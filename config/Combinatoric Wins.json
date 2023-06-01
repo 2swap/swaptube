@@ -1,0 +1,140 @@
+{
+  "config": {
+    "width": 1920,
+    "height": 1080,
+    "framerate": 30,
+    "name": "test"
+  },
+  "scenes": [
+    {
+      "type": "header",
+      "header": "Threat Analysis and Combinatoric Wins.",
+      "subheader": "",
+      "duration_seconds": 19
+    },
+    {
+      "type": "c4",
+      "boards": [
+        {
+          "representation": "444556566",
+          "name": "The 7",
+          "annotations": "",
+          "duration_seconds":6,
+          "transition_seconds":0
+        },
+        {
+          "representation": "444556566",
+          "name": "The 7",
+          "annotations": "                    T      T              ",
+          "duration_seconds":15,
+          "transition_seconds":10
+        },
+        {
+          "representation": "4445565665757",
+          "name": "The 7",
+          "annotations": "                    T      T              ",
+          "duration_seconds":0,
+          "transition_seconds":6
+        },
+        {
+          "representation": "444556566575777",
+          "name": "",
+          "annotations": "                    T      T              ",
+          "duration_seconds":13
+        },
+        {
+          "representation": "4",
+          "name": "",
+          "annotations": "",
+          "duration_seconds":0
+        },
+        {
+          "representation": "436236442",
+          "name": "",
+          "annotations": "",
+          "duration_seconds":13
+        },
+        {
+          "representation": "436236442",
+          "name": "",
+          "annotations": "1234567123456712345671234567T234T671234567",
+          "duration_seconds":8
+        },
+        {
+          "representation": "436236442",
+          "name": "",
+          "annotations": "1234567123456712345671234567T234T671234t6t",
+          "duration_seconds":12
+        },
+        {
+          "representation": "43623644237",
+          "name": "",
+          "annotations": "1234567123456712345671234567T234T671234T67",
+          "duration_seconds":8
+        },
+        {
+          "representation": "436236442",
+          "name": "",
+          "annotations": "1234567123456712345671234567T234T671234t6t",
+          "duration_seconds":10,
+          "transition_seconds":0
+        },
+        {
+          "representation": "4362364427",
+          "name": "",
+          "annotations": "1234567123456712345671234567T234T671234567",
+          "duration_seconds":5
+        },
+        {
+          "representation": "4",
+          "name": "",
+          "annotations": "",
+          "duration_seconds":0,
+          "transition_seconds":4
+        },
+        {
+          "representation": "44444435",
+          "name": "The Narrow 6-1",
+          "annotations": "",
+          "duration_seconds":3
+        },
+        {
+          "representation": "444444355555",
+          "name": "The Narrow 6-1",
+          "annotations": "           -                              ",
+          "duration_seconds":8
+        },
+        {
+          "representation": "4444443555552",
+          "name": "The Narrow 6-1",
+          "annotations": "                              T    T      ",
+          "duration_seconds":4,
+          "transition_seconds":4
+        },
+        {
+          "representation": "44444435555",
+          "name": "The Narrow 6-1",
+          "annotations": "123456712345671234567123456712t4567tt34567",
+          "duration_seconds":7,
+          "transition_seconds":1
+        }
+      ]
+    },
+    {
+      "type": "2swap",
+          "duration_seconds":17,
+          "transition_seconds":1
+    },
+    {
+      "type": "latex",
+      "blurbs": [
+        {
+          "latex": "\\text{Threats} \\rightarrow \\text{Parity} \\rightarrow \\text{Win Conditions} \\rightarrow \\text{Openings} \\rightarrow \\text{Claimeven} \\rightarrow \\text{???}",
+          "math": true,
+          "duration_seconds":10,
+          "transition_seconds":1
+        }
+      ]
+    }
+  ]
+}

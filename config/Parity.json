@@ -1,0 +1,104 @@
+{
+  "config": {
+    "width": 1920,
+    "height": 1080,
+    "framerate": 30,
+    "name": "Parity"
+  },
+  "scenes": [
+    {
+      "type": "header",
+      "header": "Introduction to Parity",
+      "subheader": "",
+      "duration_seconds": 1
+    },
+    {
+      "type": "c4",
+      "boards": [
+        {
+          "representation": "444556566",
+          "name": "The 7",
+          "annotations": "                    T      T              ",
+          "duration_seconds":1,
+          "transition_seconds":1
+        },
+        {
+          "representation": "43623644237",
+          "name": "",
+          "annotations": "1234567123456712345671234567T234T671234T67",
+          "duration_seconds":1,
+          "transition_seconds":1
+        },
+        {
+          "representation": "4444443555552",
+          "name": "The Narrow 6-1",
+          "annotations": "                              T    T      ",
+          "duration_seconds":1,
+          "transition_seconds":1
+        }
+      ]
+    },
+    {
+      "type": "latex",
+      "blurbs": [
+        {
+          "latex": "1 = 0.5 * 2 \\rightarrow \\text{Odd}",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":1,
+          "transition_hint":[
+            "=",
+            "* 2 \\rightarrow"
+          ]
+        },
+        {
+          "latex": "2 = 1 * 2 \\rightarrow \\text{Even}",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":1,
+          "transition_hint":[
+            "=",
+            "* 2 \\rightarrow"
+          ]
+        },
+        {
+          "latex": "3 = 1.5 * 2 \\rightarrow \\text{Odd}",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":1,
+          "transition_hint":[
+            "=",
+            "* 2 \\rightarrow"
+          ]
+        },
+        {
+          "latex": "4 = 2 * 2 \\rightarrow \\text{Even}",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":1,
+          "transition_hint":[
+            "=",
+            "* 2 \\rightarrow"
+          ]
+        }
+      ]
+    },
+    {
+      "type":"container",
+      "motion":"left",
+      "split":"none",
+      "contents":
+      {
+        "latex": "4 = 2 * 2 \\rightarrow \\text{Even}",
+        "math": true,
+        "duration_seconds":1,
+        "transition_seconds":1
+      }
+    },
+    {
+      "type": "2swap",
+          "duration_seconds":1,
+          "transition_seconds":1
+    }
+  ]
+}
