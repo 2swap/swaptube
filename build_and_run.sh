@@ -2,9 +2,11 @@
 
 clear
 
+mkdir -p out
+
 # Check if the number of arguments is less than expected
 if [ $# -lt 1 ]; then
-    echo "Example Usage: $0 Parity.json"
+    echo "Example Usage: $0 test_mandelbrot.json"
     exit 1
 fi
 
