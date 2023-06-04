@@ -6,6 +6,9 @@ class TwoswapScene : public Scene {
 public:
     TwoswapScene(const json& config, const json& contents);
     Pixels query(int& frames_left) override;
+    Scene* createScene(const json& config, const json& scene) override {
+        return new TwoswapScene(config, scene);
+    }
 };
 
 TwoswapScene::TwoswapScene(const json& config, const json& contents) : Scene(config, contents) {}

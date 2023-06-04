@@ -252,11 +252,12 @@ Pixels svg_to_pix(const string& svg, int scale_factor) {
         fprintf(stderr, "Error loading SVG data from file \"%s\"\n", svg.c_str());
         exit(-1);
     }
-    RsvgDimensionData dimensionData; 
-    rsvg_handle_get_dimensions(handle, &dimensionData);
+    gdouble dim_width = 0;
+    gdouble dim_height = 0; 
+    rsvg_handle_get_intrinsic_size_in_pixels(handle, &dim_width, &dim_height);
 
-    int w = dimensionData.width*scale_factor;
-    int h = dimensionData.height*scale_factor;
+    int w = dim_width*scale_factor;
+    int h = dim_height*scale_factor;
     Pixels ret(w, h);
 
     //Render it
