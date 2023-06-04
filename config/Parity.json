@@ -13,7 +13,7 @@
       "duration_seconds": 1
     },
     {
-      "type": "c4",
+      "type": "oc4",
       "boards": [
         {
           "representation": "444556566",
@@ -39,66 +39,78 @@
       ]
     },
     {
-      "type": "latex",
+      "type": "olatex",
       "blurbs": [
         {
           "latex": "1 = 0.5 * 2 \\rightarrow \\text{Odd}",
           "math": true,
           "duration_seconds":1,
-          "transition_seconds":1,
-          "transition_hint":[
-            "=",
-            "* 2 \\rightarrow"
-          ]
+          "transition_seconds":1
         },
         {
           "latex": "2 = 1 * 2 \\rightarrow \\text{Even}",
           "math": true,
           "duration_seconds":1,
-          "transition_seconds":1,
-          "transition_hint":[
-            "=",
-            "* 2 \\rightarrow"
-          ]
+          "transition_seconds":1
         },
         {
           "latex": "3 = 1.5 * 2 \\rightarrow \\text{Odd}",
           "math": true,
           "duration_seconds":1,
-          "transition_seconds":1,
-          "transition_hint":[
-            "=",
-            "* 2 \\rightarrow"
-          ]
+          "transition_seconds":1
         },
         {
           "latex": "4 = 2 * 2 \\rightarrow \\text{Even}",
           "math": true,
           "duration_seconds":1,
-          "transition_seconds":1,
-          "transition_hint":[
-            "=",
-            "* 2 \\rightarrow"
-          ]
+          "transition_seconds":1
         }
       ]
     },
     {
-      "type":"container",
-      "motion":"left",
-      "split":"none",
-      "contents":
-      {
-        "latex": "4 = 2 * 2 \\rightarrow \\text{Even}",
-        "math": true,
-        "duration_seconds":1,
-        "transition_seconds":1
-      }
+      "type":"composite",
+      "subscenes":
+      [
+        {
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 1080,
+          "subscene": {
+            "type": "latex",
+            "blurbs": [
+              {
+                "latex": "3 = 1.5 * 2 \\rightarrow \\text{Odd}",
+                "math": true,
+                "duration_seconds":1,
+                "transition_seconds":1
+              },
+              {
+                "latex": "4 = 2 * 2 \\rightarrow \\text{Even}",
+                "math": true,
+                "duration_seconds":1,
+                "transition_seconds":1
+              }
+            ]
+          }
+        },
+        {
+          "x": 960,
+          "y": 0,
+          "width": 960,
+          "height": 1080,
+          "subscene": {
+            "type": "2swap",
+            "duration_seconds":1,
+            "transition_seconds":1
+          }
+        }
+      ]
     },
     {
       "type": "2swap",
-          "duration_seconds":1,
-          "transition_seconds":1
+      "duration_seconds":1,
+      "transition_seconds":1
     }
   ]
 }

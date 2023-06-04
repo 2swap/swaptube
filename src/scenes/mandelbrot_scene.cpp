@@ -1,5 +1,6 @@
 #pragma once
 
+#include "scene.h"
 #include "Mandelbrot/mandelbrot_renderer.cpp"
 using json = nlohmann::json;
 
@@ -7,6 +8,9 @@ class MandelbrotScene : public Scene {
 public:
     MandelbrotScene(const json& config, const json& contents);
     Pixels query(int& frames_left) override;
+    Scene* createScene(const json& config, const json& scene) override {
+        return new MandelbrotScene(config, scene);
+    }
 
 private:
     MandelbrotRenderer mr;

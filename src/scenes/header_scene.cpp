@@ -1,11 +1,15 @@
 #pragma once
 
+#include "scene.h"
 using json = nlohmann::json;
 
 class HeaderScene : public Scene {
 public:
     HeaderScene(const json& config, const json& contents);
     Pixels query(int& frames_left) override;
+    Scene* createScene(const json& config, const json& scene) override {
+        return new HeaderScene(config, scene);
+    }
 };
 
 HeaderScene::HeaderScene(const json& config, const json& contents) : Scene(config, contents) {}

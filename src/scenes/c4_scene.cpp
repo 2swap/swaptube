@@ -1,5 +1,6 @@
 #pragma once
 
+#include "scene.h"
 #include "Connect4/c4.h"
 using json = nlohmann::json;
 
@@ -9,6 +10,9 @@ public:
     Pixels query(int& frames_left) override;
     void render_non_transition(Pixels& p, int which);
     void render_transition(Pixels& p, int which, double weight);
+    Scene* createScene(const json& config, const json& scene) override {
+        return new C4Scene(config, scene);
+    }
 
 private:
     vector<Board> boards;

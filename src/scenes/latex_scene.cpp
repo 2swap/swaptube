@@ -1,5 +1,6 @@
 #pragma once
 
+#include "scene.h"
 using json = nlohmann::json;
 
 class LatexScene : public Scene {
@@ -8,6 +9,9 @@ public:
     Pixels query(int& frames_left) override;
     void render_non_transition(Pixels& p, int which);
     void render_transition(Pixels& p, int which, double weight);
+    Scene* createScene(const json& config, const json& scene) override {
+        return new LatexScene(config, scene);
+    }
 
 private:
     vector<Pixels> equations;
