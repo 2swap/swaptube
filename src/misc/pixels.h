@@ -203,47 +203,6 @@ public:
     }
 };
 
-int convolve(const Pixels& a, const Pixels& b, int adx, int ady){
-    /*b should be smaller for speed*/
-    if(a.w*a.h<b.w*b.h) return convolve(b, a, -adx, -ady);
-
-    double sum = 0;
-    for (int x = 0; x < b.w; x++)
-        for (int y = 0; y < b.h; y++){
-            sum += .3 * a.get_alpha(x-adx, y-ady) * b.get_alpha(x, y);
-        }
-    return sum;
-}
-
-Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y, bool complete){
-    int max_conv = 0;
-    Pixels ret(p1.w+p2.w, p1.h+p2.h);
-    int jump = complete ? 1 : 6;
-    for(int x = 0; x < ret.w; x+=jump)
-        for(int y = 0; y < ret.h; y+=jump){
-            int convolution = convolve(p1, p2, x-p1.w, y-p1.h);
-            if(convolution > max_conv){
-                max_conv = convolution;
-                max_x = x;
-                max_y = y;
-            }
-            ret.set_pixel(x, y, convolution);
-        }
-    for(int x = max(0, max_x-jump*2); x < min(ret.w, max_x+jump*2); x++)
-        for(int y = max(0, max_y-jump*2); y < min(ret.h, max_y+jump*2); y++){
-            int convolution = convolve(p1, p2, x-p1.w, y-p1.h);
-            if(convolution > max_conv){
-                max_conv = convolution;
-                max_x = x;
-                max_y = y;
-            }
-            ret.set_pixel(x, y, convolution);
-        }
-    max_x -= p1.w;
-    max_y -= p1.h;
-    return ret;
-}
-
 Pixels svg_to_pix(const string& svg, int scale_factor) {
     //Open svg and get its dimensions
     RsvgHandle* handle = rsvg_handle_new_from_file(svg.c_str(), NULL);

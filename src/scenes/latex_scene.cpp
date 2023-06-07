@@ -12,6 +12,7 @@ public:
     Scene* createScene(const json& config, const json& scene) override {
         return new LatexScene(config, scene);
     }
+    bool show_cs;
 
 private:
     vector<Pixels> equations;
@@ -59,6 +60,7 @@ void LatexScene::render_transition(Pixels& p, int which, double weight) {
     p.copy(equations[which], x1, y1, 1, 1-weight);
 
     if(which != coords.size()-1){
+        p.copy(convolutions[which], 0, 0, 1, 1);
         int x2 = coords[which+1].first;
         int y2 = coords[which+1].second;
         p.copy(equations[which+1], x2, y2, 1, weight);
