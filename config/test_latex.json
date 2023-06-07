@@ -1,0 +1,51 @@
+{
+  "config": {
+    "width": 1280,
+    "height": 720,
+    "framerate": 30,
+    "name": "test"
+  },
+  "scenes": [
+    {
+      "type": "latex",
+      "blurbs": [
+        {
+          "latex": "1 = 0.5 * 2",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "2 = 1 * 2",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "3 = 1.5 * 2",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "4 = 2 * 2",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "4 = 2 * (1 + 1)",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "4 \\pi = 2 * 2\\pi",
+          "math": true,
+          "duration_seconds":1,
+          "transition_seconds":2
+        }
+      ]
+    }
+  ]
+}

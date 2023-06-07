@@ -7,6 +7,7 @@
 #include "scenes/Connect4/c4.h"
 #include "misc/json.hpp" // nlohmann json library
 #include "misc/pixels.h"
+#include "misc/convolver.cpp"
 #include "misc/writer.cpp" // moviemaker-cpp video writer
 #include "scenes/scene.cpp"
 
