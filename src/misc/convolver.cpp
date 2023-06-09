@@ -28,7 +28,6 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     return ret;
 }
 
-// Helper function for flood fill
 void flood_fill(Pixels& ret, const Pixels& p, int x, int y, int id) {
     // Check if current pixel is within bounds and has alpha channel != 0
     if (p.get_alpha(x, y) == 0)
@@ -47,6 +46,7 @@ void flood_fill(Pixels& ret, const Pixels& p, int x, int y, int id) {
     flood_fill(ret, p, x, y + 1, id); // Down
     flood_fill(ret, p, x, y - 1, id); // Up
 }
+
 
 Pixels segment(const Pixels& p, int& id) {
     Pixels ret(p.w, p.h);
@@ -68,6 +68,57 @@ Pixels segment(const Pixels& p, int& id) {
     return ret;
 }
 
+void flood_fill_connected_to_opaque(const Pixels& p, Pixels& connected_to_opaque, int x, int y) {
+    int width = p.w;
+    int height = p.h;
+
+    // Check if current pixel is within bounds and has nonzero alpha channel
+    if (x < 0 || x >= width || y < 0 || y >= height || p.get_alpha(x, y) == 0)
+        return;
+
+    // Check if the current pixel is already marked in connected_to_opaque
+    if (connected_to_opaque.get_pixel(x, y) != 0)
+        return;
+
+    // Mark the current pixel as connected to an opaque pixel
+    connected_to_opaque.set_pixel(x, y, 0xffffffff);
+
+    // Recursive flood fill for adjacent pixels
+    flood_fill_connected_to_opaque(p, connected_to_opaque, x + 1, y); // Right
+    flood_fill_connected_to_opaque(p, connected_to_opaque, x - 1, y); // Left
+    flood_fill_connected_to_opaque(p, connected_to_opaque, x, y + 1); // Down
+    flood_fill_connected_to_opaque(p, connected_to_opaque, x, y - 1); // Up
+}
+
+Pixels remove_unconnected_components(const Pixels& p) {
+    int width = p.w;
+    int height = p.h;
+
+    // Create a Pixels object to track if each pixel is connected to an opaque pixel
+    Pixels output(width, height);
+    output.fill(0);
+
+    // Iterate over each pixel in the input image
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            // Check if current pixel has alpha channel high enough and is not marked as connected_to_opaque
+            if (p.get_alpha(x, y) == 255 && output.get_pixel(x, y) == 0) {
+                // Perform flood-fill to mark all connected pixels as connected to an opaque pixel
+                flood_fill_connected_to_opaque(p, output, x, y);
+            }
+        }
+    }
+
+    // Construct the output by copying the input and bitwise AND-ing it
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int pixel = p.get_pixel(x, y) & output.get_pixel(x, y);
+            output.set_pixel(x, y, pixel);
+        }
+    }
+
+    return output;
+}
 
 /*vector<Pixels> decompose(const Pixels& p) {
     // Segment the input Pixels
@@ -200,8 +251,8 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         results.push_back(step_result);
 
         // Subtract the intersection from the starting Pixels
-        current_p1 = subtract(current_p1, intersection, 0, 0);
-        current_p2 = subtract(current_p2, intersection, -max_x, -max_y);
+        current_p1 = remove_unconnected_components(subtract(current_p1, intersection, 0, 0));
+        current_p2 = remove_unconnected_components(subtract(current_p2, intersection, -max_x, -max_y));
     }
 
     return results;
