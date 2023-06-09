@@ -38,7 +38,7 @@ public:
         pixels[spot+0] = getb(col);
         pixels[spot+1] = getg(col);
         pixels[spot+2] = getr(col);
-        pixels[spot+3] = 255;
+        pixels[spot+3] = geta(col);
     }
 
     inline void set_pixel_with_transparency(int x, int y, int col) {
@@ -50,7 +50,7 @@ public:
         pixels[spot+0] = getb(mergecol);
         pixels[spot+1] = getg(mergecol);
         pixels[spot+2] = getr(mergecol);
-        pixels[spot+3] = 255;
+        pixels[spot+3] = geta(mergecol);
     }
 
     inline void print_dimensions(){
@@ -203,6 +203,41 @@ public:
     }
 };
 
+Pixels crop(const Pixels& p) {
+    int min_x = p.w;
+    int min_y = p.h;
+    int max_x = -1;
+    int max_y = -1;
+
+    // Find the bounding box of non-zero alpha pixels
+    for (int y = 0; y < p.h; y++) {
+        for (int x = 0; x < p.w; x++) {
+            if (p.get_alpha(x, y) > 0) {
+                min_x = min(min_x, x);
+                min_y = min(min_y, y);
+                max_x = max(max_x, x);
+                max_y = max(max_y, y);
+            }
+        }
+    }
+
+    // Calculate the dimensions of the cropped Pixels
+    int width = max_x - min_x + 1;
+    int height = max_y - min_y + 1;
+
+    // Create the cropped Pixels object
+    Pixels cropped_pixels(width, height);
+
+    // Copy the pixels within the bounding box to the cropped Pixels
+    for (int y = min_y; y <= max_y; y++) {
+        for (int x = min_x; x <= max_x; x++) {
+            cropped_pixels.set_pixel(x - min_x, y - min_y, p.get_pixel(x, y));
+        }
+    }
+
+    return cropped_pixels;
+}
+
 Pixels svg_to_pix(const string& svg, int scale_factor) {
     //Open svg and get its dimensions
     RsvgHandle* handle = rsvg_handle_new_from_file(svg.c_str(), NULL);
@@ -228,7 +263,7 @@ Pixels svg_to_pix(const string& svg, int scale_factor) {
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
     ret.grayscale_to_alpha();
-    return ret;
+    return crop(ret);
 }
 
 Pixels eqn_to_pix(const string& eqn, int scale_factor){

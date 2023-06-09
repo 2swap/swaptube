@@ -10,37 +10,13 @@
       "type": "latex",
       "blurbs": [
         {
-          "latex": "1 = 0.5 * 2",
+          "latex": "abc = 123",
           "math": true,
           "duration_seconds":1,
           "transition_seconds":2
         },
         {
-          "latex": "2 = 1 * 2",
-          "math": true,
-          "duration_seconds":1,
-          "transition_seconds":2
-        },
-        {
-          "latex": "3 = 1.5 * 2",
-          "math": true,
-          "duration_seconds":1,
-          "transition_seconds":2
-        },
-        {
-          "latex": "4 = 2 * 2",
-          "math": true,
-          "duration_seconds":1,
-          "transition_seconds":2
-        },
-        {
-          "latex": "4 = 2 * (1 + 1)",
-          "math": true,
-          "duration_seconds":1,
-          "transition_seconds":2
-        },
-        {
-          "latex": "4 \\pi = 2 * 2\\pi",
+          "latex": "123 = abc",
           "math": true,
           "duration_seconds":1,
           "transition_seconds":2

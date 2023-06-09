@@ -1,64 +1,32 @@
-int convolve(const Pixels& a, const Pixels& b, int adx, int ady){
-    /*b should be smaller for speed*/
-    if(a.w*a.h<b.w*b.h) return convolve(b, a, -adx, -ady);
+int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
+    /*a should be smaller for speed*/
+    if(a.w*a.h>b.w*b.h) return convolve(b, a, -dx, -dy);
 
     double sum = 0;
-    for (int x = 0; x < b.w; x++)
-        for (int y = 0; y < b.h; y++){
-            sum += a.get_alpha(x-adx, y-ady) * b.get_alpha(x, y);
+    for (int x = 0; x < a.w; x++)
+        for (int y = 0; y < a.h; y++){
+            sum += a.get_alpha(x, y) > 0 && b.get_alpha(x-dx, y-dy) > 0;
         }
-    return sum/50000;
+    return sum/4;
 }
 
-Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y, bool complete){
+Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     int max_conv = 0;
     Pixels ret(p1.w+p2.w, p1.h+p2.h);
-    int jump = complete ? 1 : 1;
-    for(int x = 0; x < ret.w; x+=jump)
-        for(int y = 0; y < ret.h; y+=jump){
-            int convolution = convolve(p1, p2, x-p1.w, y-p1.h);
-            if(convolution > max_conv){
-                max_conv = convolution;
-                max_x = x;
-                max_y = y;
-            }
-            ret.set_pixel(x, y, makecol(convolution, convolution, convolution));
-        }
-    for(int x = max(0, max_x-jump*2); x < min(ret.w, max_x+jump*2); x++)
-        for(int y = max(0, max_y-jump*2); y < min(ret.h, max_y+jump*2); y++){
-            int convolution = convolve(p1, p2, x-p1.w, y-p1.h);
-            if(convolution > max_conv){
-                max_conv = convolution;
-                max_x = x;
-                max_y = y;
-            }
-            ret.set_pixel(x, y, makecol(convolution, convolution, convolution));
-        }
-    max_x -= p1.w;
-    max_y -= p1.h;
-    return ret;
-}
-
-/*Pixels convolve_map_minusy(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
-    int max_conv = 0;
-    if(p1.w<p2.w || p1.h<p2.h){
-        dimensions dont match
-    }
-    Pixels ret(p1.w-p2.w, p1.h-p2.h);
     for(int x = 0; x < ret.w; x++)
         for(int y = 0; y < ret.h; y++){
-            int convolution = convolve(p1, p2, x, y);
+            int convolution = convolve(p1, p2, x-p2.w, y-p2.h);
             if(convolution > max_conv){
                 max_conv = convolution;
                 max_x = x;
                 max_y = y;
             }
-            ret.set_pixel(x, y, makecol(convolution, convolution, convolution));
+            ret.set_pixel(x, y, makecol(convolution, 255, 255, 255));
         }
-    max_x -= p1.w;
-    max_y -= p1.h;
+    max_x -= p2.w;
+    max_y -= p2.h;
     return ret;
-}*/
+}
 
 // Helper function for flood fill
 void flood_fill(Pixels& ret, const Pixels& p, int x, int y, int id) {
@@ -101,7 +69,7 @@ Pixels segment(const Pixels& p, int& id) {
 }
 
 
-vector<Pixels> decompose(const Pixels& p) {
+/*vector<Pixels> decompose(const Pixels& p) {
     // Segment the input Pixels
     int num_segments = 0;
     Pixels segmented_pixels = segment(p, num_segments);
@@ -155,4 +123,86 @@ vector<Pixels> decompose(const Pixels& p) {
     }
 
     return ret;
+}*/
+
+Pixels intersect(const Pixels& p1, const Pixels& p2, int dx, int dy) {
+    int width = p1.w;
+    int height = p1.h;
+    Pixels result(width, height);
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int pixel1 = p1.get_pixel(x, y);
+            int pixel2 = p2.get_pixel(x - dx, y - dy);
+
+            if (geta(pixel1) > geta(pixel2)) {
+                result.set_pixel(x, y, pixel2);
+            } else {
+                result.set_pixel(x, y, pixel1);
+            }
+        }
+    }
+
+    return result;
+}
+
+Pixels subtract(const Pixels& p1, const Pixels& p2, int dx, int dy) {
+    int width = p1.w;
+    int height = p1.h;
+    Pixels result(width, height);
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int pixel1 = p1.get_pixel(x, y);
+            int pixel2 = p2.get_pixel(x - dx, y - dy);
+
+            int alpha_diff = geta(pixel1) - geta(pixel2);
+            int new_alpha = max(alpha_diff, 0);
+            int new_pixel = makecol(new_alpha, getr(pixel1), getg(pixel1), getb(pixel1));
+
+            result.set_pixel(x, y, new_pixel);
+        }
+    }
+
+    return result;
+}
+
+struct StepResult {
+    int max_x;
+    int max_y;
+    Pixels map;
+    Pixels intersection;
+    Pixels current_p1;
+    Pixels current_p2;
+
+    StepResult(int mx, int my, Pixels cm, Pixels intersect, Pixels p1, Pixels p2)
+            : max_x(mx), max_y(my), map(cm), intersection(intersect), current_p1(p1), current_p2(p2) {}
+};
+
+vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
+    vector<StepResult> results;
+
+    Pixels current_p1 = p1;
+    Pixels current_p2 = p2;
+
+    for (int i = 0; i < 4; i++) {
+        int max_x = 0;
+        int max_y = 0;
+
+        // Perform convolution mapping to find maximum intersection
+        Pixels cm = convolve_map(current_p1, current_p2, max_x, max_y);
+
+        // Intersect the two Pixels objects based on the maximum convolution
+        Pixels intersection = intersect(current_p1, current_p2, max_x, max_y);
+
+        // Store the result of this step
+        StepResult step_result(max_x, max_y, cm, intersection, current_p1, current_p2);
+        results.push_back(step_result);
+
+        // Subtract the intersection from the starting Pixels
+        current_p1 = subtract(current_p1, intersection, 0, 0);
+        current_p2 = subtract(current_p2, intersection, -max_x, -max_y);
+    }
+
+    return results;
 }
