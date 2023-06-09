@@ -3,9 +3,14 @@ int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
     if(a.w*a.h>b.w*b.h) return convolve(b, a, -dx, -dy);
 
     double sum = 0;
-    for (int x = 0; x < a.w; x++)
-        for (int y = 0; y < a.h; y++){
-            sum += a.get_alpha(x, y) > 0 && b.get_alpha(x-dx, y-dy) > 0;
+    int minx = max(0, dx);
+    int miny = max(0, dy);
+    int maxx = min(a.w, b.w+dx);
+    int maxy = min(a.h, b.h+dy);
+
+    for (int x = minx; x < maxx; x++)
+        for (int y = miny; y < maxy; y++){
+            sum += (a.get_alpha(x, y) & b.get_alpha(x-dx, y-dy)) > 0;
         }
     return sum/4;
 }
@@ -236,7 +241,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
     Pixels current_p1 = p1;
     Pixels current_p2 = p2;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 3; i++) {
         int max_x = 0;
         int max_y = 0;
 
