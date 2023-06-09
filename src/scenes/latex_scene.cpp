@@ -8,6 +8,7 @@ public:
     LatexScene(const json& config, const json& contents);
     Pixels query(int& frames_left) override;
     void render_non_transition(Pixels& p, int which);
+    void render_transition_fade(Pixels& p, int which, double weight);
     void render_transition(Pixels& p, int which, double weight);
     Scene* createScene(const json& config, const json& scene) override {
         return new LatexScene(config, scene);
@@ -18,6 +19,7 @@ private:
     vector<Pixels> equations;
     vector<Pixels> convolutions;
     vector<pair<int, int>> coords;
+    vector<vector<StepResult>> intersections;
 };
 
 LatexScene::LatexScene(const json& config, const json& contents) : Scene(config, contents) {
@@ -39,9 +41,10 @@ LatexScene::LatexScene(const json& config, const json& contents) : Scene(config,
     for (int i = 0; i < equations.size()-1; i++) {
         int max_x = 0, max_y = 0;
         cout << blurbs[i]["latex"] << " <- CONVOLVING -> " << blurbs[i+1]["latex"] << endl;
-        convolutions.push_back(convolve_map(equations[i], equations[i+1], max_x, max_y, false));
-        x -= max_x;
-        y -= max_y;
+        intersections.push_back(find_intersections(equations[i], equations[i+1]));
+        convolutions.push_back(convolve_map(equations[i], equations[i+1], max_x, max_y));
+        x += max_x;
+        y += max_y;
         coords.push_back(make_pair(x, y));
     }
 }
@@ -53,17 +56,47 @@ void LatexScene::render_non_transition(Pixels& p, int which) {
     p.copy(equations[which], x, y, 1, 1);
 }
 
-void LatexScene::render_transition(Pixels& p, int which, double weight) {
+void LatexScene::render_transition_fade(Pixels& p, int which, double weight) {
     p.fill(0);
     int x1 = coords[which].first;
     int y1 = coords[which].second;
     p.copy(equations[which], x1, y1, 1, 1-weight);
 
-    if(which != coords.size()-1){
-        p.copy(convolutions[which], 0, 0, 1, 1);
-        int x2 = coords[which+1].first;
-        int y2 = coords[which+1].second;
-        p.copy(equations[which+1], x2, y2, 1, weight);
+    if(which == coords.size()-1) return;
+
+    p.copy(convolutions[which], 0, 0, 1, 1);
+    int x2 = coords[which+1].first;
+    int y2 = coords[which+1].second;
+    p.copy(equations[which+1], x2, y2, 1, weight);
+}
+
+void LatexScene::render_transition(Pixels& p, int which, double weight) {
+    p.fill(0);
+
+    if(which == coords.size()-1) return;
+    
+    int x2 = coords[which+1].first;
+    int y2 = coords[which+1].second;
+
+    int i = 0;
+
+    for (const StepResult& step : intersections[which]) {
+        int old_x = 0;
+        int old_y = 0;
+        int new_x = step.max_x;
+        int new_y = step.max_y;
+
+        int x = lerp(old_x, new_x, smoother2(1-weight));
+        int y = lerp(old_y, new_y, smoother2(1-weight));
+
+        // Render the intersection at the interpolated position
+        p.copy(step.intersection, x+x2, y+y2, 1, 1);
+
+        //p.copy(step.map, 0, i, 1, 1);
+        //p.copy(step.intersection, 400, i, 1, 1);
+        //p.copy(step.current_p1, 600, i, 1, 1);
+        //p.copy(step.current_p2, 800, i, 1, 1);
+        i+=100;
     }
 }
 

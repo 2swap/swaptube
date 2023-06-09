@@ -19,19 +19,12 @@ private:
 };
 
 CompositeScene::CompositeScene(const json& config, const json& contents) : Scene(config, contents) {
-    cout << "aaaa" << endl;
     for (auto& j : contents["subscenes"]) {
-    cout << "bbbb" << endl;
         json config_new_resolution = config;
-    cout << "vvvv" << endl;
         config_new_resolution["width"] = j["width"];
-    cout << "cccc" << endl;
         config_new_resolution["height"] = j["height"];
-    cout << "xxxx" << endl << j["subscene"] << config_new_resolution << endl;
         scene_with_coords s = make_pair(create_scene_determine_type(config_new_resolution, j["subscene"]), make_pair(j["x"], j["y"]));
-    cout << "ssss" << endl;
         scenes.push_back(s);
-    cout << "dddd" << endl;
     }
 }
 
