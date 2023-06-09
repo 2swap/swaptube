@@ -10,74 +10,24 @@
       "type": "latex",
       "blurbs": [
         {
-          "latex": "\\sqrt[3]{(x-y)^3}",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "x-y",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
           "latex": "\\frac{2(x-y)}{2}",
-          "duration_seconds":2,
-          "transition_seconds":3
+          "duration_seconds":1,
+          "transition_seconds":2
         },
         {
           "latex": "(x-y)*\\frac{1}{2}",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "\\frac{x-y}{2}",
-          "duration_seconds":2,
-          "transition_seconds":3
+          "duration_seconds":1,
+          "transition_seconds":2
         },
         {
           "latex": "A=\\frac{x-y}{2}",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "A=\\frac{\\tau}{2}",
-          "duration_seconds":2,
-          "transition_seconds":3
+          "duration_seconds":1,
+          "transition_seconds":2
         },
         {
           "latex": "A=\\pi",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "abc = 123",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "1234 = abc",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "幼稚園 = abc",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "1 = 0.5 * 2 \\rightarrow \\text{Odd}",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "2 = 1 * 2 \\rightarrow \\text{Even}",
-          "duration_seconds":2,
-          "transition_seconds":3
-        },
-        {
-          "latex": "3 = 1.5 * 2 \\rightarrow \\text{Odd}",
-          "duration_seconds":2,
-          "transition_seconds":0
+          "duration_seconds":1,
+          "transition_seconds":2
         }
       ]
     }
