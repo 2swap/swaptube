@@ -1,3 +1,5 @@
+#include <stack>
+
 int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
     /*a should be smaller for speed*/
     if(a.w*a.h>b.w*b.h) return convolve(b, a, -dx, -dy);
@@ -8,18 +10,30 @@ int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
     int maxx = min(a.w, b.w+dx);
     int maxy = min(a.h, b.h+dy);
 
-    for (int x = minx; x < maxx; x++)
-        for (int y = miny; y < maxy; y++){
+    int jump = 2;
+    for (int x = minx; x < maxx; x+=jump)
+        for (int y = miny; y < maxy; y+=jump){
             sum += (a.get_alpha(x, y) & b.get_alpha(x-dx, y-dy)) > 0;
         }
-    return sum/4;
+    return sum*jump*jump/4.;
 }
 
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     int max_conv = 0;
     Pixels ret(p1.w+p2.w, p1.h+p2.h);
-    for(int x = 0; x < ret.w; x++)
-        for(int y = 0; y < ret.h; y++){
+    int jump = 4;
+    for(int x = 0; x < ret.w; x+=jump)
+        for(int y = 0; y < ret.h; y+=jump){
+            int convolution = convolve(p1, p2, x-p2.w, y-p2.h);
+            if(convolution > max_conv){
+                max_conv = convolution;
+                max_x = x;
+                max_y = y;
+            }
+            ret.set_pixel(x, y, makecol(convolution, 255, 255, 255));
+        }
+    for(int x = max(0, max_x-jump); x < min(ret.w, max_x+jump); x++)
+        for(int y = max(0, max_y-jump); y < min(ret.h, max_y+jump); y++){
             int convolution = convolve(p1, p2, x-p2.w, y-p2.h);
             if(convolution > max_conv){
                 max_conv = convolution;
@@ -33,25 +47,58 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     return ret;
 }
 
-void flood_fill(Pixels& ret, const Pixels& p, int x, int y, int id) {
-    // Check if current pixel is within bounds and has alpha channel != 0
-    if (p.get_alpha(x, y) == 0)
-        return;
+void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int id) {
+    stack<pair<int, int> > stack;
+    stack.push({start_x, start_y});
 
-    // Check if the current pixel is already segmented
-    if (ret.get_alpha(x, y) != 0)
-        return;
+    while (!stack.empty()) {
+        auto [x, y] = stack.top();
+        stack.pop();
 
-    // Set the identifier color for the current pixel
-    ret.set_pixel(x, y, id);
+        if (x < 0 || x >= p.w || y < 0 || y >= p.h)
+            continue;
 
-    // Recursive flood fill for adjacent pixels
-    flood_fill(ret, p, x + 1, y, id); // Right
-    flood_fill(ret, p, x - 1, y, id); // Left
-    flood_fill(ret, p, x, y + 1, id); // Down
-    flood_fill(ret, p, x, y - 1, id); // Up
+        if (p.get_alpha(x, y) == 0 || ret.get_pixel(x, y) != 0)
+            continue;
+
+        ret.set_pixel(x, y, id);
+
+        stack.push({x + 1, y}); // Right
+        stack.push({x - 1, y}); // Left
+        stack.push({x, y + 1}); // Down
+        stack.push({x, y - 1}); // Up
+    }
 }
 
+int connected_component_size(const Pixels& p, int start_x, int start_y) {
+    int component_size = 0;
+    int target_alpha = p.get_alpha(start_x, start_y);
+    Pixels visited(p.w, p.h);
+
+    stack<pair<int, int>> stack;
+    stack.push({start_x, start_y});
+
+    while (!stack.empty()) {
+        auto [x, y] = stack.top();
+        stack.pop();
+
+        if (x < 0 || x >= p.w || y < 0 || y >= p.h)
+            continue;
+
+        if (p.get_alpha(x, y) != target_alpha || visited.get_pixel(x, y) != 0)
+            continue;
+
+        visited.set_pixel(x, y, 1);
+        component_size++;
+
+        stack.push({x + 1, y}); // Right
+        stack.push({x - 1, y}); // Left
+        stack.push({x, y + 1}); // Down
+        stack.push({x, y - 1}); // Up
+    }
+
+    return component_size;
+}
 
 Pixels segment(const Pixels& p, int& id) {
     Pixels ret(p.w, p.h);
@@ -71,6 +118,35 @@ Pixels segment(const Pixels& p, int& id) {
     }
 
     return ret;
+}
+
+Pixels erase_small_components(const Pixels& p, int min_size) {
+    int id = 0;
+    Pixels segmented = segment(p, id);
+
+    // Calculate the area of each segmented component
+    std::vector<int> componentArea(id, 0);
+    for (int y = 0; y < segmented.h; y++) {
+        for (int x = 0; x < segmented.w; x++) {
+            int componentId = segmented.get_pixel(x, y);
+            if (componentId != 0) {
+                componentArea[componentId - 1]++;
+            }
+        }
+    }
+
+    // Erase components with area less than 'min_size' pixels
+    Pixels result = p;
+    for (int y = 0; y < segmented.h; y++) {
+        for (int x = 0; x < segmented.w; x++) {
+            int componentId = segmented.get_pixel(x, y);
+            if (componentArea[componentId - 1] < min_size) {
+                result.set_pixel(x, y, makecol(0,255,255,255));
+            }
+        }
+    }
+
+    return result;
 }
 
 void flood_fill_connected_to_opaque(const Pixels& p, Pixels& connected_to_opaque, int x, int y) {
@@ -182,12 +258,10 @@ Pixels remove_unconnected_components(const Pixels& p) {
 }*/
 
 Pixels intersect(const Pixels& p1, const Pixels& p2, int dx, int dy) {
-    int width = p1.w;
-    int height = p1.h;
-    Pixels result(width, height);
+    Pixels result(p1.w, p1.h);
 
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (int y = 0; y < p1.h; y++) {
+        for (int x = 0; x < p1.w; x++) {
             int pixel1 = p1.get_pixel(x, y);
             int pixel2 = p2.get_pixel(x - dx, y - dy);
 
@@ -202,13 +276,37 @@ Pixels intersect(const Pixels& p1, const Pixels& p2, int dx, int dy) {
     return result;
 }
 
-Pixels subtract(const Pixels& p1, const Pixels& p2, int dx, int dy) {
-    int width = p1.w;
-    int height = p1.h;
-    Pixels result(width, height);
+double iou(const Pixels& p1, const Pixels& p2) {
+    int intersection_count = 0;
+    int union_count = 0;
 
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (int y = 0; y < p1.h; y++) {
+        for (int x = 0; x < p1.w; x++) {
+            int pixel1 = p1.get_pixel(x, y);
+            int pixel2 = p2.get_pixel(x, y);
+
+            if (geta(pixel1) > 0 || geta(pixel2) > 0) {
+                union_count++;
+            }
+
+            if (geta(pixel1) > 0 && geta(pixel2) > 0) {
+                intersection_count++;
+            }
+        }
+    }
+
+    if (union_count == 0) {
+        return 0.0; // To avoid division by zero
+    }
+
+    return static_cast<double>(intersection_count) / union_count;
+}
+
+Pixels subtract(const Pixels& p1, const Pixels& p2, int dx, int dy) {
+    Pixels result(p1.w, p1.h);
+
+    for (int y = 0; y < p1.h; y++) {
+        for (int x = 0; x < p1.w; x++) {
             int pixel1 = p1.get_pixel(x, y);
             int pixel2 = p2.get_pixel(x - dx, y - dy);
 
@@ -227,13 +325,70 @@ struct StepResult {
     int max_x;
     int max_y;
     Pixels map;
-    Pixels intersection;
+    Pixels induced1;
+    Pixels induced2;
     Pixels current_p1;
     Pixels current_p2;
 
-    StepResult(int mx, int my, Pixels cm, Pixels intersect, Pixels p1, Pixels p2)
-            : max_x(mx), max_y(my), map(cm), intersection(intersect), current_p1(p1), current_p2(p2) {}
+    StepResult(int mx, int my, Pixels cm, Pixels i1, Pixels i2, Pixels p1, Pixels p2)
+            : max_x(mx), max_y(my), map(cm), induced1(i1), induced2(i2), current_p1(p1), current_p2(p2) {}
 };
+
+void flood_fill_copy_shape(const Pixels& from, Pixels& to, int from_x, int from_y, int to_x, int to_y) {
+    stack<tuple<int, int, int, int>> stack;
+    stack.push({from_x, from_y, to_x, to_y});
+
+    while (!stack.empty()) {
+        auto [fx, fy, tx, ty] = stack.top();
+        stack.pop();
+
+        if (fx < 0 || fx >= from.w || fy < 0 || fy >= from.h)
+            continue;
+
+        if (tx < 0 || tx >= to.w || ty < 0 || ty >= to.h)
+            continue;
+
+        if (from.get_alpha(fx, fy) == 0 || to.get_pixel(tx, ty) == from.get_pixel(fx, fy))
+            continue;
+
+        to.set_pixel(tx, ty, from.get_pixel(fx, fy));
+
+        stack.push({fx + 1, fy, tx + 1, ty}); // Right
+        stack.push({fx - 1, fy, tx - 1, ty}); // Left
+        stack.push({fx, fy + 1, tx, ty + 1}); // Down
+        stack.push({fx, fy - 1, tx, ty - 1}); // Up
+    }
+}
+
+Pixels induce(const Pixels& from, const Pixels& to, int dx, int dy) {
+    Pixels induced(2*from.w+to.w, 2*from.h+to.h);
+
+    // Copy the to Pixels to the induced Pixels
+    for (int y = 0; y < to.h; y++) {
+        for (int x = 0; x < to.w; x++) {
+            int pixel = to.get_pixel(x, y);
+            induced.set_pixel(x+from.w, y+from.h, pixel);
+        }
+    }
+
+    // Perform flood fill for each pixel in the translated to Pixels
+    for (int y = 0; y < to.h; y++) {
+        for (int x = 0; x < to.w; x++) {
+            int from_x = x+dx;
+            int from_y = y+dy;
+            int to_x = x;
+            int to_y = y;
+            int induced_x = x+from.w;
+            int induced_y = y+from.h;
+            if (to.get_alpha(x, y) != 0 && induced.get_pixel(induced_x, induced_y) != from.get_pixel(from_x, from_y)) {
+                // Found a new shape, perform flood fill starting from the current pixel in from
+                flood_fill_copy_shape(from, induced, from_x, from_y, induced_x, induced_y);
+            }
+        }
+    }
+
+    return induced;
+}
 
 vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
     vector<StepResult> results;
@@ -241,7 +396,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
     Pixels current_p1 = p1;
     Pixels current_p2 = p2;
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         int max_x = 0;
         int max_y = 0;
 
@@ -249,15 +404,18 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         Pixels cm = convolve_map(current_p1, current_p2, max_x, max_y);
 
         // Intersect the two Pixels objects based on the maximum convolution
-        Pixels intersection = intersect(current_p1, current_p2, max_x, max_y);
+        Pixels intersection = erase_small_components(intersect(current_p1, current_p2, max_x, max_y), 100);
 
-        // Store the result of this step
-        StepResult step_result(max_x, max_y, cm, intersection, current_p1, current_p2);
-        results.push_back(step_result);
+        Pixels induced1 = induce(current_p1, intersection, 0, 0);
+        Pixels induced2 = induce(current_p2, intersection, -max_x, -max_y);
 
         // Subtract the intersection from the starting Pixels
-        current_p1 = remove_unconnected_components(subtract(current_p1, intersection, 0, 0));
-        current_p2 = remove_unconnected_components(subtract(current_p2, intersection, -max_x, -max_y));
+        current_p1 = remove_unconnected_components(subtract(current_p1, induced1, -current_p1.w, -current_p1.h));
+        current_p2 = remove_unconnected_components(subtract(current_p2, induced2, -current_p2.w-max_x, -current_p2.h-max_y));
+
+        // Store the result of this step
+        StepResult step_result(max_x, max_y, cm, induced1, induced2, current_p1, current_p2);
+        results.push_back(step_result);
     }
 
     return results;

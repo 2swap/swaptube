@@ -45,8 +45,9 @@ public:
         if(x < 0 || x >= w || y < 0 || y >= h) return;
         // this could go in a loop but unrolled for speeeeed
         int spot = 4*(w*y+x);
-        int alpha = geta(col);
-        int mergecol = colorlerp(makecol(pixels[spot+2], pixels[spot+1], pixels[spot+0]), col&0xffffff, alpha/255.);
+        int lower_alpha = get_alpha(x, y);
+        int upper_alpha = geta(col);
+        int mergecol = colorlerp(makecol(pixels[spot+2], pixels[spot+1], pixels[spot+0]), col, upper_alpha/255.);
         pixels[spot+0] = getb(mergecol);
         pixels[spot+1] = getg(mergecol);
         pixels[spot+2] = getr(mergecol);
