@@ -16,7 +16,7 @@ inline int rgb_to_col(int r, int g, int b){return r<<16|g<<8|b;}
 inline double smoother1(double x){return 3*x*x-2*x*x*x;}
 inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
 inline double smoother3(double x){return x<.5 ? cube(x)*4 : 1-cube(1-x)*4;}
-inline string boardlerp(string b1, string b2, double w){int range = b2.size()-b1.size(); return (b1.size() > b2.size()? b1 : b2).substr(0, round(b1.size()+w*range));}
+inline double transparency_profile(double x){return x<.6 ? cube(x/.6) : 1;}
 inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
 inline int makecol(int r, int g, int b){return (255<<24)+(r<<16)+(g<<8)+b;}
 inline int makecol(int a, int r, int g, int b){return (a<<24)+(r<<16)+(g<<8)+b;}

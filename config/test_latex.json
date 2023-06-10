@@ -15,17 +15,37 @@
           "transition_seconds":2
         },
         {
-          "latex": "(x-y)*\\frac{1}{2}",
+          "latex": "(x-y)*\\frac{2}{2}",
           "duration_seconds":1,
           "transition_seconds":2
         },
         {
-          "latex": "A=\\frac{x-y}{2}",
+          "latex": "A=2*\\frac{x-y}{2}",
           "duration_seconds":1,
           "transition_seconds":2
         },
         {
-          "latex": "A=\\pi",
+          "latex": "ABC",
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "A=B=C",
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "\\frac{A}{B} = C",
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "2\\frac{A}{B}+4 = 2C+4",
+          "duration_seconds":1,
+          "transition_seconds":2
+        },
+        {
+          "latex": "幼稚園",
           "duration_seconds":1,
           "transition_seconds":2
         }

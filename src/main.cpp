@@ -8,6 +8,7 @@
 #include "misc/json.hpp" // nlohmann json library
 #include "misc/pixels.h"
 #include "misc/convolver.cpp"
+#include "misc/convolution_tests.cpp"
 #include "misc/writer.cpp" // moviemaker-cpp video writer
 #include "scenes/scene.cpp"
 
@@ -37,6 +38,7 @@ json parse_json(string filename) {
 
 int main(int argc, char* argv[]) {
     run_inlines_unit_tests();
+    run_convolution_unit_tests();
     run_c4_unit_tests();
 
     if (argc != 2) {
