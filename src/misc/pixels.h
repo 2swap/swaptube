@@ -9,9 +9,8 @@
 
 using namespace std;
 
-inline int RED         = 0x880000;
-inline int YELLOW      = 0x888800;
-inline int EMPTY       = 0x003388;
+inline int BLACK = 0xFF000000;
+inline int WHITE = 0xFFFFFFFF;
 
 class Pixels{
 public:
@@ -142,65 +141,6 @@ public:
         fill_rect(x, y+r, rw, rh-r*2, col);
         for(int i = 0; i < 4; i++)
             fill_ellipse(i%2==0 ? (x+r) : (x+w-r), i/2==0 ? (y+r) : (y+rh-r), r, r, col);
-    }
-
-    void draw_c4_disk(int stonex, int stoney, int col, bool highlight, char annotation){
-        double stonewidth = w/16.;
-        int highlightcol = colorlerp(col, 0, .4);
-        int textcol = colorlerp(col, 0, .7);
-        double px = (stonex-WIDTH/2.+.5)*stonewidth+w/2;
-        double py = (-stoney+HEIGHT/2.-.5)*stonewidth+h/2;
-        if(highlight) fill_ellipse(px, py, stonewidth*.48, stonewidth*.48, highlightcol);
-        fill_ellipse(px, py, stonewidth*.4, stonewidth*.4, col);
-
-        switch (annotation) {
-            case '+':
-                fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, textcol);  // Draw two rectangles to form a plus sign
-                fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, textcol);
-                break;
-            case '-':
-                fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, textcol);  // Draw a rectangle to form a minus sign
-                break;
-            case '|':
-                fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, textcol);  // Draw a rectangle to form a vertical bar
-                break;
-            case '=':
-                fill_rect(px - stonewidth/4 , py - 3*stonewidth/16, stonewidth/2, stonewidth/8, textcol);  // Draw two rectangles to form an equal sign
-                fill_rect(px - stonewidth/4 , py + stonewidth/16, stonewidth/2, stonewidth/8, textcol);
-                break;
-            case 't':
-                fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, textcol);  // Draw a rectangle to form a 't'
-                fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, textcol);
-                break;
-            case 'T':
-                fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, textcol);  // Draw a rectangle to form a 'T'
-                fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, textcol);
-                break;
-            case ':':
-                fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, textcol);  // Draw an ellipse to form a ':'
-                fill_ellipse(px, py + stonewidth / 8, stonewidth / 12, stonewidth / 12, textcol);
-                break;
-            case '0':
-                fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, textcol);  // Draw a circle to form a '0'
-                fill_ellipse(px, py, stonewidth / 9, stonewidth / 5, col);
-                break;
-            case '.':
-                fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, textcol);  // Draw a circle to form a '0'
-                break;
-            default:
-                break;
-        }
-    }
-
-    void render_c4_board(Board b){
-        int cols[] = {EMPTY, RED, YELLOW};
-
-        // background
-        fill(0);
-        for(int stonex = 0; stonex < WIDTH; stonex++)
-            for(int stoney = 0; stoney < HEIGHT; stoney++)
-                draw_c4_disk(stonex, stoney, cols[b.grid[stoney][stonex]], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney));
-
     }
 };
 

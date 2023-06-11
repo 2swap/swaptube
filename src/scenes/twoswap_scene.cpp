@@ -11,17 +11,17 @@ public:
     }
 };
 
-TwoswapScene::TwoswapScene(const json& config, const json& contents) : Scene(config, contents) {}
+TwoswapScene::TwoswapScene(const json& config, const json& contents) : Scene(config, contents) {
+    Pixels twoswap_pix = eqn_to_pix(latex_text("2swap"), pix.w/160);
+
+    pix.fill(BLACK);
+    pix.fill_ellipse(pix.w/3, pix.h/2, pix.w/12, pix.w/12, WHITE);
+    pix.copy(twoswap_pix, pix.w/3+pix.w/12+pix.w/32, (pix.h-twoswap_pix.h)/2+pix.w/32, 1, 1);
+}
 
 Pixels TwoswapScene::query(int& frames_left) {
     frames_left = scene_duration_frames - time;
     time++;
-
-    Pixels twoswap_pix = eqn_to_pix(latex_text("2swap"), 8);
-
-    pix.fill(0);
-    pix.fill_ellipse(pix.w/3, pix.h/2, pix.w/12, pix.w/12, 0xffffff);
-    pix.copy(twoswap_pix, pix.w/3+pix.w/12-40, (pix.h-twoswap_pix.h)/2+20, 1, 1);
 
     return pix;
 }

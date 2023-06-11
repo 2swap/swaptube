@@ -34,7 +34,7 @@ static Scene* create_scene_determine_type(const json& config, const json& scene_
     }
     else {
         cerr << "Unknown scene type: " << scene_type << endl;
-        return nullptr;
+        exit(1);
     }
 }
 

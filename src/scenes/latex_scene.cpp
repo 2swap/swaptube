@@ -49,12 +49,12 @@ LatexScene::LatexScene(const json& config, const json& contents) : Scene(config,
 }
 
 void LatexScene::render_non_transition(Pixels& p, int which) {
-    p.fill(0);
+    p.fill(BLACK);
     p.copy(equations[which], coords[which].first, coords[which].second, 1, 1);
 }
 
 void LatexScene::render_transition(Pixels& p, int which, double weight) {
-    p.fill(0);
+    p.fill(BLACK);
 
     if(which == equations.size()-1) {
         p.copy(equations[which], coords[which].first, coords[which].second, 1, cube(1-weight));
