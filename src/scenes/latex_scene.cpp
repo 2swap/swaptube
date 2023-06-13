@@ -29,7 +29,7 @@ LatexScene::LatexScene(const json& config, const json& contents) : Scene(config,
         json blurb = blurbs[blurb_index];
         string eqn = blurb["latex"].get<string>();
         cout << "rendering latex: " << eqn << endl;
-        equations.push_back(eqn_to_pix(eqn, 2));
+        equations.push_back(eqn_to_pix(eqn, 3));
     }
 
     int x = (pix.w-equations[0].w)/2;
@@ -50,30 +50,34 @@ LatexScene::LatexScene(const json& config, const json& contents) : Scene(config,
 
 void LatexScene::render_non_transition(Pixels& p, int which) {
     p.fill(BLACK);
-    p.copy(equations[which], coords[which].first, coords[which].second, 1, 1);
+    p.copy(equations[which], coords[which].first, coords[which].second, 1);
 }
 
 void LatexScene::render_transition(Pixels& p, int which, double weight) {
     p.fill(BLACK);
 
     if(which == equations.size()-1) {
-        p.copy(equations[which], coords[which].first, coords[which].second, 1, cube(1-weight));
+        p.copy(equations[which], coords[which].first, coords[which].second, cube(1-weight));
         return;
     }
 
+    double tp = transparency_profile(weight);
+    double tp1 = transparency_profile(1-weight);
+    double smooth = smoother2(weight);
+
     for (int i = 0; i < intersections[which].size(); i++) {
         const StepResult& step = intersections[which][i];
-        int x = round(lerp(coords[which].first , coords[which+1].first-step.max_x, smoother2(weight)));
-        int y = round(lerp(coords[which].second, coords[which+1].second-step.max_y, smoother2(weight)));
+        int x = round(lerp(coords[which].first , coords[which+1].first-step.max_x, smooth));
+        int y = round(lerp(coords[which].second, coords[which+1].second-step.max_y, smooth));
 
         // Render the intersection at the interpolated position
-        p.copy(step.induced1, x-step.current_p1.w, y-step.current_p1.h, 1, transparency_profile(1-weight));
-        p.copy(step.induced2, x-step.current_p2.w, y-step.current_p2.h, 1, transparency_profile(weight));
+        p.copy(step.induced1, x-step.current_p1.w, y-step.current_p1.h, tp1);
+        p.copy(step.induced2, x-step.current_p2.w, y-step.current_p2.h, tp);
     }
 
     int num_intersections = intersections[which].size();
-    p.copy(intersections[which][num_intersections-1].current_p1, coords[which].first, coords[which].second, 1, transparency_profile(1-weight));
-    p.copy(intersections[which][num_intersections-1].current_p2, coords[which+1].first, coords[which+1].second, 1, transparency_profile(weight));
+    p.copy(intersections[which][num_intersections-1].current_p1, coords[which].first, coords[which].second, tp1);
+    p.copy(intersections[which][num_intersections-1].current_p2, coords[which+1].first, coords[which+1].second, tp);
 }
 
 Pixels LatexScene::query(int& frames_left) {

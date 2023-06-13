@@ -28,7 +28,7 @@ make -j12
 # Check if the build was successful
 if [ $? -eq 0 ]; then
   # Run the program
-  ./swaptube ../config/$1
+  ./swaptube ../input/$1
 else
   echo "Build failed. Please check the build errors."
 fi

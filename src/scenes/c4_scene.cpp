@@ -94,7 +94,7 @@ void C4Scene::render_non_transition(Pixels& p, int which) {
     Board b = boards[which];
     render_c4_board(pix, b);
     Pixels board_title_pix = eqn_to_pix(latex_text(contents["boards"][which]["name"].get<string>()), pix.w / 320);
-    pix.copy(board_title_pix, (pix.w - board_title_pix.w)/2, pix.h-pix.w/12, 1, 1);
+    pix.copy(board_title_pix, (pix.w - board_title_pix.w)/2, pix.h-pix.w/12, 1);
 }
 
 void C4Scene::render_transition(Pixels& p, int which, double weight) {
@@ -110,10 +110,10 @@ void C4Scene::render_transition(Pixels& p, int which, double weight) {
     Pixels next_title_pix = eqn_to_pix(next_title, pix.w / 320);
     
     if(next_title == curr_title)
-        pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, 1, 1);
+        pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, 1);
     else{
-        pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, 1, weight);
-        pix.copy(next_title_pix, (pix.w - next_title_pix.w)/2, pix.h-pix.w/12, 1, 1-weight);
+        pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, weight);
+        pix.copy(next_title_pix, (pix.w - next_title_pix.w)/2, pix.h-pix.w/12, 1-weight);
     }
 }
 
