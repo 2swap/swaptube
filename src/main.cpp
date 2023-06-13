@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     // Create the MovieWriter object
     MovieWriter writer(name, width, height, framerate);
 
-    writer.add_audio_from_file("/home/swap/CS/moviemaker-cpp/input/testaudio.mp3");
+    //writer.add_audio();//"/home/swap/CS/moviemaker-cpp/input/a.mp3");
 
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
