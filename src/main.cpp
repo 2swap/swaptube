@@ -60,18 +60,19 @@ int main(int argc, char* argv[]) {
     // Create the MovieWriter object
     MovieWriter writer(name, width, height, framerate);
 
+    writer.add_audio_from_file("/home/swap/CS/moviemaker-cpp/input/testaudio.mp3");
+
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
         Scene* scene = create_scene_determine_type(config, scene_json);
         if (scene != nullptr) {
             int frames_left = -1;
             while (frames_left != 0) {
-                Pixels result = scene->query(frames_left);
+                writer.addFrame(scene->query(frames_left));
                 if (frames_left == -1){
                     cout << "frames_left was not set" << endl;
                     exit(1);
                 }
-                writer.addFrame(&result.pixels[0]);
             }
 
             // clean up the dynamically allocated scene object
@@ -80,10 +81,12 @@ int main(int argc, char* argv[]) {
 
     }
 
+    /* Consider removing this block after audio is implemented.
     //One last black frame at the end, else adding more audio afterwards leaves an afterimage.
     Pixels pix(width, height);
     pix.fill(0);
-    writer.addFrame(&pix.pixels[0]);
+    writer.addFrame(pix);
+    */
 
     return 0;
 }

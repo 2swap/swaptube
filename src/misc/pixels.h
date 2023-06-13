@@ -44,7 +44,6 @@ public:
         if(x < 0 || x >= w || y < 0 || y >= h) return;
         // this could go in a loop but unrolled for speeeeed
         int spot = 4*(w*y+x);
-        int lower_alpha = get_alpha(x, y);
         int upper_alpha = geta(col);
         int mergecol = colorlerp(makecol(pixels[spot+2], pixels[spot+1], pixels[spot+0]), col, upper_alpha/255.);
         pixels[spot+0] = getb(mergecol);
@@ -70,11 +69,11 @@ public:
 
     Pixels scale(int scale){
         Pixels scaled(w/scale, h/scale);
-        scaled.copy(*this, 0, 0, scale, 1);
+        scaled.copy_and_scale(*this, 0, 0, scale, 1);
         return scaled;
     }
 
-    void copy(Pixels p, int x, int y, int scale, double transparency){
+    void copy_and_scale(Pixels p, int x, int y, int scale, double transparency){
         for(int dx = 0; dx < p.w/scale; dx++)
             for(int dy = 0; dy < p.h/scale; dy++){
                 int r = 0;
@@ -97,6 +96,17 @@ public:
                 int col = (int(a*transparency)<<24)+(r<<16)+(g<<8)+b;
                 set_pixel_with_transparency(x+dx, y+dy, col);
             }
+    }
+
+    void copy(Pixels p, int dx, int dy, double transparency){
+        for(int x = 0; x < p.w; x++){
+            int xpdx = x+dx;
+            for(int y = 0; y < p.h; y++){
+                int col = p.get_pixel(x, y);
+                col = (int(geta(col)*transparency)<<24) + (col & 0xffffff);
+                set_pixel_with_transparency(x+dx, y+dy, col);
+            }
+        }
     }
 
     void invert(){

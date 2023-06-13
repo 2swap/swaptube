@@ -16,7 +16,7 @@ TwoswapScene::TwoswapScene(const json& config, const json& contents) : Scene(con
 
     pix.fill(BLACK);
     pix.fill_ellipse(pix.w/3, pix.h/2, pix.w/12, pix.w/12, WHITE);
-    pix.copy(twoswap_pix, pix.w/3+pix.w/12+pix.w/32, (pix.h-twoswap_pix.h)/2+pix.w/32, 1, 1);
+    pix.copy(twoswap_pix, pix.w/3+pix.w/12+pix.w/32, (pix.h-twoswap_pix.h)/2+pix.w/32, 1);
 }
 
 Pixels TwoswapScene::query(int& frames_left) {

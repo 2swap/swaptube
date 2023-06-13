@@ -1,80 +1,46 @@
-// Adapted from https://stackoverflow.com/questions/34511312/how-to-encode-a-video-from-several-images-generated-in-a-c-program-without-wri
-// All credit to the authors of https://github.com/apc-llc/moviemaker-cpp. Slightly modified for context-specificity.
+// Adapted from https://stackoverflow.com/questions/34511312
 
 #pragma once
 
-#include <librsvg-2.0/librsvg/rsvg.h>
-#include <vector>
-#include <iostream>
-#include <memory>
 #include "pixels.h"
 
 extern "C"
 {
-    #include <x264.h>
     #include <libswscale/swscale.h>
-    #include <libavcodec/avcodec.h>
-    #include <libavutil/mathematics.h>
     #include <libavformat/avformat.h>
-    #include <libavutil/opt.h>
 }
 
 using namespace std;
 
-// One-time initialization.
-class FFmpegInitialize
-{
-public :
-
-    FFmpegInitialize()
-    {
-        // Loads the whole database of available codecs and formats.
-        av_register_all();
-    }
-};
-
-static FFmpegInitialize ffmpegInitialize;
-
 class MovieWriter
 {
     const unsigned int width, height;
-    unsigned int iframe;
+    unsigned int inframe, outframe, audframe;
     int framerate;
 
-    SwsContext* swsCtx;
-    AVOutputFormat* fmt;
+    SwsContext* sws_ctx;
     AVStream* stream;
     AVFormatContext* fc;
     AVCodecContext* c;
     AVPacket pkt;
 
-    AVFrame *rgbpic, *yuvpic;
+    AVFrame *rgbpic;
+    AVFrame *yuvpic;
 
-    std::vector<uint8_t> pixels;
+public:
 
-    cairo_surface_t* cairo_surface;
-
-public :
-
-    MovieWriter(const std::string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_ = 25) :
+    MovieWriter(const std::string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_) :
         
-    width(width_), height(height_), iframe(0), framerate(framerate_),
-          pixels(4 * width * height)
+    width(width_), height(height_), inframe(0), outframe(0), audframe(0), framerate(framerate_)
 
     {
-        cairo_surface = cairo_image_surface_create_for_data(
-            (unsigned char*)&pixels[0], CAIRO_FORMAT_RGB24, width, height,
-            cairo_format_stride_for_width(CAIRO_FORMAT_RGB24, width));
-
         // Preparing to convert my generated RGB images to YUV frames.
-        swsCtx = sws_getContext(width, height,
+        sws_ctx = sws_getContext(width, height,
             AV_PIX_FMT_RGB24, width, height, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
 
         // Preparing the data concerning the format and codec,
         // in order to write properly the header, frame data and end of file.
-        const char* fmtext = "mp4";
-        const string filename = filename_ + "." + fmtext;
-        fmt = av_guess_format(fmtext, NULL, NULL);
+        const string filename = filename_ + ".mp4";
         avformat_alloc_output_context2(&fc, NULL, NULL, filename.c_str());
 
         // Setting up the codec.
@@ -87,7 +53,7 @@ public :
         c->width = width;
         c->height = height;
         c->pix_fmt = AV_PIX_FMT_YUV420P;
-        c->time_base = (AVRational){ 1, framerate };
+        c->time_base = { 1, framerate };
 
         // Setting up the format, its stream(s),
         // linking with the codec(s) and write the header.
@@ -101,30 +67,194 @@ public :
 
         // Once the codec is set up, we need to let the container know
         // which codec are the streams using, in this case the only (video) stream.
-        stream->time_base = (AVRational){ 1, framerate };
+        stream->time_base = { 1, framerate };
         av_dump_format(fc, 0, filename.c_str(), 1);
         avio_open(&fc->pb, filename.c_str(), AVIO_FLAG_WRITE);
-        int ret = avformat_write_header(fc, &opt);
-        av_dict_free(&opt); 
+        avformat_write_header(fc, &opt);
+        av_dict_free(&opt);
 
         // Preparing the containers of the frame data:
-        // Allocating memory for each RGB frame, which will be lately converted to YUV.
+        // Allocating memory for each RGB frame, which will be converted to YUV.
         rgbpic = av_frame_alloc();
         rgbpic->format = AV_PIX_FMT_RGB24;
         rgbpic->width = width;
         rgbpic->height = height;
-        ret = av_frame_get_buffer(rgbpic, 1);
+        av_frame_get_buffer(rgbpic, 1);
 
         // Allocating memory for each conversion output YUV frame.
         yuvpic = av_frame_alloc();
         yuvpic->format = AV_PIX_FMT_YUV420P;
         yuvpic->width = width;
         yuvpic->height = height;
-        ret = av_frame_get_buffer(yuvpic, 1);
+        av_frame_get_buffer(yuvpic, 1);
     }
 
-    void addFrame(const uint8_t* pixels)
+    void addAudioFrame(AVFrame* frame) {
+        cout << "aaa" << endl;
+        int ret = avcodec_send_frame(c, frame);
+        if (ret < 0) {
+            // Error handling
+            cout << "Error sending audio frame to encoder: " << ret << endl;
+            exit(1);
+        }cout << "bbb" << endl;
+
+        while (ret >= 0) {
+            AVPacket pkt;
+            av_init_packet(&pkt);
+
+            ret = avcodec_receive_packet(c, &pkt);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                break;
+            } else if (ret < 0) {
+                // Error handling
+                cout << "Error receiving audio packet from encoder: " << ret << endl;
+                exit(1);
+            }
+
+            av_packet_rescale_ts(&pkt, c->time_base, stream->time_base);
+            pkt.stream_index = stream->index;
+
+            ret = av_interleaved_write_frame(fc, &pkt);
+            if (ret < 0) {
+                // Error handling
+                cout << "Error writing audio packet to output file: " << ret << endl;
+                exit(1);
+            }
+
+            av_packet_unref(&pkt);
+        }
+    }
+
+    void add_audio_from_file(const std::string& filename) {
+        AVFormatContext* inputFormatContext = nullptr;
+        AVCodecContext* audioDecoderContext = nullptr;
+        AVPacket packet;
+
+        int ret = avformat_open_input(&inputFormatContext, filename.c_str(), nullptr, nullptr);
+        if (ret < 0) {
+            // Error handling
+            cout << "Could not open input file: " << ret << endl;
+            exit(1);
+        }
+
+        ret = avformat_find_stream_info(inputFormatContext, nullptr);
+        if (ret < 0) {
+            // Error handling
+            cout << "Could not find stream information: " << ret << endl;
+            exit(1);
+        }
+
+        int audioStreamIndex = av_find_best_stream(inputFormatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+        if (audioStreamIndex < 0) {
+            // Error handling
+            cout << "Could not find audio stream in input file" << endl;
+            exit(1);
+        }
+
+        AVCodec* audioDecoder = avcodec_find_decoder(inputFormatContext->streams[audioStreamIndex]->codec->codec_id);
+        if (!audioDecoder) {
+            // Error handling
+            cout << "Could not find audio decoder" << endl;
+            exit(1);
+        }
+
+        audioDecoderContext = avcodec_alloc_context3(audioDecoder);
+        if (!audioDecoderContext) {
+            // Error handling
+            cout << "Could not allocate audio decoder context" << endl;
+            exit(1);
+        }
+
+        ret = avcodec_parameters_to_context(audioDecoderContext, inputFormatContext->streams[audioStreamIndex]->codec);
+        if (ret < 0) {
+            // Error handling
+            cout << "Could not initialize audio decoder context: " << ret << endl;
+            exit(1);
+        }
+
+        ret = avcodec_open2(audioDecoderContext, audioDecoder, nullptr);
+        if (ret < 0) {
+            // Error handling
+            cout << "Could not open audio decoder: " << ret << endl;
+            exit(1);
+        }
+
+        AVFrame* audioFrame = av_frame_alloc();
+        if (!audioFrame) {
+            // Error handling
+            cout << "Could not allocate audio frame" << endl;
+            exit(1);
+        }
+
+        while (av_read_frame(inputFormatContext, &packet) >= 0) {
+            if (packet.stream_index == audioStreamIndex) {
+                ret = avcodec_send_packet(audioDecoderContext, &packet);
+                if (ret < 0) {
+                    // Error handling
+                    cout << "Error sending audio packet to decoder: " << ret << endl;
+                    exit(1);
+                }
+
+                while (ret >= 0) {
+                    ret = avcodec_receive_frame(audioDecoderContext, audioFrame);
+                    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                        break;
+                    } else if (ret < 0) {
+                        // Error handling
+                        cout << "Error receiving audio frame from decoder: " << ret << endl;
+                        exit(1);
+                    }
+
+                    addAudioFrame(audioFrame);
+                }
+            }
+
+            av_packet_unref(&packet);
+        }
+
+        ret = avcodec_send_packet(audioDecoderContext, nullptr);
+        while (ret >= 0) {
+            ret = avcodec_receive_frame(audioDecoderContext, audioFrame);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                break;
+            } else if (ret < 0) {
+                // Error handling
+                cout << "Error receiving audio frame from decoder: " << ret << endl;
+                exit(1);
+            }
+
+            addAudioFrame(audioFrame);
+        }
+
+        av_frame_free(&audioFrame);
+        avcodec_free_context(&audioDecoderContext);
+        avformat_close_input(&inputFormatContext);
+    }
+
+    bool encode_and_write_frame(AVFrame* frame){
+        int got_output = 0;
+        avcodec_encode_video2(c, &pkt, frame, &got_output);
+        if (!got_output) return false;
+
+        // We set the packet PTS and DTS taking in the account our FPS (second argument),
+        // and the time base that our selected format uses (third argument).
+        av_packet_rescale_ts(&pkt, { 1, framerate }, stream->time_base);
+
+        pkt.stream_index = stream->index;
+        cout << "Writing frame " << outframe++ << " (size = " << pkt.size << ")" << endl;
+
+        // Write the encoded frame to the mp4 file.
+        av_interleaved_write_frame(fc, &pkt);
+        av_packet_unref(&pkt);
+
+        return true;
+    }
+
+    void addFrame(const Pixels& p)
     {
+        cout << "Encoding frame " << inframe++ << ". ";
+        const uint8_t* pixels = &p.pixels[0];
+
         // The AVFrame data will be stored as RGBRGBRGB... row-wise,
         // from left to right and from top to bottom.
         for (unsigned int y = 0; y < height; y++)
@@ -140,8 +270,7 @@ public :
 
         // Not actually scaling anything, but just converting
         // the RGB data to YUV and store it in yuvpic.
-        sws_scale(swsCtx, rgbpic->data, rgbpic->linesize, 0,
-            height, yuvpic->data, yuvpic->linesize);
+        sws_scale(sws_ctx, rgbpic->data, rgbpic->linesize, 0, height, yuvpic->data, yuvpic->linesize);
 
         av_init_packet(&pkt);
         pkt.data = NULL;
@@ -150,58 +279,28 @@ public :
         // The PTS of the frame are just in a reference unit,
         // unrelated to the format we are using. We set them,
         // for instance, as the corresponding frame number.
-        yuvpic->pts = iframe;
+        yuvpic->pts = outframe;
 
-        int got_output;
-        int ret = avcodec_encode_video2(c, &pkt, yuvpic, &got_output);
-        if (got_output)
-        {
-            fflush(stdout);
-
-            // We set the packet PTS and DTS taking in the account our FPS (second argument),
-            // and the time base that our selected format uses (third argument).
-            av_packet_rescale_ts(&pkt, (AVRational){ 1, framerate }, stream->time_base);
-
-            pkt.stream_index = stream->index;
-            cout << "Writing frame " << iframe++ << " (size = " << pkt.size << ")" << endl;
-
-            // Write the encoded frame to the mp4 file.
-            av_interleaved_write_frame(fc, &pkt);
-            av_packet_unref(&pkt);
-        }
+        if(!encode_and_write_frame(yuvpic)) cout << endl;
     }
 
     ~MovieWriter()
     {
-        // Writing the delayed frames:
-        for (int got_output = 1; got_output; )
-        {
-            int ret = avcodec_encode_video2(c, &pkt, NULL, &got_output);
-            if (got_output)
-            {
-                fflush(stdout);
-                av_packet_rescale_ts(&pkt, (AVRational){ 1, framerate }, stream->time_base);
-                pkt.stream_index = stream->index;
-                cout << "Writing frame " << iframe++ << " (size = " << pkt.size << ")" << endl;
-                av_interleaved_write_frame(fc, &pkt);
-                av_packet_unref(&pkt);
-            }
-        }
+        // Writing the delayed frames
+        while(encode_and_write_frame(NULL));
         
         // Writing the end of the file.
         av_write_trailer(fc);
 
         // Closing the file.
-        if (!(fmt->flags & AVFMT_NOFILE))
-            avio_closep(&fc->pb);
-        avcodec_close(stream->codec);
+        avio_closep(&fc->pb);
+        avcodec_close(stream->codecpar);
 
         // Freeing all the allocated memory:
-        sws_freeContext(swsCtx);
+        sws_freeContext(sws_ctx);
         av_frame_free(&rgbpic);
         av_frame_free(&yuvpic);
-        avformat_free_context(fc);
 
-        cairo_surface_destroy(cairo_surface);
+        avformat_free_context(fc);
     }
 };

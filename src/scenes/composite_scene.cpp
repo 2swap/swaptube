@@ -34,7 +34,7 @@ Pixels CompositeScene::query(int& frames_left) {
         int this_scene_frames_left = 0;
         Pixels p = swc.first->query(this_scene_frames_left);
         frames_left = max(this_scene_frames_left, frames_left);
-        pix.copy(p, swc.second.first, swc.second.second, 1, 1);
+        pix.copy(p, swc.second.first, swc.second.second, 1);
     }
     time++;
     return pix;
