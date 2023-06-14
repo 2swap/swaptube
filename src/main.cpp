@@ -58,9 +58,9 @@ int main(int argc, char* argv[]) {
     string name = "../out/" + config["name"].get<string>();
 
     // Create the MovieWriter object
-    MovieWriter writer(name, width, height, framerate);
+    MovieWriter writer(name, width, height, framerate, "/home/swap/CS/moviemaker-cpp/input/testaudio.mp3");
 
-    //writer.add_audio();//"/home/swap/CS/moviemaker-cpp/input/a.mp3");
+    writer.add_audio();
 
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
