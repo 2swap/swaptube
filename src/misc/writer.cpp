@@ -113,7 +113,6 @@ public:
         // Once the codec is set up, we need to let the container know
         // which codec are the streams using, in this case the only (video) stream.
         videoStream->time_base = { 1, framerate };
-        audioStream->time_base = { 1, framerate };
         av_dump_format(fc, 0, output_filename.c_str(), 1);
         avio_open(&fc->pb, output_filename.c_str(), AVIO_FLAG_WRITE);
         avformat_write_header(fc, &opt);
@@ -166,6 +165,7 @@ public:
                     // Encode the audio frame
                     frame->pts = audframe;
                     audframe++;
+                    avcodec_send_frame(audioOutputCodecContext, frame);
 
                     while (ret >= 0) {
                         ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
