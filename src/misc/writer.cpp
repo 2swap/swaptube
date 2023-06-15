@@ -19,6 +19,8 @@ class MovieWriter
     int framerate;
     int audioStreamIndex;
 
+    string output_filename;
+
     SwsContext* sws_ctx;
     AVStream* videoStream;
     AVStream* audioStream;
@@ -26,20 +28,24 @@ class MovieWriter
     AVCodecContext* videoCodecContext;
     AVCodecContext* audioInputCodecContext;
     AVCodecContext* audioOutputCodecContext;
-    AVPacket pkt;
-    AVFormatContext* inputAudioFormatContext;
+    AVPacket pkt, inputPacket, outputPacket;
 
     AVFrame *rgbpic;
     AVFrame *yuvpic;
 
 public:
 
-    MovieWriter(const std::string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_, const string& inputAudioFilename) :
+    MovieWriter(const std::string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_) :
         
-    width(width_), height(height_), inframe(0), outframe(0), audframe(0), framerate(framerate_),
-    sws_ctx(nullptr), videoStream(nullptr), audioStream(nullptr), fc(nullptr), videoCodecContext(nullptr), rgbpic(nullptr), yuvpic(nullptr), pkt(), inputAudioFormatContext(nullptr)
+    width(width_), height(height_), inframe(0), outframe(0), audframe(0), framerate(framerate_), output_filename(filename_),
+    sws_ctx(nullptr), videoStream(nullptr), audioStream(nullptr), fc(nullptr), videoCodecContext(nullptr), rgbpic(nullptr), yuvpic(nullptr),
+    pkt(), inputPacket(), outputPacket()
 
     {
+    }
+
+    void init(const string& inputAudioFilename){
+        AVFormatContext* inputAudioFormatContext = nullptr;
         avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
 
         // Find input audio stream information
@@ -55,6 +61,7 @@ public:
                 break;
             }
         }
+
         // INPUT
         AVCodec* audioInputCodec = avcodec_find_decoder(codecParams->codec_id);
         audioInputCodecContext = avcodec_alloc_context3(audioInputCodec);
@@ -67,8 +74,7 @@ public:
 
         // Preparing the data concerning the format and codec,
         // in order to write properly the header, frame data and end of file.
-        const string filename = filename_ + ".mp4";
-        avformat_alloc_output_context2(&fc, NULL, NULL, filename.c_str());
+        avformat_alloc_output_context2(&fc, NULL, NULL, output_filename.c_str());
 
         // Setting up the codec.
         AVCodec* codec = avcodec_find_encoder_by_name("libx264");
@@ -108,8 +114,8 @@ public:
         // which codec are the streams using, in this case the only (video) stream.
         videoStream->time_base = { 1, framerate };
         audioStream->time_base = { 1, framerate };
-        av_dump_format(fc, 0, filename.c_str(), 1);
-        avio_open(&fc->pb, filename.c_str(), AVIO_FLAG_WRITE);
+        av_dump_format(fc, 0, output_filename.c_str(), 1);
+        avio_open(&fc->pb, output_filename.c_str(), AVIO_FLAG_WRITE);
         avformat_write_header(fc, &opt);
         av_dict_free(&opt);
 
@@ -125,86 +131,66 @@ public:
 
         av_init_packet(&pkt);
 
+        // Initialize input and output packets
+        AVPacket inputPacket;
+        av_init_packet(&inputPacket);
+
+        AVPacket outputPacket;
+        av_init_packet(&outputPacket);
+
         avcodec_register_all();
+        
+        avformat_close_input(&inputAudioFormatContext);
     }
 
 
-void add_audio() {
-    std::cout << "Adding audio" << std::endl;
+    void add_audio(const string& inputAudioFilename) {
+        cout << "Adding audio" << endl;
 
-    // Initialize input and output packets
-    AVPacket inputPacket;
-    av_init_packet(&inputPacket);
+        AVFormatContext* inputAudioFormatContext = nullptr;
+        avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
 
-    AVPacket outputPacket;
-    av_init_packet(&outputPacket);
-    
-    int pts = 0;
-
-    // Read input audio frames and write to output format context
-    while (av_read_frame(inputAudioFormatContext, &inputPacket) >= 0) {
-        if (inputPacket.stream_index == audioStreamIndex) {
-            AVFrame* frame = av_frame_alloc();
-            int ret = avcodec_send_packet(audioInputCodecContext, &inputPacket);
-
-            while (ret >= 0) {
-                ret = avcodec_receive_frame(audioInputCodecContext, frame);
-                if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                    cout << ret << " " << AVERROR(EAGAIN) << " " << AVERROR_EOF << endl;
-                    break;
-                }
-
-                // Encode the audio frame
-                frame->pts = pts;
-                pts++;
-                avcodec_send_frame(audioOutputCodecContext, frame);
+        // Read input audio frames and write to output format context
+        while (av_read_frame(inputAudioFormatContext, &inputPacket) >= 0) {
+            if (inputPacket.stream_index == audioStreamIndex) {
+                AVFrame* frame = av_frame_alloc();
+                int ret = avcodec_send_packet(audioInputCodecContext, &inputPacket);
 
                 while (ret >= 0) {
-                    ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
+                    ret = avcodec_receive_frame(audioInputCodecContext, frame);
                     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                        cout << ret << " " << AVERROR(EAGAIN) << " " << AVERROR_EOF << endl;
                         break;
                     }
 
-                    // Set the stream index of the output packet to the audio stream index
-                    outputPacket.stream_index = audioStream->index;
+                    // Encode the audio frame
+                    frame->pts = audframe;
+                    audframe++;
 
-                    // Write the output packet to the output format context
-                    ret = av_write_frame(fc, &outputPacket);
+                    while (ret >= 0) {
+                        ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
+                        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                            break;
+                        }
 
-                    av_packet_unref(&outputPacket);
+                        // Set the stream index of the output packet to the audio stream index
+                        outputPacket.stream_index = audioStream->index;
+
+                        // Write the output packet to the output format context
+                        ret = av_write_frame(fc, &outputPacket);
+
+                        av_packet_unref(&outputPacket);
+                    }
                 }
+                av_frame_unref(frame);
+                av_frame_free(&frame);
             }
-            av_frame_unref(frame);
-            av_frame_free(&frame);
-        }
-        av_packet_unref(&inputPacket);
-    }
-
-    // Encode any remaining audio frames in the buffer
-    avcodec_send_frame(audioOutputCodecContext, NULL);
-
-    int ret = 0;
-    while (ret >= 0) {
-        ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
-        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-            break;
         }
 
-        // Set the stream index of the output packet to the audio stream index
-        outputPacket.stream_index = audioStream->index;
+        avformat_close_input(&inputAudioFormatContext);
 
-        // Write the output packet to the output format context
-        ret = av_write_frame(fc, &outputPacket);
-
-        av_packet_unref(&outputPacket);
+        std::cout << "Audio added successfully" << std::endl;
     }
-
-    // Clean up resources
-    avformat_close_input(&inputAudioFormatContext);
-
-    std::cout << "Audio added successfully" << std::endl;
-}
-
 
     bool encode_and_write_frame(AVFrame* frame){
         int got_output = 0;
@@ -256,7 +242,28 @@ void add_audio() {
 
     ~MovieWriter()
     {
-        // Writing the delayed frames
+
+
+        // write delayed audio frames
+        avcodec_send_frame(audioOutputCodecContext, NULL);
+        int ret = 0;
+        while (ret >= 0) {
+            ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
+            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+                break;
+            }
+
+            // Set the stream index of the output packet to the audio stream index
+            outputPacket.stream_index = audioStream->index;
+
+            // Write the output packet to the output format context
+            ret = av_write_frame(fc, &outputPacket);
+
+            av_packet_unref(&outputPacket);
+        }
+
+
+        // Writing the delayed video frames
         while(encode_and_write_frame(NULL));
         
         // Writing the end of the file.
@@ -280,6 +287,7 @@ void add_audio() {
         avcodec_free_context(&audioOutputCodecContext);
         avcodec_free_context(&audioInputCodecContext);
 
+        av_packet_unref(&inputPacket);
         av_packet_unref(&pkt);
     }
 };

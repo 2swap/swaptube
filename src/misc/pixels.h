@@ -219,7 +219,7 @@ Pixels svg_to_pix(const string& svg, int scale_factor) {
 
 Pixels eqn_to_pix(const string& eqn, int scale_factor){
     hash<string> hasher;
-    string name = "/home/swap/CS/moviemaker-cpp/out/latex/" + to_string(hasher(eqn)) + ".svg";
+    string name = "/home/swap/CS/swaptube/out/latex/" + to_string(hasher(eqn)) + ".svg";
 
     if (access(name.c_str(), F_OK) != -1) {
         // File already exists, no need to generate LaTeX
