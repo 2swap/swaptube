@@ -42,25 +42,25 @@ int main(int argc, char* argv[]) {
     run_c4_unit_tests();
 
     if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " <config_file>" << endl;
+        cerr << "Usage: " << argv[0] << " <config_file_without_.json>" << endl;
         return 1;
     }
 
-    string json_filename = argv[1];
-
-    json video = parse_json(json_filename);
+    json video = parse_json("../in/" + string(argv[1]) + ".json");
 
     // Extract overall information from the config
     json config = video["config"];
     int width = config["width"];
     int height = config["height"];
     int framerate = config["framerate"];
-    string name = "../out/" + config["name"].get<string>();
+    string name = "../out/" + string(argv[1]) + ".mp4";
 
     // Create the MovieWriter object
-    MovieWriter writer(name, width, height, framerate, "/home/swap/CS/moviemaker-cpp/input/testaudio.mp3");
+    MovieWriter writer(name, width, height, framerate);
 
-    writer.add_audio();
+    writer.init("/home/swap/CS/swaptube/media/testaudio.mp3");
+    writer.add_audio("/home/swap/CS/swaptube/media/testaudio.mp3");
+    writer.add_audio("/home/swap/CS/swaptube/media/testaudio.mp3");
 
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {

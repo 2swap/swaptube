@@ -1,0 +1,24 @@
+{
+  "config": {
+    "width": 1920,
+    "height": 1080,
+    "framerate": 30
+  },
+  "scenes": [
+    {
+      "type": "latex",
+      "blurbs": [
+        {
+          "latex": "\\text{むかし、むかし、あるところに浦島太郎}",
+          "duration_seconds":1,
+          "transition_seconds":1
+        },
+        {
+          "latex": "\\text{Thanks for watching!}",
+          "duration_seconds":1,
+          "transition_seconds":1
+        }
+      ]
+    }
+  ]
+}

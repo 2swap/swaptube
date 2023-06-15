@@ -6,7 +6,7 @@ mkdir -p out
 
 # Check if the number of arguments is less than expected
 if [ $# -lt 1 ]; then
-    echo "Example Usage: $0 test_mandelbrot.json"
+    echo "Example Usage: $0 test_mandelbrot"
     exit 1
 fi
 
@@ -28,15 +28,10 @@ make -j12
 # Check if the build was successful
 if [ $? -eq 0 ]; then
   # Run the program
-  ./swaptube ../input/$1
+  ./swaptube $1
 else
   echo "Build failed. Please check the build errors."
 fi
 
 cd ..
 
-# add audio
-# ffmpeg -i out/test.mp4 -i out/c4.mp3 -map 0:v -map 1:a -c:v copy out/output.mp4
-
-# watch the result!
-# vlc out/output.mp4
