@@ -9,7 +9,7 @@
 #include "misc/pixels.h"
 #include "misc/convolver.cpp"
 #include "misc/convolution_tests.cpp"
-#include "misc/writer.cpp" // moviemaker-cpp video writer
+#include "audio_video/writer.cpp"
 #include "scenes/scene.cpp"
 
 using json = nlohmann::json;
@@ -59,10 +59,10 @@ int main(int argc, char* argv[]) {
     MovieWriter writer(name, width, height, framerate);
 
     writer.init("../media/testaudio.mp3");
-    writer.add_audio("../media/testaudio.mp3");
-    writer.add_audio("../media/testaudio.mp3");
-    writer.add_silence(2);
-    writer.add_audio("../media/testaudio.mp3");
+    //writer.add_audio("../media/testaudio.mp3");
+    //writer.add_audio("../media/testaudio.mp3");
+    //writer.add_silence(2);
+    //writer.add_audio("../media/testaudio.mp3");
 
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {

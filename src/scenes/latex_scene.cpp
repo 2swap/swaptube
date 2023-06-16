@@ -29,7 +29,7 @@ LatexScene::LatexScene(const json& config, const json& contents) : Scene(config,
         json blurb = blurbs[blurb_index];
         string eqn = blurb["latex"].get<string>();
         cout << "rendering latex: " << eqn << endl;
-        Pixels p = eqn_to_pix(eqn, 2);
+        Pixels p = eqn_to_pix(eqn, 3);
         equations.push_back(p);
         coords.push_back(make_pair((pix.w-p.w)/2, (pix.h-p.h)/2));
     }
