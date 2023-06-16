@@ -29,22 +29,15 @@ LatexScene::LatexScene(const json& config, const json& contents) : Scene(config,
         json blurb = blurbs[blurb_index];
         string eqn = blurb["latex"].get<string>();
         cout << "rendering latex: " << eqn << endl;
-        equations.push_back(eqn_to_pix(eqn, 3));
+        Pixels p = eqn_to_pix(eqn, 2);
+        equations.push_back(p);
+        coords.push_back(make_pair((pix.w-p.w)/2, (pix.h-p.h)/2));
     }
-
-    int x = (pix.w-equations[0].w)/2;
-    int y = (pix.h-equations[0].h)/2;
-    coords.push_back(make_pair(x, y));
 
     // Frontload convolution
     for (int i = 0; i < equations.size()-1; i++) {
-        cout << blurbs[i]["latex"] << " <- CONVOLVING -> " << blurbs[i+1]["latex"] << endl;
+        cout << blurbs[i]["latex"] << " <- Finding Intersections -> " << blurbs[i+1]["latex"] << endl;
         intersections.push_back(find_intersections(equations[i], equations[i+1]));
-        int max_x = 0, max_y = 0;
-        convolutions.push_back(convolve_map(equations[i], equations[i+1], max_x, max_y));
-        x += max_x;
-        y += max_y;
-        coords.push_back(make_pair(x, y));
     }
 }
 

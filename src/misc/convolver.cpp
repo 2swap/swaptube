@@ -18,6 +18,24 @@ int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
     return sum*jump*jump/4.;
 }
 
+void shrink_alpha_from_center(Pixels& p) {
+    int centerX = p.w / 2;
+    int centerY = p.h / 2;
+
+    for (int y = 0; y < p.h; y++) {
+        for (int x = 0; x < p.w; x++) {
+            int distanceX = centerX - x;
+            int distanceY = centerY - y;
+            double distance = sqrt(distanceX * distanceX + distanceY * distanceY);
+
+            int alpha = p.get_alpha(x, y);
+            int shrunkAlpha = static_cast<int>(alpha * (1.0 - distance / std::max(centerX, centerY)));
+
+            p.set_alpha(x, y, shrunkAlpha);
+        }
+    }
+}
+
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     int max_conv = 0;
     Pixels ret(p1.w+p2.w, p1.h+p2.h);
@@ -396,7 +414,8 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
     Pixels current_p1 = p1;
     Pixels current_p2 = p2;
 
-    for (int i = 0; i < 4; i++) {
+    bool intersection_nonempty = 1;
+    while (intersection_nonempty) {
         int max_x = 0;
         int max_y = 0;
 
@@ -404,7 +423,9 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         Pixels cm = convolve_map(current_p1, current_p2, max_x, max_y);
 
         // Intersect the two Pixels objects based on the maximum convolution
-        Pixels intersection = erase_small_components(intersect(current_p1, current_p2, max_x, max_y), 100);
+        Pixels intersection = erase_small_components(intersect(current_p1, current_p2, max_x, max_y), 80);
+
+        intersection_nonempty = !intersection.is_empty();
 
         Pixels induced1 = induce(current_p1, intersection, 0, 0);
         Pixels induced2 = induce(current_p2, intersection, -max_x, -max_y);

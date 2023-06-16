@@ -58,9 +58,11 @@ int main(int argc, char* argv[]) {
     // Create the MovieWriter object
     MovieWriter writer(name, width, height, framerate);
 
-    writer.init("/home/swap/CS/swaptube/media/testaudio.mp3");
-    writer.add_audio("/home/swap/CS/swaptube/media/testaudio.mp3");
-    writer.add_audio("/home/swap/CS/swaptube/media/testaudio.mp3");
+    writer.init("../media/testaudio.mp3");
+    writer.add_audio("../media/testaudio.mp3");
+    writer.add_audio("../media/testaudio.mp3");
+    writer.add_silence(2);
+    writer.add_audio("../media/testaudio.mp3");
 
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
