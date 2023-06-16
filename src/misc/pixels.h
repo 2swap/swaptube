@@ -40,6 +40,11 @@ public:
         pixels[spot+3] = geta(col);
     }
 
+    inline int set_alpha(int x, int y, int a) {
+        if(x < 0 || x >= w || y < 0 || y >= h || a < 0 || a > 255) return 0;
+        pixels[4*(w*y+x)+3] = a;
+    }
+
     inline void set_pixel_with_transparency(int x, int y, int col) {
         if(x < 0 || x >= w || y < 0 || y >= h) return;
         // this could go in a loop but unrolled for speeeeed
@@ -55,6 +60,18 @@ public:
     inline void print_dimensions(){
         cout << "w: " << w << ", h: " << h << endl;
     }
+
+    bool is_empty() const {
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                if (get_alpha(x, y) != 0) {
+                    return false; // Found a pixel with non-zero alpha, so the Pixels is not empty
+                }
+            }
+        }
+        return true; // No pixel with non-zero alpha found, Pixels is empty
+    }
+
 
     void add_border(){
         for(int x = 0; x < w; x++){
