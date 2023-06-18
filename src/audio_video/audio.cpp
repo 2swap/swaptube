@@ -1,8 +1,10 @@
-void MovieWriter::add_audio(const string& inputAudioFilename) {
+double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
     cout << "Adding audio" << endl;
 
     AVFormatContext* inputAudioFormatContext = nullptr;
-    avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
+    avformat_open_input(&inputAudioFormatContext, (media_folder+inputAudioFilename).c_str(), nullptr, nullptr);
+
+    double length_in_seconds = 0;
 
     // Read input audio frames and write to output format context
     while (av_read_frame(inputAudioFormatContext, &inputPacket) >= 0) {
@@ -13,18 +15,18 @@ void MovieWriter::add_audio(const string& inputAudioFilename) {
             while (ret >= 0) {
                 ret = avcodec_receive_frame(audioInputCodecContext, frame);
                 if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                    cout << ret << " " << AVERROR(EAGAIN) << " " << AVERROR_EOF << endl;
                     break;
                 }
 
+                // Calculate the duration of the audio frame
+                length_in_seconds += (double)frame->nb_samples / audioInputCodecContext->sample_rate;
+
                 // Encode the audio frame
-                cout << "Frame " << audframe << endl;
                 frame->pts = audframe;
                 audframe++;
                 avcodec_send_frame(audioOutputCodecContext, frame);
 
                 while (ret >= 0) {
-                    cout << err2str(ret) << endl;
                     ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
                     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                         break;
@@ -50,8 +52,11 @@ void MovieWriter::add_audio(const string& inputAudioFilename) {
 
     avformat_close_input(&inputAudioFormatContext);
 
-    cout << "Audio added successfully" << endl;
+    cout << "Audio added successfully, length " << length_in_seconds << endl;
+
+    return length_in_seconds;
 }
+
 
 void MovieWriter::add_silence(double duration) {
     cout << "Adding silence: " << duration << " seconds" << endl;

@@ -9,14 +9,24 @@
       "type": "latex",
       "blurbs": [
         {
+          "transition": true,
+          "audio":"testaudio.mp3"
+        },
+        {
           "latex": "\\text{むかし、むかし、あるところに浦島太郎}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "audio":"testaudio.mp3"
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{Thanks for watching!}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "audio":"testaudio.mp3"
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         }
       ]
     }

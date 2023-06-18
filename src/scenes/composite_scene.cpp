@@ -8,22 +8,22 @@ typedef pair<Scene*, pair<int, int>> scene_with_coords;
 
 class CompositeScene : public Scene {
 public:
-    CompositeScene(const json& config, const json& contents);
+    CompositeScene(const json& config, const json& contents, MovieWriter& writer);
     Pixels query(int& frames_left) override;
-    Scene* createScene(const json& config, const json& scene) override {
-        return new CompositeScene(config, scene);
+    Scene* createScene(const json& config, const json& scene, MovieWriter& writer) override {
+        return new CompositeScene(config, scene, writer);
     }
 
 private:
     vector<scene_with_coords> scenes;
 };
 
-CompositeScene::CompositeScene(const json& config, const json& contents) : Scene(config, contents) {
+CompositeScene::CompositeScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents) {
     for (auto& j : contents["subscenes"]) {
         json config_new_resolution = config;
         config_new_resolution["width"] = j["width"];
         config_new_resolution["height"] = j["height"];
-        scene_with_coords s = make_pair(create_scene_determine_type(config_new_resolution, j["subscene"]), make_pair(j["x"], j["y"]));
+        scene_with_coords s = make_pair(create_scene_determine_type(config_new_resolution, j["subscene"], writer), make_pair(j["x"], j["y"]));
         scenes.push_back(s);
     }
 }
