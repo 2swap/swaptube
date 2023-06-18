@@ -6,7 +6,7 @@ using json = nlohmann::json;
 
 inline int C4_RED         = 0xff880000;
 inline int C4_YELLOW      = 0xff888800;
-inline int C4_EMPTY       = 0xff115599;
+inline int C4_EMPTY       = 0xff004488;
 
 class C4Scene : public Scene {
 public:

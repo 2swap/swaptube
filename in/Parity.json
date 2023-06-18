@@ -14,7 +14,7 @@
         },
         {
           "representation": "444556566",
-          "name": "The 7",
+          "name": "",
           "annotations": "                    R      R              "
         },
         {
@@ -30,7 +30,7 @@
         },
         {
           "representation": "4444443555552",
-          "name": "The Narrow 6-1",
+          "name": "",
           "annotations": "                              R    R      "
         },
         {
@@ -97,7 +97,7 @@
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}\\end{array}"
         },
         {
           "transition":true
@@ -109,7 +109,7 @@
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}\\end{array}"
         },
         {
           "transition":true
@@ -121,13 +121,13 @@
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\hline\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\hline\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\hline\\textcolor{#888800}{36}&\\textcolor{#880000}{37}&\\textcolor{#888800}{38}&\\textcolor{#880000}{39}&\\textcolor{#888800}{40}&\\textcolor{#880000}{41}&\\textcolor{#888800}{42}&\\textcolor{#ffffff}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\hline\\textcolor{#888800}{36}&\\textcolor{#880000}{37}&\\textcolor{#888800}{38}&\\textcolor{#880000}{39}&\\textcolor{#888800}{40}&\\textcolor{#880000}{41}&\\textcolor{#888800}{42}\\end{array}"
         },
         {
           "transition":true
@@ -153,10 +153,10 @@
           "duration_seconds":2
         },
         {
-          "representation": "23333212223355555251111166676677777444444",
+          "representation": "233332122233555552511111666766777776444444",
           "name": "",
           "annotations": "123B56712345671234567123456712345671234567",
-          "audio": "5.mp3"
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -173,10 +173,20 @@
           "duration_seconds":2
         },
         {
-          "representation": "23333221213655555532277777116666761144",
+          "representation": "2333322121365555553227777711666674461144",
           "name": "",
-          "annotations": "",
-          "audio": "7.mp3"
+          "annotations": "123R5671234567123B567123456712345671234567",
+          "audio": "6_2.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "2333322121365555553227777711666674461144",
+          "name": "",
+          "annotations": "123R5671234567123B567123456712345671234567",
+          "audio": "5.mp3"
         },
         {
           "transition":true,
@@ -185,18 +195,8 @@
         {
           "representation": "444441355553333711114553",
           "name": "",
-          "annotations": "",
-          "audio": "8.mp3"
-        },
-        {
-          "transition":true,
-          "duration_seconds":2
-        },
-        {
-          "representation": "444343554437373357775755",
-          "name": "",
-          "annotations": "",
-          "audio": "9.mp3"
+          "annotations": "123456712345671234567123456712345Y71234567",
+          "audio": "7.mp3"
         },
         {
           "transition":true,
@@ -206,7 +206,177 @@
           "representation": "444441355553333711114553177777222222",
           "name": "",
           "annotations": "123456712345671234567123456712345Y71234567",
+          "duration_seconds":2
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444343554437373357775755",
+          "name": "",
+          "annotations": "1B345B71R345R71R345R71R345R71B345B71234567",
+          "audio": "8.mp3"
+        },
+        {
+          "transition":true,
+          "audio": "9.mp3"
+        },
+        {
+          "representation": "444445555751245666667672771733313233",
+          "name": "",
+          "annotations": "12345671R345671234567123456712345671234567",
           "audio": "10.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": "yyyyyyyrrrrrrryyyyyyyrrrrrrryyyyyyyrrrrrrr",
+          "audio": "11.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444442222267233333367467766776",
+          "name": "",
+          "annotations": "12345671234Y671234R671234Y671234R671234567",
+          "audio": "12.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444442222267233333367467766776111111555555",
+          "name": "",
+          "annotations": "12345671234Y671234R671234Y671234R671234567",
+          "duration_seconds":2
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "4444433336666641561115151777755",
+          "name": "",
+          "annotations": "12345671R3456712345671R345671Y345671234567",
+          "audio": "13.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "4444433336666641561115151777755",
+          "name": "",
+          "annotations": "12345671R3456712345671R345671Y345671234567",
+          "audio": "14.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444443333666664156111515177775553377",
+          "name": "",
+          "annotations": "12345671R3456712345671R345671Y345671234567",
+          "audio": "15.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444443333666664156111515177775553377",
+          "name": "",
+          "annotations": "1234567123456712345671R345671Y345671234567",
+          "audio": "16.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": "",
+          "audio": "17.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "4444422226666624623373",
+          "name": "",
+          "annotations": "123456712345671234567123456712345671234567",
+          "audio": "18.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "44444222266666246233733",
+          "name": "",
+          "annotations": "R2345671234567123456712345671234R671234567",
+          "audio": "19.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444442222666662462337333",
+          "name": "",
+          "annotations": "R2345671234567123456712345671234R671234567",
+          "audio": "20.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "4444422226666624623373",
+          "name": "",
+          "annotations": "1234567123456712045671234567123456++234+67",
+          "audio": "21.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "44444222266666246233737777711111133",
+          "name": "",
+          "annotations": "12345671234R671234567123456712345671234567",
+          "audio": "22.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444442222666662462337333",
+          "name": "",
+          "annotations": "R2y4y67123456712345671234Y671234R671234567",
+          "audio": "23.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "4444422226666624623373333",
+          "name": "",
+          "annotations": "123456712345671234567123456712345671234567",
+          "audio": "24.mp3"
         },
         {
           "transition":true,

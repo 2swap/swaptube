@@ -12,6 +12,14 @@ public:
 };
 
 TwoswapScene::TwoswapScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents) {
+    if(contents.find("audio") != contents.end())
+        scene_duration_frames = writer.add_audio_get_length(contents["audio"].get<string>());
+    else{
+        scene_duration_frames = contents["duration_seconds"].get<int>();
+        writer.add_silence(scene_duration_frames/10.);
+    }
+    scene_duration_frames *= framerate;
+
     Pixels twoswap_pix = eqn_to_pix(latex_text("2swap"), pix.w/160);
 
     pix.fill(BLACK);
