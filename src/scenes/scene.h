@@ -5,7 +5,7 @@ using json = nlohmann::json;
 class Scene {
 public:
     Scene(const json& config, const json& contents);
-    virtual Scene* createScene(const json& config, const json& contents) = 0;
+    virtual Scene* createScene(const json& config, const json& contents, MovieWriter& writer) = 0;
     virtual Pixels query(int& frames_left) = 0;
   
 protected:
@@ -16,4 +16,4 @@ protected:
     int scene_duration_frames = 0;
 };
 
-static Scene* create_scene_determine_type(const json& config, const json& scene_json);
+static Scene* create_scene_determine_type(const json& config, const json& scene_json, MovieWriter& writer);

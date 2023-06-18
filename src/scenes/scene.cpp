@@ -11,26 +11,26 @@ Scene::Scene(const json& config, const json& c) : contents(c), framerate(config[
         scene_duration_frames = contents["duration_seconds"].get<int>() * framerate;
 }
 
-static Scene* create_scene_determine_type(const json& config, const json& scene_json) {
+static Scene* create_scene_determine_type(const json& config, const json& scene_json, MovieWriter& writer) {
     string scene_type = scene_json["type"];
     cout << endl << "Creating a " << scene_type << " scene" << endl;
     if (scene_type == "latex") {
-        return new LatexScene(config, scene_json);
+        return new LatexScene(config, scene_json, writer);
     }
     else if (scene_type == "c4") {
-        return new C4Scene(config, scene_json);
+        return new C4Scene(config, scene_json, writer);
     }
     else if (scene_type == "mandelbrot") {
-        return new MandelbrotScene(config, scene_json);
+        return new MandelbrotScene(config, scene_json, writer);
     }
     else if (scene_type == "header") {
-        return new HeaderScene(config, scene_json);
+        return new HeaderScene(config, scene_json, writer);
     }
     else if (scene_type == "2swap") {
-        return new TwoswapScene(config, scene_json);
+        return new TwoswapScene(config, scene_json, writer);
     }
     else if (scene_type == "composite") {
-        return new CompositeScene(config, scene_json);
+        return new CompositeScene(config, scene_json, writer);
     }
     else {
         cerr << "Unknown scene type: " << scene_type << endl;

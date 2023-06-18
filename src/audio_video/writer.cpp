@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <filesystem>
 extern "C"
 {
     #include <libswscale/swscale.h>
@@ -28,6 +29,7 @@ class MovieWriter
     int audioStreamIndex;
 
     string output_filename;
+    string media_folder;
 
     SwsContext* sws_ctx;
     AVStream* videoStream;
@@ -43,23 +45,39 @@ class MovieWriter
 
 public:
 
-    MovieWriter(const std::string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_) :
+    void make_media_folder() {
+        // Check if the folder already exists
+        if (filesystem::exists(media_folder)) {
+            cout << "Media folder already exists, not creating." << endl;
+        } else {
+            // Create the folder
+            if (filesystem::create_directory(media_folder)) {
+                cout << "Media folder created successfully." << endl;
+            } else {
+                cout << "Failed to create media folder." << endl;
+            }
+        }
+    }
+
+    MovieWriter(const string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_, const string& media_) :
         
     width(width_), height(height_), inframe(0), outframe(0), audframe(0), audiopts(0), audiodts(0), framerate(framerate_), output_filename(filename_),
     sws_ctx(nullptr), videoStream(nullptr), audioStream(nullptr), fc(nullptr), videoCodecContext(nullptr), rgbpic(nullptr), yuvpic(nullptr),
-    pkt(), inputPacket(), outputPacket()
+    pkt(), inputPacket(), outputPacket(), media_folder(media_)
 
     {
+        make_media_folder();
     }
 
-    void add_audio(const string& inputAudioFilename);
+    double add_audio_get_length(const string& inputAudioFilename);
     void add_silence(double duration);
     bool encode_and_write_frame(AVFrame* frame);
     void addFrame(const Pixels& p);
 
     void init(const string& inputAudioFilename){
         AVFormatContext* inputAudioFormatContext = nullptr;
-        avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
+        avformat_open_input(&inputAudioFormatContext, (media_folder+inputAudioFilename).c_str(), nullptr, nullptr);
+        cout << "Initializing writer with codec from " << (media_folder+inputAudioFilename) << endl;
 
         // Find input audio stream information
         avformat_find_stream_info(inputAudioFormatContext, nullptr);

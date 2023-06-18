@@ -55,18 +55,20 @@ int main(int argc, char* argv[]) {
     int framerate = config["framerate"];
     string name = "../out/" + string(argv[1]) + ".mp4";
 
-    // Create the MovieWriter object
-    MovieWriter writer(name, width, height, framerate);
+    cout << "Project name: " << name << endl;
 
-    writer.init("../media/testaudio.mp3");
-    //writer.add_audio("../media/testaudio.mp3");
-    //writer.add_audio("../media/testaudio.mp3");
-    //writer.add_silence(2);
-    //writer.add_audio("../media/testaudio.mp3");
+    // Create the MovieWriter object
+    MovieWriter writer(name, width, height, framerate, "../media/" + string(argv[1]) + "/");
+
+    cout << "Initializing Writer" << endl;
+
+    writer.init("testaudio.mp3");
+
+    cout << "Beginning Render" << endl;
 
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
-        Scene* scene = create_scene_determine_type(config, scene_json);
+        Scene* scene = create_scene_determine_type(config, scene_json, writer);
         if (scene != nullptr) {
             int frames_left = -1;
             while (frames_left != 0) {
@@ -80,15 +82,7 @@ int main(int argc, char* argv[]) {
             // clean up the dynamically allocated scene object
             delete scene;
         }
-
     }
-
-    /* Consider removing this block after audio is implemented.
-    //One last black frame at the end, else adding more audio afterwards leaves an afterimage.
-    Pixels pix(width, height);
-    pix.fill(0);
-    writer.addFrame(pix);
-    */
 
     return 0;
 }

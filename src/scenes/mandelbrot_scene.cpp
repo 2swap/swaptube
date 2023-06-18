@@ -6,17 +6,17 @@ using json = nlohmann::json;
 
 class MandelbrotScene : public Scene {
 public:
-    MandelbrotScene(const json& config, const json& contents);
+    MandelbrotScene(const json& config, const json& contents, MovieWriter& writer);
     Pixels query(int& frames_left) override;
-    Scene* createScene(const json& config, const json& scene) override {
-        return new MandelbrotScene(config, scene);
+    Scene* createScene(const json& config, const json& scene, MovieWriter& writer) override {
+        return new MandelbrotScene(config, scene, writer);
     }
 
 private:
     MandelbrotRenderer mr;
 };
 
-MandelbrotScene::MandelbrotScene(const json& config, const json& contents) : Scene(config, contents) {
+MandelbrotScene::MandelbrotScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents) {
     Complex center(contents["center"]["real"].get<double>(), contents["center"]["imag"].get<double>());
     Complex current_zoom(contents["current_zoom"]["real"].get<double>(), contents["current_zoom"]["imag"].get<double>());
     Complex zoom_multiplier(contents["zoom_multiplier"]["real"].get<double>(), contents["zoom_multiplier"]["imag"].get<double>());
@@ -40,6 +40,6 @@ Pixels MandelbrotScene::query(int& frames_left) {
     time++;
 
     double duration_frames = contents["duration_seconds"].get<int>() * framerate;
-    mr.render_mandelbrot(pix);
+    mr.edge_detect_render(pix);
     return pix;
 }

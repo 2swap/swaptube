@@ -6,11 +6,14 @@
 #include <unistd.h>  // For access() function
 #include <fstream>
 #include <sstream>
+#include <stack>
 
 using namespace std;
 
 inline int BLACK = 0xFF000000;
 inline int WHITE = 0xFFFFFFFF;
+inline int TRANSPARENT_BLACK = 0x00000000;
+inline int TRANSPARENT_WHITE = 0x00FFFFFF;
 
 class Pixels{
 public:
@@ -19,19 +22,23 @@ public:
     int h;
     Pixels(int width, int height) : w(width), h(height), pixels(4*width*height){};
 
+    inline bool out_of_range(int x, int y) const {
+        return x < 0 || x >= w || y < 0 || y >= h;
+    }
+
     inline int get_pixel(int x, int y) const {
-        if(x < 0 || x >= w || y < 0 || y >= h) return 0;
+        if(out_of_range(x, y)) return 0;
         int spot = 4*(w*y+x);
         return makecol(pixels[spot+3], pixels[spot+2], pixels[spot+1], pixels[spot+0]);
     }
 
     inline int get_alpha(int x, int y) const {
-        if(x < 0 || x >= w || y < 0 || y >= h) return 0;
+        if(out_of_range(x, y)) return 0;
         return pixels[4*(w*y+x)+3];
     }
 
     inline void set_pixel(int x, int y, int col) {
-        if(x < 0 || x >= w || y < 0 || y >= h) return;
+        if(out_of_range(x, y)) return;
         // this could go in a loop but unrolled for speeeeed
         int spot = 4*(w*y+x);
         pixels[spot+0] = getb(col);
@@ -41,12 +48,12 @@ public:
     }
 
     inline int set_alpha(int x, int y, int a) {
-        if(x < 0 || x >= w || y < 0 || y >= h || a < 0 || a > 255) return 0;
+        if(out_of_range(x, y) || a < 0 || a > 255) return 0;
         pixels[4*(w*y+x)+3] = a;
     }
 
     inline void set_pixel_with_transparency(int x, int y, int col) {
-        if(x < 0 || x >= w || y < 0 || y >= h) return;
+        if(out_of_range(x, y)) return;
         // this could go in a loop but unrolled for speeeeed
         int spot = 4*(w*y+x);
         int upper_alpha = geta(col);
@@ -71,7 +78,6 @@ public:
         }
         return true; // No pixel with non-zero alpha found, Pixels is empty
     }
-
 
     void add_border(){
         for(int x = 0; x < w; x++){
@@ -139,6 +145,7 @@ public:
 
     void grayscale_to_alpha(){
         for(int i = 0; i < pixels.size(); i+=4){
+            if(pixels[i] != pixels[i+1] || pixels[i+2] != pixels[i+1]) continue;
             pixels[i+3] = pixels[i];
             pixels[i] = 255;
             pixels[i+1] = 255;
@@ -169,6 +176,40 @@ public:
         for(int i = 0; i < 4; i++)
             fill_ellipse(i%2==0 ? (x+r) : (x+w-r), i/2==0 ? (y+r) : (y+rh-r), r, r, col);
     }
+
+    void flood_fill(int x, int y, int color) {
+        int targetColor = get_pixel(x, y);
+
+        // Check if the target pixel already has the desired color
+        if (targetColor == color)
+            return;
+
+        std::stack<std::pair<int, int>> stack;
+        stack.push({x, y});
+
+        while (!stack.empty()) {
+            auto [curX, curY] = stack.top();
+            stack.pop();
+
+            // Check if current pixel is within the image boundaries
+            if (curX < 0 || curX >= w || curY < 0 || curY >= h)
+                continue;
+
+            // Check if current pixel is the target color
+            if (get_pixel(curX, curY) != targetColor)
+                continue;
+
+            // Update the pixel color
+            set_pixel(curX, curY, color);
+
+            // Push neighboring pixels onto the stack
+            stack.push({curX - 1, curY}); // Left
+            stack.push({curX + 1, curY}); // Right
+            stack.push({curX, curY - 1}); // Up
+            stack.push({curX, curY + 1}); // Down
+        }
+    }
+
 };
 
 Pixels crop(const Pixels& p) {
@@ -243,7 +284,7 @@ Pixels eqn_to_pix(const string& eqn, int scale_factor){
         return svg_to_pix(name, scale_factor);
     }
 
-    string command = "cd /home/swap/CS/MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
+    string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
     int result = system(command.c_str());
     
     if (result == 0) {
