@@ -1,7 +1,7 @@
 {
   "config": {
     "width": 640,
-    "height": 480,
+    "height": 360,
     "framerate": 30,
     "name": "Parity"
   },
@@ -43,7 +43,7 @@
       "type": "header",
       "header": "Introduction to Parity",
       "subheader": "Long Term Planning in Connect 4",
-      "duration_seconds": 2
+      "duration_seconds": 3
     },
     {
       "type": "latex",
@@ -82,7 +82,7 @@
       "type": "header",
       "header": "",
       "subheader": "",
-      "duration_seconds": 0.5
+      "duration_seconds": 1
     },
     {
       "type": "latex",
@@ -160,13 +160,13 @@
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "audio": "6.mp3"
         },
         {
           "representation": "233332212136555555322777771166667",
           "name": "",
           "annotations": "123R5671234567123B567123456712345671234567",
-          "audio": "6.mp3"
+          "audio": "6_1.mp3"
         },
         {
           "transition":true,
@@ -183,14 +183,44 @@
           "duration_seconds":2
         },
         {
-          "representation": "2333322121365555553227777711666674461144",
+          "representation": "233332212136555555322777771166667",
           "name": "",
           "annotations": "123R5671234567123B567123456712345671234567",
-          "audio": "5.mp3"
+          "audio": "6_3.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "23333221213655555532277777116666744",
+          "name": "",
+          "annotations": "123R5671234567123B567123456712345671234567",
+          "audio": "6_4.mp3"
         },
         {
           "transition":true,
           "duration_seconds":2
+        },
+        {
+          "representation": "23333221213655555532277777116666744",
+          "name": "",
+          "annotations": "123R5671234567123B567123.56712345671234567",
+          "audio": "6_5.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "23333221213655555532277777116666744",
+          "name": "",
+          "annotations": "123R5671234567123B567123.56712345671234567",
+          "audio": "5.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":4
         },
         {
           "representation": "444441355553333711114553",
@@ -203,10 +233,10 @@
           "duration_seconds":2
         },
         {
-          "representation": "444441355553333711114553177777222222",
+          "representation": "44444135555333371111455317777722222266",
           "name": "",
           "annotations": "123456712345671234567123456712345Y71234567",
-          "duration_seconds":2
+          "duration_seconds":4
         },
         {
           "transition":true,
@@ -220,13 +250,43 @@
         },
         {
           "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "444343554437373357775755111111",
+          "name": "",
+          "annotations": "12345671234567123456712345671T345T71.345.7",
           "audio": "9.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "44434355443737335777575511111122",
+          "name": "",
+          "annotations": "12345671234567123456712345671T345T71234567",
+          "duration_seconds":2
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
         },
         {
           "representation": "444445555751245666667672771733313233",
           "name": "",
-          "annotations": "12345671R345671234567123456712345671234567",
+          "annotations": "12345671R345671.34567123456712345671234567",
           "audio": "10.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "44444555575124566666767277173331323311122",
+          "name": "",
+          "annotations": "12345671R345671234567123456712345671234567",
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -283,7 +343,7 @@
           "duration_seconds":2
         },
         {
-          "representation": "444443333666664156111515177775553377",
+          "representation": "44444333366666415611151517777555337722",
           "name": "",
           "annotations": "12345671R3456712345671R345671Y345671234567",
           "audio": "15.mp3"
@@ -293,9 +353,9 @@
           "duration_seconds":2
         },
         {
-          "representation": "444443333666664156111515177775553377",
+          "representation": "4444433336666641561115151777755",
           "name": "",
-          "annotations": "1234567123456712345671R345671Y345671234567",
+          "annotations": "12345671234567123456712345671Y345671234567",
           "audio": "16.mp3"
         },
         {
@@ -320,7 +380,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "duration_seconds":1
         },
         {
           "representation": "44444222266666246233733",
@@ -330,7 +390,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "duration_seconds":1
         },
         {
           "representation": "444442222666662462337333",
@@ -350,13 +410,23 @@
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "audio": "22.mp3"
         },
         {
           "representation": "44444222266666246233737777711111133",
           "name": "",
           "annotations": "12345671234R671234567123456712345671234567",
-          "audio": "22.mp3"
+          "duration_seconds":2
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "44444222266666246233737777711111133355555",
+          "name": "",
+          "annotations": "12345671234R671234567123456712345671234567",
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -373,10 +443,90 @@
           "duration_seconds":2
         },
         {
+          "representation": "444442222666662462337333",
+          "name": "",
+          "annotations": "R204y67123456712345671234Y671234R6--234-67",
+          "audio": "24.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
           "representation": "4444422226666624623373333",
           "name": "",
-          "annotations": "123456712345671234567123456712345671234567",
-          "audio": "24.mp3"
+          "annotations": "R234567123456712345671234Y671234R671234567",
+          "duration_seconds":2
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": "yyyyyyyrrrrrrryyyyyyyrrrrrrryyyyyyyrrrrrrr",
+          "audio": "25.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "436675555354444733311111145377",
+          "name": "",
+          "annotations": "12345671R345R71.345Y712345.712345671234567",
+          "audio": "26.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "436675555354444733311111145377",
+          "name": "",
+          "annotations": "12345671R345R71.345Y712345.712345671234567",
+          "audio": "27.mp3"
+        },
+        {
+          "transition":true,
+          "audio": "28.mp3"
+        },
+        {
+          "representation": "43667555535444473331111114537777222",
+          "name": "",
+          "annotations": "12345671R345R71.345Y712345.712345671234567",
+          "audio": "29.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "436675555354444733311111145377772226666",
+          "name": "",
+          "annotations": "12345671R345R71.34567123456712345671234567",
+          "audio": "30.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "43667555535444473331111114537777222666622",
+          "name": "",
+          "annotations": "",
+          "audio": "31.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "436675555354444733311111145377",
+          "name": "",
+          "annotations": "12345671R345671.345Y712345.712345671234567",
+          "audio": "32.mp3"
         },
         {
           "transition":true,
@@ -385,8 +535,89 @@
       ]
     },
     {
+      "type": "header",
+      "header": "Zugzwang",
+      "subheader": "'Compulsion to Move'",
+      "audio": "33.mp3"
+    },
+    {
+      "type": "c4",
+      "boards": [
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "43667555535444473331111114537777222",
+          "name": "Yellow is IN Zugzwang",
+          "annotations": "12345671R345671.345Y712345.712345671234567",
+          "audio": "34.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "43667555535444473331111114537777222",
+          "name": "",
+          "annotations": "12345671R345671.345Y712345.712345671234567",
+          "audio": "35.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "434443233322446666676777732",
+          "name": "",
+          "annotations": "123456712345671234567Y234Y67.234.671234567",
+          "audio": "36.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "434443233322446666676777732",
+          "name": "",
+          "annotations": "12345671234R67R234R67Y234Y67.234.671234567",
+          "audio": "37.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "43444323332244666667677773222751",
+          "name": "",
+          "annotations": "12345671234R67R234R67Y234Y67.234.671234567",
+          "audio": "38.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        },
+        {
+          "representation": "43444323332244666667677773222751",
+          "name": "Yellow CONTROLS the Zugzwang",
+          "annotations": "12345671234R67R234R67Y234Y67.234.671234567",
+          "audio": "39.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":2
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "header": "Win Conditions",
+      "subheader": "and Generalizing the Zugzwang",
+      "audio": "41.mp3"
+    },
+    {
       "type": "2swap",
-      "duration_seconds":1
+      "audio": "42.mp3"
     }
   ]
 }

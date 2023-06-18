@@ -16,7 +16,7 @@ TwoswapScene::TwoswapScene(const json& config, const json& contents, MovieWriter
         scene_duration_frames = writer.add_audio_get_length(contents["audio"].get<string>());
     else{
         scene_duration_frames = contents["duration_seconds"].get<int>();
-        writer.add_silence(scene_duration_frames/10.);
+        writer.add_silence(scene_duration_frames);
     }
     scene_duration_frames *= framerate;
 
