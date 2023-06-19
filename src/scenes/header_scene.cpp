@@ -36,7 +36,7 @@ Pixels HeaderScene::query(int& frames_left) {
 
     Pixels ret(pix.w, pix.h);
     ret.fill(BLACK);
-    ret.copy(pix, 0, 0, fifo_curve(time / static_cast<double>(scene_duration_frames), time/static_cast<double>(framerate), frames_left/static_cast<double>(framerate)));
+    ret.copy(pix, 0, 0, fifo_curve(time / static_cast<double>(scene_duration_frames)));
     time++;
 
     return ret;
