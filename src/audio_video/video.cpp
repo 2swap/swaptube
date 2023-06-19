@@ -20,6 +20,7 @@ bool MovieWriter::encode_and_write_frame(AVFrame* frame){
 
 void MovieWriter::addFrame(const Pixels& p)
 {
+    p.print_to_terminal();
     cout << "Encoding frame " << inframe++ << ". ";
     const uint8_t* pixels = &p.pixels[0];
 
