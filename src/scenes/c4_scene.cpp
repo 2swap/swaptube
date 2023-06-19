@@ -4,9 +4,11 @@
 #include "Connect4/c4.h"
 using json = nlohmann::json;
 
-inline int C4_RED         = 0xff880000;
-inline int C4_YELLOW      = 0xff888800;
-inline int C4_EMPTY       = 0xff004488;
+inline int C4_RED           = 0xff880000;
+inline int C4_YELLOW        = 0xff888800;
+inline int C4_RED_THREAT    = 0xffff4444;
+inline int C4_YELLOW_THREAT = 0xffffff44;
+inline int C4_EMPTY         = 0xff222222;
 
 class C4Scene : public Scene {
 public:
@@ -26,11 +28,12 @@ private:
 
 void draw_c4_disk(Pixels& p, int stonex, int stoney, int col, bool highlight, char annotation){
     double stonewidth = p.w/16.;
+    int highlightcol = colorlerp(col, 0, .4);
     int textcol = colorlerp(col, 0, .7);
     double px = (stonex-WIDTH/2.+.5)*stonewidth+p.w/2;
     double py = (-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2;
-    if(highlight) p.fill_ellipse(px, py, stonewidth*.3, stonewidth*.3, col);
-    else p.fill_ellipse(px, py, stonewidth*.4, stonewidth*.4, col);
+    if(highlight) p.fill_ellipse(px, py, stonewidth*.46, stonewidth*.46, highlightcol);
+    p.fill_ellipse(px, py, stonewidth*.4, stonewidth*.4, col);
 
     switch (annotation) {
         case '+':
@@ -48,32 +51,32 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col, bool highlight, ch
             p.fill_rect(px - stonewidth/4 , py + stonewidth/16, stonewidth/2, stonewidth/8, textcol);
             break;
         case 'r':
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED_THREAT);
             break;
         case 'R':
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
+            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED_THREAT);
             break;
         case 'y':
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW_THREAT);
             break;
         case 'Y':
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
+            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW_THREAT);
             break;
         case 'b':
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 6, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_RED);
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 8, stonewidth / 6, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_YELLOW);
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 6+1, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 24+1, stonewidth / 2, C4_RED_THREAT);
+            p.fill_rect(px - stonewidth * 0, py - stonewidth / 8, stonewidth / 6, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_YELLOW_THREAT);
             break;
         case 'B':
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 4, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_RED);
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 4, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_YELLOW);
+            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 4+1, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 24+1, stonewidth / 2, C4_RED_THREAT);
+            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 4, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_YELLOW_THREAT);
             break;
         case ':':
             p.fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, textcol);  // Draw an ellipse to form a ':'
@@ -114,8 +117,22 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter& writer) 
     if(contents.find("audio") != contents.end()){
         cout << "This scene has a single audio for all of its subscenes." << endl;
         double duration = writer.add_audio_get_length(contents["audio"].get<string>());
+        double ct = boards_json.size();
+        for (int i = 0; i < boards_json.size(); i++) {
+            json& board_json = boards_json[i];
+            if (board_json.find("duration_seconds") != board_json.end()) {
+                duration -= board_json["duration_seconds"].get<double>();
+                ct--;
+            }
+        }
         for (int i = 0; i < boards_json.size(); i++){
-            durations.push_back(duration/boards_json.size());
+            json& board_json = boards_json[i];
+            if (board_json.find("duration_seconds") != board_json.end()) {
+                durations.push_back(board_json["duration_seconds"].get<double>());
+            }
+            else {
+                durations.push_back(duration/ct);
+            }
         }
     }
     else{

@@ -29,7 +29,11 @@ TwoswapScene::TwoswapScene(const json& config, const json& contents, MovieWriter
 
 Pixels TwoswapScene::query(int& frames_left) {
     frames_left = scene_duration_frames - time;
+
+    Pixels ret(pix.w, pix.h);
+    ret.fill(BLACK);
+    ret.copy(pix, 0, 0, fifo_curve(time / static_cast<double>(scene_duration_frames), time/static_cast<double>(framerate), frames_left/static_cast<double>(framerate)));
     time++;
 
-    return pix;
+    return ret;
 }

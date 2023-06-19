@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <stack>
+#include <iomanip>
 
 using namespace std;
 
@@ -64,8 +65,40 @@ public:
         pixels[spot+3] = geta(mergecol);
     }
 
-    inline void print_dimensions(){
+    void print_dimensions(){
         cout << "w: " << w << ", h: " << h << endl;
+    }
+
+    void print_to_terminal() const {
+        const int width = 150;
+        const int height = 40;
+        const int xStep = max(w / width, 1);
+        const int yStep = max(h / height, 1);
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                int sampleX = x * xStep;
+                int sampleY = y * yStep;
+
+                int r = pixels[(sampleX + w * sampleY) * 4];
+                int g = pixels[(sampleX + w * sampleY) * 4 + 1];
+                int b = pixels[(sampleX + w * sampleY) * 4 + 2];
+
+                // Map the RGB values to ANSI color codes
+                int rCode = static_cast<int>((1-cube(1-(r / 256.0))) * 5);
+                int gCode = static_cast<int>((1-cube(1-(g / 256.0))) * 5);
+                int bCode = static_cast<int>((1-cube(1-(b / 256.0))) * 5);
+
+                // Calculate the ANSI color code based on RGB values
+                int colorCode = 16 + 36 * bCode + 6 * gCode + rCode;
+
+                // Output the colored ASCII character
+                cout << "\033[48;5;" << colorCode << "m";
+                cout << ' ';
+            }
+            cout << "|" << endl << "|";
+        }
+        cout << "\033[0m" << endl;  // Reset the color attributes
     }
 
     bool is_empty() const {

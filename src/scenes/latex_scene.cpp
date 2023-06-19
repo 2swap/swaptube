@@ -31,7 +31,7 @@ LatexScene::LatexScene(const json& config, const json& contents, MovieWriter& wr
         if(blurb.find("transition") != blurb.end()) continue;
         string eqn = blurb["latex"].get<string>();
         cout << "rendering latex: " << eqn << endl;
-        Pixels p = eqn_to_pix(eqn, 1);
+        Pixels p = eqn_to_pix(eqn, pix.w / 640);
         equations.push_back(p);
         coords.push_back(make_pair((pix.w-p.w)/2, (pix.h-p.h)/2));
     }
@@ -51,8 +51,22 @@ LatexScene::LatexScene(const json& config, const json& contents, MovieWriter& wr
     if(contents.find("audio") != contents.end()){
         cout << "This scene has a single audio for all of its subscenes." << endl;
         double duration = writer.add_audio_get_length(contents["audio"].get<string>());
+        double ct = blurbs_json.size();
+        for (int i = 0; i < blurbs_json.size(); i++) {
+            json& blurb_json = blurbs_json[i];
+            if (blurb_json.find("duration_seconds") != blurb_json.end()) {
+                duration -= blurb_json["duration_seconds"].get<double>();
+                ct--;
+            }
+        }
         for (int i = 0; i < blurbs_json.size(); i++){
-            durations.push_back(duration/blurbs_json.size());
+            json& blurb_json = blurbs_json[i];
+            if (blurb_json.find("duration_seconds") != blurb_json.end()) {
+                durations.push_back(blurb_json["duration_seconds"].get<double>());
+            }
+            else {
+                durations.push_back(duration/ct);
+            }
         }
     }
     else{
