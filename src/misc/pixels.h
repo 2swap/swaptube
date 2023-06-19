@@ -317,7 +317,7 @@ Pixels eqn_to_pix(const string& eqn, int scale_factor){
         return svg_to_pix(name, scale_factor);
     }
 
-    string command = "set +H && cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
+    string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
     int result = system(command.c_str());
     
     if (result == 0) {

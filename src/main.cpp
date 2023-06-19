@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
 
     cout << "Initializing Writer" << endl;
 
-    writer.init("testaudio.mp3");
+    writer.init("../media/testaudio.mp3");
 
     cout << "Beginning Render" << endl;
 

@@ -361,25 +361,25 @@
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{\\text{Red likes odd-row threats}}"
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd-row threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{\\text{Red likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}"
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}"
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}"
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}"
         },
         {
           "transition":true
@@ -768,19 +768,19 @@
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}"
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}"
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats (and odd-row threats!)}}"
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats (and odd threats too!)}}\\end{array}"
         },
         {
           "transition":true
