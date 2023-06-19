@@ -76,8 +76,8 @@ public:
 
     void init(const string& inputAudioFilename){
         AVFormatContext* inputAudioFormatContext = nullptr;
-        avformat_open_input(&inputAudioFormatContext, (media_folder+inputAudioFilename).c_str(), nullptr, nullptr);
-        cout << "Initializing writer with codec from " << (media_folder+inputAudioFilename) << endl;
+        avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
+        cout << "Initializing writer with codec from " << inputAudioFilename << endl;
 
         // Find input audio stream information
         avformat_find_stream_info(inputAudioFormatContext, nullptr);

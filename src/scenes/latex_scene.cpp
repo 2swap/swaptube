@@ -114,6 +114,10 @@ void LatexScene::render_transition(Pixels& p, int which, double weight) {
         // Render the intersection at the interpolated position
         p.copy(step.induced1, x-step.current_p1.w, y-step.current_p1.h, tp1);
         p.copy(step.induced2, x-step.current_p2.w, y-step.current_p2.h, tp);
+
+
+        //p.copy(step.intersection, 0, i*200, 1);
+        //p.copy(step.map, 0, i*200, 1);
     }
 
     int num_intersections = intersections[which].size();

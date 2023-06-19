@@ -13,9 +13,9 @@ int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
     int jump = 2;
     for (int x = minx; x < maxx; x+=jump)
         for (int y = miny; y < maxy; y+=jump){
-            sum += (a.get_alpha(x, y) & b.get_alpha(x-dx, y-dy)) > 0;
+            sum += a.get_alpha(x, y) > 128 && b.get_alpha(x-dx, y-dy) > 128;
         }
-    return sum*jump*jump/4.;
+    return sum;
 }
 
 void shrink_alpha_from_center(Pixels& p) {
@@ -39,7 +39,7 @@ void shrink_alpha_from_center(Pixels& p) {
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     int max_conv = 0;
     Pixels ret(p1.w+p2.w, p1.h+p2.h);
-    int jump = 4;
+    int jump = 2;
     for(int x = 0; x < ret.w; x+=jump)
         for(int y = 0; y < ret.h; y+=jump){
             int convolution = convolve(p1, p2, x-p2.w, y-p2.h);
@@ -201,7 +201,7 @@ Pixels remove_unconnected_components(const Pixels& p) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // Check if current pixel has alpha channel high enough and is not marked as connected_to_opaque
-            if (p.get_alpha(x, y) == 255 && output.get_pixel(x, y) == 0) {
+            if (p.get_alpha(x, y) > 50 && output.get_pixel(x, y) == 0) {
                 // Perform flood-fill to mark all connected pixels as connected to an opaque pixel
                 flood_fill_connected_to_opaque(p, output, x, y);
             }
@@ -347,9 +347,10 @@ struct StepResult {
     Pixels induced2;
     Pixels current_p1;
     Pixels current_p2;
+    Pixels intersection;
 
-    StepResult(int mx, int my, Pixels cm, Pixels i1, Pixels i2, Pixels p1, Pixels p2)
-            : max_x(mx), max_y(my), map(cm), induced1(i1), induced2(i2), current_p1(p1), current_p2(p2) {}
+    StepResult(int mx, int my, Pixels cm, Pixels i1, Pixels i2, Pixels p1, Pixels p2, Pixels i)
+            : max_x(mx), max_y(my), map(cm), induced1(i1), induced2(i2), current_p1(p1), current_p2(p2), intersection(i) {}
 };
 
 void flood_fill_copy_shape(const Pixels& from, Pixels& to, int from_x, int from_y, int to_x, int to_y) {
@@ -423,7 +424,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         Pixels cm = convolve_map(current_p1, current_p2, max_x, max_y);
 
         // Intersect the two Pixels objects based on the maximum convolution
-        Pixels intersection = erase_small_components(intersect(current_p1, current_p2, max_x, max_y), 80);
+        Pixels intersection = erase_small_components(intersect(current_p1, current_p2, max_x, max_y), 100);
 
         intersection_nonempty = !intersection.is_empty();
 
@@ -435,7 +436,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         current_p2 = remove_unconnected_components(subtract(current_p2, induced2, -current_p2.w-max_x, -current_p2.h-max_y));
 
         // Store the result of this step
-        StepResult step_result(max_x, max_y, cm, induced1, induced2, current_p1, current_p2);
+        StepResult step_result(max_x, max_y, cm, induced1, induced2, current_p1, current_p2, intersection);
         results.push_back(step_result);
     }
 
