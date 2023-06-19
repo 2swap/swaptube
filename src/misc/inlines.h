@@ -18,7 +18,8 @@ inline double smoother1(double x){return 3*x*x-2*x*x*x;}
 inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
 inline double smoother3(double x){return x<.5 ? cube(x)*4 : 1-cube(1-x)*4;}
 inline double transparency_profile(double x){return x<.6 ? cube(x/.6) : 1;}
-inline double fifo_curve(double x, double seconds_so_far, double seconds_left){return min(1, max(max(1-fourth(2*x-1), transparency_profile(seconds_so_far/3)), transparency_profile(seconds_left/3)));} // fade in fade out
+inline double fifo_curve(double x){return 1-fourth(2*x-1);} // fade in fade out
+inline double fifo_curve_experimental(double x, double seconds_so_far, double seconds_left){return min(1, max(max(1-fourth(2*x-1), transparency_profile(seconds_so_far/2)), transparency_profile(seconds_left/2)));} // fade in fade out
 inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
 inline int makecol(int r, int g, int b){return (255<<24)+(r<<16)+(g<<8)+b;}
 inline int makecol(int a, int r, int g, int b){return (a<<24)+(r<<16)+(g<<8)+b;}

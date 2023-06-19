@@ -155,7 +155,7 @@ void C4Scene::render_non_transition(Pixels& p, int which) {
     p.fill(BLACK);
     Board b = boards[which];
     render_c4_board(pix, b);
-    Pixels board_title_pix = eqn_to_pix(latex_text(names[which]), pix.w / 320);
+    Pixels board_title_pix = eqn_to_pix(latex_text(names[which]), pix.w / 640 + 1);
     pix.copy(board_title_pix, (pix.w - board_title_pix.w)/2, pix.h-pix.w/12, 1);
 }
 

@@ -10,7 +10,8 @@
       "type": "c4",
       "boards": [
         {
-          "transition": true
+          "transition": true,
+          "duration_seconds": 2
         },
         {
           "representation": "444556566",
@@ -34,7 +35,8 @@
           "annotations": "                              R    R      "
         },
         {
-          "transition": true
+          "transition": true,
+          "duration_seconds": 2
         }
       ],
       "audio": "1.mp3"
@@ -359,25 +361,25 @@
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{Red likes odd-row threats}"
+          "latex": "\\textcolor{#880000}{\\text{Red likes odd-row threats}}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{Red likes odd-row threats} \\newline \\textcolor{#888800}{Yellow likes even-row threats}"
+          "latex": "\\textcolor{#880000}{\\text{Red likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{Red (player 1) likes odd-row threats} \\newline \\textcolor{#888800}{Yellow likes even-row threats}"
+          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\textcolor{#880000}{Red (player 1) likes odd-row threats} \\newline \\textcolor{#888800}{Yellow (player 2) likes even-row threats}"
+          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}"
         },
         {
           "transition":true
@@ -760,6 +762,33 @@
       ]
     },
     {
+      "type": "latex",
+      "blurbs": [
+        {
+          "transition":true
+        },
+        {
+          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}"
+        },
+        {
+          "transition":true
+        },
+        {
+          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}"
+        },
+        {
+          "transition":true
+        },
+        {
+          "latex": "\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats (and odd-row threats!)}}"
+        },
+        {
+          "transition":true
+        }
+      ],
+      "audio": "40_1.mp3"
+    },
+    {
       "type": "c4",
       "boards": [
         {
@@ -931,34 +960,8 @@
           "annotations": "   R                            YB      R "
         },
         {
-          "transition":true
-        }
-      ],
-      "audio": "40_1.mp3"
-    },
-    {
-      "type": "latex",
-      "blurbs": [
-        {
-          "transition":true
-        },
-        {
-          "latex": "\\textcolor{#880000}{Red (player 1) likes odd-row threats} \\newline \\textcolor{#888800}{Yellow (player 2) likes even-row threats}"
-        },
-        {
-          "transition":true
-        },
-        {
-          "latex": "\\textcolor{#880000}{Red (player 1) likes odd-row threats \\textit{a lot!}} \\newline \\textcolor{#888800}{Yellow (player 2) likes even-row threats}"
-        },
-        {
-          "transition":true
-        },
-        {
-          "latex": "\\textcolor{#880000}{Red (player 1) likes odd-row threats \\textit{a lot!}} \\newline \\textcolor{#888800}{Yellow (player 2) likes even-row threats, \\textit{and odd-row threats!}}"
-        },
-        {
-          "transition":true
+          "transition":true,
+          "duration_seconds": 1
         }
       ],
       "audio": "40_2.mp3"
