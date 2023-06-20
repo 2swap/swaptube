@@ -1,6 +1,6 @@
 {
   "config": {
-    "width": 1080,
+    "width": 1280,
     "height": 720,
     "framerate": 30
   },
@@ -10,11 +10,11 @@
       "blurbs": [
         {
           "transition": true,
-          "audio":"testaudio.mp3"
+          "audio":"../testaudio.mp3"
         },
         {
           "latex": "\\text{むかし、むかし、あるところに浦島太郎}",
-          "audio":"testaudio.mp3"
+          "audio":"../testaudio.mp3"
         },
         {
           "transition": true,
@@ -22,7 +22,7 @@
         },
         {
           "latex": "\\text{Thanks for watching!}",
-          "audio":"testaudio.mp3"
+          "audio":"../testaudio.mp3"
         },
         {
           "transition": true,

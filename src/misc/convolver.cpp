@@ -13,7 +13,7 @@ int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
     int jump = 2;
     for (int x = minx; x < maxx; x+=jump)
         for (int y = miny; y < maxy; y+=jump){
-            sum += a.get_alpha(x, y) > 128 && b.get_alpha(x-dx, y-dy) > 128;
+            sum += (a.get_alpha(x, y) > 128) && (b.get_alpha(x-dx, y-dy) > 128);
         }
     return sum;
 }
@@ -36,33 +36,77 @@ void shrink_alpha_from_center(Pixels& p) {
     }
 }
 
+Pixels create_alpha_from_intensities(const std::vector<std::vector<int>>& intensities) {
+    int height = intensities.size();
+    int width = (height > 0) ? intensities[0].size() : 0;
+
+    Pixels result(width, height);
+    result.fill(WHITE);
+
+    // Find the minimum and maximum intensity values
+    int minIntensity = numeric_limits<int>::max();
+    int maxIntensity = numeric_limits<int>::min();
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int intensity = intensities[y][x];
+            if(intensity < 0) continue;
+            minIntensity = min(minIntensity, intensity);
+            maxIntensity = max(maxIntensity, intensity);
+        }
+    }
+
+    // Calculate the range of intensities
+    int intensityRange = maxIntensity - minIntensity;
+    if (intensityRange == 0) {
+        // Avoid division by zero if all intensities are the same
+        intensityRange = 1;
+    }
+
+    // Set the alpha channel based on normalized intensity values
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int intensity = intensities[y][x];
+            int normalizedIntensity = (intensity - minIntensity) * 255 / intensityRange;
+            if(intensity < 0) normalizedIntensity = 0;
+            result.set_alpha(x, y, normalizedIntensity);
+        }
+    }
+
+    return result;
+}
+
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     int max_conv = 0;
-    Pixels ret(p1.w+p2.w, p1.h+p2.h);
-    int jump = 2;
-    for(int x = 0; x < ret.w; x+=jump)
-        for(int y = 0; y < ret.h; y+=jump){
+    int retw = p1.w+p2.w;
+    int reth = p1.h+p2.h;
+    vector<vector<int>> map(reth, vector<int>(retw, -1));
+    int jump = 3;
+    for(int x = retw/4; x < 3*retw/4; x+=jump)
+        for(int y = reth/4; y < 3*reth/4; y+=jump){
             int convolution = convolve(p1, p2, x-p2.w, y-p2.h);
             if(convolution > max_conv){
                 max_conv = convolution;
                 max_x = x;
                 max_y = y;
             }
-            ret.set_pixel(x, y, makecol(convolution, 255, 255, 255));
+            for(int dx = 0; dx < jump; dx++)
+                for(int dy = 0; dy < jump; dy++)
+                    map[y+dy][x+dx] = convolution;
         }
-    for(int x = max(0, max_x-jump); x < min(ret.w, max_x+jump); x++)
-        for(int y = max(0, max_y-jump); y < min(ret.h, max_y+jump); y++){
+    for(int x = max(0, max_x-jump); x < min(retw, max_x+jump); x++)
+        for(int y = max(0, max_y-jump); y < min(reth, max_y+jump); y++){
             int convolution = convolve(p1, p2, x-p2.w, y-p2.h);
             if(convolution > max_conv){
                 max_conv = convolution;
                 max_x = x;
                 max_y = y;
             }
-            ret.set_pixel(x, y, makecol(convolution, 255, 255, 255));
+            map[y][x] = convolution;
         }
     max_x -= p2.w;
     max_y -= p2.h;
-    return ret;
+
+    return create_alpha_from_intensities(map);
 }
 
 void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int id) {
@@ -122,15 +166,15 @@ Pixels segment(const Pixels& p, int& id) {
     Pixels ret(p.w, p.h);
 
     // Initialize the identifier color
-    id = 1;
+    id = 0;
 
     // Perform flood fill for each pixel in the input Pixels
     for (int y = 0; y < p.h; y++) {
         for (int x = 0; x < p.w; x++) {
             if (p.get_alpha(x, y) != 0 && ret.get_alpha(x, y) == 0) {
                 // Found a new shape, perform flood fill starting from the current pixel
-                flood_fill(ret, p, x, y, id);
                 id++; // Increment the identifier color for the next shape
+                flood_fill(ret, p, x, y, id);
             }
         }
     }
@@ -143,7 +187,7 @@ Pixels erase_small_components(const Pixels& p, int min_size) {
     Pixels segmented = segment(p, id);
 
     // Calculate the area of each segmented component
-    std::vector<int> componentArea(id, 0);
+    vector<int> componentArea(id, 0);
     for (int y = 0; y < segmented.h; y++) {
         for (int x = 0; x < segmented.w; x++) {
             int componentId = segmented.get_pixel(x, y);
@@ -219,62 +263,6 @@ Pixels remove_unconnected_components(const Pixels& p) {
     return output;
 }
 
-/*vector<Pixels> decompose(const Pixels& p) {
-    // Segment the input Pixels
-    int num_segments = 0;
-    Pixels segmented_pixels = segment(p, num_segments);
-
-    // Count the total number of segments
-    int num_segments = 0;
-    for (int y = 0; y < segmented_pixels.h; y++) {
-        for (int x = 0; x < segmented_pixels.w; x++) {
-            if (segmented_pixels.data[y][x].alpha > num_segments) {
-                num_segments = segmented_pixels.data[y][x].alpha;
-            }
-        }
-    }
-
-    // Create a vector to store the decomposed segments
-    vector<Pixels> ret(num_segments);
-
-    // Find the bounding box for each segment
-    vector<int> min_x(num_segments, INT_MAX);
-    vector<int> min_y(num_segments, INT_MAX);
-    vector<int> max_x(num_segments, INT_MIN);
-    vector<int> max_y(num_segments, INT_MIN);
-
-    for (int y = 0; y < segmented_pixels.h; y++) {
-        for (int x = 0; x < segmented_pixels.w; x++) {
-            int segment_id = segmented_pixels.data[y][x].alpha;
-            if (segment_id > 0) {
-                min_x[segment_id - 1] = min(min_x[segment_id - 1], x);
-                min_y[segment_id - 1] = min(min_y[segment_id - 1], y);
-                max_x[segment_id - 1] = max(max_x[segment_id - 1], x);
-                max_y[segment_id - 1] = max(max_y[segment_id - 1], y);
-            }
-        }
-    }
-
-    // Crop and assign pixels to their corresponding segments
-    for (int segment_id = 1; segment_id <= num_segments; segment_id++) {
-        int width = max_x[segment_id - 1] - min_x[segment_id - 1] + 1;
-        int height = max_y[segment_id - 1] - min_y[segment_id - 1] + 1;
-        ret[segment_id - 1] = Pixels(width, height);
-        
-        for (int y = min_y[segment_id - 1]; y <= max_y[segment_id - 1]; y++) {
-            for (int x = min_x[segment_id - 1]; x <= max_x[segment_id - 1]; x++) {
-                if (segmented_pixels.data[y][x].alpha == segment_id) {
-                    int relX = x - min_x[segment_id - 1];
-                    int relY = y - min_y[segment_id - 1];
-                    ret[segment_id - 1].data[relY][relX] = p.data[y][x];
-                }
-            }
-        }
-    }
-
-    return ret;
-}*/
-
 Pixels intersect(const Pixels& p1, const Pixels& p2, int dx, int dy) {
     Pixels result(p1.w, p1.h);
 
@@ -292,32 +280,6 @@ Pixels intersect(const Pixels& p1, const Pixels& p2, int dx, int dy) {
     }
 
     return result;
-}
-
-double iou(const Pixels& p1, const Pixels& p2) {
-    int intersection_count = 0;
-    int union_count = 0;
-
-    for (int y = 0; y < p1.h; y++) {
-        for (int x = 0; x < p1.w; x++) {
-            int pixel1 = p1.get_pixel(x, y);
-            int pixel2 = p2.get_pixel(x, y);
-
-            if (geta(pixel1) > 0 || geta(pixel2) > 0) {
-                union_count++;
-            }
-
-            if (geta(pixel1) > 0 && geta(pixel2) > 0) {
-                intersection_count++;
-            }
-        }
-    }
-
-    if (union_count == 0) {
-        return 0.0; // To avoid division by zero
-    }
-
-    return static_cast<double>(intersection_count) / union_count;
 }
 
 Pixels subtract(const Pixels& p1, const Pixels& p2, int dx, int dy) {
@@ -409,6 +371,101 @@ Pixels induce(const Pixels& from, const Pixels& to, int dx, int dy) {
     return induced;
 }
 
+Pixels erase_low_iou(const Pixels& intersection, float threshold, const Pixels& p1, const Pixels& p2, int max_x, int max_y) {
+    int id1 = 0;
+    Pixels segmented1 = segment(p1, id1);
+
+    int id2 = 0;
+    Pixels segmented2 = segment(p2, id2);
+
+    int id3 = 0;
+    Pixels segmented3 = segment(intersection, id3);
+
+    int iu_w = id1+id2;
+    int iu_h = id3;
+
+    vector<vector<int>> intersected_pixels(iu_h, vector<int>(iu_w, 0));
+    vector<vector<int>> united_pixels(iu_h, vector<int>(iu_w, 0));
+
+    cout << "Finding unions and intersections" << endl;
+
+    // Loop over coordinates
+    for (int y = 0; y < intersection.h; y++) {
+        for (int x = 0; x < intersection.w; x++) {
+            int componentId1 = segmented1.get_pixel(x, y) - 1;
+            int componentId2 = segmented2.get_pixel(x - max_x, y - max_y) - 1;
+            int componentId3 = segmented3.get_pixel(x, y) - 1;
+
+            if (componentId1 != -1) {
+                // Loop over all segmented3 components
+                for (int y = 0; y < iu_h; y++) {
+                    united_pixels[y][componentId1]++;
+                }
+            }
+
+            if (componentId2 != -1) {
+                // Loop over all segmented3 components
+                for (int y = 0; y < iu_h; y++) {
+                    united_pixels[y][componentId2 + id1]++;
+                }
+            }
+
+            if (componentId3 != -1) {
+                // Loop over all segmented1/2 components
+                for (int x = 0; x < iu_w; x++) {
+                    united_pixels[componentId3][x]++;
+                }
+            }
+
+            if (componentId3 != -1 && componentId1 != -1) {
+                intersected_pixels[componentId3][componentId1]++;
+                united_pixels[componentId3][componentId1]--;
+            }
+
+            if (componentId3 != -1 && componentId2 != -1) {
+                intersected_pixels[componentId3][componentId2 + id1]++;
+                united_pixels[componentId3][componentId2 + id1]--;
+            }
+        }
+    }
+
+    cout << "Identifying low IOU components" << endl;
+
+    // Create the result Pixels and copy the intersection
+    Pixels result = intersection;
+
+    // Vector to store the decision of keeping or erasing each component
+    vector<bool> keepComponent(iu_h, false);
+
+    // Iterate over each component in segmented3
+    for (int componentId3 = 0; componentId3 < iu_h; componentId3++) {
+        // Check IoU with components in p1
+        for (int x = 0; x < iu_w; x++) {
+            float iou = static_cast<float>(intersected_pixels[componentId3][x]) /
+                        united_pixels[componentId3][x];
+            if (iou >= threshold) {
+                keepComponent[componentId3] = true;
+                break;
+            }
+        }
+    }
+
+    cout << "Erasing low IOU components" << endl;
+
+    // Erase the components from the result
+    for (int y = 0; y < segmented3.h; y++) {
+        for (int x = 0; x < segmented3.w; x++) {
+            int componentId3 = segmented3.get_pixel(x, y) - 1;
+            if (componentId3 != -1 && !keepComponent[componentId3]) {
+                result.set_pixel(x, y, makecol(0, 255, 255, 255));
+            }
+        }
+    }
+
+    return result;
+}
+
+
 vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
     vector<StepResult> results;
 
@@ -424,7 +481,8 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         Pixels cm = convolve_map(current_p1, current_p2, max_x, max_y);
 
         // Intersect the two Pixels objects based on the maximum convolution
-        Pixels intersection = erase_small_components(intersect(current_p1, current_p2, max_x, max_y), 100);
+        // Pixels intersection = erase_small_components(intersect(current_p1, current_p2, max_x, max_y), 200);
+        Pixels intersection = erase_low_iou(intersect(current_p1, current_p2, max_x, max_y), .6, current_p1, current_p2, max_x, max_y);
 
         intersection_nonempty = !intersection.is_empty();
 

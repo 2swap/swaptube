@@ -32,7 +32,7 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col, bool highlight, ch
     int textcol = colorlerp(col, 0, .7);
     double px = (stonex-WIDTH/2.+.5)*stonewidth+p.w/2;
     double py = (-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2;
-    if(highlight) p.fill_ellipse(px, py, stonewidth*.46, stonewidth*.46, highlightcol);
+    if(highlight) p.fill_ellipse(px, py, stonewidth*.47, stonewidth*.47, highlightcol);
     p.fill_ellipse(px, py, stonewidth*.4, stonewidth*.4, col);
 
     switch (annotation) {
@@ -143,7 +143,7 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter& writer) 
                 string audio_path = board_json["audio"].get<string>();
                 durations.push_back(writer.add_audio_get_length(audio_path));
             } else {
-                double duration = board_json["duration_seconds"].get<int>();
+                double duration = board_json["duration_seconds"].get<double>();
                 writer.add_silence(duration);
                 durations.push_back(duration);
             }
@@ -181,8 +181,8 @@ void C4Scene::render_transition(Pixels& p, int which, double weight) {
     string curr_title = "\\text{" + names[which] + "}";
     string next_title = (which == contents["boards"].size() - 1)?"\\text{}":"\\text{" + names[which+1] + "}";
 
-    Pixels curr_title_pix = eqn_to_pix(curr_title, pix.w / 320);
-    Pixels next_title_pix = eqn_to_pix(next_title, pix.w / 320);
+    Pixels curr_title_pix = eqn_to_pix(curr_title, pix.w / 640 + 1);
+    Pixels next_title_pix = eqn_to_pix(next_title, pix.w / 640 + 1);
     
     if(next_title == curr_title)
         pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, 1);

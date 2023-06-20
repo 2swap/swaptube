@@ -77,7 +77,7 @@ LatexScene::LatexScene(const json& config, const json& contents, MovieWriter& wr
                 string audio_path = blurb_json["audio"].get<string>();
                 durations.push_back(writer.add_audio_get_length(audio_path));
             } else {
-                double duration = blurb_json["duration_seconds"].get<int>();
+                double duration = blurb_json["duration_seconds"].get<double>();
                 writer.add_silence(duration);
                 durations.push_back(duration);
             }
@@ -115,9 +115,8 @@ void LatexScene::render_transition(Pixels& p, int which, double weight) {
         p.copy(step.induced1, x-step.current_p1.w, y-step.current_p1.h, tp1);
         p.copy(step.induced2, x-step.current_p2.w, y-step.current_p2.h, tp);
 
-
-        //p.copy(step.intersection, 0, i*200, 1);
-        //p.copy(step.map, 0, i*200, 1);
+        //p.copy(step.intersection, -500, i*191-50, 1);
+        //p.copy(step.map, 0, i*191-50, 1);
     }
 
     int num_intersections = intersections[which].size();

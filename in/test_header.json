@@ -1,0 +1,15 @@
+{
+  "config": {
+    "width": 1920,
+    "height": 1080,
+    "framerate": 30
+  },
+  "scenes": [
+    {
+      "type": "header",
+      "header": "Introduction to Parity",
+      "subheader": "Long Term Planning in Connect 4",
+      "duration_seconds": 2
+    }
+  ]
+}

@@ -93,37 +93,31 @@
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}\\end{array}"
-        },
-        {
-          "transition":true
-        },
-        {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\hline\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}&\\textcolor{#880000}{⬤}&\\textcolor{#888800}{⬤}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\end{array}"
         },
         {
           "transition":true
@@ -178,16 +172,6 @@
           "representation": "2333322121365555553227777711666674461144",
           "name": "",
           "annotations": "123R5671234567123B567123456712345671234567",
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":2
-        },
-        {
-          "representation": "233332212136555555322777771166667",
-          "name": "",
-          "annotations": "123R5671234567123B567123456712345671234567",
           "audio": "6_3.mp3"
         },
         {
@@ -195,14 +179,24 @@
           "duration_seconds":1
         },
         {
-          "representation": "23333221213655555532277777116666744",
+          "representation": "233332212136555555322777771166667",
           "name": "",
           "annotations": "123R5671234567123B567123456712345671234567",
-          "audio": "6_4.mp3"
+          "duration_seconds":1
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "audio": "6_4.mp3"
+        },
+        {
+          "representation": "23333221213655555532277777116666744",
+          "name": "",
+          "annotations": "123R5671234567123B567123456712345671234567",
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
         },
         {
           "representation": "23333221213655555532277777116666744",
@@ -260,6 +254,16 @@
         },
         {
           "transition":true,
+          "duration_seconds":4
+        },
+        {
+          "representation": "2333322121365555553227777711666674461144",
+          "name": "",
+          "annotations": "123R5671234567123B567123.56712345671234567",
+          "duration_seconds":4
+        },
+        {
+          "transition":true,
           "duration_seconds":0
         }
       ],
@@ -273,7 +277,7 @@
           "duration_seconds":0
         },
         {
-          "representation": "23333221213655555532277777116666744",
+          "representation": "2333322121365555553227777711666674461144",
           "name": "",
           "annotations": "123R5671234567123B567123.56712345671234567",
           "duration_seconds":0
@@ -417,7 +421,7 @@
         {
           "representation": "4444433336666641561115151777755",
           "name": "",
-          "annotations": "12345671R3456712345671R345671Y345671234567",
+          "annotations": "12345671R3456712345671R3456712345671234567",
           "audio": "13.mp3"
         },
         {
@@ -482,7 +486,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":0.5
+          "duration_seconds":1
         },
         {
           "representation": "44444222266666246233733",
@@ -492,7 +496,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":0.5
+          "duration_seconds":1
         },
         {
           "representation": "444442222666662462337333",
@@ -552,7 +556,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "audio": "24_1.mp3"
         },
         {
           "representation": "4444422226666624623373333",
@@ -821,7 +825,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "      Y     R                         Y   "
+          "annotations": " Y          R                         Y   "
         },
         {
           "transition":true
@@ -829,7 +833,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "      Y     RB                        Y   "
+          "annotations": " Y          R          B              Y   "
         },
         {
           "transition":true
@@ -837,7 +841,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "      Y      B                        Y   "
+          "annotations": " Y                     B              Y   "
         },
         {
           "transition":true
@@ -845,7 +849,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "      Y      B                            "
+          "annotations": " Y                     B                  "
         },
         {
           "transition":true
@@ -853,7 +857,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "      Y      B                R           "
+          "annotations": " Y                 R   B                  "
         },
         {
           "transition":true
@@ -861,7 +865,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "      Y                       R           "
+          "annotations": " Y                 R                      "
         },
         {
           "transition":true
@@ -869,7 +873,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "                              R           "
+          "annotations": "                   R                      "
         },
         {
           "transition":true
@@ -877,7 +881,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R                          R           "
+          "annotations": "   R               R                      "
         },
         {
           "transition":true
@@ -885,7 +889,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R                          R      B    "
+          "annotations": "   R               R                    B "
         },
         {
           "transition":true
@@ -893,7 +897,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R              Y           R      B    "
+          "annotations": "   R              YR                    B "
         },
         {
           "transition":true
@@ -901,7 +905,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R              Y     B     R      B    "
+          "annotations": "   R              YR  B                 B "
         },
         {
           "transition":true
@@ -909,7 +913,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R              Y     B     R      Y    "
+          "annotations": "   R              YR  B              Y    "
         },
         {
           "transition":true
@@ -917,7 +921,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R              Y     B            Y    "
+          "annotations": "   R              Y   B              Y    "
         },
         {
           "transition":true
@@ -925,7 +929,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R              Y     B              YR "
+          "annotations": "   R              Y   B      R            "
         },
         {
           "transition":true
@@ -933,7 +937,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R              Y                     R "
+          "annotations": "   R              Y          R            "
         },
         {
           "transition":true
@@ -941,7 +945,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R                                    R "
+          "annotations": "   R                         R            "
         },
         {
           "transition":true
@@ -949,7 +953,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R                            Y       R "
+          "annotations": "                             R            "
         },
         {
           "transition":true
@@ -957,7 +961,7 @@
         {
           "representation": "",
           "name": "",
-          "annotations": "   R                            YB      R "
+          "annotations": "                                          "
         },
         {
           "transition":true,

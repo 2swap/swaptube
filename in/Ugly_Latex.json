@@ -1,9 +1,8 @@
 {
   "config": {
-    "width": 1280,
-    "height": 720,
-    "framerate": 30,
-    "name": "Parity"
+    "width": 1920,
+    "height": 1080,
+    "framerate": 30
   },
   "scenes": [
     {
@@ -11,23 +10,31 @@
       "blurbs": [
         {
           "transition":true,
+          "duration_seconds":0.5
+        },
+        {
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}",
+          "duration_seconds":0.5
+        },
+        {
+          "transition":true,
           "duration_seconds":1
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#ffffff}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#ffffff}{\\text{Yellow likes even threats}}\\end{array}",
-          "duration_seconds":1
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}",
+          "duration_seconds":0.5
         },
         {
           "transition":true,
           "duration_seconds":1
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#ffffff}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#ffffff}{\\text{Yellow likes even threats (and odd threats too!)}}\\end{array}",
-          "duration_seconds":1
+          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats (and odd threats too!)}}\\end{array}",
+          "duration_seconds":0.5
         },
         {
           "transition":true,
-          "duration_seconds":1
+          "duration_seconds":0.5
         }
       ]
     }
