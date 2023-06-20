@@ -28,8 +28,8 @@ private:
 
 void draw_c4_disk(Pixels& p, int stonex, int stoney, int col, bool highlight, char annotation){
     double stonewidth = p.w/16.;
-    int highlightcol = colorlerp(col, 0, .4);
-    int textcol = colorlerp(col, 0, .7);
+    int highlightcol = colorlerp(col, BLACK, .4);
+    int textcol = colorlerp(col, WHITE, .5);
     double px = (stonex-WIDTH/2.+.5)*stonewidth+p.w/2;
     double py = (-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2;
     if(highlight) p.fill_ellipse(px, py, stonewidth*.47, stonewidth*.47, highlightcol);
