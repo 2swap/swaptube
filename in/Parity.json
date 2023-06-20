@@ -93,37 +93,37 @@
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\hline\\textcolor{#cc4444}{1}&\\textcolor{#888800}{2}&\\textcolor{#cc4444}{3}&\\textcolor{#888800}{4}&\\textcolor{#cc4444}{5}&\\textcolor{#888800}{6}&\\textcolor{#cc4444}{7}\\hline\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\hline\\textcolor{#cc4444}{1}&\\textcolor{#888800}{2}&\\textcolor{#cc4444}{3}&\\textcolor{#888800}{4}&\\textcolor{#cc4444}{5}&\\textcolor{#888800}{6}&\\textcolor{#cc4444}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#cc4444}{9}&\\textcolor{#888800}{10}&\\textcolor{#cc4444}{11}&\\textcolor{#888800}{12}&\\textcolor{#cc4444}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\hline\\textcolor{#cc4444}{1}&\\textcolor{#888800}{2}&\\textcolor{#cc4444}{3}&\\textcolor{#888800}{4}&\\textcolor{#cc4444}{5}&\\textcolor{#888800}{6}&\\textcolor{#cc4444}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#cc4444}{9}&\\textcolor{#888800}{10}&\\textcolor{#cc4444}{11}&\\textcolor{#888800}{12}&\\textcolor{#cc4444}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#cc4444}{15}&\\textcolor{#888800}{16}&\\textcolor{#cc4444}{17}&\\textcolor{#888800}{18}&\\textcolor{#cc4444}{19}&\\textcolor{#888800}{20}&\\textcolor{#cc4444}{21}\\hline\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\hline\\textcolor{#cc4444}{1}&\\textcolor{#888800}{2}&\\textcolor{#cc4444}{3}&\\textcolor{#888800}{4}&\\textcolor{#cc4444}{5}&\\textcolor{#888800}{6}&\\textcolor{#cc4444}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#cc4444}{9}&\\textcolor{#888800}{10}&\\textcolor{#cc4444}{11}&\\textcolor{#888800}{12}&\\textcolor{#cc4444}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#cc4444}{15}&\\textcolor{#888800}{16}&\\textcolor{#cc4444}{17}&\\textcolor{#888800}{18}&\\textcolor{#cc4444}{19}&\\textcolor{#888800}{20}&\\textcolor{#cc4444}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#cc4444}{23}&\\textcolor{#888800}{24}&\\textcolor{#cc4444}{25}&\\textcolor{#888800}{26}&\\textcolor{#cc4444}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\hline\\textcolor{#cc4444}{1}&\\textcolor{#888800}{2}&\\textcolor{#cc4444}{3}&\\textcolor{#888800}{4}&\\textcolor{#cc4444}{5}&\\textcolor{#888800}{6}&\\textcolor{#cc4444}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#cc4444}{9}&\\textcolor{#888800}{10}&\\textcolor{#cc4444}{11}&\\textcolor{#888800}{12}&\\textcolor{#cc4444}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#cc4444}{15}&\\textcolor{#888800}{16}&\\textcolor{#cc4444}{17}&\\textcolor{#888800}{18}&\\textcolor{#cc4444}{19}&\\textcolor{#888800}{20}&\\textcolor{#cc4444}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#cc4444}{23}&\\textcolor{#888800}{24}&\\textcolor{#cc4444}{25}&\\textcolor{#888800}{26}&\\textcolor{#cc4444}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#cc4444}{29}&\\textcolor{#888800}{30}&\\textcolor{#cc4444}{31}&\\textcolor{#888800}{32}&\\textcolor{#cc4444}{33}&\\textcolor{#888800}{34}&\\textcolor{#cc4444}{35}\\hline\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{ccccccc}\\textcolor{#880000}{1}&\\textcolor{#888800}{2}&\\textcolor{#880000}{3}&\\textcolor{#888800}{4}&\\textcolor{#880000}{5}&\\textcolor{#888800}{6}&\\textcolor{#880000}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#880000}{9}&\\textcolor{#888800}{10}&\\textcolor{#880000}{11}&\\textcolor{#888800}{12}&\\textcolor{#880000}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#880000}{15}&\\textcolor{#888800}{16}&\\textcolor{#880000}{17}&\\textcolor{#888800}{18}&\\textcolor{#880000}{19}&\\textcolor{#888800}{20}&\\textcolor{#880000}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#880000}{23}&\\textcolor{#888800}{24}&\\textcolor{#880000}{25}&\\textcolor{#888800}{26}&\\textcolor{#880000}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#880000}{29}&\\textcolor{#888800}{30}&\\textcolor{#880000}{31}&\\textcolor{#888800}{32}&\\textcolor{#880000}{33}&\\textcolor{#888800}{34}&\\textcolor{#880000}{35}\\hline\\textcolor{#888800}{36}&\\textcolor{#880000}{37}&\\textcolor{#888800}{38}&\\textcolor{#880000}{39}&\\textcolor{#888800}{40}&\\textcolor{#880000}{41}&\\textcolor{#888800}{42}\\end{array}"
+          "latex": "\\begin{array}{ccccccc}\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\hline\\textcolor{#cc4444}{1}&\\textcolor{#888800}{2}&\\textcolor{#cc4444}{3}&\\textcolor{#888800}{4}&\\textcolor{#cc4444}{5}&\\textcolor{#888800}{6}&\\textcolor{#cc4444}{7}\\hline\\textcolor{#888800}{8}&\\textcolor{#cc4444}{9}&\\textcolor{#888800}{10}&\\textcolor{#cc4444}{11}&\\textcolor{#888800}{12}&\\textcolor{#cc4444}{13}&\\textcolor{#888800}{14}\\hline\\textcolor{#cc4444}{15}&\\textcolor{#888800}{16}&\\textcolor{#cc4444}{17}&\\textcolor{#888800}{18}&\\textcolor{#cc4444}{19}&\\textcolor{#888800}{20}&\\textcolor{#cc4444}{21}\\hline\\textcolor{#888800}{22}&\\textcolor{#cc4444}{23}&\\textcolor{#888800}{24}&\\textcolor{#cc4444}{25}&\\textcolor{#888800}{26}&\\textcolor{#cc4444}{27}&\\textcolor{#888800}{28}\\hline\\textcolor{#cc4444}{29}&\\textcolor{#888800}{30}&\\textcolor{#cc4444}{31}&\\textcolor{#888800}{32}&\\textcolor{#cc4444}{33}&\\textcolor{#888800}{34}&\\textcolor{#cc4444}{35}\\hline\\textcolor{#888800}{36}&\\textcolor{#cc4444}{37}&\\textcolor{#888800}{38}&\\textcolor{#cc4444}{39}&\\textcolor{#888800}{40}&\\textcolor{#cc4444}{41}&\\textcolor{#888800}{42}\\hline\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}&\\textcolor{#000000}{22}\\end{array}"
         },
         {
           "transition":true
@@ -365,25 +365,25 @@
           "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd-row threats}}\\end{array}"
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red likes odd-row threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}\\end{array}"
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}\\end{array}"
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even-row threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}"
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}"
         },
         {
           "transition":true
@@ -536,23 +536,33 @@
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "audio": "23.mp3"
         },
         {
           "representation": "444442222666662462337333",
           "name": "",
-          "annotations": "R2y4y67123456712345671234Y671234R671234567",
-          "audio": "23.mp3"
+          "annotations": "y2y4y67123456712345671234Y6712345671234567",
+          "audio": "23_1.mp3"
         },
         {
           "transition":true,
           "duration_seconds":2
         },
         {
-          "representation": "444442222666662462337333",
+          "representation": "4444422226666624623373333",
           "name": "",
           "annotations": "R204y67123456712345671234Y671234R6--234-67",
           "audio": "24.mp3"
+        },
+        {
+          "transition":true,
+          "duration_seconds":0
+        },
+        {
+          "representation": "4444422226666624623373333",
+          "name": "",
+          "annotations": "R204y67123456712345671234Y671234R6--234-67",
+          "audio": "24_0.mp3"
         },
         {
           "transition":true,
@@ -772,19 +782,19 @@
           "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}"
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red likes odd threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}"
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats}}\\end{array}"
         },
         {
           "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#880000}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats (and odd threats too!)}}\\end{array}"
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red likes odd threats (a lot!)}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow likes even threats (and odd threats too!)}}\\end{array}"
         },
         {
           "transition":true
