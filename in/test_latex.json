@@ -9,114 +9,184 @@
       "type": "latex",
       "blurbs": [
         {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
           "latex": "\\frac{2(x-y)}{2}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "(x-y)*\\frac{2}{2}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "A=2*\\frac{(x-y)}{2}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "A=2*\\frac{x-y}{2}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "ABC",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "A=B=C",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\frac{A}{B} = C",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "2\\frac{A}{B}+4 = 2C+4",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "2\\frac{a}{b}+4 = 2c+4",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{some random english text!}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{even more english!}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{すべての人間は、}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{生まれながら}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{配信ちゅう!!}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{という心やさしい漁師が住んでいました。}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{ある日のこと、浜辺を歩いていると}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{一匹の亀が子供達に}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{いじめられているのを見ました。}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{12345}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{ABCDE}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{That's really smooth...}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "latex": "\\text{Thanks for watching!}",
-          "duration_seconds":1,
-          "transition_seconds":1
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
         }
       ]
     }

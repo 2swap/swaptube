@@ -1,3 +1,45 @@
+void MovieWriter::set_audiotime(double t_seconds){
+    double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
+    if(t_samples <= audiotime){
+        cerr << "Audio PTS latchup!" << endl << "Was: " << audiotime << " and is being set to " << t_samples << "!" << endl << "Aborting!" << endl;
+        exit(1);
+    }
+    audiotime = t_samples;
+}
+
+double MovieWriter::encode_and_write_audio(){
+    AVPacket outputPacket;
+    av_init_packet(&outputPacket);
+
+    double length_in_seconds = 0;
+
+    int ret = 1;
+    while (ret >= 0) {
+        ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+            break;
+        }
+
+        // Set the stream index of the output packet to the audio stream index
+        outputPacket.stream_index = audioStream->index;
+
+        // Set the correct PTS and DTS values for the output packet
+        outputPacket.dts = av_rescale_q(audiotime, audioStream->time_base, audioOutputCodecContext->time_base);
+        outputPacket.pts = outputPacket.dts;
+        audiotime += outputPacket.duration;
+
+        length_in_seconds += static_cast<double>(outputPacket.duration) / audioOutputCodecContext->sample_rate;
+
+        // Rescale PTS and DTS values before writing the packet
+        av_packet_rescale_ts(&outputPacket, audioOutputCodecContext->time_base, audioStream->time_base);
+
+        ret = av_write_frame(fc, &outputPacket);
+
+        av_packet_unref(&outputPacket);
+    }
+    return length_in_seconds;
+}
+
 double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
     cout << "Adding audio" << endl;
 
@@ -18,32 +60,11 @@ double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
                     break;
                 }
 
-                // Calculate the duration of the audio frame
-                length_in_seconds += (double)frame->nb_samples / audioInputCodecContext->sample_rate;
-
-                // Encode the audio frame
                 frame->pts = audframe;
                 audframe++;
                 avcodec_send_frame(audioOutputCodecContext, frame);
 
-                while (ret >= 0) {
-                    ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
-                    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                        break;
-                    }
-
-                    // Set the stream index of the output packet to the audio stream index
-                    outputPacket.stream_index = audioStream->index;
-
-                    // Write the output packet to the output format context
-                    outputPacket.dts = audiodts;
-                    audiodts++;
-                    outputPacket.pts = audiopts;
-                    audiopts++;
-                    ret = av_write_frame(fc, &outputPacket);
-
-                    av_packet_unref(&outputPacket);
-                }
+                length_in_seconds += encode_and_write_audio();
             }
             av_frame_unref(frame);
             av_frame_free(&frame);
@@ -68,7 +89,7 @@ void MovieWriter::add_silence(double duration) {
     int frameSize = audioOutputCodecContext->frame_size;
 
     // Calculate the number of frames needed to accommodate the specified duration
-    int numFrames = (numSamples + frameSize - 1) / frameSize;
+    int numFrames = ceil(static_cast<double>(numSamples) / frameSize);
 
     // Allocate buffer for audio data
     int bufferSize = numSamples * audioOutputCodecContext->channels;
@@ -76,25 +97,21 @@ void MovieWriter::add_silence(double duration) {
 
     // Split the audio data into multiple frames
     int samplesRemaining = numSamples;
-    int samplesPerFrame = frameSize;
 
     for (int i = 0; i < numFrames; i++) {
-        cout << "Frame " << audframe << endl;
-        if (samplesRemaining < frameSize) {
-            samplesPerFrame = samplesRemaining;
-        }
+        int samples_this_frame = min(frameSize, samplesRemaining);
 
         // Fill the audio buffer with silence
         for (int ch = 0; ch < audioOutputCodecContext->channels; ch++) {
-            int offset = ch * samplesPerFrame;
-            for (int s = 0; s < samplesPerFrame; s++) {
+            int offset = ch * samples_this_frame;
+            for (int s = 0; s < samples_this_frame; s++) {
                 audioBuffer[offset + s] = s%5;
             }
         }
 
         // Create a frame and set its properties
         AVFrame* frame = av_frame_alloc();
-        frame->nb_samples = samplesPerFrame;
+        frame->nb_samples = samples_this_frame;
         frame->channel_layout = audioOutputCodecContext->channel_layout;
         frame->sample_rate = audioOutputCodecContext->sample_rate;
         frame->format = audioOutputCodecContext->sample_fmt;
@@ -103,7 +120,7 @@ void MovieWriter::add_silence(double duration) {
         int ret = av_frame_get_buffer(frame, 0);
 
         for (int ch = 0; ch < audioOutputCodecContext->channels; ch++) {
-            frame->linesize[ch] = samplesPerFrame * av_get_bytes_per_sample(audioOutputCodecContext->sample_fmt);
+            frame->linesize[ch] = samples_this_frame * av_get_bytes_per_sample(audioOutputCodecContext->sample_fmt);
         }
 
         ret = avcodec_fill_audio_frame(frame, audioOutputCodecContext->channels, audioOutputCodecContext->sample_fmt,
@@ -113,30 +130,12 @@ void MovieWriter::add_silence(double duration) {
         audframe++;
         ret = avcodec_send_frame(audioOutputCodecContext, frame);
 
-        while (ret >= 0) {
-            ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
-            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                cout << err2str(ret) << endl;
-                break;
-            }
-
-            // Set the stream index of the output packet to the audio stream index
-            outputPacket.stream_index = audioStream->index;
-
-            outputPacket.dts = audiodts;
-            audiodts++;
-            outputPacket.pts = audiopts;
-            audiopts++;
-            // Write the output packet to the output format context
-            ret = av_write_frame(fc, &outputPacket);
-
-            av_packet_unref(&outputPacket);
-        }
+        encode_and_write_audio();
 
         av_frame_unref(frame);
         av_frame_free(&frame);
 
-        samplesRemaining -= samplesPerFrame;
+        samplesRemaining -= samples_this_frame;
     }
     cout << "Added silence: " << duration << " seconds" << endl;
 }

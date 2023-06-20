@@ -96,9 +96,9 @@ public:
                 cout << "\033[48;5;" << colorCode << "m";
                 cout << ' ';
             }
-            cout << "|" << endl << "|";
+            cout << "\033[0m" << endl;
         }
-        cout << "\033[0m" << endl;  // Reset the color attributes
+        cout << endl;
     }
 
     bool is_empty() const {

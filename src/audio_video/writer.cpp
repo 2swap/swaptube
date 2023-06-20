@@ -24,7 +24,8 @@ using namespace std;
 class MovieWriter
 {
     const unsigned int width, height;
-    unsigned int inframe, outframe, audframe, audiodts, audiopts;
+    unsigned int inframe, outframe, audframe;
+    int audiotime;
     int framerate;
     int audioStreamIndex;
 
@@ -38,7 +39,7 @@ class MovieWriter
     AVCodecContext* videoCodecContext;
     AVCodecContext* audioInputCodecContext;
     AVCodecContext* audioOutputCodecContext;
-    AVPacket pkt, inputPacket, outputPacket;
+    AVPacket pkt, inputPacket;
 
     AVFrame *rgbpic;
     AVFrame *yuvpic;
@@ -61,9 +62,9 @@ public:
 
     MovieWriter(const string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_, const string& media_) :
         
-    width(width_), height(height_), inframe(0), outframe(0), audframe(0), audiopts(0), audiodts(0), framerate(framerate_), output_filename(filename_),
+    width(width_), height(height_), inframe(0), outframe(0), audframe(0), framerate(framerate_), output_filename(filename_),
     sws_ctx(nullptr), videoStream(nullptr), audioStream(nullptr), fc(nullptr), videoCodecContext(nullptr), rgbpic(nullptr), yuvpic(nullptr),
-    pkt(), inputPacket(), outputPacket(), media_folder(media_)
+    pkt(), inputPacket(), media_folder(media_), audiotime(-1)
 
     {
         make_media_folder();
@@ -71,8 +72,10 @@ public:
 
     double add_audio_get_length(const string& inputAudioFilename);
     void add_silence(double duration);
+    double encode_and_write_audio();
     bool encode_and_write_frame(AVFrame* frame);
     void addFrame(const Pixels& p);
+    void set_audiotime(double t_seconds);
 
     void init(const string& inputAudioFilename){
         AVFormatContext* inputAudioFormatContext = nullptr;
@@ -165,9 +168,6 @@ public:
         AVPacket inputPacket;
         av_init_packet(&inputPacket);
 
-        AVPacket outputPacket;
-        av_init_packet(&outputPacket);
-
         avcodec_register_all();
         
         avformat_close_input(&inputAudioFormatContext);
@@ -175,26 +175,9 @@ public:
 
     ~MovieWriter()
     {
-
-
         // write delayed audio frames
         avcodec_send_frame(audioOutputCodecContext, NULL);
-        int ret = 0;
-        while (ret >= 0) {
-            ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
-            if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                break;
-            }
-
-            // Set the stream index of the output packet to the audio stream index
-            outputPacket.stream_index = audioStream->index;
-
-            // Write the output packet to the output format context
-            ret = av_write_frame(fc, &outputPacket);
-
-            av_packet_unref(&outputPacket);
-        }
-
+        encode_and_write_audio();
 
         // Writing the delayed video frames
         while(encode_and_write_frame(NULL));
