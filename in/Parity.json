@@ -1,7 +1,7 @@
 {
   "config": {
-    "width": 1280,
-    "height": 720,
+    "width": 1920,
+    "height": 1080,
     "framerate": 30,
     "name": "Parity"
   },
@@ -546,12 +546,12 @@
         },
         {
           "transition":true,
-          "duration_seconds":2
+          "duration_seconds":1
         },
         {
-          "representation": "4444422226666624623373333",
+          "representation": "444442222666662462337333",
           "name": "",
-          "annotations": "R204y67123456712345671234Y671234R6--234-67",
+          "annotations": "R204567123456712345671234Y671234R6--234-67",
           "audio": "24.mp3"
         },
         {
@@ -561,7 +561,7 @@
         {
           "representation": "4444422226666624623373333",
           "name": "",
-          "annotations": "R204y67123456712345671234Y671234R6--234-67",
+          "annotations": "R204567123456712345671234Y671234R6--234-67",
           "audio": "24_0.mp3"
         },
         {
