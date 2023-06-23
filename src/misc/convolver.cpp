@@ -76,6 +76,7 @@ Pixels create_alpha_from_intensities(const std::vector<std::vector<int>>& intens
 }
 
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
+    cout << "Constructing a convolution map... " << endl;
     int max_conv = 0;
     int retw = p1.w+p2.w;
     int reth = p1.h+p2.h;
@@ -105,11 +106,22 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
         }
     max_x -= p2.w;
     max_y -= p2.h;
+    cout << "Finished!" << endl;
 
     return create_alpha_from_intensities(map);
 }
 
-void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int id) {
+/**
+ * Fills the connected region in the output Pixels object with the specified color
+ * using the flood fill algorithm, starting from the given starting coordinates.
+ *
+ * @param ret The output Pixels object to fill.
+ * @param p The input Pixels object to perform the flood fill on.
+ * @param start_x The starting x-coordinate of the fill.
+ * @param start_y The starting y-coordinate of the fill.
+ * @param color The color value to assign to the filled region.
+ */
+void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int color) {
     stack<pair<int, int> > stack;
     stack.push({start_x, start_y});
 
@@ -123,7 +135,7 @@ void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int id) 
         if (p.get_alpha(x, y) == 0 || ret.get_pixel(x, y) != 0)
             continue;
 
-        ret.set_pixel(x, y, id);
+        ret.set_pixel(x, y, color);
 
         stack.push({x + 1, y}); // Right
         stack.push({x - 1, y}); // Left
@@ -163,6 +175,7 @@ int connected_component_size(const Pixels& p, int start_x, int start_y) {
 }
 
 Pixels segment(const Pixels& p, int& id) {
+    cout << "Segmenting..." << endl;
     Pixels ret(p.w, p.h);
 
     // Initialize the identifier color
@@ -171,9 +184,9 @@ Pixels segment(const Pixels& p, int& id) {
     // Perform flood fill for each pixel in the input Pixels
     for (int y = 0; y < p.h; y++) {
         for (int x = 0; x < p.w; x++) {
-            if (p.get_alpha(x, y) != 0 && ret.get_alpha(x, y) == 0) {
-                // Found a new shape, perform flood fill starting from the current pixel
+            if (p.get_alpha(x, y) != 0 && ret.get_pixel(x, y) == 0) {
                 id++; // Increment the identifier color for the next shape
+                // Found a new shape, perform flood fill starting from the current pixel
                 flood_fill(ret, p, x, y, id);
             }
         }
