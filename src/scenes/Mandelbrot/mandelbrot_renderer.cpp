@@ -37,55 +37,23 @@ class MandelbrotRenderer {
             which = wp;
         }
 
-        void depths_to_points(vector<int> depths, Pixels& p){
+        void depths_to_points(vector<vector<int>> depths, Pixels& p){
             //change depths to colors
-            for(int dx = 0; dx < p.w; dx++)
-                for(int dy = 0; dy < p.h; dy++){
-                    int depth = depths[dx+p.w*dy];
-                    int col = depth == -1 ? 0 : palette.prompt(depth+time*breath);
-                    p.set_pixel(dx, dy, col);
-                }
-        }
-
-        void render_mandelbrot_points(Pixels& p){
-            Complex screen_center = Complex(p.w*0.5, p.h*0.5);
-            vector<int> depths(p.w*p.h, 12345);
-            int queries = 0;
-            for(int jump = 16; jump >= 1; jump/=2){
-                for(int dx = 0; dx < p.w; dx+=jump)
-                    for(int dy = 0; dy < p.h; dy+=jump) {
-                        if(depths[dy*p.w+dx] != 12345) continue;
-                        Complex point = (Complex(dx, dy)-screen_center) * current_zoom + center;
-                        int depth = 0;
-                        if (which == Z)
-                            depth = m.get_depth_complex(point, exponent, c);
-                        if (which == X)
-                            depth = m.get_depth_complex(z0, point, c);
-                        if (which == C)
-                            depth = m.get_depth_complex(z0, exponent, point);
-                        depths[dx+p.w*dy] = depth;
-                        queries++;
+            bool use_cyclic_palette = false;
+            if (use_cyclic_palette) {
+                for(int dx = 0; dx < p.w; dx++) {
+                    for(int dy = 0; dy < p.h; dy++) {
+                        int depth = depths[dy][dx];
+                        int col = depth == -1 ? 0 : palette.prompt(depth+time*breath);
+                        p.set_pixel(dx, dy, col);
                     }
-                if(jump != 1){
-                    for(int dx = jump*2; dx < p.w-jump*2; dx+=jump)
-                        for(int dy = jump*2; dy < p.h-jump*2; dy+=jump){
-                            int depth = depths[dx+p.w*dy];
-                            bool uniform = true;
-                            for(int x = dx-jump*2; x <= dx+jump*2; x+=jump)
-                                for(int y = dy-jump*2; y <= dy+jump*2; y+=jump)
-                                    if(depths[x+p.w*y]!=depth)
-                                        uniform = false;
-                            if(uniform)
-                                for(int x = dx-jump; x <= dx+jump; x++)
-                                    for(int y = dy-jump; y <= dy+jump; y++)
-                                        depths[x+p.w*y] = depth;
-                        }
                 }
             }
-            cout << queries << endl;
-            depths_to_points(depths, p);
-            current_zoom = current_zoom * zoom_multiplier;
-            time++;
+            else {
+                p.fill(BLACK);
+                p.copy(create_alpha_from_intensities(depths, 255), 0, 0, 1);
+                p.filter_greenify_grays();
+            }
         }
 
         void edge_detect_render(Pixels& p) {
@@ -93,7 +61,7 @@ class MandelbrotRenderer {
             p.fill(0x00123456);
             int queries = 0;
 
-            vector<int> depths(p.w*p.h, -2);
+            vector<vector<int>> depths(p.h, vector<int>(p.w, -2));
 
             // Create a queue to store the pixels to be queried
             queue<pair<int, int>> queryQueue;
@@ -113,7 +81,7 @@ class MandelbrotRenderer {
                 auto [x, y] = queryQueue.front();
                 queryQueue.pop();
                 if(p.out_of_range(x, y)) continue;
-                if(depths[y*p.w+x] != -2) continue;
+                if(depths[y][x] != -2) continue;
 
                 // Query the pixel
                 Complex point = (Complex(x, y)-screen_center) * current_zoom + center;
@@ -125,11 +93,11 @@ class MandelbrotRenderer {
                 if (which == C)
                     depth = m.get_depth_complex(z0, exponent, point);
                 queries++;
-                depths[y*p.w+x] = depth;
+                depths[y][x] = depth;
 
                 // Check against neighbors
                 if (x > 0) {
-                    int left_neighbor = depths[y*p.w + x-1];
+                    int left_neighbor = depths[y][x-1];
                     if (left_neighbor != -2 && left_neighbor != depth) {
                         for (int dy = -1; dy <= 1; dy++) {
                             queryQueue.push({x - 1, y + dy});
@@ -138,7 +106,7 @@ class MandelbrotRenderer {
                     }
                 }
                 if (x < p.w - 1){
-                    int right_neighbor = depths[y*p.w + x+1];
+                    int right_neighbor = depths[y][x+1];
                     if (right_neighbor != -2 && right_neighbor != depth) {
                         for (int dy = -1; dy <= 1; dy++) {
                             queryQueue.push({x + 1, y + dy});
@@ -147,7 +115,7 @@ class MandelbrotRenderer {
                     }
                 }
                 if (y > 0) {
-                    int top_neighbor = depths[(y-1)*p.w + x];
+                    int top_neighbor = depths[y-1][x];
                     if(top_neighbor != -2 && top_neighbor != depth) {
                         for (int dx = -1; dx <= 1; dx++) {
                             queryQueue.push({x + dx, y - 1});
@@ -156,7 +124,7 @@ class MandelbrotRenderer {
                     }
                 }
                 if (y < p.h - 1){
-                    int bottom_neighbor = depths[(y+1)*p.w + x];
+                    int bottom_neighbor = depths[y+1][x];
                     if (bottom_neighbor != -2 && bottom_neighbor != depth) {
                         for (int dx = -1; dx <= 1; dx++) {
                             queryQueue.push({x + dx, y + 1});
@@ -173,11 +141,11 @@ class MandelbrotRenderer {
             // Perform flood fill to fill the remaining transparent locations
             for (int y = 0; y < p.h; y++) {
                 for (int x = 0; x < p.w; x++) {
-                    if (depths[y * p.w + x] == -2) {
-                        int left_depth = (x > 0) ? depths[y * p.w + (x - 1)] : -2;
-                        int right_depth = (x < p.w - 1) ? depths[y * p.w + (x + 1)] : -2;
-                        int top_depth = (y > 0) ? depths[(y - 1) * p.w + x] : -2;
-                        int bottom_depth = (y < p.h - 1) ? depths[(y + 1) * p.w + x] : -2;
+                    if (depths[y][x] == -2) {
+                        int left_depth = (x > 0) ? depths[y][x - 1] : -2;
+                        int right_depth = (x < p.w - 1) ? depths[y][x + 1] : -2;
+                        int top_depth = (y > 0) ? depths[y - 1][x] : -2;
+                        int bottom_depth = (y < p.h - 1) ? depths[y + 1][x] : -2;
 
                         int color = 0;
 
