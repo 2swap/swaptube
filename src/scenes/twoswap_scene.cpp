@@ -1,5 +1,6 @@
 #pragma once
 
+#include "scene.h"
 using json = nlohmann::json;
 
 class TwoswapScene : public Scene {
@@ -11,7 +12,7 @@ public:
     }
 };
 
-TwoswapScene::TwoswapScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents) {
+TwoswapScene::TwoswapScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents, writer) {
     double duration_seconds = 0;
     if(contents.find("audio") != contents.end())
         duration_seconds = writer.add_audio_get_length(contents["audio"].get<string>());
@@ -26,6 +27,7 @@ TwoswapScene::TwoswapScene(const json& config, const json& contents, MovieWriter
     pix.fill(BLACK);
     pix.fill_ellipse(pix.w/3, pix.h/2, pix.w/12, pix.w/12, WHITE);
     pix.copy(twoswap_pix, pix.w/3+pix.w/12+pix.w/32, (pix.h-twoswap_pix.h)/2+pix.w/32, 1);
+    frontload_audio(contents, writer);
 }
 
 Pixels TwoswapScene::query(int& frames_left) {

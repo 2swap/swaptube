@@ -12,16 +12,7 @@ public:
     }
 };
 
-HeaderScene::HeaderScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents) {
-    double duration_seconds = 0;
-    if(contents.find("audio") != contents.end())
-        duration_seconds = writer.add_audio_get_length(contents["audio"].get<string>());
-    else{
-        duration_seconds = contents["duration_seconds"].get<int>();
-        writer.add_silence(duration_seconds);
-    }
-    scene_duration_frames = duration_seconds * framerate;
-
+HeaderScene::HeaderScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents, writer) {
     string header = contents["header"].get<string>();
     string subheader = contents["subheader"].get<string>();
     Pixels header_pix = eqn_to_pix(latex_text(header), pix.w / 640 + 1);
@@ -30,6 +21,8 @@ HeaderScene::HeaderScene(const json& config, const json& contents, MovieWriter& 
     pix.fill(BLACK);
     pix.copy(header_pix, (pix.w - header_pix.w)/2, pix.h/2-100, 1);
     pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50, 1);
+
+    frontload_audio(contents, writer);
 }
 
 Pixels HeaderScene::query(int& frames_left) {

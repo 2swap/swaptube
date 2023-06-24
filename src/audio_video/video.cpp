@@ -10,7 +10,7 @@ bool MovieWriter::encode_and_write_frame(AVFrame* frame){
     av_packet_rescale_ts(&pkt, { 1, framerate }, videoStream->time_base);
 
     pkt.stream_index = videoStream->index;
-    cout << "Writing frame " << outframe++ << " (size = " << pkt.size << ")" << endl;
+    cout << "Writing frame " << outframe << " (size = " << pkt.size << ")" << endl;
 
     // Write the encoded frame to the mp4 file.
     av_interleaved_write_frame(fc, &pkt);
@@ -44,6 +44,7 @@ void MovieWriter::addFrame(const Pixels& p)
     // unrelated to the format we are using. We set them,
     // for instance, as the corresponding frame number.
     yuvpic->pts = outframe;
+    outframe++;
 
     if(!encode_and_write_frame(yuvpic)) cout << endl;
 }

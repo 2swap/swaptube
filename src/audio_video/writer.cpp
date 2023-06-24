@@ -114,7 +114,7 @@ public:
         AVCodec* codec = avcodec_find_encoder_by_name("libx264");
         AVDictionary* opt = NULL;
         av_dict_set(&opt, "preset", "ultrafast", 0);
-        av_dict_set(&opt, "crf", "23", 0);
+        av_dict_set(&opt, "crf", "18", 0);
         videoStream = avformat_new_stream(fc, codec);
         audioStream = avformat_new_stream(fc, audioInputCodec);
         videoCodecContext = videoStream->codec;

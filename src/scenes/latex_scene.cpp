@@ -1,12 +1,12 @@
 #pragma once
 
 #include "scene.h"
+#include "sequential_scene.cpp"
 using json = nlohmann::json;
 
-class LatexScene : public Scene {
+class LatexScene : public SequentialScene {
 public:
     LatexScene(const json& config, const json& contents, MovieWriter& writer);
-    Pixels query(int& frames_left) override;
     void render_non_transition(Pixels& p, int which);
     void render_transition(Pixels& p, int which, double weight);
     Scene* createScene(const json& config, const json& scene, MovieWriter& writer) override {
@@ -19,70 +19,34 @@ private:
     vector<vector<StepResult>> intersections;
     vector<Pixels> convolutions;
     vector<pair<int, int>> coords;
-    vector<double> durations;
 };
 
-LatexScene::LatexScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents) {
-    vector<json> blurbs_json = contents["blurbs"];
+LatexScene::LatexScene(const json& config, const json& contents, MovieWriter& writer) : SequentialScene(config, contents, writer) {
+    vector<json> sequence_json = contents["sequence"];
 
     // Frontload latex rendering
-    for (int blurb_index = 0; blurb_index < blurbs_json.size(); blurb_index++) {
-        json blurb = blurbs_json[blurb_index];
+    for (int i = 0; i < sequence_json.size(); i++) {
+        json blurb = sequence_json[i];
         if(blurb.find("transition") != blurb.end()) continue;
         string eqn = blurb["latex"].get<string>();
         cout << "rendering latex: " << eqn << endl;
-        Pixels p = eqn_to_pix(eqn, pix.w / 640);
+        Pixels p = eqn_to_pix(eqn, pix.w / 320);
         equations.push_back(p);
         coords.push_back(make_pair((pix.w-p.w)/2, (pix.h-p.h)/2));
     }
 
     // Frontload convolution
     int equation_index = 0;
-    for (int blurb_index = 2; blurb_index < blurbs_json.size()-2; blurb_index+=2) {
-        json blurb_json = blurbs_json[blurb_index];
+    for (int i = 2; i < sequence_json.size()-2; i+=2) {
+        json blurb_json = sequence_json[i];
         bool is_transition = blurb_json.find("transition") != blurb_json.end();
         if(!is_transition) continue;
-        cout << blurbs_json[blurb_index-1]["latex"] << " <- Finding Intersections -> " << blurbs_json[blurb_index+1]["latex"] << endl;
+        cout << sequence_json[i-1]["latex"] << " <- Finding Intersections -> " << sequence_json[i+1]["latex"] << endl;
         intersections.push_back(find_intersections(equations[equation_index], equations[equation_index+1]));
         equation_index += 1;
     }
 
-    // Frontload audio
-    if(contents.find("audio") != contents.end()){
-        cout << "This scene has a single audio for all of its subscenes." << endl;
-        double duration = writer.add_audio_get_length(contents["audio"].get<string>());
-        double ct = blurbs_json.size();
-        for (int i = 0; i < blurbs_json.size(); i++) {
-            json& blurb_json = blurbs_json[i];
-            if (blurb_json.find("duration_seconds") != blurb_json.end()) {
-                duration -= blurb_json["duration_seconds"].get<double>();
-                ct--;
-            }
-        }
-        for (int i = 0; i < blurbs_json.size(); i++){
-            json& blurb_json = blurbs_json[i];
-            if (blurb_json.find("duration_seconds") != blurb_json.end()) {
-                durations.push_back(blurb_json["duration_seconds"].get<double>());
-            }
-            else {
-                durations.push_back(duration/ct);
-            }
-        }
-    }
-    else{
-        cout << "This scene has a unique audio for each of its subscenes." << endl;
-        for (int blurb_index = 0; blurb_index < blurbs_json.size(); blurb_index++) {
-            json& blurb_json = blurbs_json[blurb_index];
-            if (blurb_json.find("audio") != blurb_json.end()) {
-                string audio_path = blurb_json["audio"].get<string>();
-                durations.push_back(writer.add_audio_get_length(audio_path));
-            } else {
-                double duration = blurb_json["duration_seconds"].get<double>();
-                writer.add_silence(duration);
-                durations.push_back(duration);
-            }
-        }
-    }
+    frontload_audio(contents, writer);
 }
 
 void LatexScene::render_non_transition(Pixels& p, int which) {
@@ -122,31 +86,4 @@ void LatexScene::render_transition(Pixels& p, int which, double weight) {
     int num_intersections = intersections[which].size();
     p.copy(intersections[which][num_intersections-1].current_p1, coords[which].first, coords[which].second, tp1);
     p.copy(intersections[which][num_intersections-1].current_p2, coords[which+1].first, coords[which+1].second, tp);
-}
-
-Pixels LatexScene::query(int& frames_left) {
-    vector<json> blurbs_json = contents["blurbs"];
-    int time_left = 0;
-    int time_spent = time;
-    bool rendered = false;
-    int content_index = -1;
-    for (int i = 0; i < blurbs_json.size(); i++) {
-        json blurb_json = blurbs_json[i];
-        bool is_transition = blurb_json.find("transition") != blurb_json.end();
-
-        double frames = durations[i] * framerate;
-        if (rendered) time_left += frames;
-        else if (time_spent < frames) {
-            if(is_transition)render_transition(pix, content_index, time_spent/frames);
-            else render_non_transition(pix, content_index);
-            rendered = true;
-            time_left += frames - time_spent;
-        } else {
-            time_spent -= frames;
-        }
-        if(is_transition) content_index += 1;
-    }
-    frames_left = time_left;
-    time++;
-    return pix;
 }
