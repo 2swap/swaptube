@@ -4,9 +4,10 @@ using json = nlohmann::json;
 
 class Scene {
 public:
-    Scene(const json& config, const json& contents);
+    Scene(const json& config, const json& contents, MovieWriter& writer);
     virtual Scene* createScene(const json& config, const json& contents, MovieWriter& writer) = 0;
     virtual Pixels query(int& frames_left) = 0;
+    void frontload_audio(const json& contents, MovieWriter& writer);
   
 protected:
     Pixels pix;

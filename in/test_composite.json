@@ -1,7 +1,7 @@
 {
   "config": {
-    "width": 1280,
-    "height": 720,
+    "width": 640,
+    "height": 360,
     "framerate": 30
   },
   "scenes": [
@@ -12,37 +12,50 @@
         {
           "x": 0,
           "y": 0,
-          "width": 640,
-          "height": 360,
+          "width": 320,
+          "height": 180,
           "subscene": {
             "type": "latex",
-            "blurbs": [
+            "sequence": [
+              {
+                "transition": true,
+                "duration_seconds": 1
+              },
               {
                 "latex": "\\frac{2(x-y)}{2}",
-                "duration_seconds":1,
-                "transition_seconds":1
+                "duration_seconds":1
+              },
+              {
+                "transition": true,
+                "duration_seconds": 1
               },
               {
                 "latex": "(x-y)*\\frac{2}{2}",
-                "duration_seconds":1,
-                "transition_seconds":1
+                "duration_seconds":1
+              },
+              {
+                "transition": true,
+                "duration_seconds": 1
               },
               {
                 "latex": "\\text{Thanks for watching!}",
-                "duration_seconds":1,
-                "transition_seconds":1
+                "duration_seconds":1
+              },
+              {
+                "transition": true,
+                "duration_seconds": 1
               }
             ]
           }
         },
         {
-          "x": 640,
-          "y": 360,
-          "width": 300,
-          "height": 300,
+          "x": 320,
+          "y": 180,
+          "width": 200,
+          "height": 100,
           "subscene":     {
             "type": "mandelbrot",
-            "duration_seconds": 6,
+            "duration_seconds": 7,
             "center": {
               "real": -0.7925403632943916,
               "imag": 0.16076317715583555,
@@ -72,43 +85,56 @@
           }
         },
         {
-          "x": 640,
+          "x": 320,
           "y": 0,
-          "width": 640,
-          "height": 360,
-          "subscene":     {
+          "width": 320,
+          "height": 180,
+          "subscene": {
             "type": "2swap",
-            "duration_seconds": 6
+            "duration_seconds": 7
           }
         },
         {
           "x": 0,
-          "y": 360,
-          "width": 640,
-          "height": 360,
-          "subscene":     {
+          "y": 180,
+          "width": 320,
+          "height": 180,
+          "subscene": {
             "type": "c4",
-            "boards": [
+            "sequence": [
+              {
+                "transition": true,
+                "duration_seconds": 1
+              },
               {
                 "representation": "444556566",
                 "name": "The 7",
                 "annotations": "                    T      T              ",
-                "duration_seconds":1,
-                "transition_seconds":1
+                "duration_seconds":1
+              },
+              {
+                "transition": true,
+                "duration_seconds": 1
               },
               {
                 "representation": "43623644237",
                 "name": "",
                 "annotations": "1234567123456712345671234567T234T671234T67",
-                "duration_seconds":1,
-                "transition_seconds":1
+                "duration_seconds":1
+              },
+              {
+                "transition": true,
+                "duration_seconds": 1
               },
               {
                 "representation": "4444443555552",
                 "name": "The Narrow 6-1",
                 "annotations": "                              T    T      ",
-                "duration_seconds":1,
-                "transition_seconds":1
+                "duration_seconds":1
+              },
+              {
+                "transition": true,
+                "duration_seconds": 1
               }
             ]
           }

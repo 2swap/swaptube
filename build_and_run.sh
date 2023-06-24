@@ -26,12 +26,22 @@ fi
 make -j12
 
 # Check if the build was successful
-if [ $? -eq 0 ]; then
-  # Run the program
-  ./swaptube $1
-else
+if [ $? -ne 0 ]; then
   echo "Build failed. Please check the build errors."
+  cd ..
+  exit 1
 fi
 
-cd ..
+# Run the program
+./swaptube $1
 
+# Check if the execution was successful
+if [ $? -ne 0 ]; then
+  echo "Execution failed in runtime."
+  cd ..
+  exit 1
+fi
+
+vlc ../out/$1.mp4
+
+cd ..

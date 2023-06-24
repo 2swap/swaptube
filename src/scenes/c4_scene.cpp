@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene.h"
+#include "sequential_scene.cpp"
 #include "Connect4/c4.h"
 using json = nlohmann::json;
 
@@ -10,10 +11,9 @@ inline int C4_RED_THREAT    = 0xffff4444;
 inline int C4_YELLOW_THREAT = 0xffffff44;
 inline int C4_EMPTY         = 0xff222222;
 
-class C4Scene : public Scene {
+class C4Scene : public SequentialScene {
 public:
     C4Scene(const json& config, const json& contents, MovieWriter& writer);
-    Pixels query(int& frames_left) override;
     void render_non_transition(Pixels& p, int which);
     void render_transition(Pixels& p, int which, double weight);
     Scene* createScene(const json& config, const json& scene, MovieWriter& writer) override {
@@ -22,7 +22,6 @@ public:
 
 private:
     vector<Board> boards;
-    vector<double> durations;
     vector<string> names;
 };
 
@@ -105,50 +104,14 @@ void render_c4_board(Pixels& p, Board b){
 
 }
 
-C4Scene::C4Scene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents) {
-    vector<json> boards_json = contents["boards"];
-    for (int i = 1; i < boards_json.size()-1; i+=2) {
-        json board = boards_json[i];
+C4Scene::C4Scene(const json& config, const json& contents, MovieWriter& writer) : SequentialScene(config, contents, writer) {
+    vector<json> sequence_json = contents["sequence"];
+    for (int i = 1; i < sequence_json.size()-1; i+=2) {
+        json board = sequence_json[i];
         boards.push_back(Board(board["representation"], board["annotations"]));
         names.push_back(board["name"]);
     }
-
-    // Frontload audio
-    if(contents.find("audio") != contents.end()){
-        cout << "This scene has a single audio for all of its subscenes." << endl;
-        double duration = writer.add_audio_get_length(contents["audio"].get<string>());
-        double ct = boards_json.size();
-        for (int i = 0; i < boards_json.size(); i++) {
-            json& board_json = boards_json[i];
-            if (board_json.find("duration_seconds") != board_json.end()) {
-                duration -= board_json["duration_seconds"].get<double>();
-                ct--;
-            }
-        }
-        for (int i = 0; i < boards_json.size(); i++){
-            json& board_json = boards_json[i];
-            if (board_json.find("duration_seconds") != board_json.end()) {
-                durations.push_back(board_json["duration_seconds"].get<double>());
-            }
-            else {
-                durations.push_back(duration/ct);
-            }
-        }
-    }
-    else{
-        cout << "This scene has a unique audio for each of its subscenes." << endl;
-        for (int blurb_index = 0; blurb_index < boards_json.size(); blurb_index++) {
-            json& board_json = boards_json[blurb_index];
-            if (board_json.find("audio") != board_json.end()) {
-                string audio_path = board_json["audio"].get<string>();
-                durations.push_back(writer.add_audio_get_length(audio_path));
-            } else {
-                double duration = board_json["duration_seconds"].get<double>();
-                writer.add_silence(duration);
-                durations.push_back(duration);
-            }
-        }
-    }
+    frontload_audio(contents, writer);
 }
 
 void C4Scene::render_non_transition(Pixels& p, int which) {
@@ -190,31 +153,4 @@ void C4Scene::render_transition(Pixels& p, int which, double weight) {
         pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, 1-weight);
         pix.copy(next_title_pix, (pix.w - next_title_pix.w)/2, pix.h-pix.w/12, weight);
     }
-}
-
-Pixels C4Scene::query(int& frames_left) {
-    vector<json> boards_json = contents["boards"];
-    int time_left = 0;
-    int time_spent = time;
-    bool rendered = false;
-    int content_index = -1;
-    for (int i = 0; i < boards_json.size(); i++) {
-        json board_json = boards_json[i];
-        bool is_transition = board_json.find("transition") != board_json.end();
-
-        double frames = durations[i] * framerate;
-        if (rendered) time_left += frames;
-        else if (time_spent < frames) {
-            if(is_transition)render_transition(pix, content_index, time_spent/frames);
-            else render_non_transition(pix, content_index);
-            rendered = true;
-            time_left += frames - time_spent;
-        } else {
-            time_spent -= frames;
-        }
-        if(is_transition) content_index += 1;
-    }
-    frames_left = time_left;
-    time++;
-    return pix;
 }
