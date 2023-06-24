@@ -36,45 +36,6 @@ void shrink_alpha_from_center(Pixels& p) {
     }
 }
 
-Pixels create_alpha_from_intensities(const std::vector<std::vector<int>>& intensities) {
-    int height = intensities.size();
-    int width = (height > 0) ? intensities[0].size() : 0;
-
-    Pixels result(width, height);
-    result.fill(WHITE);
-
-    // Find the minimum and maximum intensity values
-    int minIntensity = numeric_limits<int>::max();
-    int maxIntensity = numeric_limits<int>::min();
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int intensity = intensities[y][x];
-            if(intensity < 0) continue;
-            minIntensity = min(minIntensity, intensity);
-            maxIntensity = max(maxIntensity, intensity);
-        }
-    }
-
-    // Calculate the range of intensities
-    int intensityRange = maxIntensity - minIntensity;
-    if (intensityRange == 0) {
-        // Avoid division by zero if all intensities are the same
-        intensityRange = 1;
-    }
-
-    // Set the alpha channel based on normalized intensity values
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            int intensity = intensities[y][x];
-            int normalizedIntensity = (intensity - minIntensity) * 255 / intensityRange;
-            if(intensity < 0) normalizedIntensity = 0;
-            result.set_alpha(x, y, normalizedIntensity);
-        }
-    }
-
-    return result;
-}
-
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     cout << "Constructing a convolution map... " << endl;
     int max_conv = 0;
@@ -108,7 +69,7 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
     max_y -= p2.h;
     cout << "Finished!" << endl;
 
-    return create_alpha_from_intensities(map);
+    return create_alpha_from_intensities(map, 0);
 }
 
 /**

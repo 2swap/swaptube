@@ -243,7 +243,55 @@ public:
         }
     }
 
+    void filter_greenify_grays() {
+        for(int i = 2; i < pixels.size(); i+=4)
+            pixels[i] = (pixels[i]*pixels[i])/255;
+        for(int i = 1; i < pixels.size(); i+=4)
+            pixels[i] = 255-square(255-pixels[i])/255;
+        //for(int i = 0; i < pixels.size(); i+=4)
+        //    pixels[i] = (pixels[i]*pixels[i])/255;
+    }
+
 };
+
+Pixels create_alpha_from_intensities(const vector<vector<int>>& intensities, int negative_intensity) {
+    int height = intensities.size();
+    int width = (height > 0) ? intensities[0].size() : 0;
+
+    Pixels result(width, height);
+    result.fill(WHITE);
+
+    // Find the minimum and maximum intensity values
+    int minIntensity = numeric_limits<int>::max();
+    int maxIntensity = numeric_limits<int>::min();
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int intensity = intensities[y][x];
+            if(intensity < 0) continue;
+            minIntensity = min(minIntensity, intensity);
+            maxIntensity = max(maxIntensity, intensity);
+        }
+    }
+
+    // Calculate the range of intensities
+    int intensityRange = maxIntensity - minIntensity;
+    if (intensityRange == 0) {
+        // Avoid division by zero if all intensities are the same
+        intensityRange = 1;
+    }
+
+    // Set the alpha channel based on normalized intensity values
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int intensity = intensities[y][x];
+            int normalizedIntensity = (intensity - minIntensity) * 255 / intensityRange;
+            if(intensity < 0) normalizedIntensity = negative_intensity;
+            result.set_alpha(x, y, normalizedIntensity);
+        }
+    }
+
+    return result;
+}
 
 Pixels crop(const Pixels& p) {
     int min_x = p.w;
