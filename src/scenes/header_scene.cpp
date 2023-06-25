@@ -5,14 +5,14 @@ using json = nlohmann::json;
 
 class HeaderScene : public Scene {
 public:
-    HeaderScene(const json& config, const json& contents, MovieWriter& writer);
+    HeaderScene(const json& config, const json& contents, MovieWriter* writer);
     Pixels query(int& frames_left) override;
-    Scene* createScene(const json& config, const json& scene, MovieWriter& writer) override {
+    Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new HeaderScene(config, scene, writer);
     }
 };
 
-HeaderScene::HeaderScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents, writer) {
+HeaderScene::HeaderScene(const json& config, const json& contents, MovieWriter* writer) : Scene(config, contents, writer) {
     string header = contents["header"].get<string>();
     string subheader = contents["subheader"].get<string>();
     Pixels header_pix = eqn_to_pix(latex_text(header), pix.w / 640 + 1);

@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
     json config = video["config"];
     int width = config["width"];
     int height = config["height"];
-    int framerate = config.value("framerate", 30);
+    int framerate = config["framerate"];
     string name = "../out/" + string(argv[1]) + ".mp4";
 
     cout << "Project name: " << name << endl;
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
         writer.set_audiotime(time_s);
-        Scene* scene = create_scene_determine_type(config, scene_json, writer);
+        Scene* scene = create_scene_determine_type(config, scene_json, &writer);
         if (scene != nullptr) {
             int frames_left = -1;
             while (frames_left != 0) {
