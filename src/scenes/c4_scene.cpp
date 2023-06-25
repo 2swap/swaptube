@@ -13,10 +13,10 @@ inline int C4_EMPTY         = 0xff222222;
 
 class C4Scene : public SequentialScene {
 public:
-    C4Scene(const json& config, const json& contents, MovieWriter& writer);
+    C4Scene(const json& config, const json& contents, MovieWriter* writer);
     void render_non_transition(Pixels& p, int which);
     void render_transition(Pixels& p, int which, double weight);
-    Scene* createScene(const json& config, const json& scene, MovieWriter& writer) override {
+    Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new C4Scene(config, scene, writer);
     }
 
@@ -104,7 +104,7 @@ void render_c4_board(Pixels& p, Board b){
 
 }
 
-C4Scene::C4Scene(const json& config, const json& contents, MovieWriter& writer) : SequentialScene(config, contents, writer) {
+C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
     vector<json> sequence_json = contents["sequence"];
     for (int i = 1; i < sequence_json.size()-1; i+=2) {
         json board = sequence_json[i];

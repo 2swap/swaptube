@@ -6,10 +6,10 @@ using json = nlohmann::json;
 
 class LatexScene : public SequentialScene {
 public:
-    LatexScene(const json& config, const json& contents, MovieWriter& writer);
+    LatexScene(const json& config, const json& contents, MovieWriter* writer);
     void render_non_transition(Pixels& p, int which);
     void render_transition(Pixels& p, int which, double weight);
-    Scene* createScene(const json& config, const json& scene, MovieWriter& writer) override {
+    Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new LatexScene(config, scene, writer);
     }
     bool show_cs;
@@ -21,7 +21,7 @@ private:
     vector<pair<int, int>> coords;
 };
 
-LatexScene::LatexScene(const json& config, const json& contents, MovieWriter& writer) : SequentialScene(config, contents, writer) {
+LatexScene::LatexScene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
     vector<json> sequence_json = contents["sequence"];
 
     // Frontload latex rendering

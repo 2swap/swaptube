@@ -196,7 +196,7 @@ public:
         for(double dx = -rw+1; dx < rw; dx++)
             for(double dy = -rh+1; dy < rh; dy++)
                 if(square(dx/rw)+square(dy/rh) < 1)
-                    set_pixel(x+dx, y+dy, col);
+                    set_pixel_with_transparency(x+dx, y+dy, col);
     }
 
     void fill(int col){

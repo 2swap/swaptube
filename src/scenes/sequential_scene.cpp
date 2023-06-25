@@ -5,9 +5,9 @@ using json = nlohmann::json;
 
 class SequentialScene : public Scene {
 public:
-    SequentialScene(const json& config, const json& contents, MovieWriter& writer);
+    SequentialScene(const json& config, const json& contents, MovieWriter* writer);
     Pixels query(int& frames_left) override;
-    void frontload_audio(const json& contents, MovieWriter& writer);
+    void frontload_audio(const json& contents, MovieWriter* writer);
     // Pure virtual methods for rendering
     virtual void render_non_transition(Pixels& p, int which) = 0;
     virtual void render_transition(Pixels& p, int which, double weight) = 0;
@@ -16,14 +16,15 @@ private:
     vector<double> durations;
 };
 
-SequentialScene::SequentialScene(const json& config, const json& contents, MovieWriter& writer) : Scene(config, contents, writer) {
+SequentialScene::SequentialScene(const json& config, const json& contents, MovieWriter* writer) : Scene(config, contents, writer) {
 }
 
-void SequentialScene::frontload_audio(const json& contents, MovieWriter& writer) {
+void SequentialScene::frontload_audio(const json& contents, MovieWriter* writer) {
+    if (writer == nullptr) return;
     vector<json> sequence_json = contents["sequence"];
     if(contents.find("audio") != contents.end()){
         cout << "This scene has a single audio for all of its subscenes." << endl;
-        double duration = writer.add_audio_get_length(contents["audio"].get<string>());
+        double duration = writer->add_audio_get_length(contents["audio"].get<string>());
         double ct = sequence_json.size();
         for (int i = 0; i < sequence_json.size(); i++) {
             json& element_json = sequence_json[i];
@@ -48,10 +49,10 @@ void SequentialScene::frontload_audio(const json& contents, MovieWriter& writer)
             json& element_json = sequence_json[i];
             if (element_json.find("audio") != element_json.end()) {
                 string audio_path = element_json["audio"].get<string>();
-                durations.push_back(writer.add_audio_get_length(audio_path));
+                durations.push_back(writer->add_audio_get_length(audio_path));
             } else {
                 double duration = element_json["duration_seconds"].get<double>();
-                writer.add_silence(duration);
+                writer->add_silence(duration);
                 durations.push_back(duration);
             }
         }
