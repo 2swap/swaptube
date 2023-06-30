@@ -1,18 +1,18 @@
 {
   "config": {
-    "width": 640,
-    "height": 360,
+    "width": 1280,
+    "height": 720,
     "framerate": 30
   },
   "scenes": [
     {
       "type":"variable",
-      "duration_seconds":4,
+      "duration_seconds":1,
       "variables":{
-        "cr":"1 cos 0.26 * 1 - t 270 / cos 0.001 * +",
-        "ci":"1 sin 0.26 * 0 - t 320 / sin 0.001 * +",
-        "zr":"0 t 290 / cos 0.1 * +",
-        "zi":"0 t 240 / sin 0.1 * +"
+        "cr":"t 70 / cos 0.5 *",
+        "ci":"t 70 / sin 0.5 *",
+        "zr":"t 70 / cos 0.5 * 2 +",
+        "zi":"t 70 / sin 0.5 *"
       },
       "subscene":
       {
@@ -23,12 +23,12 @@
             "x": 0,
             "y": 0,
             "width": 0.5,
-            "height": 1,
+            "height": 0.5,
             "subscene": {
               "type": "mandelbrot",
               "commoncenters": "Complex center(-0.750045367143, -0.004786271734); Complex center(-0.7925403632943916, 0.16076317715583555); Complex center(0.6569488539350342, -0.41280661014731673); Complex center(-0.6612648356278875, 0.4151437869617779); Complex center(-1.315180982097868, 0.073481649996795);",
               "current_zoom": {
-                "real": 0.0001,
+                "real": 0.005,
                 "imag": 0
               },
               "zoom_multiplier": {
@@ -36,12 +36,12 @@
                 "imag": 0
               },
               "z": {
-                "real": "zr",
-                "imag": "zi"
-              },
-              "x": {
                 "real": 0,
                 "imag": 0
+              },
+              "x": {
+                "real": "zr",
+                "imag": "zi"
               },
               "c": {
                 "real": "cr",
@@ -58,7 +58,7 @@
             "subscene": {
               "type": "mandelbrot",
               "current_zoom": {
-                "real": 0.0006,
+                "real": 0.004,
                 "imag": 0
               },
               "zoom_multiplier": {
@@ -66,18 +66,18 @@
                 "imag": 0
               },
               "z": {
-                "real": "zr",
-                "imag": "zi"
-              },
-              "x": {
                 "real": 0,
                 "imag": 0
+              },
+              "x": {
+                "real": "zr",
+                "imag": "zi"
               },
               "c": {
                 "real": "cr",
                 "imag": "ci"
               },
-              "WhichParameterization": "Z"
+              "WhichParameterization": "X"
             }
           }
         ]

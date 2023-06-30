@@ -1,0 +1,166 @@
+{
+  "config": {
+    "width": 1280,
+    "height": 720,
+    "framerate": 30
+  },
+  "scenes": [
+    {
+      "type": "c4",
+      "sequence": [
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "444556566",
+          "name": "",
+          "annotations": ["      b",
+                          "      B",
+                          "      R",
+                          "      R",
+                          "       ",
+                          "       "],
+          "highlights": {"c7":"red", "r3":"blue"},
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "43667555535444473331111114537777222",
+          "name": "Yellow is IN Zugzwang",
+          "annotations": ["       ",
+                          " R     ",
+                          " .   Y ",
+                          "     . ",
+                          "       ",
+                          "       "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "43667555535444473331111114537777222",
+          "name": "",
+          "annotations": ["       ",
+                          " R     ",
+                          " .   Y ",
+                          "     . ",
+                          "       ",
+                          "       "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "434443233322446666676777732",
+          "name": "",
+          "annotations": ["       ",
+                          "       ",
+                          "       ",
+                          "Y   Y  ",
+                          ".   .  ",
+                          "       "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "434443233322446666676777732",
+          "name": "",
+          "annotations": ["       ",
+                          "    R  ",
+                          "R   R  ",
+                          "Y   Y  ",
+                          ".   .  ",
+                          "       "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "43444323332244666667677773222751",
+          "name": "",
+          "annotations": ["       ",
+                          "    R  ",
+                          "R   R  ",
+                          "Y   Y  ",
+                          ".   .  ",
+                          "       "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "43444323332244666667677773222751",
+          "name": "Yellow CONTROLS the Zugzwang",
+          "annotations": ["       ",
+                          "    R  ",
+                          "R   R  ",
+                          "Y   Y  ",
+                          ".   .  ",
+                          "       "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "4344432333224466666767777322275111",
+          "name": "Yellow CONTROLS the Zugzwang",
+          "annotations": ["       ",
+                          "    R  ",
+                          "R   R  ",
+                          "    Y  ",
+                          "    .  ",
+                          "       "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "header": "Win Conditions",
+      "subheader": "Generalizing the Zugzwang",
+      "duration_seconds":1
+    },
+    {
+      "type": "latex",
+      "sequence": [
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}",
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        }
+      ]
+    },
+    {
+      "type": "2swap",
+      "duration_seconds":1
+    }
+  ]
+}
