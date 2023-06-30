@@ -145,10 +145,14 @@ void MandelbrotScene::edge_detect_render(Pixels& p) {
     // Iterate around the border and add edge pixels to the queue
     for (int i = 0; i < p.h; i++) {
         queryQueue.push({0, i});
+        queryQueue.push({p.w/3, i});
+        queryQueue.push({p.w*2/3, i});
         queryQueue.push({p.w-1, i});
     }
     for (int i = 0; i < p.w; i++) {
         queryQueue.push({i, 0});
+        queryQueue.push({i, p.h/3});
+        queryQueue.push({i, p.h*2/3});
         queryQueue.push({i, p.h-1});
     }
 
@@ -240,7 +244,7 @@ void MandelbrotScene::render(Pixels& p){
     if(which == Z)
         render_mandelbrot_points(p);
     if(which == X)
-        edge_detect_render(p);
+        render_mandelbrot_points(p);
     p.fill_ellipse(p.w/2, p.h/2, 5, 5, 0x44ff0000);
 }
 

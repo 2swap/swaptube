@@ -5,10 +5,8 @@
 #include "Connect4/c4.h"
 using json = nlohmann::json;
 
-inline int C4_RED           = 0xff880000;
-inline int C4_YELLOW        = 0xff888800;
-inline int C4_RED_THREAT    = 0xffff4444;
-inline int C4_YELLOW_THREAT = 0xffffff44;
+inline int C4_RED           = 0xffcc6677;
+inline int C4_YELLOW        = 0xffddcc77;
 inline int C4_EMPTY         = 0xff222222;
 
 class C4Scene : public SequentialScene {
@@ -25,68 +23,98 @@ private:
     vector<string> names;
 };
 
-void draw_c4_disk(Pixels& p, int stonex, int stoney, int col, bool highlight, char annotation){
+double gah(double x){
+    return .5*(x+x*x)-x*x*x;
+}
+
+void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight, char annotation){
+    int cols[] = {C4_EMPTY, C4_RED, C4_YELLOW};
+    int col = cols[col_id];
+
     double stonewidth = p.w/16.;
-    int highlightcol = colorlerp(col, BLACK, .4);
-    int textcol = colorlerp(col, WHITE, .5);
+    col = colorlerp(col, BLACK, .4);
+    int darkcol = colorlerp(col, BLACK, .4);
     double px = (stonex-WIDTH/2.+.5)*stonewidth+p.w/2;
     double py = (-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2;
-    if(highlight) p.fill_ellipse(px, py, stonewidth*.47, stonewidth*.47, highlightcol);
-    p.fill_ellipse(px, py, stonewidth*.4, stonewidth*.4, col);
+    if(col_id != 0){
+        if(!highlight) p.fill_ellipse(px, py, stonewidth*.47, stonewidth*.47, col);
+        p.fill_ellipse(px, py, stonewidth*.4, stonewidth*.4, darkcol);
+    }
+    else{
+        p.fill_ellipse(px, py, stonewidth*.2, stonewidth*.2, darkcol);
+        /*
+        int rw = stonewidth*.47;
+        int rh = stonewidth*.47;
+        for(double dx = -rw+1; dx < rw; dx++)
+            for(double dy = -rh+1; dy < rh; dy++){
+                double sq = square(dx/rw)+square(dy/rh);
+                if(sq < 1)
+                    p.set_pixel_with_transparency(px+dx, py+dy, makecol(square(max(0, dy/rh)) * gah(sq) * 255, 255, 255, 255));
+            }
+            */
+    }
 
     switch (annotation) {
         case '+':
-            p.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, textcol);  // Draw two rectangles to form a plus sign
-            p.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, textcol);
+            p.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, col);  // Draw two rectangles to form a plus sign
+            p.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, col);
             break;
         case '-':
-            p.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, textcol);  // Draw a rectangle to form a minus sign
+            p.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, col);  // Draw a rectangle to form a minus sign
             break;
         case '|':
-            p.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, textcol);  // Draw a rectangle to form a vertical bar
+            p.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, col);  // Draw a rectangle to form a vertical bar
             break;
         case '=':
-            p.fill_rect(px - stonewidth/4 , py - 3*stonewidth/16, stonewidth/2, stonewidth/8, textcol);  // Draw two rectangles to form an equal sign
-            p.fill_rect(px - stonewidth/4 , py + stonewidth/16, stonewidth/2, stonewidth/8, textcol);
+            p.fill_rect(px - stonewidth/4 , py - 3*stonewidth/16, stonewidth/2, stonewidth/8, col);  // Draw two rectangles to form an equal sign
+            p.fill_rect(px - stonewidth/4 , py + stonewidth/16, stonewidth/2, stonewidth/8, col);
             break;
         case 'r':
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED_THREAT);
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
             break;
         case 'R':
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED_THREAT);
+            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
             break;
         case 'y':
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW_THREAT);
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
             break;
         case 'Y':
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW_THREAT);
+            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
             break;
         case 'b':
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 6+1, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 24+1, stonewidth / 2, C4_RED_THREAT);
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 8, stonewidth / 6, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_YELLOW_THREAT);
+            px -= stonewidth/8;
+            py -= stonewidth/12;
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
+            px += stonewidth/4;
+            py += stonewidth/6;
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
             break;
         case 'B':
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 4+1, stonewidth / 12, C4_RED_THREAT);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 24+1, stonewidth / 2, C4_RED_THREAT);
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 4, stonewidth / 12, C4_YELLOW_THREAT);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth * 0, py - stonewidth / 4, stonewidth / 24, stonewidth / 2, C4_YELLOW_THREAT);
+            px -= stonewidth/8;
+            py -= stonewidth/12;
+            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
+            px += stonewidth/4;
+            py += stonewidth/6;
+            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
             break;
         case ':':
-            p.fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, textcol);  // Draw an ellipse to form a ':'
-            p.fill_ellipse(px, py + stonewidth / 8, stonewidth / 12, stonewidth / 12, textcol);
+            p.fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, col);  // Draw an ellipse to form a ':'
+            p.fill_ellipse(px, py + stonewidth / 8, stonewidth / 12, stonewidth / 12, col);
             break;
         case '0':
-            p.fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, textcol);  // Draw a circle to form a '0'
+            p.fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, col);  // Draw a circle to form a '0'
             p.fill_ellipse(px, py, stonewidth / 9, stonewidth / 5, col);
             break;
         case '.':
-            p.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, textcol);  // Draw a circle to form a '0'
+            p.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, col);  // Draw a circle to form a '0'
             break;
         default:
             break;
@@ -94,21 +122,28 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col, bool highlight, ch
 }
 
 void render_c4_board(Pixels& p, Board b){
-    int cols[] = {C4_EMPTY, C4_RED, C4_YELLOW};
-
     // background
     p.fill(BLACK);
     for(int stonex = 0; stonex < WIDTH; stonex++)
         for(int stoney = 0; stoney < HEIGHT; stoney++)
-            draw_c4_disk(p, stonex, stoney, cols[b.grid[stoney][stonex]], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney));
+            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney));
 
 }
 
 C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
     vector<json> sequence_json = contents["sequence"];
     for (int i = 1; i < sequence_json.size()-1; i+=2) {
+        cout << "constructing board " << i << endl;
         json board = sequence_json[i];
-        boards.push_back(Board(board["representation"], board["annotations"]));
+        vector<string> annotations = board["annotations"];
+
+        // Concatenate annotations into a single string
+        string concatenatedAnnotations;
+        for (const auto& annotation : annotations) {
+            concatenatedAnnotations += annotation;
+        }
+
+        boards.push_back(Board(board["representation"], concatenatedAnnotations));
         names.push_back(board["name"]);
     }
     frontload_audio(contents, writer);
