@@ -6,6 +6,23 @@
   },
   "scenes": [
     {
+      "type": "latex",
+      "sequence": [
+        {
+          "transition":true,
+          "duration_seconds":0
+        },
+        {
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}",
+          "duration_seconds":0
+        },
+        {
+          "transition":true,
+          "duration_seconds":0
+        }
+      ]
+    },
+    {
       "type": "c4",
       "sequence": [
         {
@@ -142,25 +159,8 @@
       "duration_seconds":1
     },
     {
-      "type": "latex",
-      "sequence": [
-        {
-          "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}",
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
-        }
-      ]
-    },
-    {
       "type": "2swap",
-      "duration_seconds":1
+      "duration_seconds":2
     }
   ]
 }
