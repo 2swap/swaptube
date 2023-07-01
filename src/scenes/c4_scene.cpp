@@ -19,15 +19,12 @@ public:
     }
 
 private:
+    int time_in_this_block = 0;
     vector<Board> boards;
     vector<string> names;
 };
 
-double gah(double x){
-    return .5*(x+x*x)-x*x*x;
-}
-
-void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight, char annotation){
+void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight, char annotation, double t){
     int cols[] = {C4_EMPTY, C4_RED, C4_YELLOW};
     int col = cols[col_id];
 
@@ -37,21 +34,16 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight,
     double px = (stonex-WIDTH/2.+.5)*stonewidth+p.w/2;
     double py = (-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2;
     if(col_id != 0){
-        if(!highlight) p.fill_ellipse(px, py, stonewidth*.47, stonewidth*.47, col);
-        p.fill_ellipse(px, py, stonewidth*.4, stonewidth*.4, darkcol);
+        double ringsize = 1;
+        if(highlight){
+            double blink = bound(0, t+2*(t-static_cast<double>(stonex)/WIDTH), 2);
+            ringsize = 1-.3*(.5*(-cos(blink*3.14159)+1));
+        }
+        p.fill_ellipse(px, py, ceil(stonewidth*(.4*ringsize+.07)), ceil(stonewidth*(.4*ringsize+.07)), col);
+        p.fill_ellipse(px, py, ceil(stonewidth*(.4*ringsize    )), ceil(stonewidth*(.4*ringsize    )), darkcol);
     }
     else{
-        p.fill_ellipse(px, py, stonewidth*.2, stonewidth*.2, darkcol);
-        /*
-        int rw = stonewidth*.47;
-        int rh = stonewidth*.47;
-        for(double dx = -rw+1; dx < rw; dx++)
-            for(double dy = -rh+1; dy < rh; dy++){
-                double sq = square(dx/rw)+square(dy/rh);
-                if(sq < 1)
-                    p.set_pixel_with_transparency(px+dx, py+dy, makecol(square(max(0, dy/rh)) * gah(sq) * 255, 255, 255, 255));
-            }
-            */
+        darkcol = BLACK;
     }
 
     switch (annotation) {
@@ -88,46 +80,48 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight,
         case 'b':
             px -= stonewidth/8;
             py -= stonewidth/12;
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
+            p.fill_rect(px - stonewidth / 8, py - stonewidth / 12, stonewidth / 4, stonewidth / 16, C4_RED);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 32, py - stonewidth / 6, stonewidth / 16, stonewidth / 3, C4_RED);
             px += stonewidth/4;
             py += stonewidth/6;
-            p.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 't'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
+            p.fill_rect(px - stonewidth / 8, py - stonewidth / 12, stonewidth / 4, stonewidth / 16, C4_YELLOW);  // Draw a rectangle to form a 't'
+            p.fill_rect(px - stonewidth / 32, py - stonewidth / 6, stonewidth / 16, stonewidth / 3, C4_YELLOW);
             break;
         case 'B':
             px -= stonewidth/8;
             py -= stonewidth/12;
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 6, stonewidth / 3, stonewidth / 16, C4_RED);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 32, py - stonewidth / 6, stonewidth / 16, stonewidth / 3, C4_RED);
             px += stonewidth/4;
             py += stonewidth/6;
-            p.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 'T'
-            p.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
+            p.fill_rect(px - stonewidth / 6, py - stonewidth / 6, stonewidth / 3, stonewidth / 16, C4_YELLOW);  // Draw a rectangle to form a 'T'
+            p.fill_rect(px - stonewidth / 32, py - stonewidth / 6, stonewidth / 16, stonewidth / 3, C4_YELLOW);
             break;
         case ':':
-            p.fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, col);  // Draw an ellipse to form a ':'
+            p.fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, col);
             p.fill_ellipse(px, py + stonewidth / 8, stonewidth / 12, stonewidth / 12, col);
             break;
         case '0':
-            p.fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, col);  // Draw a circle to form a '0'
+            p.fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, col);
             p.fill_ellipse(px, py, stonewidth / 9, stonewidth / 5, col);
             break;
         case '.':
-            p.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, col);  // Draw a circle to form a '0'
+            p.fill_ellipse(px, py, stonewidth / 3, stonewidth / 3, col);
+            p.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, darkcol);
             break;
         default:
+            if(col_id == 0)
+                p.fill_ellipse(px, py, stonewidth*.2, stonewidth*.2, col);
             break;
     }
 }
 
-void render_c4_board(Pixels& p, Board b){
+void render_c4_board(Pixels& p, Board b, double t){
     // background
     p.fill(BLACK);
     for(int stonex = 0; stonex < WIDTH; stonex++)
         for(int stoney = 0; stoney < HEIGHT; stoney++)
-            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney));
-
+            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney), t);
 }
 
 C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
@@ -152,12 +146,14 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) 
 void C4Scene::render_non_transition(Pixels& p, int which) {
     p.fill(BLACK);
     Board b = boards[which];
-    render_c4_board(pix, b);
+    render_c4_board(pix, b, static_cast<double>(time_in_this_block)/framerate);
     Pixels board_title_pix = eqn_to_pix(latex_text(names[which]), pix.w / 640 + 1);
     pix.copy(board_title_pix, (pix.w - board_title_pix.w)/2, pix.h-pix.w/12, 1);
+    time_in_this_block++;
 }
 
 void C4Scene::render_transition(Pixels& p, int which, double weight) {
+    time_in_this_block = 0;
     p.fill(BLACK);
 
     if(which == boards.size()-1) {
@@ -174,7 +170,7 @@ void C4Scene::render_transition(Pixels& p, int which, double weight) {
     }
 
     Board transition = c4lerp(boards[which], (which == boards.size() - 1) ? Board("") : boards[which+1], weight);
-    render_c4_board(pix, transition);
+    render_c4_board(pix, transition, 0);
     
     string curr_title = "\\text{" + names[which] + "}";
     string next_title = (which == contents["boards"].size() - 1)?"\\text{}":"\\text{" + names[which+1] + "}";
