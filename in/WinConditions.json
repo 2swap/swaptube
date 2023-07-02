@@ -1,26 +1,87 @@
 {
   "config": {
-    "width": 1280,
-    "height": 720,
+    "width": 640,
+    "height": 360,
     "framerate": 30
   },
   "scenes": [
     {
+      "type": "c4",
+      "sequence": [
+        {
+          "transition": true
+        },
+        {
+          "representation": "4156554224254554422211111767667766",
+          "name": "Yellow Even Threat?",
+          "annotations": ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "  B    ",
+                          "  x    "]
+        },
+        {
+          "transition": true
+        },
+        {
+          "representation": "41565542242545544222111117676677667733",
+          "name": "Yellow Wins!",
+          "annotations": ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "  B    ",
+                          "  x    "]
+        },
+        {
+          "transition": true
+        },
+        {
+          "representation": "4444455552222246337757277573133311",
+          "name": "Red Odd Threat?",
+          "annotations": ["       ",
+                          "     R ",
+                          "     x ",
+                          "       ",
+                          "       ",
+                          "       "]
+        },
+        {
+          "transition": true
+        },
+        {
+          "representation": "44444555522222463377572775731333112226666",
+          "name": "Red Wins!",
+          "annotations": ["       ",
+                          "     R ",
+                          "     x ",
+                          "       ",
+                          "       ",
+                          "       "]
+        },
+        {
+          "transition":true
+        }
+      ],
+      "audio":"1.mp3",
+      "script":"Last time, we concluded that once all of the major threats are developed in a game of connect 4, the result can be computed deterministically as a function of the positions of those threats."
+    },
+    {
       "type": "latex",
       "sequence": [
         {
-          "transition":true,
-          "duration_seconds":0
+          "transition":true
         },
         {
-          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}",
-          "duration_seconds":0
+          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}"
         },
         {
-          "transition":true,
-          "duration_seconds":0
+          "transition":true
         }
-      ]
+      ],
+      "audio":"2.mp3",
+      "script":"We learned that the parity, or the even-ness or odd-ness of the row on which the threat lies, also has a strong influence on the result, but we didn't learn precisely how to go from a list of threats to a winning player. That's our task today."
     },
     {
       "type": "c4",
@@ -30,45 +91,119 @@
           "duration_seconds":1
         },
         {
-          "representation": "444556566",
-          "name": "",
-          "annotations": ["      b",
-                          "      B",
-                          "      R",
-                          "      R",
-                          "       ",
-                          "       "],
-          "highlights": {"c7":"red", "r3":"blue"},
-          "duration_seconds":1
-        },
-        {
-          "transition": true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "43667555535444473331111114537777222",
-          "name": "Yellow is IN Zugzwang",
-          "annotations": ["       ",
-                          " R     ",
-                          " .   Y ",
-                          "     . ",
-                          "       ",
-                          "       "],
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "43667555535444473331111114537777222",
+          "representation": "444443333167666646111112222232377",
           "name": "",
           "annotations": ["       ",
-                          " R     ",
-                          " .   Y ",
-                          "     . ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
                           "       ",
                           "       "],
+          "audio":"3.mp3",
+          "script":"We considered this example last time. Since everything other than the positions of the threats is superfluous, we will simply hide the disks which have been played..."
+        },
+        {
+          "transition":true,
+          "audio":"4.mp3",
+          "script":"but we will be extra careful to leave all of the threats exactly where they are."
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"5.mp3",
+          "script":"We now have a set of unadjoined columns. No need to worry about connecting 4 anymore. The players are just scrambling to get to a threat."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"6.mp3",
+          "script":"This model is a faithful representation of the game from which we took it, since as soon as a player claims a threat, that means they won the underlying game of connect 4."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"7.mp3",
+          "script":"So, we have reduced the endgame of connect 4 to this much simpler game of 'just-get-a-threat!'"
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"8.mp3",
+          "script":"In this view of the board, the 'dead space' is every piece which can be filled without getting to a threat or exposing it."
+        },
+        {
+          "transition":true,
+          "audio":"9.mp3",
+          "script":"Let's see how the players might fill in the dead space."
+        },
+        {
+          "representation": "444443333167666646111112222232377777555",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"10.mp3",
+          "script":"This is important to consider since it tells us who is in the Zugzwang. That is, it tells us who will be the first person who will need to expose a threat."
+        },
+        {
+          "transition":true,
+          "audio":"11.mp3",
+          "script":"And, in this case, it's Yellow."
+        },
+        {
+          "representation": "44444333316766664611111222223237777755555",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
           "duration_seconds":1
         },
         {
@@ -76,79 +211,89 @@
           "duration_seconds":1
         },
         {
-          "representation": "434443233322446666676777732",
+          "representation": "444443333167666646111112222232377777555",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"12.mp3",
+          "script":"In general, the player who is in Zugzwang is Red if the amount of dead space is even, or Yellow in the case that it is odd."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "444443333167666646111112222232377777555",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"13.mp3",
+          "script":"Knowing this, it is obvious why our parity rules from last time work when there is a single threat."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "444443333167666646111112222232377777555",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"14.mp3",
+          "script":"When the threat is odd, such as this example here, there is an odd amount of dead space. That means Yellow is in the Zugzwang."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "44444333316766664611111222223237777755555",
+          "name": "",
+          "annotations": ["       ",
+                          "    B  ",
+                          "    x  ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "233332212314223116555555117677777",
           "name": "",
           "annotations": ["       ",
                           "       ",
+                          "   B   ",
+                          "   x   ",
                           "       ",
-                          "Y   Y  ",
-                          ".   .  ",
                           "       "],
-          "duration_seconds":1
+          "spread":true,
+          "audio":"15.mp3",
+          "script":"If the threat had been on an even row, there would have been an even amount of dead space, meaning Red would be in the Zugzwang."
         },
         {
           "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "434443233322446666676777732",
-          "name": "",
-          "annotations": ["       ",
-                          "    R  ",
-                          "R   R  ",
-                          "Y   Y  ",
-                          ".   .  ",
-                          "       "],
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "43444323332244666667677773222751",
-          "name": "",
-          "annotations": ["       ",
-                          "    R  ",
-                          "R   R  ",
-                          "Y   Y  ",
-                          ".   .  ",
-                          "       "],
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "43444323332244666667677773222751",
-          "name": "Yellow CONTROLS the Zugzwang",
-          "annotations": ["       ",
-                          "    R  ",
-                          "R   R  ",
-                          "Y   Y  ",
-                          ".   .  ",
-                          "       "],
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "4344432333224466666767777322275111",
-          "name": "Yellow CONTROLS the Zugzwang",
-          "annotations": ["       ",
-                          "    R  ",
-                          "R   R  ",
-                          "    Y  ",
-                          "    .  ",
-                          "       "],
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
+          "audio":"16.mp3",
+          "script":"But as promised, it's time to generalize. There can be multiple rows which contain threats, and each row can contain multiple threats. NEED A 'HOOK'"
         }
       ]
     },

@@ -8,6 +8,7 @@ using json = nlohmann::json;
 inline int C4_RED           = 0xffcc6677;
 inline int C4_YELLOW        = 0xffddcc77;
 inline int C4_EMPTY         = 0xff222222;
+inline double SPREAD_FACTOR = 2;
 
 class C4Scene : public SequentialScene {
 public:
@@ -24,14 +25,14 @@ private:
     vector<string> names;
 };
 
-void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight, char annotation, double t){
+void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight, char annotation, double t, double spread){
     int cols[] = {C4_EMPTY, C4_RED, C4_YELLOW};
     int col = cols[col_id];
 
     double stonewidth = p.w/16.;
     col = colorlerp(col, BLACK, .4);
     int darkcol = colorlerp(col, BLACK, .4);
-    double px = (stonex-WIDTH/2.+.5)*stonewidth+p.w/2;
+    double px = (stonex-WIDTH/2.+.5)*stonewidth*spread+p.w/2;
     double py = (-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2;
     if(col_id != 0){
         double ringsize = 1;
@@ -116,12 +117,12 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight,
     }
 }
 
-void render_c4_board(Pixels& p, Board b, double t){
+void render_c4_board(Pixels& p, Board b, double t, double spread){
     // background
     p.fill(BLACK);
     for(int stonex = 0; stonex < WIDTH; stonex++)
         for(int stoney = 0; stoney < HEIGHT; stoney++)
-            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney), t);
+            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney), t, spread);
 }
 
 C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
@@ -146,7 +147,8 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) 
 void C4Scene::render_non_transition(Pixels& p, int which) {
     p.fill(BLACK);
     Board b = boards[which];
-    render_c4_board(pix, b, static_cast<double>(time_in_this_block)/framerate);
+    double curr_spread = contents["sequence"][which*2+1].value("spread", false) ? SPREAD_FACTOR : 1;
+    render_c4_board(pix, b, static_cast<double>(time_in_this_block)/framerate, curr_spread);
     Pixels board_title_pix = eqn_to_pix(latex_text(names[which]), pix.w / 640 + 1);
     pix.copy(board_title_pix, (pix.w - board_title_pix.w)/2, pix.h-pix.w/12, 1);
     time_in_this_block++;
@@ -170,10 +172,13 @@ void C4Scene::render_transition(Pixels& p, int which, double weight) {
     }
 
     Board transition = c4lerp(boards[which], (which == boards.size() - 1) ? Board("") : boards[which+1], weight);
-    render_c4_board(pix, transition, 0);
+
+    double curr_spread = 0                           >  which*2+1 || !contents["sequence"][which*2-1].value("spread", false) ? 1 : SPREAD_FACTOR;
+    double next_spread = contents["sequence"].size() <= which*2+3 || !contents["sequence"][which*2+1].value("spread", false) ? 1 : SPREAD_FACTOR;
+    render_c4_board(pix, transition, 0, lerp(curr_spread, next_spread, smoother2(weight)));
     
     string curr_title = "\\text{" + names[which] + "}";
-    string next_title = (which == contents["boards"].size() - 1)?"\\text{}":"\\text{" + names[which+1] + "}";
+    string next_title = (which == contents["sequence"].size() - 1)?"\\text{}":"\\text{" + names[which+1] + "}";
 
     Pixels curr_title_pix = eqn_to_pix(curr_title, pix.w / 640 + 1);
     Pixels next_title_pix = eqn_to_pix(next_title, pix.w / 640 + 1);
