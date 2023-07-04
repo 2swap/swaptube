@@ -8,7 +8,7 @@ using json = nlohmann::json;
 inline int C4_RED           = 0xffcc6677;
 inline int C4_YELLOW        = 0xffddcc77;
 inline int C4_EMPTY         = 0xff222222;
-inline double SPREAD_FACTOR = 2;
+inline double SPREAD_FACTOR = 2.1;
 
 class C4Scene : public SequentialScene {
 public:
@@ -32,16 +32,17 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight,
     double stonewidth = p.w/16.;
     col = colorlerp(col, BLACK, .4);
     int darkcol = colorlerp(col, BLACK, .4);
-    double px = (stonex-WIDTH/2.+.5)*stonewidth*spread+p.w/2;
-    double py = (-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2;
+    double px = round((stonex-WIDTH/2.+.5)*stonewidth*spread+p.w/2);
+    double py = round((-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2);
     if(col_id != 0){
         double ringsize = 1;
-        if(highlight){
+        if(highlight || (col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y'))){
             double blink = bound(0, t+2*(t-static_cast<double>(stonex)/WIDTH), 2);
             ringsize = 1-.3*(.5*(-cos(blink*3.14159)+1));
         }
         p.fill_ellipse(px, py, ceil(stonewidth*(.4*ringsize+.07)), ceil(stonewidth*(.4*ringsize+.07)), col);
         p.fill_ellipse(px, py, ceil(stonewidth*(.4*ringsize    )), ceil(stonewidth*(.4*ringsize    )), darkcol);
+        return;
     }
     else{
         darkcol = BLACK;
@@ -106,13 +107,30 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight,
             p.fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, col);
             p.fill_ellipse(px, py, stonewidth / 9, stonewidth / 5, col);
             break;
-        case '.':
+        case 'o':
+        case 'O':
             p.fill_ellipse(px, py, stonewidth / 3, stonewidth / 3, col);
             p.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, darkcol);
             break;
-        default:
+        case 'c': // c is an o but colorful
+            p.fill_ellipse(px, py, stonewidth / 3, stonewidth / 3, 0xff0099cc);
+            p.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, darkcol);
+            break;
+        case 'x':
+            {
+                double rw = stonewidth*.3;
+                double rh = stonewidth*.3;
+                for(double dx = -rw+1; dx < rw; dx++)
+                    for(double dy = -rh+1; dy < rh; dy++)
+                        if(square(dx/rw)+square(dy/rh) < 1 && (abs(dx - dy) < stonewidth*.1 || abs(dx + dy) < stonewidth*.1))
+                            p.set_pixel_with_transparency(px+dx, py+dy, col);
+                break;
+            }
+        case '.':
             if(col_id == 0)
                 p.fill_ellipse(px, py, stonewidth*.2, stonewidth*.2, col);
+            break;
+        default:
             break;
     }
 }
@@ -122,7 +140,7 @@ void render_c4_board(Pixels& p, Board b, double t, double spread){
     p.fill(BLACK);
     for(int stonex = 0; stonex < WIDTH; stonex++)
         for(int stoney = 0; stoney < HEIGHT; stoney++)
-            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], b.highlight[stoney][stonex], b.get_annotation(stonex, stoney), t, spread);
+            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], spread == 1 && b.highlight[stoney][stonex], b.get_annotation(stonex, stoney), t, spread);
 }
 
 C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
@@ -173,8 +191,8 @@ void C4Scene::render_transition(Pixels& p, int which, double weight) {
 
     Board transition = c4lerp(boards[which], (which == boards.size() - 1) ? Board("") : boards[which+1], weight);
 
-    double curr_spread = 0                           >  which*2+1 || !contents["sequence"][which*2-1].value("spread", false) ? 1 : SPREAD_FACTOR;
-    double next_spread = contents["sequence"].size() <= which*2+3 || !contents["sequence"][which*2+1].value("spread", false) ? 1 : SPREAD_FACTOR;
+    double curr_spread = 0                           >  which*2+1 || !contents["sequence"][which*2+1].value("spread", false) ? 1 : SPREAD_FACTOR;
+    double next_spread = contents["sequence"].size() <= which*2+3 || !contents["sequence"][which*2+3].value("spread", false) ? 1 : SPREAD_FACTOR;
     render_c4_board(pix, transition, 0, lerp(curr_spread, next_spread, smoother2(weight)));
     
     string curr_title = "\\text{" + names[which] + "}";
