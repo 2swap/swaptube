@@ -14,25 +14,30 @@ public:
         clear();
         play(rep);
     };
-    Board(string rep, string a) : representation(rep) {
+    Board(string rep, string a, string h) : representation(rep) {
         clear();
         play(rep);
         if(a.size() == WIDTH*HEIGHT)annotations = a;
+        if(h.size() == WIDTH*HEIGHT)highlight = h;
     };
     int col=1; // whose move is it
     int grid[HEIGHT][WIDTH];
-    bool highlight[HEIGHT][WIDTH];
+    bool blink[HEIGHT][WIDTH];
     string annotations = "                                          ";
+    string highlight = "                                          ";
     string representation;
     void clear(){
         for(int x = 0; x < WIDTH; x++)
             for(int y = 0; y < HEIGHT; y++){
                 grid[y][x] = 0;
-                highlight[y][x] = false;
+                blink[y][x] = false;
             }
     }
     char get_annotation(int x, int y){
         return annotations[x+(HEIGHT-1-y)*WIDTH];
+    }
+    char get_highlight(int x, int y){
+        return highlight[x+(HEIGHT-1-y)*WIDTH];
     }
 
 private:
@@ -68,7 +73,7 @@ private:
         if(count >= 4){
             for(int c = 0; c < 4; c++)
                 if(grid[y+dy*c][x+dx*c] != col_here) break;
-                else highlight[y+dy*c][x+dx*c] = true;
+                else blink[y+dy*c][x+dx*c] = true;
         }
     }
 };

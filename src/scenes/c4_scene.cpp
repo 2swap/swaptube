@@ -25,7 +25,7 @@ private:
     vector<string> names;
 };
 
-void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight, char annotation, double t, double spread){
+void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool blink, char highlight, char annotation, double t, double spread){
     int cols[] = {C4_EMPTY, C4_RED, C4_YELLOW};
     int col = cols[col_id];
 
@@ -34,14 +34,32 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool highlight,
     int darkcol = colorlerp(col, BLACK, .4);
     double px = round((stonex-WIDTH/2.+.5)*stonewidth*spread+p.w/2);
     double py = round((-stoney+HEIGHT/2.-.5)*stonewidth+p.h/2);
+
+    int highlight_ring_radius = ceil(stonewidth*(.4*ringsize+.15));
+    switch (highlight) {
+        case 'p':
+            p.fill_ellipse(px, py, highlight_ring_radius, highlight_ring_radius, col);
+            break;
+        case 'b':
+            p.fill_ellipse(px, py, highlight_ring_radius, highlight_ring_radius, col);
+            break;
+        case 'o':
+            p.fill_ellipse(px, py, highlight_ring_radius, highlight_ring_radius, col);
+            break;
+        default:
+            break;
+    }
+
     if(col_id != 0){
         double ringsize = 1;
-        if(highlight || (col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y'))){
+        if(blink || (col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y'))){
             double blink = bound(0, t+2*(t-static_cast<double>(stonex)/WIDTH), 2);
             ringsize = 1-.3*(.5*(-cos(blink*3.14159)+1));
         }
-        p.fill_ellipse(px, py, ceil(stonewidth*(.4*ringsize+.07)), ceil(stonewidth*(.4*ringsize+.07)), col);
-        p.fill_ellipse(px, py, ceil(stonewidth*(.4*ringsize    )), ceil(stonewidth*(.4*ringsize    )), darkcol);
+        int piece_fill_radius = ceil(stonewidth*(.4*ringsize));
+        int piece_stroke_radius = ceil(stonewidth*(.4*ringsize+.07));
+        p.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col    );
+        p.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , darkcol);
         return;
     }
     else{
@@ -140,7 +158,7 @@ void render_c4_board(Pixels& p, Board b, double t, double spread){
     p.fill(BLACK);
     for(int stonex = 0; stonex < WIDTH; stonex++)
         for(int stoney = 0; stoney < HEIGHT; stoney++)
-            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], spread == 1 && b.highlight[stoney][stonex], b.get_annotation(stonex, stoney), t, spread);
+            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], spread == 1 && b.blink[stoney][stonex], b.get_highlight(stonex, stoney), b.get_annotation(stonex, stoney), t, spread);
 }
 
 C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
@@ -148,15 +166,22 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) 
     for (int i = 1; i < sequence_json.size()-1; i+=2) {
         cout << "constructing board " << i << endl;
         json board = sequence_json[i];
-        vector<string> annotations = board["annotations"];
 
         // Concatenate annotations into a single string
+        vector<string> annotations = board["annotations"];
         string concatenatedAnnotations;
         for (const auto& annotation : annotations) {
             concatenatedAnnotations += annotation;
         }
 
-        boards.push_back(Board(board["representation"], concatenatedAnnotations));
+        // Concatenate highlights into a single string
+        vector<string> highlights = board["highlight"];
+        string concatenatedHighlights;
+        for (const auto& highlight : highlights) {
+            concatenatedHighlights += highlight;
+        }
+
+        boards.push_back(Board(board["representation"], concatenatedAnnotations, concatenatedHighlights));
         names.push_back(board["name"]);
     }
     frontload_audio(contents, writer);

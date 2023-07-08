@@ -100,12 +100,12 @@
                           ".......",
                           "......."],
           "audio":"3.mp3",
-          "script":"Consider this example. Since everything other than the positions of the threats is superfluous, we will simply hide the disks which have been played..."
+          "script":"Consider this example. Since everything other than the positions of the threats is superfluous, we will simply hide the disks which have been played."
         },
         {
           "transition":true,
           "audio":"4.mp3",
-          "script":"but we will be extra careful to leave all of the threats exactly where they are."
+          "script":"but we will be sure to leave all the threats where they are."
         },
         {
           "representation": "",
@@ -160,13 +160,19 @@
         },
         {
           "representation": "",
-          "name": "",
+          "name": "Dead Space",
           "annotations": [".......",
                           "....B..",
                           "....x..",
                           ".......",
                           ".......",
                           "......."],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "    w  ",
+                          "    w  ",
+                          "    w  "],
           "spread":true,
           "audio":"8.mp3",
           "script":"In this view of the board, the 'dead space' is every piece which can be filled without getting to a threat or exposing it."
@@ -226,7 +232,7 @@
         {
           "transition":true,
           "audio":"12_2.mp3",
-          "script":"This means that any row which has no threat at all can simply be ignored. 6 pieces will be played in that column with no consequence, so it doesn't change the evenness or oddness of the total amount of dead space."
+          "script":"As a corollary, This means that any row which has no threat at all can simply be ignored. 6 pieces will be played in that column with no consequence, so it doesn't change the evenness or oddness of the total amount of dead space."
         },
         {
           "representation": "",
@@ -256,7 +262,7 @@
                           "    .  "],
           "spread":true,
           "audio":"14.mp3",
-          "script":"When the threat is odd, such as this example here, there is an odd amount of dead space. That means Yellow is in the Zugzwang."
+          "script":"When the threat is odd- that is, it's on an odd row, such as this example here, there is an odd amount of dead space. That means Yellow is in the Zugzwang."
         },
         {
           "transition":true,
@@ -543,7 +549,13 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
+          "highlight":   ["  o    ",
+                          "  o    ",
+                          "  o    ",
+                          "p o  o ",
+                          "p o  o ",
+                          "p o    "],
           "spread":true,
           "audio":"34.mp3",
           "script":"In reality, we are not interested in the threat alone, rather the set of moves that get played in association with that threat."
@@ -561,7 +573,7 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
           "spread":true,
           "audio":"36.mp3",
           "script":"Now it becomes clear why the leftmost threat gets Yellow out of the Zugzwang. It is the only threat which is composed of an odd number of spaces. Such a threat is said to exert control over the Zugzwang."
@@ -578,7 +590,7 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
           "spread":true,
           "audio":"37.mp3",
           "script":"We always want to use threats which exert control over the Zugzwang before we expose other threats."
@@ -596,7 +608,7 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
           "spread":true,
           "audio":"39.mp3",
           "script":"Let's start by identifying the threats."
@@ -613,7 +625,13 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
+          "highlight":   [" p     ",
+                          " p     ",
+                          " p     ",
+                          " p     ",
+                          " p     ",
+                          "       "],
           "spread":true,
           "audio":"40.mp3",
           "script":"This one has 5 spaces, so it exerts Zugzwang control."
@@ -630,10 +648,16 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
+          "highlight":   [" p p   ",
+                          " p p   ",
+                          " p p   ",
+                          " p     ",
+                          " p     ",
+                          "       "],
           "spread":true,
           "audio":"41.mp3",
-          "script":"This one has 3, so it does too."
+          "script":"This one has 3, so it does as well."
         },
         {
           "transition":true,
@@ -647,10 +671,16 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
+          "highlight":   [" p p   ",
+                          " p p   ",
+                          " p p   ",
+                          " p  p  ",
+                          " p  p  ",
+                          "    p  "],
           "spread":true,
           "audio":"42.mp3",
-          "script":"This one has 3, but playing in it would reveal a yellow threat, which also exerts Zugzwang control! Let's not let Yellow have it."
+          "script":"This one also has 3, but playing in it would reveal a yellow threat, which also exerts Zugzwang control! Let's not let Yellow have it."
         },
         {
           "transition":true,
@@ -664,7 +694,13 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
+          "highlight":   [" p p  o",
+                          " p p  o",
+                          " p p  o",
+                          " p  p o",
+                          " p  p  ",
+                          "    p  "],
           "spread":true,
           "audio":"43.mp3",
           "script":"Finally, these 2 do not exert Zugzwang control."
@@ -681,7 +717,13 @@
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
+          "highlight":   [" p p   ",
+                          " p p   ",
+                          " p p   ",
+                          " p     ",
+                          " p     ",
+                          "       "],
           "spread":true,
           "audio":"44.mp3",
           "script":"So, it seems Red's best option is to take one of these two!"
@@ -691,14 +733,14 @@
           "duration_seconds":1
         },
         {
-          "representation": "6244477111",
-          "name": "",
+          "representation": "6244477111444",
+          "name": "Yellow to play (in Zugzwang)",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
                           ".R...Yx",
                           "YxY.Rx.",
-                          "c.x.x.."],
+                          "x.x.x.."],
           "spread":true,
           "audio":"45.mp3",
           "script":"That would kick the Zugzwang back to Yellow."
@@ -735,12 +777,12 @@
                           "......."],
           "spread":false,
           "audio":"47.mp3",
-          "script":"The parity of the dead space was even, and there was no threat that Red could give up to toggle the Zugzwang back to yellow."
+          "script":"The parity of the dead space was even, and furthermore, there was no threat that Red could give up to toggle the Zugzwang back to yellow."
         },
         {
           "transition":true,
           "audio":"48.mp3",
-          "script":"Ok then, so are there any cases in which it is beneficial to take a threat which does not exert Zugzwang control?"
+          "script":"Ok then, so are there any cases in which it is beneficial to expose or use a threat which does not exert Zugzwang control?"
         },
         {
           "representation": "",
@@ -751,6 +793,12 @@
                           "   R   ",
                           "   x   ",
                           "   .   "],
+          "highlight":   ["   p   ",
+                          "   p   ",
+                          "   p   ",
+                          "   o   ",
+                          "   o   ",
+                          "       "],
           "spread":true,
           "audio":"49.mp3",
           "script":"Here's a perfect example. The lower threat does not control the Zugzwang, but the top one does. Only by revealing the bottom one can Red arrive at the top threat and send the Zugzwang back to Yellow."
@@ -762,12 +810,18 @@
         {
           "representation": "",
           "name": "",
-          "annotations": ["   R   ",
+          "annotations": ["   .   ",
+                          "   R   ",
                           "   R   ",
                           "   x   ",
                           "   R   ",
-                          "   x   ",
-                          "   .   "],
+                          "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
           "audio":"50.mp3",
           "script":"Here's a much more obvious example. In this case, Red wants to get to the major threat pair as soon as possible to instantly win the game."
@@ -785,6 +839,12 @@
                           "   x   ",
                           "   R   ",
                           "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
           "audio":"51.mp3",
           "script":"So, red will uncover the bottom threat, and then claim victory using the threat pair."
@@ -802,9 +862,15 @@
                           "   x   ",
                           "   R   ",
                           "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
-          "audio":"52.mp3",
-          "script":"Now, we learned about threats which control and do not control the Zugzwang, but this threat pair can be considered as a separate kind of threat. Notice how the dead space above it can never be filled, since Red is guaranteed to win on the threat pair?"
+          "audio":"51_2.mp3",
+          "script":"In both of these instances, red will play the non-controlling threat to expose the upper threat. This is always true when the above threat is of the same color."
         },
         {
           "transition":true,
@@ -817,15 +883,87 @@
                           "   R   ",
                           "   R   ",
                           "   x   ",
-                          "   R   ",
-                          "   x   "],
+                          "   .   ",
+                          "   .   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
-          "audio":"53.mp3",
-          "script":"For that reason, we call this threat a 'terminal threat'. Everything above it might as well not exist."
+          "audio":"51_3.mp3",
+          "script":"Therefore, since the threat will simply get trodded over, it can be ignored as dead space."
         },
         {
           "transition":true,
           "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["   .   ",
+                          "   Y   ",
+                          "   Y   ",
+                          "   x   ",
+                          "   R   ",
+                          "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "   o   ",
+                          "   o   "],
+          "spread":true,
+          "audio":"51_4.mp3",
+          "script":"However, in a situation like this, the red non-controlling threat is the only thing preventing Yellow from reaching a threat pair. It may not help Red control the Zugzwang, but it is preventing a swift defeat."
+        },
+        {
+          "transition":true,
+          "audio":"51_5.mp3",
+          "script":"For this reason, a threat which does not control the Zugzwang can be ignored if and only if there is a threat of the same color following it."
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["   -   ",
+                          "   Y   ",
+                          "   Y   ",
+                          "   x   ",
+                          "   R   ",
+                          "   x   "],
+          "highlight":   ["       ",
+                          "   b   ",
+                          "   b   ",
+                          "   b   ",
+                          "   o   ",
+                          "   o   "],
+          "spread":true,
+          "audio":"52.mp3",
+          "script":"Now, we learned about threats which control and do not control the Zugzwang, but this threat pair can be considered as a separate kind of threat. Notice how the dead space above it can never be touched, since Yellow is guaranteed to win on the threat pair?"
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["   .   ",
+                          "   Y   ",
+                          "   Y   ",
+                          "   x   ",
+                          "   R   ",
+                          "   x   "],
+          "highlight":   ["       ",
+                          "   b   ",
+                          "   b   ",
+                          "   b   ",
+                          "   o   ",
+                          "   o   "],
+          "spread":true,
+          "audio":"53.mp3",
+          "script":"This 'terminal threat' has the property that nothing above it can ever be reached. Anything above it might as well not exist."
         },
         {
           "transition":true,
@@ -840,9 +978,38 @@
                           "   x   ",
                           "   R   ",
                           "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "   b   ",
+                          "   b   ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
           "audio":"54.mp3",
-          "script":"The same can be said of a threat held by both players. This threat is terminal- whoever touches it wins, so there's no getting above it."
+          "script":"The same can be said of a threat held by both players. This threat is terminal- whoever touches it wins, so there's no getting above it. The yellow threat might as well not exist."
+        },
+        {
+          "transition":true,
+          "audio":"54_2.mp3",
+          "script":"This yellow threat might as well not exist. The result would be identical."
+        },
+        {
+          "representation": "",
+          "name": "",
+          "annotations": ["       ",
+                          "       ",
+                          "   B   ",
+                          "   x   ",
+                          "   R   ",
+                          "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "   b   ",
+                          "   b   ",
+                          "   o   ",
+                          "   o   "],
+          "spread":true,
+          "duration_seconds":1
         },
         {
           "transition":true,
@@ -858,6 +1025,12 @@
                           "   Y   ",
                           "   R   ",
                           "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "   o   ",
+                          "   o   ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
           "audio":"56.mp3",
           "script":"This threat chain here actually works just like a normal threat which does not exert Zugzwang control."
@@ -876,9 +1049,15 @@
                           "   Y   ",
                           "   R   ",
                           "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "   o   ",
+                          "   o   ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
           "audio":"58.mp3",
-          "script":"This threat chain here actually works just like a normal threat which does not exert Zugzwang control."
+          "script":"And, since it has an even amount of spaces, it does not exert Zugzwang control."
         },
         {
           "transition":true,
@@ -894,13 +1073,19 @@
                           "   .   ",
                           "   R   ",
                           "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "   o   ",
+                          "   o   ",
+                          "   o   ",
+                          "   o   "],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
           "audio":"60.mp3",
-          "script":"Ok, that was a lot of information. Let's see another example to see how we can use all of this."
+          "script":"Ok, let's see another example to see how we can use all of this."
         },
         {
           "representation": "",
@@ -929,13 +1114,18 @@
                           " Y.YxYx",
                           "BRRxRxY",
                           "xxx.x.x"],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "b      ",
+                          "b      "],
           "spread":true,
-          "audio":"63.mp3",
-          "script":"On the left, the red-and-yellow threat is a terminal, so we can simply remove everything above it."
+          "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"63.mp3",
           "script":"The paired yellow threat one column over is also a terminal, so we can remove everything above it too."
         },
         {
@@ -947,6 +1137,12 @@
                           " Y.YxYx",
                           "BRRxRxY",
                           "xxx.x.x"],
+          "highlight":   ["       ",
+                          "       ",
+                          " b     ",
+                          " b     ",
+                          "b      ",
+                          "b      "],
           "spread":true,
           "duration_seconds":1
         },
@@ -964,12 +1160,18 @@
                           " Y.YxYx",
                           "BRRxRxY",
                           "xxx.x.x"],
+          "highlight":   ["     p ",
+                          "     p ",
+                          " b   p ",
+                          " b   p ",
+                          "b    p ",
+                          "b      "],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"65.mp3",
           "script":"Finally, the rightmost threat pair belongs to red- there's no way that Yellow could get to the upper threat without Red having gotten the bottom one."
         },
         {
@@ -981,111 +1183,123 @@
                           " Y.YxYx",
                           "BRRxRxY",
                           "xxx.x.x"],
+          "highlight":   ["     pb",
+                          "     pb",
+                          " b   pb",
+                          " b   p ",
+                          "b    p ",
+                          "b      "],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
-          "script":"We are also safe to ignore this row of all red threats which exert no control over the Zugzwang."
+          "audio":"66.mp3",
+          "script":"We are also safe to ignore these two red threats which exert no control over the Zugzwang, since there is another red threat above each one."
         },
         {
           "representation": "",
           "name": "",
-          "annotations": ["  .. . ",
-                          "  RY .R",
-                          " Yxx .R",
-                          " Y.Y Yx",
-                          "BRRx xY",
-                          "xxx. .x"],
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
+          "highlight":   ["    opb",
+                          "    opb",
+                          " b   pb",
+                          " b   p ",
+                          "b    p ",
+                          "b      "],
           "spread":true,
-          "audio":"64.mp3",
+          "audio":"67.mp3",
           "script":"Ok, this looks a lot more manageable! Can you tell how this game will proceed?"
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"68.mp3",
           "script":"Red is in the Zugzwang, since there is an even amount of dead space."
         },
         {
           "representation": "46",
           "name": "",
-          "annotations": ["  .. . ",
-                          "  RY .R",
-                          " Yxx .R",
-                          " Y.Y Yx",
-                          "BRRx xY",
-                          "xxx. .x"],
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"69.mp3",
           "script":"Red will start by toggling the Zugzwang like so."
         },
         {
           "representation": "46333",
           "name": "",
-          "annotations": ["  .. . ",
-                          "  RY .R",
-                          " Yxx .R",
-                          " Y.Y Yx",
-                          "BRRx xY",
-                          "xxx. .x"],
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"70.mp3",
           "script":"Yellow will then return the favor."
         },
         {
           "representation": "4633366666",
           "name": "",
-          "annotations": ["  .. . ",
-                          "  RY .R",
-                          " Yxx .R",
-                          " Y.Y Yx",
-                          "BRRx xY",
-                          "xxx. .x"],
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"71.mp3",
           "script":"Now red once more."
         },
         {
           "representation": "4633366666333",
           "name": "",
-          "annotations": ["  .. . ",
-                          "  RY .R",
-                          " Yxx .R",
-                          " Y.Y Yx",
-                          "BRRx xY",
-                          "xxx. .x"],
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"72.mp3",
           "script":"Followed by Yellow once more! Yellow will first have to throw away a non-controlling threat to get to a controlling threat."
         },
         {
           "representation": "463336666633344444",
           "name": "",
-          "annotations": ["  .. . ",
-                          "  RY .R",
-                          " Yxx .R",
-                          " Y.Y Yx",
-                          "BRRx xY",
-                          "xxx. .x"],
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
           "spread":true,
-          "audio":"64.mp3",
+          "audio":"73.mp3",
           "script":"At this point, Red has no other option but to cede a terminal threat to Yellow, thereby forfeiting."
         },
         {
@@ -1095,18 +1309,18 @@
         {
           "representation": "46333666663334444411",
           "name": "",
-          "annotations": ["  .. . ",
-                          "  RY .R",
-                          " Yxx .R",
-                          " Y.Y Yx",
-                          "BRRx xY",
-                          "xxx. .x"],
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
-          "audio":"64.mp3",
+          "audio":"74.mp3",
           "script":"This covers basically all of the situations a player can find himself in, with the exception of threat races, where both players are trying to get to a major threat pair at once, and vertical threats which can be constructed spontaneously. For brevity, we won't worry about those today."
         },
         {
@@ -1119,16 +1333,16 @@
                           "       ",
                           "       "],
           "spread":true,
-          "audio":"64.mp3",
+          "audio":"75.mp3",
           "script":"Now that our endgame theory is basically complete, let's see how to actually apply this, by categorizing common threat patterns."
         },
         {
           "transition":true,
-          "audio":"64.mp3",
-          "script":"Lucky for us, I've sort of been lying throughout this video. Threat combinations as complex as the ones we saw earlier are totally impossible."
+          "audio":"76.mp3",
+          "script":"Lucky for us, I've sort of been lying throughout this video. Threat combinations as complex as the ones we saw earlier are totally impossible. It could happen on a bigger board size, so it's good to understand."
         },
         {
-          "representation": "",
+          "representation": "46",
           "name": "",
           "annotations": ["RR..RRY",
                           "xxRYxYB",
@@ -1137,26 +1351,25 @@
                           "BRRxRxY",
                           "xxx.x.x"],
           "spread":true,
-          "audio":"64.mp3",
-          "script":"On a board like this, there can't really even be so many threats. After all, there are only two pieces played."
+          "audio":"77.mp3",
+          "script":"But on a traditional board size, there can't even be this many threats. After all, there are only two pieces played. We're not even in the endgame."
         },
         {
           "transition":true,
-          "audio":"64.mp3",
-          "script":"In practice, one or two threatened columns are common to see, but 3 or more is vanishingly rare. Since our parity mechanics explain the one-row case, let's determine the win conditions for two threatened columns. This time, using real examples."
+          "audio":"78.mp3",
+          "script":"In practice, one or two columns with threats are common to see, but 3 or more is increasingly rare. Since our parity mechanics explain the one-row case, let's determine the win conditions for two threatened columns. This time, using real examples."
         },
         {
           "representation": "",
           "name": "",
-          "annotations": ["RR..RRY",
-                          "xxRYxYB",
-                          "YYxxRRR",
-                          "xY.YxYx",
-                          "BRRxRxY",
-                          "xxx.x.x"],
-          "spread":true,
-          "audio":"64.mp3",
-          "script":"On a board like this, there can't really even be so many threats. After all, there are only two pieces played."
+          "annotations": ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":false,
+          "duration_seconds":1
         },
         {
           "transition":true,
