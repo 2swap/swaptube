@@ -228,6 +228,18 @@ public:
         fill_rect(0, 0, w, h, col);
     }
 
+    void recolor(int col){
+        int r = getr(col);
+        int g = getg(col);
+        int b = getb(col);
+        for(int dx = 0; dx < w; dx++)
+            for(int dy = 0; dy < h; dy++){
+                pixels[4*(dx+dy*w)+2] = r;
+                pixels[4*(dx+dy*w)+1] = g;
+                pixels[4*(dx+dy*w)+0] = b;
+            }
+    }
+
     void rounded_rect(int x, int y, int rw, int rh, int r, int col){
         fill_rect(x+r, y, rw-r*2, rh, col);
         fill_rect(x, y+r, rw, rh-r*2, col);

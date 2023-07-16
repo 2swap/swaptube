@@ -1588,15 +1588,6 @@
         },
         {
           "transition":true,
-          "duration_seconds":1
-        }
-      ]
-    },
-    {
-      "type": "c4_with_diagram",
-      "sequence": [
-        {
-          "transition":true,
           "audio":"diagram_01.mp3",
           "script":"Ok, let's take a step back. We have now taxonomized all threats into Zugzwang-controlling threats (marked with a Z,) non-controlling threats (marked with a zero,) and terminal threats (marked with a hash.)"
         },
@@ -1630,7 +1621,7 @@
                           "xxx...x"],
           "reduction":        ["#", "0#", "ZZ", "Z", "0", "Z", "0#"],
           "reduction_colors": ["b", "ry", "rr", "y", "r", "y", "yr"],
-          "audio":"61.mp3",
+          "audio":"diagram_03_2.mp3",
           "script":"Let's watch the players play this same game over, but track what happens as they play hot-potato with the Zugzwang."
         },
         {
@@ -1708,7 +1699,7 @@
         {
           "transition":true,
           "audio":"diagram_08.mp3",
-          "script":"Now Yellow is clearly going to lose, because all remaining threats on the bottom row of our diagram are now held by either Red, or both Red and Yellow."
+          "script":"Now Red is clearly going to lose, because no remaining red threats can toggle the Zugzwang, so Red will end up revealing a terminal threat."
         },
         {
           "representation": "463336666633344444",
@@ -1734,12 +1725,12 @@
           "reduction":        ["ZZZZZ", "ZZZZZ", "ZZZZZZ", "-Z#"],
           "reduction_colors": ["rryyy", "ryrrr", "yyrryr", "ryr"],
           "audio":"diagram_10.mp3",
-          "script":"Red's in the Zugzwang. Which threat should Red expose first? There turns out to be a very simple answer for determining this in any situation. The trick is to greedily take whichever Zugzwang-controlling threat has the fewest opponent Zugzwang-controlling threats above it."
+          "script":"Red's in the Zugzwang. Which threat should Red expose first? There turns out to be a very simple answer for determining this in any situation. The trick is to greedily take whichever Zugzwang-controlling threat has the fewest opponent Zugzwang-controlling threats immediately above it."
         },
         {
           "transition":true,
           "audio":"diagram_11.mp3",
-          "script":"In this case, that's the bottom-left threat, since there is no yellow threat above it- there is another red threat there."
+          "script":"In this case, that's the bottom-left threat, since there is no yellow threat immediately above it- there is another red threat there."
         },
         {
           "representation": "",
@@ -1751,7 +1742,7 @@
         {
           "transition":true,
           "audio":"diagram_12.mp3",
-          "script":"Now, Yellow would take the only immediately available threat."
+          "script":"Now, Yellow would expose the only immediately available threat."
         },
         {
           "representation": "",
@@ -1870,7 +1861,7 @@
                           "       "],
           "spread":true,
           "audio":"75.mp3",
-          "script":"Now that our endgame theory is basically complete, let's see how to actually apply this, by categorizing common threat patterns."
+          "script":"Now that our endgame theory is basically complete, let's see how to actually apply this, by categorizing some common threat patterns."
         },
         {
           "transition":true,

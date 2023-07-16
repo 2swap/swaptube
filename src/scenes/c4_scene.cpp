@@ -40,10 +40,10 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool blink, cha
 
     if (highlight != ' '){
         int highlight_color = WHITE;
-        if(highlight == 'd') highlight_color = HASHMARKS ; // dead space
-        if(highlight == 't') highlight_color = DIAMONDS  ; // terminal threat
-        if(highlight == 'z') highlight_color = HORIZONTAL; // zugzwang controlling threat
-        if(highlight == 'n') highlight_color = VERTICAL  ; // non-controlling threat
+        if(highlight == 'd' || highlight == 'D') highlight_color = HASHMARKS ; // dead space
+        if(highlight == 't' || highlight == 'T') highlight_color = DIAMONDS  ; // terminal threat
+        if(highlight == 'z' || highlight == 'Z') highlight_color = HORIZONTAL; // zugzwang controlling threat
+        if(highlight == 'n' || highlight == 'N') highlight_color = VERTICAL  ; // non-controlling threat
         p.rounded_rect(px - stonewidth * .4, py - stonewidth * .4, stonewidth*.8, py_down_1 - py + stonewidth * .4 * 2, stonewidth * .4, highlight_color);
     }
 
@@ -161,6 +161,21 @@ void render_c4_board(Pixels& p, Board b, double t, double spread){
     p.texture();
 }
 
+void render_threat_diagram(Pixels& p, vector<string> reduction, vector<string> reduction_colors){
+    for(int x = 0; x < reduction.size(); x++){
+        for(int y = 0; y < reduction[x].size(); y++){
+            string r = ""+reduction[x][y];
+            char rc = reduction_colors[x][y];
+            int color = WHITE;
+            if(rc == 'R' || rc == 'r') color = C4_RED;
+            if(rc == 'Y' || rc == 'y') color = C4_YELLOW;
+            Pixels latex = eqn_to_pix("\\text{"+r+"}", p.w/640 + 1);
+            latex.recolor(color);
+            p.copy(latex, x * 100, p.h-(y+1)*100, 1);
+        }
+    }
+}
+
 C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
     vector<json> sequence_json = contents["sequence"];
     for (int i = 1; i < sequence_json.size()-1; i+=2) {
@@ -194,10 +209,13 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) 
 void C4Scene::render_non_transition(Pixels& p, int which) {
     p.fill(BLACK);
     Board b = boards[which];
-    double curr_spread = contents["sequence"][which*2+1].value("spread", false) ? 1 : 0;
+    json curr = contents["sequence"][which*2+1];
+    double curr_spread = curr.value("spread", false) ? 1 : 0;
     render_c4_board(pix, b, static_cast<double>(time_in_this_block)/framerate, curr_spread);
     Pixels board_title_pix = eqn_to_pix(latex_text(names[which]), pix.w / 640 + 1);
     pix.copy(board_title_pix, (pix.w - board_title_pix.w)/2, pix.h-pix.w/12, 1);
+    if(curr.contains("reduction"))
+        render_threat_diagram(pix, curr["reduction"], curr["reduction_colors"]);
     time_in_this_block++;
 }
 
