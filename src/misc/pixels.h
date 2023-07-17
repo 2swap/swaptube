@@ -183,7 +183,7 @@ public:
                     if(col == HORIZONTAL) white = y % shapewidth < shapewidth/3;
                     if(col == VERTICAL  ) white = x % shapewidth < shapewidth/3;
                     if(col == DIAMONDS  ) white = (x+y+100000) % shapewidth < shapewidth/3 ^ (x-y+100000) % shapewidth < shapewidth/3;
-                    col = white?0xff004444:BLACK;
+                    col = (white || true)?0xff004444:BLACK;
                     set_pixel(x, y, col);
                 }
             }
@@ -226,6 +226,20 @@ public:
 
     void fill(int col){
         fill_rect(0, 0, w, h, col);
+    }
+
+    void fill_alpha(int a){
+        for(int dx = 0; dx < w; dx++)
+            for(int dy = 0; dy < h; dy++){
+                pixels[4*(dx+dy*w)+3] = a;
+            }
+    }
+
+    void mult_alpha(double m){
+        for(int dx = 0; dx < w; dx++)
+            for(int dy = 0; dy < h; dy++){
+                pixels[4*(dx+dy*w)+3] *= m;
+            }
     }
 
     void recolor(int col){
