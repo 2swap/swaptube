@@ -118,8 +118,8 @@ string replerp(const string& b1, const string& b2, double w) {
 
 Board c4lerp(Board b1, Board b2, double w){
     string representation = replerp(b1.representation, b2.representation, smoother2(w));
-    string annotations = shared(b1.annotations, b2.annotations);
-    string highlight = shared(b1.highlight, b2.highlight);
+    string annotations = w<.5?b1.annotations:b2.annotations;//shared(b1.annotations, b2.annotations);
+    string highlight = w<.5?b1.highlight:b2.highlight;//shared(b1.highlight, b2.highlight);
     Board transition(representation, annotations, highlight);
     return transition;
 }

@@ -10,7 +10,7 @@ class CompositeScene : public Scene {
 public:
     CompositeScene(const json& config, const json& contents, MovieWriter* writer);
     ~CompositeScene();
-    Pixels query(int& frames_left) override;
+    Pixels query(bool& done_scene) override;
     void update_variables(const map<string, double>& _variables) override;
     Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new CompositeScene(config, scene, writer);
@@ -35,7 +35,7 @@ CompositeScene::CompositeScene(const json& config, const json& contents, MovieWr
         scene_with_coords s = make_pair(create_scene_determine_type(config_new_resolution, contents_with_duration, nullptr), coords);
         scenes.push_back(s);
     }
-    frontload_audio(contents, writer);
+    add_audio(contents, writer);
 }
 
 void CompositeScene::update_variables(const map<string, double>& _variables) {
@@ -50,12 +50,12 @@ CompositeScene::~CompositeScene() {
     }
 }
 
-Pixels CompositeScene::query(int& frames_left) {
-    frames_left = -1;
+Pixels CompositeScene::query(bool& done_scene) {
+    done_scene = false;
     for (auto& swc : scenes){
-        int this_scene_frames_left = 0;
-        Pixels p = swc.first->query(this_scene_frames_left);
-        frames_left = max(this_scene_frames_left, frames_left);
+        bool this_scene_done = false;
+        Pixels p = swc.first->query(this_scene_done);
+        done_scene = this_scene_done || done_scene;
         pix.copy(p, swc.second.first, swc.second.second, 1);
     }
     time++;

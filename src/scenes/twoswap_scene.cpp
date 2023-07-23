@@ -6,7 +6,7 @@ using json = nlohmann::json;
 class TwoswapScene : public Scene {
 public:
     TwoswapScene(const json& config, const json& contents, MovieWriter* writer);
-    Pixels query(int& frames_left) override;
+    Pixels query(bool& done_scene) override;
     Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new TwoswapScene(config, scene, writer);
     }
@@ -18,11 +18,11 @@ TwoswapScene::TwoswapScene(const json& config, const json& contents, MovieWriter
     pix.fill(BLACK);
     pix.fill_ellipse(pix.w/3, pix.h/2, pix.w/12, pix.w/12, WHITE);
     pix.copy(twoswap_pix, pix.w/3+pix.w/12+pix.w/32, (pix.h-twoswap_pix.h)/2+pix.w/32, 1);
-    frontload_audio(contents, writer);
+    add_audio(contents, writer);
 }
 
-Pixels TwoswapScene::query(int& frames_left) {
-    frames_left = scene_duration_frames - time;
+Pixels TwoswapScene::query(bool& done_scene) {
+    done_scene = scene_duration_frames <= time;
 
     Pixels ret(pix.w, pix.h);
     ret.fill(BLACK);

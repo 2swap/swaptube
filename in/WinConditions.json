@@ -14,107 +14,95 @@
         },
         {
           "representation": "4156554224254554422211111767667766",
-          "name": "Yellow Even Threat?",
           "annotations": [".......",
                           ".......",
                           ".......",
                           ".......",
                           "..B....",
-                          "..x...."]
+                          "..x...."],
+          "duration_seconds":1
         },
         {
           "transition": true,
-          "duration_seconds":0.5
+          "audio":"01.mp3",
+          "script":"Last time, we concluded that once all of the major threats are developed in a game of connect 4, the result can be computed deterministically as a function of the positions of those threats."
         },
         {
           "representation": "41565542242545544222111117676677667733",
-          "name": "Yellow Wins!",
           "annotations": [".......",
                           ".......",
                           ".......",
                           ".......",
                           "..B....",
-                          "..x...."]
+                          "..x...."],
+          "duration_seconds":1
         },
         {
           "transition": true,
-          "duration_seconds":0.5
+          "duration_seconds":1
         },
         {
           "representation": "4444455552222246337757277573133311",
-          "name": "Red Odd Threat?",
           "annotations": [".......",
                           ".....R.",
                           ".....x.",
                           ".......",
                           ".......",
-                          "......."]
+                          "......."],
+          "duration_seconds":1
         },
         {
           "transition": true,
-          "duration_seconds":0.5
+          "audio":"02.mp3",
+          "script":"We learned that the parity, or the even-ness or odd-ness of the row on which the threat lies, determines the result, but only in the case that there is a single column with threats on it."
         },
         {
-          "representation": "44444555522222463377572775731333112226666",
-          "name": "Red Wins!",
+          "representation": "44444555522222463377572775731333111116666",
           "annotations": [".......",
                           ".....R.",
                           ".....x.",
                           ".......",
                           ".......",
-                          "......."]
-        },
-        {
-          "transition":true,
+                          "......."],
           "duration_seconds":1
-        }
-      ],
-      "audio":"1.mp3",
-      "script":"Last time, we concluded that once all of the major threats are developed in a game of connect 4, the result can be computed deterministically as a function of the positions of those threats."
-    },
-    {
-      "type": "latex",
-      "sequence": [
-        {
-          "transition":true
         },
-        {
-          "latex": "\\begin{array}{c}\\textcolor{#cc4444}{\\text{Red (player 1) likes odd-row threats}} \\\\\\\\ \\textcolor{#888800}{\\text{Yellow (player 2) likes even-row threats}}\\end{array}"
-        },
-        {
-          "transition":true
-        }
-      ],
-      "audio":"2.mp3",
-      "script":"We learned that the parity, or the even-ness or odd-ness of the row on which the threat lies, determines the result, but only in the case that there is a single column with threats on it."
-    },
-    {
-      "type": "c4",
-      "sequence": [
         {
           "transition": true,
           "duration_seconds":1
         },
         {
           "representation": "444443333167666646111112222232377",
-          "name": "",
           "annotations": [".......",
                           "....B..",
                           "....x..",
                           ".......",
                           ".......",
                           "......."],
-          "audio":"3.mp3",
-          "script":"Consider this example. Since everything other than the positions of the threats is superfluous, we will simply hide the disks which have been played, and also separate the columns to consider them individually."
+          "audio":"03.mp3",
+          "script":"Consider this example. Since everything other than the positions of the threats is superfluous, we will simply hide the disks which have been played."
         },
         {
-          "transition":true,
-          "audio":"4.mp3",
-          "script":"but we will be sure to leave all the threats where they are."
+          "transition": true,
+          "duration_seconds":1
         },
         {
           "representation": "",
-          "name": "",
+          "annotations": [".......",
+                          "....B..",
+                          "....x..",
+                          ".......",
+                          ".......",
+                          "......."],
+          "audio":"03_2.mp3",
+          "script":"We will also separate the columns to consider them individually."
+        },
+        {
+          "transition":true,
+          "audio":"04.mp3",
+          "script":"However, we will be sure to leave all the threats where they are."
+        },
+        {
+          "representation": "",
           "annotations": [".......",
                           "....B..",
                           "....x..",
@@ -122,17 +110,16 @@
                           ".......",
                           "......."],
           "spread":true,
-          "audio":"5.mp3",
+          "audio":"05.mp3",
           "script":"We now have a set of unadjoined columns. No need to worry about connecting 4 anymore. The players are just scrambling to get to a threat."
         },
         {
           "transition":true,
-          "audio":"6.mp3",
+          "audio":"06.mp3",
           "script":"This model is a faithful representation of the game from which we took it, since as soon as a player claims a threat, that means they won the underlying game of connect 4."
         },
         {
           "representation": "55555",
-          "name": "",
           "annotations": [".......",
                           "....B..",
                           "....x..",
@@ -148,7 +135,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": [".......",
                           "....B..",
                           "....x..",
@@ -156,7 +142,7 @@
                           ".......",
                           "......."],
           "spread":true,
-          "audio":"7.mp3",
+          "audio":"07.mp3",
           "script":"So, we have reduced the endgame of connect 4 to this much simpler game of 'just-get-to-a-threat-as-soon-as-possible!'"
         },
         {
@@ -165,7 +151,6 @@
         },
         {
           "representation": "",
-          "name": "Dead Space",
           "annotations": [".......",
                           "....B..",
                           "....x..",
@@ -179,17 +164,16 @@
                           "ddddddd",
                           "ddddddd"],
           "spread":true,
-          "audio":"8.mp3",
+          "audio":"08.mp3",
           "script":"In this view of the board, the 'dead space' is every piece which can be filled without getting to a threat or exposing it."
         },
         {
           "transition":true,
-          "audio":"9.mp3",
+          "audio":"09.mp3",
           "script":"Let's see how the players might fill in the dead space."
         },
         {
           "representation": "444443333167666646111112222232377777555",
-          "name": "",
           "annotations": [".......",
                           "....B..",
                           "....x..",
@@ -213,7 +197,6 @@
         },
         {
           "representation": "44444333316766664611111222223237777755555",
-          "name": "",
           "annotations": [".......",
                           "....B..",
                           "....x..",
@@ -235,7 +218,6 @@
         },
         {
           "representation": "444443333167666646111112222232377777555",
-          "name": "",
           "annotations": [".......",
                           "....B..",
                           "....x..",
@@ -250,7 +232,7 @@
                           "ddddddd"],
           "spread":true,
           "audio":"12.mp3",
-          "script":"In general, the player who is in Zugzwang is Red if the amount of dead space is even, or Yellow in the case that it is odd."
+          "script":"In general, the player who is in Zugzwang is Red- that is, player 1, if the amount of dead space is even, or Yellow, AKA player 2, in the case that it is odd."
         },
         {
           "transition":true,
@@ -259,7 +241,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["    .  ",
                           "    B  ",
                           "    x  ",
@@ -281,8 +262,7 @@
           "duration_seconds":1
         },
         {
-          "representation": "",
-          "name": "",
+          "representation": "444",
           "annotations": ["   .   ",
                           "   B   ",
                           "   x   ",
@@ -305,7 +285,6 @@
         },
         {
           "representation": "44444",
-          "name": "",
           "annotations": ["   .   ",
                           "   B   ",
                           "   x   ",
@@ -326,8 +305,7 @@
           "duration_seconds":1
         },
         {
-          "representation": "",
-          "name": "",
+          "representation": "44",
           "annotations": ["   .   ",
                           "   .   ",
                           "   B   ",
@@ -342,7 +320,7 @@
                           "   d   "],
           "spread":true,
           "audio":"15.mp3",
-          "script":"If the threat had been on an even row, there would have been an even amount of dead space, meaning Red would be in the Zugzwang."
+          "script":"If the threat had been on an even row, there would have been an even amount of dead space, meaning Red would have been in Zugzwang."
         },
         {
           "transition":true,
@@ -350,7 +328,6 @@
         },
         {
           "representation": "4444",
-          "name": "",
           "annotations": ["   .   ",
                           "   .   ",
                           "   B   ",
@@ -369,23 +346,44 @@
         {
           "transition":true,
           "audio":"15_2.mp3",
-          "script":"And, to reiterate, adding an empty column won't change this result. Both players will just climb up the column and it will be red's turn in Zugzwang once again. Adding an even amount of dead space doesn't change anything."
+          "script":"And, to reiterate, adding an empty column won't change this result."
         },
         {
-          "representation": "4411111144",
-          "name": "",
-          "annotations": ["   .   ",
-                          "   .   ",
-                          "   B   ",
-                          "   x   ",
-                          "   .   ",
-                          "   .   "],
+          "representation": "44",
+          "annotations": [" . .   ",
+                          " . .   ",
+                          " . B   ",
+                          " . x   ",
+                          " . .   ",
+                          " . .   "],
           "highlight":   ["       ",
                           "       ",
                           "       ",
                           "       ",
                           "   d   ",
                           "   d   "],
+          "spread":true,
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "audio":"15_3.mp3",
+          "script":"Both players will just climb up the column and it will be red's turn in Zugzwang once again. Adding an even amount of dead space doesn't change anything."
+        },
+        {
+          "representation": "4422222244",
+          "annotations": [" . .   ",
+                          " . .   ",
+                          " . B   ",
+                          " . x   ",
+                          " . .   ",
+                          " . .   "],
+          "highlight":   [" d     ",
+                          " d     ",
+                          " d     ",
+                          " d     ",
+                          " d d   ",
+                          " d d   "],
           "spread":true,
           "duration_seconds":1
         },
@@ -412,7 +410,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -431,11 +428,10 @@
         {
           "transition":true,
           "audio":"18.mp3",
-          "script":"The players begin by filling up the dead space, and there's an odd amount. So, Yellow starts out in the Zugzwang."
+          "script":"The players begin by filling up the dead space, and there's an odd amount. So, Yellow is in the Zugzwang."
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -444,7 +440,7 @@
                           "x.x.x.."],
           "spread":true,
           "audio":"19.mp3",
-          "script":"Yellow gets to choose which threat to expose."
+          "script":"In other words, it's Yellow who gets to choose which threat to expose."
         },
         {
           "transition":true,
@@ -453,7 +449,6 @@
         },
         {
           "representation": "624447755",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -469,13 +464,12 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
                           ".R...Yx",
-                          "YxY.Rx.",
-                          "x.x.x.."],
+                          "YxY.Rc.",
+                          "c.c.x.."],
           "spread":true,
           "audio":"20.mp3",
           "script":"That means Yellow will have to expose a Yellow threat, leaving us with these 3 options."
@@ -486,7 +480,6 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -504,7 +497,6 @@
         },
         {
           "representation": "6244477333333",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -521,7 +513,6 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -530,7 +521,7 @@
                           "x.x.x.."],
           "spread":true,
           "audio":"26.mp3",
-          "script":"Well, what about this odd row threat?"
+          "script":"Well, what about this threat?"
         },
         {
           "transition":true,
@@ -539,7 +530,6 @@
         },
         {
           "representation": "624447766",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -556,7 +546,6 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -574,7 +563,6 @@
         },
         {
           "representation": "6244477111",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -591,7 +579,6 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -608,7 +595,6 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -632,7 +618,6 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -655,7 +640,6 @@
         },
         {
           "representation": "6244477",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -674,12 +658,10 @@
         },
         {
           "transition":true,
-          "audio":"38.mp3",
-          "script":"Ok, in that case, what should Red do here?"
+          "duration_seconds":1
         },
         {
           "representation": "6244477111",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -687,16 +669,16 @@
                           "YxY.Rx.",
                           "x.x.x.."],
           "spread":true,
+          "audio":"38.mp3",
+          "script":"Ok, in that case, what should Red do here?"
+        },
+        {
+          "transition":true,
           "audio":"39.mp3",
           "script":"Let's start by identifying the threats."
         },
         {
-          "transition":true,
-          "duration_seconds":1
-        },
-        {
           "representation": "6244477111",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -719,7 +701,6 @@
         },
         {
           "representation": "6244477111",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -742,7 +723,6 @@
         },
         {
           "representation": "6244477111",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -765,7 +745,6 @@
         },
         {
           "representation": "6244477111",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -788,7 +767,6 @@
         },
         {
           "representation": "6244477111",
-          "name": "",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -811,7 +789,6 @@
         },
         {
           "representation": "6244477111444",
-          "name": "Yellow to play (in Zugzwang)",
           "annotations": ["......R",
                           "Y..RYRx",
                           "x..xxxR",
@@ -828,7 +805,6 @@
         },
         {
           "representation": "43444323332244666667677773222751",
-          "name": "",
           "annotations": [".......",
                           ".......",
                           ".......",
@@ -845,7 +821,6 @@
         },
         {
           "representation": "4344432333224466666767777322275155",
-          "name": "",
           "annotations": [".......",
                           ".......",
                           ".......",
@@ -863,7 +838,6 @@
         },
         {
           "representation": "4",
-          "name": "",
           "annotations": ["   .   ",
                           "   Y   ",
                           "   x   ",
@@ -876,7 +850,6 @@
                           "   n   ",
                           "   n   ",
                           "       "],
-          "spread":true,
           "audio":"49.mp3",
           "script":"Here's a perfect example. The lower threat does not control the Zugzwang, but the top one does. Only by revealing the bottom one can Yellow arrive at the top threat and send the Zugzwang back to Red."
         },
@@ -886,7 +859,6 @@
         },
         {
           "representation": "444444",
-          "name": "",
           "annotations": ["   .   ",
                           "   Y   ",
                           "   x   ",
@@ -899,7 +871,6 @@
                           "   n   ",
                           "   n   ",
                           "       "],
-          "spread":true,
           "duration_seconds":1
         },
         {
@@ -908,7 +879,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   .   ",
                           "   R   ",
                           "   R   ",
@@ -921,9 +891,8 @@
                           "       ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"50.mp3",
-          "script":"Here's a much more obvious example. In this case, Red wants to get to the major threat pair as soon as possible to instantly win the game."
+          "script":"Here's a much more obvious example. In this case, Red wants to get to the major threat pair as soon as possible, thereby, instantly winning the game."
         },
         {
           "transition":true,
@@ -932,7 +901,6 @@
         },
         {
           "representation": "44444",
-          "name": "",
           "annotations": ["   .   ",
                           "   R   ",
                           "   R   ",
@@ -945,7 +913,6 @@
                           "       ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "duration_seconds":1
         },
         {
@@ -954,7 +921,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   .   ",
                           "   R   ",
                           "   R   ",
@@ -967,9 +933,8 @@
                           "       ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"51_2.mp3",
-          "script":"In both of these instances, we play the non-controlling threat to expose the upper threat. This is always true when the two threats have the same color."
+          "script":"In both of these instances, we play the non-controlling threat to expose the upper threat. There's no harm in this as long as the two threats have the same color."
         },
         {
           "transition":true,
@@ -977,7 +942,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   .   ",
                           "   R   ",
                           "   R   ",
@@ -990,7 +954,6 @@
                           "       ",
                           "       ",
                           "       "],
-          "spread":true,
           "audio":"51_3.mp3",
           "script":"Therefore, since the threat will simply get trodded over, it can be ignored as dead space."
         },
@@ -1000,7 +963,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   .   ",
                           "   Y   ",
                           "   Y   ",
@@ -1013,7 +975,6 @@
                           "       ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"51_4.mp3",
           "script":"However, in a situation like this, the red non-controlling threat is the only thing preventing Yellow from reaching a threat pair. It may not help Red control the Zugzwang, but it is preventing a swift defeat."
         },
@@ -1024,7 +985,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   .   ",
                           "   Y   ",
                           "   Y   ",
@@ -1032,12 +992,11 @@
                           "   R   ",
                           "   x   "],
           "highlight":   ["       ",
-                          "   t   ",
-                          "   t   ",
-                          "   t   ",
+                          "       ",
+                          "       ",
+                          "       ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"52.mp3",
           "script":"Now, we learned about threats which control and do not control the Zugzwang, but this threat pair can be considered as a separate kind of threat. Notice how the dead space above it can never be touched, since Yellow is guaranteed to win on the threat pair?"
         },
@@ -1047,7 +1006,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   -   ",
                           "   Y   ",
                           "   Y   ",
@@ -1060,9 +1018,8 @@
                           "   t   ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"53.mp3",
-          "script":"This 'terminal threat' has the property that nothing above it can ever be reached. Anything above it might as well not exist."
+          "script":"This 'terminal threat' has the property that nothing above it can ever be touched. Anything above it might as well not exist."
         },
         {
           "transition":true,
@@ -1070,7 +1027,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   Y   ",
                           "   x   ",
                           "   B   ",
@@ -1083,7 +1039,6 @@
                           "   t   ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"54.mp3",
           "script":"The same can be said of a threat held by both players. This threat is terminal- whoever touches it wins, so there's no getting above it."
         },
@@ -1094,7 +1049,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["       ",
                           "       ",
                           "   B   ",
@@ -1107,7 +1061,6 @@
                           "   t   ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "duration_seconds":1
         },
         {
@@ -1117,7 +1070,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   Y   ",
                           "   x   ",
                           "   R   ",
@@ -1130,9 +1082,8 @@
                           "   n   ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"56.mp3",
-          "script":"This threat chain here actually works just like a normal threat which does not exert Zugzwang control."
+          "script":"This threat chain here actually works just like a normal threat."
         },
         {
           "transition":true,
@@ -1141,7 +1092,6 @@
         },
         {
           "representation": "4444",
-          "name": "",
           "annotations": ["   Y   ",
                           "   x   ",
                           "   R   ",
@@ -1154,7 +1104,6 @@
                           "   n   ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "audio":"58.mp3",
           "script":"And, since it has an even amount of spaces, it does not exert Zugzwang control."
         },
@@ -1165,7 +1114,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["   Y   ",
                           "   x   ",
                           "   .   ",
@@ -1178,7 +1126,6 @@
                           "   n   ",
                           "   n   ",
                           "   n   "],
-          "spread":true,
           "duration_seconds":1
         },
         {
@@ -1188,7 +1135,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["RR..RRY",
                           "xxRYxYB",
                           "YYxxRRR",
@@ -1205,7 +1151,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["RR..RRY",
                           "xxRYxYB",
                           "YYxxRRR",
@@ -1228,7 +1173,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": [" R..RRY",
                           " xRYxYB",
                           " YxxRRR",
@@ -1250,7 +1194,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": [" R..RRY",
                           " xRYxYB",
                           " YxxRRR",
@@ -1273,7 +1216,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..RRY",
                           "  RYxYB",
                           " YxxRRR",
@@ -1295,7 +1237,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..RRY",
                           "  RYxYB",
                           " YxxRRR",
@@ -1318,7 +1259,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..R.Y",
                           "  RYx.B",
                           " YxxR.R",
@@ -1336,34 +1276,11 @@
         },
         {
           "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "",
-          "name": "",
-          "annotations": ["  ..R. ",
-                          "  RYx.R",
-                          " YxxR.R",
-                          " Y.YxYx",
-                          "BRRxRxY",
-                          "xxx.x.x"],
-          "highlight":   ["     z ",
-                          "     zt",
-                          " t   zt",
-                          " t   z ",
-                          "t    z ",
-                          "t      "],
-          "spread":true,
           "audio":"65.mp3",
-          "script":"NOT FINALLY! Finally, the rightmost threat pair belongs to red- there's no way that Yellow could get to the upper threat without Red having gotten the bottom one."
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
+          "script":"The rightmost threat pair belongs to red- there's no way that Yellow could get to the upper threat without Red having gotten the bottom one."
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " YxxR.R",
@@ -1373,7 +1290,7 @@
           "highlight":   ["     z ",
                           "     zt",
                           " t   zt",
-                          " t   z ",
+                          " t   zt",
                           "t    z ",
                           "t      "],
           "spread":true,
@@ -1385,7 +1302,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " YxxR.R",
@@ -1395,9 +1311,9 @@
           "highlight":   ["     z ",
                           "     zt",
                           " t  nzt",
-                          " t  nz ",
-                          "t   nz ",
-                          "t   n  "],
+                          " t  nzt",
+                          "t   Nz ",
+                          "t   N  "],
           "spread":true,
           "audio":"66.mp3",
           "script":"We are also safe to ignore these two red threats which exert no control over the Zugzwang, since there is another red threat above each one."
@@ -1408,17 +1324,16 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
-                          " YxxR.R",
-                          " Y.YxYx",
-                          "BRRxRxY",
-                          "xxx.x.x"],
+                          " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
           "highlight":   ["    nz ",
                           "    nzt",
                           " t   zt",
-                          " t   z ",
+                          " t   zt",
                           "t    z ",
                           "t      "],
           "spread":true,
@@ -1430,7 +1345,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1440,7 +1354,7 @@
           "highlight":   ["    nz ",
                           "    nzt",
                           " t   zt",
-                          " t n z ",
+                          " t n zt",
                           "t  n z ",
                           "t      "],
           "spread":true,
@@ -1453,19 +1367,18 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
-          "highlight":   ["   znz ",
-                          "   znzt",
-                          " t z zt",
-                          " t   z ",
-                          "t    z ",
-                          "t      "],
+          "highlight":   ["  Zznz ",
+                          "  Zznzt",
+                          " tZz zt",
+                          " tz  zt",
+                          "tnz  zn",
+                          "tnz   n"],
           "spread":true,
           "audio":"67.mp3",
           "script":"Ok, this looks a lot more manageable! Can you tell how this game will proceed?"
@@ -1476,8 +1389,7 @@
           "script":"Red is in the Zugzwang, since there is an even amount of dead space."
         },
         {
-          "representation": "46",
-          "name": "",
+          "representation": "44455556",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1487,7 +1399,7 @@
           "highlight":   ["  Zznz ",
                           "  Zznzt",
                           " tZz zt",
-                          " tz  z ",
+                          " tz  zt",
                           "tnz  zn",
                           "tnz   n"],
           "spread":true,
@@ -1499,8 +1411,7 @@
           "script":"Red will start by toggling the Zugzwang like so."
         },
         {
-          "representation": "46333",
-          "name": "",
+          "representation": "44455556333",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1510,9 +1421,9 @@
           "highlight":   ["  Zznz ",
                           "  Zznzt",
                           " tZz zt",
-                          " tz  z ",
-                          "tnz  zn",
-                          "tnz   n"],
+                          " t   zt",
+                          "tn   zn",
+                          "tn    n"],
           "spread":true,
           "duration_seconds":1
         },
@@ -1522,20 +1433,19 @@
           "script":"Yellow will then return the favor."
         },
         {
-          "representation": "4633366666",
-          "name": "",
+          "representation": "4445555633366666",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
-          "highlight":   ["  Zznz ",
-                          "  Zznzt",
-                          " tZz zt",
-                          " tz  z ",
-                          "tnz  zn",
-                          "tnz   n"],
+          "highlight":   ["  Zzn  ",
+                          "  Zzn t",
+                          " tZz  t",
+                          " t    t",
+                          "tn    n",
+                          "tn    n"],
           "spread":true,
           "duration_seconds":1
         },
@@ -1545,43 +1455,41 @@
           "script":"Now red once more."
         },
         {
-          "representation": "4633366666333",
-          "name": "",
+          "representation": "4445555633366666333",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
-          "highlight":   ["  Zznz ",
-                          "  Zznzt",
-                          " tZz zt",
-                          " tz  z ",
-                          "tnz  zn",
-                          "tnz   n"],
+          "highlight":   ["   zn  ",
+                          "   zn t",
+                          " t z  t",
+                          " t    t",
+                          "tn    n",
+                          "tn    n"],
           "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
           "audio":"72.mp3",
-          "script":"Followed by Yellow once more! Yellow will first have to throw away a non-controlling threat to get to a controlling threat."
+          "script":"Followed by Yellow once more!"
         },
         {
-          "representation": "463336666633344444",
-          "name": "",
+          "representation": "4445555633366666333444",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
-          "highlight":   ["  Zznz ",
-                          "  Zznzt",
-                          " tZz zt",
-                          " tz  z ",
-                          "tnz  zn",
-                          "tnz   n"],
+          "highlight":   ["    n  ",
+                          "    n t",
+                          " t    t",
+                          " t    t",
+                          "tn    n",
+                          "tn    n"],
           "spread":true,
           "duration_seconds":1
         },
@@ -1591,20 +1499,19 @@
           "script":"At this point, Red has no other option but to cede a terminal threat to Yellow, thereby forfeiting."
         },
         {
-          "representation": "46333666663334444411",
-          "name": "",
+          "representation": "444555563336666633344411",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
-          "highlight":   ["  Zznz ",
-                          "  Zznzt",
-                          " tZz zt",
-                          " tz  z ",
-                          "tnz  zn",
-                          "tnz   n"],
+          "highlight":   ["    n  ",
+                          "    n t",
+                          " t    t",
+                          " t    t",
+                          " n    n",
+                          " n    n"],
           "spread":true,
           "duration_seconds":1
         },
@@ -1614,8 +1521,7 @@
           "script":"Ok, let's take a step back. We have now taxonomized all threats into Zugzwang-controlling threats (marked with a Z,) non-controlling threats (marked with a zero,) and terminal threats (marked with a hash.)"
         },
         {
-          "representation": "46",
-          "name": "",
+          "representation": "44455556",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1625,7 +1531,7 @@
           "highlight":   ["  Zznz ",
                           "  Zznzt",
                           " tZz zt",
-                          " tz  z ",
+                          " tz  zt",
                           "tnz  zn",
                           "tnz   n"],
           "spread":true,
@@ -1641,7 +1547,6 @@
         },
         {
           "representation": "44455556",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1651,7 +1556,7 @@
           "highlight":   ["  Zznz ",
                           "  Zznzt",
                           " tZz zt",
-                          " tz  z ",
+                          " tz  zt",
                           "tnz  zn",
                           "tnz   n"],
           "spread":true,
@@ -1667,7 +1572,6 @@
         },
         {
           "representation": "44455556333",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1677,7 +1581,7 @@
           "highlight":   ["  Zznz ",
                           "  Zznzt",
                           " tZz zt",
-                          " t   z ",
+                          " t   zt",
                           "tn   zn",
                           "tn    n"],
           "spread":true,
@@ -1692,7 +1596,6 @@
         },
         {
           "representation": "4445555633366666",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1702,7 +1605,7 @@
           "highlight":   ["  Zzn  ",
                           "  Zzn t",
                           " tZz  t",
-                          " t     ",
+                          " t    t",
                           "tn    n",
                           "tn    n"],
           "spread":true,
@@ -1717,7 +1620,6 @@
         },
         {
           "representation": "4445555633366666333",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1727,7 +1629,7 @@
           "highlight":   ["   zn  ",
                           "   zn t",
                           " t z  t",
-                          " t     ",
+                          " t    t",
                           "tn    n",
                           "tn    n"],
           "spread":true,
@@ -1742,7 +1644,6 @@
         },
         {
           "representation": "4445555633366666333444",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -1752,7 +1653,7 @@
           "highlight":   ["    n  ",
                           "    n t",
                           " t    t",
-                          " t     ",
+                          " t    t",
                           "tn    n",
                           "tn    n"],
           "spread":true,
@@ -1767,31 +1668,18 @@
         },
         {
           "representation": "444555563336666633344455",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
-          "spread":true,
-          "reduction":        ["#", "0#", "", "", "0", "", "0#"],
-          "reduction_colors": ["b", "ry", "", "", "r", "", "yr"],
-          "duration_seconds":1
-        },
-        {
-          "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "444555563336666633344455",
-          "name": "",
-          "annotations": ["  ..R. ",
-                          "  RYx.R",
-                          " Yxx..R",
-                          " Y...Yx",
-                          "BRR..xY",
-                          "xxx...x"],
+          "highlight":   ["       ",
+                          "      t",
+                          " t    t",
+                          " t    t",
+                          "tn    n",
+                          "tn    n"],
           "spread":true,
           "reduction":        ["#", "0#", "", "", "", "", "0#"],
           "reduction_colors": ["b", "ry", "", "", "", "", "yr"],
@@ -1803,13 +1691,18 @@
         },
         {
           "representation": "44455556333666663334445522",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
+          "highlight":   ["       ",
+                          "      t",
+                          " t    t",
+                          " t    t",
+                          "t     n",
+                          "t     n"],
           "spread":true,
           "reduction":        ["#", "#", "", "", "", "", "0#"],
           "reduction_colors": ["b", "y", "", "", "", "", "yr"],
@@ -1821,13 +1714,18 @@
         },
         {
           "representation": "4445555633366666333444552222",
-          "name": "",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
+          "highlight":   ["       ",
+                          "      t",
+                          "      t",
+                          "      t",
+                          "t     n",
+                          "t     n"],
           "spread":true,
           "reduction":        ["#", "", "", "", "", "", "0#"],
           "reduction_colors": ["b", "", "", "", "", "", "yr"],
@@ -1835,12 +1733,22 @@
         },
         {
           "transition":true,
-          "audio":"diagram_09.mp3",
-          "script":"Let's consider a yet more perplexing case, this time looking only at the diagram."
+          "duration_seconds":1
         },
         {
           "representation": "",
-          "name": "",
+          "spread":true,
+          "audio":"diagram_09.mp3",
+          "reduction":        ["", "", "", "", "", "", ""],
+          "reduction_colors": ["", "", "", "", "", "", ""],
+          "script":"Let's consider a yet more perplexing case, this time looking only at the diagram."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
           "reduction":        ["ZZZZZ", "ZZZZZ", "ZZZZZZ", "0Z#"],
           "reduction_colors": ["rryyy", "ryrrr", "yyrryr", "ryr"],
           "spread":true,
@@ -1854,7 +1762,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZZZZ", "ZZZZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "ryrrr", "yyrryr", "ryr"],
           "spread":true,
@@ -1867,7 +1774,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZZZZ", "ZZZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "ryrrr", "yrryr", "ryr"],
           "spread":true,
@@ -1880,7 +1786,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZZZ", "ZZZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "yrrr", "yrryr", "ryr"],
           "spread":true,
@@ -1893,7 +1798,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZZZ", "ZZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "yrrr", "rryr", "ryr"],
           "spread":true,
@@ -1906,7 +1810,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZZZ", "ZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "yrrr", "ryr", "ryr"],
           "spread":true,
@@ -1919,7 +1822,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZZ", "ZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "rrr", "ryr", "ryr"],
           "spread":true,
@@ -1932,7 +1834,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZ", "ZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "rr", "ryr", "ryr"],
           "spread":true,
@@ -1945,7 +1846,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZ", "ZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "rr", "ryr", "ryr"],
           "spread":true,
@@ -1958,7 +1858,6 @@
         },
         {
           "representation": "",
-          "name": "",
           "reduction":        ["ZZZZ", "ZZ", "ZZZ", "0Z#"],
           "reduction_colors": ["ryyy", "rr", "ryr", "ryr"],
           "spread":true,
@@ -1971,30 +1870,14 @@
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["       ",
                           "       ",
                           "       ",
                           "       ",
                           "       ",
                           "       "],
-          "spread":true,
-          "duration_seconds":1
-        },
-        {
-          "transition": true,
-          "audio":"74.mp3",
-          "script":"This covers basically all of the situations a player can find himself in, with the exception of threat races, where both players are racing to get to a major threat pair first, and vertical threats which can be constructed spontaneously. For brevity, we won't worry about those today."
-        },
-        {
-          "representation": "",
-          "name": "",
-          "annotations": ["       ",
-                          "       ",
-                          "       ",
-                          "       ",
-                          "       ",
-                          "       "],
+          "reduction":        ["", "", ""],
+          "reduction_colors": ["", "", ""],
           "spread":true,
           "audio":"75.mp3",
           "script":"Now that our endgame theory is basically complete, let's see how to actually apply this, by categorizing some common threat patterns."
@@ -2006,13 +1889,14 @@
         },
         {
           "representation": "46",
-          "name": "",
           "annotations": ["RR..RRY",
                           "xxRYxYB",
                           "YYxxRRR",
                           "xY.YxYx",
                           "BRRxRxY",
                           "xxx.x.x"],
+          "reduction":        ["", "", ""],
+          "reduction_colors": ["", "", ""],
           "spread":true,
           "audio":"77.mp3",
           "script":"But on a traditional board size, there can't even be this many threats. After all, there are only two pieces played. We're not even in the endgame."
@@ -2020,11 +1904,10 @@
         {
           "transition":true,
           "audio":"78.mp3",
-          "script":"In practice, one or two columns with threats are common to see, but 3 or more is rare. Since our parity mechanics explain the one-column case, let's determine the win conditions for two threatened columns."
+          "script":"In practice, one or two columns with threats are common to see, but 3 or more is increasingly rare. Since our parity mechanics explain the one-column case, let's determine the win conditions for two threatened columns."
         },
         {
           "representation": "",
-          "name": "",
           "annotations": ["  R R  ",
                           "  R R  ",
                           "  R R  ",
@@ -2043,7 +1926,6 @@
         },
         {
           "representation": "33",
-          "name": "",
           "annotations": ["  R R  ",
                           "  R R  ",
                           "  R R  ",
@@ -2053,15 +1935,14 @@
           "reduction":        ["#", "", "0#"],
           "reduction_colors": ["r", "", "yr"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
           "duration_seconds":1
         },
         {
-          "representation": "",
-          "name": "",
+          "representation": "5",
           "annotations": ["  Y Y  ",
                           "  Y Y  ",
                           "  Y Y  ",
@@ -2080,7 +1961,6 @@
         },
         {
           "representation": "533",
-          "name": "",
           "annotations": ["  Y Y  ",
                           "  Y Y  ",
                           "  Y Y  ",
@@ -2090,7 +1970,7 @@
           "reduction":        ["#", "", "0#"],
           "reduction_colors": ["y", "", "ry"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -2098,7 +1978,6 @@
         },
         {
           "representation": "35",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . .  ",
                           "  . .  ",
@@ -2117,7 +1996,6 @@
         },
         {
           "representation": "3555555",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . .  ",
                           "  . .  ",
@@ -2127,7 +2005,7 @@
           "reduction":        ["Z", "", ""],
           "reduction_colors": ["y", "", ""],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -2135,7 +2013,6 @@
         },
         {
           "representation": "355555533333",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . .  ",
                           "  . .  ",
@@ -2154,7 +2031,6 @@
         },
         {
           "representation": "3",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . R  ",
                           "  . x  ",
@@ -2173,7 +2049,6 @@
         },
         {
           "representation": "333333",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . R  ",
                           "  . x  ",
@@ -2191,7 +2066,6 @@
         },
         {
           "representation": "333333555",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . R  ",
                           "  . x  ",
@@ -2209,7 +2083,6 @@
         },
         {
           "representation": "33333355555",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . R  ",
                           "  . x  ",
@@ -2219,7 +2092,7 @@
           "reduction":        ["", "", ""],
           "reduction_colors": ["", "", ""],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -2227,7 +2100,6 @@
         },
         {
           "representation": "3",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . Y  ",
                           "  . x  ",
@@ -2246,7 +2118,6 @@
         },
         {
           "representation": "3555",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . Y  ",
                           "  . x  ",
@@ -2264,7 +2135,6 @@
         },
         {
           "representation": "355533333",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . Y  ",
                           "  . x  ",
@@ -2282,7 +2152,6 @@
         },
         {
           "representation": "355533333555",
-          "name": "",
           "annotations": ["  . .  ",
                           "  . Y  ",
                           "  . x  ",
@@ -2292,7 +2161,7 @@
           "reduction":        ["", "", ""],
           "reduction_colors": ["", "", ""],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -2300,7 +2169,6 @@
         },
         {
           "representation": "3",
-          "name": "",
           "annotations": ["  Y .  ",
                           "  x R  ",
                           "  . x  ",
@@ -2319,7 +2187,6 @@
         },
         {
           "representation": "3333",
-          "name": "",
           "annotations": ["  Y .  ",
                           "  x R  ",
                           "  . x  ",
@@ -2337,7 +2204,6 @@
         },
         {
           "representation": "3333555",
-          "name": "",
           "annotations": ["  Y .  ",
                           "  x R  ",
                           "  . x  ",
@@ -2355,7 +2221,6 @@
         },
         {
           "representation": "333355533",
-          "name": "",
           "annotations": ["  Y .  ",
                           "  x R  ",
                           "  . x  ",
@@ -2373,7 +2238,6 @@
         },
         {
           "representation": "33335553355",
-          "name": "",
           "annotations": ["  Y .  ",
                           "  x R  ",
                           "  . x  ",
@@ -2383,7 +2247,7 @@
           "reduction":        ["", "", ""],
           "reduction_colors": ["", "", ""],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -2391,7 +2255,6 @@
         },
         {
           "representation": "3",
-          "name": "",
           "annotations": ["  R .  ",
                           "  x Y  ",
                           "  . x  ",
@@ -2410,7 +2273,6 @@
         },
         {
           "representation": "3555",
-          "name": "",
           "annotations": ["  R .  ",
                           "  x Y  ",
                           "  . x  ",
@@ -2428,7 +2290,6 @@
         },
         {
           "representation": "3555333",
-          "name": "",
           "annotations": ["  R .  ",
                           "  x Y  ",
                           "  . x  ",
@@ -2446,7 +2307,6 @@
         },
         {
           "representation": "3555333555",
-          "name": "",
           "annotations": ["  R .  ",
                           "  x Y  ",
                           "  . x  ",
@@ -2464,7 +2324,6 @@
         },
         {
           "representation": "355533355533",
-          "name": "",
           "annotations": ["  R .  ",
                           "  x Y  ",
                           "  . x  ",
@@ -2474,12 +2333,12 @@
           "reduction":        ["", "", ""],
           "reduction_colors": ["", "", ""],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
           "audio":"83.mp3",
-          "script":"While there are an unending amount of different ways that columns can be threatened, by using the tools of reduction and abstraction which we learned here, it can be rather easily determined who is to win, even on arbitrarily large board sizes where the win conditions are not memorized."
+          "script":"While there are an unending amount of different ways that columns can be threatened, by using the tools of reduction and abstraction which we learned here, it can be rather easily determined who is to win, even on arbitrarily large board sizes where we haven't memorized the win conditions."
         }
       ]
     },

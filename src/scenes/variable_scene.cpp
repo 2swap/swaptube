@@ -9,7 +9,7 @@ class VariableScene : public Scene {
 public:
     VariableScene(const json& config, const json& contents, MovieWriter* writer);
     ~VariableScene();
-    Pixels query(int& frames_left) override;
+    Pixels query(bool& done_scene) override;
     Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new VariableScene(config, scene, writer);
     }
@@ -23,7 +23,7 @@ VariableScene::VariableScene(const json& config, const json& contents, MovieWrit
     contents_with_duration["duration_seconds"] = contents["duration_seconds"];
 
     subscene = create_scene_determine_type(config, contents_with_duration, nullptr);
-    frontload_audio(contents, writer);
+    add_audio(contents, writer);
 }
 
 VariableScene::~VariableScene() {
@@ -43,10 +43,9 @@ map<string, double> evaluate_all(const json& variables, double time) {
     return evaluatedVariables;
 }
 
-Pixels VariableScene::query(int& frames_left) {
-    frames_left = -1;
+Pixels VariableScene::query(bool& done_scene) {
     subscene->update_variables(evaluate_all(contents["variables"], time));
-    Pixels p = subscene->query(frames_left);
+    Pixels p = subscene->query(done_scene);
     pix.copy(p, 0, 0, 1);
     time++;
     return pix;
