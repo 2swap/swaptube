@@ -5,15 +5,20 @@
 #include "Connect4/c4.h"
 using json = nlohmann::json;
 
-inline int C4_RED           = 0xffcc6677;
-inline int C4_YELLOW        = 0xffddcc77;
+inline int C4_RED           = 0xffdc267f;
+inline int C4_YELLOW        = 0xffffb000;
 inline int C4_EMPTY         = 0xff222222;
+
+inline int IBM_ORANGE = 0xFFFE6100;
+inline int IBM_PURPLE = 0xFF785EF0;
+inline int IBM_BLUE   = 0xFF648FFF;
+inline int IBM_GREEN  = 0xFF5EB134;
 
 class C4Scene : public SequentialScene {
 public:
     C4Scene(const json& config, const json& contents, MovieWriter* writer);
-    void render_non_transition(Pixels& p, int which);
-    void render_transition(Pixels& p, int which, double weight);
+    void render_non_transition(Pixels& p, int content_index);
+    void render_transition(Pixels& p, int transition_index, double weight);
     Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new C4Scene(config, scene, writer);
     }
@@ -24,45 +29,47 @@ private:
     vector<string> names;
 };
 
-void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool blink, char highlight, char annotation, double t, double spread, double threat_diagram){
+void get_disk_screen_coordinates(const Pixels& p, int stonex, int stoney, double spread, double threat_diagram, double& px, double& py, double& stonewidth){
+    stonewidth = p.w/16.;
+    double spreadx = lerp(1, 2.1, spread);
+    double spready = lerp(0, -.75 + 1.5 * (stonex%2), spread*(1-threat_diagram));
+    px = round((stonex-WIDTH/2.+.5)*stonewidth*spreadx+p.w/2);
+    py = round((-stoney+spready  +HEIGHT/2.-.5)*stonewidth+p.h/2) - (threat_diagram*p.h/8);
+}
+
+void draw_highlight(Pixels& p, int px, int py, char highlight, double stonewidth, bool small){
+    if (highlight == ' ') return;
+    int highlight_color = WHITE;
+    if(highlight == 'd' || highlight == 'D') highlight_color = IBM_PURPLE; // dead space
+    if(highlight == 't' || highlight == 'T') highlight_color = IBM_BLUE  ; // terminal threat
+    if(highlight == 'z' || highlight == 'Z') highlight_color = IBM_ORANGE; // zugzwang controlling threat
+    if(highlight == 'n' || highlight == 'N') highlight_color = IBM_GREEN ; // non-controlling threat
+    highlight_color = colorlerp(highlight_color, BLACK, 0.6);
+    p.rounded_rect(px - stonewidth * .4, // left x coord
+                   py - stonewidth * .4, // top y coord
+                   stonewidth * .8, // width
+                   stonewidth * ((small?0:1)+.8), // height
+                   stonewidth * .4, // circle radius
+                   highlight_color);
+}
+
+void draw_c4_disk(Pixels& p, int px, int py, int col_id, bool blink, char annotation, double t, double stonewidth, bool hide_blink){
     int cols[] = {C4_EMPTY, C4_RED, C4_YELLOW};
     int col = cols[col_id];
 
-    double stonewidth = p.w/16.;
-    col = colorlerp(col, BLACK, .4);
-    double spreadx = lerp(1, 2.1, spread);
-    double spready = lerp(0, -.75 + 1.5 * (stonex%2), spread*(1-threat_diagram));
-    double px = round((stonex-WIDTH/2.+.5)*stonewidth*spreadx+p.w/2);
-    double py = round((-stoney+spready  +HEIGHT/2.-.5)*stonewidth+p.h/2) - (threat_diagram*p.h/8);
-
     double ringsize = 1;
 
-    if (highlight != ' '){
-        int highlight_color = WHITE;
-        if(highlight == 'd' || highlight == 'D') highlight_color = HASHMARKS ; // dead space
-        if(highlight == 't' || highlight == 'T') highlight_color = DIAMONDS  ; // terminal threat
-        if(highlight == 'z' || highlight == 'Z') highlight_color = HORIZONTAL; // zugzwang controlling threat
-        if(highlight == 'n' || highlight == 'N') highlight_color = VERTICAL  ; // non-controlling threat
-        p.rounded_rect(px - stonewidth * .4,
-                       py - stonewidth * .14,
-                       stonewidth * .8,
-                       stonewidth * 1.8,
-                       stonewidth * .4, highlight_color);
-    }
-
     if(col_id != 0){
-        if(blink || (col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y'))){
-            double blink = bound(0, t, 2);
-            ringsize = 1-.3*(.5*(-cos(blink*3.14159)+1));
+        if((blink && !hide_blink) || (col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y'))){
+            double blink = bound(0, t, 1) * 2 * 3.14159; // one second transition from 0 to 2pi
+            ringsize = 1-.3*(.5*(-cos(blink)+1));
         }
         int piece_fill_radius = ceil(stonewidth*(.4*ringsize));
         int piece_stroke_radius = ceil(stonewidth*(.4*ringsize+.07));
-        p.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col    );
+        p.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col);
         p.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, BLACK, .4));
         return;
     }
-
-    p.fill_ellipse(px, py, stonewidth*.3, stonewidth*.3, BLACK);
 
     switch (annotation) {
         case '+':
@@ -106,8 +113,8 @@ void draw_c4_disk(Pixels& p, int stonex, int stoney, int col_id, bool blink, cha
             p.fill_rect(px - stonewidth / 32, py - stonewidth / 6, stonewidth / 16, stonewidth / 3, C4_YELLOW);
             break;
         case 'B':
-            px -= stonewidth/8;
-            py -= stonewidth/12;
+            px -= stonewidth/12;
+            py -= stonewidth/16;
             p.fill_rect(px - stonewidth / 6, py - stonewidth / 6, stonewidth / 3, stonewidth / 16, C4_RED);  // Draw a rectangle to form a 'T'
             p.fill_rect(px - stonewidth / 32, py - stonewidth / 6, stonewidth / 16, stonewidth / 3, C4_RED);
             px += stonewidth/4;
@@ -157,11 +164,19 @@ void render_c4_board(Pixels& p, Board b, double t, double spread, double threat_
     for(int stonex = 0; stonex < WIDTH; stonex++)
         for(int stoney = 0; stoney < HEIGHT; stoney++){
             char this_highlight = b.get_highlight(stonex, stoney);
-            char next_highlight = stoney == HEIGHT-1 ? ' ' : b.get_highlight(stonex, stoney+1);
-            if(this_highlight != next_highlight) this_highlight = ' ';
-            draw_c4_disk(p, stonex, stoney, b.grid[stoney][stonex], b.blink[stoney][stonex], this_highlight, b.get_annotation(stonex, stoney), t, spread, threat_diagram);
+            bool small = stoney == 0;
+            char prev_highlight = small ? ' ' : b.get_highlight(stonex, stoney-1);
+            if(this_highlight != prev_highlight && !small) this_highlight = ' ';
+            double px = 0, py = 0, stonewidth = 0;
+            get_disk_screen_coordinates(p, stonex, stoney, spread, threat_diagram, px, py, stonewidth);
+            draw_highlight(p, px, py, this_highlight, stonewidth, small);
         }
-    p.texture();
+    for(int stonex = 0; stonex < WIDTH; stonex++)
+        for(int stoney = 0; stoney < HEIGHT; stoney++){
+            double px = 0, py = 0, stonewidth = 0;
+            get_disk_screen_coordinates(p, stonex, stoney, spread, threat_diagram, px, py, stonewidth);
+            draw_c4_disk(p, px, py, b.grid[stoney][stonex], b.blink[stoney][stonex], b.get_annotation(stonex, stoney), t, stonewidth, spread == 1);
+        }
 }
 
 void render_threat_diagram(Pixels& p, const vector<string>& reduction, const vector<string>& reduction_colors, double threat_diagram, int diff_index, double weight, double spread){
@@ -215,76 +230,67 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) 
         }
 
         boards.push_back(Board(board["representation"], concatenatedAnnotations, concatenatedHighlights));
-        names.push_back(board["name"]);
     }
-    frontload_audio(contents, writer);
 }
 
-void C4Scene::render_non_transition(Pixels& p, int which) {
+void C4Scene::render_non_transition(Pixels& p, int board_index) {
+    int json_index = content_index_to_json_index(board_index);
     p.fill(BLACK);
-    Board b = boards[which];
-    json curr = contents["sequence"][which*2+1];
+    Board b = boards[board_index];
+    json curr = contents["sequence"][json_index];
     double threat_diagram = curr.contains("reduction") ? 1 : 0;
     double curr_spread = curr.value("spread", false) ? 1 : 0;
     render_c4_board(pix, b, static_cast<double>(time_in_this_block)/framerate, curr_spread, threat_diagram);
-    Pixels board_title_pix = eqn_to_pix(latex_text(names[which]), pix.w / 640);
-    pix.copy(board_title_pix, (pix.w - board_title_pix.w)/2, pix.h-pix.w/12, 1);
     if(threat_diagram > 0) render_threat_diagram(pix, curr["reduction"], curr["reduction_colors"], threat_diagram, -1, 0, curr_spread);
     time_in_this_block++;
 }
 
-void C4Scene::render_transition(Pixels& p, int which, double weight) {
+void C4Scene::render_transition(Pixels& p, int transition_index, double weight) {
+    int curr_board_index = transition_index-1;
+    int next_board_index = transition_index;
+    int curr_board_json_index = content_index_to_json_index(curr_board_index);
+    int next_board_json_index = content_index_to_json_index(next_board_index);
     time_in_this_block = 0;
     p.fill(BLACK);
 
-    if(which == boards.size()-1) {
+    if(next_board_index == 0) {
         Pixels x = p;
-        render_non_transition(x, which);
-        pix.copy(x, 0, 0, weight);
-        return;
-    }
-    if(which == -1) {
-        Pixels x = p;
-        render_non_transition(x, which+1);
+        render_non_transition(x, next_board_index);
         pix.copy(x, 0, 0, 1-weight);
         return;
     }
+    if(curr_board_index == boards.size() - 1) {
+        Pixels x = p;
+        render_non_transition(x, curr_board_index);
+        pix.copy(x, 0, 0, weight);
+        return;
+    }
 
-    Board transition = c4lerp(boards[which], (which == boards.size() - 1) ? Board("") : boards[which+1], weight);
+    Board transition = c4lerp((curr_board_index >= 0) ? boards[curr_board_index] : Board(""), (next_board_index < boards.size()) ? boards[next_board_index] : Board(""), weight);
 
-    double curr_spread         = (0                           >  which*2+1 || !contents["sequence"][which*2+1].value   ("spread", false)) ? 0 : 1;
-    double next_spread         = (contents["sequence"].size() <= which*2+3 || !contents["sequence"][which*2+3].value   ("spread", false)) ? 0 : 1;
-    double curr_threat_diagram = (0                           >  which*2+1 || !contents["sequence"][which*2+1].contains("reduction"    )) ? 0 : 1;
-    double next_threat_diagram = (contents["sequence"].size() <= which*2+3 || !contents["sequence"][which*2+3].contains("reduction"    )) ? 0 : 1;
+    json sequence_json = contents["sequence"];
+    int cap = sequence_json.size();
+    double curr_spread         = (curr_board_json_index < 0    || !sequence_json[curr_board_json_index].value   ("spread", false)) ? 0 : 1;
+    double next_spread         = (next_board_json_index >= cap || !sequence_json[next_board_json_index].value   ("spread", false)) ? 0 : 1;
+    double curr_threat_diagram = (curr_board_json_index < 0    || !sequence_json[curr_board_json_index].contains("reduction"    )) ? 0 : 1;
+    double next_threat_diagram = (next_board_json_index >= cap || !sequence_json[next_board_json_index].contains("reduction"    )) ? 0 : 1;
+
     double spread         = lerp(curr_spread        , next_spread        , smoother2(weight));
     double threat_diagram = lerp(curr_threat_diagram, next_threat_diagram, smoother2(weight));
     render_c4_board(pix, transition, 0, spread, threat_diagram);
     if(curr_threat_diagram == 1 && next_threat_diagram == 1){
         int diff_index = -1;
-        for(int i = 0; i < contents["sequence"][which*2+1]["reduction"].size(); i++)
-            if(contents["sequence"][which*2+1]["reduction"][i] != contents["sequence"][which*2+3]["reduction"][i]){
+        for(int i = 0; i < sequence_json[curr_board_json_index]["reduction"].size(); i++)
+            if(sequence_json[curr_board_json_index]["reduction"][i] != sequence_json[next_board_json_index]["reduction"][i]){
                 diff_index = i;
                 break;
             }
-        render_threat_diagram(pix, contents["sequence"][which*2+1]["reduction"], contents["sequence"][which*2+1]["reduction_colors"], threat_diagram, diff_index, smoother2(weight), spread);
+        render_threat_diagram(pix, sequence_json[curr_board_json_index]["reduction"], sequence_json[curr_board_json_index]["reduction_colors"], threat_diagram, diff_index, smoother2(weight), spread);
     }
     if(curr_threat_diagram == 1 && next_threat_diagram == 0){
-        render_threat_diagram(pix, contents["sequence"][which*2+1]["reduction"], contents["sequence"][which*2+1]["reduction_colors"], threat_diagram, -1, 0, spread);
+        render_threat_diagram(pix, sequence_json[curr_board_json_index]["reduction"], sequence_json[curr_board_json_index]["reduction_colors"], threat_diagram, -1, 0, spread);
     }
     if(curr_threat_diagram == 0 && next_threat_diagram == 1){
-        render_threat_diagram(pix, contents["sequence"][which*2+3]["reduction"], contents["sequence"][which*2+3]["reduction_colors"], threat_diagram, -1, 0, spread);
-    }
-    
-    string curr_title = "\\text{" + names[which] + "}";
-    string next_title = (which == contents["sequence"].size() - 1)?"\\text{}":"\\text{" + names[which+1] + "}";
-
-    Pixels curr_title_pix = eqn_to_pix(curr_title, pix.w / 640);
-    Pixels next_title_pix = eqn_to_pix(next_title, pix.w / 640);
-    
-    if(next_title == curr_title)
-        pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, 1);
-    else{
-        pix.copy(curr_title_pix, (pix.w - curr_title_pix.w)/2, pix.h-pix.w/12, 1-weight);
-        pix.copy(next_title_pix, (pix.w - next_title_pix.w)/2, pix.h-pix.w/12, weight);
+        render_threat_diagram(pix, sequence_json[next_board_json_index]["reduction"], sequence_json[next_board_json_index]["reduction_colors"], threat_diagram, -1, 0, spread);
     }
 }

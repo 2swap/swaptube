@@ -1,9 +1,9 @@
 void MovieWriter::set_audiotime(double t_seconds){
     double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
-    if(t_samples <= audiotime){
-        cerr << "Audio PTS latchup!" << endl << "Was: " << audiotime << " and is being set to " << t_samples << "!" << endl << "Aborting!" << endl;
-        exit(1);
-    }
+    //if(t_samples < audiotime){
+    //    cerr << "Audio PTS latchup!" << endl << "Was: " << audiotime << " and is being set to " << t_samples << "!" << endl << "Aborting!" << endl;
+    //    exit(1);
+    //}
     audiotime = t_samples;
 }
 
@@ -26,6 +26,7 @@ double MovieWriter::encode_and_write_audio(){
         // Set the correct PTS and DTS values for the output packet
         outputPacket.dts = av_rescale_q(audiotime, audioStream->time_base, audioOutputCodecContext->time_base);
         outputPacket.pts = outputPacket.dts;
+        audio_pts_file << outputPacket.pts << endl;
         audiotime += outputPacket.duration;
 
         length_in_seconds += static_cast<double>(outputPacket.duration) / audioOutputCodecContext->sample_rate;

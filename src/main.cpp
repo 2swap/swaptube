@@ -70,19 +70,15 @@ int main(int argc, char* argv[]) {
     int i = 0;
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
-        writer.set_audiotime(time_s);
         Scene* scene = create_scene_determine_type(config, scene_json, &writer);
         if (scene != nullptr) {
-            int frames_left = -1;
-            while (frames_left != 0) {
+            bool done_scene = false;
+            while (!done_scene) {
+                writer.set_audiotime(time_s);
+                Pixels p = scene->query(done_scene);
                 time_s += 1./framerate;
-                Pixels p = scene->query(frames_left);
                 if((++i)%5 == 0) p.print_to_terminal();
                 writer.addFrame(p);
-                if (frames_left == -1){
-                    cout << "frames_left was not set" << endl;
-                    exit(1);
-                }
             }
 
             // clean up the dynamically allocated scene object

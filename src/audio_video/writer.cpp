@@ -44,6 +44,8 @@ class MovieWriter
     AVFrame *rgbpic;
     AVFrame *yuvpic;
 
+    ofstream audio_pts_file;
+
 public:
 
     void make_media_folder() {
@@ -78,6 +80,12 @@ public:
     void set_audiotime(double t_seconds);
 
     void init(const string& inputAudioFilename){
+        string audio_pts_filename = "audio_pts_file.txt";
+        audio_pts_file.open(audio_pts_filename, std::ios::out);
+        if (!audio_pts_file.is_open()) {
+            std::cerr << "Error opening file: " << audio_pts_filename << std::endl;
+        }
+
         AVFormatContext* inputAudioFormatContext = nullptr;
         avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
         cout << "Initializing writer with codec from " << inputAudioFilename << endl;
@@ -205,6 +213,7 @@ public:
 
         av_packet_unref(&inputPacket);
         av_packet_unref(&pkt);
+        audio_pts_file.close();
     }
 };
 

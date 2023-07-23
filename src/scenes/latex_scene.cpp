@@ -45,8 +45,6 @@ LatexScene::LatexScene(const json& config, const json& contents, MovieWriter* wr
         intersections.push_back(find_intersections(equations[equation_index], equations[equation_index+1]));
         equation_index += 1;
     }
-
-    frontload_audio(contents, writer);
 }
 
 void LatexScene::render_non_transition(Pixels& p, int which) {

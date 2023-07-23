@@ -6,7 +6,7 @@ using json = nlohmann::json;
 class HeaderScene : public Scene {
 public:
     HeaderScene(const json& config, const json& contents, MovieWriter* writer);
-    Pixels query(int& frames_left) override;
+    Pixels query(bool& done_scene) override;
     Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new HeaderScene(config, scene, writer);
     }
@@ -22,11 +22,11 @@ HeaderScene::HeaderScene(const json& config, const json& contents, MovieWriter* 
     pix.copy(header_pix, (pix.w - header_pix.w)/2, pix.h/2-100, 1);
     pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50, 1);
 
-    frontload_audio(contents, writer);
+    add_audio(contents, writer);
 }
 
-Pixels HeaderScene::query(int& frames_left) {
-    frames_left = scene_duration_frames - time;
+Pixels HeaderScene::query(bool& done_scene) {
+    done_scene = time >= scene_duration_frames;
 
     Pixels ret(pix.w, pix.h);
     ret.fill(BLACK);

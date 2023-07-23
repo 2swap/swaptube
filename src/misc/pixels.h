@@ -16,13 +16,6 @@ inline int WHITE = 0xFFFFFFFF;
 inline int TRANSPARENT_BLACK = 0x00000000;
 inline int TRANSPARENT_WHITE = 0x00FFFFFF;
 
-inline int TEXTURE_START = 0xFF420690;
-inline int HORIZONTAL = 0xFF420691;
-inline int VERTICAL   = 0xFF420692;
-inline int HASHMARKS  = 0xFF420693;
-inline int DIAMONDS   = 0xFF420694;
-inline int TEXTURE_END = 0xFF420695;
-
 class Pixels{
 public:
     vector<uint8_t> pixels;
@@ -119,14 +112,14 @@ public:
         return true; // No pixel with non-zero alpha found, Pixels is empty
     }
 
-    void add_border(){
+    void add_border(int col){
         for(int x = 0; x < w; x++){
-            set_pixel(x, 0, 0xffffff);
-            set_pixel(x, h-1, 0xffffff);
+            set_pixel(x, 0, col);
+            set_pixel(x, h-1, col);
         }
         for(int y = 0; y < h; y++){
-            set_pixel(0, y, 0xffffff);
-            set_pixel(w-1, y, 0xffffff);
+            set_pixel(0, y, col);
+            set_pixel(w-1, y, col);
         }
     }
 
@@ -166,26 +159,8 @@ public:
             int xpdx = x+dx;
             for(int y = 0; y < p.h; y++){
                 int col = p.get_pixel(x, y);
-                col = (int(geta(col)*transparency)<<24) + (col & 0xffffff);
+                col = (int(geta(col)*transparency)<<24) + (col & TRANSPARENT_WHITE);
                 set_pixel_with_transparency(x+dx, y+dy, col);
-            }
-        }
-    }
-
-    void texture(){
-        for(int x = 0; x < w; x++){
-            for(int y = 0; y < h; y++){
-                int col = get_pixel(x, y);
-                if(col > TEXTURE_START && col < TEXTURE_END){
-                    bool white = false;
-                    int shapewidth = w/30;
-                    if(col == HASHMARKS ) white = (x+y+100000) % shapewidth < shapewidth/3 || (x-y+100000) % shapewidth < shapewidth/3;
-                    if(col == HORIZONTAL) white = y % shapewidth < shapewidth/3;
-                    if(col == VERTICAL  ) white = x % shapewidth < shapewidth/3;
-                    if(col == DIAMONDS  ) white = (x+y+100000) % shapewidth < shapewidth/3 ^ (x-y+100000) % shapewidth < shapewidth/3;
-                    col = (white || true)?0xff004444:BLACK;
-                    set_pixel(x, y, col);
-                }
             }
         }
     }

@@ -12,7 +12,7 @@ Scene::Scene(const json& config, const json& c, MovieWriter* writer) : contents(
         scene_duration_frames = contents["duration_seconds"].get<int>() * framerate;
 }
 
-void Scene::frontload_audio(const json& contents, MovieWriter* writer) {
+void Scene::add_audio(const json& contents, MovieWriter* writer) {
     if (writer == nullptr) return;
     double duration_seconds = 0;
 
