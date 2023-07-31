@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <fstream>
+#include <chrono> // chrono library for timing.
 #include "misc/inlines.h"
 #include "scenes/Connect4/c4.h"
 #include "misc/json.hpp" // nlohmann json library
@@ -14,8 +15,6 @@
 
 using json = nlohmann::json;
 using namespace std;
-
-const double transition_duration_seconds = 2.;
 
 json parse_json(string filename) {
     // Parse the json file
@@ -37,6 +36,9 @@ json parse_json(string filename) {
 }
 
 int main(int argc, char* argv[]) {
+    // Start the timer.
+    auto start = std::chrono::high_resolution_clock::now();
+
     run_inlines_unit_tests();
     run_convolution_unit_tests();
     run_c4_unit_tests();
@@ -70,6 +72,8 @@ int main(int argc, char* argv[]) {
     int i = 0;
     // Process each scene in the config
     for (auto& scene_json : video["scenes"]) {
+        if (scene_json.value("omit", false))
+            continue;
         Scene* scene = create_scene_determine_type(config, scene_json, &writer);
         if (scene != nullptr) {
             bool done_scene = false;
@@ -85,6 +89,16 @@ int main(int argc, char* argv[]) {
             delete scene;
         }
     }
+
+    // Stop the timer.
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
+
+    // Print out time stats
+    double render_time_minutes = duration.count() / 60000000.0;
+    double video_length_minutes = time_s/60.;
+    cout << "Program execution time: " << render_time_minutes << " minutes." << endl;
+    cout << "Video length          : " << video_length_minutes << " minutes." << endl;
 
     return 0;
 }
