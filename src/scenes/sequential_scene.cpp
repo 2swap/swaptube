@@ -36,7 +36,7 @@ SequentialScene::SequentialScene(const json& config, const json& contents, Movie
 }
 
 void SequentialScene::append_duration(double duration_seconds){
-    int duration_frames = duration_seconds * framerate + 1;
+    int duration_frames = duration_seconds * framerate;
     subsequence_durations_in_frames.push_back(duration_frames);
     whole_sequence_duration_in_frames += duration_frames;
 }

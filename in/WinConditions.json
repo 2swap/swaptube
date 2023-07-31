@@ -7,6 +7,550 @@
   "scenes": [
     {
       "type": "c4",
+      "omit": false,
+      "sequence": [
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "4444415663666462222227177777333331111",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "audio":"intro/01.mp3",
+          "script":"Let's start with a simple question. Whose turn is it? It's important that we know."
+        },
+        {
+          "transition": true,
+          "audio":"intro/02.mp3",
+          "script":"If it's red's turn, then Red will have to expose the threat."
+        },
+        {
+          "representation": "444441566366646222222717777733333111185",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/03.mp3",
+          "script":"Then, Yellow will take it."
+        },
+        {
+          "representation": "4444415663666462222227177777333331111855",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "4444415663666462222227177777333331111",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/04.mp3",
+          "script":"If it's Yellow's turn, then Yellow will have to expose it."
+        },
+        {
+          "representation": "44444156636664622222271777773333311115",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/05.mp3",
+          "script":"Then Red claims the threat and wins."
+        },
+        {
+          "representation": "444441566366646222222717777733333111155",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/06.mp3",
+          "script":"Whomever's turn it is, they are done for."
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "omit": false,
+      "header": "Zugzwang",
+      "subheader": "Compulsion to Move",
+      "audio":"intro/07.mp3",
+      "script":"There is this notion of the Zugzwang. To be in the Zugzwang is to be forced to play on the X, to permit the opponent to claim a threat."
+    },
+    {
+      "type": "c4",
+      "omit": false,
+      "sequence": [
+        {
+          "transition": true,
+          "audio":"intro/08.mp3",
+          "script":"You don't want to be in the Zugzwang. It means giving something away to your opponent."
+        },
+        {
+          "representation": "4444415663666462222227177777333331111",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "audio":"intro/09.mp3",
+          "script":"For this reason, it's imperative that we know whose turn it is."
+        },
+        {
+          "transition": true,
+          "audio":"intro/10.mp3",
+          "script":"Like last time, let's follow the convention of Red playing first."
+        },
+        {
+          "representation": "4",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          "......."],
+          "audio":"intro/11.mp3",
+          "script":"Since after every red move there is a yellow move, that means, if the amount of pieces that have been played is even, it is Red's turn."
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          "......."],
+          "audio":"intro/12.mp3",
+          "script":"When there are 0 pieces down, it is Red's turn."
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "44",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          "......."],
+          "audio":"intro/13.mp3",
+          "script":"When there are 2 pieces down, it is also Red's turn."
+        },
+        {
+          "transition": true,
+          "audio":"intro/14.mp3",
+          "script":"If there are an even number of pieces played, it's Red's turn."
+        },
+        {
+          "representation": "444",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          "......."],
+          "audio":"intro/15.mp3",
+          "script":"Of course, that means, if the number of disks played is odd, it's Yellow's turn."
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "4441",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          ".......",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/16.mp3",
+          "script":"Let's go back to our game then. The amount of pieces played was odd."
+        },
+        {
+          "representation": "4444415663666462222227177777333331111",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "audio":"intro/17.mp3",
+          "script":"That means it's Yellow's turn."
+        },
+        {
+          "transition": true,
+          "audio":"intro/18.mp3",
+          "script":"Yellow is in the Zugzwang. Yellow is forced to play the X."
+        },
+        {
+          "representation": "44444156636664622222271777773333311115",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/19.mp3",
+          "script":"Then Red gets to claim the threat and win."
+        },
+        {
+          "representation": "444441566366646222222717777733333111155",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/20.mp3",
+          "script":"Let's wind back time a few moves."
+        },
+        {
+          "representation": "44444156636664622222271777773",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "audio":"intro/21.mp3",
+          "script":"This game isn't fully developed yet. There are still a number of moves to play before either player is forced to expose the threat."
+        },
+        {
+          "transition": true,
+          "audio":"intro/22.mp3",
+          "script":"However, playing in the left two columns doesn't make any new threats."
+        },
+        {
+          "representation": "44444156636664622222271777773",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/23.mp3",
+          "script":"We are inevitably going to arrive at the same position, regardless of what pieces go where on the left."
+        },
+        {
+          "representation": "4444415663666462222227177777313113331",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "44444156636664622222271777773",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "audio":"intro/24.mp3",
+          "script":"In this sense, because the structure of the threats is complete, we call this the endgame. In the endgame, since all of the threats are already developed, we can take some shortcuts and read ahead."
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "44444156636664622222271777773",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["d d    ",
+                          "d d    ",
+                          "d d    ",
+                          "d d    ",
+                          "       ",
+                          "       "],
+          "audio":"intro/25.mp3",
+          "script":"For example, we already know that all of these spots are going to fill up. We just don't know exactly how."
+        },
+        {
+          "transition": true,
+          "audio":"intro/26.mp3",
+          "script":"What this means is, we can look at the evenness or oddness like before, but instead of only considering the disks which have been played,"
+        },
+        {
+          "representation": "44444156636664622222271777773",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "audio":"intro/27.mp3",
+          "script":"instead we will consider all of the disks that have been played, and will be played."
+        },
+        {
+          "transition": true,
+          "audio":"intro/28.mp3",
+          "script":"I call this area the dead space."
+        },
+        {
+          "representation": "",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "audio":"intro/29.mp3",
+          "script":"In the same way that the evenness or oddness of the amount of pieces reveals whose turn it is, the evenness or oddness of the amount of dead space reveals whose turn it will be when a threat must be revealed. That is, it reveals who is in the Zugzwang. In our case, the dead space is odd. Yellow is in the Zugzwang."
+        },
+        {
+          "transition": true,
+          "audio":"intro/30.mp3",
+          "script":"The dead space will be filled,"
+        },
+        {
+          "representation": "4444415663666462222227177777333331111",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/31.mp3",
+          "script":"Yellow will uncover the threat,"
+        },
+        {
+          "representation": "44444156636664622222271777773333311115",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/32.mp3",
+          "script":"and Red claims it."
+        },
+        {
+          "representation": "444441566366646222222717777733333111155",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "audio":"intro/33.mp3",
+          "script":"Now that we have this useful abstraction, we don't actually need to worry about the pieces which have been played."
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "444441566366646222222717777733333111155",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "audio":"intro/34.mp3",
+          "script":"We know where the dead space is, and we also know that we are in the endgame, so the threats can't change, and thus neither can the dead space."
+        },
+        {
+          "transition": true,
+          "audio":"intro/35.mp3",
+          "script":"We can remove all the pieces,"
+        },
+        {
+          "representation": "",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/36.mp3",
+          "script":"separate the columns,"
+        },
+        {
+          "representation": "",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "spread":true,
+          "audio":"intro/37.mp3",
+          "script":"and perform the computation just the same."
+        },
+        {
+          "transition": true,
+          "audio":"intro/38.mp3",
+          "script":"We identify the dead space, and determine that it is odd,"
+        },
+        {
+          "representation": "",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "spread":true,
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "audio":"intro/40.mp3",
+          "script":"and know that Yellow will expose the threat to Red."
+        },
+        {
+          "representation": "444441566366646222222717777733333111155",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "....B..",
+                          "....x..",
+                          "......."],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd"],
+          "spread":true,
+          "duration_seconds":1
+        },
+        {
+          "transition": true,
+          "duration_seconds":1
+        }
+      ]
+    },
+    {
+      "type": "c4",
+      "omit": true,
       "sequence": [
         {
           "transition": true,
@@ -54,7 +598,7 @@
         {
           "transition": true,
           "audio":"02.mp3",
-          "script":"We learned that the parity, or the even-ness or odd-ness of the row on which the threat lies, determines the result, but only in the case that there is a single column with threats on it."
+          "script":"We learned that the parity, or the even-ness or odd-ness of the threat's row, determines the result, but only in the case that there is a single column with threats on it."
         },
         {
           "representation": "44444555522222463377572775731333111116666",
@@ -111,7 +655,7 @@
                           "......."],
           "spread":true,
           "audio":"05.mp3",
-          "script":"We now have a set of unadjoined columns. No need to worry about connecting 4 anymore. The players are just scrambling to get to a threat."
+          "script":"On these unadjoined columns, there is no need to worry about connecting 4 anymore. The players are just scrambling to get to a threat."
         },
         {
           "transition":true,
@@ -143,7 +687,7 @@
                           "......."],
           "spread":true,
           "audio":"07.mp3",
-          "script":"So, we have reduced the endgame of connect 4 to this much simpler game of 'just-get-to-a-threat-as-soon-as-possible!'"
+          "script":"So, in some sense, we have reduced the endgame of connect 4 to this much simpler game of just getting to a threat as soon as possible."
         },
         {
           "transition":true,
@@ -238,6 +782,27 @@
           "transition":true,
           "audio":"12_2.mp3",
           "script":"As a corollary, This means that any row which has no threat at all can simply be ignored. 6 pieces will be played in that column with no consequence, so it doesn't change the evenness or oddness of the total amount of dead space."
+        },
+        {
+          "representation": "",
+          "annotations": ["    .  ",
+                          "    B  ",
+                          "    x  ",
+                          "    .  ",
+                          "    .  ",
+                          "    .  "],
+          "highlight":   ["dddd dd",
+                          "dddd dd",
+                          "dddd dd",
+                          "ddddddd",
+                          "ddddddd",
+                          "ddddddd"],
+          "spread":true,
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
         },
         {
           "representation": "",
@@ -356,12 +921,12 @@
                           " . x   ",
                           " . .   ",
                           " . .   "],
-          "highlight":   ["       ",
-                          "       ",
-                          "       ",
-                          "       ",
-                          "   d   ",
-                          "   d   "],
+          "highlight":   [" d     ",
+                          " d     ",
+                          " d     ",
+                          " d     ",
+                          " d d   ",
+                          " d d   "],
           "spread":true,
           "duration_seconds":1
         },
@@ -396,12 +961,14 @@
     },
     {
       "type": "header",
+      "omit": false,
       "header": "Win Conditions",
       "subheader": "Generalizing the Zugzwang",
       "duration_seconds":3
     },
     {
       "type": "c4",
+      "omit": false,
       "sequence": [
         {
           "transition":true,
@@ -438,6 +1005,12 @@
                           ".R...Yx",
                           "YxY.Rx.",
                           "x.x.x.."],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "   d   ",
+                          "   d  d",
+                          " d d dd"],
           "spread":true,
           "audio":"19.mp3",
           "script":"In other words, it's Yellow who gets to choose which threat to expose."
@@ -455,6 +1028,12 @@
                           ".R...Yx",
                           "YxY.Rx.",
                           "x.x.x.."],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "   d   ",
+                          "   d  d",
+                          " d d dd"],
           "spread":true,
           "duration_seconds":1
         },
@@ -586,8 +1165,7 @@
                           "YxY.Rx.",
                           "x.x.x.."],
           "spread":true,
-          "audio":"33.mp3",
-          "script":"Let's step back and consider the 3 threats which we just investigated."
+          "duration_seconds":1
         },
         {
           "transition":true,
@@ -654,7 +1232,7 @@
                           "z n    "],
           "spread":true,
           "audio":"37.mp3",
-          "script":"We always want to use threats which exert control over the Zugzwang before we expose other threats."
+          "script":"These threats are stronger. We usually want to use them first."
         },
         {
           "transition":true,
@@ -737,7 +1315,29 @@
                           "    z  "],
           "spread":true,
           "audio":"42.mp3",
-          "script":"This one also has 3, but playing in it would reveal a yellow threat, which also exerts Zugzwang control! So, let's not let Yellow have it."
+          "script":"This one also has 3!"
+        },
+        {
+          "transition":true,
+          "audio":"42_2.mp3",
+          "script":"But, playing in it would unearth a yellow Zugzwang-controlling threat. It's probably best not to do that."
+        },
+        {
+          "representation": "6244477111",
+          "annotations": ["......R",
+                          "Y..RYRx",
+                          "x..xxxR",
+                          ".R...Yx",
+                          "YxY.Rx.",
+                          "x.x.x.."],
+          "highlight":   [" z zZ  ",
+                          " z zZ  ",
+                          " z zZ  ",
+                          " z  z  ",
+                          " z  z  ",
+                          "    z  "],
+          "spread":true,
+          "duration_seconds":1
         },
         {
           "transition":true,
@@ -754,9 +1354,9 @@
           "highlight":   [" z z  n",
                           " z z  n",
                           " z z  N",
-                          " z  z N",
-                          " z  z  ",
-                          "    z  "],
+                          " z    N",
+                          " z     ",
+                          "       "],
           "spread":true,
           "audio":"43.mp3",
           "script":"Finally, these 2 do not exert Zugzwang control."
@@ -785,7 +1385,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "representation": "6244477111444",
@@ -797,11 +1397,11 @@
                           "x.x.x.."],
           "spread":true,
           "audio":"45.mp3",
-          "script":"Because only they would kick the Zugzwang back to Yellow."
+          "script":"That way, we hand the Zugzwang back to Yellow."
         },
         {
           "transition":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "representation": "43444323332244666667677773222751",
@@ -828,13 +1428,27 @@
                           "x...x..",
                           "......."],
           "spread":false,
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "43444323332244666667677773222751",
+          "annotations": [".......",
+                          ".......",
+                          ".......",
+                          "Y...Y..",
+                          "x...x..",
+                          "......."],
+          "spread":false,
           "audio":"47.mp3",
           "script":"The parity of the dead space was even, and furthermore, there was no threat that Red could give up to toggle the Zugzwang back to yellow."
         },
         {
           "transition":true,
-          "audio":"48.mp3",
-          "script":"Ok then, so are there any cases in which it is beneficial to expose or use a threat which does not exert Zugzwang control?"
+          "duration_seconds":1
         },
         {
           "representation": "4",
@@ -851,7 +1465,27 @@
                           "   n   ",
                           "       "],
           "audio":"49.mp3",
-          "script":"Here's a perfect example. The lower threat does not control the Zugzwang, but the top one does. Only by revealing the bottom one can Yellow arrive at the top threat and send the Zugzwang back to Red."
+          "script":"In this case, the lower threat does not control the Zugzwang, but the top one does. Only by revealing the bottom one can Yellow arrive at the top threat and send the Zugzwang back to Red."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "444",
+          "annotations": ["   .   ",
+                          "   Y   ",
+                          "   x   ",
+                          "   Y   ",
+                          "   x   ",
+                          "   .   "],
+          "highlight":   ["   z   ",
+                          "   z   ",
+                          "   z   ",
+                          "   n   ",
+                          "   n   ",
+                          "       "],
+          "duration_seconds":1
         },
         {
           "transition":true,
@@ -898,6 +1532,26 @@
           "transition":true,
           "audio":"51.mp3",
           "script":"So, red will uncover the bottom threat, and then claim victory using the threat pair."
+        },
+        {
+          "representation": "44",
+          "annotations": ["   .   ",
+                          "   R   ",
+                          "   R   ",
+                          "   x   ",
+                          "   R   ",
+                          "   x   "],
+          "highlight":   ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "   n   ",
+                          "   n   "],
+          "duration_seconds":1
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
         },
         {
           "representation": "44444",
@@ -1126,12 +1780,23 @@
                           "   n   ",
                           "   n   ",
                           "   n   "],
+          "spread":true,
           "duration_seconds":1
         },
         {
           "transition":true,
           "audio":"60.mp3",
           "script":"Ok, let's see another example to see how we can use all of this."
+        }
+      ]
+    },
+    {
+      "type": "c4",
+      "omit": false,
+      "sequence": [
+        {
+          "transition":true,
+          "duration_seconds":1
         },
         {
           "representation": "",
@@ -1370,6 +2035,28 @@
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
+                          " Y.Y.Yx",
+                          "BRRx.xY",
+                          "xxx...x"],
+          "highlight":   ["   znz ",
+                          "   znzt",
+                          " t z zt",
+                          " t   zt",
+                          "t    z ",
+                          "t      "],
+          "spread":true,
+          "audio":"66_3.mp3",
+          "script":"Excellent. Now we have simplified the board, so let's highlight the remaining threats up to whether or not they control the Zugzwang."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "annotations": ["  ..R. ",
+                          "  RYx.R",
+                          " Yxx..R",
                           " Y...Yx",
                           "BRR..xY",
                           "xxx...x"],
@@ -1568,7 +2255,7 @@
         {
           "transition":true,
           "audio":"diagram_04.mp3",
-          "script":"Red sent the Zugzwang to Yellow first like this, expending a Zugzwang-controlling threat."
+          "script":"Red handed the Zugzwang to Yellow like this, expending a Zugzwang-controlling threat."
         },
         {
           "representation": "44455556333",
@@ -1729,20 +2416,19 @@
           "spread":true,
           "reduction":        ["#", "", "", "", "", "", "0#"],
           "reduction_colors": ["b", "", "", "", "", "", "yr"],
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
-          "duration_seconds":1
-        },
-        {
-          "representation": "",
-          "spread":true,
           "audio":"diagram_09.mp3",
-          "reduction":        ["", "", "", "", "", "", ""],
-          "reduction_colors": ["", "", "", "", "", "", ""],
           "script":"Let's consider a yet more perplexing case, this time looking only at the diagram."
-        },
+        }
+      ]
+    },
+    {
+      "type": "c4",
+      "omit": false,
+      "sequence": [
         {
           "transition":true,
           "duration_seconds":1
@@ -1866,7 +2552,23 @@
         {
           "transition":true,
           "audio":"diagram_20.mp3",
-          "script":"It's also worth noting that once you have this threat diagram, there are yet further simplifications that can be made involving terminal and non-controlling threats, but we won't go into them here. Understanding what we've covered so far is more than sufficient to derive the win conditions of the standard board size."
+          "script":"Understanding what we've covered so far is more than sufficient to derive the win conditions of the standard board size."
+        },
+        {
+          "representation": "",
+          "annotations": ["       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "       ",
+                          "       "],
+          "spread":true,
+          "audio":"75.mp3",
+          "script":"Now that our endgame theory is basically complete, let's see how to actually apply this, by categorizing some common threat patterns."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
         },
         {
           "representation": "",
@@ -1879,13 +2581,12 @@
           "reduction":        ["", "", ""],
           "reduction_colors": ["", "", ""],
           "spread":true,
-          "audio":"75.mp3",
-          "script":"Now that our endgame theory is basically complete, let's see how to actually apply this, by categorizing some common threat patterns."
+          "audio":"76.mp3",
+          "script":"Lucky for us, threat combinations as complex as these are totally impossible. It could happen on a bigger board size, so it's good to understand."
         },
         {
           "transition":true,
-          "audio":"76.mp3",
-          "script":"Lucky for us, I've sort of been lying throughout this video. Threat combinations as complex as the ones we saw earlier are totally impossible. It could happen on a bigger board size, so it's good to understand."
+          "duration_seconds":1
         },
         {
           "representation": "46",
@@ -1903,8 +2604,25 @@
         },
         {
           "transition":true,
+          "duration_seconds":1
+        },
+        {
+          "representation": "",
+          "annotations": ["RR..RRY",
+                          "xxRYxYB",
+                          "YYxxRRR",
+                          "xY.YxYx",
+                          "BRRxRxY",
+                          "xxx.x.x"],
+          "reduction":        ["", "", ""],
+          "reduction_colors": ["", "", ""],
+          "spread":true,
           "audio":"78.mp3",
           "script":"In practice, one or two columns with threats are common to see, but 3 or more is increasingly rare. Since our parity mechanics explain the one-column case, let's determine the win conditions for two threatened columns."
+        },
+        {
+          "transition":true,
+          "duration_seconds":1
         },
         {
           "representation": "",
@@ -2338,12 +3056,13 @@
         {
           "transition":true,
           "audio":"83.mp3",
-          "script":"While there are an unending amount of different ways that columns can be threatened, by using the tools of reduction and abstraction which we learned here, it can be rather easily determined who is to win, even on arbitrarily large board sizes where we haven't memorized the win conditions."
+          "script":"While there are an unending amount of different ways that columns can be threatened, by using the tools of reduction and abstraction which we learned here, it can be rather easily determined who is to win, even on arbitrarily large board sizes where we haven't memorized the win conditions.    TODO real world examples452513223241442424"
         }
       ]
     },
     {
       "type": "header",
+      "omit": false,
       "header": "Claimeven",
       "subheader": "Taming the Midgame",
       "audio":"84.mp3",
@@ -2351,6 +3070,7 @@
     },
     {
       "type": "2swap",
+      "omit": false,
       "audio":"85.mp3",
       "script":"This has been 2swap."
     }
