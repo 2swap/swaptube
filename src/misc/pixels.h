@@ -21,7 +21,10 @@ public:
     vector<uint8_t> pixels;
     int w;
     int h;
+    Pixels() : w(0), h(0), pixels(0){};
     Pixels(int width, int height) : w(width), h(height), pixels(4*width*height){};
+    // Copy constructor
+    Pixels(const Pixels& other) : w(other.w), h(other.h), pixels(other.pixels) {};
 
     inline bool out_of_range(int x, int y) const {
         return x < 0 || x >= w || y < 0 || y >= h;
@@ -48,8 +51,8 @@ public:
         pixels[spot+3] = geta(col);
     }
 
-    inline int set_alpha(int x, int y, int a) {
-        if(out_of_range(x, y) || a < 0 || a > 255) return 0;
+    inline void set_alpha(int x, int y, int a) {
+        if(out_of_range(x, y) || a < 0 || a > 255) return;
         pixels[4*(w*y+x)+3] = a;
     }
 
@@ -214,6 +217,15 @@ public:
         for(int dx = 0; dx < w; dx++)
             for(int dy = 0; dy < h; dy++){
                 pixels[4*(dx+dy*w)+3] *= m;
+            }
+    }
+
+    void mult_color(double m){
+        for(int dx = 0; dx < w; dx++)
+            for(int dy = 0; dy < h; dy++){
+                pixels[4*(dx+dy*w)+0] *= m;
+                pixels[4*(dx+dy*w)+1] *= m;
+                pixels[4*(dx+dy*w)+2] *= m;
             }
     }
 
@@ -382,13 +394,24 @@ Pixels svg_to_pix(const string& svg, int scale_factor) {
     return crop(ret);
 }
 
+// Create an unordered_map to store the cached results
+std::unordered_map<std::string, Pixels> latex_cache;
+
 Pixels eqn_to_pix(const string& eqn, int scale_factor){
+    // Check if the result is already in the cache
+    auto it = latex_cache.find(eqn);
+    if (it != latex_cache.end()) {
+        return it->second; // Return the cached Pixels object
+    }
+
     hash<string> hasher;
     string name = "/home/swap/CS/swaptube/out/latex/" + to_string(hasher(eqn)) + ".svg";
 
     if (access(name.c_str(), F_OK) != -1) {
         // File already exists, no need to generate LaTeX
-        return svg_to_pix(name, scale_factor);
+        Pixels pixels = svg_to_pix(name, scale_factor);
+        latex_cache[eqn] = pixels; // Cache the result before returning
+        return pixels;
     }
 
     string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
@@ -396,7 +419,9 @@ Pixels eqn_to_pix(const string& eqn, int scale_factor){
     
     if (result == 0) {
         // System call successful, return the generated SVG
-        return svg_to_pix(name, scale_factor);
+        Pixels pixels = svg_to_pix(name, scale_factor);
+        latex_cache[eqn] = pixels; // Cache the result before returning
+        return pixels;
     } else {
         // System call failed, handle the error
         throw runtime_error("Failed to generate LaTeX.");

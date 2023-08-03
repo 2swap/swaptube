@@ -10,6 +10,9 @@ using namespace std;
 
 class Board{
 public:
+    Board() : representation("") {
+        clear();
+    };
     Board(string rep) : representation(rep) {
         clear();
         play(rep);
