@@ -12,6 +12,9 @@ public:
     Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new LatexScene(config, scene, writer);
     }
+    Subscene* interpolate(Subscene* s1, Subscene* s2, double weight){
+        return s1;//TODO
+    }
     bool show_cs;
 
 private:

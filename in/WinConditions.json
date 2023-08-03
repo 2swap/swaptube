@@ -30,7 +30,7 @@
           "script":"If it's red's turn, then Red will have to expose the threat."
         },
         {
-          "representation": "444441566366646222222717777733333111185",
+          "representation": "4444415663666462222227177777333331111x5",
           "annotations": [".......",
                           ".......",
                           ".......",
@@ -45,7 +45,7 @@
           "script":"Then, Yellow will take it."
         },
         {
-          "representation": "4444415663666462222227177777333331111855",
+          "representation": "4444415663666462222227177777333331111x55",
           "annotations": [".......",
                           ".......",
                           ".......",
