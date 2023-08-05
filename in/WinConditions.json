@@ -1,7 +1,7 @@
 {
   "config": {
-    "width": 640,
-    "height": 360,
+    "width": 1280,
+    "height": 720,
     "framerate": 30
   },
   "scenes": [
@@ -961,14 +961,14 @@
     },
     {
       "type": "header",
-      "omit": false,
+      "omit": true,
       "header": "Win Conditions",
       "subheader": "Generalizing the Zugzwang",
       "duration_seconds":3
     },
     {
       "type": "c4",
-      "omit": false,
+      "omit": true,
       "sequence": [
         {
           "transition":true,
@@ -1792,7 +1792,7 @@
     },
     {
       "type": "c4",
-      "omit": false,
+      "omit": true,
       "sequence": [
         {
           "transition":true,
@@ -2035,8 +2035,8 @@
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
-                          " Y.Y.Yx",
-                          "BRRx.xY",
+                          " Y...Yx",
+                          "BRR..xY",
                           "xxx...x"],
           "highlight":   ["   znz ",
                           "   znzt",
@@ -2186,7 +2186,7 @@
           "script":"At this point, Red has no other option but to cede a terminal threat to Yellow, thereby forfeiting."
         },
         {
-          "representation": "444555563336666633344411",
+          "representation": "4445555633366666333444552222",
           "annotations": ["  ..R. ",
                           "  RYx.R",
                           " Yxx..R",
@@ -2427,7 +2427,7 @@
     },
     {
       "type": "c4",
-      "omit": false,
+      "omit": true,
       "sequence": [
         {
           "transition":true,
@@ -3062,7 +3062,7 @@
     },
     {
       "type": "header",
-      "omit": false,
+      "omit": true,
       "header": "Claimeven",
       "subheader": "Taming the Midgame",
       "audio":"84.mp3",
@@ -3070,7 +3070,7 @@
     },
     {
       "type": "2swap",
-      "omit": false,
+      "omit": true,
       "audio":"85.mp3",
       "script":"This has been 2swap."
     }

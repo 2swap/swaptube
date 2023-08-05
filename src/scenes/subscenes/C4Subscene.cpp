@@ -21,7 +21,7 @@ public:
     Board board;
     double weight = 0;
     int threat_diagram_transition = 0; // 0=no transition 1=fadein 2=fadeout 3=collapse
-    int diff_index = 0;
+    int diff_index = -1;
     // Constructor and other member functions specific to C4Subscene go here...
 
     C4Subscene(int width, int height, double td, double s, vector<string> r, vector<string> rc, Board b):Subscene(width, height),threat_diagram(td),spread(s),reduction_chars(r),reduction_colors(rc),board(b){}
@@ -54,15 +54,14 @@ public:
         }
     }
 
-    void draw_c4_disk(int px, int py, int col_id, bool blink, char annotation, bool highlighted, double stonewidth, bool hide_blink){
+    void draw_c4_disk(int px, int py, int col_id, bool blink, char annotation, bool highlighted, double stonewidth){
         int cols[] = {C4_EMPTY, C4_RED, C4_YELLOW};
         int col = cols[col_id];
 
-        double ringsize = 1;
-
         if(col_id != 0){
-            if((blink && !hide_blink) || (col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y'))){
-                //TODO highlight piece
+            double ringsize = 1;
+            if((col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y')) || (blink && spread == 0)){
+                ringsize = .75;
             }
             int piece_fill_radius = ceil(stonewidth*(.4*ringsize));
             int piece_stroke_radius = ceil(stonewidth*(.4*ringsize+.07));
@@ -73,38 +72,49 @@ public:
 
         if(highlighted) col = BLACK;
 
-        switch (annotation) {
-            case '+':
-                pixels.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, col);  // Draw two rectangles to form a plus sign
-                pixels.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, col);
-                break;
-            case '-':
-                pixels.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, col);  // Draw a rectangle to form a minus sign
-                break;
-            case '|':
-                pixels.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, col);  // Draw a rectangle to form a vertical bar
-                break;
-            case '=':
-                pixels.fill_rect(px - stonewidth/4 , py - 3*stonewidth/16, stonewidth/2, stonewidth/8, col);  // Draw two rectangles to form an equal sign
-                pixels.fill_rect(px - stonewidth/4 , py + stonewidth/16, stonewidth/2, stonewidth/8, col);
-                break;
+        int annotation_color = 0;
+        switch (annotation){
             case 'r':
-                pixels.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 't'
-                pixels.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
-                break;
             case 'R':
-                py += stonewidth/16;
-                pixels.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_RED);  // Draw a rectangle to form a 'T'
-                pixels.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_RED);
+                annotation_color = C4_RED;
                 break;
             case 'y':
-                pixels.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 't'
-                pixels.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
+            case 'Y':
+                annotation_color = C4_YELLOW;
                 break;
+            case 'c': // c is an o but colorful
+                annotation_color = 0xff0099cc;
+                break;
+            default:
+                annotation_color = col;
+                break;
+        }
+
+        switch (annotation) {
+            case '+':
+                pixels.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, annotation_color);  // Draw two rectangles to form a plus sign
+                pixels.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, annotation_color);
+                break;
+            case '-':
+                pixels.fill_rect(px - stonewidth/4 , py - stonewidth/16, stonewidth/2, stonewidth/8, annotation_color);  // Draw a rectangle to form a minus sign
+                break;
+            case '|':
+                pixels.fill_rect(px - stonewidth/16, py - stonewidth/4 , stonewidth/8, stonewidth/2, annotation_color);  // Draw a rectangle to form a vertical bar
+                break;
+            case '=':
+                pixels.fill_rect(px - stonewidth/4 , py - 3*stonewidth/16, stonewidth/2, stonewidth/8, annotation_color);  // Draw two rectangles to form an equal sign
+                pixels.fill_rect(px - stonewidth/4 , py + stonewidth/16, stonewidth/2, stonewidth/8, annotation_color);
+                break;
+            case 'r':
+            case 'y':
+                pixels.fill_rect(px - stonewidth / 6, py - stonewidth / 8, stonewidth / 3, stonewidth / 12, annotation_color);  // Draw a rectangle to form a 't'
+                pixels.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, annotation_color);
+                break;
+            case 'R':
             case 'Y':
                 py += stonewidth/16;
-                pixels.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, C4_YELLOW);  // Draw a rectangle to form a 'T'
-                pixels.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, C4_YELLOW);
+                pixels.fill_rect(px - stonewidth / 4, py - stonewidth / 4, stonewidth / 2, stonewidth / 12, annotation_color);  // Draw a rectangle to form a 'T'
+                pixels.fill_rect(px - stonewidth / 24, py - stonewidth / 4, stonewidth / 12, stonewidth / 2, annotation_color);
                 break;
             case 'b':
                 px -= stonewidth/8;
@@ -127,20 +137,17 @@ public:
                 pixels.fill_rect(px - stonewidth / 32, py - stonewidth / 6, stonewidth / 16, stonewidth / 3, C4_YELLOW);
                 break;
             case ':':
-                pixels.fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, col);
-                pixels.fill_ellipse(px, py + stonewidth / 8, stonewidth / 12, stonewidth / 12, col);
+                pixels.fill_ellipse(px, py - stonewidth / 8, stonewidth / 12, stonewidth / 12, annotation_color);
+                pixels.fill_ellipse(px, py + stonewidth / 8, stonewidth / 12, stonewidth / 12, annotation_color);
                 break;
             case '0':
-                pixels.fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, col);
-                pixels.fill_ellipse(px, py, stonewidth / 9, stonewidth / 5, col);
+                pixels.fill_ellipse(px, py, stonewidth / 4, stonewidth / 3, annotation_color);
+                pixels.fill_ellipse(px, py, stonewidth / 9, stonewidth / 5, annotation_color);
                 break;
             case 'o':
             case 'O':
-                pixels.fill_ellipse(px, py, stonewidth / 3, stonewidth / 3, col);
-                pixels.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, BLACK);
-                break;
             case 'c': // c is an o but colorful
-                pixels.fill_ellipse(px, py, stonewidth / 3, stonewidth / 3, 0xff0099cc);
+                pixels.fill_ellipse(px, py, stonewidth / 3, stonewidth / 3, annotation_color);
                 pixels.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, BLACK);
                 break;
             case 'x':
@@ -150,12 +157,12 @@ public:
                     for(double dx = -rw+1; dx < rw; dx++)
                         for(double dy = -rh+1; dy < rh; dy++)
                             if(square(dx/rw)+square(dy/rh) < 1 && (abs(dx - dy) < stonewidth*.1 || abs(dx + dy) < stonewidth*.1))
-                                pixels.set_pixel_with_transparency(px+dx, py+dy, col);
+                                pixels.set_pixel_with_transparency(px+dx, py+dy, annotation_color);
                     break;
                 }
             case '.':
                 if(col_id == 0)
-                    pixels.fill_ellipse(px, py, stonewidth*.2, stonewidth*.2, col);
+                    pixels.fill_ellipse(px, py, stonewidth*.2, stonewidth*.2, annotation_color);
                 break;
             default:
                 break;
@@ -197,38 +204,39 @@ public:
     }
 
     void draw_highlight(int px, int py, char highlight, double stonewidth, int height){
-        if (highlight == ' ') return;
         int highlight_color = WHITE;
         if(highlight == 'd' || highlight == 'D') highlight_color = IBM_PURPLE; // dead space
         if(highlight == 't' || highlight == 'T') highlight_color = IBM_BLUE  ; // terminal threat
         if(highlight == 'z' || highlight == 'Z') highlight_color = IBM_GREEN ; // zugzwang controlling threat
         if(highlight == 'n' || highlight == 'N') highlight_color = IBM_ORANGE; // non-controlling threat
-        pixels.rounded_rect(px - stonewidth * .4, // left x coord
-                       py - stonewidth * .4, // top y coord
-                       stonewidth * .8, // width
-                       stonewidth * (height+.8), // height
-                       stonewidth * .4, // circle radius
-                       highlight_color);
-        highlight_color = lerp(highlight_color, BLACK, 0.75);
-        pixels.rounded_rect(px - stonewidth * .33, // left x coord
-                       py - stonewidth * .33, // top y coord
-                       stonewidth * .66, // width
-                       stonewidth * (height+.66), // height
-                       stonewidth * .33, // circle radius
-                       highlight_color);
+        double u = stonewidth * .4;
+        for(int i = 0; i < 2; i++){
+            pixels.rounded_rect(
+                           px - u, // left x coord
+                           py - u, // top y coord
+                           2*u, // width
+                           2*u + stonewidth*height, // height
+                           u, // circle radius
+                           highlight_color);
+            highlight_color = colorlerp(highlight_color, BLACK, 0.75);
+            u = stonewidth * .32;
+        }
     }
 
     void draw_highlights(){
         for(int stonex = 0; stonex < WIDTH; stonex++)
             for(int stoney = 0; stoney < HEIGHT; stoney++){
-                int height = 0;
+                int height = -1;
                 char this_highlight = board.get_highlight(stonex, stoney);
-                char next_highlight = this_highlight;
-                while(stoney < HEIGHT && next_highlight == this_highlight){
+                if (this_highlight == ' ') continue;
+                char next_highlight = 'x';
+                while(stoney < HEIGHT){
+                    next_highlight = board.get_highlight(stonex, stoney);
+                    if(next_highlight != this_highlight) break;
                     stoney++;
                     height++;
-                    char next_highlight = board.get_highlight(stonex, stoney+1);
                 }
+                stoney--;
                 double px = 0, py = 0, stonewidth = 0;
                 get_disk_screen_coordinates(stonex, stoney, px, py, stonewidth);
                 draw_highlight(px, py, this_highlight, stonewidth, height);
@@ -241,7 +249,7 @@ public:
                 char this_highlight = board.get_highlight(stonex, stoney);
                 double px = 0, py = 0, stonewidth = 0;
                 get_disk_screen_coordinates(stonex, stoney, px, py, stonewidth);
-                draw_c4_disk(px, py, board.grid[stoney][stonex], board.blink[stoney][stonex], board.get_annotation(stonex, stoney), this_highlight != ' ', stonewidth, spread == 1);
+                draw_c4_disk(px, py, board.grid[stoney][stonex], board.blink[stoney][stonex], board.get_annotation(stonex, stoney), this_highlight != ' ', stonewidth);
             }
     }
 
