@@ -46,6 +46,9 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) 
                 concatenatedAnnotations += annotation;
             }
         }
+        else{
+            concatenatedAnnotations = "                                          ";
+        }
 
         // Concatenate highlights into a single string
         string concatenatedHighlights = "";
@@ -55,8 +58,11 @@ C4Scene::C4Scene(const json& config, const json& contents, MovieWriter* writer) 
                 concatenatedHighlights += highlight;
             }
         }
+        else{
+            concatenatedHighlights = "                                          ";
+        }
 
-        Board b = Board(curr["representation"], concatenatedAnnotations, concatenatedHighlights);
-        subscenes.push_back(new C4Subscene(width, height, threat_diagram, spread, reduction, reduction_colors, b));
+        Board b = Board(curr["representation"]);
+        subscenes.push_back(new C4Subscene(width, height, threat_diagram, spread, reduction, reduction_colors, b, concatenatedAnnotations, concatenatedHighlights));
     }
 }

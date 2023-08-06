@@ -57,7 +57,9 @@ void SequentialScene::add_subscene_audio(int i, const json& element_json) {
     if (audio_writer == nullptr) return;
     if (element_json.find("audio") != element_json.end()) {
         string audio_path = element_json["audio"].get<string>();
-        append_duration(audio_writer->add_audio_get_length(audio_path));
+        double duration_seconds = audio_writer->add_audio_get_length(audio_path);
+        append_duration(duration_seconds);
+        audio_writer->add_subtitle(duration_seconds, element_json["script"]);
     } else {
         double duration = element_json["duration_seconds"].get<double>();
         audio_writer->add_silence(duration);
@@ -113,6 +115,8 @@ void SequentialScene::render_transition(int transition_index, double weight) {
         pix.mult_color(1-weight);
     }
     else {
-        pix = interpolate(subscenes[curr_board_index], subscenes[next_board_index], weight)->get();
+        Subscene* subscene = interpolate(subscenes[curr_board_index], subscenes[next_board_index], weight);
+        pix = subscene->get();
+        delete subscene;
     }
 }

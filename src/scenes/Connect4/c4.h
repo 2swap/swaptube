@@ -20,14 +20,10 @@ public:
     Board(string rep, string a, string h) : representation(rep) {
         clear();
         play(rep);
-        if(a.size() == WIDTH*HEIGHT)annotations = a;
-        if(h.size() == WIDTH*HEIGHT)highlight = h;
     };
     int col=1; // whose move is it
     int grid[HEIGHT][WIDTH];
     bool blink[HEIGHT][WIDTH];
-    string annotations = "                                          ";
-    string highlight = "                                          ";
     string representation;
     void clear(){
         for(int x = 0; x < WIDTH; x++)
@@ -35,12 +31,6 @@ public:
                 grid[y][x] = 0;
                 blink[y][x] = false;
             }
-    }
-    char get_annotation(int x, int y){
-        return annotations[x+(HEIGHT-1-y)*WIDTH];
-    }
-    char get_highlight(int x, int y){
-        return highlight[x+(HEIGHT-1-y)*WIDTH];
     }
 
 private:
@@ -121,9 +111,7 @@ string replerp(const string& b1, const string& b2, double w) {
 
 Board c4lerp(Board b1, Board b2, double w){
     string representation = replerp(b1.representation, b2.representation, smoother2(w));
-    string annotations = w<.5?b1.annotations:b2.annotations;//shared(b1.annotations, b2.annotations);
-    string highlight = w<.5?b1.highlight:b2.highlight;//shared(b1.highlight, b2.highlight);
-    Board transition(representation, annotations, highlight);
+    Board transition(representation);
     return transition;
 }
 

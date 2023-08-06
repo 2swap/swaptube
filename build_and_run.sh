@@ -33,6 +33,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run the program
+#valgrind ./swaptube $1
 ./swaptube $1
 
 # Check if the execution was successful

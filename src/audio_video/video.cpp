@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../misc/pixels.h"
 
 bool MovieWriter::encode_and_write_frame(AVFrame* frame){

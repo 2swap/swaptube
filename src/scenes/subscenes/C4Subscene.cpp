@@ -18,18 +18,22 @@ public:
     double spread = 0;
     vector<string> reduction_chars;
     vector<string> reduction_colors;
+    string annotations = "                                          ";
+    string highlight = "                                          ";
     Board board;
     double weight = 0;
     int threat_diagram_transition = 0; // 0=no transition 1=fadein 2=fadeout 3=collapse
     int diff_index = -1;
     // Constructor and other member functions specific to C4Subscene go here...
 
-    C4Subscene(int width, int height, double td, double s, vector<string> r, vector<string> rc, Board b):Subscene(width, height),threat_diagram(td),spread(s),reduction_chars(r),reduction_colors(rc),board(b){}
+    C4Subscene(int width, int height, double td, double s, vector<string> r, vector<string> rc, Board b, string a, string h):Subscene(width, height),threat_diagram(td),spread(s),reduction_chars(r),reduction_colors(rc),board(b),annotations(a),highlight(h){}
 
     C4Subscene(const C4Subscene& subscene1, const C4Subscene& subscene2, double w):Subscene(subscene1.pixels.w, subscene1.pixels.h){
         threat_diagram =   lerp(subscene1.threat_diagram, subscene2.threat_diagram, smoother2(w));
         spread         =   lerp(subscene1.spread        , subscene2.spread        , smoother2(w));
         board          = c4lerp(subscene1.board         , subscene2.board         , w           );
+        annotations = w>.5?subscene2.annotations:subscene1.annotations;
+        highlight = w>.5?subscene2.highlight:subscene1.highlight;
         weight = w;
 
         if(subscene1.threat_diagram == 1 && subscene2.threat_diagram == 1){
@@ -52,6 +56,13 @@ public:
             reduction_colors = subscene2.reduction_colors;
             threat_diagram_transition = 1;
         }
+    }
+
+    char get_annotation(int x, int y){
+        return annotations[x+(HEIGHT-1-y)*WIDTH];
+    }
+    char get_highlight(int x, int y){
+        return highlight[x+(HEIGHT-1-y)*WIDTH];
     }
 
     void draw_c4_disk(int px, int py, int col_id, bool blink, char annotation, bool highlighted, double stonewidth){
@@ -227,11 +238,11 @@ public:
         for(int stonex = 0; stonex < WIDTH; stonex++)
             for(int stoney = 0; stoney < HEIGHT; stoney++){
                 int height = -1;
-                char this_highlight = board.get_highlight(stonex, stoney);
+                char this_highlight = get_highlight(stonex, stoney);
                 if (this_highlight == ' ') continue;
                 char next_highlight = 'x';
                 while(stoney < HEIGHT){
-                    next_highlight = board.get_highlight(stonex, stoney);
+                    next_highlight = get_highlight(stonex, stoney);
                     if(next_highlight != this_highlight) break;
                     stoney++;
                     height++;
@@ -246,10 +257,9 @@ public:
     void draw_board(){
         for(int stonex = 0; stonex < WIDTH; stonex++)
             for(int stoney = 0; stoney < HEIGHT; stoney++){
-                char this_highlight = board.get_highlight(stonex, stoney);
                 double px = 0, py = 0, stonewidth = 0;
                 get_disk_screen_coordinates(stonex, stoney, px, py, stonewidth);
-                draw_c4_disk(px, py, board.grid[stoney][stonex], board.blink[stoney][stonex], board.get_annotation(stonex, stoney), this_highlight != ' ', stonewidth);
+                draw_c4_disk(px, py, board.grid[stoney][stonex], board.blink[stoney][stonex], get_annotation(stonex, stoney), get_highlight(stonex, stoney) != ' ', stonewidth);
             }
     }
 
