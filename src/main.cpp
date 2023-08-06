@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     int width = config["width"];
     int height = config["height"];
     int framerate = config["framerate"];
-    string name = "../out/" + string(argv[1]) + ".mp4";
+    string name = "../out/" + string(argv[1]);
 
     cout << "Project name: " << name << endl;
 
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]) {
                 writer.set_audiotime(time_s);
                 Pixels p = scene->query(done_scene);
                 time_s += 1./framerate;
-                if((++i)%5 == 0) p.print_to_terminal();
+                if((++i)%15 == 0) p.print_to_terminal();
                 writer.addFrame(p);
             }
 

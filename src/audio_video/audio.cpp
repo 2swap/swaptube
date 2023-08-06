@@ -1,9 +1,12 @@
+#pragma once
+
 void MovieWriter::set_audiotime(double t_seconds){
     double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
     //if(t_samples < audiotime){
     //    cerr << "Audio PTS latchup!" << endl << "Was: " << audiotime << " and is being set to " << t_samples << "!" << endl << "Aborting!" << endl;
     //    exit(1);
     //}
+    substime = t_seconds;
     audiotime = t_samples;
 }
 

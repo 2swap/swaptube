@@ -24,25 +24,29 @@ using namespace std;
 class MovieWriter
 {
     const unsigned int width, height;
-    unsigned int inframe, outframe, audframe;
-    int audiotime;
+    unsigned int inframe = 0, outframe = 0, audframe = 0;
+    int audiotime = 0;
+    double substime = 0;
+    int subtitle_count = 0;
     int framerate;
     int audioStreamIndex;
 
     string output_filename;
     string media_folder;
 
-    SwsContext* sws_ctx;
-    AVStream* videoStream;
-    AVStream* audioStream;
-    AVFormatContext* fc;
-    AVCodecContext* videoCodecContext;
-    AVCodecContext* audioInputCodecContext;
-    AVCodecContext* audioOutputCodecContext;
+    ofstream srt_file;
+
+    SwsContext* sws_ctx = nullptr;
+    AVStream* videoStream = nullptr;
+    AVStream* audioStream = nullptr;
+    AVFormatContext* fc = nullptr;
+    AVCodecContext* videoCodecContext = nullptr;
+    AVCodecContext* audioInputCodecContext = nullptr;
+    AVCodecContext* audioOutputCodecContext = nullptr;
     AVPacket pkt, inputPacket;
 
-    AVFrame *rgbpic;
-    AVFrame *yuvpic;
+    AVFrame *rgbpic = nullptr;
+    AVFrame *yuvpic = nullptr;
 
     ofstream audio_pts_file;
 
@@ -64,12 +68,16 @@ public:
 
     MovieWriter(const string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_, const string& media_) :
         
-    width(width_), height(height_), inframe(0), outframe(0), audframe(0), framerate(framerate_), output_filename(filename_),
-    sws_ctx(nullptr), videoStream(nullptr), audioStream(nullptr), fc(nullptr), videoCodecContext(nullptr), rgbpic(nullptr), yuvpic(nullptr),
-    pkt(), inputPacket(), media_folder(media_), audiotime(-1)
+    width(width_), height(height_), framerate(framerate_), output_filename(filename_+".mp4"),
+    pkt(), inputPacket(), media_folder(media_)
 
     {
         make_media_folder();
+        string srt_filename = filename_+".srt";
+        srt_file.open(srt_filename);
+        if (!srt_file.is_open()) {
+            std::cerr << "Error opening subs file: " << srt_filename << std::endl;
+        }
     }
 
     double add_audio_get_length(const string& inputAudioFilename);
@@ -78,6 +86,8 @@ public:
     bool encode_and_write_frame(AVFrame* frame);
     void addFrame(const Pixels& p);
     void set_audiotime(double t_seconds);
+    void add_srt_time(double s);
+    void add_subtitle(double duration, const string& text);
 
     void init(const string& inputAudioFilename){
         string audio_pts_filename = "audio_pts_file.txt";
@@ -214,8 +224,12 @@ public:
         av_packet_unref(&inputPacket);
         av_packet_unref(&pkt);
         audio_pts_file.close();
+        if (srt_file.is_open()) {
+            srt_file.close();
+        }
     }
 };
 
 #include "audio.cpp"
 #include "video.cpp"
+#include "subs.cpp"

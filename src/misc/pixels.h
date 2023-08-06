@@ -73,8 +73,8 @@ public:
     }
 
     void print_to_terminal() const {
-        const int width = 128;
-        const int height = 32;
+        const int width = 196;
+        const int height = 64;
         const int xStep = max(w / width, 1);
         const int yStep = max(h / height, 1);
 
