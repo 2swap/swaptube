@@ -838,7 +838,7 @@
                           "x.x.x.."],
           "spread":true,
           "audio":"26.mp3",
-          "script":"Well, what about this threat?"
+          "script":"What about this threat?"
         },
         {
           "transition":true,
@@ -1183,11 +1183,29 @@
                           "......."],
           "spread":false,
           "audio":"47.mp3",
-          "script":"The parity of the dead space was even, and furthermore, there was no threat that Red could give up to toggle the Zugzwang back to yellow."
+          "script":"The parity of the dead space was even, and there was no threat that Red could give up to toggle the Zugzwang back to yellow."
         },
         {
           "transition":true,
           "duration_seconds":1
+        }
+      ]
+    },
+    {
+      "type": "header",
+      "omit": false,
+      "header": "Simplifications,",
+      "subheader": "and local threat interactions",
+      "duration_seconds":1
+    },
+    {
+      "type": "c4",
+      "omit": false,
+      "sequence": [
+        {
+          "transition":true,
+          "audio":"48.mp3",
+          "script":"Okay then, so are there any cases in which it is beneficial to take a threat which does not exert Zugzwang control?"
         },
         {
           "representation": "4",
@@ -1374,7 +1392,7 @@
         {
           "transition":true,
           "audio":"51_5.mp3",
-          "script":"For this reason, a threat which does not control the Zugzwang can be ignored if and only if there is a threat of the same color following it."
+          "script":"For this reason, a threat which does not control the Zugzwang can be ignored, if and only if there is a threat of the same color following it."
         },
         {
           "representation": "",
@@ -1471,10 +1489,10 @@
                           "   x   "],
           "highlight":   ["       ",
                           "       ",
-                          "   n   ",
-                          "   n   ",
-                          "   n   ",
-                          "   n   "],
+                          "       ",
+                          "       ",
+                          "       ",
+                          "       "],
           "audio":"56.mp3",
           "script":"This threat chain here actually works just like a normal threat."
         },
@@ -1784,7 +1802,7 @@
                           "t      "],
           "spread":true,
           "audio":"66_3.mp3",
-          "script":"Excellent. Now we have simplified the board, so let's highlight the remaining threats up to whether or not they control the Zugzwang."
+          "script":"Excellent. Now that we have simplified the board, let's highlight the remaining threats up to whether or not they control the Zugzwang."
         },
         {
           "transition":true,
@@ -1962,8 +1980,7 @@
           "spread":true,
           "reduction":        ["#", "0#", "ZZ", "Z", "0", "Z", "0#"],
           "reduction_colors": ["b", "ry", "rr", "y", "r", "y", "yr"],
-          "audio":"diagram_02.mp3",
-          "script":"We can label these different threat types in a separate diagram like so."
+          "duration_seconds":1
         },
         {
           "transition":true,
@@ -2758,7 +2775,7 @@
         {
           "transition":true,
           "audio":"83.mp3",
-          "script":"While there are an unending amount of different ways that columns can be threatened, by using the tools of reduction and abstraction which we learned here, it can be rather easily determined who is to win, even on arbitrarily large board sizes where we haven't memorized the win conditions.    TODO real world examples452513223241442424"
+          "script":"While there are an unending amount of different ways that columns can be threatened, by using the tools of reduction and abstraction which we learned here, it can be rather easily determined who is to win, even on arbitrarily large board sizes where we haven't memorized the win conditions."
         }
       ]
     },

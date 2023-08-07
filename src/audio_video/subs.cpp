@@ -18,21 +18,22 @@ void MovieWriter::add_srt_time(double s){
 }
 
 void MovieWriter::add_subtitle(double duration, const string& text) {
-    // Maximum length of a subtitle before splitting
-    const int maxSubtitleLength = 60;
-
-    if (text.length() > maxSubtitleLength) {
+    if (text.size() > 90) {
+        cout << "Subtitle too long!" << endl;
         // Find the position of the first period in the substring
-        for (char c : {'.', ',', ' '}) {
+        for (char c : {'!', '?', '.', ',', '-'}) {
+            cout << "Attempting to split by " << c << endl;
             size_t firstPeriodPos = text.find(c);
 
             if (firstPeriodPos != string::npos) {
+                cout << "aaa" << text << endl;
                 // Split the text into first and remaining parts
                 string firstPart = text.substr(0, firstPeriodPos + 1);
                 string remainingPart = text.substr(firstPeriodPos + 1);
+                if(remainingPart.size() < 12 || firstPart.size() < 12) continue;
 
                 // Calculate modified duration for the first part
-                double modifiedDuration = duration * (firstPart.length() / static_cast<double>(text.length()));
+                double modifiedDuration = duration * (firstPart.size() / static_cast<double>(text.size()));
 
                 // Write the first part of the subtitle
                 add_subtitle(modifiedDuration, firstPart);
@@ -42,8 +43,10 @@ void MovieWriter::add_subtitle(double duration, const string& text) {
                 return;
             }
         }
+    }
     //recursive base case
     subtitle_count++;
+    cout << "Adding subtitle: " << text << endl;
     // Write the complete subtitle entry to the file
     srt_file << subtitle_count << endl;
     add_srt_time(substime);

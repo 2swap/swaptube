@@ -30,8 +30,16 @@ Pixels HeaderScene::query(bool& done_scene) {
 
     Pixels ret(pix.w, pix.h);
     ret.fill(BLACK);
-    ret.copy(pix, 0, 0, fifo_curve(time / static_cast<double>(scene_duration_frames)));
     time++;
-
-    return ret;
+    int fade_in_or_out_frames = min(scene_duration_frames/3, 3*framerate);
+    int second_thirdile = scene_duration_frames - fade_in_or_out_frames;
+    if(time < fade_in_or_out_frames){
+        ret.copy(pix, 0, 0, smoother2(static_cast<double>(time) / fade_in_or_out_frames));
+        return ret;
+    }
+    else if(time >= second_thirdile){
+        ret.copy(pix, 0, 0, smoother2(static_cast<double>(scene_duration_frames - time) / fade_in_or_out_frames));
+        return ret;
+    }
+    else return pix;
 }

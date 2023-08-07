@@ -195,7 +195,7 @@ public:
                 set_pixel(x+dx, y+dy, col);
     }
 
-    void fill_ellipse(int x, int y, int rw, int rh, int col){
+    void fill_ellipse(double x, double y, double rw, double rh, int col){
         for(double dx = -rw+1; dx < rw; dx++)
             for(double dy = -rh+1; dy < rh; dy++)
                 if(square(dx/rw)+square(dy/rh) < 1)
