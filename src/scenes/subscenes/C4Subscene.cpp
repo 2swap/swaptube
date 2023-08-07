@@ -70,14 +70,12 @@ public:
         int col = cols[col_id];
 
         if(col_id != 0){
-            double ringsize = 1;
-            if((col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y')) || (blink && spread == 0)){
-                ringsize = .75;
-            }
-            int piece_fill_radius = ceil(stonewidth*(.4*ringsize));
-            int piece_stroke_radius = ceil(stonewidth*(.4*ringsize+.07));
+            bool any_blink = (col_id == 1 && (annotation == 'B' || annotation == 'R')) || (col_id == 2 && (annotation == 'B' || annotation == 'Y')) || (blink && spread == 0);
+            double piece_fill_radius = ceil(stonewidth*.4);
+            double piece_stroke_radius = ceil(stonewidth*(.47));
+            double blink_radius = ceil(stonewidth*(.2));
             pixels.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col);
-            pixels.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, BLACK, .4));
+            pixels.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, BLACK, any_blink?.8:.4));
             return;
         }
 
@@ -195,7 +193,7 @@ public:
                 latex.recolor(color);
                 latex.mult_alpha(threat_diagram);
                 double stonewidth = pixels.w/16.;
-                double shifty = (x==diff_index && y != 0)?weight:0;
+                double shifty = (x==diff_index && y != 0)?smoother2(weight):0;
                 double spreadx = lerp(1, 2.1, spread);
                 double px = round((x-reduction_chars.size()/2.+.5)*stonewidth*spreadx+pixels.w/2);
                 double py = round((-(y-shifty)-.5)*stonewidth+pixels.h);
@@ -222,6 +220,7 @@ public:
         if(highlight == 'n' || highlight == 'N') highlight_color = IBM_ORANGE; // non-controlling threat
         double u = stonewidth * .4;
         for(int i = 0; i < 2; i++){
+            highlight_color = colorlerp(highlight_color, BLACK, 0.6);
             pixels.rounded_rect(
                            px - u, // left x coord
                            py - u, // top y coord
@@ -229,7 +228,6 @@ public:
                            2*u + stonewidth*height, // height
                            u, // circle radius
                            highlight_color);
-            highlight_color = colorlerp(highlight_color, BLACK, 0.75);
             u = stonewidth * .32;
         }
     }

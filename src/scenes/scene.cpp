@@ -16,12 +16,12 @@ void Scene::add_audio(const json& contents, MovieWriter* writer) {
     if (writer == nullptr) return;
     double duration_seconds = 0;
 
-    if (contents.find("audio") != contents.end())
+    if (contents.find("audio") != contents.end()) {
         duration_seconds = writer->add_audio_get_length(contents["audio"].get<string>());
-    else {
+        writer->add_subtitle(duration_seconds, contents["script"]);
+    } else {
         duration_seconds = contents["duration_seconds"].get<int>();
         writer->add_silence(duration_seconds);
-        writer->add_subtitle(duration_seconds, contents["script"]);
     }
     scene_duration_frames = duration_seconds * framerate;
 }
