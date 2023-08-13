@@ -1,7 +1,7 @@
 {
   "config": {
-    "width": 640,
-    "height": 360,
+    "width": 1280,
+    "height": 720,
     "framerate": 30
   },
   "scenes": [
@@ -37,7 +37,7 @@
                           "....B..",
                           "....x..",
                           "......."],
-          "duration_seconds":1
+          "duration_seconds":0.5
         },
         {
           "transition": true,
@@ -419,7 +419,7 @@
           "duration_seconds":1
         },
         {
-          "representation": "444441566366646222222717777733333111155",
+          "representation": "4444415663666462222227177777333331111",
           "annotations": [".......",
                           ".......",
                           ".......",
@@ -904,11 +904,11 @@
                           "YxY.Rx.",
                           "x.x.x.."],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":0.5
         },
         {
           "transition":true,
-          "duration_seconds":1
+          "duration_seconds":0.5
         },
         {
           "representation": "6244477",
@@ -1187,7 +1187,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":1
+          "duration_seconds":0.5
         }
       ]
     },
@@ -1196,7 +1196,7 @@
       "omit": false,
       "header": "Simplifications,",
       "subheader": "and local threat interactions",
-      "duration_seconds":1
+      "duration_seconds":2
     },
     {
       "type": "c4",
@@ -1953,8 +1953,8 @@
                           "      t",
                           "      t",
                           "      t",
-                          "      n",
-                          "      n"],
+                          "t     n",
+                          "t     n"],
           "spread":true,
           "duration_seconds":1
         },

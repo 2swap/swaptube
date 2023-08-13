@@ -209,7 +209,7 @@ public:
         double spreadx = lerp(1, 2.1, spread);
         double spready = lerp(0, -.75 + 1.5 * (stonex%2), spread*(1-threat_diagram));
         px = round((stonex-WIDTH/2.+.5)*stonewidth*spreadx+pixels.w/2);
-        py = round((-stoney+spready  +HEIGHT/2.-.5)*stonewidth+pixels.h/2) - (threat_diagram*pixels.h/8);
+        py = round((-stoney+spready + HEIGHT/2.-.5)*stonewidth+pixels.h/2 - threat_diagram*pixels.h/8);
     }
 
     void draw_highlight(int px, int py, char highlight, double stonewidth, int height){
