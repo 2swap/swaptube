@@ -1,7 +1,7 @@
 {
   "config": {
-    "width": 1280,
-    "height": 720,
+    "width": 1920,
+    "height": 1080,
     "framerate": 30
   },
   "scenes": [
@@ -1196,7 +1196,7 @@
       "omit": false,
       "header": "Simplifications,",
       "subheader": "and local threat interactions",
-      "duration_seconds":2
+      "duration_seconds":3
     },
     {
       "type": "c4",
@@ -1430,7 +1430,7 @@
                           "   n   ",
                           "   n   "],
           "audio":"53.mp3",
-          "script":"This 'terminal threat' has the property that nothing above it can ever be touched. Anything above it might as well not exist."
+          "script":"This 'terminal threat' has the property that nothing above it can ever be touched. Anything above it might as well just not exist."
         },
         {
           "transition":true,
@@ -1784,7 +1784,7 @@
         },
         {
           "transition":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "representation": "",
@@ -1846,7 +1846,7 @@
                           "tnz  zn",
                           "tnz   n"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -1868,7 +1868,7 @@
                           "tn   zn",
                           "tn    n"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -1890,7 +1890,7 @@
                           "tn    n",
                           "tn    n"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -1912,7 +1912,7 @@
                           "tn    n",
                           "tn    n"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -1934,7 +1934,7 @@
                           "tn    n",
                           "tn    n"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
@@ -1956,7 +1956,7 @@
                           "t     n",
                           "t     n"],
           "spread":true,
-          "duration_seconds":1
+          "duration_seconds":2
         },
         {
           "transition":true,
