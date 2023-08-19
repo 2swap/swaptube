@@ -27,6 +27,9 @@ json parse_json(string filename) {
     json video_json;
     try {
         file >> video_json;
+    } catch (const json::parse_error& e) {
+        cerr << "Parse error at position " << e.byte << ": " << e.what() << endl;
+        exit(1);
     } catch (const exception& e) {
         cerr << "Failed to parse file: " << filename << endl;
         exit(1);
@@ -81,12 +84,15 @@ int main(int argc, char* argv[]) {
                 writer.set_audiotime(time_s);
                 Pixels p = scene->query(done_scene);
                 time_s += 1./framerate;
-                if((++i)%15 == 0) p.print_to_terminal();
+                if((i++)%15 == 0) p.print_to_terminal();
+                writer.set_audiotime(0.0);
                 writer.addFrame(p);
             }
+            cout << "d" << endl;
 
             // clean up the dynamically allocated scene object
             delete scene;
+            cout << "d" << endl;
         }
     }
 
