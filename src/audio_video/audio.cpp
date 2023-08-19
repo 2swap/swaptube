@@ -1,4 +1,5 @@
 #pragma once
+#include <sys/stat.h>
 
 void MovieWriter::set_audiotime(double t_seconds){
     double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
@@ -44,13 +45,30 @@ double MovieWriter::encode_and_write_audio(){
     return length_in_seconds;
 }
 
+bool MovieWriter::file_exists(const std::string& filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
+
 double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
     cout << "Adding audio" << endl;
+    double length_in_seconds = 0;
+
+    // Check if the input audio file exists
+    std::string fullInputAudioFilename = media_folder + inputAudioFilename;
+    if (!file_exists(fullInputAudioFilename)) {
+        std::cerr << "Input audio file does not exist: " << fullInputAudioFilename << std::endl;
+        length_in_seconds = 1.0;
+        add_silence(length_in_seconds);
+        return length_in_seconds;
+    }
 
     AVFormatContext* inputAudioFormatContext = nullptr;
-    avformat_open_input(&inputAudioFormatContext, (media_folder+inputAudioFilename).c_str(), nullptr, nullptr);
-
-    double length_in_seconds = 0;
+    int ret = avformat_open_input(&inputAudioFormatContext, fullInputAudioFilename.c_str(), nullptr, nullptr);
+    if (ret < 0) {
+        std::cerr << "Error opening input audio file." << std::endl;
+        exit(1);
+    }
 
     // Read input audio frames and write to output format context
     while (av_read_frame(inputAudioFormatContext, &inputPacket) >= 0) {
@@ -81,7 +99,6 @@ double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
 
     return length_in_seconds;
 }
-
 
 void MovieWriter::add_silence(double duration) {
     cout << "Adding silence: " << duration << " seconds" << endl;

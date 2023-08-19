@@ -4,16 +4,14 @@
 #include "sequential_scene.cpp"
 using json = nlohmann::json;
 
-class LatexScene : public SequentialScene {
+class LatexScene : public Scene {
 public:
     LatexScene(const json& config, const json& contents, MovieWriter* writer);
     void render_non_transition(Pixels& p, int which);
     void render_transition(Pixels& p, int which, double weight);
+    Pixels query(bool& done_scene) override;
     Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
         return new LatexScene(config, scene, writer);
-    }
-    Subscene* interpolate(Subscene* s1, Subscene* s2, double weight){
-        return s1;//TODO
     }
     bool show_cs;
 
@@ -24,7 +22,7 @@ private:
     vector<pair<int, int>> coords;
 };
 
-LatexScene::LatexScene(const json& config, const json& contents, MovieWriter* writer) : SequentialScene(config, contents, writer) {
+LatexScene::LatexScene(const json& config, const json& contents, MovieWriter* writer) : Scene(config, contents, writer) {
     vector<json> sequence_json = contents["sequence"];
 
     // Frontload latex rendering
@@ -87,4 +85,14 @@ void LatexScene::render_transition(Pixels& p, int which, double weight) {
     int num_intersections = intersections[which].size();
     p.copy(intersections[which][num_intersections-1].current_p1, coords[which].first, coords[which].second, tp1);
     p.copy(intersections[which][num_intersections-1].current_p2, coords[which+1].first, coords[which+1].second, tp);
+}
+
+Pixels LatexScene::query(bool& done_scene) {
+    done_scene = scene_duration_frames <= time;
+
+    Pixels ret(pix.w, pix.h);
+    ret.fill(BLACK);
+    time++;
+
+    return ret;
 }

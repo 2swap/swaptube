@@ -7,6 +7,7 @@
   "scenes": [
     {
       "type": "c4",
+      "omit":false,
       "sequence": [
         {
           "transition": true,
@@ -52,6 +53,7 @@
     },
     {
       "type":"composite",
+      "omit":true,
       "subscenes":
       [
         {
@@ -160,9 +162,10 @@
           }
         }
       ]
-    }
+    },
     {
       "type": "c4",
+      "omit":true,
       "sequence": [
         {
           "transition": true,
@@ -406,6 +409,7 @@
     },
     {
       "type":"composite",
+      "omit":true,
       "subscenes":
       [
         {
@@ -460,6 +464,7 @@
     },
     {
       "type": "c4",
+      "omit":true,
       "sequence": [
         {
           "transition": true,
@@ -595,6 +600,7 @@
     },
     {
       "type": "c4",
+      "omit":true,
       "sequence": [
         {
           "transition": true,
@@ -647,24 +653,33 @@
         }
       ]
     },
-    Creating a position which yields these easy wins for yellow is difficult.
-    However, an expert player up against a newbie might make it look easy. As expected, capitalizing on these situations on the fly is the trademark of expertise. Active study and deliberate practice can help you see it coming.
-    Understanding these positions is not only crucial for the learner, but also for the connect 4 researcher. Solving a game requires an immense search of billions of options on behalf of either player.
-    However, these positions from which a player can win via Claimeven prove to be a small island of simplicity in an otherwise chaotic sea of complex situations. These positions will serve as a foothold, an indispensable landmark for further reduction.
-
-    Before we part, I'll leave you with one last puzzle. 43667555355335117 In this case, and unlike the others, Red is winning. How can we apply our understanding of claimeven to this position?
-    [solve the puzzle]
     {
       "type": "header",
-      "omit": false,
-      "header": "Claimeven",
-      "subheader": "Taming the Midgame",
+      "omit":true,
+      "header": "TODO",
+      "subheader": "",
       "audio":"84.mp3",
-      "script":"What we have done here was no mean feat- we have effectively and absolutely solved the endgame. Now the task is to work backwards. Is there a way that we can comparably reduce the midgame? The answer is, in many cases, yes. Stay tuned, because we will start to get a feeling of the shape of certain weakly solved subtrees of Connect 4."
+      "script":"Creating a position which yields these easy wins for yellow is difficult. However, an expert player up against a newbie might make it look easy. As expected, capitalizing on these situations on the fly is the trademark of expertise. Active study and deliberate practice can help you see it coming."
+    },
+    {
+      "type": "header",
+      "omit":true,
+      "header": "Steady State Solutions",
+      "subheader": "",
+      "audio":"84.mp3",
+      "script":"Understanding these positions is not only crucial for the learner, but also for the connect 4 researcher. Solving a game requires an immense search of billions of options on behalf of either player. However, these positions from which a player can win via Claimeven prove to be a small island of simplicity in an otherwise chaotic sea of complex situations. These positions will serve as a foothold, an indispensable landmark for further reduction."
+    },
+    {
+      "type": "header",
+      "omit":true,
+      "header": "TODO",
+      "subheader": "",
+      "audio":"84.mp3",
+      "script":"Before we part, I'll give you a taste of how this can be generalized, with one last puzzle. 43667555355335117 In this case, and unlike the others, Red is winning. How can we apply our understanding of claimeven to this position? [solve the puzzle]"
     },
     {
       "type": "2swap",
-      "omit": false,
+      "omit":true,
       "audio":"85.mp3",
       "script":"This has been 2swap."
     }

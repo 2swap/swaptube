@@ -33,7 +33,7 @@ static Scene* create_scene_determine_type(const json& config, const json& scene_
         return new LatexScene(config, scene_json, writer);
     }
     else if (scene_type == "c4") {
-        return new C4Scene(config, scene_json, writer);
+        return new SequentialScene<C4Scene>(config, scene_json, writer);
     }
     else if (scene_type == "mandelbrot") {
         return new MandelbrotScene(config, scene_json, writer);

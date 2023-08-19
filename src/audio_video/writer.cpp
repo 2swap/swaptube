@@ -80,6 +80,7 @@ public:
         }
     }
 
+    bool file_exists(const std::string& filename);
     double add_audio_get_length(const string& inputAudioFilename);
     void add_silence(double duration);
     double encode_and_write_audio();
