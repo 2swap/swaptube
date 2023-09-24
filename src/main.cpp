@@ -1,20 +1,31 @@
+using namespace std;
+
 #include <iostream>
 #include <string>
 #include <stdlib.h>
 #include <math.h>
 #include <fstream>
 #include <chrono> // chrono library for timing.
+
+int VIDEO_WIDTH = 0;
+int VIDEO_HEIGHT = 0;
+int VIDEO_FRAMERATE = 0;
+double video_time_s = 0;
+int video_num_frames = 0;
+
+#include "audio_video/writer.cpp"
+
+MovieWriter* WRITER;
+
 #include "misc/inlines.h"
 #include "scenes/Connect4/c4.h"
 #include "misc/json.hpp" // nlohmann json library
 #include "misc/pixels.h"
 #include "misc/convolver.cpp"
 #include "misc/convolution_tests.cpp"
-#include "audio_video/writer.cpp"
 #include "scenes/scene.cpp"
 
 using json = nlohmann::json;
-using namespace std;
 
 json parse_json(string filename) {
     // Parse the json file
@@ -38,61 +49,33 @@ json parse_json(string filename) {
     return video_json;
 }
 
-int main(int argc, char* argv[]) {
+void render_a_scene(Scene* scene){
+    bool done_scene = false;
+    while (!done_scene) {
+        WRITER->set_audiotime(video_time_s);
+        const Pixels& p = scene->query(done_scene);
+        video_time_s += 1./VIDEO_FRAMERATE;
+        if((video_num_frames++)%15 == 0) p.print_to_terminal();
+        WRITER->set_audiotime(0.0);
+        WRITER->addFrame(p);
+    }
+    
+    // clean up the dynamically allocated scene object
+    delete scene;
+}
+
+void render(const json& scenes){
+    cout << "Beginning Render" << endl;
     // Start the timer.
     auto start = std::chrono::high_resolution_clock::now();
 
-    run_inlines_unit_tests();
-    run_convolution_unit_tests();
-    run_c4_unit_tests();
-
-    if (argc != 2) {
-        cerr << "Usage: " << argv[0] << " <config_file_without_.json>" << endl;
-        exit(1);
-    }
-
-    json video = parse_json("../in/" + string(argv[1]) + ".json");
-
-    // Extract overall information from the config
-    json config = video["config"];
-    int width = config["width"];
-    int height = config["height"];
-    int framerate = config["framerate"];
-    string name = "../out/" + string(argv[1]);
-
-    cout << "Project name: " << name << endl;
-
-    // Create the MovieWriter object
-    MovieWriter writer(name, width, height, framerate, "../media/" + string(argv[1]) + "/");
-
-    cout << "Initializing Writer" << endl;
-
-    writer.init("../media/testaudio.mp3");
-
-    cout << "Beginning Render" << endl;
-
-    double time_s = 0;
-    int i = 0;
     // Process each scene in the config
-    for (auto& scene_json : video["scenes"]) {
+    for (auto& scene_json : scenes) {
         if (scene_json.value("omit", false))
             continue;
-        Scene* scene = create_scene_determine_type(config, scene_json, &writer);
+        Scene* scene = create_scene_determine_type(VIDEO_WIDTH, VIDEO_HEIGHT, scene_json);
         if (scene != nullptr) {
-            bool done_scene = false;
-            while (!done_scene) {
-                writer.set_audiotime(time_s);
-                Pixels p = scene->query(done_scene);
-                time_s += 1./framerate;
-                if((i++)%15 == 0) p.print_to_terminal();
-                writer.set_audiotime(0.0);
-                writer.addFrame(p);
-            }
-            cout << "d" << endl;
-
-            // clean up the dynamically allocated scene object
-            delete scene;
-            cout << "d" << endl;
+            render_a_scene(scene);
         }
     }
 
@@ -102,9 +85,50 @@ int main(int argc, char* argv[]) {
 
     // Print out time stats
     double render_time_minutes = duration.count() / 60000000.0;
-    double video_length_minutes = time_s/60.;
-    cout << "Program execution time: " << render_time_minutes << " minutes." << endl;
-    cout << "Video length          : " << video_length_minutes << " minutes." << endl;
+    double video_length_minutes = video_time_s/60.;
+    cout << "Render time:  " << render_time_minutes << " minutes." << endl;
+    cout << "Video length: " << video_length_minutes << " minutes." << endl;
+}
+
+void extract_config_info(const json& config) {
+    VIDEO_WIDTH = config["width"];
+    VIDEO_HEIGHT = config["height"];
+    VIDEO_FRAMERATE = config["framerate"];
+}
+
+void run_unit_tests(){
+    run_inlines_unit_tests();
+    run_convolution_unit_tests();
+    run_c4_unit_tests();
+}
+
+void setup_writer(const string& project_name){
+    // Create a new MovieWriter object and assign it to the pointer
+    WRITER = new MovieWriter("../out/" + project_name + ".mp4",
+                             "../out/" + project_name + ".srt",
+                           "../media/" + project_name + "/");
+    WRITER->init("../media/testaudio.mp3");
+}
+
+int main(int argc, char* argv[]) {
+    run_unit_tests();
+
+    if (argc != 2) {
+        cerr << "Usage: " << argv[0] << " <config_file_without_.json>" << endl;
+        exit(1);
+    }
+
+    const string project_name = string(argv[1]);
+
+    json video = parse_json("../in/" + project_name + ".json");
+
+    extract_config_info(video["config"]);
+
+    setup_writer(project_name);
+
+    render(video["scenes"]);
+
+    delete WRITER;
 
     return 0;
 }

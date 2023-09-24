@@ -3,6 +3,7 @@
 #pragma once
 
 #include <filesystem>
+#include "../misc/pixels.h"
 extern "C"
 {
     #include <libswscale/swscale.h>
@@ -23,12 +24,10 @@ using namespace std;
 
 class MovieWriter
 {
-    const unsigned int width, height;
     unsigned int inframe = 0, outframe = 0, audframe = 0;
     int audiotime = 0;
     double substime = 0;
     int subtitle_count = 0;
-    int framerate;
     int audioStreamIndex;
 
     string output_filename;
@@ -66,19 +65,16 @@ public:
         }
     }
 
-    MovieWriter(const string& filename_, const unsigned int width_, const unsigned int height_, const int framerate_, const string& media_) :
-        
-    width(width_), height(height_), framerate(framerate_), output_filename(filename_+".mp4"),
-    pkt(), inputPacket(), media_folder(media_)
-
-    {
+    MovieWriter(const string& output_filename_, const string& srt_filename_, const string& media_) :
+    output_filename(output_filename_), pkt(), inputPacket(), media_folder(media_) {
         make_media_folder();
-        string srt_filename = filename_+".srt";
-        srt_file.open(srt_filename);
+        srt_file.open(srt_filename_);
         if (!srt_file.is_open()) {
-            std::cerr << "Error opening subs file: " << srt_filename << std::endl;
+            std::cerr << "Error opening subs file: " << srt_filename_ << std::endl;
         }
     }
+
+    MovieWriter() {}
 
     bool file_exists(const std::string& filename);
     double add_audio_get_length(const string& inputAudioFilename);
@@ -122,8 +118,8 @@ public:
         avcodec_open2(audioInputCodecContext, audioInputCodec, nullptr);
 
         // Preparing to convert my generated RGB images to YUV frames.
-        sws_ctx = sws_getContext(width, height,
-            AV_PIX_FMT_RGB24, width, height, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
+        sws_ctx = sws_getContext(VIDEO_WIDTH, VIDEO_HEIGHT,
+            AV_PIX_FMT_RGB24, VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
 
         // Preparing the data concerning the format and codec,
         // in order to write properly the header, frame data and end of file.
@@ -137,10 +133,10 @@ public:
         videoStream = avformat_new_stream(fc, codec);
         audioStream = avformat_new_stream(fc, audioInputCodec);
         videoCodecContext = videoStream->codec;
-        videoCodecContext->width = width;
-        videoCodecContext->height = height;
+        videoCodecContext->width = VIDEO_WIDTH;
+        videoCodecContext->height = VIDEO_HEIGHT;
         videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
-        videoCodecContext->time_base = { 1, framerate };
+        videoCodecContext->time_base = { 1, VIDEO_FRAMERATE };
 
 
         // Create a new audio stream in the output format context
@@ -165,7 +161,7 @@ public:
 
         // Once the codec is set up, we need to let the container know
         // which codec are the streams using, in this case the only (video) stream.
-        videoStream->time_base = { 1, framerate };
+        videoStream->time_base = { 1, VIDEO_FRAMERATE };
         av_dump_format(fc, 0, output_filename.c_str(), 1);
         avio_open(&fc->pb, output_filename.c_str(), AVIO_FLAG_WRITE);
         avformat_write_header(fc, &opt);
@@ -176,8 +172,8 @@ public:
         yuvpic = av_frame_alloc();
         rgbpic->format = AV_PIX_FMT_RGB24;
         yuvpic->format = AV_PIX_FMT_YUV420P;
-        rgbpic->width = yuvpic->width = width;
-        rgbpic->height = yuvpic->height = height;
+        rgbpic->width = yuvpic->width = VIDEO_WIDTH;
+        rgbpic->height = yuvpic->height = VIDEO_HEIGHT;
         av_frame_get_buffer(rgbpic, 1);
         av_frame_get_buffer(yuvpic, 1);
 

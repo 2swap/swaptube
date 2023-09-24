@@ -1,5 +1,6 @@
 #pragma once
 #include <sys/stat.h>
+#include <vector>
 
 void MovieWriter::set_audiotime(double t_seconds){
     double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
@@ -58,7 +59,7 @@ double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
     std::string fullInputAudioFilename = media_folder + inputAudioFilename;
     if (!file_exists(fullInputAudioFilename)) {
         std::cerr << "Input audio file does not exist: " << fullInputAudioFilename << std::endl;
-        length_in_seconds = 1.0;
+        length_in_seconds = 3.0;
         add_silence(length_in_seconds);
         return length_in_seconds;
     }

@@ -8,11 +8,14 @@ using json = nlohmann::json;
 
 class MandelbrotScene : public Scene {
 public:
-    MandelbrotScene(const json& config, const json& contents, MovieWriter* writer);
-    Pixels query(bool& done_scene) override;
+    MandelbrotScene(const int width, const int height, const json& contents) : Scene(width, height, contents) {
+        current_zoom = Complex(contents["current_zoom"]["real"].get<double>(), contents["current_zoom"]["imag"].get<double>());
+        add_audio(contents);
+    }
+    const Pixels& query(bool& done_scene) override;
     void update_variables(const map<string, double>& _variables) override;
-    Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
-        return new MandelbrotScene(config, scene, writer);
+    Scene* createScene(const int width, const int height, const json& scene) override {
+        return new MandelbrotScene(width, height, scene);
     }
 
 private:
@@ -42,11 +45,6 @@ private:
     void edge_detect_render(Pixels& p);
     void render(Pixels& p);
 };
-
-MandelbrotScene::MandelbrotScene(const json& config, const json& contents, MovieWriter* writer) : Scene(config, contents, writer) {
-    current_zoom = Complex(contents["current_zoom"]["real"].get<double>(), contents["current_zoom"]["imag"].get<double>());
-    add_audio(contents, writer);
-}
 
 double MandelbrotScene::get_or_variable(const json& j){
     return j.is_string() ? variables[j.get<string>()] : j.get<double>();
@@ -248,10 +246,10 @@ void MandelbrotScene::render(Pixels& p){
     p.fill_ellipse(p.w/2, p.h/2, 5, 5, 0x44ff0000);
 }
 
-Pixels MandelbrotScene::query(bool& done_scene) {
+const Pixels& MandelbrotScene::query(bool& done_scene) {
     done_scene = time >= scene_duration_frames;
 
-    double duration_frames = contents["duration_seconds"].get<int>() * framerate;
+    double duration_frames = contents["duration_seconds"].get<int>() * VIDEO_FRAMERATE;
 
     render(pix);
     time++;
