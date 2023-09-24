@@ -1,20 +1,34 @@
 #pragma once
 
-#include "scene.h"
+#include "scene.cpp"
 #include "Mandelbrot/mandelbrot.cpp"
 #include "Mandelbrot/palette.cpp"
 #include <queue>
-using json = nlohmann::json;
+#include <variant>
 
 class MandelbrotScene : public Scene {
 public:
-    MandelbrotScene(const int width, const int height, const json& contents) : Scene(width, height, contents) {
+    MandelbrotScene(const int width, const int height) : Scene(width, height) {
         current_zoom = Complex(contents["current_zoom"]["real"].get<double>(), contents["current_zoom"]["imag"].get<double>());
         add_audio(contents);
     }
     const Pixels& query(bool& done_scene) override;
-    void update_variables(const map<string, double>& _variables) override;
-    Scene* createScene(const int width, const int height, const json& scene) override {
+    void update_variables(const unordered_map<string, double>& _variables) {
+        variables = _variables;
+        zoom_multiplier = Complex(get_or_variable(contents["zoom_multiplier"]["real"]), get_or_variable(contents["zoom_multiplier"]["imag"]));
+        z0              = Complex(get_or_variable(contents["z"]["real"]              ), get_or_variable(contents["z"]["imag"]              ));
+        exponent        = Complex(get_or_variable(contents["x"]["real"]              ), get_or_variable(contents["x"]["imag"]              ));
+        c               = Complex(get_or_variable(contents["c"]["real"]              ), get_or_variable(contents["c"]["imag"]              ));
+
+        string paramValue = contents["WhichParameterization"].get<string>();
+        which = C;
+        if (paramValue == "Z") {
+            which = Z;
+        } else if (paramValue == "X") {
+            which = X;
+        }
+    }
+    Scene* createScene(const int width, const int height) override {
         return new MandelbrotScene(width, height, scene);
     }
 
@@ -36,35 +50,17 @@ private:
     Complex current_zoom;
     double breath;
     int depth = 100;
-    map<string, double> variables;
+    unordered_map<string, double> variables;
 
-    double get_or_variable(const json& j);
+    double get_or_variable(variant<string, double> either){
+        return holds_alternative<string>(either) ? variables[get<string>(either)] : get<double>(either);
+    }
     void depths_to_points(vector<vector<int>> depths, Pixels& p);
     int render_for_parameterization(Complex point);
     void render_mandelbrot_points(Pixels& p);
     void edge_detect_render(Pixels& p);
     void render(Pixels& p);
 };
-
-double MandelbrotScene::get_or_variable(const json& j){
-    return j.is_string() ? variables[j.get<string>()] : j.get<double>();
-}
-
-void MandelbrotScene::update_variables(const map<string, double>& _variables) {
-    variables = _variables;
-    zoom_multiplier = Complex(get_or_variable(contents["zoom_multiplier"]["real"]), get_or_variable(contents["zoom_multiplier"]["imag"]));
-    z0              = Complex(get_or_variable(contents["z"]["real"]              ), get_or_variable(contents["z"]["imag"]              ));
-    exponent        = Complex(get_or_variable(contents["x"]["real"]              ), get_or_variable(contents["x"]["imag"]              ));
-    c               = Complex(get_or_variable(contents["c"]["real"]              ), get_or_variable(contents["c"]["imag"]              ));
-
-    string paramValue = contents["WhichParameterization"].get<string>();
-    which = C;
-    if (paramValue == "Z") {
-        which = Z;
-    } else if (paramValue == "X") {
-        which = X;
-    }
-}
 
 void MandelbrotScene::depths_to_points(vector<vector<int>> depths, Pixels& p){
     //change depths to colors

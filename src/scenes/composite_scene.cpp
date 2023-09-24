@@ -1,33 +1,20 @@
 #pragma once
 
-#include "scene.h"
+#include <unordered_map>
+#include "scene.cpp"
 #include "Connect4/c4.h"
-using json = nlohmann::json;
 
 typedef pair<Scene*, pair<int, int>> scene_with_coords;
 
 class CompositeScene : public Scene {
 public:
-    Scene* createScene(const int width, const int height, const json& scene) override {
-        return new CompositeScene(width, height, scene);
+    Scene* createScene(const int width, const int height) override {
+        return new CompositeScene(width, height);
     }
 
-    CompositeScene(const int width, const int height, const json& contents) : Scene(width, height, contents) {
-        for (auto& j : contents["subscenes"]) {
-            cout << "determining subscene coordinates..." << endl;
-            int subscene_width = width * j["width"].get<double>();
-            int subscene_height = height * j["height"].get<double>();
+    CompositeScene(const int width, const int height) : Scene(width, height) {}
 
-            pair<int, int> coords = make_pair(j["x"].get<double>()*width, j["y"].get<double>()*height);
-
-            // Pass in nullptr as the moviewriter to signal to the subscene not to write audio.
-            scene_with_coords s = make_pair(create_scene_determine_type(subscene_width, subscene_height, j["subscene"]), coords);
-            scenes.push_back(s);
-        }
-        add_audio(contents);
-    }
-
-    void update_variables(const map<string, double>& _variables) override {
+    void update_variables(const unordered_map<string, double>& _variables) override {
         for (auto& swc : scenes) {
             swc.first->update_variables(_variables);
         }

@@ -1,22 +1,18 @@
 #pragma once
 
-#include "scene.h"
-#include "sequential_scene.cpp"
-using json = nlohmann::json;
+#include "scene.cpp"
 
 class LatexScene : public Scene {
 public:
-    Scene* createScene(const int width, const int height, const json& scene) override {
+    Scene* createScene(const int width, const int height) override {
         return new LatexScene(width, height, scene);
     }
     bool show_cs;
 
-    LatexScene(const int width, const int height, const json& contents) : Scene(width, height, contents) {
-        vector<json> sequence_json = contents["sequence"];
-
+    LatexScene(const int width, const int height) : Scene(width, height) {
         // Frontload latex rendering
-        for (int i = 0; i < sequence_json.size(); i++) {
-            json blurb = sequence_json[i];
+        for (int i = 0; i < equations_strings.size(); i++) {
+            json blurb = equations_strings[i];
             if(blurb.find("transition") != blurb.end()) continue;
             string eqn = blurb["latex"].get<string>();
             cout << "rendering latex: " << eqn << endl;
@@ -87,6 +83,7 @@ public:
     }
 
 private:
+    vector<string> equations_strings;
     vector<Pixels> equations;
     vector<vector<StepResult>> intersections;
     vector<Pixels> convolutions;

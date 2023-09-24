@@ -1,3 +1,5 @@
+#include <cassert>
+
 void unit_test_convolve() {
     // Create two Pixels objects with rectangular fills
     Pixels a(15, 15);

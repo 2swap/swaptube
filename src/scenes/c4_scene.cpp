@@ -1,5 +1,3 @@
-using json = nlohmann::json;
-
 inline int C4_RED           = 0xffdc267f;
 inline int C4_YELLOW        = 0xffffb000;
 inline int C4_EMPTY         = 0xff222222;
@@ -14,60 +12,45 @@ public:
     Pixels pixels;
     bool rendered = false;
 
+    string representation = "";
     double threat_diagram = 0;
     double spread = 0;
     vector<string> reduction_chars;
     vector<string> reduction_colors;
-    string annotations = "                                          ";
-    string highlight = "                                          ";
+    string annotations = "......."
+                         "......."
+                         "......."
+                         "......."
+                         "......."
+                         ".......";
+    string highlight  =  "       "
+                         "       "
+                         "       "
+                         "       "
+                         "       "
+                         "       ";
     Board board;
     double weight = 0;
     int threat_diagram_transition = 0; // 0=no transition 1=fadein 2=fadeout 3=collapse
     int diff_index = -1;
 
-    json cts;
-
-    Scene* createScene(const int width, const int height, const json& scene) override {
-        return new C4Scene(width, height, scene);
+    Scene* createScene(const int width, const int height) override {
+        return new C4Scene(width, height);
     }
 
-    C4Scene(const int width, const int height, const json& contents):Scene(width, height, contents), cts(contents) {
-        threat_diagram = contents.contains("reduction") ? 1 : 0;
+    C4Scene(const int width, const int height):Scene(width, height) {
+        /*threat_diagram = contents.contains("reduction") ? 1 : 0;
         spread = contents.value("spread", false) ? 1 : 0;
         if(threat_diagram == 1){
             reduction_chars = contents["reduction"];
             reduction_colors = contents["reduction_colors"];
-        }
+        }*/
 
-        // Concatenate annotations into a single string
-        annotations = "";
-        if (contents.contains("annotations")) {
-            vector<string> json_annotations = contents["annotations"];
-            for (const auto& annotation : json_annotations) {
-                annotations += annotation;
-            }
-        }
-        else{
-            annotations = "..........................................";
-        }
-
-        // Concatenate highlights into a single string
-        highlight = "";
-        if (contents.contains("highlight")) {
-            vector<string> json_highlights = contents["highlight"];
-            for (const auto& h : json_highlights) {
-                highlight += h;
-            }
-        }
-        else{
-            highlight = "                                          ";
-        }
-
-        board = Board(contents["representation"]);
+        board = Board(representation);
     }
 
     //interpolative constructor
-    C4Scene(const C4Scene& subscene1, const C4Scene& subscene2, double w):Scene(subscene1.w, subscene1.h, subscene1.cts), cts(subscene1.cts) {
+    C4Scene(const C4Scene& subscene1, const C4Scene& subscene2, double w):Scene(subscene1.w, subscene1.h) {
         threat_diagram =   lerp(subscene1.threat_diagram, subscene2.threat_diagram, smoother2(w));
         spread         =   lerp(subscene1.spread        , subscene2.spread        , smoother2(w));
         board          = c4lerp(subscene1.board         , subscene2.board         , w           );
@@ -299,7 +282,7 @@ public:
             }
     }
 
-    void render() {
+    void render_c4() {
         cout << "rendering subscene" << endl;
         pixels = Pixels(w, h);
         // background
@@ -311,7 +294,7 @@ public:
 
     const Pixels& query(bool& done_scene) override {
         if (!rendered) {
-            render();
+            render_c4();
             rendered = true;
         }
         return pixels;
