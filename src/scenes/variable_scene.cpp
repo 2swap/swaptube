@@ -5,31 +5,6 @@
 #include "calculator.cpp"
 using json = nlohmann::json;
 
-class VariableScene : public Scene {
-public:
-    VariableScene(const json& config, const json& contents, MovieWriter* writer);
-    ~VariableScene();
-    Pixels query(bool& done_scene) override;
-    Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
-        return new VariableScene(config, scene, writer);
-    }
-
-private:
-    Scene* subscene;
-};
-
-VariableScene::VariableScene(const json& config, const json& contents, MovieWriter* writer) : Scene(config, contents, writer) {
-    json contents_with_duration = contents["subscene"];
-    contents_with_duration["duration_seconds"] = contents["duration_seconds"];
-
-    subscene = create_scene_determine_type(config, contents_with_duration, nullptr);
-    add_audio(contents, writer);
-}
-
-VariableScene::~VariableScene() {
-    delete subscene;
-}
-
 map<string, double> evaluate_all(const json& variables, double time) {
     map<string, double> evaluatedVariables;
     for (auto it = variables.begin(); it != variables.end(); ++it) {
@@ -43,10 +18,32 @@ map<string, double> evaluate_all(const json& variables, double time) {
     return evaluatedVariables;
 }
 
-Pixels VariableScene::query(bool& done_scene) {
-    subscene->update_variables(evaluate_all(contents["variables"], time));
-    Pixels p = subscene->query(done_scene);
-    pix.copy(p, 0, 0, 1);
-    time++;
-    return pix;
-}
+class VariableScene : public Scene {
+public:
+    Scene* createScene(const int width, const int height, const json& scene) override {
+        return new VariableScene(width, height, scene);
+    }
+
+    VariableScene(const int width, const int height, const json& contents) : Scene(width, height, contents) {
+        json contents_with_duration = contents["subscene"];
+        contents_with_duration["duration_seconds"] = contents["duration_seconds"];
+
+        subscene = create_scene_determine_type(width, height, contents_with_duration);
+        // DON'T add_audio(contents); -> The subscene will write audio! I don't need to!
+    }
+
+    ~VariableScene() {
+        delete subscene;
+    }
+
+    const Pixels& query(bool& done_scene) override {
+        subscene->update_variables(evaluate_all(contents["variables"], time));
+        Pixels p = subscene->query(done_scene);
+        pix.copy(p, 0, 0, 1);
+        time++;
+        return pix;
+    }
+
+private:
+    Scene* subscene;
+};

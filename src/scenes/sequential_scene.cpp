@@ -16,31 +16,29 @@ int json_index_to_content_index(int b){
 template <typename T>
 class SequentialScene : public Scene {
 public:
-    Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
-        return new SequentialScene<T>(config, scene, writer);
+    Scene* createScene(const int width, const int height, const json& scene) override {
+        return new SequentialScene<T>(width, height, scene);
     }
 
-    SequentialScene(const json& config, const json& contents, MovieWriter* writer) : Scene(config, contents, writer) {
-        audio_writer = writer;
+    SequentialScene(const int width, const int height, const json& contents) : Scene(width, height, contents) {
         vector<json> sequence_json = contents["sequence"];
         for (int i = 1; i < sequence_json.size()-1; i+=2) {
             cout << "constructing sequential subscene " << i << endl;
             json curr = sequence_json[i];
 
-            subscenes.push_back(T(config, curr, writer));
+            subscenes.push_back(T(width, height, curr));
         }
     }
 
     void add_subscene_audio(int i, const json& element_json) {
-        if (audio_writer == nullptr) return;
         if (element_json.find("audio") != element_json.end()) {
             string audio_path = element_json["audio"].get<string>();
-            double duration_seconds = audio_writer->add_audio_get_length(audio_path);
+            double duration_seconds = WRITER->add_audio_get_length(audio_path);
             append_duration(duration_seconds);
-            audio_writer->add_subtitle(duration_seconds, element_json["script"]);
+            WRITER->add_subtitle(duration_seconds, element_json["script"]);
         } else {
             double duration = element_json["duration_seconds"].get<double>();
-            audio_writer->add_silence(duration);
+            WRITER->add_silence(duration);
             append_duration(duration);
         }
     }
@@ -51,7 +49,7 @@ public:
         else render_non_transition(json_index_to_content_index(json_index));
     }
 
-    Pixels query(bool& done_scene) {
+    const Pixels& query(bool& done_scene) {
         done_scene = true;
         vector<json> sequence_json = contents["sequence"];
         int frames_spent = time;
@@ -101,12 +99,11 @@ public:
     }
 
 private:
-    MovieWriter* audio_writer = nullptr;
     vector<double> subsequence_durations_in_frames;
     int index_in_sequence = -1;
     int whole_sequence_duration_in_frames = 0;
     void append_duration(double duration_seconds){
-        int duration_frames = duration_seconds * framerate;
+        int duration_frames = duration_seconds * VIDEO_FRAMERATE;
         subsequence_durations_in_frames.push_back(duration_frames);
         whole_sequence_duration_in_frames += duration_frames;
     }

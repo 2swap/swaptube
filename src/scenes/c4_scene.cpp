@@ -25,15 +25,13 @@ public:
     int threat_diagram_transition = 0; // 0=no transition 1=fadein 2=fadeout 3=collapse
     int diff_index = -1;
 
-    json cfg;
     json cts;
-    MovieWriter* wrt;
 
-    Scene* createScene(const json& config, const json& scene, MovieWriter* writer) override {
-        return new C4Scene(config, scene, writer);
+    Scene* createScene(const int width, const int height, const json& scene) override {
+        return new C4Scene(width, height, scene);
     }
 
-    C4Scene(const json& config, const json& contents, MovieWriter* writer):Scene(config, contents, writer), cfg(config), cts(contents), wrt(writer) {
+    C4Scene(const int width, const int height, const json& contents):Scene(width, height, contents), cts(contents) {
         threat_diagram = contents.contains("reduction") ? 1 : 0;
         spread = contents.value("spread", false) ? 1 : 0;
         if(threat_diagram == 1){
@@ -50,7 +48,7 @@ public:
             }
         }
         else{
-            annotations = "                                          ";
+            annotations = "..........................................";
         }
 
         // Concatenate highlights into a single string
@@ -69,7 +67,7 @@ public:
     }
 
     //interpolative constructor
-    C4Scene(const C4Scene& subscene1, const C4Scene& subscene2, double w):Scene(subscene1.cfg, subscene1.cts, subscene1.wrt), cfg(subscene1.cfg), cts(subscene1.cts), wrt(subscene1.wrt) {
+    C4Scene(const C4Scene& subscene1, const C4Scene& subscene2, double w):Scene(subscene1.w, subscene1.h, subscene1.cts), cts(subscene1.cts) {
         threat_diagram =   lerp(subscene1.threat_diagram, subscene2.threat_diagram, smoother2(w));
         spread         =   lerp(subscene1.spread        , subscene2.spread        , smoother2(w));
         board          = c4lerp(subscene1.board         , subscene2.board         , w           );
@@ -117,7 +115,6 @@ public:
             double blink_radius = ceil(stonewidth*(.2));
             pixels.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col);
             pixels.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, BLACK, any_blink?.8:.4));
-            return;
         }
 
         if(highlighted) col = BLACK;
@@ -304,8 +301,6 @@ public:
 
     void render() {
         cout << "rendering subscene" << endl;
-        double w = cfg["width"];
-        double h = cfg["height"];
         pixels = Pixels(w, h);
         // background
         pixels.fill(BLACK);
@@ -314,7 +309,7 @@ public:
         render_threat_diagram();
     }
 
-    Pixels query(bool& done_scene) override {
+    const Pixels& query(bool& done_scene) override {
         if (!rendered) {
             render();
             rendered = true;
