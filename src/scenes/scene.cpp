@@ -1,57 +1,72 @@
-#include "mandelbrot_scene.cpp"
-#include "latex_scene.cpp"
+#pragma once
+
+#include <unordered_map>
+#include <cassert>
+
+using namespace std;
+
+class Scene {
+public:
+    Scene(const int width, const int height) : w(width), h(height), pix(width, height){};
+    virtual Scene* createScene(const int width, const int height) = 0;
+    virtual const Pixels& query(bool& done_scene) = 0;
+    virtual void update_variables(const unordered_map<string, double>& variables) {};
+
+    void render(const AudioSegment& audio){
+        scene_duration_frames = WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE;
+
+        bool done_scene = false;
+        while (!done_scene) {
+            WRITER->set_audiotime(video_time_s);
+            const Pixels& p = query(done_scene);
+            video_time_s += 1./VIDEO_FRAMERATE;
+            if((video_num_frames++)%15 == 0) p.print_to_terminal();
+            WRITER->set_audiotime(0.0);
+            WRITER->addFrame(p);
+        }
+    }
+  
+protected:
+    Pixels pix;
+    int w = 0;
+    int h = 0;
+    int time = 0;
+    int scene_duration_frames = 0;
+};
+
+//#include "mandelbrot_scene.cpp"
+//#include "latex_scene.cpp"
 #include "header_scene.cpp"
 #include "c4_scene.cpp"
 #include "twoswap_scene.cpp"
 #include "composite_scene.cpp"
 #include "variable_scene.cpp"
 
-// Implementation of the Scene class constructor
-Scene::Scene(const int width, const int height, const json& c) : w(width), h(height), contents(c), pix(width, height){
-    if (contents.contains("duration_seconds"))
-        scene_duration_frames = contents["duration_seconds"].get<int>() * VIDEO_FRAMERATE;
-}
-
-void Scene::add_audio(const json& contents) {
-    double duration_seconds = 0;
-
-    if (contents.find("audio") != contents.end()) {
-        duration_seconds = WRITER->add_audio_get_length(contents["audio"].get<string>());
-        WRITER->add_subtitle(duration_seconds, contents["script"]);
-    } else {
-        duration_seconds = contents["duration_seconds"].get<int>();
-        WRITER->add_silence(duration_seconds);
-    }
-    scene_duration_frames = duration_seconds * VIDEO_FRAMERATE;
-}
-
-static Scene* create_scene_determine_type(const int width, const int height, const json& scene_json) {
-    string scene_type = scene_json["type"];
+static Scene* create_scene_determine_type(const int width, const int height, const string& scene_type) {
     cout << endl << "Creating a " << scene_type << " scene" << endl;
-    if (scene_type == "latex") {
-        return new LatexScene(width, height, scene_json);
+    if (scene_type == "c4") {
+        return new C4Scene(width, height);
     }
-    else if (scene_type == "c4") {
-        return new SequentialScene<C4Scene>(width, height, scene_json);
-    }
-    else if (scene_type == "mandelbrot") {
-        return new MandelbrotScene(width, height, scene_json);
-    }
+    //else if (scene_type == "latex") {
+    //    return new LatexScene(width, height);
+    //}
+    //else if (scene_type == "mandelbrot") {
+    //    return new MandelbrotScene(width, height);
+    //}
     else if (scene_type == "header") {
-        return new HeaderScene(width, height, scene_json);
+        return new HeaderScene(width, height);
     }
     else if (scene_type == "2swap") {
-        return new TwoswapScene(width, height, scene_json);
+        return new TwoswapScene(width, height);
     }
     else if (scene_type == "composite") {
-        return new CompositeScene(width, height, scene_json);
+        return new CompositeScene(width, height);
     }
     else if (scene_type == "variable") {
-        return new VariableScene(width, height, scene_json);
+        return new VariableScene(width, height);
     }
     else {
         cerr << "Unknown scene type: " << scene_type << endl;
         exit(1);
     }
 }
-

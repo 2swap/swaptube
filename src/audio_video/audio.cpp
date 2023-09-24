@@ -51,6 +51,18 @@ bool MovieWriter::file_exists(const std::string& filename) {
     return (stat(filename.c_str(), &buffer) == 0);
 }
 
+double MovieWriter::add_audio_segment(const AudioSegment& audio) {
+    double duration_seconds = 0;
+    if (audio.is_silence()) {
+        duration_seconds = add_audio_get_length(audio.getAudioFilename());
+        add_subtitle(duration_seconds, audio.getSubtitleText());
+    } else {
+        duration_seconds = audio.getDurationSeconds();
+        add_silence(duration_seconds);
+    }
+    return duration_seconds;
+}
+
 double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
     cout << "Adding audio" << endl;
     double length_in_seconds = 0;

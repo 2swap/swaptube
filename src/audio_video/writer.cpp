@@ -85,6 +85,7 @@ public:
     void set_audiotime(double t_seconds);
     void add_srt_time(double s);
     void add_subtitle(double duration, const string& text);
+    double add_audio_segment(const AudioSegment& audio);
 
     void init(const string& inputAudioFilename){
         string audio_pts_filename = "audio_pts_file.txt";
