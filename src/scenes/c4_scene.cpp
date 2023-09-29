@@ -34,10 +34,6 @@ public:
     int threat_diagram_transition = 0; // 0=no transition 1=fadein 2=fadeout 3=collapse
     int diff_index = -1;
 
-    Scene* createScene(const int width, const int height) override {
-        return new C4Scene(width, height);
-    }
-
     C4Scene(const int width, const int height):Scene(width, height) {
         /*threat_diagram = contents.contains("reduction") ? 1 : 0;
         spread = contents.value("spread", false) ? 1 : 0;
@@ -283,7 +279,7 @@ public:
     }
 
     void render_c4() {
-        cout << "rendering subscene" << endl;
+        cout << "rendering a connect 4 board" << endl;
         pixels = Pixels(w, h);
         // background
         pixels.fill(BLACK);
@@ -292,11 +288,12 @@ public:
         render_threat_diagram();
     }
 
-    const Pixels& query(bool& done_scene) override {
+    Pixels* query(bool& done_scene) override {
         if (!rendered) {
             render_c4();
             rendered = true;
         }
-        return pixels;
+        done_scene = time++>=scene_duration_frames;
+        return &pixels;
     }
 };

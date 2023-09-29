@@ -8,10 +8,6 @@ typedef pair<Scene*, pair<int, int>> scene_with_coords;
 
 class CompositeScene : public Scene {
 public:
-    Scene* createScene(const int width, const int height) override {
-        return new CompositeScene(width, height);
-    }
-
     CompositeScene(const int width, const int height) : Scene(width, height) {}
 
     void update_variables(const unordered_map<string, double>& _variables) override {
@@ -26,16 +22,18 @@ public:
         }
     }
 
-    const Pixels& query(bool& done_scene) override {
+    Pixels* query(bool& done_scene) override {
         done_scene = false;
         for (auto& swc : scenes){
             bool this_scene_done = false;
-            Pixels p = swc.first->query(this_scene_done);
-            done_scene = this_scene_done || done_scene;
-            pix.copy(p, swc.second.first, swc.second.second, 1);
+            Pixels* p = swc.first->query(this_scene_done);
+            pix.copy(*p, swc.second.first, swc.second.second, 1);
+            delete p;
+
+            done_scene |= this_scene_done;
         }
         time++;
-        return pix;
+        return &pix;
     }
 
 private:

@@ -7,10 +7,6 @@
 
 class VariableScene : public Scene {
 public:
-    Scene* createScene(const int width, const int height) override {
-        return new VariableScene(width, height);
-    }
-
     VariableScene(const int width, const int height) : Scene(width, height) {}
 
     ~VariableScene() {
@@ -34,12 +30,13 @@ public:
         return evaluatedVariables;
     }
 
-    const Pixels& query(bool& done_scene) override {
+    Pixels* query(bool& done_scene) override {
         subscene->update_variables(evaluate_all(variables, time));
-        Pixels p = subscene->query(done_scene);
-        pix.copy(p, 0, 0, 1);
+        Pixels* p = subscene->query(done_scene);
+        pix.copy(*p, 0, 0, 1);
+        delete p;
         time++;
-        return pix;
+        return &pix;
     }
 
 private:
