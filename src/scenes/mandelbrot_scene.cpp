@@ -12,7 +12,7 @@ public:
         current_zoom = Complex(contents["current_zoom"]["real"].get<double>(), contents["current_zoom"]["imag"].get<double>());
         add_audio(contents);
     }
-    const Pixels& query(bool& done_scene) override;
+    Pixels* query(bool& done_scene) override;
     void update_variables(const unordered_map<string, double>& _variables) {
         variables = _variables;
         zoom_multiplier = Complex(get_or_variable(contents["zoom_multiplier"]["real"]), get_or_variable(contents["zoom_multiplier"]["imag"]));
@@ -27,9 +27,6 @@ public:
         } else if (paramValue == "X") {
             which = X;
         }
-    }
-    Scene* createScene(const int width, const int height) override {
-        return new MandelbrotScene(width, height, scene);
     }
 
 private:
