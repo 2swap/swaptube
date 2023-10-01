@@ -4,11 +4,14 @@
 class AudioSegment {
 public:
     // Constructors
-    AudioSegment(int duration_seconds) 
+    AudioSegment(double duration_seconds) 
         : duration_seconds(duration_seconds), audio_filename(""), subtitle_text("") {}
 
-    AudioSegment(const std::string& audio_filename, const std::string& subtitle_text) 
+    AudioSegment(const std::string& audio_filename, const std::string& subtitle_text)
         : duration_seconds(0), audio_filename(audio_filename), subtitle_text(subtitle_text) {}
+
+    AudioSegment(const std::string& subtitle_text)
+        : duration_seconds(0), audio_filename("no_audio_file_provided"), subtitle_text(subtitle_text) {}
 
     // Function to check if the audio segment represents silence
     bool is_silence() const {

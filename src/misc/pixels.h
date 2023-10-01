@@ -127,13 +127,11 @@ public:
         }
     }
 
-    Pixels scale(int scale){
-        Pixels scaled(w/scale, h/scale);
-        scaled.copy_and_scale(*this, 0, 0, scale, 1);
-        return scaled;
+    int bilinear_interpolate(int a, int b, int c, int d, double alpha, double beta) {
+        return a * (1 - alpha) * (1 - beta) + b * alpha * (1 - beta) + c * (1 - alpha) * beta + d * alpha * beta;
     }
 
-    void copy_and_scale(Pixels p, int x, int y, int scale, double transparency){
+    void copy_and_scale_integer(Pixels p, int x, int y, int scale, double transparency){
         for(int dx = 0; dx < p.w/scale; dx++)
             for(int dy = 0; dy < p.h/scale; dy++){
                 int r = 0;
@@ -156,6 +154,38 @@ public:
                 int col = (int(a*transparency)<<24)+(r<<16)+(g<<8)+b;
                 set_pixel_with_transparency(x+dx, y+dy, col);
             }
+    }
+
+    void copy_and_scale_bilinear(Pixels p, int x, int y, double scale) {
+        int newWidth = static_cast<int>(p.w * scale);
+        int newHeight = static_cast<int>(p.h * scale);
+
+        for (int dx = 0; dx < newWidth; dx++) {
+            for (int dy = 0; dy < newHeight; dy++) {
+                // Bilinear interpolation
+                double gx = (dx / scale);
+                double gy = (dy / scale);
+
+                int gxi = static_cast<int>(gx);
+                int gyi = static_cast<int>(gy);
+
+                int c00 = p.get_pixel(gxi, gyi);
+                int c10 = p.get_pixel(gxi + 1, gyi);
+                int c01 = p.get_pixel(gxi, gyi + 1);
+                int c11 = p.get_pixel(gxi + 1, gyi + 1);
+
+                double alpha = gx - gxi;
+                double beta = gy - gyi;
+
+                int r = bilinear_interpolate(c00 >> 16 & 0xFF, c10 >> 16 & 0xFF, c01 >> 16 & 0xFF, c11 >> 16 & 0xFF, alpha, beta);
+                int g = bilinear_interpolate(c00 >> 8 & 0xFF, c10 >> 8 & 0xFF, c01 >> 8 & 0xFF, c11 >> 8 & 0xFF, alpha, beta);
+                int b = bilinear_interpolate(c00 & 0xFF, c10 & 0xFF, c01 & 0xFF, c11 & 0xFF, alpha, beta);
+                int a = bilinear_interpolate(c00 >> 24 & 0xFF, c10 >> 24 & 0xFF, c01 >> 24 & 0xFF, c11 >> 24 & 0xFF, alpha, beta);
+
+                int col = (a << 24) + (r << 16) + (g << 8) + b;
+                set_pixel_with_transparency(x + dx, y + dy, col);
+            }
+        }
     }
 
     void copy(Pixels p, int dx, int dy, double transparency){

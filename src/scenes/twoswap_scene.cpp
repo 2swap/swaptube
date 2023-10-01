@@ -4,7 +4,10 @@
 
 class TwoswapScene : public Scene {
 public:
-    TwoswapScene(const int width, const int height) : Scene(width, height) {
+    TwoswapScene(const int width, const int height) : Scene(width, height) {init();}
+    TwoswapScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {init();}
+
+    void init(){
         Pixels twoswap_pix = eqn_to_pix(latex_text("2swap"), pix.w/160);
 
         pix.fill(BLACK);
@@ -15,12 +18,12 @@ public:
     Pixels* query(bool& done_scene) override {
         done_scene = scene_duration_frames <= time;
 
-        Pixels* ret = new Pixels(pix.w, pix.h);
-        cout << "copying pix" << endl;
-        ret->copy(pix, 0, 0, fifo_curve(time / static_cast<double>(scene_duration_frames)));
-        cout << "copied pix" << endl;
+        //Pixels* ret = new Pixels(pix.w, pix.h);
+        //cout << "copying pix" << endl;
+        //ret->copy(pix, 0, 0, fifo_curve(time / static_cast<double>(scene_duration_frames)));
+        //cout << "copied pix" << endl;
         time++;
 
-        return ret;
+        return &pix;
     }
 };

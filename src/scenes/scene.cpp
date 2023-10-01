@@ -5,14 +5,47 @@
 
 using namespace std;
 
+enum VIDEO_WRITING_STATUS {
+    READY_FOR_AUDIO,
+    READY_FOR_VIDEO
+} write_status = READY_FOR_AUDIO;
+
 class Scene {
 public:
     Scene(const int width, const int height) : w(width), h(height), pix(width, height){};
     virtual Pixels* query(bool& done_scene) = 0;
     virtual void update_variables(const unordered_map<string, double>& variables) {};
 
-    void render(const AudioSegment& audio){
+    void inject_audio_and_render(const AudioSegment& audio){
+        inject_audio(audio);
+        render();
+    }
+
+    void inject_audio(const AudioSegment& audio){
+        if (write_status != READY_FOR_AUDIO) {
+            cerr << "======================================================\n";
+            cerr << "ERROR: Attempted to add audio twice in a row, without rendering video!\n";
+            cerr << "You probably forgot to use render()!\n";
+            cerr << "Exiting the program...\n";
+            cerr << "======================================================\n";
+            exit(EXIT_FAILURE);
+        }
+
+        time = 0;
         scene_duration_frames = WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE;
+        write_status = READY_FOR_VIDEO;
+    }
+
+    void render(){
+        if (write_status != READY_FOR_VIDEO) {
+            cerr << "======================================================\n";
+            cerr << "ERROR: Attempted to render video, without having added audio first!\n";
+            cerr << "You probably forgot to inject_audio() or inject_audio_and_render()!\n";
+            cerr << "Exiting the program...\n";
+            cerr << "======================================================\n";
+            exit(EXIT_FAILURE);
+        }
+
         cout << "Rendering a scene" << endl;
         cout << "Frame Count:" << scene_duration_frames << endl;
 
@@ -25,6 +58,7 @@ public:
             if((video_num_frames++)%15 == 0) p->print_to_terminal();
             WRITER->addFrame(*p);
         }
+        write_status = READY_FOR_AUDIO;
     }
 
     int w = 0;
