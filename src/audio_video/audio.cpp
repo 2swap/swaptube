@@ -51,6 +51,15 @@ bool MovieWriter::file_exists(const std::string& filename) {
     return (stat(filename.c_str(), &buffer) == 0);
 }
 
+void MovieWriter::add_shtooka_entry(const std::string& filename, const std::string& subtitleText) {
+    if (!shtooka_file.is_open()) {
+        std::cerr << "Shtooka file is not open. Cannot add entry." << std::endl;
+        return;
+    }
+
+    shtooka_file << filename << "\t" << subtitleText << "\n";
+}
+
 double MovieWriter::add_audio_segment(const AudioSegment& audio) {
     double duration_seconds = 0;
     if (audio.is_silence()) {
@@ -59,6 +68,7 @@ double MovieWriter::add_audio_segment(const AudioSegment& audio) {
     } else {
         duration_seconds = add_audio_get_length(audio.getAudioFilename());
         add_subtitle(duration_seconds, audio.getSubtitleText());
+        add_shtooka_entry(audio.getAudioFilename(), audio.getSubtitleText());
     }
     return duration_seconds;
 }
@@ -71,7 +81,7 @@ double MovieWriter::add_audio_get_length(const string& inputAudioFilename) {
     std::string fullInputAudioFilename = media_folder + inputAudioFilename;
     if (!file_exists(fullInputAudioFilename)) {
         std::cerr << "Input audio file does not exist: " << fullInputAudioFilename << std::endl;
-        length_in_seconds = 1.0;
+        length_in_seconds = 3.0;
         add_silence(length_in_seconds);
         return length_in_seconds;
     }

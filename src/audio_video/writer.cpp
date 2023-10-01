@@ -34,6 +34,7 @@ class MovieWriter
     string media_folder;
 
     ofstream srt_file;
+    ofstream shtooka_file;
 
     SwsContext* sws_ctx = nullptr;
     AVStream* videoStream = nullptr;
@@ -65,12 +66,16 @@ public:
         }
     }
 
-    MovieWriter(const string& output_filename_, const string& srt_filename_, const string& media_) :
+    MovieWriter(const string& output_filename_, const string& srt_filename_, const string& record_filename_, const string& media_) :
     output_filename(output_filename_), pkt(), inputPacket(), media_folder(media_) {
         make_media_folder();
         srt_file.open(srt_filename_);
         if (!srt_file.is_open()) {
             std::cerr << "Error opening subs file: " << srt_filename_ << std::endl;
+        }
+        shtooka_file.open(record_filename_);
+        if (!shtooka_file.is_open()) {
+            std::cerr << "Error opening recorder list: " << record_filename_ << std::endl;
         }
     }
 
@@ -86,6 +91,7 @@ public:
     void add_srt_time(double s);
     void add_subtitle(double duration, const string& text);
     double add_audio_segment(const AudioSegment& audio);
+    void add_shtooka_entry(const string& filename, const string& subtitleText);
 
     void init(const string& inputAudioFilename){
         string audio_pts_filename = "audio_pts_file.txt";
@@ -224,6 +230,9 @@ public:
         audio_pts_file.close();
         if (srt_file.is_open()) {
             srt_file.close();
+        }
+        if (shtooka_file.is_open()) {
+            shtooka_file.close();
         }
     }
 };

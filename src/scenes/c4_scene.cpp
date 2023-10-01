@@ -20,7 +20,7 @@ private:
                          "......."
                          "......."
                          ".......";
-    string highlight  =  "       "
+    string highlights =  "       "
                          "       "
                          "       "
                          "       "
@@ -34,7 +34,7 @@ public:
     bool is_transition = false;
     Board b1, b2;
     string annotations1, annotations2;
-    string highlight1, highlight2;
+    string highlights1, highlights2;
 
     C4Scene(const int width, const int height, const string& rep):Scene(width, height), representation(rep), board(representation) {}
     C4Scene(const string& rep):Scene(VIDEO_WIDTH, VIDEO_HEIGHT), representation(rep), board(representation) {}
@@ -43,14 +43,35 @@ public:
     C4Scene(const C4Scene& subscene1, const C4Scene& subscene2):Scene(subscene1.w, subscene1.h) {
         assert(subscene1.w == subscene2.w);
         assert(subscene1.h == subscene2.h);
-        cout << subscene1.w << subscene2.h << endl;
+        assert(!subscene1.is_transition);
+        assert(!subscene2.is_transition);
         is_transition = true;
         b1 = subscene1.board;
         b2 = subscene2.board;
         annotations1 = subscene1.annotations;
         annotations2 = subscene2.annotations;
-        highlight1 = subscene1.highlight;
-        highlight2 = subscene2.highlight;
+        highlights1 = subscene1.highlights;
+        highlights2 = subscene2.highlights;
+    }
+
+    void stage_transition(string final_rep){
+        is_transition = true;
+        b1 = board;
+        b2 = Board(final_rep);
+        annotations1 = annotations;
+        annotations2 = annotations;
+        highlights1 = highlights;
+        highlights2 = highlights;
+
+        rendered = false;
+    }
+
+    void post_transition(){
+        board = b2;
+        annotations = annotations2;
+        highlights = highlights2;
+        is_transition = false;
+        representation = b2.representation;
     }
 
     void play(string s){
@@ -59,8 +80,16 @@ public:
         rendered = false;
     }
 
-    void set_highlight(string s){highlight = s; rendered = false;}
-    string get_highlight(){return highlight;}
+    void undo(int i){
+        representation = representation.substr(0, representation.size()-i);
+        board = Board(representation);
+        rendered = false;
+    }
+
+    void set_highlights(string s){highlights = s; rendered = false;}
+    string get_highlights(){return highlights;}
+    void set_annotations(string s){annotations = s; rendered = false;}
+    string get_annotations(){return annotations;}
 
     void highlight_column(int index, char c, int bottom_row, int top_row) {
         // Ensure the index is within bounds
@@ -71,7 +100,7 @@ public:
 
         // For every row, set the character at the given column to c
         for (int i = 6-top_row; i < 6-bottom_row; i++) {
-            highlight[i * 7 + index-1] = c;
+            highlights[i * 7 + index-1] = c;
         }
         rendered = false;
     }
@@ -82,16 +111,21 @@ public:
             char columnChar = '1' + x; // since column numbers are 1-indexed
             int count = std::count(representation.begin(), representation.end(), columnChar);
 
-            // Fill the unfilled parts of the highlight string
+            // Fill the unfilled parts of the highlights string
             for (int y = 6 - count - 1; y >= 0; y--) {
-                highlight[y * 7 + x] = c;
+                highlights[y * 7 + x] = c;
             }
         }
         rendered = false;
     }
 
     void unhighlight() {
-        highlight.assign(highlight.size(), ' ');
+        highlights.assign(highlights.size(), ' ');
+        rendered = false;
+    }
+
+    void unannotate() {
+        annotations.assign(annotations.size(), '.');
         rendered = false;
     }
 
@@ -99,7 +133,7 @@ public:
         double w = static_cast<double>(time)/scene_duration_frames;
         board = c4lerp(b1, b2, w);
         annotations = w>.5?annotations1:annotations2;
-        highlight   = w>.5?highlight1  :highlight2  ;
+        highlights  = w>.5?highlights1 :highlights2 ;
         rendered = false;
     }
 
@@ -107,7 +141,7 @@ public:
         return annotations[x+(HEIGHT-1-y)*WIDTH];
     }
     char get_highlight(int x, int y){
-        return highlight[x+(HEIGHT-1-y)*WIDTH];
+        return highlights[x+(HEIGHT-1-y)*WIDTH];
     }
 
     void draw_c4_disk(int px, int py, int col_id, bool blink, char annotation, bool highlighted, double stonewidth){
@@ -119,6 +153,7 @@ public:
             double piece_fill_radius = ceil(stonewidth*.4);
             double piece_stroke_radius = ceil(stonewidth*(.47));
             double blink_radius = ceil(stonewidth*(.2));
+            if(annotation == '%') col = colorlerp(col, BLACK, 0.8);
             pix.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col);
             pix.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, BLACK, any_blink?.8:.4));
         }
@@ -290,6 +325,7 @@ public:
             rendered = true;
         }
         done_scene = time++>=scene_duration_frames;
+        if(done_scene && is_transition) post_transition();
         return &pix;
     }
 };
