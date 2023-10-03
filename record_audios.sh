@@ -23,36 +23,57 @@ fi
 # Open the record_list.tsv on file descriptor 3
 exec 3< "$PROJECT_DIR/record_list.tsv"
 
+echo "Press enter to start recording..."
+read
+
 # Read from the file descriptor 3
 while IFS=$'\t' read -r filename text <&3; do
-    # Check if the file already exists
-    if [ -f "$PROJECT_DIR/$filename" ]; then
-        echo "$filename already exists in $PROJECT_DIR. Skipping..."
-        continue
-    fi
+    clear
 
-    echo "Next: $text"
-    echo "Press enter to start recording..."
-    read
+    while true; do
+        # Check if the file already exists
+        if [ -f "$PROJECT_DIR/$filename" ]; then
+            echo "$filename already exists in $PROJECT_DIR. Skipping..."
+            break
+        fi
 
-    # Start recording in the background
-    echo "Recording... Press Enter to stop."
-    ffmpeg -f alsa -i default "$PROJECT_DIR/$filename" &
-    # Get the process ID of ffmpeg
-    FFMPEG_PID=$!
+        echo "Next: $text"
 
-    # Wait for the Enter key
-    read
+        # Start recording in the background
+        echo "Recording... Press Enter to stop."
+        ffmpeg -f alsa -i default "$PROJECT_DIR/$filename" > /dev/null 2>&1 &
+        # Get the process ID of ffmpeg
+        FFMPEG_PID=$!
 
-    # Send SIGINT to ffmpeg to stop recording
-    kill -INT $FFMPEG_PID
+        # Wait for the Enter key
+        read
 
-    # Wait for ffmpeg to finish up and exit
-    wait $FFMPEG_PID
+        # Send SIGINT to ffmpeg to stop recording
+        kill -INT $FFMPEG_PID
 
-    echo "Finished recording $filename based on $text in $PROJECT_DIR"
-    echo "Press enter to proceed to the next one..."
-    read
+        # Wait for ffmpeg to finish up and exit
+        wait $FFMPEG_PID
+
+        echo "Press enter to continue or 'u' to undo the last recording..."
+        read -n1 input
+
+        case $input in
+            u|U) 
+                echo
+                echo "Deleting $PROJECT_DIR/$filename..."
+                rm "$PROJECT_DIR/$filename"
+                # It will loop back to re-record this file
+                ;;
+            "") 
+                echo
+                break
+                ;;
+            *) 
+                echo
+                echo "Invalid input. Try again."
+                ;;
+        esac
+    done
 done
 
 # Close the file descriptor 3
