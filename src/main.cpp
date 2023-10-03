@@ -9,7 +9,7 @@ using namespace std;
 
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
-int MULT = 1;
+int MULT = 3;
 
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
@@ -82,10 +82,17 @@ void render_claimeven() {
 
     tl.highlight_column(7, 'd', 2, 6);
     composite.inject_audio_and_render(AudioSegment("intro_7.mp3", "This column has 4."));
-    tl.unhighlight();
 
+    tl.highlight_unfilled('d');
+    tr.highlight_unfilled('d');
+    bl.highlight_unfilled('d');
+    br.highlight_unfilled('d');
     composite.inject_audio_and_render(AudioSegment("intro_8.mp3", "This is true for all of the games I've shown."));
     composite.inject_audio_and_render(AudioSegment("intro_9.mp3", "Not a single column with an odd number of pieces."));
+    tl.unhighlight();
+    tr.unhighlight();
+    bl.unhighlight();
+    br.unhighlight();
     composite.inject_audio_and_render(AudioSegment("intro_10.mp3", "What's more, in each of these cases, it so happens that Yellow, player 2, is winning."));
     composite.inject_audio_and_render(AudioSegment("intro_11.mp3", "It might not look like it, but Yellow is winning so spectacularly in these games, that even a fool could beat an expert. As long as that fool knows what makes these positions special."));
 
@@ -181,7 +188,7 @@ void render_claimeven() {
                         "..%%..%");
     c41.inject_audio_and_render(AudioSegment("analysis_3.mp3", "Let's mark all of the disks already played before we start."));
     c41.stage_transition("4333444434377311552222117777115555666622");
-    c41.inject_audio_and_render(AudioSegment(5));
+    c41.inject_audio_and_render(AudioSegment(7));
     c41.inject_audio_and_render(AudioSegment("analysis_4.mp3", "Regardless of what Red chooses, after the point where we start to use our strategy,"));
     c41.set_annotations("%%%%%%%"
                         "..%%..."
@@ -195,17 +202,17 @@ void render_claimeven() {
                         "%%%%%.%"
                         "..%%..."
                         "%%%%%%%"
-                        "..%%..."
+                        "..%%..%"
                         "%%%%%%%");
     c41.inject_audio_and_render(AudioSegment("analysis_7.mp3", "Similarly, yellow inevitably gets all of the even rows."));
     c41.inject_audio_and_render(AudioSegment("analysis_8.mp3", "Since Yellow is the one employing this strategy, let's call it 'claimeven'."));
-    c41.set_annotations("..%%..."
-                        "..%%..."
-                        "..%%..."
-                        "..%%..."
-                        "..%%..%"
-                        "..%%..%");
     c41.inject_audio_and_render(AudioSegment("analysis_9.mp3", "Yellow, by merely following Red, can get hold of all of the remaining even-row spaces."));
+    c41.set_annotations("%%%%%.%"
+                        "...%..."
+                        "%%..%%%"
+                        "..%%..."
+                        "%%..%%."
+                        "..%...%");
     c41.inject_audio_and_render(AudioSegment("analysis_10.mp3", "What makes this board special, is that even when we fill in all of the Red pieces on the odd rows, no line of 4 disks is made."));
     c41.set_annotations("......."
                         "%%%%%.%"
@@ -237,7 +244,14 @@ void render_claimeven() {
     c42.inject_audio_and_render(AudioSegment("analysis_17.mp3", "But... in this case, it is hovering immediately over a Yellow line of 4."));
     c42.inject_audio_and_render(AudioSegment("analysis_18.mp3", "So, for Red to win... Yellow would already have to have won."));
     c42.inject_audio_and_render(AudioSegment("analysis_19.mp3", "We say that the red line of 4 is undercut."));
-    c42.inject_audio_and_render(AudioSegment("analysis_20.mp3", "This is what makes these boards special. If there are red winning lines on odd rows, they are all undercut by yellow winning chains on even rows."));
+    c42.unhighlight();
+    c42.inject_audio_and_render(AudioSegment("analysis_20.mp3", "Let's play it out!"));
+    c42.stage_transition("43333734474443227711227722555511551166");
+    c42.inject_audio_and_render(AudioSegment(7));
+    c42.inject_audio_and_render(AudioSegment("analysis_21.mp3", "Sure enough, we win on the precise line that we predicted!"));
+    c42.inject_audio_and_render(AudioSegment("analysis_22.mp3", "This is what makes these boards special. If there are red winning lines on odd rows, they are all undercut by yellow winning chains on even rows."));
+    c42.stage_transition("");
+    c42.inject_audio_and_render(AudioSegment(1));
 
     C4Scene example("");
     example.stage_transition("4344377");
@@ -259,6 +273,7 @@ void render_claimeven() {
     example.inject_audio_and_render(AudioSegment("examples_6.mp3", "and guarantees that Red can't make a line of 4 until after Yellow gets a line of 4 on the 4th row."));
     example.inject_audio_and_render(AudioSegment(4));
     example.stage_transition("434444466");
+    example.inject_audio_and_render(AudioSegment(2));
     example.inject_audio_and_render(AudioSegment("examples_7.mp3", "Let's try this trickier example."));
     example.stage_transition("4344444663");
     example.inject_audio_and_render(AudioSegment("examples_8.mp3", "We may naively play the spot which yields even amounts of empty space in each column."));
@@ -325,6 +340,7 @@ void render_claimeven() {
     example.inject_audio_and_render(AudioSegment("examples_25.mp3", "As expected, capitalizing on these situations on the fly is the hallmark of expertise."));
     example.stage_transition("43444446673722112233667766772233111155");
     example.inject_audio_and_render(AudioSegment("examples_26.mp3", "Attentive practice can help you see it coming."));
+    example.inject_audio_and_render(AudioSegment(2));
     example.unhighlight();
 
     C4Scene claimodd(example, C4Scene(""));
@@ -341,8 +357,8 @@ void render_claimeven() {
     claimodd.inject_audio_and_render(AudioSegment("claimodd_5.mp3", "For one, we notice that there is precisely one column that doesn't have an even amount of spaces left."));
     claimodd.unhighlight();
     claimodd.inject_audio_and_render(AudioSegment("claimodd_6.mp3", "This means we can't play claimeven."));
-    claimodd.play("1");
-    claimodd.inject_audio_and_render(AudioSegment("claimodd_7.mp3", "If Yellow goes here,"));
+    claimodd.stage_transition("436675553553351171");
+    claimodd.inject_audio_and_render(AudioSegment("claimodd_7.mp3", "If Yellow goes anywhere but the middle,"));
     claimodd.set_highlights("       "
                             "       "
                             "d      "
@@ -360,7 +376,7 @@ void render_claimeven() {
                             "dd d dd"
                             " D d   "
                             " D     ");
-    claimodd.inject_audio_and_render(AudioSegment("claimodd_12.mp3", "We'll follow this pattern here, Red will get the of each coupled pair of spaces."));
+    claimodd.inject_audio_and_render(AudioSegment("claimodd_12.mp3", "We'll follow this pattern here, Red will get the top of each coupled pair of spaces."));
     claimodd.inject_audio_and_render(AudioSegment("claimodd_13.mp3", "In other words, Red will play Claimeven, except, on the center column, it will instead be Claimodd."));
     claimodd.set_highlights("DDDz DD"
                             "DDDD DD"
