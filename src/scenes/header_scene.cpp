@@ -15,7 +15,6 @@ public:
         Pixels header_pix = eqn_to_pix(latex_text(header), pix.w / 640 + 1);
         Pixels subheader_pix = eqn_to_pix(latex_text(subheader), pix.w / 640);
 
-        pix.fill(BLACK);
         pix.copy(header_pix, (pix.w - header_pix.w)/2, pix.h/2-100, 1);
         pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50, 1);
     }

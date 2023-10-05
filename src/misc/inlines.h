@@ -33,6 +33,61 @@ inline int rainbow(double x){return makecol(sin((x+1/3.)*M_PI*2)*128.+128, sin((
 inline int colorlerp(int col1, int col2, double w){return makecol(lerp(getr(col1), getr(col2), w), lerp(getg(col1), getg(col2), w), lerp(getb(col1), getb(col2), w));}
 inline string latex_text(string in){return "\\text{" + in + "}";}
 
+
+void hsv2rgb(double h, double s, double v, int& r, int& g, int& b)
+{
+    double      hh, p, q, t, ff;
+    long        i;
+
+    if(s <= 0.0) {       // < is bogus, just shuts up warnings
+        r = v;
+        g = v;
+        b = v;
+    }
+    hh = h;
+    if(hh >= 360.0) hh = 0.0;
+    hh /= 60.0;
+    i = (long)hh;
+    ff = hh - i;
+    p = v * (1.0 - s);
+    q = v * (1.0 - (s * ff));
+    t = v * (1.0 - (s * (1.0 - ff)));
+
+    switch(i) {
+    case 0:
+        r = v*255;
+        g = t*255;
+        b = p*255;
+        break;
+    case 1:
+        r = q*255;
+        g = v*255;
+        b = p*255;
+        break;
+    case 2:
+        r = p*255;
+        g = v*255;
+        b = t*255;
+        break;
+    case 3:
+        r = p*255;
+        g = q*255;
+        b = v*255;
+        break;
+    case 4:
+        r = t*255;
+        g = p*255;
+        b = v*255;
+        break;
+    case 5:
+    default:
+        r = v*255;
+        g = p*255;
+        b = q*255;
+        break;
+    }
+}
+
 // Unit test for sigmoid function
 void sigmoid_ut() {
     double x = 1.0;

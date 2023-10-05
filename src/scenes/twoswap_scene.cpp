@@ -10,7 +10,6 @@ public:
     void init(){
         Pixels twoswap_pix = eqn_to_pix(latex_text("2swap"), pix.w/160);
 
-        pix.fill(BLACK);
         pix.fill_ellipse(pix.w/3, pix.h/2, pix.w/12, pix.w/12, WHITE);
         pix.copy(twoswap_pix, pix.w/3+pix.w/12+pix.w/32, (pix.h-twoswap_pix.h)/2+pix.w/32, 1);
     }
