@@ -72,7 +72,6 @@ void MandelbrotScene::depths_to_points(vector<vector<int>> depths, Pixels& p){
         }
     }
     else {
-        p.fill(BLACK);
         p.copy(create_alpha_from_intensities(depths, 255), 0, 0, 1);
         p.filter_greenify_grays();
     }

@@ -6,7 +6,7 @@
 
 struct SceneWithPosition {
     Scene* scenePointer;
-    int x, y;
+    double x, y;
     double scale;
 };
 
@@ -15,7 +15,7 @@ public:
     CompositeScene(const int width, const int height) : Scene(width, height) {}
     CompositeScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {}
 
-    void add_scene(Scene* sc, int x, int y, double scale){
+    void add_scene(Scene* sc, double x, double y, double scale){
         SceneWithPosition swp = {sc, x, y, scale};
         scenes.push_back(swp);
     }
@@ -27,15 +27,14 @@ public:
     }
 
     Pixels* query(bool& done_scene) override {
-        done_scene = time >= scene_duration_frames;
         for (auto& swc : scenes){
             bool this_scene_done = false;
             Pixels* p = swc.scenePointer->query(this_scene_done);
-            pix.copy_and_scale_bilinear(*p, swc.x, swc.y, swc.scale);
+            pix.copy_and_scale_bilinear(*p, swc.x * w, swc.y * h, swc.scale);
 
             done_scene &= this_scene_done;
         }
-        time++;
+        done_scene = time++>=scene_duration_frames;
         return &pix;
     }
 

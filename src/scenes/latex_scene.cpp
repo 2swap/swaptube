@@ -8,7 +8,6 @@ public:
         cout << "rendering latex: " << eqn << endl;
         equation_pixels = eqn_to_pix(eqn, pix.w / 640 + 1);
         coords = make_pair((pix.w-equation_pixels.w)/2, (pix.h-equation_pixels.h)/2);
-        pix.fill(BLACK);
         pix.copy(equation_pixels, coords.first, coords.second, 1);
         equation_string = eqn;
     }
@@ -33,7 +32,6 @@ public:
         cout << subscene1.equation_string << " <- Finding Intersections -> " << subscene2.equation_string << endl;
         intersections = find_intersections(subscene1.equation_pixels, subscene2.equation_pixels);
         cout << "Number of intersections found: " << intersections.size() << endl;
-        pix.fill(BLACK);
         coords1 = subscene1.coords;
         coords2 = subscene2.coords;
     }
@@ -41,8 +39,6 @@ public:
     Pixels* query(bool& done_scene) {
         double weight = static_cast<double>(time)/scene_duration_frames;
         done_scene = scene_duration_frames <= time;
-
-        pix.fill(BLACK);
 
         double tp = transparency_profile(weight);
         double tp1 = transparency_profile(1-weight);

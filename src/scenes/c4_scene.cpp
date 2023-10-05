@@ -11,7 +11,6 @@ inline int IBM_GREEN  = 0xFF5EB134;
 
 class C4Scene : public Scene {
 private:
-    bool rendered = false;
 
     string representation = "";
     string annotations = "......."
@@ -31,7 +30,6 @@ public:
     Board board;
     int diff_index = -1;
 
-    bool is_transition = false;
     Board b1, b2;
     string annotations1, annotations2;
     string highlights1, highlights2;

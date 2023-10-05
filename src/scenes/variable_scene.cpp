@@ -8,13 +8,23 @@
 class VariableScene : public Scene {
 public:
     VariableScene(const int width, const int height) : Scene(width, height) {}
-
-    ~VariableScene() {
-        delete subscene;
-    }
+    VariableScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {}
 
     void set_subscene(Scene* _subscene){
         subscene = _subscene;
+    }
+
+    void insert_variable(string variable, string equation) {
+        variables[variable] = equation;
+    }
+
+    void print_variables() const {
+        std::cout << "Variables:" << std::endl;
+        std::cout << "-----------------------" << std::endl;
+        for (const auto& variable : variables) {
+            std::cout << variable.first << " : " << variable.second << std::endl;
+        }
+        std::cout << "-----------------------" << std::endl;
     }
     
     unordered_map<string, double> evaluate_all(const unordered_map<string, string>& variables, double time) const {
@@ -32,11 +42,9 @@ public:
 
     Pixels* query(bool& done_scene) override {
         subscene->update_variables(evaluate_all(variables, time));
-        Pixels* p = subscene->query(done_scene);
-        pix.copy(*p, 0, 0, 1);
-        delete p;
-        time++;
-        return &pix;
+        done_scene = time++>=scene_duration_frames;
+        bool b;
+        return subscene->query(b);
     }
 
 private:

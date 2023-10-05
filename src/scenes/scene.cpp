@@ -16,6 +16,12 @@ public:
     virtual Pixels* query(bool& done_scene) = 0;
     virtual void update_variables(const unordered_map<string, double>& variables) {};
 
+    void set_variable(double& d, const string& var, const unordered_map<string, double>& variables){
+        rendered = false;
+        if(variables.find(var) != variables.end())
+            d = variables.at(var);
+    }
+
     void inject_audio_and_render(const AudioSegment& audio){
         inject_audio(audio);
         render();
@@ -65,6 +71,8 @@ public:
     int h = 0;
   
 protected:
+    bool rendered = false;
+    bool is_transition = false;
     Pixels pix;
     int time = 0;
     int scene_duration_frames = 0;
@@ -77,3 +85,4 @@ protected:
 #include "twoswap_scene.cpp"
 #include "composite_scene.cpp"
 #include "variable_scene.cpp"
+#include "complex_plot_scene.cpp"
