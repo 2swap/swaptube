@@ -86,3 +86,4 @@ protected:
 #include "composite_scene.cpp"
 #include "variable_scene.cpp"
 #include "complex_plot_scene.cpp"
+#include "3d_scene.cpp"

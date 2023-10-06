@@ -22,6 +22,7 @@ inline double transparency_profile(double x){return x<.6 ? cube(x/.6) : 1;}
 inline double fifo_curve(double x){return 1-fourth(2*x-1);} // fade in fade out
 inline double fifo_curve_experimental(double x, double seconds_so_far, double seconds_left){return min(1, max(max(1-fourth(2*x-1), transparency_profile(seconds_so_far/2)), transparency_profile(seconds_left/2)));} // fade in fade out
 inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
+inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
 inline int makecol(int r, int g, int b){return (255<<24)+(r<<16)+(g<<8)+b;}
 inline int makecol(int a, int r, int g, int b){return (a<<24)+(r<<16)+(g<<8)+b;}
 inline int geta(int col){return (col&0xff000000)>>24;}

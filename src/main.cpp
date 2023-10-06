@@ -45,30 +45,63 @@ void setup_writer(const string& project_name){
 }
 
 void render_video() {
-    ComplexPlotScene coefficients(VIDEO_WIDTH/2, VIDEO_HEIGHT);
-    ComplexPlotScene roots(VIDEO_WIDTH/2, VIDEO_HEIGHT);
-    coefficients.add_point(0,0);
-    coefficients.add_point(0,0);
-    coefficients.add_point(0,0);
-    coefficients.set_mode(COEFFICIENTS);
-    roots.add_point(0,0);
-    roots.add_point(0,0);
-    roots.add_point(0,0);
-    roots.set_mode(ROOTS);
+    ThreeDimensionScene tds;
+    for(int i = -7; i <= 7; i+=2)
+    for(int j = -7; j <= 7; j+=2)
+    for(int k = -7; k <= 7; k+=2)
+        tds.add_point(glm::vec3(i, j, k));
 
-    CompositeScene composite;
-    composite.add_scene(&coefficients, 0, 0, 1);
-    composite.add_scene(&roots, .5, 0, 1);
-
-    VariableScene v;
-    v.set_subscene(&composite);
-    v.insert_variable("r0", "t sin");
-    v.insert_variable("i0", "t cos");
-    v.insert_variable("r1", "t 2 * sin");
-    v.insert_variable("i1", "t 3 * cos");
-    v.insert_variable("r2", "t 4 * sin");
-    v.insert_variable("i2", "t 5 * cos");
-    v.inject_audio_and_render(AudioSegment(6.28));
+    VariableScene v(&tds);
+    v.set_variables(std::unordered_map<std::string, std::string>{
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "20 0 -"},
+        {"q1", "0"},
+        {"q2", "0"},
+        {"q3", "1"},
+        {"q4", "0"}
+    });
+    v.inject_audio_and_render(AudioSegment(2));
+    v.stage_transition(std::unordered_map<std::string, std::string>{
+        {"x", "20 0 -"},
+        {"y", "0"},
+        {"z", "0"},
+        {"q1", ".5"},
+        {"q2", "0"},
+        {"q3", "1"},
+        {"q4", "0"}
+    });
+    v.inject_audio_and_render(AudioSegment(2));
+    v.stage_transition(std::unordered_map<std::string, std::string>{
+        {"x", "20 0 -"},
+        {"y", "20"},
+        {"z", "0"},
+        {"q1", ".5"},
+        {"q2", "0"},
+        {"q3", "1"},
+        {"q4", ".5"}
+    });
+    v.inject_audio_and_render(AudioSegment(2));
+    v.stage_transition(std::unordered_map<std::string, std::string>{
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"q1", "0"},
+        {"q2", "0"},
+        {"q3", "1"},
+        {"q4", "0"}
+    });
+    v.inject_audio_and_render(AudioSegment(2));
+    v.stage_transition(std::unordered_map<std::string, std::string>{
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"q1", ".5"},
+        {"q2", ".5"},
+        {"q3", "0"},
+        {"q4", ".5"}
+    });
+    v.inject_audio_and_render(AudioSegment(2));
 }
 
 int main(int argc, char* argv[]) {
