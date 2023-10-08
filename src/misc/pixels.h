@@ -272,6 +272,92 @@ public:
             }
     }
 
+    void bresenham(int x1, int y1, int x2, int y2, int col) {
+        int dx = abs(x2 - x1);
+        int dy = abs(y2 - y1);
+
+        int sx = (x1 < x2) ? 1 : -1; // Direction of drawing on x axis
+        int sy = (y1 < y2) ? 1 : -1; // Direction of drawing on y axis
+
+        int err = dx - dy;
+
+        while(true) {
+            set_pixel(x1, y1, col);
+
+            // If we've reached the end point, break
+            if (x1 == x2 && y1 == y2) break;
+
+            int e2 = err * 2;
+
+            // Adjust for next point based on the error
+            if (e2 > -dy) {
+                err -= dy;
+                x1 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y1 += sy;
+            }
+        }
+    }
+
+    void xiaolin_wu(int x0, int y0, int x1, int y1, int col) {
+        bool steep = abs(y1 - y0) > abs(x1 - x0);
+        if (steep) {
+            std::swap(x0, y0);
+            std::swap(x1, y1);
+        }
+        if (x0 > x1) {
+            std::swap(x0, x1);
+            std::swap(y0, y1);
+        }
+
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        float gradient = dy / static_cast<float>(dx);
+
+        // Compute start and end points
+        int xend = round(x0);
+        float yend = y0 + gradient * (xend - x0);
+        float xgap = 1.0 - fractional_part(x0 + 0.5);
+        int xpxl1 = xend;
+        int ypxl1 = floor(yend);
+        if (steep) {
+            set_pixel_with_transparency(ypxl1, xpxl1, col * (1 - fractional_part(yend) * xgap));
+            set_pixel_with_transparency(ypxl1 + 1, xpxl1, col * fractional_part(yend) * xgap);
+        } else {
+            set_pixel_with_transparency(xpxl1, ypxl1, col * (1 - fractional_part(yend) * xgap));
+            set_pixel_with_transparency(xpxl1, ypxl1 + 1, col * fractional_part(yend) * xgap);
+        }
+
+        // Compute end points
+        xend = round(x1);
+        yend = y1 + gradient * (xend - x1);
+        xgap = fractional_part(x1 + 0.5);
+        int xpxl2 = xend;
+        int ypxl2 = floor(yend);
+        if (steep) {
+            set_pixel_with_transparency(ypxl2, xpxl2, col * (1 - fractional_part(yend) * xgap));
+            set_pixel_with_transparency(ypxl2 + 1, xpxl2, col * fractional_part(yend) * xgap);
+        } else {
+            set_pixel_with_transparency(xpxl2, ypxl2, col * (1 - fractional_part(yend) * xgap));
+            set_pixel_with_transparency(xpxl2, ypxl2 + 1, col * fractional_part(yend) * xgap);
+        }
+
+        // Main loop
+        if (steep) {
+            for (int x = xpxl1 + 1; x < xpxl2; x++) {
+                set_pixel_with_transparency(floor(gradient * (x - x0) + y0), x, col * (1 - fractional_part(gradient * (x - x0) + y0)));
+                set_pixel_with_transparency(floor(gradient * (x - x0) + y0) + 1, x, col * fractional_part(gradient * (x - x0) + y0));
+            }
+        } else {
+            for (int x = xpxl1 + 1; x < xpxl2; x++) {
+                set_pixel_with_transparency(x, floor(gradient * (x - x0) + y0), col * (1 - fractional_part(gradient * (x - x0) + y0)));
+                set_pixel_with_transparency(x, floor(gradient * (x - x0) + y0) + 1, col * fractional_part(gradient * (x - x0) + y0));
+            }
+        }
+    }
+
     void rounded_rect(int x, int y, int rw, int rh, int r, int col){
         fill_rect(x+r, y, rw-r*2, rh, col);
         fill_rect(x, y+r, rw, rh-r*2, col);

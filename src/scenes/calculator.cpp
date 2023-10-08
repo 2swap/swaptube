@@ -69,7 +69,7 @@ double calculator(const string& expression, double t) {
     istringstream iss(expression);
     string token;
     while (iss >> token) {
-        if (isdigit(token[0]) || token[0] == '.') {
+        if (isdigit(token[0]) || token[0] == '.' || (token[0] == '-' && token.size() > 1)) {
             stack.push(stod(token));
         } else if (token == "t") {
             stack.push(t / VIDEO_FRAMERATE);

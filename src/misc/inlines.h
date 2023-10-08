@@ -33,6 +33,7 @@ inline int coldist(int col1, int col2){return abs(geta(col1) - geta(col2)) + abs
 inline int rainbow(double x){return makecol(sin((x+1/3.)*M_PI*2)*128.+128, sin((x+2/3.)*M_PI*2)*128.+128, sin(x*M_PI*2)*128.+128);}
 inline int colorlerp(int col1, int col2, double w){return makecol(lerp(getr(col1), getr(col2), w), lerp(getg(col1), getg(col2), w), lerp(getb(col1), getb(col2), w));}
 inline string latex_text(string in){return "\\text{" + in + "}";}
+inline float fractional_part(float x) {return x - floor(x);}
 
 
 void hsv2rgb(double h, double s, double v, int& r, int& g, int& b)
