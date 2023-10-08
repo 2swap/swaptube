@@ -13,6 +13,7 @@ enum VIDEO_WRITING_STATUS {
 class Scene {
 public:
     Scene(const int width, const int height) : w(width), h(height), pix(width, height){};
+    Scene() : w(VIDEO_WIDTH), h(VIDEO_HEIGHT), pix(VIDEO_WIDTH, VIDEO_HEIGHT){};
     virtual Pixels* query(bool& done_scene) = 0;
     virtual void update_variables(const unordered_map<string, double>& variables) {};
 
@@ -87,3 +88,4 @@ protected:
 #include "variable_scene.cpp"
 #include "complex_plot_scene.cpp"
 #include "3d_scene.cpp"
+#include "graph_scene.cpp"

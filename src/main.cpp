@@ -44,64 +44,26 @@ void setup_writer(const string& project_name){
     WRITER->init("../media/testaudio.mp3");
 }
 
+#include "../../Klotski/C4Board.cpp"
 void render_video() {
-    ThreeDimensionScene tds;
-    for(int i = -7; i <= 7; i+=2)
-    for(int j = -7; j <= 7; j+=2)
-    for(int k = -7; k <= 7; k+=2)
-        tds.add_point(glm::vec3(i, j, k));
+    GraphScene<C4Board> gs(&graph);
 
-    VariableScene v(&tds);
+    std::string nodestr = "4366755553533111111";
+    graph.add_to_stack(new C4Board(nodestr));
+    graph.expand_graph_dfs();
+    gs.graph_to_3d();
+
+    VariableScene v(&gs);
     v.set_variables(std::unordered_map<std::string, std::string>{
-        {"x", "0"},
+        {"x", "t sin 15 *"},
         {"y", "0"},
-        {"z", "20 0 -"},
-        {"q1", "0"},
+        {"z", "t cos 15 *"},
+        {"q1", "t 4 / cos"},
         {"q2", "0"},
-        {"q3", "1"},
+        {"q3", "t -4 / sin"},
         {"q4", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(2));
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"x", "20 0 -"},
-        {"y", "0"},
-        {"z", "0"},
-        {"q1", ".5"},
-        {"q2", "0"},
-        {"q3", "1"},
-        {"q4", "0"}
-    });
-    v.inject_audio_and_render(AudioSegment(2));
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"x", "20 0 -"},
-        {"y", "20"},
-        {"z", "0"},
-        {"q1", ".5"},
-        {"q2", "0"},
-        {"q3", "1"},
-        {"q4", ".5"}
-    });
-    v.inject_audio_and_render(AudioSegment(2));
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"x", "0"},
-        {"y", "0"},
-        {"z", "0"},
-        {"q1", "0"},
-        {"q2", "0"},
-        {"q3", "1"},
-        {"q4", "0"}
-    });
-    v.inject_audio_and_render(AudioSegment(2));
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"x", "0"},
-        {"y", "0"},
-        {"z", "0"},
-        {"q1", ".5"},
-        {"q2", ".5"},
-        {"q3", "0"},
-        {"q4", ".5"}
-    });
-    v.inject_audio_and_render(AudioSegment(2));
+    v.inject_audio_and_render(AudioSegment(10));
 }
 
 int main(int argc, char* argv[]) {
