@@ -19,11 +19,11 @@ public:
         pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50, 1);
     }
 
-    Pixels* query(bool& done_scene) {
+    void query(bool& done_scene, Pixels*& p) override {
         done_scene = time >= scene_duration_frames;
 
         time++;
-        return &pix;
+        p = &pix;
     }
 private:
     string header;

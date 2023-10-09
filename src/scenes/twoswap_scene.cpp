@@ -14,7 +14,7 @@ public:
         pix.copy(twoswap_pix, pix.w/3+pix.w/12+pix.w/32, (pix.h-twoswap_pix.h)/2+pix.w/32, 1);
     }
 
-    Pixels* query(bool& done_scene) override {
+    void query(bool& done_scene, Pixels*& p) override {
         done_scene = scene_duration_frames <= time;
 
         //Pixels* ret = new Pixels(pix.w, pix.h);
@@ -23,6 +23,6 @@ public:
         //cout << "copied pix" << endl;
         time++;
 
-        return &pix;
+        p = &pix;
     }
 };

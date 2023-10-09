@@ -73,13 +73,12 @@ public:
         return interpolated;
     }
 
-    Pixels* query(bool& done_scene) override {
+    void query(bool& done_scene, Pixels*& p) override {
         if(is_transition) {subscene->update_variables(interpolate_variables(time));}
         else {subscene->update_variables(evaluate_all(variables));}
         done_scene = time++>=scene_duration_frames;
         if(done_scene && is_transition) post_transition();
-        bool b;
-        return subscene->query(b);
+        subscene->query(p);
     }
 
 private:

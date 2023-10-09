@@ -15,6 +15,19 @@ glm::quat  ROLL_CCW  (0, 0 , 0, 1 );
 
 class ThreeDimensionScene : public Scene {
 public:
+    struct Point {
+        glm::vec3 position;
+        int color; // ARGB integer representation
+        Point(const glm::vec3& pos, int clr) : position(pos), color(clr) {}
+    };
+
+    struct Line {
+        glm::vec3 start;
+        glm::vec3 end;
+        int color; // ARGB integer representation
+        Line(const glm::vec3& s, const glm::vec3& e, int clr) : start(s), end(e), color(clr) {}
+    };
+
     ThreeDimensionScene(const int width, const int height) : Scene(width, height) {init();}
     ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {init();}
 
@@ -53,35 +66,35 @@ public:
 
     void render_3d() {
         pix.fill(BLACK);
-        //for (const glm::vec3& point : points) {
+        //for (const Point& point : points) {
         //    render_point(point);
         //}
-        for (const pair<glm::vec3, glm::vec3>& line : lines) {
+        for (const Line& line : lines) {
             render_line(line);
         }
     }
 
-    Pixels* query(bool& done_scene) override {
+    void query(bool& done_scene, Pixels*& p) override {
         if (!rendered) {
             render_3d();
             rendered = true;
         }
         done_scene = time++ >= scene_duration_frames;
-        return &pix;
+        p = &pix;
     }
 
-    void render_point(glm::vec3 point) {
-        std::pair<int, int> pixel = coordinate_to_pixel(point);
-        pix.fill_ellipse(pixel.first, pixel.second, 2, 2, WHITE);
+    void render_point(const Point& point) {
+        std::pair<int, int> pixel = coordinate_to_pixel(point.position);
+        pix.fill_ellipse(pixel.first, pixel.second, 2, 2, point.color);
     }
 
-    void render_line(pair<glm::vec3, glm::vec3> line) {
-        std::pair<int, int> pixel1 = coordinate_to_pixel(line.first);
-        std::pair<int, int> pixel2 = coordinate_to_pixel(line.second);
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, WHITE);
+    void render_line(const Line& line) {
+        std::pair<int, int> pixel1 = coordinate_to_pixel(line.start);
+        std::pair<int, int> pixel2 = coordinate_to_pixel(line.end);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color);
     }
 
-    void add_point(glm::vec3 point) {
+    void add_point(Point point) {
         points.push_back(point);
     }
 
@@ -90,8 +103,8 @@ public:
     }
 
 protected:
-    std::vector<glm::vec3> points;
-    std::vector<pair<glm::vec3, glm::vec3>> lines;
+    std::vector<Point> points;
+    std::vector<Line> lines;
     glm::vec3 camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
 };

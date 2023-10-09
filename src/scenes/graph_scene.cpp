@@ -13,25 +13,25 @@ public:
         points.clear();
         lines.clear();
         for(pair<double, Node<T>> p : graph->nodes){
-            double id = p.first;
             Node<T> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
-            points.push_back(node_pos);
+            points.push_back(Point(node_pos, WHITE));
+            
             for(double neighbor_id : node.neighbors){
                 Node<T> neighbor = graph->nodes.find(neighbor_id)->second;
                 glm::vec3 neighbor_pos = glm::vec3(neighbor.x, neighbor.y, neighbor.z);
-                lines.push_back(make_pair(node_pos, neighbor_pos));
+                lines.push_back(Line(node_pos, neighbor_pos, WHITE));
             }
         }
         rendered = false;
     }
 
-    Pixels* query(bool& done_scene) override {
+    void query(bool& done_scene, Pixels*& p) override {
         if(do_physics){
-            graph->iterate_physics(8, false);
+            graph->iterate_physics(1, true);
             graph_to_3d();
         }
-        ThreeDimensionScene::query(done_scene);
+        ThreeDimensionScene::query(done_scene, p);
     }
 
 private:

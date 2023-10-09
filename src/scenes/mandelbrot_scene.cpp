@@ -12,7 +12,7 @@ public:
         current_zoom = Complex(contents["current_zoom"]["real"].get<double>(), contents["current_zoom"]["imag"].get<double>());
         add_audio(contents);
     }
-    Pixels* query(bool& done_scene) override;
+    void query(bool& done_scene, Pixels*& p) override;
     void update_variables(const unordered_map<string, double>& _variables) {
         variables = _variables;
         zoom_multiplier = Complex(get_or_variable(contents["zoom_multiplier"]["real"]), get_or_variable(contents["zoom_multiplier"]["imag"]));

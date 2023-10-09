@@ -12,10 +12,10 @@ public:
         equation_string = eqn;
     }
 
-    Pixels* query(bool& done_scene) {
+    void query(bool& done_scene, Pixels*& p) override {
         done_scene = scene_duration_frames <= time;
         time++;
-        return &pix;
+        p = &pix;
     }
 
     string equation_string;
@@ -36,7 +36,7 @@ public:
         coords2 = subscene2.coords;
     }
 
-    Pixels* query(bool& done_scene) {
+    void query(bool& done_scene, Pixels*& p) override {
         double weight = static_cast<double>(time)/scene_duration_frames;
         done_scene = scene_duration_frames <= time;
 
@@ -63,7 +63,7 @@ public:
 
         time++;
 
-        return &pix;
+        p = &pix;
     }
 
 private:

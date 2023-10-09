@@ -44,26 +44,19 @@ void setup_writer(const string& project_name){
     WRITER->init("../media/testaudio.mp3");
 }
 
-#include "../../Klotski/C4Board.cpp"
 void render_video() {
-    GraphScene<C4Board> gs(&graph);
+    CompositeScene composite;
 
-    std::string nodestr = "4366755553533111111";
-    graph.add_to_stack(new C4Board(nodestr));
-    graph.expand_graph_dfs();
-    gs.graph_to_3d();
+    C4Scene c40("43334444343773");
 
-    VariableScene v(&gs);
-    v.set_variables(std::unordered_map<std::string, std::string>{
-        {"x", "t sin 15 *"},
-        {"y", "0"},
-        {"z", "t cos 15 *"},
-        {"q1", "t 4 / cos"},
-        {"q2", "0"},
-        {"q3", "t -4 / sin"},
-        {"q4", "0"}
-    });
-    v.inject_audio_and_render(AudioSegment(10));
+    composite.add_scene(&c40, 0, 0, 1, 1);
+
+    composite.inject_audio_and_render(AudioSegment(2));
+    composite.stage_transition(&c40, 0.5, 0.5, 0.5, 0.5);
+    composite.inject_audio_and_render(AudioSegment(2));
+    composite.inject_audio_and_render(AudioSegment(2));
+    composite.stage_transition(&c40, 0.2, 0.4, 0.3, 0.8);
+    composite.inject_audio_and_render(AudioSegment(2));
 }
 
 int main(int argc, char* argv[]) {
