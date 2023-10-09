@@ -316,14 +316,14 @@ public:
         draw_board();
     }
 
-    Pixels* query(bool& done_scene) override {
-        if(is_transition) interpolate();
+    void query(bool& done_scene, Pixels*& p) override {
+        if (is_transition) interpolate();
         if (!rendered) {
             render_c4();
             rendered = true;
         }
         done_scene = time++>=scene_duration_frames;
         if(done_scene && is_transition) post_transition();
-        return &pix;
+        p = &pix;
     }
 };

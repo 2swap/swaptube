@@ -14,13 +14,26 @@ class Scene {
 public:
     Scene(const int width, const int height) : w(width), h(height), pix(width, height){};
     Scene() : w(VIDEO_WIDTH), h(VIDEO_HEIGHT), pix(VIDEO_WIDTH, VIDEO_HEIGHT){};
-    virtual Pixels* query(bool& done_scene) = 0;
+    virtual void query(bool& done_scene, Pixels*& p) = 0;
     virtual void update_variables(const unordered_map<string, double>& variables) {};
+
+    void query(Pixels*& p){
+        bool b = false;
+        query(b, p);
+    }
 
     void set_variable(double& d, const string& var, const unordered_map<string, double>& variables){
         rendered = false;
         if(variables.find(var) != variables.end())
             d = variables.at(var);
+    }
+
+    void resize(int width, int height){
+        if(w == width && h == height) return;
+        w = width;
+        h = height;
+        pix = Pixels(w, h);
+        rendered = false;
     }
 
     void inject_audio_and_render(const AudioSegment& audio){
@@ -57,9 +70,10 @@ public:
         cout << "Frame Count:" << scene_duration_frames << endl;
 
         bool done_scene = false;
+        Pixels* p = nullptr;
         while (!done_scene) {
             WRITER->set_audiotime(video_time_s);
-            Pixels* p = query(done_scene);
+            query(done_scene, p);
             assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
             video_time_s += 1./VIDEO_FRAMERATE;
             if((video_num_frames++)%15 == 0) p->print_to_terminal();

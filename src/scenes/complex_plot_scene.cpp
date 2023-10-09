@@ -50,7 +50,7 @@ public:
         return out;
     }
 
-    Pixels* query(bool& done_scene) override {
+    void query(bool& done_scene, Pixels*& p) override {
         //if(is_transition) interpolate();
         if(!rendered){
             render_plot();
@@ -58,7 +58,7 @@ public:
         }
         done_scene = time++>=scene_duration_frames;
         //if(done_scene && is_transition) post_transition();
-        return &pix;
+        p = &pix;
     }
 
     void set_mode(complex_plot_mode cpm){
