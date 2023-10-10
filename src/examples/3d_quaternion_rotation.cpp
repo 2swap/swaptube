@@ -3,7 +3,7 @@ void render_video() {
     for(int i = -7; i <= 7; i+=2)
     for(int j = -7; j <= 7; j+=2)
     for(int k = -7; k <= 7; k+=2)
-        tds.add_point(glm::vec3(i, j, k));
+        tds.add_point(Point(glm::vec3(i, j, k), WHITE));
 
     VariableScene v(&tds);
     glm::quat q = tds.get_quat();

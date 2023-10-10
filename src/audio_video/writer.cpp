@@ -211,6 +211,7 @@ public:
         // Closing the file.
         cout << "closing the file" << endl;
         avio_closep(&fc->pb);
+        cout << "closing the codec" << endl;
         avcodec_close(videoStream->codec);
 
         // Freeing all the allocated memory:
