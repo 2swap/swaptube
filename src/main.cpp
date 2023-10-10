@@ -9,7 +9,7 @@ using namespace std;
 
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
-int MULT = 2;
+int MULT = 1;
 
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
@@ -45,18 +45,23 @@ void setup_writer(const string& project_name){
 }
 
 void render_video() {
-    CompositeScene composite;
+    ThreeDimensionScene tds;
 
     C4Scene c40("43334444343773");
 
-    composite.add_scene(&c40, 0, 0, 1, 1);
+    tds.add_surface(Surface(glm::vec3(0,0,-1),glm::vec3(-8,2,8),glm::vec3(-2,-9,0),&c40));
 
-    composite.inject_audio_and_render(AudioSegment(2));
-    composite.stage_transition(&c40, 0.5, 0.5, 0.5, 0.5);
-    composite.inject_audio_and_render(AudioSegment(2));
-    composite.inject_audio_and_render(AudioSegment(2));
-    composite.stage_transition(&c40, 0.2, 0.4, 0.3, 0.8);
-    composite.inject_audio_and_render(AudioSegment(2));
+    VariableScene v(&tds);
+    v.set_variables(std::unordered_map<std::string, std::string>{
+        {"x", "t sin 30 *"},
+        {"y", "t 3 * cos"},
+        {"z", "t cos 30 *"},
+        {"q1", "t 4 / cos"},
+        {"q2", "0"},
+        {"q3", "t -4 / sin"},
+        {"q4", "0"}
+    });
+    v.inject_audio_and_render(AudioSegment(3));
 }
 
 int main(int argc, char* argv[]) {
