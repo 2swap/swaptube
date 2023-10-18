@@ -14,7 +14,6 @@ public:
         upcoming_variables = v;
         is_transition = true;
         rendered = false;
-        prior_time = time;
         assert(v.size() == variables.size());
     }
 
@@ -78,6 +77,7 @@ public:
         else {subscene->update_variables(evaluate_all(variables));}
         done_scene = time++>=scene_duration_frames;
         if(done_scene && is_transition) post_transition();
+        if(done_scene) prior_time += time;
         subscene->query(p);
     }
 

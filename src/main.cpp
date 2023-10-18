@@ -9,7 +9,7 @@ using namespace std;
 
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
-int MULT = 1;
+int MULT = 2;
 
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
@@ -44,24 +44,49 @@ void setup_writer(const string& project_name){
     WRITER->init("../media/testaudio.mp3");
 }
 
+#include "../../Klotski/C4Board.cpp"
 void render_video() {
-    ThreeDimensionScene tds;
+    c4_branch_mode = UNION_WEAK;
+    std::string nodestr = "4366755553533111111332222666675";
+    graph.add_to_stack(new C4Board(nodestr));
+    graph.expand_graph_dfs();
+    graph.make_edges_bidirectional();
 
-    C4Scene c40("43334444343773");
+    GraphScene<C4Board> gs(&graph);
+    gs.graph_to_3d();
 
-    tds.add_surface(Surface(glm::vec3(0,0,-1),glm::vec3(-8,2,8),glm::vec3(-2,-9,0),&c40));
-
-    VariableScene v(&tds);
+    VariableScene v(&gs);
     v.set_variables(std::unordered_map<std::string, std::string>{
-        {"x", "t sin 30 *"},
-        {"y", "t 3 * cos"},
-        {"z", "t cos 30 *"},
+        {"x", "t sin 150 *"},
+        {"y", "0"},
+        {"z", "t cos 150 *"},
         {"q1", "t 4 / cos"},
         {"q2", "0"},
         {"q3", "t -4 / sin"},
         {"q4", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(3));
+    v.inject_audio_and_render(AudioSegment(2));
+    v.stage_transition(std::unordered_map<std::string, std::string>{
+        {"x", "t sin 10 *"},
+        {"y", "0"},
+        {"z", "t cos 10 *"},
+        {"q1", "t 4 / cos"},
+        {"q2", "0"},
+        {"q3", "t -4 / sin"},
+        {"q4", "0"}
+    });
+    v.inject_audio_and_render(AudioSegment(2));
+    v.inject_audio_and_render(AudioSegment(2));
+    v.stage_transition(std::unordered_map<std::string, std::string>{
+        {"x", "t sin 150 *"},
+        {"y", "0"},
+        {"z", "t cos 150 *"},
+        {"q1", "t 4 / cos"},
+        {"q2", "0"},
+        {"q3", "t -4 / sin"},
+        {"q4", "0"}
+    });
+    v.inject_audio_and_render(AudioSegment(2));
 }
 
 int main(int argc, char* argv[]) {
@@ -79,6 +104,8 @@ int main(int argc, char* argv[]) {
     // Start the timer.
     auto start = std::chrono::high_resolution_clock::now();
     render_video();
+    delete WRITER;
+
     // Stop the timer.
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
@@ -87,8 +114,6 @@ int main(int argc, char* argv[]) {
     double video_length_minutes = video_time_s/60.;
     cout << "Render time:  " << render_time_minutes << " minutes." << endl;
     cout << "Video length: " << video_length_minutes << " minutes." << endl;
-
-    delete WRITER;
 
     return 0;
 }
