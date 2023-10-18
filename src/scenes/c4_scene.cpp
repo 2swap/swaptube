@@ -256,7 +256,7 @@ public:
     }
 
     void get_disk_screen_coordinates(int stonex, int stoney, double& px, double& py, double& stonewidth){
-        stonewidth = pix.w/16.;
+        stonewidth = min(pix.w/10., pix.h/10.);
         px = round((stonex-WIDTH/2.+.5)*stonewidth+pix.w/2);
         py = round((-stoney + HEIGHT/2.-.5)*stonewidth+pix.h/2);
     }
@@ -311,7 +311,7 @@ public:
     }
 
     void render_c4() {
-        pix.fill(BLACK);
+        pix.fill(TRANSPARENT_BLACK);
         draw_highlights();
         draw_board();
     }

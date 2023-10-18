@@ -6,15 +6,28 @@
 template <typename T>
 class GraphScene : public ThreeDimensionScene {
 public:
-    GraphScene(const int width, const int height, Graph<T>* g) : ThreeDimensionScene(width, height), graph(g) {}
-    GraphScene(Graph<T>* g) : ThreeDimensionScene(), graph(g) {}
+    GraphScene(const int width, const int height, Graph<T>* g) : ThreeDimensionScene(width, height), graph(g) {init();}
+    GraphScene(Graph<T>* g) : ThreeDimensionScene(), graph(g) {init();}
+
+    void init(){
+        // this is very specialized to connect 4 graphs. do something about it later.
+        for(pair<double, Node<T>> p : graph->nodes){
+            Node<T> node = p.second;
+            glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
+            surfaces.push_back(Surface(glm::vec3(0,0,0),glm::vec3(-3,0,0),glm::vec3(0,-3,0), new C4Scene(300, 300, node.data->representation)));
+        }
+    }
 
     void graph_to_3d(){
         points.clear();
         lines.clear();
+
+        int i = 0;
         for(pair<double, Node<T>> p : graph->nodes){
             Node<T> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
+            surfaces[i].center = node_pos;
+            i++;
             points.push_back(Point(node_pos, WHITE));
             
             for(double neighbor_id : node.neighbors){
@@ -32,6 +45,12 @@ public:
             graph_to_3d();
         }
         ThreeDimensionScene::query(done_scene, p);
+    }
+
+    ~GraphScene(){
+        for (Surface surface : surfaces){
+            delete surface.scenePointer;
+        }
     }
 
 private:
