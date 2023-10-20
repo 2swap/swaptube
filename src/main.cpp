@@ -44,8 +44,14 @@ void setup_writer(const string& project_name){
     WRITER->init("../media/testaudio.mp3");
 }
 
-#include "../../Klotski/C4Board.cpp"
+
 void render_video() {
+    LatexScene l("agh");
+    l.inject_audio_and_render(AudioSegment(3));
+}
+
+#include "../../Klotski/C4Board.cpp"
+void renader_video() {
     c4_branch_mode = UNION_WEAK;
     std::string nodestr = "4366755553533111111332222666675";
     graph.add_to_stack(new C4Board(nodestr));

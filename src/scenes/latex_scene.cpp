@@ -4,12 +4,14 @@
 
 class LatexScene : public Scene {
 public:
-    LatexScene(const int width, const int height, string eqn) : Scene(width, height) {
-        cout << "rendering latex: " << eqn << endl;
-        equation_pixels = eqn_to_pix(eqn, pix.w / 640 + 1);
+    LatexScene(const int width, const int height, string eqn) : Scene(width, height), equation_string(eqn) {init_latex_scene();}
+    LatexScene(string eqn) : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), equation_string(eqn) {init_latex_scene();}
+
+    void init_latex_scene(){
+        cout << "rendering latex: " << equation_string << endl;
+        equation_pixels = eqn_to_pix(equation_string, pix.w / 640 + 1);
         coords = make_pair((pix.w-equation_pixels.w)/2, (pix.h-equation_pixels.h)/2);
         pix.copy(equation_pixels, coords.first, coords.second, 1);
-        equation_string = eqn;
     }
 
     void query(bool& done_scene, Pixels*& p) override {

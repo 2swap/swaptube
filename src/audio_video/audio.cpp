@@ -2,6 +2,54 @@
 #include <sys/stat.h>
 #include <vector>
 
+void MovieWriter::init_audio(const string& inputAudioFilename) {
+    srt_file.open(srt_filename);
+    if (!srt_file.is_open()) {
+        std::cerr << "Error opening subs file: " << srt_filename << std::endl;
+    }
+    shtooka_file.open(record_filename);
+    if (!shtooka_file.is_open()) {
+        std::cerr << "Error opening recorder list: " << record_filename << std::endl;
+    }
+
+    AVFormatContext* inputAudioFormatContext = nullptr;
+    avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
+    cout << "Initializing writer with codec from " << inputAudioFilename << endl;
+
+    // Find input audio stream information
+    avformat_find_stream_info(inputAudioFormatContext, nullptr);
+
+    // Find input audio stream
+    audioStreamIndex = -1;
+    AVCodecParameters* codecParams = nullptr;
+    for (unsigned int i = 0; i < inputAudioFormatContext->nb_streams; ++i) {
+        if (inputAudioFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            audioStreamIndex = i;
+            codecParams = inputAudioFormatContext->streams[i]->codecpar;
+            break;
+        }
+    }
+
+    // INPUT
+    AVCodec* audioInputCodec = avcodec_find_decoder(codecParams->codec_id);
+    audioInputCodecContext = avcodec_alloc_context3(audioInputCodec);
+    avcodec_parameters_to_context(audioInputCodecContext, codecParams);
+    avcodec_open2(audioInputCodecContext, audioInputCodec, nullptr);
+
+    // Create a new audio stream in the output format context
+    // Copy codec parameters to the new audio stream
+    audioStream = avformat_new_stream(fc, audioInputCodec);
+    avcodec_parameters_copy(audioStream->codecpar, codecParams);
+
+    // OUTPUT
+    AVCodec* audioOutputCodec = avcodec_find_encoder(codecParams->codec_id);
+    audioOutputCodecContext = avcodec_alloc_context3(audioOutputCodec);
+    avcodec_parameters_to_context(audioOutputCodecContext, codecParams);
+    avcodec_open2(audioOutputCodecContext, audioOutputCodec, nullptr);
+
+    avformat_close_input(&inputAudioFormatContext);
+}
+
 void MovieWriter::set_audiotime(double t_seconds){
     double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
     //if(t_samples < audiotime){
@@ -13,8 +61,7 @@ void MovieWriter::set_audiotime(double t_seconds){
 }
 
 double MovieWriter::encode_and_write_audio(){
-    AVPacket outputPacket;
-    av_init_packet(&outputPacket);
+    AVPacket outputPacket = {0};
 
     double length_in_seconds = 0;
 
@@ -182,4 +229,24 @@ void MovieWriter::add_silence(double duration) {
         samplesRemaining -= samples_this_frame;
     }
     cout << "Added silence: " << duration << " seconds" << endl;
+}
+
+void MovieWriter::destroy_audio() {
+    // write delayed audio frames
+    avcodec_send_frame(audioOutputCodecContext, NULL);
+    encode_and_write_audio();
+    
+    // Freeing audio specific resources
+    avcodec_free_context(&audioOutputCodecContext);
+    avcodec_free_context(&audioInputCodecContext);
+    
+    av_packet_unref(&inputPacket);
+    
+    audio_pts_file.close();
+    if (srt_file.is_open()) {
+        srt_file.close();
+    }
+    if (shtooka_file.is_open()) {
+        shtooka_file.close();
+    }
 }
