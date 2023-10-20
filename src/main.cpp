@@ -44,22 +44,15 @@ void setup_writer(const string& project_name){
     WRITER->init("../media/testaudio.mp3");
 }
 
-
-void render_video() {
-    LatexScene l("agh");
-    l.inject_audio_and_render(AudioSegment(3));
-}
-
 #include "../../Klotski/C4Board.cpp"
-void renader_video() {
+void render_video() {
     c4_branch_mode = UNION_WEAK;
     std::string nodestr = "4366755553533111111332222666675";
     graph.add_to_stack(new C4Board(nodestr));
     graph.expand_graph_dfs();
     graph.make_edges_bidirectional();
 
-    GraphScene<C4Board> gs(&graph);
-    gs.graph_to_3d();
+    C4GraphScene gs(&graph);
 
     VariableScene v(&gs);
     v.set_variables(std::unordered_map<std::string, std::string>{
@@ -71,7 +64,7 @@ void renader_video() {
         {"q3", "t -4 / sin"},
         {"q4", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(2));
+    v.inject_audio_and_render(AudioSegment(1));
     v.stage_transition(std::unordered_map<std::string, std::string>{
         {"x", "t sin 10 *"},
         {"y", "0"},
@@ -81,8 +74,8 @@ void renader_video() {
         {"q3", "t -4 / sin"},
         {"q4", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(2));
-    v.inject_audio_and_render(AudioSegment(2));
+    v.inject_audio_and_render(AudioSegment(1));
+    v.inject_audio_and_render(AudioSegment(1));
     v.stage_transition(std::unordered_map<std::string, std::string>{
         {"x", "t sin 150 *"},
         {"y", "0"},
@@ -92,7 +85,7 @@ void renader_video() {
         {"q3", "t -4 / sin"},
         {"q4", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(2));
+    v.inject_audio_and_render(AudioSegment(1));
 }
 
 int main(int argc, char* argv[]) {
