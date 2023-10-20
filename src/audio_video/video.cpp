@@ -1,16 +1,77 @@
 #pragma once
 
+void MovieWriter::init_video() {
+    // Preparing to convert my generated RGB images to YUV frames.
+    sws_ctx = sws_getContext(VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_RGB24,
+                             VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
+
+    // Setting up the codec.
+    AVCodec* codec = avcodec_find_encoder_by_name("libx264");
+    AVDictionary* opt = NULL;
+    av_dict_set(&opt, "preset", "ultrafast", 0);
+    av_dict_set(&opt, "crf", "18", 0);
+
+    videoStream = avformat_new_stream(fc, codec);
+    if (!videoStream) {
+        cout << "Failed create new videostream!" << endl;
+        exit(1);
+    }
+
+    videoCodecContext = avcodec_alloc_context3(codec);
+    videoCodecContext->width = VIDEO_WIDTH;
+    videoCodecContext->height = VIDEO_HEIGHT;
+    videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
+    videoCodecContext->time_base = { 1, VIDEO_FRAMERATE };
+
+    avcodec_parameters_from_context(videoStream->codecpar, videoCodecContext);
+
+    avcodec_open2(videoCodecContext, codec, &opt);
+    av_dict_free(&opt);
+
+    videoStream->time_base = { 1, VIDEO_FRAMERATE };
+    av_dump_format(fc, 0, output_filename.c_str(), 1);
+    avio_open(&fc->pb, output_filename.c_str(), AVIO_FLAG_WRITE);
+    int ret = avformat_write_header(fc, &opt);
+    if (ret < 0) {
+        cout << "Failed to write header!" << endl;
+        exit(1);
+    }
+    av_dict_free(&opt);
+
+    // Allocating memory for each RGB and YUV frame.
+    rgbpic = av_frame_alloc();
+    yuvpic = av_frame_alloc();
+    rgbpic->format = AV_PIX_FMT_RGB24;
+    yuvpic->format = AV_PIX_FMT_YUV420P;
+    rgbpic->width = yuvpic->width = VIDEO_WIDTH;
+    rgbpic->height = yuvpic->height = VIDEO_HEIGHT;
+    av_frame_get_buffer(rgbpic, 1);
+    av_frame_get_buffer(yuvpic, 1);
+}
+
 bool MovieWriter::encode_and_write_frame(AVFrame* frame){
-    int got_output = 0;
-    avcodec_encode_video2(videoCodecContext, &pkt, frame, &got_output);
-    if (!got_output) return false;
+
+    if(frame != NULL){
+        int ret = avcodec_send_frame(videoCodecContext, frame);
+        if (ret<0) {
+            cout << "Failed encoding video!" << endl;
+            exit(1);
+        }
+    }
+
+    int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
+    if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) {
+        return false;
+    } else if (ret2!=0) {
+        cout << "Failed to receive video packet!" << endl;
+        exit(1);
+    }
 
     // We set the packet PTS and DTS taking in the account our FPS (second argument),
     // and the time base that our selected format uses (third argument).
     av_packet_rescale_ts(&pkt, { 1, VIDEO_FRAMERATE }, videoStream->time_base);
 
     pkt.stream_index = videoStream->index;
-    cout << "Writing frame " << outframe << " (size = " << pkt.size << ")" << endl;
 
     // Write the encoded frame to the mp4 file.
     av_interleaved_write_frame(fc, &pkt);
@@ -20,7 +81,6 @@ bool MovieWriter::encode_and_write_frame(AVFrame* frame){
 
 void MovieWriter::addFrame(const Pixels& p)
 {
-    cout << "Encoding frame " << inframe++ << ". ";
     const uint8_t* pixels = &p.pixels[0];
 
     // The AVFrame data will be stored as RGBRGBRGB... row-wise,
@@ -47,4 +107,21 @@ void MovieWriter::addFrame(const Pixels& p)
     outframe++;
 
     if(!encode_and_write_frame(yuvpic)) cout << endl;
+}
+
+void MovieWriter::destroy_video() {
+    // Writing the delayed video frames
+    while(encode_and_write_frame(NULL));
+
+    // Closing the video codec.
+    cout << "closing the codec" << endl;
+    avcodec_close(videoCodecContext);
+
+    // Freeing video specific resources
+    cout << "freeing some stuff" << endl;
+    sws_freeContext(sws_ctx);
+    av_frame_free(&rgbpic);
+    av_frame_free(&yuvpic);
+
+    av_packet_unref(&pkt);
 }

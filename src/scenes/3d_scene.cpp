@@ -38,10 +38,10 @@ struct Surface {
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width, const int height) : Scene(width, height), sketchpad(width, height) {init();}
-    ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), sketchpad(VIDEO_WIDTH, VIDEO_HEIGHT) {init();}
+    ThreeDimensionScene(const int width, const int height) : Scene(width, height), sketchpad(width, height) {init_camera();}
+    ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), sketchpad(VIDEO_WIDTH, VIDEO_HEIGHT) {init_camera();}
 
-    void init(){
+    void init_camera(){
         camera_direction = glm::quat(1,0,0,0);
     }
 

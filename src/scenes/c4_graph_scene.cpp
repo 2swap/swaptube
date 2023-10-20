@@ -4,10 +4,18 @@
 #include "../../../Klotski/Graph.cpp" // I am too lazy to figure the right pattern out right now, so I'll assume you have my Klotski repo checked out in the same folder as this repo.
 
 template <typename T>
-class GraphScene : public ThreeDimensionScene {
+class C4GraphScene : public GraphScene {
 public:
-    GraphScene(const int width, const int height, Graph<T>* g) : ThreeDimensionScene(width, height), graph(g) {}
-    GraphScene(Graph<T>* g) : ThreeDimensionScene(), graph(g) {}
+    C4GraphScene(const int width, const int height, Graph<T>* g) : ThreeDimensionScene(width, height), graph(g) {init();}
+    C4GraphScene(Graph<T>* g) : ThreeDimensionScene(), graph(g) {init();}
+
+    void init(){
+        for(pair<double, Node<T>> p : graph->nodes){
+            Node<T> node = p.second;
+            glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
+            surfaces.push_back(Surface(glm::vec3(0,0,0),glm::vec3(-3,0,0),glm::vec3(0,-3,0), new C4Scene(300, 300, node.data->representation)));
+        }
+    }
 
     void graph_to_3d(){
         points.clear();
@@ -36,6 +44,12 @@ public:
             graph_to_3d();
         }
         ThreeDimensionScene::query(done_scene, p);
+    }
+
+    ~GraphScene(){
+        for (Surface surface : surfaces){
+            delete surface.scenePointer;
+        }
     }
 
 private:

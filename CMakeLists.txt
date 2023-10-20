@@ -18,4 +18,4 @@ include_directories("/usr/include/cairo")
 
 add_executable(${PROJECT_NAME} "src/main.cpp")
 
-target_link_libraries(${PROJECT_NAME} ${FFMPEG_LIBRARIES} ${SWSCALE_LIBRARIES} ${RSVG_LIBRARIES} cairo)
+target_link_libraries(${PROJECT_NAME} ${FFMPEG_LIBRARIES} ${SWSCALE_LIBRARIES} ${RSVG_LIBRARIES} cairo gobject-2.0)

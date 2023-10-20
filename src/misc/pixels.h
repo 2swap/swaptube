@@ -505,7 +505,7 @@ Pixels svg_to_pix(const string& svg, int scale_factor) {
     cairo_t* cr = cairo_create(surface);
     cairo_scale(cr, scale_factor, scale_factor);
     rsvg_handle_render_cairo(handle, cr);
-    rsvg_handle_close(handle, nullptr);
+    g_object_unref(handle);
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
     ret.grayscale_to_alpha();
