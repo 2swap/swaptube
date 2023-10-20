@@ -73,34 +73,65 @@ public:
         }
     }
 
+    bool isOutsideScreen(const pair<int, int>& point, int width, int height) {
+        return point.first < 0 || point.first >= width || point.second < 0 || point.second >= height;
+    }
+
     void render_surface(const Surface& surface, int padcol) {
-        std::vector<std::pair<int, int>> pointy(4);
+        vector<pair<int, int>> corners(4);
         //note, ordering matters here
-        pointy[0] = coordinate_to_pixel(surface.center + surface.left_relative + surface.up_relative);
-        pointy[1] = coordinate_to_pixel(surface.center - surface.left_relative + surface.up_relative);
-        pointy[2] = coordinate_to_pixel(surface.center - surface.left_relative - surface.up_relative);
-        pointy[3] = coordinate_to_pixel(surface.center + surface.left_relative - surface.up_relative);
+        corners[0] = coordinate_to_pixel(surface.center + surface.left_relative + surface.up_relative);
+        corners[1] = coordinate_to_pixel(surface.center - surface.left_relative + surface.up_relative);
+        corners[2] = coordinate_to_pixel(surface.center - surface.left_relative - surface.up_relative);
+        corners[3] = coordinate_to_pixel(surface.center + surface.left_relative - surface.up_relative);
         
+        // Check if all corners are outside the screen
+        bool allOutside = true;
+        for (const auto& corner : corners) {
+            if (!isOutsideScreen(corner, w, h)) {
+                allOutside = false;
+                break;
+            }
+        }
+
+        if (allOutside) {
+            return;  // Return early if all corners are outside the screen
+        }
+
         // Draw the edges of the polygon using Bresenham's function
         for (int i = 0; i < 4; i++) {
             int next = (i + 1) % 4;
-            sketchpad.bresenham(pointy[i].first, pointy[i].second, pointy[next].first, pointy[next].second, padcol);
+            sketchpad.bresenham(corners[i].first, corners[i].second, corners[next].first, corners[next].second, padcol);
         }
-
-        // Get the seed point for flood fill (average of corner points)
-        int seedX = (pointy[0].first + pointy[1].first + pointy[2].first + pointy[3].first) / 4;
-        int seedY = (pointy[0].second + pointy[1].second + pointy[2].second + pointy[3].second) / 4;
 
         Pixels* p;
         surface.scenePointer->query(p);
 
         // Call the flood fill algorithm
-        floodFillSurface(seedX, seedY, surface, p, padcol); // assuming background is black and polygon is white
+        floodFillSurface(corners, surface, p, padcol); // assuming background is black and polygon is white
     }
 
-    void floodFillSurface(int x, int y, const Surface& surface, Pixels* p, int padcol) {
+    void floodFillSurface(vector<pair<int, int>>& corners, const Surface& surface, Pixels* p, int padcol) {
         std::queue<std::pair<int, int>> q;
-        q.push({x, y});
+
+        // 1. Compute the centroid of the quadrilateral
+        double cx = 0, cy = 0;
+        for (const auto& corner : corners) {
+            cx += corner.first;
+            cy += corner.second;
+        }
+        cx /= 4;
+        cy /= 4;
+
+        // 2. For each edge, perform linear interpolation to get intermediate points
+        for (int i = 0; i < 4; i++) {
+            int x1 = corners[i].first;
+            int y1 = corners[i].second;
+            int x2 = corners[(i+1)%4].first;
+            int y2 = corners[(i+1)%4].second;
+            q.push({lerp(x1, cx, .5), lerp(y1, cy, .5)});
+            //q.push({lerp(lerp(x1, x2, .5), cx, .3), lerp(lerp(y1, y2, .5), cy, .3)});
+        }
 
         glm::vec3 normal = glm::normalize(glm::cross(surface.left_relative, surface.up_relative));
         double lr2 = square(glm::length(surface.left_relative));
@@ -113,12 +144,14 @@ public:
             // Check if the current point is within bounds and has the old color
             if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
 
-            //compute position in surface's coordinate frame as a function of x and y.
-            glm::vec3 particle_velocity = unproject(cx, cy);
-            glm::vec2 surface_coords = intersectionPoint(particle_velocity-camera_pos, surface, normal, lr2, ur2);
+            if(pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
+                //compute position in surface's coordinate frame as a function of x and y.
+                glm::vec3 particle_velocity = unproject(cx, cy);
+                glm::vec2 surface_coords = intersectionPoint(particle_velocity-camera_pos, surface, normal, lr2, ur2);
+                // Set the pixel to the new color
+                pix.set_pixel_with_transparency(cx, cy, p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h));
+            }
 
-            // Set the pixel to the new color
-            pix.set_pixel_with_transparency(cx, cy, p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h));
             sketchpad.set_pixel(cx, cy, padcol);
 
             // Add the neighboring points to the queue
@@ -158,7 +191,7 @@ public:
     void render_3d() {
         if (random() < .01) unit_test_unproject();
         sketchpad.fill(BLACK);
-        pix.fill(rand()%100==1);
+        pix.fill(TRANSPARENT_BLACK);
         //surfaces first
 
         // Create a list of pointers to the surfaces

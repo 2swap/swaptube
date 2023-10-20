@@ -13,12 +13,9 @@ public:
         points.clear();
         lines.clear();
 
-        int i = 0;
         for(pair<double, Node<T>> p : graph->nodes){
             Node<T> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
-            surfaces[i].center = node_pos;
-            i++;
             points.push_back(Point(node_pos, WHITE));
             
             for(double neighbor_id : node.neighbors){
@@ -38,7 +35,7 @@ public:
         ThreeDimensionScene::query(done_scene, p);
     }
 
-private:
+protected:
     bool do_physics = true;
     Graph<T>* graph;
 };
