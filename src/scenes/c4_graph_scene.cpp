@@ -70,8 +70,8 @@ public:
             graph_to_3d();
             update_surfaces();
         }
-        last_frame_cam = camera_direction;
         ThreeDimensionScene::query(done_scene, p);
+        last_frame_cam = camera_direction;
     }
 
     ~C4GraphScene(){
