@@ -17,14 +17,18 @@ public:
             Node<T> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
             points.push_back(Point(node_pos, WHITE));
-            
+
             for(double neighbor_id : node.neighbors){
                 Node<T> neighbor = graph->nodes.find(neighbor_id)->second;
                 glm::vec3 neighbor_pos = glm::vec3(neighbor.x, neighbor.y, neighbor.z);
-                lines.push_back(Line(node_pos, neighbor_pos, WHITE));
+                lines.push_back(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor)));
             }
         }
         rendered = false;
+    }
+
+    virtual int get_edge_color(const Node<T>& node, const Node<T>& neighbor){
+        return WHITE;
     }
 
     void query(bool& done_scene, Pixels*& p) override {

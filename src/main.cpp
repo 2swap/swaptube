@@ -44,15 +44,8 @@ void setup_writer(const string& project_name){
     WRITER->init("../media/testaudio.mp3");
 }
 
-#include "../../Klotski/C4Board.cpp"
 void render_video() {
-    c4_branch_mode = UNION_WEAK;
-    std::string nodestr = "4366755553533111111332222666675";
-    graph.add_to_stack(new C4Board(nodestr));
-    graph.expand_graph_dfs();
-    graph.make_edges_bidirectional();
-
-    C4GraphScene gs(&graph);
+    C4GraphScene gs(&staticgraph, "43667555535331111113322226666757", SIMPLE_WEAK);
 
     VariableScene v(&gs);
     v.set_variables(std::unordered_map<std::string, std::string>{

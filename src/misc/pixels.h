@@ -67,7 +67,7 @@ public:
         pixels[spot+0] = getb(mergecol);
         pixels[spot+1] = getg(mergecol);
         pixels[spot+2] = getr(mergecol);
-        pixels[spot+3] = geta(mergecol);
+        pixels[spot+3] = 255 - (255-upper_alpha) * (255-get_alpha(x, y)) / 255;
     }
 
     void print_dimensions(){
@@ -273,7 +273,7 @@ public:
             }
     }
 
-    void bresenham(int x1, int y1, int x2, int y2, int col) {
+    void bresenham(int x1, int y1, int x2, int y2, int col, int thickness) {
         int dx = abs(x2 - x1);
         int dy = abs(y2 - y1);
 
@@ -284,6 +284,12 @@ public:
 
         while(true) {
             set_pixel(x1, y1, col);
+            for(int i = 1; i < thickness; i++){
+                set_pixel(x1+1, y1  , col);
+                set_pixel(x1-1, y1  , col);
+                set_pixel(x1  , y1+1, col);
+                set_pixel(x1  , y1-1, col);
+            }
 
             // If we've reached the end point, break
             if (x1 == x2 && y1 == y2) break;

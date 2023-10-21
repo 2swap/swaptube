@@ -1,3 +1,5 @@
+#pragma once
+
 inline int C4_RED           = 0xffff0000;
 inline int C4_YELLOW        = 0xffffff00;
 inline int C4_EMPTY         = 0xff222222;
