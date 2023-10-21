@@ -45,40 +45,32 @@ void setup_writer(const string& project_name){
 }
 
 void render_video() {
-    C4GraphScene gs(&staticgraph, "43667555535331111113322226666757", SIMPLE_WEAK);
+    C4GraphScene gs(&staticgraph, "436675555353311111133222", SIMPLE_WEAK);
+    gs.surfaces_on = false;
+    gs.set_camera_pos(glm::vec3(0,0,150));
 
     VariableScene v(&gs);
     v.set_variables(std::unordered_map<std::string, std::string>{
-        {"x", "t sin 150 *"},
-        {"y", "0"},
-        {"z", "t cos 150 *"},
-        {"q1", "t 4 / cos"},
-        {"q2", "0"},
-        {"q3", "t -4 / sin"},
-        {"q4", "0"}
+        {"x", "t cos 150 *"},
+        {"y", "t sin 150 *"},
+        {"z", "0"}//,
+        //{"q1", "t 4 / cos"},
+        //{"q2", "0"},
+        //{"q3", "t -4 / sin"},
+        //{"q4", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(1));
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"x", "t sin 10 *"},
-        {"y", "0"},
-        {"z", "t cos 10 *"},
-        {"q1", "t 4 / cos"},
-        {"q2", "0"},
-        {"q3", "t -4 / sin"},
-        {"q4", "0"}
-    });
-    v.inject_audio_and_render(AudioSegment(1));
-    v.inject_audio_and_render(AudioSegment(1));
+    v.inject_audio_and_render(AudioSegment(4));
     v.stage_transition(std::unordered_map<std::string, std::string>{
         {"x", "t sin 150 *"},
         {"y", "0"},
-        {"z", "t cos 150 *"},
-        {"q1", "t 4 / cos"},
-        {"q2", "0"},
-        {"q3", "t -4 / sin"},
-        {"q4", "0"}
+        {"z", "t cos 150 *"}//,
+        //{"q1", "t 4 / cos"},
+        //{"q2", "0"},
+        //{"q3", "t -4 / sin"},
+        //{"q4", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(1));
+    v.inject_audio_and_render(AudioSegment(4));
+    v.inject_audio_and_render(AudioSegment(4));
 }
 
 int main(int argc, char* argv[]) {

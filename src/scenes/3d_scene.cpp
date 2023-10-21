@@ -7,6 +7,7 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <glm/gtx/string_cast.hpp>
 
 glm::quat PITCH_DOWN (0, 1 , 0, 0 );
 glm::quat PITCH_UP   (0, -1, 0, 0 );
@@ -46,13 +47,16 @@ public:
         camera_direction = glm::quat(1,0,0,0);
     }
 
-    std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate) {
+    std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
         coordinate = camera_direction * (coordinate - camera_pos) * glm::conjugate(camera_direction);
-        if(coordinate.z >= 0) return {-1000, -1000};
+        if(coordinate.z >= -1) {behind_camera = true; return {-1000, -1000};}
 
         double scale = w*.6 / coordinate.z; // perspective projection
-        return {scale*coordinate.x+w/2, scale*coordinate.y+h/2};
+        double x = scale * coordinate.x + w/2;
+        double y = scale * coordinate.y + h/2;
+
+        return {x, y};
     }
 
     glm::vec3 unproject(double px, double py) {
@@ -69,7 +73,8 @@ public:
     void unit_test_unproject(){
         for(int x = 0; x < 2; x++)
         for(int y = 0; y < 2; y++){
-            pair<double, double> out = coordinate_to_pixel(unproject(x, y));
+            bool behind_camera = false;
+            pair<double, double> out = coordinate_to_pixel(unproject(x, y), behind_camera);
             assert(square(out.first-x) < .01 && square(out.second-y) < .01);
         }
     }
@@ -81,11 +86,13 @@ public:
     virtual void render_surface(const Surface& surface, int padcol) {
         vector<pair<int, int>> corners(4);
         //note, ordering matters here
-        corners[0] = coordinate_to_pixel(surface.center + surface.left_relative + surface.up_relative);
-        corners[1] = coordinate_to_pixel(surface.center - surface.left_relative + surface.up_relative);
-        corners[2] = coordinate_to_pixel(surface.center - surface.left_relative - surface.up_relative);
-        corners[3] = coordinate_to_pixel(surface.center + surface.left_relative - surface.up_relative);
-        
+        bool behind_camera = false;
+        corners[0] = coordinate_to_pixel(surface.center + surface.left_relative + surface.up_relative, behind_camera);
+        corners[1] = coordinate_to_pixel(surface.center - surface.left_relative + surface.up_relative, behind_camera);
+        corners[2] = coordinate_to_pixel(surface.center - surface.left_relative - surface.up_relative, behind_camera);
+        corners[3] = coordinate_to_pixel(surface.center + surface.left_relative - surface.up_relative, behind_camera);
+        if(behind_camera) return;
+
         // Check if all corners are outside the screen
         bool allOutside = true;
         for (const auto& corner : corners) {
@@ -176,12 +183,16 @@ public:
     }
 
     void update_variables(const std::unordered_map<string, double>& variables) {
-        set_camera_pos(
-            glm::vec3(variables.at("x"), variables.at("y"), variables.at("z"))
-        );
-        set_quat(
-            glm::quat(variables.at("q1"), variables.at("q2"), variables.at("q3"), variables.at("q4"))
-        );
+        if(variables.find("x") != variables.end()){
+            set_camera_pos(
+                glm::vec3(variables.at("x"), variables.at("y"), variables.at("z"))
+            );
+        }
+        if(variables.find("q1") != variables.end()){
+            set_quat(
+                glm::quat(variables.at("q1"), variables.at("q2"), variables.at("q3"), variables.at("q4"))
+            );
+        }
         rendered = false;
     }
 
@@ -192,10 +203,46 @@ public:
     }
 
     void render_3d() {
+        pix.fill(TRANSPARENT_BLACK);
+
+
+        glm::vec3 aggregate(0.0f, 0.0f, 0.0f);
+
+        // Sum up all point positions
+        for (Point p : points){
+            aggregate += p.position;
+        }
+
+        // Find average (center of mass) of the points
+        glm::vec3 center_of_mass = aggregate / static_cast<float>(points.size());
+        Point p(center_of_mass, 0xff00ff00);
+
+        glm::vec3 com = glm::normalize(center_of_mass - camera_pos);
+        glm::quat v1(0,com.x,com.y,com.z);
+        glm::quat v2(0,0,0,-1);
+
+        camera_direction = (v1*(v1+v2))/glm::length(v1+v2);
+
+        glm::vec3 guh = glm::conjugate(camera_direction) * com * camera_direction;
+        cout << glm::to_string(v1) << endl;
+
+        render_point(p);
+        rendered = false;
+
+
+
+
+        if(surfaces_on)
+            render_surfaces();
+        if(points_on)
+            render_points();
+        if(lines_on)
+            render_lines();
+    }
+
+    void render_surfaces(){
         if (random() < .01) unit_test_unproject();
         sketchpad.fill(BLACK);
-        pix.fill(TRANSPARENT_BLACK);
-        //surfaces first
 
         // Create a list of pointers to the surfaces
         std::vector<const Surface*> surfacePointers;
@@ -212,10 +259,15 @@ public:
         for (int i = 0; i < surfacePointers.size(); i++) {
             render_surface(*(surfacePointers[i]), i+100);
         }
+    }
 
+    void render_points(){
         for (const Point& point : points) {
             render_point(point);
         }
+    }
+
+    void render_lines(){
         for (const Line& line : lines) {
             render_line(line);
         }
@@ -231,13 +283,17 @@ public:
     }
 
     void render_point(const Point& point) {
-        std::pair<int, int> pixel = coordinate_to_pixel(point.position);
+        bool behind_camera = false;
+        std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
+        if(behind_camera) return;
         pix.fill_ellipse(pixel.first, pixel.second, 2, 2, point.color);
     }
 
     void render_line(const Line& line) {
-        std::pair<int, int> pixel1 = coordinate_to_pixel(line.start);
-        std::pair<int, int> pixel2 = coordinate_to_pixel(line.end);
+        bool behind_camera = false;
+        std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
+        std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
+        if(behind_camera) return;
         pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, 3);
     }
 
@@ -270,11 +326,16 @@ public:
         return camera_direction;
     }
 
+    bool points_on = true;
+    bool lines_on = true;
+    bool surfaces_on = true;
+
 protected:
     std::vector<Point> points;
     std::vector<Line> lines;
     std::vector<Surface> surfaces;
     glm::vec3 camera_pos;
+    glm::quat angular_rotation_per_frame = glm::quat(1,0,0,0);
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
     Pixels sketchpad;
 };
