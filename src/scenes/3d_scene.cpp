@@ -33,6 +33,7 @@ struct Surface {
     glm::vec3 left_relative;
     glm::vec3 up_relative;
     Scene* scenePointer;
+    int alpha = 255;
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), left_relative(l), up_relative(u), scenePointer(sc) {}
 };
 
@@ -74,10 +75,10 @@ public:
     }
 
     bool isOutsideScreen(const pair<int, int>& point, int width, int height) {
-        return point.first < 0 || point.first >= width || point.second < 0 || point.second >= height;
+        return point.first < -width || point.first >= 2*width || point.second < -height || point.second >= 2*height;
     }
 
-    void render_surface(const Surface& surface, int padcol) {
+    virtual void render_surface(const Surface& surface, int padcol) {
         vector<pair<int, int>> corners(4);
         //note, ordering matters here
         corners[0] = coordinate_to_pixel(surface.center + surface.left_relative + surface.up_relative);
@@ -101,7 +102,7 @@ public:
         // Draw the edges of the polygon using Bresenham's function
         for (int i = 0; i < 4; i++) {
             int next = (i + 1) % 4;
-            sketchpad.bresenham(corners[i].first, corners[i].second, corners[next].first, corners[next].second, padcol);
+            sketchpad.bresenham(corners[i].first, corners[i].second, corners[next].first, corners[next].second, padcol, 1);
         }
 
         Pixels* p;
@@ -149,7 +150,9 @@ public:
                 glm::vec3 particle_velocity = unproject(cx, cy);
                 glm::vec2 surface_coords = intersectionPoint(particle_velocity-camera_pos, surface, normal, lr2, ur2);
                 // Set the pixel to the new color
-                pix.set_pixel_with_transparency(cx, cy, p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h));
+                int col = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h);
+                col = ((geta(col)*surface.alpha/255) << 24) | (col&0xffffff);
+                pix.set_pixel_with_transparency(cx, cy, col);
             }
 
             sketchpad.set_pixel(cx, cy, padcol);
@@ -202,7 +205,7 @@ public:
 
         // Sort the pointers based on distance from camera, in descending order
         std::sort(surfacePointers.begin(), surfacePointers.end(), [this](const Surface* a, const Surface* b) {
-            return squaredDistance(a->center, this->camera_pos) > squaredDistance(b->center, this->camera_pos);
+            return squaredDistance(a->center, this->camera_pos) < squaredDistance(b->center, this->camera_pos);
         });
 
         // Render the surfaces using the sorted pointers
@@ -235,7 +238,7 @@ public:
     void render_line(const Line& line) {
         std::pair<int, int> pixel1 = coordinate_to_pixel(line.start);
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end);
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, 3);
     }
 
     glm::vec2 intersectionPoint(const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal, double lr2, double ur2) {
