@@ -31,13 +31,18 @@ public:
         return WHITE;
     }
 
+    virtual void inheritable_postprocessing(){}
+
     void query(bool& done_scene, Pixels*& p) override {
         if(do_physics){
-            graph->iterate_physics(1, true);
+            graph->iterate_physics(physics_multiplier, true);
             graph_to_3d();
+            inheritable_postprocessing();
         }
         ThreeDimensionScene::query(done_scene, p);
     }
+    
+    int physics_multiplier = 1;
 
 protected:
     bool do_physics = true;

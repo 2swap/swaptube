@@ -49,8 +49,8 @@ public:
 
     std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
-        coordinate = camera_direction * (coordinate - camera_pos) * glm::conjugate(camera_direction);
-        if(coordinate.z >= -1) {behind_camera = true; return {-1000, -1000};}
+        coordinate = camera_direction * (object_rotation * coordinate * glm::conjugate(object_rotation) - camera_pos) * glm::conjugate(camera_direction);
+        if(coordinate.z <= 1) {behind_camera = true; return {-1000, -1000};}
 
         double scale = w*.6 / coordinate.z; // perspective projection
         double x = scale * coordinate.x + w/2;
@@ -62,11 +62,11 @@ public:
     glm::vec3 unproject(double px, double py) {
         // Compute the reverse of the projection
         glm::vec3 coordinate;
-        coordinate.z = -10;
+        coordinate.z = 10;
         double invscale = -16.66666/w;
         coordinate.x = (px-w*.5)*invscale;
         coordinate.y = (py-h*.5)*invscale;
-        coordinate = glm::conjugate(camera_direction) * coordinate * camera_direction + camera_pos;
+        coordinate = glm::conjugate(object_rotation) * (glm::conjugate(camera_direction) * coordinate * camera_direction + camera_pos) * object_rotation;
         return coordinate;
     }
 
@@ -172,13 +172,18 @@ public:
         }
     }
 
-    void set_camera_pos(glm::vec3 position) {
+    void set_camera_pos(const glm::vec3& position) {
         camera_pos = position;
         rendered = false;
     }
 
-    void set_quat(glm::quat orientation) {
+    void set_camera_direction(const glm::quat& orientation) {
         camera_direction = glm::normalize(orientation);
+        rendered = false;
+    }
+
+    void set_object_rotation(const glm::quat& orientation) {
+        object_rotation = glm::normalize(orientation);
         rendered = false;
     }
 
@@ -189,8 +194,8 @@ public:
             );
         }
         if(variables.find("q1") != variables.end()){
-            set_quat(
-                glm::quat(variables.at("q1"), variables.at("q2"), variables.at("q3"), variables.at("q4"))
+            set_object_rotation(
+                glm::quat(variables.at("q1"), variables.at("qi"), variables.at("qj"), variables.at("qk"))
             );
         }
         rendered = false;
@@ -202,10 +207,7 @@ public:
         return glm::dot(diff, diff);
     }
 
-    void render_3d() {
-        pix.fill(TRANSPARENT_BLACK);
-
-
+    void point_at_center_of_mass(){ // TODO this doesnt even work and idk why
         glm::vec3 aggregate(0.0f, 0.0f, 0.0f);
 
         // Sum up all point positions
@@ -228,9 +230,13 @@ public:
 
         render_point(p);
         rendered = false;
+    }
 
+    void render_3d() {
+        pix.fill(TRANSPARENT_BLACK);
 
-
+        // active navigation/pointing
+        // point_at_center_of_mass();
 
         if(surfaces_on)
             render_surfaces();
@@ -241,7 +247,10 @@ public:
     }
 
     void render_surfaces(){
-        if (random() < .01) unit_test_unproject();
+        //lots of upfront cost, so bailout if there arent any surfaces.
+        if (surfaces.size() == 0) return;
+
+        if (random() < .1) unit_test_unproject();
         sketchpad.fill(BLACK);
 
         // Create a list of pointers to the surfaces
@@ -335,7 +344,7 @@ protected:
     std::vector<Line> lines;
     std::vector<Surface> surfaces;
     glm::vec3 camera_pos;
-    glm::quat angular_rotation_per_frame = glm::quat(1,0,0,0);
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
+    glm::quat object_rotation;  // Quaternion representing the rotation of the objects in the scene
     Pixels sketchpad;
 };
