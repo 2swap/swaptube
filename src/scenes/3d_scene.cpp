@@ -31,11 +31,16 @@ struct Line {
 
 struct Surface {
     glm::vec3 center;
-    glm::vec3 left_relative;
-    glm::vec3 up_relative;
+    glm::vec3 pos_x_dir;
+    glm::vec3 pos_y_dir;
     Scene* scenePointer;
+    double lr2;
+    double ur2;
     int alpha = 255;
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), left_relative(l), up_relative(u), scenePointer(sc) {}
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc) {
+        lr2 = square(glm::length(l));
+        ur2 = square(glm::length(u));
+    }
 };
 
 class ThreeDimensionScene : public Scene {
@@ -49,7 +54,7 @@ public:
 
     std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
-        coordinate = camera_direction * (object_rotation * coordinate * glm::conjugate(object_rotation) - camera_pos) * glm::conjugate(camera_direction);
+        coordinate = camera_direction * (coordinate - camera_pos) * glm::conjugate(camera_direction);
         if(coordinate.z <= 1) {behind_camera = true; return {-1000, -1000};}
 
         double scale = w*.6 / coordinate.z; // perspective projection
@@ -63,10 +68,10 @@ public:
         // Compute the reverse of the projection
         glm::vec3 coordinate;
         coordinate.z = 10;
-        double invscale = -16.66666/w;
+        double invscale = coordinate.z / (w*.6);
         coordinate.x = (px-w*.5)*invscale;
         coordinate.y = (py-h*.5)*invscale;
-        coordinate = glm::conjugate(object_rotation) * (glm::conjugate(camera_direction) * coordinate * camera_direction + camera_pos) * object_rotation;
+        coordinate = glm::conjugate(camera_direction) * coordinate * camera_direction + camera_pos;
         return coordinate;
     }
 
@@ -87,10 +92,11 @@ public:
         vector<pair<int, int>> corners(4);
         //note, ordering matters here
         bool behind_camera = false;
-        corners[0] = coordinate_to_pixel(surface.center + surface.left_relative + surface.up_relative, behind_camera);
-        corners[1] = coordinate_to_pixel(surface.center - surface.left_relative + surface.up_relative, behind_camera);
-        corners[2] = coordinate_to_pixel(surface.center - surface.left_relative - surface.up_relative, behind_camera);
-        corners[3] = coordinate_to_pixel(surface.center + surface.left_relative - surface.up_relative, behind_camera);
+        corners[0] = coordinate_to_pixel(surface.center + surface.pos_x_dir + surface.pos_y_dir, behind_camera);
+        corners[1] = coordinate_to_pixel(surface.center - surface.pos_x_dir + surface.pos_y_dir, behind_camera);
+        corners[2] = coordinate_to_pixel(surface.center - surface.pos_x_dir - surface.pos_y_dir, behind_camera);
+        corners[3] = coordinate_to_pixel(surface.center + surface.pos_x_dir - surface.pos_y_dir, behind_camera);
+        for(int i = 0; i < 4; i++) pix.fill_ellipse(corners[i].first, corners[i].second, 2, 2, WHITE);
         if(behind_camera) return;
 
         // Check if all corners are outside the screen
@@ -141,9 +147,7 @@ public:
             //q.push({lerp(lerp(x1, x2, .5), cx, .3), lerp(lerp(y1, y2, .5), cy, .3)});
         }
 
-        glm::vec3 normal = glm::normalize(glm::cross(surface.left_relative, surface.up_relative));
-        double lr2 = square(glm::length(surface.left_relative));
-        double ur2 = square(glm::length(surface.up_relative));
+        glm::vec3 normal = glm::cross(surface.pos_x_dir, surface.pos_y_dir);
 
         while (!q.empty()) {
             auto [cx, cy] = q.front();
@@ -152,12 +156,15 @@ public:
             // Check if the current point is within bounds and has the old color
             if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
 
-            if(pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
+            if(true || pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
                 //compute position in surface's coordinate frame as a function of x and y.
-                glm::vec3 particle_velocity = unproject(cx, cy);
-                glm::vec2 surface_coords = intersectionPoint(particle_velocity-camera_pos, surface, normal, lr2, ur2);
+                glm::vec3 particle_3d = unproject(cx, cy);
+                glm::vec2 surface_coords = intersection_point(camera_pos, particle_3d-camera_pos, surface, normal);
                 // Set the pixel to the new color
-                int col = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h);
+                double x_pix = surface_coords.x*p->w;
+                double y_pix = surface_coords.y*p->h;
+                int col = p->get_pixel(x_pix, y_pix);
+                //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? WHITE : BLACK; // add tiling to void space
                 col = ((geta(col)*surface.alpha/255) << 24) | (col&0xffffff);
                 pix.set_pixel_with_transparency(cx, cy, col);
             }
@@ -177,24 +184,24 @@ public:
         rendered = false;
     }
 
-    void set_camera_direction(const glm::quat& orientation) {
-        camera_direction = glm::normalize(orientation);
-        rendered = false;
+    void set_original_camera_pos(const glm::vec3& position) {
+        original_camera_pos = position;
     }
 
-    void set_object_rotation(const glm::quat& orientation) {
-        object_rotation = glm::normalize(orientation);
+    void set_camera_direction(const glm::quat& orientation) {
+        camera_direction = glm::normalize(orientation);
+        set_camera_pos(glm::conjugate(camera_direction) * original_camera_pos * camera_direction);
         rendered = false;
     }
 
     void update_variables(const std::unordered_map<string, double>& variables) {
-        if(variables.find("x") != variables.end()){
+        /*if(variables.find("x") != variables.end()){
             set_camera_pos(
                 glm::vec3(variables.at("x"), variables.at("y"), variables.at("z"))
             );
-        }
+        }*/
         if(variables.find("q1") != variables.end()){
-            set_object_rotation(
+            set_camera_direction(
                 glm::quat(variables.at("q1"), variables.at("qi"), variables.at("qj"), variables.at("qk"))
             );
         }
@@ -250,7 +257,8 @@ public:
         //lots of upfront cost, so bailout if there arent any surfaces.
         if (surfaces.size() == 0) return;
 
-        if (random() < .1) unit_test_unproject();
+        unit_test_unproject();
+        unit_test_intersection_point();
         sketchpad.fill(BLACK);
 
         // Create a list of pointers to the surfaces
@@ -306,21 +314,43 @@ public:
         pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, 3);
     }
 
-    glm::vec2 intersectionPoint(const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal, double lr2, double ur2) {
-
+    glm::vec2 intersection_point(const glm::vec3 &particle_start, const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal) {
         // Find t
-        float t = glm::dot(normal, (surface.center - camera_pos)) / glm::dot(normal, particle_velocity);
+        float t = glm::dot(normal, (surface.center - particle_start)) / glm::dot(normal, particle_velocity);
+        //cout << "t: " << t << endl;
 
         // Compute the intersection point in 3D space
-        glm::vec3 intersection_3D = camera_pos + t * particle_velocity;
+        glm::vec3 intersection_3D = particle_start + t * particle_velocity;
+        //cout << "intersection_3D: " << intersection_3D.x << ", " << intersection_3D.y << ", " << intersection_3D.z << endl;
 
         // Convert 3D intersection point to surface's local 2D coordinates
-        glm::vec3 gah = intersection_3D - surface.center;
+        glm::vec3 centered = intersection_3D - surface.center;
         glm::vec2 intersection_2D;
-        intersection_2D.x = glm::dot(gah, surface.left_relative) / lr2;
-        intersection_2D.y = glm::dot(gah, surface.up_relative) / ur2;
+        intersection_2D.x = glm::dot(centered, surface.pos_x_dir) / surface.lr2;
+        intersection_2D.y = glm::dot(centered, surface.pos_y_dir) / surface.ur2;
+        //cout << "intersection_2D: " << intersection_2D.x << ", " << intersection_2D.y << endl;
 
-        return (intersection_2D + 1.0f) * 0.5f;  // Mapping from [-1, 1] to [0, 1]
+        return (intersection_2D + 1.0f) * 0.5f;
+    }
+
+    void unit_test_intersection_point(){
+        glm::vec3 particle_start(-1,-1,-1);
+        glm::vec3 particle_velocity(3,2,1);
+        Surface surface(glm::vec3(0,0,0), glm::vec3(-1,0,0), glm::vec3(0,-1,0), NULL);
+        glm::vec3 normal(0,0,1);
+        glm::vec2 expected_output(-.5,0);
+        glm::vec2 actual_output = intersection_point(particle_start, particle_velocity, surface, normal);
+        //cout << "actual output: " << actual_output.x << ", " << actual_output.y << endl;
+        assert(glm::length(actual_output - expected_output) < 0.001);
+
+        particle_start = glm::vec3(0,0,-1);
+        particle_velocity = glm::vec3(1,10,1);
+        surface = Surface(glm::vec3(0,0,0), glm::vec3(-1,0,1), glm::vec3(0,-1,0), NULL);
+        normal = glm::vec3(-1,0,-1);
+        expected_output = glm::vec2(.25,-2);
+        actual_output = intersection_point(particle_start, particle_velocity, surface, normal);
+        //cout << "actual output: " << actual_output.x << ", " << actual_output.y << endl;
+        assert(glm::length(actual_output - expected_output) < 0.001);
     }
 
     void add_point(Point point) {
@@ -344,7 +374,7 @@ protected:
     std::vector<Line> lines;
     std::vector<Surface> surfaces;
     glm::vec3 camera_pos;
+    glm::vec3 original_camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
-    glm::quat object_rotation;  // Quaternion representing the rotation of the objects in the scene
     Pixels sketchpad;
 };
