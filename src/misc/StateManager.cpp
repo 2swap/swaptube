@@ -94,7 +94,7 @@ static unordered_map<string, double> global_state{
 
 class StateManager {
 public:
-    StateManager() : parent(nullptr) {}
+    StateManager() : parent(nullptr), subjugated(false) {}
 
     /* Accessors */
     bool contains(const string& varname) const {
@@ -264,7 +264,16 @@ public:
         }
     }
 
+    const void set_subjugated(bool b) {
+        subjugated = b;
+    }
+
     const State get_state(const StateQuery& query) const {
+        if(subjugated){
+            if (parent == nullptr) {
+                throw runtime_error("A StateManager was queried while marked as subjugated despite not having a parent."): 
+            return parent->get_state(query);
+        }
         State result;
         for (const auto& varname : query) {
             result.set(varname, get_value(varname));
@@ -283,7 +292,12 @@ private:
     unordered_set<string> in_microblock_transition;
     unordered_set<string> in_macroblock_transition;
 
+
     StateManager* parent = nullptr;
+    // When a state manager is "sujugated" to a parent, that means it
+    // strictly defers to the parent's state without considering its
+    // own variables first.
+    bool subjugated = false;
 
     // Take a string like "<variable_that_equals_7> 5 +" and return "7 5 +"
     string insert_equation_dependencies(string variable, string equation) const {
