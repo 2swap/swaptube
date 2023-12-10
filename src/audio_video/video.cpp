@@ -114,7 +114,6 @@ void MovieWriter::destroy_video() {
     while(encode_and_write_frame(NULL));
 
     // Closing the video codec.
-    cout << "closing the codec" << endl;
     avcodec_close(videoCodecContext);
 
     // Freeing video specific resources

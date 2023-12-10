@@ -31,20 +31,29 @@ public:
     }
 
     void update_surfaces(){
-        surfaces.clear();
-        if(surfaces.size() != graph->size()) {
-            for(pair<double, Node<C4Board>> p : graph->nodes){
-                Node<C4Board> node = p.second;
-                glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
-                surfaces.push_back(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), new C4Scene(600, 600, node.data->representation)));
-            }
+        for(pair<double, Node<C4Board>> p : graph->nodes){
+            Node<C4Board> node = p.second;
+            glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
+            C4Scene* sc = new C4Scene(600, 600, node.data->representation);
+            surfaces.push_back(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), sc));
         }
         rendered = false;
     }
 
-    void inheritable_postprocessing() override{
+    void clear_surfaces(){
+        for(Surface s : surfaces){
+            delete s.scenePointer;
+        }
+        surfaces.clear();
+        rendered = false;
+    }
+
+    void inheritable_preprocessing() override{
         update_surfaces();
-        //TODO implement center_camera();
+    }
+
+    void inheritable_postprocessing() override{
+        clear_surfaces();
     }
 
     void render_surface(const Surface& surface, int padcol) {
