@@ -96,7 +96,7 @@ public:
         corners[1] = coordinate_to_pixel(surface.center - surface.pos_x_dir + surface.pos_y_dir, behind_camera);
         corners[2] = coordinate_to_pixel(surface.center - surface.pos_x_dir - surface.pos_y_dir, behind_camera);
         corners[3] = coordinate_to_pixel(surface.center + surface.pos_x_dir - surface.pos_y_dir, behind_camera);
-        for(int i = 0; i < 4; i++) pix.fill_ellipse(corners[i].first, corners[i].second, 2, 2, WHITE);
+        //for(int i = 0; i < 4; i++) pix.fill_ellipse(corners[i].first, corners[i].second, 2, 2, WHITE);
         if(behind_camera) return;
 
         // Check if all corners are outside the screen
@@ -156,7 +156,7 @@ public:
             // Check if the current point is within bounds and has the old color
             if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
 
-            if(true || pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
+            if(pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
                 //compute position in surface's coordinate frame as a function of x and y.
                 glm::vec3 particle_3d = unproject(cx, cy);
                 glm::vec2 surface_coords = intersection_point(camera_pos, particle_3d-camera_pos, surface, normal);
@@ -184,25 +184,21 @@ public:
         rendered = false;
     }
 
-    void set_original_camera_pos(const glm::vec3& position) {
-        original_camera_pos = position;
-    }
-
-    void set_camera_direction(const glm::quat& orientation) {
+    void set_camera_direction(const glm::quat& orientation, double dist) {
         camera_direction = glm::normalize(orientation);
-        set_camera_pos(glm::conjugate(camera_direction) * original_camera_pos * camera_direction);
+        set_camera_pos(glm::conjugate(camera_direction) * glm::vec3(0,0,-dist) * camera_direction);
         rendered = false;
     }
 
     void update_variables(const std::unordered_map<string, double>& variables) {
-        /*if(variables.find("x") != variables.end()){
+        if(variables.find("x") != variables.end()){
             set_camera_pos(
                 glm::vec3(variables.at("x"), variables.at("y"), variables.at("z"))
             );
-        }*/
+        }
         if(variables.find("q1") != variables.end()){
             set_camera_direction(
-                glm::quat(variables.at("q1"), variables.at("qi"), variables.at("qj"), variables.at("qk"))
+                glm::quat(variables.at("q1"), variables.at("qi"), variables.at("qj"), variables.at("qk")), variables.at("d")
             );
         }
         rendered = false;
@@ -276,6 +272,7 @@ public:
         for (int i = 0; i < surfacePointers.size(); i++) {
             render_surface(*(surfacePointers[i]), i+100);
         }
+        //cout << "Rendered all surfaces" << endl;
     }
 
     void render_points(){
@@ -311,7 +308,7 @@ public:
         std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, 3);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, 1);
     }
 
     glm::vec2 intersection_point(const glm::vec3 &particle_start, const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal) {
@@ -374,7 +371,6 @@ protected:
     std::vector<Line> lines;
     std::vector<Surface> surfaces;
     glm::vec3 camera_pos;
-    glm::vec3 original_camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
     Pixels sketchpad;
 };
