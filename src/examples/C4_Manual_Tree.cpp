@@ -36,16 +36,15 @@ void render_video() {
     }
     v.inject_audio_and_render(AudioSegment(.1));
     g.dimensions = 3;
-    for(int i = 1; i <= 7; i++){
+    /*for(int i = 1; i <= 7; i++){
         for(int j = 1; j <= 7; j++){
             if(j==4) continue;
             g.add_node(new C4Board("444" + to_string(i) + to_string(j)));
             g.sanitize_for_closure();
-            v.inject_audio_and_render(AudioSegment(.1));
         }
         v.inject_audio_and_render(AudioSegment(.1));
     }
-    v.inject_audio_and_render(AudioSegment(1));
+    v.inject_audio_and_render(AudioSegment(.1));*/
 
 
     cout << g.size() << endl;

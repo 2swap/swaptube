@@ -72,12 +72,12 @@ public:
         bool done_scene = false;
         Pixels* p = nullptr;
         while (!done_scene) {
-            WRITER->set_audiotime(video_time_s);
+            WRITER->set_time(video_time_s);
             query(done_scene, p);
             assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
             video_time_s += 1./VIDEO_FRAMERATE;
-            if((video_num_frames++)%15 == 0) p->print_to_terminal();
-            WRITER->addFrame(*p);
+            if((video_num_frames++)%5 == 0) p->print_to_terminal();
+            WRITER->add_frame(*p);
         }
         write_status = READY_FOR_AUDIO;
     }
