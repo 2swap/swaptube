@@ -1,19 +1,13 @@
-// Adapted from https://stackoverflow.com/questions/34511312
-
 #pragma once
 
 #include <filesystem>
 #include "../misc/pixels.h"
-extern "C"
-{
-    #include <libswscale/swscale.h>
-    #include <libavformat/avformat.h>
-}
+#include "subs.cpp"
+#include "audio.cpp"
+#include "video.cpp"
 
 char* err2str(int errnum)
 {
-    // static char str[AV_ERROR_MAX_STRING_SIZE];
-    // thread_local may be better than static in multi-thread circumstance
     thread_local char str[AV_ERROR_MAX_STRING_SIZE]; 
     memset(str, 0, sizeof(str));
     return av_make_error_string(str, AV_ERROR_MAX_STRING_SIZE, errnum);
@@ -24,35 +18,32 @@ using namespace std;
 
 class MovieWriter
 {
-    unsigned outframe = 0, audframe = 0;
-    int audiotime = 0;
-    double substime = 0;
-    int subtitle_count = 0;
-    int audioStreamIndex;
-
-    string output_filename, srt_filename, record_filename;
-    string media_folder;
-
-    ofstream srt_file;
-    ofstream shtooka_file;
-
-    SwsContext* sws_ctx = nullptr;
-    AVStream* videoStream = nullptr;
-    AVStream* audioStream = nullptr;
+private:
+    string media_folder, output_filename;
     AVFormatContext* fc = nullptr;
-    AVCodecContext* videoCodecContext = nullptr;
-    AVCodecContext* audioInputCodecContext = nullptr;
-    AVCodecContext* audioOutputCodecContext = nullptr;
-    AVPacket pkt = {0}, inputPacket = {0};
+    SubtitleWriter subswriter;
+    AudioWriter audiowriter;
+    VideoWriter videowriter;
 
-    AVFrame *rgbpic = nullptr;
-    AVFrame *yuvpic = nullptr;
-
-    ofstream audio_pts_file;
+    // Function to initialize 'fc'
+    AVFormatContext* initFC(const string& output_filename) {
+        AVFormatContext* temp_fc = nullptr;
+        cout << "Initializing FormatContext" << endl;
+        avformat_alloc_output_context2(&temp_fc, NULL, NULL, output_filename.c_str());
+        return temp_fc;
+    }
 
 public:
 
-    void make_media_folder() {
+    MovieWriter(const string& project_name):
+        media_folder("../media/" + project_name + "/"),
+        output_filename("../out/" + project_name + ".mp4"),
+        fc(initFC(output_filename)),
+        subswriter(project_name),
+        audiowriter(media_folder, fc),
+        videowriter(output_filename, fc)
+    {
+        cout << "Constructing a MovieWriter" << endl;
         // Check if the folder already exists
         if (filesystem::exists(media_folder)) {
             cout << "Media folder already exists, not creating." << endl;
@@ -66,50 +57,46 @@ public:
         }
     }
 
-    MovieWriter(const string& output_filename_, const string& srt_filename_, const string& record_filename_, const string& media_) :
-    output_filename(output_filename_), srt_filename(srt_filename_), record_filename(record_filename_), inputPacket(), media_folder(media_) {}
+    ~MovieWriter(){
+        // We babysit these cleanup functions instead of delegating to destructors because
+        // the shared fc resource complicates things and ordering of cleanup is crucial.
+        audiowriter.cleanup();
+        videowriter.cleanup();
 
-    MovieWriter() {}
-
-    bool file_exists(const std::string& filename);
-    double add_audio_get_length(const string& inputAudioFilename);
-    void add_silence(double duration);
-    double encode_and_write_audio();
-    bool encode_and_write_frame(AVFrame* frame);
-    void addFrame(const Pixels& p);
-    void set_audiotime(double t_seconds);
-    void add_srt_time(double s);
-    void add_subtitle(double duration, const string& text);
-    double add_audio_segment(const AudioSegment& audio);
-    void add_shtooka_entry(const string& filename, const string& subtitleText);
-    void init_audio(const string& inputAudioFilename);
-    void init_video();
-    void destroy_audio();
-    void destroy_video();
-
-    void init(const string& inputAudioFilename) {
-        make_media_folder();
-        avformat_alloc_output_context2(&fc, NULL, NULL, output_filename.c_str());
-        av_log_set_level(AV_LOG_DEBUG);
-
-        init_audio(inputAudioFilename);
-        init_video();
-    }
-
-    ~MovieWriter()
-    {
-        destroy_audio();
-
-        destroy_video();
-        
-        cout << "closing the file" << endl;
+        cout << "Yeeting the fc" << endl;
         av_write_trailer(fc);
         avio_closep(&fc->pb);
         avformat_free_context(fc);
     }
 
+    void init(const string& inputAudioFilename) {
+        audiowriter.init_audio(inputAudioFilename);
+        videowriter.init_video();
+    }
+
+    void set_time(double t_seconds){
+        subswriter.set_substime(t_seconds);
+        audiowriter.set_audiotime(t_seconds);
+    }
+
+    void add_frame(const Pixels& p) {
+        videowriter.add_frame(p);
+    }
+
+    double add_audio_segment(const AudioSegment& audio){
+        double duration_seconds = 0;
+        if (audio.is_silence()) {
+            duration_seconds = audio.getDurationSeconds();
+            audiowriter.add_silence(duration_seconds);
+        } else {
+            duration_seconds = audiowriter.add_audio_get_length(audio.getAudioFilename());
+            subswriter.add_subtitle(duration_seconds, audio.getSubtitleText());
+            audiowriter.add_shtooka_entry(audio.getAudioFilename(), audio.getSubtitleText());
+        }
+        return duration_seconds;
+    }
+
 };
 
-#include "audio.cpp"
-#include "video.cpp"
-#include "subs.cpp"
+// This is a global writer handle which is accessed both by the main class and the scene object.
+MovieWriter* WRITER;

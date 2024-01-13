@@ -5,11 +5,10 @@ using namespace std;
 #include <stdlib.h>
 #include <math.h>
 #include <fstream>
-#include <chrono> // chrono library for timing.
 
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
-int MULT = 2;
+int MULT = 1;
 
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
@@ -19,32 +18,31 @@ int video_num_frames = 0;
 
 #include "audio_video/AudioSegment.cpp"
 #include "audio_video/writer.cpp"
-
-MovieWriter* WRITER;
-
 #include "misc/inlines.h"
 #include "scenes/Connect4/c4.h"
 #include "misc/pixels.h"
 #include "misc/convolver.cpp"
 #include "misc/convolution_tests.cpp"
 #include "scenes/scene.cpp"
+#include "misc/Timer.cpp"
+
+void setup_writer(const string& project_name){
+    cout << "Setting up static writer" << endl;
+    // Create a new MovieWriter object and assign it to the pointer
+    WRITER = new MovieWriter(project_name);
+    cout << "Initializing static writer" << endl;
+    WRITER->init("../media/testaudio.mp3");
+    cout << "Static writer ready" << endl;
+}
+
+#include "examples/C4_Manual_Tree.cpp"
+
 
 void run_unit_tests(){
     run_inlines_unit_tests();
     run_convolution_unit_tests();
     run_c4_unit_tests();
 }
-
-void setup_writer(const string& project_name){
-    // Create a new MovieWriter object and assign it to the pointer
-    WRITER = new MovieWriter("../out/" + project_name + ".mp4",
-                             "../out/" + project_name + ".srt",
-                           "../media/" + project_name + "/record_list.tsv",
-                           "../media/" + project_name + "/");
-    WRITER->init("../media/testaudio.mp3");
-}
-
-#include "examples/Solutions.cpp"
 
 int main(int argc, char* argv[]) {
     run_unit_tests();
@@ -53,24 +51,20 @@ int main(int argc, char* argv[]) {
         cerr << "Usage: " << argv[0] << " <config_file_without_.json>" << endl;
         exit(1);
     }
-
     const string project_name = string(argv[1]);
 
-    setup_writer(project_name);
-
-    // Start the timer.
-    auto start = std::chrono::high_resolution_clock::now();
-    render_video();
-    delete WRITER;
-
-    // Stop the timer.
-    auto stop = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    // Print out time stats
-    double render_time_minutes = duration.count() / 60000000.0;
-    double video_length_minutes = video_time_s/60.;
-    cout << "Render time:  " << render_time_minutes << " minutes." << endl;
-    cout << "Video length: " << video_length_minutes << " minutes." << endl;
+    Timer timer;
+    {
+        setup_writer(project_name);
+        {
+            render_video();
+        }
+        cout << "Deleting the writer" << endl;
+        delete WRITER;
+        cout << "Deleted the writer" << endl;
+    }
+    timer.stop_timer(video_time_s);
+    cout << "Done" << endl;
 
     return 0;
 }
