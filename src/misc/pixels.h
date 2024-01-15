@@ -3,7 +3,9 @@
 #include <vector>
 #include <librsvg-2.0/librsvg/rsvg.h>
 #include "inlines.h"
-#include <unistd.h>  // For access() function
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/ioctl.h>
 #include <fstream>
 #include <sstream>
 #include <stack>
@@ -75,8 +77,13 @@ public:
     }
 
     void print_to_terminal() const {
-        const int width = 196;
-        const int height = 64;
+        struct winsize wsz;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsz);
+
+        const int twidth = wsz.ws_col;
+        const int theight = wsz.ws_row;
+        const int width = min(twidth, theight*w/h);
+        const int height = min(theight, twidth*h/w);
         const int xStep = max(w / width, 1);
         const int yStep = max(h / height, 1);
 

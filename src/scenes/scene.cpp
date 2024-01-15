@@ -16,6 +16,7 @@ public:
     Scene() : w(VIDEO_WIDTH), h(VIDEO_HEIGHT), pix(VIDEO_WIDTH, VIDEO_HEIGHT){};
     virtual void query(bool& done_scene, Pixels*& p) = 0;
     virtual void update_variables(const unordered_map<string, double>& variables) {};
+    virtual unordered_map<string, string> get_default_variables() {return unordered_map<string, string>();};
 
     void query(Pixels*& p){
         bool b = false;

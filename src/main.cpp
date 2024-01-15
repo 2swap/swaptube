@@ -35,7 +35,7 @@ void setup_writer(const string& project_name){
     cout << "Static writer ready" << endl;
 }
 
-#include "examples/C4_Manual_Tree.cpp"
+#include "projects/.active_project.tmp"
 
 
 void run_unit_tests(){
@@ -59,12 +59,9 @@ int main(int argc, char* argv[]) {
         {
             render_video();
         }
-        cout << "Deleting the writer" << endl;
         delete WRITER;
-        cout << "Deleted the writer" << endl;
     }
     timer.stop_timer(video_time_s);
-    cout << "Done" << endl;
 
     return 0;
 }

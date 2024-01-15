@@ -7,14 +7,25 @@
 
 class VariableScene : public Scene {
 public:
-    VariableScene(const int width, const int height, Scene* _subscene) : Scene(width, height), subscene(_subscene) {}
-    VariableScene(Scene* _subscene) : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), subscene(_subscene) {}
+    VariableScene(const int width, const int height, Scene* _subscene) : Scene(width, height), subscene(_subscene) {set_variables_to_scene_default();}
+    VariableScene(Scene* _subscene) : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), subscene(_subscene) {set_variables_to_scene_default();}
+
+    void set_variables_to_scene_default(){
+        variables = subscene->get_default_variables();
+    }
 
     void stage_transition(unordered_map<string, string> v){
         upcoming_variables = v;
         is_transition = true;
         rendered = false;
         assert(v.size() == variables.size());
+    }
+
+TODO update all setters of maps to use this func
+    void updateMap(std::unordered_map<std::string, int>& map1, const std::unordered_map<std::string, int>& map2) {
+            for (const auto& pair : map2) {
+                        map1[pair.first] = pair.second;
+                            }
     }
 
     void set_variables(unordered_map<string, string> v){
