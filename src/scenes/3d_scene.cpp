@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scene.cpp"
+#include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -51,6 +52,22 @@ public:
     void init_camera(){
         camera_direction = glm::quat(1,0,0,0);
         camera_pos = glm::vec3(0,0,-3);
+    }
+
+    std::unordered_map<std::string, std::string> get_default_variables(){
+        return unordered_map<string, string>{
+            {"q1", 0},
+            {"qi", 0},
+            {"qj", 0},
+            {"qk", 0},
+            {"d", 0},
+            {"x", 0},
+            {"y", 0},
+            {"z", 0},
+            {"surfaces_on", "1"},
+            {"points_on", "1"},
+            {"lines_on", "1"},
+        };
     }
 
     std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
@@ -292,16 +309,15 @@ public:
     }
 
     void update_variables(const std::unordered_map<string, double>& variables) {
-        if(variables.find("x") != variables.end()){
-            set_camera_pos(
-                glm::vec3(variables.at("x"), variables.at("y"), variables.at("z"))
-            );
-        }
-        if(variables.find("q1") != variables.end()){
-            set_camera_direction(
-                glm::quat(variables.at("q1"), variables.at("qi"), variables.at("qj"), variables.at("qk")), variables.at("d")
-            );
-        }
+        surfaces_on = variables.at("surfaces_on") != 0;
+        points_on = variables.at("points_on") != 0;
+        lines_on = variables.at("lines_on") != 0;
+        set_camera_pos(
+            glm::vec3(variables.at("x"), variables.at("y"), variables.at("z"))
+        );
+        set_camera_direction(
+            glm::quat(variables.at("q1"), variables.at("qi"), variables.at("qj"), variables.at("qk")), variables.at("d")
+        );
         rendered = false;
     }
 
@@ -463,11 +479,10 @@ public:
         return camera_direction;
     }
 
-    bool points_on = true;
-    bool lines_on = true;
-    bool surfaces_on = true;
-
 protected:
+    bool surfaces_on = false;
+    bool points_on = false;
+    bool lines_on = false;
     std::vector<Point> points;
     std::vector<Line> lines;
     std::vector<Surface> surfaces;
