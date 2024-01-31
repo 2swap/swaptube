@@ -53,7 +53,7 @@ public:
         }
 
         time = 0;
-        scene_duration_frames = WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE;
+        scene_duration_frames = FOR_REAL ? WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE : 0;
         write_status = READY_FOR_VIDEO;
     }
 
@@ -78,7 +78,7 @@ public:
             assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
             video_time_s += 1./VIDEO_FRAMERATE;
             if((video_num_frames++)%5 == 0) p->print_to_terminal();
-            WRITER->add_frame(*p);
+            if(FOR_REAL) WRITER->add_frame(*p);
         }
         write_status = READY_FOR_AUDIO;
     }

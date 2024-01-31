@@ -13,6 +13,7 @@ int MULT = 1;
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
 int VIDEO_FRAMERATE = 30;
+bool FOR_REAL = true; // Whether we should actually write any AV output
 double video_time_s = 0;
 int video_num_frames = 0;
 
