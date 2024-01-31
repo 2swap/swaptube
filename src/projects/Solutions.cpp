@@ -49,16 +49,15 @@ void render_video() {
     v.stage_transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(.3));
     v.inject_audio_and_render(AudioSegment("First of all, you're gonna have to get comfortable imagining the game as a tree."));
 
     v.stage_transition(closequat);
 
 
     v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"y", "20"}
+        {"y", "13"}
     });
-    v.inject_audio_and_render(AudioSegment(.3));
+    v.inject_audio_and_render(AudioSegment(1));
     std::vector<double> nodes_to_remove;
     for (const auto& node_it : g.nodes) {
         nodes_to_remove.push_back(node_it.first);
@@ -67,12 +66,27 @@ void render_video() {
         g.remove_node(key);
     }
     v.set_variables(std::unordered_map<std::string, std::string>{
-        {"y", "0"}
+        {"y", "0"}, {"d", "10"}
     });
 
-    v.inject_audio_and_render(AudioSegment("For any starting position, we can draw a node."));
-    g.add_node(new C4Board("444"));
 
+    v.stage_transition(std::unordered_map<std::string, std::string>{
+        {"surfaces_opacity", "1"}
+    });
+
+    g.add_node(new C4Board("444"));
+    v.inject_audio_and_render(AudioSegment("For any starting position, we can draw a node."));
+
+
+
+
+
+
+
+
+
+
+    
     FOR_REAL = false;
     c4.inject_audio_and_render(AudioSegment("there is some amount of moves that can be made from that position, which we will represent as nodes connected to the root."));
     c4.inject_audio_and_render(AudioSegment("We'll connect those new nodes to the root with red lines, since red was the one who made a move here."));
