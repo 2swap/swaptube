@@ -89,7 +89,7 @@ public:
 
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
-                int sampleX = x * xStep;
+                int sampleX = x * xStep / 3 + w / 3;
                 int sampleY = y * yStep;
 
                 int r = pixels[(sampleX + w * sampleY) * 4];

@@ -15,21 +15,24 @@ public:
     }
 
     void stage_transition(unordered_map<string, string> v){
-        upcoming_variables = v;
+        upcoming_variables = variables;
+        update_map(upcoming_variables, v);
         is_transition = true;
         rendered = false;
-        assert(v.size() == variables.size());
+        assert(upcoming_variables.size() == variables.size());
     }
 
-TODO update all setters of maps to use this func
-    void updateMap(std::unordered_map<std::string, int>& map1, const std::unordered_map<std::string, int>& map2) {
-            for (const auto& pair : map2) {
-                        map1[pair.first] = pair.second;
-                            }
+    void update_map(std::unordered_map<std::string, string>& map1, const std::unordered_map<std::string, string>& map2) {
+        for (const auto& pair : map2) {
+            if(map1.find(pair.first) == map1.end()){
+                cout << "Invalid variable key!" << endl;
+            }
+            map1[pair.first] = pair.second;
+        }
     }
 
     void set_variables(unordered_map<string, string> v){
-        variables = v;
+        update_map(variables, v);
         rendered = false;
     }
 
