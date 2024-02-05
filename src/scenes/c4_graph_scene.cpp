@@ -75,7 +75,7 @@ public:
             glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
             surface.scenePointer
         );
-        surface_rotated.alpha = surface.alpha;
+        surface_rotated.opacity = surface.opacity;
 
         ThreeDimensionScene::render_surface(surface_rotated, padcol);
     }

@@ -12,6 +12,7 @@ void render_video() {
     g.sanitize_for_closure();
     VariableScene v(&c4);
 
+    //FOR_REAL = false;
     std::unordered_map<std::string, std::string> closequat{
         {"q1", "t 4 / cos"},
         {"qi", "0"},
@@ -19,7 +20,6 @@ void render_video() {
         {"qk", "0"},
         {"d", "2"}
     };
-    FOR_REAL = false;
     v.set_variables(closequat);
     v.inject_audio_and_render(AudioSegment("So far we have been interested in strategies of connect 4,"));
     v.stage_transition(std::unordered_map<std::string, std::string>{
@@ -31,6 +31,7 @@ void render_video() {
     });
     v.inject_audio_and_render(AudioSegment("but now it's time to apply those strategies to actually get a structural understanding of the game."));
 
+    if(FOR_REAL){
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board("444" + to_string(i)));
         g.sanitize_for_closure();
@@ -45,7 +46,7 @@ void render_video() {
             v.inject_audio_and_render(AudioSegment(.1));
         }
     }
-    FOR_REAL = true;
+    }
     v.stage_transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"}
     });
@@ -65,32 +66,65 @@ void render_video() {
     for (const double key : nodes_to_remove) {
         g.remove_node(key);
     }
+
+
     v.set_variables(std::unordered_map<std::string, std::string>{
-        {"y", "0"}, {"d", "10"}
+        {"y", "1.5"}, {"d", "10"},
+        {"q1", "0"},
+        {"qi", "0"},
+        {"qj", "0"},
+        {"qk", "0"},
     });
-
-
     v.stage_transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"}
     });
 
-    g.add_node(new C4Board("444"));
-    v.inject_audio_and_render(AudioSegment("For any starting position, we can draw a node."));
-
-
-
-
-
-
-
-
-
-
+    g.add_node(new C4Board("436"));
     
-    FOR_REAL = false;
+    
+    
+    
+    v.inject_audio_and_render(AudioSegment("For any starting position, we can draw a node."));
+    g.gravity_strength = 1;
+    c4.physics_multiplier = 0;
+    g.dimensions = 2;
     c4.inject_audio_and_render(AudioSegment("there is some amount of moves that can be made from that position, which we will represent as nodes connected to the root."));
-    c4.inject_audio_and_render(AudioSegment("We'll connect those new nodes to the root with red lines, since red was the one who made a move here."));
-    c4.inject_audio_and_render(AudioSegment("And from those positions, there are even more options that can be made, by Yellow this time, continuing the graph."));
+
+    double x = -1.5*4;
+    double y = 2;
+    g.add_node_with_position(new C4Board("4361"), (x+=1.5), y, 0);
+    g.sanitize_for_closure();
+    v.inject_audio_and_render(AudioSegment("Yellow can play in the left column,"));
+
+    g.add_node_with_position(new C4Board("4362"), (x+=1.5), y, 0);
+    g.sanitize_for_closure();
+    v.inject_audio_and_render(AudioSegment("the next column over,"));
+
+    FOR_REAL = true;
+    v.inject_audio(AudioSegment("and so on successively."), 5);
+    for(int i = 3; i <= 7; i++){
+        g.add_node_with_position(new C4Board("436" + to_string(i)), (x+=1.5), y, 0);
+        g.sanitize_for_closure();
+        v.render();
+    }
+
+    c4.physics_multiplier = 1;
+    c4.inject_audio_and_render(AudioSegment("We connect those new nodes to the root with yellow lines, since yellow was the one who played a move here."));
+    c4.inject_audio(AudioSegment("And from those positions, there are even more options that can be made, by Yellow this time, continuing the graph."), 49);
+    for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
+        g.add_node(new C4Board("436" + to_string(i) + to_string(j)));
+        g.sanitize_for_closure();
+        v.render();
+    }
+
+
+
+
+
+
+    /*
+
+
     c4.inject_audio_and_render(AudioSegment("In other words, every path through this graph represents a particular continuation from the existing board."));
     c4.inject_audio_and_render(AudioSegment("Some of them are really stupid continuations."));
     c4.inject_audio_and_render(AudioSegment("Some of them are the most commonly played lines by human players."));
@@ -176,4 +210,5 @@ void render_video() {
     c4.inject_audio_and_render(AudioSegment("Now, I may be biased, but I think the next few videos are going to be _really_ cool. We're going to take connect four as a case study in the nature of emergent complexity itself. Stay tuned. This has been 2swap."));
 
     
+    */
 }

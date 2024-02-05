@@ -5,10 +5,7 @@
 
 using namespace std;
 
-enum VIDEO_WRITING_STATUS {
-    READY_FOR_AUDIO,
-    READY_FOR_VIDEO
-} write_status = READY_FOR_AUDIO;
+int video_sessions_left = 0;
 
 class Scene {
 public:
@@ -38,12 +35,12 @@ public:
     }
 
     void inject_audio_and_render(const AudioSegment& audio){
-        inject_audio(audio);
+        inject_audio(audio, 1);
         render();
     }
 
-    void inject_audio(const AudioSegment& audio){
-        if (write_status != READY_FOR_AUDIO) {
+    void inject_audio(const AudioSegment& audio, int expected_video_sessions){
+        if (video_sessions_left != 0) {
             cerr << "======================================================\n";
             cerr << "ERROR: Attempted to add audio twice in a row, without rendering video!\n";
             cerr << "You probably forgot to use render()!\n";
@@ -52,13 +49,12 @@ public:
             exit(EXIT_FAILURE);
         }
 
-        time = 0;
-        scene_duration_frames = FOR_REAL ? WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE : 0;
-        write_status = READY_FOR_VIDEO;
+        scene_duration_frames = FOR_REAL ? (WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE) / expected_video_sessions: 0;
+        video_sessions_left = expected_video_sessions;
     }
 
     void render(){
-        if (write_status != READY_FOR_VIDEO) {
+        if (video_sessions_left == 0) {
             cerr << "======================================================\n";
             cerr << "ERROR: Attempted to render video, without having added audio first!\n";
             cerr << "You probably forgot to inject_audio() or inject_audio_and_render()!\n";
@@ -70,6 +66,7 @@ public:
         cout << "Rendering a scene" << endl;
         cout << "Frame Count:" << scene_duration_frames << endl;
 
+        time = 0;
         bool done_scene = false;
         Pixels* p = nullptr;
         while (!done_scene) {
@@ -80,7 +77,7 @@ public:
             if((video_num_frames++)%5 == 0) p->print_to_terminal();
             if(FOR_REAL) WRITER->add_frame(*p);
         }
-        write_status = READY_FOR_AUDIO;
+        video_sessions_left--;
     }
 
     int w = 0;

@@ -20,6 +20,7 @@ glm::quat  ROLL_CCW  (0, 0 , 0, 1 );
 struct Point {
     glm::vec3 position;
     int color; // ARGB integer representation
+    double opacity = 1.0;
     Point(const glm::vec3& pos, int clr) : position(pos), color(clr) {}
 };
 
@@ -27,6 +28,7 @@ struct Line {
     glm::vec3 start;
     glm::vec3 end;
     int color; // ARGB integer representation
+    double opacity = 1.0;
     Line(const glm::vec3& s, const glm::vec3& e, int clr) : start(s), end(e), color(clr) {}
 };
 
@@ -37,7 +39,7 @@ struct Surface {
     Scene* scenePointer;
     double lr2;
     double ur2;
-    int alpha = 255;
+    double opacity = 1.0;
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc) {
         lr2 = square(glm::length(l));
         ur2 = square(glm::length(u));
@@ -283,7 +285,7 @@ public:
                 double y_pix = surface_coords.y*p->h+.5;
                 int col = p->get_pixel(x_pix, y_pix);
                 //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? WHITE : BLACK; // add tiling to void space
-                col = colorlerp(TRANSPARENT_BLACK, ((geta(col)*surface.alpha/255) << 24) | (col&0xffffff),surfaces_opacity);
+                col = colorlerp(TRANSPARENT_BLACK, (static_cast<int>(geta(col)*surface.opacity) << 24) | (col&0xffffff),surfaces_opacity);
                 pix.set_pixel_with_transparency(cx, cy, col);
             }
 
@@ -407,7 +409,7 @@ public:
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
-        pix.fill_ellipse(pixel.first, pixel.second, 2, 2, colorlerp(TRANSPARENT_BLACK, point.color, points_opacity));
+        pix.fill_ellipse(pixel.first, pixel.second, 2, 2, colorlerp(TRANSPARENT_BLACK, point.color, points_opacity * point.opacity));
     }
 
     void render_line(const Line& line) {
@@ -415,7 +417,7 @@ public:
         std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(TRANSPARENT_BLACK, line.color, lines_opacity), 1);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(TRANSPARENT_BLACK, line.color, lines_opacity*line.opacity), 1);
     }
 
     glm::vec2 intersection_point(const glm::vec3 &particle_start, const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal) {
