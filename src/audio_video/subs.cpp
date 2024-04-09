@@ -51,7 +51,7 @@ public:
     }
 
     void add_subtitle(double duration, const string& text) {
-        if (text.size() > 90) {
+        if (text.size() > 120) {
             cout << "Subtitle too long!" << endl;
             // Find the position of the first period in the substring
             for (char c : {'!', '?', '.', ',', '-'}) {

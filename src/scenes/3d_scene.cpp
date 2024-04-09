@@ -18,21 +18,26 @@ glm::quat  ROLL_CW   (0, 0 , 0, -1);
 glm::quat  ROLL_CCW  (0, 0 , 0, 1 );
 
 struct Point {
+    string name;
     glm::vec3 position;
     int color; // ARGB integer representation
     double opacity = 1.0;
-    Point(const glm::vec3& pos, int clr) : position(pos), color(clr) {}
+    Point(string n, const glm::vec3& pos, int clr) : name(n), position(pos), color(clr) {}
 };
 
 struct Line {
+    string name;
+    glm::vec3 position;
     glm::vec3 start;
     glm::vec3 end;
     int color; // ARGB integer representation
     double opacity = 1.0;
-    Line(const glm::vec3& s, const glm::vec3& e, int clr) : start(s), end(e), color(clr) {}
+    Line(string n, const glm::vec3& s, const glm::vec3& e, int clr) : name(n), start(s), end(e), color(clr) {}
 };
 
 struct Surface {
+    string name;
+    glm::vec3 position;
     glm::vec3 center;
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
@@ -40,7 +45,7 @@ struct Surface {
     double lr2;
     double ur2;
     double opacity = 1.0;
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc) {
+    Surface(string n, const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : name(n), center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc) {
         lr2 = square(glm::length(l));
         ur2 = square(glm::length(u));
     }
@@ -285,7 +290,7 @@ public:
                 double y_pix = surface_coords.y*p->h+.5;
                 int col = p->get_pixel(x_pix, y_pix);
                 //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? WHITE : BLACK; // add tiling to void space
-                col = colorlerp(TRANSPARENT_BLACK, (static_cast<int>(geta(col)*surface.opacity) << 24) | (col&0xffffff),surfaces_opacity);
+                col = colorlerp(TRANSPARENT_BLACK, col, surface.opacity*surfaces_opacity);
                 pix.set_pixel_with_transparency(cx, cy, col);
             }
 
@@ -332,7 +337,7 @@ public:
 
         // Find average (center of mass) of the points
         glm::vec3 center_of_mass = aggregate / static_cast<float>(points.size());
-        Point p(center_of_mass, 0xff00ff00);
+        Point p("center_of_mass", center_of_mass, 0xff00ff00);
 
         glm::vec3 com = glm::normalize(center_of_mass - camera_pos);
         glm::quat v1(0,com.x,com.y,com.z);
@@ -442,7 +447,7 @@ public:
     void unit_test_intersection_point(){
         glm::vec3 particle_start(-1,-1,-1);
         glm::vec3 particle_velocity(3,2,1);
-        Surface surface(glm::vec3(0,0,0), glm::vec3(-1,0,0), glm::vec3(0,-1,0), NULL);
+        Surface surface("test", glm::vec3(0,0,0), glm::vec3(-1,0,0), glm::vec3(0,-1,0), NULL);
         glm::vec3 normal(0,0,1);
         glm::vec2 expected_output(-.5,0);
         glm::vec2 actual_output = intersection_point(particle_start, particle_velocity, surface, normal);
@@ -451,7 +456,7 @@ public:
 
         particle_start = glm::vec3(0,0,-1);
         particle_velocity = glm::vec3(1,10,1);
-        surface = Surface(glm::vec3(0,0,0), glm::vec3(-1,0,1), glm::vec3(0,-1,0), NULL);
+        surface = Surface("test2", glm::vec3(0,0,0), glm::vec3(-1,0,1), glm::vec3(0,-1,0), NULL);
         normal = glm::vec3(-1,0,-1);
         expected_output = glm::vec2(.25,-2);
         actual_output = intersection_point(particle_start, particle_velocity, surface, normal);
@@ -471,7 +476,7 @@ public:
         return camera_direction;
     }
 
-protected:
+public:
     double surfaces_opacity = 0;
     double points_opacity = 0;
     double lines_opacity = 0;

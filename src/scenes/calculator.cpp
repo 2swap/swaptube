@@ -1,9 +1,13 @@
+#pragma once
+
 #include <iostream>
 #include <stack>
 #include <cmath>
 #include <sstream>
 #include <unordered_map>
 #include <functional>
+
+using namespace std;
 
 struct OperatorInfo {
     function<double(vector<double>&)> operator_function;
@@ -54,7 +58,7 @@ struct OperatorInfo {
  *   an error message and return 0.0.
  * - The function assumes that the given expression is space-delimited.
  */
-double calculator(const string& expression, double t) {
+double calculator(const string& expression, double t = 0) {
     stack<double> stack;
     unordered_map<string, OperatorInfo> operators = {
         {"+", {[](vector<double>& operands) { return operands[0] + operands[1]; }, 2}},

@@ -14,12 +14,14 @@ int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
 int VIDEO_FRAMERATE = 30;
 bool FOR_REAL = true; // Whether we should actually write any AV output
+bool PRINT_TO_TERMINAL = true;
 double video_time_s = 0;
 int video_num_frames = 0;
 
+#include "scenes/dagger.cpp"
+#include "misc/inlines.h"
 #include "audio_video/AudioSegment.cpp"
 #include "audio_video/writer.cpp"
-#include "misc/inlines.h"
 #include "scenes/Connect4/c4.h"
 #include "misc/pixels.h"
 #include "misc/convolver.cpp"

@@ -16,12 +16,12 @@ public:
         for(pair<double, Node<T>> p : graph->nodes){
             Node<T> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
-            points.push_back(Point(node_pos, WHITE));
+            points.push_back(Point(node.data->representation, node_pos, WHITE));
 
             for(double neighbor_id : node.neighbors){
                 Node<T> neighbor = graph->nodes.find(neighbor_id)->second;
                 glm::vec3 neighbor_pos = glm::vec3(neighbor.x, neighbor.y, neighbor.z);
-                lines.push_back(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor)));
+                lines.push_back(Line(node.data->representation + " - " + neighbor.data->representation, node_pos, neighbor_pos, get_edge_color(node, neighbor)));
             }
         }
         rendered = false;

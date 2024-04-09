@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <cassert>
+#include "dagger.cpp"
 
 using namespace std;
 
@@ -40,44 +41,48 @@ public:
     }
 
     void inject_audio(const AudioSegment& audio, int expected_video_sessions){
+        if(!FOR_REAL)
+            return;
         if (video_sessions_left != 0) {
-            cerr << "======================================================\n";
-            cerr << "ERROR: Attempted to add audio twice in a row, without rendering video!\n";
-            cerr << "You probably forgot to use render()!\n";
-            cerr << "Exiting the program...\n";
-            cerr << "======================================================\n";
-            exit(EXIT_FAILURE);
+            failout("ERROR: Attempted to add audio twice in a row, without rendering video!\nYou probably forgot to use render()!");
         }
 
-        scene_duration_frames = FOR_REAL ? (WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE) / expected_video_sessions: 0;
+        superscene_frames_left = FOR_REAL ? WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE : 0;
+        cout << "Scene should last " << superscene_frames_left << " frames, with " << expected_video_sessions << " sessions.";
         video_sessions_left = expected_video_sessions;
     }
 
-    void render(){
+    bool render_one_frame(){
+        if(!FOR_REAL)
+            return true;
         if (video_sessions_left == 0) {
-            cerr << "======================================================\n";
-            cerr << "ERROR: Attempted to render video, without having added audio first!\n";
-            cerr << "You probably forgot to inject_audio() or inject_audio_and_render()!\n";
-            cerr << "Exiting the program...\n";
-            cerr << "======================================================\n";
-            exit(EXIT_FAILURE);
+            failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
         }
 
-        cout << "Rendering a scene" << endl;
-        cout << "Frame Count:" << scene_duration_frames << endl;
+        bool done_scene = false;
+        Pixels* p = nullptr;
+        superscene_frames_left--;
+        WRITER->set_time(video_time_s);
+        query(done_scene, p);
+        assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
+        video_time_s += 1./VIDEO_FRAMERATE;
+        if(PRINT_TO_TERMINAL && ((video_num_frames++)%5 == 0)) p->print_to_terminal();
+        WRITER->add_frame(*p);
+        if(done_scene) video_sessions_left--;
+        return done_scene;
+    }
+
+    void render(){
+        if(!FOR_REAL)
+            return;
+        scene_duration_frames = superscene_frames_left / video_sessions_left;
+        cout << "Rendering a scene. Frame Count:" << scene_duration_frames << endl;
 
         time = 0;
         bool done_scene = false;
-        Pixels* p = nullptr;
         while (!done_scene) {
-            WRITER->set_time(video_time_s);
-            query(done_scene, p);
-            assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
-            video_time_s += 1./VIDEO_FRAMERATE;
-            if((video_num_frames++)%5 == 0) p->print_to_terminal();
-            if(FOR_REAL) WRITER->add_frame(*p);
+            done_scene = render_one_frame();
         }
-        video_sessions_left--;
     }
 
     int w = 0;
@@ -89,13 +94,13 @@ protected:
     Pixels pix;
     int time = 0;
     int scene_duration_frames = 0;
+    int superscene_frames_left = 0;
 };
 
 //#include "mandelbrot_scene.cpp"
 #include "latex_scene.cpp"
 #include "header_scene.cpp"
 #include "c4_scene.cpp"
-#include "twoswap_scene.cpp"
 #include "composite_scene.cpp"
 #include "variable_scene.cpp"
 #include "complex_plot_scene.cpp"
