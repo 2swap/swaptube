@@ -16,6 +16,9 @@ public:
     CompositeScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {}
 
     void add_scene(Scene* sc, double x, double y, double width, double height){
+        if(x<0||y<0||width<0||height<0||x>1||y>1||width>1||height>1)
+            failout("Added scene with coords outside the range 0 to 1.");
+
         SceneWithPosition swp = {sc, x, y, width, height};
         scenes.push_back(swp);
     }
@@ -67,7 +70,9 @@ public:
             }
             Pixels* p = nullptr;
             swc.scenePointer->query(p);
+        cout << "h" << endl;
             pix.copy(*p, swc.x * w, swc.y * h, 1);
+        cout << "i" << endl;
         }
     }
 

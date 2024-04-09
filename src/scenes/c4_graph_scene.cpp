@@ -35,7 +35,7 @@ public:
             Node<C4Board> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
             C4Scene* sc = new C4Scene(600, 600, node.data->representation);
-            surfaces.push_back(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), sc));
+            surfaces.push_back(Surface("s" + node.data->representation, node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), sc));
         }
         rendered = false;
     }
@@ -70,6 +70,7 @@ public:
         glm::quat rotated_up_quat = conj2 * up_as_quat * cam2;
 
         Surface surface_rotated(
+            surface.name,
             surface.center,
             glm::vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
             glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
