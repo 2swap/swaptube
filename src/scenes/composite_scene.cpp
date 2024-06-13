@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include "scene.cpp"
-#include "Connect4/c4.h"
 
 struct SceneWithPosition {
     Scene* scenePointer;
@@ -70,9 +69,7 @@ public:
             }
             Pixels* p = nullptr;
             swc.scenePointer->query(p);
-        cout << "h" << endl;
             pix.copy(*p, swc.x * w, swc.y * h, 1);
-        cout << "i" << endl;
         }
     }
 

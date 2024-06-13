@@ -8,7 +8,7 @@ using namespace std;
 
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
-int MULT = 1;
+int MULT = 3;
 
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;

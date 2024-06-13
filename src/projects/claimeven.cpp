@@ -28,8 +28,7 @@ void render_claimeven() {
     composite.add_scene(&tr, VIDEO_WIDTH/2,              0, .5);
     composite.add_scene(&bl,             0, VIDEO_HEIGHT/2, .5);
     composite.add_scene(&br, VIDEO_WIDTH/2, VIDEO_HEIGHT/2, .5);
-
-    composite.inject_audio_and_render(AudioSegment("intro_5.mp3", "One feature of all of these positions is that the amount of space remaining in each column is even."));
+composite.inject_audio_and_render(AudioSegment("intro_5.mp3", "One feature of all of these positions is that the amount of space remaining in each column is even."));
 
     tl.highlight_column(1, 'd', 0, 6);
     composite.inject_audio_and_render(AudioSegment("intro_6.mp3", "This column has 6 empty spots."));
