@@ -1,5 +1,6 @@
 #include "../../../Klotski/C4Board.cpp"
 void render_video() {
+    Graph<C4Board> graph;
     GraphScene<C4Board> gs(&graph);
 
     c4_branch_mode = UNION_WEAK;

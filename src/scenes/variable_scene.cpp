@@ -1,7 +1,6 @@
 #pragma once
 
 #include "scene.cpp"
-#include "Connect4/c4.h"
 #include "calculator.cpp"
 #include <unordered_map>
 
@@ -62,6 +61,7 @@ public:
 
             // Evaluate the expression based on the provided time
             double evaluatedValue = calculator(expression, time + prior_time);
+            cout << evaluatedValue << endl;
             evaluatedVariables[variableName] = evaluatedValue;
         }
         return evaluatedVariables;
@@ -92,6 +92,7 @@ public:
         done_scene = time++>=scene_duration_frames;
         if(done_scene && is_transition) post_transition();
         if(done_scene) prior_time += time;
+        cout << "ccc" << endl;
         subscene->query(p);
     }
 

@@ -40,6 +40,8 @@ public:
             roots[point_index] = std::complex<double>(r, i);
         }
         set_variable(pixel_width, "pixel_width", variables);
+        cout << "bbb" << endl;
+        rendered = false;
     }
 
     std::complex<double> polynomial(const complex<double>& c){
@@ -53,6 +55,7 @@ public:
     void query(bool& done_scene, Pixels*& p) override {
         //if(is_transition) interpolate();
         if(!rendered){
+        cout << "aaa" << endl;
             render_plot();
             rendered = true;
         }

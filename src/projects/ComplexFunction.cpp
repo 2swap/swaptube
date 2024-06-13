@@ -11,8 +11,8 @@ void render_video() {
     roots.set_mode(ROOTS);
 
     CompositeScene composite;
-    composite.add_scene(&coefficients, 0, 0, 1);
-    composite.add_scene(&roots, .5, 0, 1);
+    composite.add_scene(&coefficients, 0, 0, .5, 1);
+    composite.add_scene(&roots, .5, 0, .5, 1);
 
     VariableScene v(&composite);
     v.insert_variable("r0", "t sin");
@@ -21,8 +21,9 @@ void render_video() {
     v.insert_variable("i1", "t 3 * cos");
     v.insert_variable("r2", "t 4 * sin");
     v.insert_variable("i2", "t 5 * cos");
-    v.inject_audio_and_render(AudioSegment(3.14));
-
+    v.print_variables();
+    v.inject_audio_and_render(AudioSegment(6.28));
+/*
     v.stage_transition(std::unordered_map<std::string, std::string>{
         {"r0", "1"},
         {"i0", "1"},
@@ -33,4 +34,5 @@ void render_video() {
     });
     v.inject_audio_and_render(AudioSegment(3.14));
     v.inject_audio_and_render(AudioSegment(3.14));
+    */
 }
