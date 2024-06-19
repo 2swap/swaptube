@@ -14,25 +14,11 @@ void render_video() {
     composite.add_scene(&coefficients, 0, 0, .5, 1);
     composite.add_scene(&roots, .5, 0, .5, 1);
 
-    VariableScene v(&composite);
-    v.insert_variable("r0", "t sin");
-    v.insert_variable("i0", "t cos");
-    v.insert_variable("r1", "t 2 * sin");
-    v.insert_variable("i1", "t 3 * cos");
-    v.insert_variable("r2", "t 4 * sin");
-    v.insert_variable("i2", "t 5 * cos");
-    v.print_variables();
-    v.inject_audio_and_render(AudioSegment(6.28));
-/*
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"r0", "1"},
-        {"i0", "1"},
-        {"r1", "1"},
-        {"i1", "1"},
-        {"r2", "1"},
-        {"i2", "1"}
-    });
-    v.inject_audio_and_render(AudioSegment(3.14));
-    v.inject_audio_and_render(AudioSegment(3.14));
-    */
+    dag.add_equation("r0", "<t> sin");
+    dag.add_equation("i0", "<t> cos");
+    dag.add_equation("r1", "<t> 2 * sin");
+    dag.add_equation("i1", "<t> 3 * cos");
+    dag.add_equation("r2", "<t> 4 * sin");
+    dag.add_equation("i2", "<t> 5 * cos");
+    composite.inject_audio_and_render(AudioSegment(6.28));
 }

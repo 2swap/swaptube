@@ -8,7 +8,7 @@ using namespace std;
 
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
-int MULT = 3;
+int MULT = 1;
 
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
@@ -43,6 +43,7 @@ void setup_writer(const string& project_name){
 
 void run_unit_tests(){
     run_inlines_unit_tests();
+    test_dagger();
     run_convolution_unit_tests();
     run_c4_unit_tests();
 }

@@ -6,8 +6,8 @@
 template <typename T>
 class GraphScene : public ThreeDimensionScene {
 public:
-    GraphScene(const int width, const int height, Graph<T>* g) : ThreeDimensionScene(width, height), graph(g) {points_opacity = 0;}
-    GraphScene(Graph<T>* g) : ThreeDimensionScene(), graph(g) {points_opacity = 0;}
+    GraphScene(const int width, const int height, Graph<T>* g) : ThreeDimensionScene(width, height), graph(g) {}
+    GraphScene(Graph<T>* g) : ThreeDimensionScene(), graph(g) {}
 
     void graph_to_3d(){
         points.clear();

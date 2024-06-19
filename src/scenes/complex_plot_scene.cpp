@@ -32,18 +32,6 @@ public:
         return rgb_to_col(r, g, b) | 0xff000000;
     }
 
-    void update_variables(const std::unordered_map<string, double>& variables) {
-        for(int point_index = 0; point_index < roots.size(); point_index++) {
-            double r, i;
-            set_variable(r, "r" + std::to_string(point_index), variables);
-            set_variable(i, "i" + std::to_string(point_index), variables);
-            roots[point_index] = std::complex<double>(r, i);
-        }
-        set_variable(pixel_width, "pixel_width", variables);
-        cout << "bbb" << endl;
-        rendered = false;
-    }
-
     std::complex<double> polynomial(const complex<double>& c){
         std::complex<double> out(1, 0);
         for(std::complex<double> point : roots){
@@ -53,14 +41,8 @@ public:
     }
 
     void query(bool& done_scene, Pixels*& p) override {
-        //if(is_transition) interpolate();
-        if(!rendered){
-        cout << "aaa" << endl;
-            render_plot();
-            rendered = true;
-        }
+        render_plot();
         done_scene = time++>=scene_duration_frames;
-        //if(done_scene && is_transition) post_transition();
         p = &pix;
     }
 
@@ -69,19 +51,22 @@ public:
     }
 
     void render_plot(){
-        if(mode == ROOTS)render_roots();
-        if(mode == COEFFICIENTS)render_coefficients();
-        pix.add_border(WHITE);
+        for(int point_index = 0; point_index < roots.size(); point_index++) {
+            double real_part = dag.get("r" + to_string(point_index));
+            double imag_part = dag.get("i" + to_string(point_index));
+            cout << real_part << " " << imag_part << endl;
+            roots[point_index] = std::complex<double>(real_part, imag_part);
+        }
+        if(mode == ROOTS)render_root_mode();
+        if(mode == COEFFICIENTS)render_coefficient_mode();
     }
 
     void add_point(double x, double y){
         roots.push_back(std::complex<double>(x, y));
-        rendered = false;
     }
 
     void set_pixel_width(double w){
         pixel_width = w;
-        rendered = false;
     }
 
     double get_pixel_width(){
@@ -93,7 +78,8 @@ public:
         pix.fill_ellipse(pixel.first, pixel.second, 5, 5, WHITE);
     }
 
-    void render_roots(){
+    void render_root_mode(){
+        determine_coefficients_from_roots();
         pix.fill(BLACK);
         for(int x = 0; x < w; x++){
             for(int y = 0; y < h; y++){
@@ -105,7 +91,7 @@ public:
         }
     }
 
-    void render_coefficients(){
+    void render_coefficient_mode(){
         pix.fill(BLACK);
         determine_coefficients_from_roots();
         for(std::complex<double> point : coefficients){
