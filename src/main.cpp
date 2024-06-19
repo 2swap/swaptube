@@ -18,8 +18,8 @@ bool PRINT_TO_TERMINAL = true;
 double video_time_s = 0;
 int video_num_frames = 0;
 
-#include "scenes/dagger.cpp"
 #include "misc/inlines.h"
+#include "scenes/dagger.cpp"
 #include "audio_video/AudioSegment.cpp"
 #include "audio_video/writer.cpp"
 #include "scenes/Connect4/c4.h"

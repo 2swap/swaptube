@@ -284,8 +284,8 @@ public:
     }
 
     void set_camera_direction() {
-        camera_direction = glm::normalize(glm::quat(dag.get("q1"), dag.get("qi"), dag.get("qj"), dag.get("qk")));
-        camera_pos = glm::vec3(dag.get("x"), dag.get("y"), dag.get("z")) + glm::conjugate(camera_direction) * glm::vec3(0,0,-dag["d"]) * camera_direction;
+        camera_direction = glm::normalize(glm::quat(dag["q1"], dag["qi"], dag["qj"], dag["qk"]));
+        camera_pos = glm::vec3(dag["x"], dag["y"], dag["z"]) + glm::conjugate(camera_direction) * glm::vec3(0,0,-dag["d"]) * camera_direction;
     }
 
     // Function to compute squared distance between two points
@@ -297,7 +297,7 @@ public:
     void render_3d() {
         pix.fill(TRANSPARENT_BLACK);
 
-        if(dag.get("surfaces_opacity") > 0)
+        if(dag["surfaces_opacity"] > 0)
             render_surfaces();
         if(dag["points_opacity"] > 0)
             render_points();

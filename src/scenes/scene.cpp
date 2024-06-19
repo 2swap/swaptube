@@ -13,19 +13,19 @@ public:
     Scene(const int width, const int height) : w(width), h(height), pix(width, height){};
     Scene() : w(VIDEO_WIDTH), h(VIDEO_HEIGHT), pix(VIDEO_WIDTH, VIDEO_HEIGHT){};
     virtual void query(bool& done_scene, Pixels*& p) = 0;
-    virtual void update_variables(const unordered_map<string, double>& variables) {};
-    virtual unordered_map<string, string> get_default_variables() {return unordered_map<string, string>();};
 
     void query(Pixels*& p){
         bool b = false;
         query(b, p);
     }
 
+    /*
     void set_variable(double& d, const string& var, const unordered_map<string, double>& variables){
         rendered = false;
         if(variables.find(var) != variables.end())
             d = variables.at(var);
     }
+    */
 
     void resize(int width, int height){
         if(w == width && h == height) return;
@@ -52,6 +52,24 @@ public:
         video_sessions_left = expected_video_sessions;
     }
 
+    void render(){
+        if(!FOR_REAL)
+            return;
+        scene_duration_frames = superscene_frames_left / video_sessions_left;
+        cout << "Rendering a scene. Frame Count:" << scene_duration_frames << endl;
+
+        time = 0;
+        bool done_scene = false;
+        while (!done_scene) {
+            done_scene = render_one_frame();
+        }
+        dag.close_all_transitions();
+    }
+
+    int w = 0;
+    int h = 0;
+  
+private:
     bool render_one_frame(){
         if(!FOR_REAL)
             return true;
@@ -59,6 +77,8 @@ public:
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
         }
 
+        dag.set_special("t", video_time_s);
+        dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / scene_duration_frames);
         dag.evaluate_all();
         bool done_scene = false;
         Pixels* p = nullptr;
@@ -73,22 +93,6 @@ public:
         return done_scene;
     }
 
-    void render(){
-        if(!FOR_REAL)
-            return;
-        scene_duration_frames = superscene_frames_left / video_sessions_left;
-        cout << "Rendering a scene. Frame Count:" << scene_duration_frames << endl;
-
-        time = 0;
-        bool done_scene = false;
-        while (!done_scene) {
-            done_scene = render_one_frame();
-        }
-    }
-
-    int w = 0;
-    int h = 0;
-  
 protected:
     bool rendered = false;
     bool is_transition = false;

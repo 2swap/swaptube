@@ -48,10 +48,10 @@ void render_video() {
     glm::quat quats[6] = {PITCH_DOWN,PITCH_UP,YAW_RIGHT,YAW_LEFT,ROLL_CW,ROLL_CCW};
     for(glm::quat mult : quats){
         q *= mult;
-        dag.add_equation("q1", std::to_string(q.w));
-        dag.add_equation("qi", std::to_string(q.x));
-        dag.add_equation("qj", std::to_string(q.y));
-        dag.add_equation("q4", std::to_string(q.z));
+        dag.add_transition("q1", std::to_string(q.w));
+        dag.add_transition("qi", std::to_string(q.x));
+        dag.add_transition("qj", std::to_string(q.y));
+        dag.add_transition("qk", std::to_string(q.z));
         tds.inject_audio_and_render(AudioSegment(2));
     }
 }
