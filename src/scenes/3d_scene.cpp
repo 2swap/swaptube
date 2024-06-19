@@ -53,29 +53,8 @@ struct Surface {
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width, const int height) : Scene(width, height), sketchpad(width, height) {init_camera();}
-    ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), sketchpad(VIDEO_WIDTH, VIDEO_HEIGHT) {init_camera();}
-
-    void init_camera(){
-        camera_direction = glm::quat(1,0,0,0);
-        camera_pos = glm::vec3(0,0,-3);
-    }
-
-    std::unordered_map<std::string, std::string> get_default_variables(){
-        return unordered_map<string, string>{
-            {"q1", "0"},
-            {"qi", "0"},
-            {"qj", "0"},
-            {"qk", "0"},
-            {"d",  "0"},
-            {"x",  "0"},
-            {"y",  "0"},
-            {"z",  "0"},
-            {"surfaces_opacity", "1"},
-            {"points_opacity", "0"},
-            {"lines_opacity", "1"},
-        };
-    }
+    ThreeDimensionScene(const int width, const int height) : Scene(width, height), sketchpad(width, height) {}
+    ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), sketchpad(VIDEO_WIDTH, VIDEO_HEIGHT) {}
 
     std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
@@ -290,7 +269,7 @@ public:
                 double y_pix = surface_coords.y*p->h+.5;
                 int col = p->get_pixel(x_pix, y_pix);
                 //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? WHITE : BLACK; // add tiling to void space
-                col = colorlerp(TRANSPARENT_BLACK, col, surface.opacity*surfaces_opacity);
+                col = colorlerp(TRANSPARENT_BLACK, col, surface.opacity*dag["surfaces_opacity"]);
                 pix.set_pixel_with_transparency(cx, cy, col);
             }
 
@@ -304,21 +283,9 @@ public:
         }
     }
 
-    void set_camera_direction(const glm::quat& orientation, double dist) {
-        camera_direction = glm::normalize(orientation);
-        camera_pos = camera_focus + glm::conjugate(camera_direction) * glm::vec3(0,0,-dist) * camera_direction;
-        rendered = false;
-    }
-
-    void update_variables(const std::unordered_map<string, double>& variables) {
-        surfaces_opacity = variables.at("surfaces_opacity");
-        points_opacity = variables.at("points_opacity");
-        lines_opacity = variables.at("lines_opacity");
-        camera_focus = glm::vec3(variables.at("x"), variables.at("y"), variables.at("z"));
-        set_camera_direction(
-            glm::quat(variables.at("q1"), variables.at("qi"), variables.at("qj"), variables.at("qk")), variables.at("d")
-        );
-        rendered = false;
+    void set_camera_direction() {
+        camera_direction = glm::normalize(glm::quat(dag.get("q1"), dag.get("qi"), dag.get("qj"), dag.get("qk")));
+        camera_pos = glm::vec3(dag.get("x"), dag.get("y"), dag.get("z")) + glm::conjugate(camera_direction) * glm::vec3(0,0,-dag["d"]) * camera_direction;
     }
 
     // Function to compute squared distance between two points
@@ -327,39 +294,14 @@ public:
         return glm::dot(diff, diff);
     }
 
-    void point_at_center_of_mass(){ // TODO this doesnt even work and idk why
-        glm::vec3 aggregate(0.0f, 0.0f, 0.0f);
-
-        // Sum up all point positions
-        for (Point p : points){
-            aggregate += p.position;
-        }
-
-        // Find average (center of mass) of the points
-        glm::vec3 center_of_mass = aggregate / static_cast<float>(points.size());
-        Point p("center_of_mass", center_of_mass, 0xff00ff00);
-
-        glm::vec3 com = glm::normalize(center_of_mass - camera_pos);
-        glm::quat v1(0,com.x,com.y,com.z);
-        glm::quat v2(0,0,0,-1);
-
-        camera_direction = (v1*(v1+v2))/glm::length(v1+v2);
-
-        glm::vec3 guh = glm::conjugate(camera_direction) * com * camera_direction;
-        cout << glm::to_string(v1) << endl;
-
-        render_point(p);
-        rendered = false;
-    }
-
     void render_3d() {
         pix.fill(TRANSPARENT_BLACK);
 
-        if(surfaces_opacity > 0)
+        if(dag.get("surfaces_opacity") > 0)
             render_surfaces();
-        if(points_opacity > 0)
+        if(dag["points_opacity"] > 0)
             render_points();
-        if(lines_opacity > 0)
+        if(dag["lines_opacity"] > 0)
             render_lines();
     }
 
@@ -402,10 +344,8 @@ public:
     }
 
     void query(bool& done_scene, Pixels*& p) override {
-        if (!rendered) {
-            render_3d();
-            rendered = true;
-        }
+        set_camera_direction();
+        render_3d();
         done_scene = time++ >= scene_duration_frames;
         p = &pix;
     }
@@ -414,7 +354,7 @@ public:
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
-        pix.fill_ellipse(pixel.first, pixel.second, 2, 2, colorlerp(TRANSPARENT_BLACK, point.color, points_opacity * point.opacity));
+        pix.fill_ellipse(pixel.first, pixel.second, 2, 2, colorlerp(TRANSPARENT_BLACK, point.color, dag["points_opacity"] * point.opacity));
     }
 
     void render_line(const Line& line) {
@@ -422,7 +362,7 @@ public:
         std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(TRANSPARENT_BLACK, line.color, lines_opacity*line.opacity), 1);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(TRANSPARENT_BLACK, line.color, dag["lines_opacity"]*line.opacity), 1);
     }
 
     glm::vec2 intersection_point(const glm::vec3 &particle_start, const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal) {
@@ -472,19 +412,11 @@ public:
         surfaces.push_back(s);
     }
 
-    glm::quat get_quat() {
-        return camera_direction;
-    }
-
 public:
-    double surfaces_opacity = 0;
-    double points_opacity = 0;
-    double lines_opacity = 0;
     std::vector<Point> points;
     std::vector<Line> lines;
     std::vector<Surface> surfaces;
     glm::vec3 camera_pos;
-    glm::vec3 camera_focus;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
     double fov = .282*3;
     Pixels sketchpad;

@@ -10,27 +10,27 @@ void render_video() {
     C4GraphScene c4(&g, "444", MANUAL);
     c4.physics_multiplier = 1;
     g.sanitize_for_closure();
-    VariableScene v(&c4);
 
-    FOR_REAL = false;
-    FOR_REAL = true;
     PRINT_TO_TERMINAL = false;
     std::unordered_map<std::string, std::string> closequat{
         {"q1", "t 4 / cos"},
         {"qi", "0"},
         {"qj", "t -4 / sin"},
         {"qk", "0"},
+        {"d", "2"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"surfaces_opacity", "1"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "1"},
     };
-    v.set_variables(std::unordered_map<std::string, std::string>{
-        {"d", "2"}
-    });
-    v.set_variables(closequat);
-    v.inject_audio_and_render(AudioSegment("So far we have been interested in strategies of connect 4,"));
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"d", "20"}
-    });
-    v.inject_audio_and_render(AudioSegment("but now it's time to apply those strategies to actually get a structural understanding of the game."));
+    dag.add_equations(closequat);
+    c4.inject_audio_and_render(AudioSegment("So far we have been interested in strategies of connect 4,"));
+    dag.add_equation("d", "20");
+    c4.inject_audio_and_render(AudioSegment("but now it's time to apply those strategies to actually get a structural understanding of the game."));
 
+    /*
     if(FOR_REAL){
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board("444" + to_string(i)));

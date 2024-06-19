@@ -58,7 +58,7 @@ struct OperatorInfo {
  *   an error message and return 0.0.
  * - The function assumes that the given expression is space-delimited.
  */
-double calculator(const string& expression, double t = 0) {
+double calculator(const string& expression) {
     stack<double> stack;
     unordered_map<string, OperatorInfo> operators = {
         {"+", {[](vector<double>& operands) { return operands[0] + operands[1]; }, 2}},
@@ -75,8 +75,6 @@ double calculator(const string& expression, double t = 0) {
     while (iss >> token) {
         if (isdigit(token[0]) || token[0] == '.' || (token[0] == '-' && token.size() > 1)) {
             stack.push(stod(token));
-        } else if (token == "t") {
-            stack.push(t / VIDEO_FRAMERATE);
         } else {
             auto it = operators.find(token);
             if (it != operators.end()) {

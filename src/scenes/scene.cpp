@@ -59,6 +59,7 @@ public:
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
         }
 
+        dag.evaluate_all();
         bool done_scene = false;
         Pixels* p = nullptr;
         superscene_frames_left--;
@@ -102,7 +103,6 @@ protected:
 #include "header_scene.cpp"
 #include "c4_scene.cpp"
 #include "composite_scene.cpp"
-#include "variable_scene.cpp"
 #include "complex_plot_scene.cpp"
 #include "3d_scene.cpp"
 #include "graph_scene.cpp"

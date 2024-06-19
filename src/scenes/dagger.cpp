@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 #include "calculator.cpp"
+#include "../misc/inlines.h"
 
 using namespace std;
 
@@ -21,21 +22,33 @@ using namespace std;
 struct VariableContents {
     double value;
     bool state;
-    VariableContents(double val = 0.0, bool st = true) : value(val), state(st) {}
+    bool special;
+    VariableContents(double val = 0.0, bool st = true, bool spec = false) : value(val), state(st), special(spec) {}
 };
 
 class Dagger {
 public:
-    Dagger() {}
+    Dagger() {
+        variables["t"] = VariableContents(0, true, true);
+    }
 
     void remove_equation(string variable) {
-        /* When a new component is added, we do not know the
-         * correct compute order anymore since there are new equations.
-         */
         variables.erase(variable);
         dependencies.erase(variable);
         equations.erase(variable);
     }
+    double operator [](const string v) const {return get(v);}
+    void add_equations(std::unordered_map<std::string, std::string> equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            add_equation(it->first, it->second);
+        }
+    }
+    void remove_equations(std::unordered_map<std::string, std::string> equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            remove_equation(it->first);
+        }
+    }
+
     void add_equation(string variable, string equation) {
         /* When a new component is added, we do not know the
          * correct compute order anymore since there are new equations.
@@ -58,6 +71,10 @@ public:
     }
 
     double get(string variable) const {
+        if(variables.find(variable) == variables.end()){
+            print_state();
+            failout("ERROR: Attempted to read slate variable " + variable + " without it existing!\nState has been printed above.");
+        }
         assert(variables.at(variable).state);
         return variables.at(variable).value;
     }
@@ -74,6 +91,9 @@ public:
     }
 
     void evaluate_all() {
+        /* Step 0: Increment timer. */
+        variables["t"].value+=1.0/VIDEO_FRAMERATE;
+        
         /* Step 1: Iterate through all variables,
          * check that their "state" is true from last cycle,
          * and reset it to false. */
@@ -161,19 +181,21 @@ private:
     void evaluate_single_variable(const string& variable) {
         VariableContents& vc = variables.at(variable);
         assert(!vc.state);
-        string scrubbed_equation = insert_equation_dependencies(variable, equations.at(variable));
-        cout << scrubbed_equation << endl;
-        vc.value = calculator(scrubbed_equation);
         vc.state = true;
+        if(vc.special) return;
+        string scrubbed_equation = insert_equation_dependencies(variable, equations.at(variable));
+        vc.value = calculator(scrubbed_equation);
     }
 };
 
 // Global dagger
-Dagger dag();
+Dagger dag;
 
 void test_dagger() {
+    cout << "Testing dagger" << endl;
     // Construct a Dagger object
     Dagger dagger;
+    assert(dagger.get("t") == 0);
 
     // Add equations
     dagger.add_equation("x", "5"); // x = 5
@@ -186,6 +208,7 @@ void test_dagger() {
     assert(dagger.get("x") == 5.0);
     assert(dagger.get("y") == 10.0);
     assert(dagger.get("z") == 15.0);
+    assert(dagger.get("t") == 1.0/VIDEO_FRAMERATE);
 
     // Modify equations
     dagger.add_equation("x", "7"); // x = 7
@@ -198,4 +221,5 @@ void test_dagger() {
     assert(dagger.get("x") == 7.0);
     assert(dagger.get("y") == 20.0);
     assert(dagger.get("z") == 27.0);
+    assert(dagger.get("t") == 2.0/VIDEO_FRAMERATE);
 }
