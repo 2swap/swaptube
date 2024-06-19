@@ -52,8 +52,8 @@ public:
 
     void render_plot(){
         for(int point_index = 0; point_index < roots.size(); point_index++) {
-            double real_part = dag.get("r" + to_string(point_index));
-            double imag_part = dag.get("i" + to_string(point_index));
+            double real_part = dag["r" + to_string(point_index)];
+            double imag_part = dag["i" + to_string(point_index)];
             cout << real_part << " " << imag_part << endl;
             roots[point_index] = std::complex<double>(real_part, imag_part);
         }
