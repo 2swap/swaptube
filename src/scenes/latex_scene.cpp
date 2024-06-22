@@ -39,6 +39,7 @@ public:
     }
 
     void query(bool& done_scene, Pixels*& p) override {
+        pix.fill(BLACK);
         double weight = static_cast<double>(time)/scene_duration_frames;
         done_scene = scene_duration_frames <= time;
 

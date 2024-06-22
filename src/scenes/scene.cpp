@@ -111,3 +111,4 @@ protected:
 #include "3d_scene.cpp"
 #include "graph_scene.cpp"
 #include "c4_graph_scene.cpp"
+#include "mouse_scene.cpp"
