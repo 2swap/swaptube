@@ -418,6 +418,6 @@ public:
     std::vector<Surface> surfaces;
     glm::vec3 camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
-    double fov = .282*3;
+    double fov = .282*3/2;
     Pixels sketchpad;
 };

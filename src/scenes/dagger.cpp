@@ -62,6 +62,10 @@ public:
         variables.erase(variable);
     }
 
+    bool contains(const string& varname){
+        return variables.find(varname) != variables.end();
+    }
+
     double operator [](const string v) const {return get_value(v);}
     void add_equations(std::unordered_map<std::string, std::string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
@@ -82,6 +86,8 @@ public:
     void close_all_transitions(){
         for(string varname : in_transition){
             add_equation(varname, get_equation(varname + ".post_transition"));
+            VariableContents& vc = variables.at(varname);
+            vc.value = get_value(varname + ".post_transition");
             remove_equation(varname + ".post_transition");
             remove_equation(varname + ".pre_transition");
         }

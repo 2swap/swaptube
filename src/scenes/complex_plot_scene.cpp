@@ -2,11 +2,15 @@
 
 #include "scene.cpp"
 #include <complex>
+#include <Eigen/Dense>
+#include <Eigen/Eigenvalues>
 
 enum complex_plot_mode{
     ROOTS,
     COEFFICIENTS
 };
+
+using namespace Eigen;
 
 class ComplexPlotScene : public Scene {
 public:
@@ -32,7 +36,16 @@ public:
         return rgb_to_col(r, g, b) | 0xff000000;
     }
 
-    std::complex<double> polynomial(const complex<double>& c){
+    std::complex<double> evaluate_polynomial_given_coefficients(const std::vector<std::complex<double>>& coefficients, const std::complex<double>& point) {
+        std::complex<double> result = 0.0;
+        std::complex<double> power_of_point = 1.0;
+        for (const auto& coefficient : coefficients) {
+            result += coefficient * power_of_point;
+            power_of_point *= point;
+        }
+        return result;
+    }
+    std::complex<double> polynomial(const complex<double>& c, const vector<complex<double>>& roots){
         std::complex<double> out(1, 0);
         for(std::complex<double> point : roots){
             out *= c - point;
@@ -50,19 +63,126 @@ public:
         mode = cpm;
     }
 
-    void render_plot(){
-        for(int point_index = 0; point_index < roots.size(); point_index++) {
-            double real_part = dag["r" + to_string(point_index)];
-            double imag_part = dag["i" + to_string(point_index)];
-            cout << real_part << " " << imag_part << endl;
-            roots[point_index] = std::complex<double>(real_part, imag_part);
+    void dag_roots_to_coefficients(){
+        vector<complex<double>> coefficients = get_coefficients();
+        
+        for(int point_index = 0; dag.contains("root_r" + to_string(point_index)); point_index++) {
+            dag.remove_equation("root_r" + to_string(point_index));
+            dag.remove_equation("root_i" + to_string(point_index));
         }
-        if(mode == ROOTS)render_root_mode();
-        if(mode == COEFFICIENTS)render_coefficient_mode();
+        for(int i = 0; i < coefficients.size(); i++){
+            dag.add_equation("coefficient_r" + to_string(i), to_string(coefficients[i].real()));
+            dag.add_equation("coefficient_i" + to_string(i), to_string(coefficients[i].imag()));
+        }
+        dag.evaluate_all();
     }
 
-    void add_point(double x, double y){
-        roots.push_back(std::complex<double>(x, y));
+    void dag_coefficients_to_roots(){
+        vector<complex<double>> roots = get_roots();
+         
+        for(int point_index = 0; dag.contains("coefficient_r" + to_string(point_index)); point_index++) {
+            dag.remove_equation("coefficient_r" + to_string(point_index));
+            dag.remove_equation("coefficient_i" + to_string(point_index));
+        }
+        for(int i = 0; i < roots.size(); i++){
+            dag.add_equation("root_r" + to_string(i), to_string(roots[i].real()));
+            dag.add_equation("root_i" + to_string(i), to_string(roots[i].imag()));
+        }
+        dag.evaluate_all();
+    }
+
+    vector<complex<double>> get_coefficients(){
+        if(dag.contains("coefficient_r0")){
+            vector<complex<double>> coefficients;
+            for(int point_index = 0; dag.contains("coefficient_r" + to_string(point_index)); point_index++) {
+                std::complex<double> coeff(dag["coefficient_r" + to_string(point_index)],
+                                           dag["coefficient_i" + to_string(point_index)]);
+                coefficients.push_back(coeff);
+            }
+            return coefficients;
+        }
+        
+        // The initial polynomial P(z) = 1
+        std::vector<std::complex<double>> current_poly = {1.0};
+
+        for (const auto& root : get_roots()) {
+            // Each new polynomial will have one degree higher than the previous
+            std::vector<std::complex<double>> new_poly(current_poly.size() + 1);
+
+            // Multiply the current polynomial by (z - root)
+            for (size_t i = 0; i < current_poly.size(); ++i) {
+                new_poly[i] += current_poly[i] * (-root);     // Coefficient for (current_poly * -root)
+                new_poly[i + 1] += current_poly[i];           // Coefficient for (current_poly * z)
+            }
+
+            current_poly = new_poly;
+        }
+        return current_poly;
+    }
+
+    // Function to compute the derivative of a polynomial given its coefficients
+    std::vector<std::complex<double>> compute_derivative(const std::vector<std::complex<double>>& coefficients) {
+        std::vector<std::complex<double>> derivative;
+        int n = coefficients.size() - 1; // Degree of the polynomial
+
+        for (int i = 1; i <= n; ++i) {
+            derivative.push_back(coefficients[i] * std::complex<double>(i, 0));
+        }
+
+        return derivative;
+    }
+
+    vector<complex<double>> deflate_polynomial(const vector<complex<double>>& coefficients, const complex<double>& root) {
+        int n = coefficients.size() - 1;
+        vector<complex<double>> new_coefficients(n);
+        new_coefficients[0] = coefficients[0];
+        for (int i = 1; i < n; ++i) {
+            new_coefficients[i] = coefficients[i] + root * new_coefficients[i - 1];
+        }
+        return new_coefficients;
+    }
+
+    vector<complex<double>> get_roots(){
+        vector<complex<double>> roots;
+        if(dag.contains("root_r0")){
+            for(int point_index = 0; dag.contains("root_r" + to_string(point_index)); point_index++) {
+                std::complex<double> root(dag["root_r" + to_string(point_index)], dag["root_i" + to_string(point_index)]);
+                roots.push_back(root);
+            }
+        } else {
+            vector<complex<double>> coefficients = get_coefficients();
+            int n = coefficients.size() - 1;
+
+            // Create the companion matrix
+            MatrixXcd companion_matrix = MatrixXcd::Zero(n, n);
+            for (int i = 0; i < n; ++i) {
+                companion_matrix(i, n - 1) = -coefficients[i] / coefficients[n];
+                if (i < n - 1) {
+                    companion_matrix(i + 1, i) = complex<double>(1, 0);
+                }
+            }
+
+            // Compute the eigenvalues (roots)
+            ComplexEigenSolver<MatrixXcd> solver(companion_matrix);
+            if (solver.info() != Success) {
+                cerr << "Eigenvalue computation did not converge." << endl;
+                return roots;
+            }
+            VectorXcd eigenvalues = solver.eigenvalues();
+
+            // Store the roots
+            roots.reserve(n);
+            for (int i = 0; i < n; ++i) {
+                roots.push_back(eigenvalues[i]);
+            }
+        }
+        return roots;
+    }
+
+    void render_plot(){
+        if(mode == ROOTS)render_root_mode(get_coefficients(), get_roots());
+        if(mode == COEFFICIENTS)render_coefficient_mode(get_coefficients());
+        render_axes();
     }
 
     void set_pixel_width(double w){
@@ -78,12 +198,28 @@ public:
         pix.fill_ellipse(pixel.first, pixel.second, 5, 5, WHITE);
     }
 
-    void render_root_mode(){
-        determine_coefficients_from_roots();
+    void render_axes(){
+        std::pair<int, int> i_pos = coordinate_to_pixel(std::complex<double>(0,10));
+        std::pair<int, int> i_neg = coordinate_to_pixel(std::complex<double>(0,-10));
+        std::pair<int, int> r_pos = coordinate_to_pixel(std::complex<double>(10,0));
+        std::pair<int, int> r_neg = coordinate_to_pixel(std::complex<double>(-10,0));
+        pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff222222, 1);
+        pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff222222, 1);
+        for(int i = -9; i < 10; i++){
+            std::pair<int, int> i_pos = coordinate_to_pixel(std::complex<double>(i,.1));
+            std::pair<int, int> i_neg = coordinate_to_pixel(std::complex<double>(i,-.1));
+            std::pair<int, int> r_pos = coordinate_to_pixel(std::complex<double>(.1,i));
+            std::pair<int, int> r_neg = coordinate_to_pixel(std::complex<double>(-.1,i));
+            pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff222222, 1);
+            pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff222222, 1);
+        }
+    }
+
+    void render_root_mode(const vector<complex<double>>& coefficients, const vector<complex<double>>& roots){
         pix.fill(BLACK);
         for(int x = 0; x < w; x++){
             for(int y = 0; y < h; y++){
-                pix.set_pixel(x, y, complex_to_color(polynomial(pixel_to_coordinate(make_pair(x, y)))));
+                pix.set_pixel(x, y, complex_to_color(evaluate_polynomial_given_coefficients(coefficients,pixel_to_coordinate(make_pair(x, y)))));
             }
         }
         for(std::complex<double> point : roots){
@@ -91,37 +227,17 @@ public:
         }
     }
 
-    void render_coefficient_mode(){
+    void render_coefficient_mode(const vector<complex<double>>& coefficients){
         pix.fill(BLACK);
-        determine_coefficients_from_roots();
         for(std::complex<double> point : coefficients){
             render_point(point);
         }
     }
 
     void determine_coefficients_from_roots() {
-        // The initial polynomial P(z) = 1
-        std::vector<std::complex<double>> current_poly = {1.0};
-
-        for (const auto& root : roots) {
-            // Each new polynomial will have one degree higher than the previous
-            std::vector<std::complex<double>> new_poly(current_poly.size() + 1);
-
-            // Multiply the current polynomial by (z - root)
-            for (size_t i = 0; i < current_poly.size(); ++i) {
-                new_poly[i] += current_poly[i] * (-root);     // Coefficient for (current_poly * -root)
-                new_poly[i + 1] += current_poly[i];           // Coefficient for (current_poly * z)
-            }
-
-            current_poly = new_poly;
-        }
-
-        coefficients = current_poly;
     }
 
 private:
-    std::vector<std::complex<double>> roots;
-    std::vector<std::complex<double>> coefficients;
     double pixel_width = 0.01;
     complex_plot_mode mode = ROOTS;
 };
