@@ -48,6 +48,7 @@ public:
         }
 
         superscene_frames_left = FOR_REAL ? WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE : 0;
+        cout << "Scene says: " << audio.get_subtitle_text() << endl;
         cout << "Scene should last " << superscene_frames_left << " frames, with " << expected_video_sessions << " sessions.";
         video_sessions_left = expected_video_sessions;
     }
@@ -63,7 +64,6 @@ public:
         while (!done_scene) {
             done_scene = render_one_frame();
         }
-        dag.close_all_transitions();
     }
 
     int w = 0;
@@ -90,6 +90,8 @@ private:
         if(PRINT_TO_TERMINAL && ((video_num_frames++)%5 == 0)) p->print_to_terminal();
         WRITER->add_frame(*p);
         if(done_scene) video_sessions_left--;
+        if(video_sessions_left == 0)
+            dag.close_all_transitions();
         return done_scene;
     }
 

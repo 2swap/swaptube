@@ -1,7 +1,9 @@
 #pragma once
 
+#include <iomanip>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 #include <cassert>
 #include <iostream>
@@ -24,7 +26,7 @@ struct VariableContents {
     double value;
 
     // Is this variable fresh (updated since last control cycle) or stale?
-    bool state;
+    bool fresh;
 
     // Special variables are not updated in accordance with their equation and are expected
     // to be modified elsewhere. For example, the time variable <t> is special.
@@ -38,13 +40,13 @@ struct VariableContents {
     list<string> dependencies;
 
     VariableContents()
-                : value(0.0), state(true), special(false), equation(""), dependencies() {}
+                : value(0.0), fresh(true), special(false), equation(""), dependencies() {}
 
     VariableContents(string eq,
                      double val = 0.0,
-                     bool st = true,
+                     bool fr = true,
                      bool spec = false
-                    ) : equation(eq), value(val), state(st), special(spec), dependencies() {}
+                    ) : equation(eq), value(val), fresh(fr), special(spec), dependencies() {}
 };
 
 class Dagger {
@@ -54,52 +56,30 @@ public:
         variables["transition_fraction"] = VariableContents("", 0, true, true);
     }
 
-    void remove_equation(string variable) {
-        /* When a new component is removed, we do not know the
-         * correct compute order anymore.
-         */
-        last_compute_order.clear();
-        variables.erase(variable);
-    }
-
+    /* Accessors */
     bool contains(const string& varname){
         return variables.find(varname) != variables.end();
     }
-
     double operator [](const string v) const {return get_value(v);}
-    void add_equations(std::unordered_map<std::string, std::string> equations) {
-        for(auto it = equations.begin(); it != equations.end(); it++){
-            add_equation(it->first, it->second);
+    void print_state() const {
+        /* Print out all variable names along with their current value and their computation status. */
+        cout << "Variables:" << endl;
+        cout << "-----------------------" << endl;
+        for (const auto& variable : variables) {
+            const VariableContents& vc = variable.second;
+            cout << (vc.special?"*":" ")
+                 << left << setw(32) << variable.first
+                 << setw(38) << (vc.equation == ""?"":" := " + vc.equation)
+                 << " : " << setw(10) << vc.value
+                 << (vc.fresh ? " (Fresh)" : " (Stale)")
+                 << " " << &vc
+                 << endl;
         }
+        cout << "-----------------------" << endl;
     }
 
-    void add_transition(string variable, string equation) {
-        in_transition.push_back(variable);
-        string eq1 = get_equation(variable);
-        string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <transition_fraction> smoothlerp";
-        add_equation(variable+".pre_transition", eq1);
-        add_equation(variable+".post_transition", eq2);
-        add_equation(variable, lerp_both);
-    }
 
-    void close_all_transitions(){
-        for(string varname : in_transition){
-            add_equation(varname, get_equation(varname + ".post_transition"));
-            VariableContents& vc = variables.at(varname);
-            vc.value = get_value(varname + ".post_transition");
-            remove_equation(varname + ".post_transition");
-            remove_equation(varname + ".pre_transition");
-        }
-        in_transition.clear();
-    }
-
-    void remove_equations(std::unordered_map<std::string, std::string> equations) {
-        for(auto it = equations.begin(); it != equations.end(); it++){
-            remove_equation(it->first);
-        }
-    }
-
+    /* Modifiers */
     void add_equation(string variable, string equation) {
         /* When a new component is added, we do not know the
          * correct compute order anymore since there are new equations.
@@ -118,19 +98,68 @@ public:
             } else break;
         }
     }
+    void add_transition(string variable, string equation) {
 
-    /* Print out all variable names along with their current value and their computation status. */
-    void print_state() const {
-        cout << "Variables:" << endl;
-        cout << "-----------------------" << endl;
-        for (const auto& variable : variables) {
-            const VariableContents& vc = variable.second;
-            cout << variable.first << " : " << vc.value << (vc.state ? " (Fresh)" : " (Stale)") << endl;
+        // No point in doing a noop transition
+        if(get_equation(variable) == equation) return;
+
+        // Nested transitions not supported
+        if(in_transition.find(variable) != in_transition.end()){
+            failout("Transition added to a variable already in transition: " + variable);
         }
-        cout << "-----------------------" << endl;
+
+        in_transition.insert(variable);
+        string eq1 = get_equation(variable);
+        string eq2 = equation;
+        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <transition_fraction> smoothlerp";
+        add_equation(variable+".pre_transition", eq1);
+        add_equation(variable+".post_transition", eq2);
+        add_equation(variable, lerp_both);
+    }
+    void remove_equation(string variable) {
+        /* When a new component is removed, we do not know the
+         * correct compute order anymore.
+         */
+        last_compute_order.clear();
+        variables.erase(variable);
+    }
+
+    /* Bulk Modifiers. Naive. One per modifier. */
+    void add_transitions(std::unordered_map<std::string, std::string> equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            add_transition(it->first, it->second);
+        }
+    }
+    void add_equations(std::unordered_map<std::string, std::string> equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            add_equation(it->first, it->second);
+        }
+    }
+    void remove_equations(std::unordered_map<std::string, std::string> equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            remove_equation(it->first);
+        }
+    }
+
+    void close_all_transitions(){
+        for(string varname : in_transition){
+            add_equation(varname, get_equation(varname + ".post_transition"));
+            VariableContents& vc = variables.at(varname);
+            vc.value = get_value(varname + ".post_transition");
+            remove_equation(varname + ".post_transition");
+            remove_equation(varname + ".pre_transition");
+        }
+        in_transition.clear();
     }
 
     void set_special(const string& varname, double value){
+        // If the variable doesn't exist yet, make it
+        if(!contains(varname)){
+            last_compute_order.clear();
+            variables[varname] = VariableContents("", value, true, true);
+            return;
+        }
+
         //Just call get_variable because it performs some checks for existence.
         get_variable(varname);
 
@@ -145,11 +174,14 @@ public:
 
     void evaluate_all() {
         /* Step 1: Iterate through all variables,
-         * check that their "state" is true from last cycle,
+         * check that they are fresh from last cycle,
          * and reset it to false. */
         for (auto& variable : variables) {
-            assert(variable.second.state);
-            variable.second.state = false;
+            if(!variable.second.fresh){
+                print_state();
+                failout("ERROR: variable " + variable.first + " was not fresh when expected!\nState has been printed above.");
+            }
+            variable.second.fresh = false;
         }
 
         /* Step 2: Follow the last_iteration_order to set variables in accordance with the DAG. */
@@ -172,13 +204,19 @@ public:
                     const VariableContents& vc = variable.second;
 
                     // Don't recompute something already computed
-                    if (vc.state) continue;
+                    if (vc.fresh) continue;
 
                     // Check that all variable dependencies are met
                     bool all_dependencies_met = true;
                     for (const string& dependency : vc.dependencies) {
+                        if(!contains(dependency)){
+                            print_state();
+                            failout("error: attempted to access variable " + dependency
+                                    + " during evaluation of " + variable_name + " := "
+                                    + vc.equation + "!\nstate has been printed above.");
+                        }
                         const VariableContents& dep_vc = variables.at(dependency);
-                        if (!dep_vc.state) {
+                        if (!dep_vc.fresh) {
                             all_dependencies_met = false;
                             break;
                         }
@@ -192,7 +230,12 @@ public:
                     evaluate_single_variable(variable_name);
                     last_compute_order.push_back(variable_name); // Document the order of computation
                 }
-                assert(one_variable_changed || !unevaluated_variable_remaining);
+                /* Each iteration we expect a variable to be computed at the least.
+                 * If that doesn't happen, that means it isn't really a DAG. */
+                if(!one_variable_changed && unevaluated_variable_remaining){
+                    print_state();
+                    failout("error: variable dependency graph appears not to be a DAG! State has been printed above.");
+                }
             }
         }
     }
@@ -205,14 +248,14 @@ private:
     list<string> last_compute_order;
 
     // A list of all variable names which are currently undergoing transitions
-    list<string> in_transition;
+    unordered_set<string> in_transition;
 
     // Take a string like "<variable_that_equals_7> 5 +" and return "7 5 +"
     string insert_equation_dependencies(string variable, string equation) const {
         for (const string& dependency : variables.at(variable).dependencies) {
             const VariableContents& vc = variables.at(dependency);
             // Make sure that the dependency is already computed.
-            assert(vc.state);
+            assert(vc.fresh);
             string replaced_substring = "<" + dependency + ">";
             size_t pos = equation.find(replaced_substring);
             while (pos != string::npos) {
@@ -226,8 +269,8 @@ private:
 
     void evaluate_single_variable(const string& variable) {
         VariableContents& vc = variables.at(variable);
-        assert(!vc.state);
-        vc.state = true;
+        assert(!vc.fresh);
+        vc.fresh = true;
         if(vc.special) return;
         string scrubbed_equation = insert_equation_dependencies(variable, vc.equation);
         vc.value = calculator(scrubbed_equation);
@@ -240,7 +283,7 @@ private:
         }
         return variables.at(variable);
     }
-    
+
     string get_equation(string variable) const {
         return get_variable(variable).equation;
     }
@@ -249,7 +292,7 @@ private:
         VariableContents vc = get_variable(variable);
 
         // We should never ever read from a stale variable.
-        assert(vc.state);
+        assert(vc.fresh);
 
         return vc.value;
     }
@@ -270,7 +313,6 @@ void test_dagger() {
     dagger.add_equation("z", "<x> <y> +"); // z = x + y
     dagger.set_special("t", 420);
     dagger.evaluate_all();
-    dagger.print_state();
 
     // Validate initial values
     assert(dagger["x"] == 5.0);
@@ -284,7 +326,6 @@ void test_dagger() {
     dagger.add_equation("z", "<x> <y> +"); // z = x + y
     dagger.set_special("t", 69);
     dagger.evaluate_all();
-    dagger.print_state();
 
     // Validate updated values
     assert(dagger["x"] == 7.0);

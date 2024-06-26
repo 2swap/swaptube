@@ -104,7 +104,7 @@ void sigmoid_ut() {
     double tolerance = 0.000001;
 
     if (abs(result - expected) < tolerance) {
-        cout << "sigmoid_ut passed." << endl;
+        //cout << "sigmoid_ut passed." << endl;
     } else {
         cout << "sigmoid_ut failed." << endl;
         exit(1);
@@ -119,7 +119,7 @@ void min_ut() {
     double expected = 2.0;
 
     if (result == expected) {
-        cout << "min_ut passed." << endl;
+        //cout << "min_ut passed." << endl;
     } else {
         cout << "min_ut failed." << endl;
         exit(1);
@@ -134,7 +134,7 @@ void max_ut() {
     double expected = 3.0;
 
     if (result == expected) {
-        cout << "max_ut passed." << endl;
+        //cout << "max_ut passed." << endl;
     } else {
         cout << "max_ut failed." << endl;
         exit(1);
@@ -148,7 +148,7 @@ void square_ut() {
     double expected = 6.25;
 
     if (result == expected) {
-        cout << "square_ut passed." << endl;
+        //cout << "square_ut passed." << endl;
     } else {
         cout << "square_ut failed." << endl;
         exit(1);
@@ -162,7 +162,7 @@ void cube_ut() {
     double expected = 8.0;
 
     if (result == expected) {
-        cout << "cube_ut passed." << endl;
+        //cout << "cube_ut passed." << endl;
     } else {
         cout << "cube_ut failed." << endl;
         exit(1);
@@ -175,10 +175,10 @@ void rgb_to_col_ut() {
     int g = 128;
     int b = 64;
     int result = rgb_to_col(r, g, b);
-    int expected = 16744512;
+    int expected = 0xff8040;
 
     if (result == expected) {
-        cout << "rgb_to_col_ut passed." << endl;
+        //cout << "rgb_to_col_ut passed." << endl;
     } else {
         cout << "rgb_to_col_ut failed." << endl;
         exit(1);
@@ -193,7 +193,7 @@ void smoother1_ut() {
 
     double tolerance = 0.000001;
     if (abs(result - expected) < tolerance) {
-        cout << "smoother1_ut passed." << endl;
+        //cout << "smoother1_ut passed." << endl;
     } else {
         cout << "smoother1_ut failed." << endl;
         exit(1);
@@ -208,7 +208,7 @@ void smoother2_ut() {
 
     double tolerance = 0.000001;
     if (abs(result - expected) < tolerance) {
-        cout << "smoother2_ut passed." << endl;
+        //cout << "smoother2_ut passed." << endl;
     } else {
         cout << "smoother2_ut failed." << endl;
         exit(1);
@@ -223,7 +223,7 @@ void smoother3_ut() {
 
     double tolerance = 0.000001;
     if (abs(result - expected) < tolerance) {
-        cout << "smoother3_ut passed." << endl;
+        //cout << "smoother3_ut passed." << endl;
     } else {
         cout << "smoother3_ut failed." << endl;
         exit(1);
@@ -238,7 +238,7 @@ void coldist_ut() {
     int expected = 10;
 
     if (result == expected) {
-        cout << "coldist_ut passed." << endl;
+        //cout << "coldist_ut passed." << endl;
     } else {
         cout << "coldist_ut failed." << endl;
         exit(1);
@@ -255,7 +255,7 @@ void lerp_ut() {
 
     double tolerance = 0.000001;
     if (abs(result - expected) < tolerance) {
-        cout << "lerp_ut passed." << endl;
+        //cout << "lerp_ut passed." << endl;
     } else {
         cout << "lerp_ut failed." << endl;
         exit(1);
@@ -271,7 +271,7 @@ void makecol_ut() {
     int expected = 16744512 + (255<<24);
 
     if (result == expected) {
-        cout << "makecol_ut passed." << endl;
+        //cout << "makecol_ut passed." << endl;
     } else {
         cout << "makecol_ut failed." << endl;
         exit(1);
@@ -288,7 +288,7 @@ void makecol_alpha_ut() {
     int expected = 184516672;
 
     if (result == expected) {
-        cout << "makecol_alpha_ut passed." << endl;
+        //cout << "makecol_alpha_ut passed." << endl;
     } else {
         cout << "makecol_alpha_ut failed." << endl;
         exit(1);
@@ -302,7 +302,7 @@ void rainbow_ut() {
     int expected = 4210688 + (255<<24); // Equivalent to makecol(255, 191, 64)
 
     if (result == expected) {
-        cout << "rainbow_ut passed." << endl;
+        //cout << "rainbow_ut passed." << endl;
     } else {
         cout << "rainbow_ut failed." << endl;
         exit(1);
@@ -316,7 +316,7 @@ void geta_ut() {
     int expected = 255;
 
     if (result == expected) {
-        cout << "geta_ut passed." << endl;
+        //cout << "geta_ut passed." << endl;
     } else {
         cout << "geta_ut failed." << endl;
         exit(1);
@@ -330,7 +330,7 @@ void getr_ut() {
     int expected = 170;
 
     if (result == expected) {
-        cout << "getr_ut passed." << endl;
+        //cout << "getr_ut passed." << endl;
     } else {
         cout << "getr_ut failed." << endl;
         exit(1);
@@ -344,7 +344,7 @@ void getg_ut() {
     int expected = 187;
 
     if (result == expected) {
-        cout << "getg_ut passed." << endl;
+        //cout << "getg_ut passed." << endl;
     } else {
         cout << "getg_ut failed." << endl;
         exit(1);
@@ -358,7 +358,7 @@ void getb_ut() {
     int expected = 204;
 
     if (result == expected) {
-        cout << "getb_ut passed." << endl;
+        //cout << "getb_ut passed." << endl;
     } else {
         cout << "getb_ut failed." << endl;
         exit(1);
@@ -374,7 +374,7 @@ void colorlerp_ut() {
     int expected = makecol(127, 0, 127);  // Purple
 
     if (result == expected) {
-        cout << "colorlerp_ut passed." << endl;
+        //cout << "colorlerp_ut passed." << endl;
     } else {
         cout << "colorlerp_ut failed." << endl;
         exit(1);
@@ -388,7 +388,7 @@ void latex_text_ut() {
     string expected = "\\text{Hello}";
 
     if (result == expected) {
-        cout << "latex_text_ut passed." << endl;
+        //cout << "latex_text_ut passed." << endl;
     } else {
         cout << "latex_text_ut failed." << endl;
         exit(1);
@@ -416,4 +416,5 @@ void run_inlines_unit_tests(){
     getb_ut();
     colorlerp_ut();
     latex_text_ut();
+    cout << "inline tests passed." << endl;
 }

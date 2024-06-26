@@ -9,13 +9,12 @@ void render_video() {
     g.lock_root_at_origin = true;
     C4GraphScene c4(&g, "444", MANUAL);
     c4.physics_multiplier = 1;
-    g.sanitize_for_closure();
 
     PRINT_TO_TERMINAL = false;
     std::unordered_map<std::string, std::string> closequat{
-        {"q1", "t 4 / cos"},
+        {"q1", "1"},
         {"qi", "0"},
-        {"qj", "t -4 / sin"},
+        {"qj", "0"},
         {"qk", "0"},
         {"d", "2"},
         {"x", "0"},
@@ -23,42 +22,35 @@ void render_video() {
         {"z", "0"},
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
-        {"points_opacity", "1"},
+        {"points_opacity", "0"},
     };
-    dag.add_equations(closequat);
+    auto closequat_moving = closequat;
+    closequat_moving["q1"] = "<t> 4 / cos";
+    closequat_moving["qj"] = "<t> -4 / sin";
+    dag.add_equations(closequat_moving);
     c4.inject_audio_and_render(AudioSegment("So far we have been interested in strategies of connect 4,"));
-    dag.add_equation("d", "20");
+    dag.add_transition("d", "10");
     c4.inject_audio_and_render(AudioSegment("but now it's time to apply those strategies to actually get a structural understanding of the game."));
 
-    /*
     if(FOR_REAL){
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board("444" + to_string(i)));
-        g.sanitize_for_closure();
-        v.inject_audio_and_render(AudioSegment(.1));
+        c4.inject_audio_and_render(AudioSegment(.1));
     }
     g.dimensions = 3;
     for(int i = 1; i <= 7; i++){
         for(int j = 1; j <= 7; j++){
             if(j==4) continue;
             g.add_node(new C4Board("444" + to_string(i) + to_string(j)));
-            g.sanitize_for_closure();
-            v.inject_audio_and_render(AudioSegment(.1));
+            c4.inject_audio_and_render(AudioSegment(.1));
         }
     }
     }
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"surfaces_opacity", "0"}
-    });
-    v.inject_audio_and_render(AudioSegment("First of all, you're gonna have to get comfortable imagining the game as a tree."));
+    dag.add_transition("surfaces_opacity", "0");
+    c4.inject_audio_and_render(AudioSegment("First of all, you're gonna have to get comfortable imagining the game as a tree."));
 
-    v.stage_transition(closequat);
-
-
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"y", "13"}
-    });
-    v.inject_audio_and_render(AudioSegment(1));
+    dag.add_transition("y", "13");
+    c4.inject_audio_and_render(AudioSegment(1));
     std::vector<double> nodes_to_remove;
     for (const auto& node_it : g.nodes) {
         nodes_to_remove.push_back(node_it.first);
@@ -68,23 +60,21 @@ void render_video() {
     }
 
 
-    v.set_variables(std::unordered_map<std::string, std::string>{
-        {"y", "1.5"}, {"d", "10"},
+    dag.add_equations(std::unordered_map<std::string, std::string>{
+        {"y", "1.5"}, {"d", "6"},
         {"q1", "0"},
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"},
+        {"lines_opacity", "0"},
     });
-    v.stage_transition(std::unordered_map<std::string, std::string>{
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"}
     });
 
     g.add_node(new C4Board("436"));
     
-    
-    
-    
-    v.inject_audio_and_render(AudioSegment("For any starting position, we can draw a node."));
+    c4.inject_audio_and_render(AudioSegment("For any starting position, we can draw a node."));
     g.gravity_strength = 1;
     c4.physics_multiplier = 0;
     g.dimensions = 2;
@@ -93,31 +83,31 @@ void render_video() {
     double x = -1.5*4;
     double y = 2;
     g.add_node_with_position(new C4Board("4361"), (x+=1.5), y, 0);
-    g.sanitize_for_closure();
-    v.inject_audio_and_render(AudioSegment("Yellow can play in the left column,"));
+    c4.inject_audio_and_render(AudioSegment("Yellow can play in the left column,"));
 
     g.add_node_with_position(new C4Board("4362"), (x+=1.5), y, 0);
-    g.sanitize_for_closure();
-    v.inject_audio_and_render(AudioSegment("the next column over,"));
+    c4.inject_audio_and_render(AudioSegment("the next column over,"));
 
-    v.inject_audio(AudioSegment("and so on successively."), 5);
+    c4.inject_audio(AudioSegment("and so on successively."), 5);
     for(int i = 3; i <= 7; i++){
         g.add_node_with_position(new C4Board("436" + to_string(i)), (x+=1.5), y, 0);
-        g.sanitize_for_closure();
-        v.render();
+        c4.render();
     }
     g.immobilize_all_nodes();
 
     c4.physics_multiplier = 1;
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"d", "10 t 2 / +"}
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"lines_opacity", "1"}
     });
-    v.inject_audio_and_render(AudioSegment("We connect those new nodes to the root with yellow lines, since yellow was the one who played a move here."));
-    v.inject_audio(AudioSegment("And from those positions, there are even more options that can be made, by Red this time, continuing the graph."), 49);
+    c4.inject_audio_and_render(AudioSegment("We connect those new nodes to the root with yellow lines, since yellow was the one who played a move here."));
+    c4.inject_audio(AudioSegment("And from those positions, there are even more options that can be made, by Red this time, continuing the graph."), 49);
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "15"},
+        {"y", "3"},
+    });
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
         g.add_node_with_position(new C4Board("436" + to_string(i) + to_string(j)), (i-4)*1.5, 4, 0);
-        g.sanitize_for_closure();
-        v.render();
+        c4.render();
     }
 
 
@@ -127,44 +117,51 @@ void render_video() {
 
 
 
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"d", "30"}
-    });
-    v.inject_audio(AudioSegment("In other words, every path through this graph represents a particular continuation from the existing board."), 4);
-    for(Surface& s : c4.surfaces) s.opacity = 0.2;
-    for(Surface& s : c4.surfaces) s.opacity = 0.2;
-    for(Line& l : c4.lines) l.opacity = 0.2;
-    v.render();
+    c4.inject_audio(AudioSegment("In other words, every path through this graph represents a particular continuation from the existing board."), 4);
+    for(Surface& s : c4.surfaces) s.opacity = 0;
+    for(Surface& s : c4.surfaces) s.opacity = 0;
+    for(Line& l : c4.lines) l.opacity = 0;
+    c4.render();
     for(Surface& s : c4.surfaces) s.opacity = string("43667").find(s.name) != string::npos? 1 : 0.2;
     for(Line& l : c4.lines) l.opacity = l.name == "4366 - 43667" || l.name != "436 - 4366" ? 1 : 0.2;
-    v.render();
+    c4.render();
     for(Surface& s : c4.surfaces) s.opacity = string("43676").find(s.name) != string::npos? 1 : 0.2;
     for(Line& l : c4.lines) l.opacity = l.name == "4367 - 43676" || l.name != "436 - 4367" ? 1 : 0.2;
-    v.render();
+    c4.render();
     for(Surface& s : c4.surfaces) s.opacity = string("43655").find(s.name) != string::npos? 1 : 0.2;
     for(Line& l : c4.lines) l.opacity = l.name == "4365 - 43655" || l.name != "436 - 4365" ? 1 : 0.2;
-    v.render();
+    c4.render();
     for(Surface& s : c4.surfaces) s.opacity = 1;
     for(Line& l : c4.lines) l.opacity = 1;
-    v.inject_audio_and_render(AudioSegment("Any set of moves that you could make is in this graph."));
+    c4.inject_audio_and_render(AudioSegment("Any set of moves that you could make is in this graph."));
 
-    v.stage_transition(std::unordered_map<std::string, std::string>{
-        {"x", "10"}
-    });
-    v.stage_transition(std::unordered_map<std::string, std::string>{
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"x", "10"},
         {"surfaces_opacity", "0"}
     });
-    v.inject_audio_and_render(AudioSegment("As a result, it gets intractably large, really fast."));
+    c4.inject_audio_and_render(AudioSegment("As a result, it gets intractably large, really fast."));
     g.dimensions = 3;
     g.gravity_strength = 0;
     g.mobilize_all_nodes();
-    v.stage_transition(closequat);
-    v.inject_audio_and_render(AudioSegment("At any position in the opening, there are 7 possible moves to make, This means,"));
+    c4.inject_audio_and_render(AudioSegment("At any position in the opening, there are 7 possible moves to make, This means,"));
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 2; k++){
         g.add_node(new C4Board("436" + to_string(i) + to_string(j) + to_string(k)));
-        g.sanitize_for_closure();
-        v.render();
+        c4.render();
     }
+
+    CompositeScene composite;
+    composite.add_scene(&c4, 0, 0, 1, 1);
+    LatexScene latex1("0: 1");
+    LatexScene latex2("1: 7");
+    LatexScene latex2("2: 49");
+    LatexScene latex2("3: 238");
+    LatexScene latex2("4: 1120");
+    LatexScene latex2("4: 1120");
+    latex1.inject_audio_and_render(AudioSegment(1));
+    LatexTransitionScene lt1(latex1, latex2);
+    lt1.inject_audio_and_render(AudioSegment(1));
+    latex2.inject_audio_and_render(AudioSegment(1));
+    composite.add_scene(&latex1, .5, 0, .5, 1);
     v.inject_audio_and_render(AudioSegment("at a depth of 0, the amount of nodes is 1 (the empty board),"));
     v.inject_audio_and_render(AudioSegment("at a depth of 1, the amount of nodes is 7 (the 7 openings),"));
     v.inject_audio_and_render(AudioSegment("at a depth of 2, the amount of nodes is 49,"));

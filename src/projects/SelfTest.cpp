@@ -1,11 +1,13 @@
-void render_video() {
+void render_latex(){
     LatexScene latex1("a=b");
     LatexScene latex2("a=b=c");
     latex1.inject_audio_and_render(AudioSegment(1));
     LatexTransitionScene lt1(latex1, latex2);
     lt1.inject_audio_and_render(AudioSegment(1));
     latex2.inject_audio_and_render(AudioSegment(1));
-    /*
+}
+
+void render_complex() {
     PRINT_TO_TERMINAL = false;
     ComplexPlotScene coefficients(VIDEO_WIDTH/2, VIDEO_HEIGHT);
     ComplexPlotScene roots(VIDEO_WIDTH/2, VIDEO_HEIGHT);
@@ -37,54 +39,26 @@ void render_video() {
     dag.add_transition("root_i2", ".7");
     composite.inject_audio_and_render(AudioSegment(2));
 
-    coefficients.dag_roots_to_coefficients();
-    //dag.add_transition("mouse_x", to_string(coefficients.pixel_to_coordinate(dag["coefficient_r2"])));
-    //dag.add_transition("mouse_y", to_string(coefficients.pixel_to_coordinate(dag["coefficient_i2"])));
-    dag.add_transition("coefficient_i2", "1.2");
-    dag.add_transition("coefficient_r2", "1.2");
-    composite.inject_audio_and_render(AudioSegment(2));
+    for(int i = 0; i < 3; i++){
+        coefficients.dag_roots_to_coefficients();
+        dag.add_transition("mouse_x", "<coefficient_r2_pixel>");
+        dag.add_transition("mouse_y", "<coefficient_i2_pixel>");
+        composite.inject_audio_and_render(AudioSegment(1));
+        dag.add_transition("coefficient_i2", "1.2");
+        dag.add_transition("coefficient_r2", "1.2");
+        composite.inject_audio_and_render(AudioSegment(2));
 
-    coefficients.dag_coefficients_to_roots();
-    dag.add_transition("root_i2", "-1.2");
-    dag.add_transition("root_r2", "1.6");
-    composite.inject_audio_and_render(AudioSegment(2));
+        coefficients.dag_coefficients_to_roots();
+        dag.add_transition("mouse_x", "<root_r2_pixel> "+to_string(VIDEO_WIDTH/2)+" +");
+        dag.add_transition("mouse_y", "<root_i2_pixel>");
+        composite.inject_audio_and_render(AudioSegment(1));
+        dag.add_transition("root_i2", "-1.2");
+        dag.add_transition("root_r2", "1.6");
+        composite.inject_audio_and_render(AudioSegment(2));
+    }
+}
 
-    coefficients.dag_roots_to_coefficients();
-    dag.add_transition("coefficient_i2", "-.2");
-    dag.add_transition("coefficient_r2", "1");
-    composite.inject_audio_and_render(AudioSegment(2));
-
-    coefficients.dag_coefficients_to_roots();
-    dag.add_transition("root_i2", "-2");
-    dag.add_transition("root_r2", "-1.3");
-    composite.inject_audio_and_render(AudioSegment(2));
-
-    coefficients.dag_roots_to_coefficients();
-    dag.add_transition("coefficient_i2", "1.2");
-    dag.add_transition("coefficient_r2", "1.2");
-    composite.inject_audio_and_render(AudioSegment(2));
-
-    coefficients.dag_coefficients_to_roots();
-    dag.add_transition("root_i2", "-1.2");
-    dag.add_transition("root_r2", "1.6");
-    composite.inject_audio_and_render(AudioSegment(2));
-
-    coefficients.dag_roots_to_coefficients();
-    dag.add_transition("coefficient_i2", "-.2");
-    dag.add_transition("coefficient_r2", "1");
-    composite.inject_audio_and_render(AudioSegment(2));
-
-    coefficients.dag_coefficients_to_roots();
-    dag.add_transition("root_i2", "-2");
-    dag.add_transition("root_r2", "-1.3");
-    composite.inject_audio_and_render(AudioSegment(2));
-    */
-
-
-
-
-
-    /*
+void render_3d(){
     ThreeDimensionScene tds;
     for(int i = -7; i <= 7; i+=2)
     for(int j = -7; j <= 7; j+=2)
@@ -114,5 +88,8 @@ void render_video() {
         dag.add_transition("qk", std::to_string(q.z));
         tds.inject_audio_and_render(AudioSegment(2));
     }
-    */
+}
+
+void render_video() {
+    render_complex();
 }

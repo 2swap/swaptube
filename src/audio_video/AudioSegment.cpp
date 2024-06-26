@@ -19,15 +19,15 @@ public:
     }
 
     // Getter methods
-    double getDurationSeconds() const {
+    double get_duration_seconds() const {
         return duration_seconds;
     }
 
-    std::string getAudioFilename() const {
+    std::string get_audio_filename() const {
         return audio_filename;
     }
 
-    std::string getSubtitleText() const {
+    std::string get_subtitle_text() const {
         return subtitle_text;
     }
 

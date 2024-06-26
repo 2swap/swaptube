@@ -20,7 +20,15 @@ public:
         p = &pix;
     }
 
-    void begin_transition(string eqn) {
+    string equation_string;
+    Pixels equation_pixels;
+    pair<int, int> coords;
+};
+
+class LatexTransitionScene : public Scene {
+public:
+    //interpolative constructor
+    LatexTransitionScene(const LatexScene& subscene1, const LatexScene& subscene2):Scene(subscene1.w, subscene1.h) {
         assert(subscene1.w == subscene2.w);
         assert(subscene1.h == subscene2.h);
         cout << subscene1.equation_string << " <- Finding Intersections -> " << subscene2.equation_string << endl;
@@ -62,14 +70,6 @@ public:
     }
 
 private:
-    bool in_transition_state;
-
-    // Things used for non-transition states
-    string equation_string;
-    Pixels equation_pixels;
-    pair<int, int> coords;
-
-    // Things used for transitions
     vector<StepResult> intersections;
     pair<int, int> coords1;
     pair<int, int> coords2;

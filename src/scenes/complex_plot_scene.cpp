@@ -94,10 +94,13 @@ public:
     vector<complex<double>> get_coefficients(){
         if(dag.contains("coefficient_r0")){
             vector<complex<double>> coefficients;
-            for(int point_index = 0; dag.contains("coefficient_r" + to_string(point_index)); point_index++) {
-                std::complex<double> coeff(dag["coefficient_r" + to_string(point_index)],
-                                           dag["coefficient_i" + to_string(point_index)]);
-                coefficients.push_back(coeff);
+            for(int point_index = 0; true; point_index++) {
+                if(dag.contains("coefficient_r" + to_string(point_index))){
+                    std::complex<double> coeff(dag["coefficient_r" + to_string(point_index)],
+                                               dag["coefficient_i" + to_string(point_index)]);
+                    coefficients.push_back(coeff);
+                }
+                else break;
             }
             return coefficients;
         }
@@ -145,9 +148,13 @@ public:
     vector<complex<double>> get_roots(){
         vector<complex<double>> roots;
         if(dag.contains("root_r0")){
-            for(int point_index = 0; dag.contains("root_r" + to_string(point_index)); point_index++) {
-                std::complex<double> root(dag["root_r" + to_string(point_index)], dag["root_i" + to_string(point_index)]);
-                roots.push_back(root);
+            for(int point_index = 0; true; point_index++) {
+                if(dag.contains("root_r" + to_string(point_index))){
+                    std::complex<double> root(dag["root_r" + to_string(point_index)],
+                                               dag["root_i" + to_string(point_index)]);
+                    roots.push_back(root);
+                }
+                else break;
             }
         } else {
             vector<complex<double>> coefficients = get_coefficients();
@@ -193,8 +200,7 @@ public:
         return pixel_width;
     }
 
-    void render_point(std::complex<double> point){
-        std::pair<int, int> pixel = coordinate_to_pixel(point);
+    void render_point(const pair<int,int>& pixel){
         pix.fill_ellipse(pixel.first, pixel.second, 5, 5, WHITE);
     }
 
@@ -222,15 +228,26 @@ public:
                 pix.set_pixel(x, y, complex_to_color(evaluate_polynomial_given_coefficients(coefficients,pixel_to_coordinate(make_pair(x, y)))));
             }
         }
-        for(std::complex<double> point : roots){
-            render_point(point);
+        for(int i = 0; i < roots.size(); i++){
+            const std::complex<double> point = roots[i];
+            const std::pair<int, int> pixel = coordinate_to_pixel(point);
+            // add telemetry to the dag only if the roots are the inputs. Ordering is not known.
+            if(dag.contains("root_r0")){
+                dag.set_special("root_r"+to_string(i)+"_pixel", pixel.first);
+                dag.set_special("root_i"+to_string(i)+"_pixel", pixel.second);
+            }
+            render_point(pixel);
         }
     }
 
     void render_coefficient_mode(const vector<complex<double>>& coefficients){
         pix.fill(BLACK);
-        for(std::complex<double> point : coefficients){
-            render_point(point);
+        for(int i = 0; i < coefficients.size(); i++){
+            const std::complex<double> point = coefficients[i];
+            const std::pair<int, int> pixel = coordinate_to_pixel(point);
+            dag.set_special("coefficient_r"+to_string(i)+"_pixel", pixel.first);
+            dag.set_special("coefficient_i"+to_string(i)+"_pixel", pixel.second);
+            render_point(pixel);
         }
     }
 

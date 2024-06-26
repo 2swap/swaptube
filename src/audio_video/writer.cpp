@@ -86,12 +86,12 @@ public:
     double add_audio_segment(const AudioSegment& audio){
         double duration_seconds = 0;
         if (audio.is_silence()) {
-            duration_seconds = audio.getDurationSeconds();
+            duration_seconds = audio.get_duration_seconds();
             audiowriter.add_silence(duration_seconds);
         } else {
-            duration_seconds = audiowriter.add_audio_get_length(audio.getAudioFilename());
-            subswriter.add_subtitle(duration_seconds, audio.getSubtitleText());
-            audiowriter.add_shtooka_entry(audio.getAudioFilename(), audio.getSubtitleText());
+            duration_seconds = audiowriter.add_audio_get_length(audio.get_audio_filename());
+            subswriter.add_subtitle(duration_seconds, audio.get_subtitle_text());
+            audiowriter.add_shtooka_entry(audio.get_audio_filename(), audio.get_subtitle_text());
         }
         return duration_seconds;
     }
