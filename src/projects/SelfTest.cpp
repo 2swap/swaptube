@@ -1,10 +1,9 @@
 void render_latex(){
-    LatexScene latex1("a=b");
-    LatexScene latex2("a=b=c");
-    latex1.inject_audio_and_render(AudioSegment(1));
-    LatexTransitionScene lt1(latex1, latex2);
-    lt1.inject_audio_and_render(AudioSegment(1));
-    latex2.inject_audio_and_render(AudioSegment(1));
+    LatexScene latex("a=b");
+    latex.inject_audio_and_render(AudioSegment(1));
+    latex.begin_transition("a=b=c");
+    latex.inject_audio_and_render(AudioSegment(1));
+    latex.inject_audio_and_render(AudioSegment(1));
 }
 
 void render_complex() {
@@ -91,5 +90,6 @@ void render_3d(){
 }
 
 void render_video() {
-    render_complex();
+    //render_complex();
+    render_latex();
 }

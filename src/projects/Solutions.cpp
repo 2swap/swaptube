@@ -1,5 +1,6 @@
 using namespace std;
 void render_video() {
+    PRINT_TO_TERMINAL = false;
     Graph<C4Board> g;
     g.decay = 0.1;
     g.repel_force = 0.4;
@@ -10,7 +11,6 @@ void render_video() {
     C4GraphScene c4(&g, "444", MANUAL);
     c4.physics_multiplier = 1;
 
-    PRINT_TO_TERMINAL = false;
     std::unordered_map<std::string, std::string> closequat{
         {"q1", "1"},
         {"qi", "0"},
@@ -143,7 +143,7 @@ void render_video() {
     g.dimensions = 3;
     g.gravity_strength = 0;
     g.mobilize_all_nodes();
-    c4.inject_audio_and_render(AudioSegment("At any position in the opening, there are 7 possible moves to make, This means,"));
+    c4.inject_audio_and_render(AudioSegment("At any position in the opening, there are 7 possible moves to make."));
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 2; k++){
         g.add_node(new C4Board("436" + to_string(i) + to_string(j) + to_string(k)));
         c4.render();
@@ -151,22 +151,18 @@ void render_video() {
 
     CompositeScene composite;
     composite.add_scene(&c4, 0, 0, 1, 1);
-    LatexScene latex1("0: 1");
-    LatexScene latex2("1: 7");
-    LatexScene latex2("2: 49");
-    LatexScene latex2("3: 238");
-    LatexScene latex2("4: 1120");
-    LatexScene latex2("4: 1120");
-    latex1.inject_audio_and_render(AudioSegment(1));
-    LatexTransitionScene lt1(latex1, latex2);
-    lt1.inject_audio_and_render(AudioSegment(1));
-    latex2.inject_audio_and_render(AudioSegment(1));
-    composite.add_scene(&latex1, .5, 0, .5, 1);
-    v.inject_audio_and_render(AudioSegment("at a depth of 0, the amount of nodes is 1 (the empty board),"));
-    v.inject_audio_and_render(AudioSegment("at a depth of 1, the amount of nodes is 7 (the 7 openings),"));
-    v.inject_audio_and_render(AudioSegment("at a depth of 2, the amount of nodes is 49,"));
+    LatexScene latex(VIDEO_WIDTH/2, VIDEO_HEIGHT, "0: 1");
+    composite.add_scene(&latex, .5, 0, .5, 1);
+    composite.inject_audio_and_render(AudioSegment("This means, at a depth of 0, the amount of nodes is 1 (the empty board),"));
+    latex.begin_transition("0: 1\\\\\\\\1: 7");
+    composite.inject_audio_and_render(AudioSegment("at a depth of 1, the amount of nodes is 7 (the 7 openings),"));
+    latex.begin_transition("0: 1\\\\\\\\1: 7\\\\\\\\2: 49");
+    composite.inject_audio_and_render(AudioSegment("at a depth of 2, the amount of nodes is 49,"));
+    composite.inject_audio_and_render(AudioSegment("and the progression continues exponentially."));
     /*
-    v.inject_audio_and_render(AudioSegment("and the progression continues exponentially."));
+    latex.begin_transition("3: 238");
+    latex.begin_transition("4: 1120");
+    latex.begin_transition("4: 1120");
     v.inject_audio_and_render(AudioSegment("In fact, John Tromp determined that there are a total of 4,531,985,219,092 unique connect 4 positions."));
     v.inject_audio_and_render(AudioSegment("We can do some tricks like de-duplicating based on horizontal symmetry,"));
     v.inject_audio_and_render(AudioSegment("but the full game graph is still incomprehensibly huge, tangled, and complex."));
