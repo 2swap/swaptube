@@ -6,8 +6,6 @@
 
 using namespace std;
 
-int video_sessions_left = 0;
-
 class Scene {
 public:
     Scene(const int width, const int height) : w(width), h(height), pix(width, height){};
@@ -18,14 +16,6 @@ public:
         bool b = false;
         query(b, p);
     }
-
-    /*
-    void set_variable(double& d, const string& var, const unordered_map<string, double>& variables){
-        rendered = false;
-        if(variables.find(var) != variables.end())
-            d = variables.at(var);
-    }
-    */
 
     void resize(int width, int height){
         if(w == width && h == height) return;
@@ -43,56 +33,60 @@ public:
     void inject_audio(const AudioSegment& audio, int expected_video_sessions){
         if(!FOR_REAL)
             return;
+        cout << "Scene says: " << audio.get_subtitle_text() << endl;
         if (video_sessions_left != 0) {
             failout("ERROR: Attempted to add audio twice in a row, without rendering video!\nYou probably forgot to use render()!");
         }
 
-        superscene_frames_left = FOR_REAL ? WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE : 0;
-        cout << "Scene says: " << audio.get_subtitle_text() << endl;
+        superscene_frames_total = superscene_frames_left = FOR_REAL ? WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE : 0;
+        video_sessions_total = video_sessions_left = expected_video_sessions;
         cout << "Scene should last " << superscene_frames_left << " frames, with " << expected_video_sessions << " sessions.";
-        video_sessions_left = expected_video_sessions;
     }
 
     void render(){
-        if(!FOR_REAL)
+        if(!FOR_REAL){
+            dag.close_all_transitions();
             return;
-        scene_duration_frames = superscene_frames_left / video_sessions_left;
-        cout << "Rendering a scene. Frame Count:" << scene_duration_frames << endl;
+        }
+
+        int video_sessions_done = video_sessions_total - video_sessions_left;
+        int superscene_frames_done = superscene_frames_total - superscene_frames_left;
+        double num_frames_per_session = static_cast<double>(superscene_frames_total) / video_sessions_total;
+        int num_frames_to_be_done_after_this_time = round(num_frames_per_session * (video_sessions_done + 1));
+        scene_duration_frames = num_frames_to_be_done_after_this_time - superscene_frames_done;
+        cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (sessions left: " << video_sessions_left << ", " << superscene_frames_left << " frames total)" << endl;
 
         time = 0;
-        bool done_scene = false;
-        while (!done_scene) {
-            done_scene = render_one_frame();
+        for (int frame = 0; frame < scene_duration_frames; frame++) {
+            render_one_frame();
+            superscene_frames_left--;
         }
+        video_sessions_left--;
+        if(video_sessions_left == 0)
+            dag.close_all_transitions();
     }
 
     int w = 0;
     int h = 0;
   
 private:
-    bool render_one_frame(){
-        if(!FOR_REAL)
-            return true;
+    void render_one_frame(){
+        dag.set_special("t", video_time_s);
+        dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
+        dag.evaluate_all();
+
         if (video_sessions_left == 0) {
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
         }
 
-        dag.set_special("t", video_time_s);
-        dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / scene_duration_frames);
-        dag.evaluate_all();
-        bool done_scene = false;
+        bool unused = false;
         Pixels* p = nullptr;
-        superscene_frames_left--;
         WRITER->set_time(video_time_s);
-        query(done_scene, p);
+        query(unused, p);
         assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
         video_time_s += 1./VIDEO_FRAMERATE;
         if(PRINT_TO_TERMINAL && ((video_num_frames++)%5 == 0)) p->print_to_terminal();
         WRITER->add_frame(*p);
-        if(done_scene) video_sessions_left--;
-        if(video_sessions_left == 0)
-            dag.close_all_transitions();
-        return done_scene;
     }
 
 protected:
@@ -100,8 +94,11 @@ protected:
     bool is_transition = false;
     Pixels pix;
     int time = 0;
+    int video_sessions_left = 0;
+    int video_sessions_total = 0;
     int scene_duration_frames = 0;
     int superscene_frames_left = 0;
+    int superscene_frames_total = 0;
 };
 
 //#include "mandelbrot_scene.cpp"

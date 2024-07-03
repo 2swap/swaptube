@@ -30,12 +30,9 @@ int video_num_frames = 0;
 #include "misc/Timer.cpp"
 
 void setup_writer(const string& project_name){
-    cout << "Setting up static writer" << endl;
     // Create a new MovieWriter object and assign it to the pointer
     WRITER = new MovieWriter(project_name);
-    cout << "Initializing static writer" << endl;
     WRITER->init("../media/testaudio.mp3");
-    cout << "Static writer ready" << endl;
 }
 
 #include "projects/.active_project.tmp"

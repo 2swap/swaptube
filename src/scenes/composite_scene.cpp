@@ -23,6 +23,7 @@ public:
     }
 
     void render_composite(){
+        pix.fill(BLACK);
         for (auto& swc : scenes){
             int  width_int = static_cast<int>(swc.width  * w);
             int height_int = static_cast<int>(swc.height * h);
@@ -37,7 +38,6 @@ public:
 
     void query(bool& done_scene, Pixels*& p) override {
         render_composite();
-        done_scene = time++ >= scene_duration_frames;
         p = &pix;
     }
 

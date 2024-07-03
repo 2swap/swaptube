@@ -33,12 +33,10 @@ private:
 
 public:
     SubtitleWriter(const string& project_name) : srt_filename("../out/" + project_name + ".srt") {
-        cout << "Constructing a SubtitleWriter" << endl;
         srt_file.open(srt_filename);
         if (!srt_file.is_open()) {
             cerr << "Failed to open file: " << srt_filename << endl;
         }
-        cout << "Constructed a SubtitleWriter" << endl;
     }
 
     ~SubtitleWriter() {

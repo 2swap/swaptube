@@ -13,6 +13,10 @@ public:
         coords = make_pair((pix.w-equation_pixels.w)/2, (pix.h-equation_pixels.h)/2);
     }
 
+    void append_transition(string eqn) {
+        begin_transition(equation_string + eqn);
+    }
+
     void begin_transition(string eqn) {
         if(in_transition_state) end_transition();
         transition_equation_string = eqn;
@@ -38,16 +42,13 @@ public:
     void query(bool& done_scene, Pixels*& p) override {
         pix.fill(BLACK);
         double weight = dag["transition_fraction"];
+        // Define end of transition as falling edge of transition_fraction
         if(weight < transition_fraction) end_transition();
         transition_fraction = weight;
         if(!in_transition_state){
-            done_scene = scene_duration_frames <= time;
-            time++;
             pix.copy(equation_pixels, coords.first, coords.second, 1);
             p = &pix;
         } else { // in a transition
-            done_scene = scene_duration_frames <= time;
-
             double tp = transparency_profile(weight);
             double tp1 = transparency_profile(1-weight);
             double smooth = smoother2(weight);
@@ -69,12 +70,7 @@ public:
             pix.copy(last_intersection.current_p1, coords.first, coords.second, tp1*tp1);
             pix.copy(last_intersection.current_p2, transition_coords.first, transition_coords.second, tp*tp);
 
-            time++;
-
             p = &pix;
-
-            // Define end of transition as falling edge of transition_fraction
-            cout << transition_fraction << endl;
         }
     }
 

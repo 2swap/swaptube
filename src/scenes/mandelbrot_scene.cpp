@@ -239,12 +239,9 @@ void MandelbrotScene::render(Pixels& p){
 }
 
 const Pixels& MandelbrotScene::query(bool& done_scene) {
-    done_scene = time >= scene_duration_frames;
-
     double duration_frames = contents["duration_seconds"].get<int>() * VIDEO_FRAMERATE;
 
     render(pix);
-    time++;
     
     return pix;
 }

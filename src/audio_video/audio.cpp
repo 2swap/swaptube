@@ -68,7 +68,6 @@ private:
 
 public:
     AudioWriter(const string& _media_folder, AVFormatContext *fc_) : media_folder(_media_folder), fc(fc_) {
-        cout << "Constructing an AudioWriter" << endl;
         record_filename = media_folder + "record_list.tsv";
         shtooka_file.open(record_filename);
         if (!shtooka_file.is_open()) {
@@ -79,7 +78,6 @@ public:
     void init_audio(const string& inputAudioFilename) {
         AVFormatContext* inputAudioFormatContext = nullptr;
         avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
-        cout << "Initializing writer with codec from " << inputAudioFilename << endl;
 
         // Find input audio stream information
         avformat_find_stream_info(inputAudioFormatContext, nullptr);

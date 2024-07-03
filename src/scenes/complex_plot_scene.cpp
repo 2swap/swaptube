@@ -55,7 +55,6 @@ public:
 
     void query(bool& done_scene, Pixels*& p) override {
         render_plot();
-        done_scene = time++>=scene_duration_frames;
         p = &pix;
     }
 
