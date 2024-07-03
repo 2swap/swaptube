@@ -55,9 +55,7 @@ private:
 
 public:
     VideoWriter(const string& _output_filename, AVFormatContext *fc_)
-        : output_filename(_output_filename), fc(fc_) {
-        cout << "Constructing a VideoWriter" << endl;
-    }
+        : output_filename(_output_filename), fc(fc_) {}
 
     void init_video() {
         av_log_set_level(AV_LOG_DEBUG);

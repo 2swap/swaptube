@@ -1,7 +1,7 @@
 #pragma once
 
 #include "scene.cpp"
-#include "../../../Klotski/Graph.cpp" // I am too lazy to figure the right pattern out right now, so I'll assume you have my Klotski repo checked out in the same folder as this repo.
+#include "Graph.cpp"
 
 template <typename T>
 class GraphScene : public ThreeDimensionScene {
@@ -18,10 +18,11 @@ public:
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
             points.push_back(Point(node.data->representation, node_pos, WHITE));
 
-            for(double neighbor_id : node.neighbors){
+            for(const Edge& neighbor_edge : node.neighbors){
+                double neighbor_id = neighbor_edge.to;
                 Node<T> neighbor = graph->nodes.find(neighbor_id)->second;
                 glm::vec3 neighbor_pos = glm::vec3(neighbor.x, neighbor.y, neighbor.z);
-                lines.push_back(Line(node.data->representation + " - " + neighbor.data->representation, node_pos, neighbor_pos, get_edge_color(node, neighbor)));
+                lines.push_back(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor), neighbor_edge.opacity));
             }
         }
         rendered = false;

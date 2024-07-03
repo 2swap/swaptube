@@ -1,6 +1,7 @@
 using namespace std;
 void render_video() {
     PRINT_TO_TERMINAL = false;
+    FOR_REAL = true;
     Graph<C4Board> g;
     g.decay = 0.1;
     g.repel_force = 0.4;
@@ -16,7 +17,7 @@ void render_video() {
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"},
-        {"d", "2"},
+        {"d", "4"},
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
@@ -49,15 +50,9 @@ void render_video() {
     dag.add_transition("surfaces_opacity", "0");
     c4.inject_audio_and_render(AudioSegment("First of all, you're gonna have to get comfortable imagining the game as a tree."));
 
-    dag.add_transition("y", "13");
+    dag.add_transition("y", "30");
     c4.inject_audio_and_render(AudioSegment(1));
-    std::vector<double> nodes_to_remove;
-    for (const auto& node_it : g.nodes) {
-        nodes_to_remove.push_back(node_it.first);
-    }
-    for (const double key : nodes_to_remove) {
-        g.remove_node(key);
-    }
+    g.clear();
 
 
     dag.add_equations(std::unordered_map<std::string, std::string>{
@@ -104,6 +99,7 @@ void render_video() {
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"d", "15"},
         {"y", "3"},
+        {"surfaces_opacity", "0"},
     });
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
         g.add_node_with_position(new C4Board("436" + to_string(i) + to_string(j)), (i-4)*1.5, 4, 0);
@@ -116,56 +112,132 @@ void render_video() {
 
 
 
-
     c4.inject_audio(AudioSegment("In other words, every path through this graph represents a particular continuation from the existing board."), 4);
-    for(Surface& s : c4.surfaces) s.opacity = 0;
-    for(Surface& s : c4.surfaces) s.opacity = 0;
-    for(Line& l : c4.lines) l.opacity = 0;
+    for(auto& node : g.nodes)
+        for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors))
+            const_cast<Edge&>(edge).opacity = 0.2;
     c4.render();
-    for(Surface& s : c4.surfaces) s.opacity = string("43667").find(s.name) != string::npos? 1 : 0.2;
-    for(Line& l : c4.lines) l.opacity = l.name == "4366 - 43667" || l.name != "436 - 4366" ? 1 : 0.2;
+    for(auto& node : g.nodes)
+        for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
+            bool highlight = false;
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "43667" && g.nodes.find(edge.from)->second.data->representation == "4366";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "4366" && g.nodes.find(edge.from)->second.data->representation == "43667";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "4366" && g.nodes.find(edge.from)->second.data->representation == "436";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "436" && g.nodes.find(edge.from)->second.data->representation == "4366";
+            const_cast<Edge&>(edge).opacity = highlight ? 1 : 0.2;
+        }
     c4.render();
-    for(Surface& s : c4.surfaces) s.opacity = string("43676").find(s.name) != string::npos? 1 : 0.2;
-    for(Line& l : c4.lines) l.opacity = l.name == "4367 - 43676" || l.name != "436 - 4367" ? 1 : 0.2;
+    for(auto& node : g.nodes)
+        for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
+            bool highlight = false;
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "43626" && g.nodes.find(edge.from)->second.data->representation == "4362";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "4362" && g.nodes.find(edge.from)->second.data->representation == "43626";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "4362" && g.nodes.find(edge.from)->second.data->representation == "436";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "436" && g.nodes.find(edge.from)->second.data->representation == "4362";
+            const_cast<Edge&>(edge).opacity = highlight ? 1 : 0.2;
+        }
     c4.render();
-    for(Surface& s : c4.surfaces) s.opacity = string("43655").find(s.name) != string::npos? 1 : 0.2;
-    for(Line& l : c4.lines) l.opacity = l.name == "4365 - 43655" || l.name != "436 - 4365" ? 1 : 0.2;
+    for(auto& node : g.nodes)
+        for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
+            bool highlight = false;
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "43655" && g.nodes.find(edge.from)->second.data->representation == "4365";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "4365" && g.nodes.find(edge.from)->second.data->representation == "43655";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "4365" && g.nodes.find(edge.from)->second.data->representation == "436";
+            highlight |= g.nodes.find(edge.to)->second.data->representation == "436" && g.nodes.find(edge.from)->second.data->representation == "4365";
+            const_cast<Edge&>(edge).opacity = highlight ? 1 : 0.2;
+        }
     c4.render();
-    for(Surface& s : c4.surfaces) s.opacity = 1;
-    for(Line& l : c4.lines) l.opacity = 1;
+    for(auto& node : g.nodes)
+        for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors))
+            const_cast<Edge&>(edge).opacity = 1;
+    FOR_REAL = true;
     c4.inject_audio_and_render(AudioSegment("Any set of moves that you could make is in this graph."));
 
     dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"x", "10"},
-        {"surfaces_opacity", "0"}
+        {"x", "50"},
     });
     c4.inject_audio_and_render(AudioSegment("As a result, it gets intractably large, really fast."));
     g.dimensions = 3;
-    g.gravity_strength = 0;
-    g.mobilize_all_nodes();
-    c4.inject_audio_and_render(AudioSegment("At any position in the opening, there are 7 possible moves to make."));
-    for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 2; k++){
-        g.add_node(new C4Board("436" + to_string(i) + to_string(j) + to_string(k)));
-        c4.render();
+    g.gravity_strength = 1;
+    g.clear();
+    dag.add_equations(std::unordered_map<std::string, std::string>{
+        {"x", "0"},
+        {"d", "5"},
+        {"points_opacity", "1"},
+        {"surfaces_opacity", "0"},
+        {"q1", "<t> 4 / cos"},
+        {"qj", "<t> -4 / sin"},
+    });
+
+    C4GraphScene c4gs(VIDEO_WIDTH/2, VIDEO_HEIGHT, &g, "", MANUAL);
+    LatexScene latex(VIDEO_WIDTH/2, VIDEO_HEIGHT, "0: 1");
+    CompositeScene composite;
+    composite.add_scene(&c4gs, 0, 0, .5, 1);
+    composite.add_scene(&latex, .5, 0, .5, 1);
+
+    composite.inject_audio_and_render(AudioSegment("At any position in the opening, there are 7 possible moves to make. This means, at a depth of 0, the amount of nodes is 1 (the empty board),"));
+
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "10"},
+    });
+    composite.inject_audio(AudioSegment("at a depth of 1, the amount of nodes is 7 (the 7 openings),"), 7);
+    latex.append_transition("\\\\\\\\1: 7");
+    for(int i = 1; i <= 7; i++){
+        g.add_node(new C4Board(to_string(i)));
+        composite.render();
+    }
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"surfaces_opacity", "0"},
+    });
+
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "20"},
+    });
+    composite.inject_audio(AudioSegment("at a depth of 2, the amount of nodes is 49,"), 49);
+    latex.append_transition("\\\\\\\\2: 49");
+    for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
+        g.add_node(new C4Board(to_string(i) + to_string(j)));
+        composite.render();
     }
 
-    CompositeScene composite;
-    composite.add_scene(&c4, 0, 0, 1, 1);
-    LatexScene latex(VIDEO_WIDTH/2, VIDEO_HEIGHT, "0: 1");
-    composite.add_scene(&latex, .5, 0, .5, 1);
-    composite.inject_audio_and_render(AudioSegment("This means, at a depth of 0, the amount of nodes is 1 (the empty board),"));
-    latex.begin_transition("0: 1\\\\\\\\1: 7");
-    composite.inject_audio_and_render(AudioSegment("at a depth of 1, the amount of nodes is 7 (the 7 openings),"));
-    latex.begin_transition("0: 1\\\\\\\\1: 7\\\\\\\\2: 49");
-    composite.inject_audio_and_render(AudioSegment("at a depth of 2, the amount of nodes is 49,"));
-    composite.inject_audio_and_render(AudioSegment("and the progression continues exponentially."));
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "50"},
+    });
+    composite.inject_audio(AudioSegment("and the progression continues exponentially."), 343);
+    latex.append_transition("\\\\\\\\3: 238");
+    for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 7; k++){
+        g.add_node(new C4Board(to_string(i) + to_string(j) + to_string(k)));
+        composite.render();
+    }
+
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "70"},
+    });
+    composite.inject_audio(AudioSegment(3), 2401);
+    latex.append_transition("\\\\\\\\4: 1120");
+    if(FOR_REAL)for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 7; k++)for(int l = 1; l <= 7; l++){
+        g.add_node(new C4Board(to_string(i) + to_string(j) + to_string(k) + to_string(l)));
+        composite.render();
+    }
+    composite.inject_audio_and_render(AudioSegment("Now this is just a mess. You can't tell the structure of this graph whatsoever by looking at it, and we're only 4 moves in."));
+    latex.append_transition("\\\\\\\\...\\\\\\\\total: 4,531,985,219,092");
+    composite.inject_audio_and_render(AudioSegment("In fact, Stefan Edelkamp and Peter Kissmann computed in 2008 that there are a total of 4.5 trillion unique positions at any depth."));
+
+    C4Scene c4_left(VIDEO_WIDTH*2/5, VIDEO_HEIGHT, "43637563");
+    LatexScene latex_equals(2*VIDEO_WIDTH/5, VIDEO_HEIGHT, "=");
+    C4Scene c4_right(VIDEO_WIDTH*2/5, VIDEO_HEIGHT, "45251325");
+    CompositeScene mirror_symmetry_composite;
+    mirror_symmetry_composite.add_scene(&latex_equals, .3, 0, .4, 1);
+    mirror_symmetry_composite.add_scene(&c4_left, 0, 0, .4, 1);
+    mirror_symmetry_composite.add_scene(&c4_right, .6, 0, .4, 1);
+    mirror_symmetry_composite.inject_audio_and_render(AudioSegment("We can do some tricks like de-duplicating based on horizontal symmetry,"));
+    LatexScene latex_lower_bound(VIDEO_WIDTH, VIDEO_HEIGHT/5, "Best Case: 2,265,992,609,546");
+    mirror_symmetry_composite.add_scene(&latex_lower_bound, 0, .8, 0, .2);
+    mirror_symmetry_composite.inject_audio_and_render(AudioSegment("but that will remove less than half of the nodes, because we are only deleting one node per mirror pair."));
+
     /*
-    latex.begin_transition("3: 238");
-    latex.begin_transition("4: 1120");
-    latex.begin_transition("4: 1120");
-    v.inject_audio_and_render(AudioSegment("In fact, John Tromp determined that there are a total of 4,531,985,219,092 unique connect 4 positions."));
-    v.inject_audio_and_render(AudioSegment("We can do some tricks like de-duplicating based on horizontal symmetry,"));
-    v.inject_audio_and_render(AudioSegment("but the full game graph is still incomprehensibly huge, tangled, and complex."));
+    just the graph.inject_audio_and_render(AudioSegment("We are going to need a bit of a paradigm shift if we want to be able to gain any insight from this tangled mess."));
+    v.inject_audio_and_render(AudioSegment("Instead of growing the graph from the beginning of the game out,"));
     v.inject_audio_and_render(AudioSegment("Let's start with an endgame position to make life a little bit easier on ourselves."));
     v.inject_audio_and_render(AudioSegment("This is a particular endgame, and here is what it looks like when we expand out its full tree of positions."));
     v.inject_audio_and_render(AudioSegment("Now, let's color in all the terminal states of this board."));

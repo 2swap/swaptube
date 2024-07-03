@@ -11,7 +11,5 @@ public:
         pix.fill(TRANSPARENT_BLACK);
         pix.fill_rect(dag["mouse_x"], dag["mouse_y"], 6, 6, 0xffff0000);
         p = &pix;
-        done_scene = scene_duration_frames <= time;
-        time++;
     }
 };

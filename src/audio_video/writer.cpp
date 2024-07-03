@@ -28,7 +28,6 @@ private:
     // Function to initialize 'fc'
     AVFormatContext* initFC(const string& output_filename) {
         AVFormatContext* temp_fc = nullptr;
-        cout << "Initializing FormatContext" << endl;
         avformat_alloc_output_context2(&temp_fc, NULL, NULL, output_filename.c_str());
         return temp_fc;
     }
@@ -43,7 +42,6 @@ public:
         audiowriter(media_folder, fc),
         videowriter(output_filename, fc)
     {
-        cout << "Constructing a MovieWriter" << endl;
         // Check if the folder already exists
         if (filesystem::exists(media_folder)) {
             cout << "Media folder already exists, not creating." << endl;

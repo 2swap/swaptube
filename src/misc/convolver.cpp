@@ -37,7 +37,6 @@ void shrink_alpha_from_center(Pixels& p) {
 }
 
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
-    cout << "Constructing a convolution map... " << endl;
     int max_conv = 0;
     int retw = p1.w+p2.w;
     int reth = p1.h+p2.h;
@@ -67,7 +66,6 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y){
         }
     max_x -= p2.w;
     max_y -= p2.h;
-    cout << "Finished!" << endl;
 
     return create_alpha_from_intensities(map, 0);
 }

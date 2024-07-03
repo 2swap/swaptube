@@ -57,10 +57,16 @@ public:
     }
 
     /* Accessors */
-    bool contains(const string& varname){
+    bool contains(const string& varname) const {
         return variables.find(varname) != variables.end();
     }
     double operator [](const string v) const {return get_value(v);}
+    double get_with_default(const string v, double deflt) const {
+        if (contains(v)) {
+            return get_value(v);
+        }
+        return deflt;
+    }
     void print_state() const {
         /* Print out all variable names along with their current value and their computation status. */
         cout << "Variables:" << endl;
