@@ -1,5 +1,19 @@
 #include <iostream>
 #include <string>
+#include <algorithm>
+#include <cctype>
+
+// Function to sanitize a string for use as a filename
+std::string sanitize_filename(const std::string& text) {
+    std::string sanitized = text;
+    // Replace spaces with underscores
+    std::replace(sanitized.begin(), sanitized.end(), ' ', '_');
+    // Remove non-alphanumeric characters except underscores
+    sanitized.erase(std::remove_if(sanitized.begin(), sanitized.end(),
+        [](char c) { return !std::isalnum(c) && c != '_'; }),
+        sanitized.end());
+    return sanitized + ".mp3";
+}
 
 class AudioSegment {
 public:
@@ -7,11 +21,8 @@ public:
     AudioSegment(double duration_seconds) 
         : duration_seconds(duration_seconds), audio_filename(""), subtitle_text("") {}
 
-    AudioSegment(const std::string& audio_filename, const std::string& subtitle_text)
-        : duration_seconds(0), audio_filename(audio_filename), subtitle_text(subtitle_text) {}
-
     AudioSegment(const std::string& subtitle_text)
-        : duration_seconds(0), audio_filename("no_audio_file_provided"), subtitle_text(subtitle_text) {}
+        : duration_seconds(0), audio_filename(sanitize_filename(subtitle_text)), subtitle_text(subtitle_text) {}
 
     // Function to check if the audio segment represents silence
     bool is_silence() const {

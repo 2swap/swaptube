@@ -16,7 +16,7 @@ public:
         for(pair<double, Node<T>> p : graph->nodes){
             Node<T> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
-            points.push_back(Point(node.data->representation, node_pos, WHITE));
+            points.push_back(Point(node.data->representation, node_pos, node.color, node.opacity));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
