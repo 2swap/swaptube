@@ -43,14 +43,14 @@ public:
     /**
      * Constructor to create a new node.
      * @param t The data associated with the node.
-     * @param dist The distance of the node from the root.
      */
     Node(T* t, double hash) : data(t), hash(hash) {}
-    int dist = 0;
     double hash = 0;
     bool highlight = false;
     T* data;
     EdgeSet neighbors;
+    double opacity = 1;
+    int color = 0xffffffff;
     bool flooded = false;
     bool immobile = false;
     double vx = (double) rand() / (RAND_MAX), vy = (double) rand() / (RAND_MAX), vz = (double) rand() / (RAND_MAX), vw = (double) rand() / (RAND_MAX);
@@ -75,7 +75,6 @@ public:
     std::stack<double> dfs_stack;
     std::queue<double> bfs_queue;
     std::unordered_map<double, Node<T>> nodes;
-    std::map<int, std::pair<int, int>> dist_count;
     double root_node_hash = 0;
 
 
@@ -188,34 +187,29 @@ public:
 
     /**
      * Expand the graph by adding neighboring nodes.
-    void expand_graph_bfs(){
+     */
+    void expand_graph_bfs(bool only_one = false){
         while(true){
-            double id;
-            {
-                if (bfs_queue.empty()) {
-                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                    std::cout << "Sleeping and awaiting more work..." << std::endl;
-                    return;
-                }
-                id = bfs_queue.front();
-                bfs_queue.pop();
+            if (bfs_queue.empty()) {
+                return;
             }
-
+            double id = bfs_queue.front();
             std::unordered_set<T*> neighbor_nodes = nodes.find(id)->second.data->get_neighbors();
             for(auto it = neighbor_nodes.begin(); it != neighbor_nodes.end(); ++it){
                 double child_hash = (*it)->get_hash();
                 {
-                    nodes.find(id)->second.neighbors.insert(child_hash);
+                    nodes.find(id)->second.neighbors.insert(Edge(id, child_hash));
                     if(!node_exists(child_hash)){
                         add_node(*it);
                         bfs_queue.push(child_hash);
+                        if(only_one) return;
                     }
                 }
             }
+            bfs_queue.pop();
         }
         std::cout << "Finished expansion" << std::endl;
     }
-     */
 
     void highlight_nodes(Graph<T>& g){
         int ct = 0;
@@ -437,23 +431,6 @@ public:
         }
         delete node->data;
         nodes.erase(id);
-    }
-
-    /**
-     * Find a neighboring node that is closer to the origin.
-     * @param id The hash of the node from which to find a neighbor.
-     * @return The hash of the neighbor node closer to the origin.
-     */
-    double approach_origin(double id){
-        if(!node_exists(id)) return 0;
-        Node<T>* node = &(nodes.find(id)->second);
-        std::unordered_set<double> neighbor_nodes = node->neighbors;
-        for(double neighbor_id : neighbor_nodes){
-            Node<T>* neighbor = &(nodes.find(neighbor_id)->second);
-            if(neighbor->dist == node->dist-1)
-                return neighbor_id;
-        }
-        return 0;
     }
 
     /**

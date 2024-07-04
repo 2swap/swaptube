@@ -1,7 +1,7 @@
 using namespace std;
-void render_video() {
+void beginning() {
     PRINT_TO_TERMINAL = false;
-    FOR_REAL = true;
+    FOR_REAL = false;
     Graph<C4Board> g;
     g.decay = 0.1;
     g.repel_force = 0.4;
@@ -33,17 +33,17 @@ void render_video() {
     dag.add_transition("d", "10");
     c4.inject_audio_and_render(AudioSegment("but now it's time to apply those strategies to actually get a structural understanding of the game."));
 
+    c4.inject_audio(AudioSegment(2), 7+49);
     if(FOR_REAL){
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board("444" + to_string(i)));
-        c4.inject_audio_and_render(AudioSegment(.1));
+        c4.render();
     }
     g.dimensions = 3;
     for(int i = 1; i <= 7; i++){
         for(int j = 1; j <= 7; j++){
-            if(j==4) continue;
             g.add_node(new C4Board("444" + to_string(i) + to_string(j)));
-            c4.inject_audio_and_render(AudioSegment(.1));
+            c4.render();
         }
     }
     }
@@ -150,7 +150,6 @@ void render_video() {
     for(auto& node : g.nodes)
         for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors))
             const_cast<Edge&>(edge).opacity = 1;
-    FOR_REAL = true;
     c4.inject_audio_and_render(AudioSegment("Any set of moves that you could make is in this graph."));
 
     dag.add_transitions(std::unordered_map<std::string, std::string>{
@@ -179,6 +178,7 @@ void render_video() {
 
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"d", "10"},
+        {"y", "5"},
     });
     composite.inject_audio(AudioSegment("at a depth of 1, the amount of nodes is 7 (the 7 openings),"), 7);
     latex.append_transition("\\\\\\\\1: 7");
@@ -192,6 +192,7 @@ void render_video() {
 
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"d", "20"},
+        {"y", "10"},
     });
     composite.inject_audio(AudioSegment("at a depth of 2, the amount of nodes is 49,"), 49);
     latex.append_transition("\\\\\\\\2: 49");
@@ -202,6 +203,7 @@ void render_video() {
 
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"d", "50"},
+        {"y", "20"},
     });
     composite.inject_audio(AudioSegment("and the progression continues exponentially."), 343);
     latex.append_transition("\\\\\\\\3: 238");
@@ -212,6 +214,7 @@ void render_video() {
 
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"d", "70"},
+        {"y", "30"},
     });
     composite.inject_audio(AudioSegment(3), 2401);
     latex.append_transition("\\\\\\\\4: 1120");
@@ -232,18 +235,117 @@ void render_video() {
     mirror_symmetry_composite.add_scene(&c4_right, .6, 0, .4, 1);
     mirror_symmetry_composite.inject_audio_and_render(AudioSegment("We can do some tricks like de-duplicating based on horizontal symmetry,"));
     LatexScene latex_lower_bound(VIDEO_WIDTH, VIDEO_HEIGHT/5, "Best Case: 2,265,992,609,546");
-    mirror_symmetry_composite.add_scene(&latex_lower_bound, 0, .8, 0, .2);
+    mirror_symmetry_composite.add_scene(&latex_lower_bound, 0, .8, 1, .2);
     mirror_symmetry_composite.inject_audio_and_render(AudioSegment("but that will remove less than half of the nodes, because we are only deleting one node per mirror pair."));
 
+    C4GraphScene just_the_graph(VIDEO_WIDTH, VIDEO_HEIGHT, &g, "", MANUAL);
+
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"surfaces_opacity", "0"},
+        {"lines_opacity", "0"},
+        {"points_opacity", "0"},
+    });
+    just_the_graph.inject_audio_and_render(AudioSegment("We are going to need a bit of a paradigm shift if we want to be able to gain any insight from this tangled mess."));
+    g.clear();
+    g.add_node(new C4Board(""));
+
+    dag.add_equations(closequat);
+    dag.add_equations(std::unordered_map<std::string, std::string>{
+        {"surfaces_opacity", "1"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "0"},
+        {"d", "20"},
+        {"y", "10"},
+    });
+    just_the_graph.inject_audio(AudioSegment("Instead of growing the graph from the beginning of the game out,"), 7+49);
+    for(int i = 1; i <= 7; i++){
+        g.add_node(new C4Board(to_string(i)));
+        just_the_graph.render();
+    }
+    for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
+        g.add_node(new C4Board(to_string(i) + to_string(j)));
+        just_the_graph.render();
+    }
+    just_the_graph.inject_audio_and_render(AudioSegment("Let's start with an endgame position to make life a little bit easier on ourselves."));
+
+}
+void endgame_examination(){
+    std::unordered_map<std::string, std::string> closequat{
+        {"q1", "1"},
+        {"qi", "0"},
+        {"qj", "0"},
+        {"qk", "0"},
+        {"d", "4"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"surfaces_opacity", "1"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "0"},
+    };
+    auto closequat_moving = closequat;
+    closequat_moving["q1"] = "<t> 4 / cos";
+    closequat_moving["qj"] = "<t> -4 / sin";
+    dag.add_equations(closequat_moving);
+
+    dag.add_equations(std::unordered_map<std::string, std::string>{
+        {"d", "3"},
+        {"y", "0"},
+        {"surfaces_opacity", "1"},
+    });
+    Graph<C4Board> g;
+    g.decay = 0.1;
+    g.repel_force = 0.3;
+    g.gravity_strength = 0;
+    g.dimensions = 3;
+    g.sqrty = true;
+    g.lock_root_at_origin = true;
+    C4GraphScene c4(&g, "36426444226456412121132335635611737", FULL);
+    c4.physics_multiplier = 1;
+    c4.inject_audio_and_render(AudioSegment("This is a particular endgame."));
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"surfaces_opacity", "0"},
+        {"points_opacity", "1"},
+        {"d", "30"},
+    });
+    c4.inject_audio_and_render(AudioSegment("Let's see what it looks like when we expand out its full tree of positions."));
+    c4.inject_audio(AudioSegment(6), 100);
+    for(int i = 0; i < 99; i++){
+        g.expand_graph_bfs(true);
+        c4.render();
+    }
+    g.expand_graph_bfs();
+    c4.render();
+    FOR_REAL = true;
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"lines_opacity", "0.1"},
+    });
+    c4.color_edges = false;
+    c4.inject_audio_and_render(AudioSegment("Now, I want to focus on the nodes of this board."));
+    for(auto& node : g.nodes)
+        if(node.second.data->who_won() == INCOMPLETE)
+            node.second.opacity = 0;
+    c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states of this board."));
+    for(auto& node : g.nodes)
+        if(node.second.data->who_won() == RED)
+            node.second.color = C4_RED;
+    c4.inject_audio_and_render(AudioSegment("In other words, we are identifying the games which have either been won for red,"));
+    for(auto& node : g.nodes)
+        if(node.second.data->who_won() == YELLOW)
+            node.second.color = C4_YELLOW;
+    c4.inject_audio_and_render(AudioSegment("won for yellow,"));
+    for(auto& node : g.nodes)
+        if(node.second.data->who_won() == TIE)
+            node.second.color = 0xff2222ff;
+    c4.inject_audio_and_render(AudioSegment("or have completely filled without a winner as a tie."));
+}
+
+void render_video() {
+    //beginning();
+    endgame_examination();
+
+
     /*
-    just the graph.inject_audio_and_render(AudioSegment("We are going to need a bit of a paradigm shift if we want to be able to gain any insight from this tangled mess."));
-    v.inject_audio_and_render(AudioSegment("Instead of growing the graph from the beginning of the game out,"));
-    v.inject_audio_and_render(AudioSegment("Let's start with an endgame position to make life a little bit easier on ourselves."));
-    v.inject_audio_and_render(AudioSegment("This is a particular endgame, and here is what it looks like when we expand out its full tree of positions."));
-    v.inject_audio_and_render(AudioSegment("Now, let's color in all the terminal states of this board."));
-    v.inject_audio_and_render(AudioSegment("In other words, we are identifying the games which have either been won for red,"));
-    v.inject_audio_and_render(AudioSegment("won for yellow,"));
-    v.inject_audio_and_render(AudioSegment("or have completely filled without a winner as a tie."));
     v.inject_audio_and_render(AudioSegment("Now, this is more easy to tell what's going on."));
     v.inject_audio_and_render(AudioSegment("In the case of this endgame, there are some paths that lead to a red victory,"));
     v.inject_audio_and_render(AudioSegment("some paths that lead to a Yellow victory,"));

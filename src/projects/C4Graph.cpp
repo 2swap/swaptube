@@ -1,4 +1,3 @@
-#include "../../../Klotski/C4Board.cpp"
 void render_video() {
     Graph<C4Board> graph;
     GraphScene<C4Board> gs(&graph);

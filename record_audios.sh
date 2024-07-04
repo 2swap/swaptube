@@ -41,18 +41,33 @@ while IFS=$'\t' read -r filename text <&3; do
 
         # Start recording in the background
         echo "Recording... Press Enter to stop."
-        ffmpeg -f alsa -i default "$PROJECT_DIR/$filename" > /dev/null 2>&1 &
-        # Get the process ID of ffmpeg
+        ffmpeg -f alsa -i default "$PROJECT_DIR/$filename" > "$PROJECT_DIR/ffmpeg.log" 2>&1 &
+        
+        # Capture the process ID
         FFMPEG_PID=$!
+        echo "Started ffmpeg with PID $FFMPEG_PID"
+
+        # Verify the process ID
+        if ! ps -p $FFMPEG_PID > /dev/null; then
+            echo "Error: ffmpeg process $FFMPEG_PID does not exist. Check $PROJECT_DIR/ffmpeg.log for details. Exiting."
+            exit 3
+        fi
 
         # Wait for the Enter key
         read
 
-        # Send SIGINT to ffmpeg to stop recording
-        kill -INT $FFMPEG_PID
+        # Check if the process is still running before attempting to stop it
+        if ps -p $FFMPEG_PID > /dev/null; then
+            # Send 'q' to ffmpeg to stop recording
+            echo "Stopping ffmpeg with PID $FFMPEG_PID"
+            kill -INT $FFMPEG_PID
 
-        # Wait for ffmpeg to finish up and exit
-        wait $FFMPEG_PID
+            # Wait for ffmpeg to finish up and exit
+            wait $FFMPEG_PID
+            echo "ffmpeg stopped"
+        else
+            echo "ffmpeg process $FFMPEG_PID has already exited. Check $PROJECT_DIR/ffmpeg.log for details."
+        fi
 
         echo "Press enter to continue or 'u' to undo the last recording..."
         read -n1 input

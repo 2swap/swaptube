@@ -14,6 +14,7 @@ public:
     }
 
     void append_transition(string eqn) {
+        if(in_transition_state) end_transition();
         begin_transition(equation_string + eqn);
     }
 

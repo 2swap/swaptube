@@ -21,7 +21,7 @@ struct Point {
     glm::vec3 position;
     int color; // ARGB integer representation
     double opacity;
-    Point(string n, const glm::vec3& pos, int clr) : position(pos), color(clr), opacity(1) {}
+    Point(string n, const glm::vec3& pos, int clr, double op=1) : position(pos), color(clr), opacity(op) {}
 };
 
 struct Line {
@@ -30,8 +30,7 @@ struct Line {
     glm::vec3 end;
     int color; // ARGB integer representation
     double opacity;
-    Line(const glm::vec3& s, const glm::vec3& e, int clr) : start(s), end(e), color(clr), opacity(1) {}
-    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op) : start(s), end(e), color(clr), opacity(op) {}
+    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op=1) : start(s), end(e), color(clr), opacity(op) {}
 };
 
 struct Surface {

@@ -15,8 +15,6 @@ public:
 
         if(mode != MANUAL){
             graph->add_to_stack(new C4Board(root_node_representation));
-            graph->expand_graph_dfs();
-            graph->make_edges_bidirectional();
         } else {
             graph->add_node(new C4Board(root_node_representation));
         }
@@ -27,6 +25,7 @@ public:
     }
 
     int get_edge_color(const Node<C4Board>& node, const Node<C4Board>& neighbor){
+        if(!color_edges) return WHITE;
         return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
     }
 
@@ -84,6 +83,7 @@ public:
             delete surface.scenePointer;
         }
     }
+    bool color_edges = true;
 
 private:
     string root_node_representation;
