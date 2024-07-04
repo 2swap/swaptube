@@ -21,7 +21,8 @@ struct Point {
     glm::vec3 position;
     int color; // ARGB integer representation
     double opacity;
-    Point(string n, const glm::vec3& pos, int clr, double op=1) : position(pos), color(clr), opacity(op) {}
+    bool highlight;
+    Point(string n, const glm::vec3& pos, int clr, bool hlt=false, double op=1) : position(pos), color(clr), highlight(hlt), opacity(op) {}
 };
 
 struct Line {
@@ -349,6 +350,10 @@ public:
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
+        if(point.highlight){
+            pix.fill_ellipse(pixel.first, pixel.second, 5, 5, WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, 3, 3, BLACK);
+        }
         pix.fill_ellipse(pixel.first, pixel.second, 2, 2, colorlerp(BLACK, point.color, dag["points_opacity"] * point.opacity));
     }
 

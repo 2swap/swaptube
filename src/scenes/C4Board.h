@@ -84,7 +84,7 @@ public:
     void add_all_legal_children(std::unordered_set<C4Board*>& neighbors);
     void add_all_good_children(std::unordered_set<C4Board*>& neighbors);
     void add_only_child_steady_state(const SteadyState& ss, std::unordered_set<C4Board*>& neighbors);
-    std::unordered_set<C4Board*> get_neighbors();
+    std::unordered_set<C4Board*> get_children();
 };
 
 void fhourstones_tests(){

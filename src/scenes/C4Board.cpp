@@ -444,7 +444,7 @@ void C4Board::add_only_child_steady_state(const SteadyState& ss, std::unordered_
     neighbors.insert(new C4Board(moved));
 }
 
-std::unordered_set<C4Board*> C4Board::get_neighbors(){
+std::unordered_set<C4Board*> C4Board::get_children(){
     std::unordered_set<C4Board*> neighbors;
 
     if (is_solution()) {
