@@ -284,8 +284,8 @@ void endgame_examination(){
         {"points_opacity", "0"},
     };
     auto closequat_moving = closequat;
-    closequat_moving["q1"] = "<t> 4 / cos";
-    closequat_moving["qj"] = "<t> -4 / sin";
+    closequat_moving["q1"] = "<t> 8 / cos";
+    closequat_moving["qj"] = "<t> -8 / sin";
     dag.add_equations(closequat_moving);
 
     dag.add_equations(std::unordered_map<std::string, std::string>{
@@ -305,55 +305,189 @@ void endgame_examination(){
     c4.inject_audio_and_render(AudioSegment("This is a particular endgame."));
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"},
-        {"points_opacity", "1"},
+        {"points_opacity", "0.1"},
         {"d", "30"},
     });
     c4.inject_audio_and_render(AudioSegment("Let's see what it looks like when we expand out its full tree of positions."));
     c4.inject_audio(AudioSegment(6), 100);
     for(int i = 0; i < 99; i++){
-        g.expand_graph_bfs(true);
+        g.expand_graph(false, true);
         c4.render();
     }
-    g.expand_graph_bfs();
+    g.expand_graph(false, false);
     c4.render();
-    FOR_REAL = true;
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"lines_opacity", "0.1"},
     });
     c4.color_edges = false;
-    c4.inject_audio_and_render(AudioSegment("Now, I want to focus on the nodes of this board."));
+    c4.inject_audio_and_render(AudioSegment("Now, I want to focus on the nodes of this graph."));
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == INCOMPLETE)
             node.second.opacity = 0;
-    c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states of this board."));
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"points_opacity", "1"},
+    });
+    c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states of this board- that is, the nodes which have no children."));
+    double some_red_node = -1;
     for(auto& node : g.nodes)
-        if(node.second.data->who_won() == RED)
+        if(node.second.data->who_won() == RED){
             node.second.color = C4_RED;
+            some_red_node = node.second.hash;
+        }
     c4.inject_audio_and_render(AudioSegment("In other words, we are identifying the games which have either been won for red,"));
+    double some_yellow_node = -1;
     for(auto& node : g.nodes)
-        if(node.second.data->who_won() == YELLOW)
-            node.second.color = C4_YELLOW;
+        if(node.second.data->who_won() == YELLOW){
+            node.second.color = 0xffaaaa00;
+            some_yellow_node = node.second.hash;
+        }
     c4.inject_audio_and_render(AudioSegment("won for yellow,"));
+    double some_tie_node = -1;
     for(auto& node : g.nodes)
-        if(node.second.data->who_won() == TIE)
-            node.second.color = 0xff2222ff;
+        if(node.second.data->who_won() == TIE){
+            node.second.color = 0xff5555ff;
+            some_tie_node = node.second.hash;
+        }
     c4.inject_audio_and_render(AudioSegment("or have completely filled without a winner as a tie."));
+
+    c4.inject_audio_and_render(AudioSegment("Now, it's easier to tell what's going on."));
+
+    auto result = g.shortest_path(g.root_node_hash, some_red_node);
+    list<Edge*> edges = result.second;
+    for(Edge* e : edges) e->opacity = 5;
+    c4.inject_audio_and_render(AudioSegment("In the case of this endgame, there are some paths that lead to a red victory,"));
+    for(Edge* e : edges) e->opacity = 1;
+
+    result = g.shortest_path(g.root_node_hash, some_yellow_node);
+    edges = result.second;
+    for(Edge* e : edges) e->opacity = 5;
+    c4.inject_audio_and_render(AudioSegment("some paths that lead to a Yellow victory,"));
+    for(Edge* e : edges) e->opacity = 1;
+
+    result = g.shortest_path(g.root_node_hash, some_tie_node);
+    edges = result.second;
+    for(Edge* e : edges) e->opacity = 5;
+    c4.inject_audio_and_render(AudioSegment("and some paths that lead to the game becoming a tie."));
+    for(Edge* e : edges) e->opacity = 1;
+
+
+    C4Scene board(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, "36426444226456412121132335635611737");
+    CompositeScene composite;
+    composite.add_scene(&c4, 0, 0, 1, 1);
+    composite.add_scene(&board, 0, 0, .333, .333);
+
+    composite.inject_audio_and_render(AudioSegment("So, what we might want to know is, who is favored in the root position? If both players play perfectly, who wins?"));
+    composite.inject_audio_and_render(AudioSegment("We have constructed this graph, so how can we use it to play optimally in this position?"));
+    composite.inject_audio_and_render(AudioSegment("Hold that thought- we'll get there. We'll have to work our way up to that point."));
+
+    Node<C4Board>* consider;
+    for(auto& node : g.nodes){
+        if(node.second.color != 0xffffffff) continue;
+        if(node.second.neighbors.size() != 1) continue;
+        bool bad = false;
+        for(const Edge& e : node.second.neighbors) if(g.nodes.at(e.to).color == 0xffffffff) bad = true;
+        if(bad) continue;
+        consider = &(node.second);
+        break;
+    }
+    consider->highlight = true;
+    board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
+    composite.inject_audio_and_render(AudioSegment("Consider this board, which is in the graph. The game hasn't ended yet, but it is about to."));
+    composite.inject_audio_and_render(AudioSegment("It's Red's move, with only one choice, which is to win the game."));
+    int dummy;
+    C4Result winner = consider->data->who_is_winning(dummy);
+    consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
+    consider->opacity = 1;
+    consider->highlight = false;
+    composite.inject_audio_and_render(AudioSegment("So, for all intents and purposes, we may as well color this node red too. Red will win here."));
+    FOR_REAL = true;
+
+    composite.inject_audio(AudioSegment("We can repeat this line of thinking for all of the other moves which force the game into an ending state."), 30);
+    while(true){
+        consider = NULL;
+        for(auto& node : g.nodes){
+            if(node.second.color != 0xffffffff) continue;
+            if(node.second.neighbors.size() != 1) continue;
+            bool bad = false;
+            for(const Edge& e : node.second.neighbors) if(g.nodes.at(e.to).color == 0xffffffff) bad = true;
+            if(bad) continue;
+            consider = &(node.second);
+            break;
+        }
+        if(consider == NULL) break;
+        consider->highlight = true;
+        board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
+        composite.render();
+        C4Result winner = consider->data->who_is_winning(dummy);
+        consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
+        consider->opacity = 1;
+        consider->highlight = false;
+        composite.render();
+    }
+    composite.inject_audio_and_render(AudioSegment("Awesome! But, now, we are out of obvious nodes to fill in."));
+    for(auto& node : g.nodes){
+        if(node.second.color != 0xffffffff) continue;
+        bool bad = false;
+        for(const Edge& e : node.second.neighbors) if(g.nodes.at(e.to).color == 0xffffffff) bad = true;
+        if(bad) continue;
+        consider = &(node.second);
+        break;
+    }
+    consider->highlight = true;
+    board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
+    composite.inject_audio_and_render(AudioSegment("What about this one?"));
+    
+    for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
+    composite.inject_audio_and_render(AudioSegment("There's not only one choice, but both of the children have already been colored with a computed game result."));
+    c4.color_edges = true;
+    composite.inject_audio_and_render(AudioSegment("If we color the edges again, we recall that it's yellow to move in this position."));
+    composite.inject_audio_and_render(AudioSegment("Notice that we have already computed the two branches' results- one is yellow's win, and one is a tie."));
+    composite.inject_audio_and_render(AudioSegment("Well, Yellow will naturally take the win over a tie."));
+    winner = consider->data->who_is_winning(dummy);
+    consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
+    consider->opacity = 1;
+    consider->highlight = false;
+    for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
+    composite.inject_audio_and_render(AudioSegment("Therefore, we can color this node as yellow."));
+
+    composite.inject_audio(AudioSegment("In general, a node's status is the best result of all of the children, on behalf of the player whose move it is."), 32);
+    while(true){
+        consider = NULL;
+        for(auto& node : g.nodes){
+            if(node.second.color != 0xffffffff) continue;
+            bool bad = false;
+            for(const Edge& e : node.second.neighbors) if(g.nodes.at(e.to).color == 0xffffffff) bad = true;
+            if(bad) continue;
+            consider = &(node.second);
+            break;
+        }
+        cout << "a" << endl;
+        if(consider == NULL) break;
+
+        cout << "b" << endl;
+        for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
+        consider->highlight = true;
+        board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
+        composite.render();
+        for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
+        winner = consider->data->who_is_winning(dummy);
+        consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
+        consider->opacity = 1;
+        consider->highlight = false;
+        composite.render();
+    }
+
+    composite.inject_audio_and_render(AudioSegment("And now, we have worked our way all the way back up to the endgame which we considered in the first place, and it turns out that it was a tie!"));
+
 }
 
 void render_video() {
-    //beginning();
+    //FOR_REAL = false;
+    if(FOR_REAL) beginning();
     endgame_examination();
 
 
     /*
-    v.inject_audio_and_render(AudioSegment("Now, this is more easy to tell what's going on."));
-    v.inject_audio_and_render(AudioSegment("In the case of this endgame, there are some paths that lead to a red victory,"));
-    v.inject_audio_and_render(AudioSegment("some paths that lead to a Yellow victory,"));
-    v.inject_audio_and_render(AudioSegment("and some paths that lead to the game becoming a tie."));
-    v.inject_audio_and_render(AudioSegment("So, who is favored in the root position?"));
-    v.inject_audio_and_render(AudioSegment("In other words, if both players play perfectly, who wins?"));
-    v.inject_audio_and_render(AudioSegment("Well, in this board Red has already won, but let's take a look at the board before it, in which Red is just about to win."));
-    v.inject_audio_and_render(AudioSegment("In this board, Red has the option to claim victory right away,"));
     v.inject_audio_and_render(AudioSegment("but Red also has the option to, for example, not notice it whatsoever and play this move, thereby permitting a Yellow victory."));
     v.inject_audio_and_render(AudioSegment("we want to know who would win under perfect play, so we will assume Red doesn't make this mistake, and succeeds in taking the correct move."));
     v.inject_audio_and_render(AudioSegment("So, we can color this node as red too, since Red should win under perfect play."));
@@ -380,7 +514,7 @@ void render_video() {
     v.inject_audio_and_render(AudioSegment("Using these strategies, Connect 4 was solved. Thanks to computer scientists such as James Dow Allen, Victor Allis, and John Tromp, we know that Red Wins, and only does so by starting with a disk in the center column."));
     v.inject_audio_and_render(AudioSegment("One space off to either side and it's a tie, and starting on the edge or one in from the edge, it's Yellow to win."));
     v.inject_audio_and_render(AudioSegment("But why?"));
-    v.inject_audio_and_render(AudioSegment("This is great and all, but it provides absolutely no information into why, or how, this is the case. "));
+    v.inject_audio_and_render(AudioSegment("This is great and all, but it provides absolutely no information into why, or how, this is the case."));
     v.inject_audio_and_render(AudioSegment("It was computed by means of a brute force search, and contributes little to the theoretical analysis of the game."));
     v.inject_audio_and_render(AudioSegment("All of the strategy, and actual understanding of the game, cannot be communicated by an immense tree of colored nodes. "));
     v.inject_audio_and_render(AudioSegment("Is there any way to rigorously unite the wisdom and intuition accrued by countless human experts with the output of this enormous algorithm?"));
