@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../misc/visual_media.cpp"
 #include "scene.cpp"
 
 class HeaderScene : public Scene {
@@ -12,8 +13,10 @@ public:
     }
 
     void init(){
-        Pixels header_pix = eqn_to_pix(latex_text(header), pix.w / 640 + 1);
-        Pixels subheader_pix = eqn_to_pix(latex_text(subheader), pix.w / 640);
+        ScalingParams header_sp(pix.w, pix.h/4);
+        Pixels header_pix = eqn_to_pix(latex_text(header), header_sp);
+        ScalingParams subheader_sp(pix.w, pix.h/6);
+        Pixels subheader_pix = eqn_to_pix(latex_text(subheader), subheader_sp);
 
         pix.copy(header_pix, (pix.w - header_pix.w)/2, pix.h/2-100, 1);
         pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50, 1);

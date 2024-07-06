@@ -5,15 +5,18 @@ void render_video() {
 
     tds.add_surface(Surface(glm::vec3(0,0,-1),glm::vec3(-8,2,8),glm::vec3(-2,-9,0),&c40));
 
-    VariableScene v(&tds);
-    v.set_variables(std::unordered_map<std::string, std::string>{
-        {"x", "t sin 30 *"},
-        {"y", "t 3 * cos"},
-        {"z", "t cos 30 *"},
-        {"q1", "t 4 / cos"},
-        {"q2", "0"},
-        {"q3", "t -4 / sin"},
-        {"q4", "0"}
+    dag.add_equations(std::unordered_map<std::string, std::string>{
+        {"surfaces_opacity", "1"},
+        {"lines_opacity", "0"},
+        {"points_opacity", "0"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"d", "20"},
+        {"q1", "<t> 4 / cos"},
+        {"qi", "0"},
+        {"qj", "<t> -4 / sin"},
+        {"qk", "0"}
     });
-    v.inject_audio_and_render(AudioSegment(3));
+    tds.inject_audio_and_render(AudioSegment(3));
 }

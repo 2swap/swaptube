@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../misc/visual_media.cpp"
 #include "scene.cpp"
 
 class LatexScene : public Scene {
@@ -9,7 +10,9 @@ public:
 
     void init_latex_scene(){
         cout << "rendering latex: " << equation_string << endl;
-        equation_pixels = eqn_to_pix(equation_string, pix.w / 640 + 1);
+        ScalingParams sp(pix.w, pix.h);
+        equation_pixels = eqn_to_pix(equation_string, sp);
+        scale_factor = sp.scale_factor;
         coords = make_pair((pix.w-equation_pixels.w)/2, (pix.h-equation_pixels.h)/2);
     }
 
@@ -23,7 +26,8 @@ public:
         transition_equation_string = eqn;
 
         cout << "rendering latex: " << transition_equation_string << endl;
-        transition_equation_pixels = eqn_to_pix(transition_equation_string, pix.w / 640 + 1);
+        ScalingParams sp(scale_factor);
+        transition_equation_pixels = eqn_to_pix(transition_equation_string, sp);
         transition_coords = make_pair((pix.w-transition_equation_pixels.w)/2, (pix.h-transition_equation_pixels.h)/2);
 
         cout << equation_string << " <- Finding Intersections -> " << eqn << endl;
@@ -44,12 +48,11 @@ public:
         pix.fill(BLACK);
         double weight = dag["transition_fraction"];
         // Define end of transition as falling edge of transition_fraction
-        if(weight < transition_fraction) end_transition();
-        transition_fraction = weight;
         if(!in_transition_state){
             pix.copy(equation_pixels, coords.first, coords.second, 1);
             p = &pix;
         } else { // in a transition
+            if(weight < transition_fraction) end_transition();
             double tp = transparency_profile(weight);
             double tp1 = transparency_profile(1-weight);
             double smooth = smoother2(weight);
@@ -73,11 +76,13 @@ public:
 
             p = &pix;
         }
+        transition_fraction = weight;
     }
 
 private:
     double transition_fraction = -1;
     bool in_transition_state;
+    double scale_factor;
 
     // Things used for non-transition states
     string equation_string;
