@@ -30,23 +30,36 @@ Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
     }
 
     // Get the intrinsic dimensions of the SVG
-    RsvgDimensionData dimensions;
-    rsvg_handle_get_dimensions(handle, &dimensions);
+    gdouble out_width, out_height;
+    rsvg_handle_get_intrinsic_size_in_pixels(handle, &out_width, &out_height);
 
     if (scaling_params.mode == ScalingMode::BoundingBox) {
         // Calculate the scale factor to fit within the bounding box
-        scaling_params.scale_factor = min(static_cast<double>(scaling_params.max_width) / dimensions.width, static_cast<double>(scaling_params.max_height) / dimensions.height);
+        scaling_params.scale_factor = min(static_cast<double>(scaling_params.max_width) / out_width, static_cast<double>(scaling_params.max_height) / out_height);
     }
-    int width  = static_cast<int>(dimensions.width  * scaling_params.scale_factor);
-    int height = static_cast<int>(dimensions.height * scaling_params.scale_factor);
+    int width  = static_cast<int>(out_width  * scaling_params.scale_factor);
+    int height = static_cast<int>(out_height * scaling_params.scale_factor);
 
     Pixels ret(width, height);
 
+    // Create a uint8_t array to store the raw pixel data
+    std::vector<uint8_t> raw_data(width * height * 4);
+
     // Render the SVG
-    cairo_surface_t* surface = cairo_image_surface_create_for_data(&(ret.pixels[0]), CAIRO_FORMAT_ARGB32, width, height, width * 4);
+    cairo_surface_t* surface = cairo_image_surface_create_for_data(raw_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4);
     cairo_t* cr = cairo_create(surface);
     cairo_scale(cr, scaling_params.scale_factor, scaling_params.scale_factor);
     rsvg_handle_render_cairo(handle, cr);
+
+    // Copy the uint8_t array to the Pixels object
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int offset = (y * width + x) * 4;
+            ret.set_pixel(x, y, makecol(raw_data[offset + 3], raw_data[offset + 2], raw_data[offset + 1], raw_data[offset]));
+        }
+    }
+
+    // Clean up
     g_object_unref(handle);
     cairo_destroy(cr);
     cairo_surface_destroy(surface);

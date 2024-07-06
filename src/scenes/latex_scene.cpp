@@ -34,7 +34,6 @@ public:
         intersections = find_intersections(equation_pixels, transition_equation_pixels);
         cout << "Number of intersections found: " << intersections.size() << endl;
         in_transition_state = true;
-        transition_fraction = -1;
     }
 
     void end_transition(){
@@ -45,17 +44,20 @@ public:
     }
 
     void query(bool& done_scene, Pixels*& p) override {
-        pix.fill(BLACK);
-        double weight = dag["transition_fraction"];
-        // Define end of transition as falling edge of transition_fraction
+        pix.fill(TRANSPARENT_BLACK);
+
+        if(in_transition_state){
+            // On rising edge of audio segment, we end transition
+            if(dag["audio_segment_number"] > last_audio_segment_number) end_transition();
+        }
+        
         if(!in_transition_state){
-            pix.copy(equation_pixels, coords.first, coords.second, 1);
+            pix.overwrite(equation_pixels, coords.first, coords.second);
             p = &pix;
         } else { // in a transition
-            if(weight < transition_fraction) end_transition();
-            double tp = transparency_profile(weight);
-            double tp1 = transparency_profile(1-weight);
-            double smooth = smoother2(weight);
+            double tp = transparency_profile(dag["transition_fraction"]);
+            double tp1 = transparency_profile(1-dag["transition_fraction"]);
+            double smooth = smoother2(dag["transition_fraction"]);
 
             for (int i = 0; i < intersections.size(); i++) {
                 const StepResult& step = intersections[i];
@@ -76,11 +78,11 @@ public:
 
             p = &pix;
         }
-        transition_fraction = weight;
+        last_audio_segment_number = dag["audio_segment_number"];
     }
 
 private:
-    double transition_fraction = -1;
+    double last_audio_segment_number = 0;
     bool in_transition_state;
     double scale_factor;
 

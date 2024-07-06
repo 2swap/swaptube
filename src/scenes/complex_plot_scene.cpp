@@ -200,7 +200,7 @@ public:
     }
 
     void render_point(const pair<int,int>& pixel){
-        pix.fill_ellipse(pixel.first, pixel.second, 5, 5, WHITE);
+        pix.fill_ellipse(pixel.first, pixel.second, 5, 5, OPAQUE_WHITE);
     }
 
     void render_axes(){
@@ -221,7 +221,7 @@ public:
     }
 
     void render_root_mode(const vector<complex<double>>& coefficients, const vector<complex<double>>& roots){
-        pix.fill(BLACK);
+        pix.fill(OPAQUE_BLACK);
         for(int x = 0; x < w; x++){
             for(int y = 0; y < h; y++){
                 pix.set_pixel(x, y, complex_to_color(evaluate_polynomial_given_coefficients(coefficients,pixel_to_coordinate(make_pair(x, y)))));
@@ -240,7 +240,7 @@ public:
     }
 
     void render_coefficient_mode(const vector<complex<double>>& coefficients){
-        pix.fill(BLACK);
+        pix.fill(OPAQUE_BLACK);
         for(int i = 0; i < coefficients.size(); i++){
             const std::complex<double> point = coefficients[i];
             const std::pair<int, int> pixel = coordinate_to_pixel(point);

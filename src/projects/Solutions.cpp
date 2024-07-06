@@ -71,7 +71,7 @@ void beginning() {
     g.gravity_strength = 1;
     c4.physics_multiplier = 0;
     g.dimensions = 2;
-    c4.inject_audio_and_render(AudioSegment("there is some amount of moves that can be made from that position, which we will represent as nodes connected to the root."));
+    c4.inject_audio_and_render(AudioSegment("there is some amount of moves that can be made from that position, which we will represent as child nodes connected to the root."));
 
     double x = -1.5*4;
     double y = 2;
@@ -163,7 +163,7 @@ void beginning() {
         {"points_opacity", "1"},
         {"surfaces_opacity", "0"},
         {"q1", "<t> 4 / cos"},
-        {"qj", "<t> -4 / sin"},
+        {"qj", "<t> -4 / sin"}, TODO record all voices before rerendering
     });
 
     C4GraphScene c4gs(VIDEO_WIDTH/2, VIDEO_HEIGHT, &g, "", MANUAL);
@@ -179,7 +179,7 @@ void beginning() {
         {"y", "5"},
     });
     composite.inject_audio(AudioSegment("at a depth of 1, the amount of nodes is 7 (the 7 openings),"), 7);
-    latex.append_transition("\\\\\\\\1: 7");
+    latex.append_transition("\\\\\\\\1: 7");TODO latex
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board(to_string(i)));
         composite.render();
@@ -245,6 +245,7 @@ void beginning() {
     });
     just_the_graph.inject_audio_and_render(AudioSegment("We are going to need a bit of a paradigm shift if we want to be able to gain any insight from this tangled mess."));
     g.clear();
+    g.gravity_strength = 1;
     g.add_node(new C4Board(""));
 
     dag.add_equations(closequat);
@@ -252,7 +253,7 @@ void beginning() {
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_opacity", "0"},
-        {"d", "20"},
+        {"d", "15"},
         {"y", "10"},
     });
     just_the_graph.inject_audio(AudioSegment("Instead of growing the graph from the beginning of the game out,"), 7+49);
@@ -315,7 +316,7 @@ void endgame_examination(){
     g.expand_graph(false, false);
     c4.render();
     dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"lines_opacity", "0.1"},
+        {"lines_opacity", "0.2"},
     });
     c4.color_edges = false;
     c4.inject_audio_and_render(AudioSegment("Now, I want to focus on the nodes of this graph."));
@@ -332,14 +333,14 @@ void endgame_examination(){
             node.second.color = C4_RED;
             some_red_node = node.second.hash;
         }
-    c4.inject_audio_and_render(AudioSegment("In other words, we are identifying the games which have either been won for red,"));
+    c4.inject_audio_and_render(AudioSegment("In other words, we are identifying the games which either Red has won,"));
     double some_yellow_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == YELLOW){
             node.second.color = 0xffaaaa00;
             some_yellow_node = node.second.hash;
         }
-    c4.inject_audio_and_render(AudioSegment("won for yellow,"));
+    c4.inject_audio_and_render(AudioSegment("Yellow has won,"));
     double some_tie_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == TIE){
@@ -350,6 +351,7 @@ void endgame_examination(){
 
     c4.inject_audio_and_render(AudioSegment("Now, it's easier to tell what's going on."));
 
+    g.nodes.at(g.root_node_hash).highlight = true;
     auto result = g.shortest_path(g.root_node_hash, some_red_node);
     list<Edge*> edges = result.second;
     for(Edge* e : edges) e->opacity = 5;
@@ -377,7 +379,7 @@ void endgame_examination(){
     composite.inject_audio_and_render(AudioSegment("We have constructed this graph, so how can we use it to play optimally in this position?"));
     if(!FOR_REAL) g.iterate_physics(1000);
     g.immobilize_all_nodes();
-    composite.inject_audio_and_render(AudioSegment("Hold that thought- we'll get there. We'll have to work our way up to that point."));
+    composite.inject_audio_and_render(AudioSegment("We'll have to work our way up to that point."));
 
     Node<C4Board>* consider;
     for(auto& node : g.nodes){
@@ -395,7 +397,7 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
+        {"d", "7"},
     });
     composite.inject_audio_and_render(AudioSegment("Consider this board, which is in the graph. The game hasn't ended yet, but it is about to."));
     composite.inject_audio_and_render(AudioSegment("It's Red's move, with only one choice, which is to win the game."));
@@ -403,7 +405,6 @@ void endgame_examination(){
     C4Result winner = consider->data->who_is_winning(dummy);
     consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
     consider->opacity = 1;
-    consider->highlight = false;
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"x", "0"},
         {"y", "0"},
@@ -411,6 +412,7 @@ void endgame_examination(){
         {"d", "30"},
     });
     composite.inject_audio_and_render(AudioSegment("So, for all intents and purposes, we may as well color this node red too. Red will win here."));
+    consider->highlight = false;
     composite.inject_audio_and_render(AudioSegment("We can repeat this line of thinking for all of the other moves which force the game into an ending state."));
 
     composite.inject_audio(AudioSegment(7), 30);
@@ -450,15 +452,15 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
+        {"d", "6"},
     });
     composite.inject_audio_and_render(AudioSegment("What about this one?"));
     
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
-    composite.inject_audio_and_render(AudioSegment("There's not only one choice, but both of the children have already been colored with a computed game result."));
+    composite.inject_audio_and_render(AudioSegment("There's more than one choice, but both of the children have already been colored with a computed game result."));
     c4.color_edges = true;
     composite.inject_audio_and_render(AudioSegment("If we color the edges again, we recall that it's yellow to move in this position."));
-    composite.inject_audio_and_render(AudioSegment("Notice that we have already computed the two branches' results- one is yellow's win, and one is a tie."));
+    composite.inject_audio_and_render(AudioSegment("Looking at the children, one is yellow's win, and one is a tie."));
     composite.inject_audio_and_render(AudioSegment("Well, Yellow will naturally take the win over a tie."));
     composite.inject_audio_and_render(AudioSegment("Therefore, we can color this node as yellow."));
     winner = consider->data->who_is_winning(dummy);
@@ -506,7 +508,8 @@ void endgame_examination(){
     LatexScene strong_solution_text(VIDEO_WIDTH, VIDEO_HEIGHT/5, "\\text{Strong Solution}");
     composite.add_scene(&strong_solution_text, 0, .8, 1, .2);
     composite.inject_audio_and_render(AudioSegment("This is called a strong solution. In a strong solution, we examine each possible board, and document what the result should be under optimal play."));
-    composite.inject_audio_and_render(AudioSegment("You can think of the strong solution as a dictionary of positions- you can look up a position, and the dictionary tells you who would win under perfect play."));
+    composite.remove_scene(&strong_solution_text);
+    composite.inject_audio_and_render(AudioSegment("You can think of the strong solution as a dictionary of positions- you can look up a position, and the dictionary tells you who is favored there."));
     for(auto& node : g.nodes) if(node.second.data->representation == "36426444226456412121132335635611737") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
@@ -514,7 +517,7 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
+        {"d", "7"},
     });
     composite.inject_audio_and_render(AudioSegment("If we already have a strong solution, we can use it to play optimally. Let's imagine we are playing as Red."));
     consider->highlight = false;
@@ -525,7 +528,6 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
     });
     composite.inject_audio_and_render(AudioSegment("Let's say Yellow plays in the 7th column."));
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
@@ -540,7 +542,6 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
     });
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
     composite.inject_audio_and_render(AudioSegment("So, we will choose the tied node, corresponding to a move in the 7th column."));
@@ -553,7 +554,6 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
     });
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
     composite.inject_audio_and_render(AudioSegment("Yellow responds in the 5th column."));
@@ -566,7 +566,6 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
     });
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
     composite.inject_audio_and_render(AudioSegment("We examine the new children here and play in the 5th column in response, which is the child node with the best outcome."));
@@ -579,10 +578,33 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
+    });
+    for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
+    composite.inject_audio_and_render(AudioSegment("Now yellow plays in column 7."));
+    for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
+    consider->highlight = false;
+    for(auto& node : g.nodes) if(node.second.data->representation == "3642644422645641212113233563561173777557") consider = &(node.second);
+    consider->highlight = true;
+    board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"x", to_string(consider->x)},
+        {"y", to_string(consider->y)},
+        {"z", to_string(consider->z)},
     });
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
     composite.inject_audio_and_render(AudioSegment("Now yellow plays in column 7. In this case the children will have the same outcome, so we can just pick one at random."));
+    for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
+    consider->highlight = false;
+    for(auto& node : g.nodes) if(node.second.data->representation == "36426444226456412121132335635611737777755") consider = &(node.second);
+    consider->highlight = true;
+    board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"x", to_string(consider->x)},
+        {"y", to_string(consider->y)},
+        {"z", to_string(consider->z)},
+    });
+    for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
+    composite.inject_audio_and_render(AudioSegment("Now, yellow only has one choice, which is to conclude the game as a tie."));
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
     consider->highlight = false;
     for(auto& node : g.nodes) if(node.second.data->representation == "364264442264564121211323356356117377777555") consider = &(node.second);
@@ -592,10 +614,9 @@ void endgame_examination(){
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
-        {"d", "10"},
     });
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
-    composite.inject_audio_and_render(AudioSegment("By doing this, we have made the best possible move at each turn, and achieved the best result possible for this starting position- a tie."));
+    composite.inject_audio_and_render(AudioSegment("By doing this, we have made the best possible move at each turn, and achieved the best result possible for this starting position."));
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
     consider->highlight = false;
 
@@ -604,7 +625,7 @@ void endgame_examination(){
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "30"},
+        {"d", "20"},
     });
     composite.inject_audio_and_render(AudioSegment("Now, instead of doing this selection of optimal branches while playing the game, we can do it upfront all at once."));
     for(auto& node : g.nodes) if(node.second.data->representation.size() % 2 == 0){
@@ -632,6 +653,12 @@ void endgame_examination(){
         best_edge->opacity = 5;
     }
     composite.inject_audio(AudioSegment("We can now delete all of the other children."), 6);
+    g.mobilize_all_nodes();
+    g.gravity_strength = 0.2;
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "15"},
+        {"y", "6"},
+    });
     bool still_an_edge = true;
     while(still_an_edge){
         still_an_edge = false;
@@ -646,10 +673,6 @@ void endgame_examination(){
                 }
     }
     composite.inject_audio_and_render(AudioSegment("It's important to note that this is no longer a strong solution. There are positions which exist but which are no longer present in our graph."));
-    g.mobilize_all_nodes();
-    dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"d", "15"},
-    });
     composite.inject_audio_and_render(AudioSegment("We have now chopped off all of the variations which we would not choose to play as Red."));
     composite.inject_audio_and_render(AudioSegment("In the graph, what this means is that all of the nodes for which it's Red's turn have only a single Red edge coming out- that is, the optimal one of our selection."));
     for(auto& node : g.nodes)
@@ -690,7 +713,7 @@ void minimax_the_opening(){
     g.decay = 0.1;
     g.repel_force = 0.3;
     g.gravity_strength = 0;
-    g.dimensions = 3;
+    g.dimensions = 4;
     g.sqrty = true;
     g.lock_root_at_origin = true;
     C4GraphScene c4(&g, "", MANUAL);
@@ -735,7 +758,6 @@ void minimax_the_opening(){
     openings.add_scene(&c4, 0, 0, 1, 1);
     openings.inject_audio_and_render(AudioSegment("Using these strategies, Connect 4 was solved."));
     openings.add_scene(&latex_red, .45, .8, .1, .1);
-    FOR_REAL = true;
     double d = .1275;
     openings.inject_audio_and_render(AudioSegment("We know that under optimal play, Red Wins, and only does so by starting with a disk in the center column."));
     openings.add_scene(&latex_tie, .45-1*d, .8, .1, .1);
@@ -754,6 +776,7 @@ void minimax_the_opening(){
 }
 
 void prisoner() {
+/*    FOR_REAL = false;
     ThreeDimensionScene tds;
 
     LatexScene c40("");
@@ -791,17 +814,19 @@ void prisoner() {
     .inject_audio_and_render(AudioSegment("A strong solution tells us everything that could be known, but weak solutions have a lot more room for creative expression."));
     .inject_audio_and_render(AudioSegment("Can we immensely reduce the amount of information required to 'know' a weak solution, such that it doesn't require rote memorization?"));
     .inject_audio_and_render(AudioSegment("Are there any particularly clever ways of representing those weak solutions? We can represent them graph-theoretically, but perhaps they can be expressed by other means?"));
-    .inject_audio_and_render(AudioSegment("These questions are hard to answer, but the answer turns out to be an astonishing... yes!"));*/
+    .inject_audio_and_render(AudioSegment("These questions are hard to answer, but that's!"));
+*/
 }
 
 void render_video() {
-    FOR_REAL = false;
+    FOR_REAL = true;
     PRINT_TO_TERMINAL = false;
     if(FOR_REAL){
         beginning();
         endgame_examination();
     }
     minimax_the_opening();
+    prisoner();
 
 
     /*
