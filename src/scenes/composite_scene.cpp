@@ -23,7 +23,7 @@ public:
     }
 
     void render_composite(){
-        pix.fill(BLACK);
+        pix.fill(OPAQUE_BLACK);
         for (auto& swc : scenes){
             int  width_int = static_cast<int>(swc.width  * w);
             int height_int = static_cast<int>(swc.height * h);
@@ -32,7 +32,7 @@ public:
             }
             Pixels* p = nullptr;
             swc.scenePointer->query(p);
-            pix.copy(*p, swc.x * w, swc.y * h, 1);
+            pix.copy(*p, swc.x * w, swc.y * h);
         }
     }
 

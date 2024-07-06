@@ -25,7 +25,7 @@ public:
     }
 
     int get_edge_color(const Node<C4Board>& node, const Node<C4Board>& neighbor){
-        if(!color_edges) return WHITE;
+        if(!color_edges) return OPAQUE_WHITE;
         return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
     }
 

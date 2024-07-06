@@ -29,7 +29,7 @@ public:
     }
 
     virtual int get_edge_color(const Node<T>& node, const Node<T>& neighbor){
-        return WHITE;
+        return OPAQUE_WHITE;
     }
 
     virtual void inheritable_preprocessing(){}

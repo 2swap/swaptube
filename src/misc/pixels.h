@@ -15,18 +15,18 @@
 
 using namespace std;
 
-inline int BLACK = 0xFF000000;
-inline int WHITE = 0xFFFFFFFF;
+inline int OPAQUE_BLACK = 0xFF000000;
+inline int OPAQUE_WHITE = 0xFFFFFFFF;
 inline int TRANSPARENT_BLACK = 0x00000000;
 inline int TRANSPARENT_WHITE = 0x00FFFFFF;
 
 class Pixels{
 public:
-    vector<uint8_t> pixels;
+    vector<int> pixels;
     int w;
     int h;
     Pixels() : w(0), h(0), pixels(0){};
-    Pixels(int width, int height) : w(width), h(height), pixels(4*width*height){};
+    Pixels(int width, int height) : w(width), h(height), pixels(width*height){};
     // Copy constructor
     Pixels(const Pixels& other) : w(other.w), h(other.h), pixels(other.pixels) {};
 
@@ -36,40 +36,29 @@ public:
 
     inline int get_pixel(int x, int y) const {
         if(out_of_range(x, y)) return 0;
-        int spot = 4*(w*y+x);
-        return makecol(pixels[spot+3], pixels[spot+2], pixels[spot+1], pixels[spot+0]);
+        return pixels[w*y+x];
+    }
+
+    inline void get_pixel_by_channels(int x, int y, int& a, int& r, int& g, int& b) const {
+        int col = get_pixel(x,y);
+        a=geta(col);
+        r=getr(col);
+        g=getg(col);
+        b=getb(col);
     }
 
     inline int get_alpha(int x, int y) const {
-        if(out_of_range(x, y)) return 0;
-        return pixels[4*(w*y+x)+3];
+        return geta(get_pixel(x,y));
     }
 
     inline void set_pixel(int x, int y, int col) {
         if(out_of_range(x, y)) return;
-        // this could go in a loop but unrolled for speeeeed
-        int spot = 4*(w*y+x);
-        pixels[spot+0] = getb(col);
-        pixels[spot+1] = getg(col);
-        pixels[spot+2] = getr(col);
-        pixels[spot+3] = geta(col);
+        pixels[w*y+x] = col;
     }
 
     inline void set_alpha(int x, int y, int a) {
         if(out_of_range(x, y) || a < 0 || a > 255) return;
-        pixels[4*(w*y+x)+3] = a;
-    }
-
-    inline void set_pixel_with_transparency(int x, int y, int col) {
-        if(out_of_range(x, y)) return;
-        // this could go in a loop but unrolled for speeeeed
-        int spot = 4*(w*y+x);
-        int upper_alpha = geta(col);
-        int mergecol = colorlerp(makecol(pixels[spot+2], pixels[spot+1], pixels[spot+0]), col, upper_alpha/255.);
-        pixels[spot+0] = getb(mergecol);
-        pixels[spot+1] = getg(mergecol);
-        pixels[spot+2] = getr(mergecol);
-        pixels[spot+3] = 255 - (255-upper_alpha) * (255-get_alpha(x, y)) / 255;
+        pixels[w*y+x] = (pixels[w*y+x] & 0x00ffffff) | (a << 24);
     }
 
     void print_dimensions(){
@@ -92,14 +81,13 @@ public:
                 int sampleX = x * xStep / 3 + w / 3;
                 int sampleY = y * yStep;
 
-                int r = pixels[(sampleX + w * sampleY) * 4];
-                int g = pixels[(sampleX + w * sampleY) * 4 + 1];
-                int b = pixels[(sampleX + w * sampleY) * 4 + 2];
+                int a, r, g, b;
+                get_pixel_by_channels(sampleX, sampleY, a, r, g, b);
 
                 // Map the RGB values to ANSI color codes
-                int rCode = static_cast<int>((1-cube(1-(r / 256.0))) * 5);
-                int gCode = static_cast<int>((1-cube(1-(g / 256.0))) * 5);
-                int bCode = static_cast<int>((1-cube(1-(b / 256.0))) * 5);
+                int rCode = static_cast<int>((1-cube(1-(r / 255.0*a/255.))) * 5);
+                int gCode = static_cast<int>((1-cube(1-(g / 255.0*a/255.))) * 5);
+                int bCode = static_cast<int>((1-cube(1-(b / 255.0*a/255.))) * 5);
 
                 // Calculate the ANSI color code based on RGB values
                 int colorCode = 16 + 36 * bCode + 6 * gCode + rCode;
@@ -135,13 +123,21 @@ public:
         }
     }
 
-    void copy(Pixels p, int dx, int dy, double transparency){
+    void copy(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1){
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;
             for(int y = 0; y < p.h; y++){
-                int col = p.get_pixel(x, y);
-                col = (int(geta(col)*transparency)<<24) + (col & TRANSPARENT_WHITE);TODO when used in the CompositeScene, this misbehaves
-                set_pixel_with_transparency(x+dx, y+dy, col);
+                int col = color_combine(get_pixel(xpdx, y+dy), p.get_pixel(x, y), overlay_opacity_multiplier);
+                set_pixel(xpdx, y+dy, col);
+            }
+        }
+    }
+
+    void overwrite(Pixels p, int dx, int dy){
+        for(int x = 0; x < p.w; x++){
+            int xpdx = x+dx;
+            for(int y = 0; y < p.h; y++){
+                set_pixel(xpdx, y+dy, p.get_pixel(x, y));
             }
         }
     }
@@ -158,12 +154,13 @@ public:
     }
 
     void grayscale_to_alpha(){
-        for(int i = 0; i < pixels.size(); i+=4){
-            if(pixels[i] != pixels[i+1] || pixels[i+2] != pixels[i+1]) continue;
-            pixels[i+3] = pixels[i];
-            pixels[i] = 255;
-            pixels[i+1] = 255;
-            pixels[i+2] = 255;
+        for (int y = 0; y < h; ++y) {
+            for (int x = 0; x < w; ++x) {
+                int a, r, g, b;
+                get_pixel_by_channels(x, y, a, r, g, b);
+                if(r != b || g != r) continue; // if this pixel is not true grayscale
+                pixels[x+y*w] = makecol(r, 255, 255, 255);
+            }
         }
     }
 
@@ -177,46 +174,11 @@ public:
         for(double dx = -rw+1; dx < rw; dx++)
             for(double dy = -rh+1; dy < rh; dy++)
                 if(square(dx/rw)+square(dy/rh) < 1)
-                    set_pixel_with_transparency(x+dx, y+dy, col);
+                    set_pixel(x+dx, y+dy, col);
     }
 
     void fill(int col){
         fill_rect(0, 0, w, h, col);
-    }
-
-    void fill_alpha(int a){
-        for(int dx = 0; dx < w; dx++)
-            for(int dy = 0; dy < h; dy++){
-                pixels[4*(dx+dy*w)+3] = a;
-            }
-    }
-
-    void mult_alpha(double m){
-        for(int dx = 0; dx < w; dx++)
-            for(int dy = 0; dy < h; dy++){
-                pixels[4*(dx+dy*w)+3] *= m;
-            }
-    }
-
-    void mult_color(double m){
-        for(int dx = 0; dx < w; dx++)
-            for(int dy = 0; dy < h; dy++){
-                pixels[4*(dx+dy*w)+0] *= m;
-                pixels[4*(dx+dy*w)+1] *= m;
-                pixels[4*(dx+dy*w)+2] *= m;
-            }
-    }
-
-    void recolor(int col){
-        int r = getr(col);
-        int g = getg(col);
-        int b = getb(col);
-        for(int dx = 0; dx < w; dx++)
-            for(int dy = 0; dy < h; dy++){
-                pixels[4*(dx+dy*w)+2] = r;
-                pixels[4*(dx+dy*w)+1] = g;
-                pixels[4*(dx+dy*w)+0] = b;
-            }
     }
 
     void bresenham(int x1, int y1, int x2, int y2, int col, int thickness) {
@@ -254,6 +216,31 @@ public:
         }
     }
 
+    void print_colors_by_frequency(){
+        // Map to store the frequency of each color
+        unordered_map<int, int> color_frequency;
+
+        // Traverse the pixels vector and count the occurrences of each color
+        for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
+            color_frequency[get_pixel(x, y)]++;
+
+        // Convert the map to a vector of pairs (color, frequency)
+        vector<pair<int, int>> frequency_vector(color_frequency.begin(), color_frequency.end());
+
+        // Sort the vector by frequency in descending order
+        sort(frequency_vector.begin(), frequency_vector.end(), [](const pair<int, int>& a, const pair<int, int>& b) {
+            return b.second < a.second;
+        });
+
+        // Print the top 5 most common colors
+        cout << "Top 5 most common colors:" << endl;
+        for (int i = 0; i < min(5, static_cast<int>(frequency_vector.size())); ++i) {
+            int color = frequency_vector[i].first;
+            int frequency = frequency_vector[i].second;
+            cout << "Color: " << color_to_string(color) << ", Frequency: " << frequency << endl;
+        }
+    }
+
     void xiaolin_wu(int x0, int y0, int x1, int y1, int col) {
         bool steep = abs(y1 - y0) > abs(x1 - x0);
         if (steep) {
@@ -276,11 +263,11 @@ public:
         int xpxl1 = xend;
         int ypxl1 = floor(yend);
         if (steep) {
-            set_pixel_with_transparency(ypxl1, xpxl1, col * (1 - fractional_part(yend) * xgap));
-            set_pixel_with_transparency(ypxl1 + 1, xpxl1, col * fractional_part(yend) * xgap);
+            set_pixel(ypxl1, xpxl1, col * (1 - fractional_part(yend) * xgap));
+            set_pixel(ypxl1 + 1, xpxl1, col * fractional_part(yend) * xgap);
         } else {
-            set_pixel_with_transparency(xpxl1, ypxl1, col * (1 - fractional_part(yend) * xgap));
-            set_pixel_with_transparency(xpxl1, ypxl1 + 1, col * fractional_part(yend) * xgap);
+            set_pixel(xpxl1, ypxl1, col * (1 - fractional_part(yend) * xgap));
+            set_pixel(xpxl1, ypxl1 + 1, col * fractional_part(yend) * xgap);
         }
 
         // Compute end points
@@ -290,23 +277,23 @@ public:
         int xpxl2 = xend;
         int ypxl2 = floor(yend);
         if (steep) {
-            set_pixel_with_transparency(ypxl2, xpxl2, col * (1 - fractional_part(yend) * xgap));
-            set_pixel_with_transparency(ypxl2 + 1, xpxl2, col * fractional_part(yend) * xgap);
+            set_pixel(ypxl2, xpxl2, col * (1 - fractional_part(yend) * xgap));
+            set_pixel(ypxl2 + 1, xpxl2, col * fractional_part(yend) * xgap);
         } else {
-            set_pixel_with_transparency(xpxl2, ypxl2, col * (1 - fractional_part(yend) * xgap));
-            set_pixel_with_transparency(xpxl2, ypxl2 + 1, col * fractional_part(yend) * xgap);
+            set_pixel(xpxl2, ypxl2, col * (1 - fractional_part(yend) * xgap));
+            set_pixel(xpxl2, ypxl2 + 1, col * fractional_part(yend) * xgap);
         }
 
         // Main loop
         if (steep) {
             for (int x = xpxl1 + 1; x < xpxl2; x++) {
-                set_pixel_with_transparency(floor(gradient * (x - x0) + y0), x, col * (1 - fractional_part(gradient * (x - x0) + y0)));
-                set_pixel_with_transparency(floor(gradient * (x - x0) + y0) + 1, x, col * fractional_part(gradient * (x - x0) + y0));
+                set_pixel(floor(gradient * (x - x0) + y0), x, col * (1 - fractional_part(gradient * (x - x0) + y0)));
+                set_pixel(floor(gradient * (x - x0) + y0) + 1, x, col * fractional_part(gradient * (x - x0) + y0));
             }
         } else {
             for (int x = xpxl1 + 1; x < xpxl2; x++) {
-                set_pixel_with_transparency(x, floor(gradient * (x - x0) + y0), col * (1 - fractional_part(gradient * (x - x0) + y0)));
-                set_pixel_with_transparency(x, floor(gradient * (x - x0) + y0) + 1, col * fractional_part(gradient * (x - x0) + y0));
+                set_pixel(x, floor(gradient * (x - x0) + y0), col * (1 - fractional_part(gradient * (x - x0) + y0)));
+                set_pixel(x, floor(gradient * (x - x0) + y0) + 1, col * fractional_part(gradient * (x - x0) + y0));
             }
         }
     }
@@ -367,7 +354,7 @@ Pixels create_alpha_from_intensities(const vector<vector<int>>& intensities, int
     int width = (height > 0) ? intensities[0].size() : 0;
 
     Pixels result(width, height);
-    result.fill(WHITE);
+    result.fill(OPAQUE_WHITE);
 
     // Find the minimum and maximum intensity values
     int minIntensity = numeric_limits<int>::max();

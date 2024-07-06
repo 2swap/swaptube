@@ -153,12 +153,12 @@ public:
             double piece_fill_radius = ceil(stonewidth*.4);
             double piece_stroke_radius = ceil(stonewidth*(.47));
             double blink_radius = ceil(stonewidth*(.2));
-            if(annotation == '%') col = colorlerp(col, BLACK, 0.8);
+            if(annotation == '%') col = colorlerp(col, OPAQUE_BLACK, 0.8);
             pix.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col);
-            pix.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, BLACK, any_blink?.8:.4));
+            pix.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, OPAQUE_BLACK, any_blink?.8:.4));
         }
 
-        if(highlighted) col = BLACK;
+        if(highlighted) col = OPAQUE_BLACK;
 
         int annotation_color = 0;
         switch (annotation){
@@ -236,7 +236,7 @@ public:
             case 'O':
             case 'c': // c is an o but colorful
                 pix.fill_ellipse(px, py, stonewidth / 3, stonewidth / 3, annotation_color);
-                pix.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, BLACK);
+                pix.fill_ellipse(px, py, stonewidth / 6, stonewidth / 6, OPAQUE_BLACK);
                 break;
             case 'x':
                 {
@@ -245,7 +245,7 @@ public:
                     for(double dx = -rw+1; dx < rw; dx++)
                         for(double dy = -rh+1; dy < rh; dy++)
                             if(square(dx/rw)+square(dy/rh) < 1 && (abs(dx - dy) < stonewidth*.1 || abs(dx + dy) < stonewidth*.1))
-                                pix.set_pixel_with_transparency(px+dx, py+dy, annotation_color);
+                                pix.set_pixel(px+dx, py+dy, annotation_color);
                     break;
                 }
             case '.':
@@ -264,14 +264,14 @@ public:
     }
 
     void draw_highlight(int px, int py, char highlight, double stonewidth, int height){
-        int highlight_color = WHITE;
+        int highlight_color = OPAQUE_WHITE;
         if(highlight == 'd' || highlight == 'D') highlight_color = IBM_PURPLE; // dead space
         if(highlight == 't' || highlight == 'T') highlight_color = IBM_BLUE  ; // terminal threat
         if(highlight == 'z' || highlight == 'Z') highlight_color = IBM_GREEN ; // zugzwang controlling threat
         if(highlight == 'n' || highlight == 'N') highlight_color = IBM_ORANGE; // non-controlling threat
         double u = stonewidth * .4;
         for(int i = 0; i < 2; i++){
-            highlight_color = colorlerp(highlight_color, BLACK, 0.6);
+            highlight_color = colorlerp(highlight_color, OPAQUE_BLACK, 0.6);
             pix.rounded_rect(
                            px - u, // left x coord
                            py - u, // top y coord

@@ -33,6 +33,7 @@ public:
     void inject_audio(const AudioSegment& audio, int expected_video_sessions){
         if(!FOR_REAL)
             return;
+        dag.set_special("audio_segment_number", dag["audio_segment_number"] + 1);
         cout << "Scene says: " << audio.get_subtitle_text() << endl;
         if (video_sessions_left != 0) {
             failout("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
@@ -73,8 +74,9 @@ public:
   
 private:
     void render_one_frame(){
-        dag.set_special("t", video_time_s);
         dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
+        dag.set_special("t", dag["frame_number"] / VIDEO_FRAMERATE);
+        dag.set_special("frame_number", dag["frame_number"] + 1);
         dag.evaluate_all();
 
         if (video_sessions_left == 0) {
@@ -83,11 +85,10 @@ private:
 
         bool unused = false;
         Pixels* p = nullptr;
-        WRITER->set_time(video_time_s);
+        WRITER->set_time(dag["t"]);
         query(unused, p);
         assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
-        video_time_s += 1./VIDEO_FRAMERATE;
-        if(PRINT_TO_TERMINAL && ((video_num_frames++)%5 == 0)) p->print_to_terminal();
+        if(PRINT_TO_TERMINAL && (int(dag["frame_number"]) % 5 == 0)) p->print_to_terminal();
         WRITER->add_frame(*p);
     }
 

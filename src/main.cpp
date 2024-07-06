@@ -15,7 +15,6 @@ int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
 int VIDEO_FRAMERATE = 30;
 bool FOR_REAL = true; // Whether we should actually write any AV output
 bool PRINT_TO_TERMINAL = true;
-double video_time_s = 0;
 int video_num_frames = 0;
 
 #include "misc/inlines.h"
@@ -58,11 +57,11 @@ int main(int argc, char* argv[]) {
     {
         setup_writer(project_name);
         {
-            render_video();
+            render_video(); // from the project file
         }
         delete WRITER;
     }
-    timer.stop_timer(video_time_s);
+    timer.stop_timer(dag["t"]);
 
     return 0;
 }

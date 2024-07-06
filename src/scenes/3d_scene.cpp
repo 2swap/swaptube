@@ -208,7 +208,7 @@ public:
         corners[1] = coordinate_to_pixel(surface.center - surface.pos_x_dir + surface.pos_y_dir, behind_camera); if(behind_camera) return;
         corners[2] = coordinate_to_pixel(surface.center - surface.pos_x_dir - surface.pos_y_dir, behind_camera); if(behind_camera) return;
         corners[3] = coordinate_to_pixel(surface.center + surface.pos_x_dir - surface.pos_y_dir, behind_camera); if(behind_camera) return;
-        //for(int i = 0; i < 4; i++) pix.fill_ellipse(corners[i].first, corners[i].second, 2, 2, WHITE);
+        //for(int i = 0; i < 4; i++) pix.fill_ellipse(corners[i].first, corners[i].second, 2, 2, OPAQUE_WHITE);
 
         if(!should_render_surface(corners)) return;
 
@@ -265,9 +265,9 @@ public:
                 double x_pix = surface_coords.x*p->w+.5;
                 double y_pix = surface_coords.y*p->h+.5;
                 int col = p->get_pixel(x_pix, y_pix);
-                //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? WHITE : BLACK; // add tiling to void space
+                //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? OPAQUE_WHITE : OPAQUE_BLACK; // add tiling to void space
                 col = colorlerp(TRANSPARENT_BLACK, col, dag["surfaces_opacity"]);
-                pix.set_pixel_with_transparency(cx, cy, col);
+                pix.set_pixel(cx, cy, col);
             }
 
             sketchpad.set_pixel(cx, cy, padcol);
@@ -308,7 +308,7 @@ public:
 
         //unit_test_unproject();
         //unit_test_intersection_point();
-        sketchpad.fill(BLACK);
+        sketchpad.fill(OPAQUE_BLACK);
 
         // Create a list of pointers to the surfaces
         std::vector<const Surface*> surfacePointers;
@@ -350,11 +350,12 @@ public:
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
+        double dot_size = pix.w/150.;
         if(point.highlight){
-            pix.fill_ellipse(pixel.first, pixel.second, 5, 5, WHITE);
-            pix.fill_ellipse(pixel.first, pixel.second, 3, 3, BLACK);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         }
-        pix.fill_ellipse(pixel.first, pixel.second, 2, 2, colorlerp(BLACK, point.color, dag["points_opacity"] * point.opacity));
+        pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(OPAQUE_BLACK, point.color, dag["points_opacity"] * point.opacity));
     }
 
     void render_line(const Line& line) {
@@ -363,7 +364,7 @@ public:
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
         //cout << line.opacity << endl;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(BLACK, line.color, dag["lines_opacity"] * line.opacity), 1);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, dag["lines_opacity"] * line.opacity), 1);
     }
 
     glm::vec2 intersection_point(const glm::vec3 &particle_start, const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal) {

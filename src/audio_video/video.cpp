@@ -108,18 +108,20 @@ public:
         av_frame_get_buffer(yuvpic, 1);
     }
     void add_frame(const Pixels& p) {
-        const uint8_t* pixels = &p.pixels[0];
-
         // The AVFrame data will be stored as RGBRGBRGB... row-wise,
         // from left to right and from top to bottom.
         for (unsigned int y = 0; y < VIDEO_HEIGHT; y++)
         {
+            // rgbpic->linesize[0] is equal to width.
+            int rowboi = y * rgbpic->linesize[0];
             for (unsigned int x = 0; x < VIDEO_WIDTH; x++)
             {
-                // rgbpic->linesize[0] is equal to width.
-                rgbpic->data[0][y * rgbpic->linesize[0] + 3 * x + 0] = pixels[y * 4 * VIDEO_WIDTH + 4 * x + 2];
-                rgbpic->data[0][y * rgbpic->linesize[0] + 3 * x + 1] = pixels[y * 4 * VIDEO_WIDTH + 4 * x + 1];
-                rgbpic->data[0][y * rgbpic->linesize[0] + 3 * x + 2] = pixels[y * 4 * VIDEO_WIDTH + 4 * x + 0];
+                int a,r,g,b;
+                p.get_pixel_by_channels(x, y, a, r, g, b);
+                double alpha = a/255.; // in the end, we pretend there is a black background
+                rgbpic->data[0][rowboi + 3 * x + 0] = r*alpha;
+                rgbpic->data[0][rowboi + 3 * x + 1] = g*alpha;
+                rgbpic->data[0][rowboi + 3 * x + 2] = b*alpha;
             }
         }
 

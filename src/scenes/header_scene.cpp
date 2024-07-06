@@ -18,8 +18,8 @@ public:
         ScalingParams subheader_sp(pix.w, pix.h/6);
         Pixels subheader_pix = eqn_to_pix(latex_text(subheader), subheader_sp);
 
-        pix.copy(header_pix, (pix.w - header_pix.w)/2, pix.h/2-100, 1);
-        pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50, 1);
+        pix.overwrite(header_pix, (pix.w - header_pix.w)/2, pix.h/2-100);
+        pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50);
     }
 
     void query(bool& done_scene, Pixels*& p) override {

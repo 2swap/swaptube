@@ -62,7 +62,7 @@ void render_3d(){
     for(int i = -7; i <= 7; i+=2)
     for(int j = -7; j <= 7; j+=2)
     for(int k = -7; k <= 7; k+=2)
-        tds.add_point(Point(""+i+j+k, glm::vec3(i, j, k), WHITE));
+        tds.add_point(Point(""+i+j+k, glm::vec3(i, j, k), OPAQUE_WHITE));
 
     glm::quat q(1,0,0,0);
     dag.add_equation("x", "0");
