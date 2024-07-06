@@ -36,6 +36,13 @@ public:
         }
     }
 
+    void remove_scene(Scene* sc) {
+        scenes.erase(std::remove_if(scenes.begin(), scenes.end(),
+                                    [sc](const SceneWithPosition& swp) {
+                                        return swp.scenePointer == sc;
+                                    }), scenes.end());
+    }
+
     void query(bool& done_scene, Pixels*& p) override {
         render_composite();
         p = &pix;

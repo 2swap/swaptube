@@ -135,73 +135,12 @@ public:
         }
     }
 
-    int bilinear_interpolate(int a, int b, int c, int d, double alpha, double beta) {
-        return a * (1 - alpha) * (1 - beta) + b * alpha * (1 - beta) + c * (1 - alpha) * beta + d * alpha * beta;
-    }
-
-    void copy_and_scale_integer(Pixels p, int x, int y, int scale, double transparency){
-        for(int dx = 0; dx < p.w/scale; dx++)
-            for(int dy = 0; dy < p.h/scale; dy++){
-                int r = 0;
-                int g = 0;
-                int b = 0;
-                int a = 0;
-                for(int scalex = 0; scalex < scale; scalex++)
-                    for(int scaley = 0; scaley < scale; scaley++){
-                        int spot = 4*(p.w*(dy*scale+scaley)+(dx*scale+scalex));
-                        b += p.pixels[spot];
-                        g += p.pixels[spot+1];
-                        r += p.pixels[spot+2];
-                        a += p.pixels[spot+3];
-                    }
-                r /= square(scale);
-                g /= square(scale);
-                b /= square(scale);
-                a /= square(scale);
-
-                int col = (int(a*transparency)<<24)+(r<<16)+(g<<8)+b;
-                set_pixel_with_transparency(x+dx, y+dy, col);
-            }
-    }
-
-    void copy_and_scale_bilinear(Pixels p, int x, int y, double scale) {
-        int newWidth = static_cast<int>(p.w * scale);
-        int newHeight = static_cast<int>(p.h * scale);
-
-        for (int dx = 0; dx < newWidth; dx++) {
-            for (int dy = 0; dy < newHeight; dy++) {
-                // Bilinear interpolation
-                double gx = (dx / scale);
-                double gy = (dy / scale);
-
-                int gxi = static_cast<int>(gx);
-                int gyi = static_cast<int>(gy);
-
-                int c00 = p.get_pixel(gxi, gyi);
-                int c10 = p.get_pixel(gxi + 1, gyi);
-                int c01 = p.get_pixel(gxi, gyi + 1);
-                int c11 = p.get_pixel(gxi + 1, gyi + 1);
-
-                double alpha = gx - gxi;
-                double beta = gy - gyi;
-
-                int r = bilinear_interpolate(c00 >> 16 & 0xFF, c10 >> 16 & 0xFF, c01 >> 16 & 0xFF, c11 >> 16 & 0xFF, alpha, beta);
-                int g = bilinear_interpolate(c00 >> 8 & 0xFF, c10 >> 8 & 0xFF, c01 >> 8 & 0xFF, c11 >> 8 & 0xFF, alpha, beta);
-                int b = bilinear_interpolate(c00 & 0xFF, c10 & 0xFF, c01 & 0xFF, c11 & 0xFF, alpha, beta);
-                int a = bilinear_interpolate(c00 >> 24 & 0xFF, c10 >> 24 & 0xFF, c01 >> 24 & 0xFF, c11 >> 24 & 0xFF, alpha, beta);
-
-                int col = (a << 24) + (r << 16) + (g << 8) + b;
-                set_pixel_with_transparency(x + dx, y + dy, col);
-            }
-        }
-    }
-
     void copy(Pixels p, int dx, int dy, double transparency){
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;
             for(int y = 0; y < p.h; y++){
                 int col = p.get_pixel(x, y);
-                col = (int(geta(col)*transparency)<<24) + (col & TRANSPARENT_WHITE);
+                col = (int(geta(col)*transparency)<<24) + (col & TRANSPARENT_WHITE);TODO when used in the CompositeScene, this misbehaves
                 set_pixel_with_transparency(x+dx, y+dy, col);
             }
         }
@@ -495,66 +434,4 @@ Pixels crop(const Pixels& p) {
     }
 
     return cropped_pixels;
-}
-
-Pixels svg_to_pix(const string& svg, int scale_factor) {
-    //Open svg and get its dimensions
-    RsvgHandle* handle = rsvg_handle_new_from_file(svg.c_str(), NULL);
-    if (!handle)
-    {
-        fprintf(stderr, "Error loading SVG data from file \"%s\"\n", svg.c_str());
-        exit(-1);
-    }
-    gdouble dim_width = 0;
-    gdouble dim_height = 0; 
-    rsvg_handle_get_intrinsic_size_in_pixels(handle, &dim_width, &dim_height);
-
-    int w = dim_width*scale_factor;
-    int h = dim_height*scale_factor;
-    Pixels ret(w, h);
-
-    //Render it
-    cairo_surface_t* surface = cairo_image_surface_create_for_data(&(ret.pixels[0]), CAIRO_FORMAT_ARGB32, w, h, w * 4);
-    cairo_t* cr = cairo_create(surface);
-    cairo_scale(cr, scale_factor, scale_factor);
-    rsvg_handle_render_cairo(handle, cr);
-    g_object_unref(handle);
-    cairo_destroy(cr);
-    cairo_surface_destroy(surface);
-    ret.grayscale_to_alpha();
-    return crop(ret);
-}
-
-// Create an unordered_map to store the cached results
-std::unordered_map<std::string, Pixels> latex_cache;
-
-Pixels eqn_to_pix(const string& eqn, int scale_factor){
-    // Check if the result is already in the cache
-    auto it = latex_cache.find(eqn);
-    if (it != latex_cache.end()) {
-        return it->second; // Return the cached Pixels object
-    }
-
-    hash<string> hasher;
-    string name = "/home/swap/CS/swaptube/out/latex/" + to_string(hasher(eqn)) + ".svg";
-
-    if (access(name.c_str(), F_OK) != -1) {
-        // File already exists, no need to generate LaTeX
-        Pixels pixels = svg_to_pix(name, scale_factor);
-        latex_cache[eqn] = pixels; // Cache the result before returning
-        return pixels;
-    }
-
-    string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
-    int result = system(command.c_str());
-    
-    if (result == 0) {
-        // System call successful, return the generated SVG
-        Pixels pixels = svg_to_pix(name, scale_factor);
-        latex_cache[eqn] = pixels; // Cache the result before returning
-        return pixels;
-    } else {
-        // System call failed, handle the error
-        throw runtime_error("Failed to generate LaTeX.");
-    }
 }

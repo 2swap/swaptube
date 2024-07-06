@@ -238,23 +238,17 @@ public:
         shtooka_file << filename << "\t" << text << "\n";
     }
     void cleanup() {
-        cout << "Deleting AudioWriter" << endl;
-
         avcodec_send_frame(audioOutputCodecContext, NULL);
-        cout << "Writing delayed audio frames" << endl;
         encode_and_write_audio();
         
-        cout << "Freeing audio specific resources" << endl;
         avcodec_free_context(&audioOutputCodecContext);
         avcodec_free_context(&audioInputCodecContext);
         
         av_packet_unref(&inputPacket);
         
         //audio_pts_file.close();
-        cout << "Closing shtooka file" << endl;
         if (shtooka_file.is_open()) {
             shtooka_file.close();
         }
-        cout << "Deleted AudioWriter" << endl;
     }
 };

@@ -167,6 +167,20 @@ public:
         if (!node_exists(from) || !node_exists(to)) return;
         nodes.at(from).neighbors.insert(Edge(from, to));
     }
+    
+    /**
+     * Remove an edge between two nodes.
+     * @param from The hash of the source node.
+     * @param to The hash of the destination node.
+     */
+    void remove_edge(double from, double to) {
+        if (!node_exists(from) || !node_exists(to)) return;
+        
+        Node<T>& from_node = nodes.at(from);
+        Edge edge_to_remove(from, to);
+        
+        from_node.neighbors.erase(edge_to_remove);
+    }
 
     bool does_edge_exist(double from, double to){
         if (!node_exists(from)) return false;
@@ -304,6 +318,33 @@ public:
         path.push_front(start);
 
         return {path, edges};
+    }
+
+    void delete_orphans() {
+        bool orphan_found;
+        do {
+            orphan_found = false;
+            std::unordered_set<double> non_orphans;
+
+            // Mark all nodes that are in the "to" position of any edge
+            for (const auto& node_pair : nodes) {
+                const Node<T>& node = node_pair.second;
+                for (const auto& edge : node.neighbors) {
+                    non_orphans.insert(edge.to);
+                }
+            }
+
+            // Iterate through the nodes and remove those that are not in the non_orphans set
+            for (auto it = nodes.begin(); it != nodes.end(); ) {
+                if (non_orphans.find(it->first) == non_orphans.end() && it->first != root_node_hash) {
+                    delete it->second.data;
+                    it = nodes.erase(it);
+                    orphan_found = true;
+                } else {
+                    ++it;
+                }
+            }
+        } while (orphan_found);
     }
 
     /**

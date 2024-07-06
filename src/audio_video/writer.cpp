@@ -61,7 +61,6 @@ public:
         audiowriter.cleanup();
         videowriter.cleanup();
 
-        cout << "Yeeting the fc" << endl;
         av_write_trailer(fc);
         avio_closep(&fc->pb);
         avformat_free_context(fc);
