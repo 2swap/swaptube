@@ -5,15 +5,17 @@
 
 class LatexScene : public Scene {
 public:
-    LatexScene(const int width, const int height, string eqn) : Scene(width, height), equation_string(eqn) {init_latex_scene();}
-    LatexScene(string eqn) : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), equation_string(eqn) {init_latex_scene();}
+    LatexScene(const int width, const int height, string eqn, double extra_scale) : Scene(width, height), equation_string(eqn) {init_latex_scene(extra_scale);}
+    LatexScene(string eqn, double extra_scale) : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), equation_string(eqn) {init_latex_scene(extra_scale);}
 
-    void init_latex_scene(){
+    void init_latex_scene(double extra_scale){
         cout << "rendering latex: " << equation_string << endl;
-        ScalingParams sp(pix.w, pix.h);
+        ScalingParams sp(pix.w * extra_scale, pix.h * extra_scale);
         equation_pixels = eqn_to_pix(equation_string, sp);
         scale_factor = sp.scale_factor;
         coords = make_pair((pix.w-equation_pixels.w)/2, (pix.h-equation_pixels.h)/2);
+        pix.fill(TRANSPARENT_BLACK);
+        pix.overwrite(equation_pixels, coords.first, coords.second);
     }
 
     void append_transition(string eqn) {
@@ -32,58 +34,66 @@ public:
 
         cout << equation_string << " <- Finding Intersections -> " << eqn << endl;
         intersections = find_intersections(equation_pixels, transition_equation_pixels);
-        cout << "Number of intersections found: " << intersections.size() << endl;
         in_transition_state = true;
+        transition_audio_segment = dag["audio_segment_number"];
     }
 
     void end_transition(){
+        cout << "Ending transition" << endl;
+        assert(in_transition_state);
         equation_pixels = transition_equation_pixels;
         coords = transition_coords;
         equation_string = transition_equation_string;
+        pix.overwrite(equation_pixels, coords.first, coords.second);
         in_transition_state = false;
     }
 
     void query(bool& done_scene, Pixels*& p) override {
-        pix.fill(TRANSPARENT_BLACK);
+        if(in_transition_state && dag["audio_segment_number"] != transition_audio_segment)
+            end_transition();
 
-        if(in_transition_state){
-            // On rising edge of audio segment, we end transition
-            if(dag["audio_segment_number"] > last_audio_segment_number) end_transition();
-        }
-        
         if(!in_transition_state){
-            pix.overwrite(equation_pixels, coords.first, coords.second);
             p = &pix;
         } else { // in a transition
+            pix.fill(TRANSPARENT_BLACK);
             double tp = transparency_profile(dag["transition_fraction"]);
             double tp1 = transparency_profile(1-dag["transition_fraction"]);
             double smooth = smoother2(dag["transition_fraction"]);
+
+            double top_vx = 0;
+            double top_vy = 0;
 
             for (int i = 0; i < intersections.size(); i++) {
                 const StepResult& step = intersections[i];
                 int x = round(lerp(coords.first , transition_coords.first -step.max_x, smooth));
                 int y = round(lerp(coords.second, transition_coords.second-step.max_y, smooth));
+                if(i == 0){
+                    top_vx += transition_coords.first  - step.max_x - coords.first ;
+                    top_vy += transition_coords.second - step.max_y - coords.second;
+                }
 
                 // Render the intersection at the interpolated position
-                pix.copy(step.induced1, x-step.current_p1.w, y-step.current_p1.h, tp1);
-                pix.copy(step.induced2, x-step.current_p2.w, y-step.current_p2.h, tp);
+                pix.overlay(step.induced1, x-step.current_p1.w, y-step.current_p1.h, tp1);
+                pix.overlay(step.induced2, x-step.current_p2.w, y-step.current_p2.h, tp );
 
-                //pix.copy(step.intersection, 0  , i*191, 1);
-                //pix.copy(step.map         , 500, i*191, 1);
+                //pix.overlay(step.intersection, 0  , i*191, 1);
+                //pix.overlay(step.map         , 500, i*191, 1);
             }
 
+            int dx = round(lerp(-top_vx, 0, smooth));
+            int dy = round(lerp(-top_vy, 0, smooth));
+
             StepResult last_intersection = intersections[intersections.size()-1];
-            pix.copy(last_intersection.current_p1, coords.first, coords.second, tp1*tp1);
-            pix.copy(last_intersection.current_p2, transition_coords.first, transition_coords.second, tp*tp);
+            pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
+            pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
 
             p = &pix;
         }
-        last_audio_segment_number = dag["audio_segment_number"];
     }
 
 private:
-    double last_audio_segment_number = 0;
-    bool in_transition_state;
+    double transition_audio_segment = -1;
+    bool in_transition_state = false;
     double scale_factor;
 
     // Things used for non-transition states

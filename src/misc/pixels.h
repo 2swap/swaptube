@@ -123,11 +123,21 @@ public:
         }
     }
 
-    void copy(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1){
+    void overlay(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1){
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;
             for(int y = 0; y < p.h; y++){
                 int col = color_combine(get_pixel(xpdx, y+dy), p.get_pixel(x, y), overlay_opacity_multiplier);
+                set_pixel(xpdx, y+dy, col);
+            }
+        }
+    }
+
+    void underlay(Pixels p, int dx, int dy){
+        for(int x = 0; x < p.w; x++){
+            int xpdx = x+dx;
+            for(int y = 0; y < p.h; y++){
+                int col = color_combine(p.get_pixel(x, y), get_pixel(xpdx, y+dy));
                 set_pixel(xpdx, y+dy, col);
             }
         }

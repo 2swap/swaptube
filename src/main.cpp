@@ -16,6 +16,7 @@ int VIDEO_FRAMERATE = 30;
 bool FOR_REAL = true; // Whether we should actually write any AV output
 bool PRINT_TO_TERMINAL = true;
 int video_num_frames = 0;
+string project_name = "to_be_populated";
 
 #include "misc/inlines.h"
 #include "scenes/dagger.cpp"
@@ -51,7 +52,7 @@ int main(int argc, char* argv[]) {
         cerr << "Usage: " << argv[0] << " <config_file_without_.json>" << endl;
         exit(1);
     }
-    const string project_name = string(argv[1]);
+    project_name = string(argv[1]);
 
     Timer timer;
     {

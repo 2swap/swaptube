@@ -350,12 +350,12 @@ public:
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
-        double dot_size = pix.w/150.;
+        double dot_size = pix.w/250.;
         if(point.highlight){
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_WHITE);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         }
-        pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(OPAQUE_BLACK, point.color, dag["points_opacity"] * point.opacity));
+        pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(TRANSPARENT_BLACK, point.color, dag["points_opacity"] * point.opacity));
     }
 
     void render_line(const Line& line) {

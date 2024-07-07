@@ -33,7 +33,6 @@ public:
     void inject_audio(const AudioSegment& audio, int expected_video_sessions){
         if(!FOR_REAL)
             return;
-        dag.set_special("audio_segment_number", dag["audio_segment_number"] + 1);
         cout << "Scene says: " << audio.get_subtitle_text() << endl;
         if (video_sessions_left != 0) {
             failout("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
@@ -61,22 +60,28 @@ public:
 
         time = 0;
         for (int frame = 0; frame < scene_duration_frames; frame++) {
-            render_one_frame();
-            superscene_frames_left--;
+            render_one_frame(frame);
         }
         video_sessions_left--;
-        if(video_sessions_left == 0)
+        if(video_sessions_left == 0){
             dag.close_all_transitions();
+            dag.set_special("audio_segment_number", dag["audio_segment_number"] + 1);
+        }
+    }
+
+    Pixels* expose_pixels() {
+        return &pix;
     }
 
     int w = 0;
     int h = 0;
   
 private:
-    void render_one_frame(){
-        dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
-        dag.set_special("t", dag["frame_number"] / VIDEO_FRAMERATE);
+    void render_one_frame(int subscene_frame){
         dag.set_special("frame_number", dag["frame_number"] + 1);
+        dag.set_special("t", dag["frame_number"] / VIDEO_FRAMERATE);
+        dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
+        dag.set_special("subscene_transition_fraction", static_cast<double>(subscene_frame) / scene_duration_frames);
         dag.evaluate_all();
 
         if (video_sessions_left == 0) {
@@ -90,6 +95,7 @@ private:
         assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
         if(PRINT_TO_TERMINAL && (int(dag["frame_number"]) % 5 == 0)) p->print_to_terminal();
         WRITER->add_frame(*p);
+        superscene_frames_left--;
     }
 
 protected:
@@ -114,3 +120,4 @@ protected:
 #include "graph_scene.cpp"
 #include "c4_graph_scene.cpp"
 #include "mouse_scene.cpp"
+#include "png_scene.cpp"

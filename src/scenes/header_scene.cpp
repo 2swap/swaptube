@@ -19,7 +19,7 @@ public:
         Pixels subheader_pix = eqn_to_pix(latex_text(subheader), subheader_sp);
 
         pix.overwrite(header_pix, (pix.w - header_pix.w)/2, pix.h/2-100);
-        pix.copy(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50);
+        pix.overlay(subheader_pix, (pix.w - subheader_pix.w)/2, pix.h/2+50);
     }
 
     void query(bool& done_scene, Pixels*& p) override {
