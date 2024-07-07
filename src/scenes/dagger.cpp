@@ -52,10 +52,11 @@ struct VariableContents {
 class Dagger {
 public:
     Dagger() {
-        variables["t"] = VariableContents("", 0, true, true);
-        variables["frame_number"] = VariableContents("", -1, true, true);
-        variables["audio_segment_number"] = VariableContents("", -1, true, true);
-        variables["transition_fraction"] = VariableContents("", 0, true, true);
+        variables["t"                           ] = VariableContents("", 0, true, true);
+        variables["frame_number"                ] = VariableContents("", 0, true, true);
+        variables["audio_segment_number"        ] = VariableContents("", 0, true, true);
+        variables["transition_fraction"         ] = VariableContents("", 0, true, true);
+        variables["subscene_transition_fraction"] = VariableContents("", 0, true, true);
     }
 
     /* Accessors */

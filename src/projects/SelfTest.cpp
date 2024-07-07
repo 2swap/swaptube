@@ -1,11 +1,3 @@
-void render_latex(){
-    LatexScene latex("a=b");
-    latex.inject_audio_and_render(AudioSegment(1));
-    latex.begin_transition("a=b=c");
-    latex.inject_audio_and_render(AudioSegment(1));
-    latex.inject_audio_and_render(AudioSegment(1));
-}
-
 void render_complex() {
     PRINT_TO_TERMINAL = false;
     ComplexPlotScene coefficients(VIDEO_WIDTH/2, VIDEO_HEIGHT);
@@ -90,6 +82,5 @@ void render_3d(){
 }
 
 void render_video() {
-    //render_complex();
-    render_latex();
+    render_complex();
 }

@@ -134,7 +134,6 @@ int connected_component_size(const Pixels& p, int start_x, int start_y) {
 }
 
 Pixels segment(const Pixels& p, int& id) {
-    cout << "Segmenting..." << endl;
     Pixels ret(p.w, p.h);
 
     // Initialize the identifier color
@@ -359,7 +358,7 @@ Pixels erase_low_iou(const Pixels& intersection, float threshold, const Pixels& 
     vector<vector<int>> intersected_pixels(iu_h, vector<int>(iu_w, 0));
     vector<vector<int>> united_pixels(iu_h, vector<int>(iu_w, 0));
 
-    cout << "Finding unions and intersections" << endl;
+    // Find unions and intersections
 
     // Loop over coordinates
     for (int y = 0; y < intersection.h; y++) {
@@ -401,7 +400,7 @@ Pixels erase_low_iou(const Pixels& intersection, float threshold, const Pixels& 
         }
     }
 
-    cout << "Identifying low IOU components" << endl;
+    // Identify low IOU components
 
     // Create the result Pixels and copy the intersection
     Pixels result = intersection;
@@ -422,9 +421,7 @@ Pixels erase_low_iou(const Pixels& intersection, float threshold, const Pixels& 
         }
     }
 
-    cout << "Erasing low IOU components" << endl;
-
-    // Erase the components from the result
+    // Erase the low-IOU components from the result
     for (int y = 0; y < segmented3.h; y++) {
         for (int x = 0; x < segmented3.w; x++) {
             int componentId3 = segmented3.get_pixel(x, y) - 1;

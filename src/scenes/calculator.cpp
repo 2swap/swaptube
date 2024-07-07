@@ -81,7 +81,7 @@ double calculator(const string& expression) {
             if (it != operators.end()) {
                 OperatorInfo& opInfo = it->second;
                 if (stack.size() < static_cast<size_t>(opInfo.numOperands)) {
-                    cerr << "Insufficient operands for operator: " << token << endl;
+                    failout("Insufficient operands for operator: " + token);
                     return 0.0;
                 }
 
@@ -94,7 +94,7 @@ double calculator(const string& expression) {
                 double result = opInfo.operator_function(operands);
                 stack.push(result);
             } else {
-                cerr << "Invalid operator: " << token << endl;
+                failout("Invalid operator: " + token);
                 return 0.0;
             }
         }
