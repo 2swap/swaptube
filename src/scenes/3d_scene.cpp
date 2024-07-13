@@ -17,12 +17,18 @@ glm::quat   YAW_LEFT (0, 0, 1 , 0 );
 glm::quat  ROLL_CW   (0, 0 , 0, -1);
 glm::quat  ROLL_CCW  (0, 0 , 0, 1 );
 
+enum NodeHighlightType {
+    NORMAL,
+    RING,
+    BULLSEYE,
+};
+
 struct Point {
     glm::vec3 position;
     int color; // ARGB integer representation
     double opacity;
-    bool highlight;
-    Point(string n, const glm::vec3& pos, int clr, bool hlt=false, double op=1) : position(pos), color(clr), highlight(hlt), opacity(op) {}
+    NodeHighlightType highlight;
+    Point(string n, const glm::vec3& pos, int clr, NodeHighlightType hlt=NORMAL, double op=1) : position(pos), color(clr), highlight(hlt), opacity(op) {}
 };
 
 struct Line {
@@ -35,14 +41,14 @@ struct Line {
 };
 
 struct Surface {
-    glm::vec3 position;
     glm::vec3 center;
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
     Scene* scenePointer;
     double lr2;
     double ur2;
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc) {
+    double opacity;
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc), opacity(1) {
         lr2 = square(glm::length(l));
         ur2 = square(glm::length(u));
     }
@@ -85,18 +91,16 @@ public:
             }
     }
 
-    bool isOutsideScreen(const pair<int, int>& point, int width, int height) {
-        return point.first < -width || point.first >= 2*width || point.second < -height || point.second >= 2*height;
+    bool isOutsideScreen(const pair<int, int>& point) {
+        return point.first < 0 || point.first >= w || point.second < 0 || point.second >= h;
     }
 
     // Utility function to find the orientation of the ordered triplet (p, q, r).
     // The function returns:
-    // 0 --> p, q and r are colinear
     // 1 --> Clockwise
     // 2 --> Counterclockwise
     int orientation(const pair<int, int>& p, const pair<int, int>& q, const pair<int, int>& r) {
         int val = (q.second - p.second) * (r.first - q.first) - (q.first - p.first) * (r.second - q.second);
-        if (val == 0) return 0;  // colinear
         return (val > 0) ? 1 : 2; // clock or counterclockwise
     }
 
@@ -106,33 +110,21 @@ public:
     }
 
     // Function to check if a point is inside a polygon.
-    bool isInsidePolygon(const pair<int, int>& point, const vector<pair<int, int>>& polygon) {
+    bool isInsideConvexPolygon(const pair<int, int>& point, const vector<pair<int, int>>& polygon) {
         if (polygon.size() < 3) return false; // Not a polygon
 
         // Extend the point to the right infinitely
-        pair<int, int> extreme = {INT_MAX, point.second};
+        pair<int, int> extreme = {100000, point.second};
 
-        // Count intersections of the above line with sides of polygon
-        int count = 0, i = 0;
-        do {
+        for(int i = 0; i < polygon.size(); i++) {
             int next = (i + 1) % polygon.size();
 
-            // Check if the line segment from 'point' to 'extreme' intersects
-            // with the line segment from 'polygon[i]' to 'polygon[next]'
             if (lineSegmentsIntersect(polygon[i], polygon[next], point, extreme)) {
-                // If the point 'point' is colinear with line segment 'i-next',
-                // then check if it lies on segment. If it does, return true,
-                // otherwise false
-                if (orientation(polygon[i], point, polygon[next]) == 0)
-                   return onSegment(polygon[i], point, polygon[next]);
-
-                count++;
+                return true;
             }
-            i = next;
-        } while (i != 0);
+        }
 
-        // Return true if count is odd, false otherwise
-        return count & 1; // Same as (count % 2 == 1)
+        return false;
     }
 
     // Function to check if two line segments (p1,q1) and (p2,q2) intersect.
@@ -147,19 +139,6 @@ public:
         if (o1 != o2 && o3 != o4)
             return true;
 
-        // Special Cases
-        // p1, q1 and p2 are colinear and p2 lies on segment p1q1
-        if (o1 == 0 && onSegment(p1, p2, q1)) return true;
-
-        // p1, q1 and q2 are colinear and q2 lies on segment p1q1
-        if (o2 == 0 && onSegment(p1, q2, q1)) return true;
-
-        // p2, q2 and p1 are colinear and p1 lies on segment p2q2
-        if (o3 == 0 && onSegment(p2, p1, q2)) return true;
-
-        // p2, q2 and q1 are colinear and q1 lies on segment p2q2
-        if (o4 == 0 && onSegment(p2, q1, q2)) return true;
-
         return false; // Doesn't fall in any of the above cases
     }
 
@@ -172,30 +151,26 @@ public:
     }
 
     bool should_render_surface(vector<pair<int, int>> corners){
+        // We identify that polygons A and B share some amount of area, if and only if any one of these 3 conditions are met:
+        // 1. A corner of A is inside B
+        // 2. A corner of B is inside A
+        // 3. There is an edge a in A and an edge b in B such that a and b intersect.
+
         // Check if any corner of the quadrilateral is inside the screen
-        for (const auto& corner : corners) {
-            if (!isOutsideScreen(corner, w, h)) {
+        for (const auto& corner : corners)
+            if (!isOutsideScreen(corner))
                 return true;
-            }
-        }
 
         vector<pair<int, int>> screenCorners = {{0, 0}, {w, 0}, {w, h}, {0, h}};
-        for (const auto& corner : screenCorners) {
-            if (isInsidePolygon(corner, corners)) {
+        for (const auto& corner : screenCorners)
+            if (isInsideConvexPolygon(corner, corners))
                 return true;
-            }
-        }
 
         // Check if any edge of the quadrilateral intersects with the screen edges
-        for (int i = 0; i < 4; i++) {
-            int next = (i + 1) % 4;
-            for (int j = 0; j < 4; j++) {
-                int nextScreen = (j + 1) % 4;
-                if (lineSegmentsIntersect(corners[i], corners[next], screenCorners[j], screenCorners[nextScreen])) {
+        for (int i = 0; i < 4; i++)
+            for (int j = 0; j < 4; j++)
+                if (lineSegmentsIntersect(corners[i], corners[(i + 1) % 4], screenCorners[j], screenCorners[(j + 1) % 4]))
                     return true;
-                }
-            }
-        }
 
         return false;
     }
@@ -257,18 +232,16 @@ public:
             // Check if the current point is within bounds and has the old color
             if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
 
-            if(pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
+            //if(pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
                 //compute position in surface's coordinate frame as a function of x and y.
                 glm::vec3 particle_3d = unproject(cx, cy);
                 glm::vec2 surface_coords = intersection_point(camera_pos, particle_3d-camera_pos, surface, normal);
                 // Set the pixel to the new color
                 double x_pix = surface_coords.x*p->w+.5;
                 double y_pix = surface_coords.y*p->h+.5;
-                int col = p->get_pixel(x_pix, y_pix);
                 //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? OPAQUE_WHITE : OPAQUE_BLACK; // add tiling to void space
-                col = colorlerp(TRANSPARENT_BLACK, col, dag["surfaces_opacity"]);
-                pix.set_pixel(cx, cy, col);
-            }
+                pix.overlay_pixel(cx, cy, p->get_pixel(x_pix, y_pix), surface.opacity * dag["surfaces_opacity"]);
+            //}
 
             sketchpad.set_pixel(cx, cy, padcol);
 
@@ -294,7 +267,7 @@ public:
     void render_3d() {
         pix.fill(TRANSPARENT_BLACK);
 
-        if(dag["surfaces_opacity"] > 0)
+        if(dag["surfaces_opacity"] > 0 && !skip_surfaces)
             render_surfaces();
         if(dag["points_opacity"] > 0)
             render_points();
@@ -304,7 +277,7 @@ public:
 
     void render_surfaces(){
         //lots of upfront cost, so bailout if there arent any surfaces.
-        if (surfaces.size() == 0) return;
+        if (surfaces.size() == 0 || dag["surfaces_opacity"] == 0) return;
 
         //unit_test_unproject();
         //unit_test_intersection_point();
@@ -312,9 +285,9 @@ public:
 
         // Create a list of pointers to the surfaces
         std::vector<const Surface*> surfacePointers;
-        for (const Surface& surface : surfaces) {
-            surfacePointers.push_back(&surface);
-        }
+        for (const Surface& surface : surfaces)
+            if(surface.opacity > 0)
+                surfacePointers.push_back(&surface);
 
         // Sort the pointers based on distance from camera, in descending order
         std::sort(surfacePointers.begin(), surfacePointers.end(), [this](const Surface* a, const Surface* b) {
@@ -350,15 +323,22 @@ public:
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
-        double dot_size = pix.w/250.;
-        if(point.highlight){
+        double dot_size = pix.w/350.;
+        if(point.highlight == RING){
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_WHITE);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
+        } else if(point.highlight == BULLSEYE){
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2.5, dot_size*2.5, OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_BLACK);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*1  , dot_size*1  , OPAQUE_BLACK);
         }
+        if(point.opacity == 0) return;
         pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(TRANSPARENT_BLACK, point.color, dag["points_opacity"] * point.opacity));
     }
 
     void render_line(const Line& line) {
+        if(line.opacity == 0) return;
         bool behind_camera = false;
         std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
@@ -421,5 +401,6 @@ public:
     glm::vec3 camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
     double fov = .282*3/2;
+    bool skip_surfaces = false;
     Pixels sketchpad;
 };

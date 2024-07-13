@@ -39,6 +39,10 @@ public:
         return pixels[w*y+x];
     }
 
+    inline void overlay_pixel(int x, int y, int col, double overlay_opacity_multiplier = 1){
+        set_pixel(x, y, color_combine(get_pixel(x, y), col, overlay_opacity_multiplier));
+    }
+
     inline void get_pixel_by_channels(int x, int y, int& a, int& r, int& g, int& b) const {
         int col = get_pixel(x,y);
         a=geta(col);
@@ -127,8 +131,7 @@ public:
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;
             for(int y = 0; y < p.h; y++){
-                int col = color_combine(get_pixel(xpdx, y+dy), p.get_pixel(x, y), overlay_opacity_multiplier);
-                set_pixel(xpdx, y+dy, col);
+                overlay_pixel(xpdx, y+dy, p.get_pixel(x, y), overlay_opacity_multiplier);
             }
         }
     }

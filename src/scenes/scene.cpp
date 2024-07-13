@@ -121,3 +121,4 @@ protected:
 #include "c4_graph_scene.cpp"
 #include "mouse_scene.cpp"
 #include "png_scene.cpp"
+#include "exposed_pixels_scene.cpp"

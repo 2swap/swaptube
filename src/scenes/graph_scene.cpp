@@ -16,7 +16,8 @@ public:
         for(pair<double, Node<T>> p : graph->nodes){
             Node<T> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
-            points.push_back(Point(node.data->representation, node_pos, node.color, node.highlight, node.opacity));
+            NodeHighlightType highlight = (node.data->get_hash() == graph->root_node_hash) ? BULLSEYE : (node.highlight? RING : NORMAL);
+            points.push_back(Point(node.data->representation, node_pos, node.color, highlight, node.opacity));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;

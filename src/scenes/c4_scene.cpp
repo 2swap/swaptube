@@ -314,6 +314,18 @@ public:
 
     void render_c4() {
         pix.fill(TRANSPARENT_BLACK);
+
+/*  color the board background      double px, py, px1, py1, stonewidth;
+        get_disk_screen_coordinates(0, 5, px, py, stonewidth);
+        get_disk_screen_coordinates(6, 0, px1, py1, stonewidth);
+        double u = stonewidth * .4;
+        pix.rounded_rect(
+                       px - u, // left x coord
+                       py - u, // top y coord
+                       2*u + px1-px, // width
+                       2*u + py1-py, // height
+                       u, // circle radius
+                       0xffff0000);*/
         draw_highlights();
         draw_board();
     }
