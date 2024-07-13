@@ -77,7 +77,7 @@ public:
     double repel_force = 1;
     double attract_force = 1;
     int dimensions = 2;
-    bool lock_root_at_origin = false;
+    bool lock_root_at_origin = true;
     bool sqrty = true;
 
     Graph(){}

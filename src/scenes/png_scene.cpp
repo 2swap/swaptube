@@ -10,7 +10,6 @@ public:
     void init_png_scene(string picture_name){
         cout << "rendering png: " << picture_name << endl;
         pix = png_to_pix(picture_name);
-        pix.add_border(OPAQUE_WHITE);
         w = pix.w;
         h = pix.h;
     }

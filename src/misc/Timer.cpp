@@ -12,8 +12,10 @@ public:
         // Print out time stats
         double render_time_minutes = duration.count() / 60000000.0;
         double video_length_minutes = time/60.;
-        cout << "Render time:  " << render_time_minutes << " minutes." << endl;
-        cout << "Video length: " << video_length_minutes << " minutes." << endl;
+        cout << "=================== Timer Output ===================" << endl;
+        cout << "= Render time:  " << render_time_minutes << " minutes." << endl;
+        cout << "= Video length: " << video_length_minutes << " minutes." << endl;
+        cout << "====================================================" << endl;
     }
 
 private:
