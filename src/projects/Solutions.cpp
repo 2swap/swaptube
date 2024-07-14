@@ -293,7 +293,7 @@ void endgame_examination(){
     g.decay = 0.1;
     g.repel_force = 0.3;
     g.dimensions = 3;
-    C4GraphScene c4(&g, "36426444226456412121132335635611737", FULL);
+    C4GraphScene c4(&g, "36426444226456412121132335635611737", MANUAL);
     c4.inject_audio_and_render(AudioSegment("This is a particular endgame."));
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"},
@@ -942,11 +942,11 @@ void prisoner() {
 
 void render_tree_comparison(){
     dag.add_equations(std::unordered_map<std::string, std::string>{
-        {"q1", "1"},
+        {"q1", "<t> 4 / cos"},
         {"qi", "0"},
-        {"qj", "0"},
+        {"qj", "<t> -4 / sin"},
         {"qk", "0"},
-        {"d", "4"},
+        {"d", "10"},
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
@@ -956,36 +956,52 @@ void render_tree_comparison(){
     });
 
     FOR_REAL = true;
-    string starting_position = "44444432655552322533337271111117777";
 
-    C4Scene board(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, starting_position);
+    std::vector<string> starting_positions = {"4444443265555232253333727111177", "44444432655552322533337271111"};
+    std::vector<string> scripts = {
+        "Even if you claimed to have memorized a _weak_ solution tree of the whole game, merely verifying your memorization would be a decades-long endeavor.",
+        "So, is there any way to rigorously unite the wisdom and intuition accrued by human experts with the output of this enormous algorithm?"
+    };
 
-    Graph<C4Board> strong;
-    strong.decay = 0.1;
-    strong.repel_force = 0.4;
-    strong.dimensions = 3;
-    C4GraphScene strong_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &strong, starting_position, FULL);
+    for(int i = 0; i < starting_positions.size(); i++){
+        string starting_position = starting_positions[i];
+        C4Scene board(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, starting_position);
+        LatexScene board_header(VIDEO_WIDTH*.3, VIDEO_HEIGHT*.1, "\\text{Position} \\\\\\\\ \\text{" + to_string(starting_position.size()) + " discs placed}", 1);
 
-    Graph<C4Board> weak;
-    weak.decay = 0.1;
-    weak.repel_force = 0.4;
-    weak.dimensions = 3;
-    C4GraphScene weak_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &weak, starting_position, SIMPLE_WEAK);
+        Graph<C4Board> strong;
+        strong.decay = 0.1;
+        strong.repel_force = 0.02;
+        strong.attract_force = 2;
+        strong.dimensions = 3;
+        C4GraphScene strong_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &strong, starting_position, FULL);
+        LatexScene strong_header(VIDEO_WIDTH*.3, VIDEO_HEIGHT*.1, "\\text{Strong Solution / Full Graph} \\\\\\\\ \\text{" + to_string(strong.size()) + " nodes}", 1);
 
-    Graph<C4Board> union_weak;
-    union_weak.decay = 0.1;
-    union_weak.repel_force = 0.4;
-    union_weak.dimensions = 3;
-    C4GraphScene union_weak_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &union_weak, starting_position, UNION_WEAK);
+        Graph<C4Board> weak;
+        weak.decay = 0.1;
+        weak.repel_force = 1;
+        weak.dimensions = 3;
+        C4GraphScene weak_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &weak, starting_position, SIMPLE_WEAK);
+        LatexScene weak_header(VIDEO_WIDTH*.3, VIDEO_HEIGHT*.1, "\\text{A Weak Solution} \\\\\\\\ \\text{" + to_string(weak.size()) + " nodes}", 1);
 
-    CompositeScene composite;
-    composite.add_scene(&board           , 0  , 0  , 0.5, 0.5);
-    composite.add_scene(&strong_scene    , 0  , 0.5, 0.5, 0.5);
-    composite.add_scene(&weak_scene      , 0.5, 0  , 0.5, 0.5);
-    composite.add_scene(&union_weak_scene, 0.5, 0.5, 0.5, 0.5);
+        Graph<C4Board> union_weak;
+        union_weak.decay = 0.1;
+        union_weak.repel_force = 0.2;
+        union_weak.dimensions = 3;
+        C4GraphScene union_weak_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &union_weak, starting_position, UNION_WEAK);
+        LatexScene union_weak_header(VIDEO_WIDTH*.3, VIDEO_HEIGHT*.1, "\\text{Union of All Weak Solutions} \\\\\\\\ \\text{" + to_string(union_weak.size()) + " nodes}", 1);
 
-    composite.inject_audio_and_render(AudioSegment("Even if you claimed to have memorized a _weak_ solution tree of the whole game, merely verifying your memorization would be a decades-long endeavor."));
-    composite.inject_audio_and_render(AudioSegment("So, is there any way to rigorously unite the wisdom and intuition accrued by human experts with the output of this enormous algorithm?"));
+        CompositeScene composite;
+        composite.add_scene(&board            , 0  , 0  , 0.5, 0.5);
+        composite.add_scene(&strong_scene     , 0  , 0.5, 0.5, 0.5);
+        composite.add_scene(&weak_scene       , 0.5, 0  , 0.5, 0.5);
+        composite.add_scene(&union_weak_scene , 0.5, 0.5, 0.5, 0.5);
+        composite.add_scene(&board_header     , 0.1, 0.4, 0.3, 0.1);
+        composite.add_scene(&strong_header    , 0.1, 0.9, 0.3, 0.1);
+        composite.add_scene(&weak_header      , 0.6, 0.4, 0.3, 0.1);
+        composite.add_scene(&union_weak_header, 0.6, 0.9, 0.3, 0.1);
+
+        composite.inject_audio_and_render(AudioSegment(scripts[i]));
+    }
 /*
     .inject_audio_and_render(AudioSegment("Well, a strong solution tells us everything that could be known, but weak solutions have a lot more room for creative expression."));
     .inject_audio_and_render(AudioSegment("Can we immensely reduce the amount of information required to 'know' a weak solution, such that it doesn't require rote memorization?"));
