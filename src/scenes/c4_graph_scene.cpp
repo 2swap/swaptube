@@ -13,10 +13,10 @@ public:
     void init_c4_graph(C4BranchMode mode){
         c4_branch_mode = mode;
 
+        graph->add_to_stack(new C4Board(root_node_representation));
+
         if(mode != MANUAL){
-            graph->add_to_stack(new C4Board(root_node_representation));
-        } else {
-            graph->add_node(new C4Board(root_node_representation));
+            graph->expand_graph(false, false);
         }
 
         if(mode == SIMPLE_WEAK){
