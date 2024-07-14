@@ -3,10 +3,7 @@ void beginning() {
     Graph<C4Board> g;
     g.decay = 0.1;
     g.repel_force = 0.4;
-    g.gravity_strength = 0;
     g.dimensions = 2;
-    g.sqrty = true;
-    g.lock_root_at_origin = true;
     C4GraphScene c4(&g, "444", MANUAL);
 
     std::unordered_map<std::string, std::string> closequat{
@@ -799,7 +796,7 @@ void prisoner() {
     dag.add_equations(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
-        {"points_opacity", "1"},
+        {"points_opacity", "0"},
         {"y", "0"},
         {"z", "0"},
         {"d", "4"},
@@ -897,7 +894,6 @@ void prisoner() {
     g.dimensions = 3;
     C4GraphScene c4(&g, "", MANUAL);
     c4.physics_multiplier = 1;
-    FOR_REAL = true;
     if(FOR_REAL)for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 7; k++)for(int l = 1; l <= 7; l++){
         g.add_node(new C4Board(to_string(i)));
         g.add_node(new C4Board(to_string(i) + to_string(j)));
@@ -934,12 +930,63 @@ void prisoner() {
         {"qk", "0"},
     });
     composite.inject_audio_and_render(AudioSegment("Just because we know these disparate facts about who wins in what scenario, we can't say we truly understand this system any better than before."));
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"q1", "<t> 4 / cos"},
+        {"qi", "0"},
+        {"qj", "<t> -4 / sin"},
+        {"qk", "0"},
+    });
     c4.inject_audio_and_render(AudioSegment("What's more, this information is effectively incommunicable. Any solution tree is so big that you simply can't be bestowed that information."));
     c4.inject_audio_and_render(AudioSegment("You can't realistically visualize it. You can't realistically memorize it."));
-    /*
+}
 
-    .inject_audio_and_render(AudioSegment("Even if you claimed to have memorized a _weak_ solution tree, merely verifying your memorization would be a decades-long endeavor."));
-    .inject_audio_and_render(AudioSegment("So, is there any way to rigorously unite the wisdom and intuition accrued by human experts with the output of this enormous algorithm?"));
+void render_tree_comparison(){
+    dag.add_equations(std::unordered_map<std::string, std::string>{
+        {"q1", "1"},
+        {"qi", "0"},
+        {"qj", "0"},
+        {"qk", "0"},
+        {"d", "4"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"surfaces_opacity", "0"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "1"},
+    });
+
+    FOR_REAL = true;
+    string starting_position = "44444432655552322533337271111117777";
+
+    C4Scene board(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, starting_position);
+
+    Graph<C4Board> strong;
+    strong.decay = 0.1;
+    strong.repel_force = 0.4;
+    strong.dimensions = 3;
+    C4GraphScene strong_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &strong, starting_position, FULL);
+
+    Graph<C4Board> weak;
+    weak.decay = 0.1;
+    weak.repel_force = 0.4;
+    weak.dimensions = 3;
+    C4GraphScene weak_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &weak, starting_position, SIMPLE_WEAK);
+
+    Graph<C4Board> union_weak;
+    union_weak.decay = 0.1;
+    union_weak.repel_force = 0.4;
+    union_weak.dimensions = 3;
+    C4GraphScene union_weak_scene(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, &union_weak, starting_position, UNION_WEAK);
+
+    CompositeScene composite;
+    composite.add_scene(&board           , 0  , 0  , 0.5, 0.5);
+    composite.add_scene(&strong_scene    , 0  , 0.5, 0.5, 0.5);
+    composite.add_scene(&weak_scene      , 0.5, 0  , 0.5, 0.5);
+    composite.add_scene(&union_weak_scene, 0.5, 0.5, 0.5, 0.5);
+
+    composite.inject_audio_and_render(AudioSegment("Even if you claimed to have memorized a _weak_ solution tree of the whole game, merely verifying your memorization would be a decades-long endeavor."));
+    composite.inject_audio_and_render(AudioSegment("So, is there any way to rigorously unite the wisdom and intuition accrued by human experts with the output of this enormous algorithm?"));
+/*
     .inject_audio_and_render(AudioSegment("Well, a strong solution tells us everything that could be known, but weak solutions have a lot more room for creative expression."));
     .inject_audio_and_render(AudioSegment("Can we immensely reduce the amount of information required to 'know' a weak solution, such that it doesn't require rote memorization?"));
     .inject_audio_and_render(AudioSegment("In other words, are there any particularly clever ways of representing those weak solutions? We can represent them graph-theoretically, but perhaps they can be expressed by other means?"));
@@ -960,6 +1007,7 @@ void render_video() {
         beginning();
         endgame_examination();
         minimax_the_opening();
+        prisoner();
     }
-    prisoner();
+    render_tree_comparison();
 }

@@ -360,7 +360,7 @@ public:
         int s = node_vector.size();
 
         for (int n = 0; n < iterations; n++) {
-            if(n%10==0) std::cout << "Spreading out graph, iteration " << n << ". Node count = " << s << std::endl;
+            //if(n%10==0) std::cout << "Spreading out graph, iteration " << n << ". Node count = " << s << std::endl;
 
             for (size_t i = 0; i < s; ++i) {
                 Node<T>* node = node_vector[i];
