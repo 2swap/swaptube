@@ -178,12 +178,12 @@ public:
     virtual void render_surface(const Surface& surface, int padcol) {
         vector<pair<int, int>> corners(4);
         //note, ordering matters here
-        bool behind_camera = false;
-        corners[0] = coordinate_to_pixel(surface.center + surface.pos_x_dir + surface.pos_y_dir, behind_camera); if(behind_camera) return;
-        corners[1] = coordinate_to_pixel(surface.center - surface.pos_x_dir + surface.pos_y_dir, behind_camera); if(behind_camera) return;
-        corners[2] = coordinate_to_pixel(surface.center - surface.pos_x_dir - surface.pos_y_dir, behind_camera); if(behind_camera) return;
-        corners[3] = coordinate_to_pixel(surface.center + surface.pos_x_dir - surface.pos_y_dir, behind_camera); if(behind_camera) return;
-        //for(int i = 0; i < 4; i++) pix.fill_ellipse(corners[i].first, corners[i].second, 2, 2, OPAQUE_WHITE);
+        bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
+        corners[0] = coordinate_to_pixel(surface.center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
+        corners[1] = coordinate_to_pixel(surface.center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
+        corners[2] = coordinate_to_pixel(surface.center - surface.pos_x_dir - surface.pos_y_dir, behind_camera_3);
+        corners[3] = coordinate_to_pixel(surface.center + surface.pos_x_dir - surface.pos_y_dir, behind_camera_4);
+        if(behind_camera_1 && behind_camera_2 && behind_camera_3 && behind_camera_4) return;
 
         if(!should_render_surface(corners)) return;
 
@@ -219,8 +219,10 @@ public:
             int y1 = corners[i].second;
             int x2 = corners[(i+1)%4].first;
             int y2 = corners[(i+1)%4].second;
-            q.push({lerp(x1, cx, .5), lerp(y1, cy, .5)});
-            //q.push({lerp(lerp(x1, x2, .5), cx, .3), lerp(lerp(y1, y2, .5), cy, .3)});
+            double fineness = 20;
+            for(double j = 0.5; j < fineness; j++){
+                q.push({lerp(x1, cx, j/fineness), lerp(y1, cy, j/fineness)});
+            }
         }
 
         glm::vec3 normal = glm::cross(surface.pos_x_dir, surface.pos_y_dir);
@@ -302,15 +304,13 @@ public:
     }
 
     void render_points(){
-        for (const Point& point : points) {
+        for (const Point& point : points)
             render_point(point);
-        }
     }
 
     void render_lines(){
-        for (const Line& line : lines) {
+        for (const Line& line : lines)
             render_line(line);
-        }
     }
 
     void query(bool& done_scene, Pixels*& p) override {
