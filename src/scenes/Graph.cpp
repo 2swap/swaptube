@@ -108,24 +108,27 @@ public:
      */
     double add_node(T* t){
         double hash = t->get_hash();
-        std::cout << "adding node with hash: " << hash << " and representation " << t->representation << std::endl;
+        if(size()%500 == 999) std::cout << "Node count: " << size() << std::endl;
         if (node_exists(hash)) {
             delete t;
             return hash;
         }
-        nodes.emplace(hash, Node<T>(t, hash));
-        int s = size();
-        if (s == 1) root_node_hash = hash;
-        add_missing_edges(true);
-        if (hash == root_node_hash && lock_root_at_origin) {
-            Node<T>& just_inserted = nodes.at(hash);
-            just_inserted.x = just_inserted.y = just_inserted.z = 0;
+        Node<T> new_node(t, hash);
+        if (size() == 0) {
+            root_node_hash = hash;
+            if (lock_root_at_origin) new_node.x = new_node.y = new_node.z = new_node.w = 0;
         }
+        nodes.emplace(hash, new_node);
+        add_missing_edges(true);
         return hash;
     }
 
     void add_node_with_position(T* t, double x, double y, double z) {
         double hash = add_node(t);
+        move_node(hash, x, y, z);
+    }
+
+    void move_node(double hash, double x, double y, double z) {
         auto it = nodes.find(hash);
         if (it == nodes.end()) return;
         Node<T>& node = it->second;
@@ -138,8 +141,10 @@ public:
      * Expand the graph by adding neighboring nodes.
      */
     void expand_graph(bool is_dfs, bool only_one = false) {
+        cout << "Expanding graph" << endl;
         while (!traverse_deque.empty()) {
-            double id = is_dfs ? traverse_deque.front() : traverse_deque.back();
+            double id = traverse_deque.front();
+            traverse_deque.pop_front();
 
             std::unordered_set<T*> neighbor_nodes = nodes.at(id).data->get_children();
             for (const auto& neighbor : neighbor_nodes) {
@@ -147,13 +152,14 @@ public:
                 add_directed_edge(id, child_hash);
                 if (!node_exists(child_hash)) {
                     add_node(neighbor);
+                    if (only_one) traverse_deque.push_front(id);
+
                     if (is_dfs) traverse_deque.push_front(child_hash);
                     else        traverse_deque.push_back (child_hash);
+
                     if (only_one) return;
                 }
             }
-            if (is_dfs) traverse_deque.pop_front();
-            else        traverse_deque.pop_back();
         }
     }
 

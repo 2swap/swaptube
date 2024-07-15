@@ -11,6 +11,7 @@ public:
     C4GraphScene(Graph<C4Board>* g, string rep, C4BranchMode mode) : GraphScene(g), root_node_representation(rep) {init_c4_graph(mode);}
 
     void init_c4_graph(C4BranchMode mode){
+        cout << "\n\n Initting c4 graph" << endl;
         c4_branch_mode = mode;
 
         graph->add_to_stack(new C4Board(root_node_representation));
@@ -20,7 +21,7 @@ public:
         }
 
         if(mode == SIMPLE_WEAK){
-            find_steady_state(root_node_representation, 30000, ss_simple_weak, false);
+            // I don't know what to do about this. Definitely a rabbit hole of antipatterns under this call. find_steady_state(root_node_representation, 30000, ss_simple_weak, false);
         }
     }
 

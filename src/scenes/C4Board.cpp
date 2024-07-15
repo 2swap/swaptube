@@ -6,6 +6,16 @@
 
 Graph<C4Board>* graph_to_check_if_points_are_in = NULL;
 
+std::array<std::string, C4_HEIGHT> ss_list = {
+    " @22@| ",
+    " 2112| ",
+    " 1221| ",
+    " 2112| ",
+    " 2121|1",
+    " 211211"
+};
+SteadyState ss_simple_weak(ss_list);
+
 C4Board::C4Board(const C4Board& other) {
     // Copy the representation
     representation = other.representation;
@@ -155,17 +165,17 @@ C4Board C4Board::child(int piece) const{
     return new_board;
 }
 
-C4Result C4Board::who_is_winning(int& work) {
+C4Result C4Board::who_is_winning(int& work, bool verbose) {
     C4Result cachedResult;
     auto it = cache.find(representation);
     if (it != cache.end()) {
-        std::cout << "Using cached result..." << std::endl;
+        if(verbose)std::cout << "Using cached result..." << std::endl;
         return it->second;
     }
 
     char command[150];
     std::sprintf(command, "echo %s | ~/Unduhan/Fhourstones/SearchGame", representation.c_str());
-    std::cout << "Calling fhourstones on " << command << "... ";
+    if(verbose)std::cout << "Calling fhourstones on " << command << "... ";
     FILE* pipe = popen(command, "r");
     if (!pipe) {
         std::cout << "fhourstones error!" << std::endl;
@@ -191,13 +201,13 @@ C4Result C4Board::who_is_winning(int& work) {
     }
 
     if (result.find("(=)") != std::string::npos) {
-        std::cout << "Tie!" << std::endl;
+        if(verbose)std::cout << "Tie!" << std::endl;
         gameResult = TIE;
     } else if ((result.find("(+)") != std::string::npos) == is_reds_turn()) {
-        std::cout << "Red!" << std::endl;
+        if(verbose)std::cout << "Red!" << std::endl;
         gameResult = RED;
     } else {
-        std::cout << "Yellow!" << std::endl;
+        if(verbose)std::cout << "Yellow!" << std::endl;
         gameResult = YELLOW;
     }
 
@@ -211,7 +221,6 @@ void C4Board::add_all_winning_fhourstones(std::unordered_set<C4Board*>& neighbor
             C4Board moved = child(i);
             int work = -1;
             if(moved.who_is_winning(work) == RED){
-                std::cout << moved.representation << std::endl;
                 neighbors.insert(new C4Board(moved));
             }
         }
@@ -440,7 +449,6 @@ json C4Board::get_data() const {
 void C4Board::add_only_child_steady_state(const SteadyState& ss, std::unordered_set<C4Board*>& neighbors){
     int x = ss.query_steady_state(*this);
     C4Board moved = child(x);
-    std::cout << moved.representation << std::endl;
     neighbors.insert(new C4Board(moved));
 }
 
@@ -461,8 +469,10 @@ std::unordered_set<C4Board*> C4Board::get_children(){
             break;
         case SIMPLE_WEAK:
             if(is_reds_turn()){
+                //std::cout << representation << " \tSIMPLE_WEAK: it's red's turn!" << std::endl;
                 add_only_child_steady_state(ss_simple_weak, neighbors);
             }else{
+                //std::cout << representation << " \tSIMPLE_WEAK: it's yellow's turn!" << std::endl;
                 add_all_legal_children(neighbors);
             }
             break;

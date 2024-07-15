@@ -19,23 +19,6 @@ enum C4BranchMode {
 typedef unsigned long int Bitboard;
 C4BranchMode c4_branch_mode = TRIM_STEADY_STATES;
 
-std::array<std::string, C4_HEIGHT> ss_list = {
-    "   |@  ",
-    "   |1  ",
-    "2 2|1  ",
-    "1 2|2  ",
-    "2 2|12@",
-    "1 11211"
-};
-/*std::array<std::string, C4_HEIGHT> ss_list = {
-    "       ",
-    "       ",
-    " #1  ++",
-    " 12  ==",
-    "#21  --",
-    "212  @@"
-};*/
-SteadyState ss_simple_weak(ss_list);
 std::unordered_map<std::string, C4Result> cache;
 
 std::string disk_col(int i){
@@ -76,7 +59,7 @@ public:
     C4Board* remove_piece();
     void play_piece(int piece);
     C4Board child(int piece) const;
-    C4Result who_is_winning(int& work);
+    C4Result who_is_winning(int& work, bool verbose = false);
     int get_human_winning_fhourstones();
     int get_best_winning_fhourstones();
     void add_best_winning_fhourstones(std::unordered_set<C4Board*>& neighbors);
