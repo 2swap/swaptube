@@ -303,10 +303,10 @@ void endgame_examination(){
     c4.inject_audio_and_render(AudioSegment("Let's see what it looks like when we expand out its full tree of positions."));
     c4.inject_audio(AudioSegment(6), 100);
     for(int i = 0; i < 99; i++){
-        g.expand_graph(false, true);
+        g.expand_graph(true);
         c4.render();
     }
-    g.expand_graph(false, false);
+    g.expand_graph(false);
     c4.render();
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"lines_opacity", "0.2"},
@@ -1015,7 +1015,22 @@ void render_tree_comparison(){
     dag.add_equations(std::unordered_map<std::string, std::string>{
         {"points_opacity", "0"},
     });
+}
 
+void render_weak_trees(){
+    dag.add_equations(std::unordered_map<std::string, std::string>{
+        {"q1", "<t> 4 / cos"},
+        {"qi", "0"},
+        {"qj", "<t> -4 / sin"},
+        {"qk", "0"},
+        {"d", "10"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"surfaces_opacity", "0"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "0"},
+    });
     if(FOR_REAL){
         dag.add_equations(std::unordered_map<std::string, std::string>{
             {"d", "80"},
@@ -1038,6 +1053,12 @@ void render_tree_comparison(){
 
     if(FOR_REAL){
         dag.add_equations(std::unordered_map<std::string, std::string>{
+            {"q1", "1"},
+            {"qi", "<t> -4 / cos"},
+            {"qj", "<t> -4 / sin"},
+            {"qk", "0"},
+        });
+        dag.add_equations(std::unordered_map<std::string, std::string>{
             {"d", "120"},
         });
         string starting_position = "4444443265555232253333727";
@@ -1053,54 +1074,17 @@ void render_tree_comparison(){
         composite.add_scene(&board     , 0, 0, 0.3, 0.3);
 
         composite.inject_audio_and_render(AudioSegment("Can we immensely reduce the amount of information required to 'know' a weak solution, such that it doesn't require rote memorization?"));
-        composite.inject_audio_and_render(AudioSegment("In other words, are there any particularly clever ways of representing such weak solutions? We can represent them graph-theoretically, but perhaps they can be expressed by other means?"));
-    }
-
-    {
-        FOR_REAL = true;
-        dag.add_equations(std::unordered_map<std::string, std::string>{
-            {"q1", "1"},
-            {"qi", "<t> -4 / cos"},
-            {"qj", "<t> -4 / sin"},
-            {"qk", "0"},
-        });
-        ss_list = std::array<std::string, C4_HEIGHT>{
-            "  22@| ",
-            "  112| ",
-            " 1221| ",
-            " 2112| ",
-            " 2121|@",
-            " 211211"
-        };
-        ss_simple_weak = SteadyState(ss_list);
-        dag.add_equations(std::unordered_map<std::string, std::string>{
-            {"d", "180"},
-        });
-        string starting_position = "44444432655552322533337";
-        C4Scene board(VIDEO_WIDTH*.3, VIDEO_HEIGHT*.3, starting_position);
-        Graph<C4Board> weak;
-        weak.decay = 0.3;
-        weak.repel_force = 2;
-        weak.dimensions = 3;
-        weak.gravity_strength = 0.1;
-        C4GraphScene weak_scene(&weak, starting_position, SIMPLE_WEAK);
-        weak_scene.physics_multiplier = 5;
-        CompositeScene composite;
-        composite.add_scene(&weak_scene, 0, 0, 1  , 1  );
-        composite.add_scene(&board     , 0, 0, 0.3, 0.3);
-
-        composite.inject_audio_and_render(AudioSegment("Can we immensely reduce the amount of information required to 'know' a weak solution, such that it doesn't require rote memorization?"));
         dag.add_transitions(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
-            {"qi", "0"},
-            {"qj", "0"},
+            {"qi", "<t> sin 400 /"},
+            {"qj", "<t> sin 400 /"},
             {"qk", "1"},
         });
         composite.inject_audio_and_render(AudioSegment("In other words, are there any particularly clever ways of representing such weak solutions? We can represent them graph-theoretically, but perhaps they can be expressed by other means?"));
         weak_scene.skip_surfaces = true;
 
         dag.add_transitions(std::unordered_map<std::string, std::string>{
-            {"d", "270"},
+            {"d", "200"},
             {"surfaces_opacity", "1"},
             {"lines_opacity", "0.2"},
             {"points_opacity", "0"},
@@ -1113,11 +1097,12 @@ void render_tree_comparison(){
         CompositeScene shill_compositely;
         ThreeDimensionScene shill;
         PngScene claimeven("Claimeven_Thumb");
+        claimeven.expose_pixels()->add_border(0xff444444, 12);
         LatexScene words1("\\text{If you haven't already seen my Claimeven video...}", 1);
         LatexScene words2("\\text{Check it out now!}", 1);
-        double t = 1.2; Surface c (glm::vec3(20 ,0 ,-240),glm::vec3(claimeven.w*.005*sin(t), claimeven.w*.005*cos(t), 0),glm::vec3(claimeven.h*.005*-cos(t), claimeven.h*.005*sin(t), 0),&claimeven);
-               t = 1.8; Surface w1(glm::vec3(-12,-5,-235),glm::vec3(words1.w   *.04 *sin(t), words1.w   *.04 *cos(t), 0),glm::vec3(words1.h   *.04 *-cos(t), words1.h   *.04 *sin(t), 0),&words1   );
-               t = 1.4; Surface w2(glm::vec3(-10,5 ,-245),glm::vec3(words2.w   *.02 *sin(t), words2.w   *.02 *cos(t), 0),glm::vec3(words2.h   *.02 *-cos(t), words2.h   *.02 *sin(t), 0),&words2   );
+        double t = 1.2; Surface c (glm::vec3(20 ,0 ,-170),glm::vec3(claimeven.w*.005*sin(t), claimeven.w*.005*cos(t), 0),glm::vec3(claimeven.h*.005*-cos(t), claimeven.h*.005*sin(t), 0),&claimeven);
+               t = 1.8; Surface w1(glm::vec3(-12,-5,-165),glm::vec3(words1.w   *.04 *sin(t), words1.w   *.04 *cos(t), 0),glm::vec3(words1.h   *.04 *-cos(t), words1.h   *.04 *sin(t), 0),&words1   );
+               t = 1.4; Surface w2(glm::vec3(-10,5 ,-175),glm::vec3(words2.w   *.02 *sin(t), words2.w   *.02 *cos(t), 0),glm::vec3(words2.h   *.02 *-cos(t), words2.h   *.02 *sin(t), 0),&words2   );
         shill.add_surface(c );
         shill.add_surface(w1);
         shill.add_surface(w2);
@@ -1127,37 +1112,50 @@ void render_tree_comparison(){
         shill_compositely.inject_audio_and_render(AudioSegment("We can use a positional language built on top of the idea of claimeven to concisely express solutions to positions which have a high degree of self-symmetry,"));
         dag.add_transitions(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
-            {"qi", "0"},
-            {"qj", "0"},
+            {"qi", "<t> 4 / cos 2 /"},
+            {"qj", "<t> -4 / sin 2 /"},
             {"qk", "0"},
-            {"d", "180"},
-            {"x", "0"},
-            {"y", "0"},
-            {"z", "0"},
+            {"d", "120"},
             {"surfaces_opacity", "1"},
             {"lines_opacity", "1"},
             {"points_opacity", "0"},
         });
-        shill_compositely.inject_audio_and_render(AudioSegment("and in doing so, we can get these graphs down from the trillions of nodes to the order of the tens of thousands."));
+        shill_compositely.inject_audio_and_render(AudioSegment("and in doing so, we can get the full-board graph down from the trillions of nodes to the order of the tens of thousands."));
+        composite.inject_audio_and_render(AudioSegment("Or at least, I think so... I still haven't been able to perform this reduction for the entire graph. Still working on that technical challenge."));
     }
 
-/*
-    .inject_audio_and_render(AudioSegment("Or at least, I think so... I still haven't been able to perform this reduction for the entire graph. Still workin on that technical challenge."));
-    .inject_audio_and_render(AudioSegment("But, what I can tell you for sure is that there's some real human openings which, using reduction by claimeven-like strategies, have weak solutions expressable with less than a thousand nodes. Not even a megabyte."));
-    .inject_audio_and_render(AudioSegment("And it's TOTALLY visualizable, and, if you wanna go there, memorizable too."));
-    .inject_audio_and_render(AudioSegment("I'll spoil two of them here, but you'll have to stay tuned to see exactly how we accomplish this, as well as what we can learn about systems other than connect 4 from these compressed solutions."));
-    .inject_audio_and_render(AudioSegment("This has been 2swap."));
-*/
+    if(FOR_REAL){
+        dag.add_equations(std::unordered_map<std::string, std::string>{
+            {"d", "50"},
+        });
+        C4Scene opening1(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, "444444");
+        CompositeScene composite;
+        composite.add_scene(&opening1,  0, .0, .5, .5);
+
+        composite.inject_audio_and_render(AudioSegment("But, what I can tell you for sure is that there's some real human openings which, using reduction by claimeven-like strategies, have weak solutions expressable with less than a thousand nodes. Not even a megabyte."));
+        composite.inject_audio_and_render(AudioSegment("And they're TOTALLY visualizable, and, if you wanna go there, memorizable too."));
+        Graph<C4Board> graph1, graph2;
+        graph1.decay = 0.2;
+        graph1.repel_force = 0.1;
+        graph1.attract_force = 2;
+        graph1.dimensions = 3;
+        C4GraphScene graphscene1(&graph1, "444444", TRIM_STEADY_STATES);
+        graphscene1.physics_multiplier = 20;
+        composite.add_scene(&graphscene1,  0, 0, 1, 1);
+        composite.inject_audio_and_render(AudioSegment("I'll spoil this one here, but you'll have to stay tuned to see exactly how we accomplish this, as well as what we can learn about systems other than connect 4 from these compressed solutions."));
+    }
+
+    TwoswapScene swap1;
+    swap1.inject_audio_and_render(AudioSegment("This has been 2swap."));
 }
 
 void render_video() {
-    FOR_REAL = false;
+    FOR_REAL = true;
     PRINT_TO_TERMINAL = false;
-    if(FOR_REAL){
-        beginning();
-        endgame_examination();
-        minimax_the_opening();
-        prisoner();
-    }
+    beginning();
+    endgame_examination();
+    minimax_the_opening();
+    prisoner();
     render_tree_comparison();
+    render_weak_trees();
 }

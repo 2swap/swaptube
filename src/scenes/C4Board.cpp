@@ -285,10 +285,9 @@ bool C4Board::is_reds_turn() const{
 }
 
 int C4Board::burst() const{
-
     int wm = get_instant_win();
     if(wm != -1){
-        std::cout << representation<<wm << " added for instawin" << std::endl;
+        //std::cout << representation<<wm << " added for instawin" << std::endl;
         return wm;
     }
 
@@ -309,7 +308,9 @@ int C4Board::burst() const{
     for (int i = 0; i < winning_columns.size(); ++i) {
         int x = winning_columns[i];
         if(graph_to_check_if_points_are_in->node_exists(child(x).get_hash())) {
-        std::cout << representation <<x<< " added since it is in the graph already" << std::endl;return x;}
+            //std::cout << representation <<x<< " added since it is in the graph already" << std::endl;
+            return x;
+        }
     }
 
     // Next Priority: Test for easy steadystates!
@@ -320,8 +321,8 @@ int C4Board::burst() const{
             int x = winning_columns[i];
             SteadyState ss;
             if(find_steady_state(child(x).representation, attempt, ss, true)){
-                std::cout << representation<<x << " added since a steadystate was found" << std::endl;
-                return(x);
+                //std::cout << representation<<x << " added since a steadystate was found" << std::endl;
+                return x;
             }
         }
         attempt *= 2;
@@ -345,13 +346,12 @@ int C4Board::burst() const{
 }
 
 int C4Board::get_human_winning_fhourstones() {
-
     int ret = movecache.GetSuggestedMoveIfExists(get_hash());
     if(ret != -1) return ret;
 
     int b = burst();
     if(b != -1){
-        std::cout << representation <<b<< " added by burst" << std::endl;
+        //std::cout << representation <<b<< " added by burst" << std::endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, b);
         return b;
     }
@@ -360,11 +360,11 @@ int C4Board::get_human_winning_fhourstones() {
     if (winning_columns.size() == 1) {
         // Single winning column
         char wc = winning_columns[0];
-        std::cout << representation<<wc << " added as the only winning move" << std::endl;
+        //std::cout << representation<<wc << " added as the only winning move" << std::endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, wc);
         return wc;
     } else if (winning_columns.size() == 0){
-        std::cout << "Get human winning fhourstones error!" << std::endl;
+        //std::cout << "Get human winning fhourstones error!" << std::endl;
         exit(1);
     }
 
@@ -373,7 +373,7 @@ int C4Board::get_human_winning_fhourstones() {
 
     print();
 
-    std::cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << std::endl;
+    //std::cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << std::endl;
     for (size_t i = 0; i < winning_columns.size(); i++) {
         std::cout << "Column " << winning_columns[i] << std::endl;
     }
@@ -396,7 +396,7 @@ int C4Board::get_human_winning_fhourstones() {
 
 void C4Board::add_best_winning_fhourstones(std::unordered_set<C4Board*>& neighbors) {
     C4Board moved = child(get_human_winning_fhourstones());
-    std::cout << moved.representation << " added since it was selected" << std::endl;
+    //std::cout << moved.representation << " added since it was selected" << std::endl;
     neighbors.insert(new C4Board(moved));
 }
 
@@ -415,7 +415,7 @@ void C4Board::add_all_good_children(std::unordered_set<C4Board*>& neighbors){
             C4Board moved = child(i);
             // Check the move isn't giga dumb
             if(moved.get_instant_win() == -1){
-                std::cout << moved.representation << " added since it is not dumb" << std::endl;
+                //std::cout << representation << ": attempting " << i << ". Result: " << moved.representation << " added since it is not dumb" << std::endl;
                 neighbors.insert(new C4Board(moved));
             }
         }
@@ -469,10 +469,8 @@ std::unordered_set<C4Board*> C4Board::get_children(){
             break;
         case SIMPLE_WEAK:
             if(is_reds_turn()){
-                //std::cout << representation << " \tSIMPLE_WEAK: it's red's turn!" << std::endl;
                 add_only_child_steady_state(ss_simple_weak, neighbors);
             }else{
-                //std::cout << representation << " \tSIMPLE_WEAK: it's yellow's turn!" << std::endl;
                 add_all_legal_children(neighbors);
             }
             break;
@@ -485,18 +483,29 @@ std::unordered_set<C4Board*> C4Board::get_children(){
                 if(found){
                     has_steady_state = true;
                     steadystate = ss;
-                    std::cout << "found a steady state!" << std::endl;
+                    //std::cout << "found a steady state!" << std::endl;
                     break;
                 }
                 else{
-                    std::cout << "Adding children as yellow!" << std::endl;
+                    //std::cout << "Adding children as yellow!" << std::endl;
                     add_all_good_children(neighbors);
                 }
             }else{ // red's move
-                std::cout << "Making a good move as red." << std::endl;
+                //std::cout << "Making a good move as red." << std::endl;
                 add_best_winning_fhourstones(neighbors);
             }
             break;
     }
     return neighbors;
+}
+
+std::unordered_set<double> C4Board::get_children_hashes(){
+    if(!children_hashes_initialized) {
+        std::unordered_set<C4Board*> children = get_children();
+        for (const auto& child : children) {
+            children_hashes.insert(child->get_hash());
+        }
+        children_hashes_initialized = true;
+    }
+    return children_hashes;
 }

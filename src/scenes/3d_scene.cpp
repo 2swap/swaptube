@@ -291,9 +291,9 @@ public:
             if(surface.opacity > 0)
                 surfacePointers.push_back(&surface);
 
-        // Sort the pointers based on distance from camera, in descending order
+        // Sort the pointers based on distance from camera
         std::sort(surfacePointers.begin(), surfacePointers.end(), [this](const Surface* a, const Surface* b) {
-            return squaredDistance(a->center, this->camera_pos) < squaredDistance(b->center, this->camera_pos);
+            return squaredDistance(a->center, this->camera_pos) > squaredDistance(b->center, this->camera_pos);
         });
 
         // Render the surfaces using the sorted pointers

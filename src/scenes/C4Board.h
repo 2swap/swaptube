@@ -35,6 +35,8 @@ public:
     Bitboard red_bitboard = 0, yellow_bitboard = 0;
     std::string blurb = "A connect 4 board.";
     std::string game_name = "c4";
+    unordered_set<double> children_hashes;
+    bool children_hashes_initialized;
 
     bool has_steady_state = false;
     SteadyState steadystate;
@@ -68,6 +70,7 @@ public:
     void add_all_good_children(std::unordered_set<C4Board*>& neighbors);
     void add_only_child_steady_state(const SteadyState& ss, std::unordered_set<C4Board*>& neighbors);
     std::unordered_set<C4Board*> get_children();
+    std::unordered_set<double> get_children_hashes();
 };
 
 void fhourstones_tests(){

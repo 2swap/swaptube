@@ -122,3 +122,4 @@ protected:
 #include "mouse_scene.cpp"
 #include "png_scene.cpp"
 #include "exposed_pixels_scene.cpp"
+#include "twoswap_scene.cpp"
