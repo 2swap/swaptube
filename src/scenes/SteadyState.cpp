@@ -296,8 +296,19 @@ SteadyState create_random_steady_state(const C4Board& b) {
     return steadyState;
 }
 
+// Given a steady state and a board position, make sure that steady state solves that position
+bool validate_steady_state(std::string rep, SteadyState& ss) {
+    std::cout << "validating a steady state..." << std::endl;
+    C4Board b(rep);
+
+    //AllPossibleWorlds
+    // If all possible worlds do not have a 
+
+    return false;
+}
+
 bool find_steady_state(std::string rep, int num_games, SteadyState& ss, bool verbose, bool allow_cache = true) {
-    std::cout << "Searching for a steady state..." << std::endl;
+    //std::cout << "Searching for a steady state..." << std::endl;
 
     C4Board b(rep);
 
@@ -314,7 +325,7 @@ bool find_steady_state(std::string rep, int num_games, SteadyState& ss, bool ver
         std::cout << "Loaded cached steady state from file." << std::endl;
         return true;
     }
-    b.print();
+    //b.print();
 
     std::vector<SteadyState> steady_states;
     int num_coevolution = 100;

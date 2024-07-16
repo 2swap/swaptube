@@ -116,14 +116,16 @@ public:
         return true; // No pixel with non-zero alpha found, Pixels is empty
     }
 
-    void add_border(int col){
-        for(int x = 0; x < w; x++){
-            set_pixel(x, 0, col);
-            set_pixel(x, h-1, col);
-        }
-        for(int y = 0; y < h; y++){
-            set_pixel(0, y, col);
-            set_pixel(w-1, y, col);
+    void add_border(int col, int thickness = 1){
+        for(int t = 0; t < thickness; t++){
+            for(int x = 0; x < w; x++){
+                set_pixel(x, t, col);
+                set_pixel(x, h-1-t, col);
+            }
+            for(int y = 0; y < h; y++){
+                set_pixel(t, y, col);
+                set_pixel(w-1-t, y, col);
+            }
         }
     }
 
@@ -192,6 +194,12 @@ public:
 
     void fill(int col){
         fill_rect(0, 0, w, h, col);
+    }
+
+    void bitwise_and(int bitstrip){
+        for(int x = 0; x < w; x++)
+            for(int y = 0; y < h; y++)
+                pixels[x+y*w] &= bitstrip;
     }
 
     void bresenham(int x1, int y1, int x2, int y2, int col, int thickness) {

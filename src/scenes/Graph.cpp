@@ -53,7 +53,7 @@ public:
     bool flooded = false;
     bool immobile = false;
     double vx = (double)rand() / (RAND_MAX), vy = (double)rand() / (RAND_MAX), vz = (double)rand() / (RAND_MAX), vw = (double)rand() / (RAND_MAX);
-    double x = (double)rand() / (RAND_MAX), y = (double)rand() / (RAND_MAX), z = (double)rand() / (RAND_MAX), w = (double)rand() / (RAND_MAX);
+    double  x = (double)rand() / (RAND_MAX),  y = (double)rand() / (RAND_MAX),  z = (double)rand() / (RAND_MAX),  w = (double)rand() / (RAND_MAX);
 };
 
 /**
@@ -95,6 +95,7 @@ public:
     }
 
     void add_to_stack(T* t){
+        //cout << "Adding to stack... length before adding is " << traverse_deque.size() << endl;
         double hash = t->get_hash();
         root_node_hash = hash;
         add_node(t);
@@ -107,6 +108,12 @@ public:
      * @return hash The hash/id of the node which was added
      */
     double add_node(T* t){
+        double x = add_node_without_edges(t);
+        //cout << "Manually adding missing edges cause a human manually added a node" << endl;
+        add_missing_edges(true);
+        return x;
+    }
+    double add_node_without_edges(T* t){
         double hash = t->get_hash();
         if(size()%500 == 999) std::cout << "Node count: " << size() << std::endl;
         if (node_exists(hash)) {
@@ -119,8 +126,31 @@ public:
             if (lock_root_at_origin) new_node.x = new_node.y = new_node.z = new_node.w = 0;
         }
         nodes.emplace(hash, new_node);
-        add_missing_edges(true);
         return hash;
+    }
+
+    /**
+     * Expand the graph by adding neighboring nodes.
+     */
+    void expand_graph(bool only_one = false) {
+        while (!traverse_deque.empty()) {
+            double id = traverse_deque.front();
+            traverse_deque.pop_front();
+
+            std::unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
+            for (const auto& child : child_nodes) {
+                double child_hash = child->get_hash();
+                if (!node_exists(child_hash)) {
+                    add_node_without_edges(child);
+                    if (only_one) traverse_deque.push_front(id);
+
+                    traverse_deque.push_back(child_hash); // This is bfs. To change to dfs, push_front here.
+
+                    if (only_one) {add_missing_edges(true); return;}
+                }
+            }
+        }
+        add_missing_edges(true);
     }
 
     void add_node_with_position(T* t, double x, double y, double z) {
@@ -135,32 +165,6 @@ public:
         node.x = x;
         node.y = y;
         node.z = z;
-    }
-
-    /**
-     * Expand the graph by adding neighboring nodes.
-     */
-    void expand_graph(bool is_dfs, bool only_one = false) {
-        cout << "Expanding graph" << endl;
-        while (!traverse_deque.empty()) {
-            double id = traverse_deque.front();
-            traverse_deque.pop_front();
-
-            std::unordered_set<T*> neighbor_nodes = nodes.at(id).data->get_children();
-            for (const auto& neighbor : neighbor_nodes) {
-                double child_hash = neighbor->get_hash();
-                add_directed_edge(id, child_hash);
-                if (!node_exists(child_hash)) {
-                    add_node(neighbor);
-                    if (only_one) traverse_deque.push_front(id);
-
-                    if (is_dfs) traverse_deque.push_front(child_hash);
-                    else        traverse_deque.push_back (child_hash);
-
-                    if (only_one) return;
-                }
-            }
-        }
     }
 
     /**
@@ -210,12 +214,7 @@ public:
     void add_missing_edges(bool teleport_orphans_to_parents) {
         for (auto& pair : nodes) {
             Node<T>& parent = pair.second;
-            std::unordered_set<double> child_hashes;
-
-            std::unordered_set<T*> children_nodes = parent.data->get_children();
-            for (const auto& child : children_nodes) {
-                child_hashes.insert(child->get_hash());
-            }
+            std::unordered_set<double> child_hashes = parent.data->get_children_hashes();
 
             for (double child_hash : child_hashes) {
                 // this theoretical child isn't guaranteed to be in the graph

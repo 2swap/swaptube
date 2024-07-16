@@ -11,13 +11,16 @@ public:
     C4GraphScene(Graph<C4Board>* g, string rep, C4BranchMode mode) : GraphScene(g), root_node_representation(rep) {init_c4_graph(mode);}
 
     void init_c4_graph(C4BranchMode mode){
-        cout << "\n\n Initting c4 graph" << endl;
         c4_branch_mode = mode;
+
+        if(mode == TRIM_STEADY_STATES){
+            graph_to_check_if_points_are_in = graph;
+        }
 
         graph->add_to_stack(new C4Board(root_node_representation));
 
         if(mode != MANUAL){
-            graph->expand_graph(false, false);
+            graph->expand_graph(false);
         }
 
         if(mode == SIMPLE_WEAK){
