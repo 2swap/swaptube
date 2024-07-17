@@ -37,7 +37,7 @@ public:
         if (video_sessions_left != 0) {
             failout("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
                     "This superscene was created with " + to_string(video_sessions_total) + " total video sessions, "
-                    "but render() was only called " + to_string(video_sessions_total-video_sessions_left) + "times.");
+                    "but render() was only called " + to_string(video_sessions_total-video_sessions_left) + " times.");
         }
 
         superscene_frames_total = superscene_frames_left = FOR_REAL ? WRITER->add_audio_segment(audio) * VIDEO_FRAMERATE : 0;

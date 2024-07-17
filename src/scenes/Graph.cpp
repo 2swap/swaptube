@@ -131,8 +131,10 @@ public:
 
     /**
      * Expand the graph by adding neighboring nodes.
+     * Return amount of new nodes that were added.
      */
-    void expand_graph(bool only_one = false) {
+    bool expand_graph(bool only_one = false) {
+        int new_nodes_added = 0;
         while (!traverse_deque.empty()) {
             double id = traverse_deque.front();
             traverse_deque.pop_front();
@@ -142,15 +144,17 @@ public:
                 double child_hash = child->get_hash();
                 if (!node_exists(child_hash)) {
                     add_node_without_edges(child);
+                    new_nodes_added++;
                     if (only_one) traverse_deque.push_front(id);
 
                     traverse_deque.push_back(child_hash); // This is bfs. To change to dfs, push_front here.
 
-                    if (only_one) {add_missing_edges(true); return;}
+                    if (only_one) {add_missing_edges(true); return new_nodes_added;}
                 }
             }
         }
         add_missing_edges(true);
+        return new_nodes_added;
     }
 
     void add_node_with_position(T* t, double x, double y, double z) {
@@ -220,8 +224,7 @@ public:
                 // this theoretical child isn't guaranteed to be in the graph
                 if(!node_exists(child_hash)) continue;
                 Node<T>& child = nodes.find(child_hash)->second;
-                bool child_is_orphan = !does_edge_exist(parent.hash, child.hash);
-                if(teleport_orphans_to_parents && child_is_orphan){
+                if(teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)/*child is orphan*/){
                     child.x = parent.x;
                     child.y = parent.y;
                     child.z = parent.z;
