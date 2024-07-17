@@ -36,7 +36,7 @@ public:
     std::string blurb = "A connect 4 board.";
     std::string game_name = "c4";
     unordered_set<double> children_hashes;
-    bool children_hashes_initialized;
+    bool children_hashes_initialized = false;
 
     bool has_steady_state = false;
     SteadyState steadystate;

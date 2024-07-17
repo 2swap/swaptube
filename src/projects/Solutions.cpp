@@ -301,9 +301,10 @@ void endgame_examination(){
         {"d", "30"},
     });
     c4.inject_audio_and_render(AudioSegment("Let's see what it looks like when we expand out its full tree of positions."));
-    c4.inject_audio(AudioSegment(6), 100);
-    for(int i = 0; i < 99; i++){
-        g.expand_graph(true);
+    c4.inject_audio(AudioSegment(6), 47);
+    while(true){
+        int new_nodes = g.expand_graph(true);
+        if(new_nodes == 0) break;
         c4.render();
     }
     g.expand_graph(false);
@@ -319,7 +320,7 @@ void endgame_examination(){
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"points_opacity", "1"},
     });
-    c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states of this board- that is, the nodes which have no children."));
+    c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states of this graph- that is, the nodes which have no children."));
     double some_red_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == RED){
@@ -377,7 +378,7 @@ void endgame_examination(){
         if(node.second.color != 0xffffffff) continue;
         if(node.second.neighbors.size() != 1) continue;
         bool bad = false;
-        for(const Edge& e : node.second.neighbors) if(g.nodes.at(e.to).color == 0xffffffff) bad = true;
+        for(const Edge& e : node.second.neighbors) if(g.nodes.at(e.to).color != 0xffff0000) bad = true;
         if(bad) continue;
         consider = &(node.second);
         break;
@@ -617,7 +618,7 @@ void endgame_examination(){
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "20"},
+        {"d", "25"},
     });
     composite.inject_audio_and_render(AudioSegment("Now, instead of doing this selection of optimal branches while playing the game, we can do it upfront all at once."));
     for(auto& node : g.nodes) if(node.second.data->representation.size() % 2 == 0){
@@ -629,25 +630,29 @@ void endgame_examination(){
         for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)) const_cast<Edge&>(e).opacity = 5;
     }
     composite.inject_audio_and_render(AudioSegment("For those nodes, we'll examine their edges, and from there, select an optimal child node."));
-    for(auto& node : g.nodes) if(node.second.data->representation.size() % 2 == 0){
-        node.second.highlight = false;
-        for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)) const_cast<Edge&>(e).opacity = 1;
-        Edge* best_edge;
-        int best_status = -1;
-        for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
-            C4Result res = g.nodes.at(e.to).data->who_is_winning(dummy);
-            int status = res==RED?1:(res==TIE?0:-1);
-            if(status > best_status){
-                best_edge = &(const_cast<Edge&>(e));
-                best_status = status;
+    for(auto& node : g.nodes){
+        if(node.second.data->representation.size() % 2 == 0 && node.second.data->who_won() == INCOMPLETE){
+            node.second.highlight = false;
+            for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)) const_cast<Edge&>(e).opacity = 1;
+
+            Edge* best_edge;
+            int best_status = -2;
+
+            for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
+                C4Result res = g.nodes.at(e.to).data->who_is_winning(dummy);
+                int status = res==RED?1:(res==TIE?0:-1);
+                if(status > best_status){
+                    best_edge = &(const_cast<Edge&>(e));
+                    best_status = status;
+                }
             }
+            best_edge->opacity = 5;
         }
-        best_edge->opacity = 5;
     }
-    composite.inject_audio(AudioSegment("We can now delete all the other children."), 6);
+    composite.inject_audio(AudioSegment("We can now delete all the other children."), 7);
     g.mobilize_all_nodes();
     dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"d", "15"},
+        {"d", "20"},
         {"y", "0"},
     });
     bool still_an_edge = true;
@@ -674,10 +679,12 @@ void endgame_examination(){
     composite.inject_audio_and_render(AudioSegment("What we've developed here is called a Weak solution (on behalf of Red.) It doesn't contain all positions, but it contains enough for us to guarantee Red to play optimally."));
     composite.inject_audio_and_render(AudioSegment("For that reason it shouldn't be a surprise that all the nodes which were yellow-to-win have been removed."));
 
+    composite.inject_audio(AudioSegment("That would've required a red blunder to get to, and we've removed all branches which contain red blunders."), 2);
+    composite.render();
     dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"y", "-50"},
+        {"y", "-50 <subscene_transition_fraction> 0"},
     });
-    composite.inject_audio_and_render(AudioSegment("That would've required a red blunder to get to, and we've removed all branches which contain red blunders."));
+    composite.render();
 }
 
 void minimax_the_opening(){
@@ -768,7 +775,6 @@ void minimax_the_opening(){
 }
 
 void prisoner() {
-    FOR_REAL = false;
     ThreeDimensionScene tds;
 
     LatexScene flashcard1_front("(157, 286)", .75);
