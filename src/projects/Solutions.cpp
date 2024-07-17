@@ -965,9 +965,10 @@ void render_tree_comparison(){
     std::vector<string> scripts = {
         "This position is pretty simple- the game is gonna end in 2 moves, and there are no choices to be made. Naturally, our graph is also extremely simple. Let's delete some discs from the board and see how the graphs grow.",
         "Ok, that's already getting a little bit bigger. I'll keep plucking off pieces and you can watch what happens.",
-        "All of the graphs still grow exponentially.",
+        "All of the graphs are growing exponentially.",
         "This should give some intuition that even if you claimed to have memorized a _weak_ solution tree of the whole game, merely verifying your memorization would likely take a lifetime.",
     };
+    std::vector<string> distances = {"5","20","40","60",};
 
     if(FOR_REAL)for(int i = 0; i < starting_positions.size(); i++){
         string starting_position = starting_positions[i];
@@ -1011,11 +1012,12 @@ void render_tree_comparison(){
             composite.inject_audio_and_render(AudioSegment("Well, a strong solution tells us everything that could be known, but weak solutions have a lot more room for creative expression."));
 
             ExposedPixelsScene black_screen(VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
-            black_screen.expose_pixels()->fill(0xcc000000);
+            black_screen.expose_pixels()->fill(0xe6000000);
             composite.add_scene(&black_screen, 0  , 0  , 0.5, 0.5);
             composite.add_scene(&black_screen, 0  , 0.5, 0.5, 0.5);
             composite.add_scene(&black_screen, 0.5, 0.5, 0.5, 0.5);
             composite.inject_audio_and_render(AudioSegment("Take a close look at this particular weak solution- notice how it has a very regular structure?"));
+            composite.inject_audio_and_render(AudioSegment("That's not because all weak solutions are well-structured, it's because I hand-picked this one with the intention for it to be simple."));
         }
     }
     dag.add_equations(std::unordered_map<std::string, std::string>{
@@ -1103,7 +1105,7 @@ void render_weak_trees(){
         CompositeScene shill_compositely;
         ThreeDimensionScene shill;
         PngScene claimeven("Claimeven_Thumb");
-        claimeven.expose_pixels()->add_border(0xff444444, 12);
+        claimeven.expose_pixels()->add_border(0xff444444, 15);
         LatexScene words1("\\text{If you haven't already seen my Claimeven video...}", 1);
         LatexScene words2("\\text{Check it out now!}", 1);
         double t = 1.2; Surface c (glm::vec3(20 ,0 ,-170),glm::vec3(claimeven.w*.005*sin(t), claimeven.w*.005*cos(t), 0),glm::vec3(claimeven.h*.005*-cos(t), claimeven.h*.005*sin(t), 0),&claimeven);
@@ -1132,15 +1134,19 @@ void render_weak_trees(){
 
     if(FOR_REAL){
         dag.add_equations(std::unordered_map<std::string, std::string>{
-            {"d", "50"},
+            {"surfaces_opacity", "0"},
+            {"d", "80"},
         });
         C4Scene opening1(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, "444444");
+        C4Scene opening2(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, "4363");
         CompositeScene composite;
-        composite.add_scene(&opening1,  0, .0, .5, .5);
+        composite.add_scene(&opening1,  0,  0, .5, .5);
+        composite.add_scene(&opening2, .5, .5, .5, .5);
 
         composite.inject_audio_and_render(AudioSegment("But, what I can tell you for sure is that there's some real human openings which, using reduction by claimeven-like strategies, have weak solutions expressable with less than a thousand nodes. Not even a megabyte."));
         composite.inject_audio_and_render(AudioSegment("And they're TOTALLY visualizable, and, if you wanna go there, memorizable too."));
-        Graph<C4Board> graph1, graph2;
+        composite.remove_scene(&opening2);
+        Graph<C4Board> graph1;
         graph1.decay = 0.2;
         graph1.repel_force = 0.1;
         graph1.attract_force = 2;
@@ -1148,6 +1154,9 @@ void render_weak_trees(){
         C4GraphScene graphscene1(&graph1, "444444", TRIM_STEADY_STATES);
         graphscene1.physics_multiplier = 20;
         composite.add_scene(&graphscene1,  0, 0, 1, 1);
+        TODO mention that this formalizes the idea of variations
+        TODO rework the graph
+        TODO re-record audio
         composite.inject_audio_and_render(AudioSegment("I'll spoil this one here, but you'll have to stay tuned to see exactly how we accomplish this, as well as what we can learn about systems other than connect 4 from these compressed solutions."));
     }
 
