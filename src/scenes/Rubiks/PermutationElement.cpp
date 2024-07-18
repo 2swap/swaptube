@@ -3,45 +3,28 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <iomanip>
 #include "PieceSet.cpp"
-
-// Define composition operator
-vector<int> operator+(const vector<int>& a, const vector<int>& b) {
-    vector<int> result(a.size());
-    for (size_t i = 0; i < a.size(); ++i) {
-        result[i] = a[b[i]];
-    }
-    return result;
-}
-
-// Define inversion operator
-vector<int> operator~(const vector<int>& a) {
-    vector<int> inverse(a.size());
-    for (size_t i = 0; i < a.size(); ++i) {
-        inverse[a[i]] = i;
-    }
-    return inverse;
-}
+#include "VectorOperations.cpp"
 
 class PermutationElement {
 public:
     virtual ~PermutationElement() = default;
-    virtual void print() const = 0;
+
     string get_name() const {
         return name;
     }
     vector<int> get_effect() const {
         return effect;
     }
-
-    PieceSet get_modified_set() const {
-        vector<int> modified_indices;
-        for (size_t i = 0; i < effect.size(); ++i) {
-            if (effect[i] != i) {
-                modified_indices.push_back(i);
-            }
-        }
-        return PieceSet(modified_indices);
+    int get_primordial_size() const {
+        return primordial_size;
+    }
+    int get_impact() const {
+        return impact;
+    }
+    int get_yuckiness() const {
+        return impact * primordial_size;
     }
 
     int order() const {
@@ -54,15 +37,12 @@ public:
         return count;
     }
 
-protected:
-    const vector<int> effect;
-    const string name;
+    void print() const {
+        cout << setw(50) << left << name 
+             << " impacts " << setw(2) << right << impact
+             << " pieces and has primordial_size " << setw(5) << right << primordial_size << "." << endl;
+    }
 
-    // Constructor initializes const member
-    PermutationElement(const string& name, const vector<int>& effect)
-        : name(name), effect(effect) {}
-
-private:
     static vector<int> identity(size_t size) {
         vector<int> id(size);
         for (size_t i = 0; i < size; ++i) {
@@ -70,4 +50,14 @@ private:
         }
         return id;
     }
+
+protected:
+    const int primordial_size;
+    const vector<int> effect;
+    const string name;
+    const int impact;
+
+    // Constructor initializes const members
+    PermutationElement(const string& name, const vector<int>& effect, int primordial_size)
+        : name(name), effect(effect), primordial_size(primordial_size), impact(PieceSet(effect).get_size()) {}
 };

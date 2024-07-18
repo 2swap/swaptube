@@ -21,8 +21,11 @@ public:
     AudioSegment(double duration_seconds) 
         : duration_seconds(duration_seconds), audio_filename(""), subtitle_text("") {}
 
-    AudioSegment(const std::string& subtitle_text)
+    AudioSegment(const string& subtitle_text)
         : duration_seconds(0), audio_filename(sanitize_filename(subtitle_text)), subtitle_text(subtitle_text) {}
+
+    AudioSegment(const string& subtitle_text, const string& filename)
+        : duration_seconds(0), audio_filename(filename), subtitle_text(subtitle_text) {}
 
     // Function to check if the audio segment represents silence
     bool is_silence() const {
