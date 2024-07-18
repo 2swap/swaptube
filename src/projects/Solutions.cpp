@@ -24,7 +24,7 @@ void beginning() {
     closequat_moving["qj"] = "<t> -4 / sin";
     dag.add_equations(closequat_moving);
     c4.inject_audio_and_render(AudioSegment("So far we've been interested in strategies of connect 4,"));
-    dag.add_transition("d", "10");
+    dag.add_transition("d", "15");
     c4.inject_audio_and_render(AudioSegment("but now it's time to apply those strategies to get a structural understanding of the game."));
 
     c4.inject_audio(AudioSegment(2), 7+49);
@@ -50,7 +50,7 @@ void beginning() {
 
 
     dag.add_equations(std::unordered_map<std::string, std::string>{
-        {"y", "1.5"}, {"d", "6"},
+        {"y", "3"}, {"d", "6"},
         {"q1", "0"},
         {"qi", "0"},
         {"qj", "0"},
@@ -91,8 +91,8 @@ void beginning() {
     c4.inject_audio_and_render(AudioSegment("We connect those new nodes to the root with yellow lines, since yellow was the one who played a move here."));
     c4.inject_audio(AudioSegment("And from those positions, there are even more options that can be made, by Red this time, continuing the graph."), 49);
     dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"d", "15"},
-        {"y", "3"},
+        {"d", "10"},
+        {"y", "4"},
         {"surfaces_opacity", "0"},
     });
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
@@ -163,7 +163,7 @@ void beginning() {
     });
 
     C4GraphScene c4gs(VIDEO_WIDTH/2, VIDEO_HEIGHT, &g, "", MANUAL);
-    LatexScene latex(VIDEO_WIDTH/2, VIDEO_HEIGHT, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline \\end{tabular}", 0.5);
+    LatexScene latex(VIDEO_WIDTH/2, VIDEO_HEIGHT, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline \\end{tabular}", 0.55);
     latex.begin_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline \\end{tabular}");
     CompositeScene composite;
     composite.add_scene(&c4gs, 0, 0, .5, 1);
@@ -320,28 +320,34 @@ void endgame_examination(){
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"points_opacity", "1"},
     });
-    c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states of this graph- that is, the nodes which have no children."));
+    c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states- that is, the nodes which have no children."));
+    c4.inject_audio(AudioSegment("In other words, we're identifying the games which either Red won,"), 2);
+    c4.render();
     double some_red_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == RED){
             node.second.color = C4_RED;
             some_red_node = node.second.hash;
         }
-    c4.inject_audio_and_render(AudioSegment("In other words, we're identifying the games which either Red won,"));
+    c4.render();
+    c4.inject_audio(AudioSegment("Yellow won,"), 2);
+    c4.render();
     double some_yellow_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == YELLOW){
             node.second.color = 0xffaaaa00;
             some_yellow_node = node.second.hash;
         }
-    c4.inject_audio_and_render(AudioSegment("Yellow won,"));
+    c4.render();
+    c4.inject_audio(AudioSegment("or completely filled without a winner, making it a tie."), 2);
+    c4.render();
     double some_tie_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == TIE){
             node.second.color = 0xff5555ff;
             some_tie_node = node.second.hash;
         }
-    c4.inject_audio_and_render(AudioSegment("or completely filled without a winner, making it a tie."));
+    c4.render();
 
     g.nodes.at(g.root_node_hash).highlight = true;
     auto result = g.shortest_path(g.root_node_hash, some_red_node);
@@ -407,7 +413,7 @@ void endgame_examination(){
     consider->highlight = false;
     composite.inject_audio_and_render(AudioSegment("We can repeat this line of thinking for all the other moves which force the game into an ending state."));
 
-    composite.inject_audio(AudioSegment(7), 30);
+    composite.inject_audio(AudioSegment(10), 30);
     while(true){
         consider = NULL;
         for(auto& node : g.nodes){
@@ -495,7 +501,13 @@ void endgame_examination(){
 
     g.nodes.at(g.root_node_hash).highlight = true;
 
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "10"},
+    });
     composite.inject_audio_and_render(AudioSegment("We've worked our way all the way back up to the endgame which we considered in the first place, and it turns out that it was a tie!"));
+    dag.add_transitions(std::unordered_map<std::string, std::string>{
+        {"d", "30"},
+    });
 
     LatexScene strong_solution_text(VIDEO_WIDTH, VIDEO_HEIGHT/5, "\\text{Strong Solution}", 1);
     composite.add_scene(&strong_solution_text, 0, .8, 1, .2);
@@ -724,11 +736,13 @@ void minimax_the_opening(){
     c4.inject_audio_and_render(AudioSegment("So the obvious question is, can we apply Minimax to the opening to determine who should win from the starting position?"));
     c4.inject_audio_and_render(AudioSegment("In theory, sure, but even with our modern computers, we can't do this for 4 trillion nodes. It's just too much."));
     dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"y", "70"},
+        {"surfaces_opacity", "0"},
+        {"lines_opacity", "0"},
+        {"points_opacity", "0"},
     });
     c4.inject_audio_and_render(AudioSegment("But by ignoring branches which are suboptimal _while traversing the graph in the first place_, along with a bunch of other tricks, this becomes doable."));
     dag.add_equations(std::unordered_map<std::string, std::string>{
-        {"y", "-15"},
+        {"y", "-12"},
     });
     dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"y", "1"},
@@ -843,13 +857,13 @@ void prisoner() {
     for(int x = -22; x < 22; x++){
         for(int y = -59; y < 59; y++){
             Scene* sc = ((x+y)%3 == 0) ? &flashcard1_back : (((x+y)%3 == 1) ? &flashcard2_back : &flashcard3_back);
-            cardgrid.add_surface(Surface(glm::vec3((x+.5)*2.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*2,0),glm::vec3(1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),sc));
+            cardgrid.add_surface(Surface(glm::vec3((x+.5)*2.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*2,2),glm::vec3(1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),sc));
         }
     }
     PngScene mona_lisa("Mona_Lisa_Hands");
-    Surface s(glm::vec3(0,0,-1),glm::vec3(mona_lisa.w*.1, 0, 0),glm::vec3(0, mona_lisa.h*.1, 0),&mona_lisa);
+    Surface s(glm::vec3(0,0,1),glm::vec3(mona_lisa.w*.1, 0, 0),glm::vec3(0, mona_lisa.h*.1, 0),&mona_lisa);
     cardgrid.add_surface(s);
-    cardgrid.inject_audio(AudioSegment("The prison guard forgot to mention that the color codes on the back of the cards document the precise color of the Mona Lisa painting at those two coordinates, and, sadly, our prisoner was too caught up memorizing numbers to realize the structure underlying the data."), 100);
+    cardgrid.inject_audio(AudioSegment("The prison guard forgot to mention that the color codes on the back of the cards document the precise color of the Mona Lisa painting at those two coordinates, and, sadly, our prisoner was too caught up memorizing numbers to realize the structure underlying the data.", "The_prison_guard_forgot_to_mention_that_the_color_codes_on_the_back_of_the_cards_document_the_precise_color_of_the_Mona_Lisa_painting.mp3"), 100);
     for(int i = 0; i < 100; i++){
         for(int j = 0; j < cardgrid.surfaces.size(); j++){
             cardgrid.surfaces[j].opacity = 1-i/100.;
@@ -883,11 +897,11 @@ void prisoner() {
     }
 
     PngScene mona_lisa_no_hands("Mona_Lisa");
-    Surface no_hands(glm::vec3(0,0,-1.1),glm::vec3(mona_lisa_no_hands.w*.1, 0, 0),glm::vec3(0, mona_lisa_no_hands.h*.1, 0),&mona_lisa_no_hands);
+    Surface no_hands(glm::vec3(0,0,0.9),glm::vec3(mona_lisa_no_hands.w*.1, 0, 0),glm::vec3(0, mona_lisa_no_hands.h*.1, 0),&mona_lisa_no_hands);
     cardgrid.add_surface(no_hands);
-    cardgrid.inject_audio(AudioSegment("But until that happens, if you were to go up to him and ask 'Is Mona Lisa's left hand on top of her right, or is it the other way around?', he would have no idea."), 100);
-    for(int x = 0; x < 100; x++){
-        glm::vec3 dir(1,0,0);
+    cardgrid.inject_audio(AudioSegment("But until that happens, if you were to go up to him and ask 'Is Mona Lisa's left hand on top of her right, or is it the other way around?', he would have no idea."), 1000);
+    for(int x = 0; x < 1000; x++){
+        glm::vec3 dir(.1,0,0);
         cardgrid.surfaces[cardgrid.surfaces.size()-1].center += dir;
         cardgrid.surfaces[0].center -= dir;
         cardgrid.render();
@@ -961,16 +975,19 @@ void render_tree_comparison(){
     });
 
 
-    std::vector<string> starting_positions = {"4444443265555232253333727111177771125","44444432655552322533337271111777711","444444326555523225333372711117777","4444443265555232253333727111177",};
-    std::vector<string> scripts = {
+    vector<string> starting_positions = {"4444443265555232253333727111177771125","44444432655552322533337271111777711","444444326555523225333372711117777","4444443265555232253333727111177",};
+    vector<string> scripts = {
         "This position is pretty simple- the game is gonna end in 2 moves, and there are no choices to be made. Naturally, our graph is also extremely simple. Let's delete some discs from the board and see how the graphs grow.",
         "Ok, that's already getting a little bit bigger. I'll keep plucking off pieces and you can watch what happens.",
-        "All of the graphs are growing exponentially.",
+        "All the graphs are just gonna keep growing exponentially, with the strong solution being the biggest and the weak solution being the smallest.",
         "This should give some intuition that even if you claimed to have memorized a _weak_ solution tree of the whole game, merely verifying your memorization would likely take a lifetime.",
     };
-    std::vector<string> distances = {"5","20","40","60",};
+    vector<string> distances = {"5","20","40","60",};
 
     if(FOR_REAL)for(int i = 0; i < starting_positions.size(); i++){
+        dag.add_equations(std::unordered_map<std::string, std::string>{
+            {"d", distances[i]},
+        });
         string starting_position = starting_positions[i];
         C4Scene board(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, starting_position);
         LatexScene board_header(VIDEO_WIDTH*.3, VIDEO_HEIGHT*.1, "\\text{Position} \\\\\\\\ \\text{" + to_string(starting_position.size()) + " discs placed}", 1);
@@ -1017,12 +1034,9 @@ void render_tree_comparison(){
             composite.add_scene(&black_screen, 0  , 0.5, 0.5, 0.5);
             composite.add_scene(&black_screen, 0.5, 0.5, 0.5, 0.5);
             composite.inject_audio_and_render(AudioSegment("Take a close look at this particular weak solution- notice how it has a very regular structure?"));
-            composite.inject_audio_and_render(AudioSegment("That's not because all weak solutions are well-structured, it's because I hand-picked this one with the intention for it to be simple."));
+            composite.inject_audio_and_render(AudioSegment("That's not because all weak solutions are well-structured, it's because I hand-picked this one with the intention for it to be simple.", "extra.mp3"));
         }
     }
-    dag.add_equations(std::unordered_map<std::string, std::string>{
-        {"points_opacity", "0"},
-    });
 }
 
 void render_weak_trees(){
@@ -1031,13 +1045,13 @@ void render_weak_trees(){
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
         {"qk", "0"},
-        {"d", "10"},
+        {"d", "15"},
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
         {"surfaces_opacity", "0"},
         {"lines_opacity", "1"},
-        {"points_opacity", "0"},
+        {"points_opacity", "1"},
     });
     if(FOR_REAL){
         dag.add_equations(std::unordered_map<std::string, std::string>{
@@ -1067,7 +1081,7 @@ void render_weak_trees(){
             {"qk", "0"},
         });
         dag.add_equations(std::unordered_map<std::string, std::string>{
-            {"d", "120"},
+            {"d", "140"},
         });
         string starting_position = "4444443265555232253333727";
         C4Scene board(VIDEO_WIDTH*.3, VIDEO_HEIGHT*.3, starting_position);
@@ -1095,7 +1109,7 @@ void render_weak_trees(){
             {"d", "200"},
             {"surfaces_opacity", "1"},
             {"lines_opacity", "0.2"},
-            {"points_opacity", "0"},
+            {"points_opacity", "0.2"},
             {"q1", "1"},
             {"qi", "<t> sin 400 /"},
             {"qj", "<t> sin 400 /"},
@@ -1108,9 +1122,9 @@ void render_weak_trees(){
         claimeven.expose_pixels()->add_border(0xff444444, 15);
         LatexScene words1("\\text{If you haven't already seen my Claimeven video...}", 1);
         LatexScene words2("\\text{Check it out now!}", 1);
-        double t = 1.2; Surface c (glm::vec3(20 ,0 ,-170),glm::vec3(claimeven.w*.005*sin(t), claimeven.w*.005*cos(t), 0),glm::vec3(claimeven.h*.005*-cos(t), claimeven.h*.005*sin(t), 0),&claimeven);
-               t = 1.8; Surface w1(glm::vec3(-12,-5,-165),glm::vec3(words1.w   *.04 *sin(t), words1.w   *.04 *cos(t), 0),glm::vec3(words1.h   *.04 *-cos(t), words1.h   *.04 *sin(t), 0),&words1   );
-               t = 1.4; Surface w2(glm::vec3(-10,5 ,-175),glm::vec3(words2.w   *.02 *sin(t), words2.w   *.02 *cos(t), 0),glm::vec3(words2.h   *.02 *-cos(t), words2.h   *.02 *sin(t), 0),&words2   );
+        double t = 1.2; Surface c (glm::vec3(20 ,0 ,-170),glm::vec3(claimeven.w*.005*sin(t)/3, claimeven.w*.005*cos(t)/3, 0),glm::vec3(claimeven.h*.005*-cos(t)/3, claimeven.h*.005*sin(t)/3, 0),&claimeven);
+               t = 1.8; Surface w1(glm::vec3(-12,-5,-165),glm::vec3(words1.w   *.04 *sin(t)/3, words1.w   *.04 *cos(t)/3, 0),glm::vec3(words1.h   *.04 *-cos(t)/3, words1.h   *.04 *sin(t)/3, 0),&words1   );
+               t = 1.4; Surface w2(glm::vec3(-10,5 ,-175),glm::vec3(words2.w   *.02 *sin(t)/3, words2.w   *.02 *cos(t)/3, 0),glm::vec3(words2.h   *.02 *-cos(t)/3, words2.h   *.02 *sin(t)/3, 0),&words2   );
         shill.add_surface(c );
         shill.add_surface(w1);
         shill.add_surface(w2);
@@ -1123,10 +1137,10 @@ void render_weak_trees(){
             {"qi", "<t> 4 / cos 2 /"},
             {"qj", "<t> -4 / sin 2 /"},
             {"qk", "0"},
-            {"d", "120"},
-            {"surfaces_opacity", "1"},
+            {"d", "140"},
+            {"surfaces_opacity", "0"},
             {"lines_opacity", "1"},
-            {"points_opacity", "0"},
+            {"points_opacity", "1"},
         });
         shill_compositely.inject_audio_and_render(AudioSegment("and in doing so, we can get the full-board graph down from the trillions of nodes to the order of the tens of thousands."));
         composite.inject_audio_and_render(AudioSegment("Or at least, I think so... I still haven't been able to perform this reduction for the entire graph. Still working on that technical challenge."));
@@ -1135,7 +1149,9 @@ void render_weak_trees(){
     if(FOR_REAL){
         dag.add_equations(std::unordered_map<std::string, std::string>{
             {"surfaces_opacity", "0"},
-            {"d", "80"},
+            {"lines_opacity", "0"},
+            {"points_opacity", "0"},
+            {"d", "100"},
         });
         C4Scene opening1(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, "444444");
         C4Scene opening2(VIDEO_WIDTH/2, VIDEO_HEIGHT/2, "4363");
@@ -1144,7 +1160,6 @@ void render_weak_trees(){
         composite.add_scene(&opening2, .5, .5, .5, .5);
 
         composite.inject_audio_and_render(AudioSegment("But, what I can tell you for sure is that there's some real human openings which, using reduction by claimeven-like strategies, have weak solutions expressable with less than a thousand nodes. Not even a megabyte."));
-        composite.inject_audio_and_render(AudioSegment("And they're TOTALLY visualizable, and, if you wanna go there, memorizable too."));
         composite.remove_scene(&opening2);
         Graph<C4Board> graph1;
         graph1.decay = 0.2;
@@ -1154,9 +1169,13 @@ void render_weak_trees(){
         C4GraphScene graphscene1(&graph1, "444444", TRIM_STEADY_STATES);
         graphscene1.physics_multiplier = 20;
         composite.add_scene(&graphscene1,  0, 0, 1, 1);
-        TODO mention that this formalizes the idea of variations
-        TODO rework the graph
-        TODO re-record audio
+        dag.add_transitions(std::unordered_map<std::string, std::string>{
+            {"surfaces_opacity", "0"},
+            {"lines_opacity", "1"},
+            {"points_opacity", "1"},
+        });
+        composite.inject_audio_and_render(AudioSegment("And they're TOTALLY visualizable, and, if you wanna go there, memorizable too."));
+        composite.inject_audio_and_render(AudioSegment("This is a pretty big deal, because it formalizes the player's intuition of discrete variations or openings which are complex and worth learning. The offshooting lines in these graphs map onto them perfectly."));
         composite.inject_audio_and_render(AudioSegment("I'll spoil this one here, but you'll have to stay tuned to see exactly how we accomplish this, as well as what we can learn about systems other than connect 4 from these compressed solutions."));
     }
 

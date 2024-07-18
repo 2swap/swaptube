@@ -15,22 +15,20 @@ class Puzzle {
 public:
     Puzzle(const vector<int>& state, const vector<shared_ptr<PermutationElement>>& elements) : state(state), primordial_elements(elements) {
 
-        if(false){
-            // Verify that the set of primordial elements is closed under inversion
-            for (const auto& elem : primordial_elements) {
-                bool found_inverse = false;
-                auto inverse_effect = ~elem->get_effect();
-                for (const auto& check_elem : primordial_elements) {
-                    if (check_elem->get_effect() == inverse_effect) {
-                        found_inverse = true;
-                        break;
-                    }
+        // Verify that the set of primordial elements is closed under inversion
+        for (const auto& elem : primordial_elements) {
+            bool found_inverse = false;
+            auto inverse_effect = ~elem->get_effect();
+            for (const auto& check_elem : primordial_elements) {
+                if (check_elem->get_effect() == inverse_effect) {
+                    found_inverse = true;
+                    break;
                 }
-                if (!found_inverse) {
-                    cout << "ERROR: Set of primordial elements is not closed under inversion. The following primordial has no inverse:" << endl;
-                    elem->print();
-                    exit(1);
-                }
+            }
+            if (!found_inverse) {
+                cout << "ERROR: Set of primordial elements is not closed under inversion. The following primordial has no inverse:" << endl;
+                elem->print();
+                exit(1);
             }
         }
 
@@ -47,18 +45,54 @@ public:
     }
 
     void print() const {
+        auto get_color_code = [](size_t i, size_t max) {
+            float ratio = static_cast<float>(i) / max;
+            int red = static_cast<int>(255 * (1 - ratio));
+            int blue = static_cast<int>(255 * ratio);
+            return "\033[38;2;" + std::to_string(red) + ";0;" + std::to_string(blue) + "m";
+        };
+        
+        const string reset = "\033[0m";
+
         cout << "=========" << endl;
         cout << "Puzzle state: ";
-        for (int s : state) {
-            cout << s << " ";
+        for (size_t i = 0; i < state.size(); ++i) {
+            cout << get_color_code(state[i], state.size() - 1) << state[i] << reset << " ";
         }
         cout << endl;
+        cout << "=========" << endl;
+        cout << endl;
+    }
 
+    void print_covered(const PieceSet& ps) const {
+        auto get_color_code = [](size_t i, size_t max) {
+            float ratio = static_cast<float>(i) / max;
+            int red = static_cast<int>(255 * (1 - ratio));
+            int blue = static_cast<int>(255 * ratio);
+            return "\033[38;2;" + std::to_string(red) + ";0;" + std::to_string(blue) + "m";
+        };
+        
+        const string reset = "\033[0m";
+
+        cout << "=========" << endl;
+        ps.print();
+        cout << "Puzzle state: ";
+        for (size_t i = 0; i < state.size(); ++i) {
+            if((ps.get_bit_representation() & (1ul << i)) != 0ul)
+                cout << get_color_code(state[i], state.size() - 1) << state[i] << reset << " ";
+            else
+                cout << "x ";
+        }
+        cout << endl;
+        cout << "=========" << endl;
+        cout << endl;
+    }
+
+    void print_primordials() const {
         cout << "Primordial Elements:" << endl;
         for (const auto& elem : primordial_elements) {
             elem->print();
         }
-        cout << "=========" << endl;
         cout << endl;
 
     }
@@ -75,6 +109,10 @@ public:
         state = state + elem.get_effect();
     }
 
+    void apply(const vector<int>& elem) {
+        state = state + elem;
+    }
+
     shared_ptr<PermutationElement> get_primordial(const string& name) {
         for (const auto& elem : primordial_elements) {
             if (elem->get_name() == name) {
@@ -84,16 +122,6 @@ public:
         // If no element is found, you can return a nullptr or handle it as needed
         cout << "ERROR: No primordial element found with the name " << name << "." << endl;
         exit(1);
-    }
-
-    PieceSet scrambled_pieceset() const {
-        vector<int> scrambled_indices;
-        for (size_t i = 0; i < state.size(); ++i) {
-            if (state[i] != static_cast<int>(i)) {
-                scrambled_indices.push_back(i);
-            }
-        }
-        return PieceSet(scrambled_indices);
     }
 
     double solvedness() const {
@@ -114,11 +142,15 @@ public:
         return state.size();
     }
 
+    vector<int> get_state(){
+        return state;
+    }
+
     void scramble() {
         // Seed the random number generator with the current time
         srand(static_cast<unsigned int>(time(nullptr)));
 
-        for (int i = 0; i < 5000; i++) {
+        for (int i = 0; i < 500 + (rand() % 10); i++) {
             apply_random_primordial();
         }
     }

@@ -11,34 +11,22 @@ public:
     GeneratedElement(const shared_ptr<PermutationElement>& elem1,
                      const shared_ptr<PermutationElement>& elem2,
                      GenerationMethod method)
-    : PermutationElement(generate_construction(elem1, elem2, method), generate_effect(elem1, elem2, method)) {
+    : PermutationElement(generate_construction   (elem1, elem2, method),
+                         generate_effect         (elem1, elem2, method),
+                         generate_primordial_size(elem1, elem2, method)) {
     }
 
     GeneratedElement(const shared_ptr<PermutationElement>& elem1,
                      int mult)
-    : PermutationElement(to_string(mult) + elem1->get_name(), mult==1?elem1->get_effect():generate_effect(elem1, make_shared<GeneratedElement>(elem1, mult-1), GenerationMethod::COMPOSITION)) {
-    }
-
-    void print() const override {
-        cout << "GeneratedElement '" << name << "' modifies " + to_string(get_modified_set().size()) + " pieces." << endl;
+    : PermutationElement(to_string(mult) + elem1->get_name(),
+                         mult==1?elem1->get_effect():generate_effect(elem1, make_shared<GeneratedElement>(elem1, mult-1), GenerationMethod::COMPOSITION),
+                         elem1->get_primordial_size()*mult) {
     }
 
 private:
-    static vector<int> generate_effect(const shared_ptr<PermutationElement>& elem1, 
-                                            const shared_ptr<PermutationElement>& elem2, 
-                                            GenerationMethod method) {
-        switch (method) {
-            case GenerationMethod::COMPOSITION: return elem1->get_effect() + elem2->get_effect();
-            case GenerationMethod::CONJUGATION: return elem1->get_effect() + elem2->get_effect() + ~(elem1->get_effect());
-            case GenerationMethod::COMMUTATION: return elem1->get_effect() + elem2->get_effect() + ~(elem1->get_effect()) + ~(elem2->get_effect());
-        }
-        cout << "ERROR: was unable to generate element's effect." << endl;
-        exit(1);
-    }
-
     static string generate_construction(const shared_ptr<PermutationElement>& elem1, 
-                                             const shared_ptr<PermutationElement>& elem2, 
-                                             GenerationMethod method) {
+                                        const shared_ptr<PermutationElement>& elem2, 
+                                        GenerationMethod method) {
         switch (method) {
             case GenerationMethod::COMPOSITION: return       elem1->get_name() + "+" + elem2->get_name();
             case GenerationMethod::CONJUGATION: return "<" + elem1->get_name() + "," + elem2->get_name() + ">";
@@ -48,15 +36,27 @@ private:
         exit(1);
     }
 
-    static inline bool invalid_char(char c) {
-        return !(isdigit(c) || islower(c));
+    static vector<int> generate_effect(const shared_ptr<PermutationElement>& elem1, 
+                                       const shared_ptr<PermutationElement>& elem2, 
+                                       GenerationMethod method) {
+        switch (method) {
+            case GenerationMethod::COMPOSITION: return elem1->get_effect() + elem2->get_effect();
+            case GenerationMethod::CONJUGATION: return elem1->get_effect() + elem2->get_effect() + ~(elem1->get_effect());
+            case GenerationMethod::COMMUTATION: return elem1->get_effect() + elem2->get_effect() + ~(elem1->get_effect()) + ~(elem2->get_effect());
+        }
+        cout << "ERROR: was unable to generate element's effect." << endl;
+        exit(1);
     }
 
-    bool string_is_valid(const string &str) {
-        for(int i = 0; i < str.size(); i++){
-            if(invalid_char(str[i]))
-                return false;
+    static int generate_primordial_size(const shared_ptr<PermutationElement>& elem1, 
+                                        const shared_ptr<PermutationElement>& elem2, 
+                                        GenerationMethod method) {
+        switch (method) {
+            case GenerationMethod::COMPOSITION: return elem1->get_primordial_size() + elem2->get_primordial_size();
+            case GenerationMethod::CONJUGATION: return 2*elem1->get_primordial_size() + elem2->get_primordial_size();
+            case GenerationMethod::COMMUTATION: return 2*elem1->get_primordial_size() + 2*elem2->get_primordial_size();
         }
-        return true;
+        cout << "ERROR: was unable to generate element's primordial size." << endl;
+        exit(1);
     }
 };
