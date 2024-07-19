@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scene.cpp"
+#include "../scene.cpp"
 
 // The idea here is that the user does whatever they want with the Pixels object, manually
 class ExposedPixelsScene : public Scene {

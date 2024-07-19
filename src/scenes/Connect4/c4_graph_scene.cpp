@@ -1,7 +1,7 @@
 #pragma once
 
-#include "scene.cpp"
-#include "graph_scene.cpp"
+#include "../scene.cpp"
+#include "../Math/graph_scene.cpp"
 #include "c4_scene.cpp"
 #include "C4Board.cpp"
 
