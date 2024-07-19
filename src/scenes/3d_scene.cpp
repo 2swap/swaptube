@@ -325,13 +325,13 @@ public:
         if(behind_camera) return;
         double dot_size = pix.w/300.;
         if(point.highlight == RING){
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , colorlerp(TRANSPARENT_BLACK, OPAQUE_WHITE, dag["points_opacity"] * point.opacity));
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, colorlerp(TRANSPARENT_BLACK, OPAQUE_BLACK, dag["points_opacity"] * point.opacity));
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         } else if(point.highlight == BULLSEYE){
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*3  , dot_size*3  , colorlerp(TRANSPARENT_BLACK, OPAQUE_WHITE, dag["points_opacity"] * point.opacity));
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2.5, dot_size*2.5, colorlerp(TRANSPARENT_BLACK, OPAQUE_BLACK, dag["points_opacity"] * point.opacity));
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , colorlerp(TRANSPARENT_BLACK, OPAQUE_WHITE, dag["points_opacity"] * point.opacity));
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, colorlerp(TRANSPARENT_BLACK, OPAQUE_BLACK, dag["points_opacity"] * point.opacity));
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*3  , dot_size*3  , OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2.5, dot_size*2.5, OPAQUE_BLACK);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         }
         if(point.opacity == 0) return;
         pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(TRANSPARENT_BLACK, point.color, dag["points_opacity"] * point.opacity));
