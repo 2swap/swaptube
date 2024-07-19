@@ -163,7 +163,7 @@ void beginning() {
     });
 
     C4GraphScene c4gs(VIDEO_WIDTH/2, VIDEO_HEIGHT, &g, "", MANUAL);
-    LatexScene latex(VIDEO_WIDTH/2, VIDEO_HEIGHT, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline \\end{tabular}", 0.55);
+    LatexScene latex(VIDEO_WIDTH/2, VIDEO_HEIGHT, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline \\end{tabular}", 0.52);
     latex.begin_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline \\end{tabular}");
     CompositeScene composite;
     composite.add_scene(&c4gs, 0, 0, .5, 1);
@@ -502,7 +502,7 @@ void endgame_examination(){
     g.nodes.at(g.root_node_hash).highlight = true;
 
     dag.add_transitions(std::unordered_map<std::string, std::string>{
-        {"d", "10"},
+        {"d", "7"},
     });
     composite.inject_audio_and_render(AudioSegment("We've worked our way all the way back up to the endgame which we considered in the first place, and it turns out that it was a tie!"));
     dag.add_transitions(std::unordered_map<std::string, std::string>{
@@ -756,6 +756,7 @@ void minimax_the_opening(){
         {"qk", "0"},
         {"d", "5"},
         {"surfaces_opacity", "1"},
+        {"lines_opacity", "1"},
     });
     g.dimensions = 2;
     double x = -1.5*4;
@@ -806,12 +807,12 @@ void prisoner() {
     flashcard3_front.expose_pixels()->underlay(roundrect, 0, 0);
     flashcard3_back.expose_pixels()->underlay(roundrect, 0, 0);
 
-    tds.add_surface(Surface(glm::vec3(0,0  , 0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_front));
-    tds.add_surface(Surface(glm::vec3(0,0  ,-0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_back));
-    tds.add_surface(Surface(glm::vec3(0,100, 0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_front));
-    tds.add_surface(Surface(glm::vec3(0,100,-0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_back));
-    tds.add_surface(Surface(glm::vec3(0,200, 0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_front));
-    tds.add_surface(Surface(glm::vec3(0,200,-0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_back));
+    tds.add_surface(Surface(glm::vec3(0,0  , 0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_front));
+    tds.add_surface(Surface(glm::vec3(0,0  ,-0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_back));
+    tds.add_surface(Surface(glm::vec3(0,100, 0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_front));
+    tds.add_surface(Surface(glm::vec3(0,100,-0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_back));
+    tds.add_surface(Surface(glm::vec3(0,200, 0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_front));
+    tds.add_surface(Surface(glm::vec3(0,200,-0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_back));
 
     dag.add_equations(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"},
@@ -883,17 +884,21 @@ void prisoner() {
     ExposedPixelsScene black_screen;
     black_screen.expose_pixels()->fill(OPAQUE_BLACK);
 
+    CompositeScene cardgrid_with_black_squares;
+    ThreeDimensionScene black_squares;
+    cardgrid_with_black_squares.add_scene(&cardgrid, 0, 0, 1, 1);
+    cardgrid_with_black_squares.add_scene(&black_squares, 0, 0, 1, 1);
     int count = 0;
     for(int y = 12; y >= -12; y--){
         for(int x = 5; x >= -5; x--){
-            cardgrid.add_surface(Surface(glm::vec3((x+.5)*10.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*10,0),glm::vec3(10, 0, 0),glm::vec3(0, 10*static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&black_screen));
+            black_squares.add_surface(Surface(glm::vec3((x+.5)*10.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*10,0),glm::vec3(10, 0, 0),glm::vec3(0, 10*static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&black_screen));
             count++;
         }
     }
-    cardgrid.inject_audio(AudioSegment("At least in the sense that, if somebody held a contest to recreate the painting from memory, he'd win it, pixel-by-pixel. As long as the prison guard remembers to tell him that's what the data represents."), count);
+    cardgrid_with_black_squares.inject_audio(AudioSegment("At least in the sense that, if somebody held a contest to recreate the painting from memory, he'd win it, pixel-by-pixel. As long as the prison guard remembers to tell him that's what the data represents."), count);
     for(int x = 0; x < count; x++){
-        cardgrid.surfaces.pop_back();
-        cardgrid.render();
+        black_squares.surfaces.pop_back();
+        cardgrid_with_black_squares.render();
     }
 
     PngScene mona_lisa_no_hands("Mona_Lisa");
@@ -1051,7 +1056,7 @@ void render_weak_trees(){
         {"z", "0"},
         {"surfaces_opacity", "0"},
         {"lines_opacity", "1"},
-        {"points_opacity", "1"},
+        {"points_opacity", "0"},
     });
     if(FOR_REAL){
         dag.add_equations(std::unordered_map<std::string, std::string>{
@@ -1122,7 +1127,7 @@ void render_weak_trees(){
         claimeven.expose_pixels()->add_border(0xff444444, 15);
         LatexScene words1("\\text{If you haven't already seen my Claimeven video...}", 1);
         LatexScene words2("\\text{Check it out now!}", 1);
-        double t = 1.2; Surface c (glm::vec3(20 ,0 ,-170),glm::vec3(claimeven.w*.005*sin(t)/3, claimeven.w*.005*cos(t)/3, 0),glm::vec3(claimeven.h*.005*-cos(t)/3, claimeven.h*.005*sin(t)/3, 0),&claimeven);
+        double t = 1.2; Surface c (glm::vec3(20 ,0 ,-170),glm::vec3(claimeven.w*.005*sin(t), claimeven.w*.005*cos(t), 0),glm::vec3(claimeven.h*.005*-cos(t), claimeven.h*.005*sin(t), 0),&claimeven);
                t = 1.8; Surface w1(glm::vec3(-12,-5,-165),glm::vec3(words1.w   *.04 *sin(t)/3, words1.w   *.04 *cos(t)/3, 0),glm::vec3(words1.h   *.04 *-cos(t)/3, words1.h   *.04 *sin(t)/3, 0),&words1   );
                t = 1.4; Surface w2(glm::vec3(-10,5 ,-175),glm::vec3(words2.w   *.02 *sin(t)/3, words2.w   *.02 *cos(t)/3, 0),glm::vec3(words2.h   *.02 *-cos(t)/3, words2.h   *.02 *sin(t)/3, 0),&words2   );
         shill.add_surface(c );
@@ -1140,7 +1145,7 @@ void render_weak_trees(){
             {"d", "140"},
             {"surfaces_opacity", "0"},
             {"lines_opacity", "1"},
-            {"points_opacity", "1"},
+            {"points_opacity", "0"},
         });
         shill_compositely.inject_audio_and_render(AudioSegment("and in doing so, we can get the full-board graph down from the trillions of nodes to the order of the tens of thousands."));
         composite.inject_audio_and_render(AudioSegment("Or at least, I think so... I still haven't been able to perform this reduction for the entire graph. Still working on that technical challenge."));
@@ -1172,10 +1177,10 @@ void render_weak_trees(){
         dag.add_transitions(std::unordered_map<std::string, std::string>{
             {"surfaces_opacity", "0"},
             {"lines_opacity", "1"},
-            {"points_opacity", "1"},
+            {"points_opacity", "0"},
         });
         composite.inject_audio_and_render(AudioSegment("And they're TOTALLY visualizable, and, if you wanna go there, memorizable too."));
-        composite.inject_audio_and_render(AudioSegment("This is a pretty big deal, because it formalizes the player's intuition of discrete variations or openings which are complex and worth learning. The offshooting lines in these graphs map onto them perfectly."));
+        composite.inject_audio_and_render(AudioSegment("This is a pretty big deal, because it formalizes the player's intuition of discrete variations or openings which are complex and worth learning. The offshooting lines in these graphs map onto them perfectly.", "goof.mp3"));
         composite.inject_audio_and_render(AudioSegment("I'll spoil this one here, but you'll have to stay tuned to see exactly how we accomplish this, as well as what we can learn about systems other than connect 4 from these compressed solutions."));
     }
 
@@ -1185,7 +1190,7 @@ void render_weak_trees(){
 
 void render_video() {
     FOR_REAL = true;
-    PRINT_TO_TERMINAL = false;
+    PRINT_TO_TERMINAL = true;
     beginning();
     endgame_examination();
     minimax_the_opening();
