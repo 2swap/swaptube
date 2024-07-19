@@ -1,6 +1,6 @@
 #pragma once
 
-#include "scene.cpp"
+#include "../scene.cpp"
 #include "Graph.cpp"
 
 template <typename T>

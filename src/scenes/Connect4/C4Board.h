@@ -6,7 +6,7 @@
 #include <set>
 #include <unordered_set>
 #include <climits>
-#include "GenericBoard.cpp"
+#include "../Math/GenericBoard.cpp"
 #include "SteadyState.h"
 
 enum C4BranchMode {

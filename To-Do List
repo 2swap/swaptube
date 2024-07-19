@@ -1,0 +1,33 @@
+To-Do List
+
+	Scene/Project Specific
+Steady State Verifier
+Rubik's Scene
+Lambda Calc Scene
+Graphs should self-center at center of mass
+Scenes for making line graphs, bar charts, etc?
+
+	Ease Of Use / Debug
+Add Diagnostics Logs with Gnuplot
+
+	Graphics
+3D Clipping Ordering by Projected Distance
+
+	End Product Quality
+Decrease Bitrate? Somehow fight the youtube compression algorithm?
+Better checking for viewability on OLED screens
+More aliasing
+Fix the subtitle splitter
+
+	Debt Cleanup
+Fix yucky interface between main.cpp and .active_project.cpp
+Project should define resolution and framerate, not main file
+Color Class
+Cleanup Inlines.h
+
+	Simplify and Abstract
+Give each scene its own DAG
+Abstract out the idea of Coordinate Systems
+Change the CompositeScene into a generic 2d-scene
+Allow for slate values of non-real-scalar types (vectors, quaternions, etc)
+Add a mechanism to set integer pointers to slate values

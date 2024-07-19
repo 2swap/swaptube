@@ -12,7 +12,7 @@
 #include <random>
 #include <limits.h>
 #include "GenericBoard.cpp"
-#include "json.hpp"
+#include "../../misc/json.hpp"
 using json = nlohmann::json;
 
 class Edge {

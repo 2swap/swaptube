@@ -1,3 +1,4 @@
+#pragma once
 using namespace std;
 
 #include <iostream>
@@ -9,7 +10,6 @@ using namespace std;
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
 int MULT = 3;
-
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
 int VIDEO_FRAMERATE = 30;
@@ -19,14 +19,13 @@ int video_num_frames = 0;
 string project_name = "to_be_populated";
 
 #include "misc/inlines.h"
-#include "scenes/dagger.cpp"
+#include "misc/dagger.cpp"
 #include "audio_video/AudioSegment.cpp"
 #include "audio_video/writer.cpp"
 #include "scenes/Connect4/c4.h"
 #include "misc/pixels.h"
 #include "misc/convolver.cpp"
 #include "misc/convolution_tests.cpp"
-#include "scenes/scene.cpp"
 #include "misc/Timer.cpp"
 
 void setup_writer(const string& project_name){
@@ -35,8 +34,7 @@ void setup_writer(const string& project_name){
     WRITER->init("../media/testaudio.mp3");
 }
 
-#include "projects/.active_project.tmp"
-
+#include "projects/.active_project.cpp"
 
 void run_unit_tests(){
     run_inlines_unit_tests();

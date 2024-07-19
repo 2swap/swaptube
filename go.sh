@@ -18,7 +18,7 @@ if [ ! -e $PROJECT_PATH ]; then
     echo "Project $1 does not exist."
     exit 1
 fi
-cp $PROJECT_PATH src/projects/.active_project.tmp
+cp $PROJECT_PATH src/projects/.active_project.cpp
 
 cd build
 
@@ -52,7 +52,7 @@ fi
 
 cd ..
 
-rm src/projects/.active_project.tmp
+rm src/projects/.active_project.src
 
 vlc out/$1.mp4
 

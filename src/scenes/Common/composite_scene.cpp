@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include "scene.cpp"
+#include "../scene.cpp"
 
 struct SceneWithPosition {
     Scene* scenePointer;

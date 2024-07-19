@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 #include <cassert>
-#include "dagger.cpp"
+#include "../misc/dagger.cpp"
 
 using namespace std;
 
@@ -109,17 +109,3 @@ protected:
     int superscene_frames_left = 0;
     int superscene_frames_total = 0;
 };
-
-//#include "mandelbrot_scene.cpp"
-#include "latex_scene.cpp"
-#include "header_scene.cpp"
-#include "c4_scene.cpp"
-#include "composite_scene.cpp"
-#include "complex_plot_scene.cpp"
-#include "3d_scene.cpp"
-#include "graph_scene.cpp"
-#include "c4_graph_scene.cpp"
-#include "mouse_scene.cpp"
-#include "png_scene.cpp"
-#include "exposed_pixels_scene.cpp"
-#include "twoswap_scene.cpp"
