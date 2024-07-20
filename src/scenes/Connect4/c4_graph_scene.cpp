@@ -36,7 +36,7 @@ public:
     void update_surfaces(){
         for(pair<double, Node<C4Board>> p : graph->nodes){
             Node<C4Board> node = p.second;
-            glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
+            glm::vec3 node_pos = glm::vec3(node.position);
             C4Scene* sc = new C4Scene(600, 600, node.data->representation);
             surfaces.push_back(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), sc));
         }

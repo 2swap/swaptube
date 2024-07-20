@@ -16,13 +16,9 @@ inline double cube(double x){return x * x * x;}
 inline double fourth(double x){return square(square(x));}
 inline double smoother1(double x){return 3*x*x-2*x*x*x;}
 inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
-inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
-inline double fifo_curve(double x){return 1-fourth(2*x-1);} // fade in fade out
-inline double fifo_curve_experimental(double x, double seconds_so_far, double seconds_left){return min(1, max(max(1-fourth(2*x-1), transparency_profile(seconds_so_far/2)), transparency_profile(seconds_left/2)));} // fade in fade out
 inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
 inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
 inline string latex_text(string in){return "\\text{" + in + "}";}
-inline float fractional_part(float x) {return x - floor(x);}
 inline string failout(string message){
     cerr << "======================================================\n";
     cerr << message << "\n";
@@ -172,19 +168,9 @@ void run_inlines_unit_tests(){
     max_ut();
     square_ut();
     cube_ut();
-    rgb_to_col_ut();
     smoother1_ut();
     smoother2_ut();
-    coldist_ut();
     lerp_ut();
-    makecol_ut();
-    rainbow_ut();
-    geta_ut();
-    getr_ut();
-    getg_ut();
-    getb_ut();
-    colorlerp_ut();
     latex_text_ut();
-    color_combine_ut();
     cout << "inline tests passed." << endl;
 }

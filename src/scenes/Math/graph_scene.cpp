@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../scene.cpp"
+#include "../Common/3d_scene.cpp"
 #include "Graph.cpp"
 
 template <typename T>
@@ -15,14 +16,14 @@ public:
 
         for(pair<double, Node<T>> p : graph->nodes){
             Node<T> node = p.second;
-            glm::vec3 node_pos = glm::vec3(node.x, node.y, node.z);
+            glm::vec3 node_pos = glm::vec3(node.position);
             NodeHighlightType highlight = (node.data->get_hash() == graph->root_node_hash) ? BULLSEYE : (node.highlight? RING : NORMAL);
             points.push_back(Point(node.data->representation, node_pos, node.color, highlight, node.opacity));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
                 Node<T> neighbor = graph->nodes.find(neighbor_id)->second;
-                glm::vec3 neighbor_pos = glm::vec3(neighbor.x, neighbor.y, neighbor.z);
+                glm::vec3 neighbor_pos = glm::vec3(neighbor.position);
                 lines.push_back(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor), neighbor_edge.opacity));
             }
         }

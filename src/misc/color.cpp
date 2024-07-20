@@ -15,14 +15,14 @@ inline int coldist(int col1, int col2){return abs(geta(col1) - geta(col2)) +
                                               abs(getr(col1) - getr(col2)) +
                                               abs(getg(col1) - getg(col2)) +
                                               abs(getb(col1) - getb(col2));}
-inline int rainbow(double x){return makecol(255,
+inline int rainbow(double x){return argb_to_col(255,
                                             sin((x+1/3.)*M_PI*2)*128.+128,
                                             sin((x+2/3.)*M_PI*2)*128.+128,
                                             sin((x     )*M_PI*2)*128.+128);}
-inline int colorlerp(int col1, int col2, double w){return makecol(round(lerp(geta(col1), geta(col2), w)),
-                                                                  round(lerp(getr(col1), getr(col2), w)),
-                                                                  round(lerp(getg(col1), getg(col2), w)),
-                                                                  round(lerp(getb(col1), getb(col2), w)));}
+inline int colorlerp(int col1, int col2, double w){return argb_to_col(round(lerp(geta(col1), geta(col2), w)),
+                                                                      round(lerp(getr(col1), getr(col2), w)),
+                                                                      round(lerp(getg(col1), getg(col2), w)),
+                                                                      round(lerp(getb(col1), getb(col2), w)));}
 inline string color_to_string(int c){return "(" + to_string(geta(c)) + ", " + to_string(getr(c)) + ", " + to_string(getg(c)) + ", " + to_string(getb(c)) + ")";}
 inline void print_argb(int c){cout << color_to_string(c) << endl;}
 
@@ -91,8 +91,6 @@ void hsv2rgb(double h, double s, double v, int& r, int& g, int& b)
     }
 }
 
-bool inline_unit_tests_verbose = false;
-
 // Unit test for coldist function
 void coldist_ut() {
     int col1 = 0xF0A0B0C0;
@@ -108,19 +106,19 @@ void coldist_ut() {
     }
 }
 
-// Unit test for makecol function
-void makecol_ut() {
+// Unit test for argb_to_col function
+void argb_to_col_ut() {
     int a = 0xde;
     int r = 0xad;
     int g = 0xbe;
     int b = 0xef;
-    int result = makecol(a, r, g, b);
+    int result = argb_to_col(a, r, g, b);
     int expected = 0xdeadbeef;
 
     if (result == expected) {
-        if(inline_unit_tests_verbose) cout << "makecol_alpha_ut passed." << endl;
+        if(inline_unit_tests_verbose) cout << "argb_to_col_alpha_ut passed." << endl;
     } else {
-        cout << "makecol_alpha_ut failed." << endl;
+        cout << "argb_to_col_alpha_ut failed." << endl;
         exit(1);
     }
 }
@@ -129,7 +127,7 @@ void makecol_ut() {
 void rainbow_ut() {
     double x = 0.25;
     int result = rainbow(x);
-    int expected = 4210688 + (255<<24); // Equivalent to makecol(255, 191, 64)
+    int expected = 4210688 + (255<<24); // Equivalent to argb_to_col(255, 191, 64)
 
     if (result == expected) {
         if(inline_unit_tests_verbose) cout << "rainbow_ut passed." << endl;
@@ -197,11 +195,11 @@ void getb_ut() {
 
 // Unit test for colorlerp function
 void colorlerp_ut() {
-    int col1 = makecol(2, 255, 0, 0);  // Red
-    int col2 = makecol(4, 0, 0, 255);  // Blue
+    int col1 = argb_to_col(2, 255, 0, 0);  // Red
+    int col2 = argb_to_col(4, 0, 0, 255);  // Blue
     double w = 0.5;
     int result = colorlerp(col1, col2, w);
-    int expected = makecol(3, 128, 0, 128);  // Purple
+    int expected = argb_to_col(3, 128, 0, 128);  // Purple
 
     if (result == expected) {
         if(inline_unit_tests_verbose) cout << "colorlerp_ut passed." << endl;
@@ -214,8 +212,8 @@ void colorlerp_ut() {
 // Unit test for color_combine function
 void color_combine_ut() {
     {
-        int col1 = makecol(0, 198, 55, 18); // Transparent Random
-        int col2 = makecol(4, 5, 6, 7);
+        int col1 = argb_to_col(0, 198, 55, 18); // Transparent Random
+        int col2 = argb_to_col(4, 5, 6, 7);
         double w = 0.5;
         int result = color_combine(col1, col2);
         int expected = col2;
@@ -229,8 +227,8 @@ void color_combine_ut() {
     }
 
     {
-        int col1 = makecol(134, 198, 55, 18); // Random Color
-        int col2 = makecol(255, 5  , 6 , 7 ); // Random opaque color;
+        int col1 = argb_to_col(134, 198, 55, 18); // Random Color
+        int col2 = argb_to_col(255, 5  , 6 , 7 ); // Random opaque color;
         double w = 0.5;
         int result = color_combine(col1, col2);
         int expected = col2;
@@ -244,11 +242,11 @@ void color_combine_ut() {
     }
 
     {
-        int col1 = makecol(128, 0, 0, 128); // Semi-Opaque Blue
-        int col2 = makecol(128, 128, 0, 0); // Semi-Opaque Red
+        int col1 = argb_to_col(128, 0, 0, 128); // Semi-Opaque Blue
+        int col2 = argb_to_col(128, 128, 0, 0); // Semi-Opaque Red
         double w = 0.5;
         int result = color_combine(col1, col2);
-        int expected = makecol(192, 85, 0, 43); // Opaquer Purple
+        int expected = argb_to_col(192, 85, 0, 43); // Opaquer Purple
 
         if (result == expected) {
             if(inline_unit_tests_verbose) cout << "color_combine_ut passed." << endl;
@@ -259,25 +257,15 @@ void color_combine_ut() {
     }
 }
 
-void run_inlines_unit_tests(){
-    sigmoid_ut();
-    min_ut();
-    max_ut();
-    square_ut();
-    cube_ut();
-    rgb_to_col_ut();
-    smoother1_ut();
-    smoother2_ut();
+void run_color_unit_tests(){
     coldist_ut();
-    lerp_ut();
-    makecol_ut();
+    argb_to_col_ut();
     rainbow_ut();
     geta_ut();
     getr_ut();
     getg_ut();
     getb_ut();
     colorlerp_ut();
-    latex_text_ut();
     color_combine_ut();
     cout << "inline tests passed." << endl;
 }

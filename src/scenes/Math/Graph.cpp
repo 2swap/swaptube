@@ -11,6 +11,9 @@
 #include <deque>
 #include <random>
 #include <limits.h>
+#include <glm/glm.hpp>
+#include <queue>
+#include <cstdlib>
 #include "GenericBoard.cpp"
 #include "../../misc/json.hpp"
 using json = nlohmann::json;
@@ -28,13 +31,13 @@ public:
     }
     struct HashFunction {
         size_t operator()(const Edge& edge) const {
-            size_t toHash = std::hash<int>()(edge.to);
-            size_t fromHash = std::hash<int>()(edge.from) << 1;
+            size_t toHash = hash<int>()(edge.to);
+            size_t fromHash = hash<int>()(edge.from) << 1;
             return toHash ^ fromHash;
         }
     };
 };
-using EdgeSet = std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>;
+using EdgeSet = unordered_set<Edge, Edge::HashFunction, equal_to<Edge>>;
 
 template <class T>
 class Node {
@@ -43,7 +46,13 @@ public:
      * Constructor to create a new node.
      * @param t The data associated with the node.
      */
-    Node(T* t, double hash) : data(t), hash(hash) {}
+    Node(T* t, double hash) : data(t), hash(hash),
+        velocity(0,0,0,0),
+        position(static_cast<double>(std::rand()) / RAND_MAX,
+                 static_cast<double>(std::rand()) / RAND_MAX,
+                 static_cast<double>(std::rand()) / RAND_MAX,
+                 static_cast<double>(std::rand()) / RAND_MAX) {}
+
     double hash = 0;
     bool highlight = false;
     T* data;
@@ -52,8 +61,8 @@ public:
     int color = 0xffffffff;
     bool flooded = false;
     bool immobile = false;
-    double vx = (double)rand() / (RAND_MAX), vy = (double)rand() / (RAND_MAX), vz = (double)rand() / (RAND_MAX), vw = (double)rand() / (RAND_MAX);
-    double  x = (double)rand() / (RAND_MAX),  y = (double)rand() / (RAND_MAX),  z = (double)rand() / (RAND_MAX),  w = (double)rand() / (RAND_MAX);
+    glm::dvec4 velocity;
+    glm::dvec4 position;
 };
 
 /**
@@ -67,8 +76,8 @@ public:
         return nodes.size();
     }
 
-    std::deque<double> traverse_deque;
-    std::unordered_map<double, Node<T>> nodes;
+    deque<double> traverse_deque;
+    unordered_map<double, Node<T>> nodes;
     double root_node_hash = 0;
 
     double gravity_strength = 0;
@@ -77,7 +86,6 @@ public:
     double repel_force = 1;
     double attract_force = 1;
     int dimensions = 2;
-    bool lock_root_at_origin = true;
     bool sqrty = true;
 
     Graph(){}
@@ -115,7 +123,7 @@ public:
     }
     double add_node_without_edges(T* t){
         double hash = t->get_hash();
-        if(size()%500 == 999) std::cout << "Node count: " << size() << std::endl;
+        if(size()%500 == 999) cout << "Node count: " << size() << endl;
         if (node_exists(hash)) {
             delete t;
             return hash;
@@ -123,7 +131,6 @@ public:
         Node<T> new_node(t, hash);
         if (size() == 0) {
             root_node_hash = hash;
-            if (lock_root_at_origin) new_node.x = new_node.y = new_node.z = new_node.w = 0;
         }
         nodes.emplace(hash, new_node);
         return hash;
@@ -139,7 +146,7 @@ public:
             double id = traverse_deque.front();
             traverse_deque.pop_front();
 
-            std::unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
+            unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
             for (const auto& child : child_nodes) {
                 double child_hash = child->get_hash();
                 if (!node_exists(child_hash)) {
@@ -218,16 +225,14 @@ public:
     void add_missing_edges(bool teleport_orphans_to_parents) {
         for (auto& pair : nodes) {
             Node<T>& parent = pair.second;
-            std::unordered_set<double> child_hashes = parent.data->get_children_hashes();
+            unordered_set<double> child_hashes = parent.data->get_children_hashes();
 
             for (double child_hash : child_hashes) {
                 // this theoretical child isn't guaranteed to be in the graph
                 if(!node_exists(child_hash)) continue;
                 Node<T>& child = nodes.find(child_hash)->second;
                 if(teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)/*child is orphan*/){
-                    child.x = parent.x;
-                    child.y = parent.y;
-                    child.z = parent.z;
+                    child.position = parent.position;
                 }
                 add_directed_edge(parent.hash, child_hash);
             }
@@ -273,16 +278,16 @@ public:
     }
 
     // Function to find the shortest path between two nodes using Dijkstra's algorithm
-    std::pair<std::list<double>, std::list<Edge*>> shortest_path(double start, double end) {
-        std::unordered_map<double, double> distances;
-        std::unordered_map<double, double> predecessors;
-        std::unordered_set<double> visited;
+    pair<list<double>, list<Edge*>> shortest_path(double start, double end) {
+        unordered_map<double, double> distances;
+        unordered_map<double, double> predecessors;
+        unordered_set<double> visited;
         auto compare = [&](double lhs, double rhs) { return distances[lhs] > distances[rhs]; };
-        std::priority_queue<double, std::vector<double>, decltype(compare)> priority_queue(compare);
+        priority_queue<double, vector<double>, decltype(compare)> priority_queue(compare);
 
         // Initialize distances
         for (const auto& node_pair : nodes) {
-            distances[node_pair.first] = std::numeric_limits<double>::max();
+            distances[node_pair.first] = numeric_limits<double>::max();
         }
         distances[start] = 0;
         priority_queue.push(start);
@@ -308,12 +313,12 @@ public:
         }
 
         // Reconstruct the shortest path
-        std::list<double> path;
-        std::list<Edge*> edges;
+        list<double> path;
+        list<Edge*> edges;
         for (double at = end; at != start; at = predecessors[at]) {
             if (predecessors.find(at) == predecessors.end()) {
                 // If there's no path from start to end, return empty lists
-                return {std::list<double>(), std::list<Edge*>()};
+                return {list<double>(), list<Edge*>()};
             }
             path.push_front(at);
             for (auto& edge : nodes.at(predecessors[at]).neighbors) {
@@ -332,7 +337,7 @@ public:
         bool orphan_found;
         do {
             orphan_found = false;
-            std::unordered_set<double> non_orphans;
+            unordered_set<double> non_orphans;
 
             // Mark all nodes that are in the "to" position of any edge
             for (const auto& node_pair : nodes) {
@@ -360,110 +365,67 @@ public:
      * @param iterations The number of iterations to perform.
      */
     void iterate_physics(int iterations){
-        std::vector<Node<T>*> node_vector; // Change from list to vector
+        vector<Node<T>*> node_vector; // Change from list to vector
 
         for (auto& node_pair : nodes) {
             node_vector.push_back(&node_pair.second); // Add it to the vector
         }
-        int s = node_vector.size();
 
         for (int n = 0; n < iterations; n++) {
-            //if(n%10==0) std::cout << "Spreading out graph, iteration " << n << ". Node count = " << s << std::endl;
+            if(n%10==9) cout << "Spreading out graph, iteration " << n << "." << endl;
+                perform_single_physics_iteration(node_vector);
+        }
+    }
 
-            for (size_t i = 0; i < s; ++i) {
-                Node<T>* node = node_vector[i];
-                for (size_t j = i+1; j < s; ++j) {
-                    Node<T>* node2 = node_vector[j];
-                    
-                    double dx = node2->x - node->x;
-                    double dy = node2->y - node->y;
-                    double dz = node2->z - node->z;
-                    double dw = node2->w - node->w;
-                    double force = repel_force;
-                    double dist_sq = dx * dx + dy * dy + dz * dz + dw * dw + .1;
-                    if(sqrty){
-                        force *= .5/dist_sq;
-                    } else {
-                        force *= .0025 / (dist_sq*dist_sq);
-                    }
-                    double nx = force * dx;
-                    double ny = force * dy;
-                    double nz = force * dz;
-                    double nw = force * dw;
-
-                    node2->vx += nx;
-                    node2->vy += ny;
-                    node2->vz += nz;
-                    node2->vw += nw;
-                    node->vx -= nx;
-                    node->vy -= ny;
-                    node->vz -= nz;
-                    node->vw -= nw;
-                }
-                const EdgeSet& neighbor_nodes = node->neighbors;
-                
-                for (const Edge& neighbor_edge : neighbor_nodes) {
-                    double neighbor_id = neighbor_edge.to;
-                    Node<T>& neighbor = nodes.at(neighbor_id);
-                    
-                    double dx = node->x - neighbor.x;
-                    double dy = node->y - neighbor.y;
-                    double dz = node->z - neighbor.z;
-                    double dw = node->w - neighbor.w;
-                    double force = attract_force;
-                    double dist_sq = dx * dx + dy * dy + dz * dz + dw * dw + 1;
-                    if(sqrty){
-                        force *= (dist_sq-1)/dist_sq;
-                    } else {
-                        force *= 1/dist_sq + dist_sq - 2;
-                    }
-                    double nx = force * dx;
-                    double ny = force * dy;
-                    double nz = force * dz;
-                    double nw = force * dw;
-                    
-                    neighbor.vx += nx;
-                    neighbor.vy += ny;
-                    neighbor.vz += nz;
-                    neighbor.vw += nw;
-                    node->vx -= nx;
-                    node->vy -= ny;
-                    node->vz -= nz;
-                    node->vw -= nw;
-                }
+    void perform_single_physics_iteration(const vector<Node<T>*>& node_vector){
+        int s = node_vector.size();
+        for (size_t i = 0; i < s; ++i) {
+            Node<T>* node = node_vector[i];
+            for (size_t j = i+1; j < s; ++j) {
+                Node<T>* node2 = node_vector[j];
+                perform_pairwise_node_motion(node, node2, true);
             }
-
-            for (size_t i = 0; i < s; ++i) {
-                Node<T>* node = node_vector[i];
-                if((lock_root_at_origin && node->hash == root_node_hash) || node->immobile){
-                    continue;
-                }
-                double magnitude = std::sqrt(node->vx * node->vx + node->vy * node->vy + node->vz * node->vz + node->vw * node->vw);
-                if(magnitude > speedlimit) {
-                    double scale = speedlimit / magnitude;
-
-                    node->vx *= scale;
-                    node->vy *= scale;
-                    node->vz *= scale;
-                    node->vw *= scale;
-                }
-                node->vy += gravity_strength;
-                node->vx *= decay;
-                node->vy *= decay;
-                node->vz *= decay;
-                node->vw *= decay;
-                node->x += node->vx;
-                node->y += node->vy;
-                if(dimensions>=3)
-                    node->z += node->vz;
-                else
-                    node->z = 0;
-                if(dimensions>=4)
-                    node->w = (node->w + node->vw)*.9;
-                else
-                    node->w = 0;
+            const EdgeSet& neighbor_nodes = node->neighbors;
+            for (const Edge& neighbor_edge : neighbor_nodes) {
+                double neighbor_id = neighbor_edge.to;
+                Node<T>* neighbor = &nodes.at(neighbor_id);
+                perform_pairwise_node_motion(node, neighbor, false);
             }
         }
+
+        for (size_t i = 0; i < s; ++i) {
+            Node<T>* node = node_vector[i];
+            if(node->immobile) continue;
+            double magnitude = glm::length(node->velocity);
+            if(magnitude > speedlimit) {
+                double scale = speedlimit / magnitude;
+                node->velocity *= scale;
+            }
+            node->velocity.y += gravity_strength;
+            node->velocity *= decay;
+            if(dimensions < 3) node->velocity.z = 0;
+            if(dimensions < 4) node->velocity.w = 0;
+            node->position += node->velocity;
+        }
+    }
+
+    double get_attraction_force(double dist_sq){
+        if(sqrty) return attract_force * (dist_sq-1)/dist_sq;
+        else      return attract_force * (1/dist_sq + dist_sq - 2);
+    }
+
+    double get_repulsion_force(double dist_sq){
+        if(sqrty) return repel_force * .5/dist_sq;
+        else      return repel_force * .0025 / (dist_sq*dist_sq);
+    }
+
+    void perform_pairwise_node_motion(Node<T>* node1, Node<T>* node2, bool repulsion_mode) {
+        glm::dvec4 delta = node1->position - node2->position;
+        double dist_sq = square(delta.x) + square(delta.y) + square(delta.z) + square(delta.w) + 1;
+        double force = repulsion_mode?get_repulsion_force(dist_sq):get_attraction_force(dist_sq);
+        glm::dvec4 change = delta * force;
+        node2->velocity += change;
+        node1->velocity -= change;
     }
 };
 

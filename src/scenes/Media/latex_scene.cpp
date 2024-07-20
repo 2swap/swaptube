@@ -3,6 +3,9 @@
 #include "../../misc/visual_media.cpp"
 #include "../scene.cpp"
 
+// Special function which ensures no temporary transparency while performing latex transitions
+inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
+
 class LatexScene : public Scene {
 public:
     LatexScene(const int width, const int height, string eqn, double extra_scale) : Scene(width, height), equation_string(eqn) {init_latex_scene(extra_scale);}

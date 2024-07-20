@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <librsvg-2.0/librsvg/rsvg.h>
 #include "inlines.h"
 #include <unistd.h>
 #include <stdio.h>
@@ -174,7 +173,7 @@ public:
                 int a, r, g, b;
                 get_pixel_by_channels(x, y, a, r, g, b);
                 if(r != b || g != r) continue; // if this pixel is not true grayscale
-                pixels[x+y*w] = makecol(r, 255, 255, 255);
+                pixels[x+y*w] = argb_to_col(r, 255, 255, 255);
             }
         }
     }
@@ -274,6 +273,7 @@ public:
         }
     }
 
+    inline float fractional_part(float x) {return x - floor(x);}
     void xiaolin_wu(int x0, int y0, int x1, int y1, int col) {
         bool steep = abs(y1 - y0) > abs(x1 - x0);
         if (steep) {
