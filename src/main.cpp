@@ -1,4 +1,3 @@
-#pragma once
 using namespace std;
 
 #include <iostream>
@@ -9,7 +8,7 @@ using namespace std;
 
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
-int MULT = 3;
+int MULT = 2;
 int VIDEO_WIDTH = WIDTH_BASE*MULT;
 int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
 int VIDEO_FRAMERATE = 30;
@@ -19,6 +18,7 @@ int video_num_frames = 0;
 string project_name = "to_be_populated";
 
 #include "misc/inlines.h"
+#include "misc/color.cpp"
 #include "misc/dagger.cpp"
 #include "audio_video/AudioSegment.cpp"
 #include "audio_video/writer.cpp"
@@ -38,6 +38,7 @@ void setup_writer(const string& project_name){
 
 void run_unit_tests(){
     run_inlines_unit_tests();
+    run_color_unit_tests();
     test_dagger();
     run_convolution_unit_tests();
     run_c4_unit_tests();

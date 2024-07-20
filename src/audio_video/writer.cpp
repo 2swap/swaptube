@@ -13,6 +13,17 @@ char* err2str(int errnum)
     return av_make_error_string(str, AV_ERROR_MAX_STRING_SIZE, errnum);
 }
 
+void ensure_directory_exists(const std::string& path) {
+    if (filesystem::exists(path)) {
+        cout << "Directory " << path << " already exists, not creating." << endl;
+    } else {
+        if (filesystem::create_directory(path)) {
+            cout << "Directory " << path << " created successfully." << endl;
+        } else {
+            failout("Failed to create directory " + path + ".");
+        }
+    }
+}
 
 using namespace std;
 
@@ -42,17 +53,10 @@ public:
         audiowriter(media_folder, fc),
         videowriter(output_filename, fc)
     {
-        // Check if the folder already exists
-        if (filesystem::exists(media_folder)) {
-            cout << "Media folder already exists, not creating." << endl;
-        } else {
-            // Create the folder
-            if (filesystem::create_directory(media_folder)) {
-                cout << "Media folder created successfully." << endl;
-            } else {
-                cout << "Failed to create media folder." << endl;
-            }
-        }
+        // Ensure necessary directories exist
+        ensure_directory_exists("../media/");
+        ensure_directory_exists(media_folder);
+        ensure_directory_exists("../out/");
     }
 
     ~MovieWriter(){

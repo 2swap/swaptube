@@ -3,6 +3,7 @@
 #include <png.h>
 #include <vector>
 #include <stdexcept>
+#include <librsvg-2.0/librsvg/rsvg.h>
 #include "pixels.h"
 
 enum class ScalingMode {
@@ -28,14 +29,14 @@ Pixels png_to_pix(const string& filename) {
     // Open the PNG file
     FILE* fp = fopen(("/home/swap/CS/swaptube/media/" + project_name + "/" + filename + ".png").c_str(), "rb");
     if (!fp) {
-        throw std::runtime_error("Failed to open PNG file.");
+        throw runtime_error("Failed to open PNG file.");
     }
 
     // Create and initialize the png_struct
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!png) {
         fclose(fp);
-        throw std::runtime_error("Failed to create png read struct.");
+        throw runtime_error("Failed to create png read struct.");
     }
 
     // Create and initialize the png_info
@@ -43,14 +44,14 @@ Pixels png_to_pix(const string& filename) {
     if (!info) {
         png_destroy_read_struct(&png, nullptr, nullptr);
         fclose(fp);
-        throw std::runtime_error("Failed to create png info struct.");
+        throw runtime_error("Failed to create png info struct.");
     }
 
     // Set up error handling (required without using the default error handlers)
     if (setjmp(png_jmpbuf(png))) {
         png_destroy_read_struct(&png, &info, nullptr);
         fclose(fp);
-        throw std::runtime_error("Error during PNG creation.");
+        throw runtime_error("Error during PNG creation.");
     }
 
     // Initialize input/output for libpng
@@ -86,7 +87,7 @@ Pixels png_to_pix(const string& filename) {
     png_read_update_info(png, info);
 
     // Read image data
-    std::vector<png_bytep> row_pointers(height);
+    vector<png_bytep> row_pointers(height);
     for (int y = 0; y < height; y++) {
         row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png, info));
     }
@@ -140,7 +141,7 @@ Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
     Pixels ret(width, height);
 
     // Create a uint8_t array to store the raw pixel data
-    std::vector<uint8_t> raw_data(width * height * 4);
+    vector<uint8_t> raw_data(width * height * 4);
 
     // Render the SVG
     cairo_surface_t* surface = cairo_image_surface_create_for_data(raw_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4);
@@ -165,8 +166,11 @@ Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
 }
 
 // Create an unordered_map to store the cached results
-std::unordered_map<std::string, Pixels> latex_cache;
+unordered_map<string, Pixels> latex_cache;
 
+/*
+ * We use MicroTEX to convert LaTeX equations into svg files.
+ */
 Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
     // Check if the result is already in the cache
     auto it = latex_cache.find(eqn);

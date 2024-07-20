@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <filesystem>
 #include <sys/stat.h>
 extern "C"
 {
@@ -76,11 +77,21 @@ public:
     }
 
     void init_audio(const string& inputAudioFilename) {
+        // Check if the input file exists
+        if (!filesystem::exists(inputAudioFilename)) {
+            failout("Error: Input audio file " + inputAudioFilename + " does not exist.");
+        }
+
         AVFormatContext* inputAudioFormatContext = nullptr;
-        avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr);
+        if (avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr) < 0) {
+            failout("Error: Could not open input audio file " + inputAudioFilename);
+        }
 
         // Find input audio stream information
-        avformat_find_stream_info(inputAudioFormatContext, nullptr);
+        if (avformat_find_stream_info(inputAudioFormatContext, nullptr) < 0){
+            avformat_close_input(&inputAudioFormatContext);
+            failout("Error: Could not find stream information in input audio file " + inputAudioFilename);
+        }
 
         // Find input audio stream
         audioStreamIndex = -1;
@@ -112,6 +123,7 @@ public:
 
         avformat_close_input(&inputAudioFormatContext);
     }
+
     void set_audiotime(double t_seconds) {
         double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
         /*if(t_samples < audiotime){

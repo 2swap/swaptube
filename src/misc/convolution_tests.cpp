@@ -5,7 +5,7 @@ void unit_test_convolve() {
     Pixels a(15, 15);
     Pixels b(10, 10);
 
-    int col = makecol(255,255,255,255);
+    int col = argb_to_col(255,255,255,255);
     a.fill_rect(2, 2, 6, 6, col);  // Fill a rectangle in 'a'
     b.fill_rect(3, 3, 3, 3, col);  // Fill a smaller rectangle in 'b'
 

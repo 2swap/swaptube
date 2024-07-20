@@ -174,7 +174,7 @@ Pixels erase_small_components(const Pixels& p, int min_size) {
         for (int x = 0; x < segmented.w; x++) {
             int componentId = segmented.get_pixel(x, y);
             if (componentArea[componentId - 1] < min_size) {
-                result.set_pixel(x, y, makecol(0,255,255,255));
+                result.set_pixel(x, y, argb_to_col(0,255,255,255));
             }
         }
     }
@@ -263,7 +263,7 @@ Pixels subtract(const Pixels& p1, const Pixels& p2, int dx, int dy) {
 
             int alpha_diff = geta(pixel1) - geta(pixel2);
             int new_alpha = max(alpha_diff, 0);
-            int new_pixel = makecol(new_alpha, getr(pixel1), getg(pixel1), getb(pixel1));
+            int new_pixel = argb_to_col(new_alpha, getr(pixel1), getg(pixel1), getb(pixel1));
 
             result.set_pixel(x, y, new_pixel);
         }
@@ -426,7 +426,7 @@ Pixels erase_low_iou(const Pixels& intersection, float threshold, const Pixels& 
         for (int x = 0; x < segmented3.w; x++) {
             int componentId3 = segmented3.get_pixel(x, y) - 1;
             if (componentId3 != -1 && !keepComponent[componentId3]) {
-                result.set_pixel(x, y, makecol(0, 255, 255, 255));
+                result.set_pixel(x, y, argb_to_col(0, 255, 255, 255));
             }
         }
     }
