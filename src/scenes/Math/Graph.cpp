@@ -415,8 +415,8 @@ public:
     }
 
     double get_repulsion_force(double dist_sq){
-        if(sqrty) return repel_force * .5/dist_sq;
-        else      return repel_force * .0025 / (dist_sq*dist_sq);
+        if(sqrty) return -repel_force * .5/dist_sq;
+        else      return -repel_force * .0025 / (dist_sq*dist_sq);
     }
 
     void perform_pairwise_node_motion(Node<T>* node1, Node<T>* node2, bool repulsion_mode) {
