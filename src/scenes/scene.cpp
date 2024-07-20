@@ -1,10 +1,14 @@
 #pragma once
 
 #include <unordered_map>
+#include <chrono>
 #include <cassert>
 #include "../misc/dagger.cpp"
+#include "../audio_video/DebugPlot.h"
 
 using namespace std;
+
+static DebugPlot time_per_frame_plot("render_time_per_frame");
 
 class Scene {
 public:
@@ -78,6 +82,8 @@ public:
   
 private:
     void render_one_frame(int subscene_frame){
+        auto start_time = chrono::high_resolution_clock::now(); // Start timing
+
         dag.set_special("frame_number", dag["frame_number"] + 1);
         dag.set_special("t", dag["frame_number"] / VIDEO_FRAMERATE);
         dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
@@ -96,6 +102,10 @@ private:
         if(PRINT_TO_TERMINAL && (int(dag["frame_number"]) % 5 == 0)) p->print_to_terminal();
         WRITER->add_frame(*p);
         superscene_frames_left--;
+
+        auto end_time = chrono::high_resolution_clock::now(); // End timing
+        chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
+        time_per_frame_plot.add_datapoint(frame_duration.count()); // Add the time to DebugPlot
     }
 
 protected:

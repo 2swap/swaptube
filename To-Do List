@@ -23,7 +23,6 @@ Fix the subtitle splitter
 Fix yucky interface between main.cpp and .active_project.cpp
 Project should define resolution and framerate, not main file
 Color Class
-Cleanup Inlines.h
 
 	Simplify and Abstract
 Give each scene its own DAG
