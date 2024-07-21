@@ -51,13 +51,7 @@ struct VariableContents {
 
 class Dagger {
 public:
-    Dagger() {
-        variables["t"                           ] = VariableContents("", 0, true, true);
-        variables["frame_number"                ] = VariableContents("", 0, true, true);
-        variables["audio_segment_number"        ] = VariableContents("", 0, true, true);
-        variables["transition_fraction"         ] = VariableContents("", 0, true, true);
-        variables["subscene_transition_fraction"] = VariableContents("", 0, true, true);
-    }
+    Dagger() { }
 
     /* Accessors */
     bool contains(const string& varname) const {
@@ -307,14 +301,10 @@ private:
     }
 };
 
-// Global dagger
-Dagger dag;
-
 void test_dagger() {
     cout << "Testing dagger" << endl;
     // Construct a Dagger object
     Dagger dagger;
-    assert(dagger["t"] == 0);
 
     // Add equations
     dagger.add_equation("x", "5"); // x = 5

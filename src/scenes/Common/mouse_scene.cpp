@@ -4,8 +4,7 @@
 
 class MouseScene : public Scene {
 public:
-    MouseScene(const int width, const int height) : Scene(width, height) {}
-    MouseScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {}
+    MouseScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
 
     void query(bool& done_scene, Pixels*& p) override {
         pix.fill(TRANSPARENT_BLACK);

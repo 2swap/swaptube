@@ -5,7 +5,7 @@ class Timer {
 public:
     Timer() : start(std::chrono::high_resolution_clock::now()) {}
 
-    void stop_timer(double time) {
+    void stop_timer(double time = -1) {
         // Stop the timer.
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);

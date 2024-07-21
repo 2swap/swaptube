@@ -49,19 +49,21 @@ struct Surface {
     float ilr2;
     float iur2;
     double opacity;
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc), opacity(1) {
-        ilr2 = 0.5/square(glm::length(l));
-        iur2 = 0.5/square(glm::length(u));
-        normal = glm::cross(pos_x_dir, pos_y_dir);
-    }
+    int color;
+    // Two types of surfaces- ones which are backed by a scene, and ones which are constant color
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc)
+        : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc), opacity(1),
+        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir) {}
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, int col)
+        : center(c), pos_x_dir(l), pos_y_dir(u), color(col), scenePointer(NULL), opacity(1),
+        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir) {}
 };
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width, const int height) : Scene(width, height), sketchpad(width, height) {over_w_fov = 1 / (w*fov);}
-    ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), sketchpad(VIDEO_WIDTH, VIDEO_HEIGHT) {over_w_fov = 1 / (w*fov);}
+    ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), sketchpad(width, height) {over_w_fov = 1 / (w*fov);}
 
-    std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
+    pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
         coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
         if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
@@ -237,16 +239,16 @@ public:
             // Check if the current point is within bounds and has the old color
             if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
 
-            //if(pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
+            int color = surface.color;
+
+            if(surface.sp != NULL){ // If this is not a surface of constant color
                 //compute position in surface's coordinate frame as a function of x and y.
                 glm::vec2 surface_coords = screen_to_surface_intersection(dotnormcam, cx, cy, surface);
+                color = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h)l
+            }
 
-                // Set the pixel to the new color
-                double x_pix = surface_coords.x*p->w+.5;
-                double y_pix = surface_coords.y*p->h+.5;
-                //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? OPAQUE_WHITE : OPAQUE_BLACK; // add tiling to void space
-                pix.overlay_pixel(cx, cy, p->get_pixel(x_pix, y_pix), opacity);
-            //}
+            // Set the pixel to the new color
+            pix.overlay_pixel(cx, cy, color, opacity);
 
             sketchpad.set_pixel(cx, cy, padcol);
 

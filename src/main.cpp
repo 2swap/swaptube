@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
         }
         delete WRITER;
     }
-    timer.stop_timer(dag["t"]);
+    timer.stop_timer();
 
     return 0;
 }

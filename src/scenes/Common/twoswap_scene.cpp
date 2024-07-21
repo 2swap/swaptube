@@ -5,10 +5,7 @@
 
 class TwoswapScene : public Scene {
 public:
-    TwoswapScene(const int width, const int height) : Scene(width, height) {init();}
-    TwoswapScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {init();}
-
-    void init(){
+    TwoswapScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {
         ScalingParams sp(pix.w*.7, pix.h);
         Pixels twoswap_pix = eqn_to_pix(latex_text("2swap"), sp);
         pix.fill_ellipse(pix.w/4, pix.h/2, pix.w/14, pix.w/14, OPAQUE_WHITE);
