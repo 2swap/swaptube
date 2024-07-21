@@ -382,7 +382,7 @@ public:
 
     void perform_single_physics_iteration(const vector<Node<T>*>& node_vector){
         int s = node_vector.size();
-        glm::dvec4 center_of_mass;
+        glm::dvec4 center_of_mass(0,0,0,0);
 
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
@@ -399,7 +399,6 @@ public:
             }
         }
         center_of_mass /= s;
-        cout << "cent" << center_of_mass.x << endl;
 
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
@@ -411,14 +410,13 @@ public:
             }
             node->velocity.y += gravity_strength;
             node->velocity *= decay;
+            node->position += node->velocity - center_of_mass;
             if(dimensions < 3) {node->velocity.z = 0; node->position.z = 0;}
             if(dimensions < 4) {node->velocity.w = 0; node->position.w = 0;}
-            node->position += node->velocity - center_of_mass;
         }
     }
 
     double get_attraction_force(double dist_sq){
-        return 0;
         if(sqrty) return attract_force * (dist_sq-1)/dist_sq;
         else      return attract_force * (1/dist_sq + dist_sq - 2);
     }

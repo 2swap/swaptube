@@ -28,7 +28,7 @@ struct Point {
     int color; // ARGB integer representation
     double opacity;
     NodeHighlightType highlight;
-    Point(string n, const glm::vec3& pos, int clr, NodeHighlightType hlt=NORMAL, double op=1) : position(pos), color(clr), highlight(hlt), opacity(op) {}
+    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt=NORMAL, double op=1) : position(pos), color(clr), highlight(hlt), opacity(op) {}
 };
 
 struct Line {
@@ -44,24 +44,26 @@ struct Surface {
     glm::vec3 center;
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
+    glm::vec3 normal;
     Scene* scenePointer;
-    double lr2;
-    double ur2;
+    float ilr2;
+    float iur2;
     double opacity;
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc) : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc), opacity(1) {
-        lr2 = square(glm::length(l));
-        ur2 = square(glm::length(u));
+        ilr2 = 0.5/square(glm::length(l));
+        iur2 = 0.5/square(glm::length(u));
+        normal = glm::cross(pos_x_dir, pos_y_dir);
     }
 };
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width, const int height) : Scene(width, height), sketchpad(width, height) {}
-    ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), sketchpad(VIDEO_WIDTH, VIDEO_HEIGHT) {}
+    ThreeDimensionScene(const int width, const int height) : Scene(width, height), sketchpad(width, height) {over_w_fov = 1 / (w*fov);}
+    ThreeDimensionScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT), sketchpad(VIDEO_WIDTH, VIDEO_HEIGHT) {over_w_fov = 1 / (w*fov);}
 
     std::pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
-        coordinate = camera_direction * (coordinate - camera_pos) * glm::conjugate(camera_direction);
+        coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
         if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
         double scale = (w*fov) / coordinate.z; // perspective projection
@@ -71,24 +73,24 @@ public:
         return {x, y};
     }
 
-    glm::vec3 unproject(double px, double py) {
-        // Compute the reverse of the projection
-        glm::vec3 coordinate;
-        coordinate.z = 10;
-        double invscale = coordinate.z / (w*fov);
-        coordinate.x = (px-w*.5)*invscale;
-        coordinate.y = (py-h*.5)*invscale;
-        coordinate = glm::conjugate(camera_direction) * coordinate * camera_direction + camera_pos;
-        return coordinate;
-    }
+    glm::vec2 screen_to_surface_intersection(float dotnormcam, double px, double py, const Surface &surface) {
+        // Compute the ray direction from the camera through the screen point
+        glm::vec3 ray_dir((px - w * 0.5) * over_w_fov, (py - h * 0.5) * over_w_fov, 1);
+        ray_dir = conjugate_camera_direction * ray_dir * camera_direction;
 
-    void unit_test_unproject(){
-        for(int x = 0; x < 2; x++)
-            for(int y = 0; y < 2; y++){
-                bool behind_camera = false;
-                pair<double, double> out = coordinate_to_pixel(unproject(x, y), behind_camera);
-                assert(square(out.first-x) < .01 && square(out.second-y) < .01);
-            }
+        // Compute the intersection point in 3D space
+        float t = dotnormcam / glm::dot(surface.normal, ray_dir);
+
+        glm::vec3 intersection_3D = camera_pos + t * ray_dir;
+
+        // Convert 3D intersection point to surface's local 2D coordinates
+        glm::vec3 centered = intersection_3D - surface.center;
+        glm::vec2 intersection_2D(
+            glm::dot(centered, surface.pos_x_dir) * surface.ilr2 + 0.5f,
+            glm::dot(centered, surface.pos_y_dir) * surface.iur2 + 0.5f
+        );
+
+        return intersection_2D;
     }
 
     bool isOutsideScreen(const pair<int, int>& point) {
@@ -219,14 +221,15 @@ public:
             int y1 = corners[i].second;
             int x2 = corners[(i+1)%4].first;
             int y2 = corners[(i+1)%4].second;
-            double fineness = 50;
-            for(double j = 0.5; j < fineness; j++){
-                q.push({lerp(x1, cx, j/fineness), lerp(y1, cy, j/fineness)});
+            float fineness = 50;
+            for(float j = 0.5; j < fineness; j++){
+                float jf = j/fineness;
+                q.push({lerp(x1, x2, jf), lerp(y1, y2, jf)});
             }
         }
 
-        glm::vec3 normal = glm::cross(surface.pos_x_dir, surface.pos_y_dir);
-
+        double opacity = surface.opacity * dag["surfaces_opacity"];
+        float dotnormcam = glm::dot(surface.normal, (surface.center - camera_pos));
         while (!q.empty()) {
             auto [cx, cy] = q.front();
             q.pop();
@@ -236,13 +239,13 @@ public:
 
             //if(pix.get_pixel(cx, cy) == TRANSPARENT_BLACK){
                 //compute position in surface's coordinate frame as a function of x and y.
-                glm::vec3 particle_3d = unproject(cx, cy);
-                glm::vec2 surface_coords = intersection_point(camera_pos, particle_3d-camera_pos, surface, normal);
+                glm::vec2 surface_coords = screen_to_surface_intersection(dotnormcam, cx, cy, surface);
+
                 // Set the pixel to the new color
                 double x_pix = surface_coords.x*p->w+.5;
                 double y_pix = surface_coords.y*p->h+.5;
                 //if(p->out_of_range(x_pix, y_pix)) col = (static_cast<int>(4*x_pix/p->w) + static_cast<int>(4*y_pix/p->h)) % 2 ? OPAQUE_WHITE : OPAQUE_BLACK; // add tiling to void space
-                pix.overlay_pixel(cx, cy, p->get_pixel(x_pix, y_pix), surface.opacity * dag["surfaces_opacity"]);
+                pix.overlay_pixel(cx, cy, p->get_pixel(x_pix, y_pix), opacity);
             //}
 
             sketchpad.set_pixel(cx, cy, padcol);
@@ -257,7 +260,8 @@ public:
 
     void set_camera_direction() {
         camera_direction = glm::normalize(glm::quat(dag["q1"], dag["qi"], dag["qj"], dag["qk"]));
-        camera_pos = glm::vec3(dag["x"], dag["y"], dag["z"]) + glm::conjugate(camera_direction) * glm::vec3(0,0,-dag["d"]) * camera_direction;
+        conjugate_camera_direction = glm::conjugate(camera_direction);
+        camera_pos = glm::vec3(dag["x"], dag["y"], dag["z"]) + conjugate_camera_direction * glm::vec3(0,0,-dag["d"]) * camera_direction;
     }
 
     // Function to compute squared distance between two points
@@ -281,8 +285,6 @@ public:
         //lots of upfront cost, so bailout if there arent any surfaces.
         if (surfaces.size() == 0 || dag["surfaces_opacity"] == 0) return;
 
-        //unit_test_unproject();
-        //unit_test_intersection_point();
         sketchpad.fill(OPAQUE_BLACK);
 
         // Create a list of pointers to the surfaces
@@ -306,6 +308,7 @@ public:
     void render_points(){
         for (const Point& point : points)
             render_point(point);
+        render_point(Point(glm::vec3(0,0,0), OPAQUE_WHITE));
     }
 
     void render_lines(){
@@ -347,45 +350,6 @@ public:
         pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, dag["lines_opacity"] * line.opacity), 1);
     }
 
-    glm::vec2 intersection_point(const glm::vec3 &particle_start, const glm::vec3 &particle_velocity, const Surface &surface, const glm::vec3 &normal) {
-        // Find t
-        float t = glm::dot(normal, (surface.center - particle_start)) / glm::dot(normal, particle_velocity);
-        //cout << "t: " << t << endl;
-
-        // Compute the intersection point in 3D space
-        glm::vec3 intersection_3D = particle_start + t * particle_velocity;
-        //cout << "intersection_3D: " << intersection_3D.x << ", " << intersection_3D.y << ", " << intersection_3D.z << endl;
-
-        // Convert 3D intersection point to surface's local 2D coordinates
-        glm::vec3 centered = intersection_3D - surface.center;
-        glm::vec2 intersection_2D;
-        intersection_2D.x = glm::dot(centered, surface.pos_x_dir) / surface.lr2;
-        intersection_2D.y = glm::dot(centered, surface.pos_y_dir) / surface.ur2;
-        //cout << "intersection_2D: " << intersection_2D.x << ", " << intersection_2D.y << endl;
-
-        return (intersection_2D + 1.0f) * 0.5f;
-    }
-
-    void unit_test_intersection_point(){
-        glm::vec3 particle_start(-1,-1,-1);
-        glm::vec3 particle_velocity(3,2,1);
-        Surface surface(glm::vec3(0,0,0), glm::vec3(-1,0,0), glm::vec3(0,-1,0), NULL);
-        glm::vec3 normal(0,0,1);
-        glm::vec2 expected_output(-.5,0);
-        glm::vec2 actual_output = intersection_point(particle_start, particle_velocity, surface, normal);
-        //cout << "actual output: " << actual_output.x << ", " << actual_output.y << endl;
-        assert(glm::length(actual_output - expected_output) < 0.001);
-
-        particle_start = glm::vec3(0,0,-1);
-        particle_velocity = glm::vec3(1,10,1);
-        surface = Surface(glm::vec3(0,0,0), glm::vec3(-1,0,1), glm::vec3(0,-1,0), NULL);
-        normal = glm::vec3(-1,0,-1);
-        expected_output = glm::vec2(.25,-2);
-        actual_output = intersection_point(particle_start, particle_velocity, surface, normal);
-        //cout << "actual output: " << actual_output.x << ", " << actual_output.y << endl;
-        assert(glm::length(actual_output - expected_output) < 0.001);
-    }
-
     void add_point(Point point) {
         points.push_back(point);
     }
@@ -400,7 +364,10 @@ public:
     std::vector<Surface> surfaces;
     glm::vec3 camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
-    double fov = .282*3/2;
+    glm::quat conjugate_camera_direction;
+    float fov = .282*3/2;
+    float over_w_fov;
     bool skip_surfaces = false;
+    float mult;
     Pixels sketchpad;
 };
