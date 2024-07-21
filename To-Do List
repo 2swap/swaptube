@@ -7,9 +7,6 @@ Lambda Calc Scene
 Graphs should self-center at center of mass
 Scenes for making line graphs, bar charts, etc?
 
-	Ease Of Use / Debug
-Add Diagnostics Logs with Gnuplot
-
 	Graphics
 3D Clipping Ordering by Projected Distance
 

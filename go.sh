@@ -55,7 +55,7 @@ fi
 
 cd ..
 
-rm src/projects/.active_project.src
+rm src/projects/.active_project.cpp
 
 vlc out/$1.mp4
 

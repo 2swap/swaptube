@@ -15,6 +15,7 @@ The following external dependencies are required for specific functionalities wi
 |------------|---------|---------|----------------|--------------|
 | CMake | Everything | go.sh script | Compiles the project | `sudo apt install cmake` |
 | FFMPEG and associated development libraries | Everything | audio_video folder | Encoding and processing video and audio streams | `sudo apt install ffmpeg libavcodec-dev libavformat-dev libavdevice-dev libavutil-dev libavfilter-dev libswscale-dev libpostproc-dev libswresample-dev` |
+| gnuplot | Debug plot generation | DebugPlot.h | Data dumped in out/ is rendered to a PNG | `sudo apt install gnuplot` |
 | GLM | Graphs and 3D Graphics | 3d_scene.cpp, Graph.cpp | Vectors and quaternions to represent and rotate objects in space | `sudo apt install libglm-dev` |
 | MicroTeX | In-Video LaTeX | visual_media.cpp | Converts LaTeX equations into SVG files for rendering | Manual setup from MicroTeX repository |
 | RSVG | In-Video LaTeX | visual_media.cpp | Loads and renders SVG files into pixel data | `sudo apt install librsvg2-dev` |

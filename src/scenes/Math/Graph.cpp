@@ -47,7 +47,10 @@ public:
      * @param t The data associated with the node.
      */
     Node(T* t, double hash) : data(t), hash(hash),
-        velocity(0,0,0,0),
+        velocity(static_cast<double>(std::rand()) / RAND_MAX,
+                 static_cast<double>(std::rand()) / RAND_MAX,
+                 static_cast<double>(std::rand()) / RAND_MAX,
+                 static_cast<double>(std::rand()) / RAND_MAX), 
         position(static_cast<double>(std::rand()) / RAND_MAX,
                  static_cast<double>(std::rand()) / RAND_MAX,
                  static_cast<double>(std::rand()) / RAND_MAX,
@@ -365,10 +368,10 @@ public:
      * @param iterations The number of iterations to perform.
      */
     void iterate_physics(int iterations){
-        vector<Node<T>*> node_vector; // Change from list to vector
+        vector<Node<T>*> node_vector;
 
         for (auto& node_pair : nodes) {
-            node_vector.push_back(&node_pair.second); // Add it to the vector
+            node_vector.push_back(&node_pair.second);
         }
 
         for (int n = 0; n < iterations; n++) {
@@ -379,8 +382,11 @@ public:
 
     void perform_single_physics_iteration(const vector<Node<T>*>& node_vector){
         int s = node_vector.size();
+        glm::dvec4 center_of_mass;
+
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
+            center_of_mass += node->position;
             for (size_t j = i+1; j < s; ++j) {
                 Node<T>* node2 = node_vector[j];
                 perform_pairwise_node_motion(node, node2, true);
@@ -392,6 +398,8 @@ public:
                 perform_pairwise_node_motion(node, neighbor, false);
             }
         }
+        center_of_mass /= s;
+        cout << "cent" << center_of_mass.x << endl;
 
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
@@ -403,13 +411,14 @@ public:
             }
             node->velocity.y += gravity_strength;
             node->velocity *= decay;
-            if(dimensions < 3) node->velocity.z = 0;
-            if(dimensions < 4) node->velocity.w = 0;
-            node->position += node->velocity;
+            if(dimensions < 3) {node->velocity.z = 0; node->position.z = 0;}
+            if(dimensions < 4) {node->velocity.w = 0; node->position.w = 0;}
+            node->position += node->velocity - center_of_mass;
         }
     }
 
     double get_attraction_force(double dist_sq){
+        return 0;
         if(sqrty) return attract_force * (dist_sq-1)/dist_sq;
         else      return attract_force * (1/dist_sq + dist_sq - 2);
     }
