@@ -1,6 +1,5 @@
 #pragma once
 
-#include <filesystem>
 #include "../misc/pixels.h"
 #include "subs.cpp"
 #include "audio.cpp"
@@ -11,18 +10,6 @@ char* err2str(int errnum)
     thread_local char str[AV_ERROR_MAX_STRING_SIZE]; 
     memset(str, 0, sizeof(str));
     return av_make_error_string(str, AV_ERROR_MAX_STRING_SIZE, errnum);
-}
-
-void ensure_directory_exists(const std::string& path) {
-    if (filesystem::exists(path)) {
-        cout << "Directory " << path << " already exists, not creating." << endl;
-    } else {
-        if (filesystem::create_directory(path)) {
-            cout << "Directory " << path << " created successfully." << endl;
-        } else {
-            failout("Failed to create directory " + path + ".");
-        }
-    }
 }
 
 using namespace std;

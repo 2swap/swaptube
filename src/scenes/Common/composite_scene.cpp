@@ -5,7 +5,7 @@
 
 struct SceneWithPosition {
     Scene* scenePointer;
-    double x, y;
+    string dag_name;
     double width, height;
 };
 
@@ -13,10 +13,7 @@ class CompositeScene : public Scene {
 public:
     CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
 
-    void add_scene(Scene* sc, double x, double y, double width, double height){
-        if(x<0||y<0||width<0||height<0||x>1||y>1||width>1||height>1)
-            failout("Added scene with coords outside the range 0 to 1.");
-
+    void add_scene(Scene* sc, string dag_name, double width, double height){
         SceneWithPosition swp = {sc, x, y, width, height};
         scenes.push_back(swp);
     }
@@ -31,7 +28,7 @@ public:
             }
             Pixels* p = nullptr;
             swc.scenePointer->query(p);
-            pix.overlay(*p, swc.x * w, swc.y * h);
+            pix.overlay(*p, dag[swc.dag_name + ".x"] * w, dag[swc.dag_name + ".y"] * h);
         }
     }
 
@@ -42,7 +39,7 @@ public:
                                     }), scenes.end());
     }
 
-    void query(bool& done_scene, Pixels*& p) override {
+    void query(Pixels*& p) override {
         render_composite();
         p = &pix;
     }

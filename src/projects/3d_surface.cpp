@@ -1,3 +1,5 @@
+#include "../scenes/Common/3d_scene.cpp"
+
 void render_video() {
     ThreeDimensionScene tds;
 

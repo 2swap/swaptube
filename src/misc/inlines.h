@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include "math.h"
 #include <cmath>
+#include <sys/sysinfo.h>
 
 using namespace std;
 
@@ -24,6 +25,32 @@ inline string failout(string message){
     cerr << message << "\n";
     cerr << "======================================================\n";
     exit(EXIT_FAILURE);
+}
+long get_free_memory() {
+    struct sysinfo memInfo;
+
+     if (sysinfo(&memInfo) != 0) {
+         perror("sysinfo");
+         failout("Unable to call sysinfo to determine system memory");
+     }
+
+     // Free memory in mb
+     double free_memory = static_cast<double>(memInfo.freeram) * memInfo.mem_unit / square(1024);
+
+     return free_memory;
+}
+
+#include <filesystem>
+void ensure_directory_exists(const std::string& path) {
+    if (filesystem::exists(path)) {
+        cout << "Directory " << path << " already exists, not creating." << endl;
+    } else {
+        if (filesystem::create_directory(path)) {
+            cout << "Directory " << path << " created successfully." << endl;
+        } else {
+            failout("Failed to create directory " + path + ".");
+        }
+    }
 }
 
 bool inline_unit_tests_verbose = false;

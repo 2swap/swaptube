@@ -12,7 +12,7 @@ public:
         h = pix.h;
     }
 
-    void query(bool& done_scene, Pixels*& p) override {
+    void query(Pixels*& p) override {
         p = &pix;
     }
 
