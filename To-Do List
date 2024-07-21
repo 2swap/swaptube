@@ -4,17 +4,18 @@ To-Do List
 Steady State Verifier
 Rubik's Scene
 Lambda Calc Scene
-Graphs should self-center at center of mass
 Scenes for making line graphs, bar charts, etc?
 
 	Graphics
 3D Clipping Ordering by Projected Distance
+unproject and intersection_point functions should be combined
 
 	End Product Quality
 Decrease Bitrate? Somehow fight the youtube compression algorithm?
 Better checking for viewability on OLED screens
 More aliasing
 Fix the subtitle splitter
+Audio and video time drift
 
 	Debt Cleanup
 Fix yucky interface between main.cpp and .active_project.cpp

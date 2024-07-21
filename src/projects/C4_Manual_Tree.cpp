@@ -8,7 +8,7 @@ void render_video() {
     g.dimensions = 2;
     g.sqrty = true;
     C4GraphScene gs(&g, "444", MANUAL);
-    gs.physics_multiplier = 3;
+    gs.physics_multiplier = 1;
 
     dag.add_equations(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
