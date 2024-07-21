@@ -9,6 +9,7 @@
 using namespace std;
 
 static DebugPlot time_per_frame_plot("render_time_per_frame");
+static DebugPlot dag_time_plot("Time-based metrics", vector<string>{"t", "transition_fraction", "subscene_transition_fraction"});
 
 class Scene {
 public:
@@ -88,6 +89,9 @@ private:
         dag.set_special("t", dag["frame_number"] / VIDEO_FRAMERATE);
         dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
         dag.set_special("subscene_transition_fraction", static_cast<double>(subscene_frame) / scene_duration_frames);
+
+        dag_time_plot.add_datapoint(vector<double>{dag["t"], dag["transition_fraction"], dag["subscene_transition_fraction"]});
+
         dag.evaluate_all();
 
         if (video_sessions_left == 0) {

@@ -28,21 +28,13 @@ void render_video() {
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
         {"qk", "0"},
-        {"d", "20"}
+        {"d", "8"}
     });
-    gs.inject_audio_and_render(AudioSegment(1));
-
     gs.inject_audio_and_render(AudioSegment(1));
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board("444" + to_string(i)));
     }
     g.dimensions = 3;
-    for(int i = 1; i <= 7; i++){
-        for(int j = 1; j <= 7; j++){
-            if(j==4) continue;
-            g.add_node(new C4Board("444" + to_string(i) + to_string(j)));
-        }
-    }
     gs.inject_audio_and_render(AudioSegment(1));
 
 
