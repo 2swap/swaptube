@@ -6,7 +6,7 @@ class MouseScene : public Scene {
 public:
     MouseScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
 
-    void query(bool& done_scene, Pixels*& p) override {
+    void query(Pixels*& p) override {
         pix.fill(TRANSPARENT_BLACK);
         pix.fill_rect(dag["mouse_x"], dag["mouse_y"], 6, 6, 0xffff0000);
         p = &pix;

@@ -49,7 +49,7 @@ public:
         in_transition_state = false;
     }
 
-    void query(bool& done_scene, Pixels*& p) override {
+    void query(Pixels*& p) override {
         if(in_transition_state && dag["audio_segment_number"] != transition_audio_segment)
             end_transition();
 

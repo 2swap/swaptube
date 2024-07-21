@@ -53,10 +53,10 @@ struct Surface {
     // Two types of surfaces- ones which are backed by a scene, and ones which are constant color
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc)
         : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc), opacity(1),
-        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir) {}
+        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, int col)
         : center(c), pos_x_dir(l), pos_y_dir(u), color(col), scenePointer(NULL), opacity(1),
-        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir) {}
+        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
 };
 
 class ThreeDimensionScene : public Scene {
@@ -197,14 +197,14 @@ public:
             sketchpad.bresenham(corners[i].first, corners[i].second, corners[next].first, corners[next].second, padcol, 1);
         }
 
-        Pixels* p;
-        surface.scenePointer->query(p);
-
         // Call the flood fill algorithm
-        floodFillSurface(corners, surface, p, padcol); // assuming background is black and polygon is white
+        floodFillSurface(corners, surface, padcol); // assuming background is black and polygon is white
     }
 
-    void floodFillSurface(vector<pair<int, int>>& corners, const Surface& surface, Pixels* p, int padcol) {
+    void floodFillSurface(vector<pair<int, int>>& corners, const Surface& surface, int padcol) {
+        Pixels* p = NULL;
+        if(surface.scenePointer != NULL) surface.scenePointer->query(p);
+
         std::queue<std::pair<int, int>> q;
 
         // 1. Compute the centroid of the quadrilateral
@@ -241,10 +241,10 @@ public:
 
             int color = surface.color;
 
-            if(surface.sp != NULL){ // If this is not a surface of constant color
+            if(p != NULL){ // If this is not a surface of constant color
                 //compute position in surface's coordinate frame as a function of x and y.
                 glm::vec2 surface_coords = screen_to_surface_intersection(dotnormcam, cx, cy, surface);
-                color = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h)l
+                color = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h);
             }
 
             // Set the pixel to the new color
@@ -318,7 +318,8 @@ public:
             render_line(line);
     }
 
-    void query(bool& done_scene, Pixels*& p) override {
+    void query(Pixels*& p) override {
+        cout << "aaa" << endl;
         set_camera_direction();
         render_3d();
         p = &pix;

@@ -1,5 +1,5 @@
 #pragma once
-
+#include <librsvg/rsvg.h>
 #include <png.h>
 #include <vector>
 #include <stdexcept>
@@ -105,7 +105,7 @@ Pixels png_to_pix(const string& filename) {
             uint8_t g = px[1];
             uint8_t b = px[2];
             uint8_t a = px[3];
-            ret.set_pixel(x, y, makecol(a, r, g, b));
+            ret.set_pixel(x, y, argb_to_col(a, r, g, b));
         }
     }
 
@@ -128,15 +128,18 @@ Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
     }
 
     // Get the intrinsic dimensions of the SVG
-    gdouble out_width, out_height;
-    rsvg_handle_get_intrinsic_size_in_pixels(handle, &out_width, &out_height);
+    RsvgDimensionData dimension = { 0 };
+    rsvg_handle_get_dimensions(handle, &dimension);
+
+    //gdouble out_width, out_height;
+    //rsvg_handle_get_intrinsic_size_in_pixels(handle, &out_width, &out_height);
 
     if (scaling_params.mode == ScalingMode::BoundingBox) {
         // Calculate the scale factor to fit within the bounding box
-        scaling_params.scale_factor = min(static_cast<double>(scaling_params.max_width) / out_width, static_cast<double>(scaling_params.max_height) / out_height);
+        scaling_params.scale_factor = min(static_cast<double>(scaling_params.max_width) / dimension.width, static_cast<double>(scaling_params.max_height) / dimension.height);
     }
-    int width  = static_cast<int>(out_width  * scaling_params.scale_factor);
-    int height = static_cast<int>(out_height * scaling_params.scale_factor);
+    int width  = static_cast<int>(dimension.width  * scaling_params.scale_factor);
+    int height = static_cast<int>(dimension.height * scaling_params.scale_factor);
 
     Pixels ret(width, height);
 
@@ -153,7 +156,7 @@ Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int offset = (y * width + x) * 4;
-            ret.set_pixel(x, y, makecol(raw_data[offset + 3], raw_data[offset + 2], raw_data[offset + 1], raw_data[offset]));
+            ret.set_pixel(x, y, argb_to_col(raw_data[offset + 3], raw_data[offset + 2], raw_data[offset + 1], raw_data[offset]));
         }
     }
 
@@ -179,7 +182,9 @@ Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
     }
 
     hash<string> hasher;
-    string name = "/home/swap/CS/swaptube/out/latex/" + to_string(hasher(eqn)) + ".svg";
+    string directory_path = "../out/latex/";
+    ensure_directory_exists(directory_path);
+    string name = directory_path + to_string(hasher(eqn)) + ".svg";
 
     if (access(name.c_str(), F_OK) != -1) {
         // File already exists, no need to generate LaTeX

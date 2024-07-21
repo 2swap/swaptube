@@ -23,5 +23,4 @@ Project should define resolution and framerate, not main file
 
 	Simplify and Abstract
 Abstract out the idea of Coordinate Systems
-Change the CompositeScene into a generic 2d-scene
 Add a mechanism to set integer pointers to slate values
