@@ -11,8 +11,7 @@ struct SceneWithPosition {
 
 class CompositeScene : public Scene {
 public:
-    CompositeScene(const int width, const int height) : Scene(width, height) {}
-    CompositeScene() : Scene(VIDEO_WIDTH, VIDEO_HEIGHT) {}
+    CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
 
     void add_scene(Scene* sc, double x, double y, double width, double height){
         if(x<0||y<0||width<0||height<0||x>1||y>1||width>1||height>1)

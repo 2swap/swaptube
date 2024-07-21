@@ -7,10 +7,8 @@
 
 class C4GraphScene : public GraphScene<C4Board> {
 public:
-    C4GraphScene(const int width, const int height, Graph<C4Board>* g, string rep, C4BranchMode mode) : GraphScene(width, height, g), root_node_representation(rep) {init_c4_graph(mode);}
-    C4GraphScene(Graph<C4Board>* g, string rep, C4BranchMode mode) : GraphScene(g), root_node_representation(rep) {init_c4_graph(mode);}
-
-    void init_c4_graph(C4BranchMode mode){
+    C4GraphScene(Graph<C4Board>* g, string rep, C4BranchMode mode, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    : GraphScene(g, width, height), root_node_representation(rep) {
         c4_branch_mode = mode;
 
         if(mode == TRIM_STEADY_STATES){
@@ -37,7 +35,7 @@ public:
         for(pair<double, Node<C4Board>> p : graph->nodes){
             Node<C4Board> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position);
-            C4Scene* sc = new C4Scene(600, 600, node.data->representation);
+            C4Scene* sc = new C4Scene(node.data->representation, 600, 600);
             surfaces.push_back(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), sc));
         }
         rendered = false;

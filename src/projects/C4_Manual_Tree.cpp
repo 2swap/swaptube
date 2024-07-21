@@ -10,7 +10,7 @@ void render_video() {
     C4GraphScene gs(&g, "444", MANUAL);
     gs.physics_multiplier = 1;
 
-    dag.add_equations(std::unordered_map<std::string, std::string>{
+    gs.dag.add_equations(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
@@ -23,7 +23,7 @@ void render_video() {
         {"points_opacity", "1"},
         {"d", "2"}
     });
-    dag.add_transitions(std::unordered_map<std::string, std::string>{
+    gs.dag.add_transitions(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},

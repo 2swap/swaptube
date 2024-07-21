@@ -8,14 +8,20 @@
 
 using namespace std;
 
+static int frame_number;
 static DebugPlot time_per_frame_plot("render_time_per_frame");
 static DebugPlot dag_time_plot("Time-based metrics", vector<string>{"t", "transition_fraction", "subscene_transition_fraction"});
 
 class Scene {
 public:
-    Scene(const int width, const int height) : w(width), h(height), pix(width, height){};
-    Scene() : w(VIDEO_WIDTH), h(VIDEO_HEIGHT), pix(VIDEO_WIDTH, VIDEO_HEIGHT){};
     virtual void query(bool& done_scene, Pixels*& p) = 0;
+    Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : w(width), h(height), pix(width, height){
+        dag.set_special("frame_number", 0);
+        dag.set_special("audio_segment_number", 0);
+        dag.set_special("transition_fraction", 0);
+        dag.set_special("subscene_transition_fraction", 0);
+        dag.add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
+    }
 
     void query(Pixels*& p){
         bool b = false;
@@ -27,7 +33,6 @@ public:
         w = width;
         h = height;
         pix = Pixels(w, h);
-        rendered = false;
     }
 
     void inject_audio_and_render(const AudioSegment& audio){
@@ -80,19 +85,19 @@ public:
 
     int w = 0;
     int h = 0;
+    Dagger dag;
   
 private:
     void render_one_frame(int subscene_frame){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
-        dag.set_special("frame_number", dag["frame_number"] + 1);
-        dag.set_special("t", dag["frame_number"] / VIDEO_FRAMERATE);
+        dag.set_special("frame_number", frame_number);
+        frame_number++;
         dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
         dag.set_special("subscene_transition_fraction", static_cast<double>(subscene_frame) / scene_duration_frames);
 
-        dag_time_plot.add_datapoint(vector<double>{dag["t"], dag["transition_fraction"], dag["subscene_transition_fraction"]});
-
         dag.evaluate_all();
+        dag_time_plot.add_datapoint(vector<double>{dag["t"], dag["transition_fraction"], dag["subscene_transition_fraction"]});
 
         if (video_sessions_left == 0) {
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
