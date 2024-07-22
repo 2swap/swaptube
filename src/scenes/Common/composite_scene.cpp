@@ -6,23 +6,22 @@
 struct SceneWithPosition {
     Scene* scenePointer;
     string dag_name;
-    double width, height;
 };
 
 class CompositeScene : public Scene {
 public:
     CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
 
-    void add_scene(Scene* sc, string dag_name, double width, double height){
-        SceneWithPosition swp = {sc, x, y, width, height};
+    void add_scene(Scene* sc, string dag_name){
+        SceneWithPosition swp = {sc, dag_name};
         scenes.push_back(swp);
     }
 
     void render_composite(){
         pix.fill(TRANSPARENT_BLACK);
         for (auto& swc : scenes){
-            int  width_int = static_cast<int>(swc.width  * w);
-            int height_int = static_cast<int>(swc.height * h);
+            int  width_int = dag[swc.dag_name + ".w"] * w;
+            int height_int = dag[swc.dag_name + ".h"] * h;
             if(swc.scenePointer->w != width_int || swc.scenePointer->h != height_int){
                 swc.scenePointer->resize(width_int, height_int);
             }

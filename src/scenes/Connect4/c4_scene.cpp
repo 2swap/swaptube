@@ -83,8 +83,8 @@ public:
         char annotation = get_annotation(disc_x, disc_y);
         if(annotation != ' ') {
             ScalingParams sp(stonewidth, stonewidth);
-            Pixels latex = eqn_to_pix(latex_text(to_string(annotation)), sp);
-            pix.overlay(latex, px, py);
+            Pixels latex = eqn_to_pix(latex_text(string()+annotation), sp);
+            pix.overlay(latex, px-latex.w/2, py-latex.h/2);
         } else {
             if(col_id == 0) pix.fill_ellipse(px, py, stonewidth*.2, stonewidth*.2, 0xff666666);
         }

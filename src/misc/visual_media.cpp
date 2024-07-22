@@ -183,8 +183,10 @@ Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
 
     hash<string> hasher;
     string directory_path = "../out/latex/";
-    ensure_directory_exists(directory_path);
-    string name = directory_path + to_string(hasher(eqn)) + ".svg";
+    char full_directory_path[PATH_MAX];
+    realpath(directory_path.c_str(), full_directory_path);
+    ensure_directory_exists(full_directory_path);
+    string name = full_directory_path + to_string(hasher(eqn)) + ".svg";
 
     if (access(name.c_str(), F_OK) != -1) {
         // File already exists, no need to generate LaTeX

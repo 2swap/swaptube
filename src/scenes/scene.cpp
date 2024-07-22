@@ -84,7 +84,6 @@ public:
   
 private:
     void render_one_frame(int subscene_frame){
-        cout << "Rendering one frame" << endl;
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
         dag.set_special("frame_number", frame_number);
@@ -101,9 +100,7 @@ private:
 
         Pixels* p = nullptr;
         WRITER->set_time(dag["t"]);
-        cout << "cskajsdflkj" << endl;
         query(p);
-        cout << "dskajsdflkj" << endl;
         assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
         if(PRINT_TO_TERMINAL && (int(dag["frame_number"]) % 5 == 0)) p->print_to_terminal();
         WRITER->add_frame(*p);
@@ -113,7 +110,6 @@ private:
         chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
         time_per_frame_plot.add_datapoint(frame_duration.count()); // Add the time to DebugPlot
         memutil_plot.add_datapoint(get_free_memory()); // Add the time to DebugPlot
-        cout << "Rendered one frame" << endl;
     }
 
 protected:
