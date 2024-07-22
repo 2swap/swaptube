@@ -319,7 +319,6 @@ public:
     }
 
     void query(Pixels*& p) override {
-        cout << "aaa" << endl;
         set_camera_direction();
         render_3d();
         p = &pix;
@@ -350,7 +349,7 @@ public:
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
         //cout << line.opacity << endl;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, dag["lines_opacity"] * line.opacity), 1);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, dag["lines_opacity"] * line.opacity), 3);
     }
 
     void add_point(Point point) {

@@ -225,10 +225,10 @@ public:
             }
             set_pixel(x1, y1, col);
             for(int i = 1; i < thickness; i++){
-                set_pixel(x1+1, y1  , col);
-                set_pixel(x1-1, y1  , col);
-                set_pixel(x1  , y1+1, col);
-                set_pixel(x1  , y1-1, col);
+                set_pixel(x1+i, y1  , col);
+                set_pixel(x1-i, y1  , col);
+                set_pixel(x1  , y1+i, col);
+                set_pixel(x1  , y1-i, col);
             }
 
             // If we've reached the end point, break
