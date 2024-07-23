@@ -1,14 +1,26 @@
+#include "../io/PathManager.cpp"
+
+PathManager("C4_Manual_Tree");
+
 #include "../scenes/Connect4/c4_graph_scene.cpp"
 
 void render_video() {
-    PRINT_TO_TERMINAL = false;
+    FOR_REAL = true; // Whether we should actually be writing any AV output
+    PRINT_TO_TERMINAL = true;
+    const int WIDTH_BASE = 640;
+    const int HEIGHT_BASE = 360;
+    const int MULT = 1;
+    const int VIDEO_WIDTH = WIDTH_BASE*MULT;
+    const int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
+    const int VIDEO_FRAMERATE = 30;
+
     Graph<C4Board> g;
     g.decay = 0.1;
     g.repel_force = 0.5;
     g.gravity_strength = 0;
     g.dimensions = 2;
     g.sqrty = true;
-    C4GraphScene gs(&g, "444", MANUAL);
+    C4GraphScene gs(&g, "444", MANUAL, VIDEO_WIDTH, VIDEO_HEIGHT);
     gs.physics_multiplier = 1;
 
     gs.dag.add_equations(std::unordered_map<std::string, std::string>{
@@ -37,4 +49,10 @@ void render_video() {
     }
     g.dimensions = 3;
     gs.inject_audio_and_render(AudioSegment(1));
+}
+int main() {
+    Timer timer;
+    render_video();
+    timer.stop_timer();
+    return 0;
 }

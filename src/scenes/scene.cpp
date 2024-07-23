@@ -9,11 +9,13 @@
 using namespace std;
 
 static int frame_number;
+static bool FOR_REAL = true; // Whether we should actually be writing any AV output
+static bool PRINT_TO_TERMINAL = true;
 
 class Scene {
 public:
     virtual void query(Pixels*& p) = 0;
-    Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : w(width), h(height), pix(width, height){
+    Scene(const int width, const int height) : w(width), h(height), pix(width, height){
         dag.set_special("frame_number", 0);
         dag.set_special("audio_segment_number", 0);
         dag.set_special("transition_fraction", 0);
@@ -99,7 +101,6 @@ private:
         Pixels* p = nullptr;
         WRITER->set_time(dag["t"]);
         query(p);
-        assert(p->w == VIDEO_WIDTH && p->h == VIDEO_HEIGHT);
         if(PRINT_TO_TERMINAL && (int(dag["frame_number"]) % 5 == 0)) p->print_to_terminal();
         WRITER->add_frame(*p);
         superscene_frames_left--;

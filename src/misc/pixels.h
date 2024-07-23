@@ -22,9 +22,9 @@ inline int TRANSPARENT_WHITE = 0x00FFFFFF;
 
 class Pixels{
 public:
-    vector<int> pixels;
     int w;
     int h;
+    vector<int> pixels;
     Pixels() : w(0), h(0), pixels(0){};
     Pixels(int width, int height) : w(width), h(height), pixels(width*height){};
     // Copy constructor

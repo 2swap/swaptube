@@ -46,7 +46,7 @@ struct VariableContents {
                      double val = 0.0,
                      bool fr = true,
                      bool spec = false
-                    ) : equation(eq), value(val), fresh(fr), special(spec), dependencies() {}
+                    ) : value(val), fresh(fr), special(spec), equation(eq), dependencies() {}
 };
 
 class Dagger {

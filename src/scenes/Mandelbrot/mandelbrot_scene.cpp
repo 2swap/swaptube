@@ -8,7 +8,7 @@
 
 class MandelbrotScene : public Scene {
 public:
-    MandelbrotScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {
+    MandelbrotScene(const int width, const int height) : Scene(width, height) {
         current_zoom = Complex(contents["current_zoom"]["real"].get<double>(), contents["current_zoom"]["imag"].get<double>());
         add_audio(contents);
     }

@@ -22,6 +22,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 include_directories(${PNG_INCLUDE_DIR})
 include_directories(${GLM_INCLUDE_DIRS})
 
-add_executable(${PROJECT_NAME} "src/main.cpp")
+add_executable(${PROJECT_NAME} "src/projects/.active_project.cpp")
 
 target_link_libraries(${PROJECT_NAME} ${FFMPEG_LIBRARIES} ${SWSCALE_LIBRARIES} ${RSVG_LIBRARIES} cairo gobject-2.0 ${PNG_LIBRARIES})
+
+# Add the -Wreorder flag
+target_compile_options(${PROJECT_NAME} PRIVATE -Wreorder)

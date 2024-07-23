@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <regex>
+#include <cassert>
 extern "C"
 {
     #include <libswscale/swscale.h>
@@ -94,6 +95,9 @@ int send_frame(AVCodecContext* vcc, AVFrame* frame){
 
 class VideoWriter {
 private:
+    const int VIDEO_WIDTH;
+    const int VIDEO_HEIGHT;
+    const int VIDEO_FRAMERATE;
     string output_filename;
 
     //note that the FormatContext has shared ownership with audioWriter and MovieWriter
@@ -137,8 +141,9 @@ private:
     }
 
 public:
-    VideoWriter(const string& output_folder, const string& _output_filename, AVFormatContext *fc_)
-        : output_filename(output_folder + _output_filename), fc(fc_) {
+    VideoWriter(int w, int h, int fr, const string& output_folder, const string& _output_filename, AVFormatContext *fc_)
+        : VIDEO_WIDTH(w), VIDEO_HEIGHT(h), VIDEO_FRAMERATE(fr),
+        output_filename(output_folder + _output_filename), fc(fc_) {
         ensure_directory_exists(output_folder);
     }
 
@@ -195,6 +200,7 @@ public:
     void add_frame(const Pixels& p) {
         // The AVFrame data will be stored as RGBRGBRGB... row-wise,
         // from left to right and from top to bottom.
+        assert(p.w == VIDEO_WIDTH && p.h == VIDEO_HEIGHT);
         for (unsigned int y = 0; y < VIDEO_HEIGHT; y++)
         {
             // rgbpic->linesize[0] is equal to width.

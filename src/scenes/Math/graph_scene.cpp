@@ -7,7 +7,7 @@
 template <typename T>
 class GraphScene : public ThreeDimensionScene {
 public:
-    GraphScene(Graph<T>* g, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : ThreeDimensionScene(width, height), graph(g) {}
+    GraphScene(Graph<T>* g, const int width, const int height) : ThreeDimensionScene(width, height), graph(g) {}
 
     void graph_to_3d(){
         points.clear();

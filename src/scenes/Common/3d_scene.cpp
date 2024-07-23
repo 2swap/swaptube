@@ -26,13 +26,12 @@ enum NodeHighlightType {
 struct Point {
     glm::vec3 position;
     int color; // ARGB integer representation
-    double opacity;
     NodeHighlightType highlight;
+    double opacity;
     Point(const glm::vec3& pos, int clr, NodeHighlightType hlt=NORMAL, double op=1) : position(pos), color(clr), highlight(hlt), opacity(op) {}
 };
 
 struct Line {
-    glm::vec3 position;
     glm::vec3 start;
     glm::vec3 end;
     int color; // ARGB integer representation
@@ -44,12 +43,12 @@ struct Surface {
     glm::vec3 center;
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
-    glm::vec3 normal;
+    int color;
     Scene* scenePointer;
+    double opacity;
     float ilr2;
     float iur2;
-    double opacity;
-    int color;
+    glm::vec3 normal;
     // Two types of surfaces- ones which are backed by a scene, and ones which are constant color
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc)
         : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc), opacity(1),
@@ -61,7 +60,7 @@ struct Surface {
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    ThreeDimensionScene(const int width, const int height)
         : Scene(width, height), sketchpad(width, height) {
         dag.add_equation("fov", ".5"); 
     }
