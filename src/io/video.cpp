@@ -95,10 +95,6 @@ int send_frame(AVCodecContext* vcc, AVFrame* frame){
 
 class VideoWriter {
 private:
-    const int VIDEO_WIDTH;
-    const int VIDEO_HEIGHT;
-    const int VIDEO_FRAMERATE;
-    string output_filename;
 
     //note that the FormatContext has shared ownership with audioWriter and MovieWriter
     AVFormatContext *fc = nullptr;
@@ -141,11 +137,7 @@ private:
     }
 
 public:
-    VideoWriter(int w, int h, int fr, const string& output_folder, const string& _output_filename, AVFormatContext *fc_)
-        : VIDEO_WIDTH(w), VIDEO_HEIGHT(h), VIDEO_FRAMERATE(fr),
-        output_filename(output_folder + _output_filename), fc(fc_) {
-        ensure_directory_exists(output_folder);
-    }
+    VideoWriter(AVFormatContext *fc_) : fc(fc_) { }
 
     void init_video() {
         av_log_set_level(AV_LOG_DEBUG);
@@ -178,8 +170,8 @@ public:
         av_dict_free(&opt);
 
         videoStream->time_base = { 1, VIDEO_FRAMERATE };
-        av_dump_format(fc, 0, output_filename.c_str(), 1);
-        avio_open(&fc->pb, output_filename.c_str(), AVIO_FLAG_WRITE);
+        av_dump_format(fc, 0, PATH_MANAGER.video_output.c_str(), 1);
+        avio_open(&fc->pb, PATH_MANAGER.video_output.c_str(), AVIO_FLAG_WRITE);
         int ret = avformat_write_header(fc, &opt);
         if (ret < 0) {
             cout << "Failed to write header!" << endl;

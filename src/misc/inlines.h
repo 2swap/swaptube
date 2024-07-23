@@ -5,6 +5,7 @@
 #include "math.h"
 #include <cmath>
 #include <sys/sysinfo.h>
+#include <iostream>
 
 using namespace std;
 
@@ -40,33 +41,6 @@ long get_free_memory() {
      return free_memory;
 }
 
-#include <chrono>
-#include <sstream>
-#include <iomanip>
-#include <ctime>
-string get_timestamp(){
-    // Get current time
-    auto now = chrono::system_clock::now();
-    time_t now_time_t = chrono::system_clock::to_time_t(now);
-    tm now_tm = *localtime(&now_time_t);
-    // Format time to append to folder name
-    stringstream ss;
-    ss << put_time(&now_tm, "%Y%m%d_%H%M%S");
-    return ss.str();
-}
-
-#include <filesystem>
-void ensure_directory_exists(const string& path) {
-    if (filesystem::exists(path)) {
-        cout << "Directory " << path << " already exists, not creating." << endl;
-    } else {
-        if (filesystem::create_directories(path)) {
-            cout << "Directory " << path << " created successfully." << endl;
-        } else {
-            failout("Failed to create directory " + path + ".");
-        }
-    }
-}
 
 bool inline_unit_tests_verbose = false;
 

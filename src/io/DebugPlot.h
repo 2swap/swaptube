@@ -9,28 +9,23 @@
 
 class DebugPlot {
 public:
-    static string data_folder;
-    static string plot_folder;
     // Constructor that initializes the plot name, data series names, and file paths
     DebugPlot(const string& plot_name) 
         : plot_name_(plot_name),
-          data_file_path_(data_folder + plot_name + ".dat"),
-          plot_file_path_(plot_folder + plot_name + ".png"),
+          data_file_path_(PATH_MANAGER.data_dir + plot_name + ".dat"),
+          plot_file_path_(PATH_MANAGER.plots_dir + plot_name + ".png"),
           series_names_(vector<string>{plot_name}),
           num_series_(1)
     { init(); }
     DebugPlot(const string& plot_name, const vector<string>& series_names) 
         : plot_name_(plot_name),
-          data_file_path_(data_folder + plot_name + ".dat"),
-          plot_file_path_(plot_folder + plot_name + ".png"),
+          data_file_path_(PATH_MANAGER.data_dir + plot_name + ".dat"),
+          plot_file_path_(PATH_MANAGER.plots_dir + plot_name + ".png"),
           series_names_(series_names),
           num_series_(series_names.size())
     { init(); }
 
     void init(){
-        cout << "b" << endl;
-        ensure_directory_exists(data_folder);
-        ensure_directory_exists(plot_folder);
         data_file_.open(data_file_path_, ios::out | ios::trunc);
         if (!data_file_.is_open()) {
             throw runtime_error("Failed to open data file: " + data_file_path_);

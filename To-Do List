@@ -15,10 +15,5 @@ Prepare c4 scene for steady state diagrams
 Decrease Bitrate? Somehow fight the youtube compression algorithm?
 Audio and video time drift
 
-	Debt Cleanup
-Fix yucky interface between main.cpp and .active_project.cpp
-Project should define resolution and framerate, not main file
-
 	Simplify and Abstract
 Abstract out the idea of Coordinate Systems
-Add a mechanism to set integer pointers to slate values

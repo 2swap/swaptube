@@ -28,7 +28,7 @@ private:
     string annotations2;
 
 public:
-    C4Scene(const string& rep, const int width, const int height)
+    C4Scene(const string& rep, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         :Scene(width, height), representation(rep), board(rep), stonewidth(min(width, height)/10.) {}
 
     void stage_transition(string final_rep){

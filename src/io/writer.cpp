@@ -17,9 +17,6 @@ using namespace std;
 class MovieWriter
 {
 private:
-    const int VIDEO_WIDTH;
-    const int VIDEO_HEIGHT;
-    const int VIDEO_FRAMERATE;
     bool made_folder;
     AVFormatContext* fc = nullptr;
     SubtitleWriter subswriter;
@@ -27,20 +24,19 @@ private:
     VideoWriter videowriter;
 
     // Function to initialize 'fc'
-    AVFormatContext* initFC(const string& output_folder, const string& output_filename) {
+    AVFormatContext* initFC() {
         AVFormatContext* temp_fc = nullptr;
-        avformat_alloc_output_context2(&temp_fc, NULL, NULL, (output_folder + output_filename).c_str());
+        avformat_alloc_output_context2(&temp_fc, NULL, NULL, PATH_MANAGER.video_output.c_str());
         return temp_fc;
     }
 
 public:
-    MovieWriter(int w, int h, int fr, const string& project_name, const string& media_folder, const string& output_folder)
-    : VIDEO_WIDTH(w), VIDEO_HEIGHT(h), VIDEO_FRAMERATE(fr),
-      fc(initFC(output_folder, project_name + ".mp4")),
-      subswriter(output_folder, project_name + ".srt"),
-      audiowriter(media_folder, fc),
-      videowriter(w, h, fr, output_folder, project_name + ".mp4", fc) {
-        init("../media/testaudio.mp3");
+    MovieWriter()
+    : fc(initFC()),
+      subswriter(),
+      audiowriter(fc),
+      videowriter(fc) {
+        init();
     }
 
     ~MovieWriter(){
@@ -48,11 +44,10 @@ public:
         // the shared fc resource complicates things and ordering of cleanup is crucial.
         audiowriter.cleanup();
         videowriter.cleanup();
-
     }
 
-    void init(const string& inputAudioFilename) {
-        audiowriter.init_audio(inputAudioFilename);
+    void init() {
+        audiowriter.init_audio();
         videowriter.init_video();
     }
 
@@ -81,4 +76,4 @@ public:
 };
 
 // This is a global writer handle which is accessed both by the main class and the scene object.
-MovieWriter* WRITER;
+MovieWriter WRITER;
