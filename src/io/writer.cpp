@@ -17,7 +17,6 @@ using namespace std;
 class MovieWriter
 {
 private:
-    string media_folder, output_filename;
     AVFormatContext* fc = nullptr;
     SubtitleWriter subswriter;
     AudioWriter audiowriter;
@@ -32,18 +31,9 @@ private:
 
 public:
 
-    MovieWriter(const string& project_name):
-        media_folder("../media/" + project_name + "/"),
-        output_filename("../out/" + project_name + ".mp4"),
-        fc(initFC(output_filename)),
-        subswriter(project_name),
-        audiowriter(media_folder, fc),
-        videowriter(output_filename, fc)
-    {
-        // Ensure necessary directories exist
-        ensure_directory_exists("../media/");
-        ensure_directory_exists(media_folder);
-        ensure_directory_exists("../out/");
+    MovieWriter(const string& project_name, const string& media_folder, const string& output_folder)
+    : fc(initFC(output_folder + project_name + ".mp4")), subswriter(project_name), audiowriter(media_folder, fc), videowriter(output_folder + project_name + ".mp4", fc) {
+        ensure_directory_exists(output_folder);
     }
 
     ~MovieWriter(){

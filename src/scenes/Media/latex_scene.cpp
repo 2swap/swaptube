@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../misc/visual_media.cpp"
+#include "../../io/visual_media.cpp"
 #include "../scene.cpp"
 
 // Special function which ensures no temporary transparency while performing latex transitions

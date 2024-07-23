@@ -61,7 +61,10 @@ struct Surface {
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), sketchpad(width, height) {over_w_fov = 1 / (w*fov);}
+    ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+        : Scene(width, height), sketchpad(width, height) {
+        dag.add_equation("fov", ".5"); 
+    }
 
     pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
@@ -77,16 +80,14 @@ public:
 
     glm::vec2 screen_to_surface_intersection(float dotnormcam, double px, double py, const Surface &surface) {
         // Compute the ray direction from the camera through the screen point
-        glm::vec3 ray_dir((px - w * 0.5) * over_w_fov, (py - h * 0.5) * over_w_fov, 1);
+        glm::vec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1);
         ray_dir = conjugate_camera_direction * ray_dir * camera_direction;
 
         // Compute the intersection point in 3D space
         float t = dotnormcam / glm::dot(surface.normal, ray_dir);
 
-        glm::vec3 intersection_3D = camera_pos + t * ray_dir;
-
         // Convert 3D intersection point to surface's local 2D coordinates
-        glm::vec3 centered = intersection_3D - surface.center;
+        glm::vec3 centered = camera_pos + t * ray_dir - surface.center;
         glm::vec2 intersection_2D(
             glm::dot(centered, surface.pos_x_dir) * surface.ilr2 + 0.5f,
             glm::dot(centered, surface.pos_y_dir) * surface.iur2 + 0.5f
@@ -232,31 +233,49 @@ public:
 
         double opacity = surface.opacity * dag["surfaces_opacity"];
         float dotnormcam = glm::dot(surface.normal, (surface.center - camera_pos));
-        while (!q.empty()) {
-            auto [cx, cy] = q.front();
-            q.pop();
 
-            // Check if the current point is within bounds and has the old color
-            if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
+        if(p != NULL){ // If this is not a surface of constant color
+            while (!q.empty()) {
+                auto [cx, cy] = q.front();
+                q.pop();
 
-            int color = surface.color;
+                // Check if the current point is within bounds and has the old color
+                if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
 
-            if(p != NULL){ // If this is not a surface of constant color
                 //compute position in surface's coordinate frame as a function of x and y.
                 glm::vec2 surface_coords = screen_to_surface_intersection(dotnormcam, cx, cy, surface);
-                color = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h);
+                int color = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h);
+
+                // Set the pixel to the new color
+                pix.overlay_pixel(cx, cy, color, opacity);
+
+                sketchpad.set_pixel(cx, cy, padcol);
+
+                // Add the neighboring points to the queue
+                q.push({cx + 1, cy});
+                q.push({cx - 1, cy});
+                q.push({cx, cy + 1});
+                q.push({cx, cy - 1});
             }
+        } else {
+            while (!q.empty()) {
+                auto [cx, cy] = q.front();
+                q.pop();
 
-            // Set the pixel to the new color
-            pix.overlay_pixel(cx, cy, color, opacity);
+                // Check if the current point is within bounds and has the old color
+                if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
 
-            sketchpad.set_pixel(cx, cy, padcol);
+                // Set the pixel to the new color
+                pix.overlay_pixel(cx, cy, surface.color, opacity);
 
-            // Add the neighboring points to the queue
-            q.push({cx + 1, cy});
-            q.push({cx - 1, cy});
-            q.push({cx, cy + 1});
-            q.push({cx, cy - 1});
+                sketchpad.set_pixel(cx, cy, padcol);
+
+                // Add the neighboring points to the queue
+                q.push({cx + 1, cy});
+                q.push({cx - 1, cy});
+                q.push({cx, cy + 1});
+                q.push({cx, cy - 1});
+            }
         }
     }
 
@@ -325,6 +344,11 @@ public:
     }
 
     void render_point(const Point& point) {
+        fov = dag["fov"];
+        over_w_fov = 1/(w*fov);
+        halfwidth = w*.5;
+        halfheight = h*.5;
+
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
@@ -348,7 +372,6 @@ public:
         std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        //cout << line.opacity << endl;
         pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, dag["lines_opacity"] * line.opacity), 3);
     }
 
@@ -360,16 +383,17 @@ public:
         surfaces.push_back(s);
     }
 
+    glm::vec3 camera_pos;
+    glm::quat camera_direction;  // Quaternion representing the camera's orientation
+    glm::quat conjugate_camera_direction;
+    float fov;
+    float over_w_fov;
+    float halfwidth;
+    float halfheight;
+    Pixels sketchpad;
 public:
     std::vector<Point> points;
     std::vector<Line> lines;
     std::vector<Surface> surfaces;
-    glm::vec3 camera_pos;
-    glm::quat camera_direction;  // Quaternion representing the camera's orientation
-    glm::quat conjugate_camera_direction;
-    float fov = .282*3/2;
-    float over_w_fov;
     bool skip_surfaces = false;
-    float mult;
-    Pixels sketchpad;
 };

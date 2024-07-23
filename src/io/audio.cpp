@@ -7,6 +7,7 @@
 #include <vector>
 #include <filesystem>
 #include <sys/stat.h>
+#include "AudioSegment.cpp"
 extern "C"
 {
     #include <libswscale/swscale.h>
@@ -69,6 +70,7 @@ private:
 
 public:
     AudioWriter(const string& _media_folder, AVFormatContext *fc_) : media_folder(_media_folder), fc(fc_) {
+        ensure_directory_exists(media_folder);
         record_filename = media_folder + "record_list.tsv";
         shtooka_file.open(record_filename);
         if (!shtooka_file.is_open()) {
