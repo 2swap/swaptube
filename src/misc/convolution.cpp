@@ -1,4 +1,5 @@
 #include <stack>
+#include <cassert>
 
 int convolve(const Pixels& a, const Pixels& b, int dx, int dy){
     /*a should be smaller for speed*/
@@ -469,3 +470,23 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
 
     return results;
 }
+
+void unit_test_convolve() {
+    // Create two Pixels objects with rectangular fills
+    Pixels a(15, 15);
+    Pixels b(10, 10);
+
+    int col = argb_to_col(255,255,255,255);
+    a.fill_rect(2, 2, 6, 6, col);  // Fill a rectangle in 'a'
+    b.fill_rect(3, 3, 3, 3, col);  // Fill a smaller rectangle in 'b'
+
+    // Test maximum overlap
+    int max_overlap = convolve(a, b, 1, 1);
+    int other_overlap = convolve(a, b, 5, 5);
+    assert(max_overlap >= other_overlap);
+    other_overlap = convolve(a, b, 1, 5);
+    assert(max_overlap >= other_overlap);
+    other_overlap = convolve(a, b, 1, 5);
+    assert(max_overlap >= other_overlap);
+}
+

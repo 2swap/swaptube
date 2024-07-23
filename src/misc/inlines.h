@@ -214,5 +214,4 @@ void run_inlines_unit_tests(){
     smoother2_ut();
     lerp_ut();
     latex_text_ut();
-    cout << "inline tests passed." << endl;
 }

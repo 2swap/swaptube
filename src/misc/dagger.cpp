@@ -302,7 +302,6 @@ private:
 };
 
 void test_dagger() {
-    cout << "Testing dagger" << endl;
     // Construct a Dagger object
     Dagger dagger;
 

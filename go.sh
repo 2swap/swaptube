@@ -24,6 +24,9 @@ cd build
 
 clear
 
+echo "==============================================="
+echo "=================== COMPILE ==================="
+echo "==============================================="
 echo "go.sh: Running \`cmake ..\` from build directory"
 # if the build directory is empty, run CMake to generate build files
 if [ ! -e "CMakeCache.txt" ]; then
@@ -34,6 +37,7 @@ echo "go.sh: Running \`make -j12\`"
 # build the project
 make -j12
 
+
 # Check if the build was successful
 if [ $? -ne 0 ]; then
   echo "go.sh: Build failed. Please check the build errors."
@@ -41,7 +45,9 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-echo "go.sh: Running compiled swaptube binary"
+echo "==============================================="
+echo "===================== RUN ====================="
+echo "==============================================="
 # Run the program
 #valgrind ./swaptube $1
 ./swaptube $1
@@ -59,5 +65,4 @@ rm src/projects/.active_project.cpp
 
 ultimate_subdir=$(ls -1d out/$1/*/ 2>/dev/null | sort | tail -n 1)
 
-vlc $ultimate_subdir/$1.mp4
-
+vlc $ultimate_subdir/$1.mp4 > /dev/null 2>&1

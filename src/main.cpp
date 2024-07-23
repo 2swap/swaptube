@@ -1,11 +1,5 @@
 using namespace std;
 
-#include <iostream>
-#include <string>
-#include <stdlib.h>
-#include <math.h>
-#include <fstream>
-
 int WIDTH_BASE = 640;
 int HEIGHT_BASE = 360;
 int MULT = 1;
@@ -15,23 +9,20 @@ int VIDEO_FRAMERATE = 30;
 bool FOR_REAL = true; // Whether we should actually write any AV output
 bool PRINT_TO_TERMINAL = true;
 int video_num_frames = 0;
+
+#include <iostream>
+#include <string>
+#include <stdlib.h>
+#include <math.h>
+#include <fstream>
+
 string project_name = "to_be_populated";
+string media_folder = "to_be_populated";
+string output_folder = "to_be_populated";
 
 #include "misc/inlines.h"
-#include "misc/color.cpp"
-#include "misc/dagger.cpp"
 #include "io/writer.cpp"
-#include "scenes/Connect4/c4.h"
-#include "misc/pixels.h"
-#include "misc/convolver.cpp"
-#include "misc/convolution_tests.cpp"
 #include "misc/Timer.cpp"
-
-void setup_writer(const string& project_name, const string& media_folder, const string& output_folder){
-    // Create a new MovieWriter object and assign it to the pointer
-    WRITER = new MovieWriter(project_name, media_folder, output_folder);
-    WRITER->init("../media/testaudio.mp3");
-}
 
 #include "projects/.active_project.cpp"
 
@@ -39,25 +30,30 @@ void run_unit_tests(){
     run_inlines_unit_tests();
     run_color_unit_tests();
     test_dagger();
-    run_convolution_unit_tests();
     run_c4_unit_tests();
 }
 
 int main(int argc, char* argv[]) {
+    cout << "0" << endl;
     run_unit_tests();
+    cout << "1" << endl;
 
     if (argc != 2) {
         cerr << "Usage: " << argv[0] << " <config_file_without_.json>" << endl;
         exit(1);
     }
+    cout << "2" << endl;
     project_name = string(argv[1]);
-    string media_folder = "../media/" + project_name + "/";
-    string output_folder = "../out/" + project_name + "/" + get_timestamp() + "/";
-    DebugPlot::output_folder = output_folder;
+    media_folder = "../media/" + project_name + "/";
+    output_folder = "../out/" + project_name + "/" + get_timestamp() + "/";
+
+    DebugPlot time_per_frame_plot("render_time_per_frame");
+    DebugPlot memutil_plot("memutil");
+    DebugPlot dag_time_plot("Time-based metrics", vector<string>{"t", "transition_fraction", "subscene_transition_fraction"});
 
     Timer timer;
     {
-        setup_writer(project_name, media_folder, output_folder);
+        WRITER = new MovieWriter(project_name, media_folder, output_folder);
         {
             render_video(); // from the project file
         }

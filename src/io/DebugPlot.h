@@ -9,7 +9,6 @@
 
 class DebugPlot {
 public:
-    static string output_folder;
     // Constructor that initializes the plot name, data series names, and file paths
     DebugPlot(const string& plot_name) 
         : plot_name_(plot_name),
@@ -27,6 +26,7 @@ public:
     { init(); }
 
     void init(){
+        cout << "b" << endl;
         ensure_directory_exists(output_folder + "data/");
         ensure_directory_exists(output_folder + "plots/");
         data_file_.open(data_file_path_, ios::out | ios::trunc);
@@ -92,6 +92,4 @@ private:
     const size_t num_series_;
     ofstream data_file_;
 };
-
-string DebugPlot::output_folder;
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <regex>
 extern "C"
 {
     #include <libswscale/swscale.h>
@@ -8,6 +9,88 @@ extern "C"
 }
 
 using namespace std;
+
+// Function to redirect stderr to a pipe
+int redirect_stderr(int pipefd[2]) {
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        return -1;
+    }
+
+    // Save the original stderr
+    int original_stderr = dup(STDERR_FILENO);
+
+    // Redirect stderr to the write end of the pipe
+    if (dup2(pipefd[1], STDERR_FILENO) == -1) {
+        perror("dup2");
+        return -1;
+    }
+
+    // Close the write end of the pipe in the parent process
+    close(pipefd[1]);
+
+    return original_stderr;
+}
+
+// Function to restore the original stderr
+void restore_stderr(int original_stderr) {
+    dup2(original_stderr, STDERR_FILENO);
+    close(original_stderr);
+}
+
+// Function to read from a file descriptor into a string
+string read_from_fd(int fd) {
+    string output;
+    char buffer[1024];
+    ssize_t bytes_read;
+
+    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
+        output.append(buffer, bytes_read);
+    }
+
+    return output;
+}
+
+// Function to parse the debug output
+void parse_debug_output(const string& output) {
+    istringstream iss(output);
+    string line;
+    regex regex_pattern(R"(frame=\s*(\d+)\s*QP=(\d+\.\d+)\s+NAL=(\d+)\s+Slice:([IPBS])\s+Poc:(\d+)\s+I:(\d+)\s+P:(\d+)\s+SKIP:(\d+)\s+size=(\d+)\s+bytes)");
+    regex regex_pattern_empty_line(R"(\s*)");
+    while (getline(iss, line)) {
+        smatch match;
+        if (regex_search(line, match, regex_pattern) && match.size() == 10) {
+            int frame = stoi(match[1].str());
+            float qp = stof(match[2].str());
+            int nal = stoi(match[3].str());
+            string slice = match[4].str();
+            int poc = stoi(match[5].str());
+            int i = stoi(match[6].str());
+            int p = stoi(match[7].str());
+            int skip = stoi(match[8].str());
+            int size = stoi(match[9].str());
+        } else if(regex_search(line, match, regex_pattern_empty_line)) {
+            // do nothing
+        } else {
+            // If the string did not match the expected format, dump it to stderr
+            cerr << "Failed to parse cerr output from encoder: " << line << endl;
+        }
+    }
+}
+
+/*
+ * Wrapper around avcodec_send_frame which captures its output to stderr.
+ */
+int send_frame(AVCodecContext* vcc, AVFrame* frame){
+    int pipefd[2];
+    int original_stderr = redirect_stderr(pipefd);
+    int ret = avcodec_send_frame(vcc, frame);
+    restore_stderr(original_stderr);
+    string debug_output = read_from_fd(pipefd[0]);
+    close(pipefd[0]);
+    parse_debug_output(debug_output);
+    return ret;
+}
 
 class VideoWriter {
 private:
@@ -26,7 +109,7 @@ private:
 
     bool encode_and_write_frame(AVFrame* frame){
         if(frame != NULL){
-            int ret = avcodec_send_frame(videoCodecContext, frame);
+            int ret = send_frame(videoCodecContext, frame);
             if (ret<0) {
                 cout << "Failed encoding video!" << endl;
                 exit(1);
@@ -54,8 +137,10 @@ private:
     }
 
 public:
-    VideoWriter(const string& _output_filename, AVFormatContext *fc_)
-        : output_filename(_output_filename), fc(fc_) {}
+    VideoWriter(const string& output_folder, const string& _output_filename, AVFormatContext *fc_)
+        : output_filename(output_folder + _output_filename), fc(fc_) {
+        ensure_directory_exists(output_folder);
+    }
 
     void init_video() {
         av_log_set_level(AV_LOG_DEBUG);
@@ -135,7 +220,7 @@ public:
         yuvpic->pts = outframe;
         outframe++;
 
-        if(!encode_and_write_frame(yuvpic)) cout << endl;
+        encode_and_write_frame(yuvpic);
     }
     void cleanup() {
         // Writing the delayed video frames
@@ -145,13 +230,14 @@ public:
         avcodec_close(videoCodecContext);
 
         // Freeing video specific resources
-        cout << "freeing some stuff" << endl;
         sws_freeContext(sws_ctx);
         av_frame_free(&rgbpic);
         av_frame_free(&yuvpic);
 
         av_packet_unref(&pkt);
 
-        cout << "Done video cleanup" << endl;
+        av_write_trailer(fc);
+        avio_closep(&fc->pb);
+        avformat_free_context(fc);
     }
 };

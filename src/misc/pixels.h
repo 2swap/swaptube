@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include "inlines.h"
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -11,6 +10,8 @@
 #include <iomanip>
 #include <unordered_map>
 #include <algorithm>
+#include "inlines.h"
+#include "color.cpp"
 
 using namespace std;
 

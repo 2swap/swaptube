@@ -131,9 +131,7 @@ void replerp_ut() {
     pass &= replerp(b2, b1, 0.5) == "123";
     pass &= replerp(b2, b1, 0.75) == "1234";
     pass &= replerp(b2, b1, 1.) == "12345";
-    if (pass) {
-        std::cout << "replerp_ut - Case 1: Passed." << std::endl;
-    } else {
+    if (!pass) {
         std::cout << "replerp_ut - Case 1: Failed." << std::endl;
         exit(1);
     }
@@ -154,9 +152,7 @@ void replerp_ut() {
     pass &= replerp(b4, b3, 0.6) == "a";
     pass &= replerp(b4, b3, 0.8) == "ab";
     pass &= replerp(b4, b3, 1.) == "abc";
-    if (pass) {
-        std::cout << "replerp_ut - Case 2: Passed." << std::endl;
-    } else {
+    if (!pass) {
         std::cout << "replerp_ut - Case 2: Failed." << std::endl;
         exit(1);
     }
