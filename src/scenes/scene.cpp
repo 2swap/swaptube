@@ -4,7 +4,7 @@
 #include <chrono>
 #include <cassert>
 #include "../misc/dagger.cpp"
-#include "../audio_video/DebugPlot.h"
+#include "../io/DebugPlot.h"
 
 using namespace std;
 

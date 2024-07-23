@@ -9,23 +9,26 @@
 
 class DebugPlot {
 public:
+    static string output_folder;
     // Constructor that initializes the plot name, data series names, and file paths
     DebugPlot(const string& plot_name) 
         : plot_name_(plot_name),
-          data_file_path_("../out/" + plot_name + ".dat"),
-          plot_file_path_("../out/" + plot_name + ".png"),
+          data_file_path_(output_folder + "data/" + plot_name + ".dat"),
+          plot_file_path_(output_folder + "plots/" + plot_name + ".png"),
           series_names_(vector<string>{plot_name}),
           num_series_(1)
     { init(); }
     DebugPlot(const string& plot_name, const vector<string>& series_names) 
         : plot_name_(plot_name),
-          data_file_path_("../out/" + plot_name + ".dat"),
-          plot_file_path_("../out/" + plot_name + ".png"),
+          data_file_path_(output_folder + "data/" + plot_name + ".dat"),
+          plot_file_path_(output_folder + "plots/" + plot_name + ".png"),
           series_names_(series_names),
           num_series_(series_names.size())
     { init(); }
 
     void init(){
+        ensure_directory_exists(output_folder + "data/");
+        ensure_directory_exists(output_folder + "plots/");
         data_file_.open(data_file_path_, ios::out | ios::trunc);
         if (!data_file_.is_open()) {
             throw runtime_error("Failed to open data file: " + data_file_path_);
@@ -89,4 +92,6 @@ private:
     const size_t num_series_;
     ofstream data_file_;
 };
+
+string DebugPlot::output_folder;
 

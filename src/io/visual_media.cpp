@@ -4,7 +4,7 @@
 #include <vector>
 #include <stdexcept>
 #include <librsvg-2.0/librsvg/rsvg.h>
-#include "pixels.h"
+#include "../misc/pixels.h"
 
 enum class ScalingMode {
     BoundingBox,
@@ -186,7 +186,7 @@ Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
     char full_directory_path[PATH_MAX];
     realpath(directory_path.c_str(), full_directory_path);
     ensure_directory_exists(full_directory_path);
-    string name = full_directory_path + to_string(hasher(eqn)) + ".svg";
+    string name = string(full_directory_path) + "/" + to_string(hasher(eqn)) + ".svg";
 
     if (access(name.c_str(), F_OK) != -1) {
         // File already exists, no need to generate LaTeX

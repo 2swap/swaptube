@@ -85,7 +85,8 @@ public:
                 int sampleY = y * yStep;
 
                 int a, r, g, b;
-                get_pixel_by_channels(sampleX, sampleY, a, r, g, b);
+                //there is something weird going on here, dont know why the params have to be in reverse
+                get_pixel_by_channels(sampleX, sampleY, a, b, g, r);
 
                 // Map the RGB values to ANSI color codes
                 int rCode = static_cast<int>((1-cube(1-(r / 255.0*a/255.))) * 5);

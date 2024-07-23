@@ -57,5 +57,7 @@ cd ..
 
 rm src/projects/.active_project.cpp
 
-vlc out/$1.mp4
+ultimate_subdir=$(ls -1d out/$1/*/ 2>/dev/null | sort | tail -n 1)
+
+vlc $ultimate_subdir/$1.mp4
 
