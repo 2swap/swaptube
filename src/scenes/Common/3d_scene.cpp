@@ -60,7 +60,7 @@ struct Surface {
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width, const int height)
+    ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height), sketchpad(width, height) {
         dag.add_equation("fov", ".5"); 
     }

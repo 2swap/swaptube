@@ -27,7 +27,7 @@ struct ScalingParams {
 
 Pixels png_to_pix(const string& filename) {
     // Open the PNG file
-    FILE* fp = fopen((media_folder + project_name + "/" + filename + ".png").c_str(), "rb");
+    FILE* fp = fopen((PATH_MANAGER.media_dir + filename + ".png").c_str(), "rb");
     if (!fp) {
         throw runtime_error("Failed to open PNG file.");
     }
@@ -185,7 +185,6 @@ Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
     string directory_path = "../out/latex/";
     char full_directory_path[PATH_MAX];
     realpath(directory_path.c_str(), full_directory_path);
-    ensure_directory_exists(full_directory_path);
     string name = string(full_directory_path) + "/" + to_string(hasher(eqn)) + ".svg";
 
     if (access(name.c_str(), F_OK) != -1) {

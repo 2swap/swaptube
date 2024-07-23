@@ -69,8 +69,7 @@ private:
     }
 
 public:
-    AudioWriter(const string& _media_folder, AVFormatContext *fc_) : media_folder(_media_folder), fc(fc_) {
-        ensure_directory_exists(media_folder);
+    AudioWriter(AVFormatContext *fc_) : fc(fc_) {
         record_filename = media_folder + "record_list.tsv";
         shtooka_file.open(record_filename);
         if (!shtooka_file.is_open()) {
@@ -78,21 +77,21 @@ public:
         }
     }
 
-    void init_audio(const string& inputAudioFilename) {
+    void init_audio() {
         // Check if the input file exists
-        if (!filesystem::exists(inputAudioFilename)) {
-            failout("Error: Input audio file " + inputAudioFilename + " does not exist.");
+        if (!filesystem::exists(PATH_MANAGER.testaudio_path)) {
+            failout("Error: Input audio file " + PATH_MANAGER.testaudio_path + " does not exist.");
         }
 
         AVFormatContext* inputAudioFormatContext = nullptr;
-        if (avformat_open_input(&inputAudioFormatContext, inputAudioFilename.c_str(), nullptr, nullptr) < 0) {
-            failout("Error: Could not open input audio file " + inputAudioFilename);
+        if (avformat_open_input(&inputAudioFormatContext, PATH_MANAGER.testaudio_path.c_str(), nullptr, nullptr) < 0) {
+            failout("Error: Could not open input audio file " + PATH_MANAGER.testaudio_path);
         }
 
         // Find input audio stream information
         if (avformat_find_stream_info(inputAudioFormatContext, nullptr) < 0){
             avformat_close_input(&inputAudioFormatContext);
-            failout("Error: Could not find stream information in input audio file " + inputAudioFilename);
+            failout("Error: Could not find stream information in input audio file " + PATH_MANAGER.testaudio_path);
         }
 
         // Find input audio stream
@@ -194,12 +193,13 @@ public:
         }
         cout << "Added silence: " << duration << " seconds" << endl;
     }
-    double add_audio_get_length(const string& inputAudioFilename) {
+    double add_audio_get_length(const string& audioname) {
         cout << "Adding audio" << endl;
         double length_in_seconds = 0;
 
+        string fullInputAudioFilename = PATH_MANAGER.media_dir + audioname;
+
         // Check if the input audio file exists
-        std::string fullInputAudioFilename = media_folder + inputAudioFilename;
         if (!file_exists(fullInputAudioFilename)) {
             std::cerr << "Input audio file does not exist: " << fullInputAudioFilename << std::endl;
             length_in_seconds = 3.0;

@@ -1,18 +1,25 @@
+using namespace std;
 #include "../io/PathManager.cpp"
 
-PathManager("C4_Manual_Tree");
+
+
+const int width_base = 640;
+const int height_base = 360;
+const int mult = 1;
+
+// PROJECT GLOBALS
+const int VIDEO_WIDTH = width_base * mult;
+const int VIDEO_HEIGHT = height_base * mult;
+const int VIDEO_FRAMERATE = 30;
+
+#include "../io/writer.cpp"
 
 #include "../scenes/Connect4/c4_graph_scene.cpp"
+#include "../misc/Timer.cpp"
 
 void render_video() {
     FOR_REAL = true; // Whether we should actually be writing any AV output
     PRINT_TO_TERMINAL = true;
-    const int WIDTH_BASE = 640;
-    const int HEIGHT_BASE = 360;
-    const int MULT = 1;
-    const int VIDEO_WIDTH = WIDTH_BASE*MULT;
-    const int VIDEO_HEIGHT = HEIGHT_BASE*MULT;
-    const int VIDEO_FRAMERATE = 30;
 
     Graph<C4Board> g;
     g.decay = 0.1;
