@@ -17,19 +17,18 @@ inline string empty_annotations = "       "
 
 class C4Scene : public Scene {
 private:
+    // non-transitions
+    string representation = "";
+    Board board;
     double stonewidth;
+    string annotations = empty_annotations;
 
     // transitions
     Board b2;
     string annotations2;
 
-    // non-transitions
-    Board board;
-    string representation = "";
-    string annotations = empty_annotations;
-
 public:
-    C4Scene(const string& rep, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    C4Scene(const string& rep, const int width, const int height)
         :Scene(width, height), representation(rep), board(rep), stonewidth(min(width, height)/10.) {}
 
     void stage_transition(string final_rep){

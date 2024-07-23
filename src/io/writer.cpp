@@ -17,6 +17,9 @@ using namespace std;
 class MovieWriter
 {
 private:
+    const int VIDEO_WIDTH;
+    const int VIDEO_HEIGHT;
+    const int VIDEO_FRAMERATE;
     bool made_folder;
     AVFormatContext* fc = nullptr;
     SubtitleWriter subswriter;
@@ -31,11 +34,12 @@ private:
     }
 
 public:
-    MovieWriter(const string& project_name, const string& media_folder, const string& output_folder)
-    : fc(initFC(output_folder, project_name + ".mp4")),
+    MovieWriter(int w, int h, int fr, const string& project_name, const string& media_folder, const string& output_folder)
+    : VIDEO_WIDTH(w), VIDEO_HEIGHT(h), VIDEO_FRAMERATE(fr),
+      fc(initFC(output_folder, project_name + ".mp4")),
       subswriter(output_folder, project_name + ".srt"),
       audiowriter(media_folder, fc),
-      videowriter(output_folder, project_name + ".mp4", fc) {
+      videowriter(w, h, fr, output_folder, project_name + ".mp4", fc) {
         init("../media/testaudio.mp3");
     }
 

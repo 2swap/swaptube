@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include "SteadyState.h"
 #include <random>
+#include <cassert>
 #include "C4Board.h"
 
 // Method to populate char** array from std::array of strings

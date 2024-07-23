@@ -21,8 +21,8 @@ using json = nlohmann::json;
 class Edge {
 public:
     Edge(double f, double t) : from(f), to(t), opacity(1) {}
-    double to;
     double from;
+    double to;
     double opacity;
 
     //Stuff needed to slap it in an unordered set
@@ -56,9 +56,9 @@ public:
                  static_cast<double>(std::rand()) / RAND_MAX,
                  static_cast<double>(std::rand()) / RAND_MAX) {}
 
+    T* data;
     double hash = 0;
     bool highlight = false;
-    T* data;
     EdgeSet neighbors;
     double opacity = 1;
     int color = 0xffffffff;

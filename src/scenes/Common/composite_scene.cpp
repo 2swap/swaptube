@@ -10,7 +10,7 @@ struct SceneWithPosition {
 
 class CompositeScene : public Scene {
 public:
-    CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
+    CompositeScene(const int width, const int height) : Scene(width, height) {}
 
     void add_scene(Scene* sc, string dag_name){
         SceneWithPosition swp = {sc, dag_name};
