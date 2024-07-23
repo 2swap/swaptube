@@ -33,7 +33,8 @@ private:
     }
 
 public:
-    SubtitleWriter(const string& srt_filename) : srt_filename(srt_filename) {
+    SubtitleWriter(const string& output_folder, const string& srt_filename) : srt_filename(srt_filename) {
+        ensure_directory_exists(output_folder);
         srt_file.open(srt_filename);
         if (!srt_file.is_open()) failout("Failed to open file: " + srt_filename);
     }

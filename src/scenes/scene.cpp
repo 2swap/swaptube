@@ -9,9 +9,6 @@
 using namespace std;
 
 static int frame_number;
-static DebugPlot time_per_frame_plot("render_time_per_frame");
-static DebugPlot memutil_plot("memutil");
-static DebugPlot dag_time_plot("Time-based metrics", vector<string>{"t", "transition_fraction", "subscene_transition_fraction"});
 
 class Scene {
 public:
@@ -67,6 +64,7 @@ public:
         for (int frame = 0; frame < scene_duration_frames; frame++) {
             render_one_frame(frame);
         }
+        cout << endl;
         video_sessions_left--;
         if(video_sessions_left == 0){
             dag.close_all_transitions();
@@ -81,7 +79,7 @@ public:
     int w = 0;
     int h = 0;
     Dagger dag;
-  
+
 private:
     void render_one_frame(int subscene_frame){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
@@ -110,6 +108,8 @@ private:
         chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
         time_per_frame_plot.add_datapoint(frame_duration.count()); // Add the time to DebugPlot
         memutil_plot.add_datapoint(get_free_memory()); // Add the time to DebugPlot
+        cout << "#";
+        fflush(stdout);
     }
 
 protected:

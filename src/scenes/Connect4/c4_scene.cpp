@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../io/visual_media.cpp"
+#include "c4.h"
 #include <algorithm>
 
 inline int C4_RED           = 0xffff0000;

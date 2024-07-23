@@ -267,5 +267,4 @@ void run_color_unit_tests(){
     getb_ut();
     colorlerp_ut();
     color_combine_ut();
-    cout << "inline tests passed." << endl;
 }

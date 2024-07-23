@@ -17,23 +17,26 @@ using namespace std;
 class MovieWriter
 {
 private:
+    bool made_folder;
     AVFormatContext* fc = nullptr;
     SubtitleWriter subswriter;
     AudioWriter audiowriter;
     VideoWriter videowriter;
 
     // Function to initialize 'fc'
-    AVFormatContext* initFC(const string& output_filename) {
+    AVFormatContext* initFC(const string& output_folder, const string& output_filename) {
         AVFormatContext* temp_fc = nullptr;
-        avformat_alloc_output_context2(&temp_fc, NULL, NULL, output_filename.c_str());
+        avformat_alloc_output_context2(&temp_fc, NULL, NULL, (output_folder + output_filename).c_str());
         return temp_fc;
     }
 
 public:
-
     MovieWriter(const string& project_name, const string& media_folder, const string& output_folder)
-    : fc(initFC(output_folder + project_name + ".mp4")), subswriter(project_name), audiowriter(media_folder, fc), videowriter(output_folder + project_name + ".mp4", fc) {
-        ensure_directory_exists(output_folder);
+    : fc(initFC(output_folder, project_name + ".mp4")),
+      subswriter(output_folder, project_name + ".srt"),
+      audiowriter(media_folder, fc),
+      videowriter(output_folder, project_name + ".mp4", fc) {
+        init("../media/testaudio.mp3");
     }
 
     ~MovieWriter(){
@@ -42,9 +45,6 @@ public:
         audiowriter.cleanup();
         videowriter.cleanup();
 
-        av_write_trailer(fc);
-        avio_closep(&fc->pb);
-        avformat_free_context(fc);
     }
 
     void init(const string& inputAudioFilename) {
