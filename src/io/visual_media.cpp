@@ -182,9 +182,8 @@ Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
     }
 
     hash<string> hasher;
-    string directory_path = "../out/latex/";
     char full_directory_path[PATH_MAX];
-    realpath(directory_path.c_str(), full_directory_path);
+    realpath(PATH_MANAGER.latex_dir.c_str(), full_directory_path);
     string name = string(full_directory_path) + "/" + to_string(hasher(eqn)) + ".svg";
 
     if (access(name.c_str(), F_OK) != -1) {

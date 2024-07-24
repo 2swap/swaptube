@@ -2,13 +2,14 @@
 
 #include "../../io/visual_media.cpp"
 #include "../scene.cpp"
+#include "convolution.cpp"
 
 // Special function which ensures no temporary transparency while performing latex transitions
 inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
 
 class LatexScene : public Scene {
 public:
-    LatexScene(double extra_scale, const string& eqn, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    LatexScene(const string& eqn, double extra_scale, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
     : Scene(width, height), equation_string(eqn) {
         cout << "rendering latex: " << equation_string << endl;
         ScalingParams sp(pix.w * extra_scale, pix.h * extra_scale);
