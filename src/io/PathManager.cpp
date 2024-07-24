@@ -77,4 +77,4 @@ public:
 };
 
 // Global Path Manager
-PathManager PATH_MANAGER("C4_Manual_Tree");
+PathManager PATH_MANAGER(project_name);

@@ -1,4 +1,6 @@
 using namespace std;
+#include <string>
+const string project_name = "C4_Manual_Tree";
 #include "../io/PathManager.cpp"
 
 
