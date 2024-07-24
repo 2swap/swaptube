@@ -2,6 +2,7 @@
 
 #include "../scene.cpp"
 #include <string>
+#include <unordered_map>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -62,7 +63,20 @@ class ThreeDimensionScene : public Scene {
 public:
     ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height), sketchpad(width, height) {
-        dag.add_equation("fov", ".5"); 
+        dag.add_equations(unordered_map<string, string>{
+            {"fov", ".5"},
+            {"x", "0"},
+            {"y", "0"},
+            {"z", "0"},
+            {"d", "2"},
+            {"q1", "1"},
+            {"qi", "0"},
+            {"qj", "0"},
+            {"qk", "0"},
+            {"surfaces_opacity", "1"},
+            {"lines_opacity", "1"},
+            {"points_opacity", "1"}
+        });
     }
 
     pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
@@ -328,7 +342,6 @@ public:
     void render_points(){
         for (const Point& point : points)
             render_point(point);
-        render_point(Point(glm::vec3(0,0,0), OPAQUE_WHITE));
     }
 
     void render_lines(){
