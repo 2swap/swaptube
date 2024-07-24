@@ -1,4 +1,9 @@
 build
 out
 media
-src/projects/.active_project.tmp
+src/projects/.active_project.cpp
+
+# vim temp files
+*~
+*.swp
+*.swo

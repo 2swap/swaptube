@@ -20,9 +20,6 @@ const int VIDEO_FRAMERATE = 30;
 #include "../misc/Timer.cpp"
 
 void render_video() {
-    FOR_REAL = true; // Whether we should actually be writing any AV output
-    PRINT_TO_TERMINAL = true;
-
     Graph<C4Board> g;
     g.decay = 0.1;
     g.repel_force = 0.5;
