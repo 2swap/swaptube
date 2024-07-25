@@ -41,7 +41,7 @@ class OrbitSim {
 public:
     float force_constant = 0.0001f;
     float collision_threshold = 0.02f;
-    float drag = 0.9f;
+    float drag = 0.99f;
     vector<FixedObject> fixed_objects;
     list<MobileObject> mobile_objects;
     bool mobile_interactions = true;
@@ -67,8 +67,7 @@ public:
                 if (distance < collision_threshold) {
                     return fixed_obj.color;
                 } else {
-                    float force_magnitude = force_constant / distance;
-                    glm::vec3 acceleration = glm::normalize(direction) * force_magnitude;
+                    glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance(distance);
                     obj1.velocity += acceleration;
                 }
             }
@@ -93,8 +92,7 @@ private:
                     deleted = true;
                     break;
                 } else {
-                    float force_magnitude = force_constant / distance;
-                    glm::vec3 acceleration = glm::normalize(direction) * force_magnitude;
+                    glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance(distance);
                     obj1.velocity += acceleration;
                 }
             }
@@ -107,8 +105,7 @@ private:
                         glm::vec3 direction = obj2.position - obj1.position;
                         float distance = glm::length(direction);
                         if (distance > 0) {
-                            float force_magnitude = force_constant / distance;
-                            glm::vec3 acceleration = glm::normalize(direction) * force_magnitude;
+                            glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance(distance);
                             obj1.velocity += acceleration;
                             obj2.velocity -= acceleration;
                         }
@@ -122,6 +119,10 @@ private:
             object.velocity *= drag;
             object.position += object.velocity;
         }
+    }
+
+    float magnitude_force_given_distance(float d){
+        return force_constant/(.1+d*d);
     }
 };
 
