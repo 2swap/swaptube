@@ -364,14 +364,14 @@ public:
         bool behind_camera = false;
         std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
-        double dot_size = pix.w/300.;
+        double dot_size = pix.w/500.;
         if(point.highlight == RING){
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , point.color);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         } else if(point.highlight == BULLSEYE){
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*3  , dot_size*3  , OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*3  , dot_size*3  , point.color);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*2.5, dot_size*2.5, OPAQUE_BLACK);
-            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , OPAQUE_WHITE);
+            pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , point.color);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         }
         if(point.opacity == 0) return;
