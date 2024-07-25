@@ -27,7 +27,7 @@ public:
             //lines.push_back(Line(position, obj.position, 0xff00ff00, 1));
         }
         for (const auto& obj : simulation->fixed_objects) {
-            points.push_back(Point(obj.get_position(dag), obj.color, NORMAL, obj.opacity));
+            points.push_back(Point(obj.get_position(dag), obj.color, RING, obj.opacity));
         }
     }
 
