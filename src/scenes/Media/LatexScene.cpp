@@ -1,10 +1,15 @@
 #pragma once
 
-#include "../Media/latex_scene.cpp"
+#include "../../io/visual_media.cpp"
+#include "../Scene.cpp"
+#include "Convolution.cpp"
 
-class LambdaScene : public Scene {
+// Special function which ensures no temporary transparency while performing latex transitions
+inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
+
+class LatexScene : public Scene {
 public:
-    LambdaScene(const string& eqn, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    LatexScene(const string& eqn, double extra_scale, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
     : Scene(width, height), equation_string(eqn) {
         cout << "rendering latex: " << equation_string << endl;
         ScalingParams sp(pix.w * extra_scale, pix.h * extra_scale);
@@ -32,7 +37,7 @@ public:
         cout << equation_string << " <- Finding Intersections -> " << eqn << endl;
         intersections = find_intersections(equation_pixels, transition_equation_pixels);
         in_transition_state = true;
-        transition_audio_segment = dag["audio_segment_number"];
+        transition_audio_segment = (*dag)["audio_segment_number"];
     }
 
     void end_transition(){
@@ -46,16 +51,16 @@ public:
     }
 
     void query(Pixels*& p) override {
-        if(in_transition_state && dag["audio_segment_number"] != transition_audio_segment)
+        if(in_transition_state && (*dag)["audio_segment_number"] != transition_audio_segment)
             end_transition();
 
         if(!in_transition_state){
             p = &pix;
         } else { // in a transition
             pix.fill(TRANSPARENT_BLACK);
-            double tp = transparency_profile(dag["transition_fraction"]);
-            double tp1 = transparency_profile(1-dag["transition_fraction"]);
-            double smooth = smoother2(dag["transition_fraction"]);
+            double tp = transparency_profile((*dag)["transition_fraction"]);
+            double tp1 = transparency_profile(1-(*dag)["transition_fraction"]);
+            double smooth = smoother2((*dag)["transition_fraction"]);
 
             double top_vx = 0;
             double top_vy = 0;
@@ -104,9 +109,3 @@ private:
     Pixels transition_equation_pixels;
     pair<int, int> transition_coords;
 };
-
-Pixels lambda_to_pixels(LambdaExpression e){
-    unordered_map<string, int> vbar_y_values;
-    int w = one less than 4 times the number of variables (vertical lines)
-    int h = one more than twice the maximum number of nested abstractions and applications (one less for alternaitve diagrams with multiple variables). 
-}

@@ -65,11 +65,8 @@ public:
         pixels[w*y+x] = (pixels[w*y+x] & 0x00ffffff) | (a << 24);
     }
 
-    void print_dimensions(){
-        cout << "w: " << w << ", h: " << h << endl;
-    }
-
     void print_to_terminal() const {
+        cout << endl;
         struct winsize wsz;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsz);
 
@@ -184,6 +181,10 @@ public:
         for(int dx = 0; dx < rw; dx++)
             for(int dy = 0; dy < rh; dy++)
                 set_pixel(x+dx, y+dy, col);
+    }
+
+    void fill_circle(double x, double y, double r, int col){
+        fill_ellipse(x, y, r, r, col);
     }
 
     void fill_ellipse(double x, double y, double rw, double rh, int col){

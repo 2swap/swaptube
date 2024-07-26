@@ -55,7 +55,7 @@ public:
     }
 
     void interpolate(){
-        double w = dag["transition_fraction"];
+        double w = (*dag)["transition_fraction"];
         board = c4lerp(board, b2, w);
         annotations = w>.5?annotations:annotations2;
         rendered = false;
