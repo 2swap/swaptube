@@ -29,6 +29,8 @@ public:
     virtual unique_ptr<LambdaExpression> reduce() const = 0;
     virtual unique_ptr<LambdaExpression> replace(const LambdaVariable& v, const LambdaExpression& e) const = 0;
     virtual string get_string() const = 0;
+    virtual int parenthetical_depth() const = 0;
+    virtual int num_variable_instantiations() const = 0;
     virtual bool is_reducible() const = 0;
     virtual ~LambdaExpression() = default;
     virtual unique_ptr<LambdaExpression> clone() const = 0;
@@ -42,6 +44,12 @@ public:
         if(!is_single_letter(vn)){
             failout("Lambda variable was not a single letter!");
         }
+    }
+    int parenthetical_depth() const override {
+        return 0;
+    }
+    int num_variable_instantiations() const override {
+        return 1;
     }
     string get_string() const override {
         return varname;
@@ -70,6 +78,12 @@ public:
     string get_string() const override {
         return "(\\" + variable.get_string() + ". " + body->get_string() + ")";
     }
+    int parenthetical_depth() const override {
+        return 1 + body->parenthetical_depth();
+    }
+    int num_variable_instantiations() const override {
+        return body->num_variable_instantiations();
+    }
     bool is_reducible() const override { return body->is_reducible(); }
     unique_ptr<LambdaExpression> replace(const LambdaVariable& v, const LambdaExpression& e) const override {
         return make_unique<LambdaAbstraction>(variable, body->replace(v, e));
@@ -93,6 +107,12 @@ public:
     LambdaApplication(unique_ptr<LambdaExpression> f, unique_ptr<LambdaExpression> s) : first(move(f)), second(move(s)) { }
     string get_string() const override {
         return "(" + first->get_string() + " " + second->get_string() + ")";
+    }
+    int parenthetical_depth() const override {
+        return 1 + max(first->parenthetical_depth(), second->parenthetical_depth());
+    }
+    int num_variable_instantiations() const override {
+        return first->num_variable_instantiations() + second->num_variable_instantiations();
     }
     bool is_immediately_reducible() const {
         // Is the first thing an abstraction?
@@ -154,3 +174,6 @@ unique_ptr<LambdaExpression> parse_lambda_from_string(const string& input){
     failout("Failed to parse string!");
 }
 
+int num_variable_instantiations (const LambdaExpression&){
+
+}

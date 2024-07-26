@@ -17,12 +17,13 @@ static bool PRINT_TO_TERMINAL = true;
 class Scene {
 public:
     virtual void query(Pixels*& p) = 0;
-    Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : w(width), h(height), pix(width, height){
-        dag.set_special("frame_number", 0);
-        dag.set_special("audio_segment_number", 0);
-        dag.set_special("transition_fraction", 0);
-        dag.set_special("subscene_transition_fraction", 0);
-        dag.add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
+    Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+        : w(width), h(height), dag(make_shared<Dagger>()), pix(width, height){
+        dag->set_special("frame_number", 0);
+        dag->set_special("audio_segment_number", 0);
+        dag->set_special("transition_fraction", 0);
+        dag->set_special("subscene_transition_fraction", 0);
+        dag->add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
     }
 
     void resize(int width, int height){
@@ -54,7 +55,7 @@ public:
 
     void render(){
         if(!FOR_REAL){
-            dag.close_all_transitions();
+            dag->close_all_transitions();
             return;
         }
 
@@ -71,8 +72,8 @@ public:
         cout << endl;
         video_sessions_left--;
         if(video_sessions_left == 0){
-            dag.close_all_transitions();
-            dag.set_special("audio_segment_number", dag["audio_segment_number"] + 1);
+            dag->close_all_transitions();
+            dag->set_special("audio_segment_number", (*dag)["audio_segment_number"] + 1);
         }
     }
 
@@ -82,28 +83,28 @@ public:
 
     int w = 0;
     int h = 0;
-    Dagger dag;
+    shared_ptr<Dagger> dag;
 
 private:
     void render_one_frame(int subscene_frame){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
-        dag.set_special("frame_number", frame_number);
+        dag->set_special("frame_number", frame_number);
         frame_number++;
-        dag.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
-        dag.set_special("subscene_transition_fraction", static_cast<double>(subscene_frame) / scene_duration_frames);
+        dag->set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
+        dag->set_special("subscene_transition_fraction", static_cast<double>(subscene_frame) / scene_duration_frames);
 
-        dag.evaluate_all();
-        dag_time_plot.add_datapoint(vector<double>{dag["t"], dag["transition_fraction"], dag["subscene_transition_fraction"]});
+        dag->evaluate_all();
+        dag_time_plot.add_datapoint(vector<double>{(*dag)["t"], (*dag)["transition_fraction"], (*dag)["subscene_transition_fraction"]});
 
         if (video_sessions_left == 0) {
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
         }
 
         Pixels* p = nullptr;
-        WRITER.set_time(dag["t"]);
+        WRITER.set_time((*dag)["t"]);
         query(p);
-        if(PRINT_TO_TERMINAL && (int(dag["frame_number"]) % 5 == 0)) p->print_to_terminal();
+        if(PRINT_TO_TERMINAL && (int((*dag)["frame_number"]) % 5 == 0)) p->print_to_terminal();
         WRITER.add_frame(*p);
         superscene_frames_left--;
 

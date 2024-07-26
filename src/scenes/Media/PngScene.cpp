@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../io/visual_media.cpp"
-#include "../scene.cpp"
+#include "../Scene.cpp"
 
 class PngScene : public Scene {
 public:

@@ -56,13 +56,12 @@ cp $PROJECT_PATH $TEMPFILE
     fi
 )
 SUCCESS=$?
-
+ultimate_subdir=$(ls -1d out/$1/*/ 2>/dev/null | sort | tail -n 1)
+cp $TEMPFILE "$ultimate_subdir/Project.cpp"
 rm $TEMPFILE
 
 # Check if the compile and run were successful
 if [ $SUCCESS -eq 0 ]; then
-    ultimate_subdir=$(ls -1d out/$1/*/ 2>/dev/null | sort | tail -n 1)
-
     if [ -n "$ultimate_subdir" ]; then
         vlc "$ultimate_subdir/$1.mp4" vlc://quit > /dev/null 2>&1
     else

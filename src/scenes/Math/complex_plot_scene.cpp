@@ -94,8 +94,8 @@ public:
             vector<complex<double>> coefficients;
             for(int point_index = 0; true; point_index++) {
                 if(dag.contains("coefficient_r" + to_string(point_index))){
-                    std::complex<double> coeff(dag["coefficient_r" + to_string(point_index)],
-                                               dag["coefficient_i" + to_string(point_index)]);
+                    std::complex<double> coeff((*dag)["coefficient_r" + to_string(point_index)],
+                                               (*dag)["coefficient_i" + to_string(point_index)]);
                     coefficients.push_back(coeff);
                 }
                 else break;
@@ -148,8 +148,8 @@ public:
         if(dag.contains("root_r0")){
             for(int point_index = 0; true; point_index++) {
                 if(dag.contains("root_r" + to_string(point_index))){
-                    std::complex<double> root(dag["root_r" + to_string(point_index)],
-                                               dag["root_i" + to_string(point_index)]);
+                    std::complex<double> root((*dag)["root_r" + to_string(point_index)],
+                                               (*dag)["root_i" + to_string(point_index)]);
                     roots.push_back(root);
                 }
                 else break;

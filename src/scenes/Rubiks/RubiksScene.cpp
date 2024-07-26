@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../scene.cpp"
-#include "../Common/3d_scene.cpp"
+#include "../Scene.cpp"
+#include "../Common/3DScene.cpp"
 
 class RubiksScene : public ThreeDimensionScene {
 public:

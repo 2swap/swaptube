@@ -244,7 +244,7 @@ public:
             }
         }
 
-        double opacity = surface.opacity * dag["surfaces_opacity"];
+        double opacity = surface.opacity * (*dag)["surfaces_opacity"];
         float dotnormcam = glm::dot(surface.normal, (surface.center - camera_pos));
 
         if(p != NULL){ // If this is not a surface of constant color
@@ -293,9 +293,9 @@ public:
     }
 
     void set_camera_direction() {
-        camera_direction = glm::normalize(glm::quat(dag["q1"], dag["qi"], dag["qj"], dag["qk"]));
+        camera_direction = glm::normalize(glm::quat((*dag)["q1"], (*dag)["qi"], (*dag)["qj"], (*dag)["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);
-        camera_pos = glm::vec3(dag["x"], dag["y"], dag["z"]) + conjugate_camera_direction * glm::vec3(0,0,-dag["d"]) * camera_direction;
+        camera_pos = glm::vec3((*dag)["x"], (*dag)["y"], (*dag)["z"]) + conjugate_camera_direction * glm::vec3(0,0,-(*dag)["d"]) * camera_direction;
     }
 
     // Function to compute squared distance between two points
@@ -307,17 +307,17 @@ public:
     void render_3d() {
         pix.fill(TRANSPARENT_BLACK);
 
-        if(dag["surfaces_opacity"] > 0 && !skip_surfaces)
+        if((*dag)["surfaces_opacity"] > 0 && !skip_surfaces)
             render_surfaces();
-        if(dag["points_opacity"] > 0)
+        if((*dag)["points_opacity"] > 0)
             render_points();
-        if(dag["lines_opacity"] > 0)
+        if((*dag)["lines_opacity"] > 0)
             render_lines();
     }
 
     void render_surfaces(){
         //lots of upfront cost, so bailout if there arent any surfaces.
-        if (surfaces.size() == 0 || dag["surfaces_opacity"] == 0) return;
+        if (surfaces.size() == 0 || (*dag)["surfaces_opacity"] == 0) return;
 
         sketchpad.fill(OPAQUE_BLACK);
 
@@ -356,7 +356,7 @@ public:
     }
 
     void render_point(const Point& point) {
-        fov = dag["fov"];
+        fov = (*dag)["fov"];
         over_w_fov = 1/(w*fov);
         halfwidth = w*.5;
         halfheight = h*.5;
@@ -375,7 +375,7 @@ public:
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         }
         if(point.opacity == 0) return;
-        pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(TRANSPARENT_BLACK, point.color, dag["points_opacity"] * point.opacity));
+        pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(TRANSPARENT_BLACK, point.color, (*dag)["points_opacity"] * point.opacity));
     }
 
     void render_line(const Line& line) {
@@ -384,7 +384,7 @@ public:
         std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, dag["lines_opacity"] * line.opacity), 3);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, (*dag)["lines_opacity"] * line.opacity), 3);
     }
 
     void add_point(Point point) {

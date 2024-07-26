@@ -20,10 +20,12 @@ string get_timestamp(){
 #include "../misc/inlines.h"
 void ensure_dir_exists(const string& path) {
     if (filesystem::exists(path)) {
-        cout << "Directory " << path << " already exists, not creating." << endl;
+        //cout << "Directory " << path << " already exists, not creating." << endl;
+        return;
     } else {
         if (filesystem::create_directories(path)) {
-            cout << "Directory " << path << " created successfully." << endl;
+            //cout << "Directory " << path << " created successfully." << endl;
+            return;
         } else {
             failout("Failed to create dir " + path + ".");
         }
