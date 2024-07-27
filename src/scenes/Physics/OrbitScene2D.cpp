@@ -3,24 +3,40 @@
 #include "../Scene.cpp"
 #include "OrbitSim.cpp"
 
+extern "C" void render_predictions_cuda(const vector<int>& planetcolors, const vector<glm::vec3>& positions, int width, int height, glm::vec3 screen_center, float zoom, int* colors, float force_constant, float collision_threshold_squared, float drag);
+
 class OrbitScene2D : public Scene {
 public:
     OrbitScene2D(OrbitSim* sim, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-        : Scene(width, height), simulation(sim) {zoom = h/2.;}
+        : Scene(width, height), simulation(sim) {}
 
-    void render_predictions(){
-        glm::vec3 screen_center(w*.5,h*.5,0);
-        for(int x = 0; x < w; x++) for(int y = 0; y < h; y++){
-            glm::vec3 object_pos(x, y, 0);
-            object_pos -= screen_center;
-            object_pos /= zoom;
-            int col = (simulation->predict_fate_of_object(object_pos, *dag) | 0xff000000) & 0x99ffffff;
+    void render_predictions() {
+        vector<int> colors(w*h);
+        glm::vec3 screen_center((*dag)["screen_center_x"], (*dag)["screen_center_y"], (*dag)["screen_center_z"]);
+
+        int num_positions = simulation->fixed_objects.size();
+
+        vector<glm::vec3> positions(num_positions);
+        vector<int> planetcolors(num_positions);
+        for (int i = 0; i < num_positions; ++i) {
+            positions[i] = simulation->fixed_objects[i].get_position(*dag);
+            planetcolors[i] = simulation->fixed_objects[i].color;
+        }
+        float force_constant = (*dag)["force_constant"];
+        float collision_threshold_squared = square((*dag)["collision_threshold"]);
+        float drag = (*dag)["drag"];
+        float zoom = (*dag)["zoom"] * h;
+        render_predictions_cuda(planetcolors, positions, w, h, screen_center, zoom, colors.data(), force_constant, collision_threshold_squared, drag);
+
+        for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
+            int col = colors[y * w + x];
             pix.set_pixel(x, y, col);
         }
     }
 
     void sim_to_2d() {
         glm::vec3 screen_center(w*.5,h*.5,0);
+        float zoom = (*dag)["zoom"] * h;
 
         for (const auto& obj : simulation->mobile_objects) {
             glm::vec3 pix_position = obj.position * zoom + screen_center;
@@ -40,7 +56,6 @@ public:
         p=&pix;
     }
 
-    float zoom;
     int physics_multiplier = 1;
 
 protected:

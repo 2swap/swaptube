@@ -17,3 +17,4 @@ Audio and video time drift
 
 	Simplify and Abstract
 Abstract out the idea of Coordinate Systems
+Abstract out the idea of a project? The Project constructor makes the writer and stuff?

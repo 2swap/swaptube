@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <cassert>
-#include "../misc/dagger.cpp"
+#include "../misc/Dagger.cpp"
 #include "../io/DebugPlot.h"
 #include "../misc/pixels.h"
 #include "../io/AudioSegment.cpp"

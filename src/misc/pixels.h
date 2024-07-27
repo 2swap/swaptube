@@ -161,11 +161,6 @@ public:
                 pixels[i] = 255-pixels[i];
     }
 
-    void fade(double f){
-        for(int i = 0; i < pixels.size(); i++)
-            pixels[i] *= f;
-    }
-
     void grayscale_to_alpha(){
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
