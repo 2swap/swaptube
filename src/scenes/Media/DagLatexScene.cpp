@@ -6,33 +6,51 @@
 #include "../../io/visual_media.cpp"
 #include "../Scene.cpp"
 
-string double_to_string(double value, int precision) {
+// doubles with 4 sig figs
+string double_to_string(double value) {
     ostringstream out;
-    out << fixed << setprecision(precision) << value;
+    if (value == 0) {
+        return "0";
+    }
+
+    int exponent = static_cast<int>(floor(log10(abs(value))));
+    int significant_digits = 4 - exponent - 1;
+
+    out << fixed << setprecision(significant_digits) << value;
     string str = out.str();
+    
+    // Remove trailing zeros
     str.erase(str.find_last_not_of('0') + 1, string::npos);
-    if (str.back() == '.') str.pop_back();
+    
+    // Remove decimal point if it is the last character
+    if (str.back() == '.') {
+        str.pop_back();
+    }
+    
     return str;
 }
 
 class DagLatexScene : public Scene {
 public:
-    DagLatexScene(const string& vn, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-    : Scene(width, height), variable_name(vn) { }
+    DagLatexScene(const string& vn, const string& dn, const int col, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    : Scene(width, height), variable_name(vn), display_name(dn), color(col) {
+        if(color & 0xff000000 != 0xff000000)
+            failout("DagLatexScene color must be opaque");
+    }
 
     void query(Pixels*& p) override {
         ScalingParams sp(pix.w, pix.h);
-        string eqn_str = latex_text(variable_name) + " = " + double_to_string((*dag)[variable_name], 4);
+        string eqn_str = latex_text(display_name) + " = " + double_to_string((*dag)[variable_name]);
         Pixels equation_pixels = eqn_to_pix(eqn_str, sp);
         pix.fill(TRANSPARENT_BLACK);
         pix.overwrite(equation_pixels, 0, 0);
+        pix.bitwise_and(color);
         p = &pix;
     }
 
 private:
-    double scale_factor;
-
-    // Things used for non-transition states
     string variable_name;
+    string display_name;
+    int color;
     pair<int, int> coords;
 };
