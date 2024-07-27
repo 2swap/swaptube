@@ -35,16 +35,17 @@ public:
     }
 
     void sim_to_2d() {
-        glm::vec3 screen_center(w*.5,h*.5,0);
+        glm::vec3 screen_center((*dag)["screen_center_x"], (*dag)["screen_center_y"], (*dag)["screen_center_z"]);
         float zoom = (*dag)["zoom"] * h;
 
         for (const auto& obj : simulation->mobile_objects) {
-            glm::vec3 pix_position = obj.position * zoom + screen_center;
-            pix.fill_circle(pix_position.x, pix_position.y, w/500., obj.color);
+            glm::vec3 pix_position = (obj.position - screen_center) * zoom;
+            pix.fill_circle(pix_position.x, pix_position.y, w/300., obj.color);
         }
         for (const auto& obj : simulation->fixed_objects) {
-            glm::vec3 pix_position = obj.get_position(*dag) * zoom + screen_center;
-            pix.fill_circle(pix_position.x, pix_position.y, w/300., obj.color);
+            glm::vec3 pix_position = (obj.get_position(*dag) - screen_center) * zoom;
+            pix.fill_circle(pix_position.x, pix_position.y, w/100., obj.color);
+            pix.fill_circle(pix_position.x, pix_position.y, w/200., OPAQUE_BLACK);
         }
     }
 
