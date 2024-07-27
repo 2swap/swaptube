@@ -13,8 +13,8 @@ __global__ void predict_fate_of_object_kernel(int* planetcolors, glm::vec3* posi
     if (x >= width || y >= height) return;
 
     glm::vec3 object_pos(x - width/2, y-height/2, 0);
-    object_pos += screen_center;
     object_pos /= zoom;
+    object_pos += screen_center;
     glm::vec3 velocity(0.f, 0, 0);
 
     while (true) {
