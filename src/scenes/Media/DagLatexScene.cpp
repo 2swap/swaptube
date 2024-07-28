@@ -36,16 +36,16 @@ public:
     : Scene(width, height), variable_name(vn), display_name(dn), color(col) {
         if(color & 0xff000000 != 0xff000000)
             failout("DagLatexScene color must be opaque");
+        state_query.insert(variable_name);
     }
 
-    void query(Pixels*& p) override {
+    void draw() override{
         ScalingParams sp(pix.w, pix.h);
-        string eqn_str = latex_text(display_name) + " = " + double_to_string((*dag)[variable_name]);
+        string eqn_str = latex_text(display_name) + " = " + double_to_string(state[variable_name]);
         Pixels equation_pixels = eqn_to_pix(eqn_str, sp);
         pix.fill(TRANSPARENT_BLACK);
         pix.overwrite(equation_pixels, 0, 0);
         pix.bitwise_and(color);
-        p = &pix;
     }
 
 private:

@@ -18,6 +18,7 @@ public:
         coords = make_pair((pix.w-equation_pixels.w)/2, (pix.h-equation_pixels.h)/2);
         pix.fill(TRANSPARENT_BLACK);
         pix.overwrite(equation_pixels, coords.first, coords.second);
+        append_to_state_query(StateQuery{"audio_segment_number", "transition_fraction"});
     }
 
     void append_transition(string eqn) {
@@ -37,7 +38,7 @@ public:
         cout << equation_string << " <- Finding Intersections -> " << eqn << endl;
         intersections = find_intersections(equation_pixels, transition_equation_pixels);
         in_transition_state = true;
-        transition_audio_segment = (*dag)["audio_segment_number"];
+        transition_audio_segment = state["audio_segment_number"];
     }
 
     void end_transition(){
@@ -50,17 +51,17 @@ public:
         in_transition_state = false;
     }
 
-    void query(Pixels*& p) override {
-        if(in_transition_state && (*dag)["audio_segment_number"] != transition_audio_segment)
+    void draw() override{
+        if(in_transition_state && state["audio_segment_number"] != transition_audio_segment)
             end_transition();
 
         if(!in_transition_state){
             p = &pix;
         } else { // in a transition
             pix.fill(TRANSPARENT_BLACK);
-            double tp = transparency_profile((*dag)["transition_fraction"]);
-            double tp1 = transparency_profile(1-(*dag)["transition_fraction"]);
-            double smooth = smoother2((*dag)["transition_fraction"]);
+            double tp = transparency_profile(state["transition_fraction"]);
+            double tp1 = transparency_profile(1-state["transition_fraction"]);
+            double smooth = smoother2(state["transition_fraction"]);
 
             double top_vx = 0;
             double top_vy = 0;
@@ -88,8 +89,6 @@ public:
             StepResult last_intersection = intersections[intersections.size()-1];
             pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
             pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
-
-            p = &pix;
         }
     }
 

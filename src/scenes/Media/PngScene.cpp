@@ -11,8 +11,7 @@ public:
         resize(pix.w, pix.h);
     }
 
-    void query(Pixels*& p) override {
-        p = &pix;
+    void draw() override{
     }
 
 private:

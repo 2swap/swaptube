@@ -31,10 +31,10 @@ public:
         }
     }
 
-    void query(Pixels*& p) override {
+    void draw(Pixels*& p) override {
         simulation->iterate_physics(physics_multiplier, dag);
         sim_to_3d();
-        ThreeDimensionScene::query(p);
+        ThreeDimensionScene::draw();
     }
 
     int physics_multiplier = 1;

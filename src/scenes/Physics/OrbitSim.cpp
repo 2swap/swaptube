@@ -37,11 +37,17 @@ public:
         : Object(col, op, false), position(pos), velocity(0) {}
 };
 
+float global_force_constant = 0.001;
+
 class OrbitSim {
 public:
-    vector<FixedObject> fixed_objects;
+    list<FixedObject> fixed_objects;
     list<MobileObject> mobile_objects;
-    bool mobile_interactions = true;
+    bool mobile_interactions = false;
+
+    void remove_fixed_object(const string& dag_name) {
+        fixed_objects.remove_if([&dag_name](const FixedObject& obj) { return obj.dag_name == dag_name; });
+    }
 
     void add_fixed_object(int color, float opacity, const string& dag_name) {
         fixed_objects.push_back(FixedObject(color, opacity, dag_name));
@@ -56,56 +62,59 @@ public:
     }
 
     int predict_fate_of_object(glm::vec3 o, const Dagger& dag) {
-        glm::vec3 velocity(0.f,0,0);
+        glm::vec3 velocity(0.f, 0, 0);
         float sqr_v = 0;
 
-        float force_constant = dag["force_constant"];
+        float tick_duration = dag["tick_duration"];
         float collision_threshold_squared = square(dag["collision_threshold"]);
-        float drag = dag["drag"];
+        float drag = pow(dag["drag"], tick_duration);
 
         // Store positions in a vector
-        std::vector<glm::vec3> positions;
+        vector<glm::vec3> positions;
         positions.reserve(fixed_objects.size());
         for (const auto& fixed_obj : fixed_objects) {
             positions.push_back(fixed_obj.get_position(dag));
         }
 
         while (true) {
-            for (size_t i = 0; i < fixed_objects.size(); ++i) {
+            float v2 = glm::dot(velocity, velocity);
+            int i = 0;
+            for (const FixedObject& fo : fixed_objects) {
                 glm::vec3 direction = positions[i] - o;
                 float distance2 = glm::dot(direction, direction);
-                if (distance2 < square(.1) && sqr_v < 1){
-                    return fixed_objects[i].color;
+                if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
+                    return fo.color;
                 } else {
-                    velocity += glm::normalize(direction) * magnitude_force_given_distance_squared(force_constant, distance2);
+                    velocity += glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
                 }
+                ++i;
             }
 
             velocity *= drag;
-            o += velocity;
-            sqr_v = 0;//glm::dot(velocity, velocity)/1000000;
+            o += velocity * tick_duration;
         }
     }
 
 private:
     void iterate_physics_once(const Dagger& dag) {
-        float force_constant = dag["force_constant"];
+        float tick_duration = dag["tick_duration"];
+        float drag = pow(dag["drag"], tick_duration);
         float collision_threshold_squared = square(dag["collision_threshold"]);
-        float drag = dag["drag"];
         // Interactions between fixed objects and mobile objects
         for (auto it = mobile_objects.begin(); it != mobile_objects.end(); /*it is incremented elsewhere*/) {
             auto& obj1 = *it;
             bool deleted = false;
+            float v2 = glm::dot(obj1.velocity, obj1.velocity);
 
             for (const auto& fixed_obj : fixed_objects) {
                 glm::vec3 direction = fixed_obj.get_position(dag) - obj1.position;
                 float distance2 = glm::dot(direction, direction);
-                if (distance2 < collision_threshold_squared) {
+                if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
                     it = mobile_objects.erase(it);
                     deleted = true;
                     break;
                 } else {
-                    glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance_squared(force_constant, distance2);
+                    glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
                     obj1.velocity += acceleration;
                 }
             }
@@ -118,7 +127,7 @@ private:
                         glm::vec3 direction = obj2.position - obj1.position;
                         float distance2 = glm::dot(direction, direction);
                         if (distance2 > 0) {
-                            glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance_squared(force_constant, distance2);
+                            glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
                             obj1.velocity += acceleration;
                             obj2.velocity -= acceleration;
                         }
@@ -130,12 +139,12 @@ private:
 
         for (auto& object : mobile_objects){
             object.velocity *= drag;
-            object.position += object.velocity;
+            object.position += object.velocity * tick_duration;
         }
     }
 
-    inline float magnitude_force_given_distance_squared(float force_constant, float d2){
-        return force_constant/(.1+d2);
+    inline float magnitude_force_given_distance_squared(float d2){
+        return global_force_constant/(.1+d2);
     }
 };
 

@@ -7,7 +7,5 @@ class ExposedPixelsScene : public Scene {
 public:
     ExposedPixelsScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
 
-    void query(Pixels*& p) override {
-        p = &pix;
-    }
+    void draw() override{ }
 };

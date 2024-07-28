@@ -63,7 +63,7 @@ class ThreeDimensionScene : public Scene {
 public:
     ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height), sketchpad(width, height) {
-        dag.add_equations(unordered_map<string, string>{
+        unordered_map<string, string> equations{
             {"fov", ".5"},
             {"x", "0"},
             {"y", "0"},
@@ -76,7 +76,9 @@ public:
             {"surfaces_opacity", "1"},
             {"lines_opacity", "1"},
             {"points_opacity", "1"}
-        });
+        };
+        dag.add_equations(equations);
+        append_to_state_query(get_keys(equations));
     }
 
     pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
@@ -219,7 +221,7 @@ public:
         Pixels* p = NULL;
         if(surface.scenePointer != NULL) surface.scenePointer->query(p);
 
-        std::queue<std::pair<int, int>> q;
+        queue<pair<int, int>> q;
 
         // 1. Compute the centroid of the quadrilateral
         double cx = 0, cy = 0;
@@ -244,7 +246,7 @@ public:
             }
         }
 
-        double opacity = surface.opacity * (*dag)["surfaces_opacity"];
+        double opacity = surface.opacity * state["surfaces_opacity"];
         float dotnormcam = glm::dot(surface.normal, (surface.center - camera_pos));
 
         if(p != NULL){ // If this is not a surface of constant color
@@ -293,9 +295,9 @@ public:
     }
 
     void set_camera_direction() {
-        camera_direction = glm::normalize(glm::quat((*dag)["q1"], (*dag)["qi"], (*dag)["qj"], (*dag)["qk"]));
+        camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);
-        camera_pos = glm::vec3((*dag)["x"], (*dag)["y"], (*dag)["z"]) + conjugate_camera_direction * glm::vec3(0,0,-(*dag)["d"]) * camera_direction;
+        camera_pos = glm::vec3(state["x"], state["y"], state["z"]) + conjugate_camera_direction * glm::vec3(0,0,-state["d"]) * camera_direction;
     }
 
     // Function to compute squared distance between two points
@@ -307,28 +309,28 @@ public:
     void render_3d() {
         pix.fill(TRANSPARENT_BLACK);
 
-        if((*dag)["surfaces_opacity"] > 0 && !skip_surfaces)
+        if(state["surfaces_opacity"] > 0 && !skip_surfaces)
             render_surfaces();
-        if((*dag)["points_opacity"] > 0)
+        if(state["points_opacity"] > 0)
             render_points();
-        if((*dag)["lines_opacity"] > 0)
+        if(state["lines_opacity"] > 0)
             render_lines();
     }
 
     void render_surfaces(){
         //lots of upfront cost, so bailout if there arent any surfaces.
-        if (surfaces.size() == 0 || (*dag)["surfaces_opacity"] == 0) return;
+        if (surfaces.size() == 0 || state["surfaces_opacity"] == 0) return;
 
         sketchpad.fill(OPAQUE_BLACK);
 
         // Create a list of pointers to the surfaces
-        std::vector<const Surface*> surfacePointers;
+        vector<const Surface*> surfacePointers;
         for (const Surface& surface : surfaces)
             if(surface.opacity > 0)
                 surfacePointers.push_back(&surface);
 
         // Sort the pointers based on distance from camera
-        std::sort(surfacePointers.begin(), surfacePointers.end(), [this](const Surface* a, const Surface* b) {
+        sort(surfacePointers.begin(), surfacePointers.end(), [this](const Surface* a, const Surface* b) {
             return squaredDistance(a->center, this->camera_pos) > squaredDistance(b->center, this->camera_pos);
         });
 
@@ -349,20 +351,20 @@ public:
             render_line(line);
     }
 
-    void query(Pixels*& p) override {
+    void pre_query TODO copy Composite
+    void draw() override{
         set_camera_direction();
         render_3d();
-        p = &pix;
     }
 
     void render_point(const Point& point) {
-        fov = (*dag)["fov"];
+        fov = state["fov"];
         over_w_fov = 1/(w*fov);
         halfwidth = w*.5;
         halfheight = h*.5;
 
         bool behind_camera = false;
-        std::pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
+        pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
         double dot_size = pix.w/500.;
         if(point.highlight == RING){
@@ -375,16 +377,16 @@ public:
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         }
         if(point.opacity == 0) return;
-        pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(TRANSPARENT_BLACK, point.color, (*dag)["points_opacity"] * point.opacity));
+        pix.fill_ellipse(pixel.first, pixel.second, dot_size, dot_size, colorlerp(TRANSPARENT_BLACK, point.color, state["points_opacity"] * point.opacity));
     }
 
     void render_line(const Line& line) {
         if(line.opacity == 0) return;
         bool behind_camera = false;
-        std::pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
-        std::pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
+        pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
+        pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, (*dag)["lines_opacity"] * line.opacity), 3);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, state["lines_opacity"] * line.opacity), 3);
     }
 
     void add_point(Point point) {
@@ -404,8 +406,8 @@ public:
     float halfheight;
     Pixels sketchpad;
 public:
-    std::vector<Point> points;
-    std::vector<Line> lines;
-    std::vector<Surface> surfaces;
+    vector<Point> points;
+    vector<Line> lines;
+    vector<Surface> surfaces;
     bool skip_surfaces = false;
 };

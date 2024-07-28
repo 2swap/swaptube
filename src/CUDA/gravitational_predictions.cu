@@ -6,7 +6,7 @@ __device__ float magnitude_force_given_distance_squared_device(float force_const
     return force_constant / (.1f + d2);
 }
 
-__global__ void predict_fate_of_object_kernel(int* planetcolors, glm::vec3* positions, int num_positions, glm::vec3 screen_center, float zoom, int* colors, int width, int height, const float force_constant, const float collision_threshold_squared, const float drag) {
+__global__ void predict_fate_of_object_kernel(int* planetcolors, glm::vec3* positions, int num_positions, glm::vec3 screen_center, float zoom, int* colors, int width, int height, const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -31,11 +31,11 @@ __global__ void predict_fate_of_object_kernel(int* planetcolors, glm::vec3* posi
         }
 
         velocity *= drag;
-        object_pos += velocity;
+        object_pos += velocity * tick_duration;
     }
 }
 
-extern "C" void render_predictions_cuda(const std::vector<int>& planetcolors, const std::vector<glm::vec3>& positions, int width, int height, glm::vec3 screen_center, float zoom, int* colors, float force_constant, float collision_threshold_squared, float drag) {
+extern "C" void render_predictions_cuda(const std::vector<int>& planetcolors, const std::vector<glm::vec3>& positions, int width, int height, glm::vec3 screen_center, float zoom, int* colors, float force_constant, float collision_threshold_squared, float drag, const float tick_duration) {
     glm::vec3* d_positions;
     int* d_colors;
     int* d_planetcolors;
@@ -51,7 +51,7 @@ extern "C" void render_predictions_cuda(const std::vector<int>& planetcolors, co
     dim3 threadsPerBlock(16, 16);
     dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x, (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
-    predict_fate_of_object_kernel<<<numBlocks, threadsPerBlock>>>(d_planetcolors, d_positions, num_positions, screen_center, zoom, d_colors, width, height, force_constant, collision_threshold_squared, drag);
+    predict_fate_of_object_kernel<<<numBlocks, threadsPerBlock>>>(d_planetcolors, d_positions, num_positions, screen_center, zoom, d_colors, width, height, force_constant, collision_threshold_squared, drag, tick_duration);
 
     cudaMemcpy(colors, d_colors, width * height * sizeof(int), cudaMemcpyDeviceToHost);
 

@@ -32,11 +32,10 @@ public:
         :Scene(width, height), representation(rep), board(rep), stonewidth(min(width, height)/10.) {}
 
     void stage_transition(string final_rep){
+        state_query.insert(final_rep);
         is_transition = true;
         b2 = Board(final_rep);
         annotations2 = annotations;
-
-        rendered = false;
     }
 
     void post_transition(){
@@ -44,6 +43,7 @@ public:
         annotations = annotations2;
         is_transition = false;
         representation = b2.representation;
+        state_query.erase(final_rep);
     }
 
     void set_annotations(string s){annotations = s; rendered = false;}
@@ -55,7 +55,7 @@ public:
     }
 
     void interpolate(){
-        double w = (*dag)["transition_fraction"];
+        double w = state["transition_fraction"];
         board = c4lerp(board, b2, w);
         annotations = w>.5?annotations:annotations2;
         rendered = false;
@@ -104,13 +104,9 @@ public:
             }
     }
 
-    void query(Pixels*& p) override {
+    void draw() override{
         if (is_transition) interpolate();
-        if (!rendered) {
-            render_c4();
-            rendered = true;
-        }
+        render_c4();
         //if(done_scene && is_transition) post_transition();
-        p = &pix;
     }
 };

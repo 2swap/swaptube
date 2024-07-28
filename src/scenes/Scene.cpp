@@ -16,14 +16,25 @@ static bool PRINT_TO_TERMINAL = true;
 
 class Scene {
 public:
-    virtual void query(Pixels*& p) = 0;
+    virtual void draw() = 0;
     Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-        : w(width), h(height), dag(make_shared<Dagger>()), pix(width, height){
+        : w(width), h(height), dag(make_shared<Dagger>()), pix(width, height) {
         dag->set_special("frame_number", 0);
         dag->set_special("audio_segment_number", 0);
         dag->set_special("transition_fraction", 0);
         dag->set_special("subscene_transition_fraction", 0);
         dag->add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
+    }
+
+    // Scenes which contain other scenes use this to populate the StateQuery
+    virtual void pre_query(){}
+    // Scenes can request re-rendering even if state hasn't changed
+    virtual bool does_subscene_want_to_rerender() const {}
+    void query(Pixels*& p) {
+        pre_query();
+        update_state();
+        if(state != last_state || does_subscene_want_to_rerender()) draw();
+        p=&pix;
     }
 
     void resize(int width, int height){
@@ -77,6 +88,11 @@ public:
         }
     }
 
+    void update_state() {
+        last_state = state;
+        state = dag->get_state(state_query);
+    }
+
     Pixels* expose_pixels() {
         return &pix;
     }
@@ -84,6 +100,7 @@ public:
     int w = 0;
     int h = 0;
     shared_ptr<Dagger> dag;
+    StateQuery state_query;
 
 private:
     void render_one_frame(int subscene_frame){
@@ -117,6 +134,9 @@ private:
     }
 
 protected:
+    void append_to_state_query(StateQuery sq){
+        state_query.insert(sq.begin(), sq.end());
+    }
     bool rendered = false;
     bool is_transition = false;
     Pixels pix;
@@ -125,4 +145,6 @@ protected:
     int scene_duration_frames = 0;
     int superscene_frames_left = 0;
     int superscene_frames_total = 0;
+    State state;
+    State last_state;
 };

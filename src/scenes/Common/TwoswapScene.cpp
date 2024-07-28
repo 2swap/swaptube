@@ -12,8 +12,7 @@ public:
         pix.overwrite(twoswap_pix, pix.w/4+pix.w/14+pix.w/48, (pix.h-twoswap_pix.h)/2+pix.w/48);
     }
 
-    void query(Pixels*& p) override {
-        p = &pix;
+    void draw() override{
     }
 
 private:
