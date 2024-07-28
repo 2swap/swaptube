@@ -36,13 +36,13 @@ public:
     virtual void inheritable_preprocessing(){}
     virtual void inheritable_postprocessing(){}
 
-    void query(Pixels*& p) override {
+    void draw() override{
         if(do_physics){
             graph->iterate_physics(physics_multiplier);
             graph_to_3d();
             inheritable_preprocessing();
         }
-        ThreeDimensionScene::query(p);
+        ThreeDimensionScene::draw();
         inheritable_postprocessing();
     }
     

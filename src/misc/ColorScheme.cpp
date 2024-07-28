@@ -4,6 +4,8 @@ using namespace std;
 
 #include <vector>
 #include <list>
+#include <sstream>
+#include <iostream>
 
 class ColorScheme {
 private:
@@ -15,6 +17,16 @@ public:
         colors.pop_front();
         colors.push_back(color);
         return color;
+    }
+    ColorScheme(const string& hex_string) {
+        for (size_t i = 0; i < hex_string.size(); i += 6) {
+            string hex_color = hex_string.substr(i, 6);
+            unsigned int x;   
+            stringstream ss;
+            ss << hex << hex_color;
+            ss >> x;
+            colors.push_back(x | 0xff000000);
+        }
     }
 };
 

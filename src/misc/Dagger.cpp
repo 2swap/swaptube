@@ -49,6 +49,15 @@ struct VariableContents {
                     ) : value(val), fresh(fr), special(spec), equation(eq), dependencies() {}
 };
 
+using StateQuery = unordered_set<string>;
+using State = unordered_map<string, double>;
+template <class T>
+unordered_set<string> get_keys(const unordered_map<string, T>& map) {
+    unordered_set<string> keySet;
+    for (const auto& pair : map) keySet.insert(pair.first);
+    return keySet;
+}
+
 class Dagger {
 public:
     Dagger() { }
@@ -243,6 +252,14 @@ public:
         }
     }
 
+    State get_state(const StateQuery& query) const {
+        State result;
+        for (const auto& varname : query) {
+            result[varname] = get_value(varname);
+        }
+        return result;
+    }
+
 private:
     // A list of variables and their relevant data
     unordered_map<string, VariableContents> variables;
@@ -313,10 +330,13 @@ void test_dagger() {
     dagger.evaluate_all();
 
     // Validate initial values
-    assert(dagger["x"] == 5.0);
-    assert(dagger["y"] == 10.0);
-    assert(dagger["z"] == 15.0);
-    assert(dagger["t"] == 420);
+    StateQuery query = {"x", "y", "z", "t"};
+    State state1 = dagger.get_state(query);
+
+    assert(state1["x"] == 5.0);
+    assert(state1["y"] == 10.0);
+    assert(state1["z"] == 15.0);
+    assert(state1["t"] == 420);
 
     // Modify equations
     dagger.add_equation("x", "7"); // x = 7
@@ -325,9 +345,16 @@ void test_dagger() {
     dagger.set_special("t", 69);
     dagger.evaluate_all();
 
+    State state2 = dagger.get_state(query);
+
     // Validate updated values
-    assert(dagger["x"] == 7.0);
-    assert(dagger["y"] == 20.0);
-    assert(dagger["z"] == 27.0);
-    assert(dagger["t"] == 69);
+    assert(state2["x"] == 7.0);
+    assert(state2["y"] == 20.0);
+    assert(state2["z"] == 27.0);
+    assert(state2["t"] == 69);
+
+    assert(!(state1 == state2));  // State1 and State2 should not be equal
+    assert(state1 == state1);  // State1 and State1 should be equal
+    assert(state2 == state2);  // State2 and State2 should be equal
 }
+
