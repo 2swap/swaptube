@@ -12,8 +12,8 @@ public:
         pix.overwrite(twoswap_pix, pix.w/4+pix.w/14+pix.w/48, (pix.h-twoswap_pix.h)/2+pix.w/48);
     }
 
-    void draw() override{
-    }
+    bool scene_requests_rerender() const override { return false; }
+    void draw() override{ }
 
 private:
 };

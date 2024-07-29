@@ -3,7 +3,7 @@
 #include "../Scene.cpp"
 #include "OrbitSim.cpp"
 
-extern "C" void render_predictions_cuda(const vector<int>& planetcolors, const vector<glm::vec3>& positions, int width, int height, glm::vec3 screen_center, float zoom, int* colors, float force_constant, float collision_threshold_squared, float drag, float tick_duration);
+extern "C" void render_predictions_cuda(const vector<int>& planetcolors, const vector<glm::vec3>& positions, int width, int height, glm::vec3 screen_center, float zoom, int* colors, int* times, float force_constant, float collision_threshold_squared, float drag, float tick_duration);
 
 class OrbitScene2D : public Scene {
 public:
@@ -21,8 +21,13 @@ public:
         });
     }
 
+    bool scene_requests_rerender() const override {
+        return true;
+    }
+
     void render_predictions() {
         vector<int> colors(w*h);
+        vector<int> times(w*h);
         glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
 
         int num_positions = simulation->fixed_objects.size();
@@ -39,15 +44,14 @@ public:
         float tick_duration = state["tick_duration"];
         float drag = pow(state["drag"], tick_duration);
         float zoom = state["zoom"] * h;
-        render_predictions_cuda(planetcolors, positions, w, h, screen_center, zoom, colors.data(), global_force_constant, collision_threshold_squared, drag, tick_duration);
+        render_predictions_cuda(planetcolors, positions, w, h, screen_center, zoom, colors.data(), times.data(), global_force_constant, collision_threshold_squared, drag, tick_duration);
 
-        for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
-            int col = colors[y * w + x];
-            predictions.set_pixel(x, y, col | 0xff000000);
-        }
         unsigned int opacity = state["predictions_opacity"]*255;
-        unsigned int alpha = (opacity << 24) | 0x00ffffff;
-        predictions.bitwise_and(alpha);
+        for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
+            int col = colors[y * w + x] & 0x00ffffff;
+            unsigned int time = static_cast<unsigned int>(opacity / (times[y * w + x]/30.+1)) << 24;
+            predictions.set_pixel(x, y, col | time);
+        }
     }
 
     void sim_to_2d() {
@@ -65,9 +69,6 @@ public:
             pix.fill_circle(pix_position.x, pix_position.y, w/200., OPAQUE_BLACK);
         }
     }
-
-    // request re-rendering even if state hasn't changed
-    bool does_subscene_want_to_rerender() const override { return true; }
 
     void draw() override {
         pix.fill(TRANSPARENT_BLACK);

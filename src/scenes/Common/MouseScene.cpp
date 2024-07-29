@@ -8,6 +8,7 @@ public:
         append_to_state_query(StateQuery{"mouse_x", "mouse_y"})
     }
 
+    bool scene_requests_rerender() const override { return false; }
     void draw() override{
         pix.fill(TRANSPARENT_BLACK);
         pix.fill_rect(state["mouse_x"], state["mouse_y"], 6, 6, 0xffff0000);

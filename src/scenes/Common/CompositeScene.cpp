@@ -28,7 +28,14 @@ public:
         scenes.push_back(swp);
     }
 
-    void render_composite(){
+    bool scene_requests_rerender() const override {
+        for (auto& swc : scenes){
+            if(swc.scenePointer->scene_requests_rerender()) return true;
+        }
+        return false;
+    }
+
+    void draw() override {
         pix.fill(TRANSPARENT_BLACK);
         for (auto& swc : scenes){
             int  width_int = state[swc.dag_name + ".w"] * w;
@@ -60,10 +67,6 @@ public:
                 state_query.insert(s);
             }
         }
-    }
-
-    void draw() override{
-        render_composite();
     }
 
 private:

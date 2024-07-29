@@ -51,6 +51,7 @@ public:
         in_transition_state = false;
     }
 
+    bool scene_requests_rerender() const override { return false; }
     void draw() override{
         if(in_transition_state && state["audio_segment_number"] != transition_audio_segment)
             end_transition();

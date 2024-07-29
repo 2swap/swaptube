@@ -217,6 +217,14 @@ public:
         floodFillSurface(corners, surface, padcol); // assuming background is black and polygon is white
     }
 
+    bool scene_requests_rerender() const override {
+        for(const auto& surface : surfaces){
+            if(surface.scenePointer->scene_requests_rerender())
+                return false;
+        }
+        return false;
+    }
+
     void floodFillSurface(vector<pair<int, int>>& corners, const Surface& surface, int padcol) {
         Pixels* p = NULL;
         if(surface.scenePointer != NULL) surface.scenePointer->query(p);

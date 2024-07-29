@@ -52,9 +52,7 @@ public:
         return out;
     }
 
-    void draw() override{
-        render_plot();
-    }
+    bool scene_requests_rerender() const override { return false; }
 
     void set_mode(complex_plot_mode cpm){
         mode = cpm;
@@ -183,7 +181,7 @@ public:
         return roots;
     }
 
-    void render_plot(){
+    void draw() override{
         if(mode == ROOTS)render_root_mode(get_coefficients(), get_roots());
         if(mode == COEFFICIENTS)render_coefficient_mode(get_coefficients());
         render_axes();
