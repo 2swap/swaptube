@@ -28,12 +28,11 @@ public:
 
     // Scenes which contain other scenes use this to populate the StateQuery
     virtual void pre_query(){}
-    // Scenes can request re-rendering even if state hasn't changed
-    virtual bool does_subscene_want_to_rerender() const {}
+    virtual bool scene_requests_rerender() const = 0;
     void query(Pixels*& p) {
         pre_query();
         update_state();
-        if(state != last_state || does_subscene_want_to_rerender()) draw();
+        if(state != last_state || scene_requests_rerender()) draw();
         p=&pix;
     }
 

@@ -104,6 +104,7 @@ public:
             }
     }
 
+    bool scene_requests_rerender() const override { return false; }
     void draw() override{
         if (is_transition) interpolate();
         render_c4();

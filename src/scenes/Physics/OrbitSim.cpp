@@ -85,7 +85,7 @@ public:
                 if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
                     return fo.color;
                 } else {
-                    velocity += glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
+                    velocity += tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
                 }
                 ++i;
             }
@@ -114,7 +114,7 @@ private:
                     deleted = true;
                     break;
                 } else {
-                    glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
+                    glm::vec3 acceleration = tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
                     obj1.velocity += acceleration;
                 }
             }
@@ -127,7 +127,7 @@ private:
                         glm::vec3 direction = obj2.position - obj1.position;
                         float distance2 = glm::dot(direction, direction);
                         if (distance2 > 0) {
-                            glm::vec3 acceleration = glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
+                            glm::vec3 acceleration = tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
                             obj1.velocity += acceleration;
                             obj2.velocity -= acceleration;
                         }

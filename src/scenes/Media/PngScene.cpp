@@ -11,8 +11,8 @@ public:
         resize(pix.w, pix.h);
     }
 
-    void draw() override{
-    }
+    bool scene_requests_rerender() const override { return false; }
+    void draw() override{ }
 
 private:
     // nothing yet

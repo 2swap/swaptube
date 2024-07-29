@@ -39,6 +39,7 @@ public:
         state_query.insert(variable_name);
     }
 
+    bool scene_requests_rerender() const override { return false; }
     void draw() override{
         ScalingParams sp(pix.w, pix.h);
         string eqn_str = latex_text(display_name) + " = " + double_to_string(state[variable_name]);

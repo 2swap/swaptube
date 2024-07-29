@@ -30,6 +30,7 @@ public:
         return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
     }
 
+    bool scene_requests_rerender() const override { return true; }
     void update_surfaces(){
         for(pair<double, Node<C4Board>> p : graph->nodes){
             Node<C4Board> node = p.second;

@@ -36,6 +36,7 @@ public:
     virtual void inheritable_preprocessing(){}
     virtual void inheritable_postprocessing(){}
 
+    bool scene_requests_rerender() const override { return false; }
     void draw() override{
         if(do_physics){
             graph->iterate_physics(physics_multiplier);
