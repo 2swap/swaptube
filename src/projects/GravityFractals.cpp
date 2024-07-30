@@ -4,7 +4,7 @@ const string project_name = "GravityFractals";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const int mult = 1;
+const int mult = 2;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -583,35 +583,63 @@ void render_3d(){
     scene.dag->add_equations(unordered_map<string, string>{
         {"planet1.x", "-.3"},
         {"planet1.y", "-.3"},
-        {"planet1.z", "0"}
+        {"planet1.z", "-.3"}
     });
     sim.add_fixed_object(planet2_color, 1, "planet2");
     scene.dag->add_equations(unordered_map<string, string>{
-        {"planet2.x", "0.3171"},
-        {"planet2.y", "0.35"},
-        {"planet2.z", "0"}
+        {"planet2.x", "0.3"},
+        {"planet2.y", "0.3"},
+        {"planet2.z", "-.3"}
     });
     sim.add_fixed_object(planet3_color, 1, "planet3");
     scene.dag->add_equations(unordered_map<string, string>{
-        {"planet3.x", "-.4"},
+        {"planet3.x", "-.3"},
         {"planet3.y", "0.3"},
-        {"planet3.z", "0"}
+        {"planet3.z", "0.3"}
+    });
+    sim.add_fixed_object(planet4_color, 1, "planet4");
+    scene.dag->add_equations(unordered_map<string, string>{
+        {"planet4.x", "0.3"},
+        {"planet4.y", "-.3"},
+        {"planet4.z", "0.3"}
     });
     scene.dag->add_equations(unordered_map<string, string>{
         {"tick_duration", ".1"},
         {"collision_threshold", "0.005"},
-        {"drag", "0.98"},
+        {"drag", "0.95"},
         {"drag_slider", "1 <drag> -"},
         {"physics_multiplier", "1"},
     });
-    scene.dag->add_equations(std::unordered_map<std::string, std::string>{
+    scene.dag->add_equations(unordered_map<string, string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
         {"qk", "0"},
+        {"d", "1.5"},
     });
 
-    scene.inject_audio_and_render(AudioSegment(5));
+    scene.inject_audio_and_render(AudioSegment(3));
+    scene.dag->add_transitions(unordered_map<string, string>{
+        {"planet1.x", "-.4"},
+        {"planet1.y", "-.3"},
+        {"planet1.z", "-.4"},
+        {"planet2.x", "0.3"},
+        {"planet2.y", "0.2"},
+        {"planet2.z", "-.4"},
+        {"planet3.x", "-.3"},
+        {"planet3.y", "0.4"},
+        {"planet3.z", "0.3"},
+        {"planet4.x", "0.5"},
+        {"planet4.y", "-.3"},
+        {"planet4.z", "0.3"}
+    });
+    /*
+    scene.dag->add_transitions(unordered_map<string, string>{
+        {"drag", "0.98"},
+    });
+    */
+    scene.inject_audio_and_render(AudioSegment(7));
+    scene.inject_audio_and_render(AudioSegment(3));
 }
 
 int main() {
