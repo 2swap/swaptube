@@ -60,6 +60,11 @@ public:
         videowriter.add_frame(p);
     }
 
+    void add_shtooka(const AudioSegment& audio){
+        if (!audio.is_silence())
+            audiowriter.add_shtooka_entry(audio.get_audio_filename(), audio.get_subtitle_text());
+    }
+
     double add_audio_segment(const AudioSegment& audio){
         double duration_seconds = 0;
         if (audio.is_silence()) {
@@ -68,7 +73,6 @@ public:
         } else {
             duration_seconds = audiowriter.add_audio_get_length(audio.get_audio_filename());
             subswriter.add_subtitle(duration_seconds, audio.get_subtitle_text());
-            audiowriter.add_shtooka_entry(audio.get_audio_filename(), audio.get_subtitle_text());
         }
         return duration_seconds;
     }

@@ -19,7 +19,6 @@ using namespace std;
 
 class AudioWriter {
 private:
-    string media_folder, record_filename;
     ofstream /*audio_pts_file,*/ shtooka_file;
     int audioStreamIndex;
     double audiotime = 0;
@@ -70,10 +69,9 @@ private:
 
 public:
     AudioWriter(AVFormatContext *fc_) : fc(fc_) {
-        record_filename = media_folder + "record_list.tsv";
-        shtooka_file.open(record_filename);
+        shtooka_file.open(PATH_MANAGER.record_list_path);
         if (!shtooka_file.is_open()) {
-            cerr << "Error opening recorder list: " << record_filename << endl;
+            cerr << "Error opening recorder list: " << PATH_MANAGER.record_list_path << endl;
         }
     }
 
@@ -197,7 +195,7 @@ public:
         cout << "Adding audio" << endl;
         double length_in_seconds = 0;
 
-        string fullInputAudioFilename = PATH_MANAGER.media_dir + audioname;
+        string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + audioname;
 
         // Check if the input audio file exists
         if (!file_exists(fullInputAudioFilename)) {

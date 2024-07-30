@@ -49,6 +49,7 @@ public:
     }
 
     void inject_audio(const AudioSegment& audio, int expected_video_sessions){
+        WRITER.add_shtooka(audio);
         if(!FOR_REAL)
             return;
         cout << "Scene says: " << audio.get_subtitle_text() << endl;
@@ -58,7 +59,7 @@ public:
                     "but render() was only called " + to_string(video_sessions_total-video_sessions_left) + " times.");
         }
 
-        superscene_frames_total = superscene_frames_left = FOR_REAL ? WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE : 0;
+        superscene_frames_total = superscene_frames_left = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
         video_sessions_total = video_sessions_left = expected_video_sessions;
         cout << "Scene should last " << superscene_frames_left << " frames, with " << expected_video_sessions << " sessions.";
     }

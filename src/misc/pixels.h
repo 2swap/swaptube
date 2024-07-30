@@ -329,11 +329,18 @@ public:
         }
     }
 
-    void rounded_rect(int x, int y, int rw, int rh, int r, int col){
-        fill_rect(x+r, y, rw-r*2, rh, col);
-        fill_rect(x, y+r, rw, rh-r*2, col);
+    // The x, y, rw, rh parameters here correspond to the external bounding box.
+    void rounded_rect(float x, float y, float rw, float rh, float r, int col){
+        int xplusr = round(x+r);
+        int yplusr = round(y+r);
+        int rwmrt2 = round(rw-r*2);
+        int rhmrt2 = round(rh-r*2);
+        int xprwmr = round(x+rw-r);
+        int yprhmr = round(y+rh-r);
+        fill_rect(xplusr, y, rwmrt2, rh, col);
+        fill_rect(x, yplusr, rw, rhmrt2, col);
         for(int i = 0; i < 4; i++)
-            fill_ellipse(i%2==0 ? (x+r) : (x+w-r), i/2==0 ? (y+r) : (y+rh-r), r, r, col);
+            fill_ellipse(i%2==0 ? xplusr : xprwmr, i/2==0 ? yplusr : yprhmr, r, r, col);
     }
 
     void flood_fill(int x, int y, int color) {

@@ -48,6 +48,7 @@ public:
     //Fles
     const string video_output;
     const string subtitle_output;
+    const string record_list_path;
     const string testaudio_path;
 
     PathManager(const string& proj)
@@ -64,6 +65,7 @@ public:
         latex_dir(this_project_media_dir + "latex/"),
         video_output(this_run_output_dir + project_name + ".mp4"),
         subtitle_output(this_run_output_dir + project_name + ".srt"),
+        record_list_path(this_project_media_dir + "record_list.tsv"),
         testaudio_path(media_dir + "testaudio.mp3")
     {
         // for the directories (as opposed to files) create them if they dont exist.
