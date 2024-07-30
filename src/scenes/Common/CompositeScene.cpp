@@ -63,9 +63,7 @@ public:
                                              swp.dag_name + ".y",
                                              swp.dag_name + ".w",
                                              swp.dag_name + ".h", });
-            for(string s : swp.scenePointer->state_query){
-                state_query.insert(s);
-            }
+            append_to_state_query(swp.scenePointer->state_query);
         }
     }
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../scene.cpp"
+#include "../Scene.cpp"
 #include <string>
 #include <unordered_map>
 #include <glm/glm.hpp>
@@ -35,9 +35,10 @@ struct Point {
 struct Line {
     glm::vec3 start;
     glm::vec3 end;
+    glm::vec3 center;
     int color; // ARGB integer representation
     double opacity;
-    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op=1) : start(s), end(e), color(clr), opacity(op) {}
+    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op=1) : start(s), end(e), center((s+e)*glm::vec3(0.5f)), color(clr), opacity(op) {}
 };
 
 struct Surface {
@@ -63,7 +64,7 @@ class ThreeDimensionScene : public Scene {
 public:
     ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height), sketchpad(width, height) {
-        unordered_map<string, string> equations{
+        dag->add_equations(unordered_map<string, string>{
             {"fov", ".5"},
             {"x", "0"},
             {"y", "0"},
@@ -76,9 +77,7 @@ public:
             {"surfaces_opacity", "1"},
             {"lines_opacity", "1"},
             {"points_opacity", "1"}
-        };
-        dag.add_equations(equations);
-        append_to_state_query(get_keys(equations));
+        });
     }
 
     pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
@@ -355,12 +354,38 @@ public:
     }
 
     void render_lines(){
+        vector<const Line*> line_ptrs;
         for (const Line& line : lines)
-            render_line(line);
+            if(line.opacity > 0)
+                line_ptrs.push_back(&line);
+        sort(line_ptrs.begin(), line_ptrs.end(), [this](const Line* a, const Line* b) {
+            return squaredDistance(a->center, this->camera_pos) > squaredDistance(b->center, this->camera_pos);
+        });
+        for (const Line* line : line_ptrs)
+            render_line(*line);
     }
 
-    void pre_query TODO copy Composite
-    void draw() override{
+    void pre_query() override {
+        state_query = StateQuery{
+            "fov",
+            "x",
+            "y",
+            "z",
+            "d",
+            "q1",
+            "qi",
+            "qj",
+            "qk",
+            "surfaces_opacity",
+            "lines_opacity",
+            "points_opacity"
+        };
+        for(const Surface& s : surfaces){
+            append_to_state_query(s.scenePointer->state_query);
+        }
+    }
+
+    void draw() override {
         set_camera_direction();
         render_3d();
     }
@@ -374,8 +399,7 @@ public:
         bool behind_camera = false;
         pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
         if(behind_camera) return;
-        double dot_size = pix.w/500.;
-        if(point.highlight == RING){
+        double dot_size = pix.w/500.; if(point.highlight == RING){
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , point.color);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         } else if(point.highlight == BULLSEYE){

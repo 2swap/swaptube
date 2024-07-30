@@ -61,45 +61,47 @@ public:
         for (int step = 0; step < multiplier; ++step) iterate_physics_once(dag);
     }
 
-    int predict_fate_of_object(glm::vec3 o, const Dagger& dag) {
-        glm::vec3 velocity(0.f, 0, 0);
-        float sqr_v = 0;
+    void get_parameters_from_dag(float& tick_duration, float& collision_threshold_squared, float& drag, const Dagger& dag){
+        tick_duration = dag["tick_duration"];
+        collision_threshold_squared = square(dag["collision_threshold"]);
+        drag = pow(dag["drag"], tick_duration);
+    }
 
-        float tick_duration = dag["tick_duration"];
-        float collision_threshold_squared = square(dag["collision_threshold"]);
-        float drag = pow(dag["drag"], tick_duration);
+    bool get_next_step(glm::vec3& pos, glm::vec3& vel, int& color, const Dagger& dag){
+        float tick_duration, collision_threshold_squared, drag;
+        get_parameters_from_dag(tick_duration, collision_threshold_squared, drag, dag);
 
-        // Store positions in a vector
-        vector<glm::vec3> positions;
-        positions.reserve(fixed_objects.size());
-        for (const auto& fixed_obj : fixed_objects) {
-            positions.push_back(fixed_obj.get_position(dag));
-        }
-
-        while (true) {
-            float v2 = glm::dot(velocity, velocity);
-            int i = 0;
-            for (const FixedObject& fo : fixed_objects) {
-                glm::vec3 direction = positions[i] - o;
-                float distance2 = glm::dot(direction, direction);
-                if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
-                    return fo.color;
-                } else {
-                    velocity += tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
-                }
-                ++i;
+        float v2 = glm::dot(vel, vel);
+        for (const FixedObject& fo : fixed_objects) {
+            glm::vec3 direction = fo.get_position(dag) - pos;
+            float distance2 = glm::dot(direction, direction);
+            if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
+                color = fo.color;
+                return true;
+            } else {
+                vel += tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(distance2);
             }
-
-            velocity *= drag;
-            o += velocity * tick_duration;
         }
+
+        vel *= drag;
+        pos += vel * tick_duration;
+        return false;
+    }
+
+    int predict_fate_of_object(glm::vec3 pos, const Dagger& dag) {
+        glm::vec3 vel(0.f, 0, 0);
+
+        int color = 0;
+        for (int i = 0; i < 10000; ++i) 
+            if(get_next_step(pos, vel, color, dag))
+                return color;
+        return 0;
     }
 
 private:
     void iterate_physics_once(const Dagger& dag) {
-        float tick_duration = dag["tick_duration"];
-        float drag = pow(dag["drag"], tick_duration);
-        float collision_threshold_squared = square(dag["collision_threshold"]);
+        float tick_duration, collision_threshold_squared, drag;
+        get_parameters_from_dag(tick_duration, collision_threshold_squared, drag, dag);
         // Interactions between fixed objects and mobile objects
         for (auto it = mobile_objects.begin(); it != mobile_objects.end(); /*it is incremented elsewhere*/) {
             auto& obj1 = *it;

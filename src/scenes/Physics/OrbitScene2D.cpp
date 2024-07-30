@@ -10,6 +10,9 @@ public:
     OrbitScene2D(OrbitSim* sim, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height), simulation(sim), predictions(width, height) {
         append_to_state_query(StateQuery{
+            "point_path.x",
+            "point_path.y",
+            "point_path.opacity",
             "tick_duration",
             "collision_threshold",
             "drag",
@@ -18,11 +21,31 @@ public:
             "screen_center_y",
             "screen_center_z",
             "predictions_opacity",
+            "physics_multiplier",
         });
     }
 
     bool scene_requests_rerender() const override {
         return true;
+    }
+
+    void render_point_path(){
+        glm::vec3 pos(state["point_path.x"], state["point_path.y"], 0);
+        glm::vec3 vel(0.f,0.f,0.f);
+        for(int i = 0; i < 10000; i++){
+            glm::vec3 last_pos = pos;
+            int dont_care_which_planet;
+            bool doneyet = simulation->get_next_step(pos, vel, dont_care_which_planet, *dag);
+
+            glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], 0);
+            glm::vec3 halfsize(w/2.,h/2.,0.f);
+            float zoom = state["zoom"] * h;
+            glm::vec3 last_pixel = (last_pos - screen_center) * zoom + halfsize;
+            glm::vec3 this_pixel = (pos      - screen_center) * zoom + halfsize;
+
+            pix.bresenham(last_pixel.x, last_pixel.y, this_pixel.x, this_pixel.y, OPAQUE_WHITE, 3);
+            if(doneyet) return;
+        }
     }
 
     void render_predictions() {
@@ -49,7 +72,7 @@ public:
         unsigned int opacity = state["predictions_opacity"]*255;
         for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
             int col = colors[y * w + x] & 0x00ffffff;
-            unsigned int time = static_cast<unsigned int>(opacity / (times[y * w + x]/30.+1)) << 24;
+            unsigned int time = static_cast<unsigned int>(opacity/* / (times[y * w + x]/300.+1)*/) << 24;
             predictions.set_pixel(x, y, col | time);
         }
     }
@@ -72,15 +95,19 @@ public:
 
     void draw() override {
         pix.fill(TRANSPARENT_BLACK);
-        simulation->iterate_physics(physics_multiplier, *dag);
+        simulation->iterate_physics(state["physics_multiplier"], *dag);
+        if(state["point_path.opacity"] > 0.001) {
+            /*if(state != last_state)*/ render_point_path();
+            unsigned int alpha = state["point_path.opacity"] * 255;
+            unsigned int point_path_opacity = alpha << 24;
+            pix.bitwise_and(point_path_opacity | 0x00ffffff);
+        }
         if(state["predictions_opacity"] > 0.001) {
             /*if(state != last_state)*/ render_predictions();
             pix.overwrite(predictions, 0, 0);
         }
         sim_to_2d();
     }
-
-    int physics_multiplier = 1;
 
 protected:
     OrbitSim* simulation;

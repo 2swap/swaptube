@@ -18,12 +18,12 @@ __global__ void predict_fate_of_object_kernel(int* planetcolors, glm::vec3* posi
     glm::vec3 velocity(0.f, 0, 0);
     int time_elapsed = 0;
 
-    while (true) {
+    while (time_elapsed < 10000) {
         float v2 = glm::dot(velocity, velocity);
         for (int i = 0; i < num_positions; ++i) {
             glm::vec3 direction = positions[i] - object_pos;
             float distance2 = glm::dot(direction, direction);
-            if (distance2 < collision_threshold_squared && v2 < force_constant) {
+            if (time_elapsed > 5 && distance2 < collision_threshold_squared && v2 < force_constant) {
                 colors[y * width + x] = planetcolors[i];
                 times[y * width + x] = time_elapsed;
                 return;
