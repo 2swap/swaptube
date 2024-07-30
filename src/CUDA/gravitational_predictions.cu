@@ -16,16 +16,15 @@ __global__ void predict_fate_of_object_kernel(int* planetcolors, glm::vec3* posi
     object_pos /= zoom;
     object_pos += screen_center;
     glm::vec3 velocity(0.f, 0, 0);
-    int time_elapsed = 0;
+    times[y * width + x] = 0;
 
-    while (time_elapsed < 10000) {
+    while (times[y * width + x] < 10000) {
         float v2 = glm::dot(velocity, velocity);
         for (int i = 0; i < num_positions; ++i) {
             glm::vec3 direction = positions[i] - object_pos;
             float distance2 = glm::dot(direction, direction);
-            if (time_elapsed > 5 && distance2 < collision_threshold_squared && v2 < force_constant) {
+            if (times[y * width + x] > 5 && distance2 < collision_threshold_squared && v2 < force_constant) {
                 colors[y * width + x] = planetcolors[i];
-                times[y * width + x] = time_elapsed;
                 return;
             } else {
                 velocity += tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared_device(force_constant, distance2);
@@ -34,7 +33,7 @@ __global__ void predict_fate_of_object_kernel(int* planetcolors, glm::vec3* posi
 
         velocity *= drag;
         object_pos += velocity * tick_duration;
-        time_elapsed++;
+        times[y * width + x]++;
     }
 }
 
