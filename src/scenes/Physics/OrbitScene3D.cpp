@@ -5,90 +5,68 @@
 #include "OrbitSim.cpp"
 #include <vector>
 
-extern "C" void render_predictions_cuda(const vector<int>& planetcolors, const vector<glm::vec3>& positions, int width, int height, glm::vec3 screen_center, float zoom, int* colors, int* times, float force_constant, float collision_threshold_squared, float drag, float tick_duration);
+extern "C" void render_predictions_cuda(
+const std::vector<int>& planetcolors, const std::vector<glm::vec3>& positions, // Planet data
+const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
+const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, // Adjustable parameters
+int* colors, int* times // outputs
+);
 
 class OrbitScene3D : public ThreeDimensionScene {
 public:
     OrbitScene3D(OrbitSim* sim, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-        : ThreeDimensionScene(width, height), simulation(sim) { }
+        : ThreeDimensionScene(width, height), simulation(sim) {}
 
     void fill_predictions_and_add_lines() {
-        lines.clear();
+        clear_lines();
 
         // Define the resolution of the 3D grid
-        const int grid_size = 60; // Example size, adjust as needed
-        vector<vector<vector<int>>> grid_colors(grid_size, vector<vector<int>>(grid_size, vector<int>(grid_size, -1)));
-        vector<vector<vector<glm::vec3>>> grid_points(grid_size, vector<vector<glm::vec3>>(grid_size, vector<glm::vec3>(grid_size)));
-        vector<vector<vector<bool>>> border_points(grid_size, vector<vector<bool>>(grid_size, vector<bool>(grid_size, false)));
 
-        float step = 1.0f / (grid_size - 1);
-        float zoom = grid_size * 1.f; // Adjusted for grid size
+        float zoom = state["zoom"];
+        int width  = round(state["wireframe_width" ]);
+        int height = round(state["wireframe_height"]);
+        int depth  = round(state["wireframe_depth" ]);
         float collision_threshold_squared = square(state["collision_threshold"]);
         float tick_duration = state["tick_duration"];
         float drag = pow(state["drag"], tick_duration);
 
-        int num_positions = simulation->fixed_objects.size();
-        vector<glm::vec3> positions(num_positions);
-        vector<int> planetcolors(num_positions);
-        int i = 0;
-        for (const FixedObject& fo : simulation->fixed_objects) {
-            positions[i] = fo.get_position(*dag);
-            planetcolors[i] = fo.color;
-            i++;
-        }
+        vector<glm::vec3> planet_positions; vector<int> planet_colors;
+        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, *dag);
 
-        // Fill the grid with predicted colors using CUDA for each slice
-        for (int z = 0; z < grid_size; ++z) {
-            vector<int> colors(grid_size * grid_size);
-            vector<int> times(grid_size * grid_size);
+        vector<int> colors (width * height * depth);
+        vector<int> times  (width * height * depth);
+        vector<int> borders(width * height * depth);
 
-            glm::vec3 slice_center(0,0,z*step-0.5f);
-
-            render_predictions_cuda(planetcolors, positions, grid_size, grid_size, slice_center, zoom, colors.data(), times.data(), global_force_constant, collision_threshold_squared, drag, tick_duration);
-
-            for (int y = 0; y < grid_size; ++y) {
-                for (int x = 0; x < grid_size; ++x) {
-                    grid_colors[x][y][z] = colors[y * grid_size + x];
-                    grid_points[x][y][z] = glm::vec3(x * step - 0.5f, y * step - 0.5f, z * step - 0.5f);
-                }
-            }
-        }
+        render_predictions_cuda(planet_colors, planet_positions, width, height, depth, glm::vec3(0.f,0,0), zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, colors.data(), times.data());
 
         // Identify border points
-        for (int x = 0; x < grid_size; ++x) {
-            for (int y = 0; y < grid_size; ++y) {
-                for (int z = 0; z < grid_size; ++z) {
-                    bool is_border = false;
-                    if (x < grid_size - 1 && grid_colors[x][y][z] != grid_colors[x + 1][y][z]) is_border = true;
-                    if (x > 0             && grid_colors[x][y][z] != grid_colors[x - 1][y][z]) is_border = true;
-                    if (y < grid_size - 1 && grid_colors[x][y][z] != grid_colors[x][y + 1][z]) is_border = true;
-                    if (y > 0             && grid_colors[x][y][z] != grid_colors[x][y - 1][z]) is_border = true;
-                    if (z < grid_size - 1 && grid_colors[x][y][z] != grid_colors[x][y][z + 1]) is_border = true;
-                    if (z > 0             && grid_colors[x][y][z] != grid_colors[x][y][z - 1]) is_border = true;
-                    border_points[x][y][z] = is_border;
-                }
-            }
+        for (int x = 0; x < width; ++x) for (int y = 0; y < height; ++y) for (int z = 0; z < depth; ++z) {
+            const int idx = x + (y + z * height) * width;
+            borders[idx] = true;
+            if (x != width  - 1 && colors[idx] != colors[idx + 1           ]) continue;
+            if (x != 0          && colors[idx] != colors[idx - 1           ]) continue;
+            if (y != height - 1 && colors[idx] != colors[idx + width       ]) continue;
+            if (y != 0          && colors[idx] != colors[idx - width       ]) continue;
+            if (z != depth  - 1 && colors[idx] != colors[idx + width*height]) continue;
+            if (z != 0          && colors[idx] != colors[idx - width*height]) continue;
+            borders[idx] = false;
         }
 
+        glm::vec3 midpoint(width*.5f, height*.5f, depth*.5f);
+
         // Draw lines between border points in a 3x3x3 cube
-        for (int x = 0; x < grid_size; ++x) {
-            for (int y = 0; y < grid_size; ++y) {
-                for (int z = 0; z < grid_size; ++z) {
-                    if (border_points[x][y][z]) {
-                        for (int dx = -1; dx <= 1; ++dx) {
-                            for (int dy = -1; dy <= 1; ++dy) {
-                                for (int dz = -1; dz <= 1; ++dz) {
-                                    if (dx == 0 && dy == 0 && dz == 0) continue;
-                                    int nx = x + dx;
-                                    int ny = y + dy;
-                                    int nz = z + dz;
-                                    if (nx >= 0 && nx < grid_size && ny >= 0 && ny < grid_size && nz >= 0 && nz < grid_size) {
-                                        if (border_points[nx][ny][nz] && grid_colors[x][y][z] == grid_colors[nx][ny][nz]) {
-                                            lines.push_back(Line(grid_points[x][y][z], grid_points[nx][ny][nz], grid_colors[x][y][z], 1));
-                                        }
-                                    }
-                                }
-                            }
+        for (int x = 0; x < width; ++x) for (int y = 0; y < height; ++y) for (int z = 0; z < depth; ++z) {
+            int idx = x + (y + z * height) * width;
+            if (borders[idx] && colors[idx] == planet_colors[0]) {
+                for (int dx = -1; dx <= 1; ++dx) for (int dy = -1; dy <= 1; ++dy) for (int dz = -1; dz <= 1; ++dz) {
+                    if (dx*9+dy*3+dz == 0) continue; // Do not draw lines bidirectionally
+                    int nx = x+dx; int ny = y+dy; int nz = z+dz;
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height && nz >= 0 && nz < depth) {
+                        int neighbor_idx = nx + (ny + nz * height) * width;
+                        if (borders[neighbor_idx] && colors[neighbor_idx] == colors[idx]) {
+                            glm::vec3 a = (glm::vec3( x, y, z) - midpoint) / zoom;
+                            glm::vec3 b = (glm::vec3(nx,ny,nz) - midpoint) / zoom;
+                            add_line(Line(a, b, colors[idx], 1));
                         }
                     }
                 }
@@ -102,27 +80,27 @@ public:
             "tick_duration",
             "collision_threshold",
             "drag",
+            "zoom",
+            "wireframe_width",
+            "wireframe_height",
+            "wireframe_depth",
             "physics_multiplier",
         });
     }
 
     void sim_to_3d() {
-        points.clear();
+        clear_points();
 
-        for (const auto& obj : simulation->mobile_objects) {
-            points.push_back(Point(obj.position, obj.color, NORMAL, obj.opacity));
-        }
-        for (const auto& obj : simulation->fixed_objects) {
-            points.push_back(Point(obj.get_position(*dag), obj.color, RING, obj.opacity));
-        }
+        for (const auto& obj : simulation->mobile_objects) add_point(Point(obj.position, obj.color, NORMAL, obj.opacity));
+        for (const auto& obj : simulation->fixed_objects) add_point(Point(obj.get_position(*dag), obj.color, RING, obj.opacity));
     }
 
     bool scene_requests_rerender() const override { return true; }
 
     void draw() override {
         simulation->iterate_physics(round(state["physics_multiplier"]), *dag);
-        /*if(lines.size() == 0)*/ fill_predictions_and_add_lines();
-        if(points.size() == 0) sim_to_3d();
+        fill_predictions_and_add_lines();
+        sim_to_3d();
         ThreeDimensionScene::draw();
     }
 

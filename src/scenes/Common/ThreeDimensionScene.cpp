@@ -24,40 +24,50 @@ enum NodeHighlightType {
     BULLSEYE,
 };
 
-struct Point {
-    glm::vec3 position;
-    int color; // ARGB integer representation
-    NodeHighlightType highlight;
-    double opacity;
-    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt=NORMAL, double op=1) : position(pos), color(clr), highlight(hlt), opacity(op) {}
+class ThreeDimensionScene;
+
+class ThreeDimensionalObject {
+public:
+    glm::vec3 center;
+    int color;
+    float opacity;
+    ThreeDimensionalObject(const glm::vec3& pos, int col, float op) : center(pos), color(col), opacity(op) {}
+    virtual ~ThreeDimensionalObject() = default;
+    virtual void render(ThreeDimensionScene& scene) const = 0;
 };
 
-struct Line {
+class Point : public ThreeDimensionalObject {
+public:
+    NodeHighlightType highlight;
+    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt=NORMAL, double op=1) : ThreeDimensionalObject(pos, clr, op), highlight(hlt) {}
+
+    void render(ThreeDimensionScene& scene) const override;
+};
+
+class Line : public ThreeDimensionalObject {
+public:
     glm::vec3 start;
     glm::vec3 end;
-    glm::vec3 center;
-    int color; // ARGB integer representation
-    double opacity;
-    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op=1) : start(s), end(e), center((s+e)*glm::vec3(0.5f)), color(clr), opacity(op) {}
+    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op=1) : ThreeDimensionalObject((s+e)*glm::vec3(0.5f), clr, op), start(s), end(e) {}
+    void render(ThreeDimensionScene& scene) const override;
 };
 
-struct Surface {
-    glm::vec3 center;
+class Surface : public ThreeDimensionalObject {
+public:
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
-    int color;
     Scene* scenePointer;
-    double opacity;
     float ilr2;
     float iur2;
     glm::vec3 normal;
     // Two types of surfaces- ones which are backed by a scene, and ones which are constant color
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc)
-        : center(c), pos_x_dir(l), pos_y_dir(u), scenePointer(sc), opacity(1),
+        : ThreeDimensionalObject(c, 0, 1), pos_x_dir(l), pos_y_dir(u), scenePointer(sc),
         ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, int col)
-        : center(c), pos_x_dir(l), pos_y_dir(u), color(col), scenePointer(NULL), opacity(1),
+        : ThreeDimensionalObject(c, col, 1), pos_x_dir(l), pos_y_dir(u), scenePointer(NULL),
         ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
+    void render(ThreeDimensionScene& scene) const override;
 };
 
 class ThreeDimensionScene : public Scene {
@@ -194,7 +204,9 @@ public:
         return false;
     }
 
-    virtual void render_surface(const Surface& surface, int padcol) {
+    virtual void render_surface(const Surface& surface) {
+        if(surface.opacity < .001 || state["surfaces_opacity"] < .001) return;
+        int padcol = (long)&surface;
         vector<pair<int, int>> corners(4);
         //note, ordering matters here
         bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
@@ -313,56 +325,32 @@ public:
         return glm::dot(diff, diff);
     }
 
-    void render_3d() {
+    void draw() override {
         pix.fill(TRANSPARENT_BLACK);
-
-        if(state["surfaces_opacity"] > 0 && !skip_surfaces)
-            render_surfaces();
-        if(state["points_opacity"] > 0)
-            render_points();
-        if(state["lines_opacity"] > 0)
-            render_lines();
-    }
-
-    void render_surfaces(){
-        //lots of upfront cost, so bailout if there arent any surfaces.
-        if (surfaces.size() == 0 || state["surfaces_opacity"] == 0) return;
-
+        set_camera_direction();
         sketchpad.fill(OPAQUE_BLACK);
 
-        // Create a list of pointers to the surfaces
-        vector<const Surface*> surfacePointers;
-        for (const Surface& surface : surfaces)
-            if(surface.opacity > 0)
-                surfacePointers.push_back(&surface);
+        vector<ThreeDimensionalObject> objects;
+
+        // Create a list of pointers to the things
+        vector<const ThreeDimensionalObject*> obj_ptrs;
+        if (obj_ptrs.empty()) {
+            for (const Surface& surface : surfaces)
+                obj_ptrs.push_back(&surface);
+            for (const Line& line : lines)
+                obj_ptrs.push_back(&line);
+            for (const Point& point : points)
+                obj_ptrs.push_back(&point);
+        }
 
         // Sort the pointers based on distance from camera
-        sort(surfacePointers.begin(), surfacePointers.end(), [this](const Surface* a, const Surface* b) {
+        sort(obj_ptrs.begin(), obj_ptrs.end(), [this](const ThreeDimensionalObject* a, const ThreeDimensionalObject* b) {
             return squaredDistance(a->center, this->camera_pos) > squaredDistance(b->center, this->camera_pos);
         });
 
-        // Render the surfaces using the sorted pointers
-        for (int i = 0; i < surfacePointers.size(); i++) {
-            render_surface(*(surfacePointers[i]), i+100);
+        for (int i = 0; i < obj_ptrs.size(); i++) {
+            obj_ptrs[i]->render(*this);
         }
-        //cout << "Rendered all surfaces" << endl;
-    }
-
-    void render_points(){
-        for (const Point& point : points)
-            render_point(point);
-    }
-
-    void render_lines(){
-        vector<const Line*> line_ptrs;
-        for (const Line& line : lines)
-            if(line.opacity > 0)
-                line_ptrs.push_back(&line);
-        sort(line_ptrs.begin(), line_ptrs.end(), [this](const Line* a, const Line* b) {
-            return squaredDistance(a->center, this->camera_pos) > squaredDistance(b->center, this->camera_pos);
-        });
-        for (const Line* line : line_ptrs)
-            render_line(*line);
     }
 
     void pre_query() override {
@@ -385,19 +373,15 @@ public:
         }
     }
 
-    void draw() override {
-        set_camera_direction();
-        render_3d();
-    }
-
     void render_point(const Point& point) {
+        if(point.opacity < .001 || state["points_opacity"] < .001) return;
         fov = state["fov"];
         over_w_fov = 1/(w*fov);
         halfwidth = w*.5;
         halfheight = h*.5;
 
         bool behind_camera = false;
-        pair<int, int> pixel = coordinate_to_pixel(point.position, behind_camera);
+        pair<int, int> pixel = coordinate_to_pixel(point.center, behind_camera);
         if(behind_camera) return;
         double dot_size = pix.w/500.; if(point.highlight == RING){
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , point.color);
@@ -413,7 +397,7 @@ public:
     }
 
     void render_line(const Line& line) {
-        if(line.opacity == 0) return;
+        if(line.opacity < .001 || state["lines_opacity"] < .001) return;
         bool behind_camera = false;
         pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
@@ -421,13 +405,24 @@ public:
         pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, state["lines_opacity"] * line.opacity), 2);
     }
 
-    void add_point(Point point) {
-        points.push_back(point);
+    void add_point(const Point& p) {
+        points.push_back(p);
+        obj_ptrs.clear();
     }
 
-    void add_surface(Surface s) {
-        surfaces.push_back(s);
+    void add_line(const Line& l) {
+        lines.push_back(l);
+        obj_ptrs.clear();
     }
+
+    void add_surface(const Surface& s) {
+        surfaces.push_back(s);
+        obj_ptrs.clear();
+    }
+
+    void clear_lines(){ lines.clear(); obj_ptrs.clear(); }
+    void clear_points(){ points.clear(); obj_ptrs.clear(); }
+    void clear_surfaces(){ surfaces.clear(); obj_ptrs.clear(); }
 
     glm::vec3 camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation
@@ -437,9 +432,13 @@ public:
     float halfwidth;
     float halfheight;
     Pixels sketchpad;
-public:
+private:
+    vector<const ThreeDimensionalObject*> obj_ptrs;
     vector<Point> points;
     vector<Line> lines;
     vector<Surface> surfaces;
-    bool skip_surfaces = false;
 };
+
+void   Point::render(ThreeDimensionScene& scene) const { scene.render_point  (*this); }
+void    Line::render(ThreeDimensionScene& scene) const { scene.render_line   (*this); }
+void Surface::render(ThreeDimensionScene& scene) const { scene.render_surface(*this); }
