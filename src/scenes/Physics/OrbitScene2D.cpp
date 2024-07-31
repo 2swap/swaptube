@@ -3,7 +3,12 @@
 #include "../Scene.cpp"
 #include "OrbitSim.cpp"
 
-extern "C" void render_predictions_cuda(const vector<int>& planetcolors, const vector<glm::vec3>& positions, int width, int height, glm::vec3 screen_center, float zoom, int* colors, int* times, float force_constant, float collision_threshold_squared, float drag, float tick_duration);
+extern "C" void render_predictions_cuda(
+const std::vector<int>& planetcolors, const std::vector<glm::vec3>& positions, // Planet data
+const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
+const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, // Adjustable parameters
+int* colors, int* times // outputs
+);
 
 class OrbitScene2D : public Scene {
 public:
@@ -53,21 +58,14 @@ public:
         vector<int> times(w*h);
         glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
 
-        int num_positions = simulation->fixed_objects.size();
+        vector<glm::vec3> planet_positions; vector<int> planet_colors;
+        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, *dag);
 
-        vector<glm::vec3> positions(num_positions);
-        vector<int> planetcolors(num_positions);
-        int i = 0;
-        for (const FixedObject& fo : simulation->fixed_objects) {
-            positions[i] = fo.get_position(*dag);
-            planetcolors[i] = fo.color;
-            i++;
-        }
         float collision_threshold_squared = square(state["collision_threshold"]);
         float tick_duration = state["tick_duration"];
         float drag = pow(state["drag"], tick_duration);
         float zoom = state["zoom"] * h;
-        render_predictions_cuda(planetcolors, positions, w, h, screen_center, zoom, colors.data(), times.data(), global_force_constant, collision_threshold_squared, drag, tick_duration);
+        render_predictions_cuda(planet_colors, planet_positions, w, h, 1 /*2d, depth is 1*/, screen_center, zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, colors.data(), times.data());
 
         unsigned int opacity = state["predictions_opacity"]*255;
         for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {

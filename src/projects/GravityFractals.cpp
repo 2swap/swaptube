@@ -607,17 +607,24 @@ void render_3d(){
         {"tick_duration", ".1"},
         {"collision_threshold", "0.005"},
         {"drag", "0.95"},
+        {"zoom", "10"},
         {"drag_slider", "1 <drag> -"},
         {"physics_multiplier", "1"},
+        {"wireframe_width", "40"},
+        {"wireframe_height", "40"},
+        {"wireframe_depth", "40"},
     });
     scene.dag->add_equations(unordered_map<string, string>{
         {"q1", "<t> 4 / cos"},
-        {"qi", "0"},
+        {"qi", ".5"},
         {"qj", "<t> -4 / sin"},
         {"qk", "0"},
-        {"d", "1.5"},
+        {"d", "3"},
     });
 
+    scene.dag->add_transitions(unordered_map<string, string>{
+        {"drag", "0.97"},
+    });
     scene.inject_audio_and_render(AudioSegment(3));
     scene.dag->add_transitions(unordered_map<string, string>{
         {"planet1.x", "-.4"},
@@ -633,11 +640,6 @@ void render_3d(){
         {"planet4.y", "-.3"},
         {"planet4.z", "0.3"}
     });
-    /*
-    scene.dag->add_transitions(unordered_map<string, string>{
-        {"drag", "0.98"},
-    });
-    */
     scene.inject_audio_and_render(AudioSegment(7));
     scene.inject_audio_and_render(AudioSegment(3));
 }

@@ -98,6 +98,18 @@ public:
         return 0;
     }
 
+    void get_fixed_object_data_for_cuda(vector<glm::vec3>& positions, vector<int>& colors, const Dagger& dag){
+        int num_positions = fixed_objects.size();
+        positions.resize(num_positions);
+           colors.resize(num_positions);
+        int i = 0;
+        for (const FixedObject& fo : fixed_objects) {
+            positions[i] = fo.get_position(dag);
+               colors[i] = fo.color;
+            i++;
+        }
+    }
+
 private:
     void iterate_physics_once(const Dagger& dag) {
         float tick_duration, collision_threshold_squared, drag;
