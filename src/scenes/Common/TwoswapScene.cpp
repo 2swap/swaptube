@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../misc/visual_media.cpp"
+#include "../../io/VisualMedia.cpp"
 #include "../Scene.cpp"
 
 class TwoswapScene : public Scene {

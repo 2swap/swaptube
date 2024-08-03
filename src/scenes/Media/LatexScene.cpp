@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../io/visual_media.cpp"
+#include "../../io/VisualMedia.cpp"
 #include "../Scene.cpp"
 #include "Convolution.cpp"
 
@@ -53,12 +53,11 @@ public:
 
     bool scene_requests_rerender() const override { return false; }
     void draw() override{
-        if(in_transition_state && state["audio_segment_number"] != transition_audio_segment)
-            end_transition();
-
-        if(!in_transition_state){
-            p = &pix;
-        } else { // in a transition
+        if(in_transition_state) {
+            if(state["audio_segment_number"] != transition_audio_segment){
+                end_transition();
+                return;
+            }
             pix.fill(TRANSPARENT_BLACK);
             double tp = transparency_profile(state["transition_fraction"]);
             double tp1 = transparency_profile(1-state["transition_fraction"]);

@@ -3,11 +3,11 @@
 #include <vector>
 
 __device__ float magnitude_force_given_distance_squared_device(float force_constant, float d2) {
-    return force_constant / (.1f + d2);
+    return force_constant / (.03f + d2);
 }
 
 __global__ void predict_fate_of_object_kernel(
-int* planetcolors, glm::vec3* positions, const int num_positions, // Planet data
+glm::vec3* positions, const int num_positions, // Planet data
 const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
 const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, // adjustable parameters
 int* colors, int* times // Outputs
@@ -25,13 +25,13 @@ int* colors, int* times // Outputs
     const int arr_idx = x + (y + z * height) * width;
     times[arr_idx] = 0;
 
-    while (times[arr_idx] < 10000) {
+    while (times[arr_idx] < 30000) {
         float v2 = glm::dot(velocity, velocity);
         for (int i = 0; i < num_positions; ++i) {
             glm::vec3 direction = positions[i] - object_pos;
             float distance2 = glm::dot(direction, direction);
             if (times[arr_idx] > 5 && distance2 < collision_threshold_squared && v2 < force_constant) {
-                colors[arr_idx] = planetcolors[i];
+                colors[arr_idx] = i;
                 return;
             } else {
                 velocity += tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared_device(force_constant, distance2);
@@ -42,27 +42,25 @@ int* colors, int* times // Outputs
         object_pos += velocity * tick_duration;
         times[arr_idx]++;
     }
+    colors[arr_idx] = -1;
 }
 
 extern "C" void render_predictions_cuda(
-const std::vector<int>& planetcolors, const std::vector<glm::vec3>& positions, // Planet data
+const std::vector<glm::vec3>& positions, // Planet data
 const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
 const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, // Adjustable parameters
 int* colors, int* times // outputs
 ) {
     glm::vec3* d_positions;
     int* d_colors;
-    int* d_planetcolors;
     int* d_times;
     const int num_positions = positions.size();
 
     cudaMalloc(&d_positions   , num_positions * sizeof(glm::vec3));
-    cudaMalloc(&d_planetcolors, num_positions * sizeof(int      ));
     cudaMalloc(&d_colors, width * height * depth * sizeof(int));
     cudaMalloc(&d_times , width * height * depth * sizeof(int));
 
     cudaMemcpy(d_positions   ,    positions.data(), num_positions * sizeof(glm::vec3), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_planetcolors, planetcolors.data(), num_positions * sizeof(int      ), cudaMemcpyHostToDevice);
 
     dim3 threadsPerBlock_thin (16, 16, 4);
     dim3 threadsPerBlock_thick(32, 32, 1);
@@ -71,13 +69,12 @@ int* colors, int* times // outputs
                    (height + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    ( depth + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
-    predict_fate_of_object_kernel<<<numBlocks, threadsPerBlock>>>(d_planetcolors, d_positions, num_positions, width, height, depth, screen_center, zoom, force_constant, collision_threshold_squared, drag, tick_duration, d_colors, d_times);
+    predict_fate_of_object_kernel<<<numBlocks, threadsPerBlock>>>(d_positions, num_positions, width, height, depth, screen_center, zoom, force_constant, collision_threshold_squared, drag, tick_duration, d_colors, d_times);
 
     cudaMemcpy(colors, d_colors, width * height * depth * sizeof(int), cudaMemcpyDeviceToHost);
     cudaMemcpy(times , d_times , width * height * depth * sizeof(int), cudaMemcpyDeviceToHost);
 
     cudaFree(d_positions);
-    cudaFree(d_planetcolors);
     cudaFree(d_colors);
     cudaFree(d_times);
 }

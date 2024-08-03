@@ -11,35 +11,36 @@ inline int geta(int col){return (col&0xff000000)>>24;}
 inline int getr(int col){return (col&0x00ff0000)>>16;}
 inline int getg(int col){return (col&0x0000ff00)>>8 ;}
 inline int getb(int col){return (col&0x000000ff)    ;}
+inline int alpha_multiply(int col, float opacity){return (static_cast<int>(geta(col) * opacity) << 24) | col&0xffffff;}
 inline int coldist(int col1, int col2){return abs(geta(col1) - geta(col2)) +
                                               abs(getr(col1) - getr(col2)) +
                                               abs(getg(col1) - getg(col2)) +
                                               abs(getb(col1) - getb(col2));}
-inline int rainbow(double x){return argb_to_col(255,
+inline int rainbow(float x){return argb_to_col(255,
                                             sin((x+1/3.)*M_PI*2)*128.+128,
                                             sin((x+2/3.)*M_PI*2)*128.+128,
                                             sin((x     )*M_PI*2)*128.+128);}
-inline int colorlerp(int col1, int col2, double w){return argb_to_col(round(lerp(geta(col1), geta(col2), w)),
+inline int colorlerp(int col1, int col2, float w){return argb_to_col(round(lerp(geta(col1), geta(col2), w)),
                                                                       round(lerp(getr(col1), getr(col2), w)),
                                                                       round(lerp(getg(col1), getg(col2), w)),
                                                                       round(lerp(getb(col1), getb(col2), w)));}
 inline string color_to_string(int c){return "(" + to_string(geta(c)) + ", " + to_string(getr(c)) + ", " + to_string(getg(c)) + ", " + to_string(getb(c)) + ")";}
 inline void print_argb(int c){cout << color_to_string(c) << endl;}
 
-int color_combine(int base_color, int over_color, double overlay_opacity_multiplier = 1){
-    double base_opacity = geta(base_color)/255.;
-    double over_opacity = geta(over_color)/255.*overlay_opacity_multiplier;
-    double final_opacity = 1-(1-base_opacity)*(1-over_opacity);
+int color_combine(int base_color, int over_color, float overlay_opacity_multiplier = 1){
+    float base_opacity = geta(base_color)/255.;
+    float over_opacity = geta(over_color)/255.*overlay_opacity_multiplier;
+    float final_opacity = 1-(1-base_opacity)*(1-over_opacity);
     if(final_opacity == 0) return 0x00000000;
     int final_alpha = round(final_opacity*255.);
-    double chroma_weight = over_opacity/final_opacity;
+    float chroma_weight = over_opacity/final_opacity;
     int final_rgb = colorlerp(base_color, over_color, chroma_weight)&0x00ffffff;
     return (final_alpha<<24)|(final_rgb);
 }
 
-void hsv2rgb(double h, double s, double v, int& r, int& g, int& b)
+void hsv2rgb(float h, float s, float v, int& r, int& g, int& b)
 {
-    double      hh, p, q, t, ff;
+    float      hh, p, q, t, ff;
     long        i;
 
     if(s <= 0.0) {       // < is bogus, just shuts up warnings
@@ -125,7 +126,7 @@ void argb_to_col_ut() {
 
 // Unit test for rainbow function
 void rainbow_ut() {
-    double x = 0.25;
+    float x = 0.25;
     int result = rainbow(x);
     int expected = 4210688 + (255<<24); // Equivalent to argb_to_col(255, 191, 64)
 
@@ -197,7 +198,7 @@ void getb_ut() {
 void colorlerp_ut() {
     int col1 = argb_to_col(2, 255, 0, 0);  // Red
     int col2 = argb_to_col(4, 0, 0, 255);  // Blue
-    double w = 0.5;
+    float w = 0.5;
     int result = colorlerp(col1, col2, w);
     int expected = argb_to_col(3, 128, 0, 128);  // Purple
 
@@ -214,7 +215,7 @@ void color_combine_ut() {
     {
         int col1 = argb_to_col(0, 198, 55, 18); // Transparent Random
         int col2 = argb_to_col(4, 5, 6, 7);
-        double w = 0.5;
+        float w = 0.5;
         int result = color_combine(col1, col2);
         int expected = col2;
 
@@ -229,7 +230,7 @@ void color_combine_ut() {
     {
         int col1 = argb_to_col(134, 198, 55, 18); // Random Color
         int col2 = argb_to_col(255, 5  , 6 , 7 ); // Random opaque color;
-        double w = 0.5;
+        float w = 0.5;
         int result = color_combine(col1, col2);
         int expected = col2;
 
@@ -244,7 +245,7 @@ void color_combine_ut() {
     {
         int col1 = argb_to_col(128, 0, 0, 128); // Semi-Opaque Blue
         int col2 = argb_to_col(128, 128, 0, 0); // Semi-Opaque Red
-        double w = 0.5;
+        float w = 0.5;
         int result = color_combine(col1, col2);
         int expected = argb_to_col(192, 85, 0, 43); // Opaquer Purple
 

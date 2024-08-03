@@ -299,7 +299,7 @@ private:
     VariableContents get_variable(string variable) const {
         if(variables.find(variable) == variables.end()){
             print_state();
-            failout("ERROR: Attempted to access slate variable " + variable + " without it existing!\nState has been printed above.");
+            failout("ERROR: Attempted to access variable " + variable + " without it existing!\nState has been printed above.");
         }
         return variables.at(variable);
     }

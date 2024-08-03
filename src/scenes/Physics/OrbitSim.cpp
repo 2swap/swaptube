@@ -10,17 +10,20 @@ using namespace std;
 class Object {
 public:
     int color;
-    float opacity;
     bool fixed;
 
-    Object(int col, float op, bool fix) : color(col), opacity(op), fixed(fix) {}
+    Object(int col, bool fix) : color(col), fixed(fix) {}
 };
 
 class FixedObject : public Object {
 public:
     const string dag_name;
-    FixedObject(int col, float op, const string& dn)
-        : Object(col, op, true), dag_name(dn) {}
+    FixedObject(int col, const string& dn)
+        : Object(col, true), dag_name(dn) {}
+
+    float get_opacity(const Dagger& dag) const {
+        return dag[dag_name + ".opacity"];
+    }
 
     glm::vec3 get_position(const Dagger& dag) const {
         return glm::vec3(dag[dag_name + ".x"],
@@ -33,8 +36,8 @@ class MobileObject : public Object {
 public:
     glm::vec3 position;
     glm::vec3 velocity;
-    MobileObject(const glm::vec3& pos, int col, float op)
-        : Object(col, op, false), position(pos), velocity(0) {}
+    MobileObject(const glm::vec3& pos, int col)
+        : Object(col, false), position(pos), velocity(0) {}
 };
 
 float global_force_constant = 0.001;
@@ -49,12 +52,12 @@ public:
         fixed_objects.remove_if([&dag_name](const FixedObject& obj) { return obj.dag_name == dag_name; });
     }
 
-    void add_fixed_object(int color, float opacity, const string& dag_name) {
-        fixed_objects.push_back(FixedObject(color, opacity, dag_name));
+    void add_fixed_object(int color, const string& dag_name) {
+        fixed_objects.push_back(FixedObject(color, dag_name));
     }
 
-    void add_mobile_object(const glm::vec3& position, int color, float opacity) {
-        mobile_objects.push_back(MobileObject(position, color, opacity));
+    void add_mobile_object(const glm::vec3& position, int color) {
+        mobile_objects.push_back(MobileObject(position, color));
     }
 
     void iterate_physics(int multiplier, const Dagger& dag) {
@@ -98,14 +101,16 @@ public:
         return 0;
     }
 
-    void get_fixed_object_data_for_cuda(vector<glm::vec3>& positions, vector<int>& colors, const Dagger& dag){
+    void get_fixed_object_data_for_cuda(vector<glm::vec3>& positions, vector<int>& colors, vector<float>& opacities, const Dagger& dag){
         int num_positions = fixed_objects.size();
         positions.resize(num_positions);
            colors.resize(num_positions);
+        opacities.resize(num_positions);
         int i = 0;
         for (const FixedObject& fo : fixed_objects) {
             positions[i] = fo.get_position(dag);
                colors[i] = fo.color;
+            opacities[i] = fo.get_opacity(dag);
             i++;
         }
     }
@@ -158,7 +163,7 @@ private:
     }
 
     inline float magnitude_force_given_distance_squared(float d2){
-        return global_force_constant/(.1+d2);
+        return global_force_constant/(.03+d2);
     }
 };
 
