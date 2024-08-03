@@ -221,7 +221,7 @@ public:
         // Draw the edges of the polygon using Bresenham's function
         for (int i = 0; i < 4; i++) {
             int next = (i + 1) % 4;
-            sketchpad.bresenham(corners[i].first, corners[i].second, corners[next].first, corners[next].second, padcol, 1);
+            sketchpad.bresenham(corners[i].first, corners[i].second, corners[next].first, corners[next].second, padcol, 1, 1);
         }
 
         // Call the flood fill algorithm
@@ -383,7 +383,7 @@ public:
         bool behind_camera = false;
         pair<int, int> pixel = coordinate_to_pixel(point.center, behind_camera);
         if(behind_camera) return;
-        double dot_size = pix.w/500.; if(point.highlight == RING){
+        double dot_size = pix.w/400.; if(point.highlight == RING){
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , point.color);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         } else if(point.highlight == BULLSEYE){
@@ -402,7 +402,7 @@ public:
         pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, colorlerp(OPAQUE_BLACK, line.color, state["lines_opacity"] * line.opacity), 2);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, state["lines_opacity"] * line.opacity, 1);
     }
 
     void add_point(const Point& p) {

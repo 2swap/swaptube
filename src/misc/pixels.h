@@ -199,7 +199,7 @@ public:
                 pixels[x+y*w] &= bitstrip;
     }
 
-    void bresenham(int x1, int y1, int x2, int y2, int col, int thickness) {
+    void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness) {
         int dx = abs(x2 - x1);
         int dy = abs(y2 - y1);
 
@@ -221,12 +221,12 @@ public:
                 cout << "thickness: " << thickness << endl;
                 return;
             }
-            set_pixel(x1, y1, col);
+            overlay_pixel(x1, y1, col, opacity);
             for(int i = 1; i < thickness; i++){
-                set_pixel(x1+i, y1  , col);
-                set_pixel(x1-i, y1  , col);
-                set_pixel(x1  , y1+i, col);
-                set_pixel(x1  , y1-i, col);
+                overlay_pixel(x1+i, y1  , col, opacity);
+                overlay_pixel(x1-i, y1  , col, opacity);
+                overlay_pixel(x1  , y1+i, col, opacity);
+                overlay_pixel(x1  , y1-i, col, opacity);
             }
 
             // If we've reached the end point, break

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "../../io/visual_media.cpp"
+#include "../../io/VisualMedia.cpp"
 #include "../Scene.cpp"
 
 // doubles with 4 sig figs
@@ -12,7 +12,7 @@ string double_to_string(double value) {
     if (value == 0) { return "0"; }
 
     int exponent = static_cast<int>(floor(log10(abs(value))));
-    int significant_digits = 4 - exponent - 1;
+    int significant_digits = 3 - exponent - 1;
 
     out << fixed << setprecision(significant_digits) << value;
     string str = out.str();
