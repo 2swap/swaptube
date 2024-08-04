@@ -376,15 +376,6 @@ public:
         }
     }
 
-    void filter_greenify_grays() {
-        for(int i = 2; i < pixels.size(); i+=4)
-            pixels[i] = (pixels[i]*pixels[i])/255;
-        for(int i = 1; i < pixels.size(); i+=4)
-            pixels[i] = 255-square(255-pixels[i])/255;
-        //for(int i = 0; i < pixels.size(); i+=4)
-        //    pixels[i] = (pixels[i]*pixels[i])/255;
-    }
-
 };
 
 Pixels create_alpha_from_intensities(const vector<vector<int>>& intensities, int negative_intensity) {

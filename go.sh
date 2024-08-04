@@ -63,7 +63,7 @@ rm $TEMPFILE
 # Check if the compile and run were successful
 if [ $SUCCESS -eq 0 ]; then
     if [ -n "$ultimate_subdir" ]; then
-        vlc "$ultimate_subdir/$1.mp4" vlc://quit > /dev/null 2>&1
+        vlc "$ultimate_subdir/$1.mp4" > /dev/null 2>&1
     else
         echo "go.sh: No output directory found for project $1."
     fi

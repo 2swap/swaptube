@@ -10,8 +10,8 @@
 using namespace std;
 
 inline double sigmoid(double x){return 2/(1+exp(-x))-1;}
-inline double min(double a, double b){return a<b?a:b;}
-inline double max(double a, double b){return a>b?a:b;}
+//inline double min(double a, double b){return a<b?a:b;}
+//inline double max(double a, double b){return a>b?a:b;}
 inline double bound(double bottom, double val, double top){return min(top, max(val, bottom));}
 inline double square(double x){return x * x;}
 inline double cube(double x){return x * x * x;}
@@ -55,36 +55,6 @@ void sigmoid_ut() {
         if(inline_unit_tests_verbose) cout << "sigmoid_ut passed." << endl;
     } else {
         cout << "sigmoid_ut failed." << endl;
-        exit(1);
-    }
-}
-
-// Unit test for min function
-void min_ut() {
-    double a = 3.0;
-    double b = 2.0;
-    double result = min(a, b);
-    double expected = 2.0;
-
-    if (result == expected) {
-        if(inline_unit_tests_verbose) cout << "min_ut passed." << endl;
-    } else {
-        cout << "min_ut failed." << endl;
-        exit(1);
-    }
-}
-
-// Unit test for max function
-void max_ut() {
-    double a = 3.0;
-    double b = 2.0;
-    double result = max(a, b);
-    double expected = 3.0;
-
-    if (result == expected) {
-        if(inline_unit_tests_verbose) cout << "max_ut passed." << endl;
-    } else {
-        cout << "max_ut failed." << endl;
         exit(1);
     }
 }
@@ -180,8 +150,6 @@ void latex_text_ut() {
 
 void run_inlines_unit_tests(){
     sigmoid_ut();
-    min_ut();
-    max_ut();
     square_ut();
     cube_ut();
     smoother1_ut();

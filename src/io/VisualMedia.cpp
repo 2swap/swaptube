@@ -27,7 +27,7 @@ struct ScalingParams {
 
 Pixels png_to_pix(const string& filename) {
     // Open the PNG file
-    FILE* fp = fopen((PATH_MANAGER.media_dir + filename + ".png").c_str(), "rb");
+    FILE* fp = fopen((PATH_MANAGER.this_project_media_dir + filename + ".png").c_str(), "rb");
     if (!fp) {
         throw runtime_error("Failed to open PNG file.");
     }

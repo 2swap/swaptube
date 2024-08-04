@@ -1,4 +1,5 @@
 #pragma once
+#include "inlines.h"
 
 // Colors are everywhere. For the sake of speed, we do not give them a dedicated child class.
 // They are ints under the hood, and are always 32-bit, 4-channel ARGB.
@@ -27,15 +28,15 @@ inline int colorlerp(int col1, int col2, float w){return argb_to_col(round(lerp(
 inline string color_to_string(int c){return "(" + to_string(geta(c)) + ", " + to_string(getr(c)) + ", " + to_string(getg(c)) + ", " + to_string(getb(c)) + ")";}
 inline void print_argb(int c){cout << color_to_string(c) << endl;}
 
-int color_combine(int base_color, int over_color, float overlay_opacity_multiplier = 1){
-    float base_opacity = geta(base_color)/255.;
-    float over_opacity = geta(over_color)/255.*overlay_opacity_multiplier;
-    float final_opacity = 1-(1-base_opacity)*(1-over_opacity);
-    if(final_opacity == 0) return 0x00000000;
-    int final_alpha = round(final_opacity*255.);
-    float chroma_weight = over_opacity/final_opacity;
-    int final_rgb = colorlerp(base_color, over_color, chroma_weight)&0x00ffffff;
-    return (final_alpha<<24)|(final_rgb);
+int color_combine(int base_color, int over_color, float overlay_opacity_multiplier = 1) {
+    float base_opacity = geta(base_color) / 255.0;
+    float over_opacity = geta(over_color) / 255.0 * overlay_opacity_multiplier;
+    float final_opacity = 1 - (1 - base_opacity) * (1 - over_opacity);
+    if (final_opacity == 0) return 0x00000000;
+    int final_alpha = round(final_opacity * 255.0);
+    float chroma_weight = over_opacity / final_opacity;
+    int final_rgb = colorlerp(base_color, over_color, chroma_weight) & 0x00ffffff;
+    return (final_alpha << 24) | (final_rgb);
 }
 
 void hsv2rgb(float h, float s, float v, int& r, int& g, int& b)
@@ -215,7 +216,6 @@ void color_combine_ut() {
     {
         int col1 = argb_to_col(0, 198, 55, 18); // Transparent Random
         int col2 = argb_to_col(4, 5, 6, 7);
-        float w = 0.5;
         int result = color_combine(col1, col2);
         int expected = col2;
 
@@ -230,7 +230,6 @@ void color_combine_ut() {
     {
         int col1 = argb_to_col(134, 198, 55, 18); // Random Color
         int col2 = argb_to_col(255, 5  , 6 , 7 ); // Random opaque color;
-        float w = 0.5;
         int result = color_combine(col1, col2);
         int expected = col2;
 
@@ -245,7 +244,6 @@ void color_combine_ut() {
     {
         int col1 = argb_to_col(128, 0, 0, 128); // Semi-Opaque Blue
         int col2 = argb_to_col(128, 128, 0, 0); // Semi-Opaque Red
-        float w = 0.5;
         int result = color_combine(col1, col2);
         int expected = argb_to_col(192, 85, 0, 43); // Opaquer Purple
 

@@ -40,6 +40,7 @@ public:
     const string repo_root;
     const string output_dir;
     const string media_dir;
+    const string this_project_output_dir;
     const string this_run_output_dir;
     const string this_project_media_dir;
     const string plots_dir;
@@ -58,7 +59,8 @@ public:
         repo_root("../"),
         output_dir(repo_root + "out/"),
         media_dir(repo_root + "media/"),
-        this_run_output_dir(output_dir + project_name + "/" + unique_timestamp + "/"),
+        this_project_output_dir(output_dir + project_name + "/"),
+        this_run_output_dir(this_project_output_dir + unique_timestamp + "/"),
         this_project_media_dir(media_dir + project_name + "/"),
         plots_dir(this_run_output_dir + "plots/"),
         data_dir(this_run_output_dir + "data/"),
@@ -72,6 +74,7 @@ public:
         ensure_dir_exists(repo_root              );
         ensure_dir_exists(output_dir             );
         ensure_dir_exists(media_dir              );
+        ensure_dir_exists(this_project_output_dir);
         ensure_dir_exists(this_run_output_dir    );
         ensure_dir_exists(this_project_media_dir );
         ensure_dir_exists(plots_dir              );

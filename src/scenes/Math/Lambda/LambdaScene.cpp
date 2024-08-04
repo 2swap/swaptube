@@ -9,7 +9,7 @@ public:
 
     void draw() override {
         pix.fill(0xff0080ff);
-        pix.overwrite(*lambda_pixels, 0, 0);
+        pix.overwrite(lambda_pixels, 0, 0);
     }
 
     bool scene_requests_rerender() const override { return false; }
@@ -17,6 +17,6 @@ public:
 private:
     // Things used for non-transition states
     LambdaExpression* le;
-    string lambda_string;
     Pixels lambda_pixels;
+    string lambda_string;
 };

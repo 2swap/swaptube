@@ -166,7 +166,7 @@ public:
         return this;
     }
 
-    const LambdaVariable* get_variable() const {
+    LambdaVariable* get_variable() const {
         return variable;
     }
 

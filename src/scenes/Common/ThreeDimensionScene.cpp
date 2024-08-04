@@ -9,14 +9,32 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <limits>
 #include <glm/gtx/string_cast.hpp>
 
-glm::quat PITCH_DOWN (0, 1 , 0, 0 );
-glm::quat PITCH_UP   (0, -1, 0, 0 );
-glm::quat   YAW_RIGHT(0, 0, -1, 0 );
-glm::quat   YAW_LEFT (0, 0, 1 , 0 );
-glm::quat  ROLL_CW   (0, 0 , 0, -1);
-glm::quat  ROLL_CCW  (0, 0 , 0, 1 );
+extern "C" void cuda_render_surface(
+    vector<int>& pix,
+    int x1,
+    int y1,
+    int plot_w,
+    int plot_h,
+    int pixels_w,
+    int* d_surface,
+    int surface_w,
+    int surface_h,
+    float opacity,
+    glm::vec3 camera_pos,
+    glm::quat camera_direction,
+    glm::quat conjugate_camera_direction,
+    const glm::vec3& surface_normal,
+    const glm::vec3& surface_center,
+    const glm::vec3& surface_pos_x_dir,
+    const glm::vec3& surface_pos_y_dir,
+    const float surface_ilr2,
+    const float surface_iur2,
+    float halfwidth,
+    float halfheight,
+    float over_w_fov);
 
 enum NodeHighlightType {
     NORMAL,
@@ -39,7 +57,8 @@ public:
 class Point : public ThreeDimensionalObject {
 public:
     NodeHighlightType highlight;
-    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt=NORMAL, double op=1) : ThreeDimensionalObject(pos, clr, op), highlight(hlt) {}
+    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, double op = 1)
+        : ThreeDimensionalObject(pos, clr, op), highlight(hlt) {}
 
     void render(ThreeDimensionScene& scene) const override;
 };
@@ -48,7 +67,9 @@ class Line : public ThreeDimensionalObject {
 public:
     glm::vec3 start;
     glm::vec3 end;
-    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op=1) : ThreeDimensionalObject((s+e)*glm::vec3(0.5f), clr, op), start(s), end(e) {}
+    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op = 1)
+        : ThreeDimensionalObject((s + e) * glm::vec3(0.5f), clr, op), start(s), end(e) {}
+
     void render(ThreeDimensionScene& scene) const override;
 };
 
@@ -60,13 +81,10 @@ public:
     float ilr2;
     float iur2;
     glm::vec3 normal;
-    // Two types of surfaces- ones which are backed by a scene, and ones which are constant color
+
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc)
         : ThreeDimensionalObject(c, 0, 1), pos_x_dir(l), pos_y_dir(u), scenePointer(sc),
-        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, int col)
-        : ThreeDimensionalObject(c, col, 1), pos_x_dir(l), pos_y_dir(u), scenePointer(NULL),
-        ilr2(0.5/square(glm::length(l))), iur2(0.5/square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
+          ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     void render(ThreeDimensionScene& scene) const override;
 };
 
@@ -100,24 +118,6 @@ public:
         double y = scale * coordinate.y + h/2;
 
         return {x, y};
-    }
-
-    glm::vec2 screen_to_surface_intersection(float dotnormcam, double px, double py, const Surface &surface) {
-        // Compute the ray direction from the camera through the screen point
-        glm::vec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1);
-        ray_dir = conjugate_camera_direction * ray_dir * camera_direction;
-
-        // Compute the intersection point in 3D space
-        float t = dotnormcam / glm::dot(surface.normal, ray_dir);
-
-        // Convert 3D intersection point to surface's local 2D coordinates
-        glm::vec3 centered = camera_pos + t * ray_dir - surface.center;
-        glm::vec2 intersection_2D(
-            glm::dot(centered, surface.pos_x_dir) * surface.ilr2 + 0.5f,
-            glm::dot(centered, surface.pos_y_dir) * surface.iur2 + 0.5f
-        );
-
-        return intersection_2D;
     }
 
     bool isOutsideScreen(const pair<int, int>& point) {
@@ -205,10 +205,13 @@ public:
     }
 
     virtual void render_surface(const Surface& surface) {
-        if(surface.opacity < .001 || state["surfaces_opacity"] < .001) return;
-        int padcol = (long)&surface;
+        float this_surface_opacity = surface.opacity * state["surfaces_opacity"];
+
+        // Attempt to skip this render if possible
+        if(this_surface_opacity < .001) return;
+
         vector<pair<int, int>> corners(4);
-        //note, ordering matters here
+        // note, ordering matters here
         bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
         corners[0] = coordinate_to_pixel(surface.center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
         corners[1] = coordinate_to_pixel(surface.center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
@@ -218,14 +221,43 @@ public:
 
         if(!should_render_surface(corners)) return;
 
-        // Draw the edges of the polygon using Bresenham's function
-        for (int i = 0; i < 4; i++) {
-            int next = (i + 1) % 4;
-            sketchpad.bresenham(corners[i].first, corners[i].second, corners[next].first, corners[next].second, padcol, 1, 1);
-        }
+        int x1 = numeric_limits<int>::max();
+        int y1 = numeric_limits<int>::max();
+        int x2 = numeric_limits<int>::min();
+        int y2 = numeric_limits<int>::min();
 
-        // Call the flood fill algorithm
-        floodFillSurface(corners, surface, padcol); // assuming background is black and polygon is white
+        for(const auto& corner : corners){
+            x1 = min(x1, corner.first );
+            y1 = min(y1, corner.second);
+            x2 = max(x2, corner.first );
+            y2 = max(y2, corner.second);
+        }
+        int plot_w = x2 - x1 + 1;
+        int plot_h = y2 - y1 + 1;
+
+        Pixels* queried = NULL;
+        surface.scenePointer->query(queried);
+
+        cuda_render_surface(
+            pix.pixels,
+            x1, y1, plot_w, plot_h, pix.w,
+            queried->pixels.data(),
+            surface.scenePointer->w,
+            surface.scenePointer->h,
+            this_surface_opacity,
+            camera_pos,
+            camera_direction,
+            conjugate_camera_direction,
+            surface.normal,
+            surface.center,
+            surface.pos_x_dir,
+            surface.pos_y_dir,
+            surface.ilr2,
+            surface.iur2,
+            halfwidth,
+            halfheight,
+            over_w_fov
+        );
     }
 
     bool scene_requests_rerender() const override {
@@ -234,83 +266,6 @@ public:
                 return false;
         }
         return false;
-    }
-
-    void floodFillSurface(vector<pair<int, int>>& corners, const Surface& surface, int padcol) {
-        Pixels* p = NULL;
-        if(surface.scenePointer != NULL) surface.scenePointer->query(p);
-
-        queue<pair<int, int>> q;
-
-        // 1. Compute the centroid of the quadrilateral
-        double cx = 0, cy = 0;
-        for (const auto& corner : corners) {
-            cx += corner.first;
-            cy += corner.second;
-        }
-        cx /= 4;
-        cy /= 4;
-        q.push({cx, cy});
-
-        // 2. For each edge, perform linear interpolation to get intermediate points
-        for (int i = 0; i < 4; i++) {
-            int x1 = corners[i].first;
-            int y1 = corners[i].second;
-            int x2 = corners[(i+1)%4].first;
-            int y2 = corners[(i+1)%4].second;
-            float fineness = 50;
-            for(float j = 0.5; j < fineness; j++){
-                float jf = j/fineness;
-                q.push({lerp(x1, x2, jf), lerp(y1, y2, jf)});
-            }
-        }
-
-        double opacity = surface.opacity * state["surfaces_opacity"];
-        float dotnormcam = glm::dot(surface.normal, (surface.center - camera_pos));
-
-        if(p != NULL){ // If this is not a surface of constant color
-            while (!q.empty()) {
-                auto [cx, cy] = q.front();
-                q.pop();
-
-                // Check if the current point is within bounds and has the old color
-                if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
-
-                //compute position in surface's coordinate frame as a function of x and y.
-                glm::vec2 surface_coords = screen_to_surface_intersection(dotnormcam, cx, cy, surface);
-                int color = p->get_pixel(surface_coords.x*p->w, surface_coords.y*p->h);
-
-                // Set the pixel to the new color
-                pix.overlay_pixel(cx, cy, color, opacity);
-
-                sketchpad.set_pixel(cx, cy, padcol);
-
-                // Add the neighboring points to the queue
-                q.push({cx + 1, cy});
-                q.push({cx - 1, cy});
-                q.push({cx, cy + 1});
-                q.push({cx, cy - 1});
-            }
-        } else {
-            while (!q.empty()) {
-                auto [cx, cy] = q.front();
-                q.pop();
-
-                // Check if the current point is within bounds and has the old color
-                if (cx < 0 || cx >= w || cy < 0 || cy >= h || sketchpad.get_pixel(cx, cy) == padcol) continue;
-
-                // Set the pixel to the new color
-                pix.overlay_pixel(cx, cy, surface.color, opacity);
-
-                sketchpad.set_pixel(cx, cy, padcol);
-
-                // Add the neighboring points to the queue
-                q.push({cx + 1, cy});
-                q.push({cx - 1, cy});
-                q.push({cx, cy + 1});
-                q.push({cx, cy - 1});
-            }
-        }
     }
 
     void set_camera_direction() {
@@ -326,6 +281,11 @@ public:
     }
 
     void draw() override {
+        fov = state["fov"];
+        over_w_fov = 1/(w*fov);
+        halfwidth = w*.5;
+        halfheight = h*.5;
+
         pix.fill(TRANSPARENT_BLACK);
         set_camera_direction();
         sketchpad.fill(OPAQUE_BLACK);
@@ -375,10 +335,6 @@ public:
 
     void render_point(const Point& point) {
         if(point.opacity < .001 || state["points_opacity"] < .001) return;
-        fov = state["fov"];
-        over_w_fov = 1/(w*fov);
-        halfwidth = w*.5;
-        halfheight = h*.5;
 
         bool behind_camera = false;
         pair<int, int> pixel = coordinate_to_pixel(point.center, behind_camera);

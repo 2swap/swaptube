@@ -8,5 +8,6 @@ public:
     ExposedPixelsScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
 
     bool scene_requests_rerender() const override { return false; }
+    Pixels& get_pixels(){return pix;}
     void draw() override{ }
 };
