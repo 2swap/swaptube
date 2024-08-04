@@ -145,6 +145,6 @@ protected:
     int scene_duration_frames = 0;
     int superscene_frames_left = 0;
     int superscene_frames_total = 0;
-    State state;
+    State state = unordered_map<string, double>{{"THIS IS A FAKE STATE.", 0.0}};
     State last_state;
 };

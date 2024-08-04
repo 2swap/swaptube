@@ -22,10 +22,9 @@ const int VIDEO_FRAMERATE = 30;
 void render_video() {
     ThreeDimensionScene tds;
 
-    PngScene eps("Mona_Lisa");
-    LambdaScene ls("(\\x. (\\y. (\\z. ((x z) (y z)))))");
+    LambdaScene ls("((\\n. (\\f. (\\x. (((n (\\g. (\\h. (h (g f))))) (\\u. x)) (\\u. u))))) (\\a. (\\b. (a (a b)))))", 400, 400);
 
-    tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(-8,2,8),glm::vec3(-2,-9,0),&eps));
+    tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(8,0,0),glm::vec3(0,9,0),&ls));
 
     tds.dag->add_equations(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"},
@@ -34,19 +33,18 @@ void render_video() {
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "40"},
-        {"q1", "<t> 4 / cos"},
-        {"qi", "0"},
-        {"qj", "<t> -4 / sin"},
+        {"d", "20"},
+        {"q1", "1"},
+        {"qi", "<t> cos 10 /"},
+        {"qj", "<t> sin 10 /"},
         {"qk", "0"}
     });
-    tds.inject_audio_and_render(AudioSegment(5));
+    tds.inject_audio_and_render(AudioSegment(3));
 }
 
 int main() {
     Timer timer;
     render_video();
-    timer.stop_timer();
     return 0;
 }
 
