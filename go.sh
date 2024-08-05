@@ -2,14 +2,14 @@
 
 # Check if the number of arguments is less than expected
 if [ $# -lt 1 ]; then
-    echo "go.sh: Suppose that in the projects/ directory you have made a project called myproject.cpp."
+    echo "go.sh: Suppose that in the Projects/ directory you have made a project called myproject.cpp."
     echo "go.sh: Example Usage: $0 myproject"
     exit 1
 fi
 
 # Assign the path to a variable
-PROJECT_PATH="src/projects/$1.cpp"
-TEMPFILE="src/projects/.active_project.cpp"
+PROJECT_PATH="src/Projects/$1.cpp"
+TEMPFILE="src/Projects/.active_project.cpp"
 
 # Check if the desired project exists
 if [ ! -e $PROJECT_PATH ]; then

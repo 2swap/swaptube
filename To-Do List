@@ -3,13 +3,9 @@ To-Do List
 	Scene/Project Specific
 Steady State Verifier
 Rubik's Scene
-Lambda Calc Scene
 Scenes for making line graphs, bar charts, etc?
 c4_graph_scene re-renders all of its subscenes every frame, because it reconstructs them every frame, even though none of them will change.
 Prepare c4 scene for steady state diagrams
-
-	Graphics
-3D Clipping Ordering by Projected Distance
 
 	End Product Quality
 Decrease Bitrate? Somehow fight the youtube compression algorithm?
@@ -18,3 +14,5 @@ Audio and video time drift
 	Simplify and Abstract
 Abstract out the idea of Coordinate Systems
 Abstract out the idea of a project? The Project constructor makes the writer and stuff?
+
+

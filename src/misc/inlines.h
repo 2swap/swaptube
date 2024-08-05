@@ -25,6 +25,7 @@ inline string failout(string message){
     cerr << "======================================================\n";
     cerr << message << "\n";
     cerr << "======================================================\n";
+    //WRITER.~Writer();
     exit(EXIT_FAILURE);
 }
 long get_free_memory() {
