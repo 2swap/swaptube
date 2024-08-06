@@ -9,7 +9,7 @@
 extern "C" void render_predictions_cuda(
 const std::vector<glm::vec3>& positions, // Planet data
 const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
-const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, // Adjustable parameters
+const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, const float eps, // Adjustable parameters
 int* colors, int* times // outputs
 );
 
@@ -24,6 +24,7 @@ public:
         // Define the resolution of the 3D grid
 
         float zoom = state["zoom"];
+        float eps = state["eps"];
         int width  = round(state["wireframe_width" ]);
         int height = round(state["wireframe_height"]);
         int depth  = round(state["wireframe_depth" ]);
@@ -49,7 +50,7 @@ public:
         float drag = pow(state["drag"], tick_duration);
 
         vector<glm::vec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
-        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, *state_manager);
+        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, state_manager);
 
         // Early bailout if we wont render anything
         float max_opacity = 0;
@@ -60,7 +61,7 @@ public:
         vector<int> times  (width * height * depth);
         vector<int> borders(width * height * depth);
 
-        render_predictions_cuda(planet_positions, width, height, depth, glm::vec3(0.f,0,0), zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, colors.data(), times.data());
+        render_predictions_cuda(planet_positions, width, height, depth, glm::vec3(0.f,0,0), zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, eps, colors.data(), times.data());
 
         // Identify border points
         for (int x = 0; x < width; ++x) for (int y = 0; y < height; ++y) for (int z = 0; z < depth; ++z) {
@@ -111,6 +112,7 @@ public:
             "nonconverge.opacity",
             "physics_multiplier",
             "boundingbox.opacity",
+            "eps",
         };
     }
 
@@ -118,16 +120,18 @@ public:
         clear_points();
 
         for (const auto& obj : simulation->mobile_objects) add_point(Point(obj.position, obj.color, NORMAL, 1));
-        for (const auto& obj : simulation->fixed_objects) add_point(Point(obj.get_position(*state_manager), obj.color, RING, 1));
+        for (const auto& obj : simulation->fixed_objects) add_point(Point(obj.get_position(state_manager), obj.color, RING, 1));
     }
 
+    bool update_data_objects_check_if_changed() override {
+        simulation->iterate_physics(round(state["physics_multiplier"]), state_manager);
+        return simulation->has_been_updated_since_last_scene_query();
+    }
     void draw() override {
-        simulation->iterate_physics(round(state["physics_multiplier"]), *state_manager);
         fill_predictions_and_add_lines();
         sim_to_3d();
         ThreeDimensionScene::draw();
     }
-
 
 protected:
     OrbitSim* simulation;

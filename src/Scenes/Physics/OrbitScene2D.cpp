@@ -1,12 +1,12 @@
 #pragma once
 
 #include "../Scene.cpp"
-#include "OrbitSim.cpp"
+#include "../../DataObjects/OrbitSim.cpp"
 
 extern "C" void render_predictions_cuda(
 const std::vector<glm::vec3>& positions, // Planet data
 const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
-const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, // Adjustable parameters
+const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, const float eps, // Adjustable parameters
 int* colors, int* times // outputs
 );
 
@@ -22,7 +22,7 @@ public:
         for(int i = 0; i < 10000; i++){
             glm::vec3 last_pos = pos;
             int dont_care_which_planet;
-            bool doneyet = simulation->get_next_step(pos, vel, dont_care_which_planet, *state_manager);
+            bool doneyet = simulation->get_next_step(pos, vel, dont_care_which_planet, state_manager);
 
             glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], 0);
             glm::vec3 halfsize(w/2.,h/2.,0.f);
@@ -41,13 +41,14 @@ public:
         glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
 
         vector<glm::vec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
-        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, *state_manager);
+        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, state_manager);
 
         float collision_threshold_squared = square(state["collision_threshold"]);
         float tick_duration = state["tick_duration"];
         float drag = pow(state["drag"], tick_duration);
         float zoom = state["zoom"] * h;
-        render_predictions_cuda(planet_positions, w, h, 1 /*2d, depth is 1*/, screen_center, zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, colors.data(), times.data());
+        float eps = state["eps"];
+        render_predictions_cuda(planet_positions, w, h, 1 /*2d, depth is 1*/, screen_center, zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, eps, colors.data(), times.data());
 
         unsigned int opacity = state["predictions_opacity"]*255;
         for (int y = 0; y < h; ++y) for (int x = 0; x < w; ++x) {
@@ -68,7 +69,7 @@ public:
             pix.fill_circle(pix_position.x, pix_position.y, w/300., obj.color);
         }
         for (const auto& obj : simulation->fixed_objects) {
-            glm::vec3 pix_position = (obj.get_position(*state_manager) - screen_center) * zoom + halfsize;
+            glm::vec3 pix_position = (obj.get_position(state_manager) - screen_center) * zoom + halfsize;
             pix.fill_circle(pix_position.x, pix_position.y, w/100., obj.color);
             pix.fill_circle(pix_position.x, pix_position.y, w/200., OPAQUE_BLACK);
         }
@@ -88,11 +89,16 @@ public:
             "screen_center_z",
             "predictions_opacity",
             "physics_multiplier",
+            "eps",
         };
+    }
+    bool update_data_objects_check_if_changed() override {
+        simulation->iterate_physics(round(state["physics_multiplier"]), state_manager);
+        return simulation->has_been_updated_since_last_scene_query();
     }
     void draw() override {
         pix.fill(TRANSPARENT_BLACK);
-        simulation->iterate_physics(state["physics_multiplier"], *state_manager);
+        simulation->iterate_physics(state["physics_multiplier"], state_manager);
         if(state["predictions_opacity"] > 0.001) {
             /*if(state != last_state)*/ render_predictions();
         }

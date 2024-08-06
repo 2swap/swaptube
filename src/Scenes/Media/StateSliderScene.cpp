@@ -28,14 +28,10 @@ string double_to_string(double value) {
     return str;
 }
 
-class DagLatexScene : public Scene {
+class StateSliderScene : public Scene {
 public:
-    DagLatexScene(const string& vn, const string& dn, const int col, double min_val, double max_val, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-    : Scene(width, height), variable_name(vn), display_name(dn), color(col), min_value(min_val), max_value(max_val) {
-        if((color & 0xff000000) != 0xff000000)
-            failout("DagLatexScene color must be opaque");
-        state_query.insert(variable_name);
-    }
+    StateSliderScene(const string& vn, const string& dn, double min_val, double max_val, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    : Scene(width, height), variable_name(vn), display_name(dn), min_value(min_val), max_value(max_val) { }
 
     void draw() override {
         ScalingParams sp(pix.w, pix.h);
@@ -47,14 +43,13 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{};
+        return StateQuery{variable_name};
     }
     bool update_data_objects_check_if_changed() override { return false; } // No DataObjects
 
 private:
     string variable_name;
     string display_name;
-    int color;
     double min_value, max_value;
 
     void draw_slider() {

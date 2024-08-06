@@ -39,6 +39,17 @@ int color_combine(int base_color, int over_color, float overlay_opacity_multipli
     return (final_alpha << 24) | (final_rgb);
 }
 
+string latex_color(unsigned int color, string text) {
+    // Mask out the alpha channel
+    unsigned int rgb = color & 0x00FFFFFF;
+
+    // Convert to a hex string
+    stringstream ss;
+    ss << "\\textcolor{#" << hex << setw(6) << setfill('0') << rgb << "}{" << text << "}";
+
+    return ss.str();
+}
+
 void hsv2rgb(float h, float s, float v, int& r, int& g, int& b)
 {
     float      hh, p, q, t, ff;

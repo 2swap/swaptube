@@ -92,7 +92,7 @@ class ThreeDimensionScene : public Scene {
 public:
     ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height), sketchpad(width, height) {
-        state_manager->add_equations(unordered_map<string, string>{
+        state_manager.add_equations(unordered_map<string, string>{
             {"fov", ".5"},
             {"x", "0"},
             {"y", "0"},
@@ -366,6 +366,7 @@ public:
 
     void add_surface(const Surface& s) {
         surfaces.push_back(s);
+        s.scenePointer->state_manager.set_parent(&state_manager);
         obj_ptrs.clear();
     }
 

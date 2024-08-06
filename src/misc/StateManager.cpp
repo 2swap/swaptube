@@ -91,7 +91,7 @@ private:
 
 class StateManager {
 public:
-    StateManager() { }
+    StateManager() : parent(nullptr) {}
 
     /* Accessors */
     bool contains(const string& varname) const {
@@ -136,7 +136,6 @@ public:
         }
     }
     void add_transition(string variable, string equation) {
-
         // No point in doing a noop transition
         if(get_equation(variable) == equation) return;
 
@@ -159,6 +158,11 @@ public:
          */
         last_compute_order.clear();
         variables.erase(variable);
+    }
+    void set_parent(StateManager* p) {
+        if(parent != nullptr)
+            failout("Attempted setting StateManager's parent, but StateManager already had a parent!");
+        parent = p;
     }
 
     /* Bulk Modifiers. Naive. One per modifier. */
@@ -295,6 +299,8 @@ private:
     // A list of all variable names which are currently undergoing transitions
     unordered_set<string> in_transition;
 
+    StateManager* parent = nullptr;
+
     // Take a string like "<variable_that_equals_7> 5 +" and return "7 5 +"
     string insert_equation_dependencies(string variable, string equation) const {
         for (const string& dependency : variables.at(variable).dependencies) {
@@ -309,6 +315,23 @@ private:
                 pos = equation.find(replaced_substring, pos + to_string(vc.value).length());
             }
         }
+
+        // Logic to replace substrings in square brackets [] with the number of characters inside
+        size_t start_pos = equation.find('[');
+        while (start_pos != string::npos) {
+            size_t end_pos = equation.find(']', start_pos);
+            if (end_pos != string::npos) {
+                string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
+                string value_from_parent = to_string(get_value_from_parent(content));
+                equation.replace(start_pos, end_pos - start_pos + 1, value_from_parent);
+                // Update start_pos to search for the next occurrence
+                start_pos = equation.find('[', start_pos + value_from_parent.length());
+            } else {
+                // If no matching closing bracket is found, exit the loop
+                break;
+            }
+        }
+
         return equation;
     }
 
@@ -321,7 +344,7 @@ private:
         vc.value = calculator(scrubbed_equation);
     }
 
-    VariableContents get_variable(string variable) const {
+    VariableContents get_variable(const string& variable) const {
         if(variables.find(variable) == variables.end()){
             print_state();
             failout("ERROR: Attempted to access variable " + variable + " without it existing!\nState has been printed above.");
@@ -329,17 +352,23 @@ private:
         return variables.at(variable);
     }
 
-    string get_equation(string variable) const {
+    string get_equation(const string& variable) const {
         return get_variable(variable).equation;
     }
 
-    double get_value(string variable) const {
+    double get_value(const string& variable) const {
         VariableContents vc = get_variable(variable);
 
         // We should never ever read from a stale variable.
         assert(vc.fresh);
 
         return vc.value;
+    }
+
+    double get_value_from_parent(const string& variable) const {
+        if(parent == nullptr)
+            failout("Parent is a nullptr");
+        return parent->get_value(variable);
     }
 };
 
