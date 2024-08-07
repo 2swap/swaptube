@@ -21,6 +21,7 @@ inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
 inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
 inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
 inline string latex_text(string in){return "\\text{" + in + "}";}
+inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
 inline string failout(string message){
     cerr << "======================================================\n";
     cerr << message << "\n";
@@ -41,7 +42,6 @@ long get_free_memory() {
 
      return free_memory;
 }
-
 
 bool inline_unit_tests_verbose = false;
 

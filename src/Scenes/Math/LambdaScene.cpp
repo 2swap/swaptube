@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../DataObjects/LambdaExpression.cpp"
+#include "../../DataObjects/LambdaCalculus.cpp"
 #include "../../io/VisualMedia.cpp"
 
 class LambdaScene : public Scene {

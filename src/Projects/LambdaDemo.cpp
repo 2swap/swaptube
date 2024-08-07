@@ -56,7 +56,7 @@ void render_video() {
 
     // Boolean NOT
     shared_ptr<LambdaVariable> x = make_shared<LambdaVariable>('x', OPAQUE_WHITE);
-    shared_ptr<LambdaExpression> le_boolean_not = abstract(x, apply(apply(x, le_boolean_false, OPAQUE_WHITE), le_boolean_true, OPAQUE_WHITE), OPAQUE_WHITE);
+    shared_ptr<LambdaExpression> le_boolean_not = abstract('x', apply(apply(x, le_boolean_false, OPAQUE_WHITE), le_boolean_true, OPAQUE_WHITE), OPAQUE_WHITE);
 
     LambdaScene ls(apply(le_boolean_not, le_boolean_true, OPAQUE_WHITE), 400, 400);
     tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(8,0,0),glm::vec3(0,9,0),&ls));

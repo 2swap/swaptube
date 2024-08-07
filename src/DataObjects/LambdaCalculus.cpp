@@ -13,10 +13,6 @@
 
 using namespace std;
 
-bool is_single_letter(const string& str) {
-    return str.length() == 1 && isalpha(str[0]);
-}
-
 class LambdaVariable;
 class LambdaAbstraction;
 class LambdaApplication;
@@ -31,7 +27,7 @@ public:
     virtual shared_ptr<LambdaExpression> clone() const = 0;
 
     virtual shared_ptr<LambdaExpression> reduce() = 0;
-    virtual shared_ptr<LambdaExpression> replace(const LambdaVariable& v, const LambdaExpression& e) = 0;
+    virtual shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) = 0;
     virtual string get_string() const = 0;
     virtual string get_latex() const = 0;
     virtual int parenthetical_depth() const = 0;
@@ -131,9 +127,9 @@ public:
 
     bool is_reducible() const override { return false; }
 
-    shared_ptr<LambdaExpression> replace(const LambdaVariable& v, const LambdaExpression& e) override {
+    shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) override {
         shared_ptr<LambdaExpression> ret;
-        if(get_string() == v.get_string()) {
+        if(varname == v) {
             ret = e.clone();
         } else {
             ret = clone();
@@ -151,33 +147,31 @@ public:
     shared_ptr<const LambdaAbstraction> get_bound_abstraction() const;
 };
 
-shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p);
-shared_ptr<LambdaExpression> abstract(const shared_ptr<const LambdaVariable> v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p);
+shared_ptr<LambdaExpression> apply   (const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p);
+shared_ptr<LambdaExpression> abstract(const char                               v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p);
 
 class LambdaAbstraction : public LambdaExpression {
 private:
-    shared_ptr<LambdaVariable> variable;
+    const char bound_variable;
     shared_ptr<LambdaExpression> body;
 public:
-    LambdaAbstraction(shared_ptr<LambdaVariable> v, shared_ptr<LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr) 
-        : LambdaExpression("Abstraction", c, p), variable(v), body(b) { }
+    LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr) 
+        : LambdaExpression("Abstraction", c, p), bound_variable(v), body(b) { }
 
     shared_ptr<LambdaExpression> clone() const override {
-        shared_ptr<LambdaVariable> v = dynamic_pointer_cast<LambdaVariable>(variable->clone());
         shared_ptr<LambdaExpression> b = body->clone();
-        return abstract(v, b, color, parent);
+        return abstract(bound_variable, b, color, parent);
     }
 
     string get_string() const override {
-        return "(\\" + variable->get_string() + ". " + body->get_string() + ")";
+        return string("(\\") + bound_variable + ". " + body->get_string() + ")";
     }
 
     string get_latex() const {
-        return latex_color(color, "(\\lambda ") + variable->get_latex() + latex_color(color, ". ") + body->get_latex() + latex_color(color, ")");
+        return latex_color(color, string("(\\lambda ") + bound_variable + ". ") + body->get_latex() + latex_color(color, ")");
     }
 
     void set_color_recursive(const int c) {
-        variable->set_color_recursive(c);
         body->set_color_recursive(c);
         set_color(c);
         mark_updated();
@@ -193,8 +187,8 @@ public:
 
     bool is_reducible() const override { return body->is_reducible(); }
 
-    shared_ptr<LambdaExpression> replace(const LambdaVariable& v, const LambdaExpression& e) override {
-        if (variable->get_string() != v.get_string()) {
+    shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) override {
+        if (bound_variable != v) {
             shared_ptr<LambdaExpression> old_body = body;
             body = body->replace(v, e);
             body->set_parent(shared_from_this());
@@ -215,8 +209,8 @@ public:
         return shared_from_this();
     }
 
-    shared_ptr<LambdaVariable> get_variable() const {
-        return variable;
+    char get_bound_variable() const {
+        return bound_variable;
     }
 
     shared_ptr<LambdaExpression> get_body() const {
@@ -269,7 +263,7 @@ public:
         return is_immediately_reducible() || first->is_reducible() || second->is_reducible();
     }
 
-    shared_ptr<LambdaExpression> replace(const LambdaVariable& v, const LambdaExpression& e) override {
+    shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) override {
         shared_ptr<LambdaExpression> old_first = first;
         first = first->replace(v, e);
         first->set_parent(shared_from_this());
@@ -287,8 +281,8 @@ public:
         if(is_immediately_reducible()) {
             shared_ptr<LambdaAbstraction> abs = dynamic_pointer_cast<LambdaAbstraction>(first);
             shared_ptr<LambdaExpression> abss_body = abs->get_body();
-            shared_ptr<LambdaVariable> abss_variable = abs->get_variable();
-            shared_ptr<LambdaExpression> ret = abss_body->replace(*abss_variable, *second);
+            char abss_variable = abs->get_bound_variable();
+            shared_ptr<LambdaExpression> ret = abss_body->replace(abss_variable, *second);
             ret->set_parent(parent);
             return ret;
         } else if(first->is_reducible()) {
@@ -348,7 +342,6 @@ private:
             if (app->get_first()) node_stack.push(app->get_first());
         } else if (auto* abs = dynamic_cast<LambdaAbstraction*>(expr.get())) {
             if (abs->get_body()) node_stack.push(abs->get_body());
-            //if (abs->get_variable()) node_stack.push(abs->get_variable()); BINDS DONT GET ITERATED
         }
     }
 };
@@ -362,12 +355,10 @@ shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, c
     return ret;
 }
 
-shared_ptr<LambdaExpression> abstract(const shared_ptr<const LambdaVariable> v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr){
-    shared_ptr<LambdaVariable> nv = dynamic_pointer_cast<LambdaVariable>(v->clone());
+shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr){
     shared_ptr<LambdaExpression> nb = b->clone();
-    shared_ptr<LambdaExpression> ret = make_shared<LambdaAbstraction>(nv, nb, c, p);
+    shared_ptr<LambdaExpression> ret = make_shared<LambdaAbstraction>(v, nb, c, p);
     nb->set_parent(ret);
-    nv->set_parent(ret);
     return ret;
 }
 
@@ -409,7 +400,7 @@ shared_ptr<const LambdaAbstraction> LambdaVariable::get_bound_abstraction() cons
     while (current) {
         if (current->get_type() == "Abstraction") {
             shared_ptr<const LambdaAbstraction> abstraction = dynamic_pointer_cast<const LambdaAbstraction>(current);
-            if (abstraction && abstraction->get_variable()->get_string() == get_string()) {
+            if (abstraction && abstraction->get_bound_variable() == varname) {
                 return abstraction;
             }
         }
@@ -431,9 +422,8 @@ shared_ptr<LambdaExpression> parse_lambda_from_string(const string& input) {
        input[3             ] == '.'  &&
        input[4             ] == ' '  &&
        input[input.size()-1] == ')'){
-        shared_ptr<LambdaVariable> v = make_shared<LambdaVariable>(input[2], OPAQUE_WHITE);
         shared_ptr<LambdaExpression> b = parse_lambda_from_string(input.substr(5, input.size() - 6));
-        return abstract(v, b, OPAQUE_WHITE);
+        return abstract(input[2], b, OPAQUE_WHITE);
     }
 
     // Parsing application
@@ -454,4 +444,3 @@ shared_ptr<LambdaExpression> parse_lambda_from_string(const string& input) {
     failout("Failed to parse string!");
     return nullptr;
 }
-
