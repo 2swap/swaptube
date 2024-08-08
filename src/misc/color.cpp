@@ -1,4 +1,5 @@
 #pragma once
+#include <iomanip>
 #include "inlines.h"
 
 // Colors are everywhere. For the sake of speed, we do not give them a dedicated child class.

@@ -9,6 +9,7 @@
 // For failout function
 #include "../misc/inlines.h"
 #include "../misc/color.cpp"
+#include "../misc/pixels.h"
 #include "DataObject.cpp"
 
 using namespace std;

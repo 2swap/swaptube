@@ -61,6 +61,54 @@ void render_video() {
     LambdaScene ls(apply(le_boolean_not, le_boolean_true, OPAQUE_WHITE), 400, 400);
     tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(8,0,0),glm::vec3(0,9,0),&ls));
 
+    // Show the lambda expression for 
+    tds.inject_audio_and_render(AudioSegment("What you're looking at right now is a computation taking place."));
+    tds.inject_audio_and_render(AudioSegment("More specifically, it's evaluating 4 factorial, and soon, it will arrive at the result of 24."));
+    tds.inject_audio_and_render(AudioSegment("Oh look, it's done!"));
+
+    // 
+    tds.inject_audio_and_render(AudioSegment("What are all these weird lines though?"));
+    tds.inject_audio_and_render(AudioSegment("Well, this bundle of pink lines represents the number 3."));
+    tds.inject_audio_and_render(AudioSegment("These green lines represent the factorial function."));
+    tds.inject_audio_and_render(AudioSegment("We've got one, two, three, and so on..."));
+    tds.inject_audio_and_render(AudioSegment("as well as plus and times."));
+    tds.inject_audio_and_render(AudioSegment("But, they enable us to ask the question 'what is plus times plus'."));
+    tds.inject_audio_and_render(AudioSegment("We saw factorial(3), but we can just as easily compute the function 3(factorial) and evaluate the result!"));
+    tds.inject_audio_and_render(AudioSegment("OK, you can't actually do that, right? That's not a real thing. Right?"));
+    tds.inject_audio_and_render(AudioSegment("And it's certainly not the case that when evaluating it, the answer would make any sense... right?"));
+    tds.inject_audio_and_render(AudioSegment("To learn the answer, we're going to have to completely unlearn the ideas of functions, programs, values, and datatypes."));
+    tds.inject_audio_and_render(AudioSegment("Because they're just the stickers we've put on top of math to make it understandable by our tiny monkey brains."));
+    tds.inject_audio_and_render(AudioSegment("Because they're a mirage distracting us from the essence of computation itself."));
+    tds.inject_audio_and_render(AudioSegment("Because today, we're learning the lambda calculus."));
+
+    // 
+    tds.inject_audio_and_render(AudioSegment("Our story starts in the 1930's. David Hilbert ..."));
+    tds.inject_audio_and_render(AudioSegment(""));
+    tds.inject_audio_and_render(AudioSegment(""));
+
+    // 
+    tds.inject_audio_and_render(AudioSegment("These diagrams and their actions turn out to have some super cool properties."));
+    tds.inject_audio_and_render(AudioSegment("You might remember from math class that there is this notion of a function."));
+    tds.inject_audio_and_render(AudioSegment("Functions always have a domain and a range. It takes in one type of data, and spits out another."));
+    tds.inject_audio_and_render(AudioSegment("For example, the factorial function takes in a positive integer, and spits out another positive integer."));
+    tds.inject_audio_and_render(AudioSegment("Addition is a function that takes a pair of real numbers, and gives a single real number back."));
+    tds.inject_audio_and_render(AudioSegment("A function is a thing which takes an object from the Domain, and spits out a corresponding object in the Range."));
+    tds.inject_audio_and_render(AudioSegment("Now, out of curiosity we can also talk about the set of functions, say, which take two real numbers and give one back."));
+    tds.inject_audio_and_render(AudioSegment("Addition, subtraction, multiplication, and division come to mind."));
+    tds.inject_audio_and_render(AudioSegment(""));
+    tds.inject_audio_and_render(AudioSegment(""));
+    tds.inject_audio_and_render(AudioSegment(""));
+
+    // 
+    tds.inject_audio_and_render(AudioSegment(""));
+    tds.inject_audio_and_render(AudioSegment(""));
+    tds.inject_audio_and_render(AudioSegment(""));
+
+    // 
+    tds.inject_audio_and_render(AudioSegment(""));
+    tds.inject_audio_and_render(AudioSegment(""));
+    tds.inject_audio_and_render(AudioSegment(""));
+
     tds.state_manager.add_equations(unordered_map<string, string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "0"},
