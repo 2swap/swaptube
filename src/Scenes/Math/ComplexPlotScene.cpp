@@ -250,7 +250,9 @@ public:
         };
         failout("Unimplemented function in ComplexPlotScene. TODO");
     }
-    bool update_data_objects_check_if_changed() override { return false; } // ComplexPlotScene has no DataObjects
+    void mark_data_unchanged() override { }
+    void change_data() override { } // ComplexPlotScene has no DataObjects
+    bool check_if_data_changed() const override { return false; } // ComplexPlotScene has no DataObjects
 
     void determine_coefficients_from_roots() {
     }

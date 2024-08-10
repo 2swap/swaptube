@@ -33,8 +33,11 @@ public:
         return OPAQUE_WHITE;
     }
 
-    bool update_data_objects_check_if_changed() override {
+    void mark_data_unchanged() override { graph->mark_unchanged(); }
+    void change_data() override {
         graph->iterate_physics(physics_multiplier);
+    }
+    bool check_if_data_changed() const override {
         return graph->has_been_updated_since_last_scene_query();
     }
 

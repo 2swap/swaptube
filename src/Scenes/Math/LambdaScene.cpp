@@ -11,8 +11,15 @@ public:
     const StateQuery populate_state_query() const override {
         return StateQuery{};
     }
-    bool update_data_objects_check_if_changed() override {
-        if(le->is_reducible() && (++tick%10==0)) le = le->reduce();
+
+    void reduce(){
+        if(le->is_reducible())
+            le = le->reduce();
+    }
+
+    void mark_data_unchanged() override { le->mark_unchanged(); }
+    void change_data() override { } // This scene is expected to only be manipulated by the customer
+    bool check_if_data_changed() const override {
         return le->has_been_updated_since_last_scene_query();
     }
 

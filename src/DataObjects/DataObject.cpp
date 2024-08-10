@@ -1,10 +1,11 @@
 class DataObject {
 public:
     // Initialize to updated, since on the first step we wish to redraw the scene.
-    bool has_been_updated_since_last_scene_query(){
-        bool tmp = updated_since_last_scene_query;
+    void mark_unchanged(){
         updated_since_last_scene_query = false;
-        return tmp;
+    }
+    bool has_been_updated_since_last_scene_query(){
+        return updated_since_last_scene_query;
     }
 private:
     bool updated_since_last_scene_query = true;

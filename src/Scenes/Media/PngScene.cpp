@@ -12,6 +12,9 @@ public:
         h = pix.h;
     }
 
+    bool check_if_data_changed() const override { return false; }
+    void mark_data_unchanged() override { }
+    void change_data() override { }
     void draw() override{ }
 
 private:

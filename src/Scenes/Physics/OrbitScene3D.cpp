@@ -123,8 +123,11 @@ public:
         for (const auto& obj : simulation->fixed_objects) add_point(Point(obj.get_position(state_manager), obj.color, RING, 1));
     }
 
-    bool update_data_objects_check_if_changed() override {
+    void mark_data_unchanged() override { simulation->mark_unchanged(); }
+    void change_data() override {
         simulation->iterate_physics(round(state["physics_multiplier"]), state_manager);
+    }
+    bool check_if_data_changed() const override {
         return simulation->has_been_updated_since_last_scene_query();
     }
     void draw() override {

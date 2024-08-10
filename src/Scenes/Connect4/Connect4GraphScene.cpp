@@ -79,8 +79,6 @@ public:
         ThreeDimensionScene::render_surface(surface_rotated, padcol);
     }
 
-    bool update_data_objects_check_if_changed() override { return g->has_been_updated_since_last_scene_query(); }
-
     ~C4GraphScene(){
         for (Surface surface : surfaces){
             delete surface.scenePointer;

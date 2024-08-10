@@ -14,13 +14,14 @@ const int VIDEO_FRAMERATE = 30;
 #include "../io/writer.cpp"
 #include "../misc/Timer.cpp"
 
-#include "../Scenes/Common/ThreeDimensionScene.cpp"
+//#include "../Scenes/Common/ThreeDimensionScene.cpp"
+#include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Math/LambdaScene.cpp"
 #include "../Scenes/Media/PngScene.cpp"
 #include "../Scenes/Common/ExposedPixelsScene.cpp"
 
 void render_video() {
-    ThreeDimensionScene tds;
+    CompositeScene tds;
 
     string factorial = "(\\n. (\\f. (((n (\\f. (\\n. (n (f (\\f. (\\x. ((n f) (f x))))))))) (\\x. f)) (\\x. x))))";
     shared_ptr<LambdaExpression> le_factorial = parse_lambda_from_string(factorial);
@@ -37,12 +38,12 @@ void render_video() {
     // Boolean True
     string boolean_true = "(\\a. (\\b. a))";
     shared_ptr<LambdaExpression> le_boolean_true = parse_lambda_from_string(boolean_true);
-    le_boolean_true->set_color_recursive(0xffff0000); // Red color
+    le_boolean_true->set_color_recursive(0xff00ff00); // Red color
 
     // Boolean False
     string boolean_false = "(\\a. (\\b. b))";
     shared_ptr<LambdaExpression> le_boolean_false = parse_lambda_from_string(boolean_false);
-    le_boolean_false->set_color_recursive(0xff00ff00); // Green color
+    le_boolean_false->set_color_recursive(0xffff0000); // Green color
 
     // Boolean AND
     string boolean_and = "(\\p. (\\q. ((p q) p)))";
@@ -58,11 +59,20 @@ void render_video() {
     shared_ptr<LambdaVariable> x = make_shared<LambdaVariable>('x', OPAQUE_WHITE);
     shared_ptr<LambdaExpression> le_boolean_not = abstract('x', apply(apply(x, le_boolean_false, OPAQUE_WHITE), le_boolean_true, OPAQUE_WHITE), OPAQUE_WHITE);
 
+    //LambdaScene ls(apply(le_factorial, le_church_3, OPAQUE_WHITE), 400, 400);
     LambdaScene ls(apply(le_boolean_not, le_boolean_true, OPAQUE_WHITE), 400, 400);
-    tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(8,0,0),glm::vec3(0,9,0),&ls));
+    tds.add_scene(&ls, "lambda_s", 0, 0, 1, 1);
 
+    PRINT_TO_TERMINAL = false;
     // Show the lambda expression for 
-    tds.inject_audio_and_render(AudioSegment("What you're looking at right now is a computation taking place."));
+    int num_reductions = 5;
+    tds.inject_audio(AudioSegment("What you're looking at right now is a computation taking place."), num_reductions);
+    tds.render();
+    for(int i = 0; i < num_reductions - 1; i++){
+        ls.reduce();
+        tds.render();
+    }
+    return;
     tds.inject_audio_and_render(AudioSegment("More specifically, it's evaluating 4 factorial, and soon, it will arrive at the result of 24."));
     tds.inject_audio_and_render(AudioSegment("Oh look, it's done!"));
 

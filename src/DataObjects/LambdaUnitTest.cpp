@@ -16,23 +16,29 @@ void test_parse_and_reduce(const string& input, const string& expected) {
 }
 
 int main() {
-    // Test 1: Identity function
+    // Irreducible Term
     test_parse_and_reduce("(\\x. x)", "(\\x. x)");
-
-    // Test 2: Constant function
     test_parse_and_reduce("(\\x. (\\y. x))", "(\\x. (\\y. x))");
 
-    // Test 3: Application of identity function to a variable
+    // Simple substitutions
     test_parse_and_reduce("((\\x. x) y)", "y");
-
-    // Test 4: Application of a constant function to a variable
     test_parse_and_reduce("((\\x. (\\y. x)) z)", "(\\y. z)");
 
-    // Test 5: Application of a function to another function
+    // Omega
     test_parse_and_reduce("((\\x. (x x)) (\\x. (x x)))", "((\\x. (x x)) (\\x. (x x)))"); // Should not reduce further
 
-    // Test 6: Alpha renaming
-    test_parse_and_reduce("((\\x. (\\y. (x y))) (\\y. y))", "(\\y. ((\\a. a) y))");
+    //Test production of double bindings
+    test_parse_and_reduce("((\\x. (\\y. (x y))) (\\y. y))", "(\\y. ((\\y. y) y))");
+
+    // Test alpha renaming
+    test_parse_and_reduce("((\\y. (\\x. (y x))) (\\z. (x z)))", "(\\a. ((\\z. (x z)) a))");
+
+    // Test double-bound variables
+    test_parse_and_reduce("((\\x. (x (\\x. x))) (\\z. z))", "((\\z. z) (\\x. x))");
+    test_parse_and_reduce("((\\x. ((\\x. x) x)) y)", "((\\x. x) y)");
+
+    // Triply bound variables
+    test_parse_and_reduce("(\\x. ((\\x. (x (\\x. x))) (\\z. z)))", "(\\x. ((\\z. z) (\\x. x)))");
 
     cout << "All tests completed." << endl;
     return 0;

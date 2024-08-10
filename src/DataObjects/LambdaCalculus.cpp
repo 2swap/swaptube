@@ -5,6 +5,7 @@
 #include <cassert>
 #include <stack>
 #include <memory>
+#include <unordered_set>
 
 // For failout function
 #include "../misc/inlines.h"
@@ -27,14 +28,27 @@ public:
     LambdaExpression(const string& t, const int c, shared_ptr<LambdaExpression> p = nullptr) : type(t), color(c), parent(p) {}
     virtual shared_ptr<LambdaExpression> clone() const = 0;
 
+    virtual unordered_set<char> free_variables() const = 0;
+    virtual unordered_set<char> all_referenced_variables() const = 0;
     virtual shared_ptr<LambdaExpression> reduce() = 0;
-    virtual shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) = 0;
+    virtual shared_ptr<LambdaExpression> substitute(const char v, const LambdaExpression& e) = 0;
+    virtual void rename(const char o, const char n) = 0;
     virtual string get_string() const = 0;
     virtual string get_latex() const = 0;
     virtual int parenthetical_depth() const = 0;
     virtual int num_variable_instantiations() const = 0;
     virtual bool is_reducible() const = 0;
     virtual void set_color_recursive(const int c) = 0;
+    virtual void tint_recursive(const int c) = 0;
+    char get_fresh() const {
+        if(parent != nullptr) return parent->get_fresh();
+        unordered_set<char> used = all_referenced_variables();
+        for(char c = 'a'; c <= 'z'; c++)
+            if(used.find(c) == used.end())
+                return c;
+        failout("No fresh variables left!");
+        return 0;
+    }
     void set_parent(shared_ptr<LambdaExpression> p) {
         parent = p;
         mark_updated();
@@ -93,7 +107,7 @@ public:
 
 class LambdaVariable : public LambdaExpression {
 private:
-    const char varname;
+    char varname;
 public:
     LambdaVariable(const char vn, const int c, shared_ptr<LambdaExpression> p = nullptr) : LambdaExpression("Variable", c, p), varname(vn) {
         if(!isalpha(vn)){
@@ -101,8 +115,21 @@ public:
         }
     }
 
+    unordered_set<char> all_referenced_variables() const override {
+        return unordered_set<char>{varname};
+    }
+
+    unordered_set<char> free_variables() const override {
+        return unordered_set<char>{varname};
+    }
+
     shared_ptr<LambdaExpression> clone() const override {
         return make_shared<LambdaVariable>(varname, color, parent);
+    }
+
+    void tint_recursive(const int c) {
+        set_color(colorlerp(color, c, 0.5));
+        mark_updated();
     }
 
     void set_color_recursive(const int c) {
@@ -128,16 +155,21 @@ public:
 
     bool is_reducible() const override { return false; }
 
-    shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) override {
-        shared_ptr<LambdaExpression> ret;
-        if(varname == v) {
-            ret = e.clone();
-        } else {
-            ret = clone();
+    void rename(const char o, const char n) override {
+        if(varname == o) {
+            varname = n;
         }
-        ret->set_parent(parent);
         mark_updated();
-        return ret;
+    }
+
+    shared_ptr<LambdaExpression> substitute(const char v, const LambdaExpression& e) override {
+        mark_updated();
+        if(varname == v && get_bound_abstraction() == nullptr) { // don't substitute bound variables
+            shared_ptr<LambdaExpression> ret = e.clone();
+            ret->tint_recursive(color);
+            return ret;
+        }
+        return shared_from_this();
     }
 
     shared_ptr<LambdaExpression> reduce() override {
@@ -153,11 +185,23 @@ shared_ptr<LambdaExpression> abstract(const char                               v
 
 class LambdaAbstraction : public LambdaExpression {
 private:
-    const char bound_variable;
+    char bound_variable;
     shared_ptr<LambdaExpression> body;
 public:
     LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr) 
         : LambdaExpression("Abstraction", c, p), bound_variable(v), body(b) { }
+
+    unordered_set<char> all_referenced_variables() const override {
+        unordered_set<char> all_vars = body->all_referenced_variables();
+        all_vars.insert(bound_variable);
+        return all_vars;
+    }
+
+    unordered_set<char> free_variables() const override {
+        unordered_set<char> free_vars = body->free_variables();
+        free_vars.erase(bound_variable);
+        return free_vars;
+    }
 
     shared_ptr<LambdaExpression> clone() const override {
         shared_ptr<LambdaExpression> b = body->clone();
@@ -170,6 +214,12 @@ public:
 
     string get_latex() const {
         return latex_color(color, string("(\\lambda ") + bound_variable + ". ") + body->get_latex() + latex_color(color, ")");
+    }
+
+    void tint_recursive(const int c) {
+        body->tint_recursive(c);
+        set_color(colorlerp(color, c, 0.5));
+        mark_updated();
     }
 
     void set_color_recursive(const int c) {
@@ -188,19 +238,38 @@ public:
 
     bool is_reducible() const override { return body->is_reducible(); }
 
-    shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) override {
-        if (bound_variable != v) {
-            shared_ptr<LambdaExpression> old_body = body;
-            body = body->replace(v, e);
-            body->set_parent(shared_from_this());
+    void rename(const char o, const char n) override {
+        if(bound_variable == o) {
+            bound_variable = n;
         }
+        body->rename(o, n);
         mark_updated();
+    }
+
+    shared_ptr<LambdaExpression> substitute(const char v, const LambdaExpression& e) override {
+        mark_updated();
+        if (bound_variable == v) {
+            body = body->substitute(v, e);
+            body->set_parent(shared_from_this());
+            return shared_from_this();
+        }
+
+        unordered_set<char> fv = e.free_variables();
+        if (fv.find(bound_variable) == fv.end()) {
+            body = body->substitute(v, e);
+            body->set_parent(shared_from_this());
+            return shared_from_this();
+        }
+
+        char fresh = get_fresh();
+        rename(bound_variable, fresh);
+        body = body->substitute(v, e);
+        body->set_parent(shared_from_this());
         return shared_from_this();
     }
 
     shared_ptr<LambdaExpression> reduce() override {
         if(body->is_reducible()) {
-            shared_ptr<LambdaExpression> old_body = body;
             body = body->reduce();
             body->set_parent(shared_from_this());
         } else {
@@ -227,6 +296,24 @@ public:
     LambdaApplication(shared_ptr<LambdaExpression> f, shared_ptr<LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p = nullptr) 
         : LambdaExpression("Application", c, p), first(f), second(s) { }
 
+    unordered_set<char> all_referenced_variables() const override {
+        unordered_set<char> all_vars_f = first->all_referenced_variables();
+        unordered_set<char> all_vars_s = second->all_referenced_variables();
+        for(const char s : all_vars_s){
+            all_vars_f.insert(s);
+        }
+        return all_vars_f;
+    }
+
+    unordered_set<char> free_variables() const override {
+        unordered_set<char> free_vars_f = first->free_variables();
+        unordered_set<char> free_vars_s = second->free_variables();
+        for(const char s : free_vars_s){
+            free_vars_f.insert(s);
+        }
+        return free_vars_f;
+    }
+
     shared_ptr<LambdaExpression> clone() const override {
         shared_ptr<LambdaExpression> f = first->clone();
         shared_ptr<LambdaExpression> s = second->clone();
@@ -239,6 +326,13 @@ public:
 
     string get_latex() const {
         return latex_color(color, "(") + first->get_latex() + " " + second->get_latex() + latex_color(color, ")");
+    }
+
+    void tint_recursive(const int c) {
+        first->tint_recursive(c);
+        second->tint_recursive(c);
+        set_color(colorlerp(color, c, 0.5));
+        mark_updated();
     }
 
     void set_color_recursive(const int c) {
@@ -264,13 +358,17 @@ public:
         return is_immediately_reducible() || first->is_reducible() || second->is_reducible();
     }
 
-    shared_ptr<LambdaExpression> replace(const char v, const LambdaExpression& e) override {
-        shared_ptr<LambdaExpression> old_first = first;
-        first = first->replace(v, e);
+    void rename(const char o, const char n) override {
+        first->rename(o, n);
+        second->rename(o, n);
+        mark_updated();
+    }
+
+    shared_ptr<LambdaExpression> substitute(const char v, const LambdaExpression& e) override {
+        first = first->substitute(v, e);
         first->set_parent(shared_from_this());
 
-        shared_ptr<LambdaExpression> old_second = second;
-        second = second->replace(v, e);
+        second = second->substitute(v, e);
         second->set_parent(shared_from_this());
 
         mark_updated();
@@ -281,19 +379,18 @@ public:
         mark_updated();
         if(is_immediately_reducible()) {
             shared_ptr<LambdaAbstraction> abs = dynamic_pointer_cast<LambdaAbstraction>(first);
-            shared_ptr<LambdaExpression> abss_body = abs->get_body();
             char abss_variable = abs->get_bound_variable();
-            shared_ptr<LambdaExpression> ret = abss_body->replace(abss_variable, *second);
+            shared_ptr<LambdaExpression> abss_body = abs->get_body();
+            abss_body->set_parent(nullptr);
+            shared_ptr<LambdaExpression> ret = abss_body->substitute(abss_variable, *second);
             ret->set_parent(parent);
             return ret;
         } else if(first->is_reducible()) {
-            shared_ptr<LambdaExpression> old_first = first;
             first = first->reduce();
             first->set_parent(shared_from_this());
             return shared_from_this();
         }
         else if(second->is_reducible()) {
-            shared_ptr<LambdaExpression> old_second = second;
             second = second->reduce();
             second->set_parent(shared_from_this());
             return shared_from_this();

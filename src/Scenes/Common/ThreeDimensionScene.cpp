@@ -260,9 +260,16 @@ public:
         );
     }
 
-    bool update_data_objects_check_if_changed() override {
+    void mark_data_unchanged() override { }
+    void change_data() override {
         for(const auto& surface : surfaces){
-            if(surface.scenePointer->update_data_objects_check_if_changed()) return true;
+            surface.scenePointer->change_data();
+        }
+    }
+
+    bool check_if_data_changed() const override {
+        for(const auto& surface : surfaces){
+            if(surface.scenePointer->check_if_data_changed()) return true;
         }
         return false;
     }

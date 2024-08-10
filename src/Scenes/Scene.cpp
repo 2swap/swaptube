@@ -28,12 +28,16 @@ public:
 
     // Scenes which contain other scenes use this to populate the StateQuery
     virtual const StateQuery populate_state_query() const = 0;
-    virtual bool update_data_objects_check_if_changed() = 0;
+    virtual bool check_if_data_changed() const = 0;
+    virtual void change_data() = 0;
+    virtual void mark_data_unchanged() = 0;
     virtual bool has_subscene_state_changed() const {return false;}
     void query(Pixels*& p) {
         update_state();
-        if(state != last_state || has_subscene_state_changed() || update_data_objects_check_if_changed())
+        change_data();
+        if(state != last_state || has_subscene_state_changed() || check_if_data_changed())
             draw();
+        mark_data_unchanged();
         p=&pix;
     }
 

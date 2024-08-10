@@ -107,7 +107,9 @@ public:
     const StateQuery populate_state_query() const override {
         return StateQuery{};
     }
-    bool update_data_objects_check_if_changed() override { return false; } // No DataObjects
+    void mark_data_unchanged() override { }
+    void change_data() override { } // No DataObjects
+    bool check_if_data_changed() const override { return false; } // No DataObjects
 
     void draw() override{
         if (is_transition) interpolate();

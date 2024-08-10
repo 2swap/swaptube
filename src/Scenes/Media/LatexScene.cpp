@@ -92,7 +92,9 @@ public:
     const StateQuery populate_state_query() const override {
         return StateQuery{"audio_segment_number", "transition_fraction"};
     }
-    bool update_data_objects_check_if_changed() override { return false; } // No DataObjects, although maybe the equations should be made into DO's...
+    void mark_data_unchanged() override { }
+    void change_data() override { }
+    bool check_if_data_changed() const override { return false; } // No DataObjects, although maybe the equations should be made into DO's...
 
 private:
     double transition_audio_segment = -1;

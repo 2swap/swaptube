@@ -14,7 +14,7 @@ public:
         : Scene(width, height) {}
 
     void add_scene(Scene* sc, string state_manager_name, double x, double y, double w, double h){
-        sc->state_manager.set_parentstate_manager;
+        sc->state_manager.set_parent(&state_manager);
         const unordered_map<string, string> equations{
             {state_manager_name + ".x", to_string(x)},
             {state_manager_name + ".y", to_string(y)},
@@ -26,9 +26,17 @@ public:
         scenes.push_back(swp);
     }
 
-    bool update_data_objects_check_if_changed() override {
+    void mark_data_unchanged() override { }
+
+    void change_data() override {
         for (auto& swp : scenes){
-            if(swp.scenePointer->update_data_objects_check_if_changed()) return true;
+            swp.scenePointer->change_data();
+        }
+    }
+
+    bool check_if_data_changed() const override {
+        for (auto& swp : scenes){
+            if(swp.scenePointer->check_if_data_changed()) return true;
         }
         return false;
     }
