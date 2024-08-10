@@ -24,6 +24,10 @@ protected:
     const string type;
     int color;
     shared_ptr<LambdaExpression> parent;
+    int x = 0;
+    int y = 0;
+    int w = 0;
+    int h = 0;
 public:
     LambdaExpression(const string& t, const int c, shared_ptr<LambdaExpression> p = nullptr) : type(t), color(c), parent(p) {}
     virtual shared_ptr<LambdaExpression> clone() const = 0;
@@ -103,6 +107,7 @@ public:
     class Iterator;
 
     Pixels draw_lambda_diagram();
+    void set_positions();
 };
 
 class LambdaVariable : public LambdaExpression {
@@ -460,37 +465,65 @@ shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const Lambd
     return ret;
 }
 
-Pixels LambdaExpression::draw_lambda_diagram() {
-    int w = num_variable_instantiations() * 4 - 1;
-    int h = parenthetical_depth() * 2;
-    Pixels pix(w, h);
-    pix.fill(TRANSPARENT_BLACK);
+void LambdaExpression::set_positions() {
+    if(parent != nullptr) failout("set_positions called on a child expression");
+    int bounding_box_h = parenthetical_depth() * 2;
 
     Iterator it(shared_from_this());
-    int x = 0;
+    int iter_x = 0;
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
         shared_ptr<const LambdaExpression> nearest_ancestor_application = current->get_nearest_ancestor_application();
-        int color = current->get_color();
-        int nearest_ancestor_application_y = nearest_ancestor_application != nullptr ? h - nearest_ancestor_application->get_application_depth() * 2 - 2 : h;
+        int nearest_ancestor_y = nearest_ancestor_application != nullptr ? bounding_box_h - nearest_ancestor_application->get_application_depth() * 2 - 2 : bounding_box_h;
         if (current->get_type() == "Variable") {
-            int top_y = dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction()->get_abstraction_depth() * 2;
-            pix.fill_rect(x+1, top_y + 1, 1, nearest_ancestor_application_y-top_y - 1, color);
-            x+=4;
+            current->x = iter_x+1;
+            current->y = 1 + dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction()->get_abstraction_depth() * 2;
+            current->h = nearest_ancestor_y - current->y;
+            iter_x+=4;
         }
         if(current->get_type() == "Abstraction") {
-            int abstraction_y = current->get_abstraction_depth() * 2;
-            int abstraction_w = current->num_variable_instantiations() * 4 - 1;
-            pix.fill_rect(x, abstraction_y, abstraction_w, 1, color);
+            current->y = current->get_abstraction_depth() * 2;
+            current->w = current->num_variable_instantiations() * 4 - 1;
+            current->x = iter_x;
         }
         if(current->get_type() == "Application") {
-            int application_y = h - current->get_application_depth() * 2 - 2;
-            int application_w = dynamic_pointer_cast<LambdaApplication>(current)->get_first()->num_variable_instantiations() * 4 + 1;
-            pix.fill_rect(x+1, application_y, 1, nearest_ancestor_application_y - application_y, color);
-            pix.fill_rect(x+1, application_y, application_w, 1, color);
+            current->x = iter_x+1;
+            current->w = dynamic_pointer_cast<LambdaApplication>(current)->get_first()->num_variable_instantiations() * 4 + 1;
+            current->y = bounding_box_h - current->get_application_depth() * 2 - 2;
+            current->h = nearest_ancestor_y - current->y;
+        }
+    }
+}
+
+Pixels LambdaExpression::draw_lambda_diagram() {
+    if(parent != nullptr) failout("draw_lambda_diagram called on a child expression");
+    set_positions();
+    int bounding_box_w = num_variable_instantiations() * 4 - 1;
+    int bounding_box_h = parenthetical_depth() * 2;
+    Pixels pix(bounding_box_w, bounding_box_h);
+    pix.fill(TRANSPARENT_BLACK);
+
+    Iterator it(shared_from_this());
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        int color = current->get_color();
+        if (current->get_type() == "Variable") {
+            pix.fill_rect(current->x, current->y, 1, current->h, color);
+        }
+        if(current->get_type() == "Abstraction") {
+            pix.fill_rect(current->x, current->y, current->w, 1, color);
+        }
+        if(current->get_type() == "Application") {
+            pix.fill_rect(current->x, current->y, 1, current->h, color);
+            pix.fill_rect(current->x, current->y, current->w, 1, color);
         }
     }
     return pix;
+}
+
+shared_ptr<const LambdaExpression> interpolate(shared_ptr<const LambdaExpression> l1, shared_ptr<const LambdaExpression> l2){
+    shared_ptr<const LambdaExpression> ret = l1->clone();
+    ret->
 }
 
 shared_ptr<const LambdaAbstraction> LambdaVariable::get_bound_abstraction() const {
