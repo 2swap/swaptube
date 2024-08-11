@@ -276,7 +276,7 @@ public:
 
     bool has_subscene_state_changed() const override {
         for(const auto& surface : surfaces){
-            if(surface.scenePointer->has_subscene_state_changed()) return true;
+            if(surface.scenePointer->check_if_state_changed()) return true;
         }
         return false;
     }

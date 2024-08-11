@@ -67,8 +67,8 @@ Sure, here's an additional section that documents the repository structure based
     - `.active_project.tmp`: The go.sh script will copy your project to this path during compilation. I'm probably gonna change this pattern soon.
   - **./src/misc/**: Contains miscellaneous utility code and libraries.
     - `Timer.cpp`: For timing the render
-    - `calculator.cpp`: This is an RPN string calculator used by the `dagger`, which you interface with whenever you define curves in the DAG.
-    - `dagger.cpp`: This is the magic tool that lets you perform sick transitions. Lots of comments, check them out.
+    - `calculator.cpp`: This is an RPN string calculator used by the StateManager, which you interface with whenever you define curves in the DAG.
+    - `StateManager.cpp`: This is the magic tool that lets you perform sick transitions. Lots of comments, check them out.
     - `inlines.h`: Random helper functions.
     - `visual_media.cpp`: This is what will read SVGs and PNGs and turn them into `pixels`.
     - `pixels.h`: A class representing buffered image data.

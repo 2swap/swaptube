@@ -29,18 +29,6 @@ public:
     Pixels(int width, int height) : w(width), h(height), pixels(width*height){};
     // Copy constructor
     Pixels(const Pixels& other) : w(other.w), h(other.h), pixels(other.pixels) {};
-    // Upscale constructor
-    Pixels(const Pixels& other, int scale_factor) : w(other.w * scale_factor), h(other.h * scale_factor), pixels(w*h) {
-        for(int x = 0; x < other.w; x++){
-            for(int y = 0; y < other.h; y++){
-                for(int dx = 0; dx < scale_factor; dx++){
-                    for(int dy = 0; dy < scale_factor; dy++){
-                        set_pixel(x*scale_factor+dx, y*scale_factor+dy, other.get_pixel(x, y));
-                    }
-                }
-            }
-        }
-    };
 
     inline bool out_of_range(int x, int y) const {
         return x < 0 || x >= w || y < 0 || y >= h;

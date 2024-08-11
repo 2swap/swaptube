@@ -92,5 +92,5 @@ private:
 
 static DebugPlot time_per_frame_plot("render_time_per_frame");
 static DebugPlot memutil_plot("memutil");
-static DebugPlot state_manager_time_plot("Time-based metrics", vector<string>{"t", "transition_fraction", "subscene_transition_fraction"});
+static DebugPlot state_manager_time_plot("Time-based metrics", vector<string>{"transition_fraction", "subscene_transition_fraction"});
 

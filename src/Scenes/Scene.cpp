@@ -19,23 +19,20 @@ public:
     virtual void draw() = 0;
     Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : w(width), h(height), state_manager(), pix(width, height) {
-        state_manager.set_special("frame_number", 0);
-        state_manager.set_special("audio_segment_number", 0);
-        state_manager.set_special("transition_fraction", 0);
-        state_manager.set_special("subscene_transition_fraction", 0);
         state_manager.add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
     }
 
     // Scenes which contain other scenes use this to populate the StateQuery
     virtual const StateQuery populate_state_query() const = 0;
     virtual bool check_if_data_changed() const = 0;
+    bool check_if_state_changed() {return state != last_state || has_subscene_state_changed();}
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
     virtual bool has_subscene_state_changed() const {return false;}
     void query(Pixels*& p) {
         update_state();
         change_data();
-        if(state != last_state || has_subscene_state_changed() || check_if_data_changed())
+        if(check_if_state_changed() || check_if_data_changed())
             draw();
         mark_data_unchanged();
         p=&pix;
@@ -89,11 +86,12 @@ public:
         video_sessions_left--;
         if(video_sessions_left == 0){
             state_manager.close_all_transitions();
-            state_manager.set_special("audio_segment_number", state_manager["audio_segment_number"] + 1);
+            global_state["audio_segment_number"]++;
         }
     }
 
     void update_state() {
+        state_manager.evaluate_all();
         last_state = state;
         state = state_manager.get_state(populate_state_query());
     }
@@ -110,13 +108,11 @@ private:
     void render_one_frame(int subscene_frame){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
-        state_manager.set_special("frame_number", frame_number);
-        frame_number++;
-        state_manager.set_special("transition_fraction", 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total);
-        state_manager.set_special("subscene_transition_fraction", static_cast<double>(subscene_frame) / scene_duration_frames);
+        global_state["frame_number"]++;
+        global_state["transition_fraction"] = 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total;
+        global_state["subscene_transition_fraction"] = static_cast<double>(subscene_frame) / scene_duration_frames;
 
-        state_manager.evaluate_all();
-        state_manager_time_plot.add_datapoint(vector<double>{state_manager["t"], state_manager["transition_fraction"], state_manager["subscene_transition_fraction"]});
+        state_manager_time_plot.add_datapoint(vector<double>{global_state["transition_fraction"], global_state["subscene_transition_fraction"]});
 
         if (video_sessions_left == 0) {
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
@@ -125,7 +121,7 @@ private:
         Pixels* p = nullptr;
         WRITER.set_time(state_manager["t"]);
         query(p);
-        if(PRINT_TO_TERMINAL && (int(state_manager["frame_number"]) % 5 == 0)) p->print_to_terminal();
+        if(PRINT_TO_TERMINAL && (int(global_state["frame_number"]) % 5 == 0)) p->print_to_terminal();
         WRITER.add_frame(*p);
         superscene_frames_left--;
 

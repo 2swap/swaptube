@@ -28,10 +28,6 @@ struct VariableContents {
     // Is this variable fresh (updated since last control cycle) or stale?
     bool fresh;
 
-    // Special variables are not updated in accordance with their equation and are expected
-    // to be modified elsewhere. For example, the time variable <t> is special.
-    bool special;
-
     // A list of variable-equation pairs like <"x", "y 5 +"> to represent "x=y+5" (in RPN)
     string equation;
 
@@ -40,13 +36,12 @@ struct VariableContents {
     list<string> dependencies;
 
     VariableContents()
-                : value(0.0), fresh(true), special(false), equation(""), dependencies() {}
+                : value(0.0), fresh(true), equation(""), dependencies() {}
 
     VariableContents(string eq,
                      double val = 0.0,
-                     bool fr = true,
-                     bool spec = false
-                    ) : value(val), fresh(fr), special(spec), equation(eq), dependencies() {}
+                     bool fr = true
+                    ) : value(val), fresh(fr), equation(eq), dependencies() {}
 };
 
 using StateQuery = unordered_set<string>;
@@ -89,6 +84,13 @@ private:
     unordered_map<string, double> map;
 };
 
+static unordered_map<string, double> global_state{
+    {"frame_number", 0},
+    {"audio_segment_number", 0},
+    {"transition_fraction", 0},
+    {"subscene_transition_fraction", 0},
+};
+
 class StateManager {
 public:
     StateManager() : parent(nullptr) {}
@@ -104,8 +106,7 @@ public:
         cout << "-----------------------" << endl;
         for (const auto& variable : variables) {
             const VariableContents& vc = variable.second;
-            cout << (vc.special?"*":" ")
-                 << left << setw(32) << variable.first
+            cout << left << setw(32) << variable.first
                  << setw(38) << (vc.equation == ""?"":" := " + vc.equation)
                  << " : " << setw(10) << vc.value
                  << (vc.fresh ? " (Fresh)" : " (Stale)")
@@ -193,27 +194,11 @@ public:
         in_transition.clear();
     }
 
-    void set_special(const string& varname, double value){
-        // If the variable doesn't exist yet, make it
-        if(!contains(varname)){
-            last_compute_order.clear();
-            variables[varname] = VariableContents("", value, true, true);
-            return;
+    void evaluate_all() {
+        for(const pair<string, double> p : global_state){
+            add_equation(p.first, to_string(p.second));
         }
 
-        //Just call get_variable because it performs some checks for existence.
-        get_variable(varname);
-
-        VariableContents& vc = variables.at(varname);
-
-        // If this isnt a special variable, this value will soon be stomped on.
-        // It wouldnt make sense to use this function in other cases.
-        assert(vc.special);
-
-        vc.value = value;
-    }
-
-    void evaluate_all() {
         /* Step 1: Iterate through all variables,
          * check that they are fresh from last cycle,
          * and reset it to false. */
@@ -339,7 +324,6 @@ private:
         VariableContents& vc = variables.at(variable);
         assert(!vc.fresh);
         vc.fresh = true;
-        if(vc.special) return;
         string scrubbed_equation = insert_equation_dependencies(variable, vc.equation);
         vc.value = calculator(scrubbed_equation);
     }
@@ -380,23 +364,20 @@ void test_state_manager() {
     state_manager.add_equation("x", "5"); // x = 5
     state_manager.add_equation("y", "10"); // y = 10
     state_manager.add_equation("z", "<x> <y> +"); // z = x + y
-    state_manager.set_special("t", 420);
     state_manager.evaluate_all();
 
     // Validate initial values
-    StateQuery query = {"x", "y", "z", "t"};
+    StateQuery query = {"x", "y", "z"};
     State state1 = state_manager.get_state(query);
 
     assert(state1["x"] == 5.0);
     assert(state1["y"] == 10.0);
     assert(state1["z"] == 15.0);
-    assert(state1["t"] == 420);
 
     // Modify equations
     state_manager.add_equation("x", "7"); // x = 7
     state_manager.add_equation("y", "20"); // y = 20
     state_manager.add_equation("z", "<x> <y> +"); // z = x + y
-    state_manager.set_special("t", 69);
     state_manager.evaluate_all();
 
     State state2 = state_manager.get_state(query);
@@ -405,7 +386,6 @@ void test_state_manager() {
     assert(state2["x"] == 7.0);
     assert(state2["y"] == 20.0);
     assert(state2["z"] == 27.0);
-    assert(state2["t"] == 69);
 
     assert(!(state1 == state2));  // State1 and State2 should not be equal
     assert(state1 == state1);  // State1 and State1 should be equal

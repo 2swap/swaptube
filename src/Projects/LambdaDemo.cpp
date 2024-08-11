@@ -66,7 +66,7 @@ void render_video() {
     PRINT_TO_TERMINAL = false;
     // Show the lambda expression for 
     int num_reductions = 5;
-    tds.inject_audio(AudioSegment("What you're looking at right now is a computation taking place."), num_reductions);
+    tds.inject_audio(AudioSegment(8), num_reductions);//"What you're looking at right now is a computation taking place."), num_reductions);
     tds.render();
     for(int i = 0; i < num_reductions - 1; i++){
         ls.reduce();

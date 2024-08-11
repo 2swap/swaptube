@@ -43,8 +43,9 @@ public:
 
     bool has_subscene_state_changed() const override {
         for (auto& swp : scenes){
-            if(swp.scenePointer->has_subscene_state_changed()) return true;
+            if(swp.scenePointer->check_if_state_changed()) return true;
         }
+        cout << "No subscene state changed" << endl;
         return false;
     }
 

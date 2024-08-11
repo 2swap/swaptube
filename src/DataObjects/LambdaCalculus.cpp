@@ -24,12 +24,13 @@ protected:
     const string type;
     int color;
     shared_ptr<LambdaExpression> parent;
-    int x = 0;
-    int y = 0;
-    int w = 0;
-    int h = 0;
+    float x;
+    float y;
+    float w;
+    float h;
+    const float uid;
 public:
-    LambdaExpression(const string& t, const int c, shared_ptr<LambdaExpression> p = nullptr) : type(t), color(c), parent(p) {}
+    LambdaExpression(const string& t, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, float u = 0) : type(t), color(c), parent(p), x(x), y(y), w(w), h(h), uid(u==0?u:rand) {}
     virtual shared_ptr<LambdaExpression> clone() const = 0;
 
     virtual unordered_set<char> free_variables() const = 0;
@@ -106,18 +107,29 @@ public:
 
     class Iterator;
 
-    Pixels draw_lambda_diagram();
+    Pixels draw_lambda_diagram(float scale);
     void set_positions();
+    void interpolate_positions(shared_ptr<const LambdaExpression> l2, const float weight){
+        w = smoothlerp(w, l2->w, weight);
+        h = smoothlerp(h, l2->h, weight);
+        x = smoothlerp(x, l2->x, weight);
+        y = smoothlerp(y, l2->y, weight);
+    }
+    virtual void interpolate_positions_recursive(shared_ptr<const LambdaExpression> l2, const float weight) = 0;
 };
 
 class LambdaVariable : public LambdaExpression {
 private:
     char varname;
 public:
-    LambdaVariable(const char vn, const int c, shared_ptr<LambdaExpression> p = nullptr) : LambdaExpression("Variable", c, p), varname(vn) {
+    LambdaVariable(const char vn, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, float u = 0) : LambdaExpression("Variable", c, p, x, y, w, h, u), varname(vn) {
         if(!isalpha(vn)){
             failout("Lambda variable was not a letter!");
         }
+    }
+
+    void interpolate_positions_recursive(shared_ptr<const LambdaExpression> l2, const float weight) override {
+        interpolate_positions(l2, weight);
     }
 
     unordered_set<char> all_referenced_variables() const override {
@@ -129,7 +141,7 @@ public:
     }
 
     shared_ptr<LambdaExpression> clone() const override {
-        return make_shared<LambdaVariable>(varname, color, parent);
+        return make_shared<LambdaVariable>(varname, color, parent, x, y, w, h, u);
     }
 
     void tint_recursive(const int c) {
@@ -185,16 +197,24 @@ public:
     shared_ptr<const LambdaAbstraction> get_bound_abstraction() const;
 };
 
-shared_ptr<LambdaExpression> apply   (const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p);
-shared_ptr<LambdaExpression> abstract(const char                               v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p);
+shared_ptr<LambdaExpression> apply   (const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p, float x, float y, float w, float h, float u = 0);
+shared_ptr<LambdaExpression> abstract(const char                               v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p, float x, float y, float w, float h, float u = 0);
 
 class LambdaAbstraction : public LambdaExpression {
 private:
     char bound_variable;
     shared_ptr<LambdaExpression> body;
 public:
-    LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr) 
-        : LambdaExpression("Abstraction", c, p), bound_variable(v), body(b) { }
+    LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, float u = 0)
+        : LambdaExpression("Abstraction", c, p, x, y, w, h, u), bound_variable(v), body(b) { }
+
+    void interpolate_positions_recursive(shared_ptr<const LambdaExpression> l2, const float weight) override {
+        interpolate_positions(l2, weight);
+        if(l2->get_string() == get_string()) {
+            shared_ptr<const LambdaAbstraction> abs = dynamic_pointer_cast<const LambdaAbstraction>(l2);
+            body->interpolate_positions_recursive(abs->get_body(), weight);
+        }
+    }
 
     unordered_set<char> all_referenced_variables() const override {
         unordered_set<char> all_vars = body->all_referenced_variables();
@@ -210,7 +230,7 @@ public:
 
     shared_ptr<LambdaExpression> clone() const override {
         shared_ptr<LambdaExpression> b = body->clone();
-        return abstract(bound_variable, b, color, parent);
+        return abstract(bound_variable, b, color, parent, x, y, w, h, u);
     }
 
     string get_string() const override {
@@ -298,8 +318,17 @@ private:
     shared_ptr<LambdaExpression> first;
     shared_ptr<LambdaExpression> second;
 public:
-    LambdaApplication(shared_ptr<LambdaExpression> f, shared_ptr<LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p = nullptr) 
-        : LambdaExpression("Application", c, p), first(f), second(s) { }
+    LambdaApplication(shared_ptr<LambdaExpression> f, shared_ptr<LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, float u = 0)
+        : LambdaExpression("Application", c, p, x, y, w, h, u), first(f), second(s) { }
+
+    void interpolate_positions_recursive(shared_ptr<const LambdaExpression> l2, const float weight) override {
+        interpolate_positions(l2, weight);
+        if(l2->get_string() == get_string()) {
+            shared_ptr<const LambdaApplication> app = dynamic_pointer_cast<const LambdaApplication>(l2);
+            first ->interpolate_positions_recursive(app->get_first (), weight);
+            second->interpolate_positions_recursive(app->get_second(), weight);
+        }
+    }
 
     unordered_set<char> all_referenced_variables() const override {
         unordered_set<char> all_vars_f = first->all_referenced_variables();
@@ -322,7 +351,7 @@ public:
     shared_ptr<LambdaExpression> clone() const override {
         shared_ptr<LambdaExpression> f = first->clone();
         shared_ptr<LambdaExpression> s = second->clone();
-        return apply(f, s, color, parent);
+        return apply(f, s, color, parent, x, y, w, h, u);
     }
 
     string get_string() const override {
@@ -449,18 +478,18 @@ private:
     }
 };
 
-shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p = nullptr){
+shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, float u = 0){
     shared_ptr<LambdaExpression> nf = f->clone();
     shared_ptr<LambdaExpression> ns = s->clone();
-    shared_ptr<LambdaExpression> ret = make_shared<LambdaApplication>(nf, ns, c, p);
+    shared_ptr<LambdaExpression> ret = make_shared<LambdaApplication>(nf, ns, c, p, x, y, w, h, u);
     nf->set_parent(ret);
     ns->set_parent(ret);
     return ret;
 }
 
-shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr){
+shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, float u = 0){
     shared_ptr<LambdaExpression> nb = b->clone();
-    shared_ptr<LambdaExpression> ret = make_shared<LambdaAbstraction>(v, nb, c, p);
+    shared_ptr<LambdaExpression> ret = make_shared<LambdaAbstraction>(v, nb, c, p, x, y, w, h, u);
     nb->set_parent(ret);
     return ret;
 }
@@ -495,11 +524,11 @@ void LambdaExpression::set_positions() {
     }
 }
 
-Pixels LambdaExpression::draw_lambda_diagram() {
+Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
     if(parent != nullptr) failout("draw_lambda_diagram called on a child expression");
-    set_positions();
-    int bounding_box_w = num_variable_instantiations() * 4 - 1;
-    int bounding_box_h = parenthetical_depth() * 2;
+    if(w + h + x + y == 0) failout("Attempted drawing lambda diagram with unset positions!");
+    int bounding_box_w = (num_variable_instantiations() * 4 - 1) * scale;
+    int bounding_box_h = (parenthetical_depth() * 2) * scale;
     Pixels pix(bounding_box_w, bounding_box_h);
     pix.fill(TRANSPARENT_BLACK);
 
@@ -508,22 +537,23 @@ Pixels LambdaExpression::draw_lambda_diagram() {
         shared_ptr<LambdaExpression> current = it.next();
         int color = current->get_color();
         if (current->get_type() == "Variable") {
-            pix.fill_rect(current->x, current->y, 1, current->h, color);
+            pix.fill_rect(current->x * scale, current->y * scale, 8, current->h * scale, color);
         }
         if(current->get_type() == "Abstraction") {
-            pix.fill_rect(current->x, current->y, current->w, 1, color);
+            pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, 8, color);
         }
         if(current->get_type() == "Application") {
-            pix.fill_rect(current->x, current->y, 1, current->h, color);
-            pix.fill_rect(current->x, current->y, current->w, 1, color);
+            pix.fill_rect(current->x * scale, current->y * scale, 8, current->h * scale, color);
+            pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, 8, color);
         }
     }
     return pix;
 }
 
-shared_ptr<const LambdaExpression> interpolate(shared_ptr<const LambdaExpression> l1, shared_ptr<const LambdaExpression> l2){
-    shared_ptr<const LambdaExpression> ret = l1->clone();
-    ret->
+shared_ptr<LambdaExpression> get_interpolated(shared_ptr<const LambdaExpression> l1, shared_ptr<const LambdaExpression> l2, const float weight){
+    shared_ptr<LambdaExpression> ret = l1->clone();
+    ret->interpolate_positions_recursive(l2, weight);
+    return ret;
 }
 
 shared_ptr<const LambdaAbstraction> LambdaVariable::get_bound_abstraction() const {
