@@ -4,7 +4,7 @@ const string project_name = "LambdaDemo";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const int mult = 2;
+const int mult = 1;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -59,13 +59,14 @@ void render_video() {
     shared_ptr<LambdaVariable> x = make_shared<LambdaVariable>('x', OPAQUE_WHITE);
     shared_ptr<LambdaExpression> le_boolean_not = abstract('x', apply(apply(x, le_boolean_false, OPAQUE_WHITE), le_boolean_true, OPAQUE_WHITE), OPAQUE_WHITE);
 
-    //LambdaScene ls(apply(le_factorial, le_church_3, OPAQUE_WHITE), 400, 400);
-    LambdaScene ls(apply(le_boolean_not, le_boolean_true, OPAQUE_WHITE), 400, 400);
+    shared_ptr<LambdaExpression> term = apply(le_factorial, le_church_3, OPAQUE_WHITE);
+    //shared_ptr<LambdaExpression> term = apply(le_boolean_not, le_boolean_true, OPAQUE_WHITE);
+    LambdaScene ls(term, 400, 400);
     tds.add_scene(&ls, "lambda_s", 0, 0, 1, 1);
 
     PRINT_TO_TERMINAL = false;
     // Show the lambda expression for 
-    int num_reductions = 5;
+    int num_reductions = term->count_reductions() + 2;
     tds.inject_audio(AudioSegment(8), num_reductions);//"What you're looking at right now is a computation taking place."), num_reductions);
     tds.render();
     for(int i = 0; i < num_reductions - 1; i++){
