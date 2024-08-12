@@ -1,3 +1,5 @@
+#pragma once
+
 class DataObject {
 public:
     // Initialize to updated, since on the first step we wish to redraw the scene.

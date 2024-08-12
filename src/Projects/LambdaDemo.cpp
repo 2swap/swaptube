@@ -120,7 +120,7 @@ void render_video() {
     tds.inject_audio_and_render(AudioSegment(""));
     tds.inject_audio_and_render(AudioSegment(""));
 
-    tds.state_manager.add_equations(unordered_map<string, string>{
+    tds.state_manager.set(unordered_map<string, string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "0"},
         {"points_opacity", "1"},

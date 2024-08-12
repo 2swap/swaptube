@@ -167,12 +167,12 @@ public:
     }
 
     /* Bulk Modifiers. Naive. One per modifier. */
-    void add_transitions(std::unordered_map<std::string, std::string> equations) {
+    void transition(std::unordered_map<std::string, std::string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             add_transition(it->first, it->second);
         }
     }
-    void add_equations(std::unordered_map<std::string, std::string> equations) {
+    void set(std::unordered_map<std::string, std::string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             add_equation(it->first, it->second);
         }

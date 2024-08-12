@@ -29,25 +29,25 @@ void render_video() {
     comp.add_scene(&scene, "orbit2d_s", 0, 0, 1, 1, true); 
 
     sim.add_fixed_object(cs.get_color(), 1, "planet1");
-    scene.state_manager.add_equations(unordered_map<string, string>{
+    scene.state_manager.set(unordered_map<string, string>{
         {"planet1.x", "-.3"},
         {"planet1.y", "-.3"},
         {"planet1.z", "0"}
     });
     sim.add_fixed_object(cs.get_color(), 1, "planet2");
-    scene.state_manager.add_equations(unordered_map<string, string>{
+    scene.state_manager.set(unordered_map<string, string>{
         {"planet2.x", "0.3171"},
         {"planet2.y", "0.3"},
         {"planet2.z", "0"}
     });
     sim.add_fixed_object(cs.get_color(), 1, "planet3");
-    scene.state_manager.add_equations(unordered_map<string, string>{
+    scene.state_manager.set(unordered_map<string, string>{
         {"planet3.x", "-.4"},
         {"planet3.y", "0.3"},
         {"planet3.z", "0"}
     });
 
-    scene.state_manager.add_equations(unordered_map<string, string>{
+    scene.state_manager.set(unordered_map<string, string>{
         {"force_constant", "0.000001"},
         {"collision_threshold", "0.055"},
         {"drag", "0.9997"},

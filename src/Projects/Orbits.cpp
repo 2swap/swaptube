@@ -26,21 +26,21 @@ void render_video() {
     CompositeScene comp;
     comp.add_scene(&scene, "orbit2d_s", 0, 0, 1, 1, true); 
     sim.add_fixed_object(cs.get_color(), "planet1");
-    comp.state_manager.add_equations(unordered_map<string, string>{
+    comp.state_manager.set(unordered_map<string, string>{
         {"planet1.opacity", "1"},
         {"planet1.x", "-.2"},
         {"planet1.y", "-.1"},
         {"planet1.z", "0"},
     });
     sim.add_fixed_object(cs.get_color(), "planet2");
-    comp.state_manager.add_equations(unordered_map<string, string>{
+    comp.state_manager.set(unordered_map<string, string>{
         {"planet2.opacity", "1"},
         {"planet2.x", "0.2171"},
         {"planet2.y", "0.1"},
         {"planet2.z", "0"}
     });
 
-    comp.state_manager.add_equations(unordered_map<string, string>{
+    comp.state_manager.set(unordered_map<string, string>{
         {"collision_threshold", "0.05"},
         {"drag", "0.97"},
         {"drag_display", "1 <drag> -"},
@@ -61,11 +61,11 @@ void render_video() {
     comp.add_scene(&drag, "eps_s", 0, .9, 1, .1, true); 
 
     scene.inject_audio_and_render(AudioSegment(3));
-    scene.state_manager.add_equations(unordered_map<string, string>{
+    scene.state_manager.set(unordered_map<string, string>{
         {"eps", "0.0001"},
     });
     scene.inject_audio_and_render(AudioSegment(3));
-    scene.state_manager.add_equations(unordered_map<string, string>{
+    scene.state_manager.set(unordered_map<string, string>{
         {"eps", "0.00001"},
     });
     scene.inject_audio_and_render(AudioSegment(3));

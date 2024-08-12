@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Math/graph_scene.cpp"
-#include "c4_scene.cpp"
-#include "C4Board.cpp"
+#include "../Math/GraphScene.cpp"
+#include "Connect4Scene.cpp"
+#include "../../DataObjects/Connect4/C4Board.cpp"
 
 class C4GraphScene : public GraphScene<C4Board> {
 public:
@@ -14,15 +14,21 @@ public:
             graph_to_check_if_points_are_in = graph;
         }
 
-        graph->add_to_stack(new C4Board(root_node_representation));
+        C4Board* board;
+        if(mode == SIMPLE_WEAK){
+            shared_ptr<SteadyState> ss = find_steady_state(root_node_representation, 30000);
+            if(ss == NULL)
+                failout("No steady state found when making a SIMPLE_WEAK C4GraphScene.");
+            board = new C4Board(root_node_representation, ss);
+        } else {
+            board = new C4Board(root_node_representation);
+        }
+        graph->add_to_stack(board);
 
         if(mode != MANUAL){
             graph->expand_graph(false);
         }
-
-        if(mode == SIMPLE_WEAK){
-            // I don't know what to do about this. Definitely a rabbit hole of antipatterns under this call. find_steady_state(root_node_representation, 30000, ss_simple_weak, false);
-        }
+        cout << "GRAPH SIZE: " << graph->size() << endl;
     }
 
     int get_edge_color(const Node<C4Board>& node, const Node<C4Board>& neighbor){
@@ -34,18 +40,8 @@ public:
         for(pair<double, Node<C4Board>> p : graph->nodes){
             Node<C4Board> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position);
-            C4Scene* sc = new C4Scene(node.data->representation, 600, 600);
-            surfaces.push_back(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), sc));
+            add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<C4Scene>(node.data->representation, 600, 600)));
         }
-        rendered = false;
-    }
-
-    void clear_surfaces(){
-        for(Surface s : surfaces){
-            delete s.scenePointer;
-        }
-        surfaces.clear();
-        rendered = false;
     }
 
     void inheritable_preprocessing() override{
@@ -56,7 +52,7 @@ public:
         clear_surfaces();
     }
 
-    void render_surface(const Surface& surface, int padcol) {
+    void render_surface(const Surface& surface) {
         //make all the boards face the camera
         glm::quat conj2 = glm::conjugate(camera_direction) * glm::conjugate(camera_direction);
         glm::quat cam2 = camera_direction * camera_direction;
@@ -76,14 +72,9 @@ public:
             surface.scenePointer
         );
 
-        ThreeDimensionScene::render_surface(surface_rotated, padcol);
+        ThreeDimensionScene::render_surface(surface_rotated);
     }
 
-    ~C4GraphScene(){
-        for (Surface surface : surfaces){
-            delete surface.scenePointer;
-        }
-    }
     bool color_edges = true;
 
 private:

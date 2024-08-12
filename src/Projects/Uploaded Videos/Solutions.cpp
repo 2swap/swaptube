@@ -31,7 +31,7 @@ void beginning() {
     auto closequat_moving = closequat;
     closequat_moving["q1"] = "<t> 4 / cos";
     closequat_moving["qj"] = "<t> -4 / sin";
-    state_manager.add_equations(closequat_moving);
+    state_manager.set(closequat_moving);
     c4.inject_audio_and_render(AudioSegment("So far we've been interested in strategies of connect 4,"));
     state_manager.add_transition("d", "15");
     c4.inject_audio_and_render(AudioSegment("but now it's time to apply those strategies to get a structural understanding of the game."));
@@ -58,7 +58,7 @@ void beginning() {
     g.clear();
 
 
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"y", "3"}, {"d", "6"},
         {"q1", "0"},
         {"qi", "0"},
@@ -66,7 +66,7 @@ void beginning() {
         {"qk", "0"},
         {"lines_opacity", "0"},
     });
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"}
     });
 
@@ -94,12 +94,12 @@ void beginning() {
     g.immobilize_all_nodes();
 
     c4.physics_multiplier = 1;
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"lines_opacity", "1"}
     });
     c4.inject_audio_and_render(AudioSegment("We connect those new nodes to the root with yellow lines, since yellow was the one who played a move here."));
     c4.inject_audio(AudioSegment("And from those positions, there are even more options that can be made, by Red this time, continuing the graph."), 49);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "10"},
         {"y", "4"},
         {"surfaces_opacity", "0"},
@@ -155,14 +155,14 @@ void beginning() {
             const_cast<Edge&>(edge).opacity = 1;
     c4.inject_audio_and_render(AudioSegment("Any set of moves that you could make is in this graph."));
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", "50"},
     });
     c4.inject_audio_and_render(AudioSegment("As a result, it gets intractably large really quickly."));
     g.dimensions = 3;
     g.gravity_strength = 1;
     g.clear();
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"x", "0"},
         {"d", "5"},
         {"points_opacity", "1"},
@@ -180,7 +180,7 @@ void beginning() {
 
     composite.inject_audio_and_render(AudioSegment("At any position in the opening, there are 7 possible moves to make. So, at a depth of 0, the amount of nodes is 1 (that is, the empty board),"));
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "10"},
         {"y", "5"},
     });
@@ -190,11 +190,11 @@ void beginning() {
         g.add_node(new C4Board(to_string(i)));
         composite.render();
     }
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"},
     });
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "20"},
         {"y", "10"},
     });
@@ -206,7 +206,7 @@ void beginning() {
     }
     g.gravity_strength = 0;
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "50"},
         {"y", "0"},
     });
@@ -217,7 +217,7 @@ void beginning() {
         composite.render();
     }
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "80"},
     });
     composite.inject_audio(AudioSegment(3), 2401);
@@ -244,7 +244,7 @@ void beginning() {
 
     C4GraphScene just_the_graph(VIDEO_WIDTH, VIDEO_HEIGHT, &g, "", MANUAL);
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"},
         {"lines_opacity", "0"},
         {"points_opacity", "0"},
@@ -254,8 +254,8 @@ void beginning() {
     g.gravity_strength = .5;
     g.add_node(new C4Board(""));
 
-    state_manager.add_equations(closequat);
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(closequat);
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_opacity", "0"},
@@ -291,9 +291,9 @@ void endgame_examination(){
     auto closequat_moving = closequat;
     closequat_moving["q1"] = "<t> 13 / cos";
     closequat_moving["qj"] = "<t> -13 / sin";
-    state_manager.add_equations(closequat_moving);
+    state_manager.set(closequat_moving);
 
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"d", "3"},
         {"y", "0"},
         {"surfaces_opacity", "1"},
@@ -304,7 +304,7 @@ void endgame_examination(){
     g.dimensions = 3;
     C4GraphScene c4(&g, "36426444226456412121132335635611737", MANUAL);
     c4.inject_audio_and_render(AudioSegment("This is a particular endgame."));
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"},
         {"points_opacity", "0.1"},
         {"d", "30"},
@@ -318,7 +318,7 @@ void endgame_examination(){
     }
     g.expand_graph(false);
     c4.render();
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"lines_opacity", "0.2"},
     });
     c4.inject_audio_and_render(AudioSegment("Now, I wanna focus on the nodes of this graph."));
@@ -326,7 +326,7 @@ void endgame_examination(){
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == INCOMPLETE)
             node.second.opacity = 0;
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"points_opacity", "1"},
     });
     c4.inject_audio_and_render(AudioSegment("Let's identify all the terminal states- that is, the nodes which have no children."));
@@ -400,7 +400,7 @@ void endgame_examination(){
     }
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -412,7 +412,7 @@ void endgame_examination(){
     C4Result winner = consider->data->who_is_winning(dummy);
     consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
     consider->opacity = 1;
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
@@ -455,7 +455,7 @@ void endgame_examination(){
     }
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -475,7 +475,7 @@ void endgame_examination(){
     consider->opacity = 1;
     consider->highlight = false;
     for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
@@ -510,11 +510,11 @@ void endgame_examination(){
 
     g.nodes.at(g.root_node_hash).highlight = true;
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "7"},
     });
     composite.inject_audio_and_render(AudioSegment("We've worked our way all the way back up to the endgame which we considered in the first place, and it turns out that it was a tie!"));
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "30"},
     });
 
@@ -526,7 +526,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "36426444226456412121132335635611737") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -537,7 +537,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "364264442264564121211323356356117377") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -551,7 +551,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "3642644422645641212113233563561173777") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -563,7 +563,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "3642644422645641212113233563561173777") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -575,7 +575,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "36426444226456412121132335635611737775") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -587,7 +587,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "364264442264564121211323356356117377755") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -599,7 +599,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "3642644422645641212113233563561173777557") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -611,7 +611,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "36426444226456412121132335635611737777755") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -623,7 +623,7 @@ void endgame_examination(){
     for(auto& node : g.nodes) if(node.second.data->representation == "364264442264564121211323356356117377777555") consider = &(node.second);
     consider->highlight = true;
     board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", to_string(consider->x)},
         {"y", to_string(consider->y)},
         {"z", to_string(consider->z)},
@@ -635,7 +635,7 @@ void endgame_examination(){
     composite.remove_scene(&board);
 
 
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
@@ -672,7 +672,7 @@ void endgame_examination(){
     }
     composite.inject_audio(AudioSegment("We can now delete all the other children."), 7);
     g.mobilize_all_nodes();
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"d", "20"},
         {"y", "0"},
     });
@@ -702,7 +702,7 @@ void endgame_examination(){
 
     composite.inject_audio(AudioSegment("That would've required a red blunder to get to, and we've removed all branches which contain red blunders."), 2);
     composite.render();
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"y", "-50 <subscene_transition_fraction> 0"},
     });
     composite.render();
@@ -725,8 +725,8 @@ void minimax_the_opening(){
     auto closequat_moving = closequat;
     closequat_moving["q1"] = "<t> 10 / cos";
     closequat_moving["qj"] = "<t> -10 / sin";
-    state_manager.add_equations(closequat_moving);
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.set(closequat_moving);
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"y", "0"},
     });
     Graph<C4Board> g;
@@ -744,21 +744,21 @@ void minimax_the_opening(){
     }
     c4.inject_audio_and_render(AudioSegment("So the obvious question is, can we apply Minimax to the opening to determine who should win from the starting position?"));
     c4.inject_audio_and_render(AudioSegment("In theory, sure, but even with our modern computers, we can't do this for 4 trillion nodes. It's just too much."));
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"},
         {"lines_opacity", "0"},
         {"points_opacity", "0"},
     });
     c4.inject_audio_and_render(AudioSegment("But by ignoring branches which are suboptimal _while traversing the graph in the first place_, along with a bunch of other tricks, this becomes doable."));
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"y", "-12"},
     });
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"y", "1"},
     });
     g.clear();
     g.add_node(new C4Board(""));
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
@@ -823,7 +823,7 @@ void prisoner() {
     tds.add_surface(Surface(glm::vec3(0,200, 0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_front));
     tds.add_surface(Surface(glm::vec3(0,200,-0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_back));
 
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_opacity", "0"},
@@ -831,7 +831,7 @@ void prisoner() {
         {"z", "0"},
         {"d", "4"},
     });
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"ntf", "<subscene_transition_fraction> .5 -"},
         {"x", "3 <ntf> * 4 ^ -1 *"},
         {"sigmoid", "3.1415 4 / 1 2.71828 <ntf> 40 * ^ + /"},
@@ -842,18 +842,18 @@ void prisoner() {
     });
     tds.inject_audio(AudioSegment("Lemme make an analogy. Imagine a prisoner is forced to memorize a deck of flash cards. On the front of each card is a 2-dimensional coordinate, and the back of the flash card is a hexadecimal number."), 3);
     tds.render();
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"y", "100"}
     });
     tds.render();
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"y", "200"}
     });
     tds.render();
 
 
 
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
@@ -881,7 +881,7 @@ void prisoner() {
         cardgrid.surfaces[cardgrid.surfaces.size()-1].opacity = cube(i/100.);
         cardgrid.render();
     }
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"d", "256"},
     });
     for(int j = 0; j < cardgrid.surfaces.size() - 1; j++){
@@ -934,7 +934,7 @@ void prisoner() {
         g.add_node(new C4Board(to_string(i) + to_string(j) + to_string(k) + to_string(l)));
     }
     g.iterate_physics(100);
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"y", "200"},
     });
 
@@ -946,7 +946,7 @@ void prisoner() {
     cardgrid.surfaces[0].center += dir;
     cardgrid.surfaces[1].center += dir;
     c4.skip_surfaces = true;
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"y", "190"},
         {"q1", "1"},
         {"qi", "-.1"},
@@ -954,7 +954,7 @@ void prisoner() {
         {"qk", "0"},
     });
     composite.inject_audio_and_render(AudioSegment("This analogy sort of illustrates the position we're in with our strong solution for connect 4."));
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"y", "0"},
         {"d", "70"},
         {"q1", "1"},
@@ -963,7 +963,7 @@ void prisoner() {
         {"qk", "0"},
     });
     composite.inject_audio_and_render(AudioSegment("Just because we know these disparate facts about who wins in what scenario, we can't say we truly understand this system any better than before."));
-    state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    state_manager.transition(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
@@ -974,7 +974,7 @@ void prisoner() {
 }
 
 void render_tree_comparison(){
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
@@ -999,7 +999,7 @@ void render_tree_comparison(){
     vector<string> distances = {"5","20","40","60",};
 
     if(FOR_REAL)for(int i = 0; i < starting_positions.size(); i++){
-        state_manager.add_equations(std::unordered_map<std::string, std::string>{
+        state_manager.set(std::unordered_map<std::string, std::string>{
             {"d", distances[i]},
         });
         string starting_position = starting_positions[i];
@@ -1054,7 +1054,7 @@ void render_tree_comparison(){
 }
 
 void render_weak_trees(){
-    state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    state_manager.set(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
@@ -1068,7 +1068,7 @@ void render_weak_trees(){
         {"points_opacity", "0"},
     });
     if(FOR_REAL){
-        state_manager.add_equations(std::unordered_map<std::string, std::string>{
+        state_manager.set(std::unordered_map<std::string, std::string>{
             {"d", "80"},
         });
         string starting_position = "444444326555523225333372711";
@@ -1088,13 +1088,13 @@ void render_weak_trees(){
     }
 
     if(FOR_REAL){
-        state_manager.add_equations(std::unordered_map<std::string, std::string>{
+        state_manager.set(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
             {"qi", "<t> -4 / cos"},
             {"qj", "<t> -4 / sin"},
             {"qk", "0"},
         });
-        state_manager.add_equations(std::unordered_map<std::string, std::string>{
+        state_manager.set(std::unordered_map<std::string, std::string>{
             {"d", "140"},
         });
         string starting_position = "4444443265555232253333727";
@@ -1110,7 +1110,7 @@ void render_weak_trees(){
         composite.add_scene(&board     , 0, 0, 0.3, 0.3);
 
         composite.inject_audio_and_render(AudioSegment("Can we immensely reduce the amount of information required to 'know' a weak solution, such that it doesn't require rote memorization?"));
-        state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+        state_manager.transition(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
             {"qi", "<t> sin 400 /"},
             {"qj", "<t> sin 400 /"},
@@ -1119,7 +1119,7 @@ void render_weak_trees(){
         composite.inject_audio_and_render(AudioSegment("In other words, are there any particularly clever ways of representing such weak solutions? We can represent them graph-theoretically, but perhaps they can be expressed by other means?"));
         weak_scene.skip_surfaces = true;
 
-        state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+        state_manager.transition(std::unordered_map<std::string, std::string>{
             {"d", "200"},
             {"surfaces_opacity", "1"},
             {"lines_opacity", "0.2"},
@@ -1146,7 +1146,7 @@ void render_weak_trees(){
         shill_compositely.add_scene(&shill    , 0, 0, 1, 1);
         shill_compositely.inject_audio_and_render(AudioSegment("I'll give you a hint- Claimeven is the magic bullet here!"));
         shill_compositely.inject_audio_and_render(AudioSegment("We can use a positional language built on top of the idea of claimeven to concisely express solutions to positions which have a high degree of self-symmetry,"));
-        state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+        state_manager.transition(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
             {"qi", "<t> 4 / cos 2 /"},
             {"qj", "<t> -4 / sin 2 /"},
@@ -1161,7 +1161,7 @@ void render_weak_trees(){
     }
 
     if(FOR_REAL){
-        state_manager.add_equations(std::unordered_map<std::string, std::string>{
+        state_manager.set(std::unordered_map<std::string, std::string>{
             {"surfaces_opacity", "0"},
             {"lines_opacity", "0"},
             {"points_opacity", "0"},
@@ -1183,7 +1183,7 @@ void render_weak_trees(){
         C4GraphScene graphscene1(&graph1, "444444", TRIM_STEADY_STATES);
         graphscene1.physics_multiplier = 20;
         composite.add_scene(&graphscene1,  0, 0, 1, 1);
-        state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+        state_manager.transition(std::unordered_map<std::string, std::string>{
             {"surfaces_opacity", "0"},
             {"lines_opacity", "1"},
             {"points_opacity", "0"},

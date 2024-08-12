@@ -16,10 +16,10 @@ enum C4Result {
     INCOMPLETE
 };
 
-std::vector<char> miai = {'@', '#'};
-std::vector<char> priority_list = {'+', '=', '-'};
-std::vector<char> claims = {' ', '|'};
-std::vector<char> disks = {'1', '2'};
+vector<char> miai = {'@', '#'};
+vector<char> priority_list = {'+', '=', '-'};
+vector<char> claims = {' ', '|'};
+vector<char> disks = {'1', '2'};
 
 bool is_miai(char c){
     return c == '@' || c == '#';
@@ -28,44 +28,46 @@ bool is_miai(char c){
 class SteadyState {
 public:
     SteadyState();
-    SteadyState(const std::array<std::string, C4_HEIGHT>& chars);
+    SteadyState(const array<string, C4_HEIGHT>& chars);
     int query_steady_state(const C4Board board) const;
     void mutate();
     void drop(int x, char c);
-    C4Result play_one_game(const std::string& boardString, std::string& defeat, const std::string& prior_defeat, bool verbose = false) const;
+    C4Result play_one_game(const string& boardString, string& defeat, const string& prior_defeat, bool verbose) const;
     void print() const;
     char steadystate[C4_HEIGHT][C4_WIDTH];
 
 
-    void write_to_file(const std::string& filename) const {
-        std::ofstream file(filename);
+    void write_to_file(const string& filename) const {
+        ofstream file(filename);
         if (file.is_open()) {
             for (int row = 0; row < C4_HEIGHT; ++row) {
                 for (int col = 0; col < C4_WIDTH; ++col) {
                     file << steadystate[row][col];
                 }
-                file << std::endl;
+                file << endl;
             }
         }
     }
 
-    void read_from_file(const std::string& filename) {
-        std::ifstream file(filename);
+    void read_from_file(const string& filename) {
+        print();
+        ifstream file(filename);
         if (file.is_open()) {
             for (int row = 0; row < C4_HEIGHT; ++row) {
-                std::string line;
-                if (std::getline(file, line)) { // Read the entire line as a string
+                string line;
+                if (getline(file, line)) { // Read the entire line as a string
                     // Check if the line length matches the expected width
-                    if (line.length() == static_cast<std::size_t>(C4_WIDTH)) {
+                    if (line.length() == static_cast<size_t>(C4_WIDTH)) {
                         for (int col = 0; col < C4_WIDTH; ++col) {
-                            steadystate[row][col] = line[col]; // Assign characters to the array
+                            char c = line[col];
+                            steadystate[row][col] = c; // Assign characters to the array
                         }
                     } else {
-                        std::cout << "Invalid line length in the file." << std::endl;
+                        cout << "Invalid line length in the file." << endl;
                         exit(1);
                     }
                 } else {
-                    std::cout << "STEADYSTATE CACHE READ ERROR" << std::endl;
+                    cout << "STEADYSTATE CACHE READ ERROR" << endl;
                     exit(1);
                 }
             }

@@ -3,18 +3,9 @@
 #include "C4Board.h"
 #include "SteadyState.cpp"
 #include "JsonC4Cache.cpp"
+#include <string>
 
 Graph<C4Board>* graph_to_check_if_points_are_in = NULL;
-
-std::array<std::string, C4_HEIGHT> ss_list = {
-    " @22@| ",
-    " 2112| ",
-    " 1221| ",
-    " 2112| ",
-    " 2121|1",
-    " 211211"
-};
-SteadyState ss_simple_weak(ss_list);
 
 C4Board::C4Board(const C4Board& other) {
     // Copy the representation
@@ -23,9 +14,17 @@ C4Board::C4Board(const C4Board& other) {
     // Copy the bitboards
     red_bitboard = other.red_bitboard;
     yellow_bitboard = other.yellow_bitboard;
+
+    steadystate = other.steadystate;
 }
 
-C4Board::C4Board(std::string representation) {
+C4Board::C4Board() { }
+
+C4Board::C4Board(string representation) {
+    fill_board_from_string(representation);
+}
+
+C4Board::C4Board(string representation, shared_ptr<SteadyState> ss) : steadystate(ss) {
     fill_board_from_string(representation);
 }
 
@@ -39,12 +38,12 @@ int C4Board::piece_code_at(int x, int y) const {
 }
 
 void C4Board::print() const {
-    std::cout << representation << std::endl;
+    cout << representation << endl;
     for(int y = 0; y < C4_HEIGHT; y++) {
         for(int x = 0; x < C4_WIDTH; x++) {
-            std::cout << disk_col(piece_code_at(x, y)) << " ";
+            cout << disk_col(piece_code_at(x, y)) << " ";
         }
-        std::cout << std::endl;
+        cout << endl;
     }
 }
 
@@ -53,7 +52,7 @@ bool C4Board::is_legal(int x) const {
 }
 
 int C4Board::random_legal_move() const {
-    std::vector<int> legal_columns;
+    vector<int> legal_columns;
 
     for (int x = 1; x <= C4_WIDTH; ++x) {
         if(is_legal(x))
@@ -96,7 +95,7 @@ bool C4Board::is_solution() {
 /*double unsignedLongToDouble(Bitboard value) {
     // Use type punning to reinterpret the bits of 'value' as a double
     double result;
-    std::memcpy(&result, &value, sizeof(result));
+    memcpy(&result, &value, sizeof(result));
     return result;
 }
 
@@ -128,7 +127,7 @@ double C4Board::board_specific_reverse_hash() const {
     return hash_in_progress;
 }
 
-void C4Board::fill_board_from_string(const std::string& rep)
+void C4Board::fill_board_from_string(const string& rep)
 {
     // Iterate through the moves and fill the board
     for (int i = 0; i < rep.size(); i++) {
@@ -137,10 +136,14 @@ void C4Board::fill_board_from_string(const std::string& rep)
 }
 
 void C4Board::play_piece(int piece){
-    if(piece < 0) {print(); std::cout << "uh oh " << representation << " " << piece << std::endl; exit(1);}
-    if(hash != 0) {print(); std::cout << "oops " << representation << " " << piece << std::endl; exit(1);}
+    if(piece < 0) {
+        print();
+        steadystate->print();
+        failout("Attempted playing a piece in an illegal column. Representation: " + representation + ", piece: " + to_string(piece));
+    }
+    if(hash != 0) {print(); cout << "oops " << representation << " " << piece << endl; exit(1);}
     if(piece > 0){
-        if(!is_legal(piece)) {print(); std::cout << "gah " << representation << " " << piece << std::endl; exit(1);}
+        if(!is_legal(piece)) {print(); cout << "gah " << representation << " " << piece << endl; exit(1);}
         int x = piece - 1; // convert from 1index to 0
         int y = 0;
         Bitboard bb = (red_bitboard | yellow_bitboard);
@@ -152,7 +155,7 @@ void C4Board::play_piece(int piece){
                 break;
             }
         }
-        representation+=std::to_string(piece);
+        representation+=to_string(piece);
     } else {
         representation+='0';
     }
@@ -169,22 +172,21 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     C4Result cachedResult;
     auto it = cache.find(representation);
     if (it != cache.end()) {
-        if(verbose)std::cout << "Using cached result..." << std::endl;
+        if(verbose)cout << "Using cached result..." << endl;
         return it->second;
     }
 
     char command[150];
-    std::sprintf(command, "echo %s | ~/Unduhan/Fhourstones/SearchGame", representation.c_str());
-    if(verbose)std::cout << "Calling fhourstones on " << command << "... ";
+    sprintf(command, "echo %s | ~/Unduhan/Fhourstones/SearchGame", representation.c_str());
+    if(verbose)cout << "Calling fhourstones on " << command << "... ";
     FILE* pipe = popen(command, "r");
     if (!pipe) {
-        std::cout << "fhourstones error!" << std::endl;
         C4Board c4(representation);
-        std::cout << std::setprecision (15) << c4.get_hash() << std::endl;
-        exit(1);
+        cout << setprecision (15) << c4.get_hash() << endl;
+        failout("fhourstones error!");
     }
     char buffer[4096];
-    std::string result = "";
+    string result = "";
     while (!feof(pipe)) {
         if (fgets(buffer, 4096, pipe) != NULL) {
             result += buffer;
@@ -194,20 +196,20 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
 
     C4Result gameResult;
     size_t workPos = result.find("work = ");
-    if (workPos != std::string::npos) {
-        work = std::stoi(result.substr(workPos + 7, result.find('\n', workPos) - workPos - 7));
+    if (workPos != string::npos) {
+        work = stoi(result.substr(workPos + 7, result.find('\n', workPos) - workPos - 7));
     } else {
         work = -1; // Set work to a default value if not found
     }
 
-    if (result.find("(=)") != std::string::npos) {
-        if(verbose)std::cout << "Tie!" << std::endl;
+    if (result.find("(=)") != string::npos) {
+        if(verbose)cout << "Tie!" << endl;
         gameResult = TIE;
-    } else if ((result.find("(+)") != std::string::npos) == is_reds_turn()) {
-        if(verbose)std::cout << "Red!" << std::endl;
+    } else if ((result.find("(+)") != string::npos) == is_reds_turn()) {
+        if(verbose)cout << "Red!" << endl;
         gameResult = RED;
     } else {
-        if(verbose)std::cout << "Yellow!" << std::endl;
+        if(verbose)cout << "Yellow!" << endl;
         gameResult = YELLOW;
     }
 
@@ -215,7 +217,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     return gameResult;
 }
 
-void C4Board::add_all_winning_fhourstones(std::unordered_set<C4Board*>& neighbors){
+void C4Board::add_all_winning_fhourstones(unordered_set<C4Board*>& neighbors){
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
             C4Board moved = child(i);
@@ -265,8 +267,8 @@ int C4Board::get_best_winning_fhourstones() {
     return lowest_work_move;
 }
 
-std::vector<int> C4Board::get_winning_moves() const{
-    std::vector<int> ret;
+vector<int> C4Board::get_winning_moves() const{
+    vector<int> ret;
     for (int x = 1; x <= C4_WIDTH; x++) {
         if (is_legal(x)) {
             C4Board moved = child(x);
@@ -287,19 +289,19 @@ bool C4Board::is_reds_turn() const{
 int C4Board::burst() const{
     int wm = get_instant_win();
     if(wm != -1){
-        //std::cout << representation<<wm << " added for instawin" << std::endl;
+        //cout << representation<<wm << " added for instawin" << endl;
         return wm;
     }
 
-    std::vector<int> winning_columns = get_winning_moves();
+    vector<int> winning_columns = get_winning_moves();
     if (winning_columns.size() == 0){
-        std::string representation2(representation);
+        string representation2(representation);
         while(representation2 != ""){
             C4Board c4(representation2);
-            std::cout << representation2 << ": " << std::setprecision (15) << c4.get_hash() << std::endl;
+            cout << representation2 << ": " << setprecision (15) << c4.get_hash() << endl;
             representation2 = representation2.substr(0, representation2.size()-1);
         }
-        std::cout << "Burst winning columns error!" << std::endl;
+        cout << "Burst winning columns error!" << endl;
         exit(1);
     }
 
@@ -308,7 +310,7 @@ int C4Board::burst() const{
     for (int i = 0; i < winning_columns.size(); ++i) {
         int x = winning_columns[i];
         if(graph_to_check_if_points_are_in->node_exists(child(x).get_hash())) {
-            //std::cout << representation <<x<< " added since it is in the graph already" << std::endl;
+            //cout << representation <<x<< " added since it is in the graph already" << endl;
             return x;
         }
     }
@@ -319,9 +321,11 @@ int C4Board::burst() const{
     for(int j = 0; j < 7; j++){
         for (int i = 0; i < winning_columns.size(); ++i) {
             int x = winning_columns[i];
-            SteadyState ss;
-            if(find_steady_state(child(x).representation, attempt, ss, true)){
-                //std::cout << representation<<x << " added since a steadystate was found" << std::endl;
+            C4Board xth_child = child(x);
+            xth_child.print();
+            shared_ptr<SteadyState> ss = find_steady_state(xth_child.representation, attempt);
+            if(ss != nullptr){
+                //cout << representation<<x << " added since a steadystate was found" << endl;
                 return x;
             }
         }
@@ -336,7 +340,7 @@ int C4Board::burst() const{
         if(bm != -1){
             int recurse = forcing.child(bm).burst();
             if(recurse != -1) {
-                std::cout << forcing.representation<<bm << " added recursively" << std::endl;
+                cout << forcing.representation<<bm << " added recursively" << endl;
                 return x;
             }
         }
@@ -351,20 +355,20 @@ int C4Board::get_human_winning_fhourstones() {
 
     int b = burst();
     if(b != -1){
-        //std::cout << representation <<b<< " added by burst" << std::endl;
+        //cout << representation <<b<< " added by burst" << endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, b);
         return b;
     }
 
-    std::vector<int> winning_columns = get_winning_moves();
+    vector<int> winning_columns = get_winning_moves();
     if (winning_columns.size() == 1) {
         // Single winning column
         char wc = winning_columns[0];
-        //std::cout << representation<<wc << " added as the only winning move" << std::endl;
+        //cout << representation<<wc << " added as the only winning move" << endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, wc);
         return wc;
     } else if (winning_columns.size() == 0){
-        //std::cout << "Get human winning fhourstones error!" << std::endl;
+        //cout << "Get human winning fhourstones error!" << endl;
         exit(1);
     }
 
@@ -373,34 +377,28 @@ int C4Board::get_human_winning_fhourstones() {
 
     print();
 
-    //std::cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << std::endl;
+    //cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
     for (size_t i = 0; i < winning_columns.size(); i++) {
-        std::cout << "Column " << winning_columns[i] << std::endl;
+        cout << "Column " << winning_columns[i] << endl;
     }
 
     int choice;
     do {
-        std::cout << "Enter your choice: ";
-        std::cin >> choice;
-        if (std::cin.fail()) {
-            std::cout << "ERROR -- You did not enter an integer" << std::endl;
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cout << "Enter your choice: ";
+        cin >> choice;
+        if (cin.fail()) {
+            cout << "ERROR -- You did not enter an integer" << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
-    } while (std::find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
+    } while (find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
 
     movecache.AddOrUpdateEntry(get_hash(), representation, choice);
     movecache.WriteCache();
     return choice;
 }
 
-void C4Board::add_best_winning_fhourstones(std::unordered_set<C4Board*>& neighbors) {
-    C4Board moved = child(get_human_winning_fhourstones());
-    //std::cout << moved.representation << " added since it was selected" << std::endl;
-    neighbors.insert(new C4Board(moved));
-}
-
-void C4Board::add_all_legal_children(std::unordered_set<C4Board*>& neighbors){
+void C4Board::add_all_legal_children(unordered_set<C4Board*>& neighbors){
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
             C4Board moved = child(i);
@@ -409,13 +407,13 @@ void C4Board::add_all_legal_children(std::unordered_set<C4Board*>& neighbors){
     }
 }
 
-void C4Board::add_all_good_children(std::unordered_set<C4Board*>& neighbors){
+void C4Board::add_all_good_children(unordered_set<C4Board*>& neighbors){
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
             C4Board moved = child(i);
             // Check the move isn't giga dumb
             if(moved.get_instant_win() == -1){
-                //std::cout << representation << ": attempting " << i << ". Result: " << moved.representation << " added since it is not dumb" << std::endl;
+                //cout << representation << ": attempting " << i << ". Result: " << moved.representation << " added since it is not dumb" << endl;
                 neighbors.insert(new C4Board(moved));
             }
         }
@@ -431,7 +429,7 @@ json C4Board::get_data() const {
     // Create a nested JSON array for the 2D array steadystate.steadystate
     json steadystate_array;
 
-    for (const auto& row : steadystate.steadystate) {
+    for (const auto& row : steadystate->steadystate) {
         json row_array;
         for (const auto& value : row) {
             char c = has_steady_state?value:' ';
@@ -446,14 +444,16 @@ json C4Board::get_data() const {
     return data;
 }
 
-void C4Board::add_only_child_steady_state(const SteadyState& ss, std::unordered_set<C4Board*>& neighbors){
-    int x = ss.query_steady_state(*this);
+void C4Board::add_only_child_steady_state(unordered_set<C4Board*>& neighbors){
+    if(steadystate == nullptr)
+        failout("Querying a null steadystate!");
+    int x = steadystate->query_steady_state(*this);
     C4Board moved = child(x);
     neighbors.insert(new C4Board(moved));
 }
 
-std::unordered_set<C4Board*> C4Board::get_children(){
-    std::unordered_set<C4Board*> neighbors;
+unordered_set<C4Board*> C4Board::get_children(){
+    unordered_set<C4Board*> neighbors;
 
     if (is_solution()) {
         return neighbors;
@@ -469,7 +469,7 @@ std::unordered_set<C4Board*> C4Board::get_children(){
             break;
         case SIMPLE_WEAK:
             if(is_reds_turn()){
-                add_only_child_steady_state(ss_simple_weak, neighbors);
+                add_only_child_steady_state(neighbors);
             }else{
                 add_all_legal_children(neighbors);
             }
@@ -478,34 +478,101 @@ std::unordered_set<C4Board*> C4Board::get_children(){
             if(!is_reds_turn()){ // if it's yellow's move
                 int bm = get_blocking_move();
                 if(bm != -1 && child(bm).get_instant_win() != -1) break; // if i cant stop an insta win
-                SteadyState ss;
-                bool found = find_steady_state(representation, 1, ss, true);
-                if(found){
+                shared_ptr<SteadyState> ss = find_steady_state(representation, 1);
+                if(ss != nullptr){
                     has_steady_state = true;
                     steadystate = ss;
-                    //std::cout << "found a steady state!" << std::endl;
+                    //cout << "found a steady state!" << endl;
                     break;
                 }
                 else{
-                    //std::cout << "Adding children as yellow!" << std::endl;
+                    //cout << "Adding children as yellow!" << endl;
                     add_all_good_children(neighbors);
                 }
             }else{ // red's move
-                //std::cout << "Making a good move as red." << std::endl;
-                add_best_winning_fhourstones(neighbors);
+                C4Board moved = child(get_human_winning_fhourstones());
+                //cout << moved.representation << " added since it was selected" << endl;
+                neighbors.insert(new C4Board(moved));
             }
             break;
     }
     return neighbors;
 }
 
-std::unordered_set<double> C4Board::get_children_hashes(){
+unordered_set<double> C4Board::get_children_hashes(){
     if(!children_hashes_initialized) {
-        std::unordered_set<C4Board*> children = get_children();
+        unordered_set<C4Board*> children = get_children();
         for (const auto& child : children) {
             children_hashes.insert(child->get_hash());
         }
         children_hashes_initialized = true;
     }
     return children_hashes;
+}
+
+string replerp(const string& b1, const string& b2, double w) {
+    if (b1.find(b2) == 0 || b2.find(b1) == 0) {
+        // One string begins with the other
+        int range = b2.size() - b1.size();
+        return (b1.size() > b2.size() ? b1 : b2).substr(0, round(b1.size() + w * range));
+    } else {
+        // Neither string begins with the other
+        int common_prefix_len = 0;
+        while (b1[common_prefix_len] == b2[common_prefix_len]) {
+            common_prefix_len++;
+        }
+
+        string common_prefix = b1.substr(0, common_prefix_len);
+        if(w<0.5) return replerp(b1, common_prefix, w*2);
+        else return replerp(common_prefix, b2, (w-.5)*2);
+    }
+}
+
+C4Board c4lerp(C4Board b1, C4Board b2, double w){
+    string representation = replerp(b1.representation, b2.representation, smoother2(w));
+    C4Board transition(representation);
+    return transition;
+}
+
+// Unit test for replerp function
+void replerp_ut() {
+    string b1 = "12345";
+    string b2 = "1";
+    bool pass = true;
+    pass &= replerp(b1, b2, 0.) == "12345";
+    pass &= replerp(b1, b2, 0.25) == "1234";
+    pass &= replerp(b1, b2, 0.5) == "123";
+    pass &= replerp(b1, b2, 0.75) == "12";
+    pass &= replerp(b1, b2, 1.) == "1";
+
+    pass &= replerp(b2, b1, 0.) == "1";
+    pass &= replerp(b2, b1, 0.25) == "12";
+    pass &= replerp(b2, b1, 0.5) == "123";
+    pass &= replerp(b2, b1, 0.75) == "1234";
+    pass &= replerp(b2, b1, 1.) == "12345";
+    if (!pass) {
+        cout << "replerp_ut - Case 1: Failed." << endl;
+        exit(1);
+    }
+
+    string b3 = "abc";
+    string b4 = "de";
+    pass = true;
+    pass &= replerp(b3, b4, 0.) == "abc";
+    pass &= replerp(b3, b4, 0.2) == "ab";
+    pass &= replerp(b3, b4, 0.4) == "a";
+    pass &= replerp(b3, b4, 0.6) == "";
+    pass &= replerp(b3, b4, 0.8) == "d";
+    pass &= replerp(b3, b4, 1.) == "de";
+
+    pass &= replerp(b4, b3, 0.) == "de";
+    pass &= replerp(b4, b3, 0.2) == "d";
+    pass &= replerp(b4, b3, 0.4) == "";
+    pass &= replerp(b4, b3, 0.6) == "a";
+    pass &= replerp(b4, b3, 0.8) == "ab";
+    pass &= replerp(b4, b3, 1.) == "abc";
+    if (!pass) {
+        cout << "replerp_ut - Case 2: Failed." << endl;
+        exit(1);
+    }
 }

@@ -14,8 +14,9 @@
 #include <glm/glm.hpp>
 #include <queue>
 #include <cstdlib>
+#include "DataObject.cpp"
 #include "GenericBoard.cpp"
-#include "../../misc/json.hpp"
+#include "../misc/json.hpp"
 using json = nlohmann::json;
 
 class Edge {
@@ -47,14 +48,14 @@ public:
      * @param t The data associated with the node.
      */
     Node(T* t, double hash) : data(t), hash(hash),
-        velocity(static_cast<double>(std::rand()) / RAND_MAX,
-                 static_cast<double>(std::rand()) / RAND_MAX,
-                 static_cast<double>(std::rand()) / RAND_MAX,
-                 static_cast<double>(std::rand()) / RAND_MAX), 
-        position(static_cast<double>(std::rand()) / RAND_MAX,
-                 static_cast<double>(std::rand()) / RAND_MAX,
-                 static_cast<double>(std::rand()) / RAND_MAX,
-                 static_cast<double>(std::rand()) / RAND_MAX) {}
+        velocity(10 * static_cast<double>(std::rand()) / RAND_MAX,
+                 10 * static_cast<double>(std::rand()) / RAND_MAX,
+                 10 * static_cast<double>(std::rand()) / RAND_MAX,
+                 10 * static_cast<double>(std::rand()) / RAND_MAX), 
+        position(10 * static_cast<double>(std::rand()) / RAND_MAX,
+                 10 * static_cast<double>(std::rand()) / RAND_MAX,
+                 10 * static_cast<double>(std::rand()) / RAND_MAX,
+                 10 * static_cast<double>(std::rand()) / RAND_MAX) {}
 
     T* data;
     double hash = 0;
@@ -84,12 +85,11 @@ public:
     double root_node_hash = 0;
 
     double gravity_strength = 0;
-    double decay = .9;
-    double speedlimit = 3;
-    double repel_force = 1;
-    double attract_force = 1;
+    double decay = .90;
+    double speedlimit = 10;
+    double repel_force = .4;
+    double attract_force = .4;
     int dimensions = 2;
-    bool sqrty = true;
 
     Graph(){}
 
@@ -403,11 +403,13 @@ public:
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
             if(node->immobile) continue;
+
             double magnitude = glm::length(node->velocity);
             if(magnitude > speedlimit) {
                 double scale = speedlimit / magnitude;
                 node->velocity *= scale;
             }
+
             node->velocity.y += gravity_strength;
             node->velocity *= decay;
             node->position += node->velocity - center_of_mass;
@@ -417,13 +419,11 @@ public:
     }
 
     double get_attraction_force(double dist_sq){
-        if(sqrty) return attract_force * (dist_sq-1)/dist_sq;
-        else      return attract_force * (1/dist_sq + dist_sq - 2);
+        return attract_force * (dist_sq-1)/dist_sq;
     }
 
     double get_repulsion_force(double dist_sq){
-        if(sqrty) return -repel_force * .5/dist_sq;
-        else      return -repel_force * .0025 / (dist_sq*dist_sq);
+        return -repel_force / dist_sq;
     }
 
     void perform_pairwise_node_motion(Node<T>* node1, Node<T>* node2, bool repulsion_mode) {

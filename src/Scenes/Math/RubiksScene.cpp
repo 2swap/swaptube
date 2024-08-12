@@ -17,7 +17,6 @@ public:
             int color = get_color_as_function_of_normal(glm::cross(x_dir, y_dir);
             surfaces.push_back(Surface(node_pos, x_dir, y_dir, color));
         }
-        rendered = false;
     }
 
     int get_color_as_function_of_normal(const glm::vec3& normal){
@@ -29,7 +28,6 @@ public:
             delete s.scenePointer;
         }
         surfaces.clear();
-        rendered = false;
     }
 
     ~C4GraphScene(){

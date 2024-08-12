@@ -6,7 +6,7 @@
 #include <set>
 #include <unordered_set>
 #include <climits>
-#include "../Math/GenericBoard.cpp"
+#include "../GenericBoard.cpp"
 #include "SteadyState.h"
 
 enum C4BranchMode {
@@ -19,9 +19,9 @@ enum C4BranchMode {
 typedef unsigned long int Bitboard;
 C4BranchMode c4_branch_mode = TRIM_STEADY_STATES;
 
-std::unordered_map<std::string, C4Result> cache;
+unordered_map<string, C4Result> cache;
 
-std::string disk_col(int i){
+string disk_col(int i){
     if(i == 1) return "\033[31mx\033[0m";  // Red "x"
     if(i == 2) return "\033[33mo\033[0m";  // Yellow "o"
     return ".";
@@ -29,25 +29,27 @@ std::string disk_col(int i){
 
 class C4Board : public GenericBoard {
 public:
-    const int BOARD_WIDTH = C4_WIDTH;
-    const int BOARD_HEIGHT = C4_HEIGHT;
-    std::string representation;
+    int BOARD_WIDTH = C4_WIDTH;
+    int BOARD_HEIGHT = C4_HEIGHT;
+    string representation;
     Bitboard red_bitboard = 0, yellow_bitboard = 0;
-    std::string blurb = "A connect 4 board.";
-    std::string game_name = "c4";
+    string blurb = "A connect 4 board.";
+    string game_name = "c4";
     unordered_set<double> children_hashes;
     bool children_hashes_initialized = false;
 
     bool has_steady_state = false;
-    SteadyState steadystate;
+    shared_ptr<SteadyState> steadystate;
 
     C4Board(const C4Board& other);
-    C4Board(std::string representation);
+    C4Board(string representation);
+    C4Board(string representation, shared_ptr<SteadyState> ss);
+    C4Board();
     int piece_code_at(int x, int y) const;
     json get_data() const;
     int burst() const;
     int get_instant_win() const;
-    std::vector<int> get_winning_moves() const;
+    vector<int> get_winning_moves() const;
     int get_blocking_move() const;
     void print() const override;
     int random_legal_move() const;
@@ -57,24 +59,24 @@ public:
     bool is_solution() override;
     double board_specific_hash() const override;
     double board_specific_reverse_hash() const override;
-    void fill_board_from_string(const std::string& rep);
+    void fill_board_from_string(const string& rep);
     C4Board* remove_piece();
     void play_piece(int piece);
     C4Board child(int piece) const;
     C4Result who_is_winning(int& work, bool verbose = false);
     int get_human_winning_fhourstones();
     int get_best_winning_fhourstones();
-    void add_best_winning_fhourstones(std::unordered_set<C4Board*>& neighbors);
-    void add_all_winning_fhourstones(std::unordered_set<C4Board*>& neighbors);
-    void add_all_legal_children(std::unordered_set<C4Board*>& neighbors);
-    void add_all_good_children(std::unordered_set<C4Board*>& neighbors);
-    void add_only_child_steady_state(const SteadyState& ss, std::unordered_set<C4Board*>& neighbors);
-    std::unordered_set<C4Board*> get_children();
-    std::unordered_set<double> get_children_hashes();
+    void add_best_winning_fhourstones(unordered_set<C4Board*>& neighbors);
+    void add_all_winning_fhourstones(unordered_set<C4Board*>& neighbors);
+    void add_all_legal_children(unordered_set<C4Board*>& neighbors);
+    void add_all_good_children(unordered_set<C4Board*>& neighbors);
+    void add_only_child_steady_state(unordered_set<C4Board*>& neighbors);
+    unordered_set<C4Board*> get_children();
+    unordered_set<double> get_children_hashes();
 };
 
 void fhourstones_tests(){
-    std::cout << "fhourstones_tests" << std::endl;
+    cout << "fhourstones_tests" << endl;
     C4Board b("4444445623333356555216622");
     int work = -1;
     C4Result winner = b.who_is_winning(work);
@@ -85,12 +87,12 @@ void fhourstones_tests(){
 }
 
 void construction_tests(){
-    std::cout << "construction_tests" << std::endl;
+    cout << "construction_tests" << endl;
     C4Board a("71");
     a.print();
     assert(a.is_reds_turn());
-    std::cout << a.red_bitboard << std::endl;
-    std::cout << a.yellow_bitboard << std::endl;
+    cout << a.red_bitboard << endl;
+    cout << a.yellow_bitboard << endl;
     assert(a.red_bitboard == 70368744177664UL);
     assert(a.yellow_bitboard == 1099511627776UL);
 
@@ -120,8 +122,8 @@ void construction_tests(){
 }
 
 void winner_tests(){
-    std::cout << "winner_tests" << std::endl;
-    std::list<std::pair<std::string, C4Result>> pairs;
+    cout << "winner_tests" << endl;
+    list<pair<string, C4Result>> pairs;
     //verticals
     pairs.emplace_back("4141414", RED);
     pairs.emplace_back("1212121", RED);
@@ -143,18 +145,18 @@ void winner_tests(){
 
     int n = 0;
     for (const auto& pair : pairs) {
-        const std::string& rep = pair.first;
+        const string& rep = pair.first;
         C4Result winner = pair.second;
 
         C4Board b("");
         for (int i = 0; i < rep.size(); i++) {
             b.play_piece(rep[i] - '0'); // Convert char to int
             C4Result observed_winner = b.who_won();
-            std::cout << b.red_bitboard << ":" << observed_winner << std::endl;
+            cout << b.red_bitboard << ":" << observed_winner << endl;
             assert(observed_winner == (i == rep.size()-1 ? winner : INCOMPLETE));
         }
         n++;
-        std::cout << "Passed c4 unit test " << n << "!" << std::endl;
+        cout << "Passed c4 unit test " << n << "!" << endl;
     }
 }
 

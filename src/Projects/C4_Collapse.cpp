@@ -1,6 +1,6 @@
 using namespace std;
 #include <string>
-const string project_name = "C4_Simple_Weak";
+const string project_name = "C4_Collapse";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
@@ -22,19 +22,20 @@ const int VIDEO_FRAMERATE = 30;
 void render_video() {
     Graph<C4Board> g;
     g.dimensions = 3;
-    C4GraphScene gs(&g, "43667555535331111113322", SIMPLE_WEAK);
+    C4GraphScene gs(&g, "4363", TRIM_STEADY_STATES);
 
     gs.state_manager.set(unordered_map<string, string>{
         {"q1", "<t> .1 * cos"},
         {"qi", "0"},
         {"qj", "<t> .1 * sin"},
         {"qk", "0"},
-        {"d", "150"},
+        {"d", "600"},
         {"surfaces_opacity", "0"},
         {"points_opacity", "0"},
         {"physics_multiplier", "1"},
     });
-    gs.inject_audio_and_render(AudioSegment(4));
+    gs.inject_audio_and_render(AudioSegment(1));
+    cout << "GRAPH SIZE: " << g.size() << endl;
 }
 
 int main() {

@@ -16,7 +16,6 @@ static bool PRINT_TO_TERMINAL = true;
 
 class Scene {
 public:
-    virtual void draw() = 0;
     Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : w(width), h(height), state_manager(), pix(width, height) {
         state_manager.add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
@@ -25,10 +24,11 @@ public:
     // Scenes which contain other scenes use this to populate the StateQuery
     virtual const StateQuery populate_state_query() const = 0;
     virtual bool check_if_data_changed() const = 0;
-    bool check_if_state_changed() {return state != last_state || has_subscene_state_changed();}
+    virtual void draw() = 0;
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
     virtual bool has_subscene_state_changed() const {return false;}
+    bool check_if_state_changed() {return state != last_state || has_subscene_state_changed();}
     void query(Pixels*& p) {
         update_state();
         change_data();
@@ -134,8 +134,6 @@ private:
     }
 
 protected:
-    bool rendered = false;
-    bool is_transition = false;
     Pixels pix;
     int video_sessions_left = 0;
     int video_sessions_total = 0;

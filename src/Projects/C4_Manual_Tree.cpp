@@ -16,7 +16,7 @@ const int VIDEO_FRAMERATE = 30;
 
 #include "../io/writer.cpp"
 
-#include "../Scenes/Connect4/c4_graph_scene.cpp"
+#include "../Scenes/Connect4/Connect4GraphScene.cpp"
 #include "../misc/Timer.cpp"
 
 void render_video() {
@@ -27,9 +27,8 @@ void render_video() {
     g.dimensions = 2;
     g.sqrty = true;
     C4GraphScene gs(&g, "444", MANUAL, VIDEO_WIDTH, VIDEO_HEIGHT);
-    gs.physics_multiplier = 1;
 
-    gs.state_manager.add_equations(std::unordered_map<std::string, std::string>{
+    gs.state_manager.set(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
@@ -40,14 +39,15 @@ void render_video() {
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_opacity", "1"},
-        {"d", "2"}
+        {"physics_multiplier", "1"},
+        {"d", "2"},
     });
-    gs.state_manager.add_transitions(std::unordered_map<std::string, std::string>{
+    gs.state_manager.transition(std::unordered_map<std::string, std::string>{
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
         {"qk", "0"},
-        {"d", "8"}
+        {"d", "8"},
     });
     gs.inject_audio_and_render(AudioSegment(1));
     for(int i = 1; i <= 7; i++){
@@ -59,6 +59,5 @@ void render_video() {
 int main() {
     Timer timer;
     render_video();
-    timer.stop_timer();
     return 0;
 }

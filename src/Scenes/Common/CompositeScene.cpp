@@ -21,7 +21,7 @@ public:
             {state_manager_name + ".w", to_string(w)},
             {state_manager_name + ".h", to_string(h)},
         };
-        state_manager.add_equations(equations);
+        state_manager.set(equations);
         SceneWithPosition swp = {sc, state_manager_name};
         scenes.push_back(swp);
     }

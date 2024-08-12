@@ -77,12 +77,12 @@ class Surface : public ThreeDimensionalObject {
 public:
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
-    Scene* scenePointer;
+    shared_ptr<Scene> scenePointer;
     float ilr2;
     float iur2;
     glm::vec3 normal;
 
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, Scene* sc)
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, shared_ptr<Scene> sc)
         : ThreeDimensionalObject(c, 0, 1), pos_x_dir(l), pos_y_dir(u), scenePointer(sc),
           ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     void render(ThreeDimensionScene& scene) const override;
@@ -92,7 +92,7 @@ class ThreeDimensionScene : public Scene {
 public:
     ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height), sketchpad(width, height) {
-        state_manager.add_equations(unordered_map<string, string>{
+        state_manager.set(unordered_map<string, string>{
             {"fov", ".5"},
             {"x", "0"},
             {"y", "0"},
@@ -307,6 +307,7 @@ public:
 
         // Create a list of pointers to the things
         vector<const ThreeDimensionalObject*> obj_ptrs;
+        obj_ptrs.clear();
         if (obj_ptrs.empty()) {
             for (const Surface& surface : surfaces)
                 obj_ptrs.push_back(&surface);
