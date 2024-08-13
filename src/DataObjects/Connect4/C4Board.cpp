@@ -28,11 +28,6 @@ C4Board::C4Board(string representation, shared_ptr<SteadyState> ss) : steadystat
     fill_board_from_string(representation);
 }
 
-//this is in 0-indexed, upside down x and y land
-int bitboard_at(Bitboard bb, int x, int y){
-    return (bb >> x >> y*(C4_WIDTH+1))&1UL;
-}
-
 int C4Board::piece_code_at(int x, int y) const {
     return bitboard_at(red_bitboard, x, y) + (2*bitboard_at(yellow_bitboard, x, y));
 }
@@ -47,8 +42,12 @@ void C4Board::print() const {
     }
 }
 
+Bitboard C4Board::legal_moves() const {
+    return downset(red_bitboard | yellow_bitboard);
+}
+
 bool C4Board::is_legal(int x) const {
-    return (((red_bitboard|yellow_bitboard) >> (x-1)) & 1) == 0;
+    return (((red_bitboard|yellow_bitboard) >> (x-1)) & 1ul) == 0ul;
 }
 
 int C4Board::random_legal_move() const {
@@ -92,17 +91,6 @@ bool C4Board::is_solution() {
     return winner == RED || winner == YELLOW;
 }
 
-/*double unsignedLongToDouble(Bitboard value) {
-    // Use type punning to reinterpret the bits of 'value' as a double
-    double result;
-    memcpy(&result, &value, sizeof(result));
-    return result;
-}
-
-double C4Board::board_specific_hash() const {
-    return unsignedLongToDouble(red_bitboard) + unsignedLongToDouble(yellow_bitboard)*2;
-}*/
-
 double C4Board::board_specific_hash() const {
     double a = 1;
     double hash_in_progress = 0;
@@ -138,32 +126,24 @@ void C4Board::fill_board_from_string(const string& rep)
 void C4Board::play_piece(int piece){
     if(piece < 0) {
         print();
-        steadystate->print();
         failout("Attempted playing a piece in an illegal column. Representation: " + representation + ", piece: " + to_string(piece));
     }
     if(hash != 0) {print(); cout << "oops " << representation << " " << piece << endl; exit(1);}
+
     if(piece > 0){
         if(!is_legal(piece)) {print(); cout << "gah " << representation << " " << piece << endl; exit(1);}
         int x = piece - 1; // convert from 1index to 0
-        int y = 0;
-        Bitboard bb = (red_bitboard | yellow_bitboard);
-        for (y = C4_HEIGHT - 1; y >= 0; y--) {
-            if (bitboard_at(bb, x, y) == 0) {
-                Bitboard piece = 1UL << x << (y*(C4_WIDTH+1));
-                if(is_reds_turn()) red_bitboard += piece;
-                else yellow_bitboard += piece;
-                break;
-            }
-        }
-        representation+=to_string(piece);
-    } else {
-        representation+='0';
+        Bitboard p = legal_moves() & make_column(x);
+        if(is_reds_turn()) red_bitboard += p;
+        else yellow_bitboard += p;
     }
+    representation+=to_string(piece);
 }
 
 C4Board C4Board::child(int piece) const{
     C4Board new_board(*this);
     new_board.hash = 0;
+
     new_board.play_piece(piece);
     return new_board;
 }
@@ -350,8 +330,9 @@ int C4Board::burst() const{
 }
 
 int C4Board::get_human_winning_fhourstones() {
-    int ret = movecache.GetSuggestedMoveIfExists(get_hash());
-    if(ret != -1) return ret;
+    // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
+    //int ret = movecache.GetSuggestedMoveIfExists(get_hash());
+    //if(ret != -1) return ret;
 
     int b = burst();
     if(b != -1){
@@ -377,12 +358,13 @@ int C4Board::get_human_winning_fhourstones() {
 
     print();
 
-    //cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
+    cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
     for (size_t i = 0; i < winning_columns.size(); i++) {
         cout << "Column " << winning_columns[i] << endl;
     }
+    cout << "Or type -1 to continue searching for steadystates." << endl;
 
-    int choice;
+    int choice = -10;
     do {
         cout << "Enter your choice: ";
         cin >> choice;
@@ -391,6 +373,7 @@ int C4Board::get_human_winning_fhourstones() {
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
+        if (choice == -1) return get_human_winning_fhourstones();
     } while (find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
 
     movecache.AddOrUpdateEntry(get_hash(), representation, choice);
@@ -490,6 +473,7 @@ unordered_set<C4Board*> C4Board::get_children(){
                     add_all_good_children(neighbors);
                 }
             }else{ // red's move
+
                 C4Board moved = child(get_human_winning_fhourstones());
                 //cout << moved.representation << " added since it was selected" << endl;
                 neighbors.insert(new C4Board(moved));

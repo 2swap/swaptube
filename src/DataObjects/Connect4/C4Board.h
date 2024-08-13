@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <climits>
 #include "../GenericBoard.cpp"
+#include "Bitboard.cpp"
 #include "SteadyState.h"
 
 enum C4BranchMode {
@@ -16,7 +17,6 @@ enum C4BranchMode {
     FULL,
     MANUAL
 };
-typedef unsigned long int Bitboard;
 C4BranchMode c4_branch_mode = TRIM_STEADY_STATES;
 
 unordered_map<string, C4Result> cache;
@@ -32,7 +32,7 @@ public:
     int BOARD_WIDTH = C4_WIDTH;
     int BOARD_HEIGHT = C4_HEIGHT;
     string representation;
-    Bitboard red_bitboard = 0, yellow_bitboard = 0;
+    Bitboard red_bitboard = 0ul, yellow_bitboard = 0ul;
     string blurb = "A connect 4 board.";
     string game_name = "c4";
     unordered_set<double> children_hashes;
@@ -48,6 +48,7 @@ public:
     int piece_code_at(int x, int y) const;
     json get_data() const;
     int burst() const;
+    Bitboard legal_moves() const;
     int get_instant_win() const;
     vector<int> get_winning_moves() const;
     int get_blocking_move() const;

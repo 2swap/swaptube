@@ -32,17 +32,28 @@ public:
     int query_steady_state(const C4Board board) const;
     void mutate();
     void drop(int x, char c);
-    C4Result play_one_game(const string& boardString, string& defeat, const string& prior_defeat, bool verbose) const;
+    C4Result play_one_game(const string& boardString) const;
     void print() const;
+    int bitboard_yellow = 0;
+    int bitboard_red = 0;
+    int bitboard_miai = 0;
+    int bitboard_claimeven = 0;
+    int bitboard_claimodd = 0;
+    int bitboard_plus = 0;
+    int bitboard_equal = 0;
+    int bitboard_minus = 0;
     char steadystate[C4_HEIGHT][C4_WIDTH];
+    bool validate_steady_state(const C4Board& b, int& branches_searched);
+    char get_char(int x, int y) const;
+    void set_char(int x, int y, char c);
 
 
     void write_to_file(const string& filename) const {
         ofstream file(filename);
         if (file.is_open()) {
-            for (int row = 0; row < C4_HEIGHT; ++row) {
-                for (int col = 0; col < C4_WIDTH; ++col) {
-                    file << steadystate[row][col];
+            for (int y = 0; y < C4_HEIGHT; ++y) {
+                for (int x = 0; x < C4_WIDTH; ++x) {
+                    file << get_char(x, y);
                 }
                 file << endl;
             }
@@ -53,14 +64,13 @@ public:
         print();
         ifstream file(filename);
         if (file.is_open()) {
-            for (int row = 0; row < C4_HEIGHT; ++row) {
+            for (int y = 0; y < C4_HEIGHT; ++y) {
                 string line;
                 if (getline(file, line)) { // Read the entire line as a string
                     // Check if the line length matches the expected width
                     if (line.length() == static_cast<size_t>(C4_WIDTH)) {
-                        for (int col = 0; col < C4_WIDTH; ++col) {
-                            char c = line[col];
-                            steadystate[row][col] = c; // Assign characters to the array
+                        for (int x = 0; x < C4_WIDTH; ++x) {
+                            set_char(x, y, line[x]); // Assign characters to the array
                         }
                     } else {
                         cout << "Invalid line length in the file." << endl;

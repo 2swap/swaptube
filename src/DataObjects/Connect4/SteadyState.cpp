@@ -12,6 +12,14 @@ void populate_char_array(const array<string, C4_HEIGHT>& source, char dest[C4_HE
 
 vector<char> replacement_chars = {'+', '=', '-'};
 
+void SteadyState::set_char(int x, int y, char c){
+    steadystate[y][x] = c;
+}
+
+char SteadyState::get_char(int x, int y) const {
+    return steadystate[y][x];
+}
+
 SteadyState::SteadyState() {
     // Initialize the character array with empty cells
     for (int row = 0; row < C4_HEIGHT; ++row) {
@@ -42,7 +50,9 @@ int SteadyState::query_steady_state(const C4Board board) const {
     // Given a board, use the steady state to determine where to play.
     // Return the x position of the row to play in.
 
-    // Third Priority: Obey Miai
+    //Bitboard moveset = board.legal_moves();
+    // First Priority: Obey Miai
+
     int num_hash = 0;
     int hash_move = -10;
     int num_atp = 0;
@@ -66,7 +76,7 @@ int SteadyState::query_steady_state(const C4Board board) const {
         return hash_move;
     }
 
-    // Fourth Priority: Claimeven and Claimodd
+    // Second Priority: Claimeven and Claimodd
     // First, check there aren't 2 available claimparities
     int return_x = -1;
     vector<char> priorities(C4_WIDTH, 'x');
@@ -91,7 +101,7 @@ int SteadyState::query_steady_state(const C4Board board) const {
     }
     if(return_x != -1) return return_x+1;
 
-    // Fifth Priority: Priority Markings
+    // Third Priority: Priority Markings
     int x = -1;
     for (char c : priority_list) {
         auto it = find(priorities.begin(), priorities.end(), c);
@@ -101,6 +111,7 @@ int SteadyState::query_steady_state(const C4Board board) const {
                 x = static_cast<int>(distance(priorities.begin(), it));
                 break;
             } else {
+                // Case of two equal priorities
                 return -6;
             }
         }
@@ -193,56 +204,6 @@ void SteadyState::mutate() {
     }
 }
 
-C4Result SteadyState::play_one_game(const string& boardString, string& defeat, const string& prior_defeat, bool verbose) const {
-    string defeat_ = "";
-    C4Board board(boardString);
-    int moveno = 0;
-
-    bool off_the_rails = false;
-
-    C4Result winner = INCOMPLETE;
-    while (true) {
-        int randomColumn = board.get_instant_win();
-        if(randomColumn == -1){
-            randomColumn = board.get_blocking_move();
-        }
-        if(randomColumn == -1){
-            if (moveno < prior_defeat.size() && !off_the_rails){
-                int p = prior_defeat[moveno]-'0';
-                if(board.is_legal(p))
-                    randomColumn = p;
-                else off_the_rails = true;
-                if(rand()%20 == 0) off_the_rails = true;
-            }
-        }
-        if(randomColumn == -1){
-            randomColumn = board.random_legal_move();
-        }
-        moveno++;
-        defeat_ += '0'+randomColumn;
-        board.play_piece(randomColumn);
-        winner = board.who_won();
-        if(winner != INCOMPLETE) {
-            if(verbose) board.print();
-            defeat = defeat_;
-            return winner;
-        }
-
-        // Query the steady state and play the determined disk
-        int columnToPlay = query_steady_state(board);
-
-        if (columnToPlay < 0) {
-            if(verbose) board.print();
-            defeat = defeat_;
-            return TIE; // TODO this should forfeit
-        } else if (columnToPlay >= 1 && columnToPlay <= 7) {
-            board.play_piece(columnToPlay);
-        }
-        winner = board.who_won();
-        if(winner != INCOMPLETE) return winner;
-    }
-}
-
 void SteadyState::print() const {
     for(int y = 0; y < C4_HEIGHT; y++) {
         for(int x = 0; x < C4_WIDTH; x++) {
@@ -278,18 +239,49 @@ SteadyState create_random_steady_state(const C4Board& b) {
     return steadyState;
 }
 
-// Given a steady state and a board position, make sure that steady state solves that position
-bool validate_steady_state(string rep, SteadyState& ss) {
-    cout << "validating a steady state..." << endl;
-    C4Board b(rep);
+C4Result SteadyState::play_one_game(const string& boardString) const {
+    assert(boardString.size() % 2 == 1);
+    C4Board board(boardString);
 
-    //AllPossibleWorlds
-    // If all possible worlds do not have a 
+    C4Result winner = INCOMPLETE;
+    while (true) {
+        int randomColumn = board.random_legal_move();
+        board.play_piece(randomColumn);
+        winner = board.who_won();
+        if(board.who_won() != INCOMPLETE) return winner;
 
-    return false;
+        // Query the steady state and play the determined disk
+        int columnToPlay = query_steady_state(board);
+
+        if (columnToPlay < 0) return YELLOW;
+        else if (columnToPlay >= 1 && columnToPlay <= 7) board.play_piece(columnToPlay);
+        winner = board.who_won();
+        if(winner != INCOMPLETE) return winner;
+    }
 }
 
-shared_ptr<SteadyState> find_steady_state(string rep, int num_games) {
+// Given a steady state and a board position, make sure that steady state solves that position
+bool SteadyState::validate_steady_state(const C4Board& b, int& branches_searched) {
+
+    for (int i = 1; i <= 7; i++){
+        if(!b.is_legal(i)) continue;
+        branches_searched++;
+        C4Board child = b.child(i);
+        if(child.who_won() != INCOMPLETE) return false;
+
+        // Query the steady state and play the determined disk
+        int columnToPlay = query_steady_state(child.representation);
+
+        if (columnToPlay <= 0) return false;
+        else if (columnToPlay >= 1 && columnToPlay <= 7) child.play_piece(columnToPlay);
+        if(child.who_won() == RED) return true;
+        if(!validate_steady_state(child, branches_searched)) return false;
+    }
+
+    return true;
+}
+
+shared_ptr<SteadyState> find_steady_state(const string& rep, int num_games) {
     //cout << "Searching for a steady state..." << endl;
 
     C4Board b(rep);
@@ -305,20 +297,19 @@ shared_ptr<SteadyState> find_steady_state(string rep, int num_games) {
         shared_ptr<SteadyState> ss = make_shared<SteadyState>();
         ss->read_from_file(cachedFilename);
         ss->print();
-        cout << "Loaded cached steady state from file." << endl;
+        cout << "Loaded cached steady state from file " << cachedFilename << endl;
+        int branches_searched = 0;
+        if(!ss->validate_steady_state(b, branches_searched)){
+            failout("Saved steadystate was caught losing!");
+        }
+        cout << "Steadystate validated over " << branches_searched << " branches!" << endl;
         return ss;
     }
 
     vector<SteadyState> steady_states;
-    int num_coevolution = 100;
-    list<string> last_defeats;
-    for(int i = 0; i < num_coevolution; i++){
-        last_defeats.push_front("");
-    }
     int best = 1;
 
     // Generate a lot of random steady states
-    int verification = 30000;
     for (int i = 0; i < 100; ++i) {
         steady_states.push_back(create_random_steady_state(b));
     }
@@ -327,26 +318,32 @@ shared_ptr<SteadyState> find_steady_state(string rep, int num_games) {
     while(true){
         int consecutive_wins = 0;
         int idx = rand()%steady_states.size(); // Randomly select a steady state
-        auto coe = last_defeats.begin();
         while (true) {
             C4Result col;
-            string prior_defeat = "";
-            bool use_prior = rand()%5==-1;
-            if(use_prior){
-                prior_defeat = *coe;
-                coe++;
-                if(coe == last_defeats.end())
-                    coe = last_defeats.begin();
-            }
-            string new_defeat = "not_defeated";
-            col = steady_states[idx].play_one_game(rep, new_defeat, prior_defeat, false);
-            if(new_defeat != "not_defeated"){
-                last_defeats.push_front(new_defeat);
-                last_defeats.pop_back();
-            }
+            col = steady_states[idx].play_one_game(rep);
             games_played++;
 
-            if (col != RED) { // If it loses
+            bool eliminate_agent = false;
+            if (col != RED) {
+                eliminate_agent = true;
+            } else {
+                if(consecutive_wins > 500){
+                    int dont_care_how_many_branches = 0;
+                    if(steady_states[idx].validate_steady_state(rep, dont_care_how_many_branches)) {
+                        cout << "Steady state found after " << games_played << " games." << endl;
+                        shared_ptr<SteadyState> ss = make_shared<SteadyState>(steady_states[idx]);
+                        ss->print();
+                        string filename = "steady_states/" + ss_hash + ".ss";
+                        ss->write_to_file(filename);
+                        return ss;
+                    } else {
+                        eliminate_agent = true;
+                    }
+                }
+                consecutive_wins++;
+            }
+
+            if(eliminate_agent){
                 int n = 2.0*sqrt(consecutive_wins + .1);
                 for (int i = 0; i < n; ++i) {
                     int random_idx = rand() % steady_states.size();
@@ -364,16 +361,6 @@ shared_ptr<SteadyState> find_steady_state(string rep, int num_games) {
                     games_played = 0;
                 }
                 break;
-            } else {
-                if(consecutive_wins > verification){
-                    cout << "Steady state found after " << games_played << " games." << endl;
-                    shared_ptr<SteadyState> ss = make_shared<SteadyState>(steady_states[idx]);
-                    ss->print();
-                    string filename = "steady_states/" + ss_hash + ".ss";
-                    ss->write_to_file(filename);
-                    return ss;
-                }
-                consecutive_wins++;
             }
         }
     }
@@ -671,7 +658,7 @@ void steady_state_unit_tests_problem_6() {
 
     string s = "";
     for(int i = 0; i < 1000; i++){
-        assert(ss.play_one_game("4444443552522", s, "", false) == RED);
+        assert(ss.play_one_game("4444443552522") == RED);
     }
 }
 
