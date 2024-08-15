@@ -7,142 +7,127 @@
 #include <cassert>
 #include "C4Board.h"
 
-// Method to populate char** array from array of strings
-void populate_char_array(const array<string, C4_HEIGHT>& source, char dest[C4_HEIGHT][C4_WIDTH]);
-
 vector<char> replacement_chars = {'+', '=', '-'};
 
 void SteadyState::set_char(int x, int y, char c){
     steadystate[y][x] = c;
+    Bitboard point = make_point(x, y);
+    switch(c) {
+        case '@':
+            bitboard_miai += point;
+            break;
+        case ' ':
+            bitboard_claimeven += point;
+            break;
+        case '|':
+            bitboard_claimodd += point;
+            break;
+        case '+':
+            bitboard_plus += point;
+            break;
+        case '=':
+            bitboard_equals += point;
+            break;
+        case '-':
+            bitboard_minus += point;
+            break;
+        default:
+            failout("invalid SteadyState::set_char character.");
+    }
 }
 
-char SteadyState::get_char(int x, int y) const {
+// Method to populate char** array from array of strings
+void SteadyState::populate_char_array(const array<string, C4_HEIGHT>& source) {
+    for (int y = 0; y < C4_HEIGHT; ++y) {
+        for(int x = 0; x < C4_WIDTH; ++x){
+            set_char(x, y, source[y][x]);
+        }
+    }
+}
+
+char SteadyState::get_char_from_char_array(int x, int y) const {
     return steadystate[y][x];
 }
 
-SteadyState::SteadyState() {
+char SteadyState::get_char_from_bitboards(int x, int y) const {
+    Bitboard point = make_point(x, y);
+    char ret = 0;
+    if((bitboard_miai      & point) != 0ul) {assert(ret==0); ret='@';}
+    if((bitboard_claimeven & point) != 0ul) {assert(ret==0); ret=' ';}
+    if((bitboard_claimodd  & point) != 0ul) {assert(ret==0); ret='|';}
+    if((bitboard_plus      & point) != 0ul) {assert(ret==0); ret='+';}
+    if((bitboard_equals    & point) != 0ul) {assert(ret==0); ret='=';}
+    if((bitboard_minus     & point) != 0ul) {assert(ret==0); ret='-';}
+    assert(ret != 0);
+    return ret;
+}
+
+char SteadyState::get_char(int x, int y) const {
+    char a = get_char_from_char_array(x, y);
+    char b = get_char_from_bitboards(x, y);
+    if(a != b)
+        failout("Bitboards didnt match array!");
+    return a;
+}
+
+void SteadyState::clear() const {
     // Initialize the character array with empty cells
     for (int row = 0; row < C4_HEIGHT; ++row) {
         for (int col = 0; col < C4_WIDTH; ++col) {
-            steadystate[row][col] = ' ';
+            set_char(col, row, ' ');
         }
     }
+}
+
+SteadyState::SteadyState() {
+    clear();
 }
 
 SteadyState::SteadyState(const array<string, C4_HEIGHT>& chars) {
-    // Initialize the character array with empty cells
-    for (int row = 0; row < C4_HEIGHT; ++row) {
-        for (int col = 0; col < C4_WIDTH; ++col) {
-            steadystate[row][col] = ' ';
-        }
-    }
+    clear();
+
     // Initialize the character array with the provided strings
-    populate_char_array(chars, steadystate);
+    populate_char_array(chars);
 }
 
-int SteadyState::query_steady_state(const C4Board board) const {
-    int b[C4_HEIGHT][C4_WIDTH];
-    for (int y = 0; y < C4_HEIGHT; ++y) {
-        for (int x = 0; x < C4_WIDTH; ++x) {
-            b[y][x] = board.piece_code_at(x, y);
-        }
-    }
+int SteadyState::query_steady_state(const C4Board& board) const {
     // Given a board, use the steady state to determine where to play.
     // Return the x position of the row to play in.
 
-    //Bitboard moveset = board.legal_moves();
-    // First Priority: Obey Miai
+    Bitboard moveset = board.legal_moves();
 
-    int num_hash = 0;
-    int hash_move = -10;
-    int num_atp = 0;
-    int atp_move = -10;
-    for (int x = 0; x < C4_WIDTH; ++x) {
-        for (int y = 0; y < C4_HEIGHT; ++y) {
-            if(b[y][x] != 0) break;
-            if (steadystate[y][x]=='@') {
-                num_atp++;
-                atp_move = x+1;
-            } else if (steadystate[y][x]=='#') {
-                num_hash++;
-                hash_move = x+1;
-            }
-        }
-    }
-    if(num_atp == 1){
-        return atp_move;
-    }
-    if(num_hash == 1){
-        return hash_move;
-    }
+    // Construct priority list
+    Bitboard miai_moveset = moveset & bitboard_miai;
+    if (!is_power_of_two(miai_moveset)) miai_moveset = 0ul;
+    const Bitboard claims_moveset = (odd_rows & bitboard_claimodd) | (even_rows & bitboard_claimeven);
+    const Bitboard bitboards[] = {miai_moveset, claims_moveset, bitboard_plus, bitboard_equals, bitboard_minus};
 
-    // Second Priority: Claimeven and Claimodd
-    // First, check there aren't 2 available claimparities
-    int return_x = -1;
-    vector<char> priorities(C4_WIDTH, 'x');
-    for (int x = 0; x < C4_WIDTH; ++x) {
-        bool even = true;
-        for (int y = C4_HEIGHT - 1; y >= 0; --y) {
-            even = !even;
-            if (b[y][x] == 0) {
-                char ss = steadystate[y][x];
-                priorities[x] = ss;
-                if ((ss == ' ' && even) || (ss == '|' && !even)){
-                    if(return_x == -1){
-                        return_x = x;
-                    }
-                    else
-                        return -5;
-                        //if(rand()%2==1) return_x = x;
-                }
-                break;
-            }
-        }
-    }
-    if(return_x != -1) return return_x+1;
-
-    // Third Priority: Priority Markings
-    int x = -1;
-    for (char c : priority_list) {
-        auto it = find(priorities.begin(), priorities.end(), c);
-        if (it != priorities.end()) {
-            auto next_it = find(next(it), priorities.end(), c);
-            if (next_it == priorities.end()) {
-                x = static_cast<int>(distance(priorities.begin(), it));
-                break;
-            } else {
-                // Case of two equal priorities
-                return -6;
-            }
+    for (int n = 0; n < bitboards.size(); n++) {
+        const Bitboard this_priority_moveset = bitboards[n] & moveset;
+        if (this_moveset) {
+            // Case of two equal priorities
+            if (!is_power_of_two(this_priority_moveset) && this_priority_moveset != 0) return -6;
+            for (int x = 0; x < C4_WIDTH; x++) if(make_column(x) & this_moveset) return x;
+            failout("Failed to find a priority marking when one was expected.");
         }
     }
 
-    int y = -1;
-    for (int i = 0; i < C4_HEIGHT; ++i) {
-        if (b[i][x] == 0) {
-            y = i;
-            break;
-        }
-    }
-
-    if (y == -1 || x == -1) {
-        return -4;
-    }
-
-    return x+1;
+    // No instruction was provided.
+    return -4;
 }
 
-void SteadyState::drop(int x, char c){
+// TODO this is not performant and does not really make use of bitboards
+void SteadyState::drop(const int x, const char c){
     int y = C4_HEIGHT-1;
     for(y; y >= 0; y--){
-        char here = steadystate[y][x];
-        if(here != c && (here == ' ' || here == '|')){
+        const char here = get_char(x, y);
+        if(here != c && (here == ' ' || here == '|'))
             break;
-        }
     }
-    if(y>=0) steadystate[y][x] = c;
+    if(y>=0) set_char(x, y, c);
 }
 
+// TODO this is not performant and does not really make use of bitboards
 void SteadyState::mutate() {
     int r = rand()%10;
 
@@ -151,19 +136,19 @@ void SteadyState::mutate() {
         char c = '@';
         for(int y = 0; y < C4_WIDTH; y++){
             for(int x = 0; x < C4_WIDTH; x++){
-                if(steadystate[y][x] == c){
-                    steadystate[y][x] = replacement_chars[rand()%replacement_chars.size()];
+                if(get_char(x, y) == c){
+                    set_char(x, y, replacement_chars[rand()%replacement_chars.size()]);
                 }
             }
         }
         for(int i = 0; i < 2; i++){
             int x = rand()%C4_WIDTH;
             int y = C4_HEIGHT-1;
-            for(y; y >= 0; y--)
-                if(steadystate[y][x] != '1' && steadystate[y][x] != '2'){
-                    break;
-                }
-            if(y>=0 && !is_miai(steadystate[y][x])) steadystate[y][x] = c;
+            for(y; y >= 0; y--) {
+                char c_here = get_char(x, y);
+                if(c_here != '1' && c_here != '2') break;
+            }
+            if(y>=0 && !is_miai(get_char(x, y))) set_char(x, y, c);
             else i--;
         }
     }
@@ -192,10 +177,10 @@ void SteadyState::mutate() {
         int ct = 0;
         char claim = r==9?'|':' ';
         for (int y = 0; y < C4_HEIGHT; ++y) {
-            char c = steadystate[y][x];
+            char c = get_char(x, y);
             if(c != '1' && c != '2' && !is_miai(c)){
                 ct++;
-                steadystate[y][x] = claim;
+                set_char(x, y, claim);
             }
         }
         if((claim=='|') == (ct%2==0)){
@@ -207,7 +192,7 @@ void SteadyState::mutate() {
 void SteadyState::print() const {
     for(int y = 0; y < C4_HEIGHT; y++) {
         for(int x = 0; x < C4_WIDTH; x++) {
-            char c = steadystate[y][x];
+            char c = get_char(x, y);
             if(c == '1' or c == '2')
                 cout << disk_col(c-'0') << " ";
             else
@@ -219,24 +204,24 @@ void SteadyState::print() const {
 }
 
 SteadyState create_random_steady_state(const C4Board& b) {
-    SteadyState steadyState;
+    SteadyState ss;
 
     for (int y = 0; y < C4_HEIGHT; ++y) {
         for (int x = 0; x < C4_WIDTH; ++x) {
             int pc = b.piece_code_at(x, y);
             if (pc == 1) {
-                steadyState.steadystate[y][x] = '1';
+                ss.set_char(x, y, '1');
             } else if (pc == 2) {
-                steadyState.steadystate[y][x] = '2';
+                ss.set_char(x, y, '2');
             } else {
-                steadyState.steadystate[y][x] = ' ';
+                ss.set_char(x, y, ' ');
             }
         }
     }
 
-    steadyState.mutate();
+    ss.mutate();
 
-    return steadyState;
+    return ss;
 }
 
 C4Result SteadyState::play_one_game(const string& boardString) const {
@@ -346,7 +331,7 @@ shared_ptr<SteadyState> find_steady_state(const string& rep, int num_games) {
                     int random_idx = rand() % steady_states.size();
                     for(int y = 0; y < C4_HEIGHT; y++){
                         for(int x = 0; x < C4_WIDTH; x++){
-                            steady_states[random_idx].steadystate[y][x] = steady_states[idx].steadystate[y][x];
+                            steady_states[random_idx].set_char(x, y, steady_states[idx].get_char(x, y));
                         }
                     }
                     steady_states[random_idx].mutate();
@@ -363,15 +348,6 @@ shared_ptr<SteadyState> find_steady_state(const string& rep, int num_games) {
     }
 }
 
-
-// Method to populate char** array from array of strings
-void populate_char_array(const array<string, C4_HEIGHT>& source, char dest[C4_HEIGHT][C4_WIDTH]) {
-    for (int i = 0; i < C4_HEIGHT; ++i) {
-        for(int j = 0; j < C4_WIDTH; ++j){
-            dest[i][j] = source[i][j];
-        }
-    }
-}
 
 void steady_state_unit_tests_problem_1() {
     // Define the initial board configuration

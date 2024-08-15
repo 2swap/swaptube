@@ -34,3 +34,10 @@ inline void print_bitboard(Bitboard b) {
     }
     cout << endl;
 }
+
+inline void is_power_of_two(Bitboard b) {
+    return 0 == (n & (n-1));
+}
+
+inline const Bitboard even_rows = 0b00000000'11111111'00000000'11111111'00000000'11111111'00000000'11111111UL;
+inline const Bitboard  odd_rows = 0b11111111'00000000'11111111'00000000'11111111'00000000'11111111'00000000UL;

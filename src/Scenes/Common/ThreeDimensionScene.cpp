@@ -88,6 +88,21 @@ public:
     void render(ThreeDimensionScene& scene) const override;
 };
 
+glm::vec3 midpoint(const vector<glm::vec3>& vecs){
+    glm::vec3 ret(0.0f, 0.0f, 0.0f);
+    for(const glm::vec3& vec : vecs) ret += vec;
+    return ret/vec.size();
+}
+
+class Polygon : public ThreeDimensionalObject {
+public:
+    vector<glm::vec3> vertices;
+
+    Polygon(const vector<glm::vec3>& verts, int _color)
+        : ThreeDimensionalObject(midpoint(verts), _color, 1), vertices(verts) {}
+    void render(ThreeDimensionScene& scene) const override;
+};
+
 class ThreeDimensionScene : public Scene {
 public:
     ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
@@ -400,3 +415,4 @@ private:
 void   Point::render(ThreeDimensionScene& scene) const { scene.render_point  (*this); }
 void    Line::render(ThreeDimensionScene& scene) const { scene.render_line   (*this); }
 void Surface::render(ThreeDimensionScene& scene) const { scene.render_surface(*this); }
+void Polygon::render(ThreeDimensionScene& scene) const { scene.render_polygon(*this); }
