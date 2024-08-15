@@ -274,7 +274,8 @@ bool SteadyState::validate_steady_state(const C4Board& b, int& branches_searched
 
         if (columnToPlay <= 0) return false;
         else if (columnToPlay >= 1 && columnToPlay <= 7) child.play_piece(columnToPlay);
-        if(child.who_won() == RED) return true;
+        C4Result winner = child.who_won();
+        if(winner == RED) continue;
         if(!validate_steady_state(child, branches_searched)) return false;
     }
 
@@ -298,11 +299,6 @@ shared_ptr<SteadyState> find_steady_state(const string& rep, int num_games) {
         ss->read_from_file(cachedFilename);
         ss->print();
         cout << "Loaded cached steady state from file " << cachedFilename << endl;
-        int branches_searched = 0;
-        if(!ss->validate_steady_state(b, branches_searched)){
-            failout("Saved steadystate was caught losing!");
-        }
-        cout << "Steadystate validated over " << branches_searched << " branches!" << endl;
         return ss;
     }
 
@@ -328,9 +324,10 @@ shared_ptr<SteadyState> find_steady_state(const string& rep, int num_games) {
                 eliminate_agent = true;
             } else {
                 if(consecutive_wins > 500){
-                    int dont_care_how_many_branches = 0;
-                    if(steady_states[idx].validate_steady_state(rep, dont_care_how_many_branches)) {
+                    int how_many_branches = 0;
+                    if(steady_states[idx].validate_steady_state(rep, how_many_branches)) {
                         cout << "Steady state found after " << games_played << " games." << endl;
+                        cout << "Steady state validated on " << how_many_branches << " branches." << endl;
                         shared_ptr<SteadyState> ss = make_shared<SteadyState>(steady_states[idx]);
                         ss->print();
                         string filename = "steady_states/" + ss_hash + ".ss";

@@ -22,7 +22,7 @@ const int VIDEO_FRAMERATE = 30;
 void render_video() {
     Graph<C4Board> g;
     g.dimensions = 3;
-    C4GraphScene gs(&g, "4361", TRIM_STEADY_STATES);
+    C4GraphScene gs(&g, "4365", TRIM_STEADY_STATES);
 
     gs.state_manager.set(unordered_map<string, string>{
         {"q1", "<t> .1 * cos"},

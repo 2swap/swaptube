@@ -1,7 +1,7 @@
 build
 out
 media
-src/projects/.active_project.cpp
+src/Projects/.active_project.cpp
 
 # vim temp files
 *~

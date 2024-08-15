@@ -331,8 +331,8 @@ int C4Board::burst() const{
 
 int C4Board::get_human_winning_fhourstones() {
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    //int ret = movecache.GetSuggestedMoveIfExists(get_hash());
-    //if(ret != -1) return ret;
+    int ret = movecache.GetSuggestedMoveIfExists(get_hash());
+    if(ret != -1) return ret;
 
     int b = burst();
     if(b != -1){
