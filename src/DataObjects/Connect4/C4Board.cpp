@@ -115,8 +115,7 @@ double C4Board::board_specific_reverse_hash() const {
     return hash_in_progress;
 }
 
-void C4Board::fill_board_from_string(const string& rep)
-{
+void C4Board::fill_board_from_string(const string& rep) {
     // Iterate through the moves and fill the board
     for (int i = 0; i < rep.size(); i++) {
         play_piece(rep[i]-'0');
@@ -220,13 +219,7 @@ int C4Board::get_instant_win() const{
 }
 
 int C4Board::get_blocking_move() const{
-    for (int x = 1; x <= C4_WIDTH; ++x){
-        if(!is_legal(x)) continue;
-        C4Result whowon = child(0).child(x).who_won();
-        if(whowon == RED || whowon == YELLOW)
-            return x;
-    }
-    return -1;
+    return child(0).get_instant_win();
 }
 
 int C4Board::get_best_winning_fhourstones() {
@@ -286,13 +279,16 @@ int C4Board::burst() const{
     }
 
     // Add things already in the graph!
-    //drop a red piece in each column and see if it is in the graph
+    //drop a red piece in each column and see if it is in the graph or in the move cache
     for (int i = 0; i < winning_columns.size(); ++i) {
         int x = winning_columns[i];
-        if(graph_to_check_if_points_are_in->node_exists(child(x).get_hash())) {
+        C4Board child_x = child(x);
+        if(graph_to_check_if_points_are_in->node_exists(child_x.get_hash())) {
             //cout << representation <<x<< " added since it is in the graph already" << endl;
             return x;
         }
+        //int ret = movecache.GetSuggestedMoveIfExists(child_x.get_hash());
+        //if(ret != -1) return ret;
     }
 
     // Next Priority: Test for easy steadystates!
@@ -331,8 +327,11 @@ int C4Board::burst() const{
 
 int C4Board::get_human_winning_fhourstones() {
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    int ret = movecache.GetSuggestedMoveIfExists(get_hash());
-    if(ret != -1) return ret;
+    const bool SKIP_UNFOUND_STEADYSTATES = false;
+    if(SKIP_UNFOUND_STEADYSTATES){
+        int ret = movecache.GetSuggestedMoveIfExists(get_hash());
+        if(ret != -1) return ret;
+    }
 
     int b = burst();
     if(b != -1){
@@ -412,10 +411,10 @@ json C4Board::get_data() const {
     // Create a nested JSON array for the 2D array steadystate.steadystate
     json steadystate_array;
 
-    for (const auto& row : steadystate->steadystate) {
+    for (int y = 0; y < C4_HEIGHT; ++y) {
         json row_array;
-        for (const auto& value : row) {
-            char c = has_steady_state?value:' ';
+        for (int x = 0; x < C4_WIDTH; ++x) {
+            char c = has_steady_state?steadystate->get_char(x, y):' ';
             row_array.push_back(c);
         }
         steadystate_array.push_back(row_array);

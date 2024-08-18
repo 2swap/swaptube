@@ -42,10 +42,14 @@ public:
     virtual string get_latex() const = 0;
     virtual int parenthetical_depth() const = 0;
     virtual int num_variable_instantiations() const = 0;
+    virtual float get_width_recursive() const = 0;
+    virtual float get_height_recursive() const = 0;
     virtual bool is_reducible() const = 0;
     virtual void set_color_recursive(const int c) = 0;
     virtual void flush_uid_recursive() = 0;
     virtual void tint_recursive(const int c) = 0;
+    virtual void interpolate_recursive(shared_ptr<const LambdaExpression> l2, const float weight) = 0;
+    virtual void check_children_parents() const = 0;
     int get_uid(){ return uid; }
     int count_reductions(){
         shared_ptr<LambdaExpression> cl = clone();
@@ -82,8 +86,6 @@ public:
     shared_ptr<const LambdaExpression> get_parent() const {
         return parent;
     }
-
-    bool check_children_parents() const;
 
     int get_type_depth(const string& s) const {
         int depth = 0;
@@ -148,6 +150,24 @@ public:
 
     shared_ptr<LambdaExpression> clone() const override {
         return make_shared<LambdaVariable>(varname, color, parent, x, y, w, h, uid);
+    }
+
+    void check_children_parents() const {
+        // no children
+    }
+
+    float get_width_recursive() const {
+        return x + w;
+    }
+
+    float get_height_recursive() const {
+        return y + h;
+    }
+
+    void interpolate_recursive(shared_ptr<const LambdaExpression> l2, const float weight) {
+        interpolate_positions(l2, weight);
+        // No children to recurse
+        mark_updated();
     }
 
     void tint_recursive(const int c) {
@@ -231,8 +251,7 @@ public:
     }
 
     shared_ptr<LambdaExpression> clone() const override {
-        shared_ptr<LambdaExpression> b = body->clone();
-        return abstract(bound_variable, b, color, parent, x, y, w, h, uid);
+        return abstract(bound_variable, body, color, parent, x, y, w, h, uid);
     }
 
     string get_string() const override {
@@ -241,6 +260,26 @@ public:
 
     string get_latex() const {
         return latex_color(color, string("(\\lambda ") + bound_variable + ". ") + body->get_latex() + latex_color(color, ")");
+    }
+
+    void check_children_parents() const {
+        if(body->get_parent() != shared_from_this())
+            failout("LambdaAbstraction failed child-parent check!");
+    }
+
+    float get_width_recursive() const {
+        return max(x + w, body->get_width_recursive());
+    }
+
+    float get_height_recursive() const {
+        return max(y + h, body->get_height_recursive());
+    }
+
+    void interpolate_recursive(shared_ptr<const LambdaExpression> l2, const float weight) {
+        interpolate_positions(l2, weight);
+        shared_ptr<const LambdaExpression> l2_body = dynamic_pointer_cast<const LambdaAbstraction>(l2)->get_body();
+        body->interpolate_recursive(l2_body, weight);
+        mark_updated();
     }
 
     void tint_recursive(const int c) {
@@ -347,9 +386,7 @@ public:
     }
 
     shared_ptr<LambdaExpression> clone() const override {
-        shared_ptr<LambdaExpression> f = first->clone();
-        shared_ptr<LambdaExpression> s = second->clone();
-        return apply(f, s, color, parent, x, y, w, h, uid);
+        return apply(first, second, color, parent, x, y, w, h, uid);
     }
 
     string get_string() const override {
@@ -358,6 +395,28 @@ public:
 
     string get_latex() const {
         return latex_color(color, "(") + first->get_latex() + " " + second->get_latex() + latex_color(color, ")");
+    }
+
+    void check_children_parents() const {
+        if(first->get_parent() != shared_from_this() || second->get_parent() != shared_from_this())
+            failout("LambdaApplication failed child-parent check!");
+    }
+
+    float get_width_recursive() const {
+        return max(x + w, max(first->get_width_recursive(), second->get_width_recursive()));
+    }
+
+    float get_height_recursive() const {
+        return max(y + h, max(first->get_height_recursive(), second->get_height_recursive()));
+    }
+
+    void interpolate_recursive(shared_ptr<const LambdaExpression> l2, const float weight) {
+        interpolate_positions(l2, weight);
+        shared_ptr<const LambdaExpression> l2_first = dynamic_pointer_cast<const LambdaApplication>(l2)->get_first();
+        first->interpolate_recursive(l2_first, weight);
+        shared_ptr<const LambdaExpression> l2_second = dynamic_pointer_cast<const LambdaApplication>(l2)->get_second();
+        second->interpolate_recursive(l2_second, weight);
+        mark_updated();
     }
 
     void tint_recursive(const int c) {
@@ -511,7 +570,7 @@ void LambdaExpression::set_positions() {
         if (current->get_type() == "Variable") {
             current->x = iter_x+1;
             current->y = 1 + dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction()->get_abstraction_depth() * 2;
-            current->h = nearest_ancestor_y - current->y;
+            current->h = nearest_ancestor_y - current->y + 1;
             iter_x+=4;
         }
         if(current->get_type() == "Abstraction") {
@@ -531,53 +590,63 @@ void LambdaExpression::set_positions() {
 Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
     if(parent != nullptr) failout("draw_lambda_diagram called on a child expression");
     if(w + h + x + y == 0) failout("Attempted drawing lambda diagram with unset positions!");
-    int bounding_box_w = (num_variable_instantiations() * 4 - 1) * scale;
-    int bounding_box_h = (parenthetical_depth() * 2) * scale;
-    Pixels pix(bounding_box_w, bounding_box_h);
+    float bounding_box_w = get_width_recursive();
+    float bounding_box_h = get_height_recursive();
+    Pixels pix(bounding_box_w * scale, bounding_box_h * scale);
     pix.fill(TRANSPARENT_BLACK);
 
     for(int i = 0; i < 2; i++){
         Iterator it(shared_from_this());
         while (it.has_next()) {
             shared_ptr<LambdaExpression> current = it.next();
+            current->check_children_parents();
             int color = current->get_color();
             if((i==0)==(geta(color) == 255)) continue;
             if (current->get_type() == "Variable") {
-                pix.fill_rect(current->x * scale, current->y * scale, 8, current->h * scale, color);
+                pix.fill_rect(current->x * scale, current->y * scale, scale, current->h * scale, color);
             }
             if(current->get_type() == "Abstraction") {
-                pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, 8, color);
+                pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, scale, color);
             }
             if(current->get_type() == "Application") {
-                pix.fill_rect(current->x * scale, current->y * scale, 8, current->h * scale, color);
-                pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, 8, color);
+                pix.fill_rect(current->x * scale, current->y * scale, scale, current->h * scale, color);
+                pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, scale, color);
             }
         }
     }
     return pix;
 }
 
-shared_ptr<LambdaExpression> get_interpolated(shared_ptr<const LambdaExpression> l1, shared_ptr<LambdaExpression> l2, const float weight){
-    shared_ptr<LambdaExpression> ret = l1->clone();
+shared_ptr<LambdaExpression> get_interpolated_half(shared_ptr<LambdaExpression> l1, shared_ptr<const LambdaExpression> l2, const float weight){
+    // Step 1: Create a map from uid to LambdaExpression pointers for l1
+    unordered_map<int, shared_ptr<LambdaExpression>> l1_map;
+    LambdaExpression::Iterator it_l1(l1);
+    while (it_l1.has_next()) {
+        shared_ptr<LambdaExpression> current_l1 = it_l1.next();
+        l1_map[current_l1->get_uid()] = current_l1;
+    }
+
+    // Step 2: Iterate over it_ret and use the map for interpolation
+    shared_ptr<LambdaExpression> ret = l2->clone();
     LambdaExpression::Iterator it_ret(ret);
     while (it_ret.has_next()) {
         shared_ptr<LambdaExpression> current_ret = it_ret.next();
-        int uid_ret = current_ret->get_uid();
-        LambdaExpression::Iterator it_l2(l2);
-        bool found = false;
-        while (it_l2.has_next()) {
-            shared_ptr<LambdaExpression> current_l2 = it_l2.next();
-            int uid_l2 = current_l2->get_uid();
-            if(uid_ret == uid_l2){
-                current_ret->interpolate_positions(current_l2, weight);
-                current_ret->set_color(colorlerp(current_ret->get_color(), current_l2->get_color(), weight));
-                found = true;
-                break;
-            }
+
+        auto it = l1_map.find(current_ret->get_uid());
+        if (it != l1_map.end()) {
+            shared_ptr<LambdaExpression> current_l1 = it->second;
+            current_ret->interpolate_positions(current_l1, weight);
+            current_ret->set_color(colorlerp(current_ret->get_color(), current_l1->get_color(), weight));
+        } else {
+            current_ret->set_color(colorlerp(current_ret->get_color(), current_ret->get_color() & 0x00ffffff, weight));
         }
-        if(!found) current_ret->set_color(colorlerp(current_ret->get_color(), 0, weight));
     }
+
     return ret;
+}
+
+pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> get_interpolated(shared_ptr<LambdaExpression> l1, shared_ptr<LambdaExpression> l2, const float weight){
+    return make_pair(get_interpolated_half(l2, l1, weight), get_interpolated_half(l1, l2, 1-weight));
 }
 
 shared_ptr<const LambdaAbstraction> LambdaVariable::get_bound_abstraction() const {

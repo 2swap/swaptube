@@ -27,25 +27,27 @@ bool is_miai(char c){
 
 class SteadyState {
 public:
-    SteadyState();
     SteadyState(const array<string, C4_HEIGHT>& chars);
-    int query_steady_state(const C4Board board) const;
+    int query_steady_state(const C4Board& board) const;
     void mutate();
-    void drop(int x, char c);
-    C4Result play_one_game(const string& boardString) const;
+    void drop(const int x, const char c);
+    C4Result play_one_game(const C4Board& board) const;
     void print() const;
-    int bitboard_yellow = 0ul;
-    int bitboard_red = 0ul;
-    int bitboard_miai = 0ul;
-    int bitboard_claimeven = 0ul;
-    int bitboard_claimodd = 0ul;
-    int bitboard_plus = 0ul;
-    int bitboard_equal = 0ul;
-    int bitboard_minus = 0ul;
-    char steadystate[C4_HEIGHT][C4_WIDTH];
+    void clear();
+    Bitboard bitboard_yellow = 0ul;
+    Bitboard bitboard_red = 0ul;
+    Bitboard bitboard_miai = 0ul;
+    Bitboard bitboard_claimeven = 0ul;
+    Bitboard bitboard_claimodd = 0ul;
+    Bitboard bitboard_plus = 0ul;
+    Bitboard bitboard_equal = 0ul;
+    Bitboard bitboard_minus = 0ul;
+    void populate_char_array(const array<string, C4_HEIGHT>& source);
     bool validate_steady_state(const C4Board& b, int& branches_searched);
-    char get_char(int x, int y) const;
-    void set_char(int x, int y, char c);
+    char get_char(const int x, const int y) const;
+    void set_char(const int x, const int y, const char c);
+    char get_char_from_char_array(const int x, const int y) const;
+    char get_char_from_bitboards(const int x, const int y) const;
 
 
     void write_to_file(const string& filename) const {
@@ -60,27 +62,22 @@ public:
         }
     }
 
-    void read_from_file(const string& filename) {
-        print();
-        ifstream file(filename);
-        if (file.is_open()) {
-            for (int y = 0; y < C4_HEIGHT; ++y) {
-                string line;
-                if (getline(file, line)) { // Read the entire line as a string
-                    // Check if the line length matches the expected width
-                    if (line.length() == static_cast<size_t>(C4_WIDTH)) {
-                        for (int x = 0; x < C4_WIDTH; ++x) {
-                            set_char(x, y, line[x]); // Assign characters to the array
-                        }
-                    } else {
-                        cout << "Invalid line length in the file." << endl;
-                        exit(1);
-                    }
-                } else {
-                    cout << "STEADYSTATE CACHE READ ERROR" << endl;
-                    exit(1);
-                }
-            }
-        }
-    }
 };
+
+SteadyState read_from_file(const string& filename) {
+    array<string, C4_HEIGHT> chars;
+
+    ifstream file(filename);
+    if (file.is_open()) {
+        for (int y = 0; y < C4_HEIGHT; ++y) {
+            string line;
+            if (getline(file, line)) { // Read the entire line as a string
+                // Check if the line length matches the expected width
+                if (line.length() == static_cast<size_t>(C4_WIDTH)) {
+                    chars[y] = line;
+                } else failout("Invalid line length in the file.");
+            } else failout("STEADYSTATE CACHE READ ERROR");
+        }
+    } else failout("Failed to read SteadyState file.");
+    return SteadyState(chars);
+}

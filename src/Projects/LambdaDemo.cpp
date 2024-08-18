@@ -4,7 +4,7 @@ const string project_name = "LambdaDemo";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const int mult = 1;
+const int mult = 2;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -66,15 +66,15 @@ void render_video() {
 
     PRINT_TO_TERMINAL = false;
     // Show the lambda expression for 
-    int num_reductions = term->count_reductions() + 2;
-    tds.inject_audio(AudioSegment(8), num_reductions);//"What you're looking at right now is a computation taking place."), num_reductions);
+    int num_reductions = term->count_reductions() + 4;
+    tds.inject_audio(AudioSegment(40), num_reductions);//"What you're looking at right now is a computation taking place."), num_reductions);
     tds.render();
     for(int i = 0; i < num_reductions - 1; i++){
         ls.reduce();
         tds.render();
     }
     return;
-    tds.inject_audio_and_render(AudioSegment("More specifically, it's evaluating 4 factorial, and soon, it will arrive at the result of 24."));
+    tds.inject_audio_and_render(AudioSegment("Specifically, it's evaluating 3 factorial, and soon, it will arrive at the result of 6."));
     tds.inject_audio_and_render(AudioSegment("Oh look, it's done!"));
 
     // 

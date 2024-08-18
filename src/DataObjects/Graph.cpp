@@ -48,14 +48,14 @@ public:
      * @param t The data associated with the node.
      */
     Node(T* t, double hash) : data(t), hash(hash),
-        velocity(10 * static_cast<double>(std::rand()) / RAND_MAX,
-                 10 * static_cast<double>(std::rand()) / RAND_MAX,
-                 10 * static_cast<double>(std::rand()) / RAND_MAX,
-                 10 * static_cast<double>(std::rand()) / RAND_MAX), 
-        position(10 * static_cast<double>(std::rand()) / RAND_MAX,
-                 10 * static_cast<double>(std::rand()) / RAND_MAX,
-                 10 * static_cast<double>(std::rand()) / RAND_MAX,
-                 10 * static_cast<double>(std::rand()) / RAND_MAX) {}
+        velocity(10 * static_cast<double>(rand()) / RAND_MAX,
+                 10 * static_cast<double>(rand()) / RAND_MAX,
+                 10 * static_cast<double>(rand()) / RAND_MAX,
+                 10 * static_cast<double>(rand()) / RAND_MAX), 
+        position(10 * static_cast<double>(rand()) / RAND_MAX,
+                 10 * static_cast<double>(rand()) / RAND_MAX,
+                 10 * static_cast<double>(rand()) / RAND_MAX,
+                 10 * static_cast<double>(rand()) / RAND_MAX) {}
 
     T* data;
     double hash = 0;
@@ -433,6 +433,52 @@ public:
         glm::dvec4 change = delta * force;
         node2->velocity += change;
         node1->velocity -= change;
+    }
+
+    void render_json(string json_out_filename) {
+        ofstream myfile;
+        myfile.open(json_out_filename);
+
+        json json_data;
+
+        json nodes_to_use;
+        for (auto it = nodes.begin(); it != nodes.end(); ++it) {
+            const Node<T>& node = it->second;
+            json node_info;
+            node_info["x"] = node.position.x;
+            node_info["y"] = node.position.y;
+            node_info["z"] = node.position.z;
+            node_info["representation"] = node.data->representation;
+            node_info["highlight"] = node.highlight;
+            node_info["data"] = node.data->get_data();
+
+            json neighbors;
+            for (const auto& neighbor : node.neighbors) {
+                ostringstream oss;
+                oss << setprecision(numeric_limits<double>::digits10 + 2) << neighbor.to;
+                neighbors.push_back(oss.str());
+            }
+            node_info["neighbors"] = neighbors;
+
+            ostringstream oss;
+            oss << setprecision(numeric_limits<double>::digits10 + 2) << it->first;
+            nodes_to_use[oss.str()] = node_info;
+        }
+
+        json_data["nodes_to_use"] = nodes_to_use;
+        json_data["nodes_to_use"].dump(4, ' ', false, json::error_handler_t::ignore);
+
+        ostringstream oss;
+        oss << setprecision(numeric_limits<double>::digits10 + 2) << root_node_hash;
+        json_data["root_node_hash"] = oss.str();
+        json_data["board_w"] = nodes.find(root_node_hash)->second.data->BOARD_WIDTH;
+        json_data["board_h"] = nodes.find(root_node_hash)->second.data->BOARD_HEIGHT;
+        json_data["game_name"] = nodes.find(root_node_hash)->second.data->game_name;
+
+        myfile << setw(4) << json_data;
+
+        myfile.close();
+        cout << "Rendered json!" << endl;
     }
 };
 

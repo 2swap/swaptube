@@ -91,7 +91,7 @@ public:
 glm::vec3 midpoint(const vector<glm::vec3>& vecs){
     glm::vec3 ret(0.0f, 0.0f, 0.0f);
     for(const glm::vec3& vec : vecs) ret += vec;
-    return ret/vec.size();
+    return ret * (1.0f/vecs.size());
 }
 
 class Polygon : public ThreeDimensionalObject {
@@ -415,4 +415,4 @@ private:
 void   Point::render(ThreeDimensionScene& scene) const { scene.render_point  (*this); }
 void    Line::render(ThreeDimensionScene& scene) const { scene.render_line   (*this); }
 void Surface::render(ThreeDimensionScene& scene) const { scene.render_surface(*this); }
-void Polygon::render(ThreeDimensionScene& scene) const { scene.render_polygon(*this); }
+// To be implemented. void Polygon::render(ThreeDimensionScene& scene) const { scene.render_polygon(*this); }
