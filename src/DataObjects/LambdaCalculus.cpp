@@ -569,7 +569,7 @@ void LambdaExpression::set_positions() {
         int nearest_ancestor_y = nearest_ancestor_application != nullptr ? bounding_box_h - nearest_ancestor_application->get_application_depth() * 2 - 2 : bounding_box_h;
         if (current->get_type() == "Variable") {
             current->x = iter_x+1;
-            current->y = 1 + dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction()->get_abstraction_depth() * 2;
+            current->y = dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction()->get_abstraction_depth() * 2;
             current->h = nearest_ancestor_y - current->y + 1;
             iter_x+=4;
         }
@@ -582,7 +582,7 @@ void LambdaExpression::set_positions() {
             current->x = iter_x+1;
             current->w = dynamic_pointer_cast<LambdaApplication>(current)->get_first()->num_variable_instantiations() * 4 + 1;
             current->y = bounding_box_h - current->get_application_depth() * 2 - 2;
-            current->h = nearest_ancestor_y - current->y;
+            current->h = nearest_ancestor_y - current->y + 1;
         }
     }
 }

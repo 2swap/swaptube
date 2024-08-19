@@ -4,7 +4,7 @@ const string project_name = "LambdaDemo";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const int mult = 2;
+const float mult = 2;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -14,14 +14,14 @@ const int VIDEO_FRAMERATE = 30;
 #include "../io/writer.cpp"
 #include "../misc/Timer.cpp"
 
-//#include "../Scenes/Common/ThreeDimensionScene.cpp"
+#include "../Scenes/Common/ThreeDimensionScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Math/LambdaScene.cpp"
 #include "../Scenes/Media/PngScene.cpp"
 #include "../Scenes/Common/ExposedPixelsScene.cpp"
 
 void render_video() {
-    CompositeScene tds;
+    ThreeDimensionScene tds;
 
     string factorial = "(\\n. (\\f. (((n (\\f. (\\n. (n (f (\\f. (\\x. ((n f) (f x))))))))) (\\x. f)) (\\x. x))))";
     shared_ptr<LambdaExpression> le_factorial = parse_lambda_from_string(factorial);
@@ -60,28 +60,104 @@ void render_video() {
     shared_ptr<LambdaExpression> le_boolean_not = abstract('x', apply(apply(x, le_boolean_false, OPAQUE_WHITE), le_boolean_true, OPAQUE_WHITE), OPAQUE_WHITE);
 
     shared_ptr<LambdaExpression> term = apply(le_factorial, le_church_3, OPAQUE_WHITE);
+    term->set_color_recursive(OPAQUE_WHITE);
+    term->flush_uid_recursive();
     //shared_ptr<LambdaExpression> term = apply(le_boolean_not, le_boolean_true, OPAQUE_WHITE);
-    LambdaScene ls(term, 400, 400);
-    tds.add_scene(&ls, "lambda_s", 0, 0, 1, 1);
+
+    shared_ptr<LambdaScene> ls = make_shared<LambdaScene>(term, 800, 800);
+    tds.add_surface(Surface(glm::vec3(0,0,0), glm::vec3(1,0,0), glm::vec3(0,1,0), ls));
+    tds.state_manager.set(unordered_map<string, string>{
+        {"surfaces_opacity", "1"},
+        {"lines_opacity", "0"},
+        {"points_opacity", "1"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"d", "2"},
+        {"q1", "1"},
+        {"qi", "<t> 2 / cos 20 /"},
+        {"qj", "<t> 2 / sin 20 /"},
+        {"qk", "0"}
+    });
 
     PRINT_TO_TERMINAL = false;
+    FOR_REAL = false;
     // Show the lambda expression for 
     int num_reductions = term->count_reductions() + 4;
-    tds.inject_audio(AudioSegment(40), num_reductions);//"What you're looking at right now is a computation taking place."), num_reductions);
+    //tds.inject_audio(AudioSegment(40), num_reductions);
+    tds.inject_audio(AudioSegment("What you're looking at right now is a computation taking place."), num_reductions/2);
     tds.render();
-    for(int i = 0; i < num_reductions - 1; i++){
-        ls.reduce();
+    tds.render();
+    for(int i = 0; i < num_reductions/2 - 2; i++){
+        ls->reduce();
         tds.render();
     }
-    return;
-    tds.inject_audio_and_render(AudioSegment("Specifically, it's evaluating 3 factorial, and soon, it will arrive at the result of 6."));
+    tds.inject_audio(AudioSegment("Specifically, it's evaluating 3 factorial, and soon, it will arrive at the result of 6."), num_reductions/2);
+    for(int i = 0; i < num_reductions/2; i++){
+        ls->reduce();
+        tds.render();
+    }
     tds.inject_audio_and_render(AudioSegment("Oh look, it's done!"));
 
     // 
     tds.inject_audio_and_render(AudioSegment("What are all these weird lines though?"));
-    tds.inject_audio_and_render(AudioSegment("Well, this bundle of pink lines represents the number 3."));
-    tds.inject_audio_and_render(AudioSegment("These green lines represent the factorial function."));
-    tds.inject_audio_and_render(AudioSegment("We've got one, two, three, and so on..."));
+    tds.inject_audio_and_render(AudioSegment("Well, this here represents the answer, 6."));
+
+    ls->set_expression(term);
+    tds.inject_audio_and_render(AudioSegment("Going back to the original setup,"));
+
+    dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xffff0000);
+    ls->set_expression(term);
+    tds.inject_audio_and_render(AudioSegment("This red chunk represents the factorial function."));
+    dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff00ff00);
+    ls->set_expression(term);
+    tds.inject_audio_and_render(AudioSegment("This green chunk represents the factorial function."));
+    term->set_color(0xff0000ff);
+    ls->set_expression(term);
+    tds.inject_audio_and_render(AudioSegment("And this blue chunk represents the application of the number to the function."));
+
+    FOR_REAL = true;
+    tds.inject_audio_and_render(AudioSegment("We can make all sorts of other values."));
+    tds.inject_audio(AudioSegment("We've got one, two, three, and so on..."), 3);
+
+    tds.state_manager.transition(unordered_map<string, string>{
+        {"q1", "1"},
+        {"qi", "0"},
+        {"qj", "0"},
+        {"qk", "0"}
+    });
+
+    tds.state_manager.transition(unordered_map<string, string>{
+        {"z", "-2"},
+    });
+
+    shared_ptr<LambdaExpression> church1 = parse_lambda_from_string("(\\f. (\\x. (f x)))");
+    church1->set_color_recursive(OPAQUE_WHITE);
+    church1->flush_uid_recursive();
+    tds.add_surface(Surface(glm::vec3(-1,-1,-1), glm::vec3(1,0,0), glm::vec3(0,1,0), make_shared<LambdaScene>(church1, 800, 800)));
+    tds.render();
+
+    tds.state_manager.transition(unordered_map<string, string>{
+        {"z", "-4"},
+    });
+
+    shared_ptr<LambdaExpression> church2 = parse_lambda_from_string("(\\f. (\\x. (f (f x))))");
+    church2->set_color_recursive(OPAQUE_WHITE);
+    church2->flush_uid_recursive();
+    tds.add_surface(Surface(glm::vec3(-1,-1,-2), glm::vec3(1,0,0), glm::vec3(0,1,0), make_shared<LambdaScene>(church2, 800, 800)));
+    tds.render();
+
+    tds.state_manager.transition(unordered_map<string, string>{
+        {"z", "-6"},
+    });
+
+    shared_ptr<LambdaExpression> church3 = parse_lambda_from_string("(\\f. (\\x. (f (f (f x)))))");
+    church3->set_color_recursive(OPAQUE_WHITE);
+    church3->flush_uid_recursive();
+    tds.add_surface(Surface(glm::vec3(-1,-1,-3), glm::vec3(1,0,0), glm::vec3(0,1,0), make_shared<LambdaScene>(church3, 800, 800)));
+    tds.render();
+    
+    return;
     tds.inject_audio_and_render(AudioSegment("as well as plus and times."));
     tds.inject_audio_and_render(AudioSegment("But, they enable us to ask the question 'what is plus times plus'."));
     tds.inject_audio_and_render(AudioSegment("We saw factorial(3), but we can just as easily compute the function 3(factorial) and evaluate the result!"));
@@ -120,19 +196,6 @@ void render_video() {
     tds.inject_audio_and_render(AudioSegment(""));
     tds.inject_audio_and_render(AudioSegment(""));
 
-    tds.state_manager.set(unordered_map<string, string>{
-        {"surfaces_opacity", "1"},
-        {"lines_opacity", "0"},
-        {"points_opacity", "1"},
-        {"x", "0"},
-        {"y", "0"},
-        {"z", "0"},
-        {"d", "20"},
-        {"q1", "1"},
-        {"qi", "<t> cos 10 /"},
-        {"qj", "<t> sin 10 /"},
-        {"qk", "0"}
-    });
     tds.inject_audio_and_render(AudioSegment(3));
 }
 

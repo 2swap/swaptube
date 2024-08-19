@@ -27,6 +27,7 @@ public:
     virtual void draw() = 0;
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
+    virtual void on_end_transition() = 0;
     virtual bool has_subscene_state_changed() const {return false;}
     bool check_if_state_changed() {return state != last_state || has_subscene_state_changed();}
     void query(Pixels*& p) {
@@ -85,9 +86,10 @@ public:
         cout << endl;
         video_sessions_left--;
         if(video_sessions_left == 0){
-            state_manager.close_all_transitions();
             global_state["audio_segment_number"]++;
         }
+        state_manager.close_all_transitions();
+        on_end_transition();
     }
 
     void update_state() {
@@ -109,10 +111,9 @@ private:
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
         global_state["frame_number"]++;
-        global_state["transition_fraction"] = 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total;
         global_state["subscene_transition_fraction"] = static_cast<double>(subscene_frame) / scene_duration_frames;
 
-        state_manager_time_plot.add_datapoint(vector<double>{global_state["transition_fraction"], global_state["subscene_transition_fraction"]});
+        state_manager_time_plot.add_datapoint(vector<double>{global_state["subscene_transition_fraction"]});
 
         if (video_sessions_left == 0) {
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");

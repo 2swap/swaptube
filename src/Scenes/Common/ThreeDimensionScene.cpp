@@ -247,6 +247,10 @@ public:
             x2 = max(x2, corner.first );
             y2 = max(y2, corner.second);
         }
+        x1 = max(x1, 0);
+        y1 = max(y1, 0);
+        x2 = min(x2, w-1);
+        y2 = min(y2, h-1);
         int plot_w = x2 - x1 + 1;
         int plot_h = y2 - y1 + 1;
 
@@ -287,6 +291,12 @@ public:
             if(surface.scenePointer->check_if_data_changed()) return true;
         }
         return false;
+    }
+
+    void on_end_transition() override {
+        for(const auto& surface : surfaces){
+            surface.scenePointer->on_end_transition();
+        }
     }
 
     bool has_subscene_state_changed() const override {

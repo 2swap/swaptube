@@ -41,6 +41,12 @@ public:
         return false;
     }
 
+    void on_end_transition() override {
+        for(const auto& swp : scenes){
+            swp.scenePointer->on_end_transition();
+        }
+    }
+
     bool has_subscene_state_changed() const override {
         for (auto& swp : scenes){
             if(swp.scenePointer->check_if_state_changed()) return true;

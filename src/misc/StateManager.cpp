@@ -87,7 +87,6 @@ private:
 static unordered_map<string, double> global_state{
     {"frame_number", 0},
     {"audio_segment_number", 0},
-    {"transition_fraction", 0},
     {"subscene_transition_fraction", 0},
 };
 
@@ -148,7 +147,7 @@ public:
         in_transition.insert(variable);
         string eq1 = get_equation(variable);
         string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <transition_fraction> smoothlerp";
+        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <subscene_transition_fraction> smoothlerp";
         add_equation(variable+".pre_transition", eq1);
         add_equation(variable+".post_transition", eq2);
         add_equation(variable, lerp_both);
