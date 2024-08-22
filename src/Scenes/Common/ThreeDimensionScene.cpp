@@ -403,6 +403,17 @@ public:
         obj_ptrs.clear();
     }
 
+    void remove_surface(shared_ptr<Scene> s) {
+        for (auto it = surfaces.begin(); it != surfaces.end(); ){
+            if (it->scenePointer == s){
+                it->scenePointer->state_manager.set_parent(nullptr);
+                it = surfaces.erase(it);
+            }
+            else ++it;
+        }
+        obj_ptrs.clear();
+    }
+
     void clear_lines(){ lines.clear(); obj_ptrs.clear(); }
     void clear_points(){ points.clear(); obj_ptrs.clear(); }
     void clear_surfaces(){ surfaces.clear(); obj_ptrs.clear(); }

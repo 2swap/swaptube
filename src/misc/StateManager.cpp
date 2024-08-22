@@ -160,7 +160,7 @@ public:
         variables.erase(variable);
     }
     void set_parent(StateManager* p) {
-        if(parent != nullptr)
+        if(parent != nullptr && p != nullptr)
             failout("Attempted setting StateManager's parent, but StateManager already had a parent!");
         parent = p;
     }

@@ -16,11 +16,12 @@ const int VIDEO_FRAMERATE = 30;
 
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
+#include "../Scenes/Common/ConvolutionScene.cpp"
 #include "../Scenes/Math/LambdaScene.cpp"
 #include "../Scenes/Media/PngScene.cpp"
 #include "../Scenes/Common/ExposedPixelsScene.cpp"
 
-void render_video() {
+void intro() {
     ThreeDimensionScene tds;
 
     string factorial = "(\\n. (\\f. (((n (\\f. (\\n. (n (f (\\f. (\\x. ((n f) (f x))))))))) (\\x. f)) (\\x. x))))";
@@ -31,38 +32,9 @@ void render_video() {
     shared_ptr<LambdaExpression> le_church_3 = parse_lambda_from_string(church_3);
     le_church_3->set_color_recursive(0xffff00ff);
 
-    string pred = "(\\n. (\\f. (\\x. (((n (\\g. (\\h. (h (g f))))) (\\u. x)) (\\u. u)))))";
-    shared_ptr<LambdaExpression> le_pred = parse_lambda_from_string(pred);
-    le_pred->set_color_recursive(0xff00ffff);
-
-    // Boolean True
-    string boolean_true = "(\\a. (\\b. a))";
-    shared_ptr<LambdaExpression> le_boolean_true = parse_lambda_from_string(boolean_true);
-    le_boolean_true->set_color_recursive(0xff00ff00); // Red color
-
-    // Boolean False
-    string boolean_false = "(\\a. (\\b. b))";
-    shared_ptr<LambdaExpression> le_boolean_false = parse_lambda_from_string(boolean_false);
-    le_boolean_false->set_color_recursive(0xffff0000); // Green color
-
-    // Boolean AND
-    string boolean_and = "(\\p. (\\q. ((p q) p)))";
-    shared_ptr<LambdaExpression> le_boolean_and = parse_lambda_from_string(boolean_and);
-    le_boolean_and->set_color_recursive(0xffff8080); // Blue color
-
-    // Boolean OR
-    string boolean_or = "(\\p. (\\q. ((p p) q)))";
-    shared_ptr<LambdaExpression> le_boolean_or = parse_lambda_from_string(boolean_or);
-    le_boolean_or->set_color_recursive(0xffff8000); // Yellow color
-
-    // Boolean NOT
-    shared_ptr<LambdaVariable> x = make_shared<LambdaVariable>('x', OPAQUE_WHITE);
-    shared_ptr<LambdaExpression> le_boolean_not = abstract('x', apply(apply(x, le_boolean_false, OPAQUE_WHITE), le_boolean_true, OPAQUE_WHITE), OPAQUE_WHITE);
-
     shared_ptr<LambdaExpression> term = apply(le_factorial, le_church_3, OPAQUE_WHITE);
     term->set_color_recursive(OPAQUE_WHITE);
     term->flush_uid_recursive();
-    //shared_ptr<LambdaExpression> term = apply(le_boolean_not, le_boolean_true, OPAQUE_WHITE);
 
     shared_ptr<LambdaScene> ls = make_shared<LambdaScene>(term, 800, 800);
     tds.add_surface(Surface(glm::vec3(0,0,0), glm::vec3(1,0,0), glm::vec3(0,1,0), ls));
@@ -111,14 +83,12 @@ void render_video() {
     tds.inject_audio_and_render(AudioSegment("This red chunk represents the factorial function."));
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff00ff00);
     ls->set_expression(term);
-    tds.inject_audio_and_render(AudioSegment("This green chunk represents the factorial function."));
+    tds.inject_audio_and_render(AudioSegment("This green chunk represents the number 3."));
     term->set_color(0xff0000ff);
     ls->set_expression(term);
     tds.inject_audio_and_render(AudioSegment("And this blue chunk represents the application of the number to the function."));
 
-    FOR_REAL = true;
     tds.inject_audio_and_render(AudioSegment("We can make all sorts of other values."));
-    tds.inject_audio(AudioSegment("We've got one, two, three, and so on..."), 3);
 
     tds.state_manager.transition(unordered_map<string, string>{
         {"q1", "1"},
@@ -128,46 +98,109 @@ void render_video() {
     });
 
     tds.state_manager.transition(unordered_map<string, string>{
-        {"z", "-2"},
+        {"z", "-10"},
     });
 
     shared_ptr<LambdaExpression> church1 = parse_lambda_from_string("(\\f. (\\x. (f x)))");
     church1->set_color_recursive(OPAQUE_WHITE);
     church1->flush_uid_recursive();
-    tds.add_surface(Surface(glm::vec3(-1,-1,-1), glm::vec3(1,0,0), glm::vec3(0,1,0), make_shared<LambdaScene>(church1, 800, 800)));
-    tds.render();
-
-    tds.state_manager.transition(unordered_map<string, string>{
-        {"z", "-4"},
-    });
+    shared_ptr<LambdaScene> church1scene = make_shared<LambdaScene>(church1, 800, 800);
+    tds.add_surface(Surface(glm::vec3(-2,-2,-1), glm::vec3(1,0,0), glm::vec3(0,1,0), church1scene));
 
     shared_ptr<LambdaExpression> church2 = parse_lambda_from_string("(\\f. (\\x. (f (f x))))");
     church2->set_color_recursive(OPAQUE_WHITE);
     church2->flush_uid_recursive();
-    tds.add_surface(Surface(glm::vec3(-1,-1,-2), glm::vec3(1,0,0), glm::vec3(0,1,0), make_shared<LambdaScene>(church2, 800, 800)));
-    tds.render();
-
-    tds.state_manager.transition(unordered_map<string, string>{
-        {"z", "-6"},
-    });
+    shared_ptr<LambdaScene> church2scene = make_shared<LambdaScene>(church2, 800, 800);
+    tds.add_surface(Surface(glm::vec3(2,2,-3), glm::vec3(1,0,0), glm::vec3(0,1,0), church2scene));
 
     shared_ptr<LambdaExpression> church3 = parse_lambda_from_string("(\\f. (\\x. (f (f (f x)))))");
     church3->set_color_recursive(OPAQUE_WHITE);
     church3->flush_uid_recursive();
-    tds.add_surface(Surface(glm::vec3(-1,-1,-3), glm::vec3(1,0,0), glm::vec3(0,1,0), make_shared<LambdaScene>(church3, 800, 800)));
-    tds.render();
+    shared_ptr<LambdaScene> church3scene = make_shared<LambdaScene>(church3, 800, 800);
+    tds.add_surface(Surface(glm::vec3(2,-2,-5), glm::vec3(1,0,0), glm::vec3(0,1,0), church3scene));
+    tds.inject_audio_and_render(AudioSegment("We've got one, two, three, and so on..."));
     
-    return;
+    tds.state_manager.transition(unordered_map<string, string>{
+        {"q1", "1"},
+        {"qi", "0"},
+        {"qj", ".5"},
+        {"qk", "0"},
+        {"d", "0"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "-10"},
+    });
+    shared_ptr<LambdaExpression> churchplus = parse_lambda_from_string("(\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x))))))");
+    churchplus->set_color_recursive(OPAQUE_WHITE);
+    churchplus->flush_uid_recursive();
+    shared_ptr<LambdaScene> churchplusscene = make_shared<LambdaScene>(churchplus, 800, 800);
+    tds.add_surface(Surface(glm::vec3(-5,1,-9), glm::vec3(0,0,1), glm::vec3(0,1,0), churchplusscene));
+
+    shared_ptr<LambdaExpression> churchtimes = parse_lambda_from_string("(\\m. (\\n. (\\a. (m (n a)))))");
+    churchtimes->set_color_recursive(OPAQUE_WHITE);
+    churchtimes->flush_uid_recursive();
+    shared_ptr<LambdaScene> churchtimesscene = make_shared<LambdaScene>(churchtimes, 800, 800);
+    tds.add_surface(Surface(glm::vec3(-5,-1,-11), glm::vec3(0,0,1), glm::vec3(0,1,0), churchtimesscene));
     tds.inject_audio_and_render(AudioSegment("as well as plus and times."));
-    tds.inject_audio_and_render(AudioSegment("But, they enable us to ask the question 'what is plus times plus'."));
-    tds.inject_audio_and_render(AudioSegment("We saw factorial(3), but we can just as easily compute the function 3(factorial) and evaluate the result!"));
-    tds.inject_audio_and_render(AudioSegment("OK, you can't actually do that, right? That's not a real thing. Right?"));
+    tds.remove_surface(church1scene);
+    tds.remove_surface(church2scene);
+    tds.remove_surface(church3scene);
+    tds.remove_surface(ls);
+
+
+
+    tds.state_manager.transition(unordered_map<string, string>{
+        {"q1", "1"},
+        {"qi", ".4"},
+        {"qj", "0"},
+        {"qk", "0"},
+    });
+    le_factorial->set_color_recursive(0xffff0000);
+    le_factorial->flush_uid_recursive();
+    shared_ptr<LambdaScene> factorial_scene = make_shared<LambdaScene>(le_factorial, 800, 800);
+    tds.add_surface(Surface(glm::vec3(-.6,10,-10), glm::vec3(1,0,0), glm::vec3(0,0,-1), factorial_scene));
+    church3->set_color_recursive(0xff00ff00);
+    church3->flush_uid_recursive();
+    shared_ptr<LambdaScene> c3s = make_shared<LambdaScene>(church3, 800, 800);
+    tds.add_surface(Surface(glm::vec3(.9,10,-9.6), glm::vec3(.4,0,0), glm::vec3(0,0,-.4), c3s));
+
+    tds.inject_audio_and_render(AudioSegment("This mathematical language permits us to express any computational procedure, including functions such as factorial, which can then be applied to numbers like 3."));
+    tds.remove_surface(churchtimesscene);
+    tds.remove_surface(churchplusscene);
+    tds.state_manager.transition(unordered_map<string, string>{
+        {"y", "5"},
+        {"z", "-11"},
+    });
+    tds.inject_audio_and_render(AudioSegment("But... the magic of it comes from the fact that it's not immediately obvious whether a certain expression is a number, a function that operates on numbers, or what."));
+    FOR_REAL = true;
+    shared_ptr<LambdaExpression> term1 = apply(le_factorial, le_church_3, 0xffffffff|0xff0000ff);
+    dynamic_pointer_cast<LambdaApplication>(term1)->get_first()->set_color_recursive(0xffffffff|0xffff0000);
+    dynamic_pointer_cast<LambdaApplication>(term1)->get_second()->set_color_recursive(0xffffffff|0xff00ff00);
+    shared_ptr<LambdaScene> ls1 = make_shared<LambdaScene>(term1, 800, 800);
+    shared_ptr<LambdaExpression> term2 = apply(le_church_3, le_factorial, 0xffffffff|0xff0000ff);
+    dynamic_pointer_cast<LambdaApplication>(term2)->get_first()->set_color_recursive(0xffffffff|0xff00ff00);
+    dynamic_pointer_cast<LambdaApplication>(term2)->get_second()->set_color_recursive(0xffffffff|0xffff0000);
+    shared_ptr<LambdaScene> ls2 = make_shared<LambdaScene>(term2, 800, 800);
+    Pixels* ls_p1;
+    Pixels* ls_p2;
+    ls1->query(ls_p1);
+    ls2->query(ls_p2);
+    shared_ptr<ConvolutionScene> convo = make_shared<ConvolutionScene>(*ls_p1);
+    tds.inject_audio_and_render(AudioSegment("And that's because, in this language, there _fundamentally is no difference_."));
+    tds.add_surface(Surface(glm::vec3(-.2,10,-12), glm::vec3(1.4,0,0), glm::vec3(0,0,-1.4), convo));
+    tds.inject_audio_and_render(AudioSegment("Just like we applied the factorial function to 3 with function application,"));
+    convo->begin_transition(*ls_p2);
+    tds.inject_audio_and_render(AudioSegment("we can apply 3 to the factorial function in the exact same way, as though 3 was a function and factorial was a value."));
+    return;
+    tds.inject_audio_and_render(AudioSegment("OK, you can't actually evaluate that, right? That's not a real thing. Right?"));
     tds.inject_audio_and_render(AudioSegment("And it's certainly not the case that when evaluating it, the answer would make any sense... right?"));
-    tds.inject_audio_and_render(AudioSegment("To learn the answer, we're going to have to completely unlearn the ideas of functions, programs, values, and datatypes."));
-    tds.inject_audio_and_render(AudioSegment("Because they're just the stickers we've put on top of math to make it understandable by our tiny monkey brains."));
+    tds.inject_audio_and_render(AudioSegment("We're going to have to completely unlearn the concepts of functions, programs, values, and datatypes."));
     tds.inject_audio_and_render(AudioSegment("Because they're a mirage distracting us from the essence of computation itself."));
     tds.inject_audio_and_render(AudioSegment("Because today, we're learning the lambda calculus."));
+}
 
+void history(){
+    ThreeDimensionScene tds;
     // 
     tds.inject_audio_and_render(AudioSegment("Our story starts in the 1930's. David Hilbert ..."));
     tds.inject_audio_and_render(AudioSegment(""));
@@ -201,7 +234,7 @@ void render_video() {
 
 int main() {
     Timer timer;
-    render_video();
+    intro();
     return 0;
 }
 
