@@ -37,6 +37,7 @@ public:
         assert(in_transition_state);
         p1 = p2;
         coords = transition_coords;
+        pix.fill(TRANSPARENT_BLACK);
         pix.overwrite(p1, coords.first, coords.second);
         in_transition_state = false;
     }
@@ -55,24 +56,21 @@ public:
                 const StepResult& step = intersections[i];
                 int x = round(lerp(coords.first , transition_coords.first -step.max_x, smooth));
                 int y = round(lerp(coords.second, transition_coords.second-step.max_y, smooth));
-                if(i == 0){
-                    top_vx += transition_coords.first  - step.max_x - coords.first ;
-                    top_vy += transition_coords.second - step.max_y - coords.second;
-                }
-
                 // Render the intersection at the interpolated position
-                pix.overlay(step.induced1, x-step.current_p1.w, y-step.current_p1.h, tp1);
-                pix.overlay(step.induced2, x-step.current_p2.w, y-step.current_p2.h, tp );
+                pix.overlay(step.induced1, x, y, tp1);
+                pix.overlay(step.induced2, x+step.max_x, y+step.max_y, tp );
 
-                //pix.overlay(step.intersection, 0  , i*191, 1);
-                //pix.overlay(step.map         , 500, i*191, 1);
+                //if(i == 0){
+                //    top_vx += transition_coords.first  - step.max_x - coords.first ;
+                //    top_vy += transition_coords.second - step.max_y - coords.second;
+                //}
             }
 
             int dx = round(lerp(-top_vx, 0, smooth));
             int dy = round(lerp(-top_vy, 0, smooth));
 
             StepResult last_intersection = intersections[intersections.size()-1];
-            pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
+            //pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
             pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
         }
     }
@@ -84,7 +82,7 @@ public:
     void change_data() override { }
     bool check_if_data_changed() const override { return false; } // No DataObjects
 
-private:
+protected:
     bool in_transition_state = false;
 
     // Things used for non-transition states

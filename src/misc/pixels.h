@@ -24,7 +24,7 @@ class Pixels{
 public:
     int w;
     int h;
-    vector<int> pixels;
+    vector<unsigned int> pixels;
     Pixels() : w(0), h(0), pixels(0){};
     Pixels(int width, int height) : w(width), h(height), pixels(width*height){};
     // Copy constructor
@@ -378,7 +378,7 @@ public:
 
 };
 
-Pixels create_alpha_from_intensities(const vector<vector<int>>& intensities, int negative_intensity) {
+Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensities) {
     int height = intensities.size();
     int width = (height > 0) ? intensities[0].size() : 0;
 
@@ -386,11 +386,11 @@ Pixels create_alpha_from_intensities(const vector<vector<int>>& intensities, int
     result.fill(OPAQUE_WHITE);
 
     // Find the minimum and maximum intensity values
-    int minIntensity = numeric_limits<int>::max();
-    int maxIntensity = numeric_limits<int>::min();
+    unsigned int minIntensity = numeric_limits<unsigned int>::max();
+    unsigned int maxIntensity = numeric_limits<unsigned int>::min();
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            int intensity = intensities[y][x];
+            unsigned int intensity = intensities[y][x];
             if(intensity < 0) continue;
             minIntensity = min(minIntensity, intensity);
             maxIntensity = max(maxIntensity, intensity);
@@ -407,10 +407,25 @@ Pixels create_alpha_from_intensities(const vector<vector<int>>& intensities, int
     // Set the alpha channel based on normalized intensity values
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            int intensity = intensities[y][x];
-            int normalizedIntensity = (intensity - minIntensity) * 255 / intensityRange;
-            if(intensity < 0) normalizedIntensity = negative_intensity;
-            result.set_alpha(x, y, normalizedIntensity);
+            unsigned int intensity = intensities[y][x];
+            // Square it to make it more peaky
+            int normalized_squared_intensity = square(intensity - minIntensity) * 255. / square(intensityRange);
+            result.set_alpha(x, y, normalized_squared_intensity);
+        }
+    }
+
+    return result;
+}
+
+Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, int negative_intensity) {
+    int height = colors.size();
+    int width = (height > 0) ? colors[0].size() : 0;
+
+    Pixels result(width, height);
+
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            result.pixels[y+x*width] = colors[y][x];
         }
     }
 

@@ -13,13 +13,13 @@
 #include <glm/gtx/string_cast.hpp>
 
 extern "C" void cuda_render_surface(
-    vector<int>& pix,
+    vector<unsigned int>& pix,
     int x1,
     int y1,
     int plot_w,
     int plot_h,
     int pixels_w,
-    int* d_surface,
+    unsigned int* d_surface,
     int surface_w,
     int surface_h,
     float opacity,

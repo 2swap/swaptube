@@ -25,6 +25,81 @@ struct ScalingParams {
         : mode(ScalingMode::ScaleFactor), max_width(0), max_height(0), scale_factor(factor) {}
 };
 
+void pix_to_png(const Pixels& pix, const string& filename) {
+    if(pix.w * pix.h == 0) return; // cowardly exit.
+
+    // Open the file for writing (binary mode)
+    FILE* fp = fopen((PATH_MANAGER.this_run_output_dir + filename + ".png").c_str(), "wb");
+    if (!fp) {
+        failout("Failed to open file for writing.");
+    }
+
+    // Initialize write structure
+    png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png) {
+        fclose(fp);
+        failout("Failed to create png write struct.");
+    }
+
+    // Initialize info structure
+    png_infop info = png_create_info_struct(png);
+    if (!info) {
+        png_destroy_write_struct(&png, nullptr);
+        fclose(fp);
+        failout("Failed to create png info struct.");
+    }
+
+    // Set up error handling (required without using the default error handlers)
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_write_struct(&png, &info);
+        fclose(fp);
+        failout("Error during PNG creation.");
+    }
+
+    // Set up output control
+    png_init_io(png, fp);
+
+    // Write header (8 bit color depth)
+    png_set_IHDR(png, info, pix.w, pix.h,
+                 8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+    png_write_info(png, info);
+
+    // Allocate memory for one row
+    png_bytep row = (png_bytep)malloc(4 * pix.w * sizeof(png_byte));
+    if (!row) {
+        png_destroy_write_struct(&png, &info);
+        fclose(fp);
+        failout("Failed to allocate memory for row.");
+    }
+
+    // Write image data
+    for (int y = 0; y < pix.h; y++) {
+        for (int x = 0; x < pix.w; x++) {
+            int pixel = pix.get_pixel(x, y);
+            uint8_t a = (pixel >> 24) & 0xFF;
+            uint8_t r = (pixel >> 16) & 0xFF;
+            uint8_t g = (pixel >> 8) & 0xFF;
+            uint8_t b = pixel & 0xFF;
+            row[x*4 + 0] = r;
+            row[x*4 + 1] = g;
+            row[x*4 + 2] = b;
+            row[x*4 + 3] = a;
+        }
+        png_write_row(png, row);
+    }
+
+    // End write
+    png_write_end(png, nullptr);
+
+    // Free allocated memory
+    free(row);
+
+    // Cleanup
+    png_destroy_write_struct(&png, &info);
+    fclose(fp);
+}
+
 Pixels png_to_pix(const string& filename) {
     // Open the PNG file
     FILE* fp = fopen((PATH_MANAGER.this_project_media_dir + filename + ".png").c_str(), "rb");
@@ -122,24 +197,22 @@ Pixels png_to_pix(const string& filename) {
 Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
     // Open svg and get its dimensions
     RsvgHandle* handle = rsvg_handle_new_from_file(svg.c_str(), NULL);
+    cout << "Rendering svg " << svg << endl;
     if (!handle) {
         fprintf(stderr, "Error loading SVG data from file \"%s\"\n", svg.c_str());
         exit(-1);
     }
 
     // Get the intrinsic dimensions of the SVG
-    RsvgDimensionData dimension = { 0 };
-    rsvg_handle_get_dimensions(handle, &dimension);
-
-    //gdouble out_width, out_height;
-    //rsvg_handle_get_intrinsic_size_in_pixels(handle, &out_width, &out_height);
+    gdouble out_width, out_height;
+    rsvg_handle_get_intrinsic_size_in_pixels(handle, &out_width, &out_height);
 
     if (scaling_params.mode == ScalingMode::BoundingBox) {
         // Calculate the scale factor to fit within the bounding box
-        scaling_params.scale_factor = min(static_cast<double>(scaling_params.max_width) / dimension.width, static_cast<double>(scaling_params.max_height) / dimension.height);
+        scaling_params.scale_factor = min(static_cast<double>(scaling_params.max_width) / out_width, static_cast<double>(scaling_params.max_height) / out_height);
     }
-    int width  = static_cast<int>(dimension.width  * scaling_params.scale_factor);
-    int height = static_cast<int>(dimension.height * scaling_params.scale_factor);
+    int width  = round(out_width  * scaling_params.scale_factor);
+    int height = round(out_height * scaling_params.scale_factor);
 
     Pixels ret(width, height);
 

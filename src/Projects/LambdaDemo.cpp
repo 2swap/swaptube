@@ -172,7 +172,6 @@ void intro() {
         {"z", "-11"},
     });
     tds.inject_audio_and_render(AudioSegment("But... the magic of it comes from the fact that it's not immediately obvious whether a certain expression is a number, a function that operates on numbers, or what."));
-    FOR_REAL = true;
     shared_ptr<LambdaExpression> term1 = apply(le_factorial, le_church_3, 0xffffffff|0xff0000ff);
     dynamic_pointer_cast<LambdaApplication>(term1)->get_first()->set_color_recursive(0xffffffff|0xffff0000);
     dynamic_pointer_cast<LambdaApplication>(term1)->get_second()->set_color_recursive(0xffffffff|0xff00ff00);
@@ -188,6 +187,7 @@ void intro() {
     shared_ptr<ConvolutionScene> convo = make_shared<ConvolutionScene>(*ls_p1);
     tds.inject_audio_and_render(AudioSegment("And that's because, in this language, there _fundamentally is no difference_."));
     tds.add_surface(Surface(glm::vec3(-.2,10,-12), glm::vec3(1.4,0,0), glm::vec3(0,0,-1.4), convo));
+    FOR_REAL = true;
     tds.inject_audio_and_render(AudioSegment("Just like we applied the factorial function to 3 with function application,"));
     convo->begin_transition(*ls_p2);
     tds.inject_audio_and_render(AudioSegment("we can apply 3 to the factorial function in the exact same way, as though 3 was a function and factorial was a value."));

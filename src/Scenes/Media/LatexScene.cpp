@@ -5,25 +5,23 @@
 
 class LatexScene : public ConvolutionScene {
 public:
-    LatexScene(const string& eqn, double extra_scale, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-    : first_scaling_params(pix.w * extra_scale, pix.h * extra_scale), ConvolutionScene(eqn_to_pix(eqn, first_scaling_params), width, height), equation_string(eqn) {
-        scale_factor = first_scaling_params.scale_factor;
-        TODO the initializer list is not in the right order
-    }
-
-    void append_latex_transition(string eqn) {
-        if(in_transition_state) end_transition();
-        begin_latex_transition(equation_string + eqn);
-    }
+    LatexScene(const string& eqn, double suggested_scale, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    : ConvolutionScene(init_latex(eqn, width*suggested_scale, height*suggested_scale), width, height) {}
 
     void begin_latex_transition(string eqn) {
-        cout << "rendering latex: " << eqn << endl;
         ScalingParams sp(scale_factor);
-        transition_equation_pixels = eqn_to_pix(transition_equation_string, sp);
-        cout << equation_string << " <- Finding Intersections -> " << eqn << endl;
+        begin_transition(eqn_to_pix(eqn, sp));
     }
 
 private:
-    ScalingParams first_scaling_params;
     double scale_factor;
+
+    Pixels init_latex(const string& eqn, int width, int height) {
+        ScalingParams sp = ScalingParams(width, height);
+        Pixels ret = eqn_to_pix(eqn, sp);
+        scale_factor = sp.scale_factor;
+
+        cout << "Scale Factor: " << scale_factor;
+        return ret;
+    }
 };
