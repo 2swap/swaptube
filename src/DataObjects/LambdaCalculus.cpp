@@ -99,10 +99,10 @@ public:
         return depth;
     }
 
-    shared_ptr<const LambdaExpression> get_nearest_ancestor_application() const {
+    shared_ptr<const LambdaExpression> get_nearest_ancestor_with_type(const string& type) const {
         shared_ptr<const LambdaExpression> current = parent;
         while (current) {
-            if (current->get_type() == "Application") {
+            if (current->get_type() == type) {
                 return current;
             }
             current = current->get_parent();
@@ -559,30 +559,51 @@ shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const Lambd
 
 void LambdaExpression::set_positions() {
     if(parent != nullptr) failout("set_positions called on a child expression");
-    int bounding_box_h = parenthetical_depth() * 2;
 
-    Iterator it(shared_from_this());
     int iter_x = 0;
+    stack<shared_ptr<LambdaApplication>> applications_in_reverse;
+
+    Iterator it = shared_from_this();
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
-        shared_ptr<const LambdaExpression> nearest_ancestor_application = current->get_nearest_ancestor_application();
-        int nearest_ancestor_y = nearest_ancestor_application != nullptr ? bounding_box_h - nearest_ancestor_application->get_application_depth() * 2 - 2 : bounding_box_h;
+        shared_ptr<const LambdaExpression> nearest_ancestor_application = current->get_nearest_ancestor_with_type("Application");
+        current->x = iter_x+1;
+        current->h = 2;
         if (current->get_type() == "Variable") {
-            current->x = iter_x+1;
             current->y = dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction()->get_abstraction_depth() * 2;
-            current->h = nearest_ancestor_y - current->y + 1;
             iter_x+=4;
         }
-        if(current->get_type() == "Abstraction") {
+        else if(current->get_type() == "Abstraction") {
             current->y = current->get_abstraction_depth() * 2;
             current->w = current->num_variable_instantiations() * 4 - 1;
-            current->x = iter_x;
+        }
+        else if(current->get_type() == "Application") {
+            shared_ptr<LambdaApplication> app = dynamic_pointer_cast<LambdaApplication>(current);
+            current->w = app->get_first()->num_variable_instantiations() * 4 + 1;
+            applications_in_reverse.push(app);
+        }
+    }
+
+    while(!applications_in_reverse.empty()) {
+        shared_ptr<LambdaApplication> current = applications_in_reverse.top();
+        applications_in_reverse.pop();
+        shared_ptr<const LambdaExpression> nearest_ancestor_abstraction = current->get_nearest_ancestor_with_type("Abstraction");
+        current->y = max(nearest_ancestor_abstraction == nullptr ? 0 : nearest_ancestor_abstraction->y + 2, max(current->get_first()->get_height_recursive(), current->get_second()->get_height_recursive()));
+    }
+
+    it = shared_from_this();
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        if (current->get_type() == "Variable") {
+            current->h = current->get_nearest_ancestor_with_type("Application")->y - current->y + 1;
         }
         if(current->get_type() == "Application") {
-            current->x = iter_x+1;
-            current->w = dynamic_pointer_cast<LambdaApplication>(current)->get_first()->num_variable_instantiations() * 4 + 1;
-            current->y = bounding_box_h - current->get_application_depth() * 2 - 2;
-            current->h = nearest_ancestor_y - current->y + 1;
+            shared_ptr<const LambdaExpression> nearest_ancestor = current->get_nearest_ancestor_with_type("Application");
+            if(nearest_ancestor == nullptr) {
+                current->h = 3;
+            } else {
+                current->h = nearest_ancestor->y - current->y + 1;
+            }
         }
     }
 }
@@ -605,10 +626,10 @@ Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
             if (current->get_type() == "Variable") {
                 pix.fill_rect(current->x * scale, current->y * scale, scale, current->h * scale, color);
             }
-            if(current->get_type() == "Abstraction") {
-                pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, scale, color);
+            else if(current->get_type() == "Abstraction") {
+                pix.fill_rect((current->x-1) * scale, current->y * scale, current->w * scale, scale, color);
             }
-            if(current->get_type() == "Application") {
+            else if(current->get_type() == "Application") {
                 pix.fill_rect(current->x * scale, current->y * scale, scale, current->h * scale, color);
                 pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, scale, color);
             }

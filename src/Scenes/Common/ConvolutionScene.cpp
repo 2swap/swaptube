@@ -8,8 +8,8 @@ inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
 
 class ConvolutionScene : public Scene {
 public:
-    ConvolutionScene(const Pixels& p, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-    : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) {
+    ConvolutionScene(const Pixels& p, const int width = 0, const int height = 0)
+    : Scene(p.w, p.h), p1(p), coords(get_coords_from_pixels(p)) {
         pix.fill(TRANSPARENT_BLACK);
         pix.overwrite(p1, coords.first, coords.second);
     }
