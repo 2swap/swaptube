@@ -8,18 +8,19 @@ __global__ void convolve_map_kernel(const unsigned int* a, const int aw, const i
 
     unsigned int sum = 0;
 
-    int shift_x = -bw + 1 + x;
-    int shift_y = -bh + 1 + y;
+    int shift_x = -bw + x + 1;
+    int shift_y = -bh + y + 1;
     int x_min = max(0 , shift_x   );
     int x_max = min(aw, shift_x+bw);
     int y_min = max(0 , shift_y   );
     int y_max = min(ah, shift_y+bh);
     for (int dx = x_min; dx < x_max; ++dx) {
         for (int dy = y_min; dy < y_max; ++dy) {
-            int a_alpha = a[ dy          * aw +  dx         ] >> 24;
-            int b_alpha = b[(dy+shift_y) * bw + (dx+shift_x)] >> 24;
+            unsigned int a_alpha = a[ dy          * aw +  dx         ] >> 24;
+            unsigned int b_alpha = b[(dy-shift_y) * bw + (dx-shift_x)] >> 24;
 
-            sum+= (a_alpha * b_alpha) >> 8;
+            //sum+= (a_alpha * b_alpha) >> 8;
+            sum+= (a_alpha > 0 && b_alpha > 0) ? 1 : 0;
         }
     }
 

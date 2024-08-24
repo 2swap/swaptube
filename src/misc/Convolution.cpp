@@ -71,8 +71,10 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) 
         }
     }
 
+    cout << " Pre-align: " << max_x << ", " << max_y << endl;
     max_x -= p2.w - 1;
     max_y -= p2.h - 1;
+    cout << "Post-align: " << max_x << ", " << max_y << endl;
 
     // Create the Pixels object from the intensity map
     Pixels p = create_alpha_from_intensities(map_2d);
@@ -81,7 +83,7 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) 
     return p;
 }
 
-void flood_fill(TranslatedPixels& ret, const TranslatedPixels& p, int start_x, int start_y, int color) {
+void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int color) {
     stack<pair<int, int>> stack;
     stack.push({start_x, start_y});
 
@@ -101,17 +103,17 @@ void flood_fill(TranslatedPixels& ret, const TranslatedPixels& p, int start_x, i
     }
 }
 
-TranslatedPixels segment(const TranslatedPixels& p, int& id) {
-    TranslatedPixels ret(Pixels(p.pixels.w, p.pixels.h), p.translation_x, p.translation_y);
+Pixels segment(const Pixels& p, unsigned int& id) {
+    Pixels ret(p.w, p.h);
 
-    id = 0;
+    id = 1u;
 
     // Perform flood fill for each pixel in the input TranslatedPixels
-    for (int y = 0; y < p.pixels.h; y++) {
-        for (int x = 0; x < p.pixels.w; x++) {
+    for (int y = 0; y < ret.h; y++) {
+        for (int x = 0; x < ret.w; x++) {
             if (p.get_alpha(x, y) != 0 && ret.get_pixel(x, y) == 0) {
-                id++; // Increment the identifier for the next shape
                 flood_fill(ret, p, x, y, id);
+                id++; // Increment the identifier for the next shape
             }
         }
     }
@@ -338,51 +340,79 @@ TranslatedPixels induce(const TranslatedPixels& original, const TranslatedPixels
     return induced;
 }
 
-TranslatedPixels erase_low_iou(const TranslatedPixels& intersection, const TranslatedPixels& unified, float threshold) {
-    int intersection_id = 0;
-    int union_id = 0;
+Pixels colorize_segments(const Pixels& segmented) {
+    int width = segmented.w;
+    int height = segmented.h;
+    Pixels colorized(width, height);
 
-    // Segment both the intersection and the union to identify connected components
-    TranslatedPixels segmented_intersection = segment(intersection, intersection_id);
-    TranslatedPixels segmented_union = segment(unified, union_id);
+    // A simple function to generate a deterministic but pseudo-random color based on segment ID
+    auto segment_id_to_color = [](unsigned int id) -> int {
+        // Example: Use a hash-like function to generate color from segment ID
+        unsigned int r = (id * 137 + 113) % 256;
+        unsigned int g = (id * 149 + 157) % 256;
+        unsigned int b = (id * 163 + 173) % 256;
+        return (r << 16) | (g << 8) | b;
+    };
 
-    // Create a 2D vector to hold the overlap areas between intersection and union segments
-    vector<vector<int>> overlap_areas(union_id + 1, vector<int>(intersection_id + 1, 0));
-    vector<int> union_areas(union_id + 1, 0);
-    vector<int> intersection_areas(intersection_id + 1, 0);
+    // Iterate over each pixel in the segmented image
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            colorized.set_pixel(x, y, segment_id_to_color(segmented.get_pixel(x, y)) | 0xff000000);  // Copy the original pixel if not part of any segment
+        }
+    }
 
-    // Calculate the bounds for unified
-    int x_start = 0;  // Local coordinates in unified's frame
-    int y_start = 0;  // Local coordinates in unified's frame
-    int x_end = unified.pixels.w;
-    int y_end = unified.pixels.h;
+    return colorized;
+}
 
-    // Iterate over the bounds of the unified pixels
-    for (int y = y_start; y < y_end; ++y) {
-        for (int x = x_start; x < x_end; ++x) {
-            int union_segment_id = segmented_union.get_pixel(x, y);
-            int intersection_segment_id = segmented_intersection.get_pixel(x, y);
+int count_pixels_with_color(const Pixels& p, const unsigned int color) {
+    int count = 0;
 
-            if (union_segment_id > 0) {
-                union_areas[union_segment_id]++;
-                if (intersection_segment_id > 0) {
-                    overlap_areas[union_segment_id][intersection_segment_id]++;
-                    intersection_areas[intersection_segment_id]++;
-                }
+    for (int y = 0; y < p.h; ++y) {
+        for (int x = 0; x < p.w; ++x) {
+            if (p.get_pixel(x, y) == color) {
+                count++;
             }
         }
     }
 
-    // Identify the set of components to keep based on IoU threshold
-    unordered_set<int> components_to_keep;
-    for (int intersection_segment = 1; intersection_segment <= intersection_id; ++intersection_segment) {
-        for (int union_segment = 1; union_segment <= union_id; ++union_segment) {
-            float iou = static_cast<float>(overlap_areas[union_segment][intersection_segment]) / 
-                        (union_areas[union_segment] + intersection_areas[intersection_segment] - overlap_areas[union_segment][intersection_segment]);
-            if (iou >= threshold) {
-                components_to_keep.insert(intersection_segment);
-                break;
-            }
+    return count;
+}
+
+TranslatedPixels erase_low_iou(const TranslatedPixels& intersection, const TranslatedPixels& unified, float threshold) {
+    unsigned int intersection_id = 0;
+    unsigned int        union_id = 0;
+
+    // Segment both the intersection and the union to identify connected components
+    TranslatedPixels segmented_intersection = TranslatedPixels(segment(intersection.pixels, intersection_id), intersection.translation_x, intersection.translation_y);
+    TranslatedPixels segmented_union        = TranslatedPixels(segment(     unified.pixels,        union_id),      unified.translation_x,      unified.translation_y);
+
+    // Initialize vectors to track which intersection segments should be kept
+    vector<bool        > should_keep_intersection(intersection_id, false);
+    vector<unsigned int> intersection_id_to_union(intersection_id, 0xFFFFFFFF); // currently just used for tracking already-computed subproblems
+
+    // Calculate the bounds for unified
+    int x_start = unified.translation_x;  // Local coordinates in unified's frame
+    int y_start = unified.translation_y;  // Local coordinates in unified's frame
+    int x_end = unified.pixels.w + unified.translation_x;
+    int y_end = unified.pixels.h + unified.translation_y;
+
+    // Iterate over the bounds of the unified pixels
+    for (int y = y_start; y < y_end; ++y) {
+        for (int x = x_start; x < x_end; ++x) {
+            // Identify the underlying intersection and union segment ids
+            unsigned int        union_segment_id = segmented_union       .get_pixel(x, y);
+            unsigned int intersection_segment_id = segmented_intersection.get_pixel(x, y);
+
+            if (intersection_segment_id == 0 || intersection_id_to_union[intersection_segment_id] != 0xFFFFFFFF) continue; // Skip already processed or background
+
+            // Map the intersection segment to its corresponding union segment
+            intersection_id_to_union[intersection_segment_id] = union_segment_id;
+
+            float intersection_pixel_count = count_pixels_with_color(segmented_intersection.pixels, intersection_segment_id);
+            float        union_pixel_count = count_pixels_with_color(segmented_union       .pixels,        union_segment_id);
+
+            // Determine if the intersection segment should be kept based on the IoU threshold
+            should_keep_intersection[intersection_segment_id] = (intersection_pixel_count / union_pixel_count) > threshold;
         }
     }
 
@@ -390,10 +420,10 @@ TranslatedPixels erase_low_iou(const TranslatedPixels& intersection, const Trans
     TranslatedPixels result(Pixels(intersection.pixels.w, intersection.pixels.h), intersection.translation_x, intersection.translation_y);
 
     // Copy the pixels from the intersection to the result if they belong to a component to keep
-    for (int y = 0; y < segmented_intersection.pixels.h; ++y) {
-        for (int x = 0; x < segmented_intersection.pixels.w; ++x) {
+    for (int y = segmented_intersection.translation_y; y < segmented_intersection.translation_y + segmented_intersection.pixels.h; ++y) {
+        for (int x = segmented_intersection.translation_x; x < segmented_intersection.translation_x + segmented_intersection.pixels.w; ++x) {
             int intersection_segment_id = segmented_intersection.get_pixel(x, y);
-            if (components_to_keep.count(intersection_segment_id) > 0) {
+            if (should_keep_intersection[intersection_segment_id]) {
                 result.set_pixel(x, y, intersection.get_pixel(x, y));
             }
         }
@@ -419,13 +449,13 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         // Perform convolution mapping to find maximum intersection
         const Pixels cm = convolve_map(current_p1, current_p2, max_x, max_y);
 
-cout << max_x << ", " << max_y << endl;
-        const TranslatedPixels translated_p1(current_p1,     0,     0);
-        const TranslatedPixels translated_p2(current_p2, max_x, max_y);
+        const TranslatedPixels   translated_p1(current_p1,     0,     0);
+        const TranslatedPixels   translated_p2(current_p2, max_x, max_y);
 
         // Intersect the two TranslatedPixels objects based on the maximum convolution
         const TranslatedPixels intersection = intersect(translated_p1, translated_p2);
         const TranslatedPixels unified      =     unify(translated_p1, translated_p2);
+
         const TranslatedPixels erasure      = erase_low_iou(intersection, unified, .4);
 
         intersection_nonempty = !erasure.is_empty();
@@ -442,15 +472,19 @@ cout << max_x << ", " << max_y << endl;
         results.push_back(step_result);
 
         // DEBUG
+        /*
         ensure_dir_exists(PATH_MANAGER.this_run_output_dir + convolution_name);
-        pix_to_png(cm                 , convolution_name + "/convolution_" + to_string(i) + "_a_map");
-        pix_to_png(intersection.pixels, convolution_name + "/convolution_" + to_string(i) + "_b_intersection");
-        pix_to_png(unified.pixels     , convolution_name + "/convolution_" + to_string(i) + "_c_unified");
-        pix_to_png(erasure.pixels     , convolution_name + "/convolution_" + to_string(i) + "_d_erasure");
-        pix_to_png(induced1.pixels    , convolution_name + "/convolution_" + to_string(i) + "_e_induced1");
-        pix_to_png(induced2.pixels    , convolution_name + "/convolution_" + to_string(i) + "_f_induced2");
-        pix_to_png(current_p1         , convolution_name + "/convolution_" + to_string(i) + "_g_p1");
-        pix_to_png(current_p2         , convolution_name + "/convolution_" + to_string(i) + "_h_p2");
+        pix_to_png(translated_p1.pixels, convolution_name + "/convolution_" + to_string(i) + "_a_translated1");
+        pix_to_png(translated_p2.pixels, convolution_name + "/convolution_" + to_string(i) + "_b_translated2");
+        pix_to_png(cm                  , convolution_name + "/convolution_" + to_string(i) + "_c_map");
+        pix_to_png(intersection.pixels , convolution_name + "/convolution_" + to_string(i) + "_d_intersection");
+        pix_to_png(unified.pixels      , convolution_name + "/convolution_" + to_string(i) + "_e_unified");
+        pix_to_png(erasure.pixels      , convolution_name + "/convolution_" + to_string(i) + "_f_erasure");
+        pix_to_png(induced1.pixels     , convolution_name + "/convolution_" + to_string(i) + "_g_induced1");
+        pix_to_png(induced2.pixels     , convolution_name + "/convolution_" + to_string(i) + "_h_induced2");
+        pix_to_png(current_p1          , convolution_name + "/convolution_" + to_string(i) + "_i_p1");
+        pix_to_png(current_p2          , convolution_name + "/convolution_" + to_string(i) + "_j_p2");
+        */
     }
 
     return results;

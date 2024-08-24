@@ -60,17 +60,17 @@ public:
                 pix.overlay(step.induced1, x, y, tp1);
                 pix.overlay(step.induced2, x+step.max_x, y+step.max_y, tp );
 
-                //if(i == 0){
-                //    top_vx += transition_coords.first  - step.max_x - coords.first ;
-                //    top_vy += transition_coords.second - step.max_y - coords.second;
-                //}
+                if(i == 0){
+                    top_vx += transition_coords.first  - step.max_x - coords.first ;
+                    top_vy += transition_coords.second - step.max_y - coords.second;
+                }
             }
 
             int dx = round(lerp(-top_vx, 0, smooth));
             int dy = round(lerp(-top_vy, 0, smooth));
 
             StepResult last_intersection = intersections[intersections.size()-1];
-            //pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
+            pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
             pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
         }
     }

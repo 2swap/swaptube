@@ -46,16 +46,14 @@ void render_latex_demo(){
     latex.begin_latex_transition("a=\\frac{b}{c}");
     latex.inject_audio_and_render(AudioSegment(1));
     latex.inject_audio_and_render(AudioSegment(1));
-    //latex.begin_latex_transition("abcdef");
-    //latex.inject_audio_and_render(AudioSegment(1));
-    //latex.inject_audio_and_render(AudioSegment(1));
-    //latex.begin_latex_transition("\\text{abcdef}");
-    //latex.inject_audio_and_render(AudioSegment(1));
-    //latex.inject_audio_and_render(AudioSegment(1));
+    latex.begin_latex_transition("abcdef");
+    latex.inject_audio_and_render(AudioSegment(1));
+    latex.inject_audio_and_render(AudioSegment(1));
 }
 
 int main() {
     Timer timer;
-    render_latex_demo();
+    //render_latex_demo();
+    render_video();
     return 0;
 }
