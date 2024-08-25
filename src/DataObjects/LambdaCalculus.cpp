@@ -606,6 +606,8 @@ void LambdaExpression::set_positions() {
             }
         }
     }
+
+    //TODO leave as much of this as possible uncomputed and rely on the draw function to compute it so that interpolation may look nicer?
 }
 
 Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {

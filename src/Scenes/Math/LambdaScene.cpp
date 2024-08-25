@@ -5,7 +5,7 @@
 
 class LambdaScene : public Scene {
 public:
-    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const bool ios = false, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), ios(int_only_scale), le(lambda->clone()) { le->flush_uid_recursive();}
+    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), le(lambda->clone()) {}
 
     const StateQuery populate_state_query() const override {
         return StateQuery{"subscene_transition_fraction"};
@@ -54,7 +54,6 @@ public:
             float trans_frac = state["subscene_transition_fraction"];
             pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> interpolated = get_interpolated(last_le, le, trans_frac);
             float scale = smoothlerp(get_scale(last_le), get_scale(le), trans_frac);
-            if(ios) scale = round(scale);
             Pixels p1 = interpolated.first->draw_lambda_diagram(scale);
             Pixels p2 = interpolated.second->draw_lambda_diagram(scale);
             float pixw = smoothlerp(p1.w, p2.w, trans_frac);
@@ -68,7 +67,6 @@ public:
     }
 
 private:
-    bool ios;
     shared_ptr<LambdaExpression> le;
     shared_ptr<LambdaExpression> last_le;
     Pixels le_pix;
