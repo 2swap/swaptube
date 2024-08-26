@@ -20,6 +20,7 @@ public:
             {state_manager_name + ".y", to_string(y)},
             {state_manager_name + ".w", to_string(w)},
             {state_manager_name + ".h", to_string(h)},
+            {state_manager_name + ".opacity", "1"},
         };
         state_manager.set(equations);
         SceneWithPosition swp = {sc, state_manager_name};
@@ -62,10 +63,11 @@ public:
             int height_int = state[swp.state_manager_name + ".h"] * h;
             if(swp.scenePointer->w != width_int || swp.scenePointer->h != height_int){
                 swp.scenePointer->resize(width_int, height_int);
+                swp.scenePointer->draw();
             }
             Pixels* p = nullptr;
             swp.scenePointer->query(p);
-            pix.overlay(*p, state[swp.state_manager_name + ".x"] * w, state[swp.state_manager_name + ".y"] * h);
+            pix.overlay(*p, state[swp.state_manager_name + ".x"] * w, state[swp.state_manager_name + ".y"] * h, state[swp.state_manager_name + ".opacity"]);
         }
     }
 
@@ -83,6 +85,7 @@ public:
             ret.insert(swp.state_manager_name + ".y");
             ret.insert(swp.state_manager_name + ".w");
             ret.insert(swp.state_manager_name + ".h");
+            ret.insert(swp.state_manager_name + ".opacity");
         }; 
         return ret;
     }

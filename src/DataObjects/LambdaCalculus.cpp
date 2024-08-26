@@ -570,7 +570,8 @@ void LambdaExpression::set_positions() {
         current->x = iter_x+1;
         current->h = 2;
         if (current->get_type() == "Variable") {
-            current->y = dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction()->get_abstraction_depth() * 2;
+            shared_ptr<const LambdaAbstraction> bound_abstr = dynamic_pointer_cast<LambdaVariable>(current)->get_bound_abstraction();
+            current->y = bound_abstr->get_abstraction_depth() * 2;
             iter_x+=4;
         }
         else if(current->get_type() == "Abstraction") {
@@ -594,11 +595,15 @@ void LambdaExpression::set_positions() {
     it = shared_from_this();
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
+        shared_ptr<const LambdaExpression> nearest_ancestor = current->get_nearest_ancestor_with_type("Application");
         if (current->get_type() == "Variable") {
-            current->h = current->get_nearest_ancestor_with_type("Application")->y - current->y + 1;
+            if(nearest_ancestor == nullptr) {
+                current->h = 2 * current->get_abstraction_depth();
+            } else {
+                current->h = nearest_ancestor->y - current->y + 1;
+            }
         }
-        if(current->get_type() == "Application") {
-            shared_ptr<const LambdaExpression> nearest_ancestor = current->get_nearest_ancestor_with_type("Application");
+        else if(current->get_type() == "Application") {
             if(nearest_ancestor == nullptr) {
                 current->h = 3;
             } else {

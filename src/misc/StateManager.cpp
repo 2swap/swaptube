@@ -87,6 +87,7 @@ private:
 static unordered_map<string, double> global_state{
     {"frame_number", 0},
     {"audio_segment_number", 0},
+    {"superscene_transition_fraction", 0},
     {"subscene_transition_fraction", 0},
 };
 
@@ -135,22 +136,11 @@ public:
             } else break;
         }
     }
-    void add_transition(string variable, string equation) {
-        // No point in doing a noop transition
-        if(get_equation(variable) == equation) return;
-
-        // Nested transitions not supported
-        if(in_transition.find(variable) != in_transition.end()){
-            failout("Transition added to a variable already in transition: " + variable);
-        }
-
-        in_transition.insert(variable);
-        string eq1 = get_equation(variable);
-        string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <subscene_transition_fraction> smoothlerp";
-        add_equation(variable+".pre_transition", eq1);
-        add_equation(variable+".post_transition", eq2);
-        add_equation(variable, lerp_both);
+    void add_subscene_transition(string variable, string equation) {
+        add_transition(variable, equation, true);
+    }
+    void add_superscene_transition(string variable, string equation) {
+        add_transition(variable, equation, false);
     }
     void remove_equation(string variable) {
         /* When a new component is removed, we do not know the
@@ -166,9 +156,14 @@ public:
     }
 
     /* Bulk Modifiers. Naive. One per modifier. */
-    void transition(std::unordered_map<std::string, std::string> equations) {
+    void subscene_transition(std::unordered_map<std::string, std::string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
-            add_transition(it->first, it->second);
+            add_subscene_transition(it->first, it->second);
+        }
+    }
+    void superscene_transition(std::unordered_map<std::string, std::string> equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            add_superscene_transition(it->first, it->second);
         }
     }
     void set(std::unordered_map<std::string, std::string> equations) {
@@ -182,15 +177,12 @@ public:
         }
     }
 
-    void close_all_transitions(){
-        for(string varname : in_transition){
-            add_equation(varname, get_equation(varname + ".post_transition"));
-            VariableContents& vc = variables.at(varname);
-            vc.value = get_value(varname + ".post_transition");
-            remove_equation(varname + ".post_transition");
-            remove_equation(varname + ".pre_transition");
-        }
-        in_transition.clear();
+    void close_all_subscene_transitions(){
+        close_all_transitions(in_subscene_transition);
+    }
+
+    void close_all_superscene_transitions(){
+        close_all_transitions(in_superscene_transition);
     }
 
     void evaluate_all() {
@@ -281,7 +273,8 @@ private:
     list<string> last_compute_order;
 
     // A list of all variable names which are currently undergoing transitions
-    unordered_set<string> in_transition;
+    unordered_set<string> in_subscene_transition;
+    unordered_set<string> in_superscene_transition;
 
     StateManager* parent = nullptr;
 
@@ -352,6 +345,39 @@ private:
         if(parent == nullptr)
             failout("Parent is a nullptr");
         return parent->get_value(variable);
+    }
+
+    void close_all_transitions(unordered_set<string>& in_transition){
+        for(string varname : in_transition){
+            add_equation(varname, get_equation(varname + ".post_transition"));
+            VariableContents& vc = variables.at(varname);
+            vc.value = get_value(varname + ".post_transition");
+            remove_equation(varname + ".post_transition");
+            remove_equation(varname + ".pre_transition");
+        }
+        in_transition.clear();
+    }
+
+    void add_transition(string variable, string equation, bool subscene) {
+        // No point in doing a noop transition
+        if(get_equation(variable) == equation) return;
+
+        // Nested transitions not supported
+        if(  in_subscene_transition.find(variable) !=   in_subscene_transition.end() ||
+           in_superscene_transition.find(variable) != in_superscene_transition.end()){
+            failout("Transition added to a variable already in transition: " + variable);
+        }
+
+        if(subscene)
+            in_subscene_transition.insert(variable);
+        else
+            in_superscene_transition.insert(variable);
+        string eq1 = get_equation(variable);
+        string eq2 = equation;
+        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (subscene?"sub":"super") + "scene_transition_fraction> smoothlerp";
+        add_equation(variable+".pre_transition", eq1);
+        add_equation(variable+".post_transition", eq2);
+        add_equation(variable, lerp_both);
     }
 };
 

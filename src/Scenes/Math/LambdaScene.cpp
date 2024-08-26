@@ -5,7 +5,7 @@
 
 class LambdaScene : public Scene {
 public:
-    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), le(lambda->clone()) {}
+    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), le(lambda->clone()) {le->set_positions();}
 
     const StateQuery populate_state_query() const override {
         return StateQuery{"subscene_transition_fraction"};

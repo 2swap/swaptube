@@ -69,7 +69,8 @@ public:
 
     void render(){
         if(!FOR_REAL){
-            state_manager.close_all_transitions();
+            state_manager.close_all_subscene_transitions();
+            state_manager.close_all_superscene_transitions();
             return;
         }
 
@@ -87,8 +88,9 @@ public:
         video_sessions_left--;
         if(video_sessions_left == 0){
             global_state["audio_segment_number"]++;
+            state_manager.close_all_superscene_transitions();
         }
-        state_manager.close_all_transitions();
+        state_manager.close_all_subscene_transitions();
         on_end_transition();
     }
 
@@ -111,9 +113,10 @@ private:
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
         global_state["frame_number"]++;
+        global_state["superscene_transition_fraction"] = 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total;
         global_state["subscene_transition_fraction"] = static_cast<double>(subscene_frame) / scene_duration_frames;
 
-        state_manager_time_plot.add_datapoint(vector<double>{global_state["subscene_transition_fraction"]});
+        state_manager_time_plot.add_datapoint(vector<double>{global_state["superscene_transition_fraction"], global_state["subscene_transition_fraction"]});
 
         if (video_sessions_left == 0) {
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");

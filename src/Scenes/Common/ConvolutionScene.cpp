@@ -8,11 +8,8 @@ inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
 
 class ConvolutionScene : public Scene {
 public:
-    ConvolutionScene(const Pixels& p, const int width = 0, const int height = 0)
-    : Scene(p.w, p.h), p1(p), coords(get_coords_from_pixels(p)) {
-        pix.fill(TRANSPARENT_BLACK);
-        pix.overwrite(p1, coords.first, coords.second);
-    }
+    ConvolutionScene(const Pixels& p, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) { }
 
     pair<int, int> get_coords_from_pixels(const Pixels& p){
         return make_pair((pix.w-p.w)/2, (pix.h-p.h)/2);
@@ -37,14 +34,12 @@ public:
         assert(in_transition_state);
         p1 = p2;
         coords = transition_coords;
-        pix.fill(TRANSPARENT_BLACK);
-        pix.overwrite(p1, coords.first, coords.second);
         in_transition_state = false;
     }
 
     void draw() override{
+        pix.fill(TRANSPARENT_BLACK);
         if(in_transition_state) {
-            pix.fill(TRANSPARENT_BLACK);
             double tp = transparency_profile(state["subscene_transition_fraction"]);
             double tp1 = transparency_profile(1-state["subscene_transition_fraction"]);
             double smooth = smoother2(state["subscene_transition_fraction"]);
@@ -72,6 +67,9 @@ public:
             StepResult last_intersection = intersections[intersections.size()-1];
             pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
             pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
+        }
+        else {
+            pix.overwrite(p1, coords.first, coords.second);
         }
     }
 
