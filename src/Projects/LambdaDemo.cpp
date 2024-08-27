@@ -57,7 +57,7 @@ void intro() {
     });
 
     PRINT_TO_TERMINAL = false;
-    FOR_REAL = false;
+    FOR_REAL = true;
     int num_reductions = term->count_reductions() + 5;
     vector<string> blurbs = {"What you're watching right now is pure computation.",
                              "Not quite algebraic manipulation,",
@@ -86,7 +86,6 @@ void intro() {
     }
 
     tds.inject_audio_and_render(AudioSegment("What are all these weird lines though?"));
-    tds.inject_audio_and_render(AudioSegment("Well, this here represents the answer, 6."));
 
     ls->set_expression(term);
     tds.inject_audio_and_render(AudioSegment("Going back to the original setup,"));
@@ -162,13 +161,7 @@ void intro() {
 
 
 
-    tds.state_manager.subscene_transition(unordered_map<string, string>{
-        {"q1", "1"},
-        {"qi", "0"},
-        {"qj", "0"},
-        {"qk", "0"},
-        {"d", "2"},
-    });
+
     le_factorial->flush_uid_recursive();
     le_church_3->flush_uid_recursive();
     le_factorial->set_color_recursive(0xffff0000);
@@ -176,6 +169,13 @@ void intro() {
     shared_ptr<LambdaExpression> term1 = apply(le_factorial, le_church_3, 0x00000000);
     shared_ptr<LambdaScene> ls1 = make_shared<LambdaScene>(term1, 600, 600);
     tds.add_surface(Surface(glm::vec3(0,0,-8), glm::vec3(1,0,0), glm::vec3(0,1,0), ls1));
+    tds.state_manager.subscene_transition(unordered_map<string, string>{
+        {"q1", "1"},
+        {"qi", "0"},
+        {"qj", "0"},
+        {"qk", "0"},
+        {"d", "2"},
+    });
 
     tds.inject_audio_and_render(AudioSegment("This mathematical language permits us to express any computational procedure, including functions such as factorial, which can then be applied to numbers like 3."));
     tds.remove_surface(churchtimesscene);
@@ -221,16 +221,16 @@ void intro() {
 
     // List of unique lambda expressions that require a larger number of reductions
     vector<string> complex_lambdas = {
-        "(((\\x. (\\y. (y ((x x) y)))) (\\x. (\\y. (y ((x x) y))))) (\\z. z))",  // Y combinator with extra application
-        "(((\\f. (\\x. (f (f (f (f x)))))) (\\y. (y y))) (\\z. z))",  // Deep nested application with self-application
-        "(((\\m. (\\n. (m (n m)))) (\\a. (a a))) (\\c. ((c c) (c c))))",  // Complex self-application
-        "(((\\f. (\\x. (f (f (f x))))) (\\y. (y y))) (\\z. z))",  // Deep nested application with self-application
-        "(((\\m. (\\n. (m (n ((m m) n))))) (\\x. x)) (\\y. (y y)))",  // Complex identity function application
-        "(((\\x. (\\y. (y ((x x) y)))) (\\x. (\\y. (y ((x x) y))))) (\\x. (\\y. (y ((x x) y)))))",  // Y combinator with extra application
-        "(((\\f. (\\x. (f (f (f (f x)))))) (\\y. (y y))) (\\x. (\\y. (y ((x x) y)))))",  // Deep nested application with self-application
-        "(((\\m. (\\n. (m (n m)))) (\\x. (\\y. (y ((x x) y))))) (\\c. ((c c) (c c))))",  // Complex self-application
-        "(((\\f. (\\x. (f (f (f x))))) (\\y. (y y))) (\\x. (\\y. (y ((x x) y)))))",  // Deep nested application with self-application
-        "(((\\m. (\\n. (m (n ((m m) n))))) (\\x. (\\y. (y ((x x) y))))) (\\y. (y y)))"  // Complex identity function application
+        "(((\\x. (\\y. (y ((x x) y)))) (\\x. (\\y. (y ((x x) y))))) (\\z. z))",
+        "(((\\f. (\\x. (f (f (f (f x)))))) (\\y. (y y))) (\\z. z))",
+        "(((\\m. (\\n. (m (n m)))) (\\a. (a a))) (\\c. ((c c) (c c))))",
+        "(((\\f. (\\x. (f (f (f x))))) (\\y. (y y))) (\\z. z))",
+        "(((\\m. (\\n. (m (n ((m m) n))))) (\\x. x)) (\\y. (y y)))",
+        "(((\\x. (\\y. (y ((x x) y)))) (\\x. (\\y. (y ((x x) y))))) (\\x. (\\y. (y ((x x) y)))))",
+        "(((\\f. (\\x. (f (f (f (f x)))))) (\\y. (y y))) (\\x. (\\y. (y ((x x) y)))))",
+        "(((\\m. (\\n. (m (n m)))) (\\x. (\\y. (y ((x x) y))))) (\\c. ((c c) (c c))))",
+        "(((\\f. (\\x. (f (f (f x))))) (\\y. (y y))) (\\x. (\\y. (y ((x x) y)))))",
+        "(((\\m. (\\n. (m (n ((m m) n))))) (\\x. (\\y. (y ((x x) y))))) (\\y. (y y)))",
     };
 
     for (int i = 0; i < num_lambdas; ++i) {
@@ -243,7 +243,7 @@ void intro() {
         // Randomize position and orientation
         float x_position = ((i % 5) + ((rand() % 1000) / 1000.0f * scatter_range_x - scatter_range_x / 2) - 2) * 2;
         float y_position = ((i / 5) + ((rand() % 1000) / 1000.0f * scatter_range_y - scatter_range_y / 2) - .5) * 3 + i%2- .5;
-        float z_position = -11.5 + (rand()%1000)/1000.0;
+        float z_position = -11.5 + 2 * (rand()%1000)/1000.0;
         float theta = ((rand()%1000)/1000.0f-0.5) * 0.2;
         glm::vec3 random_tilt_x(cos(theta), sin(theta), 0);
         glm::vec3 random_tilt_y(-sin(theta), cos(theta), 0);
@@ -259,24 +259,16 @@ void intro() {
         {"z", "-15"},
     });
 
-    tds.inject_audio(AudioSegment("Because today, we're learning the lambda calculus."), 10);
+    tds.inject_audio(AudioSegment("Because today, we're learning the lambda calculus."), 5);
 
     // Reduce all the lambdas in the background in a loop
-    for(int i = 0; i < 10; i++) {
-        if(i > 2)
+    for(int i = 0; i < 5; i++) {
+        ls1->reduce();
+        if(i > 1)
             for (auto& lambda_scene : lots_of_lambdas) {
                 lambda_scene->reduce();  // Reduce the lambda expression
             }
         tds.render();  // Render the scene after each reduction
-    }
-
-    tds.inject_audio(AudioSegment(3), 10);
-    // Reduce all the lambdas in the background in a loop
-    for(int i = 0; i < 10; i++) {
-        for (auto& lambda_scene : lots_of_lambdas) {
-            lambda_scene->reduce(); // Reduce the lambda expression
-        }
-        tds.render(); // Render the scene after each reduction
     }
 
     tds.state_manager.superscene_transition(unordered_map<string, string>{
@@ -284,9 +276,10 @@ void intro() {
         {"qk", "4"},
     });
 
-    tds.inject_audio(AudioSegment(3), 10);
+    tds.inject_audio(AudioSegment(3), 5);
     // Reduce all the lambdas in the background in a loop
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 5; i++) {
+        ls1->reduce();
         for (auto& lambda_scene : lots_of_lambdas) {
             lambda_scene->reduce(); // Reduce the lambda expression
         }
