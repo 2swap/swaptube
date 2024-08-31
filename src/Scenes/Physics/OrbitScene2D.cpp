@@ -100,7 +100,6 @@ public:
         return simulation->has_been_updated_since_last_scene_query();
     }
     void draw() override {
-        pix.fill(TRANSPARENT_BLACK);
         simulation->iterate_physics(state["physics_multiplier"], state_manager);
         if(state["predictions_opacity"] > 0.001) {
             /*if(state != last_state)*/ render_predictions();

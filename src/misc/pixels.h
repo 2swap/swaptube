@@ -393,7 +393,10 @@ public:
                 float dx = gx - gxi;
                 float dy = gy - gyi;
 
-                int result_pixel = 0;
+                float pa = 0;
+                float pr = 0;
+                float pg = 0;
+                float pb = 0;
 
                 // Iterate over the surrounding 4x4 block of pixels
                 for (int m = -1; m <= 2; m++) {
@@ -407,11 +410,18 @@ public:
                         int pixel = get_pixel(xi, yi);
                         float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
 
-                        result_pixel += static_cast<int>(weight * pixel);
+                        pa += weight * geta(pixel);
+                        pr += weight * getr(pixel);
+                        pg += weight * getg(pixel);
+                        pb += weight * getb(pixel);
                     }
                 }
+                pa = std::clamp(static_cast<int>(pa), 0, 255);
+                pr = std::clamp(static_cast<int>(pr), 0, 255);
+                pg = std::clamp(static_cast<int>(pg), 0, 255);
+                pb = std::clamp(static_cast<int>(pb), 0, 255);
 
-                result.set_pixel(x, y, result_pixel);
+                result.set_pixel(x, y, argb_to_col(pa, pr, pg, pb));
             }
         }
 

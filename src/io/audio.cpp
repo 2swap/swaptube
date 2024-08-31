@@ -132,7 +132,7 @@ public:
         audiotime = t_samples;
     }
     void add_silence(double duration) {
-        cout << "Adding silence: " << duration << " seconds" << endl;
+        //cout << "Adding silence: " << duration << " seconds" << endl;
 
         // Calculate the number of samples needed for the specified duration
         int numSamples = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
@@ -189,17 +189,15 @@ public:
 
             samplesRemaining -= samples_this_frame;
         }
-        cout << "Added silence: " << duration << " seconds" << endl;
+        //cout << "Added silence: " << duration << " seconds" << endl;
     }
     double add_audio_get_length(const string& audioname) {
-        cout << "Adding audio" << endl;
         double length_in_seconds = 0;
 
         string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + audioname;
 
         // Check if the input audio file exists
         if (!file_exists(fullInputAudioFilename)) {
-            std::cerr << "Input audio file does not exist: " << fullInputAudioFilename << std::endl;
             length_in_seconds = 3.0;
             add_silence(length_in_seconds);
             return length_in_seconds;
@@ -208,8 +206,7 @@ public:
         AVFormatContext* inputAudioFormatContext = nullptr;
         int ret = avformat_open_input(&inputAudioFormatContext, fullInputAudioFilename.c_str(), nullptr, nullptr);
         if (ret < 0) {
-            std::cerr << "Error opening input audio file." << std::endl;
-            exit(1);
+            failout("Error opening input audio file.");
         }
 
         // Read input audio frames and write to output format context

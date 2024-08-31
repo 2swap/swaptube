@@ -128,15 +128,15 @@ public:
         coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
         if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
-        double scale = (w*fov) / coordinate.z; // perspective projection
-        double x = scale * coordinate.x + w/2;
-        double y = scale * coordinate.y + h/2;
+        double scale = (get_width()*fov) / coordinate.z; // perspective projection
+        double x = scale * coordinate.x + get_width()/2;
+        double y = scale * coordinate.y + get_height()/2;
 
         return {x, y};
     }
 
     bool isOutsideScreen(const pair<int, int>& point) {
-        return point.first < 0 || point.first >= w || point.second < 0 || point.second >= h;
+        return point.first < 0 || point.first >= get_width() || point.second < 0 || point.second >= get_height();
     }
 
     // Utility function to find the orientation of the ordered triplet (p, q, r).
@@ -205,6 +205,8 @@ public:
             if (!isOutsideScreen(corner))
                 return true;
 
+        int w = get_width();
+        int h = get_height();
         vector<pair<int, int>> screenCorners = {{0, 0}, {w, 0}, {w, h}, {0, h}};
         for (const auto& corner : screenCorners)
             if (isInsideConvexPolygon(corner, corners))
@@ -249,8 +251,8 @@ public:
         }
         x1 = max(x1, 0);
         y1 = max(y1, 0);
-        x2 = min(x2, w-1);
-        y2 = min(y2, h-1);
+        x2 = min(x2, get_width()-1);
+        y2 = min(y2, get_height()-1);
         int plot_w = x2 - x1 + 1;
         int plot_h = y2 - y1 + 1;
 
@@ -261,8 +263,8 @@ public:
             pix.pixels,
             x1, y1, plot_w, plot_h, pix.w,
             queried->pixels.data(),
-            surface.scenePointer->w,
-            surface.scenePointer->h,
+            surface.scenePointer->get_width(),
+            surface.scenePointer->get_height(),
             this_surface_opacity,
             camera_pos,
             camera_direction,
@@ -320,11 +322,10 @@ public:
 
     void draw() override {
         fov = state["fov"];
-        over_w_fov = 1/(w*fov);
-        halfwidth = w*.5;
-        halfheight = h*.5;
+        over_w_fov = 1/(get_width()*fov);
+        halfwidth = get_width()*.5;
+        halfheight = get_height()*.5;
 
-        pix.fill(TRANSPARENT_BLACK);
         set_camera_direction();
         sketchpad.fill(OPAQUE_BLACK);
 

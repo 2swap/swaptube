@@ -90,15 +90,6 @@ public:
         py = round((-stoney + board.BOARD_HEIGHT/2.-.5)*stonewidth+pix.h/2);
     }
 
-    void render_c4(){
-        pix.fill(TRANSPARENT_BLACK);
-        for(int stonex = 0; stonex < board.BOARD_WIDTH; stonex++)
-            for(int stoney = 0; stoney < board.BOARD_HEIGHT; stoney++){
-                double px = 0, py = 0, stonewidth = 0;
-                draw_c4_disc(stonex, stoney);
-            }
-    }
-
     const StateQuery populate_state_query() const override {
         return StateQuery{};
     }
@@ -108,7 +99,11 @@ public:
 
     void draw() override{
         if (is_transition) interpolate();
-        render_c4();
+        for(int stonex = 0; stonex < board.BOARD_WIDTH; stonex++)
+            for(int stoney = 0; stoney < board.BOARD_HEIGHT; stoney++){
+                double px = 0, py = 0, stonewidth = 0;
+                draw_c4_disc(stonex, stoney);
+            }
         //if(done_scene && is_transition) post_transition();
     }
 };

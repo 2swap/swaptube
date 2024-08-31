@@ -13,12 +13,12 @@ enum class ScalingMode {
 
 struct ScalingParams {
     ScalingMode mode;
-    int max_width;
-    int max_height;
+    float max_width;
+    float max_height;
     double scale_factor;
 
     // Constructors for different modes
-    ScalingParams(int width, int height) 
+    ScalingParams(float width, float height) 
         : mode(ScalingMode::BoundingBox), max_width(width), max_height(height), scale_factor(0) {}
 
     ScalingParams(double factor) 
@@ -197,7 +197,7 @@ Pixels png_to_pix(const string& filename) {
 Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
     // Open svg and get its dimensions
     RsvgHandle* handle = rsvg_handle_new_from_file(svg.c_str(), NULL);
-    cout << "Rendering svg " << svg << endl;
+    //cout << "Rendering svg " << svg << endl;
     if (!handle) {
         fprintf(stderr, "Error loading SVG data from file \"%s\"\n", svg.c_str());
         exit(-1);
@@ -242,16 +242,29 @@ Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
 }
 
 // Create an unordered_map to store the cached results
-unordered_map<string, Pixels> latex_cache;
+unordered_map<string, pair<Pixels, double>> latex_cache;
+
+string generate_cache_key(const string& eqn, const ScalingParams& scaling_params) {
+    hash<string> hasher;
+    string key = eqn + "_" + to_string(static_cast<int>(scaling_params.mode)) + "_" + 
+                 to_string(scaling_params.max_width) + "_" + 
+                 to_string(scaling_params.max_height) + "_" + 
+                 to_string(scaling_params.scale_factor);
+    return to_string(hasher(key));
+}
 
 /*
  * We use MicroTEX to convert LaTeX equations into svg files.
  */
 Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
+    // Generate a cache key based on the equation and scaling parameters
+    string cache_key = generate_cache_key(eqn, scaling_params);
+
     // Check if the result is already in the cache
-    auto it = latex_cache.find(eqn);
+    auto it = latex_cache.find(cache_key);
     if (it != latex_cache.end()) {
-        return it->second; // Return the cached Pixels object
+        scaling_params.scale_factor = it->second.second;
+        return it->second.first; // Return the cached Pixels object
     }
 
     hash<string> hasher;
@@ -259,23 +272,14 @@ Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
     realpath(PATH_MANAGER.latex_dir.c_str(), full_directory_path);
     string name = string(full_directory_path) + "/" + to_string(hasher(eqn)) + ".svg";
 
-    if (access(name.c_str(), F_OK) != -1) {
-        // File already exists, no need to generate LaTeX
-        Pixels pixels = svg_to_pix(name, scaling_params);
-        latex_cache[eqn] = pixels; // Cache the result before returning
-        return pixels;
+    if (access(name.c_str(), F_OK) == -1) {
+        string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
+        int result = system(command.c_str());
+        if(result != 0) failout("Failed to generate LaTeX.");
     }
 
-    string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
-    int result = system(command.c_str());
-
-    if (result == 0) {
-        // System call successful, return the generated SVG
-        Pixels pixels = svg_to_pix(name, scaling_params);
-        latex_cache[eqn] = pixels; // Cache the result before returning
-        return pixels;
-    } else {
-        // System call failed, handle the error
-        throw runtime_error("Failed to generate LaTeX.");
-    }
+    // System call successful, return the generated SVG
+    Pixels pixels = svg_to_pix(name, scaling_params);
+    latex_cache[cache_key] = make_pair(pixels, scaling_params.scale_factor); // Cache the result before returning
+    return pixels;
 }

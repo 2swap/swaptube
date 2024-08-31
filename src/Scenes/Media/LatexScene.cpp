@@ -10,7 +10,9 @@ public:
 
     void begin_latex_transition(string eqn) {
         ScalingParams sp(scale_factor);
-        begin_transition(eqn_to_pix(eqn, sp));
+        Pixels p = eqn_to_pix(eqn, sp);
+        cout << p.w << " " << p.h << " " << scale_factor << endl;
+        begin_transition(p);
     }
 
 private:
@@ -21,7 +23,6 @@ private:
         Pixels ret = eqn_to_pix(eqn, sp);
         scale_factor = sp.scale_factor;
 
-        cout << "Scale Factor: " << scale_factor;
         return ret;
     }
 };

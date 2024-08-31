@@ -77,10 +77,7 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) 
     cout << "Post-align: " << max_x << ", " << max_y << endl;
 
     // Create the Pixels object from the intensity map
-    Pixels p = create_alpha_from_intensities(map_2d);
-    p.print_to_terminal();
-    
-    return p;
+    return create_alpha_from_intensities(map_2d);
 }
 
 void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int color) {
@@ -456,7 +453,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         const TranslatedPixels intersection = intersect(translated_p1, translated_p2);
         const TranslatedPixels unified      =     unify(translated_p1, translated_p2);
 
-        const TranslatedPixels erasure      = erase_low_iou(intersection, unified, .4);
+        const TranslatedPixels erasure      = erase_low_iou(intersection, unified, .8);
 
         intersection_nonempty = !erasure.is_empty();
 
@@ -472,7 +469,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         results.push_back(step_result);
 
         // DEBUG
-        if(true){
+        if(false){
             ensure_dir_exists(PATH_MANAGER.this_run_output_dir + convolution_name);
             pix_to_png(translated_p1.pixels, convolution_name + "/convolution_" + to_string(i) + "_a_translated1");
             pix_to_png(translated_p2.pixels, convolution_name + "/convolution_" + to_string(i) + "_b_translated2");

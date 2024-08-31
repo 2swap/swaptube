@@ -85,7 +85,7 @@ public:
 
         // Recursive base case
         subtitle_count++;
-        cout << "Adding subtitle: " << text << endl;
+        //cout << "Adding subtitle: " << text << endl;
 
         // Write the complete subtitle entry to the file
         srt_file << subtitle_count << endl;

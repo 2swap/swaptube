@@ -30,7 +30,6 @@ public:
     }
 
     void end_transition(){
-        cout << "Ending transition" << endl;
         assert(in_transition_state);
         p1 = p2;
         coords = transition_coords;
@@ -38,7 +37,6 @@ public:
     }
 
     void draw() override{
-        pix.fill(TRANSPARENT_BLACK);
         if(in_transition_state) {
             double tp = transparency_profile(state["subscene_transition_fraction"]);
             double tp1 = transparency_profile(1-state["subscene_transition_fraction"]);
@@ -55,10 +53,10 @@ public:
                 pix.overlay(step.induced1, x, y, tp1);
                 pix.overlay(step.induced2, x+step.max_x, y+step.max_y, tp );
 
-                if(i == 0){
+                /*if(i == 0){
                     top_vx += transition_coords.first  - step.max_x - coords.first ;
                     top_vy += transition_coords.second - step.max_y - coords.second;
-                }
+                }*/
             }
 
             int dx = round(lerp(-top_vx, 0, smooth));

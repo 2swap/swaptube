@@ -37,7 +37,6 @@ public:
         ScalingParams sp(pix.w, pix.h);
         string eqn_str = display_name + " = " + double_to_string(state[variable_name]);
         Pixels equation_pixels = eqn_to_pix(eqn_str, sp);
-        pix.fill(TRANSPARENT_BLACK);
         draw_slider();
         pix.overlay(equation_pixels, h/2, (h-equation_pixels.h)/2.); // h/2 shifts the text over horizontally a little out of the left wall
     }

@@ -4,7 +4,7 @@ const string project_name = "LambdaDemo";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 1;
+const float mult = 2;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -235,7 +235,7 @@ void intro() {
 
     // Create text which says Lambda Calculus behind where the camera currently is
     shared_ptr<LatexScene> title = make_shared<LatexScene>(latex_text("The \\lambda -Calculus"), 1);
-    tds.add_surface(Surface(glm::vec3(0,0,-14), glm::vec3(1,0,0), glm::vec3(0,static_cast<float>(title->h)/title->w,0), title));
+    tds.add_surface(Surface(glm::vec3(0,0,-14), glm::vec3(1,0,0), glm::vec3(0,static_cast<float>(title->get_height())/title->get_width(),0), title));
 
     // Also add a bunch of grey lambda diagrams parallel to the title with z=12
     vector<shared_ptr<LambdaScene>> lots_of_lambdas;
@@ -315,17 +315,18 @@ void intro() {
 }
 
 void history() {
+    FOR_REAL = false;
     CompositeScene cs;
     cs.inject_audio_and_render(AudioSegment("But what even is computation?"));
 
     // Create Hilbert's BiographyScene on the left, with a quote on the right
     BiographyScene hilbert("hilbert", {"David Hilbert", "One of the greatest mathematicians of the 1900s."});
     cs.add_scene(&hilbert, "hilbert", 0, 0, 0.5, 1);
-    cs.inject_audio_and_render(AudioSegment("David Hilbert, one of the greatest mathematicians of the 1900s, wanted to know whether there was some procedure that could be employed to determine, in a finite amount of time, whether some mathematical statement is true or false."));
+    cs.inject_audio_and_render(AudioSegment("David Hilbert, one of the greatest mathematicians of the 1900s, wanted to know whether there was some procedure, some algorithm, which, given some mathematical statement, can determine whether it is true or false."));
 
     // Move Hilbert to the top half to make room for other mathematicians
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"hilbert.h", ".5"},
+        {"hilbert.h", to_string(.5 * cs.get_height())},
     });
 
     // Introduce Church, Turing, and Gödel, moving them from the bottom of the screen, breaking the blurb into parts
@@ -333,56 +334,199 @@ void history() {
     BiographyScene turing("turing", {"Alan Turing", "Father of modern computer science"});
     BiographyScene godel("godel", {"Kurt Gödel", "Proved mathematics is incomplete"});
 
-    cs.add_scene(&church, "church", 0, 1, 0.5, 0.5);
-    cs.add_scene(&turing, "turing", 0.5, 1, 0.5, 0.5);
-    cs.add_scene(&godel, "godel", 0.5, 1, 0.5, 0.5);
+    cs.add_scene(&church, "church", 0, 1, 0.33333, 0.5);
+    cs.add_scene(&turing, "turing", 0.33333, 1, 0.33333, 0.5);
+    cs.add_scene(&godel, "godel", 0.66666, 1, 0.33333, 0.5);
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"turing.y", "0.5"},
+        {"godel.y", "0.5"},
+        {"church.y", "0.5"},
+    });
 
     // Break up the audio and append to the relevant biographies
-    cs.inject_audio_and_render(AudioSegment("Three men independently answered this question in different ways..."));
-    church.set_bio_text({"Alonzo Church", "Invented the Lambda Calculus", "Proposed a formal system for computation"});
-    cs.inject_audio_and_render(AudioSegment("... and the ideas they encountered along the way were so groundbreaking..."));
-    turing.set_bio_text({"Alan Turing", "Father of modern computer science", "Developed the Turing Machine"});
-    cs.inject_audio_and_render(AudioSegment("... that they proved Hilbert's task impossible..."));
-    godel.set_bio_text({"Kurt Gödel", "Proved mathematics is incomplete", "Gödel's Incompleteness Theorems"});
+    cs.inject_audio_and_render(AudioSegment("Three men independently answered this question in different ways."));
+    church.append_bio_text("First to disprove Hilbert's proposed algorithm");
+    cs.inject_audio_and_render(AudioSegment("The ideas they encountered along the way were so groundbreaking that they proved Hilbert's task impossible,"));
+    church.append_bio_text("Invented functional programming");
+    turing.append_bio_text("Invented imperative programming");
+    cs.inject_audio_and_render(AudioSegment("spawned two of the paradigms underlying modern programming languages,"));
+    godel.append_bio_text("Gödel's Incompleteness Theorems");
+    cs.inject_audio_and_render(AudioSegment("showed that mathematics is essentially incomplete,"));
+    turing.append_bio_text("Formalized the Turing Machine");
+    cs.inject_audio_and_render(AudioSegment("and spawned the entire field of computer science."));
 
     cs.inject_audio_and_render(AudioSegment("However, to answer this question in any rigorous sense, we need some sort of understanding of what a 'procedure' is in the first place."));
 
     // Slide Turing and Gödel out the right side, and introduce a LatexScene title "The \\lambda-Calculus" on the right side
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"turing.x", "1"},
-        {"godel.x", "1"},
-        {"church.x", "1"},
+        {"turing.x", "2"},
+        {"godel.x", "2"},
+        {"hilbert.x", "2"},
     });
 
-    LatexScene lambda_calculus_title("The \\lambda-Calculus", 1);
-    cs.add_scene(&lambda_calculus_title, "lambda_title", 0.5, 0, 0.5, 0.5);
+    LatexScene lambda_title(latex_text("The \\lambda-Calculus"), 1, VIDEO_WIDTH, VIDEO_HEIGHT*0.25);
+    cs.add_scene(&lambda_title, "lambda_title", 0, -0.25, 1, 0.25);
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"lambda_title.y", "0"},
+    });
     cs.inject_audio_and_render(AudioSegment("Alonzo Church was the first to answer this question by inventing the Lambda Calculus."));
+    cs.remove_scene(&church);
+    cs.remove_scene(&turing);
+    cs.remove_scene(&godel);
+
+    // Add LatexScenes showing Lambda expressions
+    LatexScene lambda_examples1("(\\lambda x. x)",                   1, VIDEO_WIDTH*.333, VIDEO_HEIGHT*.333);
+    LatexScene lambda_examples2("y",                                 1, VIDEO_WIDTH*.333, VIDEO_HEIGHT*.333);
+    LatexScene lambda_examples3("(\\lambda z. (z (\\lambda w. w)))", 1, VIDEO_WIDTH*.333, VIDEO_HEIGHT*.333);
+    LatexScene lambda_examples4("(a (b c))"                        , 1, VIDEO_WIDTH*.333, VIDEO_HEIGHT*.333);
+    cs.add_scene(&lambda_examples1, "lambda_examples1", 0.333, 0.333, 0.333, 0.333);
+    cs.add_scene(&lambda_examples2, "lambda_examples2", 0.333, 0.666, 0.333, 0.333);
+    cs.add_scene(&lambda_examples3, "lambda_examples3", 0.666, 0.333, 0.333, 0.333);
+    cs.add_scene(&lambda_examples4, "lambda_examples4", 0.666, 0.666, 0.333, 0.333);
+    cs.inject_audio_and_render(AudioSegment("In its original formulation, the Lambda Calculus was defined in terms of strings that look like this."));
+    lambda_examples1.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda x. x") + latex_color(0xffff0000, ")"));
+    lambda_examples2.begin_latex_transition(latex_color(0xff444444, "y"));
+    lambda_examples3.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda z. ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "z ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda w. w") + latex_color(0xffff0000, ")))"));
+    lambda_examples4.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "a ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "b c") + latex_color(0xffff0000, "))"));
+    cs.inject_audio(AudioSegment("They are composed of parentheses,"), 2);
+    cs.render();
+    cs.render();
+    cs.inject_audio_and_render(AudioSegment(1));
+    lambda_examples1.begin_latex_transition(latex_color(0xff444444, "(") + latex_color(0xff00ff00, "\\lambda x. x") + latex_color(0xff444444, ")"));
+    lambda_examples2.begin_latex_transition(latex_color(0xff00ff00, "y"));
+    lambda_examples3.begin_latex_transition(latex_color(0xff444444, "(\\lambda ") + latex_color(0xff00ff00, "z") + latex_color(0xff444444, ". (") + latex_color(0xff00ff00, "z ") + latex_color(0xff444444, "(\\lambda") + latex_color(0xff00ff00, "w") + latex_color(0xff444444, ".") + latex_color(0xff00ff00, "w") + latex_color(0xff444444, ")))"));
+    lambda_examples4.begin_latex_transition(latex_color(0xff444444, "(") + latex_color(0xff00ff00, "a ") + latex_color(0xff444444, "(") + latex_color(0xff00ff00, "b c") + latex_color(0xff444444, "))"));
+    cs.inject_audio(AudioSegment("letters of the alphabet,"), 2);
+    cs.render();
+    cs.render();
+    cs.inject_audio_and_render(AudioSegment(1));
+    lambda_examples1.begin_latex_transition(latex_color(0xff444444, "(") + latex_color(0xff0044ff, "\\lambda") + latex_color(0xff444444, "x") + latex_color(0xff0044ff, ".") + latex_color(0xff444444, "x)"));
+    lambda_examples2.begin_latex_transition(latex_color(0xff444444, "y"));
+    lambda_examples3.begin_latex_transition(latex_color(0xff444444, "(") + latex_color(0xff0044ff, "\\lambda") + latex_color(0xff444444, "z ") + latex_color(0xff0044ff, ".") + latex_color(0xff444444, "(z (") + latex_color(0xff0044ff, "\\lambda") + latex_color(0xff444444, "w ") + latex_color(0xff0044ff, ".") + latex_color(0xff444444, "w)))"));
+    lambda_examples4.begin_latex_transition(latex_color(0xff444444, "(a (b c))"));
+    cs.inject_audio(AudioSegment("and this notation involving a lambda and a dot. Those two always come together in a pair."), 2);
+    cs.render();
+    cs.render();
+    cs.inject_audio_and_render(AudioSegment(1));
+
+    // On the left, add the production rules of the lambda calculus
+    LatexScene lambda_rule_var("a"                , 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_abs("(\\lambda a. \\_)", 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_app("(\\_ \\_)"        , 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    cs.add_scene(&lambda_rule_var, "lambda_rule_var"    , -0.5, 0.25, 0.5, 0.25);
+    cs.add_scene(&lambda_rule_abs, "lambda_rule_abs"    , -0.5,  0.5, 0.5, 0.25);
+    cs.add_scene(&lambda_rule_app, "lambda_rule_app"    , -0.5, 0.75, 0.5, 0.25);
 
     // Slide Church out to the left
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"church.x", "-1"},
+        {"lambda_examples1.x", "1.5"},
+        {"lambda_examples2.x", "1.5"},
+        {"lambda_examples3.x", "1.5"},
+        {"lambda_examples4.x", "1.5"},
+        {"lambda_rule_var.x"    , "0"},
+        {"lambda_rule_abs.x"    , "0"},
+        {"lambda_rule_app.x"    , "0"},
     });
+    cs.inject_audio_and_render(AudioSegment("We can build these strings ourselves, following 3 rules."));
+    cs.remove_scene(&lambda_examples1);
+    cs.remove_scene(&lambda_examples2);
+    cs.remove_scene(&lambda_examples3);
+    cs.remove_scene(&lambda_examples4);
+    FOR_REAL = true;
 
-    // Add LatexScenes showing Lambda expressions
-    LatexScene lambda_examples("\\lambda x. x \\quad \\lambda x. (x x) \\quad \\lambda x. (x (x x))", 1);
-    cs.add_scene(&lambda_examples, "lambda_examples", 0.5, 0.5, 0.5, 0.5);
-    cs.inject_audio_and_render(AudioSegment("In its original formulation, the Lambda Calculus was defined in terms of strings that look like this."));
+    // Start Animation Help!
 
-    // Slide those examples to the right side of the screen
+    // Dim rules 2 and 3 to gray, and slide the variable "mod" rule out to the right.
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"lambda_examples.x", "0.5"},
+        {"lambda_rule_var.x", ".5"},
+        {"lambda_rule_var.y", ".5"},
+    });
+    cs.inject_audio_and_render(AudioSegment("The first rule says that any letter is a valid lambda expression."));
+
+    // Highlight the first rule for variables
+    cs.inject_audio(AudioSegment("a, b, c, you name it. Simple as that."), 4);
+
+    lambda_rule_var.begin_latex_transition("b");
+    cs.render();
+
+    lambda_rule_var.begin_latex_transition("c");
+    cs.render();
+
+    lambda_rule_var.begin_latex_transition("a");
+    cs.render();
+
+    // Fade out the first rule by transitioning its opacity to 0.
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
+        {"lambda_rule_var.x", "0"},
+        {"lambda_rule_var.y", ".25"},
+    });
+    cs.render();
+
+    // Move out the second rule.
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"lambda_rule_abs.x", ".5"},
+        {"lambda_rule_abs.y", ".5"},
+    });
+    cs.inject_audio_and_render(AudioSegment("The second rule says that we can make a valid expression of this form."));
+
+    // Highlight the abstraction rule, keeping the variable "a" constant
+    lambda_rule_abs.begin_latex_transition("(\\lambda a. \\_)");
+    cs.inject_audio(AudioSegment("Once again, the 'a' represents any variable."), 3);
+
+    // Shuffle through letters, transitioning back to 'a' like before
+    lambda_rule_abs.begin_latex_transition("(\\lambda b. \\_)"); cs.render();
+    lambda_rule_abs.begin_latex_transition("(\\lambda c. \\_)"); cs.render();
+    lambda_rule_abs.begin_latex_transition("(\\lambda a. \\_)"); cs.render();
+
+    // Highlight the blank in white, make the rest of the term gray.
+    lambda_rule_abs.begin_latex_transition(latex_color(0xff444444, "(\\lambda a. ") + latex_color(0xffffffff, "\\_") + latex_color(0xff444444, ")"));
+    cs.inject_audio_and_render(AudioSegment("The blank, in this case, is a placeholder for any other valid lambda expression."));
+
+    // Transition the latex to have an 'a' where the blank was.
+    lambda_rule_abs.begin_latex_transition("(\\lambda a. a)");
+    cs.inject_audio_and_render(AudioSegment("That could, for example, be a lone variable, such as the ones which we made in expression 1."));
+
+    // Show the completed valid lambda expression.
+    lambda_rule_abs.begin_latex_transition("(\\lambda x. \\_)\\\\\\\\(\\lambda a. a)");
+    cs.inject_audio_and_render(AudioSegment("So, this is a valid lambda expression which matches the proper form."));
+
+    // Slide out another modifiable copy of the abstraction rule and place the last expression inside of it.
+    lambda_rule_abs.begin_latex_transition("(\\lambda x. (\\lambda a. a))");
+    cs.inject_audio_and_render(AudioSegment("And therefore, it can also be placed inside the blank of the same rule."));
+
+    // Transition back to the identity function.
+    lambda_rule_abs.begin_latex_transition("(\\lambda a. a)");
+    // Fade-in a Python identity function which models this lambda expression identity function.
+    PngScene python_identity("python_identity");
+    cs.add_scene(&python_identity, "python_identity", 0.5, 0.75, 0.5, 0.25);
+    cs.state_manager.set(unordered_map<string, string>{
+        {"python_identity.y", "1"},
+    });
+    cs.inject_audio_and_render(AudioSegment("This rule can kind of be thought of as a function definition."));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"python_identity.y", ".75"},
     });
 
-    // On the left, add the production rules of the lambda calculus
-    LatexScene lambda_rules("1. Variable\n2. Abstraction\n3. Application", 1);
-    cs.add_scene(&lambda_rules, "lambda_rules", 0, 0.5, 0.5, 0.5);
-    cs.inject_audio_and_render(AudioSegment("We can make these strings following exactly 3 rules."));
+    cs.inject_audio_and_render(AudioSegment("The variable is the name of the input, and the blank represents the return-statement of the function."));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"python_identity.y", "1"},
+    });
 
-    cs.inject_audio_and_render(AudioSegment(""));
-    cs.inject_audio_and_render(AudioSegment(""));
-    cs.inject_audio_and_render(AudioSegment(""));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"lambda_rule_abs.x", "0"},
+        {"lambda_rule_abs.y", ".5"},
+        {"lambda_rule_app.x", ".5"},
+        {"lambda_rule_app.y", ".5"},
+    });
 
-    cs.inject_audio_and_render(AudioSegment(3));
+    // Repeat by making an example with the third function, and then explain its role as function application.
+    lambda_rule_app.begin_latex_transition(latex_color(0xff00ff00, "(\\_\\_)"));
+    cs.inject_audio_and_render(AudioSegment("If the second rule represents a function, the third rule involves _applying_ such functions."));
+
+    // Show an example where a function is applied to a variable.
+    lambda_rule_app.begin_latex_transition(latex_color(0xff00ff00, "(a b)"));
+    cs.inject_audio_and_render(AudioSegment("In this case, we are 'a' is a function that is applied to 'b'."));
 }
 
 int main() {

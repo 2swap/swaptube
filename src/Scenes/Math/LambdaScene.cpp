@@ -41,12 +41,10 @@ public:
     }
 
     float get_scale(shared_ptr<const LambdaExpression> expr) {
-        return min(w/expr->get_width_recursive(), h/expr->get_height_recursive());
-        return w/240.;
+        return min(get_width()/expr->get_width_recursive(), get_height()/expr->get_height_recursive());
     }
 
     void draw() override {
-        pix.fill(TRANSPARENT_BLACK);
         if(last_le == nullptr){
             render_diagrams(); 
             pix.overwrite(le_pix, (pix.w-le_pix.w)*.5, (pix.h-le_pix.h)*.5);

@@ -17,8 +17,10 @@ static bool PRINT_TO_TERMINAL = true;
 class Scene {
 public:
     Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-        : w(width), h(height), state_manager(), pix(width, height) {
+        : state_manager(), pix(width, height) {
         state_manager.add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
+        state_manager.add_equation("w", to_string(width));
+        state_manager.add_equation("h", to_string(height));
     }
 
     // Scenes which contain other scenes use this to populate the StateQuery
@@ -29,21 +31,17 @@ public:
     virtual void mark_data_unchanged() = 0;
     virtual void on_end_transition() = 0;
     virtual bool has_subscene_state_changed() const {return false;}
-    bool check_if_state_changed() {return state != last_state || has_subscene_state_changed();}
+    bool check_if_state_changed() {return state != last_state || dimensions != last_dimensions || has_subscene_state_changed();}
     void query(Pixels*& p) {
         update_state();
         change_data();
-        if(check_if_state_changed() || check_if_data_changed())
+        if(!has_ever_rendered || check_if_state_changed() || check_if_data_changed()){
+            pix = Pixels(get_width(), get_height());
+            has_ever_rendered = true;
             draw();
+        }
         mark_data_unchanged();
         p=&pix;
-    }
-
-    void resize(int width, int height){
-        if(w == width && h == height) return;
-        w = width;
-        h = height;
-        pix = Pixels(w, h);
     }
 
     void inject_audio_and_render(const AudioSegment& audio){
@@ -71,6 +69,7 @@ public:
         if(!FOR_REAL){
             state_manager.close_all_subscene_transitions();
             state_manager.close_all_superscene_transitions();
+            state_manager.evaluate_all();
             return;
         }
 
@@ -95,6 +94,8 @@ public:
     }
 
     void update_state() {
+        last_dimensions = dimensions;
+        dimensions = state_manager.get_state({"w", "h"});
         state_manager.evaluate_all();
         last_state = state;
         state = state_manager.get_state(populate_state_query());
@@ -104,8 +105,14 @@ public:
         return &pix;
     }
 
-    int w = 0;
-    int h = 0;
+    int get_width() const{
+        return state_manager.get_state({"w"})["w"];
+    }
+
+    int get_height() const{
+        return state_manager.get_state({"h"})["h"];
+    }
+
     StateManager state_manager;
 
 private:
@@ -144,6 +151,9 @@ protected:
     int scene_duration_frames = 0;
     int superscene_frames_left = 0;
     int superscene_frames_total = 0;
-    State state = unordered_map<string, double>{{"THIS IS A SENTINEL STATE. Do not remove. Without me, stateless scenes will never render.", 0.0}};
+    bool has_ever_rendered = false;
+    State state;
     State last_state;
+    State last_dimensions;
+    State dimensions;
 };

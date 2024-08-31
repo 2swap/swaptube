@@ -621,7 +621,6 @@ Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
     float bounding_box_w = get_width_recursive() + 4;
     float bounding_box_h = get_height_recursive() + 4;
     Pixels pix(bounding_box_w * scale, bounding_box_h * scale);
-    pix.fill(TRANSPARENT_BLACK);
 
     for(int i = 0; i < 2; i++){
         Iterator it(shared_from_this());

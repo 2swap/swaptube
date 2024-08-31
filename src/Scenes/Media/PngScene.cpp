@@ -18,7 +18,7 @@ public:
         Pixels image = png_to_pix(picture_name);
 
         // Calculate the scaling factor based on the bounding box
-        float scale = min(static_cast<float>(w) / image.w, static_cast<float>(h) / image.h);
+        float scale = min(static_cast<float>(get_width()) / image.w, static_cast<float>(get_height()) / image.h);
 
         // Calculate the new dimensions
         int new_width = static_cast<int>(image.w * scale);
@@ -28,8 +28,8 @@ public:
         Pixels scaled_image = image.bicubic_scale(new_width, new_height);
 
         // Calculate the position to center the image within the bounding box
-        int x_offset = (w - new_width) / 2;
-        int y_offset = (h - new_height) / 2;
+        int x_offset = (get_width() - new_width) / 2;
+        int y_offset = (get_height() - new_height) / 2;
 
         // Overwrite the scaled image onto the scene's pixel buffer
         pix.overwrite(scaled_image, x_offset, y_offset);

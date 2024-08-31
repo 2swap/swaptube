@@ -15,14 +15,17 @@ public:
 
     void add_scene(Scene* sc, string state_manager_name, double x, double y, double w, double h){
         sc->state_manager.set_parent(&state_manager);
-        const unordered_map<string, string> equations{
+        sc->state_manager.set(unordered_map<string, string> {
+            {"w", "[" + state_manager_name + ".w]"},
+            {"h", "[" + state_manager_name + ".h]"},
+        });
+        state_manager.set(unordered_map<string, string> {
             {state_manager_name + ".x", to_string(x)},
             {state_manager_name + ".y", to_string(y)},
-            {state_manager_name + ".w", to_string(w)},
-            {state_manager_name + ".h", to_string(h)},
+            {state_manager_name + ".w", to_string(w*get_width())},
+            {state_manager_name + ".h", to_string(h*get_height())},
             {state_manager_name + ".opacity", "1"},
-        };
-        state_manager.set(equations);
+        });
         SceneWithPosition swp = {sc, state_manager_name};
         scenes.push_back(swp);
     }
@@ -52,22 +55,14 @@ public:
         for (auto& swp : scenes){
             if(swp.scenePointer->check_if_state_changed()) return true;
         }
-        cout << "No subscene state changed" << endl;
         return false;
     }
 
     void draw() override {
-        pix.fill(TRANSPARENT_BLACK);
         for (auto& swp : scenes){
-            int  width_int = state[swp.state_manager_name + ".w"] * w;
-            int height_int = state[swp.state_manager_name + ".h"] * h;
-            if(swp.scenePointer->w != width_int || swp.scenePointer->h != height_int){
-                swp.scenePointer->resize(width_int, height_int);
-                swp.scenePointer->draw();
-            }
             Pixels* p = nullptr;
             swp.scenePointer->query(p);
-            pix.overlay(*p, state[swp.state_manager_name + ".x"] * w, state[swp.state_manager_name + ".y"] * h, state[swp.state_manager_name + ".opacity"]);
+            pix.overlay(*p, state[swp.state_manager_name + ".x"] * get_width(), state[swp.state_manager_name + ".y"] * get_height(), state[swp.state_manager_name + ".opacity"]);
         }
     }
 
@@ -83,8 +78,6 @@ public:
         for (auto& swp : scenes){
             ret.insert(swp.state_manager_name + ".x");
             ret.insert(swp.state_manager_name + ".y");
-            ret.insert(swp.state_manager_name + ".w");
-            ret.insert(swp.state_manager_name + ".h");
             ret.insert(swp.state_manager_name + ".opacity");
         }; 
         return ret;
