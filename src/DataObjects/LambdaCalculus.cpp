@@ -618,8 +618,8 @@ void LambdaExpression::set_positions() {
 Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
     if(parent != nullptr) failout("draw_lambda_diagram called on a child expression");
     if(w + h + x + y == 0) failout("Attempted drawing lambda diagram with unset positions!");
-    float bounding_box_w = get_width_recursive();
-    float bounding_box_h = get_height_recursive();
+    float bounding_box_w = get_width_recursive() + 4;
+    float bounding_box_h = get_height_recursive() + 4;
     Pixels pix(bounding_box_w * scale, bounding_box_h * scale);
     pix.fill(TRANSPARENT_BLACK);
 
@@ -631,14 +631,14 @@ Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
             int color = current->get_color();
             if((i==0)==(geta(color) == 255)) continue;
             if (current->get_type() == "Variable") {
-                pix.fill_rect(current->x * scale, current->y * scale, scale, current->h * scale, color);
+                pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, scale, current->h * scale, color);
             }
             else if(current->get_type() == "Abstraction") {
-                pix.fill_rect((current->x-1) * scale, current->y * scale, current->w * scale, scale, color);
+                pix.fill_rect((current->x+1) * scale, (current->y+2) * scale, current->w * scale, scale, color);
             }
             else if(current->get_type() == "Application") {
-                pix.fill_rect(current->x * scale, current->y * scale, scale, current->h * scale, color);
-                pix.fill_rect(current->x * scale, current->y * scale, current->w * scale, scale, color);
+                pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, scale, current->h * scale, color);
+                pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, current->w * scale, scale, color);
             }
         }
     }

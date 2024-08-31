@@ -376,6 +376,64 @@ public:
         }
     }
 
+    Pixels bicubic_scale(int new_width, int new_height) const {
+        Pixels result(new_width, new_height);
+
+        float x_ratio = static_cast<float>(w) / new_width;
+        float y_ratio = static_cast<float>(h) / new_height;
+
+        for (int y = 0; y < new_height; y++) {
+            for (int x = 0; x < new_width; x++) {
+                float gx = x * x_ratio;
+                float gy = y * y_ratio;
+
+                int gxi = static_cast<int>(gx);
+                int gyi = static_cast<int>(gy);
+
+                float dx = gx - gxi;
+                float dy = gy - gyi;
+
+                int result_pixel = 0;
+
+                // Iterate over the surrounding 4x4 block of pixels
+                for (int m = -1; m <= 2; m++) {
+                    for (int n = -1; n <= 2; n++) {
+                        int xi = gxi + m;
+                        int yi = gyi + n;
+
+                        xi = std::clamp(xi, 0, w - 1);
+                        yi = std::clamp(yi, 0, h - 1);
+
+                        int pixel = get_pixel(xi, yi);
+                        float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
+
+                        result_pixel += static_cast<int>(weight * pixel);
+                    }
+                }
+
+                result.set_pixel(x, y, result_pixel);
+            }
+        }
+
+        return result;
+    }
+
+    // Bicubic weight function
+    float bicubic_weight(float t) const {
+        const float a = -0.5f; // Commonly used value for bicubic interpolation
+
+        if (t < 0) t = -t;
+        float t2 = t * t;
+        float t3 = t2 * t;
+
+        if (t <= 1) {
+            return (a + 2) * t3 - (a + 3) * t2 + 1;
+        } else if (t < 2) {
+            return a * (t3 - 5 * t2 + 8 * t - 4);
+        } else {
+            return 0;
+        }
+    }
 };
 
 Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensities) {
