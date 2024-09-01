@@ -327,7 +327,7 @@ int C4Board::burst() const{
 
 int C4Board::get_human_winning_fhourstones() {
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = false;
+    const bool SKIP_UNFOUND_STEADYSTATES = true;
     if(SKIP_UNFOUND_STEADYSTATES){
         int ret = movecache.GetSuggestedMoveIfExists(get_hash());
         if(ret != -1) return ret;
@@ -472,7 +472,6 @@ unordered_set<C4Board*> C4Board::get_children(){
                     add_all_good_children(neighbors);
                 }
             }else{ // red's move
-
                 C4Board moved = child(get_human_winning_fhourstones());
                 //cout << moved.representation << " added since it was selected" << endl;
                 neighbors.insert(new C4Board(moved));
