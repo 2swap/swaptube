@@ -327,8 +327,16 @@ int C4Board::burst() const{
 
 int C4Board::get_human_winning_fhourstones() {
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = true;
+    const bool SKIP_UNFOUND_STEADYSTATES = false;
     if(SKIP_UNFOUND_STEADYSTATES){
+        for (int i = 1; i <= C4_WIDTH; ++i) {
+            if(!is_legal(i)) continue;
+            string filename = "unused";
+            shared_ptr<SteadyState> ss = find_cached_steady_state(child(i).get_hash(), filename);
+            if(ss != nullptr){
+                return i;
+            }
+        }
         int ret = movecache.GetSuggestedMoveIfExists(get_hash());
         if(ret != -1) return ret;
     }
@@ -460,7 +468,8 @@ unordered_set<C4Board*> C4Board::get_children(){
             if(!is_reds_turn()){ // if it's yellow's move
                 int bm = get_blocking_move();
                 if(bm != -1 && child(bm).get_instant_win() != -1) break; // if i cant stop an insta win
-                shared_ptr<SteadyState> ss = find_steady_state(representation, 1);
+                string filename = "unused";
+                shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), filename);
                 if(ss != nullptr){
                     has_steady_state = true;
                     steadystate = ss;

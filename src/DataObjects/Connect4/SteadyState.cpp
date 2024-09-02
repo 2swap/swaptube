@@ -7,6 +7,8 @@
 #include <cassert>
 #include "C4Board.h"
 
+const bool VISION = true;
+
 vector<char> replacement_chars = {'+', '=', '-'};
 
 void SteadyState::set_char(int x, int y, char c){
@@ -89,7 +91,6 @@ int SteadyState::query_steady_state(const C4Board& board) const {
     // Given a board, use the steady state to determine where to play.
     // Return the x position of the 1-indexed row to play in.
 
-    bool VISION = true;
     if(VISION) {
         int wm = board.get_instant_win();
         if(wm != -1) return wm;
@@ -232,14 +233,17 @@ C4Result SteadyState::play_one_game(const C4Board& b) const {
     C4Board board = b;
     C4Result winner = INCOMPLETE;
     while (true) {
-        int randomColumn = board.random_legal_move();
+        // Yellow's Turn
+        int randomColumn = board.get_instant_win();
+        if (randomColumn == -1 && VISION) randomColumn = board.get_blocking_move();
+        if (randomColumn == -1) randomColumn = board.random_legal_move();
         board.play_piece(randomColumn);
         winner = board.who_won();
         if(board.who_won() != INCOMPLETE) return winner;
 
+        // Red's Turn
         // Query the steady state and play the determined disk
         int columnToPlay = query_steady_state(board);
-
         if (columnToPlay < 0) return YELLOW;
         else if (columnToPlay >= 1 && columnToPlay <= 7) board.play_piece(columnToPlay);
         winner = board.who_won();
@@ -268,24 +272,28 @@ bool SteadyState::validate_steady_state(const C4Board& b, int& branches_searched
     return true;
 }
 
-shared_ptr<SteadyState> find_steady_state(const C4Board& board, int num_games) {
-    cout << "Searching for a steady state..." << endl;
-
-    C4Board copy(board);
-
-    // Convert the hash to a string
+shared_ptr<SteadyState> find_cached_steady_state(double hash, string& cache_filename) {
     ostringstream ss_hash_stream;
-    ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << copy.get_hash();
+    ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << hash;
     string ss_hash = ss_hash_stream.str();
-
-    // Check if a cached steady state file exists and read from it
-    string cached_filename = "steady_states/" + ss_hash + ".ss";
-    if (ifstream(cached_filename)) {
-        shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cached_filename));
+    cache_filename = "steady_states/" + ss_hash + ".ss";
+    if (ifstream(cache_filename)) {
+        shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename));
         ss->print();
-        cout << "Loaded cached steady state from file " << cached_filename << endl;
+        cout << "Loaded cached steady state from file " << cache_filename << endl;
         return ss;
     }
+    return nullptr;
+}
+
+shared_ptr<SteadyState> find_steady_state(const C4Board& board, int num_games) {
+    cout << "Searching for a steady state..." << endl;
+    C4Board copy(board);
+
+    // Check if a cached steady state file exists and read from it
+    string cache_filename = "";
+    shared_ptr<SteadyState> cached = find_cached_steady_state(copy.get_hash(), cache_filename);
+    if(cached != nullptr) return cached;
 
     vector<SteadyState> steady_states;
     int best = 1;
@@ -316,8 +324,7 @@ shared_ptr<SteadyState> find_steady_state(const C4Board& board, int num_games) {
                         cout << "Steady state validated on " << how_many_branches << " branches." << endl;
                         shared_ptr<SteadyState> ss = make_shared<SteadyState>(steady_states[idx]);
                         ss->print();
-                        string filename = "steady_states/" + ss_hash + ".ss";
-                        ss->write_to_file(filename);
+                        ss->write_to_file(cache_filename);
                         return ss;
                     } else {
                         eliminate_agent = true;

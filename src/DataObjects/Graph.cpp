@@ -146,6 +146,7 @@ public:
     bool expand_graph(bool only_one = false) {
         int new_nodes_added = 0;
         while (!traverse_deque.empty()) {
+            cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
             double id = traverse_deque.front();
             traverse_deque.pop_front();
 
@@ -157,7 +158,7 @@ public:
                     new_nodes_added++;
                     if (only_one) traverse_deque.push_front(id);
 
-                    traverse_deque.push_back(child_hash); // This is bfs. To change to dfs, push_front here.
+                    traverse_deque.push_front(child_hash); // push_back: bfs // push_front: dfs
 
                     if (only_one) {add_missing_edges(true); return new_nodes_added;}
                 }
