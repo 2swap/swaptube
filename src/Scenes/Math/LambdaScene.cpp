@@ -5,10 +5,10 @@
 
 class LambdaScene : public Scene {
 public:
-    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), le(lambda->clone()) {le->set_positions();}
+    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), le(lambda->clone()) {le->set_positions(); state_manager.add_equation("latex_opacity", "0");}
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"subscene_transition_fraction"};
+        return StateQuery{"subscene_transition_fraction", "latex_opacity"};
     }
 
     void reduce(){
@@ -59,9 +59,11 @@ public:
             pix.overwrite(p1, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
             pix.overlay  (p2, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
         }
-        //ScalingParams sp(pix.w, pix.h / 4);
-        //Pixels latex = eqn_to_pix(le->get_latex(), sp);
-        //pix.overwrite(latex        , (pix.w-latex.w)*.5, (pix.h-latex.h)*.5 + pix.h*.375);
+        if(state["latex_opacity"] > 0.01){
+            ScalingParams sp(pix.w, pix.h / 4);
+            Pixels latex = eqn_to_pix(le->get_latex(), sp);
+            pix.overlay(latex, (pix.w-latex.w)*.5, pix.h-latex.h, state["latex_opacity"]);
+        }
     }
 
 private:

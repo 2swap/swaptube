@@ -69,6 +69,7 @@ public:
         if(!FOR_REAL){
             state_manager.close_all_subscene_transitions();
             state_manager.close_all_superscene_transitions();
+            on_end_transition();
             state_manager.evaluate_all();
             return;
         }

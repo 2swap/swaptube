@@ -327,14 +327,29 @@ int C4Board::burst() const{
 
 int C4Board::get_human_winning_fhourstones() {
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = false;
+    const bool SKIP_UNFOUND_STEADYSTATES = true;
     if(SKIP_UNFOUND_STEADYSTATES){
         for (int i = 1; i <= C4_WIDTH; ++i) {
             if(!is_legal(i)) continue;
+            C4Board child_i = child(i);
             string filename = "unused";
-            shared_ptr<SteadyState> ss = find_cached_steady_state(child(i).get_hash(), filename);
+            shared_ptr<SteadyState> ss = find_cached_steady_state(child_i.get_hash(), filename);
             if(ss != nullptr){
                 return i;
+            }
+
+            // Check if it's forcing
+            int bm = child_i.get_blocking_move();
+            if(bm != -1){
+                C4Board child_block = child_i.child(bm);
+                for (int j = 1; j <= C4_WIDTH; ++j) {
+                    if(!child_block.is_legal(j)) continue;
+                    C4Board child_j = child_block.child(j);
+                    ss = find_cached_steady_state(child_j.get_hash(), filename);
+                    if(ss != nullptr){
+                        return i; // not j
+                    }
+                }
             }
         }
         int ret = movecache.GetSuggestedMoveIfExists(get_hash());

@@ -190,9 +190,9 @@ public:
         av_frame_get_buffer(yuvpic, 1);
     }
     void add_frame(const Pixels& p) {
-        // The AVFrame data will be stored as RGBRGBRGB... row-wise,
-        // from left to right and from top to bottom.
-        assert(p.w == VIDEO_WIDTH && p.h == VIDEO_HEIGHT);
+        if(p.w != VIDEO_WIDTH || p.h != VIDEO_HEIGHT)
+            failout("Frame dimensions were expected to be (" + to_string(VIDEO_WIDTH) + ", " + to_string(VIDEO_HEIGHT) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
+
         for (unsigned int y = 0; y < VIDEO_HEIGHT; y++)
         {
             // rgbpic->linesize[0] is equal to width.
@@ -201,6 +201,8 @@ public:
             {
                 int a,r,g,b;
                 p.get_pixel_by_channels(x, y, a, r, g, b);
+                // The AVFrame data will be stored as RGBRGBRGB... row-wise,
+                // from left to right and from top to bottom.
                 double alpha = a/255.; // in the end, we pretend there is a black background
                 rgbpic->data[0][rowboi + 3 * x + 0] = r*alpha;
                 rgbpic->data[0][rowboi + 3 * x + 1] = g*alpha;

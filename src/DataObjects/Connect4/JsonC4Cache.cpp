@@ -86,6 +86,7 @@ public:
     int GetSuggestedMoveIfExists(double hash) {
         json entry = GetEntry(hash);
         if (!entry.empty() && entry.find("suggestedMove") != entry.end()) {
+            cout << "Got entry " << entry["suggestedMove"] << " for hash " << hash << endl;
             return entry["suggestedMove"];
         } else {
             return -1; // Entry not found or no suggested move in cache

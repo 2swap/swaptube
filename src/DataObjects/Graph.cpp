@@ -63,8 +63,6 @@ public:
     EdgeSet neighbors;
     double opacity = 1;
     int color = 0xffffffff;
-    bool flooded = false;
-    bool immobile = false;
     glm::dvec4 velocity;
     glm::dvec4 position;
 };
@@ -87,7 +85,6 @@ public:
     double gravity_strength = 0;
     double decay = .90;
     double speedlimit = 10;
-    double repel_force = .4;
     double attract_force = .4;
     int dimensions = 2;
 
@@ -244,20 +241,6 @@ public:
     }
 
     /**
-     * Mark all nodes presently in the graph as mobile / immobile.
-     */
-    void mobilize_all_nodes() {
-        for (auto& pair : nodes) {
-            pair.second.immobile = false;
-        }
-    }
-    void immobilize_all_nodes() {
-        for (auto& pair : nodes) {
-            pair.second.immobile = true;
-        }
-    }
-
-    /**
      * Check if a node with the given hash exists in the graph.
      * @param id The hash of the node to check.
      * @return True if the node exists, false otherwise.
@@ -384,26 +367,34 @@ public:
     void perform_single_physics_iteration(const vector<Node<T>*>& node_vector){
         int s = node_vector.size();
         glm::dvec4 center_of_mass(0,0,0,0);
+        double total_edge_length = 0.0;
+        int edge_count = 0;
 
+        // First loop: apply forces, calculate center of mass and total edge length
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
             center_of_mass += node->position;
-            for (size_t j = i+1; j < s; ++j) {
-                Node<T>* node2 = node_vector[j];
-                perform_pairwise_node_motion(node, node2, true);
-            }
             const EdgeSet& neighbor_nodes = node->neighbors;
             for (const Edge& neighbor_edge : neighbor_nodes) {
                 double neighbor_id = neighbor_edge.to;
                 Node<T>* neighbor = &nodes.at(neighbor_id);
-                perform_pairwise_node_motion(node, neighbor, false);
+                perform_pairwise_node_attraction(node, neighbor);
+
+                // Calculate edge length
+                glm::dvec4 delta = node->position - neighbor->position;
+                double edge_length = glm::length(delta);
+                total_edge_length += edge_length;
+                edge_count++;
             }
         }
+
+        // Calculate average edge length and center of mass
+        double avg_edge_length = total_edge_length / edge_count;
         center_of_mass /= s;
 
+        // Second loop: scale node positions and apply physics
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
-            if(node->immobile) continue;
 
             double magnitude = glm::length(node->velocity);
             if(magnitude > speedlimit) {
@@ -414,23 +405,16 @@ public:
             node->velocity.y += gravity_strength;
             node->velocity *= decay;
             node->position += node->velocity - center_of_mass;
+            node->position /= avg_edge_length; // Normalize node position by average edge length
             if(dimensions < 3) {node->velocity.z = 0; node->position.z = 0;}
             if(dimensions < 4) {node->velocity.w = 0; node->position.w = 0;}
         }
     }
 
-    double get_attraction_force(double dist_sq){
-        return attract_force * (dist_sq-1)/dist_sq;
-    }
-
-    double get_repulsion_force(double dist_sq){
-        return -repel_force / dist_sq;
-    }
-
-    void perform_pairwise_node_motion(Node<T>* node1, Node<T>* node2, bool repulsion_mode) {
+    void perform_pairwise_node_attraction(Node<T>* node1, Node<T>* node2) {
         glm::dvec4 delta = node1->position - node2->position;
         double dist_sq = square(delta.x) + square(delta.y) + square(delta.z) + square(delta.w) + 1;
-        double force = repulsion_mode?get_repulsion_force(dist_sq):get_attraction_force(dist_sq);
+        double force = attract_force * (dist_sq-1)/dist_sq;
         glm::dvec4 change = delta * force;
         node2->velocity += change;
         node1->velocity -= change;

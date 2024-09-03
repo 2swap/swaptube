@@ -13,17 +13,11 @@ public:
     CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height) {}
 
-    void add_scene(Scene* sc, string state_manager_name, double x, double y, double w, double h){
+    void add_scene(Scene* sc, string state_manager_name, double x, double y){
         sc->state_manager.set_parent(&state_manager);
-        sc->state_manager.set(unordered_map<string, string> {
-            {"w", "[" + state_manager_name + ".w]"},
-            {"h", "[" + state_manager_name + ".h]"},
-        });
         state_manager.set(unordered_map<string, string> {
             {state_manager_name + ".x", to_string(x)},
             {state_manager_name + ".y", to_string(y)},
-            {state_manager_name + ".w", to_string(w*get_width())},
-            {state_manager_name + ".h", to_string(h*get_height())},
             {state_manager_name + ".opacity", "1"},
         });
         SceneWithPosition swp = {sc, state_manager_name};
@@ -48,6 +42,8 @@ public:
     void on_end_transition() override {
         for(const auto& swp : scenes){
             swp.scenePointer->on_end_transition();
+            swp.scenePointer->state_manager.close_all_subscene_transitions();
+            swp.scenePointer->state_manager.close_all_superscene_transitions();
         }
     }
 
