@@ -453,7 +453,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         const TranslatedPixels intersection = intersect(translated_p1, translated_p2);
         const TranslatedPixels unified      =     unify(translated_p1, translated_p2);
 
-        const TranslatedPixels erasure      = erase_low_iou(intersection, unified, .8);
+        const TranslatedPixels erasure      = erase_low_iou(intersection, unified, .7);
 
         intersection_nonempty = !erasure.is_empty();
 

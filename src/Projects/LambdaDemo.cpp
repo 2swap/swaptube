@@ -580,7 +580,6 @@ void visualize(){
         {"rep_viktor.y", "0.5"},
     });
     cs.inject_audio_and_render(AudioSegment("We'll try evaluating them in a sec, but first let's visualize them."));
-    cs.inject_audio_and_render(AudioSegment("There are a ton of styles, but the one I chose is John Tromp's Lambda Diagrams."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"rep_classic.y", "-1.5"},
         {"rep_keenan.y", "-1.5"},
@@ -595,24 +594,25 @@ void visualize(){
         {"w", to_string(VIDEO_WIDTH)},
         {"h", to_string(VIDEO_HEIGHT)},
     });
+    cs.inject_audio_and_render(AudioSegment("There are a ton of styles, but the one I chose is John Tromp's Lambda Diagrams."));
     cs.inject_audio_and_render(AudioSegment("After all, I'm biased- he was the first to strongly solve 7x6 Connect 4."));
 
 
 
-    LatexScene lambda_rule_var("a"                , 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
-    LatexScene lambda_rule_abs("(\\lambda a. \\_)", 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
-    LatexScene lambda_rule_app("(\\_ \\_)"        , 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_var("a"                , 0.8, VIDEO_WIDTH*.25, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_abs("(\\lambda a. \\_)", 0.8, VIDEO_WIDTH*.25, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_app("(\\_ \\_)"        , 0.8, VIDEO_WIDTH*.25, VIDEO_HEIGHT*.25);
     cs.add_scene(&lambda_rule_var, "lambda_rule_var", -0.5, 0.125);
     cs.add_scene(&lambda_rule_abs, "lambda_rule_abs", -0.5, 0.375);
-    cs.add_scene(&lambda_rule_app, "lambda_rule_app", -0.5, 0.525);
+    cs.add_scene(&lambda_rule_app, "lambda_rule_app", -0.5, 0.625);
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.x"    , "0"},
         {"lambda_rule_abs.x"    , "0"},
         {"lambda_rule_app.x"    , "0"},
-        {"rep_tromp.x", ".5"},
+        {"rep_tromp.x", ".25"},
     });
     rep_tromp.state_manager.superscene_transition(unordered_map<string, string>{
-        {"w", to_string(VIDEO_WIDTH/2)},
+        {"w", to_string(VIDEO_WIDTH*3/4)},
         {"latex_opacity", "1"},
     });
     cs.remove_scene(&rep_classic);
@@ -622,27 +622,284 @@ void visualize(){
     cs.remove_scene(&rep_vex);
     cs.remove_scene(&rep_viktor);
     cs.inject_audio_and_render(AudioSegment("Each of our three rules is part of a different shape in a lambda diagram."));
-    LambdaExpression::Iterator it
-    it = LambdaExpression::Iterator(term);
+    LambdaExpression::Iterator it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
         current->set_color(current->get_type() == "Variable" ? OPAQUE_WHITE : 0xff222222);
     }
     rep_tromp.set_expression(term);
-    cs.inject_audio_and_render(AudioSegment("Variables are these vertical lines."));
+    lambda_rule_var.begin_latex_transition(latex_color(0xffffffff, "a"                ));
+    lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
+    lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment("Variables - that is, the first rule, are these vertical lines."));
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
         current->set_color(current->get_type() == "Abstraction" ? OPAQUE_WHITE : 0xff222222);
     }
     rep_tromp.set_expression(term);
-    cs.inject_audio_and_render(AudioSegment(""));
+    lambda_rule_var.begin_latex_transition(latex_color(0xff222222, "a"                ));
+    lambda_rule_abs.begin_latex_transition(latex_color(0xffffffff, "(\\lambda a. \\_)"));
+    lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment("Lambda Abstractions, or rule 2, correspond to the vertical bars at the top."));
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
         current->set_color(current->get_type() == "Application" ? OPAQUE_WHITE : 0xff222222);
     }
     rep_tromp.set_expression(term);
+    lambda_rule_var.begin_latex_transition(latex_color(0xff222222, "a"                ));
+    lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
+    lambda_rule_app.begin_latex_transition(latex_color(0xffffffff, "(\\_ \\_)"        ));
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment("This branching structure at the bottom is rule 3, for function application."));
+
+    cs.inject_audio_and_render(AudioSegment("Let's take a close look at each of the three rules."));
+    it = LambdaExpression::Iterator(term);
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        current->set_color(current->get_type() == "Variable" ? OPAQUE_WHITE : 0xff222222);
+    }
+    rep_tromp.set_expression(term);
+    lambda_rule_var.begin_latex_transition(latex_color(0xffffffff, "a"                ));
+    lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
+    lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment("Notice that there are eight vertical lines here, just how the expression itself has eight variables."));
+    vector<LatexScene> lsv;
+    for(int i = 0; i < 8; i++){
+        string ch = "y";
+        if(((i+3)/2)%2 == 0) ch = "x";
+        LatexScene varls(ch, 1, VIDEO_WIDTH/10, VIDEO_WIDTH/10);
+        lsv.push_back(varls);
+    }
+    for(int i = 0; i < 8; i++){
+        cs.add_scene(&(lsv[i]), "lamvar" + to_string(i), .22+i/10.2, .07);
+    }
+    cs.inject_audio_and_render(AudioSegment("These correspond one-to-one, left to right."));
+    cs.inject_audio_and_render(AudioSegment("Note how they collide into different vertical bars."));
+    lambda_rule_var.begin_latex_transition(latex_color(0xff222222, "a"                ));
+    lambda_rule_abs.begin_latex_transition(latex_color(0xffffffff, "(\\lambda a. \\_)"));
+    lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        current->set_color(current->get_type() == "Abstraction" ? OPAQUE_WHITE : 0xff222222);
+    }
+    rep_tromp.set_expression(term);
+    vector<LatexScene> lsv_abstr;
+    for(int i = 0; i < 4; i++){
+        string ch = "y";
+        if(i%2 == 0) ch = "x";
+        LatexScene absls("\\lambda " + ch + ".", 1, VIDEO_WIDTH/16, VIDEO_WIDTH/16);
+        lsv_abstr.push_back(absls);
+    }
+    for(int i = 0; i < 4; i++){
+        cs.add_scene(&(lsv_abstr[i]), "lamabs" + to_string(i), .23+(i/2)*.375, .15 + .08 * (i%2));
+    }
+    cs.inject_audio_and_render(AudioSegment("Those vertical bars, corresponding to rule 2, are associated each with one of the lambda abstraction rules."));
+    it = LambdaExpression::Iterator(term);
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        int color = 0xff222222;
+        if(current->get_type() == "Abstraction" && current->get_string()[2] == 'x') color = 0xff660000;
+        if(current->get_type() == "Variable" && current->get_string() == "x") color = 0xff660000;
+        if(current->get_type() == "Abstraction" && current->get_string()[2] == 'y') color = 0xff002266;
+        if(current->get_type() == "Variable" && current->get_string() == "y") color = 0xff002266;
+        current->set_color(color);
+    }
+    rep_tromp.set_expression(term);
+    cs.inject_audio_and_render(AudioSegment("A variable makes contact with it if that variable name corresponds to the variable name which is in between the lambda and the dot."));
+    cs.inject_audio(AudioSegment("The Xs connect to the lambda abstraction which binds the variable X, and the Ys touch the bar which binds Y."), 4);
+    it = LambdaExpression::Iterator(term);
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        int color = 0xff222222;
+        if(current->get_type() == "Abstraction" && current->get_string()[2] == 'x') color = 0xffff0000;
+        if(current->get_type() == "Variable" && current->get_string() == "x") color = 0xffff0000;
+        if(current->get_type() == "Abstraction" && current->get_string()[2] == 'y') color = 0xff002266;
+        if(current->get_type() == "Variable" && current->get_string() == "y") color = 0xff002266;
+        current->set_color(color);
+    }
+    rep_tromp.set_expression(term);
+    cs.render();
+    cs.render();
+    it = LambdaExpression::Iterator(term);
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        int color = 0xff222222;
+        if(current->get_type() == "Abstraction" && current->get_string()[2] == 'x') color = 0xffff0000;
+        if(current->get_type() == "Variable" && current->get_string() == "x") color = 0xffff0000;
+        if(current->get_type() == "Abstraction" && current->get_string()[2] == 'y') color = 0xff0044ff;
+        if(current->get_type() == "Variable" && current->get_string() == "y") color = 0xff0044ff;
+        current->set_color(color);
+    }
+    rep_tromp.set_expression(term);
+    cs.render();
+    cs.render();
+    cs.inject_audio_and_render(AudioSegment(1));
+    it = LambdaExpression::Iterator(term);
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        current->set_color(OPAQUE_WHITE);
+    }
+    rep_tromp.set_expression(term);
+    lambda_rule_var.begin_latex_transition(latex_color(0xff222222, "a"                ));
+    lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
+    lambda_rule_app.begin_latex_transition(latex_color(0xffffffff, "(\\_ \\_)"        ));
+    cs.inject_audio_and_render(AudioSegment(1));
+    it = LambdaExpression::Iterator(term);
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        current->set_color(current->get_type() == "Application" ? OPAQUE_WHITE : 0xff222222);
+    }
+    rep_tromp.set_expression(term);
+    cs.inject_audio_and_render(AudioSegment("Rule 3, for function application, has two subexpressions corresponding to the two blanks."));
+    dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff006600);
+    dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff660066);
+    rep_tromp.set_expression(term);
+    cs.inject_audio_and_render(AudioSegment("This lambda expression has an application surrounding everything. It's shown in white."));
+    cs.inject_audio(AudioSegment("The lambda diagram for each of the subexpressions is drawn on the left and right branch of the application."), 2);
+    dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff00ff00);
+    dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff660066);
+    rep_tromp.set_expression(term);
+    cs.render();
+    dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff006600);
+    dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xffff00ff);
+    rep_tromp.set_expression(term);
+    cs.render();
+    while (it.has_next()) {
+        shared_ptr<LambdaExpression> current = it.next();
+        current->set_color(OPAQUE_WHITE);
+    }
+    rep_tromp.set_expression(term);
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment("Don't worry too much about how exactly these are read, it's the kind of skill you have to practice for a little while."));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"lambda_rule_var.opacity", "0"},
+        {"lambda_rule_abs.opacity", "0"},
+        {"lambda_rule_app.opacity", "0"},
+        {"rep_tromp.opacity", "0"},
+        {"lamabs0.opacity", "0"},
+        {"lamabs1.opacity", "0"},
+        {"lamabs2.opacity", "0"},
+        {"lamabs3.opacity", "0"},
+        {"lamvar0.opacity", "0"},
+        {"lamvar1.opacity", "0"},
+        {"lamvar2.opacity", "0"},
+        {"lamvar3.opacity", "0"},
+        {"lamvar4.opacity", "0"},
+        {"lamvar5.opacity", "0"},
+        {"lamvar6.opacity", "0"},
+        {"lamvar7.opacity", "0"},
+    });
+    cs.inject_audio_and_render(AudioSegment("I'll color in subcomponents so that you can tell what's going on!"));
+}
+
+void beta_reduction(){
+    CompositeScene cs;
+    LatexScene beta_title(latex_text("\\beta-Reduction"), 1, VIDEO_WIDTH, VIDEO_HEIGHT*0.25);
+    cs.add_scene(&beta_title, "beta_title", 0, -0.25);
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"beta_title.y", "0"},
+    });
+    cs.inject_audio_and_render(AudioSegment("Now for the main event. Beta reduction!"));
+    TODO animate this
+    cs.inject_audio_and_render(AudioSegment("I've mentioned that these expressions can be 'evaluated'- what exactly does that mean?"));
+    cs.inject_audio_and_render(AudioSegment("Remember that rule 2 can be interpreted as a function."));
+    cs.inject_audio_and_render(AudioSegment("And rule 3 can be interpreted as applying a value to a function."));
+    cs.inject_audio_and_render(AudioSegment("We want to create a term that combines these interpretations."));
+
+    // Scene showing lambda abstraction
+    LatexScene latexbeta("(\\lambda x. x)", 1);
+    cs.add_scene(&latexbeta, "latexbeta", 0, 0);
+    cs.inject_audio_and_render(AudioSegment("First, let's make a function by using rule 2."));
+    cs.inject_audio_and_render(AudioSegment("This will just be a simple function that takes 'x' in, and spits that value right back out."));
+
+    // Scene showing some random expression to be applied to the function
+    latexbeta.begin_latex_transition("(\\lambda x. x) 道");
+    cs.inject_audio_and_render(AudioSegment("We'll make our 'value' just be some random expression of my whimsy."));
+
+    // Application of the identity function
+    latexbeta.begin_latex_transition("((\\lambda x. x) 道)");
+    cs.inject_audio_and_render(AudioSegment("If we take the template for rule 3, and put our function in the left half, and our value in the right, we can then perform a function evaluation."));
+
+    // Show substitution
+    latexbeta.begin_latex_transition("((\\lambda x. " + latex_color(0xffff0000, "x") + ") 道)");
+    cs.inject_audio_and_render(AudioSegment("Since the function binds 'x', we first find all the instances of 'x' in the body of the function."));
+    cs.inject_audio_and_render(AudioSegment("In this case there's just this one."));
+
+    // Substitution result
+    cs.inject_audio_and_render(AudioSegment("Now, we take our value,"));
+    latexbeta.begin_latex_transition("((\\lambda x. 道) 道)");
+    cs.inject_audio_and_render(AudioSegment("and replace that instance of 'x' with that value."));
+
+    // Drop unnecessary parts
+    cs.inject_audio_and_render(AudioSegment("Now that we have placed the value in the function body,"));
+    latexbeta.begin_latex_transition("((\\lambda x. 道) \\_)");
+    cs.inject_audio_and_render(AudioSegment("we drop the original value,"));
+    latexbeta.begin_latex_transition("(\\lambda x. 道)");
+    cs.inject_audio_and_render(AudioSegment("the application which was holding it to the function,"));
+    latexbeta.begin_latex_transition("道");
+    cs.inject_audio_and_render(AudioSegment("as well as the lambda term which was wrapping the function definition."));
+
+    // Show final result
+    cs.inject_audio_and_render(AudioSegment("And we are left with precisely the random value we picked."));
+    cs.inject_audio_and_render(AudioSegment("This is exactly the behavior we should expect from a function that spits out exactly what we gave it."));
+
+    // TODO make the latexscene emoji transparent and then delete it.
+    cs.inject_audio_and_render(AudioSegment("Still looks like abstract nonsense?"));
+    cs.remove_scene(&latexbeta);
+    cs.inject_audio_and_render(AudioSegment("This actually isn't as unfamiliar to you as it might seem."));
+
+    // Transition to algebra
+    cs.inject_audio_and_render(AudioSegment("We can use the same notation with plain old algebra instead of lambda calculus."));
+    LatexScene quadratic_equation("f(x) = x^2 + 5x + 3", .5);
+    cs.add_scene(&quadratic_equation, "quadratic_equation", 0, 0);
+    cs.inject_audio_and_render(AudioSegment("Here's a quadratic function."));
+    quadratic_equation.begin_latex_transition("f(x) = x^2 + 5x + 3\\\\\\\\f(5)");
+    cs.inject_audio_and_render(AudioSegment("We want to evaluate it at x=5."));
+
+    // Show evaluation
+    cs.inject_audio_and_render(AudioSegment("We can first establish the function, and then on a separate line, apply it to 5."));
+    quadratic_equation.begin_latex_transition("f(x) = x^2 + 5x + 3; f(5)");
+    cs.inject_audio_and_render(AudioSegment("But let's stick em on the same line, separated by a semicolon."));
+    quadratic_equation.begin_latex_transition("(f(x) = x^2 + 5x + 3; f(5))");
+    cs.inject_audio_and_render(AudioSegment("We'll wrap these two things in parentheses to imply that the first is a function and the second is the value we want to put in."));
+
+    quadratic_equation.begin_latex_transition("(" + latex_color(0xffff0000, "f") + "(x) = x^2 + 5x + 3; " + latex_color(0xffff0000, "f") + "(5))");
+    cs.inject_audio_and_render(AudioSegment("Now, since we have tied the function to its value, there is no point in naming it 'f'."));
+    quadratic_equation.begin_latex_transition("((x) = x^2 + 5x + 3; 5)");
+    cs.inject_audio_and_render(AudioSegment("Let's just drop the 'f' then."));
+
+    // Transform into lambda calculus
+    cs.inject_audio_and_render(AudioSegment("We do still need to express that x is the thing in the body which the 5 will be replacing,"));
+    quadratic_equation.begin_latex_transition("(\\lambda x. x^2 + 5x + 3; 5)");
+    cs.inject_audio_and_render(AudioSegment("so let's slap a 'lambda' in front of it."));
+    cs.inject_audio_and_render(AudioSegment("Now how do we evaluate it?"));
+    cs.inject_audio_and_render(AudioSegment("Exactly the same procedure!"));
+    quadratic_equation.begin_latex_transition("(\\lambda x. " + latex_color(0xffff0000, "x") + "^2 + 5" + latex_color(0xffff0000, "x") + " + 3; 5)");
+    cs.inject_audio_and_render(AudioSegment("Identify all of the variables in the body which match the one bound by the lambda, in this case all of the 'x's."));
+    quadratic_equation.begin_latex_transition("(\\lambda x. 5^2 + 5(5) + 3; 5)");
+    cs.inject_audio_and_render(AudioSegment("Replace them all with the value which we chose- for us, that's 5."));
+    quadratic_equation.begin_latex_transition("(\\lambda x. 5^2 + 5(5) + 3; \\_)");
+    cs.inject_audio_and_render(AudioSegment("Drop the original value,"));
+    quadratic_equation.begin_latex_transition("\\lambda x. 5^2 + 5(5) + 3");
+    cs.inject_audio_and_render(AudioSegment("the application binding,"));
+    quadratic_equation.begin_latex_transition("5^2 + 5(5) + 3");
+    cs.inject_audio_and_render(AudioSegment("and the function definition."));
+    cs.inject_audio(AudioSegment("What we are left with is just an algebraic expression which represents the answer."), 3);
+    quadratic_equation.begin_latex_transition("25 + 5(5) + 3");
+    cs.render();
+    quadratic_equation.begin_latex_transition("25 + 25 + 3");
+    cs.render();
+    quadratic_equation.begin_latex_transition("53");
+    cs.render();
+    cs.inject_audio_and_render(AudioSegment("Not too alien now, is it?"));
+    cs.inject_audio_and_render(AudioSegment("Let's try a few more examples."));
+    cs.inject_audio_and_render(AudioSegment(""));
+    cs.inject_audio_and_render(AudioSegment(""));
     cs.inject_audio_and_render(AudioSegment(""));
 }
 
@@ -652,7 +909,8 @@ int main() {
     PRINT_TO_TERMINAL = true;
     //intro();
     //history();
-    visualize();
+    //visualize();
+    beta_reduction();
 
     //credits
     // 6884

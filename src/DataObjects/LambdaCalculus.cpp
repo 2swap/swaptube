@@ -622,22 +622,23 @@ Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
     float bounding_box_h = get_height_recursive() + 4;
     Pixels pix(bounding_box_w * scale, bounding_box_h * scale);
 
-    for(int i = 0; i < 2; i++){
-        Iterator it(shared_from_this());
-        while (it.has_next()) {
-            shared_ptr<LambdaExpression> current = it.next();
-            current->check_children_parents();
-            int color = current->get_color();
-            if((i==0)==(geta(color) == 255)) continue;
-            if (current->get_type() == "Variable") {
-                pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, scale, current->h * scale, color);
-            }
-            else if(current->get_type() == "Abstraction") {
-                pix.fill_rect((current->x+1) * scale, (current->y+2) * scale, current->w * scale, scale, color);
-            }
-            else if(current->get_type() == "Application") {
-                pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, scale, current->h * scale, color);
-                pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, current->w * scale, scale, color);
+    for(int i = 0; i < 2; i++) {
+        for(int step = 0; step < 2; step++) {
+            Iterator it(shared_from_this());
+            while (it.has_next()) {
+                shared_ptr<LambdaExpression> current = it.next();
+                int color = current->get_color();
+                if((i==0)==(geta(color) == 255)) continue;
+                if (current->get_type() == "Variable" && step == 0) {
+                    pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, scale, current->h * scale, color);
+                }
+                else if(current->get_type() == "Abstraction" && step == 1) {
+                    pix.fill_rect((current->x+1) * scale, (current->y+2) * scale, current->w * scale, scale, color);
+                }
+                else if(current->get_type() == "Application" && step == 1) {
+                    pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, scale, current->h * scale, color);
+                    pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, current->w * scale, scale, color);
+                }
             }
         }
     }

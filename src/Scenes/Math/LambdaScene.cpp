@@ -62,7 +62,7 @@ public:
         if(state["latex_opacity"] > 0.01){
             ScalingParams sp(pix.w, pix.h / 4);
             Pixels latex = eqn_to_pix(le->get_latex(), sp);
-            pix.overlay(latex, (pix.w-latex.w)*.5, pix.h-latex.h, state["latex_opacity"]);
+            pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["latex_opacity"]);
         }
     }
 
