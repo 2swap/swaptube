@@ -5,10 +5,14 @@
 
 class LambdaScene : public Scene {
 public:
-    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), le(lambda->clone()) {le->set_positions(); state_manager.add_equation("latex_opacity", "0");}
+    LambdaScene(const shared_ptr<const LambdaExpression> lambda, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), le(lambda->clone()) {
+        le->set_positions();
+        state_manager.add_equation("latex_opacity", "0");
+        state_manager.add_equation("title_opacity", "0");
+    }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"subscene_transition_fraction", "latex_opacity"};
+        return StateQuery{"subscene_transition_fraction", "title_opacity", "latex_opacity"};
     }
 
     void reduce(){
@@ -31,6 +35,10 @@ public:
     void render_diagrams(){
         le->set_positions();
         le_pix = le->draw_lambda_diagram(get_scale(le));
+    }
+
+    void set_title(string t){
+        title = t;
     }
 
     void on_end_transition() override {last_le = nullptr;}
@@ -64,6 +72,11 @@ public:
             Pixels latex = eqn_to_pix(le->get_latex(), sp);
             pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["latex_opacity"]);
         }
+        if(state["title_opacity"] > 0.01){
+            ScalingParams sp(pix.w, pix.h / 4);
+            Pixels latex = eqn_to_pix(latex_text(title), sp);
+            pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["title_opacity"]);
+        }
     }
 
 private:
@@ -73,4 +86,5 @@ private:
     int last_le_w = 0;
     int last_le_h = 0;
     int tick = 0;
+    string title;
 };

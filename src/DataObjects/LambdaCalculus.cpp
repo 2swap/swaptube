@@ -598,7 +598,7 @@ void LambdaExpression::set_positions() {
         shared_ptr<const LambdaExpression> nearest_ancestor = current->get_nearest_ancestor_with_type("Application");
         if (current->get_type() == "Variable") {
             if(nearest_ancestor == nullptr) {
-                current->h = 2 * current->get_abstraction_depth();
+                current->h = 2 * current->get_abstraction_depth() - current->y; // should this minus term be here?
             } else {
                 current->h = nearest_ancestor->y - current->y + 1;
             }
