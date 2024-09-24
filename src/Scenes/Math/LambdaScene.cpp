@@ -49,7 +49,7 @@ public:
     }
 
     float get_scale(shared_ptr<const LambdaExpression> expr) {
-        return min(get_width()/expr->get_width_recursive(), get_height()/expr->get_height_recursive());
+        return min(get_width()/(expr->get_width_recursive() + 4), get_height()/(expr->get_height_recursive() + 4));
     }
 
     void draw() override {

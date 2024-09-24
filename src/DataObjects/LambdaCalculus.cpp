@@ -618,8 +618,8 @@ void LambdaExpression::set_positions() {
 Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
     if(parent != nullptr) failout("draw_lambda_diagram called on a child expression");
     if(w + h + x + y == 0) failout("Attempted drawing lambda diagram with unset positions!");
-    float bounding_box_w = get_width_recursive() + 4;
-    float bounding_box_h = get_height_recursive() + 4;
+    float bounding_box_w = get_width_recursive();
+    float bounding_box_h = get_height_recursive();
     Pixels pix(bounding_box_w * scale, bounding_box_h * scale);
 
     for(int i = 0; i < 2; i++) {
