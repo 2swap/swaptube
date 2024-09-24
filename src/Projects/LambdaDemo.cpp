@@ -1474,7 +1474,7 @@ void numerals() {
     cs.inject_audio_and_render(AudioSegment("Plugging this into our function body, we get this."));
 
     // Create LambdaScene for ADD(5, 3)
-    shared_ptr<LambdaExpression> numeral_3 = parse_lambda_from_string("(\\f. (\\x. (f (f (f x))))"); // Church numeral for 3
+    shared_ptr<LambdaExpression> numeral_3 = parse_lambda_from_string("(\\f. (\\x. (f (f (f x)))))"); // Church numeral for 3
     numeral_3->set_color_recursive(0xff00ff00);
 
     shared_ptr<LambdaExpression> add_function = parse_lambda_from_string("(\\m. (\\n. ((m (\\n. (\\f. (\\x. (f ((n f) x)))))) n)))"); // ADD function
@@ -1495,11 +1495,11 @@ void numerals() {
 
     cs.inject_audio_and_render(AudioSegment("Now let's add 5 and 3 together using the Church numerals."));
 
-    succ_5_scene.reduce();
+    add_5_3_scene.reduce();
     cs.inject_audio_and_render(AudioSegment(2));
-    succ_5_scene.reduce();
+    add_5_3_scene.reduce();
     cs.inject_audio_and_render(AudioSegment(2));
-    succ_5_scene.reduce();
+    add_5_3_scene.reduce();
     cs.inject_audio_and_render(AudioSegment(2));
 
     cs.inject_audio_and_render(AudioSegment("I'll leave it to you to define multiplication!"));
