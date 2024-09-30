@@ -100,11 +100,17 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     fclose(fp);
 }
 
-Pixels png_to_pix(const string& filename) {
+Pixels png_to_pix(const string& filename_with_or_without_suffix) {
+    // Check if the filename already ends with ".png"
+    string filename = filename_with_or_without_suffix;
+    if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".png") {
+        filename += ".png";  // Append the ".png" suffix if it's not present
+    }
+
     // Open the PNG file
-    FILE* fp = fopen((PATH_MANAGER.this_project_media_dir + filename + ".png").c_str(), "rb");
+    FILE* fp = fopen((PATH_MANAGER.this_project_media_dir + filename).c_str(), "rb");
     if (!fp) {
-        throw runtime_error("Failed to open PNG file.");
+        throw runtime_error("Failed to open PNG file " + filename);
     }
 
     // Create and initialize the png_struct
@@ -194,12 +200,31 @@ Pixels png_to_pix(const string& filename) {
     return ret;
 }
 
-Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
+Pixels png_to_pix_bounding_box(const string& filename, int w, int h) {
+    Pixels image = png_to_pix(filename);
+
+    // Calculate the scaling factor based on the bounding box
+    float scale = min(static_cast<float>(w) / image.w, static_cast<float>(h) / image.h);
+
+    // Calculate the new dimensions
+    int new_width = static_cast<int>(image.w * scale);
+    int new_height = static_cast<int>(image.h * scale);
+
+    // Scale the image using bicubic interpolation
+    return image.bicubic_scale(new_width, new_height);
+}
+
+Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
+    // Check if the filename already ends with ".svg"
+    string filename = filename_with_or_without_suffix;
+    if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".svg") {
+        filename += ".svg";  // Append the ".svg" suffix if it's not present
+    }
+
     // Open svg and get its dimensions
-    RsvgHandle* handle = rsvg_handle_new_from_file(svg.c_str(), NULL);
-    //cout << "Rendering svg " << svg << endl;
+    RsvgHandle* handle = rsvg_handle_new_from_file(filename.c_str(), NULL);
     if (!handle) {
-        fprintf(stderr, "Error loading SVG data from file \"%s\"\n", svg.c_str());
+        fprintf(stderr, "Error loading SVG data from file \"%s\"\n", filename.c_str());
         exit(-1);
     }
 
@@ -244,9 +269,9 @@ Pixels svg_to_pix(const string& svg, ScalingParams& scaling_params) {
 // Create an unordered_map to store the cached results
 unordered_map<string, pair<Pixels, double>> latex_cache;
 
-string generate_cache_key(const string& eqn, const ScalingParams& scaling_params) {
+string generate_cache_key(const string& text, const ScalingParams& scaling_params) {
     hash<string> hasher;
-    string key = eqn + "_" + to_string(static_cast<int>(scaling_params.mode)) + "_" + 
+    string key = text + "_" + to_string(static_cast<int>(scaling_params.mode)) + "_" + 
                  to_string(scaling_params.max_width) + "_" + 
                  to_string(scaling_params.max_height) + "_" + 
                  to_string(scaling_params.scale_factor);
@@ -256,9 +281,9 @@ string generate_cache_key(const string& eqn, const ScalingParams& scaling_params
 /*
  * We use MicroTEX to convert LaTeX equations into svg files.
  */
-Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
+Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
     // Generate a cache key based on the equation and scaling parameters
-    string cache_key = generate_cache_key(eqn, scaling_params);
+    string cache_key = generate_cache_key(latex, scaling_params);
 
     // Check if the result is already in the cache
     auto it = latex_cache.find(cache_key);
@@ -270,10 +295,10 @@ Pixels eqn_to_pix(const string& eqn, ScalingParams& scaling_params) {
     hash<string> hasher;
     char full_directory_path[PATH_MAX];
     realpath(PATH_MANAGER.latex_dir.c_str(), full_directory_path);
-    string name = string(full_directory_path) + "/" + to_string(hasher(eqn)) + ".svg";
+    string name = string(full_directory_path) + "/" + to_string(hasher(latex)) + ".svg";
 
     if (access(name.c_str(), F_OK) == -1) {
-        string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + eqn + "\" -output=" + name + " >/dev/null 2>&1";
+        string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -output=" + name + " >/dev/null 2>&1";
         int result = system(command.c_str());
         if(result != 0) failout("Failed to generate LaTeX.");
     }

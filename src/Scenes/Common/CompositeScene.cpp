@@ -13,6 +13,20 @@ public:
     CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height) {}
 
+    void add_scene_fade_in(Scene* sc, string state_manager_name, double x, double y, bool subscene){
+        add_scene(sc, state_manager_name, x, y);
+        state_manager.set(unordered_map<string, string> {
+            {state_manager_name + ".y", to_string(y+.1)},
+            {state_manager_name + ".opacity", "0"},
+        });
+        unordered_map<string, string> map = unordered_map<string, string> {
+            {state_manager_name + ".y", to_string(y)},
+            {state_manager_name + ".opacity", "1"},
+        };
+        if(subscene) state_manager.  subscene_transition(map);
+        else         state_manager.superscene_transition(map);
+    }
+
     void add_scene(Scene* sc, string state_manager_name, double x, double y){
         sc->state_manager.set_parent(&state_manager);
         state_manager.set(unordered_map<string, string> {

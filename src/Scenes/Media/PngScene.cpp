@@ -15,24 +15,14 @@ public:
         cout << "rendering png: " << picture_name << endl;
         
         // Load the PNG image into a Pixels object
-        Pixels image = png_to_pix(picture_name);
-
-        // Calculate the scaling factor based on the bounding box
-        float scale = min(static_cast<float>(get_width()) / image.w, static_cast<float>(get_height()) / image.h);
-
-        // Calculate the new dimensions
-        int new_width = static_cast<int>(image.w * scale);
-        int new_height = static_cast<int>(image.h * scale);
-
-        // Scale the image using bicubic interpolation
-        Pixels scaled_image = image.bicubic_scale(new_width, new_height);
+        Pixels image = png_to_pix_bounding_box(picture_name, get_width(), get_height());
 
         // Calculate the position to center the image within the bounding box
-        int x_offset = (get_width() - new_width) / 2;
-        int y_offset = (get_height() - new_height) / 2;
+        int x_offset = (get_width() - image.w) / 2;
+        int y_offset = (get_height() - image.h) / 2;
 
         // Overwrite the scaled image onto the scene's pixel buffer
-        pix.overwrite(scaled_image, x_offset, y_offset);
+        pix.overwrite(image, x_offset, y_offset);
     }
 
     void on_end_transition() override { }
