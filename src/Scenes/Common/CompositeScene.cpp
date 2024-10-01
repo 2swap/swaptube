@@ -19,7 +19,7 @@ public:
             {state_manager_name + ".y", to_string(y+.1)},
             {state_manager_name + ".opacity", "0"},
         });
-        unordered_map<string, string> map = unordered_map<string, string> {
+        unordered_map<string, string> map = {
             {state_manager_name + ".y", to_string(y)},
             {state_manager_name + ".opacity", "1"},
         };
@@ -36,6 +36,22 @@ public:
         });
         SceneWithPosition swp = {sc, state_manager_name};
         scenes.push_back(swp);
+    }
+
+    void fade_out_all_scenes() {
+        for (auto& swp : scenes) {
+            unordered_map<string, string> map = {
+                {swp.state_manager_name + ".opacity", "0"}
+            };
+            state_manager.subscene_transition(map);
+        }
+    }
+
+    void remove_all_scenes() {
+        for (auto& swp : scenes){
+            swp.scenePointer->state_manager.set_parent(nullptr);
+        }
+        scenes.clear();
     }
 
     void mark_data_unchanged() override { }
@@ -77,6 +93,7 @@ public:
     }
 
     void remove_scene(Scene* sc) {
+        sc->state_manager.set_parent(nullptr);
         scenes.erase(std::remove_if(scenes.begin(), scenes.end(),
                                     [sc](const SceneWithPosition& swp) {
                                         return swp.scenePointer == sc;

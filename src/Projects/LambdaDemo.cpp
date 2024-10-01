@@ -22,6 +22,7 @@ const int VIDEO_FRAMERATE = 30;
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Media/BiographyScene.cpp"
 #include "../Scenes/Common/ExposedPixelsScene.cpp"
+#include "../Scenes/Math/RealFunctionScene.cpp"
 
 void intro() {
     ThreeDimensionScene tds;
@@ -1729,16 +1730,21 @@ void numerals() {
     cs.inject_audio_and_render(AudioSegment("you can do things that normal math just doesn't permit,"));
     ptp.begin_latex_transition(latex_color(0xffff0000, "+\\times+") + latex_color(0xff7777ff, "(a,b,c,d) = (d^{(c^b)})^{a+c}"));
     cs.inject_audio_and_render(AudioSegment("and strange emergent behavior is the norm."));
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
+        {"ptp.opacity", "0"},
+    });
+    cs.inject_audio_and_render(AudioSegment("Okay, you've officially made it to the juicy stuff. It's about to get philosophical."));
 }
 
 void factorial(){
     CompositeScene cs;
+    /*
     LatexScene title(latex_text("Recursion"), 1, VIDEO_WIDTH*0.5, VIDEO_HEIGHT*0.25);
     cs.add_scene(&title, "title", 0.25, -.25);
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"title.y", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("Okay, you've officially made it to the juicy stuff. It's about to get philosophical."));
+    */
     cs.inject_audio_and_render(AudioSegment("We're gonna need some voodoo magic to make the factorial function."));
     ConvolutionScene py_fac(png_to_pix_bounding_box("factorial_first", VIDEO_WIDTH*.6, VIDEO_HEIGHT*.6), VIDEO_WIDTH*.6, VIDEO_HEIGHT*.6);
     cs.add_scene_fade_in(&py_fac, "py_fac", 0.2, 0.2, true);
@@ -1746,72 +1752,187 @@ void factorial(){
     cs.inject_audio_and_render(AudioSegment("The core idea is that we just return n times the factorial of the previous number."));
     py_fac.begin_transition(png_to_pix_bounding_box("factorial", VIDEO_WIDTH*.6, VIDEO_HEIGHT*.6));
     cs.inject_audio_and_render(AudioSegment("However, we don't want to go into the negatives, so we add a base case."));
-    return;
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"py_fac.y", "0"},
+    });
+    LatexScene fac(latex_text("fac = "), 0.6, VIDEO_WIDTH, VIDEO_HEIGHT/6);
+    cs.add_scene_fade_in(&fac, "fac", 0, 0.5, true);
     cs.inject_audio_and_render(AudioSegment("Alright, let's try it in the lambda calculus!"));
-    cs.inject_audio_and_render(AudioSegment("Let's say you have an IS_ZERO(n) function available."));
-    cs.inject_audio_and_render(AudioSegment("We could make it, but I'd rather not get distracted."));
-    cs.inject_audio_and_render(AudioSegment("We know already how to make this if-then-else block."));
-    cs.inject_audio_and_render(AudioSegment("IS_ZERO(n) is a boolean. And as we know, booleans work as selectors!"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. ???)");
+    cs.inject_audio_and_render(AudioSegment("This is gonna be a function that takes in one variable."));
+    cs.inject_audio_and_render(AudioSegment("Let's say you have an IS\\_0 function available."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. IS\\_0)");
+    cs.inject_audio_and_render(AudioSegment("We could make it, but let's not get distracted."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (IS\\_0\\ n))");
+    cs.inject_audio_and_render(AudioSegment("IS\\_0(n) yields a boolean. And as we know, booleans work as selectors!"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)"+latex_text("then_case")+")"+latex_text("else_case")+"))");
+    cs.inject_audio_and_render(AudioSegment("Thus, we already know how to make this if-then-else block."));
     cs.inject_audio_and_render(AudioSegment("Therefore, factorial takes this form:"));
-    cs.inject_audio_and_render(AudioSegment("The boolean, along with its arguments: what we want to return if it's true, and what we want to return if it's false."));
-    cs.inject_audio_and_render(AudioSegment("If it's true, just like our python function, we simply return 1."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (("+latex_color(0xff7777ff,"(IS\\_0\\ n)")+latex_text("then_case")+")"+latex_text("else_case")+"))");
+    cs.inject_audio_and_render(AudioSegment("The boolean,"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)"+latex_color(0xff7777ff,latex_text("then_case"))+")"+latex_text("else_case")+"))");
+    cs.inject_audio_and_render(AudioSegment("what we want to return if it's true,"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)"+latex_text("then_case")+")"+latex_color(0xff7777ff,latex_text("else_case"))+"))");
+    cs.inject_audio_and_render(AudioSegment("and what we want to return if it's false."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)"+latex_text("then_case")+")"+latex_text("else_case")+"))");
+    cs.inject_audio_and_render(AudioSegment("If it's true, just like our python function,"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)"+latex_text("else_case")+"))");
+    cs.inject_audio_and_render(AudioSegment("we simply return 1."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)(???)))");
     cs.inject_audio_and_render(AudioSegment("If it's false, we return the recursive call."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)(\\times n)))");
     cs.inject_audio_and_render(AudioSegment("We multiply n,"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)((\\times n)("+latex_text("fac")+"((- n) 1)))))");
     cs.inject_audio_and_render(AudioSegment("by the factorial of n-1."));
     cs.inject_audio_and_render(AudioSegment("Now wait a minute."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)((\\times n)("+latex_color(0xffff0000,latex_text("fac"))+"((- n) 1)))))");
     cs.inject_audio_and_render(AudioSegment("Our definition of the factorial function contains itself inside."));
     cs.inject_audio_and_render(AudioSegment("In python this is fine..."));
     cs.inject_audio_and_render(AudioSegment("we understand the function as an item that can be instantiated anew anywhere, even from within itself."));
     cs.inject_audio_and_render(AudioSegment("But a lambda calculus term is self-contained."));
-    cs.inject_audio_and_render(AudioSegment("How would I draw a diagram of this term, if I don't know what fac is?"));
+    cs.inject_audio_and_render(AudioSegment("How would I draw a diagram of this term, if I don't know what this component is is?"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)((\\times n)(\\small(\\lambda n. (((IS\\_0\\ n)1)((\\times n)(...((- n) 1)))))\\normalsize((- n) 1)))))");
     cs.inject_audio_and_render(AudioSegment("You could argue, as is, this definition is infinitely long."));
     cs.inject_audio_and_render(AudioSegment("How on earth are we going to define recursion?"));
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("Time for a mind-blowing detour."));
+    cs.remove_all_scenes();
+    RealFunctionScene rfs;
+    cs.add_scene_fade_in(&rfs, "rfs", 0, 0, true);
+    rfs.add_function("? sin", 0xffff0000);
+    rfs.begin_transition(0, "? sin ? 2 * cos +");
     cs.inject_audio_and_render(AudioSegment("Let's talk about normal functions on the real numbers."));
     cs.inject_audio_and_render(AudioSegment("A fixed point is some number that you can plug into a function, and you get the same number back."));
-    cs.inject_audio_and_render(AudioSegment("That is to say, f(x) is the same as x."));
+    LatexScene fp_math("x = f(x)", 0.5, VIDEO_WIDTH/2, VIDEO_HEIGHT/3);
+    cs.add_scene_fade_in(&fp_math, "fp_math", 0, 0.06, true);
+    cs.inject_audio_and_render(AudioSegment("In other words, x is a fixed point if f(x) matches x."));
+    rfs.add_function("?", 0xff7777ff);
     cs.inject_audio_and_render(AudioSegment("Graphing this, it's where the line y=x intersects with your function."));
-    cs.inject_audio_and_render(AudioSegment("Sine evidently has exactly one fixed point, exactly at zero."));
-    cs.inject_audio_and_render(AudioSegment("y=x^2 has 2 fixed points, 0 and 1. Those are the only reals which are their own squares."));
-    cs.inject_audio_and_render(AudioSegment("But what about y=x^2+10?"));
+    rfs.begin_transition(0, "? sin");
+    fp_math.begin_latex_transition("x = sin(x)");
+    cs.inject_audio_and_render(AudioSegment("Sine evidently has exactly one fixed point,"));
+    cs.inject_audio_and_render(AudioSegment("exactly at zero."));
+    rfs.begin_transition(0, "? ? *");
+    fp_math.begin_latex_transition("x = x^2");
+    cs.inject_audio_and_render(AudioSegment("y=x^2 has 2 fixed points, 0 and 1."));
+    cs.inject_audio_and_render(AudioSegment("Those are the only reals which are their own squares."));
+    rfs.begin_transition(0, "? ? * 2 +");
+    fp_math.begin_latex_transition("x = x^2 + 2");
+    cs.inject_audio_and_render(AudioSegment("But what about y=x^2+2?"));
     cs.inject_audio_and_render(AudioSegment("It doesn't even have a fixed point!"));
-    cs.inject_audio_and_render(AudioSegment("What about the riemann zeta function plus z?"));
-    cs.inject_audio_and_render(AudioSegment("If you can find a fixed point of that in the right place, you would solve the Riemann Hypothesis, and win a million dollars!"));
+    rfs.begin_transition(0, "? sin ? 2.1 * cos ? 1.5 sin * 2.6 ? cos * + + +");
+    fp_math.begin_latex_transition("x = \\sum_{n=1}^{\\infty}\\frac{1}{n^x}");
+    cs.inject_audio_and_render(AudioSegment("What about arbitrary functions?"));
+    cs.inject_audio_and_render(AudioSegment("If you can find a fixed point of the Riemann Zeta Function in the right place, you would solve the Riemann Hypothesis, and win a million dollars!"));
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("Ok. Now hold that thought."));
+    cs.remove_all_scenes();
+    LatexScene ls("U = (\\lambda xy. (y ((x x) y)))", 0.8, VIDEO_WIDTH*.8, VIDEO_HEIGHT/4);
+    cs.add_scene_fade_in(&ls, "ls", 0, 0.25, true);
     cs.inject_audio_and_render(AudioSegment("Check out this lambda term."));
+    LatexScene ls2("UU", 0.8, VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
+    cs.add_scene_fade_in(&ls2, "ls2", 0.25, 0.5, true);
+    cs.inject_audio_and_render(AudioSegment("If we apply it to itself, we get..."));
+    ls2.begin_latex_transition("\\Theta = (UU)");
     cs.inject_audio_and_render(AudioSegment("the Turing Fixed Point Combinator!"));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"ls.x", "-.15"},
+        {"ls2.x", "0.55"},
+        {"ls.y", "-.02"},
+        {"ls2.y", "0.02"},
+    });
     cs.inject_audio_and_render(AudioSegment("It does something so cool it's unreal."));
     cs.inject_audio_and_render(AudioSegment("Let's just imagine you have some arbitrary function F."));
+    LatexScene ls3("F", 0.8, VIDEO_WIDTH, VIDEO_HEIGHT/4);
+    cs.add_scene_fade_in(&ls3, "ls3", 0, 0.5, true);
+    ls3.begin_latex_transition("(\\Theta F)");
     cs.inject_audio_and_render(AudioSegment("Apply the fixed point combinator to F, and see what happens!"));
-    cs.inject_audio_and_render(AudioSegment("Beta reduce it a couple times..."));
-    cs.inject_audio_and_render(AudioSegment("and what we get is this."));
+    ls3.begin_latex_transition("((UU)F)");
+    cs.inject_audio_and_render(AudioSegment("We know Theta is UU, so let's apply that identity..."));
+    ls3.begin_latex_transition("(((\\lambda xy. (y ((x x) y)))U)F)");
+    cs.inject_audio_and_render(AudioSegment("Expand the first U to its definition,"));
+    ls3.begin_latex_transition("((\\lambda y. (y ((U U) y)))F)");
+    cs.inject_audio_and_render(AudioSegment("Beta reduce the first argument U,"));
+    ls3.begin_latex_transition("(F ((U U) F))");
+    cs.inject_audio_and_render(AudioSegment("Beta reduce the second argument F,"));
+    ls3.begin_latex_transition("(F (\\Theta F))");
+    cs.inject_audio_and_render(AudioSegment("and substitute theta for UU."));
     cs.inject_audio_and_render(AudioSegment("Do you see it?"));
+    ls3.begin_latex_transition("(\\Theta F) \\twoheadrightarrow_\\beta (F (\\Theta F))");
     cs.inject_audio_and_render(AudioSegment("We reduced theta F to F(theta F)."));
     cs.inject_audio_and_render(AudioSegment("In other words, up to beta reduction, theta F = F(theta F)..."));
+    ls3.begin_latex_transition("\\Theta F =_\\beta F(\\Theta F)");
     cs.inject_audio_and_render(AudioSegment("So theta F is a fixed point of F! Always!"));
     cs.inject_audio_and_render(AudioSegment("You can slap Theta in front of any function, and it will give you a fixed point."));
     cs.inject_audio_and_render(AudioSegment("Like magic!"));
-    cs.inject_audio_and_render(AudioSegment("Wait... if that's the case, why am I making this video instead of solving the Riemann Hypothesis?"));
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment("Wait... if that's the case,"));
+    cs.remove_all_scenes();
+    cs.add_scene_fade_in(&rfs, "rfs", 0, 0, true);
+    rfs.begin_transition(0, "? 6 * sin ? 1.1 * cos ? 2.5 sin * 1.6 ? cos * + + +");
+    cs.inject_audio_and_render(AudioSegment("why am I making this video instead of solving the Riemann Hypothesis?"));
     cs.inject_audio_and_render(AudioSegment("It's kinda like trying to solve for the square root of negative 1."));
-    cs.inject_audio_and_render(AudioSegment("There is a solution out there, but it's not among the real numbers."));
-    cs.inject_audio_and_render(AudioSegment("In our case, these fixed points aren't necessarily among the real numbers, or even complex numbers."));
-    cs.inject_audio_and_render(AudioSegment("They can be arbitrary, non-numerical lambda expressions."));
-    cs.inject_audio_and_render(AudioSegment("So we can go ahead and define x^2+10, and sure enough we find a fixed point."));
-    cs.inject_audio_and_render(AudioSegment("But that fixed point isn't even a number. It's a fixed point of this construct which we have built in the lambda calculus to represent the mathematical idea of x^2+10."));
-    cs.inject_audio_and_render(AudioSegment("Ok, maybe it can't make the impossible possible, but this function is the magic bullet we need to make our factorial."));
+    cs.inject_audio_and_render(AudioSegment("There is always a fixed point out there, but it's not among the real numbers."));
+    cs.add_scene_fade_in(&ls3, "ls3", 0, 0.5, true);
+    cs.inject_audio_and_render(AudioSegment("In our case, Theta F isn't necessarily a real number."));
+    ls3.begin_latex_transition("\\Theta F" + latex_text("=potentially nonsense"));
+    cs.inject_audio_and_render(AudioSegment("It can be an arbitrary, non-numerical lambda expression."));
+    shared_ptr<LambdaExpression> xsqp2 = parse_lambda_from_string("(\\x. (((\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x)))))) (((\\m. (\\n. (\\s. (n (m s))))) x) x)) (\\f. (\\x. (f (f x))))))");
+    xsqp2->set_color_recursive(0xffff3333);
+    xsqp2->flush_uid_recursive();
+    shared_ptr<LambdaExpression> U = parse_lambda_from_string("(\\x. (\\y. (y ((x x) y))))");
+    shared_ptr<LambdaExpression> Theta = apply(U, U, OPAQUE_WHITE);
+    Theta->flush_uid_recursive();
+    Theta->set_color_recursive(0xff7777ff);
+    shared_ptr<LambdaExpression> txsqp2 = apply(Theta, xsqp2, OPAQUE_WHITE);
+    LambdaScene xsqp2_scene(xsqp2, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
+    cs.fade_out_all_scenes();
+    cs.add_scene_fade_in(&xsqp2_scene, "xsqp2", 0.25, 0.25, true);
+    cs.inject_audio_and_render(AudioSegment("So we can go ahead and define x^2+2,"));
+    xsqp2_scene.set_expression(txsqp2);
+    cs.inject_audio_and_render(AudioSegment("slap theta in front of it,"));
+    int num_reductions = 2;
+    cs.inject_audio(AudioSegment("reduce a few times,"), num_reductions);
+    for(int i = 0; i < num_reductions; i++) {
+        xsqp2_scene.reduce();
+        cs.render();
+    }
+    cs.inject_audio_and_render(AudioSegment("and sure enough we find a fixed point."));
+    cs.inject_audio_and_render(AudioSegment("But this fixed point isn't even a number."));
+    cs.inject_audio_and_render(AudioSegment("It's a fixed point of this construct which we have built in the lambda calculus to represent the mathematical idea of x^2+10."));
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment("Ok, so maybe Turing's Fixed Point Combinator can't make the impossible possible,"));
+    cs.remove_all_scenes();
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)((\\times n)(fac((- n) 1)))))");
+    fac.end_transition();
+    cs.add_scene_fade_in(&fac, "fac", 0, 0.3, true);
+    cs.inject_audio_and_render(AudioSegment("but it is the magic bullet to help us make our factorial."));
     cs.inject_audio_and_render(AudioSegment("This is where the voodoo magic comes in."));
-    cs.inject_audio_and_render(AudioSegment("Let's take our failed factorial attempt."));
     cs.inject_audio_and_render(AudioSegment("Hang with me."));
-    cs.inject_audio_and_render(AudioSegment("I'm gonna remove the recursive call,"));
-    cs.inject_audio_and_render(AudioSegment("and replace it with some f, which is the argument for this function."));
-    cs.inject_audio_and_render(AudioSegment("Now what would a fixed point of this function be like?"));
-    cs.inject_audio_and_render(AudioSegment("Well, it would satisfy the recursive equivalence."));
-    cs.inject_audio_and_render(AudioSegment("It would be a function such that this whole expression equals the value plugged into it."));
-    cs.inject_audio_and_render(AudioSegment("It would be a recursive implementation of the factorial function!!!"));
-    cs.inject_audio_and_render(AudioSegment("Let's do it!"));
-    cs.inject_audio_and_render(AudioSegment(""));
-    cs.inject_audio_and_render(AudioSegment(""));
-    // Script: O
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (((IS\\_0\\ n)1)((\\times n)(f((- n) 1)))))");
+    cs.inject_audio_and_render(AudioSegment("I'm gonna remove the problematic recursive call,"));
+    cs.inject_audio_and_render(AudioSegment("and replace it with some f,"));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda fn. (((IS\\_0\\ n)1)((\\times n)(f((- n) 1)))))");
+    cs.inject_audio_and_render(AudioSegment("which we will add as an argument for this function."));
+    fac.begin_latex_transition("F = (\\lambda fn. (((IS\\_0\\ n)1)((\\times n)(f((- n) 1)))))");
+    cs.inject_audio_and_render(AudioSegment("I'm gonna call this new function big F."));
+    LatexScene fac_solution("(\\Theta F)", 0.6, VIDEO_WIDTH, VIDEO_HEIGHT/4);
+    cs.add_scene_fade_in(&fac_solution, "fac_solution", 0, 0.5, true);
+    cs.inject_audio_and_render(AudioSegment("Now, let's consider what a fixed point of this function would be like."));
+    fac_solution.begin_latex_transition("(\\Theta F) =_\\beta (F (\\Theta F))");
+    cs.inject_audio_and_render(AudioSegment("This is what's true of any fixed point by definition,"));
+    fac_solution.begin_latex_transition("(\\Theta F) =_\\beta ((\\lambda fn. (((IS\\_0\\ n)1)((\\times n)(f((- n) 1))))) (\\Theta F))");
+    cs.inject_audio_and_render(AudioSegment("Plugging in the first F,"));
+    fac_solution.begin_latex_transition("(\\Theta F) =_\\beta (\\lambda n. (((IS\\_0\\ n)1)((\\times n)((\\Theta F)((- n) 1)))))");
+    cs.inject_audio_and_render(AudioSegment("and beta reducing once,"));
+    cs.inject_audio_and_render(AudioSegment("we get this expression...!"));
+    cs.inject_audio_and_render(AudioSegment("Now, remember that there was no recursive call this time- this was a finite-length lambda term."));
+    fac_solution.begin_latex_transition(latex_color(0xff7777ff, "(\\Theta F)")+" =_\\beta (\\lambda n. (((IS\\_0\\ n)1)((\\times n)("+latex_color(0xff7777ff, "(\\Theta F)")+"((- n) 1)))))");
+    cs.inject_audio_and_render(AudioSegment("but this time, through beta reduction,"));
+    cs.inject_audio_and_render(AudioSegment("we _derived_ the recursive equivalence relation that we wanted to begin with!"));
+    cs.inject_audio_and_render(AudioSegment("This term, Theta F, satisfies the recursive equivalence characteristic of the factorial function."));
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment(2));
 }
 
 void credits(){
