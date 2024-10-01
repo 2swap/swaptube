@@ -1737,6 +1737,7 @@ void numerals() {
 }
 
 void factorial(){
+    FOR_REAL = false;
     CompositeScene cs;
     /*
     LatexScene title(latex_text("Recursion"), 1, VIDEO_WIDTH*0.5, VIDEO_HEIGHT*0.25);
@@ -1931,8 +1932,31 @@ void factorial(){
     cs.inject_audio_and_render(AudioSegment("but this time, through beta reduction,"));
     cs.inject_audio_and_render(AudioSegment("we _derived_ the recursive equivalence relation that we wanted to begin with!"));
     cs.inject_audio_and_render(AudioSegment("This term, Theta F, satisfies the recursive equivalence characteristic of the factorial function."));
-    cs.fade_out_all_scenes();
-    cs.inject_audio_and_render(AudioSegment(2));
+    FOR_REAL = true;
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"fac.y", "0"},
+        {"fac_solution.y", "0.18"},
+    });
+    shared_ptr<LambdaExpression> IS0m = parse_lambda_from_string("(((\\l. l) (\\h. (\\t. (\\a. (\\b. b))))) m)");
+    shared_ptr<LambdaExpression> one = parse_lambda_from_string("(\\f. (\\x. (f x)))");
+    shared_ptr<LambdaExpression> f_pred_m = parse_lambda_from_string("(c ((\\n. (\\f. (\\x. (((n (\\g. (\\h. (h (g f))))) (\\u. x)) (\\u. u))))) m))");
+    shared_ptr<LambdaExpression> F = apply(apply(IS0m, one, OPAQUE_WHITE), f_pred_m, OPAQUE_WHITE);
+    shared_ptr<LambdaExpression> theta = parse_lambda_from_string("((\\x. (\\y. (y ((x x) y)))) (\\x. (\\y. (y ((x x) y)))))");
+    shared_ptr<LambdaExpression> TF = apply(theta, F, OPAQUE_WHITE);
+    LambdaScene fac_lambda(TF, VIDEO_WIDTH, VIDEO_HEIGHT*.6);
+    cs.add_scene_fade_in(&fac_lambda, "fac_lambda", 0, 0.4, true);
+    cs.inject_audio_and_render(AudioSegment("Here's the result!"));
+    cs.inject_audio_and_render(AudioSegment("Let me color it in so it makes some more sense."));
+    num_reductions = TF->count_reductions();
+    cs.inject_audio(AudioSegment(6), num_reductions);
+    for(int i = 0; i < num_reductions; i++) {
+        fac_lambda.reduce();
+        cs.render();
+    }
+    FOR_REAL = false;
+    cs.inject_audio_and_render(AudioSegment(""));
+    cs.inject_audio_and_render(AudioSegment(""));
+    cs.inject_audio_and_render(AudioSegment(""));
 }
 
 void credits(){
