@@ -1932,31 +1932,79 @@ void factorial(){
     cs.inject_audio_and_render(AudioSegment("but this time, through beta reduction,"));
     cs.inject_audio_and_render(AudioSegment("we _derived_ the recursive equivalence relation that we wanted to begin with!"));
     cs.inject_audio_and_render(AudioSegment("This term, Theta F, satisfies the recursive equivalence characteristic of the factorial function."));
-    FOR_REAL = true;
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"fac.y", "0"},
         {"fac_solution.y", "0.18"},
     });
-    shared_ptr<LambdaExpression> IS0m = parse_lambda_from_string("(((\\l. l) (\\h. (\\t. (\\a. (\\b. b))))) m)");
+    shared_ptr<LambdaExpression> IS0m = parse_lambda_from_string("((\\n. (\\x. (\\y. ((n (\\z. y)) x)))) m)");
     shared_ptr<LambdaExpression> one = parse_lambda_from_string("(\\f. (\\x. (f x)))");
-    shared_ptr<LambdaExpression> f_pred_m = parse_lambda_from_string("(c ((\\n. (\\f. (\\x. (((n (\\g. (\\h. (h (g f))))) (\\u. x)) (\\u. u))))) m))");
-    shared_ptr<LambdaExpression> F = apply(apply(IS0m, one, OPAQUE_WHITE), f_pred_m, OPAQUE_WHITE);
+    shared_ptr<LambdaExpression> three = parse_lambda_from_string("(\\f. (\\x. (f (f (f x)))))");
+    three->flush_uid_recursive();
+    shared_ptr<LambdaExpression> pred = parse_lambda_from_string("(\\n. (\\f. (\\x. (((n (\\g. (\\h. (h (g f))))) (\\u. x)) (\\u. u)))))");
+    shared_ptr<LambdaExpression> mult_function = parse_lambda_from_string("(\\m. (\\n. (\\s. (n (m s)))))");
+    shared_ptr<LambdaExpression> f_pred_m = apply(parse_lambda_from_string("c"), apply(pred, parse_lambda_from_string("m"), OPAQUE_WHITE), OPAQUE_WHITE);
+    shared_ptr<LambdaExpression> n_times_fpm = apply(apply(mult_function, parse_lambda_from_string("m"), OPAQUE_WHITE), f_pred_m, OPAQUE_WHITE);
+    shared_ptr<LambdaExpression> F = abstract('c', abstract('m', apply(apply(IS0m, one, OPAQUE_WHITE), n_times_fpm, OPAQUE_WHITE), OPAQUE_WHITE), OPAQUE_WHITE);
     shared_ptr<LambdaExpression> theta = parse_lambda_from_string("((\\x. (\\y. (y ((x x) y)))) (\\x. (\\y. (y ((x x) y)))))");
     shared_ptr<LambdaExpression> TF = apply(theta, F, OPAQUE_WHITE);
+    TF->flush_uid_recursive();
     LambdaScene fac_lambda(TF, VIDEO_WIDTH, VIDEO_HEIGHT*.6);
     cs.add_scene_fade_in(&fac_lambda, "fac_lambda", 0, 0.4, true);
-    cs.inject_audio_and_render(AudioSegment("Here's the result!"));
+    cs.inject_audio_and_render(AudioSegment("And that means that Theta F IS the factorial function."));
     cs.inject_audio_and_render(AudioSegment("Let me color it in so it makes some more sense."));
-    num_reductions = TF->count_reductions();
-    cs.inject_audio(AudioSegment(6), num_reductions);
+    dynamic_pointer_cast<LambdaApplication>(TF)->get_first()->set_color_recursive(0xff7777ff);
+    fac_lambda.set_expression(TF);
+    cs.inject_audio_and_render(AudioSegment("This is the fixed point operator in blue."));
+    dynamic_pointer_cast<LambdaApplication>(TF)->get_second()->set_color_recursive(0xffff3333);
+    fac_lambda.set_expression(TF);
+    cs.inject_audio_and_render(AudioSegment("Here's F."));
+    dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(TF)->get_second())->get_body())->get_body())->get_first())->get_first()->set_color_recursive(0xffffff00);
+    fac_lambda.set_expression(TF);
+    cs.inject_audio_and_render(AudioSegment("Inside of it, here's IS_ZERO,"));
+    dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(TF)->get_second())->get_body())->get_body())->get_first())->get_second()->set_color_recursive(0xffff00ff);
+    fac_lambda.set_expression(TF);
+    cs.inject_audio_and_render(AudioSegment("the number 1 in the base case,"));
+    dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(TF)->get_second())->get_body())->get_body())->get_second())->get_first())->get_first()->set_color_recursive(0xff00ff77);
+    fac_lambda.set_expression(TF);
+    cs.inject_audio_and_render(AudioSegment("the multiplication function,"));
+    dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(TF)->get_second())->get_body())->get_body())->get_second())->get_second())->get_second())->get_first()->set_color_recursive(0xff6600ff);
+    fac_lambda.set_expression(TF);
+    cs.inject_audio_and_render(AudioSegment("the function which subtracts 1 from x,"));
+    dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(TF)->get_second())->get_body())->get_body())->get_second())->get_second())->get_first()->set_color_recursive(0xff66bb66);
+    fac_lambda.set_expression(TF);
+    cs.inject_audio_and_render(AudioSegment("and the recursive function call."));
+    shared_ptr<LambdaExpression> TF3 = apply(TF, three, OPAQUE_WHITE);
+    fac_lambda.set_expression(TF3);
+    cs.inject_audio_and_render(AudioSegment("Now, let's apply this factorial function to the number three."));
+    num_reductions = TF3->count_reductions();
+    cs.inject_audio(AudioSegment(20), num_reductions);
     for(int i = 0; i < num_reductions; i++) {
+        TF3 = TF3->reduce();
         fac_lambda.reduce();
         cs.render();
     }
-    FOR_REAL = false;
-    cs.inject_audio_and_render(AudioSegment(""));
-    cs.inject_audio_and_render(AudioSegment(""));
-    cs.inject_audio_and_render(AudioSegment(""));
+    cout << TF3->get_string() << endl;
+    FOR_REAL = true;
+    cs.inject_audio_and_render(AudioSegment("It's six!!"));
+    cs.fade_out_all_scenes();
+    LatexScene fac_three("3! = fac(3) = 6", 1, VIDEO_WIDTH, VIDEO_HEIGHT/4);
+    cs.add_scene_fade_in(&fac_three, "fac_three", 0, 0.2, true);
+    cs.inject_audio_and_render(AudioSegment("Now, we know factorial(3) is 6."));
+    LatexScene three_fac("3(fac) = ???", 1, VIDEO_WIDTH, VIDEO_HEIGHT/4);
+    cs.add_scene_fade_in(&three_fac, "three_fac", 0, 0.5, true);
+    cs.inject_audio_and_render(AudioSegment("But what about 3(factorial)?"));
+    three_fac.begin_latex_transition("(3(fac))(x) = fac(fac(fac(x)))");
+    cs.inject_audio_and_render(AudioSegment("Given our knowledge that the numeral 3 iterates a function 3 times,"));
+    cs.inject_audio(AudioSegment("you can probably guess what 3(factorial) is now."), 3);
+    three_fac.begin_latex_transition("(3(fac))(x) = fac(fac(x!))");
+    cs.render();
+    three_fac.begin_latex_transition("(3(fac))(x) = fac(x!!)");
+    cs.render();
+    three_fac.begin_latex_transition("(3(fac))(x) = x!!!");
+    cs.render();
+    cs.inject_audio_and_render(AudioSegment("It's the triple factorial function!"));
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment(2));
 }
 
 void credits(){
