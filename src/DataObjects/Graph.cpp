@@ -48,14 +48,14 @@ public:
      * @param t The data associated with the node.
      */
     Node(T* t, double hash) : data(t), hash(hash),
-        velocity(10 * static_cast<double>(rand()) / RAND_MAX,
-                 10 * static_cast<double>(rand()) / RAND_MAX,
-                 10 * static_cast<double>(rand()) / RAND_MAX,
-                 10 * static_cast<double>(rand()) / RAND_MAX), 
-        position(10 * static_cast<double>(rand()) / RAND_MAX,
-                 10 * static_cast<double>(rand()) / RAND_MAX,
-                 10 * static_cast<double>(rand()) / RAND_MAX,
-                 10 * static_cast<double>(rand()) / RAND_MAX) {}
+        velocity(1 * static_cast<double>(rand()) / RAND_MAX,
+                 1 * static_cast<double>(rand()) / RAND_MAX,
+                 1 * static_cast<double>(rand()) / RAND_MAX,
+                 1 * static_cast<double>(rand()) / RAND_MAX), 
+        position(1 * static_cast<double>(rand()) / RAND_MAX,
+                 1 * static_cast<double>(rand()) / RAND_MAX,
+                 1 * static_cast<double>(rand()) / RAND_MAX,
+                 1 * static_cast<double>(rand()) / RAND_MAX) {}
 
     T* data;
     double hash = 0;
@@ -82,10 +82,11 @@ public:
     unordered_map<double, Node<T>> nodes;
     double root_node_hash = 0;
 
-    double gravity_strength = 0;
-    double decay = .90;
+    double gravity_strength = .2;
+    double decay = .8;
     double speedlimit = 10;
-    double attract_force = .4;
+    double attract_force = .1;
+    double repel_force = .1;
     int dimensions = 2;
 
     Graph(){}
@@ -367,8 +368,7 @@ public:
     void perform_single_physics_iteration(const vector<Node<T>*>& node_vector){
         int s = node_vector.size();
         glm::dvec4 center_of_mass(0,0,0,0);
-        double total_edge_length = 0.0;
-        int edge_count = 0;
+        double max_dist = 0;
 
         // First loop: apply forces, calculate center of mass and total edge length
         for (size_t i = 0; i < s; ++i) {
@@ -379,17 +379,15 @@ public:
                 double neighbor_id = neighbor_edge.to;
                 Node<T>* neighbor = &nodes.at(neighbor_id);
                 perform_pairwise_node_attraction(node, neighbor);
-
-                // Calculate edge length
-                glm::dvec4 delta = node->position - neighbor->position;
-                double edge_length = glm::length(delta);
-                total_edge_length += edge_length;
-                edge_count++;
+            }
+            for (size_t j = 0; j < i; ++j) {
+                Node<T>* nodej = node_vector[j];
+                perform_pairwise_node_attraction(node, nodej, false);
+                max_dist = max(max_dist, glm::length(node->position - nodej->position));
             }
         }
 
         // Calculate average edge length and center of mass
-        double avg_edge_length = total_edge_length / edge_count;
         center_of_mass /= s;
 
         // Second loop: scale node positions and apply physics
@@ -402,19 +400,29 @@ public:
                 node->velocity *= scale;
             }
 
-            node->velocity.y += gravity_strength;
+            if(node->hash == root_node_hash) node->position *= 0;
+            node->velocity.y += gravity_strength/size();
             node->velocity *= decay;
-            node->position += node->velocity - center_of_mass;
-            node->position /= avg_edge_length; // Normalize node position by average edge length
+            node->position += node->velocity;
             if(dimensions < 3) {node->velocity.z = 0; node->position.z = 0;}
             if(dimensions < 4) {node->velocity.w = 0; node->position.w = 0;}
         }
     }
 
-    void perform_pairwise_node_attraction(Node<T>* node1, Node<T>* node2) {
+    double get_attraction_force(double dist_sq){
+        return attract_force * (dist_sq-1)/(dist_sq+1);
+    }
+
+    double get_repulsion_force(double dist_sq){
+        return -repel_force / (dist_sq + 1);
+    }
+
+    void perform_pairwise_node_attraction(Node<T>* node1, Node<T>* node2, bool attract = true) {
         glm::dvec4 delta = node1->position - node2->position;
         double dist_sq = square(delta.x) + square(delta.y) + square(delta.z) + square(delta.w) + 1;
-        double force = attract_force * (dist_sq-1)/dist_sq;
+        double force = attract ?
+            get_attraction_force(dist_sq):
+            get_repulsion_force(dist_sq);
         glm::dvec4 change = delta * force;
         node2->velocity += change;
         node1->velocity -= change;

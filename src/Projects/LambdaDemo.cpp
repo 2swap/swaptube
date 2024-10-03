@@ -23,6 +23,7 @@ const int VIDEO_FRAMERATE = 30;
 #include "../Scenes/Media/BiographyScene.cpp"
 #include "../Scenes/Common/ExposedPixelsScene.cpp"
 #include "../Scenes/Math/RealFunctionScene.cpp"
+#include "../Scenes/Math/LambdaGraphScene.cpp"
 
 void intro() {
     ThreeDimensionScene tds;
@@ -1737,7 +1738,6 @@ void numerals() {
 }
 
 void factorial(){
-    FOR_REAL = false;
     CompositeScene cs;
     /*
     LatexScene title(latex_text("Recursion"), 1, VIDEO_WIDTH*0.5, VIDEO_HEIGHT*0.25);
@@ -1984,7 +1984,6 @@ void factorial(){
         cs.render();
     }
     cout << TF3->get_string() << endl;
-    FOR_REAL = true;
     cs.inject_audio_and_render(AudioSegment("It's six!!"));
     cs.fade_out_all_scenes();
     LatexScene fac_three("3! = fac(3) = 6", 1, VIDEO_WIDTH, VIDEO_HEIGHT/4);
@@ -2007,11 +2006,176 @@ void factorial(){
     cs.inject_audio_and_render(AudioSegment(2));
 }
 
+void reduction_graph(){
+    FOR_REAL = false;
+    CompositeScene cs;
+    std::unordered_map<std::string, std::string> closequat{
+        {"q1", "<t> 20 / cos 10 /"},
+        {"qi", "0"},
+        {"qj", "<t> -20 / sin 10 /"},
+        {"qk", "0"},
+        {"d", "3"},
+        {"x", "0"},
+        {"y", "2"},
+        {"z", "0"},
+        {"surfaces_opacity", "1"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "0"},
+    };
+    Graph<HashableString> g;
+    g.dimensions = 2;
+    LambdaGraphScene lgs(&g, "(((\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x)))))) (\\f. (\\x. (f x)))) (\\f. (\\x. (f x))))", VIDEO_WIDTH*.5, VIDEO_HEIGHT);
+    lgs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"q1", "[q1]"},
+        {"qi", "[qi]"},
+        {"qj", "[qj]"},
+        {"qk", "[qk]"},
+        {"d", "[d]"},
+        {"x", "[x]"},
+        {"y", "[y]"},
+        {"z", "[z]"},
+        {"surfaces_opacity", "[surfaces_opacity]"},
+        {"lines_opacity", "[lines_opacity]"},
+        {"points_opacity", "[points_opacity]"},
+    });
+    cs.add_scene_fade_in(&lgs, "lgs", .5, 0, true);
+    cs.state_manager.set(closequat);
+    cs.inject_audio_and_render(AudioSegment("There's one more interesting topic which I think is due for some explanation."));
+    cs.inject_audio_and_render(AudioSegment("Consider this term for 'one plus one'."));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"d", "5"},
+        {"y", "4"},
+    });
+    unordered_set<HashableString*> children;
+    auto nodescopy = g.nodes;
+    double lastid = 0;
+    nodescopy = g.nodes;
+    for(auto& p : nodescopy){
+        Node<HashableString>& n = p.second;
+        unordered_set<HashableString*> children = n.data->get_children();
+        for(HashableString* child : children){
+            lastid = g.add_node(child);
+        }
+    }
+    cs.inject_audio_and_render(AudioSegment("As we've done a million times, we can beta reduce it to two,"));
+    children = g.nodes.find(lastid)->second.data->get_children();
+    for(HashableString* child : children){
+        lastid = g.add_node(child);
+        break;
+    }
+    cs.inject_audio_and_render(AudioSegment("but this time, let's keep track of the intermediate steps."));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"d", "10"},
+        {"y", "9"},
+    });
+    children = g.nodes.find(lastid)->second.data->get_children();
+    for(HashableString* child : children){
+        lastid = g.add_node(child);
+        break;
+    }
+    cs.inject_audio_and_render(AudioSegment(1));
+    children = g.nodes.find(lastid)->second.data->get_children();
+    for(HashableString* child : children){
+        lastid = g.add_node(child);
+        break;
+    }
+    cs.inject_audio_and_render(AudioSegment(1));
+    children = g.nodes.find(lastid)->second.data->get_children();
+    for(HashableString* child : children){
+        lastid = g.add_node(child);
+        break;
+    }
+    cs.inject_audio_and_render(AudioSegment(1));
+    children = g.nodes.find(lastid)->second.data->get_children();
+    for(HashableString* child : children){
+        lastid = g.add_node(child);
+        break;
+    }
+    for(auto& p : g.nodes){
+        Node<HashableString>& n = p.second;
+        if(n.data->representation.size() == 21)
+        n.color = 0xff7777ff;
+    }
+    cs.inject_audio_and_render(AudioSegment("Ok, we've arrived at 2."));
+
+    string iter2 = "((\\n. (\\f. (\\x. (((\\f. (\\x. (f x))) f) ((n f) x))))) (\\f. (\\x. (f x))))";
+    for(auto& p : g.nodes){
+        Node<HashableString>& n = p.second;
+        lastid = p.first;
+        if(n.data->representation == iter2)
+            n.color = 0xffff3333;
+    }
+    cs.inject_audio_and_render(AudioSegment("But I want to take a closer look at this node here."));
+
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"lgs.x", "0"},
+    });
+    shared_ptr<LambdaExpression> lam_iter2 = parse_lambda_from_string(iter2);
+    lam_iter2->flush_uid_recursive();
+    LambdaScene lam(lam_iter2, VIDEO_WIDTH/2, VIDEO_HEIGHT);
+    cs.add_scene_fade_in(&lam, "lam", .5, 0, true);
+    cs.inject_audio_and_render(AudioSegment("If I beta-reduce it,"));
+    lam.reduce();
+    cs.inject_audio_and_render(AudioSegment("it looks like this."));
+    cs.inject_audio_and_render(AudioSegment("However, let's step back."));
+    lam.set_expression(lam_iter2);
+    cs.inject_audio_and_render(AudioSegment("Let me highlight the function-value pair which just got reduced."));
+    dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_first()->set_color_recursive(0xffff7700);
+    lam.set_expression(lam_iter2);
+    cs.inject_audio_and_render(AudioSegment("Here's the function,"));
+    dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_second()->set_color_recursive(0xff77ff00);
+    lam.set_expression(lam_iter2);
+    cs.inject_audio_and_render(AudioSegment("and here's the value."));
+    lam.reduce();
+    cs.inject_audio_and_render(AudioSegment("And here it is getting reduced again."));
+    lam_iter2->set_color_recursive(OPAQUE_WHITE);
+    lam.set_expression(lam_iter2);
+    cs.inject_audio_and_render(AudioSegment("But there is actually a different reduction available here!"));
+    dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_first())->get_body())->get_body())->get_body())->get_first())->get_first()->set_color_recursive(0xff00ff00);
+    dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_first())->get_body())->get_body())->get_body())->get_first())->get_second()->set_color_recursive(0xff6600ff);
+    lam.set_expression(lam_iter2);
+    cs.inject_audio_and_render(AudioSegment("Here it is."));
+    lam_iter2->specific_reduction(1);
+    lam.set_expression(lam_iter2);
+    cs.inject_audio_and_render(AudioSegment("And here it is actually taking place."));
+
+    cs.inject_audio_and_render(AudioSegment("So on our tree of reductions,"));
+    for(auto& p : g.nodes){
+        Node<HashableString>& n = p.second;
+        if(n.data->representation != iter2) continue;
+        unordered_set<HashableString*> children = n.data->get_children();
+        for(HashableString* child : children){
+            lastid = g.add_node(child);
+        }
+        break;
+    }
+
+    FOR_REAL = true;
+    cs.inject_audio_and_render(AudioSegment("there is actually another option at this node."));
+    cs.inject_audio(AudioSegment("And we can follow that path as well. Let's see where it leads..."), 3);
+    for(int i = 0; i < 3; i++) {
+        children = g.nodes.find(lastid)->second.data->get_children();
+        for(HashableString* child : children){
+            lastid = g.add_node(child);
+        }
+        cs.render();
+    }
+    cs.inject_audio_and_render(AudioSegment("Looks like it takes a different path to the same place!"));
+    for(auto& p : g.nodes){
+        Node<HashableString>& n = p.second;
+        unordered_set<HashableString*> children = n.data->get_children();
+        bool found = false;
+        for(HashableString* child : children){
+            g.add_node(child);
+            found = true;
+            break;
+        }
+        if(found) break;
+    }
+}
+
 void credits(){
     CompositeScene cs;
-    cs.inject_audio_and_render(AudioSegment("This is by far the longest video I have made on this channel,"));
-    cs.inject_audio_and_render(AudioSegment("and it could not have been done without the help of Stefano Ugliano,"));
-    cs.inject_audio_and_render(AudioSegment("who made all of the background music."));
     cs.inject_audio_and_render(AudioSegment(""));
     cs.inject_audio_and_render(AudioSegment("If you like this content, then there is nothing I would appreciate more than you joining our discord server!"));
     cs.inject_audio_and_render(AudioSegment("We talk about math, puzzles, game theory, and so on!"));
@@ -2023,15 +2187,17 @@ void credits(){
 int main() {
     Timer timer;
     FOR_REAL = true;
-    PRINT_TO_TERMINAL = true;
+    PRINT_TO_TERMINAL = false;
     /*intro();
     history();
     visualize();
     beta_reduction();
     currying();
     booleans();
-    numerals();*/
-    factorial();
+    numerals();
+    factorial();*/
+    reduction_graph();
+    //credits();
 
     //credits
     // 6884

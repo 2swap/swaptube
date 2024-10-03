@@ -36,6 +36,8 @@ public:
     virtual unordered_set<char> free_variables() const = 0;
     virtual unordered_set<char> all_referenced_variables() const = 0;
     virtual shared_ptr<LambdaExpression> reduce() = 0;
+    virtual int count_parallel_reductions() const = 0;
+    virtual shared_ptr<LambdaExpression> specific_reduction(int x) = 0;
     virtual shared_ptr<LambdaExpression> substitute(const char v, const LambdaExpression& e) = 0;
     virtual void rename(const char o, const char n) = 0;
     virtual string get_string() const = 0;
@@ -50,6 +52,23 @@ public:
     virtual void tint_recursive(const int c) = 0;
     virtual void interpolate_recursive(shared_ptr<const LambdaExpression> l2, const float weight) = 0;
     virtual void check_children_parents() const = 0;
+    unordered_set<shared_ptr<LambdaExpression>> get_all_legal_reductions() {
+        unordered_set<shared_ptr<LambdaExpression>> reductions;
+        int num_reductions = count_parallel_reductions();
+        
+        for (int n = 0; n < num_reductions; ++n) {
+            // Clone the current term
+            shared_ptr<LambdaExpression> cloned_term = clone();
+            
+            // Apply specific reduction to the cloned term
+            shared_ptr<LambdaExpression> reduced_term = cloned_term->specific_reduction(n);
+            
+            // Insert the reduced term into the set
+            reductions.insert(reduced_term);
+        }
+
+        return reductions;
+    }
     int get_uid(){ return uid; }
     int count_reductions(){
         shared_ptr<LambdaExpression> cl = clone();
@@ -202,6 +221,10 @@ public:
 
     bool is_reducible() const override { return false; }
 
+    int count_parallel_reductions() const override {
+        return 0;
+    }
+
     void rename(const char o, const char n) override {
         if(varname == o) {
             varname = n;
@@ -220,6 +243,11 @@ public:
     }
 
     shared_ptr<LambdaExpression> reduce() override {
+        failout("Reduction was attempted, but no legal reduction was found!");
+        return nullptr;
+    }
+
+    shared_ptr<LambdaExpression> specific_reduction(int x) override {
         failout("Reduction was attempted, but no legal reduction was found!");
         return nullptr;
     }
@@ -309,6 +337,10 @@ public:
 
     bool is_reducible() const override { return body->is_reducible(); }
 
+    int count_parallel_reductions() const override {
+        return body->count_parallel_reductions();
+    }
+
     void rename(const char o, const char n) override {
         if(bound_variable == o) {
             bound_variable = n;
@@ -346,6 +378,13 @@ public:
         } else {
             failout("Reduction was attempted, but no legal reduction was found!");
         }
+        mark_updated();
+        return shared_from_this();
+    }
+
+    shared_ptr<LambdaExpression> specific_reduction(int x) override {
+        body = body->specific_reduction(x);
+        body->set_parent(shared_from_this());
         mark_updated();
         return shared_from_this();
     }
@@ -455,6 +494,11 @@ public:
         return is_immediately_reducible() || first->is_reducible() || second->is_reducible();
     }
 
+    int count_parallel_reductions() const override {
+        int parallel_reductions = (is_immediately_reducible()?1:0) + first->count_parallel_reductions() + second->count_parallel_reductions();
+        return parallel_reductions;
+    }
+
     void rename(const char o, const char n) override {
         first->rename(o, n);
         second->rename(o, n);
@@ -496,6 +540,37 @@ public:
             failout("Reduction was attempted, but no legal reduction was found!");
             return nullptr;
         }
+    }
+
+    shared_ptr<LambdaExpression> specific_reduction(int x) override {
+        mark_updated();
+        int x_copy = x;
+        if(is_immediately_reducible()) {
+            if(x == 0){
+                return reduce();
+            }
+            x--;
+        }
+        if(first->is_reducible()) {
+            int first_reductions = first->count_parallel_reductions();
+            if(x < first_reductions){
+                first = first->specific_reduction(x);
+                first->set_parent(shared_from_this());
+                return shared_from_this();
+            }
+            x-=first_reductions;
+        }
+        if(second->is_reducible()) {
+            int second_reductions = second->count_parallel_reductions();
+            if(x < second_reductions){
+                second = second->specific_reduction(x);
+                second->set_parent(shared_from_this());
+                return shared_from_this();
+            }
+            x-=second_reductions;
+        }
+        failout("Specific reduction was attempted, but no legal reduction was found! " + get_string() + "; x = " + to_string(x_copy) + ".");
+        return nullptr;
     }
 
     shared_ptr<LambdaExpression> get_first() const {
@@ -692,8 +767,6 @@ shared_ptr<const LambdaAbstraction> LambdaVariable::get_bound_abstraction() cons
 }
 
 shared_ptr<LambdaExpression> parse_lambda_from_string(const string& input) {
-    cout << "Parsing '" << input << "'..." << endl;
-
     if (is_single_letter(input))
         return make_shared<LambdaVariable>(input[0], OPAQUE_WHITE);
 

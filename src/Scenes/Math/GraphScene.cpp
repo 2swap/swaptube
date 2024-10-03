@@ -40,7 +40,7 @@ public:
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
-        graph->iterate_physics(state["physics_multiplier"]);
+        //graph->iterate_physics(state["physics_multiplier"]);
     }
     bool check_if_data_changed() const override {
         return graph->has_been_updated_since_last_scene_query();
@@ -50,6 +50,7 @@ public:
     virtual void inheritable_postprocessing(){}
 
     void draw() override{
+        graph->iterate_physics(state["physics_multiplier"]);
         graph_to_3d();
         inheritable_preprocessing();
         ThreeDimensionScene::draw();
