@@ -2010,7 +2010,7 @@ void reduction_graph(){
     FOR_REAL = false;
     CompositeScene cs;
     std::unordered_map<std::string, std::string> closequat{
-        {"q1", "<t> 20 / cos 10 /"},
+        {"q1", "1"},
         {"qi", "0"},
         {"qj", "<t> -20 / sin 10 /"},
         {"qk", "0"},
@@ -2098,6 +2098,7 @@ void reduction_graph(){
             n.color = 0xff7777ff;
     }
     cs.inject_audio_and_render(AudioSegment("Ok, we've arrived at 2."));
+    cs.inject_audio_and_render(AudioSegment("I've colored it blue, because it's special- it can't be reduced further."));
 
     string iter2 = "((\\n. (\\f. (\\x. (((\\f. (\\x. (f x))) f) ((n f) x))))) (\\f. (\\x. (f x))))";
     glm::vec4 iter2pos;
@@ -2141,7 +2142,6 @@ void reduction_graph(){
     cs.inject_audio_and_render(AudioSegment("Here it is."));
     lam_iter2->specific_reduction(1);
     lam.set_expression(lam_iter2);
-    FOR_REAL = true;
     cs.inject_audio_and_render(AudioSegment("And here it is actually taking place."));
 
     g.clear();
@@ -2175,6 +2175,7 @@ void reduction_graph(){
             g.add_node(child);
         }
     }
+    FOR_REAL = true;
     cs.inject_audio_and_render(AudioSegment("let's follow both paths at the same time."));
     while(g.size() != 13){
         nodescopy = g.nodes;
@@ -2195,6 +2196,59 @@ void reduction_graph(){
         cs.inject_audio_and_render(AudioSegment(1));
     }
     cs.inject_audio_and_render(AudioSegment("Looks like all paths lead to 2!"));
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment("Of course, that's what we would expect."));
+    cs.remove_all_scenes();
+    Graph<HashableString> h;
+    string onetimesone = "(((\\m. (\\n. (\\s. (n (m s))))) (\\f. (\\x. (f (f x))))) (\\f. (\\x. (f (f x)))))";
+    LambdaGraphScene lg2(&h, onetimesone, VIDEO_WIDTH, VIDEO_HEIGHT);
+    cs.add_scene_fade_in(&lg2, "lg2", 0, 0, true);
+    h.dimensions = 3;
+    lg2.state_manager.superscene_transition(unordered_map<string, string>{
+        {"q1", "[q1]"},
+        {"qi", "[qi]"},
+        {"qj", "[qj]"},
+        {"qk", "[qk]"},
+        {"d", "[d]"},
+        {"x", "[x]"},
+        {"y", "[y]"},
+        {"z", "[z]"},
+        {"surfaces_opacity", "[surfaces_opacity]"},
+        {"lines_opacity", "[lines_opacity]"},
+        {"points_opacity", "[points_opacity]"},
+    });
+    cs.state_manager.set(unordered_map<string, string>{
+        {"d", "5"},
+        {"y", "2.5"},
+    });
+    cs.inject_audio_and_render(AudioSegment("The answer to the problem shouldn't depend on the order that you do the steps. Right?"));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"d", "15"},
+        {"y", "7"},
+    });
+    cs.inject_audio_and_render(AudioSegment("Let's try one times one."));
+    int gs = -1;
+    while(gs != h.size()){
+        gs = h.size();
+        nodescopy = h.nodes;
+        for(auto& p : nodescopy){
+            Node<HashableString>& n = p.second;
+            unordered_set<HashableString*> children = n.data->get_children();
+            for(HashableString* child : children){
+                h.add_node(child);
+            }
+        }
+        for(auto& p : h.nodes){
+            Node<HashableString>& n = p.second;
+            if(!parse_lambda_from_string(n.data->representation)->is_reducible())
+                n.color = 0xff7777ff;
+            else
+                n.color = 0xffffffff;
+        }
+        cs.inject_audio_and_render(AudioSegment(1));
+    }
+    cs.inject_audio_and_render(AudioSegment("Here's the reduction graph!"));
+    cs.inject_audio_and_render(AudioSegment(""));
 }
 
 void credits(){
@@ -2208,33 +2262,56 @@ void credits(){
 }
 
 void chapter_number(int number, string subtitle){
+    CompositeScene cs;
     LatexScene ls(latex_text(subtitle), 1, 1800, 500);
+    LatexScene ls2(latex_text("Chapter " + to_string(number) + ":"), 1, 1800, 500);
     int w = OPAQUE_WHITE;
     shared_ptr<LambdaExpression> lex = parse_lambda_from_string("x");
     for(int i = 0; i < number; i++){
         lex = apply(parse_lambda_from_string("f"), lex, w);
     }
-    LambdaScene lam(abstract('f', abstract('x', lex, w), w), 800, 800);
-    ThreeDimensionScene tds;
-    tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(1,0,0),glm::vec3(0, 1        , 0),make_shared<LambdaScene>(lam)));
-    tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(1,0,0),glm::vec3(0, 500/1800., 0),make_shared<LatexScene>(ls)));
+    lex = abstract('f', abstract('x', lex, w), w);
+    lex->set_color_recursive(0xff444444);
+    LambdaScene lam(lex, 800, 800);
+    ThreeDimensionScene tds1;
+    ThreeDimensionScene tds2;
+    tds1.add_surface(Surface(glm::vec3(0, .25,0),glm::vec3(1,0,0),glm::vec3(0, 1        , 0),make_shared<LambdaScene>(lam)));
+    tds2.add_surface(Surface(glm::vec3(0, .1,0),glm::vec3(1,0,0),glm::vec3(0, 500/1800., 0),make_shared<LatexScene>(ls)));
+    tds2.add_surface(Surface(glm::vec3(0,-.25,0),glm::vec3(1,0,0),glm::vec3(0, 500/1800., 0),make_shared<LatexScene>(ls2)));
 
-    tds.state_manager.set(std::unordered_map<std::string, std::string>{
+    tds1.state_manager.set(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_opacity", "0"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "4"},
+        {"d", "2"},
         {"ntf", "<subscene_transition_fraction> .5 -"},
-        {"x", "3 <ntf> * 4 ^ -1 *"},
-        {"sigmoid", "3.1415 4 / 1 2.71828 <ntf> 40 * ^ + /"},
+        {"x", "3 <ntf> * 5 ^ -1 *"},
+        //{"sigmoid", "3.1415 4 / 1 2.71828 <ntf> 40 * ^ + /"},
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
-        {"qk", "<sigmoid> sin 9 /"},
+        {"qk", "1 sin 9 / .0 +"},
+        //{"qk", "0"},
     });
-    tds.inject_audio_and_render(AudioSegment(6));
+    tds2.state_manager.set(std::unordered_map<std::string, std::string>{
+        {"ntf", "<subscene_transition_fraction> .5 -"},
+        {"surfaces_opacity", "1 <ntf> 2 * 4 ^ -"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "0"},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"d", "2"},
+        {"q1", "1"},
+        {"qi", "0"},
+        {"qj", "0"},
+        {"qk", "0"},
+    });
+    cs.add_scene(&tds1, "tds1", 0, 0);
+    cs.add_scene(&tds2, "tds2", 0, 0);
+    cs.inject_audio_and_render(AudioSegment(6));
 }
 
 int main() {
@@ -2256,8 +2333,8 @@ int main() {
     numerals();
     chapter_number(7, "Recursion");
     factorial();*/
-    chapter_number(8, "Reduction Graphs");
-    //reduction_graph();
+    //chapter_number(8, "Reduction Graphs");
+    reduction_graph();
     //credits();
 
     //credits

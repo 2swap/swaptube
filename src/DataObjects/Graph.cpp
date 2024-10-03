@@ -412,11 +412,12 @@ public:
     }
 
     double get_attraction_force(double dist_sq){
-        return attract_force * (dist_sq-1)/(dist_sq+1);
+        double dist_6th = dist_sq*dist_sq*dist_sq;
+        return 2*attract_force * (dist_6th-1)/(dist_6th+1);
     }
 
     double get_repulsion_force(double dist_sq){
-        return -repel_force / (dist_sq + 1);
+        return -.1*repel_force / (2*dist_sq + .1);
     }
 
     void perform_pairwise_node_attraction(Node<T>* node1, Node<T>* node2, bool attract = true) {
