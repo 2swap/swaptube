@@ -2207,19 +2207,57 @@ void credits(){
     cs.inject_audio_and_render(AudioSegment(""));
 }
 
+void chapter_number(int number, string subtitle){
+    LatexScene ls(latex_text(subtitle), 1, 1800, 500);
+    int w = OPAQUE_WHITE;
+    shared_ptr<LambdaExpression> lex = parse_lambda_from_string("x");
+    for(int i = 0; i < number; i++){
+        lex = apply(parse_lambda_from_string("f"), lex, w);
+    }
+    LambdaScene lam(abstract('f', abstract('x', lex, w), w), 800, 800);
+    ThreeDimensionScene tds;
+    tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(1,0,0),glm::vec3(0, 1        , 0),make_shared<LambdaScene>(lam)));
+    tds.add_surface(Surface(glm::vec3(0,0,0),glm::vec3(1,0,0),glm::vec3(0, 500/1800., 0),make_shared<LatexScene>(ls)));
+
+    tds.state_manager.set(std::unordered_map<std::string, std::string>{
+        {"surfaces_opacity", "1"},
+        {"lines_opacity", "1"},
+        {"points_opacity", "0"},
+        {"y", "0"},
+        {"z", "0"},
+        {"d", "4"},
+        {"ntf", "<subscene_transition_fraction> .5 -"},
+        {"x", "3 <ntf> * 4 ^ -1 *"},
+        {"sigmoid", "3.1415 4 / 1 2.71828 <ntf> 40 * ^ + /"},
+        {"q1", "1"},
+        {"qi", "0"},
+        {"qj", "0"},
+        {"qk", "<sigmoid> sin 9 /"},
+    });
+    tds.inject_audio_and_render(AudioSegment(6));
+}
+
 int main() {
     Timer timer;
     FOR_REAL = true;
     PRINT_TO_TERMINAL = false;
     /*intro();
+    chapter_number(1, "Introduction");
     history();
+    chapter_number(2, "Tromp Diagrams");
     visualize();
+    chapter_number(3, "Beta Reduction");
     beta_reduction();
+    chapter_number(4, "Currying");
     currying();
+    chapter_number(5, "Boolean Arithmetic");
     booleans();
+    chapter_number(6, "Numerals");
     numerals();
+    chapter_number(7, "Recursion");
     factorial();*/
-    reduction_graph();
+    chapter_number(8, "Reduction Graphs");
+    //reduction_graph();
     //credits();
 
     //credits
