@@ -255,14 +255,16 @@ public:
      * @param id The hash of the node to be removed.
      */
     void remove_node(double id) {
+        cout << "Trying to remove a node" << endl;
         if (!node_exists(id)) return;
         Node<T>& node = nodes.at(id);
         for (const auto& neighbor_edge : node.neighbors) {
             double neighbor_id = neighbor_edge.to;
             nodes.at(neighbor_id).neighbors.erase(Edge(neighbor_id, id));
         }
-        delete node->data;
+        delete node.data;
         nodes.erase(id);
+        cout << "removed a node" << endl;
     }
 
     // Function to find the shortest path between two nodes using Dijkstra's algorithm

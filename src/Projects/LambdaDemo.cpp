@@ -2024,7 +2024,8 @@ void reduction_graph(){
     };
     Graph<HashableString> g;
     g.dimensions = 2;
-    LambdaGraphScene lgs(&g, "(((\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x)))))) (\\f. (\\x. (f x)))) (\\f. (\\x. (f x))))", VIDEO_WIDTH*.5, VIDEO_HEIGHT);
+    string iter1 = "(((\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x)))))) (\\f. (\\x. (f x)))) (\\f. (\\x. (f x))))";
+    LambdaGraphScene lgs(&g, iter1, VIDEO_WIDTH*.5, VIDEO_HEIGHT);
     lgs.state_manager.superscene_transition(unordered_map<string, string>{
         {"q1", "[q1]"},
         {"qi", "[qi]"},
@@ -2094,16 +2095,19 @@ void reduction_graph(){
     for(auto& p : g.nodes){
         Node<HashableString>& n = p.second;
         if(n.data->representation.size() == 21)
-        n.color = 0xff7777ff;
+            n.color = 0xff7777ff;
     }
     cs.inject_audio_and_render(AudioSegment("Ok, we've arrived at 2."));
 
     string iter2 = "((\\n. (\\f. (\\x. (((\\f. (\\x. (f x))) f) ((n f) x))))) (\\f. (\\x. (f x))))";
+    glm::vec4 iter2pos;
     for(auto& p : g.nodes){
         Node<HashableString>& n = p.second;
         lastid = p.first;
-        if(n.data->representation == iter2)
+        if(n.data->representation == iter2){
             n.color = 0xffff3333;
+            iter2pos = n.position;
+        }
     }
     cs.inject_audio_and_render(AudioSegment("But I want to take a closer look at this node here."));
 
@@ -2137,41 +2141,60 @@ void reduction_graph(){
     cs.inject_audio_and_render(AudioSegment("Here it is."));
     lam_iter2->specific_reduction(1);
     lam.set_expression(lam_iter2);
+    FOR_REAL = true;
     cs.inject_audio_and_render(AudioSegment("And here it is actually taking place."));
 
-    cs.inject_audio_and_render(AudioSegment("So on our tree of reductions,"));
+    g.clear();
+    g.add_node(new HashableString(iter1));
+    g.add_node(new HashableString(iter2));
     for(auto& p : g.nodes){
         Node<HashableString>& n = p.second;
-        if(n.data->representation != iter2) continue;
-        unordered_set<HashableString*> children = n.data->get_children();
-        for(HashableString* child : children){
-            lastid = g.add_node(child);
+        lastid = p.first;
+        if(n.data->representation == iter2){
+            n.color = 0xffff3333;
+            n.position = iter2pos;
         }
-        break;
     }
+    g.iterate_physics(100);
+    cs.inject_audio_and_render(AudioSegment("Let's back up on our tree of reductions."));
 
-    FOR_REAL = true;
-    cs.inject_audio_and_render(AudioSegment("there is actually another option at this node."));
-    cs.inject_audio(AudioSegment("And we can follow that path as well. Let's see where it leads..."), 3);
-    for(int i = 0; i < 3; i++) {
-        children = g.nodes.find(lastid)->second.data->get_children();
-        for(HashableString* child : children){
-            lastid = g.add_node(child);
-        }
-        cs.render();
-    }
-    cs.inject_audio_and_render(AudioSegment("Looks like it takes a different path to the same place!"));
-    for(auto& p : g.nodes){
+    nodescopy = g.nodes;
+    for(auto& p : nodescopy){
         Node<HashableString>& n = p.second;
         unordered_set<HashableString*> children = n.data->get_children();
-        bool found = false;
         for(HashableString* child : children){
             g.add_node(child);
-            found = true;
-            break;
         }
-        if(found) break;
     }
+    cs.inject_audio_and_render(AudioSegment("Since there are two options at this node,"));
+    nodescopy = g.nodes;
+    for(auto& p : nodescopy){
+        Node<HashableString>& n = p.second;
+        unordered_set<HashableString*> children = n.data->get_children();
+        for(HashableString* child : children){
+            g.add_node(child);
+        }
+    }
+    cs.inject_audio_and_render(AudioSegment("let's follow both paths at the same time."));
+    while(g.size() != 13){
+        nodescopy = g.nodes;
+        for(auto& p : nodescopy){
+            Node<HashableString>& n = p.second;
+            unordered_set<HashableString*> children = n.data->get_children();
+            for(HashableString* child : children){
+                g.add_node(child);
+            }
+        }
+        for(auto& p : g.nodes){
+            Node<HashableString>& n = p.second;
+            if(n.data->representation.size() == 21)
+                n.color = 0xff7777ff;
+            else
+                n.color = 0xffffffff;
+        }
+        cs.inject_audio_and_render(AudioSegment(1));
+    }
+    cs.inject_audio_and_render(AudioSegment("Looks like all paths lead to 2!"));
 }
 
 void credits(){
