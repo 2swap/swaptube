@@ -19,9 +19,14 @@ public:
         for(pair<double, Node<HashableString>> p : graph->nodes){
             Node<HashableString> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position);
+            if(node.opacity < 0.01) continue;
             shared_ptr<LambdaExpression> lambda = parse_lambda_from_string(node.data->representation);
             lambda->set_color_recursive(node.color);
-            add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LambdaScene>(lambda, 600, 600)));
+            double id = p.first;
+            auto found = scene_map.find(id);
+            if(found == scene_map.end())
+                scene_map[id] = make_shared<LambdaScene>(lambda, 600, 600);
+            add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), scene_map.find(id)->second, node.opacity));
         }
     }
 
@@ -50,12 +55,14 @@ public:
             surface.center,
             glm::vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
             glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
-            surface.scenePointer
+            surface.scenePointer,
+            surface.opacity
         );
 
         ThreeDimensionScene::render_surface(surface_rotated);
     }
 
 private:
+    unordered_map<double, shared_ptr<LambdaScene>> scene_map;
     string root_node_representation;
 };

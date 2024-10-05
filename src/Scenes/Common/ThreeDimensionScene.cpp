@@ -57,7 +57,7 @@ public:
 class Point : public ThreeDimensionalObject {
 public:
     NodeHighlightType highlight;
-    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, double op = 1)
+    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1)
         : ThreeDimensionalObject(pos, clr, op), highlight(hlt) {}
 
     void render(ThreeDimensionScene& scene) const override;
@@ -67,7 +67,7 @@ class Line : public ThreeDimensionalObject {
 public:
     glm::vec3 start;
     glm::vec3 end;
-    Line(const glm::vec3& s, const glm::vec3& e, int clr, double op = 1)
+    Line(const glm::vec3& s, const glm::vec3& e, int clr, float op = 1)
         : ThreeDimensionalObject((s + e) * glm::vec3(0.5f), clr, op), start(s), end(e) {}
 
     void render(ThreeDimensionScene& scene) const override;
@@ -82,8 +82,8 @@ public:
     float iur2;
     glm::vec3 normal;
 
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, shared_ptr<Scene> sc)
-        : ThreeDimensionalObject(c, 0, 1), pos_x_dir(l), pos_y_dir(u), scenePointer(sc),
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, shared_ptr<Scene> sc, float op = 1)
+        : ThreeDimensionalObject(c, 0, op), pos_x_dir(l), pos_y_dir(u), scenePointer(sc),
           ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     void render(ThreeDimensionScene& scene) const override;
 };
@@ -417,7 +417,13 @@ public:
 
     void clear_lines(){ lines.clear(); obj_ptrs.clear(); }
     void clear_points(){ points.clear(); obj_ptrs.clear(); }
-    void clear_surfaces(){ surfaces.clear(); obj_ptrs.clear(); }
+    void clear_surfaces(){
+        for (auto it = surfaces.begin(); it != surfaces.end(); ++it){
+            it->scenePointer->state_manager.set_parent(nullptr);
+        }
+        surfaces.clear();
+        obj_ptrs.clear();
+    }
 
     glm::vec3 camera_pos;
     glm::quat camera_direction;  // Quaternion representing the camera's orientation

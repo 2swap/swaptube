@@ -57,14 +57,8 @@ public:
         int num_reductions = count_parallel_reductions();
         
         for (int n = 0; n < num_reductions; ++n) {
-            // Clone the current term
-            shared_ptr<LambdaExpression> cloned_term = clone();
-            
-            // Apply specific reduction to the cloned term
-            shared_ptr<LambdaExpression> reduced_term = cloned_term->specific_reduction(n);
-            
             // Insert the reduced term into the set
-            reductions.insert(reduced_term);
+            reductions.insert(clone()->specific_reduction(n));
         }
 
         return reductions;

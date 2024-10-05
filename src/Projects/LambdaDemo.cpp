@@ -1737,7 +1737,7 @@ void numerals() {
     cs.inject_audio_and_render(AudioSegment("Okay, you've officially made it to the juicy stuff. It's about to get philosophical."));
 }
 
-void factorial(){
+shared_ptr<LambdaExpression> factorial(){
     CompositeScene cs;
     /*
     LatexScene title(latex_text("Recursion"), 1, VIDEO_WIDTH*0.5, VIDEO_HEIGHT*0.25);
@@ -1977,6 +1977,7 @@ void factorial(){
     fac_lambda.set_expression(TF3);
     cs.inject_audio_and_render(AudioSegment("Now, let's apply this factorial function to the number three."));
     num_reductions = TF3->count_reductions();
+    shared_ptr<LambdaExpression> TF3_copy = TF3->clone();
     cs.inject_audio(AudioSegment(20), num_reductions);
     for(int i = 0; i < num_reductions; i++) {
         TF3 = TF3->reduce();
@@ -2004,9 +2005,10 @@ void factorial(){
     cs.inject_audio_and_render(AudioSegment("It's the triple factorial function!"));
     cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment(2));
+    return TF3_copy;
 }
 
-void reduction_graph(){
+void reduction_graph(shared_ptr<LambdaExpression> TF3){
     FOR_REAL = false;
     CompositeScene cs;
     std::unordered_map<std::string, std::string> closequat{
@@ -2044,8 +2046,8 @@ void reduction_graph(){
     cs.inject_audio_and_render(AudioSegment("There's one more interesting topic which I think is due for some explanation."));
     cs.inject_audio_and_render(AudioSegment("Consider this term for 'one plus one'."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"d", "5"},
-        {"y", "4"},
+        {"d", "9"},
+        {"y", "7"},
     });
     unordered_set<HashableString*> children;
     auto nodescopy = g.nodes;
@@ -2066,8 +2068,6 @@ void reduction_graph(){
     }
     cs.inject_audio_and_render(AudioSegment("but this time, let's keep track of the intermediate steps."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"d", "10"},
-        {"y", "9"},
     });
     children = g.nodes.find(lastid)->second.data->get_children();
     for(HashableString* child : children){
@@ -2175,7 +2175,6 @@ void reduction_graph(){
             g.add_node(child);
         }
     }
-    FOR_REAL = true;
     cs.inject_audio_and_render(AudioSegment("let's follow both paths at the same time."));
     while(g.size() != 13){
         nodescopy = g.nodes;
@@ -2218,15 +2217,16 @@ void reduction_graph(){
         {"points_opacity", "[points_opacity]"},
     });
     cs.state_manager.set(unordered_map<string, string>{
-        {"d", "5"},
-        {"y", "2.5"},
+        {"d", "7"},
+        {"y", "3"},
+        {"qj", "<t> 3 / sin"},
     });
     cs.inject_audio_and_render(AudioSegment("The answer to the problem shouldn't depend on the order that you do the steps. Right?"));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"d", "15"},
-        {"y", "7"},
+        {"d", "20"},
+        {"y", "9"},
     });
-    cs.inject_audio_and_render(AudioSegment("Let's try one times one."));
+    cs.inject_audio_and_render(AudioSegment("Let's try two times two."));
     int gs = -1;
     while(gs != h.size()){
         gs = h.size();
@@ -2248,7 +2248,102 @@ void reduction_graph(){
         cs.inject_audio_and_render(AudioSegment(1));
     }
     cs.inject_audio_and_render(AudioSegment("Here's the reduction graph!"));
-    cs.inject_audio_and_render(AudioSegment(""));
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment("Looks like in this case, we can only get to four also."));
+    cs.remove_all_scenes();
+    g.clear();
+    cs.add_scene(&lgs, "lgs", 0, 0);
+    string o3_str = "((\\x. ((x x) x)) (\\x. ((x x) x)))";
+    LambdaScene omega3(parse_lambda_from_string(o3_str), VIDEO_WIDTH*0.5, VIDEO_HEIGHT);
+    cs.add_scene(&omega3, "omega3", 0.5, 0);
+    g.add_node(new HashableString(o3_str));
+    cs.inject_audio_and_render(AudioSegment("Alright, I'll stop leading you on. This is a lambda term called Omega 3."));
+    gs = -1;
+    while(gs != g.size() && gs < 10){
+        gs = g.size();
+        omega3.reduce();
+        nodescopy = g.nodes;
+        for(auto& p : nodescopy){
+            Node<HashableString>& n = p.second;
+            unordered_set<HashableString*> children = n.data->get_children();
+            for(HashableString* child : children){
+                g.add_node(child);
+            }
+        }
+        for(auto& p : g.nodes){
+            Node<HashableString>& n = p.second;
+            if(!parse_lambda_from_string(n.data->representation)->is_reducible())
+                n.color = 0xff7777ff;
+            else
+                n.color = 0xffffffff;
+        }
+        cs.inject_audio_and_render(AudioSegment(1));
+    }
+    cs.inject_audio_and_render(AudioSegment("See where this is going?"));
+    cs.inject_audio_and_render(AudioSegment("When we beta reduce this term, it actually just gets bigger."));
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment("There's no branching, but this is never going to get to a blue-colored irreducible term."));
+    cs.remove_all_scenes();
+    LambdaScene omega(parse_lambda_from_string("((\\x. (x x)) (\\x. (x x)))"), VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
+    cs.add_scene_fade_in(&omega, "omega", .25, .25, true);
+    cs.inject_audio_and_render(AudioSegment("Here's an even weirder term, plain old omega."));
+    cs.inject_audio(AudioSegment("It is reducible, but it doesn't reduce to a _different_ lambda term..."), 2);
+    for(int i = 0; i < 2; i++){
+        omega.reduce();
+        cs.render();
+    }
+    omega.reduce();
+    PngScene self_arrow("self_arrow", VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
+    cs.add_scene_fade_in(&self_arrow, "self_arrow", .5, 0, true);
+    cs.inject_audio(AudioSegment("There's not much of a graph to draw, because it reduces to itself!"), 2);
+    for(int i = 0; i < 2; i++){
+        omega.reduce();
+        cs.render();
+    }
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.remove_all_scenes();
+    cs.add_scene_fade_in(&lgs, "lgs", 0, 0, true);
+    cs.state_manager.set(unordered_map<string, string>{
+        {"d", "2"},
+        {"y", "0"},
+    });
+    g.clear();
+    FOR_REAL = true;
+    g.add_to_stack(new HashableString(TF3->get_string()));
+    cs.inject_audio_and_render(AudioSegment("Here's our old friend, factorial of 3."));
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"d", "60"},
+        {"y", "40"},
+        {"points_opacity", "1"},
+    });
+    cs.inject_audio_and_render(AudioSegment(1));
+    auto TF3_clone = TF3->clone();
+    int reductions = TF3->count_reductions();
+    reductions = 40;
+    cs.inject_audio(AudioSegment(6), reductions);
+    cout << "Reductions: " << reductions << endl;
+    for(int i = 0; i < reductions; i++){
+        cout << "gs: " << g.size() << ", i: " << i << "/" << reductions << endl;
+        TF3_clone = TF3_clone->reduce();
+        if(i<20){
+        cout << "Reduced clone" << endl;
+        HashableString* hs = new HashableString(TF3_clone->get_string());
+        g.add_to_stack(hs);
+        Node<HashableString>& n = g.nodes.find(hs->get_hash())->second;
+        n.opacity = 0;
+        n.color = 0xffffffff;
+        if(n.data->representation.size() == 23)
+            n.color = 0xff7777ff;
+        }
+        cs.render();
+    }
+    return;
+    cs.inject_audio(AudioSegment(1), 50);
+    for(int i = 0; i < 50; i++){
+        g.expand_graph(true);
+        cs.render();
+    }
 }
 
 void credits(){
@@ -2316,8 +2411,9 @@ void chapter_number(int number, string subtitle){
 
 int main() {
     Timer timer;
-    FOR_REAL = true;
+    FOR_REAL = false;
     PRINT_TO_TERMINAL = false;
+    shared_ptr<LambdaExpression> TF3 = parse_lambda_from_string("(\\x. x)");
     /*intro();
     chapter_number(1, "Introduction");
     history();
@@ -2332,9 +2428,11 @@ int main() {
     chapter_number(6, "Numerals");
     numerals();
     chapter_number(7, "Recursion");
-    factorial();*/
+    */
+    TF3 = factorial();
     //chapter_number(8, "Reduction Graphs");
-    reduction_graph();
+    FOR_REAL = true;
+    reduction_graph(TF3);
     //credits();
 
     //credits

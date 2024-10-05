@@ -106,7 +106,6 @@ public:
     void add_to_stack(T* t){
         //cout << "Adding to stack... length before adding is " << traverse_deque.size() << endl;
         double hash = t->get_hash();
-        root_node_hash = hash;
         add_node(t);
         traverse_deque.push_front(hash);
     }
@@ -124,7 +123,7 @@ public:
     }
     double add_node_without_edges(T* t){
         double hash = t->get_hash();
-        if(size()%500 == 999) cout << "Node count: " << size() << endl;
+        if(size()%1000 == 999) cout << "Node count: " << size() << endl;
         if (node_exists(hash)) {
             delete t;
             return hash;
@@ -141,7 +140,7 @@ public:
      * Expand the graph by adding neighboring nodes.
      * Return amount of new nodes that were added.
      */
-    bool expand_graph(bool only_one = false) {
+    int expand_graph(bool only_one = false) {
         int new_nodes_added = 0;
         while (!traverse_deque.empty()) {
             cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
@@ -149,18 +148,24 @@ public:
             traverse_deque.pop_front();
 
             unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
+            bool only_one_found = false;
             for (const auto& child : child_nodes) {
                 double child_hash = child->get_hash();
-                if (!node_exists(child_hash)) {
+                if (only_one_found || node_exists(child_hash)) delete child;
+                else {
                     add_node_without_edges(child);
                     new_nodes_added++;
                     if (only_one) traverse_deque.push_front(id);
 
-                    traverse_deque.push_front(child_hash); // push_back: bfs // push_front: dfs
+                    traverse_deque.push_back(child_hash); // push_back: bfs // push_front: dfs
 
-                    if (only_one) {add_missing_edges(true); return new_nodes_added;}
+                    if (only_one) {
+                        add_missing_edges(true);
+                        only_one_found = true;
+                    }
                 }
             }
+            if(only_one_found) return new_nodes_added;
         }
         add_missing_edges(true);
         return new_nodes_added;
@@ -233,7 +238,7 @@ public:
                 // this theoretical child isn't guaranteed to be in the graph
                 if(!node_exists(child_hash)) continue;
                 Node<T>& child = nodes.find(child_hash)->second;
-                if(teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)/*child is orphan*/){
+                if(teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)){//if child is orphan
                     child.position = parent.position;
                 }
                 add_directed_edge(parent.hash, child_hash);
@@ -412,12 +417,12 @@ public:
     }
 
     double get_attraction_force(double dist_sq){
-        double dist_6th = dist_sq*dist_sq*dist_sq;
+        double dist_6th = dist_sq*dist_sq*dist_sq/20;
         return 2*attract_force * (dist_6th-1)/(dist_6th+1);
     }
 
     double get_repulsion_force(double dist_sq){
-        return -.1*repel_force / (2*dist_sq + .1);
+        return -repel_force / (dist_sq/2 + .1);
     }
 
     void perform_pairwise_node_attraction(Node<T>* node1, Node<T>* node2, bool attract = true) {
