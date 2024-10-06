@@ -383,6 +383,7 @@ public:
      * @param iterations The number of iterations to perform.
      */
     void iterate_physics(int iterations){
+        cout << "Spreading out graph for " << iterations << " iterations... " << flush;
         vector<Node<T>*> node_vector;
 
         for (auto& node_pair : nodes) {
@@ -390,9 +391,10 @@ public:
         }
 
         for (int n = 0; n < iterations; n++) {
-            if(n%10==9) cout << "Spreading out graph, iteration " << n << "." << endl;
-                perform_single_physics_iteration(node_vector);
+            cout << "." << endl;
+            perform_single_physics_iteration(node_vector);
         }
+        cout << "done!" << endl;
     }
 
     void perform_single_physics_iteration(const vector<Node<T>*>& node_vector){

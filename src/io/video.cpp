@@ -11,6 +11,8 @@ extern "C"
 
 using namespace std;
 
+static DebugPlot ffmpeg_output_plot("ffmpeg output", vector<string>{"frame", "qp", "nal", "poc", "i", "p", "skip", "size"});
+
 // Function to redirect stderr to a pipe
 int redirect_stderr(int pipefd[2]) {
     if (pipe(pipefd) == -1) {
@@ -60,22 +62,33 @@ void parse_debug_output(const string& output) {
     regex regex_pattern_empty_line(R"(\s*)");
     while (getline(iss, line)) {
         smatch match;
+
+        int frame    =  0;
+        float qp     =  0;
+        int nal      =  0;
+        string slice = "0";
+        int poc      =  0;
+        int i        =  0;
+        int p        =  0;
+        int skip     =  0;
+        int size     =  0;
+
         if (regex_search(line, match, regex_pattern) && match.size() == 10) {
-            int frame = stoi(match[1].str());
-            float qp = stof(match[2].str());
-            int nal = stoi(match[3].str());
-            string slice = match[4].str();
-            int poc = stoi(match[5].str());
-            int i = stoi(match[6].str());
-            int p = stoi(match[7].str());
-            int skip = stoi(match[8].str());
-            int size = stoi(match[9].str());
+            frame = stoi(match[1].str());
+            qp    = stof(match[2].str());
+            nal   = stoi(match[3].str());
+            slice =      match[4].str();
+            poc   = stoi(match[5].str());
+            i     = stoi(match[6].str());
+            p     = stoi(match[7].str());
+            skip  = stoi(match[8].str());
+            size  = stoi(match[9].str());
         } else if(regex_search(line, match, regex_pattern_empty_line)) {
-            // do nothing
         } else {
             // If the string did not match the expected format, dump it to stderr
             cerr << "Failed to parse cerr output from encoder: " << line << endl;
         }
+        ffmpeg_output_plot.add_datapoint(vector<double>{frame, qp, nal, poc, i, p, skip, slice});
     }
 }
 
@@ -108,6 +121,7 @@ private:
     unsigned outframe = 0;
 
     bool encode_and_write_frame(AVFrame* frame){
+        cout << "Video A" << endl;
         if(frame != NULL){
             int ret = send_frame(videoCodecContext, frame);
             if (ret<0) {
@@ -115,23 +129,29 @@ private:
                 exit(1);
             }
         }
+        cout << "Video B" << endl;
 
         int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
+        cout << "Video C" << endl;
         if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) {
             return false;
         } else if (ret2!=0) {
             cout << "Failed to receive video packet!" << endl;
             exit(1);
         }
+        cout << "Video D" << endl;
 
         // We set the packet PTS and DTS taking in the account our FPS (second argument),
         // and the time base that our selected format uses (third argument).
         av_packet_rescale_ts(&pkt, { 1, VIDEO_FRAMERATE }, videoStream->time_base);
+        cout << "Video E" << endl;
 
         pkt.stream_index = videoStream->index;
+        cout << "Video F" << endl;
 
         // Write the encoded frame to the mp4 file.
         av_interleaved_write_frame(fc, &pkt);
+        cout << "Video G" << endl;
 
         return true;
     }

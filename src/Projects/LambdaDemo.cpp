@@ -4,7 +4,7 @@ const string project_name = "LambdaDemo";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 2;
+const float mult = 1;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -729,7 +729,7 @@ void visualize(){
         if(current->get_type() == "Variable" && current->get_string() == "y") color = 0xff002266;
         current->set_color(color);
     }
-    cs.inject_audio(AudioSegment("A variable makes contact with it if that variable name corresponds to the variable name which is in between the lambda and the dot."), 2);
+    cs.inject_audio(AudioSegment("A variable makes contact with it if that variable name corresponds to the variable name which is in between the lambda and the dot."), 3);
     rep_tromp.set_expression(term);
     cs.render();
     cs.render();
@@ -2468,19 +2468,68 @@ void extra(){
 
 void credits(){
     CompositeScene cs;
-    cs.inject_audio_and_render(AudioSegment("I wanna give an enormous thank-you to 6884, who made all of the music which made this video come to life."));
-    cs.inject_audio_and_render(AudioSegment("This also couldn't have been possible without John Tromp, the inventor of this sick diagrammatic notation for lambda expressions."));
-    cs.inject_audio_and_render(AudioSegment("Or Peter Selinger, who wrote this book, Lecture Notes on the Lambda Calculus."));
-    cs.inject_audio_and_render(AudioSegment("His clear formalizations of a lot of the things I thought I knew helped me get through a lot of snags in rendering these diagrams."));
+    LatexScene links(latex_text("Links in the Description!"), .8, VIDEO_WIDTH, VIDEO_HEIGHT/5);
+    cs.add_scene_fade_in(&links, "links", 0, .8, true);
+    PngScene seef("seef", VIDEO_WIDTH/3, VIDEO_HEIGHT/3);
+    PngScene tromp("tromp_y", VIDEO_WIDTH/3, VIDEO_HEIGHT/3);
+    PngScene selinger("selinger", VIDEO_WIDTH/3, VIDEO_HEIGHT/3);
+    LatexScene seef_text(latex_text("6884"), .8, VIDEO_WIDTH/3, VIDEO_HEIGHT/6);
+    LatexScene tromp_text(latex_text("John Tromp"), .8, VIDEO_WIDTH/3, VIDEO_HEIGHT/6);
+    LatexScene selinger_text(latex_text("Peter Selinger"), .8, VIDEO_WIDTH/3, VIDEO_HEIGHT/6);
+    cs.add_scene_fade_in(&seef, "seef", 0, .2, true);
+    cs.add_scene_fade_in(&seef_text, "seef_text", 0, .533, true);
+    cs.inject_audio(AudioSegment("I wanna give an enormous thank-you to 6884, who made all of the music which made this video come to life."), 3);
+    cs.render();
+    cs.render();
+    cs.render();
+    cs.add_scene_fade_in(&tromp, "tromp", .333, .333, true);
+    cs.add_scene_fade_in(&tromp_text, "tromp_text", .333, .533, true);
+    cs.inject_audio(AudioSegment("This also couldn't have been possible without John Tromp, the inventor of this sick diagrammatic notation for lambda expressions."), 3);
+    cs.render();
+    cs.render();
+    cs.render();
+    cs.add_scene_fade_in(&selinger, "selinger", .666, .333, true);
+    cs.add_scene_fade_in(&selinger_text, "selinger_text", .666, .533, true);
+    cs.inject_audio(AudioSegment("Or Peter Selinger, who wrote this book, Lecture Notes on the Lambda Calculus."), 3);
+    cs.render();
+    cs.render();
+    cs.render();
+
+    shared_ptr<LambdaExpression> add = parse_lambda_from_string("(\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x))))))");
+    shared_ptr<LambdaExpression> mult = parse_lambda_from_string("(\\m. (\\n. (\\s. (n (m s)))))");
+    shared_ptr<LambdaExpression> ptp_skeleton = parse_lambda_from_string("(\\t. (\\p. ((t p) p)))");
+    shared_ptr<LambdaExpression> ptp = apply(apply(ptp_skeleton, mult, OPAQUE_WHITE), add, OPAQUE_WHITE);
+    LambdaScene ptp_scene(ptp, VIDEO_WIDTH*.6, VIDEO_HEIGHT*.6);
+    cs.fade_out_all_scenes();
+    cs.add_scene_fade_in(&ptp_scene, "ptp_scene", .2, .2, true);
+    cs.inject_audio(AudioSegment("His clear formalizations of a lot of the things I _thought_ I understood helped me get through a lot of snags in rendering these diagrams."), 2);
+    cs.render();
+    cs.remove_all_scenes();
+    cs.render();
     cs.inject_audio_and_render(AudioSegment("This video, to the best of my knowledge, is the first which shows beta-reduction animations of _any_ visualization method for the Lambda Calculus."));
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("And geez, did it take a while to make."));
-    cs.inject_audio_and_render(AudioSegment("If you like this content, then there is nothing I would appreciate more than you joining our discord server!"));
+    cs.remove_all_scenes();
+
+    PngScene discord("discord", VIDEO_WIDTH/3, VIDEO_HEIGHT/3);
+    cs.add_scene_fade_in(&discord, "discord", .333, .333, true);
+    cs.inject_audio_and_render(AudioSegment("If you like this content, then there is nothing I would appreciate more than you joining our discord server!"), 2);
+    cs.render();
+    cs.add_scene_fade_in(&links, "links", 0, .666, true);
+    cs.render();
     cs.inject_audio_and_render(AudioSegment("We talk about math, puzzles, game theory, and so on!"));
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("I can't wait to see you there."));
+    cs.remove_all_scenes();
+
+    TwoswapScene twoswap;
+    cs.add_scene_fade_in(&twoswap, "twoswap", 0, 0, true);
     cs.inject_audio_and_render(AudioSegment("But until then, this has been 2swap."));
-    // Viktor Massalogin's paper / https://github.com/bntre/visual-lambda
-    // Vex: https://www.researchgate.net/publication/2726047_Programming_with_Visual_Expressions
-    // dkeenan
+    cs.fade_out_all_scenes();
+    cs.inject_audio_and_render(AudioSegment(2));
+    // Visual Lambda Calculus (Viktor Massalogin): https://bntr.planet.ee/lambda/work/visual_lambda.pdf / https://github.com/bntre/visual-lambda
+    // Vex (Wayne Citrin, Richard Hall, Benjamin Zorn): https://www.researchgate.net/publication/2726047_Programming_with_Visual_Expressions
+    // David C Keenan's Graphical Notation for the Lambda Calculus: https://dkeenan.com/Lambda/
 }
 
 void chapter_number(int number, string subtitle){
@@ -2538,12 +2587,6 @@ void chapter_number(int number, string subtitle){
 }
 
 void render_thumbnail(){
-    shared_ptr<LambdaExpression> add = parse_lambda_from_string("(\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x))))))");
-    shared_ptr<LambdaExpression> mult = parse_lambda_from_string("(\\m. (\\n. (\\s. (n (m s)))))");
-    shared_ptr<LambdaExpression> ptp_skeleton = parse_lambda_from_string("(\\t. (\\p. ((t p) p)))");
-    shared_ptr<LambdaExpression> ptp = apply(apply(ptp_skeleton, mult, OPAQUE_WHITE), add, OPAQUE_WHITE);
-    LambdaScene ptp_scene(ptp);
-    ptp_scene.inject_audio_and_render(AudioSegment(5));
 }
 
 int main() {
@@ -2551,7 +2594,7 @@ int main() {
     FOR_REAL = true;
     PRINT_TO_TERMINAL = false;
     shared_ptr<LambdaExpression> TF3 = parse_lambda_from_string("(\\x. x)");
-/*    intro();
+    intro();
     chapter_number(1, "The Way of the Lambda");
     history();
     chapter_number(2, "Tromp Diagrams");
@@ -2569,9 +2612,8 @@ int main() {
     chapter_number(8, "Reduction Graphs");
     reduction_graph(TF3);
     chapter_number(9, "Beyond the Basics");
-    */
     extra();
-    //credits();
+    credits();
     return 0;
 }
 

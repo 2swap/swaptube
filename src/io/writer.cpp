@@ -14,6 +14,9 @@ char* err2str(int errnum)
 
 using namespace std;
 
+double video_seconds_so_far = 0;
+double audio_seconds_so_far = 0;
+
 class MovieWriter
 {
 private:
@@ -58,6 +61,7 @@ public:
 
     void add_frame(const Pixels& p) {
         videowriter.add_frame(p);
+        video_seconds_so_far += 1./VIDEO_FRAMERATE;
     }
 
     void add_shtooka(const AudioSegment& audio){
@@ -74,7 +78,8 @@ public:
             duration_seconds = audiowriter.add_audio_get_length(audio.get_audio_filename());
             subswriter.add_subtitle(duration_seconds, audio.get_subtitle_text());
         }
-        return duration_seconds;
+        audio_seconds_so_far += duration_seconds;
+        return audio_seconds_so_far - video_seconds_so_far;
     }
 
 };
