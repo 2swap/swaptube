@@ -16,30 +16,13 @@ public:
     }
 
     void update_surfaces(){
-        for(pair<double, shared_ptr<LambdaScene>> p : scene_map){
-            if(!graph->node_exists(p.first))
-                remove_surface(p.second);
-        }
+        clear_surfaces();
         for(pair<double, Node<HashableString>> p : graph->nodes){
-            Node<HashableString> node = p.second;
+            Node<HashableString>& node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position);
-            if(node.opacity < 0.01) continue;
             shared_ptr<LambdaExpression> lambda = parse_lambda_from_string(node.data->representation);
             lambda->set_color_recursive(node.color);
-            double id = p.first;
-            auto found = scene_map.find(id);
-            if(found == scene_map.end())
-                scene_map[id] = make_shared<LambdaScene>(lambda, 600, 600);
-            shared_ptr<LambdaScene> search = scene_map.find(id)->second;
-            bool should_add = true;
-            for (auto it = surfaces.begin(); it != surfaces.end(); ++it){
-                if (it->scenePointer == search){
-                    should_add = false;
-                    break;
-                }
-            }
-            if(should_add)
-                add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), search, node.opacity));
+            add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LambdaScene>(lambda, 600, 600), node.opacity));
         }
     }
 
@@ -72,6 +55,5 @@ public:
     }
 
 private:
-    unordered_map<double, shared_ptr<LambdaScene>> scene_map;
     string root_node_representation;
 };

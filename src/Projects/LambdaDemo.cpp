@@ -4,7 +4,7 @@ const string project_name = "LambdaDemo";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 1;
+const float mult = 2;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -323,6 +323,8 @@ void history() {
     // Create Hilbert's BiographyScene on the left, with a quote on the right
     BiographyScene hilbert("hilbert", {"David Hilbert", "One of the greatest mathematicians of the 1900s."}, VIDEO_WIDTH/2, VIDEO_HEIGHT);
     cs.add_scene(&hilbert, "hilbert", 0, 0);
+    LatexScene hilbert_quote(latex_text("Is there a program which can tell\\\\\\\\if a theorem is true or false?"), 1, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
+    cs.add_scene(&hilbert_quote, "hilbert_quote", .5, .25);
     cs.inject_audio_and_render(AudioSegment("David Hilbert, one of the greatest mathematicians of the 1900s, wanted to know whether there was some procedure, some algorithm, which, can determine whether any given mathematical statement is true or false."));
 
     // Move Hilbert to the top half to make room for other mathematicians
@@ -348,6 +350,7 @@ void history() {
         {"turing.y", "0.5"},
         {"godel.y", "0.5"},
         {"church.y", "0.5"},
+        {"hilbert_quote.y", "0"},
     });
 
     // Break up the audio and append to the relevant biographies
@@ -376,10 +379,20 @@ void history() {
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"lambda_title.y", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("Alonzo Church was the first to answer this question by inventing the Lambda Calculus."));
+    cs.inject_audio_and_render(AudioSegment("This video is the story of Alonzo Church's answer to that very question."));
     cs.remove_scene(&hilbert);
     cs.remove_scene(&turing);
     cs.remove_scene(&godel);
+    LatexScene calc("\\int_a^b", 1, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.5);
+    cs.add_scene_fade_in(&calc, "calc", 0.5, 0.25, true);
+    cs.inject_audio(AudioSegment("His 'Lambda Calculus', to be clear, had nothing to do with derivatives or integrals or what you learned in Calculus class in High School."), 2);
+    cs.render();
+    calc.begin_latex_transition("\\frac{d}{dx}");
+    cs.render();
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"calc.opacity", "0"},
+    });
+    cs.inject_audio_and_render(AudioSegment("The term calculus, up until recently, was used to describe a large number of logical systems."));
 
     // Add LatexScenes showing Lambda expressions
     LatexScene lambda_examples1("(\\lambda x. x)",                   1, VIDEO_WIDTH*.333, VIDEO_HEIGHT*.333);
@@ -390,7 +403,8 @@ void history() {
     cs.add_scene(&lambda_examples2, "lambda_examples2", 0.333, 0.666);
     cs.add_scene(&lambda_examples3, "lambda_examples3", 0.666, 0.333);
     cs.add_scene(&lambda_examples4, "lambda_examples4", 0.666, 0.666);
-    cs.inject_audio_and_render(AudioSegment("It was originally defined in terms of strings that look like this."));
+    cs.inject_audio_and_render(AudioSegment("It might as well be called 'The Way of the Lambda'."));
+    cs.inject_audio_and_render(AudioSegment("It's fundamentally a system for manipulating strings of letters, which look something like this."));
     lambda_examples1.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda x. x") + latex_color(0xffff0000, ")"));
     lambda_examples2.begin_latex_transition(latex_color(0xff444444, "y"));
     lambda_examples3.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda z. ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "z ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda w. w") + latex_color(0xffff0000, ")))"));
@@ -1064,6 +1078,7 @@ void currying() {
     multi_argument.begin_latex_transition("20");
     cs.inject_audio_and_render(AudioSegment(1));
 
+    //TODO animate
     cs.inject_audio_and_render(AudioSegment("Since a function can only _really_ take one argument,"));
     cs.inject_audio_and_render(AudioSegment("A two-argument function is just a function which spits out a one-argument function."));
     cs.inject_audio_and_render(AudioSegment("A three-argument function would be a function which spits out a two-argument function."));
@@ -1291,9 +1306,9 @@ void booleans() {
 
     and_gate.begin_latex_transition(latex_text("AND = ") + "(\\lambda xy. ((x \\_) \\_))");
     cs.inject_audio_and_render(AudioSegment("We're gonna use the same trick as with not, using booleans as selectors."));
-    and_gate.begin_latex_transition(latex_text("AND = ") + "(\\lambda xy. ((x \\_) "+lambda_text("FALSE")+"))");
+    and_gate.begin_latex_transition(latex_text("AND = ") + "(\\lambda xy. ((x \\_) "+latex_text("FALSE")+"))");
     cs.inject_audio_and_render(AudioSegment("If X is FALSE, then the answer is FALSE too."));
-    and_gate.begin_latex_transition(latex_text("AND = ") + "(\\lambda xy. ((x y) "+lambda_text("FALSE")+"))");
+    and_gate.begin_latex_transition(latex_text("AND = ") + "(\\lambda xy. ((x y) "+latex_text("FALSE")+"))");
     cs.inject_audio_and_render(AudioSegment("If X is TRUE, then the answer is whatever Y is."));
     cs.inject_audio_and_render(AudioSegment("So, this is AND!"));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
@@ -2398,7 +2413,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
 
 void extra(){
     CompositeScene cs;
-    LatexScene lc(latex_text("The \\lambda-Calculus"), 0.8, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
+    LatexScene lc(latex_text("The \\lambda-Calculus"), 0.4, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&lc, "lc", 0, 0.5, true);
     cs.inject_audio_and_render(AudioSegment("Lambda calculus is a deep subject, and we've only scratched the surface."));
     cs.inject_audio_and_render(AudioSegment("Just to give you a taste of what else is out there:"));
@@ -2428,16 +2443,16 @@ void extra(){
     cs.add_scene_fade_in(&imperative, "imperative", 0.5, 0, true);
     cs.render();
     PngScene lisp("lisp", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&lisp, "lisp", 2/16., 2/16., true);
+    cs.add_scene_fade_in(&lisp, "lisp", 2/16., 4/16., true);
     cs.render();
     PngScene haskell("haskell", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&haskell, "haskell", 2/16., 12/16., true);
+    cs.add_scene_fade_in(&haskell, "haskell", 2/16., 8/16., true);
     cs.render();
     PngScene c_lang("c_lang", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&c_lang, "c_lang", 12/16., 3/16., true);
+    cs.add_scene_fade_in(&c_lang, "c_lang", 12/16., 4/16., true);
     cs.render();
     PngScene rust("rust", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&rust, "rust", 12/16., 12/16., true);
+    cs.add_scene_fade_in(&rust, "rust", 10/16., 8/16., true);
     cs.render();
     cs.fade_out_all_scenes();
     PngScene python("python", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
@@ -2446,8 +2461,8 @@ void extra(){
     PngScene py_lambda("py_lambda", VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&py_lambda, "py_lambda", .25, .625, true);
     cs.inject_audio_and_render(AudioSegment("called Lambdas, which emulate the properties of the Lambda Calculus."));
-    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("But I don't like the Lambda Calculus for its utility."));
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("The philosophical implications of alternate models of computing run deep, by elucidating the structure of information and the nature of computation itself."));
 }
 
@@ -2471,8 +2486,8 @@ void credits(){
 void chapter_number(int number, string subtitle){
     cout << "Rendering chapter "<< number << endl;
     CompositeScene cs;
-    LatexScene ls(latex_text(subtitle), 1, 1800, 500);
-    LatexScene ls2(latex_text("Chapter " + to_string(number) + ":"), 1, 1800, 500);
+    LatexScene ls(latex_text("\\textit{" + subtitle + "}"), 1, 1800, 500);
+    LatexScene ls2(latex_text("\\textbf{Chapter " + to_string(number) + "}"), 1, 1800, 500);
     int w = OPAQUE_WHITE;
     shared_ptr<LambdaExpression> lex = parse_lambda_from_string("x");
     for(int i = 0; i < number; i++){
@@ -2488,13 +2503,13 @@ void chapter_number(int number, string subtitle){
     tds2.add_surface(Surface(glm::vec3(0,-.25,0),glm::vec3(1,0,0),glm::vec3(0, 500/1800., 0),make_shared<LatexScene>(ls2)));
 
     tds1.state_manager.set(std::unordered_map<std::string, std::string>{
-        {"surfaces_opacity", "1"},
+        {"surfaces_opacity", "1 <subscene_transition_fraction> 4 ^ -"},
         {"lines_opacity", "1"},
         {"points_opacity", "0"},
         {"y", "0"},
         {"z", "0"},
         {"d", "2"},
-        {"ntf", "<subscene_transition_fraction> 2 /"},
+        {"ntf", "<subscene_transition_fraction> 2 / .5 -"},
         {"x", "3 <ntf> * 5 ^ -1 *"},
         //{"sigmoid", "3.1415 4 / 1 2.71828 <ntf> 40 * ^ + /"},
         {"q1", "1"},
@@ -2522,13 +2537,22 @@ void chapter_number(int number, string subtitle){
     cs.inject_audio_and_render(AudioSegment(3));
 }
 
+void render_thumbnail(){
+    shared_ptr<LambdaExpression> add = parse_lambda_from_string("(\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x))))))");
+    shared_ptr<LambdaExpression> mult = parse_lambda_from_string("(\\m. (\\n. (\\s. (n (m s)))))");
+    shared_ptr<LambdaExpression> ptp_skeleton = parse_lambda_from_string("(\\t. (\\p. ((t p) p)))");
+    shared_ptr<LambdaExpression> ptp = apply(apply(ptp_skeleton, mult, OPAQUE_WHITE), add, OPAQUE_WHITE);
+    LambdaScene ptp_scene(ptp);
+    ptp_scene.inject_audio_and_render(AudioSegment(5));
+}
+
 int main() {
     Timer timer;
     FOR_REAL = true;
     PRINT_TO_TERMINAL = false;
     shared_ptr<LambdaExpression> TF3 = parse_lambda_from_string("(\\x. x)");
-    intro();
-    chapter_number(1, "Introduction");
+/*    intro();
+    chapter_number(1, "The Way of the Lambda");
     history();
     chapter_number(2, "Tromp Diagrams");
     visualize();
@@ -2536,17 +2560,18 @@ int main() {
     beta_reduction();
     chapter_number(4, "Currying");
     currying();
-    chapter_number(5, "Boolean Arithmetic");
+    chapter_number(5, "Boolean Logic");
     booleans();
-    chapter_number(6, "Numerals");
+    chapter_number(6, "Math");
     numerals();
     chapter_number(7, "Recursion");
     TF3 = factorial();
     chapter_number(8, "Reduction Graphs");
     reduction_graph(TF3);
     chapter_number(9, "Beyond the Basics");
+    */
     extra();
-    credits();
+    //credits();
     return 0;
 }
 
