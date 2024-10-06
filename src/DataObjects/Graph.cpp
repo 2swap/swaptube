@@ -60,6 +60,7 @@ public:
     T* data;
     double hash = 0;
     bool highlight = false;
+    unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
     double opacity = 1;
     int color = 0xffffffff;
@@ -96,6 +97,7 @@ public:
     }
 
     void clear() {
+        traverse_deque.clear();
         while (nodes.size()>0) {
             auto i = nodes.begin();
             delete i->second.data;
@@ -140,7 +142,36 @@ public:
      * Expand the graph by adding neighboring nodes.
      * Return amount of new nodes that were added.
      */
-    int expand_graph(bool only_one = false) {
+    int expand_graph_once() {
+        while (!traverse_deque.empty()) {
+            cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
+            double id = traverse_deque.front();
+            traverse_deque.pop_front();
+            cout << "Looking for " << id << endl;
+            unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
+            bool done = false;
+            for (const auto& child : child_nodes) {
+                double child_hash = child->get_hash();
+                if (done || node_exists(child_hash)) delete child;
+                else {
+                    cout << "added" << child_hash << endl;
+                    add_node_without_edges(child);
+                    traverse_deque.push_front(id);
+                    traverse_deque.push_back(child_hash); // push_back: bfs // push_front: dfs
+                    add_missing_edges(true);
+                    done = true;
+                }
+            }
+            if(done) return 1;
+        }
+        return 0;
+    }
+
+    /**
+     * Expand the graph by adding neighboring nodes.
+     * Return amount of new nodes that were added.
+     */
+    int expand_graph_completely() {
         int new_nodes_added = 0;
         while (!traverse_deque.empty()) {
             cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
@@ -148,24 +179,15 @@ public:
             traverse_deque.pop_front();
 
             unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
-            bool only_one_found = false;
             for (const auto& child : child_nodes) {
                 double child_hash = child->get_hash();
-                if (only_one_found || node_exists(child_hash)) delete child;
+                if (node_exists(child_hash)) delete child;
                 else {
                     add_node_without_edges(child);
                     new_nodes_added++;
-                    if (only_one) traverse_deque.push_front(id);
-
-                    traverse_deque.push_back(child_hash); // push_back: bfs // push_front: dfs
-
-                    if (only_one) {
-                        add_missing_edges(true);
-                        only_one_found = true;
-                    }
+                    traverse_deque.push_front(child_hash); // push_back: bfs // push_front: dfs
                 }
             }
-            if(only_one_found) return new_nodes_added;
         }
         add_missing_edges(true);
         return new_nodes_added;
@@ -232,9 +254,10 @@ public:
     void add_missing_edges(bool teleport_orphans_to_parents) {
         for (auto& pair : nodes) {
             Node<T>& parent = pair.second;
-            unordered_set<double> child_hashes = parent.data->get_children_hashes();
+            if(parent.expected_children_hashes.size() == 0)
+                parent.expected_children_hashes = parent.data->get_children_hashes();
 
-            for (double child_hash : child_hashes) {
+            for (double child_hash : parent.expected_children_hashes) {
                 // this theoretical child isn't guaranteed to be in the graph
                 if(!node_exists(child_hash)) continue;
                 Node<T>& child = nodes.find(child_hash)->second;

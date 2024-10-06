@@ -433,7 +433,7 @@ public:
     float halfwidth;
     float halfheight;
     Pixels sketchpad;
-private:
+protected:
     vector<const ThreeDimensionalObject*> obj_ptrs;
     vector<Point> points;
     vector<Line> lines;

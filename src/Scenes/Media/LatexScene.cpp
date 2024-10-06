@@ -11,7 +11,6 @@ public:
     void begin_latex_transition(string latex) {
         ScalingParams sp(scale_factor);
         Pixels p = latex_to_pix(latex, sp);
-        cout << p.w << " " << p.h << " " << scale_factor << endl;
         begin_transition(p);
     }
 

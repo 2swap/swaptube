@@ -23,14 +23,14 @@ class LambdaExpression : public DataObject, public enable_shared_from_this<Lambd
 protected:
     const string type;
     int color;
-    shared_ptr<LambdaExpression> parent;
+    weak_ptr<LambdaExpression> parent;
     float x;
     float y;
     float w;
     float h;
     int uid;
 public:
-    LambdaExpression(const string& t, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, int u = 0) : type(t), color(c), parent(p), x(x), y(y), w(w), h(h), uid(u) {}
+    LambdaExpression(const string& t, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0) : type(t), color(c), parent(p), x(x), y(y), w(w), h(h), uid(u) {}
     virtual shared_ptr<LambdaExpression> clone() const = 0;
 
     virtual unordered_set<char> free_variables() const = 0;
@@ -74,7 +74,7 @@ public:
         return -1;
     }
     char get_fresh() const {
-        if(parent != nullptr) return parent->get_fresh();
+        if(!parent.expired()) return parent.lock()->get_fresh();
         unordered_set<char> used = all_referenced_variables();
         for(char c = 'a'; c <= 'z'; c++)
             if(used.find(c) == used.end())
@@ -82,7 +82,7 @@ public:
         failout("No fresh variables left!");
         return 0;
     }
-    void set_parent(shared_ptr<LambdaExpression> p) {
+    void set_parent(weak_ptr<LambdaExpression> p) {
         parent = p;
         mark_updated();
     }
@@ -97,12 +97,12 @@ public:
         return color;
     }
     shared_ptr<const LambdaExpression> get_parent() const {
-        return parent;
+        return parent.lock();
     }
 
     int get_type_depth(const string& s) const {
         int depth = 0;
-        shared_ptr<const LambdaExpression> current = parent;
+        shared_ptr<const LambdaExpression> current = parent.lock();
         while (current) {
             if (current->get_type() == s) {
                 depth++;
@@ -113,7 +113,7 @@ public:
     }
 
     shared_ptr<const LambdaExpression> get_nearest_ancestor_with_type(const string& type) const {
-        shared_ptr<const LambdaExpression> current = parent;
+        shared_ptr<const LambdaExpression> current = parent.lock();
         while (current) {
             if (current->get_type() == type) {
                 return current;
@@ -147,7 +147,7 @@ class LambdaVariable : public LambdaExpression {
 private:
     char varname;
 public:
-    LambdaVariable(const char vn, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, int u = 0) : LambdaExpression("Variable", c, p, x, y, w, h, u), varname(vn) {
+    LambdaVariable(const char vn, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0) : LambdaExpression("Variable", c, p, x, y, w, h, u), varname(vn) {
         if(!isalpha(vn)){
             failout("Lambda variable was not a letter!");
         }
@@ -249,15 +249,15 @@ public:
     shared_ptr<const LambdaAbstraction> get_bound_abstraction() const;
 };
 
-shared_ptr<LambdaExpression> apply   (const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p, float x, float y, float w, float h, int u);
-shared_ptr<LambdaExpression> abstract(const char                               v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p, float x, float y, float w, float h, int u);
+shared_ptr<LambdaExpression> apply   (const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u);
+shared_ptr<LambdaExpression> abstract(const char                               v, const shared_ptr<const LambdaExpression> b, const int c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u);
 
 class LambdaAbstraction : public LambdaExpression {
 private:
     char bound_variable;
     shared_ptr<LambdaExpression> body;
 public:
-    LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, int u = 0)
+    LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0)
         : LambdaExpression("Abstraction", c, p, x, y, w, h, u), bound_variable(v), body(b) { }
 
     unordered_set<char> all_referenced_variables() const override {
@@ -397,7 +397,7 @@ private:
     shared_ptr<LambdaExpression> first;
     shared_ptr<LambdaExpression> second;
 public:
-    LambdaApplication(shared_ptr<LambdaExpression> f, shared_ptr<LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, int u = 0)
+    LambdaApplication(shared_ptr<LambdaExpression> f, shared_ptr<LambdaExpression> s, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0)
         : LambdaExpression("Application", c, p, x, y, w, h, u), first(f), second(s) { }
 
     unordered_set<char> all_referenced_variables() const override {
@@ -516,7 +516,7 @@ public:
             shared_ptr<LambdaAbstraction> abs = dynamic_pointer_cast<LambdaAbstraction>(first);
             char abss_variable = abs->get_bound_variable();
             shared_ptr<LambdaExpression> abss_body = abs->get_body();
-            abss_body->set_parent(nullptr);
+            abss_body->set_parent(shared_ptr<LambdaExpression>());
             shared_ptr<LambdaExpression> ret = abss_body->substitute(abss_variable, *second);
             ret->set_parent(parent);
             return ret;
@@ -610,7 +610,7 @@ private:
     }
 };
 
-shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, int u = 0){
+shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0){
     shared_ptr<LambdaExpression> nf = f->clone();
     shared_ptr<LambdaExpression> ns = s->clone();
     shared_ptr<LambdaExpression> ret = make_shared<LambdaApplication>(nf, ns, c, p, x, y, w, h, u);
@@ -619,7 +619,7 @@ shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, c
     return ret;
 }
 
-shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, const int c, shared_ptr<LambdaExpression> p = nullptr, float x = 0, float y = 0, float w = 0, float h = 0, int u = 0){
+shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0){
     shared_ptr<LambdaExpression> nb = b->clone();
     shared_ptr<LambdaExpression> ret = make_shared<LambdaAbstraction>(v, nb, c, p, x, y, w, h, u);
     nb->set_parent(ret);
@@ -627,7 +627,7 @@ shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const Lambd
 }
 
 void LambdaExpression::set_positions() {
-    if(parent != nullptr) failout("set_positions called on a child expression");
+    if(!parent.expired()) failout("set_positions called on a child expression");
 
     int iter_x = 0;
     stack<shared_ptr<LambdaApplication>> applications_in_reverse;
@@ -685,7 +685,7 @@ void LambdaExpression::set_positions() {
 }
 
 Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
-    if(parent != nullptr) failout("draw_lambda_diagram called on a child expression");
+    if(!parent.expired()) failout("draw_lambda_diagram called on a child expression");
     if(w + h + x + y == 0) failout("Attempted drawing lambda diagram with unset positions!");
     float bounding_box_w = get_width_recursive() + 4;
     float bounding_box_h = get_height_recursive() + 4;
@@ -747,7 +747,7 @@ pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> get_interpolate
 }
 
 shared_ptr<const LambdaAbstraction> LambdaVariable::get_bound_abstraction() const {
-    shared_ptr<const LambdaExpression> current = parent;
+    shared_ptr<const LambdaExpression> current = parent.lock();
     while (current) {
         if (current->get_type() == "Abstraction") {
             shared_ptr<const LambdaAbstraction> abstraction = dynamic_pointer_cast<const LambdaAbstraction>(current);

@@ -47,14 +47,12 @@ public:
     }
 
     virtual void inheritable_preprocessing(){}
-    virtual void inheritable_postprocessing(){}
 
     void draw() override{
         graph->iterate_physics(state["physics_multiplier"]);
         graph_to_3d();
         inheritable_preprocessing();
         ThreeDimensionScene::draw();
-        inheritable_postprocessing();
     }
 
 protected:

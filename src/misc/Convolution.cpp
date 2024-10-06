@@ -71,10 +71,8 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) 
         }
     }
 
-    cout << " Pre-align: " << max_x << ", " << max_y << endl;
     max_x -= p2.w - 1;
     max_y -= p2.h - 1;
-    cout << "Post-align: " << max_x << ", " << max_y << endl;
 
     // Create the Pixels object from the intensity map
     return create_alpha_from_intensities(map_2d);

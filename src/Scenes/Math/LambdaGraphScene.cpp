@@ -16,6 +16,10 @@ public:
     }
 
     void update_surfaces(){
+        for(pair<double, shared_ptr<LambdaScene>> p : scene_map){
+            if(!graph->node_exists(p.first))
+                remove_surface(p.second);
+        }
         for(pair<double, Node<HashableString>> p : graph->nodes){
             Node<HashableString> node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position);
@@ -26,16 +30,21 @@ public:
             auto found = scene_map.find(id);
             if(found == scene_map.end())
                 scene_map[id] = make_shared<LambdaScene>(lambda, 600, 600);
-            add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), scene_map.find(id)->second, node.opacity));
+            shared_ptr<LambdaScene> search = scene_map.find(id)->second;
+            bool should_add = true;
+            for (auto it = surfaces.begin(); it != surfaces.end(); ++it){
+                if (it->scenePointer == search){
+                    should_add = false;
+                    break;
+                }
+            }
+            if(should_add)
+                add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), search, node.opacity));
         }
     }
 
     void inheritable_preprocessing() override{
         update_surfaces();
-    }
-
-    void inheritable_postprocessing() override{
-        clear_surfaces();
     }
 
     void render_surface(const Surface& surface) {
