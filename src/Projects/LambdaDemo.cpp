@@ -1642,7 +1642,6 @@ void numerals() {
         {"add_fast_scene.y", ".05"},
         {"add_fast_scene.w", to_string(VIDEO_WIDTH*.3)},
         {"add_fast_scene.h", to_string(VIDEO_HEIGHT*.3)},
-        {"title.opacity", "0"},
     });
     cs.inject_audio_and_render(AudioSegment(1));
     cs.inject_audio_and_render(AudioSegment("Multiplication can be defined in terms of repeated addition,"));
