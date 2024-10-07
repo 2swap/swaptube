@@ -6,8 +6,8 @@
 
 class BiographyScene : public Scene {
 public:
-    BiographyScene(string picture, const vector<string>& biography_text, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-        : Scene(width, height), picture_name(picture), bio_text(biography_text) {
+    BiographyScene(string picture, const string& n, const vector<string>& biography_text, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+        : Scene(width, height), picture_name(picture), name(n), bio_text(biography_text) {
         draw();
     }
 
@@ -31,7 +31,7 @@ public:
 
         // Center the scaled image within the scene
         float x_offset = (get_width() - picture.w) / 2.;
-        float y_offset = (get_height() - picture.h) / 4.;
+        float y_offset = (get_height() - picture.h) / 2.;
 
         pix.overwrite(picture, x_offset, y_offset); // Draw the picture
 
@@ -39,9 +39,13 @@ public:
         float text_y = y_offset*1.1 + picture.h; // Position the text below the image, with a small margin
         float line_height = y_offset; // Approximate height for each line of text
 
+        ScalingParams sp = ScalingParams(get_width(), get_height()/6);
+        Pixels text_pixels = latex_to_pix(latex_text(name), sp);
+        pix.overwrite(text_pixels, (get_width() - text_pixels.w) / 2, 0);
+
         for (const string& line : bio_text) {
-            ScalingParams sp = ScalingParams(get_width(), line_height);
-            Pixels text_pixels = latex_to_pix(latex_text(line), sp);
+            sp = ScalingParams(get_width(), line_height);
+            text_pixels = latex_to_pix(latex_text(line), sp);
             pix.overwrite(text_pixels, (get_width() - text_pixels.w) / 2, text_y);
 
             text_y += line_height*1.1/2;
@@ -56,5 +60,6 @@ public:
 private:
     bool text_added = true;
     string picture_name;
+    string name;
     vector<string> bio_text;
 };

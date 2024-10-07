@@ -19,6 +19,7 @@ public:
         clear_surfaces();
         for(pair<double, Node<HashableString>> p : graph->nodes){
             Node<HashableString>& node = p.second;
+            if(node.opacity < 0.1) continue;
             glm::vec3 node_pos = glm::vec3(node.position);
             shared_ptr<LambdaExpression> lambda = parse_lambda_from_string(node.data->representation);
             lambda->set_color_recursive(node.color);

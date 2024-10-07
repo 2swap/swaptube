@@ -53,6 +53,7 @@ public:
     }
 
     void draw() override {
+        pix.fill(0xff222222);
         if(last_le == nullptr){
             render_diagrams(); 
             pix.overwrite(le_pix, (pix.w-le_pix.w)*.5, (pix.h-le_pix.h)*.5);

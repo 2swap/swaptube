@@ -35,7 +35,6 @@ private:
         return (stat(filename.c_str(), &buffer) == 0);
     }
     double encode_and_write_audio(){
-        cout << "Audio A" << endl;
         AVPacket outputPacket = {0};
 
         double length_in_seconds = 0;
@@ -43,7 +42,6 @@ private:
         int ret = 1;
         while (ret >= 0) {
             ret = avcodec_receive_packet(audioOutputCodecContext, &outputPacket);
-            cout << "Audio B" << endl;
             if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                 break;
             }
@@ -53,7 +51,6 @@ private:
 
             // Set the correct PTS and DTS values for the output packet
             outputPacket.dts = av_rescale_q(audiotime, audioStream->time_base, audioOutputCodecContext->time_base);
-        cout << "Audio C" << endl;
             outputPacket.pts = outputPacket.dts;
             //audio_pts_file << outputPacket.pts << endl;
             audiotime += outputPacket.duration;
@@ -62,13 +59,10 @@ private:
 
             // Rescale PTS and DTS values before writing the packet
             av_packet_rescale_ts(&outputPacket, audioOutputCodecContext->time_base, audioStream->time_base);
-        cout << "Audio D" << endl;
 
             ret = av_write_frame(fc, &outputPacket);
-        cout << "Audio E" << endl;
 
             av_packet_unref(&outputPacket);
-        cout << "Audio F" << endl;
         }
         return length_in_seconds;
     }
