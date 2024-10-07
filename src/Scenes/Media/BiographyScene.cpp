@@ -31,7 +31,7 @@ public:
 
         // Center the scaled image within the scene
         float x_offset = (get_width() - picture.w) / 2.;
-        float y_offset = (get_height() - picture.h) / 2.;
+        float y_offset = (get_height() - picture.h) / 3.;
 
         pix.overwrite(picture, x_offset, y_offset); // Draw the picture
 
@@ -41,7 +41,7 @@ public:
 
         ScalingParams sp = ScalingParams(get_width(), get_height()/6);
         Pixels text_pixels = latex_to_pix(latex_text(name), sp);
-        pix.overwrite(text_pixels, (get_width() - text_pixels.w) / 2, 0);
+        pix.overwrite(text_pixels, (get_width() - text_pixels.w) / 2, (y_offset-text_pixels.h)/2);
 
         for (const string& line : bio_text) {
             sp = ScalingParams(get_width(), line_height);

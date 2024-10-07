@@ -11,6 +11,9 @@ public:
         Pixels twoswap_pix = latex_to_pix(latex_text("2swap"), sp);
         saved_pix.fill_ellipse(pix.w/4, pix.h/2, pix.w/14, pix.w/14, OPAQUE_WHITE);
         saved_pix.overwrite(twoswap_pix, pix.w/4+pix.w/14+pix.w/48, (pix.h-twoswap_pix.h)/2+pix.w/48);
+        ScalingParams sp2(pix.w*.4, pix.h*.2);
+        Pixels swaptube_pix = latex_to_pix(latex_text("Rendered with love, using SwapTube"), sp2);
+        saved_pix.overwrite(twoswap_pix, pix.w*.95-swaptube_pix.w, pix.h*.95-swaptube_pix.h);
     }
 
     const StateQuery populate_state_query() const override {
