@@ -23,29 +23,52 @@ fi
 # Open the record_list.tsv on file descriptor 3
 exec 3< "$PROJECT_DIR/record_list.tsv"
 
+# Function to read the next 5 lines for lookahead
+read_lookahead() {
+    lookahead=()
+    for i in {1..5}; do
+        if IFS=$'\t' read -r next_filename next_text <&3; then
+            lookahead+=("$next_text")
+        else
+            break
+        fi
+    done
+}
+
+# Read first line to initialize current variables
+IFS=$'\t' read -r current_filename current_text <&3
+read_lookahead
+
 echo "Press enter to start recording..."
 read
 
 # Read from the file descriptor 3
-while IFS=$'\t' read -r filename text <&3; do
+while [ -n "$current_filename" ]; do
     clear
 
     while true; do
         # Check if the file already exists
-        if [ -f "$PROJECT_DIR/$filename" ]; then
-            echo "$filename already exists in $PROJECT_DIR. Skipping..."
+        if [ -f "$PROJECT_DIR/$current_filename" ]; then
+            echo "$current_filename already exists in $PROJECT_DIR. Skipping..."
             break
         fi
 
-        echo "Next: $text"
+        echo "-> $current_text"
+        # Show the lookahead (the next 5 entries)
+        if [ "${#lookahead[@]}" -gt 0 ]; then
+            for entry in "${lookahead[@]}"; do
+                echo "$entry"
+            done
+        else
+            echo "====="
+        fi
 
         # Start recording in the background
         echo "Recording... Press Enter to stop."
-        ffmpeg -f alsa -i default "$PROJECT_DIR/$filename" > "$PROJECT_DIR/ffmpeg.log" 2>&1 &
+        ffmpeg -f alsa -i default "$PROJECT_DIR/$current_filename" > "$PROJECT_DIR/ffmpeg.log" 2>&1 &
         
         # Capture the process ID
         FFMPEG_PID=$!
-        echo "Started ffmpeg with PID $FFMPEG_PID"
 
         # Verify the process ID
         if ! ps -p $FFMPEG_PID > /dev/null; then
@@ -59,12 +82,10 @@ while IFS=$'\t' read -r filename text <&3; do
         # Check if the process is still running before attempting to stop it
         if ps -p $FFMPEG_PID > /dev/null; then
             # Send 'q' to ffmpeg to stop recording
-            echo "Stopping ffmpeg with PID $FFMPEG_PID"
             kill -INT $FFMPEG_PID
 
             # Wait for ffmpeg to finish up and exit
             wait $FFMPEG_PID
-            echo "ffmpeg stopped"
         else
             echo "ffmpeg process $FFMPEG_PID has already exited. Check $PROJECT_DIR/ffmpeg.log for details."
         fi
@@ -75,8 +96,8 @@ while IFS=$'\t' read -r filename text <&3; do
         case $input in
             u|U) 
                 echo
-                echo "Deleting $PROJECT_DIR/$filename..."
-                rm "$PROJECT_DIR/$filename"
+                echo "Deleting $PROJECT_DIR/$current_filename..."
+                rm "$PROJECT_DIR/$current_filename"
                 # It will loop back to re-record this file
                 ;;
             "") 
@@ -89,7 +110,20 @@ while IFS=$'\t' read -r filename text <&3; do
                 ;;
         esac
     done
+
+    # Move to the next row
+    current_filename="${lookahead[0]}"
+    current_text="${lookahead[0]}"
+
+    # Shift the lookahead array to remove the first item
+    lookahead=("${lookahead[@]:1}")
+    
+    # Read the next lookahead entry to maintain the 5-line buffer
+    if IFS=$'\t' read -r next_filename next_text <&3; then
+        lookahead+=("$next_text")
+    fi
 done
 
 # Close the file descriptor 3
 exec 3<&-
+

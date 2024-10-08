@@ -25,7 +25,7 @@ const int VIDEO_FRAMERATE = 30;
 #include "../Scenes/Math/RealFunctionScene.cpp"
 #include "../Scenes/Math/LambdaGraphScene.cpp"
 #include "../Scenes/Common/TwoswapScene.cpp"
-#include "../Scenes/Connect4/C4Scene.cpp"
+#include "../Scenes/Connect4/Connect4Scene.cpp"
 
 void intro() {
     ThreeDimensionScene tds;
@@ -387,7 +387,7 @@ void history() {
         {"godel.x", "2"},
         {"hilbert.x", "2"},
         {"hilbert_quote.x", "2"},
-        {"church.x", ".25"},
+        {"church.y", ".25"},
     });
 
     LatexScene lambda_title(latex_text("The \\lambda-Calculus"), 1, VIDEO_WIDTH, VIDEO_HEIGHT*0.25);
@@ -458,9 +458,9 @@ void history() {
     cs.inject_audio_and_render(AudioSegment(1));
 
     // On the left, add the production rules of the lambda calculus
-    LatexScene lambda_rule_var(latex_text(0xffffff00, "a"                ), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
-    LatexScene lambda_rule_abs(latex_text(0xffff00ff, "(\\lambda a. \\_)"), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
-    LatexScene lambda_rule_app(latex_text(0xff00ffff, "(\\_ \\_)"        ), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_var(latex_color(0xffffff00, "a"                ), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_abs(latex_color(0xffff00ff, "(\\lambda a. \\_)"), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    LatexScene lambda_rule_app(latex_color(0xff00ffff, "(\\_ \\_)"        ), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
     cs.add_scene(&lambda_rule_var, "lambda_rule_var", -0.5, 0.25);
     cs.add_scene(&lambda_rule_abs, "lambda_rule_abs", -0.5,  0.5);
     cs.add_scene(&lambda_rule_app, "lambda_rule_app", -0.5, 0.75);
@@ -511,11 +511,11 @@ void history() {
         {"lambda_construct.y", ".5"},
     });
     cs.inject_audio_and_render(AudioSegment("As an example, we can grab the third template,"));
-    lambda_construct.begin_latex_transition(latex_color(0xffffff00, "a\\\\\\\\") + latex_color(0xffffff00, "(\\_ \\_)"));
+    lambda_construct.begin_latex_transition(latex_color(0xffffff00, "a") + "\\\\\\\\" + latex_color(0xffffff00, "(\\_ \\_)"));
     cs.inject_audio_and_render(AudioSegment("take a variable from the first template,"));
-    lambda_construct.begin_latex_transition(latex_color(0xffffff00, "("+latex_color(0xffffff00, "a")"+ \\_)"));
+    lambda_construct.begin_latex_transition(latex_color(0xffffff00, "("+latex_color(0xffffff00, "a")+ "\\_)"));
     cs.inject_audio_and_render(AudioSegment("slap it in one of the blanks,"));
-    lambda_construct.begin_latex_transition(latex_color(0xffff00ff, "(\\lambda a. \\_)\\\\\\\\") + latex_color(0xffffff00, "("+latex_color(0xffffff00, "a")"+ \\_)"));
+    lambda_construct.begin_latex_transition(latex_color(0xffff00ff, "(\\lambda a. \\_)") + "\\\\\\\\" + latex_color(0xffffff00, "("+latex_color(0xffffff00, "a")+ "\\_)"));
     cs.inject_audio_and_render(AudioSegment("take template 2,"));
     lambda_construct.begin_latex_transition(latex_color(0xffffff00, "("+latex_color(0xffffff00, "a") + latex_color(0xffff00ff, "\\ (\\lambda a. \\_)") + ")"));
     cs.inject_audio_and_render(AudioSegment("and slap it in the other."));
@@ -525,8 +525,8 @@ void history() {
     cs.inject_audio_and_render(AudioSegment("Voila! We've made a lambda expression."));
     lambda_construct.begin_latex_transition("(x\\ (\\lambda y. z))");
     cs.inject_audio_and_render(AudioSegment("Remember, these a's can be changed to any letter we want."));
-    LatexScene lc2("(\\_ \\_)", 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
-    cs.add_scene_fade_in(&lc2, "lc2", 0.5, 0.5, true);
+    LatexScene lc2("(\\_ \\_)", 0.7, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
+    cs.add_scene_fade_in(&lc2, "lc2", 0.5, 0.4, true);
     cs.inject_audio(AudioSegment("Any combination of these templates forms a valid expression."), 12);
     lc2.begin_latex_transition("(\\_ (\\_ \\_))");
     cs.render();
@@ -552,19 +552,22 @@ void history() {
     cs.render();
     lc2.begin_latex_transition("(t (w (o (((s w) a) p))))");
     cs.render();
-    cs.inject_audio_and_render(AudioSegment("Using them, we can create all sorts of different lambda terms."));
     LatexScene lc3("(\\lambda a. (\\lambda b. (a b)))", 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
-    cs.add_scene_fade_in(&lc3, "lc3", 0.5, 0.35, true);
+    cs.add_scene_fade_in(&lc3, "lc3", 0.5, 0.6, true);
+    cs.inject_audio_and_render(AudioSegment("Using them, we can create all sorts of different lambda terms."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.x", ".5"},
-        {"lambda_rule_var.y", ".65"},
+        {"lambda_rule_var.y", ".7"},
     });
+    lambda_rule_var.begin_latex_transition("a");
     cs.inject_audio_and_render(AudioSegment("Even a variable itself is a valid expression."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.opacity", "0"},
         {"lambda_construct.opacity", "0"},
         {"lc2.opacity", "0"},
         {"lc3.opacity", "0"},
+        {"lambda_rule_app.x", ".5"},
+        {"lambda_rule_app.y", ".5"},
     });
     cs.inject_audio_and_render(AudioSegment("Now, one thing you should know- these two templates have special interpretations."));
     /*
@@ -629,28 +632,22 @@ void history() {
     // Fade-in a Python identity function which models this lambda expression identity function.
     PngScene python_identity("python_identity_color", VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
     cs.add_scene(&python_identity, "python_identity", 1, 0.25);
-    cs.inject_audio_and_render(AudioSegment("This rule represents a function definition."));
+    cs.inject_audio_and_render(AudioSegment("This template represents a function definition."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"python_identity.x", ".5"},
     });
 
-    lambda_rule_abs.begin_latex_transition("(\\lambda " + latex_color(0xff7777ff, "a") + "." + latex_color(0xffff0000, "a") + ")");
+    lambda_rule_abs.begin_latex_transition("(\\lambda " + latex_color(0xff7777ff, "a") + ".a)");
     cs.inject_audio_and_render(AudioSegment("The letter that we put in is the name of the input,"));
+    lambda_rule_abs.begin_latex_transition("(\\lambda " + latex_color(0xff7777ff, "a") + "." + latex_color(0xffff0000, "a") + ")");
     cs.inject_audio_and_render(AudioSegment("and the blank represents the return-statement of the function."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"python_identity.x", "1"},
     });
 
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"lambda_rule_abs.x", "0"},
-        {"lambda_rule_abs.y", ".5"},
-        {"lambda_rule_app.x", ".5"},
-        {"lambda_rule_app.y", ".5"},
-    });
-
     // Repeat by making an example with the third function, and then explain its role as function application.
     lambda_rule_app.begin_latex_transition("(\\_\\_)");
-    cs.inject_audio_and_render(AudioSegment("The third rule involves _applying_ such functions."));
+    cs.inject_audio_and_render(AudioSegment("The third template involves _applying_ such functions."));
 
     // Show an example where a function is applied to a variable.
     lambda_rule_app.begin_latex_transition("(" + latex_color(0xff0088ff, "a") + latex_color(0xffff0000, "b") + ")");
@@ -661,9 +658,8 @@ void history() {
     // Show an example where a function is applied to a variable.
     lambda_rule_app.begin_latex_transition("(\\_\\_)");
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"lambda_rule_app.x", "-1"},
-        {"lambda_rule_abs.x", "-1"},
-        {"lambda_rule_var.x", "-1"},
+        {"lambda_rule_app.y", "1"},
+        {"lambda_rule_abs.y", "1"},
         {"lambda_title.y"   , "-1"},
     });
     cs.fade_out_all_scenes();
@@ -719,15 +715,15 @@ void visualize(){
         {"w", to_string(VIDEO_WIDTH)},
         {"h", to_string(VIDEO_HEIGHT)},
     });
-    cs.inject_audio_and_render(AudioSegment("There are a ton of styles, but the one I chose is John Tromp's Lambda Diagrams."));
+    cs.inject_audio_and_render(AudioSegment("There's a ton of styles, but the one I chose is John Tromp's Lambda Diagrams."));
     cs.inject_audio(AudioSegment("After all, I'm biased- he was the first to strongly solve 7x6 Connect 4."), 3);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"c4s.opacity", "0.5"},
     });
     cs.render();
     c4s.stage_transition("4333444434377311552222117777115555666622");
     cs.render();
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"c4s.opacity", "0"},
     });
     cs.render();
@@ -756,7 +752,7 @@ void visualize(){
     cs.remove_scene(&rep_dbi);
     cs.remove_scene(&rep_vex);
     cs.remove_scene(&rep_viktor);
-    cs.inject_audio_and_render(AudioSegment("Each of our three rules is part of a different shape in a lambda diagram."));
+    cs.inject_audio_and_render(AudioSegment("Each of our three templates is part of a different shape in a lambda diagram."));
     LambdaExpression::Iterator it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
@@ -767,7 +763,7 @@ void visualize(){
     lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
     cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio_and_render(AudioSegment("Variables - that is, the first rule, are these vertical lines."));
+    cs.inject_audio_and_render(AudioSegment("Variables - that is, the first template, are these vertical lines."));
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
@@ -778,7 +774,7 @@ void visualize(){
     lambda_rule_abs.begin_latex_transition(latex_color(0xffffffff, "(\\lambda a. \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
     cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio_and_render(AudioSegment("Lambda Abstractions, or rule 2, correspond to the vertical bars at the top."));
+    cs.inject_audio_and_render(AudioSegment("Lambda Abstractions, or template 2, correspond to the vertical bars at the top."));
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
@@ -789,7 +785,7 @@ void visualize(){
     lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xffffffff, "(\\_ \\_)"        ));
     cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio_and_render(AudioSegment("This branching structure at the bottom is rule 3, for function application."));
+    cs.inject_audio_and_render(AudioSegment("This branching structure at the bottom is template 3, for function application."));
 
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
@@ -801,7 +797,7 @@ void visualize(){
     lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
     cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio_and_render(AudioSegment("Notice that there are eight vertical lines here, just how the expression itself has eight variables."));
+    cs.inject_audio_and_render(AudioSegment("Notice that there's eight vertical lines here, just how the expression itself has eight variables."));
     vector<LatexScene> lsv;
     for(int i = 0; i < 8; i++){
         string ch = "y";
@@ -837,8 +833,8 @@ void visualize(){
     for(int i = 0; i < 4; i++){
         cs.add_scene(&(lsv_abstr[i]), "lamabs" + to_string(i), .27+(i/2)*.335, .18 + .08 * (i%2));
     }
-    cs.inject_audio_and_render(AudioSegment("Those vertical bars, corresponding to rule 2,"));
-    cs.inject_audio_and_render(AudioSegment("are associated each with one of the lambda abstraction rules."));
+    cs.inject_audio_and_render(AudioSegment("Those horizontal bars, corresponding to template 2,"));
+    cs.inject_audio_and_render(AudioSegment("are associated each with one of the lambda abstraction templates."));
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
@@ -911,7 +907,7 @@ void visualize(){
         current->set_color(current->get_type() == "Application" ? OPAQUE_WHITE : 0xff222222);
     }
     rep_tromp.set_expression(term);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"lamabs0.opacity", "0"},
         {"lamabs1.opacity", "0"},
         {"lamabs2.opacity", "0"},
@@ -925,7 +921,7 @@ void visualize(){
         {"lamvar6.opacity", "0"},
         {"lamvar7.opacity", "0"},
     });
-    cs.inject_audio(AudioSegment("Rule 3, for function application, has two subexpressions corresponding to the two blanks."), 3);
+    cs.inject_audio(AudioSegment("Template 3, for function application, has two subexpressions corresponding to the two blanks."), 3);
     cs.render();
     cs.render();
     cs.render();
@@ -939,7 +935,7 @@ void visualize(){
     dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff003300);
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff330033);
     rep_tromp.set_expression(term);
-    cs.inject_audio_and_render(AudioSegment("The outermost rule applied is an application."));
+    cs.inject_audio_and_render(AudioSegment("The outermost template applied is an application."));
     cs.inject_audio_and_render(AudioSegment("It's shown in white."));
     dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff006600);
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff660066);
@@ -992,21 +988,21 @@ void beta_reduction(){
         {"beta_title.y", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("I've mentioned that these expressions can be 'evaluated', but what does that even mean?"));
-    LatexScene latexbeta("(\\lambda x. \\_)", 0.6, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.5);
+    LatexScene latexbeta("(\\lambda x. \\_)", 0.6, VIDEO_WIDTH*.75, VIDEO_HEIGHT*.5);
     cs.add_scene(&latexbeta, "latex_beta", -.5, .25);
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"latex_beta.x", ".25"},
     });
-    cs.inject_audio(AudioSegment("Remember that rule 2 can be interpreted as a function."), 3);
+    cs.inject_audio(AudioSegment("Remember that template 2 can be interpreted as a function."), 3);
     cs.render(); cs.render(); cs.render();
     latexbeta.begin_latex_transition("(\\lambda x. \\_)\\\\\\\\(\\_ \\_)");
-    cs.inject_audio(AudioSegment("And rule 3 can be interpreted as applying a value to a function."), 3);
+    cs.inject_audio(AudioSegment("And template 3 can be interpreted as applying a value to a function."), 3);
     cs.render(); cs.render(); cs.render();
-    cs.inject_audio_and_render(AudioSegment("We wanna create a rule for evaluation that combines these interpretations."));
+    cs.inject_audio_and_render(AudioSegment("We wanna create a template for evaluation that combines these interpretations."));
 
     // Scene showing lambda abstraction
     latexbeta.begin_latex_transition("(\\lambda x. x)\\\\\\\\(\\_ \\_)");
-    cs.inject_audio_and_render(AudioSegment("First, let's make a function by using rule 2."));
+    cs.inject_audio_and_render(AudioSegment("First, let's make a function by using template 2."));
     cs.inject_audio_and_render(AudioSegment("This function is pretty simple."));
     latexbeta.begin_latex_transition("(\\lambda " + latex_color(0xff00ff00, "x") + ". x)\\\\\\\\(\\_ \\_)");
     cs.inject_audio_and_render(AudioSegment("It just takes a value in,"));
@@ -1015,12 +1011,12 @@ void beta_reduction(){
 
     // Scene showing some random expression to be applied to the function
     latexbeta.begin_latex_transition("((\\lambda x. x) \\_)");
-    cs.inject_audio_and_render(AudioSegment("We'll place that function in the spot where the function goes in rule 3."));
+    cs.inject_audio_and_render(AudioSegment("We'll place that function in the spot where the function goes in template 3."));
 
     // Scene showing some random expression to be applied to the function
     latexbeta.begin_latex_transition("((\\lambda x. x) E)");
     cs.inject_audio_and_render(AudioSegment("We'll make our 'value' just be some random expression."));
-    cs.inject_audio_and_render(AudioSegment("Now, we're gonna perform what is called 'beta reduction' to evaluate this function application."));
+    cs.inject_audio_and_render(AudioSegment("Now, we're gonna perform what's called 'beta reduction' to evaluate this function application."));
 
     // Show substitution
     latexbeta.begin_latex_transition("((" + latex_color(0xff8888ff, "\\lambda " + latex_color(0xff00ff00, "x") + ".") + "x) E)");
@@ -1031,7 +1027,7 @@ void beta_reduction(){
 
     // Substitution result
     latexbeta.begin_latex_transition(latex_color(0xffff0000, "x") + "\\quad E");
-    cs.inject_audio_and_render(AudioSegment("Now, we discard everything but the function body itself and the value we are plugging in."));
+    cs.inject_audio_and_render(AudioSegment("Now, we discard everything but the function body itself and the value we're plugging in."));
     latexbeta.begin_latex_transition(latex_color(0xffff0000, "x") + "\\quad " + latex_color(0xff7777ff, "E"));
     cs.inject_audio_and_render(AudioSegment("Now, we take our value,"));
     latexbeta.begin_latex_transition(latex_color(0xff7777ff, "E"));
@@ -1046,7 +1042,7 @@ void beta_reduction(){
     cs.inject_audio_and_render(AudioSegment("Ok, let's try a slightly trickier one."));
     cs.inject_audio(AudioSegment("To make it clear, this is the function, and this is the value."), 3);
     cs.render();
-    latexbeta.begin_latex_transition("("+latex_color(0xffff7777, "(\\lambda x. (x (y x))) (f f))");
+    latexbeta.begin_latex_transition("("+latex_color(0xffff7777, "(\\lambda x. (x (y x)))") + "(f f))");
     cs.render();
     latexbeta.begin_latex_transition("("+latex_color(0xffff7777, "(\\lambda x. (x (y x))) ")+latex_color(0xff7777ff, "(f f)")+")");
     cs.render();
@@ -1054,7 +1050,6 @@ void beta_reduction(){
     // Show substitution
     latexbeta.begin_latex_transition("("+latex_color(0xffff7777, "(\\lambda " + latex_color(0xff00ff00, "x") + ". (x (y x))) ")+latex_color(0xff7777ff, "(f f)")+")");
     cs.inject_audio_and_render(AudioSegment("Same as before, X is the variable bound by the lambda."));
-    latexbeta.begin_latex_transition("((\\lambda x. " + latex_color(0xffff0000, "x") + ") E)");
     latexbeta.begin_latex_transition("("+latex_color(0xffff7777, "(\\lambda " + latex_color(0xff00ff00, "x") + ". (" + latex_color(0xffff0000, "x") + " (y " + latex_color(0xffff0000, "x") + "))) ")+latex_color(0xff7777ff, "(f f)")+")");
     cs.inject_audio_and_render(AudioSegment("So we highlight all the instances of 'x' in the body of the function."));
     cs.inject_audio_and_render(AudioSegment("There's 2 this time."));
@@ -1073,39 +1068,39 @@ void beta_reduction(){
     cs.inject_audio_and_render(AudioSegment("This actually isn't as unfamiliar to you as it might seem."));
 
     // Transition to algebra
-    cs.inject_audio_and_render(AudioSegment("We can use the same notation with plain old algebra instead of lambda calculus."));
+    cs.inject_audio_and_render(AudioSegment("You already know how to do this in plain old algebra."));
     LatexScene quadratic_equation("f(x) = x^2 + x + 3", .6, VIDEO_WIDTH*.8, VIDEO_HEIGHT*.5);
     cs.add_scene(&quadratic_equation, "quadratic_equation", 0.1, 0.25);
     cs.inject_audio_and_render(AudioSegment("Here's an algebraic function."));
-    quadratic_equation.begin_latex_transition(latex_color(0xffff8888, "f(x) = x^2 + x + 3") + "\\\\\\\\" + latex_color(0xff88ff88, "f(5)"));
     cs.inject_audio_and_render(AudioSegment("We wanna evaluate it at x=5."));
+    quadratic_equation.begin_latex_transition(latex_color(0xffff8888, "(f(x) = x^2 + x + 3)") + "\\\\\\\\" + latex_color(0xff88ff88, "f(5)"));
 
     // Show evaluation
     cs.inject_audio_and_render(AudioSegment("We can first establish the function, and then on a separate line, apply it to 5."));
-    quadratic_equation.begin_latex_transition(latex_color(0xffff8888, "f(x) = x^2 + x + 3") + "; " + latex_color(0xff88ff88, "f(5)"));
+    quadratic_equation.begin_latex_transition(latex_color(0xffff8888, "(f(x) = x^2 + x + 3)") + "\\ " + latex_color(0xff88ff88, "f(5)"));
     cs.inject_audio_and_render(AudioSegment("But let's stick em on the same line."));
-    quadratic_equation.begin_latex_transition("(" + latex_color(0xffff8888, "f(x) = x^2 + x + 3") + "; " + latex_color(0xff88ff88, "f(5)") + ")");
+    quadratic_equation.begin_latex_transition("\\Big(" + latex_color(0xffff8888, "(f(x) = x^2 + x + 3)\\ ") + latex_color(0xff88ff88, "f(5)") + "\\Big)");
     cs.inject_audio_and_render(AudioSegment("We'll wrap these two things in parentheses to imply that the first is a function and the second is the value we wanna put in."));
 
-    quadratic_equation.begin_latex_transition("(" + latex_color(0xffff0000, "f") + "(x) = x^2 + x + 3; " + latex_color(0xffff0000, "f") + "(5))");
-    cs.inject_audio_and_render(AudioSegment("Now, since we tied the function to its value, there is no point in naming it 'f'."));
-    quadratic_equation.begin_latex_transition("((x) = x^2 + x + 3; 5)");
+    quadratic_equation.begin_latex_transition("\\Big((" + latex_color(0xffff0000, "f") + "(x) = x^2 + x + 3)\\ " + latex_color(0xffff0000, "f") + "(5)\\Big)");
+    cs.inject_audio_and_render(AudioSegment("Now, since we tied the function to its value, there's no point in naming it 'f'."));
+    quadratic_equation.begin_latex_transition("\\Big((x \\rightarrow x^2 + x + 3)\\ 5\\Big)");
     cs.inject_audio_and_render(AudioSegment("Our inline notation is unambiguous about which function we wanna apply to what value."));
-    quadratic_equation.begin_latex_transition("((" + latex_color(0xff00ff00, "x") + ") = x^2 + x + 3; 5)");
+    quadratic_equation.begin_latex_transition("\\Big((" + latex_color(0xff00ff00, "x") + " \\rightarrow x^2 + x + 3)\\ 5\\Big)");
 
     // Transform into lambda calculus
     cs.inject_audio_and_render(AudioSegment("We do still need to express that x is the thing in the body which the 5'll be replacing,"));
-    quadratic_equation.begin_latex_transition("((\\lambda x. x^2 + x + 3) 5)");
-    cs.inject_audio_and_render(AudioSegment("so let's slap a 'lambda' in front of it."));
+    quadratic_equation.begin_latex_transition("\\Big((\\lambda x. x^2 + x + 3)\\ 5\\Big)");
+    cs.inject_audio_and_render(AudioSegment("and the Lambda-Calculus way to express that is by putting a lambda-dot pair around it."));
     cs.inject_audio_and_render(AudioSegment("Now how do we evaluate it?"));
-    cs.inject_audio_and_render(AudioSegment("Exactly the same procedure!"));
-    quadratic_equation.begin_latex_transition("(\\lambda x. " + latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3; 5)");
-    cs.inject_audio_and_render(AudioSegment("Identify all of the variables in the body which match the one bound by the lambda, in this case all of the 'x's."));
-    quadratic_equation.begin_latex_transition(latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3\\quad 5");
+    cs.inject_audio_and_render(AudioSegment("Well, exactly the same procedure!"));
+    quadratic_equation.begin_latex_transition("\\Big((\\lambda x. " + latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3)\\ 5\\Big)");
+    cs.inject_audio_and_render(AudioSegment("Identify all the variables in the body which match the one bound by the lambda, in this case all the 'x's."));
+    quadratic_equation.begin_latex_transition("(" + latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3\\quad 5)");
     cs.inject_audio_and_render(AudioSegment("Drop all the slack,"));
     quadratic_equation.begin_latex_transition(latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3\\quad " + latex_color(0xff7777ff, "5"));
     cs.inject_audio_and_render(AudioSegment("grab our value,"));
-    quadratic_equation.begin_latex_transition("5^2 + 5 + 3");
+    quadratic_equation.begin_latex_transition("(5^2 + 5 + 3)");
     cs.inject_audio_and_render(AudioSegment("and shove it everywhere we had an x."));
     cs.inject_audio(AudioSegment("We're left with an algebraic expression which represents the answer."), 3);
     quadratic_equation.begin_latex_transition("25 + 5 + 3");
@@ -1137,38 +1132,38 @@ void beta_reduction(){
     cs.inject_audio_and_render(AudioSegment("and we get my function back out!"));
     */
 
-    quadratic_equation.begin_latex_transition("((\\lambda x. x) (\\lambda a. (\\lambda f. (a f))))");
+    quadratic_equation.begin_latex_transition("((\\lambda x. (\\lambda w. (x w))) (\\lambda a. (\\lambda f. (a f))))");
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"quadratic_equation.y", "0.58"},
     });
     cs.inject_audio_and_render(AudioSegment("Let's try one more, but alongside the diagram this time."));
-    shared_ptr<LambdaExpression> term = parse_lambda_from_string("((\\x. x) (\\a. (\\f. (a f))))");
+    shared_ptr<LambdaExpression> term = parse_lambda_from_string("((\\x. (\\w. (x w))) (\\a. (\\f. (a f))))");
     term->flush_uid_recursive();
     LambdaScene betadiagram(term, 0.4*VIDEO_WIDTH, 0.4*VIDEO_HEIGHT);
     cs.add_scene(&betadiagram, "betadiagram", 0.3, 0.3);
-    quadratic_equation.begin_latex_transition("((\\lambda x. x) " + latex_color(0xff7777ff, "(\\lambda a. (\\lambda f. (a f)))") + ")");
+    quadratic_equation.begin_latex_transition("((\\lambda x. (\\lambda w. (x w))) " + latex_color(0xff7777ff, "(\\lambda a. (\\lambda f. (a f)))") + ")");
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff7777ff);
     betadiagram.set_expression(term);
     cs.inject_audio_and_render(AudioSegment("Let's color the value in blue,"));
-    quadratic_equation.begin_latex_transition("((\\lambda x. " + latex_color(0xffff0000, "x") + ") " + latex_color(0xff7777ff, "(\\lambda a. (\\lambda f. (a f)))") + ")");
+    quadratic_equation.begin_latex_transition("((\\lambda x. (\\lambda w. (" + latex_color(0xffff0000, "x") + " w))) " + latex_color(0xff7777ff, "(\\lambda a. (\\lambda f. (a f)))") + ")");
     dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(term)->get_first())->get_body()->set_color_recursive(0xffff0000);
     shared_ptr<LambdaExpression> termclone = term->clone();
     betadiagram.set_expression(term);
-    cs.inject_audio_and_render(AudioSegment("and the variable which it is about to replace as red."));
+    cs.inject_audio_and_render(AudioSegment("and the variable which it's about to replace as red."));
     cs.inject_audio_and_render(AudioSegment("Now let's perform the beta reduction."));
-    quadratic_equation.begin_latex_transition(latex_color(0xff7f00ff, "(\\lambda a. (\\lambda f. (a f)))"));
+    quadratic_equation.begin_latex_transition(latex_color(0xff7f00ff, "(\\lambda w. ((\\lambda a. (\\lambda f. (a f))) w))"));
     betadiagram.reduce();
     cs.inject_audio_and_render(AudioSegment("See how the value takes the place of the variable, and then the application scaffolding drops out?"));
     quadratic_equation.begin_latex_transition("((\\lambda x. " + latex_color(0xffff0000, "x") + ") " + latex_color(0xff7777ff, "(\\lambda a. (\\lambda f. (a f)))") + ")");
     betadiagram.set_expression(termclone);
     cs.inject_audio_and_render(AudioSegment("Let's watch that a few times over."));
-    quadratic_equation.begin_latex_transition(latex_color(0xff7f00ff, "(\\lambda a. (\\lambda f. (a f)))"));
+    quadratic_equation.begin_latex_transition(latex_color(0xff7f00ff, "(\\lambda w. ((\\lambda a. (\\lambda f. (a f))) w))"));
     betadiagram.reduce();
     cs.inject_audio_and_render(AudioSegment(1));
     quadratic_equation.begin_latex_transition("((\\lambda x. " + latex_color(0xffff0000, "x") + ") " + latex_color(0xff7777ff, "(\\lambda a. (\\lambda f. (a f)))") + ")");
     betadiagram.set_expression(termclone);
     cs.inject_audio_and_render(AudioSegment(1));
-    quadratic_equation.begin_latex_transition(latex_color(0xff7f00ff, "(\\lambda a. (\\lambda f. (a f)))"));
+    quadratic_equation.begin_latex_transition(latex_color(0xff7f00ff, "(\\lambda w. ((\\lambda a. (\\lambda f. (a f))) w))"));
     betadiagram.reduce();
     cs.inject_audio_and_render(AudioSegment(1));
     cs.state_manager.subscene_transition(unordered_map<string, string>{
@@ -1202,12 +1197,12 @@ void currying() {
     cs.inject_audio_and_render(AudioSegment("First, we've gotta make a function that takes two variables."));
     LatexScene multi_argument("(\\lambda x y . 5 * y + x)", 0.6, VIDEO_WIDTH, VIDEO_HEIGHT * 0.25);
     cs.add_scene(&multi_argument, "multi_argument", 0, 0.375);
-    cs.inject_audio_and_render(AudioSegment("Pseudocode like this isn't permitted by our strict rules for making expressions."));
+    cs.inject_audio_and_render(AudioSegment("Pseudocode like this isn't permitted by our strict templates for making expressions."));
     cs.inject_audio_and_render(AudioSegment("Of course, we have yet to define numbers and plus and times, but let's assume we know how those work for now."));
     multi_argument.begin_latex_transition("(\\lambda " + latex_color(0xffff0000, "x y") + ". 5 * y + x)");
-    cs.inject_audio_and_render(AudioSegment("The real problem is, we are trying to make a function that takes in two variables.");
+    cs.inject_audio_and_render(AudioSegment("The real problem is that we're trying to make a function that takes in two variables."));
     cs.inject_audio_and_render(AudioSegment("Only one letter is allowed to go between the lambda and the dot."));
-    cs.inject_audio_and_render(AudioSegment("Luckily, there's a workaround technique, called 'currying'."));
+    cs.inject_audio_and_render(AudioSegment("Luckily, there's a workaround, called 'currying'."));
 
     multi_argument.begin_latex_transition("(\\lambda x. (\\lambda y. 5 * y + x))");
     cs.inject_audio_and_render(AudioSegment("The trick here is to make a function wrap another function."));
@@ -1222,16 +1217,16 @@ void currying() {
     cs.inject_audio_and_render(AudioSegment("Notice the bound variable is 'x'."));
     multi_argument.begin_latex_transition("(\\qquad (" + latex_color(0xffff8888, "(\\lambda "+latex_color(0xff00ff00,"x")+". (\\lambda y. 5 * y + "+latex_color(0xffff0000,"x")+"))") + latex_color(0xff7777ff, "5") + ")\\qquad 3)");
     cs.inject_audio_and_render(AudioSegment("Find all the x's in the body,"));
-    multi_argument.begin_latex_transition("(\\qquad " + latex_color(0xffff8888, "(\\lambda y. 5 * y + "+latex_color(0xffff0000,"x")+")") + ")\\ 5\\qquad 3)");
+    multi_argument.begin_latex_transition("(\\qquad " + latex_color(0xffff8888, "(\\lambda y. 5 * y + "+latex_color(0xffff0000,"x")+")") + "\\ 5\\qquad 3)");
     cs.inject_audio_and_render(AudioSegment("rip off the scaffolding,"));
     multi_argument.begin_latex_transition("(\\qquad " + latex_color(0xffff8888, "(\\lambda y. 5 * y + 5)") + "\\qquad 3)");
     cs.inject_audio_and_render(AudioSegment("and replace."));
     multi_argument.begin_latex_transition("(\\qquad (\\lambda y. 5 * y + 5)\\qquad 3)");
     cs.inject_audio_and_render(AudioSegment(1));
-    multi_argument.begin_latex_transition("((\\lambda y. 5 * y + 5) 3)");
+    multi_argument.begin_latex_transition("((\\lambda y. 5 * y + 5)\\ 3)");
     cs.inject_audio_and_render(AudioSegment("Getting the hang of beta reduction?"));
     multi_argument.begin_latex_transition("5 * 3 + 5");
-    cs.inject_audio_and_render(AudioSegment("Reduce one more time."));
+    cs.inject_audio_and_render(AudioSegment("Reduce one more time, and we have the answer."));
     multi_argument.begin_latex_transition("5 * 3 + 5 = 20");
     cs.inject_audio_and_render(AudioSegment(1));
     multi_argument.begin_latex_transition("(\\lambda x. (\\lambda y. 5 * y + x))");
@@ -1239,20 +1234,19 @@ void currying() {
     cs.inject_audio_and_render(AudioSegment("Since a function can only _really_ take one argument,"));
     multi_argument.begin_latex_transition("(\\lambda x. "+latex_color(0xffff7777, "(\\lambda y. 5 * y + x)")+")");
     cs.inject_audio_and_render(AudioSegment("A two-argument function is the same thing as a function which spits out a one-argument function."));
-    multi_argument.begin_latex_transition("(\\lambda x. "+latex_color(0xffff7777, "(\\lambda y. "+latex_color(0xffff7777, "(\\lambda z. "+latex_text("...something...")+")")+")")+")");
-    cs.inject_audio_and_render(AudioSegment("A three-argument function would be a function which spits out a two-argument function."));
+    multi_argument.begin_latex_transition("(\\lambda x. "+latex_color(0xffff7777, "(\\lambda y. "+latex_color(0xffff77ff, "(\\lambda z. "+latex_text("...something...")+")")+")")+")");
+    cs.inject_audio_and_render(AudioSegment("A three-argument function would spit out a two-argument function."));
     cs.inject_audio_and_render(AudioSegment("And so on!"));
-    multi_argument.begin_latex_transition("(\\lambda x"+latex_color(0xffff7777, "y"+latex_color(0xffff7777, "z. "+latex_text("...something...")+")")+")")+")");
+    multi_argument.begin_latex_transition("(\\lambda x"+latex_color(0xffff7777, "y"+latex_color(0xffff77ff, "z. "+latex_text("...something...")+")")+")")+")");
 
-    multi_argument.begin_latex_transition("(\\lambda x y. 5 * y + x)");
     cs.inject_audio_and_render(AudioSegment("So from now on, we'll permit two variables in the lambda,"));
     multi_argument.begin_latex_transition("(\\lambda " + latex_color(0xffff0000, "x y") + ". 5 * y + x)");
     cs.inject_audio_and_render(AudioSegment("since we can think of it as shorthand for a curried function."));
-    multi_argument.begin_latex_transition("(((\\lambda x y. 5 * y + x) 5) 3)");
+    multi_argument.begin_latex_transition("(((\\lambda x y. 5 * y + x)\\ 5)\\ 3)");
     cs.inject_audio_and_render(AudioSegment("When applying a curried function, we did it like this."));
-    multi_argument.begin_latex_transition("((\\lambda x y. 5 * y + x) 5 3)");
+    multi_argument.begin_latex_transition("((\\lambda x y. 5 * y + x)\\ 5\\ 3)");
     cs.inject_audio_and_render(AudioSegment("but we can also just drop the extra parentheses as shorthand."));
-    cs.inject_audio_and_render(AudioSegment("Alright, it's programming time. We are going to start with the values TRUE and FALSE."));
+    cs.inject_audio_and_render(AudioSegment("Alright, it's programming time. We're gonna start with the values TRUE and FALSE."));
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"currying_title.opacity", "0"},
         {"multi_argument.opacity", "0"},
@@ -1356,7 +1350,7 @@ void booleans() {
     cs.inject_audio_and_render(AudioSegment("TRUE picks out the first of 2 arguments, and FALSE picks the second."));
 
     // Transition to a conditional expression
-    LatexScene conditional("((X t) f)", 0.5, VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2);
+    LatexScene conditional("(X\\ t\\ f)", 0.5, VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2);
     cs.add_scene(&conditional, "conditional", 0.25, 0.3);
     cs.state_manager.set(unordered_map<string, string>{
         {"conditional.opacity", "0"},
@@ -1393,6 +1387,7 @@ void booleans() {
     cs.add_scene_fade_in(&not_gate, "not_gate", 0, 0.375, true);
     cs.inject_audio_and_render(AudioSegment("Let's start with NOT."));
 
+    not_gate.begin_latex_transition(latex_text("NOT(TRUE) = FALSE") + "\\\\\\\\" + latex_text("NOT(FALSE) = TRUE"));
     cs.inject_audio_and_render(AudioSegment("In other words, we want a function that maps TRUE onto FALSE, and vice versa."));
 
     // Show the abstraction for NOT
@@ -1421,7 +1416,7 @@ void booleans() {
     cs.inject_audio_and_render(AudioSegment("Beta reduce once."));
     not_gate.begin_latex_transition("((\\lambda ab. b)\\ "+latex_text("FALSE")+"\\ "+latex_text("TRUE")+")");
     cs.inject_audio_and_render(AudioSegment("Let's substitute in the known value of TRUE."));
-    not_gate.begin_latex_transition("((\\lambda b. b")\\ "+latex_text("TRUE")+")");
+    not_gate.begin_latex_transition("((\\lambda b. b)\\ "+latex_text("TRUE")+")");
     cs.inject_audio_and_render(AudioSegment("Beta reduce twice more,"));
     not_gate.begin_latex_transition(latex_text("TRUE"));
     cs.inject_audio_and_render(AudioSegment(2));
@@ -1528,12 +1523,12 @@ void numerals() {
     });
     cs.render();
     cs.inject_audio(AudioSegment("The underlying inspiration here is to represent 1 as f(x), 2 as f(f(x)), and so on."), 3);
-    LatexScene f_zero("x"      , 0.8, VIDEO_WIDTH/4, VIDEO_HEIGHT/7);
-    LatexScene f_one ("f(x)"   , 1, VIDEO_WIDTH/4, VIDEO_HEIGHT/7);
-    LatexScene f_two ("f(f(x))", 1, VIDEO_WIDTH/4, VIDEO_HEIGHT/7);
-    cs.add_scene(&f_zero, "f_zero", 0.375, 0.25);
-    cs.add_scene(&f_one , "f_one" , 0.375, 0.45);
-    cs.add_scene(&f_two , "f_two" , 0.375, 0.65);
+    LatexScene f_zero("x"      , 0.8, VIDEO_WIDTH/3, VIDEO_HEIGHT/7);
+    LatexScene f_one ("f(x)"   , 1, VIDEO_WIDTH/3, VIDEO_HEIGHT/7);
+    LatexScene f_two ("f(f(x))", 1, VIDEO_WIDTH/3, VIDEO_HEIGHT/7);
+    cs.add_scene(&f_zero, "f_zero", 0.333, 0.25);
+    cs.add_scene(&f_one , "f_one" , 0.333, 0.45);
+    cs.add_scene(&f_two , "f_two" , 0.333, 0.65);
     cs.state_manager.set(unordered_map<string, string>{
         {"f_zero.opacity", "0"},
         {"f_one.opacity" , "0"},
@@ -1559,7 +1554,7 @@ void numerals() {
     cs.inject_audio(AudioSegment("In other words, the number n is represented by applying some function f to some value x, n times over."), 3);
     cs.render();
     LatexScene f_n("f^n(x)", 1, VIDEO_WIDTH/4, VIDEO_HEIGHT/7);
-    cs.add_scene(&f_n, "f_n", 0.375, 0.85);
+    cs.add_scene(&f_n, "f_n", 0.333, 0.85);
     cs.state_manager.set(unordered_map<string, string>{
         {"f_n.opacity", "0"},
     });
@@ -1574,14 +1569,6 @@ void numerals() {
     f_one .begin_latex_transition("(f x)");
     f_two .begin_latex_transition("(f (f x))");
     f_n   .begin_latex_transition("(f^n x)");
-    cs.inject_audio_and_render(AudioSegment("Let's write that with Lambda Calculus function application syntax..."));
-    f_zero.begin_latex_transition("(\\lambda fx.\\ x)");
-    f_one .begin_latex_transition("(\\lambda fx.\\ (f\\ x))");
-    f_two .begin_latex_transition("(\\lambda fx.\\ (f\\ (f\\ x)))");
-    f_n   .begin_latex_transition("(\\lambda fx.\\ (f^n\\ x))");
-    cs.inject_audio_and_render(AudioSegment("Well, almost- the numbers are really two-argument functions which take in f and x, and then apply f to x n times."));
-    cs.inject_audio(AudioSegment("It's important to understand the difference there. These numbers ARE FUNCTIONS that TAKE IN A FUNCTION AND A VARIABLE, and then iterate that function on that variable."), 3);
-    // Create Lambda scenes for Church numerals
     shared_ptr<LambdaExpression> numeral_0 = parse_lambda_from_string("(\\f. (\\x. x))");
     numeral_0->flush_uid_recursive();
     LambdaScene zero_scene(numeral_0, VIDEO_WIDTH / 4, VIDEO_HEIGHT / 5);
@@ -1598,6 +1585,7 @@ void numerals() {
     cs.add_scene(&one_scene, "one_scene", 0.6, .5);
     cs.add_scene(&two_scene, "two_scene", 0.6, .7);
 
+    cs.inject_audio_and_render(AudioSegment(2));
     cs.state_manager.set(unordered_map<string, string>{
         {"zero_scene.opacity", "0"},
         {"one_scene.opacity", "0"},
@@ -1619,16 +1607,23 @@ void numerals() {
         {"two_scene.opacity", "1"},
     });
     cs.render();
+    f_zero.begin_latex_transition("(\\lambda fx.\\ x)");
+    f_one .begin_latex_transition("(\\lambda fx.\\ (f\\ x))");
+    f_two .begin_latex_transition("(\\lambda fx.\\ (f\\ (f\\ x)))");
+    f_n   .begin_latex_transition("(\\lambda fx.\\ (f^n\\ x))");
+    cs.inject_audio_and_render(AudioSegment("Well, almost- the numbers are really two-argument functions which take in f and x, and then apply f to x n times."));
+    cs.inject_audio(AudioSegment("It's important to understand the difference there. These numbers ARE FUNCTIONS that TAKE IN A FUNCTION AND A VARIABLE, and then iterate that function on that variable."), 3);
+    // Create Lambda scenes for Church numerals
     cs.fade_out_all_scenes();
 
     LatexScene two_sin_5("2\\ sin\\ 5", 0.8, VIDEO_WIDTH, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&two_sin_5, "2s5", 0, 3.75, true);
+    cs.add_scene_fade_in(&two_sin_5, "2s5", 0, .375, true);
     cs.inject_audio_and_render(AudioSegment("So, we can give 2 the function sin and the value 5,"));
     two_sin_5.begin_latex_transition("(sin\\ (sin\\ 5))");
     cs.inject_audio_and_render(AudioSegment("and 2 will apply sin to 5 twice."));
 
 
-
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("So how do we do math on these?"));
     cs.remove_all_scenes();
 
@@ -1673,7 +1668,7 @@ void numerals() {
         {"succ_gate.y", ".75"},
     });
     cs.inject_audio_and_render(AudioSegment("Let's evaluate the successor of 5."));
-    cs.inject_audio_and_render(AudioSegment("I've colored the extra f red. Keep an eye on it as it reduces!"));
+    cs.inject_audio_and_render(AudioSegment("I've colored the extra f red. Keep an eye on it during reduction!"));
     succ_5_scene.reduce();
     cs.inject_audio_and_render(AudioSegment(2));
     succ_5_scene.reduce();
@@ -1698,7 +1693,7 @@ void numerals() {
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"add_gate.opacity", "1"},
     });
-    cs.inject_audio_and_render(AudioSegment("How about addition then?"));
+    cs.inject_audio_and_render(AudioSegment("How 'bout addition then?"));
 
     add_gate.begin_latex_transition(latex_text("+ = ") + "(\\lambda mn.\\ \\_)");
     cs.inject_audio_and_render(AudioSegment("Addition is a function that takes in two numbers."));
@@ -1708,7 +1703,7 @@ void numerals() {
     cs.inject_audio_and_render(AudioSegment("Calling successor adds one to a number!"));
     addition_help.begin_latex_transition("n + m = SUCC(SUCC(...(n)))");
     cs.inject_audio_and_render(AudioSegment("To get m+n, we just have to call successor m times over."));
-    cs.inject_audio_and_render(AudioSegment("Remembre, the number m itself _is a function_,"));
+    cs.inject_audio_and_render(AudioSegment("Remember, the number m itself _is a function_,"));
     addition_help.begin_latex_transition("n + m = (m\\ SUCC\\ n)");
     cs.inject_audio_and_render(AudioSegment("which when applied to the successor function, will iterate that function m times!"));
     cs.inject_audio_and_render(AudioSegment("So, m SUCC n is the same as adding one to n, m times over."));
@@ -1800,7 +1795,7 @@ void numerals() {
         {"mult_scene.opacity", "1"},
         {"mult_scene.y", ".25"},
     });
-    cs.inject_audio_and_render(AudioSegment("but there is also a quicker way."));
+    cs.inject_audio_and_render(AudioSegment("but there's also a quicker way."));
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"mult_scene.x", ".35"},
         {"mult_scene.y", ".05"},
@@ -1888,7 +1883,7 @@ void numerals() {
     ptp.begin_latex_transition("((a+c)((bc)d))");
     cs.inject_audio_and_render(AudioSegment("This term is just a+c."));
     ptp.begin_latex_transition("((a+c)((c^b)d))");
-    cs.inject_audio_and_render(AudioSegment("and there are a few examples of exponentiation going on here."));
+    cs.inject_audio_and_render(AudioSegment("and there's a few examples of exponentiation going on here."));
     ptp.begin_latex_transition("((a+c)(d^{(c^b)}))");
     cs.inject_audio_and_render(AudioSegment(1));
     ptp.begin_latex_transition("(d^{(c^b)})^{a+c}");
@@ -1988,8 +1983,9 @@ shared_ptr<LambdaExpression> factorial(){
     cs.render();
     fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffff0000,latex_text("fac"))+"(-\\ n\\ 1)))))");
     cs.render();
-    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (\\small(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))\\normalsize(-\\ n\\ 1)))))");
-    cs.inject_audio_and_render(AudioSegment("You could argue, as is, this definition is infinitely long."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (\\scriptsize(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))\\normalsize(-\\ n\\ 1)))))");
+    cs.inject_audio_and_render(AudioSegment("You could argue, as is, this definition's infinitely long."));
+    fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (\\scriptsize(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(\\tiny(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))(-\\ n\\ 1)))))\\normalsize(-\\ n\\ 1)))))");
     cs.inject_audio_and_render(AudioSegment("How on earth are we gonna define recursion?"));
     cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("Time for a mind-blowing detour."));
@@ -2070,7 +2066,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.inject_audio_and_render(AudioSegment("why am I making this video instead of solving the Riemann Hypothesis?"));
     cs.inject_audio_and_render(AudioSegment("It's kinda like trying to solve for the square root of negative 1."));
     rfs.begin_transition(0, "? 6 * sin ? 1.1 * cos ? 2.5 sin * 1.6 ? cos * + + + ? 4 * sin *");
-    cs.inject_audio_and_render(AudioSegment("There is always a fixed point out there, but it's not among the real numbers."));
+    cs.inject_audio_and_render(AudioSegment("There's always a fixed point out there, but it's not among the real numbers."));
     cs.add_scene_fade_in(&ls3, "ls3", 0, 0.375, true);
     cs.inject_audio_and_render(AudioSegment("In our case, Theta F isn't necessarily a real number."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
@@ -2102,7 +2098,7 @@ shared_ptr<LambdaExpression> factorial(){
     fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_text("fac")+"(-\\ n\\ 1)))))");
     fac.end_transition();
     cs.add_scene_fade_in(&fac, "fac", 0, 0.3, true);
-    cs.inject_audio_and_render(AudioSegment("but it is the magic bullet to help us make our factorial."));
+    cs.inject_audio_and_render(AudioSegment("but it _is_ the magic bullet to help us make our factorial."));
     cs.inject_audio_and_render(AudioSegment("This is where the voodoo magic comes in."));
     cs.inject_audio_and_render(AudioSegment("Hang with me."));
     fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (f(-\\ n\\ 1)))))");
@@ -2126,13 +2122,13 @@ shared_ptr<LambdaExpression> factorial(){
     cs.inject_audio_and_render(AudioSegment("Now, remember that there was no recursive nesting this time- this is a finite-length lambda term."));
     cs.inject_audio_and_render(AudioSegment("but this time, through beta reduction,"));
     LatexScene oldfac(latex_color(0xffff7777,latex_text("fac")) + "= (\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffff7777,latex_text("fac"))+"(-\\ n\\ 1)))))", 0.8, VIDEO_WIDTH, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&oldfac, "oldfac", 0, 0.65, true);
+    cs.add_scene_fade_in(&oldfac, "oldfac", 0, 0.55, true);
     cs.inject_audio_and_render(AudioSegment("we _derived_ the recursive equivalence relation that we wanted to begin with!"));
     cs.inject_audio_and_render(AudioSegment("This term, Theta F, satisfies the recursive equivalence characteristic of the factorial function."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"fac.y", "0"},
-        {"fac_solution.y", "0.1"},
-        {"oldfac.y", "0.2"},
+        {"fac.y", "-.5"},
+        {"fac_solution.y", "0.0"},
+        {"oldfac.y", "0.1"},
     });
     shared_ptr<LambdaExpression> IS0m = parse_lambda_from_string("((\\n. (\\x. (\\y. ((n (\\z. y)) x)))) m)");
     shared_ptr<LambdaExpression> one = parse_lambda_from_string("(\\f. (\\x. (f x)))");
@@ -2149,7 +2145,7 @@ shared_ptr<LambdaExpression> factorial(){
     LambdaScene fac_lambda(TF, VIDEO_WIDTH, VIDEO_HEIGHT*.6);
     cs.add_scene_fade_in(&fac_lambda, "fac_lambda", 0, 0.4, true);
     cs.inject_audio_and_render(AudioSegment("And that means that Theta F IS the factorial function."));
-    cs.inject_audio_and_render(AudioSegment("Let me color it in so it makes some more sense."));
+    cs.inject_audio_and_render(AudioSegment("Lemme color it in so it makes some more sense."));
     dynamic_pointer_cast<LambdaApplication>(TF)->get_first()->set_color_recursive(0xff7777ff);
     fac_lambda.set_expression(TF);
     cs.inject_audio_and_render(AudioSegment("This is the fixed point operator in blue."));
@@ -2174,6 +2170,7 @@ shared_ptr<LambdaExpression> factorial(){
     shared_ptr<LambdaExpression> TF3 = apply(TF, three, OPAQUE_WHITE);
     fac_lambda.set_expression(TF3);
     cs.inject_audio_and_render(AudioSegment("Now, let's apply this factorial function to the number three."));
+    cs.inject_audio_and_render(AudioSegment("Hold on tight...!"));
     int num_reductions = TF3->count_reductions();
     shared_ptr<LambdaExpression> TF3_copy = TF3->clone();
     cs.inject_audio(AudioSegment(20), num_reductions);
@@ -2301,7 +2298,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.inject_audio_and_render(AudioSegment("I've colored it blue, because it's special- it can't be reduced further."));
     cs.inject_audio(AudioSegment("The fancy word for this is 'Beta Normal Form'."), 3);
     LatexScene bnf(latex_text("Beta Normal Form")+"\\rightarrow", 0.9, VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&bnf, "bnf", 0, 0.65, true);
+    cs.add_scene_fade_in(&bnf, "bnf", 0, 0.69, true);
     cs.render();
     cs.render();
     cs.render();
@@ -2316,10 +2313,11 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
             iter2pos = n.position;
         }
     }
-    cs.inject_audio_and_render(AudioSegment("But I wanna take a closer look at this node here."));
+    cs.inject_audio_and_render(AudioSegment("But I wanna take a closer look at the second node."));
 
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"lgs.x", "0"},
+        {"bnf.x", "-.5"},
     });
     shared_ptr<LambdaExpression> lam_iter2 = parse_lambda_from_string(iter2);
     lam_iter2->flush_uid_recursive();
@@ -2331,7 +2329,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.inject_audio_and_render(AudioSegment("However, let's step back."));
     lam.set_expression(lam_iter2);
     cs.inject_audio_and_render(AudioSegment(.2));
-    cs.inject_audio_and_render(AudioSegment("Let me highlight the function-value pair which just got reduced."));
+    cs.inject_audio_and_render(AudioSegment("Lemme highlight the function-value pair which just got reduced."));
     dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_first()->set_color_recursive(0xffff7700);
     lam.set_expression(lam_iter2);
     cs.inject_audio_and_render(AudioSegment("Here's the function,"));
@@ -2343,7 +2341,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     lam_iter2->set_color_recursive(OPAQUE_WHITE);
     lam.set_expression(lam_iter2);
     cs.inject_audio_and_render(AudioSegment("But..."));
-    cs.inject_audio_and_render(AudioSegment("there is actually a different reduction available here!"));
+    cs.inject_audio_and_render(AudioSegment("there's actually a different reduction available here!"));
     dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_first())->get_body())->get_body())->get_body())->get_first())->get_first()->set_color_recursive(0xff00ff00);
     dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaApplication>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaAbstraction>(dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_first())->get_body())->get_body())->get_body())->get_first())->get_second()->set_color_recursive(0xff6600ff);
     lam.set_expression(lam_iter2);
@@ -2378,7 +2376,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
             g.add_node(child);
         }
     }
-    cs.inject_audio_and_render(AudioSegment("Since there are two options at this node,"));
+    cs.inject_audio_and_render(AudioSegment("Since there's two options at this node,"));
     cs.inject_audio_and_render(AudioSegment("let's follow both paths at the same time."));
     while(g.size() != 13){
         nodescopy = g.nodes;
@@ -2411,8 +2409,8 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.state_manager.set(unordered_map<string, string>{
         {"d", "7"},
         {"y", "3"},
-        {"qj", "<t> 3 / sin"},
-        {"q1", "<t> 3 / cos"},
+        {"qj", "<t> 6 / sin"},
+        {"q1", "<t> 6 / cos"},
     });
     cs.inject_audio_and_render(AudioSegment("The answer to the problem shouldn't depend on the order that you do the steps. Right?"));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
@@ -2550,11 +2548,11 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
         cs.render();
     }
     cs.state_manager.superscene_transition(unordered_map<string, string>{
-        {"d", "1200"},
+        {"d", "1800"},
         {"y", "200"},
     });
     reductions = 200;
-    cs.inject_audio_and_render(AudioSegment("But, let me show you something else..."));
+    cs.inject_audio_and_render(AudioSegment("But, lemme show you something else..."));
     TF3_clone = TF3->clone();
     cs.inject_audio(AudioSegment("This is another path that seemingly goes in a totally different direction."), reductions);
     for(int i = 0; i < reductions; i++){
@@ -2580,7 +2578,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
 
     LatexScene unroll("(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ((\\Theta F)(-\\ n\\ 1)))))", 0.5, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&unroll, "unroll", 0, .375, true);
-    cs.inject_audio_and_render(AudioSegment("It turns out, in this path, it is 'unrolling' the recursive definition of factorial, so-to-speak,"));
+    cs.inject_audio_and_render(AudioSegment("It turns out, in this path, it's 'unrolling' the recursive definition of factorial, so-to-speak,"));
     unroll.begin_latex_transition("(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ((\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ((\\Theta F)(-\\ n\\ 1)))))(-\\ n\\ 1)))))");
     cs.inject_audio_and_render(AudioSegment("before the base case is ever taken advantage of."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
@@ -2591,10 +2589,10 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.inject_audio_and_render(AudioSegment("The proof is unfortunately too long for this video,"));
     LatexScene cr_statement(latex_text("No two different expressions in beta-normal form can be reached by reducing the same expression."), 1, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&cr_statement, "cr_statement", 0, 0.375, true);
-    cs.inject_audio_and_render(AudioSegment("but the Church-Rosser theorem shows that if there is one of these blue irreducible answers in our tree, there isn't another."));
+    cs.inject_audio_and_render(AudioSegment("but the Church-Rosser theorem shows that if there's _one_ of these blue irreducible answers in our tree, there isn't another."));
     cs.inject_audio_and_render(AudioSegment("Sometimes there isn't one at all, and sometimes you can go down a beta-reduction path in the wrong direction,"));
     cs.fade_out_all_scenes();
-    cs.inject_audio_and_render(AudioSegment("but there is never more than one node in this special 'beta normal form'."));
+    cs.inject_audio_and_render(AudioSegment("but there's never more than one node in this special 'beta normal form'."));
 }
 
 void extra(){
@@ -2611,7 +2609,7 @@ void extra(){
     cs.render();
     ctt.begin_latex_transition(latex_text("Typed Lambda Calculus"));
     lc.begin_latex_transition(latex_text("Variables in the \\lambda-Calculus can take datatypes"));
-    cs.inject_audio(AudioSegment("There is also the entire field of typed lambda calculus, where we assign datatypes to variables."), 2);
+    cs.inject_audio(AudioSegment("There's also the entire field of typed lambda calculus, where we assign datatypes to variables."), 2);
     cs.render();
     cs.render();
     cs.inject_audio_and_render(AudioSegment("It even turns out that any given typed program in the Lambda Calculus corresponds to some proof."));
@@ -2649,7 +2647,7 @@ void extra(){
     cs.inject_audio_and_render(AudioSegment("called Lambdas, which emulate the properties of the Lambda Calculus."));
     cs.inject_audio_and_render(AudioSegment("But I don't like the Lambda Calculus for its utility."));
     cs.fade_out_all_scenes();
-    cs.inject_audio_and_render(AudioSegment("The philosophical implications of alternate models of computing run deep, by elucidating the structure of information and the nature of computation itself."));
+    cs.inject_audio_and_render(AudioSegment("The philosophical implications of these weird models of computing run deep. They can give us a fresh perspective on the structure of information and the nature of computation itself."));
 }
 
 void credits(){
@@ -2664,13 +2662,13 @@ void credits(){
     LatexScene selinger_text(latex_text("Peter Selinger"), .8, VIDEO_WIDTH/3, VIDEO_HEIGHT/6);
     cs.add_scene_fade_in(&seef, "seef", 0, .1, true);
     cs.add_scene_fade_in(&seef_text, "seef_text", 0, .533, true);
-    cs.inject_audio(AudioSegment("I wanna give an enormous thank-you to 6884, who made all of the music which made this video come to life."), 3);
+    cs.inject_audio(AudioSegment("I wanna give an enormous thank-you to 6884, who made all the music which made this video come to life."), 3);
     cs.render();
     cs.render();
     cs.render();
     cs.add_scene_fade_in(&tromp, "tromp", .333, .1, true);
     cs.add_scene_fade_in(&tromp_text, "tromp_text", .333, .533, true);
-    cs.inject_audio(AudioSegment("This also couldn't have been possible without John Tromp, the inventor of this sick diagrammatic notation for lambda expressions."), 3);
+    cs.inject_audio(AudioSegment("This also couldn't have been possible if not for John Tromp, the inventor of this sick diagrammatic notation for lambda expressions."), 3);
     cs.render();
     cs.render();
     cs.render();
@@ -2712,7 +2710,7 @@ void credits(){
 
     PngScene discord("discord", VIDEO_WIDTH/3, VIDEO_HEIGHT/3);
     cs.add_scene_fade_in(&discord, "discord", .333, .333, true);
-    cs.inject_audio(AudioSegment("If you like this content, then there is nothing I would appreciate more than you joining our discord server!"), 2);
+    cs.inject_audio(AudioSegment("If you like this content, then there's nothing I would appreciate more than you joining our discord server!"), 2);
     cs.render();
     cs.add_scene_fade_in(&links, "links", 0, .666, true);
     cs.render();
@@ -2802,9 +2800,9 @@ int main() {
     beta_reduction();
     chapter_number(4, "Currying");
     currying();
-    chapter_number(5, "Boolean Logic");
+    chapter_number(5, "Boolean Arithmetic");
     booleans();
-    chapter_number(6, "Math");
+    chapter_number(6, "Church Numerals");
     numerals();
     chapter_number(7, "Recursion");
     TF3 = factorial();
