@@ -214,9 +214,11 @@ public:
                 // The AVFrame data will be stored as RGBRGBRGB... row-wise,
                 // from left to right and from top to bottom.
                 double alpha = a/255.; // in the end, we pretend there is a black background
-                rgbpic->data[0][rowboi + 3 * x + 0] = r*alpha;
-                rgbpic->data[0][rowboi + 3 * x + 1] = g*alpha;
-                rgbpic->data[0][rowboi + 3 * x + 2] = b*alpha;
+                double one_minus_alpha = 10*(1-alpha);
+                int idx = x*3 + rowboi;
+                rgbpic->data[0][idx + 0] = r*alpha + one_minus_alpha;
+                rgbpic->data[0][idx + 1] = g*alpha + one_minus_alpha;
+                rgbpic->data[0][idx + 2] = b*alpha + 3*one_minus_alpha;
             }
         }
 

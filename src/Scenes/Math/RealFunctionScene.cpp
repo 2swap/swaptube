@@ -70,8 +70,8 @@ public:
         std::pair<int, int> i_neg = coordinate_to_pixel(make_pair(0, -10));
         std::pair<int, int> r_pos = coordinate_to_pixel(make_pair(10, 0));
         std::pair<int, int> r_neg = coordinate_to_pixel(make_pair(-10, 0));
-        pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff222222, 1, 1);
-        pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff222222, 1, 1);
+        pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff004488, 1, 1);
+        pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff004488, 1, 1);
     }
 
     void render_functions() {
@@ -92,7 +92,7 @@ public:
             if(last_subtr * subtr < 0 && functions.size() == 2) {
                 pair<int, int> collide = coordinate_to_pixel(make_pair(x, val));
                 render_point(collide);
-                pix.bresenham(collide.first, collide.second, collide.first, get_height()/2, 0xff222222, 1, 1);
+                pix.bresenham(collide.first, collide.second, collide.first, get_height()/2, 0xffffffff, 1, 1);
             }
             last_subtr = subtr;
         }

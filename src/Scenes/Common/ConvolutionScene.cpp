@@ -53,10 +53,10 @@ public:
                 pix.overlay(step.induced1, x, y, tp1);
                 pix.overlay(step.induced2, x+step.max_x, y+step.max_y, tp );
 
-                /*if(i == 0){
+                if(i == 0 && false){
                     top_vx += transition_coords.first  - step.max_x - coords.first ;
                     top_vy += transition_coords.second - step.max_y - coords.second;
-                }*/
+                }
             }
 
             int dx = round(lerp(-top_vx, 0, smooth));

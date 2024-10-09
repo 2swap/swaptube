@@ -53,7 +53,7 @@ public:
     }
 
     void interpolate(){
-        double w = state["transition_fraction"];
+        double w = state["subscene_transition_fraction"];
         board = c4lerp(board, b2, w);
         annotations = w>.5?annotations:annotations2;
     }
@@ -91,7 +91,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{};
+        return StateQuery{"subscene_transition_fraction"};
     }
     void mark_data_unchanged() override { }
     void change_data() override { } // No DataObjects
