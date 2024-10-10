@@ -51,7 +51,7 @@ def main():
     for index in range(len(entries)):
         if successes == 1:
             input("Remember to check the first audio output file...")
-        if successes%10 == 0:
+        if successes%10 == 1:
             input("ARE YOU HYPED")
         current_filename, current_text = entries[index]
         os.system('clear')

@@ -424,11 +424,11 @@ void history() {
     cs.remove_scene(&hilbert);
     cs.remove_scene(&turing);
     cs.remove_scene(&godel);
-    LatexScene calc("\\int_a^b", 1, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.5);
+    LatexScene calc("\\frac{d}{dx}", 1, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.5);
     cs.add_scene_fade_in(&calc, "calc", 0.4, 0.25, true);
     cs.inject_audio(AudioSegment("His 'Lambda Calculus', to be clear, had nothing to do with derivatives or integrals or what you learned in Calculus class in High School."), 2);
     cs.render();
-    calc.begin_latex_transition("\\frac{d}{dx}");
+    calc.begin_latex_transition("\\int_a^b");
     cs.render();
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"calc.opacity", "0"},
@@ -752,6 +752,7 @@ void visualize(){
     });
     c4s.stage_transition("433344443437731155222211");
     cs.inject_audio_and_render(AudioSegment("After all, I'm biased- he was the first person to strongly solve Connect 4."));
+    cs.remove_scene(&c4s);
 
 
 
@@ -1112,11 +1113,11 @@ void beta_reduction(){
 
     // Transform into lambda calculus
     cs.inject_audio_and_render(AudioSegment("We do still need to express that x is the thing in the body which 5'll be replacing,"));
-    quadratic_equation.begin_latex_transition("\\Big((\\lambda x. x^2 + x + 3)\\quad 5\\Big)");
+    quadratic_equation.begin_latex_transition("\\Big((\\lambda x.\\ x^2 + x + 3)\\quad 5\\Big)");
     cs.inject_audio_and_render(AudioSegment("and the Lambda-Calculus way to express that is by putting a lambda-dot pair around it."));
     cs.inject_audio_and_render(AudioSegment("Now how do we evaluate it?"));
     cs.inject_audio_and_render(AudioSegment("Well, exactly the same procedure!"));
-    quadratic_equation.begin_latex_transition("\\Big((\\lambda x. " + latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3)\\quad 5\\Big)");
+    quadratic_equation.begin_latex_transition("\\Big((\\lambda x.\\ " + latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3)\\quad 5\\Big)");
     cs.inject_audio_and_render(AudioSegment("Identify all the variables in the body which match the one bound by the lambda, in this case all the 'x's."));
     quadratic_equation.begin_latex_transition(latex_color(0xffff0000, "x") + "^2 + " + latex_color(0xffff0000, "x") + " + 3\\quad 5");
     cs.inject_audio_and_render(AudioSegment("Drop all the slack,"));
@@ -1220,7 +1221,7 @@ void currying() {
     cs.add_scene_fade_in(&multi_argument, "multi_argument", 0, 0.3, true);
     cs.inject_audio_and_render(AudioSegment("First, we've gotta make a function that takes two variables."));
     cs.inject_audio_and_render(AudioSegment("Pseudocode like this isn't permitted by our strict templates for making expressions."));
-    multi_argument.begin_latex_transition("(\\lambda x y .\\ "+latex_color(0xff00ff00, "5\\; *")+" y "+latex_color(0xff00ff00, "+")+" x)");
+    multi_argument.begin_latex_transition("(\\lambda x y .\\ "+latex_color(0xff00ff00, "5\\: *")+" y "+latex_color(0xff00ff00, "+")+" x)");
     cs.inject_audio_and_render(AudioSegment("Of course, we have yet to define numbers and times and plus,"));
     cs.inject_audio_and_render(AudioSegment("but let's assume we know how those work for now."));
     multi_argument.begin_latex_transition("(\\lambda " + latex_color(0xffff0000, "x y") + ".\\ 5 * y + x)");
@@ -2090,7 +2091,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.remove_all_scenes();
     fac.begin_latex_transition(latex_text("fac = ") + "(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_text("fac")+"(-\\ n\\ 1)))))");
     fac.end_transition();
-    cs.add_scene_fade_in(&fac, "fac", 0.04, 0.25, true);
+    cs.add_scene_fade_in(&fac, "fac", 0, 0.25, true);
     cs.inject_audio_and_render(AudioSegment("but it _is_ the magic bullet to help us make our factorial."));
     cs.inject_audio_and_render(AudioSegment("This is where the voodoo magic comes in."));
     cs.inject_audio_and_render(AudioSegment("Hang with me."));
@@ -2117,7 +2118,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.inject_audio_and_render(AudioSegment("This component is finite and closed-form."));
     cs.inject_audio_and_render(AudioSegment("but this time, through beta reduction,"));
     LatexScene oldfac(latex_color(0xffff7777,latex_text("fac")) + "= (\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffff7777,latex_text("fac"))+"(-\\ n\\ 1)))))", 0.85, VIDEO_WIDTH, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&oldfac, "oldfac", 0.04, 0.55, true);
+    cs.add_scene_fade_in(&oldfac, "oldfac", 0.023, 0.55, true);
     cs.inject_audio_and_render(AudioSegment("we _derived_ the recursive equivalence relation that we wanted to begin with!"));
     cs.inject_audio_and_render(AudioSegment("This term, Theta F, satisfies the recursive equivalence characteristic of the factorial function."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
