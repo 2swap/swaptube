@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import subprocess
 
@@ -38,20 +39,28 @@ def main():
         print("Error: record_list.tsv is empty.")
         return
 
+    input("Unplug crappy mics...")
+    input("Do 100 jumping jacks...")
+    input("Smile...")
+    input("Don't breathe in the mic...")
+    input("Don't talk too fast, or too slow...")
     input("Press enter to start recording...")
 
     # Process each entry
-    index = 0
-    while index < len(entries):
+    successes = 0
+    for index in range(len(entries)):
+        if successes == 1:
+            input("Remember to check the first audio output file...")
+        if successes%10 == 0:
+            input("ARE YOU HYPED")
         current_filename, current_text = entries[index]
         os.system('clear')
+        # Check if the file already exists
+        if os.path.exists(f"{PROJECT_DIR}/{current_filename}"):
+            print(f"{current_filename} already exists in {PROJECT_DIR}. Skipping...")
+            continue
 
         while True:
-            # Check if the file already exists
-            if os.path.exists(f"{PROJECT_DIR}/{current_filename}"):
-                print(f"{current_filename} already exists in {PROJECT_DIR}. Skipping...")
-                break
-
             print(f"-> {current_text}")
             # Print the next 5 entries for lookahead
             print_lookahead(entries, index + 1)
@@ -81,9 +90,8 @@ def main():
                 os.remove(os.path.join(PROJECT_DIR, current_filename))
                 # It will loop back to re-record this file
             else:
+                successes+=1
                 break
-
-        index += 1  # Move to the next entry
 
 if __name__ == "__main__":
     main()
