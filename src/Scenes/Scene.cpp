@@ -7,12 +7,14 @@
 #include "../io/DebugPlot.h"
 #include "../misc/pixels.h"
 #include "../io/AudioSegment.cpp"
+#include "../io/VisualMedia.cpp"
 
 using namespace std;
 
 static int frame_number;
 static bool FOR_REAL = true; // Whether we should actually be writing any AV output
 static bool PRINT_TO_TERMINAL = true;
+static bool SAVE_FRAME_PNGS = true;
 
 class Scene {
 public:
@@ -134,6 +136,13 @@ private:
         WRITER.set_time(state_manager["t"]);
         query(p);
         if(PRINT_TO_TERMINAL && (int(global_state["frame_number"]) % 5 == 0)) p->print_to_terminal();
+        if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % VIDEO_FRAMERATE == 0)) {
+            int roundedFrameNumber = round(global_state["frame_number"]);
+            ostringstream stream;
+            stream << setw(6) << setfill('0') << roundedFrameNumber;
+            ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
+            pix_to_png(p->naive_scale_down(5), "frames/frame_"+stream.str());
+        }
         WRITER.add_frame(*p);
         superscene_frames_left--;
 

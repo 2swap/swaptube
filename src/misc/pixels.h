@@ -376,6 +376,20 @@ public:
         }
     }
 
+    Pixels naive_scale_down(int scale_down_factor) const {
+        if(w%scale_down_factor != 0 || h%scale_down_factor != 0)
+            failout("Naive scaledown was called with a scaling factor that doesn't divide the Pixels dimensions!");
+        Pixels result(w/scale_down_factor, h/scale_down_factor);
+
+        for (int y = 0; y*scale_down_factor < w; y++) {
+            for (int x = 0; x*scale_down_factor < h; x++) {
+                result.set_pixel(x, y, get_pixel(x*scale_down_factor, y*scale_down_factor));
+            }
+        }
+
+        return result;
+    }
+
     Pixels bicubic_scale(int new_width, int new_height) const {
         Pixels result(new_width, new_height);
 
