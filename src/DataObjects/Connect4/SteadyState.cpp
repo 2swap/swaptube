@@ -51,7 +51,7 @@ void SteadyState::set_char(int x, int y, char c){
             bitboard_yellow |= point;
             break;
         default:
-            failout(string("Invalid SteadyState::set_char character: '") + c + "'");
+            throw runtime_exception(string("Invalid SteadyState::set_char character: '") + c + "'");
     }
 }
 
@@ -77,7 +77,7 @@ char SteadyState::get_char(const int x, const int y) const {
     else if((bitboard_yellow    & point) != 0ul) ret='2';
     else if((frame              & point) != 0ul) ret='F';
     if(ret == 0) {
-        failout("Steadystate was unset when queried!");
+        throw runtime_exception("Steadystate was unset when queried!");
     }
     return ret;
 }
@@ -114,7 +114,7 @@ int SteadyState::query_steady_state(const C4Board& board) const {
             // Case of two equal priorities
             if (!is_power_of_two(this_priority_moveset) && this_priority_moveset != 0) return -6;
             for (int x = 0; x < C4_WIDTH; x++) if(make_column(x) & this_priority_moveset) return x+1;
-            failout("Failed to find a priority marking when one was expected.");
+            throw runtime_exception("Failed to find a priority marking when one was expected.");
         }
     }
 
@@ -363,7 +363,7 @@ void run_test(const string& board_str, const int expected, const SteadyState& ss
     if(actual != expected) {
         board.print();
         ss.print();
-        failout("SteadyState unit test failed! Expected " + to_string(expected) + " but got " + to_string(actual));
+        throw runtime_exception("SteadyState unit test failed! Expected " + to_string(expected) + " but got " + to_string(actual));
     }
 }
 

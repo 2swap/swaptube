@@ -18,7 +18,7 @@ public:
         if(mode == SIMPLE_WEAK){
             shared_ptr<SteadyState> ss = find_steady_state(root_node_representation, 30000);
             if(ss == NULL)
-                failout("No steady state found when making a SIMPLE_WEAK C4GraphScene.");
+                throw runtime_exception("No steady state found when making a SIMPLE_WEAK C4GraphScene.");
             board = new C4Board(root_node_representation, ss);
         } else {
             board = new C4Board(root_node_representation);
@@ -36,43 +36,8 @@ public:
         return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
     }
 
-    void update_surfaces(){
-        for(pair<double, Node<C4Board>> p : graph->nodes){
-            Node<C4Board> node = p.second;
-            glm::vec3 node_pos = glm::vec3(node.position);
-            add_surface(Surface(node_pos,glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<C4Scene>(node.data->representation, 600, 600)));
-        }
-    }
-
-    void inheritable_preprocessing() override{
-        update_surfaces();
-    }
-
-    void inheritable_postprocessing() override{
-        clear_surfaces();
-    }
-
-    void render_surface(const Surface& surface) {
-        //make all the boards face the camera
-        glm::quat conj2 = glm::conjugate(camera_direction) * glm::conjugate(camera_direction);
-        glm::quat cam2 = camera_direction * camera_direction;
-
-        // Rotate pos_x_dir vector
-        glm::quat left_as_quat(0.0f, surface.pos_x_dir.x, surface.pos_x_dir.y, surface.pos_x_dir.z);
-        glm::quat rotated_left_quat = conj2 * left_as_quat * cam2;
-
-        // Rotate pos_y_dir vector
-        glm::quat up_as_quat(0.0f, surface.pos_y_dir.x, surface.pos_y_dir.y, surface.pos_y_dir.z);
-        glm::quat rotated_up_quat = conj2 * up_as_quat * cam2;
-
-        Surface surface_rotated(
-            surface.center,
-            glm::vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
-            glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
-            surface.scenePointer
-        );
-
-        ThreeDimensionScene::render_surface(surface_rotated);
+    Surface make_surface(Node<T> node) const override {
+        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<C4Scene>(node.data->representation, 600, 600), node.opacity);
     }
 
     bool color_edges = true;

@@ -66,7 +66,7 @@ public:
         auto it = map.find(key);
         if (it == map.end()) {
             print();
-            failout("Invalid State Access: " + key);
+            throw runtime_exception("Invalid State Access: " + key);
         }
         return map.at(key);
     }
@@ -151,7 +151,7 @@ public:
     }
     void set_parent(StateManager* p) {
         if(parent != nullptr && p != nullptr)
-            failout("Attempted setting StateManager's parent, but StateManager already had a parent!");
+            throw runtime_exception("Attempted setting StateManager's parent, but StateManager already had a parent!");
         parent = p;
     }
 
@@ -196,7 +196,7 @@ public:
         for (auto& variable : variables) {
             if(!variable.second.fresh){
                 print_state();
-                failout("ERROR: variable " + variable.first + " was not fresh when expected!\nState has been printed above.");
+                throw runtime_exception("ERROR: variable " + variable.first + " was not fresh when expected!\nState has been printed above.");
             }
             variable.second.fresh = false;
         }
@@ -228,7 +228,7 @@ public:
                     for (const string& dependency : vc.dependencies) {
                         if(!contains(dependency)){
                             print_state();
-                            failout("error: attempted to access variable " + dependency
+                            throw runtime_exception("error: attempted to access variable " + dependency
                                     + " during evaluation of " + variable_name + " := "
                                     + vc.equation + "!\nstate has been printed above.");
                         }
@@ -251,7 +251,7 @@ public:
                  * If that doesn't happen, that means it isn't really a DAG. */
                 if(!one_variable_changed && unevaluated_variable_remaining){
                     print_state();
-                    failout("error: variable dependency graph appears not to be a DAG! State has been printed above.");
+                    throw runtime_exception("error: variable dependency graph appears not to be a DAG! State has been printed above.");
                 }
             }
         }
@@ -323,7 +323,7 @@ private:
     VariableContents get_variable(const string& variable) const {
         if(variables.find(variable) == variables.end()){
             print_state();
-            failout("ERROR: Attempted to access variable " + variable + " without it existing!\nState has been printed above.");
+            throw runtime_exception("ERROR: Attempted to access variable " + variable + " without it existing!\nState has been printed above.");
         }
         return variables.at(variable);
     }
@@ -343,7 +343,7 @@ private:
 
     double get_value_from_parent(const string& variable) const {
         if(parent == nullptr)
-            failout("Parent is a nullptr");
+            throw runtime_exception("Parent is a nullptr");
         return parent->get_value(variable);
     }
 
@@ -365,7 +365,7 @@ private:
         // Nested transitions not supported
         if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
            in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
-            failout("Transition added to a variable already in transition: " + variable);
+            throw runtime_exception("Transition added to a variable already in transition: " + variable);
         }
 
         if(micro)

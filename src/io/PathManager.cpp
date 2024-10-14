@@ -27,7 +27,7 @@ void ensure_dir_exists(const string& path) {
             //cout << "Directory " << path << " created successfully." << endl;
             return;
         } else {
-            failout("Failed to create dir " + path + ".");
+            throw runtime_exception("Failed to create dir " + path + ".");
         }
     }
 }

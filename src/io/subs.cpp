@@ -35,7 +35,7 @@ private:
 public:
     SubtitleWriter() {
         srt_file.open(PATH_MANAGER.subtitle_output);
-        if (!srt_file.is_open()) failout("Failed to open file: " + PATH_MANAGER.subtitle_output);
+        if (!srt_file.is_open()) throw runtime_exception("Failed to open file: " + PATH_MANAGER.subtitle_output);
     }
 
     ~SubtitleWriter() {

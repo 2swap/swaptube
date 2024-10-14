@@ -31,14 +31,14 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     // Open the file for writing (binary mode)
     FILE* fp = fopen((PATH_MANAGER.this_run_output_dir + filename + ".png").c_str(), "wb");
     if (!fp) {
-        failout("Failed to open file for writing.");
+        throw runtime_exception("Failed to open file for writing.");
     }
 
     // Initialize write structure
     png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
     if (!png) {
         fclose(fp);
-        failout("Failed to create png write struct.");
+        throw runtime_exception("Failed to create png write struct.");
     }
 
     // Initialize info structure
@@ -46,14 +46,14 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     if (!info) {
         png_destroy_write_struct(&png, nullptr);
         fclose(fp);
-        failout("Failed to create png info struct.");
+        throw runtime_exception("Failed to create png info struct.");
     }
 
     // Set up error handling (required without using the default error handlers)
     if (setjmp(png_jmpbuf(png))) {
         png_destroy_write_struct(&png, &info);
         fclose(fp);
-        failout("Error during PNG creation.");
+        throw runtime_exception("Error during PNG creation.");
     }
 
     // Set up output control
@@ -70,7 +70,7 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     if (!row) {
         png_destroy_write_struct(&png, &info);
         fclose(fp);
-        failout("Failed to allocate memory for row.");
+        throw runtime_exception("Failed to allocate memory for row.");
     }
 
     // Write image data
@@ -300,7 +300,7 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
     if (access(name.c_str(), F_OK) == -1) {
         string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -output=" + name + " >/dev/null 2>&1";
         int result = system(command.c_str());
-        if(result != 0) failout("Failed to generate LaTeX.");
+        if(result != 0) throw runtime_exception("Failed to generate LaTeX.");
     }
 
     // System call successful, return the generated SVG

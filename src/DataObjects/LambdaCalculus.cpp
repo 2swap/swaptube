@@ -7,7 +7,6 @@
 #include <memory>
 #include <unordered_set>
 
-// For failout function
 #include "../misc/inlines.h"
 #include "../misc/color.cpp"
 #include "../misc/pixels.h"
@@ -70,7 +69,7 @@ public:
             if(!cl->is_reducible())return i;
             cl = cl->reduce();
         }
-        failout("count_reductions called on a term which does not reduce to BNF in under 10000 reductions!");
+        throw runtime_exception("count_reductions called on a term which does not reduce to BNF in under 10000 reductions!");
         return -1;
     }
     char get_fresh() const {
@@ -79,7 +78,7 @@ public:
         for(char c = 'a'; c <= 'z'; c++)
             if(used.find(c) == used.end())
                 return c;
-        failout("No fresh variables left!");
+        throw runtime_exception("No fresh variables left!");
         return 0;
     }
     void set_parent(weak_ptr<LambdaExpression> p) {
@@ -149,7 +148,7 @@ private:
 public:
     LambdaVariable(const char vn, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0) : LambdaExpression("Variable", c, p, x, y, w, h, u), varname(vn) {
         if(!isalpha(vn)){
-            failout("Lambda variable was not a letter!");
+            throw runtime_exception("Lambda variable was not a letter!");
         }
     }
 
@@ -237,12 +236,12 @@ public:
     }
 
     shared_ptr<LambdaExpression> reduce() override {
-        failout("Reduction was attempted, but no legal reduction was found!");
+        throw runtime_exception("Reduction was attempted, but no legal reduction was found!");
         return nullptr;
     }
 
     shared_ptr<LambdaExpression> specific_reduction(int x) override {
-        failout("Reduction was attempted, but no legal reduction was found!");
+        throw runtime_exception("Reduction was attempted, but no legal reduction was found!");
         return nullptr;
     }
 
@@ -286,7 +285,7 @@ public:
 
     void check_children_parents() const {
         if(body->get_parent() != shared_from_this())
-            failout("LambdaAbstraction failed child-parent check!");
+            throw runtime_exception("LambdaAbstraction failed child-parent check!");
     }
 
     float get_width_recursive() const {
@@ -370,7 +369,7 @@ public:
             body = body->reduce();
             body->set_parent(shared_from_this());
         } else {
-            failout("Reduction was attempted, but no legal reduction was found!");
+            throw runtime_exception("Reduction was attempted, but no legal reduction was found!");
         }
         mark_updated();
         return shared_from_this();
@@ -432,7 +431,7 @@ public:
 
     void check_children_parents() const {
         if(first->get_parent() != shared_from_this() || second->get_parent() != shared_from_this())
-            failout("LambdaApplication failed child-parent check!");
+            throw runtime_exception("LambdaApplication failed child-parent check!");
     }
 
     float get_width_recursive() const {
@@ -531,7 +530,7 @@ public:
             return shared_from_this();
         }
         else {
-            failout("Reduction was attempted, but no legal reduction was found!");
+            throw runtime_exception("Reduction was attempted, but no legal reduction was found!");
             return nullptr;
         }
     }
@@ -563,7 +562,7 @@ public:
             }
             x-=second_reductions;
         }
-        failout("Specific reduction was attempted, but no legal reduction was found! " + get_string() + "; x = " + to_string(x_copy) + ".");
+        throw runtime_exception("Specific reduction was attempted, but no legal reduction was found! " + get_string() + "; x = " + to_string(x_copy) + ".");
         return nullptr;
     }
 
@@ -627,7 +626,7 @@ shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const Lambd
 }
 
 void LambdaExpression::set_positions() {
-    if(!parent.expired()) failout("set_positions called on a child expression");
+    if(!parent.expired()) throw runtime_exception("set_positions called on a child expression");
 
     int iter_x = 0;
     stack<shared_ptr<LambdaApplication>> applications_in_reverse;
@@ -685,8 +684,8 @@ void LambdaExpression::set_positions() {
 }
 
 Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
-    if(!parent.expired()) failout("draw_lambda_diagram called on a child expression");
-    if(w + h + x + y == 0) failout("Attempted drawing lambda diagram with unset positions!");
+    if(!parent.expired()) throw runtime_exception("draw_lambda_diagram called on a child expression");
+    if(w + h + x + y == 0) throw runtime_exception("Attempted drawing lambda diagram with unset positions!");
     float bounding_box_w = get_width_recursive() + 4;
     float bounding_box_h = get_height_recursive() + 4;
     Pixels pix(bounding_box_w * scale, bounding_box_h * scale);
@@ -790,6 +789,6 @@ shared_ptr<LambdaExpression> parse_lambda_from_string(const string& input) {
     }
 
     // No valid pattern was matched
-    failout("Failed to parse string!");
+    throw runtime_exception("Failed to parse string!");
     return nullptr;
 }

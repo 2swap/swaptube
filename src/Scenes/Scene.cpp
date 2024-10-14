@@ -51,20 +51,20 @@ public:
         render();
     }
 
-    void inject_audio(const AudioSegment& audio, int expected_video_sessions){
+    void inject_audio(const AudioSegment& audio, int expected_microblocks){
         WRITER.add_shtooka(audio);
         if(!FOR_REAL)
             return;
         cout << "Scene says: " << audio.get_subtitle_text() << endl;
-        if (video_sessions_left != 0) {
-            failout("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
-                    "This macroblock was created with " + to_string(video_sessions_total) + " total video sessions, "
-                    "but render() was only called " + to_string(video_sessions_total-video_sessions_left) + " times.");
+        if (remaining_microblocks != 0) {
+            throw runtime_exception("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
+                    "This macroblock was created with " + to_string(total_microblocks) + " total microblocks, "
+                    "but render() was only called " + to_string(total_microblocks - remaining_microblocks) + " times.");
         }
 
         total_macroblock_frames = remaining_macroblock_frames = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
-        video_sessions_total = video_sessions_left = expected_video_sessions;
-        cout << "Macroblock should last " << remaining_macroblock_frames << " frames, with " << expected_video_sessions << " sessions.";
+        total_microblocks = remaining_microblocks = expected_microblocks;
+        cout << "Macroblock should last " << remaining_macroblock_frames << " frames, with " << expected_microblocks << " microblocks.";
     }
 
     void render(){
@@ -79,16 +79,16 @@ public:
         int complete_microblocks = total_microblocks - remaining_microblocks;
         int complete_macroblock_frames = total_macroblock_frames - remaining_macroblock_frames;
         double num_frames_per_session = static_cast<double>(total_macroblock_frames) / total_microblocks;
-        int num_frames_to_be_done_after_this_time = round(num_frames_per_session * (video_sessions_done + 1));
+        int num_frames_to_be_done_after_this_time = round(num_frames_per_session * (completed_microblocks + 1));
         scene_duration_frames = num_frames_to_be_done_after_this_time - complete_macroblock_frames;
-        cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (sessions left: " << video_sessions_left << ", " << remaining_macroblock_frames << " frames total)" << endl;
+        cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (microblocks left: " << remaining_microblocks << ", " << remaining_macroblock_frames << " frames total)" << endl;
 
         for (int frame = 0; frame < scene_duration_frames; frame++) {
             render_one_frame(frame);
         }
         cout << endl;
-        video_sessions_left--;
-        if(video_sessions_left == 0){
+        remaining_microblocks--;
+        if(remaining_microblocks == 0){
             global_state["audio_segment_number"]++;
             state_manager.close_macroblock_transitions();
         }
@@ -128,8 +128,8 @@ private:
 
         state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"]});
 
-        if (video_sessions_left == 0) {
-            failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
+        if (remaining_microblocks == 0) {
+            throw runtime_exception("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
         }
 
         Pixels* p = nullptr;

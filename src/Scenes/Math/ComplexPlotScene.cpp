@@ -248,7 +248,7 @@ public:
         return StateQuery{
             //TODO this is a mess.
         };
-        failout("Unimplemented function in ComplexPlotScene. TODO");
+        throw runtime_exception("Unimplemented function in ComplexPlotScene. TODO");
     }
     void mark_data_unchanged() override { }
     void change_data() override { } // ComplexPlotScene has no DataObjects
