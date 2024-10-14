@@ -58,30 +58,30 @@ public:
         cout << "Scene says: " << audio.get_subtitle_text() << endl;
         if (video_sessions_left != 0) {
             failout("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
-                    "This superscene was created with " + to_string(video_sessions_total) + " total video sessions, "
+                    "This macroblock was created with " + to_string(video_sessions_total) + " total video sessions, "
                     "but render() was only called " + to_string(video_sessions_total-video_sessions_left) + " times.");
         }
 
-        superscene_frames_total = superscene_frames_left = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
+        total_macroblock_frames = remaining_macroblock_frames = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
         video_sessions_total = video_sessions_left = expected_video_sessions;
-        cout << "Scene should last " << superscene_frames_left << " frames, with " << expected_video_sessions << " sessions.";
+        cout << "Macroblock should last " << remaining_macroblock_frames << " frames, with " << expected_video_sessions << " sessions.";
     }
 
     void render(){
         if(!FOR_REAL){
-            state_manager.close_all_subscene_transitions();
-            state_manager.close_all_superscene_transitions();
+            state_manager.close_microblock_transitions();
+            state_manager.close_macroblock_transitions();
             on_end_transition();
             state_manager.evaluate_all();
             return;
         }
 
-        int video_sessions_done = video_sessions_total - video_sessions_left;
-        int superscene_frames_done = superscene_frames_total - superscene_frames_left;
-        double num_frames_per_session = static_cast<double>(superscene_frames_total) / video_sessions_total;
+        int complete_microblocks = total_microblocks - remaining_microblocks;
+        int complete_macroblock_frames = total_macroblock_frames - remaining_macroblock_frames;
+        double num_frames_per_session = static_cast<double>(total_macroblock_frames) / total_microblocks;
         int num_frames_to_be_done_after_this_time = round(num_frames_per_session * (video_sessions_done + 1));
-        scene_duration_frames = num_frames_to_be_done_after_this_time - superscene_frames_done;
-        cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (sessions left: " << video_sessions_left << ", " << superscene_frames_left << " frames total)" << endl;
+        scene_duration_frames = num_frames_to_be_done_after_this_time - complete_macroblock_frames;
+        cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (sessions left: " << video_sessions_left << ", " << remaining_macroblock_frames << " frames total)" << endl;
 
         for (int frame = 0; frame < scene_duration_frames; frame++) {
             render_one_frame(frame);
@@ -90,9 +90,9 @@ public:
         video_sessions_left--;
         if(video_sessions_left == 0){
             global_state["audio_segment_number"]++;
-            state_manager.close_all_superscene_transitions();
+            state_manager.close_macroblock_transitions();
         }
-        state_manager.close_all_subscene_transitions();
+        state_manager.close_microblock_transitions();
         on_end_transition();
     }
 
@@ -119,14 +119,14 @@ public:
     StateManager state_manager;
 
 private:
-    void render_one_frame(int subscene_frame){
+    void render_one_frame(int microblock_frame_number){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
         global_state["frame_number"]++;
-        global_state["superscene_transition_fraction"] = 1 - static_cast<double>(superscene_frames_left) / superscene_frames_total;
-        global_state["subscene_transition_fraction"] = static_cast<double>(subscene_frame) / scene_duration_frames;
+        global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_macroblock_frames) / total_macroblock_frames;
+        global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
 
-        state_manager_time_plot.add_datapoint(vector<double>{global_state["superscene_transition_fraction"], global_state["subscene_transition_fraction"]});
+        state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"]});
 
         if (video_sessions_left == 0) {
             failout("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
@@ -144,7 +144,7 @@ private:
             pix_to_png(p->naive_scale_down(5), "frames/frame_"+stream.str());
         }
         WRITER.add_frame(*p);
-        superscene_frames_left--;
+        remaining_macroblock_frames--;
 
         auto end_time = chrono::high_resolution_clock::now(); // End timing
         chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
@@ -156,11 +156,11 @@ private:
 
 protected:
     Pixels pix;
-    int video_sessions_left = 0;
-    int video_sessions_total = 0;
+    int remaining_microblocks = 0;
+    int total_microblocks = 0;
     int scene_duration_frames = 0;
-    int superscene_frames_left = 0;
-    int superscene_frames_total = 0;
+    int remaining_macroblock_frames = 0;
+    int total_macroblock_frames = 0;
     bool has_ever_rendered = false;
     State state;
     State last_state;

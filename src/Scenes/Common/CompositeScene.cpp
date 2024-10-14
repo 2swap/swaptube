@@ -13,7 +13,7 @@ public:
     CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
         : Scene(width, height) {}
 
-    void add_scene_fade_in(Scene* sc, string state_manager_name, double x, double y, bool subscene){
+    void add_scene_fade_in(Scene* sc, string state_manager_name, double x, double y, bool micro){
         add_scene(sc, state_manager_name, x, y);
         state_manager.set(unordered_map<string, string> {
             {state_manager_name + ".y", to_string(y+.1)},
@@ -23,8 +23,8 @@ public:
             {state_manager_name + ".y", to_string(y)},
             {state_manager_name + ".opacity", "1"},
         };
-        if(subscene) state_manager.  subscene_transition(map);
-        else         state_manager.superscene_transition(map);
+        if(micro) state_manager.microblock_transition(map);
+        else      state_manager.macroblock_transition(map);
     }
 
     void add_scene(Scene* sc, string state_manager_name, double x, double y){
@@ -43,7 +43,7 @@ public:
             unordered_map<string, string> map = {
                 {swp.state_manager_name + ".opacity", "0"}
             };
-            state_manager.subscene_transition(map);
+            state_manager.microblock_transition(map);
         }
     }
 
@@ -72,8 +72,8 @@ public:
     void on_end_transition() override {
         for(const auto& swp : scenes){
             swp.scenePointer->on_end_transition();
-            swp.scenePointer->state_manager.close_all_subscene_transitions();
-            swp.scenePointer->state_manager.close_all_superscene_transitions();
+            swp.scenePointer->state_manager.close_microblock_transitions();
+            swp.scenePointer->state_manager.close_macroblock_transitions();
         }
     }
 

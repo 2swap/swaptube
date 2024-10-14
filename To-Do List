@@ -1,5 +1,15 @@
 To-Do List
 
+Composite- specify the center of the subscene instead of the top left?
+Make scene definition take the fraction of the screen, instead of a full size in pixels?
+Three-dimension scene is a total mess, refactor. Also refactor its interface with Graph/GraphScene
+Smart exit on failout?
+replace bespoke failout function with c++ style error throwing
+Graph has random pointers all over and it probably shouldn't
+Perhaps check for correctness of the number of render/inject_audio calls before running somehow?
+Abstract out a ParentScene class so that non-parent classes need not implement parenty functions
+Rename subscene and superscene
+
 	Scene/Project Specific
 Steady State Verifier
 Rubik's Scene

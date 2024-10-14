@@ -86,9 +86,9 @@ private:
 
 static unordered_map<string, double> global_state{
     {"frame_number", 0},
-    {"audio_segment_number", 0},
-    {"superscene_transition_fraction", 0},
-    {"subscene_transition_fraction", 0},
+    {"macroblock_number", 0},
+    {"macroblock_fraction", 0},
+    {"microblock_fraction", 0},
 };
 
 class StateManager {
@@ -136,10 +136,10 @@ public:
             } else break;
         }
     }
-    void add_subscene_transition(string variable, string equation) {
+    void add_microblock_transition(string variable, string equation) {
         add_transition(variable, equation, true);
     }
-    void add_superscene_transition(string variable, string equation) {
+    void add_macroblock_transition(string variable, string equation) {
         add_transition(variable, equation, false);
     }
     void remove_equation(string variable) {
@@ -156,14 +156,14 @@ public:
     }
 
     /* Bulk Modifiers. Naive. One per modifier. */
-    void subscene_transition(std::unordered_map<std::string, std::string> equations) {
+    void microblock_transition(std::unordered_map<std::string, std::string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
-            add_subscene_transition(it->first, it->second);
+            add_microblock_transition(it->first, it->second);
         }
     }
-    void superscene_transition(std::unordered_map<std::string, std::string> equations) {
+    void macroblock_transition(std::unordered_map<std::string, std::string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
-            add_superscene_transition(it->first, it->second);
+            add_macroblock_transition(it->first, it->second);
         }
     }
     void set(std::unordered_map<std::string, std::string> equations) {
@@ -177,12 +177,12 @@ public:
         }
     }
 
-    void close_all_subscene_transitions(){
-        close_all_transitions(in_subscene_transition);
+    void close_microblock_transitions(){
+        close_all_transitions(in_microblock_transition);
     }
 
-    void close_all_superscene_transitions(){
-        close_all_transitions(in_superscene_transition);
+    void close_macroblock_transitions(){
+        close_all_transitions(in_macroblock_transition);
     }
 
     void evaluate_all() {
@@ -273,8 +273,8 @@ private:
     list<string> last_compute_order;
 
     // A list of all variable names which are currently undergoing transitions
-    unordered_set<string> in_subscene_transition;
-    unordered_set<string> in_superscene_transition;
+    unordered_set<string> in_microblock_transition;
+    unordered_set<string> in_macroblock_transition;
 
     StateManager* parent = nullptr;
 
@@ -358,23 +358,23 @@ private:
         in_transition.clear();
     }
 
-    void add_transition(string variable, string equation, bool subscene) {
+    void add_transition(string variable, string equation, bool micro) {
         // No point in doing a noop transition
         if(get_equation(variable) == equation) return;
 
         // Nested transitions not supported
-        if(  in_subscene_transition.find(variable) !=   in_subscene_transition.end() ||
-           in_superscene_transition.find(variable) != in_superscene_transition.end()){
+        if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
+           in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
             failout("Transition added to a variable already in transition: " + variable);
         }
 
-        if(subscene)
-            in_subscene_transition.insert(variable);
+        if(micro)
+            in_microblock_transition.insert(variable);
         else
-            in_superscene_transition.insert(variable);
+            in_macroblock_transition.insert(variable);
         string eq1 = get_equation(variable);
         string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (subscene?"sub":"super") + "scene_transition_fraction> smoothlerp";
+        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (micro?"micro":"macro") + "block_fraction> smoothlerp";
         add_equation(variable+".pre_transition", eq1);
         add_equation(variable+".post_transition", eq2);
         add_equation(variable, lerp_both);

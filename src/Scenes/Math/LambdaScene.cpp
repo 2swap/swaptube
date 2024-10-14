@@ -12,7 +12,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"subscene_transition_fraction", "title_opacity", "latex_opacity"};
+        return StateQuery{"microblock_fraction", "title_opacity", "latex_opacity"};
     }
 
     void reduce(){
@@ -57,7 +57,7 @@ public:
             render_diagrams(); 
             pix.overwrite(le_pix, (pix.w-le_pix.w)*.5, (pix.h-le_pix.h)*.5);
         } else {
-            float trans_frac = state["subscene_transition_fraction"];
+            float trans_frac = state["microblock_fraction"];
             pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> interpolated = get_interpolated(last_le, le, trans_frac);
             float scale = smoothlerp(get_scale(last_le), get_scale(le), trans_frac);
             Pixels p1 = interpolated.first->draw_lambda_diagram(scale);

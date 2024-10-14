@@ -23,7 +23,7 @@ public:
     }
 
     double call_the_function(double x, const FunctionData& func_data) {
-        double stf = state["subscene_transition_fraction"];
+        double stf = state["microblock_fraction"];
         string xstring = to_string(x);
         string f1 = replace_substring(func_data.function, "?", xstring);
         string f2 = replace_substring(func_data.transition_function, "?", xstring);
@@ -99,7 +99,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"subscene_transition_fraction"};
+        return StateQuery{"microblock_fraction"};
     }
 
     void mark_data_unchanged() override {}
