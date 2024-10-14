@@ -6,7 +6,7 @@
 
 class C4GraphScene : public GraphScene<C4Board> {
 public:
-    C4GraphScene(Graph<C4Board>* g, string rep, C4BranchMode mode, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    C4GraphScene(Graph<C4Board>* g, string rep, C4BranchMode mode, const double width = 1, const double height = 1)
     : GraphScene(g, width, height), root_node_representation(rep) {
         c4_branch_mode = mode;
 

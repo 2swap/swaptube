@@ -6,7 +6,7 @@
 
 class BiographyScene : public Scene {
 public:
-    BiographyScene(string picture, const string& n, const vector<string>& biography_text, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    BiographyScene(string picture, const string& n, const vector<string>& biography_text, const double width = 1, const double height = 1)
         : Scene(width, height), picture_name(picture), name(n), bio_text(biography_text) {
         draw();
     }

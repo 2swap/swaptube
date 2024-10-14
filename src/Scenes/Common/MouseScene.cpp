@@ -4,7 +4,7 @@
 
 class MouseScene : public Scene {
 public:
-    MouseScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
+    MouseScene(const double width = 1, const double height = 1) : Scene(width, height) {}
 
     const StateQuery populate_state_query() const override {
         return StateQuery{"mouse_x", "mouse_y"};

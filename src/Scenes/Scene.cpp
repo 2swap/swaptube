@@ -18,11 +18,10 @@ static bool SAVE_FRAME_PNGS = true;
 
 class Scene {
 public:
-    Scene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
-        : state_manager(), pix(width, height) {
-        state_manager.add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
-        state_manager.add_equation("w", to_string(width));
-        state_manager.add_equation("h", to_string(height));
+    Scene(const double width = 1, const double height = 1)
+        : state_manager(), scaleup(width<2.5&&height<2.5), pix(scaleup?width*VIDEO_WIDTH:width, scaleup?height*VIDEO_HEIGHT:height) {
+        state_manager.add_equation("w", to_string(scaleup?width*VIDEO_WIDTH:width));
+        state_manager.add_equation("h", to_string(scaleup?height*VIDEO_HEIGHT:height));
     }
 
     // Scenes which contain other scenes use this to populate the StateQuery
@@ -133,7 +132,7 @@ private:
         }
 
         Pixels* p = nullptr;
-        WRITER.set_time(state_manager["t"]);
+        WRITER.set_time(global_state["frame_number"] / VIDEO_FRAMERATE);
         query(p);
         if(PRINT_TO_TERMINAL && (int(global_state["frame_number"]) % 5 == 0)) p->print_to_terminal();
         if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % VIDEO_FRAMERATE == 0)) {
@@ -155,6 +154,7 @@ private:
     }
 
 protected:
+    bool scaleup = false;
     Pixels pix;
     int remaining_microblocks = 0;
     int total_microblocks = 0;

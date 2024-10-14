@@ -5,7 +5,7 @@
 
 class TwoswapScene : public Scene {
 public:
-    TwoswapScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {
+    TwoswapScene(const double width = 1, const double height = 1) : Scene(width, height) {
         ScalingParams sp(pix.w*.7, pix.h);
         saved_pix = Pixels(width, height);
         Pixels twoswap_pix = latex_to_pix(latex_text("2swap"), sp);

@@ -5,7 +5,7 @@
 // The idea here is that the user does whatever they want with the Pixels object, manually
 class ExposedPixelsScene : public Scene {
 public:
-    ExposedPixelsScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
+    ExposedPixelsScene(const double width = 1, const double height = 1) : Scene(width, height) {}
 
     const StateQuery populate_state_query() const override {
         return StateQuery{};

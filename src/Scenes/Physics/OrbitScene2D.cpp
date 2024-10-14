@@ -12,7 +12,7 @@ int* colors, int* times // outputs
 
 class OrbitScene2D : public Scene {
 public:
-    OrbitScene2D(OrbitSim* sim, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    OrbitScene2D(OrbitSim* sim, const double width = 1, const double height = 1)
         : Scene(width, height), simulation(sim) {}
 
     void render_point_path(){

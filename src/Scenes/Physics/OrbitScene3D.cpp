@@ -15,7 +15,7 @@ int* colors, int* times // outputs
 
 class OrbitScene3D : public ThreeDimensionScene {
 public:
-    OrbitScene3D(OrbitSim* sim, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    OrbitScene3D(OrbitSim* sim, const double width = 1, const double height = 1)
         : ThreeDimensionScene(width, height), simulation(sim) {}
 
     void fill_predictions_and_add_lines() {

@@ -30,7 +30,7 @@ string double_to_string(double value) {
 
 class StateSliderScene : public Scene {
 public:
-    StateSliderScene(const string& vn, const string& dn, double min_val, double max_val, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    StateSliderScene(const string& vn, const string& dn, double min_val, double max_val, const double width = 1, const double height = 1)
     : Scene(width, height), variable_name(vn), display_name(dn), min_value(min_val), max_value(max_val) { }
 
     void draw() override {

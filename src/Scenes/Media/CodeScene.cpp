@@ -5,7 +5,7 @@
 
 class CodeScene: public ConvolutionScene {
 public:
-    CodeScene(const string& code, double suggested_scale, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    CodeScene(const string& code, double suggested_scale, const double width = 1, const double height = 1)
     : ConvolutionScene(init_code(code, width*suggested_scale, height*suggested_scale), width, height) {}
 
     void begin_code_transition(string code) {

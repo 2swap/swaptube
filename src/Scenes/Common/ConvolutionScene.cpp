@@ -8,7 +8,7 @@ inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
 
 class ConvolutionScene : public Scene {
 public:
-    ConvolutionScene(const Pixels& p, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    ConvolutionScene(const Pixels& p, const double width = 1, const double height = 1)
     : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) { }
 
     pair<int, int> get_coords_from_pixels(const Pixels& p){

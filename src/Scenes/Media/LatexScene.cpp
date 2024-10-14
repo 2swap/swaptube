@@ -5,7 +5,7 @@
 
 class LatexScene : public ConvolutionScene {
 public:
-    LatexScene(const string& latex, double suggested_scale, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    LatexScene(const string& latex, double suggested_scale, const double width = 1, const double height = 1)
     : ConvolutionScene(init_latex(latex, width*suggested_scale, height*suggested_scale), width, height) {}
 
     void begin_latex_transition(string latex) {

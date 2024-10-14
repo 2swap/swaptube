@@ -14,7 +14,7 @@ using namespace Eigen;
 
 class ComplexPlotScene : public Scene {
 public:
-    ComplexPlotScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height) {}
+    ComplexPlotScene(const double width = 1, const double height = 1) : Scene(width, height) {}
 
     std::pair<int, int> coordinate_to_pixel(std::complex<double> coordinate){
         return std::make_pair(coordinate.real()/pixel_width + w/2., coordinate.imag()/pixel_width + h/2.);

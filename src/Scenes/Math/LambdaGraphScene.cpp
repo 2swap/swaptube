@@ -6,7 +6,7 @@
 
 class LambdaGraphScene : public GraphScene<HashableString> {
 public:
-    LambdaGraphScene(Graph<HashableString>* g, string rep, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    LambdaGraphScene(Graph<HashableString>* g, string rep, const double width = 1, const double height = 1)
     : GraphScene(g, width, height), root_node_representation(rep) {
         HashableString* reppy = new HashableString(rep);
         graph->add_to_stack(reppy);

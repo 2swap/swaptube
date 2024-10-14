@@ -14,7 +14,7 @@ struct FunctionData {
 
 class RealFunctionScene : public Scene {
 public:
-    RealFunctionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    RealFunctionScene(const double width = 1, const double height = 1)
         : Scene(width, height) {}
 
     std::pair<int, int> coordinate_to_pixel(std::pair<double, double> coordinate) {

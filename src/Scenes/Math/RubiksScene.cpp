@@ -5,7 +5,7 @@
 
 class RubiksScene : public ThreeDimensionScene {
 public:
-    RubiksScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : ThreeDimensionScene(width, height) {}
+    RubiksScene(const double width = 1, const double height = 1) : ThreeDimensionScene(width, height) {}
 
     void update_surfaces(){
         for(glm::quat q : symmetries) {

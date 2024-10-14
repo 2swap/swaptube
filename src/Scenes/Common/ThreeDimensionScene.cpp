@@ -105,7 +105,7 @@ public:
 
 class ThreeDimensionScene : public Scene {
 public:
-    ThreeDimensionScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    ThreeDimensionScene(const double width = 1, const double height = 1)
         : Scene(width, height), sketchpad(width, height) {
         state_manager.set(unordered_map<string, string>{
             {"fov", ".5"},

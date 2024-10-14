@@ -5,7 +5,7 @@
 
 class PngScene : public Scene {
 public:
-    PngScene(string pn, const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT) : Scene(width, height), picture_name(pn) { draw(); }
+    PngScene(string pn, const double width = 1, const double height = 1) : Scene(width, height), picture_name(pn) { draw(); }
 
     bool check_if_data_changed() const override { return false; }
     void mark_data_unchanged() override { }

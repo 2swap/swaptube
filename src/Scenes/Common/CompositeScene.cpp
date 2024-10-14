@@ -10,7 +10,7 @@ struct SceneWithPosition {
 
 class CompositeScene : public Scene {
 public:
-    CompositeScene(const int width = VIDEO_WIDTH, const int height = VIDEO_HEIGHT)
+    CompositeScene(const double width = 1, const double height = 1)
         : Scene(width, height) {}
 
     void add_scene_fade_in(Scene* sc, string state_manager_name, double x, double y, bool micro){
@@ -88,7 +88,8 @@ public:
         for (auto& swp : scenes){
             Pixels* p = nullptr;
             swp.scenePointer->query(p);
-            pix.overlay(*p, state[swp.state_manager_name + ".x"] * get_width(), state[swp.state_manager_name + ".y"] * get_height(), state[swp.state_manager_name + ".opacity"]);
+            pix.overlay(*p, state[swp.state_manager_name + ".x"] * get_width () - swp->get_width ()/2,
+                            state[swp.state_manager_name + ".y"] * get_height() - swp->get_height()/2, state[swp.state_manager_name + ".opacity"]);
         }
     }
 
