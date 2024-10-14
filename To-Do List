@@ -1,7 +1,6 @@
 To-Do List
 
 Composite Child can't own its own transitions?? this is a bug i think
-Make scene definition take the fraction of the screen, instead of a full size in pixels?
 Three-dimension scene is a total mess, refactor. Also refactor its interface with Graph/GraphScene
 Graph has random pointers all over and it probably shouldn't
 Perhaps check for correctness of the number of render/inject_audio calls before running somehow?
@@ -12,5 +11,4 @@ Prepare c4 scene for steady state diagrams
 Decrease Bitrate? Somehow fight the youtube compression algorithm?
 Abstract out the idea of Coordinate Systems
 Abstract out the idea of a project? The Project constructor makes the writer and stuff?
-
-
+Test that using new runtimeerror structure, we observe that the video saves on runtime error

@@ -37,7 +37,7 @@ public:
     }
 
     Surface make_surface(Node<T> node) const override {
-        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<C4Scene>(node.data->representation, 600, 600), node.opacity);
+        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<C4Scene>(node.data->representation, .25, .25), node.opacity);
     }
 
     bool color_edges = true;

@@ -15,24 +15,10 @@ public:
         });
     }
 
-    void update_surfaces(){
-        for(pair<double, Node<HashableString>> p : graph->nodes){
-            Node<HashableString>& node = p.second;
-            if(graph_surface_map.find(node.id) != graph_surface_map.end()) {
-                graph_surface_map[node.id].opacity = node.opacity;
-                graph_surface_map[node.id].center = glm::vec3(node.position);
-            } else {
-                shared_ptr<LambdaExpression> lambda = parse_lambda_from_string(node.data->representation);
-                lambda->set_color_recursive(node.color);
-                graph_surface_map[node.id] = Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LambdaScene>(lambda, 600, 600), node.opacity);
-            }
-        }
-    }
-
     Surface make_surface(Node<T> node) const override {
         shared_ptr<LambdaExpression> lambda = parse_lambda_from_string(node.data->representation);
         lambda->set_color_recursive(node.color);
-        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LambdaScene>(lambda, 600, 600), node.opacity);
+        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LambdaScene>(lambda, .25, .25), node.opacity);
     }
 
 private:

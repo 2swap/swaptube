@@ -19,9 +19,9 @@ static bool SAVE_FRAME_PNGS = true;
 class Scene {
 public:
     Scene(const double width = 1, const double height = 1)
-        : state_manager(), scaleup(width<2.5&&height<2.5), pix(scaleup?width*VIDEO_WIDTH:width, scaleup?height*VIDEO_HEIGHT:height) {
-        state_manager.add_equation("w", to_string(scaleup?width*VIDEO_WIDTH:width));
-        state_manager.add_equation("h", to_string(scaleup?height*VIDEO_HEIGHT:height));
+        : state_manager(), pix(width*VIDEO_WIDTH, height*VIDEO_HEIGHT) {
+        state_manager.add_equation("w", to_string(pix.w));
+        state_manager.add_equation("h", to_string(pix.h));
     }
 
     // Scenes which contain other scenes use this to populate the StateQuery
@@ -154,7 +154,6 @@ private:
     }
 
 protected:
-    bool scaleup = false;
     Pixels pix;
     int remaining_microblocks = 0;
     int total_microblocks = 0;
