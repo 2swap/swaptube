@@ -75,9 +75,9 @@ SteadyState read_from_file(const string& filename) {
                 // Check if the line length matches the expected width
                 if (line.length() == static_cast<size_t>(C4_WIDTH)) {
                     chars[y] = line;
-                } else throw runtime_exception("Invalid line length in the file.");
-            } else throw runtime_exception("STEADYSTATE CACHE READ ERROR");
+                } else throw runtime_error("Invalid line length in the file.");
+            } else throw runtime_error("STEADYSTATE CACHE READ ERROR");
         }
-    } else throw runtime_exception("Failed to read SteadyState file.");
+    } else throw runtime_error("Failed to read SteadyState file.");
     return SteadyState(chars);
 }

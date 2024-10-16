@@ -3,6 +3,7 @@
 #include <vector>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdexcept>
 #include <sys/ioctl.h>
 #include <fstream>
 #include <sstream>
@@ -378,7 +379,7 @@ public:
 
     Pixels naive_scale_down(int scale_down_factor) const {
         if(w%scale_down_factor != 0 || h%scale_down_factor != 0)
-            throw runtime_exception("Naive scaledown was called with a scaling factor that doesn't divide the Pixels dimensions!");
+            throw runtime_error("Naive scaledown was called with a scaling factor that doesn't divide the Pixels dimensions!");
         Pixels result(w/scale_down_factor, h/scale_down_factor);
 
         for (int y = 0; y*scale_down_factor < w; y++) {

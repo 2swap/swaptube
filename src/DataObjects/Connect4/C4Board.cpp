@@ -125,7 +125,7 @@ void C4Board::fill_board_from_string(const string& rep) {
 void C4Board::play_piece(int piece){
     if(piece < 0) {
         print();
-        throw runtime_exception("Attempted playing a piece in an illegal column. Representation: " + representation + ", piece: " + to_string(piece));
+        throw runtime_error("Attempted playing a piece in an illegal column. Representation: " + representation + ", piece: " + to_string(piece));
     }
     if(hash != 0) {print(); cout << "oops " << representation << " " << piece << endl; exit(1);}
 
@@ -162,7 +162,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     if (!pipe) {
         C4Board c4(representation);
         cout << setprecision (15) << c4.get_hash() << endl;
-        throw runtime_exception("fhourstones error!");
+        throw runtime_error("fhourstones error!");
     }
     char buffer[4096];
     string result = "";
@@ -451,7 +451,7 @@ json C4Board::get_data() const {
 
 void C4Board::add_only_child_steady_state(unordered_set<C4Board*>& neighbors){
     if(steadystate == nullptr)
-        throw runtime_exception("Querying a null steadystate!");
+        throw runtime_error("Querying a null steadystate!");
     int x = steadystate->query_steady_state(*this);
     C4Board moved = child(x);
     neighbors.insert(new C4Board(moved));

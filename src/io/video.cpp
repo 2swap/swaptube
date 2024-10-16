@@ -201,7 +201,7 @@ public:
     }
     void add_frame(const Pixels& p) {
         if(p.w != VIDEO_WIDTH || p.h != VIDEO_HEIGHT)
-            throw runtime_exception("Frame dimensions were expected to be (" + to_string(VIDEO_WIDTH) + ", " + to_string(VIDEO_HEIGHT) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
+            throw runtime_error("Frame dimensions were expected to be (" + to_string(VIDEO_WIDTH) + ", " + to_string(VIDEO_HEIGHT) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
 
         for (unsigned int y = 0; y < VIDEO_HEIGHT; y++)
         {

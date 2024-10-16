@@ -33,7 +33,7 @@ public:
     }
 
     void begin_transition(int index, const string& s){
-        if (index < 0 || index >= functions.size()) throw runtime_exception("Bad function index!");
+        if (index < 0 || index >= functions.size()) throw runtime_error("Bad function index!");
         functions[index].transition_function = s;
     }
 

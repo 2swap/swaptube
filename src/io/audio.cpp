@@ -78,18 +78,18 @@ public:
     void init_audio() {
         // Check if the input file exists
         if (!filesystem::exists(PATH_MANAGER.testaudio_path)) {
-            throw runtime_exception("Error: Input audio file " + PATH_MANAGER.testaudio_path + " does not exist.");
+            throw runtime_error("Error: Input audio file " + PATH_MANAGER.testaudio_path + " does not exist.");
         }
 
         AVFormatContext* inputAudioFormatContext = nullptr;
         if (avformat_open_input(&inputAudioFormatContext, PATH_MANAGER.testaudio_path.c_str(), nullptr, nullptr) < 0) {
-            throw runtime_exception("Error: Could not open input audio file " + PATH_MANAGER.testaudio_path);
+            throw runtime_error("Error: Could not open input audio file " + PATH_MANAGER.testaudio_path);
         }
 
         // Find input audio stream information
         if (avformat_find_stream_info(inputAudioFormatContext, nullptr) < 0){
             avformat_close_input(&inputAudioFormatContext);
-            throw runtime_exception("Error: Could not find stream information in input audio file " + PATH_MANAGER.testaudio_path);
+            throw runtime_error("Error: Could not find stream information in input audio file " + PATH_MANAGER.testaudio_path);
         }
 
         // Find input audio stream
@@ -206,7 +206,7 @@ public:
         AVFormatContext* inputAudioFormatContext = nullptr;
         int ret = avformat_open_input(&inputAudioFormatContext, fullInputAudioFilename.c_str(), nullptr, nullptr);
         if (ret < 0) {
-            throw runtime_exception("Error opening input audio file.");
+            throw runtime_error("Error opening input audio file.");
         }
 
         // Read input audio frames and write to output format context

@@ -99,7 +99,7 @@ bool testCUDA() {
     return true;
 }
 
-int main() {
+int selfcheck_main() {
     testCUDA();
     return 0;
 }

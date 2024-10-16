@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../io/PathManager.cpp"
 #include "../misc/pixels.h"
 #include "subs.cpp"
 #include "audio.cpp"

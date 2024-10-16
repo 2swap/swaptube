@@ -34,10 +34,6 @@ class Mandelbrot {
             for(d = 0; d < depth; d++){
                 if(z.magnitude2() > radius2) return d;
                 z = z.pow(x) + c;
-#ifdef BURNING_SHIP
-                z.real = std::abs(z.real);
-                z.img = std::abs(z.img);
-#endif
                 d++;
             }
             if(z.magnitude2() > radius2){
@@ -50,10 +46,6 @@ class Mandelbrot {
             for(d = 0; d < depth; d++){
                 if(z.magnitude2() > escape_radius_squared) return d;
                 z = z*z + c;
-#ifdef BURNING_SHIP
-                z.real = std::abs(z.real);
-                z.img = std::abs(z.img);
-#endif
                 d++;
             }
             if(z.magnitude2() > escape_radius_squared){

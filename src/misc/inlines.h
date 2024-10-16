@@ -37,7 +37,7 @@ long get_free_memory() {
 
      if (sysinfo(&memInfo) != 0) {
          perror("sysinfo");
-         throw runtime_exception("Unable to call sysinfo to determine system memory");
+         throw runtime_error("Unable to call sysinfo to determine system memory");
      }
 
      // Free memory in mb
