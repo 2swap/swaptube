@@ -26,7 +26,7 @@ __global__ void iterate_function(
     const int width, const int height,
     const cuDoubleComplex seed_z, const cuDoubleComplex seed_x, const cuDoubleComplex seed_c,
     const glm::vec3 pixel_parameter_multipliers,
-    const cuDoubleComplex offset, const cuDoubleComplex zoom,
+    const cuDoubleComplex zoom,
     int max_iterations,
     unsigned int* colors
 ) {
@@ -41,8 +41,7 @@ __global__ void iterate_function(
         4 * ((float)y / (float)height - 0.5f)
     );
 
-    // Apply offset and zoom
-    pixel = cuCmul(cuCadd(pixel, offset), zoom);
+    pixel = cuCmul(pixel, zoom);
 
     // Initialize the variables for Mandelbrot iteration
     cuDoubleComplex z        = cuCadd(seed_z, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.x, 0), pixel));
@@ -53,9 +52,9 @@ __global__ void iterate_function(
 
     for (; iterations < max_iterations; iterations++) {
         z = cuCadd(cuCpow(z, exponent), c);
-        int r = cuCreal(z);
+        double r = cuCreal(z);
         int i = cuCimag(z);
-        if (r*r+i*i > 256.0f) {  // Escape radius is 2, compare with |z|^2 > 4
+        if (r*r+i*i > 4.0f) {  // Escape radius is 2, compare with |z|^2 > 4
             break;
         }
     }
@@ -68,7 +67,7 @@ extern "C" void mandelbrot_render(
     const int width, const int height,
     const std::complex<double> seed_z, const std::complex<double> seed_x, const std::complex<double> seed_c,
     const glm::vec3 pixel_parameter_multipliers,
-    const std::complex<double> offset, const std::complex<double> zoom,
+    const std::complex<double> zoom,
     int max_iterations,  // Pass max_iterations as a parameter
     unsigned int* colors
 ) {
@@ -87,7 +86,7 @@ extern "C" void mandelbrot_render(
         width, height,
         make_cuDoubleComplex(seed_z.real(), seed_z.imag()), make_cuDoubleComplex(seed_x.real(), seed_x.imag()), make_cuDoubleComplex(seed_c.real(), seed_c.imag()),
         pixel_parameter_multipliers,
-        make_cuDoubleComplex(offset.real(), offset.imag()), make_cuDoubleComplex(zoom.real(), zoom.imag()),
+        make_cuDoubleComplex(zoom.real(), zoom.imag()),
         max_iterations, d_colors
     );
 

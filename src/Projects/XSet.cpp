@@ -22,8 +22,6 @@ void intro() {
     ms.state_manager.set(unordered_map<string,string>{
         {"zoom_r", "2"},
         {"zoom_i", "0"},
-        {"offset_r", "0"},
-        {"offset_i", "0"},
         {"max_iterations", "100"},
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
@@ -32,13 +30,30 @@ void intro() {
         {"seed_c_r", "0"},
         {"seed_c_i", "0"},
         {"pixel_param_z", "0"},
-        {"pixel_param_x", "1"},
-        {"pixel_param_c", "0"},
+        {"pixel_param_x", "0"},
+        {"pixel_param_c", "1"},
+        {"side_panel", "0"},
     });
     ms.inject_audio_and_render(AudioSegment(1));
     ms.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_c_r", "<t> sin"},
-        {"seed_c_i", "<t> cos"},
+        {"side_panel", "1"},
+    });
+    ms.inject_audio_and_render(AudioSegment(1));
+    ms.inject_audio_and_render(AudioSegment(2));
+    ms.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_x_r", "3"},
+    });
+    ms.inject_audio_and_render(AudioSegment(1));
+    ms.inject_audio_and_render(AudioSegment(2));
+    ms.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_z_r", ".5"},
+        {"seed_z_i", "-.3"},
+    });
+    ms.inject_audio_and_render(AudioSegment(1));
+    ms.inject_audio_and_render(AudioSegment(2));
+    ms.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_c_r", ".2"},
+        {"seed_c_i", "-.6"},
     });
     ms.inject_audio_and_render(AudioSegment(1));
     ms.inject_audio_and_render(AudioSegment(2));
