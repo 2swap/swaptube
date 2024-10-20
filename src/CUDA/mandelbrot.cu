@@ -4,6 +4,17 @@
 #include <complex>
 #include <cuComplex.h>  // Use cuDoubleComplex for complex numbers in CUDA
 
+const double bailout_radius = 256;
+const double bailout_radius_sq = bailout_radius*bailout_radius;
+
+// Function to linearly interpolate between two colors
+__device__ unsigned int cuda_color_lerp(unsigned int c1, unsigned int c2, double t) {
+    return ((unsigned int)((1 - t) * ((c1 >> 24) & 0xff) + t * ((c2 >> 24) & 0xff)) << 24) |
+           ((unsigned int)((1 - t) * ((c1 >> 16) & 0xff) + t * ((c2 >> 16) & 0xff)) << 16) |
+           ((unsigned int)((1 - t) * ((c1 >> 8 ) & 0xff) + t * ((c2 >> 8 ) & 0xff)) << 8 ) |
+           ((unsigned int)((1 - t) * ( c1        & 0xff) + t * ( c2        & 0xff))      ) ;
+}
+
 __device__ cuDoubleComplex cuCpow(cuDoubleComplex base, cuDoubleComplex exponent) {
     double a = cuCreal(base);
     double b = cuCimag(base);
@@ -30,6 +41,13 @@ __global__ void iterate_function(
     int max_iterations,
     unsigned int* colors
 ) {
+    const unsigned int color_palette[] = {
+        0xff5d0e41,
+        0xff00224d,
+        0xff000000,
+    };
+    const int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
+
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -43,23 +61,43 @@ __global__ void iterate_function(
 
     pixel = cuCmul(pixel, zoom);
 
-    // Initialize the variables for Mandelbrot iteration
     cuDoubleComplex z        = cuCadd(seed_z, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.x, 0), pixel));
     cuDoubleComplex exponent = cuCadd(seed_x, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.y, 0), pixel));
     cuDoubleComplex c        = cuCadd(seed_c, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.z, 0), pixel));
+    double rpe = cuCreal(exponent);
+    double log_real_part_exp = log(rpe);
+    double ppx_sq = pixel_parameter_multipliers.y * pixel_parameter_multipliers.y;
+    log_real_part_exp = log_real_part_exp * (1-ppx_sq) + 1 * ppx_sq;
 
-    int iterations = 0;
+    double iterations = 0;
+    bool bailed_out = false;
 
     for (; iterations < max_iterations; iterations++) {
         z = cuCadd(cuCpow(z, exponent), c);
         double r = cuCreal(z);
-        int i = cuCimag(z);
-        if (r*r+i*i > 4.0f) {  // Escape radius is 2, compare with |z|^2 > 4
+        double i = cuCimag(z);
+        double sq_radius = r*r+i*i;
+        if (sq_radius > bailout_radius_sq) {
+            bailed_out = true;
+            double log_zn = log(sq_radius)/2;
+            double nu = log(log_zn / log_real_part_exp) / log_real_part_exp;
+            iterations += 1-nu;
             break;
         }
     }
-    unsigned int iterColor = min(iterations*4, 255);
-    colors[y * width + x] = 0xff000000 | ((iterations == max_iterations) ? 0xffffffff : (iterColor + (iterColor<<8) + (iterColor<<16)));
+
+    unsigned int internal_color = 0xffffffff;
+    unsigned int color = internal_color;
+    if (bailed_out) {
+        int idx = floor(iterations);
+        double w = iterations - idx;
+        idx = (idx + 50000) % palette_size;
+        color = cuda_color_lerp(color_palette[idx], color_palette[(idx+1)%palette_size], w);
+        double iterfrac = iterations/max_iterations;
+        iterfrac = 1-(1-iterfrac)*(1-iterfrac)*(1-iterfrac);
+        color = cuda_color_lerp(color, internal_color, max(0.0, iterfrac));
+    }
+    colors[y * width + x] = color;
 }
 
 // Host function to launch the kernel

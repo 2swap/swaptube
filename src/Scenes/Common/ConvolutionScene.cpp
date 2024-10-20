@@ -38,9 +38,9 @@ public:
 
     void draw() override{
         if(in_transition_state) {
-            double tp = transparency_profile(state["microscene_fraction"]);
-            double tp1 = transparency_profile(1-state["microscene_fraction"]);
-            double smooth = smoother2(state["microscene_fraction"]);
+            double tp = transparency_profile(state["microblock_fraction"]);
+            double tp1 = transparency_profile(1-state["microblock_fraction"]);
+            double smooth = smoother2(state["microblock_fraction"]);
 
             double top_vx = 0;
             double top_vy = 0;
@@ -72,7 +72,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"microscene_fraction"};
+        return StateQuery{"microblock_fraction"};
     }
     void mark_data_unchanged() override { }
     void change_data() override { }

@@ -13,7 +13,7 @@ public:
     CompositeScene(const double width = 1, const double height = 1)
         : Scene(width, height) {}
 
-    void add_scene_fade_in(Scene* sc, string state_manager_name, double x, double y, bool micro){
+    void add_scene_fade_in(Scene* sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true){
         add_scene(sc, state_manager_name, x, y);
         state_manager.set(unordered_map<string, string> {
             {state_manager_name + ".y", to_string(y+.1)},
@@ -27,7 +27,7 @@ public:
         else      state_manager.macroblock_transition(map);
     }
 
-    void add_scene(Scene* sc, string state_manager_name, double x, double y){
+    void add_scene(Scene* sc, string state_manager_name, double x = 0.5, double y = 0.5){
         sc->state_manager.set_parent(&state_manager);
         state_manager.set(unordered_map<string, string> {
             {state_manager_name + ".x", to_string(x)},
@@ -88,8 +88,8 @@ public:
         for (auto& swp : scenes){
             Pixels* p = nullptr;
             swp.scenePointer->query(p);
-            pix.overlay(*p, state[swp.state_manager_name + ".x"] * get_width () - swp->get_width ()/2,
-                            state[swp.state_manager_name + ".y"] * get_height() - swp->get_height()/2, state[swp.state_manager_name + ".opacity"]);
+            pix.overlay(*p, state[swp.state_manager_name + ".x"] * get_width () - swp.scenePointer->get_width ()/2,
+                            state[swp.state_manager_name + ".y"] * get_height() - swp.scenePointer->get_height()/2, state[swp.state_manager_name + ".opacity"]);
         }
     }
 

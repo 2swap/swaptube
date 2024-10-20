@@ -6,7 +6,7 @@
 class LatexScene : public ConvolutionScene {
 public:
     LatexScene(const string& latex, double suggested_scale, const double width = 1, const double height = 1)
-    : ConvolutionScene(init_latex(latex, width*suggested_scale, height*suggested_scale), width, height) {}
+    : ConvolutionScene(init_latex(latex, width*suggested_scale*VIDEO_WIDTH, height*suggested_scale*VIDEO_HEIGHT), width, height) {}
 
     void begin_latex_transition(string latex) {
         ScalingParams sp(scale_factor);

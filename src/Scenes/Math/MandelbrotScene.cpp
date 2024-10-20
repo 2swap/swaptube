@@ -49,7 +49,7 @@ public:
                 mandelbrot_render(panel.w, panel.h,
                                   seed_z, seed_x, seed_c,
                                   glm::vec3(i==0,i==1,i==2),
-                                  zoom,
+                                  1,
                                   state["max_iterations"],
                                   panel.pixels.data()
                 );
