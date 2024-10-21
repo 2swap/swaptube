@@ -104,10 +104,6 @@ public:
         state = state_manager.get_state(populate_state_query());
     }
 
-    Pixels* expose_pixels() {
-        return &pix;
-    }
-
     int get_width() const{
         return state_manager.get_state({"w"})["w"];
     }

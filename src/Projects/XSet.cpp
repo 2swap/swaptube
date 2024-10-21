@@ -18,6 +18,7 @@ const int VIDEO_FRAMERATE = 30;
 #include "../Scenes/Media/PngScene.cpp"
 #include "../Scenes/Math/MandelbrotScene.cpp"
 #include "../Scenes/Common/TwoswapScene.cpp"
+#include "../Scenes/Common/ExposedPixelsScene.cpp"
 
 void intro() {
     FOR_REAL = false;
@@ -74,7 +75,6 @@ void intro() {
     ms.inject_audio_and_render(AudioSegment("This is another natural extension of the Mandelbrot Set which I found."));
     ms.state_manager.microblock_transition(init);
     ms.inject_audio_and_render(AudioSegment("But, let's take it from the start."));
-    FOR_REAL = true;
     ms.inject_audio_and_render(AudioSegment("This is the mandelbrot set."));
     CompositeScene cs;
     cs.add_scene(&ms, "ms");
@@ -201,16 +201,63 @@ void intro() {
     table.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} \\textbf{z stays bounded} & \\textbf{z explodes} \\\\\\\\ \\hline -1 & 1 \\\\\\\\ \\end{tabular}");
     cs.render();
     table.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} \\textbf{z stays bounded} & \\textbf{z explodes} \\\\\\\\ \\hline -1 & 1 \\\\\\\\ i & \\\\\\\\ \\end{tabular}");
+    FOR_REAL = true;
     cs.inject_audio_and_render(AudioSegment("and sometimes it won't."));
-    return;
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("That is the difference between a point inside the mandelbrot set, and outside it."));
+    cs.remove_all_scenes();
+    ExposedPixelsScene eps;
+    int gray = 0xff444444;
+    eps.exposed_pixels.fill(gray);
+    cs.add_scene(&eps, "eps");
+    cs.add_scene(&comp_axes, "comp_axes");
+    cs.state_manager.set(unordered_map<string,string>{
+        {"eps.opacity", "0"},
+        {"comp_axes.opacity", "0"},
+    });
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"eps.opacity", "1"},
+        {"comp_axes.opacity", "1"},
+    });
     cs.inject_audio_and_render(AudioSegment("If we make a plot of the complex plane,"));
     cs.inject_audio_and_render(AudioSegment("and for each value of C, we run this little simulation,"));
-    cs.inject_audio_and_render(AudioSegment("we'll paint points white if they blow up,"));
-    cs.inject_audio_and_render(AudioSegment("and black if they don't."));
+    double r = VIDEO_WIDTH/300.;
+    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.+VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 2*r, OPAQUE_BLACK);
+    cs.inject_audio_and_render(AudioSegment("we'll paint points black if they blow up,"));
+    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2., VIDEO_HEIGHT/4., 2*r, OPAQUE_WHITE);
+    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.-VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 2*r, OPAQUE_WHITE);
+    cs.inject_audio_and_render(AudioSegment("and white if they don't."));
+    int num_microblocks = 1000;
+    Pixels* queried = nullptr;
+    ms.query(queried);
+    cs.inject_audio(AudioSegment("Do that for all the points..."), num_microblocks);
+    for(int i = 0; i < num_microblocks; i++) {
+        for(int j = 0; j < 20; j++){
+            int point = rand()%(VIDEO_WIDTH*VIDEO_HEIGHT);
+            while(eps.exposed_pixels.get_pixel(point%VIDEO_WIDTH, point/VIDEO_WIDTH) != gray){
+                point = (point+7841)%(VIDEO_WIDTH*VIDEO_HEIGHT); // 7841 is an arbitrary prime
+            }
+            int x = point%VIDEO_WIDTH;
+            int y = point/VIDEO_WIDTH;
+            int col = queried->get_pixel(x, y);
+            eps.exposed_pixels.fill_circle(x, y, r, col==OPAQUE_WHITE?OPAQUE_WHITE:OPAQUE_BLACK);
+        }
+        cs.render();
+    }
+
     cs.inject_audio_and_render(AudioSegment("That gives us the characteristic shape of the Mandelbrot set."));
+    cs.add_scene(&ms, "ms");
+    cs.state_manager.set(unordered_map<string,string>{
+        {"ms.opacity", "0"},
+    });
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"ms.opacity", "1"},
+    });
     cs.inject_audio_and_render(AudioSegment("We can additionally add color to show how long it takes for the number to blow up."));
+    cs.remove_scene(&eps);
+    cs.remove_scene(&comp_axes);
     cs.inject_audio_and_render(AudioSegment("And that's how you get these pretty pictures."));
+    return;
     cs.inject_audio_and_render(AudioSegment("But let's look back at our equation."));
     cs.inject_audio_and_render(AudioSegment("We not only had the free choice of what C can be,"));
     cs.inject_audio_and_render(AudioSegment("but also the option to choose a starting value of Z."));
