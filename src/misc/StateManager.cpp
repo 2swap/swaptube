@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <list>
+#include <regex>
 #include <cassert>
 #include <iostream>
 #include "calculator.cpp"
@@ -119,6 +120,12 @@ public:
 
     /* Modifiers */
     void add_equation(string variable, string equation) {
+        // Validate variable name to contain only letters, numbers, dots, and underscores
+        regex valid_variable_regex("^[a-zA-Z0-9._]+$");
+        if (!std::regex_match(variable, valid_variable_regex)) {
+            throw runtime_error("Error adding equation to state manager: Variable name '" + variable + "' contains invalid characters.");
+        }
+
         /* When a new component is added, we do not know the
          * correct compute order anymore since there are new equations.
          */
@@ -150,8 +157,8 @@ public:
         variables.erase(variable);
     }
     void set_parent(StateManager* p) {
-        if(parent != nullptr && p != nullptr)
-            throw runtime_error("Attempted setting StateManager's parent, but StateManager already had a parent!");
+        if((parent == nullptr) == (p == nullptr))
+            throw runtime_error("Parent must change state from set to unset or vice versa.");
         parent = p;
     }
 
@@ -293,7 +300,7 @@ private:
             }
         }
 
-        // Logic to replace substrings in square brackets [] with the number of characters inside
+        // Logic to replace substrings in square brackets [] with the parent's value
         size_t start_pos = equation.find('[');
         while (start_pos != string::npos) {
             size_t end_pos = equation.find(']', start_pos);
@@ -343,7 +350,7 @@ private:
 
     double get_value_from_parent(const string& variable) const {
         if(parent == nullptr)
-            throw runtime_error("Parent is a nullptr");
+            throw runtime_error("Parent was a nullptr while looking for [" + variable + "]");
         return parent->get_value(variable);
     }
 

@@ -17,7 +17,7 @@ class MandelbrotScene : public Scene {
 public:
     MandelbrotScene(const double width = 1, const double height = 1) : Scene(width, height) { }
     const StateQuery populate_state_query() const override {
-        return StateQuery{"zoom_r", "zoom_i", "max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "side_panel"};
+        return StateQuery{"zoom_r", "zoom_i", "max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "side_panel", "point_path_length", "point_path_r", "point_path_i"};
     }
 
     void on_end_transition() override {}
@@ -26,10 +26,10 @@ public:
     bool check_if_data_changed() const override {return false;}
     void draw() override {
         glm::vec3 pixel_params = glm::normalize(glm::vec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
-        complex seed_z = complex(state["seed_z_r"], state["seed_z_i"]);
-        complex seed_x = complex(state["seed_x_r"], state["seed_x_i"]);
-        complex seed_c = complex(state["seed_c_r"], state["seed_c_i"]);
-        complex zoom = complex(state["zoom_r"], state["zoom_i"]);
+        complex seed_z(state["seed_z_r"], state["seed_z_i"]);
+        complex seed_x(state["seed_x_r"], state["seed_x_i"]);
+        complex seed_c(state["seed_c_r"], state["seed_c_i"]);
+        complex zoom(state["zoom_r"], state["zoom_i"]);
         int main_panel_w = lerp(pix.w, pix.w*3/4, state["side_panel"]);
         Pixels main_panel(main_panel_w, pix.h);
         mandelbrot_render(main_panel.w, main_panel.h,
@@ -58,7 +58,32 @@ public:
                 remaining_panels--;
             }
         }
+        if(state["point_path_length"] > 0) {
+            int pathcol = 0xffff0000;
+            complex z = seed_z + complex(state["point_path_r"], state["point_path_i"]);
+            pair<int, int> start = map_complex_to_pixel(z, zoom);
+            pix.fill_circle(start.first, start.second, get_width()/500., pathcol);
+            int iter_count = state["point_path_length"];
+            for(int i = 0; i < iter_count; i++){
+                complex new_z = pow(z, seed_x) + seed_c;
+                pair<int, int> prev = map_complex_to_pixel(z, zoom);
+                pair<int, int> next = map_complex_to_pixel(new_z, zoom);
+                pix.fill_circle(next.first, next.second, get_width()/500., pathcol);
+                pix.bresenham(prev.first, prev.second, next.first, next.second, pathcol, 1, 1);
+                z = new_z;
+                if(abs(z) > 100) return;
+            }
+        }
+    }
+
+    pair<int, int> map_complex_to_pixel(complex<double> z, complex<double> zoom){
+        z /= zoom;
+        double r = z.real();
+        double i = z.imag();
+        double px = r/4*get_height() + get_width()/2.;
+        double py = (i/4 + 0.5) * get_height();
+
+        return make_pair(px, py);
     }
 
 };
-
