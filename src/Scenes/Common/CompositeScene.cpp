@@ -1,7 +1,9 @@
 #pragma once
 
-#include <unordered_map>
 #include "../Scene.cpp"
+#include <unordered_map>
+#include <stdexcept>
+#include <algorithm>
 
 struct SceneWithPosition {
     Scene* scenePointer;
@@ -110,6 +112,39 @@ public:
         }; 
         return ret;
     }
+
+    void send_to_front(const string& state_manager_name) {
+        // Find the scene by its state_manager_name
+        auto it = std::find_if(scenes.begin(), scenes.end(),
+                               [&state_manager_name](const SceneWithPosition& swp) {
+                                   return swp.state_manager_name == state_manager_name;
+                               });
+        if (it == scenes.end()) {
+            throw std::runtime_error("Scene with specified name not found");
+        }
+
+        // Move the scene to the "front" (end of the vector, since reverse order)
+        SceneWithPosition swp = *it;
+        scenes.erase(it);
+        scenes.push_back(swp);
+    }
+
+    void send_to_back(const string& state_manager_name) {
+        // Find the scene by its state_manager_name
+        auto it = std::find_if(scenes.begin(), scenes.end(),
+                               [&state_manager_name](const SceneWithPosition& swp) {
+                                   return swp.state_manager_name == state_manager_name;
+                               });
+        if (it == scenes.end()) {
+            throw std::runtime_error("Scene with specified name not found");
+        }
+
+        // Move the scene to the "back" (beginning of the vector, since reverse order)
+        SceneWithPosition swp = *it;
+        scenes.erase(it);
+        scenes.insert(scenes.begin(), swp);
+    }
+
 
 private:
     vector<SceneWithPosition> scenes;

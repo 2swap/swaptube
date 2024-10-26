@@ -3,7 +3,7 @@ using namespace std;
 const string project_name = "XSet";
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 2;
+const float mult = 1;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -30,7 +30,7 @@ void intro() {
         {"zoom_r", "2 <zoom_exp> ^"},
         {"zoom_exp", "0"},
         {"zoom_i", "0"},
-        {"max_iterations", "50"},//TODO change to 600
+        {"max_iterations", "20"},//TODO change to 600
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
         {"seed_x_r", "2"},
@@ -324,6 +324,7 @@ void intro() {
     StateSliderScene ssci("[seed_c_i]", "C_i", -1, 1, .4, .1);
     cs.add_scene(&sscr, "sscr", 0.75, 0.8); 
     cs.add_scene(&ssci, "ssci", 0.75, 0.9); 
+    cs.send_to_front("parameterized");
     cs.state_manager.set(unordered_map<string,string>{
         {"sscr.opacity", "0"},
         {"ssci.opacity", "<sscr.opacity>"},
@@ -427,13 +428,12 @@ void intro() {
         {"seed_c_i", "-.4"},
     });
     cs.inject_audio_and_render(AudioSegment("This is a third-degree Julia set!"));
-    FOR_REAL = true;
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"pixel_param_z", "0"},
         {"pixel_param_x", "0"},
         {"pixel_param_c", "1"},
         {"seed_c_r", "0"},
-        {"seed_c_i", "0"},
+        {"seed_c_i", "-.3"},
     });
     cs.inject_audio_and_render(AudioSegment("We can look at its mandelbrot counterpart too."));
     sszr.state_manager.add_microblock_transition("w", to_string(0.3 * VIDEO_WIDTH));
@@ -462,15 +462,25 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("We can even make it a non-integer."));
     cs.inject_audio_and_render(AudioSegment(1));
     cs.add_scene_fade_in(&ssxi, "ssxi", 0.5, 0.9); 
+    cs.send_to_front("parameterized");
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_x_r", "2"},
         {"seed_x_i", ".1"},
     });
+    FOR_REAL = true;
     cs.inject_audio_and_render(AudioSegment("Heck, we can even make it be a complex number too!"));
     cs.inject_audio_and_render(AudioSegment(1));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"ssxr.opacity", "1 <pixel_param_x> <pixel_param_x> 0.8 * * -"},
+        {"ssxi.opacity", "<ssxr.opacity>"},
         {"seed_x_r", "2"},
         {"seed_x_i", "1"},
+    });
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_x_r", "0"},
+        {"seed_x_i", "2"},
     });
     cs.inject_audio_and_render(AudioSegment(1));
     cs.inject_audio_and_render(AudioSegment(1));
@@ -480,10 +490,12 @@ void intro() {
         {"pixel_param_z", "0"},
         {"pixel_param_x", "1"},
         {"pixel_param_c", "0"},
+        {"seed_z_r", ".7"},
+        {"seed_z_i", "-.3"},
     });
+    return;
     cs.inject_audio_and_render(AudioSegment("What if we now change the pixel to represent the exponent?"));
     cs.inject_audio_and_render(AudioSegment("So, this is the third orthogonal plane in a six-dimensional shape."));
-    return;
     cs.inject_audio_and_render(AudioSegment("We are now fixing Z and C, and letting X vary with the pixel."));
     cs.inject_audio_and_render(AudioSegment("I'll add panels on the right which parameterize each of the 3 variables, and we'll move the origin around in 3-space."));
     cs.inject_audio_and_render(AudioSegment("Wild!"));
