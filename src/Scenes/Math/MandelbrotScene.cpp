@@ -10,6 +10,7 @@ extern "C" void mandelbrot_render(
     const glm::vec3 pixel_parameter_multipliers,
     const complex<double> zoom,
     int max_iterations,
+    float gradation,
     unsigned int* depths
 );
 
@@ -17,7 +18,7 @@ class MandelbrotScene : public Scene {
 public:
     MandelbrotScene(const double width = 1, const double height = 1) : Scene(width, height) { }
     const StateQuery populate_state_query() const override {
-        return StateQuery{"zoom_r", "zoom_i", "max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "side_panel", "point_path_length", "point_path_r", "point_path_i"};
+        return StateQuery{"zoom_r", "zoom_i", "max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "side_panel", "point_path_length", "point_path_r", "point_path_i", "gradation"};
     }
 
     void on_end_transition() override {}
@@ -37,6 +38,7 @@ public:
                           pixel_params,
                           zoom,
                           state["max_iterations"],
+                          state["gradation"],
                           main_panel.pixels.data()
         );
         pix.overwrite(main_panel, 0, 0);
@@ -51,6 +53,7 @@ public:
                                   glm::vec3(i==0,i==1,i==2),
                                   1,
                                   state["max_iterations"],
+                                  state["gradation"],
                                   panel.pixels.data()
                 );
                 pix.overwrite(panel, main_panel.w, pix.h - remaining_height);
@@ -68,7 +71,7 @@ public:
                 complex new_z = pow(z, seed_x) + seed_c;
                 pair<int, int> prev = map_complex_to_pixel(z, zoom);
                 pair<int, int> next = map_complex_to_pixel(new_z, zoom);
-                pix.fill_circle(next.first, next.second, get_width()/500., pathcol);
+                pix.fill_circle(next.first, next.second, get_width()/300., pathcol);
                 pix.bresenham(prev.first, prev.second, next.first, next.second, pathcol, 1, 1);
                 z = new_z;
                 if(abs(z) > 100) return;

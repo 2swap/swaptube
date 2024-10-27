@@ -25,23 +25,38 @@ public:
         state_manager.add_equation("h", to_string(pix.h));
     }
 
-    // Scenes which contain other scenes use this to populate the StateQuery
     virtual const StateQuery populate_state_query() const = 0;
     virtual bool check_if_data_changed() const = 0;
     virtual void draw() = 0;
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
     virtual void on_end_transition() = 0;
-    virtual bool has_subscene_state_changed() const {return false;}
-    bool check_if_state_changed() {return state != last_state || dimensions != last_dimensions || has_subscene_state_changed();}
-    void query(Pixels*& p) {
+    void update() {
+        has_updated_since_last_query = true;
         update_state();
         change_data();
-        if(!has_ever_rendered || check_if_state_changed() || check_if_data_changed()){
+    }
+    virtual bool needs_redraw() const {
+        bool state_change = check_if_state_changed();
+        bool data_change = check_if_data_changed();
+        return !has_ever_rendered || state_change || data_change;
+    }
+    bool check_if_state_changed() const {
+        return state != last_state;
+    }
+    void query(Pixels*& p) {
+        State temp_state = state;
+        if(!has_updated_since_last_query){
+            update();
+            has_updated_since_last_query = false;
+        }
+        update_state(); // We already called update, but it is possible that state was changed in a parent statemanager's values
+        if(needs_redraw()){
             pix = Pixels(get_width(), get_height());
             has_ever_rendered = true;
             draw();
         }
+        last_state = temp_state;
         mark_data_unchanged();
         p=&pix;
     }
@@ -97,11 +112,11 @@ public:
     }
 
     void update_state() {
-        last_dimensions = dimensions;
-        dimensions = state_manager.get_state({"w", "h"});
         state_manager.evaluate_all();
-        last_state = state;
-        state = state_manager.get_state(populate_state_query());
+        StateQuery sq = populate_state_query();
+        sq.insert("w");
+        sq.insert("h");
+        state = state_manager.get_state(sq);
     }
 
     int get_width() const{
@@ -150,16 +165,16 @@ private:
         fflush(stdout);
     }
 
-protected:
-    Pixels pix;
+    bool has_updated_since_last_query = false;
     int remaining_microblocks = 0;
     int total_microblocks = 0;
     int scene_duration_frames = 0;
     int remaining_macroblock_frames = 0;
     int total_macroblock_frames = 0;
-    bool has_ever_rendered = false;
-    State state;
     State last_state;
-    State last_dimensions;
-    State dimensions;
+
+protected:
+    Pixels pix;
+    State state;
+    bool has_ever_rendered = false;
 };

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Scene.cpp"
+#include "SuperScene.cpp"
 #include <string>
 #include <unordered_map>
 #include <glm/glm.hpp>
@@ -103,10 +103,10 @@ public:
     void render(ThreeDimensionScene& scene) const override;
 };
 
-class ThreeDimensionScene : public Scene {
+class ThreeDimensionScene : public SuperScene {
 public:
     ThreeDimensionScene(const double width = 1, const double height = 1)
-        : Scene(width, height), sketchpad(width, height) {
+        : SuperScene(width, height), sketchpad(width, height) {
         state_manager.set(unordered_map<string, string>{
             {"fov", ".5"},
             {"x", "0"},
@@ -301,9 +301,10 @@ public:
         }
     }
 
-    bool has_subscene_state_changed() const override {
+    bool subscene_needs_redraw() const override {
         for(const auto& surface : surfaces){
-            if(surface.scenePointer->check_if_state_changed()) return true;
+            surface.scenePointer->update();
+            if(surface.scenePointer->needs_redraw()) return true;
         }
         return false;
     }

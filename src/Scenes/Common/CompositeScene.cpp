@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Scene.cpp"
+#include "SuperScene.cpp"
 #include <unordered_map>
 #include <stdexcept>
 #include <algorithm>
@@ -10,10 +10,10 @@ struct SceneWithPosition {
     string state_manager_name;
 };
 
-class CompositeScene : public Scene {
+class CompositeScene : public SuperScene {
 public:
     CompositeScene(const double width = 1, const double height = 1)
-        : Scene(width, height) {}
+        : SuperScene(width, height) {}
 
     void add_scene_fade_in(Scene* sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true){
         add_scene(sc, state_manager_name, x, y);
@@ -57,6 +57,7 @@ public:
     }
 
     void mark_data_unchanged() override { }
+    bool check_if_data_changed() const override {return false;}
 
     void change_data() override {
         for (auto& swp : scenes){
@@ -64,9 +65,10 @@ public:
         }
     }
 
-    bool check_if_data_changed() const override {
+    bool subscene_needs_redraw() const override {
         for (auto& swp : scenes){
-            if(swp.scenePointer->check_if_data_changed()) return true;
+            swp.scenePointer->update();
+            if(state[swp.state_manager_name + ".opacity"] > 0.01 && swp.scenePointer->needs_redraw()) return true;
         }
         return false;
     }
@@ -79,19 +81,14 @@ public:
         }
     }
 
-    bool has_subscene_state_changed() const override {
-        for (auto& swp : scenes){
-            if(swp.scenePointer->check_if_state_changed()) return true;
-        }
-        return false;
-    }
-
     void draw() override {
         for (auto& swp : scenes){
+            double opa = state[swp.state_manager_name + ".opacity"];
+            if(opa < 0.01) continue;
             Pixels* p = nullptr;
             swp.scenePointer->query(p);
             pix.overlay(*p, state[swp.state_manager_name + ".x"] * get_width () - swp.scenePointer->get_width ()/2,
-                            state[swp.state_manager_name + ".y"] * get_height() - swp.scenePointer->get_height()/2, state[swp.state_manager_name + ".opacity"]);
+                            state[swp.state_manager_name + ".y"] * get_height() - swp.scenePointer->get_height()/2, opa);
         }
     }
 
@@ -109,7 +106,7 @@ public:
             ret.insert(swp.state_manager_name + ".x");
             ret.insert(swp.state_manager_name + ".y");
             ret.insert(swp.state_manager_name + ".opacity");
-        }; 
+        };
         return ret;
     }
 
@@ -144,7 +141,6 @@ public:
         scenes.erase(it);
         scenes.insert(scenes.begin(), swp);
     }
-
 
 private:
     vector<SceneWithPosition> scenes;

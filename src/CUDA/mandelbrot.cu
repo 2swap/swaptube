@@ -39,6 +39,7 @@ __global__ void iterate_function(
     const glm::vec3 pixel_parameter_multipliers,
     const cuDoubleComplex zoom,
     int max_iterations,
+    float gradation,
     unsigned int* colors
 ) {
     const unsigned int color_palette[] = {
@@ -66,8 +67,6 @@ __global__ void iterate_function(
     cuDoubleComplex c        = cuCadd(seed_c, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.z, 0), pixel));
     double rpe = cuCreal(exponent);
     double log_real_part_exp = log(rpe);
-    double ppx_sq = pixel_parameter_multipliers.y * pixel_parameter_multipliers.y;
-    log_real_part_exp = log_real_part_exp * (1-ppx_sq) + 1 * ppx_sq;
 
     double iterations = 0;
     bool bailed_out = false;
@@ -79,9 +78,11 @@ __global__ void iterate_function(
         double sq_radius = r*r+i*i;
         if (sq_radius > bailout_radius_sq) {
             bailed_out = true;
-            double log_zn = log(sq_radius)/2;
-            double nu = log(log_zn / log_real_part_exp) / log_real_part_exp;
-            iterations += 1-nu;
+            if(gradation > 0.01){
+                double log_zn = log(sq_radius)/2;
+                double nu = log(log_zn / log_real_part_exp) / log_real_part_exp;
+                iterations += (1-nu) * gradation; // Do not use gradient for exponential parameterization
+            }
             break;
         }
     }
@@ -91,7 +92,7 @@ __global__ void iterate_function(
     if (bailed_out) {
         int idx = floor(iterations);
         double w = iterations - idx;
-        idx = (idx + 50000) % palette_size;
+        idx = (idx + 500000) % palette_size;
         color = cuda_color_lerp(color_palette[idx], color_palette[(idx+1)%palette_size], w);
         double iterfrac = iterations/max_iterations;
         iterfrac = 1-(1-iterfrac)*(1-iterfrac)*(1-iterfrac);
@@ -107,6 +108,7 @@ extern "C" void mandelbrot_render(
     const glm::vec3 pixel_parameter_multipliers,
     const std::complex<double> zoom,
     int max_iterations,  // Pass max_iterations as a parameter
+    float gradation,
     unsigned int* colors
 ) {
     unsigned int* d_colors;
@@ -125,7 +127,7 @@ extern "C" void mandelbrot_render(
         make_cuDoubleComplex(seed_z.real(), seed_z.imag()), make_cuDoubleComplex(seed_x.real(), seed_x.imag()), make_cuDoubleComplex(seed_c.real(), seed_c.imag()),
         pixel_parameter_multipliers,
         make_cuDoubleComplex(zoom.real(), zoom.imag()),
-        max_iterations, d_colors
+        max_iterations, gradation, d_colors
     );
 
     // Copy results back from device to host

@@ -72,11 +72,13 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"microblock_fraction"};
+        return in_transition_state ?
+               StateQuery{"microblock_fraction"}
+               : StateQuery{};
     }
     void mark_data_unchanged() override { }
     void change_data() override { }
-    bool check_if_data_changed() const override { return false; } // No DataObjects
+    bool check_if_data_changed() const override { return in_transition_state; } // No DataObjects, but we treat transitioning as changing data
 
 protected:
     bool in_transition_state = false;
