@@ -3,7 +3,7 @@ using namespace std;
 const string project_name = "XSet";
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 1;
+const float mult = 3;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -65,14 +65,11 @@ void intro() {
         {"point_path_i", "[point_path_i]"},
     });
     cs.state_manager.set(init);
-    cs.inject_audio_and_render(AudioSegment(0.1));
-    Pixels* queried = nullptr;
-    ms.query(queried);
-    queried->print_to_terminal();
 
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-0.743643887037151"},
         {"seed_c_i", "0.131825904205330"},
+        {"zoom_exp", "-1"},
     });
     cs.inject_audio_and_render(AudioSegment("This is the mandelbrot set."));
     // Zoom in on an interesting spot with a minibrot
@@ -82,7 +79,8 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("Known for its beauty at all resolutions and scales,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-0.743643887037151"},
-        {"seed_c_i", "0.15"},
+        {"zoom_exp", "-8"},
+        {"seed_c_i", "0.14"},
     });
     cs.inject_audio_and_render(AudioSegment("and its stunning self-similarity,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
@@ -107,7 +105,6 @@ void intro() {
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-.47"},
         {"seed_c_i", ".65"},
-        {"zoom_exp", ".5"},
         {"gradation", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("This much is well-documented. And don't worry, I'll explain how all of that works in a sec."));
@@ -118,6 +115,10 @@ void intro() {
         {"seed_x_r", "5"},
     });
     cs.inject_audio_and_render(AudioSegment("But before that, I wanna twist our perspective once more, into yet another orthogonal 2d-plane."));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"zoom_exp", ".5"},
+        {"gradation", "-3"},
+    });
     cs.inject_audio_and_render(AudioSegment("This is another natural extension of the Mandelbrot Set which I found."));
     cs.state_manager.microblock_transition(init);
     cs.inject_audio_and_render(AudioSegment("But, let's take it from the start."));
@@ -131,21 +132,24 @@ void intro() {
         {"comp_axes.opacity", "0"},
     });
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"comp_axes.opacity", "1"},
+        {"comp_axes.opacity", "0.2"},
     });
     cs.inject_audio_and_render(AudioSegment("It lives in the complex plane."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"ms.opacity", ".2"},
+        {"ms.opacity", ".15"},
         {"comp_axes.opacity", "0"},
     });
     cs.inject_audio(AudioSegment("The equation which generates it is surprisingly simple."), 2);
     cs.render();
-    cs.render();
-    LatexScene eqn("z_{" + latex_text("next") + "} = z^2 + c", 0.7, 1, .5);
-    cs.add_scene_fade_in(&eqn, "eqn");
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-0.082953220453125015264"},
         {"seed_c_i", "-0.966181199195312500001"},
+        {"zoom_exp", "<t> 50 - -7 /"},
+    });
+    LatexScene eqn("z_{" + latex_text("next") + "} = z^2 + c", 0.7, 1, .5);
+    cs.add_scene_fade_in(&eqn, "eqn");
+    cs.render();
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "<t> 50 - -7 /"},
     });
     eqn.begin_latex_transition(latex_color(0xffff0000, "z_{" + latex_text("next") + "}") + " = " + latex_color(0xffff0000, "z") + "^2 + c");
@@ -245,21 +249,16 @@ void intro() {
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
     cs.render();
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & (-i)^2 + i \\\\\\\\ z_5 & 677 & -1 &  \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & (-i)^2 + i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.render();
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"vals.opacity", "0"},
-    });
     cs.inject_audio_and_render(AudioSegment("The differences in behavior here are the key."));
-    LatexScene table("\\begin{tabular}{p{4cm}|p{4cm}} \\textbf{z stays bounded} & \\textbf{z explodes} \\end{tabular}", 0.7, 1, 1);
-    cs.add_scene_fade_in(&table, "table");
     cs.inject_audio(AudioSegment("Depending on what value of C we choose, sometimes Z will stay close to zero,"), 2);
-    table.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} \\textbf{z stays bounded} & \\textbf{z explodes} \\\\\\\\ \\hline -1, i & \\\\\\\\ \\end{tabular}");
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & "+latex_color(0xff00ff00, "z^2 - 1")+" & "+latex_color(0xff00ff00, "z^2 + i")+" \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.render();
     cs.render();
-    table.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} \\textbf{z stays bounded} & \\textbf{z explodes} \\\\\\\\ \\hline -1, i & 1 \\\\\\\\ \\end{tabular}");
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & "+latex_color(0xffff0000, "z^2 + 1")+" & "+latex_color(0xff00ff00, "z^2 - 1")+" & "+latex_color(0xff00ff00, "z^2 + i")+" \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("and sometimes it won't."));
     cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("That is the difference between a point inside the mandelbrot set, and outside it."));
@@ -276,10 +275,16 @@ void intro() {
     });
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"eps.opacity", "1"},
-        {"comp_axes.opacity", "1"},
+        {"comp_axes.opacity", "0.3"},
+    });
+    cs.add_scene(&ms, "ms");
+    cs.state_manager.set(unordered_map<string,string>{
+        {"ms.opacity", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("If we make a plot of the complex plane,"));
     cs.inject_audio_and_render(AudioSegment("and for each value of C, we run this little simulation,"));
+    Pixels* queried = nullptr;
+    ms.query(queried);
     double r = VIDEO_WIDTH/500.;
     eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.+VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 3*r, OPAQUE_WHITE);
     cs.inject_audio_and_render(AudioSegment("we'll paint points white if they blow up,"));
@@ -287,10 +292,6 @@ void intro() {
     eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.-VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 3*r, OPAQUE_BLACK);
     cs.inject_audio_and_render(AudioSegment("and black if they don't."));
     int num_microblocks = 1000;
-    cs.add_scene(&ms, "ms");
-    cs.state_manager.set(unordered_map<string,string>{
-        {"ms.opacity", "0"},
-    });
     cs.inject_audio(AudioSegment("Do that for all the points..."), num_microblocks);
     for(int i = 0; i < num_microblocks; i++) {
         for(int j = 0; j < 50; j++){
@@ -331,6 +332,7 @@ void intro() {
     });
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"vals.opacity", "1"},
+        {"eqn.opacity", "-1"},
     });
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & " + latex_color(0xffff0000, "0") + " & " + latex_color(0xffff0000, "0") + " & " + latex_color(0xffff0000, "0") + " \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("Before, we always started Z at 0..."));
@@ -358,17 +360,17 @@ void intro() {
     });
     cs.inject_audio_and_render(AudioSegment("Woah! That's a totally different fractal."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_z_r", "<t> sin 2 /"},
+        {"seed_z_r", "<t> 0.8 * sin 2 /"},
         {"seed_z_i", "<t> cos 2 /"},
     });
     cs.inject_audio_and_render(AudioSegment("We can play around with different values of Z all day, just like with C."));
     cs.inject_audio_and_render(AudioSegment("Which makes you think..."));
+    cs.inject_audio_and_render(AudioSegment("we started by fixing Z at zero,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "0"},
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("we started by fixing Z at zero,"));
     cs.inject_audio_and_render(AudioSegment("and making C vary as a function of the pixel."));
     PngScene parameterized("parameterized", 0.5, 0.2);
     cs.add_scene(&parameterized, "parameterized", 0.1666, 1.2); 
@@ -392,8 +394,8 @@ void intro() {
     });
     cs.inject_audio_and_render(AudioSegment("What if we fix C, and make Z start where the pixel is?"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_c_r", "<t> sin .75 *"},
-        {"seed_c_i", "<t> cos .75 *"},
+        {"seed_c_r", "<t> 0.3 * sin .75 *"},
+        {"seed_c_i", "<t> 0.4 * cos .75 *"},
     });
     cs.inject_audio_and_render(AudioSegment("We get a Julia set!"));
     cs.inject_audio_and_render(AudioSegment("So, we have 2 variables which we use to seed the iterated procedure."));
@@ -424,42 +426,43 @@ void intro() {
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"point_path_length", "1.5"},
     });
-    cs.inject_audio_and_render(AudioSegment("Iterate the function once, and we get this new point."));
+    cs.inject_audio_and_render(AudioSegment("Iterate z^2 + c once, and we get this new point."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"point_path_length", "8"},
     });
     cs.inject_audio_and_render(AudioSegment("Iterate again, and again, and again..."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"point_path_length", "50"},
-    });
-    cs.inject_audio_and_render(AudioSegment("We can see how Z changes across iterations."));
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"point_path_r", "<t> sin .75 *"},
         {"point_path_i", "<t> cos .75 *"},
     });
-    cs.inject_audio_and_render(AudioSegment(2));
+    cs.inject_audio_and_render(AudioSegment("We can see how Z changes across iterations."));
     cs.inject_audio_and_render(AudioSegment("Moving the point around a little,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"point_path_r", "1.1"},
-        {"point_path_i", ".05"},
+        {"point_path_r", "1 <t> sin 0.07 * +"},
+        {"point_path_i", ".05 <t> cos 0.07 * +"},
     });
     cs.inject_audio(AudioSegment("you can tell the difference between when it converges inside the set,"), 2);
     cs.render();
     cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"point_path_r", ".7"},
-        {"point_path_i", ".3"},
+        {"point_path_r", ".7 <t> sin 0.07 * +"},
+        {"point_path_i", ".3 <t> cos 0.07 * +"},
     });
     cs.inject_audio(AudioSegment("and when it explodes off to infinity."), 2);
     cs.render();
     cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"point_path_r", "-.15 <t> 0.9 * cos 100 / +"},
+        {"point_path_r", "-.135 <t> 0.9 * cos 100 / +"},
         {"point_path_i", "-.6 <t> 1.2 * sin 100 / +"},
     });
     eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^2 + c");
     cs.inject_audio_and_render(AudioSegment(1));
     eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^2 + c");
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"point_path_r", "-.135"},
+        {"point_path_i", "-.6"},
+    });
     cs.inject_audio_and_render(AudioSegment("When we start near the border, it dances around for a bit and then decides to explode."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"ms.opacity", "0.2"},
@@ -483,8 +486,8 @@ void intro() {
     });
     cs.inject_audio_and_render(AudioSegment(2));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_c_r", "-.5"},
-        {"seed_c_i", "-.4"},
+        {"seed_c_r", "-.56"},
+        {"seed_c_i", "-.33"},
     });
     cs.inject_audio_and_render(AudioSegment("This is a third-degree Julia set!"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
@@ -508,7 +511,7 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("We can look at its mandelbrot counterpart too."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "<t> 5 / sin 2 /"},
-        {"seed_c_i", "<t> 5 / cos 2 /"},
+        {"seed_c_i", "<t> 5 / cos"},
         {"zoom_exp", "-2"},
     });
     cs.inject_audio_and_render(AudioSegment(2));
@@ -522,11 +525,9 @@ void intro() {
         {"ssxr.opacity", "0.5 <pixel_param_x> <pixel_param_x> 0.3 * * -"},
         {"seed_c_r", "0.1"},
         {"seed_c_i", "0"},
-    });
-    cs.inject_audio_and_render(AudioSegment("Here's an exponent of 4."));
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "0"},
     });
+    cs.inject_audio_and_render(AudioSegment("Here's an exponent of 4."));
     cs.inject_audio_and_render(AudioSegment(1));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "<t> 5 / sin 2 /"},
@@ -550,21 +551,18 @@ void intro() {
     });
     cs.inject_audio_and_render(AudioSegment("Heck, we can even make it a complex number too!"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"ssxi.opacity", "<ssxr.opacity>"},
         {"seed_c_r", "<t> 5 / sin 2 /"},
         {"seed_c_i", "<t> 5 / cos 2 /"},
-        {"zoom_exp", "-1"},
     });
     cs.inject_audio_and_render(AudioSegment(1));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_c_r", "<t> 5 / sin 2 /"},
-        {"seed_c_i", "<t> 5 / cos 2 /"},
-        {"zoom_exp", "-2"},
+        {"zoom_exp", "-4"},
     });
-    cs.inject_audio_and_render(AudioSegment(3));
+    cs.inject_audio_and_render(AudioSegment(5));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0.1"},
         {"seed_c_i", "0"},
-        {"ssxi.opacity", "<ssxr.opacity>"},
         {"seed_x_r", "2"},
         {"seed_x_i", "1"},
         {"zoom_exp", "0"},
@@ -574,7 +572,7 @@ void intro() {
         {"seed_x_r", "0"},
         {"seed_x_i", "2"},
     });
-    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment(3));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_x_r", "0"},
         {"seed_x_i", "3"},
@@ -583,7 +581,7 @@ void intro() {
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0.5"},
         {"seed_c_i", "-.5"},
-        {"zoom_exp", "-3"},
+        {"zoom_exp", "-6"},
     });
     cs.inject_audio_and_render(AudioSegment("To be clear- this is still fundamentally a mandelbrot set! All I've done is change the exponent."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
@@ -621,9 +619,9 @@ void intro() {
         {"ssxr.opacity", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("I'll add panels on the right which parameterize each of the 3 variables."));
-    LatexScene lsz(latex_color(0xffff88ff, "z"), 1, 0.15, 0.15);
-    LatexScene lsx(latex_color(0xffff88ff, "x"), 1, 0.15, 0.15);
-    LatexScene lsc(latex_color(0xffff88ff, "c"), 1, 0.15, 0.15);
+    LatexScene lsz(latex_color(0xffff0000, "z"), 1, 0.15, 0.15);
+    LatexScene lsx(latex_color(0xffff0000, "x"), 1, 0.15, 0.15);
+    LatexScene lsc(latex_color(0xffff0000, "c"), 1, 0.15, 0.15);
     cs.inject_audio(AudioSegment("These are the 3 orthogonal 2-D planes corresponding to Z, X, and C."), 3);
     cs.add_scene(&lsz, "lsz", 0.95, 0.29);
     cs.render();
@@ -633,14 +631,12 @@ void intro() {
     cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"max_iterations", "200"},
-        {"seed_c_r", "<t> 5 / sin 2 *"},
-        {"seed_c_r", "<t> 6 / cos 2 *"},
-        //{"seed_x_r", "<t> 6.5 / sin 2.5 * 2 +"},
-        //{"seed_x_r", "<t> 7.5 / sin 2.5 * 2 +"},
+        {"seed_c_r", "<t> 4.1 / sin 2 *"},
+        {"seed_c_r", "<t> 6.3 / cos 2 *"},
         {"seed_x_r", "0"},
         {"seed_x_r", "0"},
-        {"seed_z_r", "<t> 5.5 / cos 2 *"},
-        {"seed_z_r", "<t> 7 / cos 2 *"},
+        {"seed_z_r", "<t> 5.2 / cos 2 *"},
+        {"seed_z_r", "<t> 6.9 / cos 2 *"},
         {"zoom_exp", "2"},
     });
     cs.inject_audio_and_render(AudioSegment("Here's a tour of the X-Set, by moving the origin around in 6-space. Enjoy!"));
@@ -657,12 +653,16 @@ void intro() {
         {"pixel_param_x", "0"},
         {"pixel_param_c", "1"},
         {"zoom_exp", "0"},
-        {"gradation", "1"},
         {"lsz.opacity", "0"},
         {"lsx.opacity", "0"},
         {"lsc.opacity", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("There's one more thing which I thought was too cool not to share. Spinning back into Mandelbrot territory,"));
+    cs.inject_audio(AudioSegment("There's one more thing which I thought was too cool not to share. Spinning back into Mandelbrot territory,"), 2);
+    cs.render();
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"gradation", "1"},
+    });
+    cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "-15.5"},
     });
@@ -713,10 +713,13 @@ void intro() {
     });
     cs.inject_audio_and_render(AudioSegment(1));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"zoom_exp", "0"},
+    });
+    cs.inject_audio_and_render(AudioSegment("and _more mandelbrot bulbs_!"));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0.6"},
         {"seed_c_i", "-0.2"},
     });
-    cs.inject_audio_and_render(AudioSegment("and _more mandelbrot bulbs_!"));
     cs.inject_audio_and_render(AudioSegment("This degree of cross-parameter self-similarity totally took me by surprise."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0"},
@@ -750,10 +753,7 @@ void intro() {
         {"seed_c_i", "<t> cos .75 *"},
         {"tss.opacity", "1"},
     });
-    cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio(AudioSegment("This has been 2swap."), 4);
-    cs.render();
-    cs.render();
+    cs.inject_audio(AudioSegment("This has been 2swap."), 2);
     cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0"},
@@ -767,7 +767,7 @@ void intro() {
 int main() {
     Timer timer;
     PRINT_TO_TERMINAL = true;
-    FOR_REAL = false;
+    FOR_REAL = true;
     signal(SIGINT, signal_handler);
     try {
         intro();

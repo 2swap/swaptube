@@ -61,15 +61,19 @@ private:
     void draw_slider() {
         const int h = get_height();
         const int w = get_width();
+
+        // vv Change away!! vv
         const int outer_color = 0xff444444; // Dark gray
         const int inner_color = 0xff000000; // Black
         const int  knob_color = 0xff444444; // Dark gray
         const double outer_radius = h * .5;
-        const double inner_radius = h * .4;
-        const double  knob_radius = h * .3;
+        const double inner_radius = h * .45;
+        const double  knob_radius = h * .4;
+        // ^^ Change away!! ^^
+
         const double outer_margin = h * .5 - outer_radius;
         const double inner_margin = h * .5 - inner_radius;
-        //pix.rounded_rect(outer_margin, outer_margin, w - outer_margin * 2, h - outer_margin * 2, outer_radius, outer_color);
+        pix.rounded_rect(outer_margin, outer_margin, w - outer_margin * 2, h - outer_margin * 2, outer_radius, outer_color);
         pix.rounded_rect(inner_margin, inner_margin, w - inner_margin * 2, h - inner_margin * 2, inner_radius, inner_color);
 
         // Calculate the position of the knob based on the variable value
