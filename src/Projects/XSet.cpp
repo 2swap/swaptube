@@ -44,6 +44,7 @@ void intro() {
         {"point_path_r", "0"},
         {"point_path_i", "0"},
         {"point_path_length", "0"},
+        {"internal_shade", "0"},
     };
     ms.state_manager.set(unordered_map<string,string>{
         {"zoom_r", "[zoom_r]"},
@@ -63,6 +64,7 @@ void intro() {
         {"point_path_length", "[point_path_length]"},
         {"point_path_r", "[point_path_r]"},
         {"point_path_i", "[point_path_i]"},
+        {"internal_shade", "[internal_shade]"},
     });
     cs.state_manager.set(init);
 
@@ -107,7 +109,7 @@ void intro() {
         {"seed_c_i", ".65"},
         {"gradation", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("This much is well-documented. And don't worry, I'll explain how all of that works in a sec."));
+    cs.inject_audio_and_render(AudioSegment("This much is well-understood. And don't worry, I'll explain how all of that works in a sec."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"pixel_param_z", "0"},
         {"pixel_param_x", "1"},
@@ -201,7 +203,7 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment(1));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 677^2 + 1 \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458229 + 1 \\end{tabular}");
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458329 + 1 \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458330 \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
@@ -222,12 +224,14 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment(1));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio(AudioSegment("and this time, we fall into a cyclic trap."), 4);
+    cs.inject_audio(AudioSegment("and this time, we fall into a cyclic trap."), 5);
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & 0^2 - 1 \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & (-1)^2 - 1 \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & 0 \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & 0 \\\\\\\\ z_5 & 677 & -1 \\\\\\\\ z_6 & 458330 & 0 \\end{tabular}");
     cs.render();
@@ -236,7 +240,7 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("Remember, we're working with Complex numbers here, not just real numbers."));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("C can be a number like i."));
-    cs.inject_audio(AudioSegment("Running our simulation again, in this case it ends up stuck as well."), 8);
+    cs.inject_audio(AudioSegment("Running our simulation again, in this case it ends up stuck as well."), 9);
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & 0^2 + i \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
@@ -249,7 +253,9 @@ void intro() {
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
     cs.render();
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & (-i)^2 + i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & (-i)^2 + i \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
     cs.render();
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.render();
@@ -261,6 +267,7 @@ void intro() {
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & "+latex_color(0xffff0000, "z^2 + 1")+" & "+latex_color(0xff00ff00, "z^2 - 1")+" & "+latex_color(0xff00ff00, "z^2 + i")+" \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("and sometimes it won't."));
     cs.fade_out_all_scenes();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("That is the difference between a point inside the mandelbrot set, and outside it."));
     cs.remove_all_scenes();
     ExposedPixelsScene eps;
@@ -281,11 +288,10 @@ void intro() {
     cs.state_manager.set(unordered_map<string,string>{
         {"ms.opacity", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("If we make a plot of the complex plane,"));
-    cs.inject_audio_and_render(AudioSegment("and for each value of C, we run this little simulation,"));
+    cs.inject_audio_and_render(AudioSegment("If we make a plot of C in the complex plane,"));
     Pixels* queried = nullptr;
     ms.query(queried);
-    double r = VIDEO_WIDTH/500.;
+    double r = VIDEO_WIDTH/600.;
     eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.+VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 3*r, OPAQUE_WHITE);
     cs.inject_audio_and_render(AudioSegment("we'll paint points white if they blow up,"));
     eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2., VIDEO_HEIGHT/4., 3*r, OPAQUE_BLACK);
@@ -294,7 +300,7 @@ void intro() {
     int num_microblocks = 1000;
     cs.inject_audio(AudioSegment("Do that for all the points..."), num_microblocks);
     for(int i = 0; i < num_microblocks; i++) {
-        for(int j = 0; j < 50; j++){
+        for(int j = 0; j < 80; j++){
             int point = rand()%(VIDEO_WIDTH*VIDEO_HEIGHT);
             while(eps.exposed_pixels.get_pixel(point%VIDEO_WIDTH, point/VIDEO_WIDTH) != gray){
                 point = (point+7841)%(VIDEO_WIDTH*VIDEO_HEIGHT); // 7841 is an arbitrary prime
@@ -302,7 +308,7 @@ void intro() {
             int x = point%VIDEO_WIDTH;
             int y = point/VIDEO_WIDTH;
             int col = queried->get_pixel(x, y);
-            eps.exposed_pixels.fill_circle(x, y, r, col==OPAQUE_BLACK?OPAQUE_BLACK:OPAQUE_WHITE);
+            eps.exposed_pixels.fill_circle(x, y, r, (col==OPAQUE_BLACK && x < VIDEO_WIDTH*.66)?OPAQUE_BLACK:OPAQUE_WHITE);
         }
         cs.render();
     }
@@ -322,9 +328,14 @@ void intro() {
         {"ms.opacity", "0.2"},
     });
     cs.inject_audio_and_render(AudioSegment("But let's look back at our equation."));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"zoom_exp", "<t> 170 - 7 /"},
+        {"seed_c_r", "-0.743643887037151"},
+        {"seed_c_i", "0.14"},
+    });
     eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^2 + " + latex_color(0xff008888, "?"));
     cs.inject_audio_and_render(AudioSegment("We not only had the free choice of what C can be, which is what we're plotting on screen,"));
-    eqn.begin_latex_transition("z_{" + latex_text("next") + "} = "+latex_color(0xffff8888, "?")+"^2 + ?");
+    eqn.begin_latex_transition("z_{" + latex_text("next") + "} = "+latex_color(0xffff4444, "?")+"^2 + ?");
     cs.inject_audio_and_render(AudioSegment("but also the option to choose a starting value of Z."));
     cs.add_scene(&vals, "vals");
     cs.state_manager.set(unordered_map<string,string>{
@@ -334,11 +345,8 @@ void intro() {
         {"vals.opacity", "1"},
         {"eqn.opacity", "-1"},
     });
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & " + latex_color(0xffff0000, "0") + " & " + latex_color(0xffff0000, "0") + " & " + latex_color(0xffff0000, "0") + " \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & " + latex_color(0xffff4444, "0") + " & " + latex_color(0xffff4444, "0") + " & " + latex_color(0xffff4444, "0") + " \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("Before, we always started Z at 0..."));
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"vals.opacity", "0"},
-    });
     StateSliderScene sszr("[seed_z_r]", "z_r", -1, 1, .3, .07);
     StateSliderScene sszi("[seed_z_i]", "z_i", -1, 1, .3, .07);
     cs.add_scene(&sszr, "sszr", 0.1666, 0.85); 
@@ -347,13 +355,20 @@ void intro() {
         {"sszr.opacity", "0"},
         {"sszi.opacity", "<sszr.opacity>"},
     });
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
+    cs.state_manager.macroblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-.5"},
-        {"ms.opacity", "1"},
         {"eqn.opacity", "0"},
+        {"zoom_exp", "-.5"},
+    });
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & " + latex_color(0xffff4444, "1") + " & " + latex_color(0xffff4444, "1") + " & " + latex_color(0xffff4444, "1") + " \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
+    cs.inject_audio(AudioSegment("But let's start at 1 and see what happens."), 2);
+    cs.render();
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"vals.opacity", "0"},
+        {"ms.opacity", "1"},
         {"sszr.opacity", "0.5 <pixel_param_z> <pixel_param_z> 0.3 * * -"},
     });
-    cs.inject_audio_and_render(AudioSegment("But let's start at 1 and see what happens."));
+    cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "-1"},
         {"seed_z_r", "1"},
@@ -367,7 +382,7 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("Which makes you think..."));
     cs.inject_audio_and_render(AudioSegment("we started by fixing Z at zero,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"zoom_exp", "0"},
+        {"zoom_exp", "-0.5"},
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
     });
@@ -453,14 +468,13 @@ void intro() {
     cs.render();
     cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"point_path_r", "-.135 <t> 0.9 * cos 100 / +"},
+        {"point_path_r", "-.133 <t> 0.9 * cos 100 / +"},
         {"point_path_i", "-.6 <t> 1.2 * sin 100 / +"},
     });
     eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^2 + c");
     cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^2 + c");
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"point_path_r", "-.135"},
+        {"point_path_r", "-.133"},
         {"point_path_i", "-.6"},
     });
     cs.inject_audio_and_render(AudioSegment("When we start near the border, it dances around for a bit and then decides to explode."));
@@ -523,8 +537,8 @@ void intro() {
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_x_r", "4"},
         {"ssxr.opacity", "0.5 <pixel_param_x> <pixel_param_x> 0.3 * * -"},
-        {"seed_c_r", "0.1"},
-        {"seed_c_i", "0"},
+        //{"seed_c_r", "0.1"},
+        //{"seed_c_i", "0"},
         {"zoom_exp", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("Here's an exponent of 4."));
@@ -555,11 +569,11 @@ void intro() {
         {"seed_c_r", "<t> 5 / sin 2 /"},
         {"seed_c_i", "<t> 5 / cos 2 /"},
     });
-    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment(3));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "-4"},
     });
-    cs.inject_audio_and_render(AudioSegment(5));
+    cs.inject_audio_and_render(AudioSegment(4));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0.1"},
         {"seed_c_i", "0"},
@@ -570,17 +584,17 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment(2));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_x_r", "0"},
-        {"seed_x_i", "2"},
+        {"seed_x_i", "1.5"},
     });
     cs.inject_audio_and_render(AudioSegment(3));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_x_r", "0"},
-        {"seed_x_i", "3"},
+        {"seed_x_i", "2.5"},
     });
     cs.inject_audio_and_render(AudioSegment("With a purely imaginary exponent, you get these alien tendrily figures."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0.5"},
-        {"seed_c_i", "-.5"},
+        {"seed_c_i", "-.4"},
         {"zoom_exp", "-6"},
     });
     cs.inject_audio_and_render(AudioSegment("To be clear- this is still fundamentally a mandelbrot set! All I've done is change the exponent."));
@@ -619,9 +633,9 @@ void intro() {
         {"ssxr.opacity", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("I'll add panels on the right which parameterize each of the 3 variables."));
-    LatexScene lsz(latex_color(0xffff0000, "z"), 1, 0.15, 0.15);
-    LatexScene lsx(latex_color(0xffff0000, "x"), 1, 0.15, 0.15);
-    LatexScene lsc(latex_color(0xffff0000, "c"), 1, 0.15, 0.15);
+    LatexScene lsz(latex_color(0xffff4444, "z"), 1, 0.15, 0.15);
+    LatexScene lsx(latex_color(0xffff4444, "x"), 1, 0.15, 0.15);
+    LatexScene lsc(latex_color(0xffff4444, "c"), 1, 0.15, 0.15);
     cs.inject_audio(AudioSegment("These are the 3 orthogonal 2-D planes corresponding to Z, X, and C."), 3);
     cs.add_scene(&lsz, "lsz", 0.95, 0.29);
     cs.render();
@@ -636,11 +650,11 @@ void intro() {
         {"seed_x_r", "0"},
         {"seed_x_r", "0"},
         {"seed_z_r", "<t> 5.2 / cos 2 *"},
-        {"seed_z_r", "<t> 6.9 / cos 2 *"},
+        {"seed_z_r", "<t> 2.9 / cos 2 *"},
         {"zoom_exp", "2"},
     });
     cs.inject_audio_and_render(AudioSegment("Here's a tour of the X-Set, by moving the origin around in 6-space. Enjoy!"));
-    cs.inject_audio_and_render(AudioSegment(40));
+    cs.inject_audio_and_render(AudioSegment(50));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"max_iterations", "400"},
         {"seed_c_r", "-1.74572428"},
@@ -653,6 +667,7 @@ void intro() {
         {"pixel_param_x", "0"},
         {"pixel_param_c", "1"},
         {"zoom_exp", "0"},
+        {"side_panel", "0"},
         {"lsz.opacity", "0"},
         {"lsx.opacity", "0"},
         {"lsc.opacity", "0"},
@@ -668,15 +683,15 @@ void intro() {
     });
     cs.inject_audio_and_render(AudioSegment("if we zoom into the armpit of this miniature mandelbrot..."));
     cs.inject_audio_and_render(AudioSegment("It's a mini Julia set, inside the Mandelbrot set!"));
-    cs.inject_audio_and_render(AudioSegment("Now, burn this shape into your mind and watch..."));
+    cs.inject_audio_and_render(AudioSegment("Now, burn this shape into your mind and watch,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "-3"},
         {"pixel_param_z", "1"},
         {"pixel_param_x", "0"},
         {"pixel_param_c", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("...as I spin into Julia land..."));
-    cs.inject_audio_and_render(AudioSegment("it turns out to be a copy of the Julia set for the C value which we are zoomed in on."));
+    cs.inject_audio_and_render(AudioSegment("as I spin into Julia land..."));
+    cs.inject_audio_and_render(AudioSegment("it's a carbon copy of the Julia set for the mandelbrot C value which we were zoomed in on!"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"zoom_exp", "0"},
         {"gradation", "0"},
@@ -690,8 +705,8 @@ void intro() {
         {"pixel_param_z", "0"},
         {"pixel_param_x", "1"},
         {"pixel_param_c", "0"},
-        {"seed_x_r", "1.45"},
-        {"seed_x_i", "0.4"},
+        {"seed_x_r", "1.5"},
+        {"seed_x_i", "0.35"},
         {"max_iterations", "100"},
         {"zoom_exp", "-3"},
     });
@@ -708,11 +723,8 @@ void intro() {
         {"seed_c_i", "-0.5"},
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
-        {"seed_x_r", "2"},
-        {"seed_x_i", "0.5"},
-    });
-    cs.inject_audio_and_render(AudioSegment(1));
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_x_r", "3"},
+        {"seed_x_i", "-.5"},
         {"zoom_exp", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("and _more mandelbrot bulbs_!"));
@@ -731,17 +743,17 @@ void intro() {
         {"pixel_param_z", "1"},
         {"pixel_param_x", "0"},
         {"pixel_param_c", "0"},
-        {"side_panel", "0"},
         {"zoom_exp", "1"},
-        {"gradation", "1"},
         {"lsz.opacity", "0"},
         {"lsx.opacity", "0"},
         {"lsc.opacity", "0"},
+        {"internal_shade", "1"},
     });
     cs.inject_audio_and_render(AudioSegment(2));
     TwoswapScene tss;
     tss.state_manager.set(unordered_map<string,string>{
         {"circle_opacity", "0"},
+        {"gradation", "1"},
     });
     cs.add_scene(&tss, "tss");
     cs.state_manager.set(unordered_map<string,string>{

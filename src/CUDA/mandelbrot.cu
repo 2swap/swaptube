@@ -33,8 +33,8 @@ __device__ cuDoubleComplex cuCpow(cuDoubleComplex base, cuDoubleComplex exponent
 }
 
 // Color interpolation function (shared)
-__device__ unsigned int get_mandelbrot_color(double iterations, int max_iterations, bool bailed_out, double gradation, double sq_radius, double log_real_part_exp, double breath) {
-    if(!bailed_out) return 0xff000000;
+__device__ unsigned int get_mandelbrot_color(double iterations, int max_iterations, bool bailed_out, double gradation, double sq_radius, double log_real_part_exp, double breath, unsigned int internal_color) {
+    if(!bailed_out) return internal_color;
 
     if(bailed_out && gradation > 0.01){
         double log_zn = log(sq_radius)/2;
@@ -160,6 +160,7 @@ __global__ void go(
     const cuDoubleComplex zoom,
     int max_iterations,
     float gradation,
+    unsigned int internal_color,
     unsigned int* colors
 ) {
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -183,7 +184,7 @@ __global__ void go(
     
     bool bailed_out = iterations < max_iterations;
 
-    colors[pixel_y * width + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, gradation, sq_radius, log_real_part_exp, log(cuCreal(zoom)));
+    colors[pixel_y * width + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, gradation, sq_radius, log_real_part_exp, -log(cuCreal(zoom)), internal_color);
 }
 
 // Host function to launch the kernel
@@ -194,6 +195,7 @@ extern "C" void mandelbrot_render(
     const std::complex<double> zoom,
     int max_iterations,  // Pass max_iterations as a parameter
     float gradation,
+    unsigned int internal_color,
     unsigned int* colors
 ) {
     unsigned int* d_colors;
@@ -212,7 +214,7 @@ extern "C" void mandelbrot_render(
         make_cuDoubleComplex(seed_z.real(), seed_z.imag()), make_cuDoubleComplex(seed_x.real(), seed_x.imag()), make_cuDoubleComplex(seed_c.real(), seed_c.imag()),
         pixel_parameter_multipliers,
         make_cuDoubleComplex(zoom.real(), zoom.imag()),
-        max_iterations, gradation, d_colors
+        max_iterations, gradation, internal_color, d_colors
     );
 
     // Copy results back from device to host
