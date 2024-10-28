@@ -3,7 +3,7 @@ using namespace std;
 const string project_name = "XSet";
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 2;
+const float mult = 1;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -29,7 +29,7 @@ void intro() {
         {"zoom_r", "2 <zoom_exp> ^"},
         {"zoom_exp", "0"},
         {"zoom_i", "0"},
-        {"max_iterations", "100 2 <zoom_exp> -3 / ^ *"},
+        {"max_iterations", "150 2 <zoom_exp> -3 / ^ *"},
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
         {"seed_x_r", "2"},
@@ -65,6 +65,10 @@ void intro() {
         {"point_path_i", "[point_path_i]"},
     });
     cs.state_manager.set(init);
+    cs.inject_audio_and_render(AudioSegment(0.1));
+    Pixels* queried = nullptr;
+    ms.query(queried);
+    queried->print_to_terminal();
 
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-0.743643887037151"},
@@ -82,7 +86,7 @@ void intro() {
     });
     cs.inject_audio_and_render(AudioSegment("and its stunning self-similarity,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"zoom_exp", "0"},
+        {"zoom_exp", "-0.8"},
     });
     cs.inject_audio_and_render(AudioSegment("it is the cornerstone example of a fractal."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
@@ -102,8 +106,8 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("The Mandelbrot sets and the Julia sets are in planes orthogonal to each other in a certain 4d-space."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-.47"},
-        {"seed_c_i", "-.65"},
-        {"zoom_exp", "1"},
+        {"seed_c_i", ".65"},
+        {"zoom_exp", ".5"},
         {"gradation", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("This much is well-documented. And don't worry, I'll explain how all of that works in a sec."));
@@ -111,24 +115,15 @@ void intro() {
         {"pixel_param_z", "0"},
         {"pixel_param_x", "1"},
         {"pixel_param_c", "0"},
-        {"seed_x_r", "2"},
+        {"seed_x_r", "5"},
     });
     cs.inject_audio_and_render(AudioSegment("But before that, I wanna twist our perspective once more, into yet another orthogonal 2d-plane."));
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_c_r", "-.2"},
-        {"seed_c_i", "-.4"},
-        {"seed_z_r", ".3"},
-        {"seed_z_i", ".2"},
-    });
     cs.inject_audio_and_render(AudioSegment("This is another natural extension of the Mandelbrot Set which I found."));
     cs.state_manager.microblock_transition(init);
     cs.inject_audio_and_render(AudioSegment("But, let's take it from the start."));
     cs.inject_audio_and_render(AudioSegment("The original mandelbrot set."));
     cs.state_manager.set(unordered_map<string,string>{
         {"ms.opacity", "1"},
-    });
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"ms.opacity", ".2"},
     });
     PngScene comp_axes("complex_axes");
     cs.add_scene(&comp_axes, "comp_axes");
@@ -139,135 +134,122 @@ void intro() {
         {"comp_axes.opacity", "1"},
     });
     cs.inject_audio_and_render(AudioSegment("It lives in the complex plane."));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"ms.opacity", ".2"},
+        {"comp_axes.opacity", "0"},
+    });
+    cs.inject_audio(AudioSegment("The equation which generates it is surprisingly simple."), 2);
+    cs.render();
+    cs.render();
     LatexScene eqn("z_{" + latex_text("next") + "} = z^2 + c", 0.7, 1, .5);
     cs.add_scene_fade_in(&eqn, "eqn");
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"comp_axes.opacity", "0"},
-    });
-    cs.inject_audio_and_render(AudioSegment("The equation which generates it is surprisingly simple."));
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-0.082953220453125015264"},
         {"seed_c_i", "-0.966181199195312500001"},
-        {"zoom_exp", "<t> 50 - -6 /"},
+        {"zoom_exp", "<t> 50 - -7 /"},
     });
     eqn.begin_latex_transition(latex_color(0xffff0000, "z_{" + latex_text("next") + "}") + " = " + latex_color(0xffff0000, "z") + "^2 + c");
-    LatexScene vals("\\begin{tabular}{p{4cm}|p{4cm}} & \\\\\\\\ \\hline z_0 & \\\\\\\\ z_1 & \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}", 0.8, 0.5, 0.4);
-    cs.add_scene_fade_in(&vals, "vals", 0.25, 0.2);
     cs.inject_audio_and_render(AudioSegment("It tells us how to update this variable Z."));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & \\\\\\\\ z_1 & \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
     cs.inject_audio(AudioSegment("Let's let C be 1 just for now. We'll try other values in a sec."), 4);
     eqn.begin_latex_transition(latex_color(0xffffffff, "z") + "^2 + " + latex_color(0xff008888, "c"));
     cs.render();
     eqn.begin_latex_transition("z^2 + 1");
     cs.render();
     cs.render();
-    cs.render();
-    eqn.begin_latex_transition("0^2 + 1");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("And let's let Z start at 0."));
-    eqn.begin_latex_transition("0 + 1");
-    cs.inject_audio_and_render(AudioSegment("We do some arithmetic,"));
-    eqn.begin_latex_transition("1");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("and we find the updated value of Z."));
-    cs.inject_audio_and_render(AudioSegment("We then take that updated value,"));
-    eqn.begin_latex_transition("1^2 + 1");
-    cs.inject_audio_and_render(AudioSegment("plug it into the equation,"));
-    eqn.begin_latex_transition("2");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1 \\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("and do the math again."));
-    eqn.begin_latex_transition("2^2 + 1");
-    cs.inject_audio(AudioSegment("We want to keep repeating this over and over."), 2);
-    cs.render();
-    eqn.begin_latex_transition("4 + 1");
-    cs.render();
-    eqn.begin_latex_transition("5");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("Just square, and add one."));
-    eqn.begin_latex_transition("5^2 + 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("25 + 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("26");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("Square, and add one."));
-    eqn.begin_latex_transition("26^2 + 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("676 + 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & \\end{tabular}");
-    eqn.begin_latex_transition("677");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("677^2 + 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("458229 + 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & \\textbf{c=1} \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458330 \\end{tabular}");
-    eqn.begin_latex_transition("458330");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("458330^2 + 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio_and_render(AudioSegment("In our case, Z is blowing up towards infinity."));
-    eqn.begin_latex_transition("z^2 + c");
-    cs.inject_audio_and_render(AudioSegment("Let's try that again."));
-    eqn.begin_latex_transition("z^2 - 1");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} \\\\\\\\ \\hline z_0 & 0 & \\\\\\\\ z_1 & 1 & \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("This time, let's let C be negative 1 instead of positive 1."));
-    eqn.begin_latex_transition("0^2 - 1");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("Plug in 0 to start off Z,"));
-    eqn.begin_latex_transition("0 - 1");
-    cs.inject_audio_and_render(AudioSegment("iterate,"));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
-    eqn.begin_latex_transition("-1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("(-1)^2 - 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("1 - 1");
-    cs.inject_audio_and_render(AudioSegment(1));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
-    eqn.begin_latex_transition("0");
-    cs.inject_audio_and_render(AudioSegment(1));
-    cs.inject_audio(AudioSegment("and this time, we fall into a cyclic trap."), 4);
-    eqn.begin_latex_transition("0^2 - 1");
-    cs.render();
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
-    eqn.begin_latex_transition("-1");
-    cs.render();
-    eqn.begin_latex_transition("(-1)^2 - 1");
-    cs.render();
-    eqn.begin_latex_transition("0");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & 0 \\\\\\\\ z_5 & 677 & -1 \\\\\\\\ z_6 & 458330 & 0 \\end{tabular}");
-    cs.render();
-    cs.inject_audio_and_render(AudioSegment(1));
-    eqn.begin_latex_transition("z^2 + c");
-    cs.inject_audio_and_render(AudioSegment("Remember, we're working with Complex numbers here, not just real numbers."));
-    eqn.begin_latex_transition("z^2 + i");
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} & \\textbf{c=i} \\\\\\\\ \\hline z_0 & 0 & 0 & 0 & \\\\\\\\ z_1 & 1 & -1 & \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment("C can be a number like i."));
-    cs.inject_audio(AudioSegment("Running our simulation again, in this case it ends up stuck as well."), 8);
-    eqn.begin_latex_transition("0^2 + i");
-    cs.render();
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} & \\textbf{c=i} \\\\\\\\ \\hline z_0 & 0 & 0 & 0 & \\\\\\\\ z_1 & 1 & -1 & i & \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
-    eqn.begin_latex_transition("i");
-    cs.render();
-    eqn.begin_latex_transition("i^2 + i");
-    cs.render();
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} & \\textbf{c=i} \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
-    eqn.begin_latex_transition("-1+i");
-    cs.render();
-    eqn.begin_latex_transition("(-1+i)^2 + i");
-    cs.render();
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} & \\textbf{c=i} \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
-    eqn.begin_latex_transition("-i");
-    cs.render();
-    eqn.begin_latex_transition("(-i)^2 + i");
-    cs.render();
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & \\textbf{c=1} & \\textbf{c=-1} & \\textbf{c=i} \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
-    eqn.begin_latex_transition("-1+i");
-    cs.render();
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"eqn.opacity", "0"},
+    });
+    cs.render();
+    LatexScene vals("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & \\\\\\\\ z_1 & \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}", 0.8, 0.8, 0.8);
+    cs.add_scene_fade_in(&vals, "vals");
+    eqn.begin_latex_transition("0^2 + 1");
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("And let's let Z start at 0."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 0^2 + 1 \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("To get the next Z value, we plug 0 into the formula."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 0 + 1 \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("We do some arithmetic,"));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1 \\\\\\\\ z_2 & \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("and we find the updated value of Z."));
+    cs.inject_audio_and_render(AudioSegment("We then take that updated value,"));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1 \\\\\\\\ z_2 & 1^2 + 1 \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("plug it into the equation,"));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1 \\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("and do the math again."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1 \\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 2^2 + 1 \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio(AudioSegment("We want to keep repeating this over and over."), 2);
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1 \\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 4 + 1 \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("Just square, and add one."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 5^2 + 1 \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 25 + 1 \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("Over and over."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 26^2 + 1 \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 676 + 1 \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 677^2 + 1 \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458229 + 1 \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458330 \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio_and_render(AudioSegment("In our case, Z is blowing up towards infinity."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 + ? \\\\\\\\ \\hline z_0 & 0 & \\\\\\\\ z_1 & 1 & \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("Let's try that again."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & \\\\\\\\ z_1 & 1 & \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("This time, let's let C be negative 1 instead of positive 1."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("Plug in 0 to start off Z,"));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & 0^2 - 1 \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("iterate,"));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & (-1)^2 - 1 \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 1 - 1 \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.inject_audio(AudioSegment("and this time, we fall into a cyclic trap."), 4);
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & 0^2 - 1 \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & (-1)^2 - 1 \\\\\\\\ z_5 & 677 & \\\\\\\\ z_6 & 458330 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 \\\\\\\\ \\hline z_0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 \\\\\\\\ z_2 & 2 & 0 \\\\\\\\ z_3 & 5 & -1 \\\\\\\\ z_4 & 26 & 0 \\\\\\\\ z_5 & 677 & -1 \\\\\\\\ z_6 & 458330 & 0 \\end{tabular}");
+    cs.render();
+    cs.inject_audio_and_render(AudioSegment(1));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + ? \\\\\\\\ \\hline z_0 & 0 & 0 & \\\\\\\\ z_1 & 1 & -1 & \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("Remember, we're working with Complex numbers here, not just real numbers."));
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.inject_audio_and_render(AudioSegment("C can be a number like i."));
+    cs.inject_audio(AudioSegment("Running our simulation again, in this case it ends up stuck as well."), 8);
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & 0^2 + i \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & i^2 + i \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & (-1+i)^2 + i \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & \\\\\\\\ z_5 & 677 & -1 & \\\\\\\\ z_6 & 458330 & 0 & \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & (-i)^2 + i \\\\\\\\ z_5 & 677 & -1 &  \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
+    cs.render();
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & 0 & 0 & 0 \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
+    cs.render();
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"vals.opacity", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("The differences in behavior here are the key."));
@@ -283,7 +265,7 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("That is the difference between a point inside the mandelbrot set, and outside it."));
     cs.remove_all_scenes();
     ExposedPixelsScene eps;
-    int gray = 0x88444444;
+    int gray = 0x44444444;
     eps.exposed_pixels.fill(gray);
     cs.add_scene(&comp_axes, "comp_axes");
     cs.add_scene(&eps, "eps");
@@ -299,18 +281,16 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("If we make a plot of the complex plane,"));
     cs.inject_audio_and_render(AudioSegment("and for each value of C, we run this little simulation,"));
     double r = VIDEO_WIDTH/500.;
-    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.+VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 3*r, OPAQUE_BLACK);
-    cs.inject_audio_and_render(AudioSegment("we'll paint points black if they blow up,"));
-    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2., VIDEO_HEIGHT/4., 3*r, OPAQUE_WHITE);
-    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.-VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 3*r, OPAQUE_WHITE);
-    cs.inject_audio_and_render(AudioSegment("and white if they don't."));
+    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.+VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 3*r, OPAQUE_WHITE);
+    cs.inject_audio_and_render(AudioSegment("we'll paint points white if they blow up,"));
+    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2., VIDEO_HEIGHT/4., 3*r, OPAQUE_BLACK);
+    eps.exposed_pixels.fill_circle(VIDEO_WIDTH/2.-VIDEO_HEIGHT/4., VIDEO_HEIGHT/2., 3*r, OPAQUE_BLACK);
+    cs.inject_audio_and_render(AudioSegment("and black if they don't."));
     int num_microblocks = 1000;
     cs.add_scene(&ms, "ms");
     cs.state_manager.set(unordered_map<string,string>{
         {"ms.opacity", "0"},
     });
-    Pixels* queried = nullptr;
-    ms.query(queried);
     cs.inject_audio(AudioSegment("Do that for all the points..."), num_microblocks);
     for(int i = 0; i < num_microblocks; i++) {
         for(int j = 0; j < 50; j++){
@@ -321,7 +301,7 @@ void intro() {
             int x = point%VIDEO_WIDTH;
             int y = point/VIDEO_WIDTH;
             int col = queried->get_pixel(x, y);
-            eps.exposed_pixels.fill_circle(x, y, r, col==OPAQUE_WHITE?OPAQUE_WHITE:OPAQUE_BLACK);
+            eps.exposed_pixels.fill_circle(x, y, r, col==OPAQUE_BLACK?OPAQUE_BLACK:OPAQUE_WHITE);
         }
         cs.render();
     }
@@ -341,11 +321,22 @@ void intro() {
         {"ms.opacity", "0.2"},
     });
     cs.inject_audio_and_render(AudioSegment("But let's look back at our equation."));
-    eqn.begin_latex_transition("z_{" + latex_text("next") + "} = ?^2 + " + latex_color(0xff008888, "?"));
+    eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^2 + " + latex_color(0xff008888, "?"));
     cs.inject_audio_and_render(AudioSegment("We not only had the free choice of what C can be, which is what we're plotting on screen,"));
     eqn.begin_latex_transition("z_{" + latex_text("next") + "} = "+latex_color(0xffff8888, "?")+"^2 + ?");
     cs.inject_audio_and_render(AudioSegment("but also the option to choose a starting value of Z."));
+    cs.add_scene(&vals, "vals");
+    cs.state_manager.set(unordered_map<string,string>{
+        {"vals.opacity", "0"},
+    });
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"vals.opacity", "1"},
+    });
+    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}|p{4cm}|p{4cm}} & z^2 + 1 & z^2 - 1 & z^2 + i \\\\\\\\ \\hline z_0 & " + latex_color(0xffff0000, "0") + " & " + latex_color(0xffff0000, "0") + " & " + latex_color(0xffff0000, "0") + " \\\\\\\\ z_1 & 1 & -1 & i \\\\\\\\ z_2 & 2 & 0 & -1+i \\\\\\\\ z_3 & 5 & -1 & -i \\\\\\\\ z_4 & 26 & 0 & -1+i \\\\\\\\ z_5 & 677 & -1 & -i \\\\\\\\ z_6 & 458330 & 0 & -1+i \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("Before, we always started Z at 0..."));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"vals.opacity", "0"},
+    });
     StateSliderScene sszr("[seed_z_r]", "z_r", -1, 1, .3, .07);
     StateSliderScene sszi("[seed_z_i]", "z_i", -1, 1, .3, .07);
     cs.add_scene(&sszr, "sszr", 0.1666, 0.85); 
@@ -475,32 +466,34 @@ void intro() {
         {"eqn.opacity", "1"},
         {"point_path_length", "0"},
     });
-    cs.inject_audio(AudioSegment("Looking back at the original equation, there's a knob we've left unturned."), 2);
+    cs.inject_audio_and_render(AudioSegment("Looking back at the original equation, there's a knob we've left unturned."));
+    cs.inject_audio(AudioSegment("This exponent- what if, instead of squaring Z, we cube it?"), 2);
     eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^" + latex_color(0xff008888, "?") + " + c");
     cs.render();
     eqn.begin_latex_transition("z_{" + latex_text("next") + "} = z^3 + c");
     cs.render();
-    cs.inject_audio_and_render(AudioSegment("This exponent- what if, instead of squaring Z, we cube it?"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_x_r", "3"},
         {"ms.opacity", "1"},
         {"eqn.opacity", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("Here's what we get."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_c_r", "-.3"},
+        {"seed_x_r", "3"},
+        {"zoom_exp", "-0.3"},
+    });
+    cs.inject_audio_and_render(AudioSegment(2));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_c_r", "-.5"},
         {"seed_c_i", "-.4"},
     });
     cs.inject_audio_and_render(AudioSegment("This is a third-degree Julia set!"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "-.58"},
         {"seed_c_i", "-.27"},
-        {"seed_z_r", "<t> 5 / sin 2 /"},
-        {"seed_z_i", "<t> 5 / cos 2 /"},
     });
     cs.inject_audio_and_render(AudioSegment(2));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"zoom_exp", "-0.5"},
+        {"zoom_exp", "-0.7"},
     });
     cs.inject_audio_and_render(AudioSegment(2));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
@@ -516,7 +509,7 @@ void intro() {
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "<t> 5 / sin 2 /"},
         {"seed_c_i", "<t> 5 / cos 2 /"},
-        {"zoom_exp", "-1"},
+        {"zoom_exp", "-2"},
     });
     cs.inject_audio_and_render(AudioSegment(2));
     cs.inject_audio_and_render(AudioSegment(2));
@@ -525,14 +518,22 @@ void intro() {
     cs.add_scene_fade_in(&ssxr, "ssxr", 0.5, 0.85); 
     cs.inject_audio_and_render(AudioSegment("We can experiment with the exponent all day."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
-        {"zoom_exp", "0"},
         {"seed_x_r", "4"},
         {"ssxr.opacity", "0.5 <pixel_param_x> <pixel_param_x> 0.3 * * -"},
         {"seed_c_r", "0.1"},
         {"seed_c_i", "0"},
     });
     cs.inject_audio_and_render(AudioSegment("Here's an exponent of 4."));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"zoom_exp", "0"},
+    });
     cs.inject_audio_and_render(AudioSegment(1));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_c_r", "<t> 5 / sin 2 /"},
+        {"seed_c_i", "<t> 5 / cos 2 /"},
+        {"zoom_exp", "-2"},
+    });
+    cs.inject_audio_and_render(AudioSegment(3));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_x_r", "3.5"},
     });
@@ -554,6 +555,12 @@ void intro() {
         {"zoom_exp", "-1"},
     });
     cs.inject_audio_and_render(AudioSegment(1));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_c_r", "<t> 5 / sin 2 /"},
+        {"seed_c_i", "<t> 5 / cos 2 /"},
+        {"zoom_exp", "-2"},
+    });
+    cs.inject_audio_and_render(AudioSegment(3));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0.1"},
         {"seed_c_i", "0"},
@@ -628,8 +635,10 @@ void intro() {
         {"max_iterations", "200"},
         {"seed_c_r", "<t> 5 / sin 2 *"},
         {"seed_c_r", "<t> 6 / cos 2 *"},
-        {"seed_x_r", "<t> 6.5 / sin 2.5 * 2 +"},
-        {"seed_x_r", "<t> 7.5 / sin 2.5 * 2 +"},
+        //{"seed_x_r", "<t> 6.5 / sin 2.5 * 2 +"},
+        //{"seed_x_r", "<t> 7.5 / sin 2.5 * 2 +"},
+        {"seed_x_r", "0"},
+        {"seed_x_r", "0"},
         {"seed_z_r", "<t> 5.5 / cos 2 *"},
         {"seed_z_r", "<t> 7 / cos 2 *"},
         {"zoom_exp", "2"},
@@ -672,7 +681,7 @@ void intro() {
         {"zoom_exp", "0"},
         {"gradation", "0"},
     });
-    cs.inject_audio_and_render(AudioSegment("The takeaway here is that these fractals are not only self-similar, but also self-similar among one-another."));
+    cs.inject_audio_and_render(AudioSegment("The takeaway here is that these fractals are not only self-similar, but also similar among one-another."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0 8 / 11 + 2.2 * sin 1.5 +"},
         {"seed_c_i", "0 8 / 11 + 2.4 * cos 1.5 +"},
@@ -686,13 +695,28 @@ void intro() {
         {"max_iterations", "100"},
         {"zoom_exp", "-3"},
     });
-    cs.inject_audio_and_render(AudioSegment("I don't know what I was expecting when I parameterized the Mandelbrot exponent, but it sure wasn't _more julia spirals and mandelbrot bulbs_!"));
+    cs.inject_audio_and_render(AudioSegment("I don't know what I was expecting when I parameterized the Mandelbrot exponent,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "2 8 / 11 + 2.2 * sin 1.5 +"},
         {"seed_c_i", "2 8 / 11 + 2.4 * cos 1.5 +"},
         {"seed_z_r", "2 8 / 11 + 2.6 * sin 1.5 *"},
         {"seed_z_i", "2 8 / 11 + 2.8 * cos 1.5 *"},
     });
+    cs.inject_audio_and_render(AudioSegment("but it sure wasn't _more julia spirals_,"));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_c_r", "0.5"},
+        {"seed_c_i", "-0.5"},
+        {"seed_z_r", "0"},
+        {"seed_z_i", "0"},
+        {"seed_x_r", "2"},
+        {"seed_x_i", "0.5"},
+    });
+    cs.inject_audio_and_render(AudioSegment(1));
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
+        {"seed_c_r", "0.6"},
+        {"seed_c_i", "-0.2"},
+    });
+    cs.inject_audio_and_render(AudioSegment("and _more mandelbrot bulbs_!"));
     cs.inject_audio_and_render(AudioSegment("This degree of cross-parameter self-similarity totally took me by surprise."));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0"},
@@ -743,11 +767,13 @@ void intro() {
 int main() {
     Timer timer;
     PRINT_TO_TERMINAL = true;
+    FOR_REAL = false;
+    signal(SIGINT, signal_handler);
     try {
         intro();
     }
     catch(std::exception& e) {
-        cout << "EXCEPTION CAUGHT IN RUNTIME:" << endl;
+        cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
     }
     return 0;

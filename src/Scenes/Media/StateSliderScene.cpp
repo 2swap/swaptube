@@ -69,7 +69,7 @@ private:
         const double  knob_radius = h * .3;
         const double outer_margin = h * .5 - outer_radius;
         const double inner_margin = h * .5 - inner_radius;
-        pix.rounded_rect(outer_margin, outer_margin, w - outer_margin * 2, h - outer_margin * 2, outer_radius, outer_color);
+        //pix.rounded_rect(outer_margin, outer_margin, w - outer_margin * 2, h - outer_margin * 2, outer_radius, outer_color);
         pix.rounded_rect(inner_margin, inner_margin, w - inner_margin * 2, h - inner_margin * 2, inner_radius, inner_color);
 
         // Calculate the position of the knob based on the variable value

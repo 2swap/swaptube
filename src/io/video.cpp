@@ -142,6 +142,7 @@ private:
         int original_stderr = redirect_stderr(pipefd);
         av_interleaved_write_frame(fc, &pkt);
         restore_stderr(original_stderr);
+        close(pipefd[0]);
 
         return true;
     }

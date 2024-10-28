@@ -32,16 +32,16 @@ __device__ cuDoubleComplex cuCpow(cuDoubleComplex base, cuDoubleComplex exponent
     return make_cuDoubleComplex(new_r * cos(new_theta), new_r * sin(new_theta));
 }
 
-// Kernel function to iterate over Mandelbrot set points
-__global__ void iterate_function(
-    const int width, const int height,
-    const cuDoubleComplex seed_z, const cuDoubleComplex seed_x, const cuDoubleComplex seed_c,
-    const glm::vec3 pixel_parameter_multipliers,
-    const cuDoubleComplex zoom,
-    int max_iterations,
-    float gradation,
-    unsigned int* colors
-) {
+// Color interpolation function (shared)
+__device__ unsigned int get_mandelbrot_color(double iterations, int max_iterations, bool bailed_out, double gradation, double sq_radius, double log_real_part_exp, double breath) {
+    if(!bailed_out) return 0xff000000;
+
+    if(bailed_out && gradation > 0.01){
+        double log_zn = log(sq_radius)/2;
+        double nu = log(log_zn / log_real_part_exp) / log_real_part_exp;
+        iterations += (1-nu) * gradation; // Do not use gradient for exponential parameterization
+    }
+
     const unsigned int color_palette[] = {
         0xffffffff,
         0xff000088,
@@ -61,57 +61,129 @@ __global__ void iterate_function(
     };*/
     const int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
 
-    int x = blockIdx.x * blockDim.x + threadIdx.x;
-    int y = blockIdx.y * blockDim.y + threadIdx.y;
+    iterations = (iterations + 50 + breath) / 5.;
+    int idx = floor(iterations);
+    double w = iterations - idx;
+    idx %= palette_size;
+    return cuda_color_lerp(color_palette[idx], color_palette[(idx + 1) % palette_size], w);
+}
 
-    if (x >= width || y >= height) return;
-
-    // Initialize pixel based on x and y
-    cuDoubleComplex pixel = make_cuDoubleComplex(
-        4 * ((x-width/2.) / (float)height),
-        4 * ((float)y / (float)height - 0.5f)
+__device__ void compute_z_x_c(
+    int pixel_x, int pixel_y, int width, int height,
+    const cuDoubleComplex seed_z, const cuDoubleComplex seed_x, const cuDoubleComplex seed_c,
+    const glm::vec3 pixel_parameter_multipliers,
+    const cuDoubleComplex zoom,
+    cuDoubleComplex& z, cuDoubleComplex& x, cuDoubleComplex& c, double& log_real_part_exp
+) {
+    // Calculate the complex point based on pixel coordinates
+    cuDoubleComplex point = make_cuDoubleComplex(
+        4 * ((pixel_x - width / 2.0) / static_cast<float>(height)),
+        4 * ((static_cast<float>(pixel_y) / height) - 0.5f)
     );
 
-    pixel = cuCmul(pixel, zoom);
+    point = cuCmul(point, zoom);
 
-    cuDoubleComplex z        = cuCadd(seed_z, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.x, 0), pixel));
-    cuDoubleComplex exponent = cuCadd(seed_x, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.y, 0), pixel));
-    cuDoubleComplex c        = cuCadd(seed_c, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.z, 0), pixel));
-    double rpe = cuCreal(exponent);
-    double log_real_part_exp = log(rpe);
+    // Compute z, x, and c based on seed values and multipliers
+    z = cuCadd(seed_z, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.x, 0), point));
+    x = cuCadd(seed_x, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.y, 0), point));
+    c = cuCadd(seed_c, cuCmul(make_cuDoubleComplex(pixel_parameter_multipliers.z, 0), point));
+    double rpe = cuCreal(x);
+    log_real_part_exp = log(rpe);
+}
 
-    double iterations = 0;
-    bool bailed_out = false;
-
+__device__ int mandelbrot_iterations(
+    cuDoubleComplex &z, const cuDoubleComplex &x, const cuDoubleComplex &c,
+    int max_iterations, double bailout_radius_sq, double &sq_radius
+) {
+    int iterations = 0;
+    sq_radius = 0;
+    
     for (; iterations < max_iterations; iterations++) {
-        z = cuCadd(cuCpow(z, exponent), c);
+        z = cuCadd(cuCpow(z, x), c);
         double r = cuCreal(z);
         double i = cuCimag(z);
-        double sq_radius = r*r+i*i;
+        sq_radius = r * r + i * i;
         if (sq_radius > bailout_radius_sq) {
-            bailed_out = true;
-            if(gradation > 0.01){
-                double log_zn = log(sq_radius)/2;
-                double nu = log(log_zn / log_real_part_exp) / log_real_part_exp;
-                iterations += (1-nu) * gradation; // Do not use gradient for exponential parameterization
-            }
-            break;
+            return iterations; // Returns immediately if bailout occurs
+        }
+    }
+    
+    return max_iterations; // No bailout, maximum iterations reached
+}
+
+__device__ int mandelbrot_iterations_2or3(
+    cuDoubleComplex &z, int exponent, const cuDoubleComplex &c,
+    int max_iterations, double bailout_radius_sq, double &sq_radius
+) {
+    int iterations = 0;
+    sq_radius = 0;
+
+    // Extract real and imaginary parts of z and c
+    double zr = cuCreal(z);
+    double zi = cuCimag(z);
+    double cr = cuCreal(c);
+    double ci = cuCimag(c);
+
+    if(exponent == 2){
+        for (; iterations < max_iterations; iterations++) {
+            double zr_new = zr * zr - zi * zi + cr;  // Real part of z^2 + c
+            double zi_new = 2.0 * zr * zi + ci;      // Imaginary part of z^2 + c
+
+            // Update z and square radius for next iteration
+            zr = zr_new;
+            zi = zi_new;
+            sq_radius = zr * zr + zi * zi;
+
+            if (sq_radius > bailout_radius_sq) return iterations;
+        }
+    } else {
+        for (; iterations < max_iterations; iterations++) {
+            double zr_new = zr * zr * zr - 3.0 * zr * zi * zi + cr;  // Real part of z^3 + c
+            double zi_new = 3.0 * zr * zr * zi - zi * zi * zi + ci;  // Imaginary part of z^3 + c
+
+            // Update z and square radius for next iteration
+            zr = zr_new;
+            zi = zi_new;
+            sq_radius = zr * zr + zi * zi;
+
+            if (sq_radius > bailout_radius_sq) return iterations;
         }
     }
 
-    unsigned int internal_color = 0xff000000;
-    unsigned int color = internal_color;
-    if (bailed_out) {
-        iterations = (iterations + 50) / 10.;
-        int idx = floor(iterations);
-        double w = iterations - idx;
-        idx %= palette_size;
-        color = cuda_color_lerp(color_palette[idx], color_palette[(idx+1)%palette_size], w);
-        double iterfrac = iterations/max_iterations;
-        iterfrac = 1-(1-iterfrac)*(1-iterfrac)*(1-iterfrac);
-        //color = cuda_color_lerp(color, internal_color, max(0.0, iterfrac));
+    return max_iterations; // No bailout, maximum iterations reached
+}
+
+__global__ void go(
+    const int width, const int height,
+    const cuDoubleComplex seed_z, const cuDoubleComplex seed_x, const cuDoubleComplex seed_c,
+    const glm::vec3 pixel_parameter_multipliers,
+    const cuDoubleComplex zoom,
+    int max_iterations,
+    float gradation,
+    unsigned int* colors
+) {
+    int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
+    int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
+    if (pixel_x >= width || pixel_y >= height) return;
+
+    cuDoubleComplex z, x, c; 
+    double log_real_part_exp, sq_radius = 0;
+    compute_z_x_c(pixel_x, pixel_y, width, height, seed_z, seed_x, seed_c, pixel_parameter_multipliers, zoom, z, x, c, log_real_part_exp);
+
+    // Check if the exponent 'x' is a positive integer
+    bool x_is_real = (cuCimag(x) == 0) && (cuCreal(x) > 0) && (cuCreal(x) == (int)cuCreal(x));
+    int intx = cuCreal(x);
+
+    int iterations;
+    if (x_is_real && (intx == 2 || intx == 3)) {
+        iterations = mandelbrot_iterations_2or3(z, intx, c, max_iterations, bailout_radius_sq, sq_radius);
+    } else {
+        iterations = mandelbrot_iterations(z, x, c, max_iterations, bailout_radius_sq, sq_radius);
     }
-    colors[y * width + x] = color;
+    
+    bool bailed_out = iterations < max_iterations;
+
+    colors[pixel_y * width + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, gradation, sq_radius, log_real_part_exp, log(cuCreal(zoom)));
 }
 
 // Host function to launch the kernel
@@ -135,7 +207,7 @@ extern "C" void mandelbrot_render(
                    (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // Launch the kernel
-    iterate_function<<<numBlocks, threadsPerBlock>>>(
+    go<<<numBlocks, threadsPerBlock>>>(
         width, height,
         make_cuDoubleComplex(seed_z.real(), seed_z.imag()), make_cuDoubleComplex(seed_x.real(), seed_x.imag()), make_cuDoubleComplex(seed_c.real(), seed_c.imag()),
         pixel_parameter_multipliers,

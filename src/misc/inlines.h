@@ -6,6 +6,7 @@
 #include <cmath>
 #include <sys/sysinfo.h>
 #include <iostream>
+#include <csignal>
 
 using namespace std;
 
@@ -22,6 +23,12 @@ inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
 inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
 inline string latex_text(string in){return "\\text{" + in + "}";}
 inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
+
+void signal_handler(int signal) {
+    if (signal == SIGINT) {
+        throw runtime_error("Control-C interrupt detected. Exiting gracefully.");
+    }
+}
 
 string replace_substring(string str, const string& from, const string& to) {
     size_t start_pos = 0;
