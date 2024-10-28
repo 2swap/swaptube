@@ -25,6 +25,12 @@ public:
         in_transition_state = true;
     }
 
+    void jump(const Pixels& p) {
+        in_transition_state = false;
+        p1 = p;
+        coords = get_coords_from_pixels(p);
+    }
+
     void on_end_transition(){
         if(in_transition_state) end_transition();
     }

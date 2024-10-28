@@ -11,6 +11,7 @@ extern "C" void mandelbrot_render(
     const complex<double> zoom,
     int max_iterations,
     float gradation,
+    float breath,
     unsigned int internal_color,
     unsigned int* depths
 );
@@ -19,7 +20,7 @@ class MandelbrotScene : public Scene {
 public:
     MandelbrotScene(const double width = 1, const double height = 1) : Scene(width, height) { }
     const StateQuery populate_state_query() const override {
-        return StateQuery{"zoom_r", "zoom_i", "max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "side_panel", "point_path_length", "point_path_r", "point_path_i", "gradation", "internal_shade"};
+        return StateQuery{"zoom_r", "zoom_i", "max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "side_panel", "point_path_length", "point_path_r", "point_path_i", "gradation", "internal_shade", "breath"};
     }
 
     void on_end_transition() override {}
@@ -41,6 +42,7 @@ public:
                           zoom,
                           state["max_iterations"],
                           state["gradation"],
+                          state["breath"],
                           internal_color,
                           main_panel.pixels.data()
         );
@@ -57,6 +59,7 @@ public:
                                   1,
                                   state["max_iterations"],
                                   i==1?0:1,
+                                  state["breath"],
                                   internal_color,
                                   panel.pixels.data()
                 );
