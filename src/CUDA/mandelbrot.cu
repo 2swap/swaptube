@@ -43,10 +43,22 @@ __global__ void iterate_function(
     unsigned int* colors
 ) {
     const unsigned int color_palette[] = {
+        0xffffffff,
+        0xff000088,
+        0xff000000,
+        0xff000088,
+    };
+    /*const unsigned int color_palette[] = {
+        0xff0e7c4a,
+        0xff2258a5,
+        0xff002347,
+        0xff000000,
+    };*/
+    /*const unsigned int color_palette[] = {
         0xff5d0e41,
         0xff00224d,
         0xff000000,
-    };
+    };*/
     const int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
 
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -87,16 +99,17 @@ __global__ void iterate_function(
         }
     }
 
-    unsigned int internal_color = 0xffffffff;
+    unsigned int internal_color = 0xff000000;
     unsigned int color = internal_color;
     if (bailed_out) {
+        iterations = (iterations + 50) / 10.;
         int idx = floor(iterations);
         double w = iterations - idx;
-        idx = (idx + 500000) % palette_size;
+        idx %= palette_size;
         color = cuda_color_lerp(color_palette[idx], color_palette[(idx+1)%palette_size], w);
         double iterfrac = iterations/max_iterations;
         iterfrac = 1-(1-iterfrac)*(1-iterfrac)*(1-iterfrac);
-        color = cuda_color_lerp(color, internal_color, max(0.0, iterfrac));
+        //color = cuda_color_lerp(color, internal_color, max(0.0, iterfrac));
     }
     colors[y * width + x] = color;
 }

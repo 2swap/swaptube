@@ -152,7 +152,7 @@ private:
             ostringstream stream;
             stream << setw(6) << setfill('0') << roundedFrameNumber;
             ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
-            pix_to_png(p->naive_scale_down(5), "frames/frame_"+stream.str());
+            pix_to_png(p->naive_scale_down(4), "frames/frame_"+stream.str());
         }
         WRITER.add_frame(*p);
         remaining_macroblock_frames--;

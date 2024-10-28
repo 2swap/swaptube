@@ -382,8 +382,8 @@ public:
             throw runtime_error("Naive scaledown was called with a scaling factor that doesn't divide the Pixels dimensions!");
         Pixels result(w/scale_down_factor, h/scale_down_factor);
 
-        for (int y = 0; y*scale_down_factor < w; y++) {
-            for (int x = 0; x*scale_down_factor < h; x++) {
+        for (int y = 0; y*scale_down_factor < h; y++) {
+            for (int x = 0; x*scale_down_factor < w; x++) {
                 result.set_pixel(x, y, get_pixel(x*scale_down_factor, y*scale_down_factor));
             }
         }

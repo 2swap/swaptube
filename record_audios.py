@@ -49,10 +49,6 @@ def main():
     # Process each entry
     successes = 0
     for index in range(len(entries)):
-        if successes == 1:
-            input("Remember to check the first audio output file...")
-        if successes%10 == 1:
-            input("ARE YOU HYPED")
         current_filename, current_text = entries[index]
         os.system('clear')
         # Check if the file already exists
@@ -91,6 +87,10 @@ def main():
                 # It will loop back to re-record this file
             else:
                 successes+=1
+                if successes%10 == 1:
+                    input("ARE YOU HYPED")
+                if successes == 1:
+                    input("Remember to check the first audio output file...")
                 break
 
 if __name__ == "__main__":

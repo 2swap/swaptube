@@ -53,7 +53,7 @@ public:
                                   glm::vec3(i==0,i==1,i==2),
                                   1,
                                   state["max_iterations"],
-                                  state["gradation"],
+                                  i==1?0:1,
                                   panel.pixels.data()
                 );
                 pix.overwrite(panel, main_panel.w, pix.h - remaining_height);
@@ -63,15 +63,16 @@ public:
         }
         if(state["point_path_length"] > 0) {
             int pathcol = 0xffff0000;
-            complex z = seed_z + complex(state["point_path_r"], state["point_path_i"]);
-            pair<int, int> start = map_complex_to_pixel(z, zoom);
-            pix.fill_circle(start.first, start.second, get_width()/500., pathcol);
+            complex z(state["point_path_r"], state["point_path_i"]);
+            pair<int, int> start = map_complex_to_pixel(z, zoom, seed_z);
+            double r = get_width()/300.;
+            pix.fill_circle(start.first, start.second, r, pathcol);
             int iter_count = state["point_path_length"];
             for(int i = 0; i < iter_count; i++){
                 complex new_z = pow(z, seed_x) + seed_c;
-                pair<int, int> prev = map_complex_to_pixel(z, zoom);
-                pair<int, int> next = map_complex_to_pixel(new_z, zoom);
-                pix.fill_circle(next.first, next.second, get_width()/300., pathcol);
+                pair<int, int> prev = map_complex_to_pixel(z, zoom, seed_z);
+                pair<int, int> next = map_complex_to_pixel(new_z, zoom, seed_z);
+                pix.fill_circle(next.first, next.second, r, pathcol);
                 pix.bresenham(prev.first, prev.second, next.first, next.second, pathcol, 1, 1);
                 z = new_z;
                 if(abs(z) > 100) return;
@@ -79,7 +80,8 @@ public:
         }
     }
 
-    pair<int, int> map_complex_to_pixel(complex<double> z, complex<double> zoom){
+    pair<int, int> map_complex_to_pixel(complex<double> z, complex<double> zoom, complex<double> seed_z){
+        z -= seed_z;
         z /= zoom;
         double r = z.real();
         double i = z.imag();

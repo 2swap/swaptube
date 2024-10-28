@@ -138,10 +138,10 @@ private:
         pkt.stream_index = videoStream->index;
 
         // Write the encoded frame to the mp4 file.
-        //int pipefd[2];
-        //int original_stderr = redirect_stderr(pipefd);
+        int pipefd[2];
+        int original_stderr = redirect_stderr(pipefd);
         av_interleaved_write_frame(fc, &pkt);
-        //restore_stderr(original_stderr);
+        restore_stderr(original_stderr);
 
         return true;
     }

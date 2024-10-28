@@ -56,7 +56,9 @@ public:
             data_file_ << endl;
         } else {
             cerr << "Data file is not open. Cannot add data point." << endl;
+            return;
         }
+        data_has_been_added = true;
     }
     void add_datapoint(double value){
         assert(num_series_ == 1);
@@ -65,6 +67,10 @@ public:
 
     // Function to generate the plot using Gnuplot
     void generate_plot() {
+        if(!data_has_been_added){
+            cout << "DebugPlot says: Not running GNUPlot since there was no data." << endl;
+            return;
+        }
         string gnuplot_command = "gnuplot -e \"set terminal png size 1920,1080; set output '" + plot_file_path_ + "'; ";
         gnuplot_command += "set ylabel 'Values'; ";
         gnuplot_command += "plot ";
@@ -82,6 +88,7 @@ public:
     }
 
 private:
+    bool data_has_been_added = false;
     const string plot_name_;
     const string data_file_path_;
     const string plot_file_path_;
