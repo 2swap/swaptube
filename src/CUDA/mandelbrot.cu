@@ -61,7 +61,7 @@ __device__ unsigned int get_mandelbrot_color(double iterations, int max_iteratio
     };*/
     const int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
 
-    iterations = (iterations + 50 + breath) / 5.;
+    iterations = (iterations + 50 - breath) / 5.;
     int idx = floor(iterations);
     double w = iterations - idx;
     idx %= palette_size;

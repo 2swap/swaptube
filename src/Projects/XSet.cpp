@@ -65,7 +65,7 @@ void intro() {
         {"point_path_r", "[point_path_r]"},
         {"point_path_i", "[point_path_i]"},
         {"internal_shade", "[internal_shade]"},
-        {"breath", "<t>"},
+        {"breath", "<t> 3 / sin 2 / "},
     });
     cs.state_manager.set(init);
 
@@ -192,19 +192,13 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("Just square, and add one."));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 5^2 + 1 \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 25 + 1 \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment(1));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & \\\\\\\\ z_6 & \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment("Over and over."));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 26^2 + 1 \\\\\\\\ z_6 & \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 676 + 1 \\\\\\\\ z_6 & \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment(1));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 677^2 + 1 \\end{tabular}");
-    cs.inject_audio_and_render(AudioSegment(1));
-    vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458329 + 1 \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
     vals.begin_latex_transition("\\begin{tabular}{p{4cm}|p{4cm}} & z^2 + 1 \\\\\\\\ \\hline z_0 & 0 \\\\\\\\ z_1 & 1\\\\\\\\ z_2 & 2 \\\\\\\\ z_3 & 5 \\\\\\\\ z_4 & 26 \\\\\\\\ z_5 & 677 \\\\\\\\ z_6 & 458330 \\end{tabular}");
     cs.inject_audio_and_render(AudioSegment(1));
@@ -724,12 +718,12 @@ void intro() {
     cs.inject_audio_and_render(AudioSegment("but it sure wasn't _more julia spirals_,"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0.5"},
-        {"seed_c_i", "-0.5"},
+        {"seed_c_i", "-0.4"},
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
         {"seed_x_r", "3"},
         {"seed_x_i", "0"},
-        {"zoom_exp", "0"},
+        {"zoom_exp", "-1"},
     });
     cs.inject_audio_and_render(AudioSegment("and _more mandelbrot bulbs_!"));
     cs.state_manager.microblock_transition(unordered_map<string,string>{
@@ -761,6 +755,8 @@ void intro() {
     cs.add_scene(&tss, "tss");
     cs.state_manager.set(unordered_map<string,string>{
         {"tss.opacity", "0"},
+    });
+    cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"gradation", "1"},
     });
     cs.inject_audio_and_render(AudioSegment("I hope you enjoyed!"));
