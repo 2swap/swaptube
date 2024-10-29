@@ -3,7 +3,7 @@ using namespace std;
 const string project_name = "XSet";
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 1;
+const float mult = 6;
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
