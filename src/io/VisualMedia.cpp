@@ -1,10 +1,9 @@
 #pragma once
-#include <librsvg/rsvg.h>
 #include <png.h>
 #include <vector>
 #include <stdexcept>
-#include <librsvg-2.0/librsvg/rsvg.h>
 #include "PathManager.cpp"
+#include <librsvg-2.0/librsvg/rsvg.h>
 #include "../misc/pixels.h"
 
 enum class ScalingMode {

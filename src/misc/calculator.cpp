@@ -6,6 +6,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <functional>
+#include "inlines.h"
 
 using namespace std;
 

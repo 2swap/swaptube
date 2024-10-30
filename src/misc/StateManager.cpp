@@ -9,9 +9,7 @@
 #include <cassert>
 #include <iostream>
 #include "calculator.cpp"
-#include "../misc/inlines.h"
-
-using namespace std;
+#include "inlines.h"
 
 /* StateManager is a DAG (Directed Acyclic Graph) of state assignments
  * used to facilitate frame-by-frame manipulation of state.
@@ -46,6 +44,7 @@ struct VariableContents {
 };
 
 using StateQuery = unordered_set<string>;
+using StateDelta = unordered_map<string, string>;
 class State {
 public:
     State() {}
@@ -87,7 +86,9 @@ private:
 
 static unordered_map<string, double> global_state{
     {"frame_number", 0},
+    {"t", 0},
     {"macroblock_number", 0},
+    {"microblock_number", 0},
     {"macroblock_fraction", 0},
     {"microblock_fraction", 0},
 };
@@ -268,10 +269,14 @@ public:
         subjugated = b;
     }
 
+    const void begin_timer(const string& timer_name) {
+        add_equation(timer_name, "<t> " + to_string(get_value("t")) + " -");
+    }
+
     const State get_state(const StateQuery& query) const {
         if(subjugated){
-            if (parent == nullptr) {
-                throw runtime_error("A StateManager was queried while marked as subjugated despite not having a parent."): 
+            if (parent == nullptr)
+                throw runtime_error("A StateManager was queried while marked as subjugated despite not having a parent.");
             return parent->get_state(query);
         }
         State result;
@@ -291,7 +296,6 @@ private:
     // A list of all variable names which are currently undergoing transitions
     unordered_set<string> in_microblock_transition;
     unordered_set<string> in_macroblock_transition;
-
 
     StateManager* parent = nullptr;
     // When a state manager is "sujugated" to a parent, that means it

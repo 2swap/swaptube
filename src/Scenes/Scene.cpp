@@ -4,23 +4,15 @@
 #include <chrono>
 #include <cassert>
 #include "../misc/StateManager.cpp"
+#include "../io/VisualMedia.cpp"
 #include "../io/DebugPlot.h"
 #include "../misc/pixels.h"
 #include "../io/AudioSegment.cpp"
-#include "../io/VisualMedia.cpp"
-
-using namespace std;
-
-static int frame_number;
-static bool FOR_REAL = true; // Whether we should actually be writing any AV output
-static bool PRINT_TO_TERMINAL = true;
-static bool SAVE_FRAME_PNGS = true;
 
 class Scene {
 public:
     Scene(const double width = 1, const double height = 1)
         : state_manager(), pix(width*VIDEO_WIDTH, height*VIDEO_HEIGHT) {
-        state_manager.add_equation("t", "<frame_number> " + to_string(VIDEO_FRAMERATE) + " /");
         state_manager.add_equation("w", to_string(pix.w));
         state_manager.add_equation("h", to_string(pix.h));
     }
@@ -103,8 +95,9 @@ public:
         }
         cout << endl;
         remaining_microblocks--;
+        global_state["microblock_number"]++;
         if(remaining_microblocks == 0){
-            global_state["audio_segment_number"]++;
+            global_state["macroblock_number"]++;
             state_manager.close_macroblock_transitions();
         }
         state_manager.close_microblock_transitions();
@@ -133,9 +126,9 @@ private:
     void render_one_frame(int microblock_frame_number){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
-        global_state["frame_number"]++;
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_macroblock_frames) / total_macroblock_frames;
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
+        global_state["t"] = global_state["frame_number"] / VIDEO_FRAMERATE;
 
         state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"]});
 
@@ -156,11 +149,14 @@ private:
         }
         WRITER.add_frame(*p);
         remaining_macroblock_frames--;
+        global_state["frame_number"]++;
 
         auto end_time = chrono::high_resolution_clock::now(); // End timing
         chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
-        time_per_frame_plot.add_datapoint(frame_duration.count()); // Add the time to DebugPlot
-        memutil_plot.add_datapoint(get_free_memory()); // Add the time to DebugPlot
+        time_per_frame_plot.add_datapoint(frame_duration.count());
+        cumulative_time_plot.add_datapoint(std::chrono::duration_cast<std::chrono::nanoseconds>(start_time.time_since_epoch()).count() / 1000000000.0);
+        memutil_plot.add_datapoint(get_free_memory());
+
         cout << "#";
         fflush(stdout);
     }

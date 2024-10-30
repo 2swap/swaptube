@@ -2,8 +2,6 @@
 
 #include "../Scene.cpp"
 
-using namespace std;
-
 class SuperScene : public Scene {
 public:
     SuperScene(const double width = 1, const double height = 1)

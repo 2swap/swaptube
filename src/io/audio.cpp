@@ -10,7 +10,6 @@
 #include "AudioSegment.cpp"
 extern "C"
 {
-    #include <libswscale/swscale.h>
     #include <libavformat/avformat.h>
 }
 
