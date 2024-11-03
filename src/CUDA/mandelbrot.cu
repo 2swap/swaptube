@@ -42,11 +42,18 @@ __device__ unsigned int get_mandelbrot_color(double iterations, int max_iteratio
         iterations += (1-nu) * gradation; // Do not use gradient for exponential parameterization
     }
 
+    /* const unsigned int color_palette[] = {
+        0xffffffff,
+        0xffff2e63,
+        0xffffffff,
+        0xff08d9d6,
+    }; */
     const unsigned int color_palette[] = {
         0xffffffff,
-        0xff000088,
-        0xff000000,
-        0xff000088,
+        0xffff33fc,
+        0xff5d21a7,
+        0xff1571df,
+        0xff25f7ff,
     };
     /*const unsigned int color_palette[] = {
         0xff0e7c4a,
@@ -61,7 +68,7 @@ __device__ unsigned int get_mandelbrot_color(double iterations, int max_iteratio
     };*/
     const int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
 
-    iterations = (iterations + 50 - breath) / 5.;
+    iterations = (iterations + 70 - breath) / 2.;
     int idx = floor(iterations);
     double w = iterations - idx;
     idx %= palette_size;
