@@ -7,7 +7,7 @@ static bool PRINT_TO_TERMINAL = true; // Whether to print every 5th frame for us
 static bool SAVE_FRAME_PNGS = true;   // Whether to save every 30th frame to disk as PNG
 
 #include <string>
-const string project_name = "PROJECT_NAME_MACRO";
+const string project_name = PROJECT_NAME_MACRO;
 const int VIDEO_FRAMERATE = 30;
 #include "../io/writer.cpp"
 #include "Timer.cpp"

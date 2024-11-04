@@ -52,17 +52,20 @@ public:
     void update_surfaces(){
         unordered_set<string> updated_ids;
 
-        for(pair<double, Node<C4Board>> p : graph->nodes){
-            Node<C4Board>& node = p.second;
-            if(graph_surface_map.find(node.id) != graph_surface_map.end()) {
-                graph_surface_map[node.id].opacity = node.opacity;
-                graph_surface_map[node.id].center = glm::vec3(node.position);
+        for(pair<double, Node<T>> p : graph->nodes){
+            Node<T>& node = p.second;
+            string rep = node.data->representation;
+
+            auto it = graph_surface_map.find(rep);
+            if(graph_surface_map.find(rep) != graph_surface_map.end()) {
+                it->second.opacity = node.opacity;
+                it->second.center = glm::vec3(node.position);
             } else {
-                graph_surface_map[node.id] = make_surface(node);
+                graph_surface_map.emplace(rep, make_surface(node));
             }
 
             // Add this id to the set of updated or created surfaces
-            updated_ids.insert(node.id);
+            updated_ids.insert(rep);
         }
 
         // Remove any surfaces from graph_surface_map that were not updated or created

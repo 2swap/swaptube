@@ -272,15 +272,27 @@ bool SteadyState::validate_steady_state(const C4Board& b, int& branches_searched
     return true;
 }
 
-shared_ptr<SteadyState> find_cached_steady_state(double hash, string& cache_filename) {
+shared_ptr<SteadyState> find_cached_steady_state(double hash, double reverse_hash, string& cache_filename) {
     ostringstream ss_hash_stream;
     ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << hash;
     string ss_hash = ss_hash_stream.str();
+
+    ostringstream reverse_ss_hash_stream;
+    reverse_ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << reverse_hash;
+    string reverse_ss_hash = ss_hash_stream.str();
+
     cache_filename = "steady_states/" + ss_hash + ".ss";
     if (ifstream(cache_filename)) {
-        shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename));
+        shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, false));
         ss->print();
-        cout << "Loaded cached steady state from file " << cache_filename << endl;
+        //cout << "Loaded cached steady state from file " << cache_filename << endl;
+        return ss;
+    }
+    string reverse_cache_filename = "steady_states/" + reverse_ss_hash + ".ss";
+    if (ifstream(reverse_cache_filename)) {
+        shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, true));
+        ss->print();
+        //cout << "Loaded cached steady state from file " << cache_filename << endl;
         return ss;
     }
     return nullptr;
@@ -292,7 +304,7 @@ shared_ptr<SteadyState> find_steady_state(const C4Board& board, int num_games) {
 
     // Check if a cached steady state file exists and read from it
     string cache_filename = "";
-    shared_ptr<SteadyState> cached = find_cached_steady_state(copy.get_hash(), cache_filename);
+    shared_ptr<SteadyState> cached = find_cached_steady_state(copy.get_hash(), copy.reverse_hash(), cache_filename);
     if(cached != nullptr) return cached;
 
     vector<SteadyState> steady_states;

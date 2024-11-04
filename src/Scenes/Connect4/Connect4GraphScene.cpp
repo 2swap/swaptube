@@ -26,7 +26,7 @@ public:
         graph->add_to_stack(board);
 
         if(mode != MANUAL){
-            graph->expand_graph(false);
+            graph->expand_graph_completely();
         }
         cout << "GRAPH SIZE: " << graph->size() << endl;
     }
@@ -36,7 +36,7 @@ public:
         return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
     }
 
-    Surface make_surface(Node<T> node) const override {
+    Surface make_surface(Node<C4Board> node) const override {
         return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<C4Scene>(node.data->representation, .25, .25), node.opacity);
     }
 

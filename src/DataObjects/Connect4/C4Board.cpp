@@ -3,6 +3,7 @@
 #include "C4Board.h"
 #include "SteadyState.cpp"
 #include "JsonC4Cache.cpp"
+#include "../Graph.cpp"
 #include <string>
 
 Graph<C4Board>* graph_to_check_if_points_are_in = NULL;
@@ -30,6 +31,16 @@ C4Board::C4Board(string representation, shared_ptr<SteadyState> ss) : steadystat
 
 int C4Board::piece_code_at(int x, int y) const {
     return bitboard_at(red_bitboard, x, y) + (2*bitboard_at(yellow_bitboard, x, y));
+}
+
+string C4Board::reverse_representation() const {
+    string result;
+    for (char ch : representation) {
+        int num = ch - '0';
+        int reversedNum = 8 - num;
+        result += to_string(reversedNum);
+    }
+    return result;
 }
 
 void C4Board::print() const {
@@ -103,16 +114,10 @@ double C4Board::board_specific_hash() const {
     return hash_in_progress;
 }
 
-double C4Board::board_specific_reverse_hash() const {
-    double a = 1;
-    double hash_in_progress = 0;
-    for (int y = 0; y < C4_HEIGHT; y++) {
-        for (int x = 0; x < C4_WIDTH; x++) {
-            hash_in_progress += a * piece_code_at(C4_WIDTH-1-x, y);
-            a *= 1.021813947;
-        }
-    }
-    return hash_in_progress;
+double C4Board::reverse_hash(){
+    if(reverse_hash_do_not_use == 0)
+        reverse_hash_do_not_use = C4Board(reverse_representation()).get_hash();
+    return reverse_hash_do_not_use;
 }
 
 void C4Board::fill_board_from_string(const string& rep) {
@@ -127,10 +132,16 @@ void C4Board::play_piece(int piece){
         print();
         throw runtime_error("Attempted playing a piece in an illegal column. Representation: " + representation + ", piece: " + to_string(piece));
     }
-    if(hash != 0) {print(); cout << "oops " << representation << " " << piece << endl; exit(1);}
+    if(hash != 0) {
+        print();
+        throw runtime_error("Illegal c4 board hash manipulation " + representation + " " + to_string(piece));
+    }
 
     if(piece > 0){
-        if(!is_legal(piece)) {print(); cout << "gah " << representation << " " << piece << endl; exit(1);}
+        if(!is_legal(piece)) {
+            print();
+            throw runtime_error("Tried playing illegal piece " + representation + " " + to_string(piece));
+        }
         int x = piece - 1; // convert from 1index to 0
         Bitboard p = legal_moves() & make_column(x);
         if(is_reds_turn()) red_bitboard += p;
@@ -326,6 +337,9 @@ int C4Board::burst() const{
 }
 
 int C4Board::get_human_winning_fhourstones() {
+    int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
+    if(ret != -1) return ret;
+
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
     const bool SKIP_UNFOUND_STEADYSTATES = true;
     if(SKIP_UNFOUND_STEADYSTATES){
@@ -333,8 +347,9 @@ int C4Board::get_human_winning_fhourstones() {
             if(!is_legal(i)) continue;
             C4Board child_i = child(i);
             string filename = "unused";
-            shared_ptr<SteadyState> ss = find_cached_steady_state(child_i.get_hash(), filename);
+            shared_ptr<SteadyState> ss = find_cached_steady_state(child_i.get_hash(), child_i.reverse_hash(), filename);
             if(ss != nullptr){
+                movecache.AddOrUpdateEntry(get_hash(), representation, i);
                 return i;
             }
 
@@ -345,15 +360,14 @@ int C4Board::get_human_winning_fhourstones() {
                 for (int j = 1; j <= C4_WIDTH; ++j) {
                     if(!child_block.is_legal(j)) continue;
                     C4Board child_j = child_block.child(j);
-                    ss = find_cached_steady_state(child_j.get_hash(), filename);
+                    ss = find_cached_steady_state(child_j.get_hash(), child_j.reverse_hash(), filename);
                     if(ss != nullptr){
+                        movecache.AddOrUpdateEntry(get_hash(), representation, i);
                         return i; // not j
                     }
                 }
             }
         }
-        int ret = movecache.GetSuggestedMoveIfExists(get_hash());
-        if(ret != -1) return ret;
     }
 
     int b = burst();
@@ -371,12 +385,8 @@ int C4Board::get_human_winning_fhourstones() {
         movecache.AddOrUpdateEntry(get_hash(), representation, wc);
         return wc;
     } else if (winning_columns.size() == 0){
-        //cout << "Get human winning fhourstones error!" << endl;
-        exit(1);
+        throw runtime_error("Get human winning fhourstones error!");
     }
-
-    int ret2 = movecache.GetSuggestedMoveIfExists(get_hash());
-    if(ret2 != -1) return ret2;
 
     print();
 
@@ -484,7 +494,7 @@ unordered_set<C4Board*> C4Board::get_children(){
                 int bm = get_blocking_move();
                 if(bm != -1 && child(bm).get_instant_win() != -1) break; // if i cant stop an insta win
                 string filename = "unused";
-                shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), filename);
+                shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), filename);
                 if(ss != nullptr){
                     has_steady_state = true;
                     steadystate = ss;
@@ -557,8 +567,7 @@ void replerp_ut() {
     pass &= replerp(b2, b1, 0.75) == "1234";
     pass &= replerp(b2, b1, 1.) == "12345";
     if (!pass) {
-        cout << "replerp_ut - Case 1: Failed." << endl;
-        exit(1);
+        throw runtime_error("replerp_ut - Case 1: Failed.");
     }
 
     string b3 = "abc";
@@ -578,7 +587,6 @@ void replerp_ut() {
     pass &= replerp(b4, b3, 0.8) == "ab";
     pass &= replerp(b4, b3, 1.) == "abc";
     if (!pass) {
-        cout << "replerp_ut - Case 2: Failed." << endl;
-        exit(1);
+        throw runtime_error("replerp_ut - Case 2: Failed.");
     }
 }

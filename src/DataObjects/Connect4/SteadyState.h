@@ -5,6 +5,7 @@ class C4Board;
 #include <unordered_set>
 #include <list>
 #include <array>
+#include <algorithm>
 
 const int C4_HEIGHT = 6;
 const int C4_WIDTH = 7;
@@ -64,7 +65,7 @@ public:
 
 };
 
-SteadyState read_from_file(const string& filename) {
+SteadyState read_from_file(const string& filename, bool read_reverse) {
     array<string, C4_HEIGHT> chars;
 
     ifstream file(filename);
@@ -74,6 +75,7 @@ SteadyState read_from_file(const string& filename) {
             if (getline(file, line)) { // Read the entire line as a string
                 // Check if the line length matches the expected width
                 if (line.length() == static_cast<size_t>(C4_WIDTH)) {
+                    if (read_reverse) reverse(line.begin(), line.end());
                     chars[y] = line;
                 } else throw runtime_error("Invalid line length in the file.");
             } else throw runtime_error("STEADYSTATE CACHE READ ERROR");

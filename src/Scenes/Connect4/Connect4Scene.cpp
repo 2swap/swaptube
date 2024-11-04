@@ -91,7 +91,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"microscene_fraction"};
+        return StateQuery{"microblock_fraction"};
     }
     void mark_data_unchanged() override { }
     void change_data() override { } // No DataObjects

@@ -9,6 +9,8 @@
 #include "../GenericBoard.cpp"
 #include "Bitboard.cpp"
 #include "SteadyState.h"
+#include "../../misc/json.hpp"
+using json = nlohmann::json;
 
 enum C4BranchMode {
     UNION_WEAK,
@@ -46,6 +48,8 @@ public:
     C4Board(string representation, shared_ptr<SteadyState> ss);
     C4Board();
     int piece_code_at(int x, int y) const;
+    string reverse_representation() const;
+    double reverse_hash();
     json get_data() const;
     int burst() const;
     Bitboard legal_moves() const;
@@ -59,7 +63,6 @@ public:
     bool is_reds_turn() const;
     bool is_solution() override;
     double board_specific_hash() const override;
-    double board_specific_reverse_hash() const override;
     void fill_board_from_string(const string& rep);
     C4Board* remove_piece();
     void play_piece(int piece);
@@ -74,6 +77,8 @@ public:
     void add_only_child_steady_state(unordered_set<C4Board*>& neighbors);
     unordered_set<C4Board*> get_children();
     unordered_set<double> get_children_hashes();
+private:
+    double reverse_hash_do_not_use = 0;
 };
 
 void fhourstones_tests(){

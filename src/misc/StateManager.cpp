@@ -44,7 +44,7 @@ struct VariableContents {
 };
 
 using StateQuery = unordered_set<string>;
-using StateDelta = unordered_map<string, string>;
+using StateSet = unordered_map<string, string>;
 class State {
 public:
     State() {}
@@ -159,7 +159,7 @@ public:
     }
     void set_parent(StateManager* p) {
         if((parent == nullptr) == (p == nullptr))
-            throw runtime_error("Parent must change state from set to unset or vice versa.");
+            throw runtime_error("Parent must change state from set to unset or vice versa. Current: " + to_string(reinterpret_cast<uintptr_t>(parent)) + ", setting to: " + to_string(reinterpret_cast<uintptr_t>(p)));
         parent = p;
     }
 
