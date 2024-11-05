@@ -5,6 +5,8 @@
 #include "JsonC4Cache.cpp"
 #include "../Graph.cpp"
 #include <string>
+#include <vector>
+#include <algorithm>
 
 Graph<C4Board>* graph_to_check_if_points_are_in = NULL;
 
@@ -207,16 +209,21 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     return gameResult;
 }
 
-void C4Board::add_all_winning_fhourstones(unordered_set<C4Board*>& neighbors){
+void C4Board::add_all_winning_fhourstones(unordered_set<C4Board*>& neighbors) {
+    vector<C4Board*> children;
+
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
             C4Board moved = child(i);
             int work = -1;
-            if(moved.who_is_winning(work) == RED){
-                neighbors.insert(new C4Board(moved));
+            if (moved.who_is_winning(work) == RED) {
+                children.push_back(new C4Board(moved));
             }
         }
     }
+
+    // Use the helper function to sort by minimum hash and insert
+    insert_sorted_children_by_min_hash(children, neighbors);
 }
 
 int C4Board::get_instant_win() const{
@@ -310,10 +317,10 @@ int C4Board::burst() const{
             int x = winning_columns[i];
             C4Board xth_child = child(x);
             xth_child.print();
-            shared_ptr<SteadyState> ss = find_steady_state(xth_child.representation, attempt);
+            shared_ptr<SteadyState> ss = find_steady_state(representation, x, attempt);
             if(ss != nullptr){
                 //cout << representation<<x << " added since a steadystate was found" << endl;
-                return x;
+                return -1;
             }
         }
         attempt *= 2;
@@ -337,37 +344,28 @@ int C4Board::burst() const{
 }
 
 int C4Board::get_human_winning_fhourstones() {
-    int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
-    if(ret != -1) return ret;
+    string ignore = "";
+    shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
+    if(ss != nullptr){
+        return -1;
+    }
+
+    int wm = get_instant_win();
+    if(wm != -1) {
+        movecache.AddOrUpdateEntry(get_hash(), representation, wm);
+        return wm;
+    }
+    int bm = get_blocking_move();
+    if(bm != -1) {
+        movecache.AddOrUpdateEntry(get_hash(), representation, bm);
+        return bm;
+    }
 
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = true;
+    const bool SKIP_UNFOUND_STEADYSTATES = false;
     if(SKIP_UNFOUND_STEADYSTATES){
-        for (int i = 1; i <= C4_WIDTH; ++i) {
-            if(!is_legal(i)) continue;
-            C4Board child_i = child(i);
-            string filename = "unused";
-            shared_ptr<SteadyState> ss = find_cached_steady_state(child_i.get_hash(), child_i.reverse_hash(), filename);
-            if(ss != nullptr){
-                movecache.AddOrUpdateEntry(get_hash(), representation, i);
-                return i;
-            }
-
-            // Check if it's forcing
-            int bm = child_i.get_blocking_move();
-            if(bm != -1){
-                C4Board child_block = child_i.child(bm);
-                for (int j = 1; j <= C4_WIDTH; ++j) {
-                    if(!child_block.is_legal(j)) continue;
-                    C4Board child_j = child_block.child(j);
-                    ss = find_cached_steady_state(child_j.get_hash(), child_j.reverse_hash(), filename);
-                    if(ss != nullptr){
-                        movecache.AddOrUpdateEntry(get_hash(), representation, i);
-                        return i; // not j
-                    }
-                }
-            }
-        }
+        int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
+        if(ret != -1) return ret;
     }
 
     int b = burst();
@@ -375,6 +373,10 @@ int C4Board::get_human_winning_fhourstones() {
         //cout << representation <<b<< " added by burst" << endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, b);
         return b;
+    }
+    ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
+    if(ss != nullptr){
+        return -1;
     }
 
     vector<int> winning_columns = get_winning_moves();
@@ -387,6 +389,9 @@ int C4Board::get_human_winning_fhourstones() {
     } else if (winning_columns.size() == 0){
         throw runtime_error("Get human winning fhourstones error!");
     }
+
+    int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
+    if(ret != -1) return ret;
 
     print();
 
@@ -413,26 +418,56 @@ int C4Board::get_human_winning_fhourstones() {
     return choice;
 }
 
-void C4Board::add_all_legal_children(unordered_set<C4Board*>& neighbors){
-    for (int i = 1; i <= C4_WIDTH; i++) {
-        if (is_legal(i)) {
-            C4Board moved = child(i);
-            neighbors.insert(new C4Board(moved));
-        }
+void C4Board::insert_sorted_children_by_min_hash(vector<C4Board*>& children, unordered_set<C4Board*>& neighbors) {
+    // Temporary vector to store pairs of C4Board* and their minimum hash values
+    vector<pair<C4Board*, size_t>> children_with_hashes;
+
+    // Populate the vector with each child board and its minimum hash
+    for (C4Board* child : children) {
+        size_t hash_value = min(child->get_hash(), child->reverse_hash());
+        children_with_hashes.push_back({child, hash_value});
+    }
+
+    // Sort the vector based on the minimum hash value
+    sort(children_with_hashes.begin(), children_with_hashes.end(),
+              [](const pair<C4Board*, size_t>& a, const pair<C4Board*, size_t>& b) {
+                  return a.second < b.second;
+              });
+
+    // Insert the sorted boards into the neighbors set
+    for (const auto& pair : children_with_hashes) {
+        neighbors.insert(pair.first);
     }
 }
 
-void C4Board::add_all_good_children(unordered_set<C4Board*>& neighbors){
+void C4Board::add_all_legal_children(unordered_set<C4Board*>& neighbors) {
+    vector<C4Board*> children;
+
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
             C4Board moved = child(i);
-            // Check the move isn't giga dumb
-            if(moved.get_instant_win() == -1){
-                //cout << representation << ": attempting " << i << ". Result: " << moved.representation << " added since it is not dumb" << endl;
-                neighbors.insert(new C4Board(moved));
+            children.push_back(new C4Board(moved));
+        }
+    }
+
+    // Use the helper function to sort by minimum hash and insert
+    insert_sorted_children_by_min_hash(children, neighbors);
+}
+
+void C4Board::add_all_good_children(unordered_set<C4Board*>& neighbors) {
+    vector<C4Board*> children;
+
+    for (int i = 1; i <= C4_WIDTH; i++) {
+        if (is_legal(i)) {
+            C4Board moved = child(i);
+            if (moved.get_instant_win() == -1) {
+                children.push_back(new C4Board(moved));
             }
         }
     }
+
+    // Use the helper function to sort by minimum hash and insert
+    insert_sorted_children_by_min_hash(children, neighbors);
 }
 
 json C4Board::get_data() const {
@@ -476,6 +511,7 @@ unordered_set<C4Board*> C4Board::get_children(){
 
     switch (c4_branch_mode){
         case MANUAL:
+            break;
         case FULL:
             add_all_legal_children(neighbors);
             break;
@@ -490,25 +526,21 @@ unordered_set<C4Board*> C4Board::get_children(){
             }
             break;
         case TRIM_STEADY_STATES:
-            if(!is_reds_turn()){ // if it's yellow's move
-                int bm = get_blocking_move();
-                if(bm != -1 && child(bm).get_instant_win() != -1) break; // if i cant stop an insta win
-                string filename = "unused";
-                shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), filename);
+            if(is_reds_turn()){
+                string ignore = "";
+                shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
                 if(ss != nullptr){
                     has_steady_state = true;
                     steadystate = ss;
-                    //cout << "found a steady state!" << endl;
                     break;
                 }
-                else{
-                    //cout << "Adding children as yellow!" << endl;
-                    add_all_good_children(neighbors);
-                }
-            }else{ // red's move
-                C4Board moved = child(get_human_winning_fhourstones());
-                //cout << moved.representation << " added since it was selected" << endl;
+                int hwf = get_human_winning_fhourstones();
+                if(hwf == -1)
+                    break;
+                C4Board moved = child(hwf);
                 neighbors.insert(new C4Board(moved));
+            } else { // yellow's move
+                add_all_good_children(neighbors);
             }
             break;
     }

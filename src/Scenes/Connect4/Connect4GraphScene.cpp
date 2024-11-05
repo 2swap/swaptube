@@ -16,7 +16,7 @@ public:
 
         C4Board* board;
         if(mode == SIMPLE_WEAK){
-            shared_ptr<SteadyState> ss = find_steady_state(root_node_representation, 30000);
+            shared_ptr<SteadyState> ss = find_steady_state(root_node_representation, -1, 30000);
             if(ss == NULL)
                 throw runtime_error("No steady state found when making a SIMPLE_WEAK C4GraphScene.");
             board = new C4Board(root_node_representation, ss);

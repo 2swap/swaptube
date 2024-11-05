@@ -75,6 +75,7 @@ public:
     void add_all_legal_children(unordered_set<C4Board*>& neighbors);
     void add_all_good_children(unordered_set<C4Board*>& neighbors);
     void add_only_child_steady_state(unordered_set<C4Board*>& neighbors);
+    void insert_sorted_children_by_min_hash(vector<C4Board*>& children, unordered_set<C4Board*>& neighbors);
     unordered_set<C4Board*> get_children();
     unordered_set<double> get_children_hashes();
 private:

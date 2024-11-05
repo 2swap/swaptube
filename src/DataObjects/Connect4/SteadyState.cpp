@@ -5,14 +5,14 @@
 #include "SteadyState.h"
 #include <random>
 #include <cassert>
+#include <array>
 #include "C4Board.h"
 
 const bool VISION = true;
 
 vector<char> replacement_chars = {'+', '=', '-'};
 
-void SteadyState::set_char(int x, int y, char c){
-    Bitboard point = make_point(x, y);
+void SteadyState::set_char_bitboard(const Bitboard point, char c){
     Bitboard notpoint = ~point;
 
     bitboard_miai &= notpoint;
@@ -23,6 +23,7 @@ void SteadyState::set_char(int x, int y, char c){
     bitboard_minus &= notpoint;
     bitboard_red &= notpoint;
     bitboard_yellow &= notpoint;
+    bitboard_first_move &= notpoint;
 
     switch(c) {
         case '@':
@@ -50,9 +51,17 @@ void SteadyState::set_char(int x, int y, char c){
         case '2':
             bitboard_yellow |= point;
             break;
+        case '!':
+            bitboard_first_move |= point;
+            break;
         default:
             throw runtime_error(string("Invalid SteadyState::set_char character: '") + c + "'");
     }
+}
+
+void SteadyState::set_char(int x, int y, char c){
+    Bitboard point = make_point(x, y);
+    set_char_bitboard(point, c);
 }
 
 // Method to populate char** array from array of strings
@@ -67,15 +76,16 @@ void SteadyState::populate_char_array(const array<string, C4_HEIGHT>& source) {
 char SteadyState::get_char(const int x, const int y) const {
     Bitboard point = make_point(x, y);
     char ret = 0;
-         if((bitboard_miai      & point) != 0ul) ret='@';
-    else if((bitboard_claimeven & point) != 0ul) ret=' ';
-    else if((bitboard_claimodd  & point) != 0ul) ret='|';
-    else if((bitboard_plus      & point) != 0ul) ret='+';
-    else if((bitboard_equal     & point) != 0ul) ret='=';
-    else if((bitboard_minus     & point) != 0ul) ret='-';
-    else if((bitboard_red       & point) != 0ul) ret='1';
-    else if((bitboard_yellow    & point) != 0ul) ret='2';
-    else if((frame              & point) != 0ul) ret='F';
+         if((bitboard_miai       & point) != 0ul) ret='@';
+    else if((bitboard_claimeven  & point) != 0ul) ret=' ';
+    else if((bitboard_claimodd   & point) != 0ul) ret='|';
+    else if((bitboard_plus       & point) != 0ul) ret='+';
+    else if((bitboard_equal      & point) != 0ul) ret='=';
+    else if((bitboard_minus      & point) != 0ul) ret='-';
+    else if((bitboard_red        & point) != 0ul) ret='1';
+    else if((bitboard_yellow     & point) != 0ul) ret='2';
+    else if((bitboard_first_move & point) != 0ul) ret='!';
+    else if((frame               & point) != 0ul) ret='F';
     if(ret == 0) {
         throw runtime_error("Steadystate was unset when queried!");
     }
@@ -104,7 +114,7 @@ int SteadyState::query_steady_state(const C4Board& board) const {
     Bitboard miai_moveset = moveset & bitboard_miai;
     if (!is_power_of_two(miai_moveset)) miai_moveset = 0ul;
     const Bitboard claims_moveset = (odd_rows & bitboard_claimodd) | (even_rows & bitboard_claimeven);
-    const Bitboard bitboards[] = {miai_moveset, claims_moveset, bitboard_plus, bitboard_equal, bitboard_minus};
+    const Bitboard bitboards[] = {bitboard_first_move, miai_moveset, claims_moveset, bitboard_plus, bitboard_equal, bitboard_minus};
 
     const int num_bitboards = sizeof(bitboards) / sizeof(bitboards[0]);
 
@@ -273,46 +283,52 @@ bool SteadyState::validate_steady_state(const C4Board& b, int& branches_searched
 }
 
 shared_ptr<SteadyState> find_cached_steady_state(double hash, double reverse_hash, string& cache_filename) {
-    ostringstream ss_hash_stream;
-    ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << hash;
-    string ss_hash = ss_hash_stream.str();
+    // Array of the two hash values to iterate over
+    array<double, 2> hashes = {hash, reverse_hash};
+    
+    for (int i = 0; i < 2; ++i) {
+        // Convert the current hash to a string with high precision
+        ostringstream ss_hash_stream;
+        ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << hashes[i];
+        string ss_hash = ss_hash_stream.str();
 
-    ostringstream reverse_ss_hash_stream;
-    reverse_ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << reverse_hash;
-    string reverse_ss_hash = ss_hash_stream.str();
-
-    cache_filename = "steady_states/" + ss_hash + ".ss";
-    if (ifstream(cache_filename)) {
-        shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, false));
-        ss->print();
-        //cout << "Loaded cached steady state from file " << cache_filename << endl;
-        return ss;
+        // Create the cache filename based on the hash
+        cache_filename = "steady_states/" + ss_hash + ".ss";
+        
+        // Attempt to open the cache file
+        if (ifstream(cache_filename)) {
+            // Use the current hash index to determine if this is a reverse hash (index 1)
+            shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, i == 1));
+            ss->print();
+            // cout << "Loaded cached steady state from file " << cache_filename << endl;
+            return ss;
+        }
     }
-    string reverse_cache_filename = "steady_states/" + reverse_ss_hash + ".ss";
-    if (ifstream(reverse_cache_filename)) {
-        shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, true));
-        ss->print();
-        //cout << "Loaded cached steady state from file " << cache_filename << endl;
-        return ss;
-    }
+    
+    // If no cached state was found, return nullptr
     return nullptr;
 }
 
-shared_ptr<SteadyState> find_steady_state(const C4Board& board, int num_games) {
+shared_ptr<SteadyState> find_steady_state(const string& representation, int first_move, int num_games) {
     cout << "Searching for a steady state..." << endl;
-    C4Board copy(board);
+    C4Board board(representation);
 
     // Check if a cached steady state file exists and read from it
     string cache_filename = "";
-    shared_ptr<SteadyState> cached = find_cached_steady_state(copy.get_hash(), copy.reverse_hash(), cache_filename);
+    shared_ptr<SteadyState> cached = find_cached_steady_state(board.get_hash(), board.reverse_hash(), cache_filename);
     if(cached != nullptr) return cached;
 
+    C4Board copy = board;
+    if(first_move != -1) copy = board.child(first_move);
+
+    if(copy.representation.size() % 2 == 0)
+        throw runtime_error("Steady state requested on board which is yellow-to-move!");
     vector<SteadyState> steady_states;
     int best = 1;
 
     // Generate a lot of random steady states
     for (int i = 0; i < 100; ++i) {
-        steady_states.push_back(create_random_steady_state(board));
+        steady_states.push_back(create_random_steady_state(copy));
     }
     int games_played = 0;
 
@@ -321,7 +337,7 @@ shared_ptr<SteadyState> find_steady_state(const C4Board& board, int num_games) {
         int idx = rand()%steady_states.size(); // Randomly select a steady state
         while (true) {
             C4Result col;
-            col = steady_states[idx].play_one_game(board);
+            col = steady_states[idx].play_one_game(copy);
             games_played++;
 
             bool eliminate_agent = false;
@@ -331,10 +347,12 @@ shared_ptr<SteadyState> find_steady_state(const C4Board& board, int num_games) {
                 if(consecutive_wins > 500){
                     int how_many_branches = 0;
                     cout << "Attempting validation..." << endl;
-                    if(steady_states[idx].validate_steady_state(board, how_many_branches)) {
+                    if(steady_states[idx].validate_steady_state(copy, how_many_branches)) {
                         cout << "Steady state found after " << games_played << " games." << endl;
                         cout << "Steady state validated on " << how_many_branches << " branches." << endl;
                         shared_ptr<SteadyState> ss = make_shared<SteadyState>(steady_states[idx]);
+                        Bitboard extra_piece = (board.yellow_bitboard^copy.yellow_bitboard)|(board.red_bitboard^copy.red_bitboard);
+                        ss->set_char_bitboard(extra_piece, '!');
                         ss->print();
                         ss->write_to_file(cache_filename);
                         return ss;

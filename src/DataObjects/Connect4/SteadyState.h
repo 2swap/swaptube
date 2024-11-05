@@ -43,10 +43,12 @@ public:
     Bitboard bitboard_plus = 0ul;
     Bitboard bitboard_equal = 0ul;
     Bitboard bitboard_minus = 0ul;
+    Bitboard bitboard_first_move = 0ul;
     void populate_char_array(const array<string, C4_HEIGHT>& source);
     bool validate_steady_state(const C4Board& b, int& branches_searched);
     char get_char(const int x, const int y) const;
     void set_char(const int x, const int y, const char c);
+    void set_char_bitboard(const Bitboard point, const char c);
     char get_char_from_char_array(const int x, const int y) const;
     char get_char_from_bitboards(const int x, const int y) const;
 
@@ -77,9 +79,9 @@ SteadyState read_from_file(const string& filename, bool read_reverse) {
                 if (line.length() == static_cast<size_t>(C4_WIDTH)) {
                     if (read_reverse) reverse(line.begin(), line.end());
                     chars[y] = line;
-                } else throw runtime_error("Invalid line length in the file.");
-            } else throw runtime_error("STEADYSTATE CACHE READ ERROR");
+                } else throw runtime_error("Invalid line length in the file " + filename);
+            } else throw runtime_error("STEADYSTATE CACHE READ ERROR " + filename);
         }
-    } else throw runtime_error("Failed to read SteadyState file.");
+    } else throw runtime_error("Failed to read SteadyState file " + filename);
     return SteadyState(chars);
 }
