@@ -392,6 +392,7 @@ public:
 
         for (int n = 0; n < iterations; n++) {
             cout << ".";
+            fflush(stdout);
             perform_single_physics_iteration(node_vector);
         }
         //cout << "done!" << endl;

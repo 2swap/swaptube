@@ -148,7 +148,7 @@ void SteadyState::mutate() {
     int r = rand()%10;
 
     if(r<2){
-        //drop a miai pair
+        // flush all miai
         char c = '@';
         for(int y = 0; y < C4_HEIGHT; y++){
             for(int x = 0; x < C4_WIDTH; x++){
@@ -157,15 +157,23 @@ void SteadyState::mutate() {
                 }
             }
         }
-        for(int i = 0; i < 2; i++){
-            int x = rand()%C4_WIDTH;
-            int y = C4_HEIGHT-1;
-            for(y; y >= 0; y--) {
-                char c_here = get_char(x, y);
-                if(c_here != '1' && c_here != '2') break;
+        if(r<1){
+            //drop a miai pair
+            int giveupcount = 0;
+            for(int i = 0; i < 2; i++){
+                int x = rand()%C4_WIDTH;
+                int y = C4_HEIGHT-1;
+                for(y; y >= 0; y--) {
+                    char c_here = get_char(x, y);
+                    if(c_here != '1' && c_here != '2') break;
+                }
+                if(y>=0 && !is_miai(get_char(x, y))) set_char(x, y, c);
+                else {
+                    i--;
+                    giveupcount++;
+                }
+                if(giveupcount > 10) break;
             }
-            if(y>=0 && !is_miai(get_char(x, y))) set_char(x, y, c);
-            else i--;
         }
     }
 

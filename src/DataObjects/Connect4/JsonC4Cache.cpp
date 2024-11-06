@@ -75,7 +75,7 @@ public:
         int ret = GetSuggestedMoveIfExists_half(hash);
         int rev = GetSuggestedMoveIfExists_half(reverse_hash);
         if(rev != -1) rev = 8 - rev;
-        if(ret != -1 && rev != -1 && rev != ret) {
+        if(ret != -1 && rev != -1 && rev != ret && hash != reverse_hash) {
             throw runtime_error("Double source of truth on board with hash " + to_string(hash) + " and reverse-hash " + to_string(reverse_hash));
         }
         if(ret != -1) return ret;

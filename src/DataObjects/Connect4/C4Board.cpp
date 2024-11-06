@@ -292,7 +292,7 @@ int C4Board::burst() const{
             cout << representation2 << ": " << setprecision (15) << c4.get_hash() << endl;
             representation2 = representation2.substr(0, representation2.size()-1);
         }
-        cout << "Burst winning columns error!" << endl;
+        cout << "Burst winning columns error! Possibly wrong move in movecache." << endl;
         exit(1);
     }
 
@@ -320,7 +320,7 @@ int C4Board::burst() const{
             shared_ptr<SteadyState> ss = find_steady_state(representation, x, attempt);
             if(ss != nullptr){
                 //cout << representation<<x << " added since a steadystate was found" << endl;
-                return -1;
+                return -2;
             }
         }
         attempt *= 2;
@@ -362,36 +362,34 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = false;
+    const bool SKIP_UNFOUND_STEADYSTATES = true;
     if(SKIP_UNFOUND_STEADYSTATES){
         int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
         if(ret != -1) return ret;
     }
 
     int b = burst();
-    if(b != -1){
+    if(b == -2) {
+        ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
+        if(ss != nullptr) return -1;
+    }
+    else if(b != -1){
         //cout << representation <<b<< " added by burst" << endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, b);
         return b;
     }
-    ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
-    if(ss != nullptr){
-        return -1;
-    }
+
+    int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
+    if(ret != -1) return ret;
 
     vector<int> winning_columns = get_winning_moves();
     if (winning_columns.size() == 1) {
-        // Single winning column
         char wc = winning_columns[0];
-        //cout << representation<<wc << " added as the only winning move" << endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, wc);
         return wc;
     } else if (winning_columns.size() == 0){
         throw runtime_error("Get human winning fhourstones error!");
     }
-
-    int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
-    if(ret != -1) return ret;
 
     print();
 
