@@ -307,7 +307,7 @@ shared_ptr<SteadyState> find_cached_steady_state(double hash, double reverse_has
         if (ifstream(cache_filename)) {
             // Use the current hash index to determine if this is a reverse hash (index 1)
             shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, i == 1));
-            ss->print();
+            //ss->print();
             // cout << "Loaded cached steady state from file " << cache_filename << endl;
             return ss;
         }
@@ -317,8 +317,8 @@ shared_ptr<SteadyState> find_cached_steady_state(double hash, double reverse_has
     return nullptr;
 }
 
-shared_ptr<SteadyState> find_steady_state(const string& representation, int first_move, int num_games) {
-    cout << "Searching for a steady state..." << endl;
+shared_ptr<SteadyState> find_steady_state(const string& representation, int first_move, int num_games, bool verbose = true) {
+    if(verbose) cout << "Searching for a steady state..." << endl;
     C4Board board(representation);
 
     // Check if a cached steady state file exists and read from it
@@ -354,14 +354,14 @@ shared_ptr<SteadyState> find_steady_state(const string& representation, int firs
             } else {
                 if(consecutive_wins > 500){
                     int how_many_branches = 0;
-                    cout << "Attempting validation..." << endl;
+                    if(verbose) cout << "Attempting validation..." << endl;
                     if(steady_states[idx].validate_steady_state(copy, how_many_branches)) {
-                        cout << "Steady state found after " << games_played << " games." << endl;
-                        cout << "Steady state validated on " << how_many_branches << " branches." << endl;
+                        if(verbose) cout << "Steady state found after " << games_played << " games." << endl;
+                        if(verbose) cout << "Steady state validated on " << how_many_branches << " branches." << endl;
                         shared_ptr<SteadyState> ss = make_shared<SteadyState>(steady_states[idx]);
                         Bitboard extra_piece = (board.yellow_bitboard^copy.yellow_bitboard)|(board.red_bitboard^copy.red_bitboard);
                         ss->set_char_bitboard(extra_piece, '!');
-                        ss->print();
+                        if(verbose) ss->print();
                         ss->write_to_file(cache_filename);
                         return ss;
                     } else {

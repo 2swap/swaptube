@@ -59,6 +59,9 @@ public:
     void print() const override;
     int random_legal_move() const;
     bool is_legal(int x) const;
+    bool search_for_steady_states(bool verbose) const;
+    int search_2ply() const;
+    int search_4ply() const;
     C4Result who_won() const;
     bool is_reds_turn() const;
     bool is_solution() override;

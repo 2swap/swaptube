@@ -277,24 +277,33 @@ bool C4Board::is_reds_turn() const{
     return representation.size() % 2 == 0;
 }
 
+bool C4Board::search_for_steady_states(bool verbose) const {
+    //drop a red piece in each column and see if it can make a steadystate
+    vector<int> winning_columns = get_winning_moves();
+    int attempt = 200;
+    for(int j = 0; j < 9; j++){
+        for (int i = 0; i < winning_columns.size(); ++i) {
+            int x = winning_columns[i];
+            C4Board xth_child = child(x);
+            if(verbose) xth_child.print();
+            shared_ptr<SteadyState> ss = find_steady_state(representation, x, attempt, verbose);
+            if(ss != nullptr){
+                return true;
+            }
+        }
+        attempt *= 1.6;
+    }
+    return false;
+}
+
 int C4Board::burst() const{
     int wm = get_instant_win();
-    if(wm != -1){
-        //cout << representation<<wm << " added for instawin" << endl;
+    if(wm != -1)
         return wm;
-    }
 
     vector<int> winning_columns = get_winning_moves();
-    if (winning_columns.size() == 0){
-        string representation2(representation);
-        while(representation2 != ""){
-            C4Board c4(representation2);
-            cout << representation2 << ": " << setprecision (15) << c4.get_hash() << endl;
-            representation2 = representation2.substr(0, representation2.size()-1);
-        }
-        cout << "Burst winning columns error! Possibly wrong move in movecache." << endl;
-        exit(1);
-    }
+    if (winning_columns.size() == 0)
+        throw runtime_error("Burst winning columns error! Possibly wrong move in movecache. " + representation);
 
     // Add things already in the graph!
     //drop a red piece in each column and see if it is in the graph or in the move cache
@@ -309,22 +318,8 @@ int C4Board::burst() const{
         //if(ret != -1) return ret;
     }
 
-    // Next Priority: Test for easy steadystates!
-    //drop a red piece in each column and see if it can make a steadystate
-    int attempt = 200;
-    for(int j = 0; j < 7; j++){
-        for (int i = 0; i < winning_columns.size(); ++i) {
-            int x = winning_columns[i];
-            C4Board xth_child = child(x);
-            xth_child.print();
-            shared_ptr<SteadyState> ss = find_steady_state(representation, x, attempt);
-            if(ss != nullptr){
-                //cout << representation<<x << " added since a steadystate was found" << endl;
-                return -2;
-            }
-        }
-        attempt *= 2;
-    }
+    if(search_for_steady_states(true))
+        return -2;
 
     // Recurse!
     for (int i = 0; i < winning_columns.size(); ++i) {
@@ -341,6 +336,49 @@ int C4Board::burst() const{
     }
 
     return -1; // no easy line found... casework will be necessary :(
+}
+
+int C4Board::search_4ply() const {
+    vector<int> winning_columns = get_winning_moves();
+    for (const int i : winning_columns) {
+        cout << "Column " << i << ": " << flush;
+        bool one_failed = false;
+        C4Board childi = child(i);
+        for (int j = 1; j <= C4_WIDTH; j++) {
+            if(!childi.is_legal(j)) { cout << "." << flush; continue; }
+            if(one_failed) { cout << "?" << flush; continue; }
+            C4Board grandchild = childi.child(j);
+            if(!grandchild.search_for_steady_states(false) && grandchild.search_2ply() == -1){
+                one_failed = true;
+                cout << "F" << flush;
+            } else cout << "T" << flush;
+        }
+        cout << endl;
+        if(!one_failed) return i;
+    }
+    return -1;
+}
+
+int C4Board::search_2ply() const {
+    cout << "Attempting 2-ply search for steadystates..." << endl;
+    vector<int> winning_columns = get_winning_moves();
+    for (const int i : winning_columns) {
+        cout << "Column " << i << ": " << flush;
+        bool one_failed = false;
+        C4Board childi = child(i);
+        for (int j = 1; j <= C4_WIDTH; j++) {
+            if(!childi.is_legal(j)) { cout << "." << flush; continue; }
+            if(one_failed) { cout << "?" << flush; continue; }
+            C4Board grandchild = childi.child(j);
+            if(!grandchild.search_for_steady_states(false)){
+                one_failed = true;
+                cout << "F" << flush;
+            } else cout << "T" << flush;
+        }
+        cout << endl;
+        if(!one_failed) return i;
+    }
+    return -1;
 }
 
 int C4Board::get_human_winning_fhourstones() {
@@ -369,12 +407,11 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     int b = burst();
-    if(b == -2) {
-        ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
-        if(ss != nullptr) return -1;
-    }
+
+    ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
+    if(ss != nullptr) return -1;
+
     else if(b != -1){
-        //cout << representation <<b<< " added by burst" << endl;
         movecache.AddOrUpdateEntry(get_hash(), representation, b);
         return b;
     }
@@ -393,9 +430,12 @@ int C4Board::get_human_winning_fhourstones() {
 
     print();
 
+    int s2p = search_2ply();
+    if(s2p > 0) return s2p;
+
     cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
-    for (size_t i = 0; i < winning_columns.size(); i++) {
-        cout << "Column " << winning_columns[i] << endl;
+    for (const int i : winning_columns) {
+        cout << "Column " << i << endl;
     }
     cout << "Or type -1 to continue searching for steadystates." << endl;
 
