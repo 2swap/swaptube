@@ -338,46 +338,44 @@ int C4Board::burst() const{
     return -1; // no easy line found... casework will be necessary :(
 }
 
-int C4Board::search_4ply() const {
+int C4Board::search_nply(const int depth, int& num_ordered_unfound, const bool topcall) const {
+    if(depth%2 == 1 || depth < 0) throw runtime_error("Invalid search depth");
+    if(topcall) cout << "Attempting " << depth << "-ply search for steadystates..." << endl;
+    if(depth == 0) {
+        bool fncall = search_for_steady_states(false);
+        num_ordered_unfound = fncall?0:1;
+        if(topcall) throw runtime_error("Can't call search_nply at depth 0");
+        // Return value is only used by top level caller, doesn't matter
+        return -1;
+    }
+    num_ordered_unfound = 10000000;
+    int best_col = -1;
     vector<int> winning_columns = get_winning_moves();
     for (const int i : winning_columns) {
         cout << "Column " << i << ": " << flush;
-        bool one_failed = false;
-        C4Board childi = child(i);
+        int nou_child = 0;
+        bool give_up = false;
+        C4Board childi = child(i); // Red plays
         for (int j = 1; j <= C4_WIDTH; j++) {
+            if(give_up) { cout << "?" << flush; continue; }
             if(!childi.is_legal(j)) { cout << "." << flush; continue; }
-            if(one_failed) { cout << "?" << flush; continue; }
-            C4Board grandchild = childi.child(j);
-            if(!grandchild.search_for_steady_states(false) && grandchild.search_2ply() == -1){
-                one_failed = true;
-                cout << "F" << flush;
-            } else cout << "T" << flush;
+            C4Board grandchild = childi.child(j); // Yellow plays
+            int nou_grandchild = 0;
+            grandchild.search_nply(depth-2, nou_grandchild, false);
+            if(topcall) cout << (nou_grandchild == 0 ? "T" : "F") << flush;
+            nou_child += nou_grandchild;
+            if(nou_child > num_ordered_unfound)
+                give_up = true;
         }
-        cout << endl;
-        if(!one_failed) return i;
+        cout << " | " << nou_child << endl;
+        if(nou_child < num_ordered_unfound || (nou_child == num_ordered_unfound && square(4-i) < square(4-best_col))) {
+            num_ordered_unfound = nou_child;
+            best_col = i;
+        }
+        if(num_ordered_unfound == 0) return i;
     }
-    return -1;
-}
 
-int C4Board::search_2ply() const {
-    cout << "Attempting 2-ply search for steadystates..." << endl;
-    vector<int> winning_columns = get_winning_moves();
-    for (const int i : winning_columns) {
-        cout << "Column " << i << ": " << flush;
-        bool one_failed = false;
-        C4Board childi = child(i);
-        for (int j = 1; j <= C4_WIDTH; j++) {
-            if(!childi.is_legal(j)) { cout << "." << flush; continue; }
-            if(one_failed) { cout << "?" << flush; continue; }
-            C4Board grandchild = childi.child(j);
-            if(!grandchild.search_for_steady_states(false)){
-                one_failed = true;
-                cout << "F" << flush;
-            } else cout << "T" << flush;
-        }
-        cout << endl;
-        if(!one_failed) return i;
-    }
+    if(topcall && num_ordered_unfound < depth) return best_col;
     return -1;
 }
 
@@ -430,7 +428,8 @@ int C4Board::get_human_winning_fhourstones() {
 
     print();
 
-    int s2p = search_2ply();
+    int nou = 0;
+    int s2p = search_nply(2, nou, true);
     if(s2p > 0) return s2p;
 
     cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
