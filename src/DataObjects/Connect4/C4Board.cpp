@@ -279,9 +279,11 @@ bool C4Board::is_reds_turn() const{
 
 bool C4Board::search_for_steady_states(bool verbose) const {
     //drop a red piece in each column and see if it can make a steadystate
+    int giw = get_instant_win();
+    if(giw != -1) return true;
     vector<int> winning_columns = get_winning_moves();
     int attempt = 200;
-    for(int j = 0; j < 9; j++){
+    for(int j = 0; j < 7; j++){
         for (int i = 0; i < winning_columns.size(); ++i) {
             int x = winning_columns[i];
             C4Board xth_child = child(x);
@@ -291,7 +293,7 @@ bool C4Board::search_for_steady_states(bool verbose) const {
                 return true;
             }
         }
-        attempt *= 1.6;
+        attempt *= 1.5;
     }
     return false;
 }
@@ -461,28 +463,39 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     print();
-
-    int nou = 0;
-    vector<int> ordering_ignore;
-    int s4p = search_nply(4, nou, true, ordering_ignore);
-    if(s4p > 0) return s4p;
+    if(true){
+        int nou = 0;
+        vector<int> ordering_ignore;
+        int snp = search_nply(2, nou, true, ordering_ignore);
+        if(snp > 0) return snp;
+    }
 
     cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
     for (const int i : winning_columns) {
-        cout << "Column " << i << endl;
+        cout << i << " : Column " << i << endl;
     }
-    cout << "Or type -1 to continue searching for steadystates." << endl;
+    cout << "-1: continue searching for steadystates." << endl;
+    cout << "-2: 2-ply search." << endl;
+    cout << "-4: 4-ply search." << endl;
+    cout << "-6: 6-ply search." << endl;
 
     int choice = -10;
     do {
         cout << "Enter your choice: ";
-        cin >> choice;
+        if(false) choice = -8;
+        else cin >> choice;
         if (cin.fail()) {
             cout << "ERROR -- You did not enter an integer" << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
         if (choice == -1) return get_human_winning_fhourstones();
+        else if (choice < -1 && (-choice) % 2 == 0) {
+            int nou = 0;
+            vector<int> ordering_ignore;
+            int snp = search_nply(-choice, nou, true, ordering_ignore);
+            if(snp > 0) return snp;
+        }
     } while (find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
 
     movecache.AddOrUpdateEntry(get_hash(), representation, choice);
