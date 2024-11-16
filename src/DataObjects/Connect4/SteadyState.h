@@ -43,7 +43,7 @@ public:
     Bitboard bitboard_plus = 0ul;
     Bitboard bitboard_equal = 0ul;
     Bitboard bitboard_minus = 0ul;
-    Bitboard bitboard_first_move = 0ul;
+    Bitboard bitboard_urgent = 0ul;
     void populate_char_array(const array<string, C4_HEIGHT>& source);
     bool validate_steady_state(const C4Board& b, int& branches_searched);
     char get_char(const int x, const int y) const;

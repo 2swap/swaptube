@@ -92,7 +92,8 @@ void fhourstones_tests(){
     assert(work == 8);
     assert(winner == RED);
     b.play_piece(5);
-    //assert(b.get_best_winning_fhourstones() == 2);
+    assert(b.get_best_winning_fhourstones() == 2);
+    cout << "fhourstones_tests passed" << endl;
 }
 
 void construction_tests(){

@@ -2,6 +2,9 @@
 #include "../Scenes/Connect4/Connect4GraphScene.cpp"
 
 void render_video() {
+    c4_unit_tests();
+    steady_state_unit_tests();
+    return;
     PRINT_TO_TERMINAL = false;
 
     vector<string> variations{

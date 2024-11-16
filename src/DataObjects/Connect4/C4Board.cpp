@@ -277,27 +277,6 @@ bool C4Board::is_reds_turn() const{
     return representation.size() % 2 == 0;
 }
 
-bool C4Board::search_for_steady_states(bool verbose) const {
-    //drop a red piece in each column and see if it can make a steadystate
-    int giw = get_instant_win();
-    if(giw != -1) return true;
-    vector<int> winning_columns = get_winning_moves();
-    int attempt = 200;
-    for(int j = 0; j < 7; j++){
-        for (int i = 0; i < winning_columns.size(); ++i) {
-            int x = winning_columns[i];
-            C4Board xth_child = child(x);
-            if(verbose) xth_child.print();
-            shared_ptr<SteadyState> ss = find_steady_state(representation, x, attempt, verbose);
-            if(ss != nullptr){
-                return true;
-            }
-        }
-        attempt *= 1.5;
-    }
-    return false;
-}
-
 int C4Board::burst() const{
     int wm = get_instant_win();
     if(wm != -1)
@@ -320,7 +299,7 @@ int C4Board::burst() const{
         //if(ret != -1) return ret;
     }
 
-    if(search_for_steady_states(true))
+    if(find_steady_state(representation, true) != nullptr)
         return -2;
 
     // Recurse!
@@ -344,11 +323,16 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
     ordering.clear();
     if (depth == 0) verbose = false;
     if (depth % 2 == 1 || depth < 0) throw runtime_error("Invalid search depth");
-    if (verbose) cout << "Attempting " << depth << "-ply search for steadystates..." << endl;
+    int giw = get_instant_win();
+    if(giw != -1) {
+        ordering = get_winning_moves();
+        num_ordered_unfound = 0;
+        return giw;
+    }
 
     // Base case
     if (depth == 0) {
-        bool fncall = search_for_steady_states(false);
+        bool fncall = find_steady_state(representation, false) != nullptr;
         ordering = get_winning_moves();
         num_ordered_unfound = fncall ? 0 : 1;
         // Return value is only used by top level caller, doesn't matter
@@ -358,11 +342,10 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
     // Iterative Deepening
     vector<int> winning_columns;
     int ignore = 0;
-    if (verbose && depth > 2) cout << "--Subcall--" << endl;
-    int s2p = search_nply(depth - 2, ignore, verbose, winning_columns);
-    if (s2p > 0) return s2p;
-    if (verbose && depth > 2) cout << "--End Subcall--" << endl;
+    int snp = search_nply(depth - 2, ignore, verbose, winning_columns);
+    if (snp > 0) return snp;
 
+    if (verbose) cout << "Attempting " << depth << "-ply search for steadystates..." << endl;
     num_ordered_unfound = 10000000;
     int best_col = -1;
 
@@ -379,7 +362,7 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
             if (!childi.is_legal(j)) { if (verbose) cout << "." << flush; continue; }
             C4Board grandchild = childi.child(j); // Yellow plays
             int nou_grandchild = 0;
-            if(depth == 2 || !grandchild.search_for_steady_states(false)) {
+            if(depth == 2 || find_steady_state(grandchild.representation, false) == nullptr) {
                 vector<int> ordering_ignore;
                 grandchild.search_nply(depth - 2, nou_grandchild, false, ordering_ignore);
                 nou_child += nou_grandchild;
@@ -424,12 +407,10 @@ int C4Board::get_human_winning_fhourstones() {
 
     int wm = get_instant_win();
     if(wm != -1) {
-        movecache.AddOrUpdateEntry(get_hash(), representation, wm);
         return wm;
     }
     int bm = get_blocking_move();
     if(bm != -1) {
-        movecache.AddOrUpdateEntry(get_hash(), representation, bm);
         return bm;
     }
 
@@ -446,7 +427,6 @@ int C4Board::get_human_winning_fhourstones() {
     if(ss != nullptr) return -1;
 
     else if(b != -1){
-        movecache.AddOrUpdateEntry(get_hash(), representation, b);
         return b;
     }
 
@@ -456,7 +436,6 @@ int C4Board::get_human_winning_fhourstones() {
     vector<int> winning_columns = get_winning_moves();
     if (winning_columns.size() == 1) {
         char wc = winning_columns[0];
-        movecache.AddOrUpdateEntry(get_hash(), representation, wc);
         return wc;
     } else if (winning_columns.size() == 0){
         throw runtime_error("Get human winning fhourstones error!");
@@ -466,7 +445,7 @@ int C4Board::get_human_winning_fhourstones() {
     if(true){
         int nou = 0;
         vector<int> ordering_ignore;
-        int snp = search_nply(2, nou, true, ordering_ignore);
+        int snp = search_nply(4, nou, true, ordering_ignore);
         if(snp > 0) return snp;
     }
 
@@ -482,7 +461,7 @@ int C4Board::get_human_winning_fhourstones() {
     int choice = -10;
     do {
         cout << "Enter your choice: ";
-        if(false) choice = -8;
+        if(false) choice = -10;
         else cin >> choice;
         if (cin.fail()) {
             cout << "ERROR -- You did not enter an integer" << endl;
@@ -498,8 +477,6 @@ int C4Board::get_human_winning_fhourstones() {
         }
     } while (find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
 
-    movecache.AddOrUpdateEntry(get_hash(), representation, choice);
-    movecache.WriteCache();
     return choice;
 }
 
@@ -622,6 +599,10 @@ unordered_set<C4Board*> C4Board::get_children(){
                 int hwf = get_human_winning_fhourstones();
                 if(hwf == -1)
                     break;
+                else {
+                    movecache.AddOrUpdateEntry(get_hash(), representation, hwf);
+                    movecache.WriteCache();
+                }
                 C4Board moved = child(hwf);
                 neighbors.insert(new C4Board(moved));
             } else { // yellow's move

@@ -66,7 +66,13 @@ rm $TEMPFILE
 # Check if the compile and run were successful
 if [ $SUCCESS -eq 0 ]; then
     if [ -n "$ultimate_subdir" ]; then
-        vlc "$ultimate_subdir/${PROJECT_NAME}.mp4" > /dev/null 2>&1
+        file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
+
+        if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
+            vlc "$file_path" > /dev/null 2>&1
+        else
+            echo "go.sh: The output file is either empty or smaller than 1KB."
+        fi
     else
         echo "go.sh: No output directory found for project ${PROJECT_NAME}."
     fi
