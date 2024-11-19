@@ -299,7 +299,7 @@ int C4Board::burst() const{
         //if(ret != -1) return ret;
     }
 
-    if(find_steady_state(representation, true) != nullptr)
+    if(find_steady_state(representation, false, true, 40, 40) != nullptr)
         return -2;
 
     // Recurse!
@@ -319,54 +319,66 @@ int C4Board::burst() const{
     return -1; // no easy line found... casework will be necessary :(
 }
 
-int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose, vector<int>& ordering) const {
-    ordering.clear();
+int C4Board::search_nply_id(const int depth, const vector<int>& order) const {
+    vector<int> ordering_last = order;
+    for(int i = 0; i <= depth; i+=2) {
+        cout << "Attempting " << i << "-ply search for steadystates..." << endl;
+        int nou = 0;
+        vector<int> ordering_this;
+        int ret = search_nply(i, nou, true, ordering_last, ordering_this);
+        ordering_last = ordering_this;
+        if(ret != -1)
+            return ret;
+    }
+    return -1;
+}
+
+int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose, vector<int> ordering_in, vector<int>& ordering_out) const {
+    ordering_out.clear();
     if (depth == 0) verbose = false;
     if (depth % 2 == 1 || depth < 0) throw runtime_error("Invalid search depth");
     int giw = get_instant_win();
     if(giw != -1) {
-        ordering = get_winning_moves();
+        ordering_out = get_winning_moves();
         num_ordered_unfound = 0;
         return giw;
     }
 
+    if(ordering_in.size() == 0) ordering_in = get_winning_moves();
+
     // Base case
     if (depth == 0) {
-        bool fncall = find_steady_state(representation, false) != nullptr;
-        ordering = get_winning_moves();
+        bool fncall = find_steady_state(representation) != nullptr;
+        ordering_out = ordering_in;
         num_ordered_unfound = fncall ? 0 : 1;
         // Return value is only used by top level caller, doesn't matter
         return -1;
     }
 
-    // Iterative Deepening
-    vector<int> winning_columns;
-    int ignore = 0;
-    int snp = search_nply(depth - 2, ignore, verbose, winning_columns);
-    if (snp > 0) return snp;
-
-    if (verbose) cout << "Attempting " << depth << "-ply search for steadystates..." << endl;
     num_ordered_unfound = 10000000;
     int best_col = -1;
 
     // Vector to store (column, nou_child) pairs
     vector<pair<int, int>> column_nou_pairs;
 
-    for (const int i : winning_columns) {
+    for (const int i : ordering_in) {
         if (verbose) cout << "Column " << i << ": " << flush;
         int nou_child = 0;
         bool give_up = false;
         C4Board childi = child(i); // Red plays
         for (int j = 1; j <= C4_WIDTH; j++) {
-            if (give_up) { if (verbose) cout << "?" << flush; continue; }
+            if (give_up            ) { if (verbose) cout << "?" << flush; continue; }
             if (!childi.is_legal(j)) { if (verbose) cout << "." << flush; continue; }
             C4Board grandchild = childi.child(j); // Yellow plays
             int nou_grandchild = 0;
-            if(depth == 2 || find_steady_state(grandchild.representation, false) == nullptr) {
-                vector<int> ordering_ignore;
-                grandchild.search_nply(depth - 2, nou_grandchild, false, ordering_ignore);
+            bool node_in_graph = graph_to_check_if_points_are_in->node_exists(grandchild.get_hash()) || graph_to_check_if_points_are_in->node_exists(grandchild.reverse_hash());
+            bool no_steadystate_yet = true;
+            if(depth != 2) no_steadystate_yet = find_steady_state(grandchild.representation) == nullptr;
+            if(!node_in_graph && no_steadystate_yet) {
+                vector<int> ignore_out;
+                grandchild.search_nply(depth - 2, nou_grandchild, false, vector<int>(), ignore_out);
                 nou_child += nou_grandchild;
-                if (nou_child > num_ordered_unfound)
+                if (nou_child >= num_ordered_unfound)
                     give_up = true;
             }
             if (verbose) cout << (nou_grandchild == 0 ? "T" : "F") << flush;
@@ -390,9 +402,8 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
               });
 
     // Populate ordering with sorted columns
-    ordering.clear();
     for (const auto& pair : column_nou_pairs) {
-        ordering.push_back(pair.first);
+        ordering_out.push_back(pair.first);
     }
 
     return -1;
@@ -442,10 +453,8 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     print();
-    if(true){
-        int nou = 0;
-        vector<int> ordering_ignore;
-        int snp = search_nply(4, nou, true, ordering_ignore);
+    if(false){
+        int snp = search_nply_id(2, winning_columns);
         if(snp > 0) return snp;
     }
 
@@ -458,11 +467,10 @@ int C4Board::get_human_winning_fhourstones() {
     cout << "-4: 4-ply search." << endl;
     cout << "-6: 6-ply search." << endl;
 
-    int choice = -10;
+    int choice = 0;
     do {
         cout << "Enter your choice: ";
-        if(false) choice = -10;
-        else cin >> choice;
+        cin >> choice;
         if (cin.fail()) {
             cout << "ERROR -- You did not enter an integer" << endl;
             cin.clear();
@@ -470,13 +478,12 @@ int C4Board::get_human_winning_fhourstones() {
         }
         if (choice == -1) return get_human_winning_fhourstones();
         else if (choice < -1 && (-choice) % 2 == 0) {
-            int nou = 0;
-            vector<int> ordering_ignore;
-            int snp = search_nply(-choice, nou, true, ordering_ignore);
+            int snp = search_nply_id(-choice, winning_columns);
             if(snp > 0) return snp;
         }
     } while (find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
 
+    movecache.WriteCache();
     return choice;
 }
 
@@ -588,6 +595,7 @@ unordered_set<C4Board*> C4Board::get_children(){
             }
             break;
         case TRIM_STEADY_STATES:
+            cout << "Node: " << representation << endl;
             if(is_reds_turn()){
                 string ignore = "";
                 shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
@@ -597,12 +605,8 @@ unordered_set<C4Board*> C4Board::get_children(){
                     break;
                 }
                 int hwf = get_human_winning_fhourstones();
-                if(hwf == -1)
-                    break;
-                else {
-                    movecache.AddOrUpdateEntry(get_hash(), representation, hwf);
-                    movecache.WriteCache();
-                }
+                if(hwf == -1) break;
+                else movecache.AddOrUpdateEntry(get_hash(), representation, hwf);
                 C4Board moved = child(hwf);
                 neighbors.insert(new C4Board(moved));
             } else { // yellow's move

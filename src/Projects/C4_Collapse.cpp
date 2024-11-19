@@ -2,9 +2,6 @@
 #include "../Scenes/Connect4/Connect4GraphScene.cpp"
 
 void render_video() {
-    c4_unit_tests();
-    steady_state_unit_tests();
-    return;
     PRINT_TO_TERMINAL = false;
 
     vector<string> variations{
@@ -33,15 +30,17 @@ void render_video() {
     "4441",
     "4442",
     "4443",
-    */
     "444441",
+    */
     "444442",
     "444443",
     "444444",
     };
     for(const string& variation : variations){
+        cout << "A" << endl;
         Graph<C4Board> g;
         C4GraphScene gs(&g, variation, TRIM_STEADY_STATES);
+        cout << "B" << endl;
 
         g.dimensions = 3;
 
