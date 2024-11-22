@@ -30,7 +30,7 @@ private:
 
 public:
     C4Scene(const string& rep, const double width = 1, const double height = 1)
-        :Scene(width, height), representation(rep), board(rep), stonewidth(min(width, height)/10.) {}
+        :Scene(width, height), representation(rep), board(rep) {}
 
     void stage_transition(string final_rep){
         is_transition = true;
@@ -100,9 +100,10 @@ public:
 
     void draw() override{
         if (is_transition) interpolate();
+        stonewidth = min(get_width(), get_height())/10;
         for(int stonex = 0; stonex < board.BOARD_WIDTH; stonex++)
             for(int stoney = 0; stoney < board.BOARD_HEIGHT; stoney++){
-                double px = 0, py = 0, stonewidth = 0;
+                double px = 0, py = 0;
                 draw_c4_disc(stonex, stoney);
             }
         //if(done_scene && is_transition) post_transition();

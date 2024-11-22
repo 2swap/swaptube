@@ -26,6 +26,9 @@ public:
                 add_line(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor), neighbor_edge.opacity));
             }
         }
+
+        // automagical camera distancing
+        auto_distance = 1.9*graph->farthest_node_distance_from_origin();
     }
 
     virtual int get_edge_color(const Node<T>& node, const Node<T>& neighbor){

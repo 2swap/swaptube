@@ -1,18 +1,12 @@
 #include "../Scenes/Common/CompositeScene.cpp"
+#include "../Scenes/Media/LatexScene.cpp"
+#include "../Scenes/Connect4/Connect4Scene.cpp"
 #include "../Scenes/Connect4/Connect4GraphScene.cpp"
 
 void render_video() {
-    PRINT_TO_TERMINAL = false;
 
     vector<string> variations{
-        /*
-    "4151",
-    "4152",
-    "4153",
-    "4154",
-    "4155",
-    "4156",
-    "4157",
+    "41",
     "4221",
     "4222",
     "4223",
@@ -31,16 +25,21 @@ void render_video() {
     "4442",
     "4443",
     "444441",
-    */
     "444442",
     "444443",
     "444444",
     };
     for(const string& variation : variations){
-        cout << "A" << endl;
         Graph<C4Board> g;
         C4GraphScene gs(&g, variation, TRIM_STEADY_STATES);
-        cout << "B" << endl;
+        LatexScene ls_opening(latex_text("Opening: "+variation), 1, .2, .1);
+        LatexScene ls_size(latex_text("Node count: "+to_string(g.size())), 1, .2, .1);
+        C4Scene c4s(variation, .2, .4);
+        CompositeScene cs;
+        cs.add_scene(&gs, "gs");
+        cs.add_scene(&ls_opening, "ls_opening", .1, .05);
+        cs.add_scene(&ls_size, "ls_size", .1, .12);
+        cs.add_scene(&c4s, "c4s", .1, .26);
 
         g.dimensions = 3;
 
@@ -49,16 +48,14 @@ void render_video() {
             {"qi", "0"},
             {"qj", "<t> .1 * sin"},
             {"qk", "0"},
-            {"d", "400"},
             {"surfaces_opacity", "0"},
-            {"points_opacity", "0"},
-            {"physics_multiplier", "10"},
+            {"points_opacity", g.size() < 10? "1" : "0"},
+            {"physics_multiplier", "40"},
         };
         gs.state_manager.set(state);
 
-        gs.inject_audio_and_render(AudioSegment(2));
-        //cout << g.size() << " <- SIZE COMPARISON -> " << g2.size() << endl;
-        //g.render_json(variation + ".json");
+        cs.inject_audio_and_render(AudioSegment(1));
+        g.render_json("c4_" + variation + ".json");
     }
 }
 

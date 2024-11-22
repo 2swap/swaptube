@@ -312,7 +312,8 @@ public:
     void set_camera_direction() {
         camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);
-        camera_pos = glm::vec3(state["x"], state["y"], state["z"]) + conjugate_camera_direction * glm::vec3(0,0,-state["d"]) * camera_direction;
+        double dist_to_use = auto_distance>0?max(1.0, auto_distance):state["d"];
+        camera_pos = glm::vec3(state["x"], state["y"], state["z"]) + conjugate_camera_direction * glm::vec3(0,0,-dist_to_use) * camera_direction;
     }
 
     // Function to compute squared distance between two points
@@ -435,6 +436,7 @@ public:
     float halfheight;
     Pixels sketchpad;
 protected:
+    double auto_distance = -1;
     vector<const ThreeDimensionalObject*> obj_ptrs;
     vector<Point> points;
     vector<Line> lines;

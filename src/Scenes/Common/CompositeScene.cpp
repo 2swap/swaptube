@@ -60,9 +60,12 @@ public:
     bool check_if_data_changed() const override {return false;}
 
     void change_data() override {
+        /*
         for (auto& swp : scenes){
             swp.scenePointer->change_data();
         }
+        */
+        // I think this is a noop since data will be changed when each of the subscenes is queried
     }
 
     bool subscene_needs_redraw() const override {

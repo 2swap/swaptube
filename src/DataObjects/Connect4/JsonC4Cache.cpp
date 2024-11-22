@@ -88,7 +88,7 @@ private:
     int GetSuggestedMoveIfExists_half(double hash) {
         json entry = GetEntry(hash);
         if (!entry.empty() && entry.find("suggestedMove") != entry.end()) {
-            cout << "Got entry " << entry["suggestedMove"] << " for hash " << hash << endl;
+            //cout << "Got entry " << entry["suggestedMove"] << " for hash " << hash << endl;
             return entry["suggestedMove"];
         } else {
             return -1; // Entry not found or no suggested move in cache
@@ -100,10 +100,10 @@ private:
         string hashString = hash_to_json_str(hash);
 
         if (cache_.count(hashString) > 0) {
-            cout << "Getting entry " << hashString << endl;
+            //cout << "Getting entry " << hashString << endl;
             return cache_[hashString];
         } else {
-            cout << "didnt find entry " << hashString << endl;
+            //cout << "didnt find entry " << hashString << endl;
             return json::object(); // Entry not found in cache
         }
     }

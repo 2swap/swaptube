@@ -61,7 +61,7 @@ public:
     bool is_legal(int x) const;
     bool search_for_steady_states(bool verbose) const;
     int search_nply(const int depth, int& num_ordered_unfound, bool verbose, vector<int> ordering_in, vector<int>& ordering_out) const;
-    int search_nply_id(const int depth, const vector<int>& order) const;
+    int search_nply_id(const int depth, const vector<int>& order_in, vector<int>& order_out) const;
     C4Result who_won() const;
     bool is_reds_turn() const;
     bool is_solution() override;

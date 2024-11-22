@@ -19,6 +19,8 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
+extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes, double repel_force);
+
 class Edge {
 public:
     Edge(double f, double t) : from(f), to(t), opacity(1) {}
@@ -125,7 +127,6 @@ public:
     }
     double add_node_without_edges(T* t){
         double hash = t->get_hash();
-        if(size()%1000 == 999) cout << "Node count: " << size() << endl;
         if (node_exists(hash)) {
             delete t;
             return hash;
@@ -144,7 +145,7 @@ public:
      */
     int expand_graph_once() {
         while (!traverse_deque.empty()) {
-            cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
+            //cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
             double id = traverse_deque.front();
             traverse_deque.pop_front();
             cout << "Looking for " << id << endl;
@@ -174,7 +175,7 @@ public:
     int expand_graph_completely() {
         int new_nodes_added = 0;
         while (!traverse_deque.empty()) {
-            cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
+            //cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
             double id = traverse_deque.front();
             traverse_deque.pop_front();
 
@@ -398,25 +399,40 @@ public:
         //cout << "done!" << endl;
     }
 
-    void perform_single_physics_iteration(const vector<Node<T>*>& node_vector){
+    void perform_single_physics_iteration(const vector<Node<T>*>& node_vector) {
         int s = node_vector.size();
         glm::dvec4 center_of_mass(0,0,0,0);
         double max_dist = 0;
 
-        // First loop: apply forces, calculate center of mass and total edge length
-        for (size_t i = 0; i < s; ++i) {
+        // Create arrays for node positions and velocity deltas
+        vector<glm::dvec4> positions(s);
+        vector<glm::dvec4> velocity_deltas(s, glm::dvec4(0.0));
+
+        // Populate positions array
+        for (int i = 0; i < s; ++i) {
+            positions[i] = node_vector[i]->position;
+        }
+
+        // Use CUDA to compute repulsion velocity deltas
+        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s, repel_force);
+
+        // Apply velocity deltas from CUDA and calculate attraction forces on the CPU
+        for (int i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
             center_of_mass += node->position;
+            node->velocity += velocity_deltas[i]; // Repulsion forces from CUDA
+
+            // Calculate attraction forces (CPU)
             const EdgeSet& neighbor_nodes = node->neighbors;
             for (const Edge& neighbor_edge : neighbor_nodes) {
                 double neighbor_id = neighbor_edge.to;
                 Node<T>* neighbor = &nodes.at(neighbor_id);
-                perform_pairwise_node_attraction(node, neighbor);
-            }
-            for (size_t j = 0; j < i; ++j) {
-                Node<T>* nodej = node_vector[j];
-                perform_pairwise_node_attraction(node, nodej, false);
-                max_dist = max(max_dist, glm::length(node->position - nodej->position));
+                glm::dvec4 diff = node->position - neighbor->position;
+                double dist_sq = glm::dot(diff, diff) + 1;
+                double force = get_attraction_force(dist_sq);
+
+                node->velocity -= diff * force; // Apply attraction forces
+                neighbor->velocity += diff * force; // Apply attraction forces
             }
         }
 
@@ -428,38 +444,44 @@ public:
             Node<T>* node = node_vector[i];
 
             double magnitude = glm::length(node->velocity);
-            if(magnitude > speedlimit) {
+            if (magnitude > speedlimit) {
                 double scale = speedlimit / magnitude;
                 node->velocity *= scale;
             }
 
-            if(node->hash == root_node_hash) node->position *= 0;
-            node->velocity.y += gravity_strength/size();
+            if (node->hash == root_node_hash) node->position *= 0;
+            node->velocity.y += gravity_strength / size();
             node->velocity *= decay;
             node->position += node->velocity;
-            if(dimensions < 3) {node->velocity.z = 0; node->position.z = 0;}
-            if(dimensions < 4) {node->velocity.w = 0; node->position.w = 0;}
+
+            // Dimensional constraints
+            if (dimensions < 3) {
+                node->velocity.z = 0;
+                node->position.z = 0;
+            }
+            if (dimensions < 4) {
+                node->velocity.w = 0;
+                node->position.w = 0;
+            }
         }
+    }
+
+    double farthest_node_distance_from_origin() const {
+        double max_distance_sq = 0.0; // Maximum squared distance
+
+        for (const auto& node_pair : nodes) {
+            const Node<T>& node = node_pair.second;
+            double distance_sq = glm::dot(node.position, node.position);
+            max_distance_sq = max(max_distance_sq, distance_sq);
+        }
+
+        // Return the square root of the maximum squared distance
+        return sqrt(max_distance_sq);
     }
 
     double get_attraction_force(double dist_sq){
         double dist_6th = dist_sq*dist_sq*dist_sq/20;
         return 2*attract_force * (dist_6th-1)/(dist_6th+1);
-    }
-
-    double get_repulsion_force(double dist_sq){
-        return -repel_force / (dist_sq/2 + .1);
-    }
-
-    void perform_pairwise_node_attraction(Node<T>* node1, Node<T>* node2, bool attract = true) {
-        glm::dvec4 delta = node1->position - node2->position;
-        double dist_sq = square(delta.x) + square(delta.y) + square(delta.z) + square(delta.w) + 1;
-        double force = attract ?
-            get_attraction_force(dist_sq):
-            get_repulsion_force(dist_sq);
-        glm::dvec4 change = delta * force;
-        node2->velocity += change;
-        node1->velocity -= change;
     }
 
     void render_json(string json_out_filename) {

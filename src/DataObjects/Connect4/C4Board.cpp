@@ -319,8 +319,8 @@ int C4Board::burst() const{
     return -1; // no easy line found... casework will be necessary :(
 }
 
-int C4Board::search_nply_id(const int depth, const vector<int>& order) const {
-    vector<int> ordering_last = order;
+int C4Board::search_nply_id(const int depth, const vector<int>& order_in, vector<int>& order_out) const {
+    vector<int> ordering_last = order_in;
     for(int i = 0; i <= depth; i+=2) {
         cout << "Attempting " << i << "-ply search for steadystates..." << endl;
         int nou = 0;
@@ -330,6 +330,7 @@ int C4Board::search_nply_id(const int depth, const vector<int>& order) const {
         if(ret != -1)
             return ret;
     }
+    order_out = ordering_last;
     return -1;
 }
 
@@ -453,9 +454,15 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     print();
-    if(false){
-        int snp = search_nply_id(2, winning_columns);
+    if(true){
+        vector<int> order_out;
+        int snp = search_nply_id(8, winning_columns, order_out);
         if(snp > 0) return snp;
+        else {
+            movecache.AddOrUpdateEntry(get_hash(), representation, winning_columns[0]);
+            movecache.WriteCache();
+            return winning_columns[0];
+        }
     }
 
     cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
@@ -478,7 +485,8 @@ int C4Board::get_human_winning_fhourstones() {
         }
         if (choice == -1) return get_human_winning_fhourstones();
         else if (choice < -1 && (-choice) % 2 == 0) {
-            int snp = search_nply_id(-choice, winning_columns);
+            vector<int> order_out;
+            int snp = search_nply_id(-choice, winning_columns, order_out);
             if(snp > 0) return snp;
         }
     } while (find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
@@ -595,7 +603,6 @@ unordered_set<C4Board*> C4Board::get_children(){
             }
             break;
         case TRIM_STEADY_STATES:
-            cout << "Node: " << representation << endl;
             if(is_reds_turn()){
                 string ignore = "";
                 shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
