@@ -47,26 +47,22 @@ public:
     Bitboard bitboard_then = 0ul;
     Bitboard bitboard_if = 0ul;
     void populate_char_array(const array<string, C4_HEIGHT>& source);
-    bool validate_steady_state(const C4Board& b, int& branches_searched);
+    bool validate(C4Board b);
+    bool validate_recursive_call(C4Board b, unordered_set<double>& wins_cache);
     char get_char(const int x, const int y) const;
     void set_char(const int x, const int y, const char c);
     void set_char_bitboard(const Bitboard point, const char c);
     char get_char_from_char_array(const int x, const int y) const;
     char get_char_from_bitboards(const int x, const int y) const;
+    bool check_ss_matches_board(C4Board b);
 
-
-    void write_to_file(const string& filename) const {
-        ofstream file(filename);
-        if (file.is_open()) {
-            for (int y = 0; y < C4_HEIGHT; ++y) {
-                for (int x = 0; x < C4_WIDTH; ++x) {
-                    file << get_char(x, y);
-                }
-                file << endl;
-            }
-        }
+    string to_string() const {
+        string s(C4_WIDTH*C4_HEIGHT, ' ');
+        for (int y = 0; y < C4_HEIGHT; ++y)
+            for (int x = 0; x < C4_WIDTH; ++x)
+                s[x+y*C4_WIDTH] = get_char(x, y);
+        return s;
     }
-
 };
 
 SteadyState read_from_file(const string& filename, bool read_reverse) {
@@ -86,4 +82,42 @@ SteadyState read_from_file(const string& filename, bool read_reverse) {
         }
     } else throw runtime_error("Failed to read SteadyState file " + filename);
     return SteadyState(chars);
+}
+
+SteadyState make_steady_state_from_string(const string& input) {
+    // Check that the input length matches the expected size
+    if (input.length() != static_cast<size_t>(C4_WIDTH * C4_HEIGHT)) {
+        throw runtime_error("Invalid input length. Expected " + to_string(C4_WIDTH * C4_HEIGHT));
+    }
+
+    // Create an array to hold the rows
+    array<string, C4_HEIGHT> chars;
+
+    // Fill the array with chunks of C4_WIDTH length from the input string
+    for (int y = 0; y < C4_HEIGHT; ++y) {
+        chars[y] = input.substr(y * C4_WIDTH, C4_WIDTH);
+    }
+
+    return SteadyState(chars);
+}
+
+string reverse_ss(const std::string& input) {
+    // Calculate the expected length of the input string
+    int expectedLength = C4_WIDTH * C4_HEIGHT;
+
+    // Validate the input string length
+    if (input.length() != expectedLength) {
+        throw invalid_argument("Input string length does not match C4_WIDTH * C4_HEIGHT");
+    }
+
+    // Output string to store the result
+    string output = input;
+
+    // Reverse each chunk of length C4_WIDTH
+    for (int i = 0; i < C4_HEIGHT; ++i) {
+        int startIdx = i * C4_WIDTH;
+        reverse(output.begin() + startIdx, output.begin() + startIdx + C4_WIDTH);
+    }
+
+    return output;
 }

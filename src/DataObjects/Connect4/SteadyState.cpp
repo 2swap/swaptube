@@ -7,6 +7,7 @@
 #include <cassert>
 #include <array>
 #include "C4Board.h"
+#include "JsonC4Cache.cpp"
 
 const bool VISION = true;
 
@@ -216,6 +217,7 @@ void SteadyState::mutate() {
             }
         }
         // drop an urgent
+        int giveupcount = 0;
         while (true) {
             int x = rand()%C4_WIDTH;
             int y = C4_HEIGHT-1;
@@ -227,6 +229,8 @@ void SteadyState::mutate() {
                 set_char(x, y, '!');
                 break;
             }
+            giveupcount++;
+            if(giveupcount > 10) break;
         }
     }
     /*
@@ -333,8 +337,20 @@ C4Result SteadyState::play_one_game(const C4Board& b) const {
     }
 }
 
+bool SteadyState::validate(C4Board b) {
+    unordered_set<double> wins_cache;
+    bool validated = validate_recursive_call(b, wins_cache);
+    if(validated){
+        movecache.AddOrUpdateEntry(b.get_hash(), b.reverse_hash(), b.representation, to_string());
+        cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
+    }
+    return validated;
+}
+
 // Given a steady state and a board position, make sure that steady state solves that position
-bool SteadyState::validate_steady_state(const C4Board& b, int& branches_searched) {
+bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins_cache) {
+    if(wins_cache.find(b.get_hash()) != wins_cache.end()) return true;
+
     if(b.is_reds_turn()){
         // Query the steady state and play the determined disk
         int columnToPlay = query_steady_state(b.representation);
@@ -342,57 +358,95 @@ bool SteadyState::validate_steady_state(const C4Board& b, int& branches_searched
         if (columnToPlay >= 1 && columnToPlay <= 7) child.play_piece(columnToPlay);
         else { return false; }
         if(child.who_won() == RED) return true;
-        if(!validate_steady_state(child, branches_searched)) { return false; }
+        else if(!validate_recursive_call(child, wins_cache)) { return false; }
     } else {
         for (int i = 1; i <= 7; i++){
             if(!b.is_legal(i)) continue;
-            branches_searched++;
             C4Board child = b.child(i);
-            if(child.who_won() != INCOMPLETE) { return false; }
-            if(!validate_steady_state(child, branches_searched)) { return false; }
+            if(child.who_won() != INCOMPLETE) { return false;}
+            if(!validate_recursive_call(child, wins_cache)) { return false; }
         }
     }
+
+    wins_cache.insert(b.get_hash());
 
     return true;
 }
 
-shared_ptr<SteadyState> find_cached_steady_state(double hash, double reverse_hash, string& cache_filename) {
+bool SteadyState::check_ss_matches_board(C4Board b){
+    return b.yellow_bitboard == bitboard_yellow && b.red_bitboard == bitboard_red;
+}
+
+void find_cached_steady_state_old(C4Board b) {
     // Array of the two hash values to iterate over
-    array<double, 2> hashes = {hash, reverse_hash};
+    array<C4Board, 2> boards = {b, C4Board(b.reverse_representation())};
     
     for (int i = 0; i < 2; ++i) {
         // Convert the current hash to a string with high precision
         ostringstream ss_hash_stream;
-        ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << hashes[i];
+        ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << boards[i].get_hash();
         string ss_hash = ss_hash_stream.str();
 
         // Create the cache filename based on the hash
-        cache_filename = "steady_states/" + ss_hash + ".ss";
+        string cache_filename = "steady_states/" + ss_hash + ".ss";
         
         // Attempt to open the cache file
         if (ifstream(cache_filename)) {
             // Use the current hash index to determine if this is a reverse hash (index 1)
             shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, i == 1));
-            //ss->print();
-            // cout << "Loaded cached steady state from file " << cache_filename << endl;
-            return ss;
+            if(!ss->check_ss_matches_board(b)) {
+                cout << "ss doesnt match board, attempting flip" << endl;
+                ss = make_shared<SteadyState>(read_from_file(cache_filename, i == 0));
+            }
+            if(!ss->check_ss_matches_board(b)){
+                cout << "ss STILL doesnt match board" << endl;
+                assert(false);
+            }
+            bool pass = ss->validate(b);
+            if(pass) cout << "Verified cached steady state from file " << cache_filename << endl;
+            else {
+                cout << "Saved steadystate failed validation!! " << cache_filename << endl;
+                assert(false);
+            }
         }
     }
-    
+}
+
+shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
+    // First check the movecache.
+    {
+        int move = -1;
+        string ss = "";
+        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.reverse_hash(), move, ss);
+        if(ss.size() == C4_WIDTH*C4_HEIGHT){
+            return make_shared<SteadyState>(make_steady_state_from_string(ss));
+        }
+    }
+
+    find_cached_steady_state_old(b);
+
+    {
+        int move = -1;
+        string ss = "";
+        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.reverse_hash(), move, ss);
+        if(ss.size() == C4_WIDTH*C4_HEIGHT){
+            return make_shared<SteadyState>(make_steady_state_from_string(ss));
+        }
+    }
+
     // If no cached state was found, return nullptr
     return nullptr;
 }
 
 shared_ptr<SteadyState> find_steady_state(const string& representation, bool verbose = false, bool read_from_cache = true, int pool = 30, int generations = 30) {
     if(pool < 3) throw runtime_error("Pool size too small! Must be at least 3 for propagation strategy.");
-    if(verbose) cout << "Searching for a steady state..." << endl;
+    cout << "Searching for a steady state of " << representation << "..." << endl;
     if(representation.size() % 2 == 1)
         throw runtime_error("Steady state requested on board which is yellow-to-move!");
     C4Board board(representation);
 
     // Check if a cached steady state file exists and read from it
-    string cache_filename = "";
-    shared_ptr<SteadyState> cached = find_cached_steady_state(board.get_hash(), board.reverse_hash(), cache_filename);
+    shared_ptr<SteadyState> cached = find_cached_steady_state(board);
     if(read_from_cache && cached != nullptr) return cached;
 
     C4Board copy = board;
@@ -424,14 +478,9 @@ shared_ptr<SteadyState> find_steady_state(const string& representation, bool ver
 
             // Check for correctness if an agent has reached the target of 500 consecutive wins
             if (consecutive_wins >= 1000) {
-                int how_many_branches = 0;
                 if(verbose) cout << "Attempting validation for a potential steady state..." << endl;
-                if(steady_states[i].validate_steady_state(copy, how_many_branches)) {
-                    if(verbose) cout << "Steady state validated on " << how_many_branches << " branches." << endl;
-                    shared_ptr<SteadyState> ss = make_shared<SteadyState>(steady_states[i]);
-                    if(verbose) ss->print();
-                    ss->write_to_file(cache_filename);
-                    return ss; // Return the validated steady state
+                if(steady_states[i].validate(copy)) {
+                    return make_shared<SteadyState>(steady_states[i]);
                 }
             }
         }
@@ -549,6 +598,22 @@ void steady_state_unit_tests_problem_6() {
     }
 }
 
+void steady_state_unit_tests_problem_8() {
+    // Define the initial board configuration
+    array<string, C4_HEIGHT> ss_list = {
+        " |     ",
+        " |     ",
+        " | |2- ",
+        " | |1@ ",
+        "2|+@1!=",
+        "2-21112"
+    };
+    SteadyState ss(ss_list);
+
+
+    run_test("4153515567", 6, ss);
+}
+
 void steady_state_unit_tests_problem_7() {
     shared_ptr<SteadyState> ss = find_steady_state("444442222666662477777762", true, false, 100, 1000);
     if(ss == nullptr) cout << "No ss found" << endl;
@@ -569,7 +634,6 @@ void steady_state_unit_tests(){
     steady_state_unit_tests_problem_1();
     steady_state_unit_tests_problem_2();
     steady_state_unit_tests_problem_6();
-    steady_state_unit_tests_problem_7();
-    assert(false);
+    steady_state_unit_tests_problem_8();
     cout << "Steady State Unit Tests Passed" << endl;
 }

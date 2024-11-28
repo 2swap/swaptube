@@ -21,8 +21,6 @@ enum C4BranchMode {
 };
 C4BranchMode c4_branch_mode = TRIM_STEADY_STATES;
 
-unordered_map<string, C4Result> cache;
-
 string disk_col(int i){
     if(i == 1) return "\033[31mx\033[0m";  // Red "x"
     if(i == 2) return "\033[33mo\033[0m";  // Yellow "o"

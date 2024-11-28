@@ -3,6 +3,7 @@
 #include "C4Board.h"
 #include "SteadyState.cpp"
 #include "JsonC4Cache.cpp"
+#include "FhourstonesCache.cpp"
 #include "../Graph.cpp"
 #include <string>
 #include <vector>
@@ -161,20 +162,29 @@ C4Board C4Board::child(int piece) const{
 }
 
 C4Result C4Board::who_is_winning(int& work, bool verbose) {
-    C4Result cachedResult;
-    auto it = cache.find(representation);
-    if (it != cache.end()) {
-        if(verbose)cout << "Using cached result..." << endl;
-        return it->second;
+
+    string winner;
+    if (fhourstonesCache.GetEntryIfExists(get_hash(), reverse_hash(), winner)) {
+        if (verbose) cout << "Using cached result..." << endl;
+
+        // Convert winner string to C4Result
+        if (winner == "TIE") return TIE;
+        else if (winner == "RED") return RED;
+        else if (winner == "YELLOW") return YELLOW;
+
+        throw runtime_error("Invalid winner value in fhourstonescache: " + winner);
     }
 
+    cout << "Calling fhourstones on " << representation << endl;
+
+    // If not found in cache, compute using fhourstones
     char command[150];
     sprintf(command, "echo %s | ~/Unduhan/Fhourstones/SearchGame", representation.c_str());
-    if(verbose)cout << "Calling fhourstones on " << command << "... ";
+    if (verbose) cout << "Calling fhourstones on " << command << "... ";
     FILE* pipe = popen(command, "r");
     if (!pipe) {
         C4Board c4(representation);
-        cout << setprecision (15) << c4.get_hash() << endl;
+        cout << setprecision(15) << c4.get_hash() << endl;
         throw runtime_error("fhourstones error!");
     }
     char buffer[4096];
@@ -195,17 +205,19 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     }
 
     if (result.find("(=)") != string::npos) {
-        if(verbose)cout << "Tie!" << endl;
         gameResult = TIE;
+        winner = "TIE";
     } else if ((result.find("(+)") != string::npos) == is_reds_turn()) {
-        if(verbose)cout << "Red!" << endl;
         gameResult = RED;
+        winner = "RED";
     } else {
-        if(verbose)cout << "Yellow!" << endl;
         gameResult = YELLOW;
+        winner = "YELLOW";
     }
 
-    cache[representation] = gameResult;
+    // Store result in persistent cache
+    fhourstonesCache.AddOrUpdateEntry(get_hash(), reverse_hash(), representation, winner);
+
     return gameResult;
 }
 
@@ -299,7 +311,7 @@ int C4Board::burst() const{
         //if(ret != -1) return ret;
     }
 
-    if(find_steady_state(representation, false, true, 40, 40) != nullptr)
+    if(find_steady_state(representation, false, true, 40, 400) != nullptr)
         return -2;
 
     // Recurse!
@@ -411,8 +423,7 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
 }
 
 int C4Board::get_human_winning_fhourstones() {
-    string ignore = "";
-    shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
+    shared_ptr<SteadyState> ss = find_cached_steady_state(C4Board(representation));
     if(ss != nullptr){
         return -1;
     }
@@ -427,23 +438,31 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = true;
-    if(SKIP_UNFOUND_STEADYSTATES){
-        int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
-        if(ret != -1) return ret;
+    const bool SKIP_UNFOUND_STEADYSTATES = false;
+    if(SKIP_UNFOUND_STEADYSTATES || representation.size() < 5){
+        int move = -1;
+        string ss = "";
+        bool found = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash(), move, ss);
+        if(ss != "") throw runtime_error("Cached steady state found in ghwf, but should have been caught before entry");
+        if(move > 0) return move;
     }
 
     int b = burst();
 
-    ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
+    ss = find_cached_steady_state(C4Board(representation));
     if(ss != nullptr) return -1;
 
     else if(b != -1){
         return b;
     }
 
-    int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash());
-    if(ret != -1) return ret;
+    {
+        int move = -1;
+        string ss = "";
+        int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash(), move, ss);
+        if(ss != "") throw runtime_error("Cached steady state found in ghwf, but should have been caught before entry");
+        if(move > 0) return move;
+    }
 
     vector<int> winning_columns = get_winning_moves();
     if (winning_columns.size() == 1) {
@@ -456,11 +475,10 @@ int C4Board::get_human_winning_fhourstones() {
     print();
     if(true){
         vector<int> order_out;
-        int snp = search_nply_id(8, winning_columns, order_out);
+        int snp = search_nply_id(4, winning_columns, order_out);
         if(snp > 0) return snp;
-        else {
-            movecache.AddOrUpdateEntry(get_hash(), representation, winning_columns[0]);
-            movecache.WriteCache();
+        else if(false) {
+            movecache.AddOrUpdateEntry(get_hash(), reverse_hash(), representation, winning_columns[0]);
             return winning_columns[0];
         }
     }
@@ -604,8 +622,7 @@ unordered_set<C4Board*> C4Board::get_children(){
             break;
         case TRIM_STEADY_STATES:
             if(is_reds_turn()){
-                string ignore = "";
-                shared_ptr<SteadyState> ss = find_cached_steady_state(get_hash(), reverse_hash(), ignore);
+                shared_ptr<SteadyState> ss = find_cached_steady_state(C4Board(representation));
                 if(ss != nullptr){
                     has_steady_state = true;
                     steadystate = ss;
@@ -613,7 +630,7 @@ unordered_set<C4Board*> C4Board::get_children(){
                 }
                 int hwf = get_human_winning_fhourstones();
                 if(hwf == -1) break;
-                else movecache.AddOrUpdateEntry(get_hash(), representation, hwf);
+                else movecache.AddOrUpdateEntry(get_hash(), reverse_hash(), representation, hwf);
                 C4Board moved = child(hwf);
                 neighbors.insert(new C4Board(moved));
             } else { // yellow's move
