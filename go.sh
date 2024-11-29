@@ -69,7 +69,8 @@ if [ $SUCCESS -eq 0 ]; then
         file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
 
         if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
-            vlc "$file_path" > /dev/null 2>&1
+            echo "a"
+            #vlc "$file_path" > /dev/null 2>&1
         else
             echo "go.sh: The output file is either empty or smaller than 1KB."
         fi

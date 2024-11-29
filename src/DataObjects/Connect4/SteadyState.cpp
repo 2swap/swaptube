@@ -342,7 +342,7 @@ bool SteadyState::validate(C4Board b) {
     bool validated = validate_recursive_call(b, wins_cache);
     if(validated){
         movecache.AddOrUpdateEntry(b.get_hash(), b.reverse_hash(), b.representation, to_string());
-        cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
+        //cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
     }
     return validated;
 }
@@ -438,9 +438,9 @@ shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
     return nullptr;
 }
 
-shared_ptr<SteadyState> find_steady_state(const string& representation, bool verbose = false, bool read_from_cache = true, int pool = 30, int generations = 30) {
+shared_ptr<SteadyState> find_steady_state(const string& representation, bool verbose = false, bool read_from_cache = true, int pool = 40, int generations = 50) {
     if(pool < 3) throw runtime_error("Pool size too small! Must be at least 3 for propagation strategy.");
-    cout << "Searching for a steady state of " << representation << "..." << endl;
+    if(verbose) cout << "Searching for a steady state of " << representation << "..." << endl;
     if(representation.size() % 2 == 1)
         throw runtime_error("Steady state requested on board which is yellow-to-move!");
     C4Board board(representation);

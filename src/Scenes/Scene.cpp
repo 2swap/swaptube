@@ -71,7 +71,7 @@ public:
 
         total_macroblock_frames = remaining_macroblock_frames = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
         total_microblocks = remaining_microblocks = expected_microblocks;
-        cout << "Macroblock should last " << remaining_macroblock_frames << " frames, with " << expected_microblocks << " microblocks.";
+        cout << "Macroblock should last " << remaining_macroblock_frames << " frames, with " << expected_microblocks << " microblocks." << endl;
     }
 
     void render(){

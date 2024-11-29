@@ -175,7 +175,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
         throw runtime_error("Invalid winner value in fhourstonescache: " + winner);
     }
 
-    cout << "Calling fhourstones on " << representation << endl;
+    if(verbose) cout << "Calling fhourstones on " << representation << endl;
 
     // If not found in cache, compute using fhourstones
     char command[150];
@@ -289,48 +289,6 @@ bool C4Board::is_reds_turn() const{
     return representation.size() % 2 == 0;
 }
 
-int C4Board::burst() const{
-    int wm = get_instant_win();
-    if(wm != -1)
-        return wm;
-
-    vector<int> winning_columns = get_winning_moves();
-    if (winning_columns.size() == 0)
-        throw runtime_error("Burst winning columns error! Possibly wrong move in movecache. " + representation);
-
-    // Add things already in the graph!
-    //drop a red piece in each column and see if it is in the graph or in the move cache
-    for (int i = 0; i < winning_columns.size(); ++i) {
-        int x = winning_columns[i];
-        C4Board child_x = child(x);
-        if(graph_to_check_if_points_are_in->node_exists(child_x.get_hash())) {
-            //cout << representation <<x<< " added since it is in the graph already" << endl;
-            return x;
-        }
-        //int ret = movecache.GetSuggestedMoveIfExists(child_x.get_hash());
-        //if(ret != -1) return ret;
-    }
-
-    if(find_steady_state(representation, false, true, 40, 400) != nullptr)
-        return -2;
-
-    // Recurse!
-    for (int i = 0; i < winning_columns.size(); ++i) {
-        int x = winning_columns[i];
-        C4Board forcing = child(x);
-        int bm = forcing.get_blocking_move();
-        if(bm != -1){
-            int recurse = forcing.child(bm).burst();
-            if(recurse != -1) {
-                cout << forcing.representation<<bm << " added recursively" << endl;
-                return x;
-            }
-        }
-    }
-
-    return -1; // no easy line found... casework will be necessary :(
-}
-
 int C4Board::search_nply_id(const int depth, const vector<int>& order_in, vector<int>& order_out) const {
     vector<int> ordering_last = order_in;
     for(int i = 0; i <= depth; i+=2) {
@@ -391,7 +349,7 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
                 vector<int> ignore_out;
                 grandchild.search_nply(depth - 2, nou_grandchild, false, vector<int>(), ignore_out);
                 nou_child += nou_grandchild;
-                if (nou_child >= num_ordered_unfound)
+                if (nou_child >= 1)
                     give_up = true;
             }
             if (verbose) cout << (nou_grandchild == 0 ? "T" : "F") << flush;
@@ -447,15 +405,43 @@ int C4Board::get_human_winning_fhourstones() {
         if(move > 0) return move;
     }
 
-    int b = burst();
+    vector<int> winning_columns = get_winning_moves();
+    if (winning_columns.size() == 0)
+        throw runtime_error("Burst winning columns error! Possibly wrong move in movecache. " + representation);
 
-    ss = find_cached_steady_state(C4Board(representation));
-    if(ss != nullptr) return -1;
-
-    else if(b != -1){
-        return b;
+    // Add things already in the graph!
+    //drop a red piece in each column and see if it is in the graph
+    for (int i = 0; i < winning_columns.size(); ++i) {
+        int x = winning_columns[i];
+        C4Board child_x = child(x);
+        if(graph_to_check_if_points_are_in->node_exists(child_x.get_hash())) {
+            //cout << representation <<x<< " added since it is in the graph already" << endl;
+            return x;
+        }
     }
 
+    if(find_steady_state(representation, false, true, 40, 200) != nullptr)
+        return -1;
+    if(find_steady_state(representation, false, true, 40, 200) != nullptr)
+        return -1;
+    if(find_steady_state(representation, false, true, 40, 200) != nullptr)
+        return -1;
+
+    if (winning_columns.size() == 1) {
+        char wc = winning_columns[0];
+        return wc;
+    } else if (winning_columns.size() == 0){
+        throw runtime_error("Get human winning fhourstones error!");
+    }
+
+    const bool BACKTRACK = true;
+    if(BACKTRACK){
+        vector<int> order_out;
+        int snp = search_nply_id(4, winning_columns, order_out);
+        if(snp > 0) return snp;
+    }
+
+    // Check Cache
     {
         int move = -1;
         string ss = "";
@@ -464,20 +450,12 @@ int C4Board::get_human_winning_fhourstones() {
         if(move > 0) return move;
     }
 
-    vector<int> winning_columns = get_winning_moves();
-    if (winning_columns.size() == 1) {
-        char wc = winning_columns[0];
-        return wc;
-    } else if (winning_columns.size() == 0){
-        throw runtime_error("Get human winning fhourstones error!");
-    }
-
     print();
-    if(true){
+    if(false){ // Cache is populated already, this is not needed
         vector<int> order_out;
-        int snp = search_nply_id(4, winning_columns, order_out);
+        int snp = search_nply_id(8, winning_columns, order_out);
         if(snp > 0) return snp;
-        else if(false) {
+        else if(true) {
             movecache.AddOrUpdateEntry(get_hash(), reverse_hash(), representation, winning_columns[0]);
             return winning_columns[0];
         }
