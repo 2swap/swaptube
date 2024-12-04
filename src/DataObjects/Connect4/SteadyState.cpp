@@ -25,8 +25,6 @@ void SteadyState::set_char_bitboard(const Bitboard point, char c){
     bitboard_red &= notpoint;
     bitboard_yellow &= notpoint;
     bitboard_urgent &= notpoint;
-    bitboard_if &= notpoint;
-    bitboard_then &= notpoint;
 
     switch(c) {
         case '@':
@@ -53,12 +51,6 @@ void SteadyState::set_char_bitboard(const Bitboard point, char c){
             break;
         case '2':
             bitboard_yellow |= point;
-            break;
-        case '?':
-            bitboard_if |= point;
-            break;
-        case ':':
-            bitboard_then |= point;
             break;
         case '!':
             bitboard_urgent |= point;
@@ -93,8 +85,6 @@ char SteadyState::get_char(const int x, const int y) const {
     else if((bitboard_minus      & point) != 0ul) ret='-';
     else if((bitboard_red        & point) != 0ul) ret='1';
     else if((bitboard_yellow     & point) != 0ul) ret='2';
-    else if((bitboard_if         & point) != 0ul) ret='?';
-    else if((bitboard_then       & point) != 0ul) ret=':';
     else if((bitboard_urgent     & point) != 0ul) ret='!';
     else if((frame               & point) != 0ul) ret='F';
     if(ret == 0) {
@@ -124,10 +114,8 @@ int SteadyState::query_steady_state(const C4Board& board) const {
     // Construct priority list
     Bitboard miai_moveset = moveset & bitboard_miai;
     if (!is_power_of_two(miai_moveset)) miai_moveset = 0ul;
-    bool conditional_captured = (bitboard_if & ~(board.red_bitboard)) != 0ul;
-    const Bitboard ifthen = conditional_captured? bitboard_then : 0ul;
     const Bitboard claims_moveset = (odd_rows & bitboard_claimodd) | (even_rows & bitboard_claimeven);
-    const Bitboard bitboards[] = {bitboard_urgent, ifthen, miai_moveset, claims_moveset, bitboard_if, bitboard_plus, bitboard_equal, bitboard_minus};
+    const Bitboard bitboards[] = {bitboard_urgent, miai_moveset, claims_moveset, bitboard_plus, bitboard_equal, bitboard_minus};
 
     const int num_bitboards = sizeof(bitboards) / sizeof(bitboards[0]);
 

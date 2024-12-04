@@ -382,9 +382,8 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
 
 int C4Board::get_human_winning_fhourstones() {
     shared_ptr<SteadyState> ss = find_cached_steady_state(C4Board(representation));
-    if(ss != nullptr){
+    if(ss != nullptr)
         return -1;
-    }
 
     int wm = get_instant_win();
     if(wm != -1) {
@@ -396,7 +395,7 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = false;
+    const bool SKIP_UNFOUND_STEADYSTATES = true;
     if(SKIP_UNFOUND_STEADYSTATES || representation.size() < 5){
         int move = -1;
         string ss = "";
@@ -420,11 +419,7 @@ int C4Board::get_human_winning_fhourstones() {
         }
     }
 
-    if(find_steady_state(representation, false, true, 40, 200) != nullptr)
-        return -1;
-    if(find_steady_state(representation, false, true, 40, 200) != nullptr)
-        return -1;
-    if(find_steady_state(representation, false, true, 40, 200) != nullptr)
+    if(find_steady_state(representation, false, true, 80, 100) != nullptr)
         return -1;
 
     if (winning_columns.size() == 1) {
@@ -434,32 +429,26 @@ int C4Board::get_human_winning_fhourstones() {
         throw runtime_error("Get human winning fhourstones error!");
     }
 
-    const bool BACKTRACK = true;
+    const bool BACKTRACK = !SKIP_UNFOUND_STEADYSTATES;
     if(BACKTRACK){
         vector<int> order_out;
         int snp = search_nply_id(4, winning_columns, order_out);
         if(snp > 0) return snp;
     }
 
+    ss = find_cached_steady_state(C4Board(representation));
+    if(ss != nullptr)
+        return -1;
+
     // Check Cache
     {
         int move = -1;
         string ss = "";
         int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash(), move, ss);
-        if(ss != "") throw runtime_error("Cached steady state found in ghwf, but should have been caught before entry");
         if(move > 0) return move;
     }
 
     print();
-    if(false){ // Cache is populated already, this is not needed
-        vector<int> order_out;
-        int snp = search_nply_id(8, winning_columns, order_out);
-        if(snp > 0) return snp;
-        else if(true) {
-            movecache.AddOrUpdateEntry(get_hash(), reverse_hash(), representation, winning_columns[0]);
-            return winning_columns[0];
-        }
-    }
 
     cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
     for (const int i : winning_columns) {

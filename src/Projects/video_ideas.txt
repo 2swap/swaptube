@@ -1,6 +1,4 @@
 Visual Sums
-X-Set
-Lambda
 Dao/Logos
 More C4
 File Anatomy

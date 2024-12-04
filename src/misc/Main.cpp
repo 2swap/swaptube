@@ -25,8 +25,6 @@ int main() {
         render_video();
     }
     catch(std::exception& e) {
-        movecache.WriteCache();
-        fhourstonesCache.WriteCache();
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
     }

@@ -1,5 +1,9 @@
 bool ValidateC4Graph(Graph<C4Board>& graph) {
+    int i = 0;
     for (const auto& node_pair : graph.nodes) {
+        if(i % 100 == 0)
+            cout << i << endl;
+        i++;
         const Node<C4Board>& node = node_pair.second;
         const C4Board& board = *node.data;
 

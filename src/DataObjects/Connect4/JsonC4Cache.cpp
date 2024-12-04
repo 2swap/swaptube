@@ -134,7 +134,7 @@ private:
     // Increment the delta and write to cache if threshold is exceeded
     void increment_delta() {
         delta++;
-        if (delta > 1000) {
+        if (delta > 10000) {
             WriteCache();
             delta = 0;
         }

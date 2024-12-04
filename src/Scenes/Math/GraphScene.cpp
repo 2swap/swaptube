@@ -53,6 +53,9 @@ public:
     }
 
     void update_surfaces(){
+        if(surfaces_override_unsafe) {
+            graph_surface_map.clear(); return;
+        }
         unordered_set<string> updated_ids;
 
         for(pair<double, Node<T>> p : graph->nodes){
@@ -112,6 +115,8 @@ public:
     void draw() override{
         ThreeDimensionScene::draw();
     }
+
+    bool surfaces_override_unsafe = false; // For really big graphs, you can permanently turn off node stuff. Careful.
 
 protected:
     Graph<T>* graph;

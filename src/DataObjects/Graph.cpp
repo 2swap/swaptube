@@ -86,7 +86,7 @@ public:
     double root_node_hash = 0;
 
     double gravity_strength = .2;
-    double decay = .8;
+    double decay = .88;
     double speedlimit = 10;
     double attract_force = .1;
     double repel_force = .1;

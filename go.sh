@@ -12,16 +12,16 @@ PROJECT_NAME=$1
 VIDEO_WIDTH=$2
 VIDEO_HEIGHT=$3
 
-# Assign the path to a variable
-PROJECT_PATH="src/Projects/${PROJECT_NAME}.cpp"
+# Find the project file in any subdirectory under src/Projects
+PROJECT_PATH=$(find src/Projects -type f -name "${PROJECT_NAME}.cpp" 2>/dev/null | head -n 1)
 TEMPFILE="src/Projects/.active_project.cpp"
 
 # Check if the desired project exists
-if [ ! -e $PROJECT_PATH ]; then
+if [ -z "$PROJECT_PATH" ]; then
     echo "go.sh: Project ${PROJECT_NAME} does not exist."
     exit 1
 fi
-cp $PROJECT_PATH $TEMPFILE
+cp "$PROJECT_PATH" "$TEMPFILE"
 
 (
     mkdir -p build
@@ -60,8 +60,8 @@ cp $PROJECT_PATH $TEMPFILE
 )
 SUCCESS=$?
 ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
-cp $TEMPFILE "$ultimate_subdir/Project.cpp"
-rm $TEMPFILE
+cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"
+rm "$TEMPFILE"
 
 # Check if the compile and run were successful
 if [ $SUCCESS -eq 0 ]; then
@@ -69,8 +69,7 @@ if [ $SUCCESS -eq 0 ]; then
         file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
 
         if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
-            echo "a"
-            #vlc "$file_path" > /dev/null 2>&1
+            vlc "$file_path" > /dev/null 2>&1
         else
             echo "go.sh: The output file is either empty or smaller than 1KB."
         fi
