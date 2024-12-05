@@ -36,10 +36,10 @@ void render_video() {
                 {"qk", "0"},
                 {"surfaces_opacity", "0"},
                 {"points_opacity", "0"},
-                {"physics_multiplier", "30"},
+                {"physics_multiplier", "10"},
             };
             gs.state_manager.set(state);
-            //cs.inject_audio_and_render(AudioSegment(3));
+            cs.inject_audio_and_render(AudioSegment(2.5));
             //g.render_json("c4_"+variation+".json");
         }
     }

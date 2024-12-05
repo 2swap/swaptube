@@ -89,7 +89,7 @@ public:
     double decay = .88;
     double speedlimit = 10;
     double attract_force = .1;
-    double repel_force = .1;
+    double repel_force = .2;
     int dimensions = 2;
 
     Graph(){}
@@ -126,6 +126,7 @@ public:
         return x;
     }
     double add_node_without_edges(T* t){
+        //cout << "total nodes: " << size() << endl;
         double hash = t->get_hash();
         if (node_exists(hash)) {
             delete t;
@@ -145,7 +146,6 @@ public:
      */
     int expand_graph_once() {
         while (!traverse_deque.empty()) {
-            //cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
             double id = traverse_deque.front();
             traverse_deque.pop_front();
             cout << "Looking for " << id << endl;
