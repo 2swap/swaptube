@@ -86,11 +86,11 @@ public:
     double root_node_hash = 0;
 
     double gravity_strength = .2;
-    double decay = .88;
-    double speedlimit = 10;
+    double decay = .92;
+    double speedlimit = 30;
     double attract_force = .1;
     double repel_force = .2;
-    int dimensions = 2;
+    int dimensions = 3;
 
     Graph(){}
 

@@ -14,7 +14,6 @@ void render_video() {
         };
         CompositeScene cs;
         for(const string& variation : variations){
-
             Graph<C4Board> g;
             C4GraphScene gs(&g, variation, TRIM_STEADY_STATES);
             gs.surfaces_override_unsafe = true;
@@ -27,8 +26,6 @@ void render_video() {
             cs.add_scene(&c4s, "c4s", .1, .26);
             //ValidateC4Graph(g);
 
-            g.dimensions = 3;
-
             StateSet state{
                 {"q1", "<t> .1 * cos"},
                 {"qi", "0"},
@@ -36,10 +33,10 @@ void render_video() {
                 {"qk", "0"},
                 {"surfaces_opacity", "0"},
                 {"points_opacity", "0"},
-                {"physics_multiplier", "10"},
+                {"physics_multiplier", "30"},
             };
             gs.state_manager.set(state);
-            cs.inject_audio_and_render(AudioSegment(2.5));
+            cs.inject_audio_and_render(AudioSegment(10));
             //g.render_json("c4_"+variation+".json");
         }
     }

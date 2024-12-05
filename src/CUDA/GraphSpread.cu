@@ -9,12 +9,39 @@ struct Bin {
     glm::dvec4 center_of_mass;
 };
 
-void sort_positions_by_bins(const glm::dvec4* positions, glm::dvec4* sorted_positions, 
-                            const int* node_bins, int* sorted_node_bins, int num_nodes, 
-                            int* bin_counts) {
+__device__ glm::dvec4 compute_force(glm::dvec4 pos_i, glm::dvec4 pos_j) {
+    glm::dvec4 diff = pos_i - pos_j;
+    double dist_sq = glm::dot(diff, diff) + 1; // Add epsilon to avoid division by zero
+    double force = 1.0 / (dist_sq*dist_sq);
+
+    return diff * force;
+}
+
+__global__ void compute_repulsion_kernel_naive(const glm::dvec4* positions, glm::dvec4* velocity_deltas,
+                                               int num_nodes, double repel_force) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= num_nodes) return;
+
+    glm::dvec4 pos_i = positions[i];
+    glm::dvec4 delta = glm::dvec4(0.0);
+
+    for (int j = 0; j < num_nodes; ++j) {
+        if (i == j) continue;
+
+        delta += compute_force(pos_i, positions[j]);
+    }
+
+    velocity_deltas[i] = repel_force * delta;
+}
+
+
+void sort_positions_by_bins_with_indices(const glm::dvec4* positions, glm::dvec4* sorted_positions, 
+                                         const int* node_bins, int* sorted_node_bins, 
+                                         int* original_indices, int* sorted_indices,
+                                         int num_nodes, int* bin_counts) {
     // Step 1: Compute cumulative bin counts (prefix sum) to determine sorted indices
     int num_bins = GRID_SIZE * GRID_SIZE * GRID_SIZE;
-    int* bin_offsets = new int[num_bins + 1]; // One extra for convenience with end index
+    int* bin_offsets = new int[num_bins + 1];
     bin_offsets[0] = 0;
 
     for (int i = 0; i < num_bins; ++i) {
@@ -28,6 +55,7 @@ void sort_positions_by_bins(const glm::dvec4* positions, glm::dvec4* sorted_posi
 
         sorted_positions[sorted_idx] = positions[i];
         sorted_node_bins[sorted_idx] = bin_idx;
+        sorted_indices[sorted_idx] = original_indices[i];
     }
 
     // Cleanup
@@ -35,8 +63,9 @@ void sort_positions_by_bins(const glm::dvec4* positions, glm::dvec4* sorted_posi
 }
 
 __global__ void compute_repulsion_kernel_binned(const glm::dvec4* sorted_positions, glm::dvec4* velocity_deltas,
-                                                          const Bin* bins, const int* bin_start_indices, int num_nodes, 
-                                                          double repel_force, glm::dvec4 min_bounds, glm::dvec4 bin_size) {
+                                                const Bin* bins, const int* bin_start_indices, 
+                                                const int* sorted_indices, int num_nodes, 
+                                                double repel_force, glm::dvec4 min_bounds, glm::dvec4 bin_size) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= num_nodes) return;
 
@@ -65,15 +94,9 @@ __global__ void compute_repulsion_kernel_binned(const glm::dvec4* sorted_positio
                 int end_idx = bin_start_indices[neighbor_bin_flat_idx + 1];
 
                 for (int j = start_idx; j < end_idx; ++j) {
-                    // Skip self-interaction
-                    if (i == j) continue;
+                    if (i == j) continue; // Skip self-interaction
 
-                    glm::dvec4 pos_j = sorted_positions[j];
-                    glm::dvec4 diff = pos_i - pos_j;
-                    double dist_sq = glm::dot(diff, diff) + 1; // Add epsilon to avoid division by zero
-                    double force = 1.0 / dist_sq;
-
-                    delta += diff * force;
+                    delta += compute_force(pos_i, sorted_positions[j]);
                 }
             }
         }
@@ -97,18 +120,15 @@ __global__ void compute_repulsion_kernel_binned(const glm::dvec4* sorted_positio
 
                 if (bin.count == 0) continue; // Skip empty bins
 
-                glm::dvec4 diff = pos_i - bin.center_of_mass;
-                double dist_sq = glm::dot(diff, diff) + 1; // Add epsilon to avoid division by zero
-                double force = bin.count / dist_sq; // Adjust force based on bin population
-
-                delta += diff * force;
+                delta += (double)bin.count * compute_force(pos_i, bin.center_of_mass);
             }
         }
     }
 
-    velocity_deltas[i] = repel_force * delta;
+    // Map back to the original index
+    int original_idx = sorted_indices[i];
+    velocity_deltas[original_idx] = repel_force * delta;
 }
-
 
 __device__ double atomicMin_double(double* address, double val) {
     unsigned long long int* address_as_ull = (unsigned long long int*)address;
@@ -229,88 +249,119 @@ void compute_node_bins(const glm::dvec4* positions, int* node_bins, int num_node
     }
 }
 
-extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes, double repel_force) {
+extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, 
+                                       int num_nodes, double repel_force) {
     glm::dvec4 *d_positions, *d_velocity_deltas;
-    Bin *d_bins;
-    int *d_node_bins;
 
     size_t size = num_nodes * sizeof(glm::dvec4);
-    size_t bin_size = GRID_SIZE * GRID_SIZE * GRID_SIZE * sizeof(Bin);
-    size_t node_bins_size = num_nodes * sizeof(int);
-
-    // Host data for bounds and bin size
-    glm::dvec4 h_min_bounds(DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX);
-    glm::dvec4 h_max_bounds(-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX);
-    glm::dvec4 h_bin_size;
 
     // Allocate device memory
     cudaMalloc(&d_positions, size);
     cudaMalloc(&d_velocity_deltas, size);
-    cudaMalloc(&d_bins, bin_size);
-    cudaMalloc(&d_node_bins, node_bins_size);
 
     // Copy positions to device
     cudaMemcpy(d_positions, host_positions, size, cudaMemcpyHostToDevice);
     cudaMemset(d_velocity_deltas, 0, size);
-    cudaMemset(d_bins, 0, bin_size);
-
-    // Step 1: Compute AABB
-    glm::dvec4 *d_min_bounds, *d_max_bounds;
-    cudaMalloc(&d_min_bounds, sizeof(glm::dvec4));
-    cudaMalloc(&d_max_bounds, sizeof(glm::dvec4));
-    cudaMemcpy(d_min_bounds, &h_min_bounds, sizeof(glm::dvec4), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_max_bounds, &h_max_bounds, sizeof(glm::dvec4), cudaMemcpyHostToDevice);
 
     int blockSize = 128;
     int gridSize = (num_nodes + blockSize - 1) / blockSize;
 
-    compute_aabb<<<gridSize, blockSize>>>(d_positions, num_nodes, d_min_bounds, d_max_bounds);
-    cudaMemcpy(&h_min_bounds, d_min_bounds, sizeof(glm::dvec4), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&h_max_bounds, d_max_bounds, sizeof(glm::dvec4), cudaMemcpyDeviceToHost);
+    if (num_nodes < 5000) {
+        // Use naive algorithm for small graphs
+        compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocity_deltas, num_nodes, repel_force);
+    } else {
+        // Use binned algorithm for larger graphs
 
-    cudaFree(d_min_bounds);
-    cudaFree(d_max_bounds);
+        // Host data for bounds and bin size
+        glm::dvec4 h_min_bounds(DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX);
+        glm::dvec4 h_max_bounds(-DBL_MAX, -DBL_MAX, -DBL_MAX, -DBL_MAX);
+        glm::dvec4 h_bin_size;
 
-    // Calculate bin size dynamically
-    h_bin_size = (h_max_bounds - h_min_bounds) / double(GRID_SIZE);
+        Bin* d_bins;
+        int* d_node_bins;
 
-    // Step 2: Compute node bin mapping on the host
-    int* host_node_bins = new int[num_nodes]; // Declare and initialize `host_node_bins`
-    compute_node_bins(host_positions, host_node_bins, num_nodes, h_min_bounds, h_bin_size);
+        size_t bin_size = GRID_SIZE * GRID_SIZE * GRID_SIZE * sizeof(Bin);
+        size_t node_bins_size = num_nodes * sizeof(int);
 
-    // Allocate memory for sorted positions and node bins
-    glm::dvec4* sorted_positions = new glm::dvec4[num_nodes];
-    int* sorted_node_bins = new int[num_nodes];
+        cudaMalloc(&d_bins, bin_size);
+        cudaMalloc(&d_node_bins, node_bins_size);
 
-    // Sort the positions and bins
-    int bin_counts[GRID_SIZE * GRID_SIZE * GRID_SIZE] = {0}; // Initialize bin counts to 0
-    for (int i = 0; i < num_nodes; ++i) {
-        bin_counts[host_node_bins[i]]++; // Populate bin counts
+        cudaMemset(d_bins, 0, bin_size);
+
+        // Step 1: Compute AABB
+        glm::dvec4 *d_min_bounds, *d_max_bounds;
+        cudaMalloc(&d_min_bounds, sizeof(glm::dvec4));
+        cudaMalloc(&d_max_bounds, sizeof(glm::dvec4));
+        cudaMemcpy(d_min_bounds, &h_min_bounds, sizeof(glm::dvec4), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_max_bounds, &h_max_bounds, sizeof(glm::dvec4), cudaMemcpyHostToDevice);
+
+        compute_aabb<<<gridSize, blockSize>>>(d_positions, num_nodes, d_min_bounds, d_max_bounds);
+        cudaMemcpy(&h_min_bounds, d_min_bounds, sizeof(glm::dvec4), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&h_max_bounds, d_max_bounds, sizeof(glm::dvec4), cudaMemcpyDeviceToHost);
+
+        cudaFree(d_min_bounds);
+        cudaFree(d_max_bounds);
+
+        // Calculate bin size dynamically
+        h_bin_size = (h_max_bounds - h_min_bounds) / double(GRID_SIZE);
+
+        // Step 2: Compute node bin mapping on the host
+        int* host_node_bins = new int[num_nodes];
+        compute_node_bins(host_positions, host_node_bins, num_nodes, h_min_bounds, h_bin_size);
+
+        // Allocate memory for sorted positions and node bins
+        glm::dvec4* sorted_positions = new glm::dvec4[num_nodes];
+        int* sorted_node_bins = new int[num_nodes];
+        int* original_indices = new int[num_nodes];
+        int* sorted_indices = new int[num_nodes];
+
+        for (int i = 0; i < num_nodes; ++i) {
+            original_indices[i] = i;
+        }
+
+        // Populate bin counts and sort positions
+        int bin_counts[GRID_SIZE * GRID_SIZE * GRID_SIZE] = {0};
+        for (int i = 0; i < num_nodes; ++i) {
+            bin_counts[host_node_bins[i]]++;
+        }
+
+        sort_positions_by_bins_with_indices(host_positions, sorted_positions, host_node_bins, 
+                                            sorted_node_bins, original_indices, sorted_indices, 
+                                            num_nodes, bin_counts);
+
+        // Copy sorted data to device
+        cudaMemcpy(d_positions, sorted_positions, size, cudaMemcpyHostToDevice);
+        cudaMemcpy(d_node_bins, sorted_node_bins, node_bins_size, cudaMemcpyHostToDevice);
+
+        int* d_sorted_indices;
+        cudaMalloc(&d_sorted_indices, num_nodes * sizeof(int));
+        cudaMemcpy(d_sorted_indices, sorted_indices, num_nodes * sizeof(int), cudaMemcpyHostToDevice);
+
+        // Step 3: Populate bins
+        populate_bins<<<gridSize, blockSize>>>(d_positions, d_bins, num_nodes, h_min_bounds, h_bin_size);
+
+        // Step 4: Finalize bins
+        finalize_bins<<<(GRID_SIZE * GRID_SIZE * GRID_SIZE + blockSize - 1) / blockSize, blockSize>>>(d_bins, GRID_SIZE * GRID_SIZE * GRID_SIZE);
+
+        // Step 5: Compute repulsion forces
+        compute_repulsion_kernel_binned<<<gridSize, blockSize>>>(d_positions, d_velocity_deltas, d_bins, 
+                                                                 d_node_bins, d_sorted_indices, num_nodes, 
+                                                                 repel_force, h_min_bounds, h_bin_size);
+
+        // Cleanup
+        delete[] sorted_positions;
+        delete[] sorted_node_bins;
+        delete[] original_indices;
+        delete[] host_node_bins;
+        cudaFree(d_bins);
+        cudaFree(d_node_bins);
+        cudaFree(d_sorted_indices);
     }
-    sort_positions_by_bins(host_positions, sorted_positions, host_node_bins, sorted_node_bins, num_nodes, bin_counts);
-
-    // Copy sorted data to device
-    cudaMemcpy(d_positions, sorted_positions, num_nodes * sizeof(glm::dvec4), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_node_bins, sorted_node_bins, num_nodes * sizeof(int), cudaMemcpyHostToDevice);
-
-    // Step 3: Populate bins
-    populate_bins<<<gridSize, blockSize>>>(d_positions, d_bins, num_nodes, h_min_bounds, h_bin_size);
-
-    // Step 4: Finalize bins
-    finalize_bins<<<(GRID_SIZE * GRID_SIZE * GRID_SIZE + blockSize - 1) / blockSize, blockSize>>>(d_bins, GRID_SIZE * GRID_SIZE * GRID_SIZE);
-
-    // Step 5: Compute repulsion forces
-    compute_repulsion_kernel_binned<<<gridSize, blockSize>>>(d_positions, d_velocity_deltas, d_bins, d_node_bins, num_nodes, repel_force, h_min_bounds, h_bin_size);
 
     // Copy results back to host
     cudaMemcpy(host_velocity_deltas, d_velocity_deltas, size, cudaMemcpyDeviceToHost);
 
     // Cleanup
-    delete[] sorted_positions;
-    delete[] sorted_node_bins;
-    delete[] host_node_bins; // Free C-style array
     cudaFree(d_positions);
     cudaFree(d_velocity_deltas);
-    cudaFree(d_bins);
-    cudaFree(d_node_bins);
 }
