@@ -36,12 +36,12 @@ void render_video() {
                 {"physics_multiplier", "30"},
             };
             gs.state_manager.set(state);
-            cs.inject_audio_and_render(AudioSegment(10));
-            //g.render_json("c4_"+variation+".json");
+            cs.inject_audio_and_render(AudioSegment(3));
+            g.render_json("c4_"+variation+".json");
         }
     }
     catch (exception& e){
-        movecache.WriteCache();
-        fhourstonesCache.WriteCache();
+        //movecache.WriteCache();
+        //fhourstonesCache.WriteCache();
     }
 }

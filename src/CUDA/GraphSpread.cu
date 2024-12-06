@@ -11,10 +11,8 @@ struct Bin {
 
 __device__ glm::dvec4 compute_force(glm::dvec4 pos_i, glm::dvec4 pos_j) {
     glm::dvec4 diff = pos_i - pos_j;
-    double dist_sq = glm::dot(diff, diff) + 1; // Add epsilon to avoid division by zero
-    double force = 1.0 / (dist_sq*dist_sq);
-
-    return diff * force;
+    double dist_sq = glm::dot(diff, diff) + 50; // Add epsilon to avoid division by zero
+    return glm::normalize(diff) / dist_sq;
 }
 
 __global__ void compute_repulsion_kernel_naive(const glm::dvec4* positions, glm::dvec4* velocity_deltas,

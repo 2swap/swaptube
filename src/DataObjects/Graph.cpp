@@ -85,11 +85,11 @@ public:
     unordered_map<double, Node<T>> nodes;
     double root_node_hash = 0;
 
-    double gravity_strength = .2;
-    double decay = .92;
-    double speedlimit = 30;
-    double attract_force = .1;
-    double repel_force = .2;
+    double gravity_strength = 0;
+    double decay = .8;
+    double speedlimit = 10;
+    double attract_force = 1;
+    double repel_force = .1;
     int dimensions = 3;
 
     Graph(){}
@@ -401,8 +401,6 @@ public:
 
     void perform_single_physics_iteration(const vector<Node<T>*>& node_vector) {
         int s = node_vector.size();
-        glm::dvec4 center_of_mass(0,0,0,0);
-        double max_dist = 0;
 
         // Create arrays for node positions and velocity deltas
         vector<glm::dvec4> positions(s);
@@ -419,8 +417,8 @@ public:
         // Apply velocity deltas from CUDA and calculate attraction forces on the CPU
         for (int i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
-            center_of_mass += node->position;
             node->velocity += velocity_deltas[i]; // Repulsion forces from CUDA
+            //cout << velocity_deltas[i].x << endl;
 
             // Calculate attraction forces (CPU)
             const EdgeSet& neighbor_nodes = node->neighbors;
@@ -428,16 +426,12 @@ public:
                 double neighbor_id = neighbor_edge.to;
                 Node<T>* neighbor = &nodes.at(neighbor_id);
                 glm::dvec4 diff = node->position - neighbor->position;
-                double dist_sq = glm::dot(diff, diff) + 1;
-                double force = get_attraction_force(dist_sq);
+                glm::dvec4 force = diff*attract_force / (glm::length(diff) + 1);
 
-                node->velocity -= diff * force; // Apply attraction forces
-                neighbor->velocity += diff * force; // Apply attraction forces
+                node->velocity -= force; // Apply attraction forces
+                neighbor->velocity += force; // Apply attraction forces
             }
         }
-
-        // Calculate average edge length and center of mass
-        center_of_mass /= s;
 
         // Second loop: scale node positions and apply physics
         for (size_t i = 0; i < s; ++i) {
@@ -468,20 +462,20 @@ public:
 
     double farthest_node_distance_from_origin() const {
         double max_distance_sq = 0.0; // Maximum squared distance
+        double avg_distance_sq = 0.0; // Maximum squared distance
 
         for (const auto& node_pair : nodes) {
             const Node<T>& node = node_pair.second;
             double distance_sq = glm::dot(node.position, node.position);
+            avg_distance_sq += distance_sq;
             max_distance_sq = max(max_distance_sq, distance_sq);
         }
+        avg_distance_sq /= nodes.size();
 
         // Return the square root of the maximum squared distance
+        cout << sqrt(max_distance_sq) << endl;
+        cout << sqrt(avg_distance_sq) << endl;
         return sqrt(max_distance_sq);
-    }
-
-    double get_attraction_force(double dist_sq){
-        double dist_6th = dist_sq*dist_sq*dist_sq/20;
-        return 2*attract_force * (dist_6th-1)/(dist_6th+1);
     }
 
     void render_json(string json_out_filename) {

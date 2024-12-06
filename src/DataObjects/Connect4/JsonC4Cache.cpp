@@ -19,7 +19,7 @@ public:
     }
 
     ~CacheManager() {
-        WriteCache();
+        //WriteCache();
     }
 
     // Read cache from a JSON file on disk
@@ -134,7 +134,7 @@ private:
     // Increment the delta and write to cache if threshold is exceeded
     void increment_delta() {
         delta++;
-        if (delta > 10000) {
+        if (delta > 100000) {
             WriteCache();
             delta = 0;
         }
