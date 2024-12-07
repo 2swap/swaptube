@@ -10,6 +10,8 @@ public:
     virtual void print() const = 0;
     virtual bool is_solution() = 0;
     virtual double board_specific_hash() const = 0;
+    virtual int symmetry_class() = 0;
+    virtual double reverse_hash() = 0;
 
     double get_hash() {
         if(hash != 0)

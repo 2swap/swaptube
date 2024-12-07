@@ -19,7 +19,7 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
-extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes, double repel_force);
+extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes);
 
 class Edge {
 public:
@@ -86,10 +86,8 @@ public:
     double root_node_hash = 0;
 
     double gravity_strength = 0;
-    double decay = .8;
-    double speedlimit = 10;
-    double attract_force = 1;
-    double repel_force = .1;
+    double decay = .96;
+    double speedlimit = 40;
     int dimensions = 3;
 
     Graph(){}
@@ -412,7 +410,7 @@ public:
         }
 
         // Use CUDA to compute repulsion velocity deltas
-        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s, repel_force);
+        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s);
 
         // Apply velocity deltas from CUDA and calculate attraction forces on the CPU
         for (int i = 0; i < s; ++i) {
@@ -426,7 +424,8 @@ public:
                 double neighbor_id = neighbor_edge.to;
                 Node<T>* neighbor = &nodes.at(neighbor_id);
                 glm::dvec4 diff = node->position - neighbor->position;
-                glm::dvec4 force = diff*attract_force / (glm::length(diff) + 1);
+                double dist_sq = glm::dot(diff, diff) + 1;
+                glm::dvec4 force = diff * get_attraction_force(dist_sq);
 
                 node->velocity -= force; // Apply attraction forces
                 neighbor->velocity += force; // Apply attraction forces
@@ -436,6 +435,14 @@ public:
         // Second loop: scale node positions and apply physics
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
+            if(node->data->symmetry_class() == 0) {
+                const auto& mirror = nodes.find(node->data->reverse_hash());
+                if(mirror != nodes.end()) {
+                    node->position = mirror->second.position;
+                    node->position.x *= -1;
+                    continue;
+                }
+            }
 
             double magnitude = glm::length(node->velocity);
             if (magnitude > speedlimit) {
@@ -460,21 +467,21 @@ public:
         }
     }
 
+    double get_attraction_force(double dist_sq){
+        double dist_6th = dist_sq*dist_sq*dist_sq*.05;
+        return .2* (dist_6th-1)/(dist_6th+1);
+    }
+
     double farthest_node_distance_from_origin() const {
         double max_distance_sq = 0.0; // Maximum squared distance
-        double avg_distance_sq = 0.0; // Maximum squared distance
 
         for (const auto& node_pair : nodes) {
             const Node<T>& node = node_pair.second;
             double distance_sq = glm::dot(node.position, node.position);
-            avg_distance_sq += distance_sq;
             max_distance_sq = max(max_distance_sq, distance_sq);
         }
-        avg_distance_sq /= nodes.size();
 
         // Return the square root of the maximum squared distance
-        cout << sqrt(max_distance_sq) << endl;
-        cout << sqrt(avg_distance_sq) << endl;
         return sqrt(max_distance_sq);
     }
 
@@ -491,8 +498,7 @@ public:
             node_info["x"] = node.position.x;
             node_info["y"] = node.position.y;
             node_info["z"] = node.position.z;
-            node_info["representation"] = node.data->representation;
-            node_info["highlight"] = node.highlight;
+            node_info["rep"] = node.data->representation;
             node_info["data"] = node.data->get_data();
 
             json neighbors;
@@ -518,7 +524,7 @@ public:
         json_data["board_h"] = nodes.find(root_node_hash)->second.data->BOARD_HEIGHT;
         json_data["game_name"] = nodes.find(root_node_hash)->second.data->game_name;
 
-        myfile << setw(4) << json_data;
+        myfile << json_data.dump();
 
         myfile.close();
         cout << "Rendered json!" << endl;

@@ -11,12 +11,12 @@ struct Bin {
 
 __device__ glm::dvec4 compute_force(glm::dvec4 pos_i, glm::dvec4 pos_j) {
     glm::dvec4 diff = pos_i - pos_j;
-    double dist_sq = glm::dot(diff, diff) + 50; // Add epsilon to avoid division by zero
-    return glm::normalize(diff) / dist_sq;
+    double dist_sq = glm::dot(diff, diff) + 1;
+    return diff * .1 / (dist_sq * 0.5 + 0.1);
 }
 
 __global__ void compute_repulsion_kernel_naive(const glm::dvec4* positions, glm::dvec4* velocity_deltas,
-                                               int num_nodes, double repel_force) {
+                                               int num_nodes) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= num_nodes) return;
 
@@ -29,7 +29,7 @@ __global__ void compute_repulsion_kernel_naive(const glm::dvec4* positions, glm:
         delta += compute_force(pos_i, positions[j]);
     }
 
-    velocity_deltas[i] = repel_force * delta;
+    velocity_deltas[i] = delta;
 }
 
 
@@ -63,7 +63,7 @@ void sort_positions_by_bins_with_indices(const glm::dvec4* positions, glm::dvec4
 __global__ void compute_repulsion_kernel_binned(const glm::dvec4* sorted_positions, glm::dvec4* velocity_deltas,
                                                 const Bin* bins, const int* bin_start_indices, 
                                                 const int* sorted_indices, int num_nodes, 
-                                                double repel_force, glm::dvec4 min_bounds, glm::dvec4 bin_size) {
+                                                glm::dvec4 min_bounds, glm::dvec4 bin_size) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= num_nodes) return;
 
@@ -125,7 +125,7 @@ __global__ void compute_repulsion_kernel_binned(const glm::dvec4* sorted_positio
 
     // Map back to the original index
     int original_idx = sorted_indices[i];
-    velocity_deltas[original_idx] = repel_force * delta;
+    velocity_deltas[original_idx] = delta;
 }
 
 __device__ double atomicMin_double(double* address, double val) {
@@ -248,7 +248,7 @@ void compute_node_bins(const glm::dvec4* positions, int* node_bins, int num_node
 }
 
 extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, 
-                                       int num_nodes, double repel_force) {
+                                       int num_nodes) {
     glm::dvec4 *d_positions, *d_velocity_deltas;
 
     size_t size = num_nodes * sizeof(glm::dvec4);
@@ -266,7 +266,7 @@ extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dv
 
     if (num_nodes < 5000) {
         // Use naive algorithm for small graphs
-        compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocity_deltas, num_nodes, repel_force);
+        compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocity_deltas, num_nodes);
     } else {
         // Use binned algorithm for larger graphs
 
@@ -344,7 +344,7 @@ extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dv
         // Step 5: Compute repulsion forces
         compute_repulsion_kernel_binned<<<gridSize, blockSize>>>(d_positions, d_velocity_deltas, d_bins, 
                                                                  d_node_bins, d_sorted_indices, num_nodes, 
-                                                                 repel_force, h_min_bounds, h_bin_size);
+                                                                 h_min_bounds, h_bin_size);
 
         // Cleanup
         delete[] sorted_positions;

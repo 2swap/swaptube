@@ -33,7 +33,6 @@ public:
     int BOARD_HEIGHT = C4_HEIGHT;
     string representation;
     Bitboard red_bitboard = 0ul, yellow_bitboard = 0ul;
-    string blurb = "A connect 4 board.";
     string game_name = "c4";
     unordered_set<double> children_hashes;
     bool children_hashes_initialized = false;
@@ -49,6 +48,7 @@ public:
     string reverse_representation() const;
     double reverse_hash();
     json get_data() const;
+    int symmetry_class();
     int burst() const;
     Bitboard legal_moves() const;
     int get_instant_win() const;

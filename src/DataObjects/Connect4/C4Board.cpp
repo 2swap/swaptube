@@ -105,6 +105,10 @@ bool C4Board::is_solution() {
     return winner == RED || winner == YELLOW;
 }
 
+int C4Board::symmetry_class() {
+    return get_hash() < reverse_hash();
+}
+
 double C4Board::board_specific_hash() const {
     double a = 1;
     double hash_in_progress = 0;
@@ -535,9 +539,6 @@ void C4Board::add_all_good_children(unordered_set<C4Board*>& neighbors) {
 json C4Board::get_data() const {
     json data;  // Create a JSON object
 
-    // Add the 'blurb' string to the JSON object
-    data["blurb"] = blurb;
-
     // Create a nested JSON array for the 2D array steadystate.steadystate
     json steadystate_array;
 
@@ -551,7 +552,7 @@ json C4Board::get_data() const {
     }
 
     // Add the nested array to the JSON object
-    data["steadystate"] = steadystate_array;
+    data["ss"] = steadystate_array;
 
     return data;
 }
