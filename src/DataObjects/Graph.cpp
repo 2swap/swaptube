@@ -86,8 +86,8 @@ public:
     double root_node_hash = 0;
 
     double gravity_strength = 0;
-    double decay = .96;
-    double speedlimit = 40;
+    double decay = .9;
+    double speedlimit = 20;
     int dimensions = 3;
 
     Graph(){}
@@ -416,7 +416,15 @@ public:
         for (int i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
             node->velocity += velocity_deltas[i]; // Repulsion forces from CUDA
-            //cout << velocity_deltas[i].x << endl;
+
+            // Add symmetry forces
+            const auto& mirror = nodes.find(node->data->reverse_hash());
+            if(mirror != nodes.end()) {
+                node->velocity.x += .01*(-mirror->second.position.x - node->position.x);
+                node->velocity.y += .01*( mirror->second.position.y - node->position.y);
+                node->velocity.z += .01*( mirror->second.position.z - node->position.z);
+                node->velocity.w += .01*( mirror->second.position.w - node->position.w);
+            }
 
             // Calculate attraction forces (CPU)
             const EdgeSet& neighbor_nodes = node->neighbors;
@@ -435,14 +443,6 @@ public:
         // Second loop: scale node positions and apply physics
         for (size_t i = 0; i < s; ++i) {
             Node<T>* node = node_vector[i];
-            if(node->data->symmetry_class() == 0) {
-                const auto& mirror = nodes.find(node->data->reverse_hash());
-                if(mirror != nodes.end()) {
-                    node->position = mirror->second.position;
-                    node->position.x *= -1;
-                    continue;
-                }
-            }
 
             double magnitude = glm::length(node->velocity);
             if (magnitude > speedlimit) {
