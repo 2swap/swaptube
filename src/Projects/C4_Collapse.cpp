@@ -36,12 +36,12 @@ void render_video() {
                 {"physics_multiplier", "30"},
             };
             gs.state_manager.set(state);
-            cs.inject_audio_and_render(AudioSegment(5));
+            cs.inject_audio_and_render(AudioSegment(3));
             g.render_json("../../Klotski/viewer/data/c4_"+variation+".json");
         }
     }
     catch (exception& e){
-        //movecache.WriteCache();
-        //fhourstonesCache.WriteCache();
+        movecache.WriteCache();
+        fhourstonesCache.WriteCache();
     }
 }

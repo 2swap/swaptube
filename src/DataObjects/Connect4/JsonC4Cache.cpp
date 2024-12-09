@@ -19,7 +19,7 @@ public:
     }
 
     ~CacheManager() {
-        //WriteCache();
+        WriteCache();
     }
 
     // Read cache from a JSON file on disk
@@ -41,6 +41,7 @@ public:
 
     // Write cache to a JSON file on disk
     bool WriteCache() {
+        if(delta == 0) return true;
         ofstream file(filename_);
         if (!file.is_open()) {
             cerr << "Error: Could not open cache file for writing." << endl;
@@ -134,7 +135,7 @@ private:
     // Increment the delta and write to cache if threshold is exceeded
     void increment_delta() {
         delta++;
-        if (delta > 100000) {
+        if (delta > 10000) {
             WriteCache();
             delta = 0;
         }

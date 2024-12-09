@@ -425,6 +425,10 @@ int C4Board::get_human_winning_fhourstones() {
 
     if(find_steady_state(representation, false, true, 80, 100) != nullptr)
         return -1;
+    if(find_steady_state(representation, false, true, 80, 100) != nullptr)
+        return -1;
+    if(find_steady_state(representation, false, true, 80, 100) != nullptr)
+        return -1;
 
     if (winning_columns.size() == 1) {
         char wc = winning_columns[0];
@@ -436,7 +440,7 @@ int C4Board::get_human_winning_fhourstones() {
     const bool BACKTRACK = !SKIP_UNFOUND_STEADYSTATES;
     if(BACKTRACK){
         vector<int> order_out;
-        int snp = search_nply_id(4, winning_columns, order_out);
+        int snp = search_nply_id(6, winning_columns, order_out);
         if(snp > 0) return snp;
     }
 

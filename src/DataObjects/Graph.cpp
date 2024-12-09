@@ -86,7 +86,7 @@ public:
     double root_node_hash = 0;
 
     double gravity_strength = 0;
-    double decay = .9;
+    double decay = .95;
     double speedlimit = 20;
     int dimensions = 3;
 
@@ -469,7 +469,7 @@ public:
 
     double get_attraction_force(double dist_sq){
         double dist_6th = dist_sq*dist_sq*dist_sq*.05;
-        return .2* (dist_6th-1)/(dist_6th+1);
+        return (dist_6th-1)/(dist_6th+1)*.2-.1;
     }
 
     double farthest_node_distance_from_origin() const {
