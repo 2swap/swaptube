@@ -1,0 +1,70 @@
+#include "../Scenes/Common/CompositeScene.cpp"
+#include "../Scenes/Media/LatexScene.cpp"
+#include "../Scenes/Connect4/Connect4Scene.cpp"
+#include "../Scenes/Connect4/Connect4GraphScene.cpp"
+#include "../DataObjects/Connect4/TreeValidator.cpp"
+
+void render_video() {
+    //PRINT_TO_TERMINAL = false;
+    //SAVE_FRAME_PNGS = false;
+
+    CompositeScene cs;
+    Graph<C4Board> g;
+    C4GraphScene gs(&g, variation, TRIM_STEADY_STATES);
+    gs.surfaces_override_unsafe = true;
+    LatexScene ls_opening(latex_text("Opening: "+variation), 1, .2, .1);
+    LatexScene ls_size(latex_text("Node count: "+to_string(g.size())), 1, .2, .1);
+    C4Scene c4s(variation, .2, .4);
+    cs.add_scene(&gs, "gs");
+    cs.add_scene(&ls_opening, "ls_opening", .1, .05);
+    cs.add_scene(&ls_size, "ls_size", .1, .12);
+    cs.add_scene(&c4s, "c4s", .1, .26);
+    //ValidateC4Graph(g);
+
+    StateSet state{
+        {"q1", "<t> .1 * cos"},
+        {"qi", "0"},
+        {"qj", "<t> .1 * sin"},
+        {"qk", "0"},
+        {"surfaces_opacity", "0"},
+        {"points_opacity", "0"},
+        {"physics_multiplier", "30"},
+    };
+    gs.state_manager.set(state);
+    cs.inject_audio_and_render(AudioSegment("Needs a catchy hook intro"));
+    cs.inject_audio_and_render(AudioSegment("So far, we have learned about a number of different strategies- different perspectives from which we can look at Connect 4."));
+    cs.inject_audio_and_render(AudioSegment("We learned about Claimeven, which tells us that there exist some rare positions where a certain player can adopt a naive strategy of always playing directly on top of their opponent."));
+    cs.inject_audio_and_render(AudioSegment("We learned about Parity, which teaches us that the even-ness and odd-ness of the rows really matters, and that each player takes a particular strategic role up to whether they were player 1 or player 2."));
+    cs.inject_audio_and_render(AudioSegment("We learned about threat analysis, which shows that the endgame"));
+    cs.inject_audio_and_render(AudioSegment("And, finally, we adopted a graph-theoretical perspective, and saw how we can perform search over the tree of connect-4 positions."));
+    cs.inject_audio_and_render(AudioSegment("Today I am going to unite all of these perspectives in order to SHOW you connect 4. Not just the game, but its guts- its structure."));
+    cs.inject_audio_and_render(AudioSegment("Ok, I'll stop leading you on- here it is."));
+    cs.inject_audio_and_render(AudioSegment("But first, you need to know what a Steady State is."));
+    cs.inject_audio_and_render(AudioSegment("In a position like this, which obeys Claimeven, Red can continue by "));
+    cs.inject_audio_and_render(AudioSegment(""));
+// Talk about the tree, and how steadystates are sparsely placed on that tree.
+    cs.inject_audio_and_render(AudioSegment("Some people have commented that this is all pointless- that connect 4 is solved, it's a closed case."));
+    cs.inject_audio_and_render(AudioSegment("And, speaking as someone who has independently solved connect 4 using a novel method,"));
+    cs.inject_audio_and_render(AudioSegment("this is dead wrong."));
+    cs.inject_audio_and_render(AudioSegment("Not only is there an infinitude of technical details of this simple game that we don't have answers to, and plenty that in my opinion we may never have answers to,"));
+    cs.inject_audio_and_render(AudioSegment("but all of them are just reverberations of that one pesky bedrock problem that seemingly lies at the bottom of everything:"));
+    cs.inject_audio_and_render(AudioSegment("What is the nature of emergent systems?"));
+    cs.inject_audio_and_render(AudioSegment("How can it be that a game with rules simple enough to teach to schoolchildren took mathematicians until the mid 1980s to tell us who should win"));
+    cs.inject_audio_and_render(AudioSegment("How can it be that such a game gives rise to all of these bizarre behaviors that demand an entire youtube explainer series along with esoteric German or Japanese words like Zugzwang and Miai to describe them?"));
+    cs.inject_audio_and_render(AudioSegment("The rules are simple! Why is there any mystery here???"));
+    cs.inject_audio_and_render(AudioSegment("Such is the problem of mathematics."));
+    cs.inject_audio_and_render(AudioSegment("We can come up with a set of axioms, but that doesn't mean we know their results."));
+    cs.inject_audio_and_render(AudioSegment("After all, the definition of a prime number can be stated concisely in one sentence,"));
+    cs.inject_audio_and_render(AudioSegment("but to this day, their distribution is shrouded in mystery."));
+    cs.inject_audio_and_render(AudioSegment("Even if we know the forces that guide particle interactions,"));
+    cs.inject_audio_and_render(AudioSegment("that doesn't make it any more self-evident that an atom with 43 protons has no stable isotopes,"));
+    cs.inject_audio_and_render(AudioSegment("or that this protein is particularly easy at adjoining to this thing which provides biological systems with an easy way to store and recover chemical energy (ATP)"));
+    cs.inject_audio_and_render(AudioSegment("Simple rules do not imply obvious behavior."));
+    cs.inject_audio_and_render(AudioSegment("Connect 4 provides a very unique combination of properties."));
+    cs.inject_audio_and_render(AudioSegment("I hope I have driven home throughout this series that, just like Chess, just like any other sufficiently expressive system, connect 4 yields worlds of complexity beyond the mere language of its axioms."));
+    cs.inject_audio_and_render(AudioSegment("Yet, somehow, it is just small enough that I can throw compute at the problem, and make formal mathematical claims that I can back up with actual data."));
+    cs.inject_audio_and_render(AudioSegment("And that I can display to you in full!"));
+    cs.inject_audio_and_render(AudioSegment("It carries within it that core kernel of emergence, yet on the 7x6 board size, remains just within reach,"));
+    cs.inject_audio_and_render(AudioSegment("presenting the mathematician with a unique opportunity for just a glance of that elusive emergent substance."));
+    cs.inject_audio_and_render(AudioSegment("This has been 2swap."));
+}

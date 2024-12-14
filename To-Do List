@@ -8,7 +8,5 @@ Abstract out a ParentScene class so that non-parent classes need not implement p
 Rubik's Scene
 Scenes for making line graphs, bar charts, etc?
 Prepare c4 scene for steady state diagrams
-Decrease Bitrate? Somehow fight the youtube compression algorithm?
+increase Bitrate? Somehow fight the youtube compression algorithm?
 Abstract out the idea of Coordinate Systems
-Abstract out the idea of a project? The Project constructor makes the writer and stuff?
-Test that using new runtimeerror structure, we observe that the video saves on runtime error
