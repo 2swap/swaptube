@@ -13,6 +13,7 @@ check_command() {
 # Check for required commands
 check_command "cmake"
 check_command "make"
+check_command "gnuplot"
 if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     echo "Error: ../MicroTeX-master/build/LaTeX does not exist. Please ensire that MicroTeX is configured."
     exit 1

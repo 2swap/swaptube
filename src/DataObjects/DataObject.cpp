@@ -6,7 +6,7 @@ public:
     void mark_unchanged(){
         updated_since_last_scene_query = false;
     }
-    bool has_been_updated_since_last_scene_query(){
+    bool has_been_updated_since_last_scene_query() const{
         return updated_since_last_scene_query;
     }
 private:
