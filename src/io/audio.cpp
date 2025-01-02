@@ -10,6 +10,7 @@
 #include "AudioSegment.cpp"
 extern "C"
 {
+    #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
 }
 
@@ -103,7 +104,7 @@ public:
         }
 
         // INPUT
-        AVCodec* audioInputCodec = avcodec_find_decoder(codecParams->codec_id);
+        const AVCodec* audioInputCodec = avcodec_find_decoder(codecParams->codec_id);
         audioInputCodecContext = avcodec_alloc_context3(audioInputCodec);
         avcodec_parameters_to_context(audioInputCodecContext, codecParams);
         avcodec_open2(audioInputCodecContext, audioInputCodec, nullptr);
@@ -114,7 +115,7 @@ public:
         avcodec_parameters_copy(audioStream->codecpar, codecParams);
 
         // OUTPUT
-        AVCodec* audioOutputCodec = avcodec_find_encoder(codecParams->codec_id);
+        const AVCodec* audioOutputCodec = avcodec_find_encoder(codecParams->codec_id);
         audioOutputCodecContext = avcodec_alloc_context3(audioOutputCodec);
         avcodec_parameters_to_context(audioOutputCodecContext, codecParams);
         avcodec_open2(audioOutputCodecContext, audioOutputCodec, nullptr);
@@ -143,7 +144,7 @@ public:
         int numFrames = ceil(static_cast<double>(numSamples) / frameSize);
 
         // Allocate buffer for audio data
-        int bufferSize = numSamples * audioOutputCodecContext->channels;
+        int bufferSize = numSamples * audioOutputCodecContext->ch_layout.nb_channels;
         vector<int16_t> audioBuffer(bufferSize, 0);
 
         // Split the audio data into multiple frames
@@ -153,7 +154,7 @@ public:
             int samples_this_frame = min(frameSize, samplesRemaining);
 
             // Fill the audio buffer with silence
-            for (int ch = 0; ch < audioOutputCodecContext->channels; ch++) {
+            for (int ch = 0; ch < audioOutputCodecContext->ch_layout.nb_channels; ch++) {
                 int offset = ch * samples_this_frame;
                 for (int s = 0; s < samples_this_frame; s++) {
                     audioBuffer[offset + s] = s%5;
@@ -163,18 +164,18 @@ public:
             // Create a frame and set its properties
             AVFrame* frame = av_frame_alloc();
             frame->nb_samples = samples_this_frame;
-            frame->channel_layout = audioOutputCodecContext->channel_layout;
+            frame->ch_layout = audioOutputCodecContext->ch_layout;
             frame->sample_rate = audioOutputCodecContext->sample_rate;
             frame->format = audioOutputCodecContext->sample_fmt;
 
             // Fill the frame with the audio data
             int ret = av_frame_get_buffer(frame, 0);
 
-            for (int ch = 0; ch < audioOutputCodecContext->channels; ch++) {
+            for (int ch = 0; ch < audioOutputCodecContext->ch_layout.nb_channels; ch++) {
                 frame->linesize[ch] = samples_this_frame * av_get_bytes_per_sample(audioOutputCodecContext->sample_fmt);
             }
 
-            ret = avcodec_fill_audio_frame(frame, audioOutputCodecContext->channels, audioOutputCodecContext->sample_fmt,
+            ret = avcodec_fill_audio_frame(frame, audioOutputCodecContext->ch_layout.nb_channels, audioOutputCodecContext->sample_fmt,
                                            reinterpret_cast<const uint8_t*>(audioBuffer.data()), bufferSize, 0);
 
             frame->pts = audframe;

@@ -1,5 +1,4 @@
-// This is a simple CUDA program which is run before any job
-// to confirm that everything is working right
+// Run this with nvcc to confirm that everything is working right
 
 #include <iostream>
 #include <cuda_runtime.h>
@@ -97,10 +96,5 @@ bool testCUDA() {
     cudaFree(dev_b);
     cudaFree(dev_c);
     return true;
-}
-
-int selfcheck_main() {
-    testCUDA();
-    return 0;
 }
 
