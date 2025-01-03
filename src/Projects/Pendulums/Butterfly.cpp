@@ -8,7 +8,7 @@ void render_video() {
     CompositeScene cs;
     vector<PendulumScene> vps;
     for(int i = 0; i < 5; i++){
-        PendulumState pendulum_state = {2+i*.000001, 3.1415, .0, .0};
+        PendulumState pendulum_state = {2+i*.00001, 3.1415, .0, .0};
         PendulumScene ps(pendulum_state, 0xffff0000 + 50*i*256 + 50*(5-i));
         vps.push_back(ps);
     }
@@ -17,6 +17,5 @@ void render_video() {
         cs.add_scene(&(vps[i]), key);
         cs.state_manager.add_equation(key + ".opacity", "0.4");
     }
-    cout << "D" << endl;
-    cs.inject_audio_and_render(AudioSegment(12));
+    cs.inject_audio_and_render(SilenceSegment(9));
 }

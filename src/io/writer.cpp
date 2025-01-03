@@ -65,19 +65,23 @@ public:
         video_seconds_so_far += 1./VIDEO_FRAMERATE;
     }
 
-    void add_shtooka(const AudioSegment& audio){
-        if (!audio.is_silence())
-            audiowriter.add_shtooka_entry(audio.get_audio_filename(), audio.get_subtitle_text());
+    void add_shtooka(const AudioSegment& audio) {
+        if (const auto* talking = dynamic_cast<const TalkingSegment*>(&audio)) {
+            audiowriter.add_shtooka_entry(talking->get_audio_filename(), talking->get_subtitle_text());
+        }
     }
 
-    double add_audio_segment(const AudioSegment& audio){
+    double add_audio_segment(const AudioSegment& audio) {
         double duration_seconds = 0;
-        if (audio.is_silence()) {
-            duration_seconds = audio.get_duration_seconds();
+        if (const auto* silence = dynamic_cast<const SilenceSegment*>(&audio)) {
+            duration_seconds = silence->get_duration_seconds();
             audiowriter.add_silence(duration_seconds);
-        } else {
-            duration_seconds = audiowriter.add_audio_get_length(audio.get_audio_filename());
-            subswriter.add_subtitle(duration_seconds, audio.get_subtitle_text());
+        } else if (const auto* talking = dynamic_cast<const TalkingSegment*>(&audio)) {
+            duration_seconds = audiowriter.add_audio_get_length(talking->get_audio_filename());
+            subswriter.add_subtitle(duration_seconds, talking->get_subtitle_text());
+        } else if (const auto* generated = dynamic_cast<const GeneratedSegment*>(&audio)) {
+            duration_seconds = audiowriter.add_generated_audio_get_length(generated->get_left_buffer(), generated->get_right_buffer());
+            subswriter.add_subtitle(duration_seconds, "[Computer Generated Sound]");
         }
         audio_seconds_so_far += duration_seconds;
         return audio_seconds_so_far - video_seconds_so_far;

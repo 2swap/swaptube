@@ -129,7 +129,7 @@ public:
         }*/
         audiotime = t_samples;
     }
-    void add_silence_old(double duration) {
+    void add_silence(double duration) {
         // Calculate the number of samples needed for the specified duration
         int numSamples = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
 
@@ -197,16 +197,14 @@ public:
         }
     }
 
-    void process_audio_buffer(const vector<float>& leftBuffer, vector<float>& rightBuffer, duration) {
-        // Check buffer sizes
-        int numSamplesExpected = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
-
-        if (leftBuffer.size() != numSamplesExpected || rightBuffer.size() != numSamplesExpected) {
-            throw runtime_error("Buffer sizes do not match the expected duration.");
+    double add_generated_audio_get_length(const vector<float>& leftBuffer, const vector<float>& rightBuffer) {
+        if (leftBuffer.size() != rightBuffer.size()) {
+            throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(leftBuffer.size()) + ", right: " + to_string(rightBuffer.size()));
         }
 
+        int numSamples = leftBuffer.size();
         int frameSize = audioOutputCodecContext->frame_size;
-        int numFrames = ceil(static_cast<double>(numSamplesExpected) / frameSize);
+        int numFrames = ceil(static_cast<double>(numSamples) / frameSize);
         int channels = audioOutputCodecContext->ch_layout.nb_channels;
 
         if (channels != 2) {
@@ -219,7 +217,7 @@ public:
         planarBuffer[1] = rightBuffer;
 
         // Process the audio buffer frame by frame
-        int samplesRemaining = numSamplesExpected;
+        int samplesRemaining = numSamples;
         for (int i = 0; i < numFrames; ++i) {
             int samples_this_frame = min(frameSize, samplesRemaining);
 
@@ -244,7 +242,7 @@ public:
             // Copy data from the planar buffers into the frame
             for (int ch = 0; ch < channels; ++ch) {
                 memcpy(frame->data[ch], 
-                       planarBuffer[ch].data() + (numSamplesExpected - samplesRemaining), 
+                       planarBuffer[ch].data() + (numSamples - samplesRemaining), 
                        samples_this_frame * sizeof(float));
             }
 
@@ -265,6 +263,7 @@ public:
 
             samplesRemaining -= samples_this_frame;
         }
+        return static_cast<double>(leftBuffer.size()) / audioOutputCodecContext->sample_rate;
     }
 
     double add_audio_get_length(const string& audioname) {

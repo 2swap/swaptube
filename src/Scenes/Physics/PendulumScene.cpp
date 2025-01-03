@@ -4,7 +4,7 @@
 
 class PendulumScene : public Scene {
 public:
-    PendulumScene(PendulumState s, int c, const double width = 1, const double height = 1) : Scene(width, height), pend(s), color(c) { }
+    PendulumScene(PendulumState s, int c, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s), color(c) { }
 
     const StateQuery populate_state_query() const override {
         return StateQuery{};
@@ -32,7 +32,17 @@ public:
         pix.fill_circle(posx, posy, line_thickness*2, color);
     }
 
+    void generate_audio(double duration, vector<float>& left, vector<float>& right){
+        PendulumState state = start_state;
+        for(int i = 0; i < duration*44100; i++){
+            state = rk4Step(state, 0.03);
+            left.push_back(sin(state.theta1));
+            right.push_back(sin(state.theta2));
+        }
+    }
+
 private:
+    PendulumState start_state;
     Pendulum pend;
     int color;
 };

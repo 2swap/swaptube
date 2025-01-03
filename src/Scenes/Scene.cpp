@@ -62,7 +62,7 @@ public:
         WRITER.add_shtooka(audio);
         if(!FOR_REAL)
             return;
-        cout << "Scene says: " << audio.get_subtitle_text() << endl;
+
         if (remaining_microblocks != 0) {
             throw runtime_error("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
                     "This macroblock was created with " + to_string(total_microblocks) + " total microblocks, "
