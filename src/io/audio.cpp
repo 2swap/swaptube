@@ -19,7 +19,7 @@ using namespace std;
 
 class AudioWriter {
 private:
-    ofstream /*audio_pts_file,*/ shtooka_file;
+    ofstream shtooka_file;
     int audioStreamIndex;
     double audiotime = 0;
     double substime = 0;
@@ -52,7 +52,6 @@ private:
             // Set the correct PTS and DTS values for the output packet
             outputPacket.dts = av_rescale_q(audiotime, audioStream->time_base, audioOutputCodecContext->time_base);
             outputPacket.pts = outputPacket.dts;
-            //audio_pts_file << outputPacket.pts << endl;
             audiotime += outputPacket.duration;
 
             length_in_seconds += static_cast<double>(outputPacket.duration) / audioOutputCodecContext->sample_rate;
@@ -255,7 +254,6 @@ public:
         
         av_packet_unref(&inputPacket);
         
-        //audio_pts_file.close();
         if (shtooka_file.is_open()) {
             shtooka_file.close();
         }

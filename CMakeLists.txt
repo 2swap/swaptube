@@ -12,7 +12,7 @@ set(ENV{GLIBCXX_FORCE_NEW} 1)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(FFMPEG REQUIRED libavcodec libavformat libavdevice libavutil libavfilter libswscale libswresample)
+pkg_check_modules(FFMPEG REQUIRED libavcodec libavformat libavdevice libavutil libavfilter)
 message(STATUS "FFMPEG Libraries -> ${FFMPEG_LIBRARIES}")
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 find_package(Cairo REQUIRED)
@@ -55,6 +55,6 @@ include_directories("/usr/include/cairo")
 include_directories(${PNG_INCLUDE_DIR})
 include_directories(${GLM_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${SWSCALE_LIBRARIES} ${RSVG_LIBRARIES} cairo gobject-2.0 ${PNG_LIBRARIES} ${GPU_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${RSVG_LIBRARIES} cairo gobject-2.0 ${PNG_LIBRARIES} ${GPU_LIBRARIES})
 target_compile_options(${PROJECT_NAME} PRIVATE -Wreorder)
 

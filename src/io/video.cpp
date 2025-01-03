@@ -6,7 +6,6 @@
 #include "DebugPlot.h"
 extern "C"
 {
-    #include <libswscale/swscale.h>
     #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
 }
@@ -107,7 +106,6 @@ private:
     //note that the FormatContext has shared ownership with audioWriter and MovieWriter
     AVFormatContext *fc = nullptr;
 
-    SwsContext *sws_ctx = nullptr;
     AVStream *videoStream = nullptr;
     AVCodecContext *videoCodecContext = nullptr;
     AVFrame *rgbpic = nullptr;
@@ -154,10 +152,6 @@ public:
     void init_video() {
         av_log_set_level(AV_LOG_DEBUG);
 
-        // Preparing to convert my generated RGB images to YUV frames.
-        sws_ctx = sws_getContext(VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_RGB24,
-                                 VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
-
         // Setting up the codec.
         const AVCodec* codec = avcodec_find_encoder_by_name("libx264");
         AVDictionary* opt = NULL;
@@ -202,31 +196,48 @@ public:
         av_frame_get_buffer(yuvpic, 1);
     }
     void add_frame(const Pixels& p) {
-        if(p.w != VIDEO_WIDTH || p.h != VIDEO_HEIGHT)
+        if (p.w != VIDEO_WIDTH || p.h != VIDEO_HEIGHT)
             throw runtime_error("Frame dimensions were expected to be (" + to_string(VIDEO_WIDTH) + ", " + to_string(VIDEO_HEIGHT) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
 
-        for (unsigned int y = 0; y < VIDEO_HEIGHT; y++)
-        {
-            // rgbpic->linesize[0] is equal to width.
-            int rowboi = y * rgbpic->linesize[0];
-            for (unsigned int x = 0; x < VIDEO_WIDTH; x++)
-            {
-                int a,r,g,b;
+        uint8_t* y_plane = yuvpic->data[0];
+        uint8_t* u_plane = yuvpic->data[1];
+        uint8_t* v_plane = yuvpic->data[2];
+
+        int y_stride = yuvpic->linesize[0];
+        int u_stride = yuvpic->linesize[1];
+        int v_stride = yuvpic->linesize[2];
+
+        for (unsigned int y = 0; y < VIDEO_HEIGHT; y++) {
+            for (unsigned int x = 0; x < VIDEO_WIDTH; x++) {
+                int a, r, g, b;
                 p.get_pixel_by_channels(x, y, a, r, g, b);
-                // The AVFrame data will be stored as RGBRGBRGB... row-wise,
-                // from left to right and from top to bottom.
-                double alpha = a/255.; // in the end, we pretend there is a black background
-                double one_minus_alpha = (1-alpha);
-                int idx = x*3 + rowboi;
-                rgbpic->data[0][idx + 0] = r*alpha;// + one_minus_alpha;
-                rgbpic->data[0][idx + 1] = g*alpha;// + one_minus_alpha;
-                rgbpic->data[0][idx + 2] = b*alpha;// + one_minus_alpha;
+
+                double alpha = a / 255.0;
+                double one_minus_alpha = 1.0 - alpha;
+                const int background_r = 0;
+                const int background_g = 0;
+                const int background_b = 0;
+                r = r * alpha + background_r * one_minus_alpha;
+                g = g * alpha + background_g * one_minus_alpha;
+                b = b * alpha + background_b * one_minus_alpha;
+
+                // Convert RGB to YUV
+                double y_value = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                // Assign to Y plane
+                y_plane[y * y_stride + x] = static_cast<uint8_t>(std::clamp(y_value, 0.0, 255.0));
+
+                // Assign to U and V planes (downsample 2x2)
+                if (x % 2 == 0 && y % 2 == 0) {
+                    double u_value = -0.14713 * r - 0.28886 * g + 0.436 * b + 128;
+                    double v_value = 0.615 * r - 0.51499 * g - 0.10001 * b + 128;
+                    int u_idx = (y / 2) * u_stride + (x / 2);
+                    int v_idx = (y / 2) * v_stride + (x / 2);
+                    u_plane[u_idx] = static_cast<uint8_t>(std::clamp(u_value, 0.0, 255.0));
+                    v_plane[v_idx] = static_cast<uint8_t>(std::clamp(v_value, 0.0, 255.0));
+                }
             }
         }
-
-        // Not actually scaling anything, but just converting
-        // the RGB data to YUV and store it in yuvpic.
-        sws_scale(sws_ctx, rgbpic->data, rgbpic->linesize, 0, VIDEO_HEIGHT, yuvpic->data, yuvpic->linesize);
 
         // The PTS of the frame are just in a reference unit,
         // unrelated to the format we are using. We set them,
@@ -244,7 +255,6 @@ public:
         avcodec_close(videoCodecContext);
 
         // Freeing video specific resources
-        sws_freeContext(sws_ctx);
         av_frame_free(&rgbpic);
         av_frame_free(&yuvpic);
 
