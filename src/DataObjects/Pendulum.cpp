@@ -78,12 +78,8 @@ public:
     PendulumState state;
     Pendulum(const PendulumState& s) : state(s) {}
 
-    void iterate_physics(int multiplier) {
-        for (int step = 0; step < multiplier; ++step) iterate_physics_once();
-    }
-
-    void iterate_physics_once() {
-        state = rk4Step(state, 0.04);
+    void iterate_physics(int multiplier, double step_size) {
+        for (int step = 0; step < multiplier; ++step) state = rk4Step(state, step_size);
         mark_updated();
     }
 };

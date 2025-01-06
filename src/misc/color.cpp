@@ -40,6 +40,42 @@ int color_combine(int base_color, int over_color, float overlay_opacity_multipli
     return (final_alpha << 24) | (final_rgb);
 }
 
+// Convert RGB to YUV
+int RGBtoYUV(const int rgb) {
+    int r = getr(rgb);
+    int g = getg(rgb);
+    int b = getb(rgb);
+
+    // Conversion formulas
+    double y_f = 0.299 * r + 0.587 * g + 0.114 * b;
+    double u_f = -0.14713 * r - 0.28886 * g + 0.436 * b + 128; // Offset U and V by 128
+    double v_f = 0.615 * r - 0.51499 * g - 0.10001 * b + 128;
+
+    // Round and convert to integers
+    int y = clamp(static_cast<int>(round(y_f)), 0, 255);
+    int u = clamp(static_cast<int>(round(u_f)), 0, 255);
+    int v = clamp(static_cast<int>(round(v_f)), 0, 255);
+    return argb_to_col(255, y, u, v);
+}
+
+// Convert YUV to RGB
+int YUVtoRGB(const int yuv) {
+    int y = getr(yuv);
+    int u = getg(yuv)-128;
+    int v = getb(yuv)-128;
+
+    // Conversion formulas
+    double r_f = y + 1.13983 * v;
+    double g_f = y - 0.39465 * u - 0.58060 * v;
+    double b_f = y + 2.03211 * u;
+
+    // Round and convert to integers
+    int r = clamp(static_cast<int>(round(r_f)), 0, 255);
+    int g = clamp(static_cast<int>(round(g_f)), 0, 255);
+    int b = clamp(static_cast<int>(round(b_f)), 0, 255);
+    return argb_to_col(255, r, g, b);
+}
+
 string latex_color(unsigned int color, string text) {
     // Mask out the alpha channel
     unsigned int rgb = color & 0x00FFFFFF;

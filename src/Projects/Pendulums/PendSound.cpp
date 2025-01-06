@@ -9,6 +9,11 @@ void render_video() {
     PendulumScene ps(pendulum_state, 0xffffffff);
     vector<float> left;
     vector<float> right;
+    StateSet state = {
+        {"physics_multiplier", "1"},
+        {"rk4_step_size", "1 30 / <physics_multiplier> /"},
+    };
+    ps.state_manager.set(state);
     ps.generate_audio(8, left, right);
     ps.inject_audio_and_render(GeneratedSegment(left, right));
 }
