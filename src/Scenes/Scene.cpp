@@ -15,6 +15,7 @@ public:
         : state_manager(), pix(width*VIDEO_WIDTH, height*VIDEO_HEIGHT) {
         state_manager.add_equation("w", to_string(pix.w));
         state_manager.add_equation("h", to_string(pix.h));
+        state_manager.evaluate_all();
     }
 
     virtual const StateQuery populate_state_query() const = 0;

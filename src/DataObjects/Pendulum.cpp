@@ -84,3 +84,37 @@ public:
     }
 };
 
+class PendulumGrid : public DataObject {
+public:
+    int w; int h;
+    vector<vector<PendulumState>> pendulum_states;
+    vector<vector<PendulumState>> pendulum_pairs;
+    PendulumGrid(const int width, const int height, const double init_p1 = 0, const double init_p2 = 0) : w(width), h(height) {
+        pendulum_states = vector<vector<PendulumState>>(h);
+        pendulum_pairs  = vector<vector<PendulumState>>(h);
+        for (int y = 0; y < h; y++) {
+            pendulum_states[y] = vector<PendulumState>(w);
+            pendulum_pairs [y] = vector<PendulumState>(w);
+            for (int x = 0; x < w; x++) {
+                pendulum_pairs [y][x] = {(x-w/2.)*2*M_PI/w + 0.001,
+                                         (y-h/2.)*2*M_PI/h,
+                                         init_p1, init_p2};
+                pendulum_states[y][x] = {(x-w/2.)*2*M_PI/w,
+                                         (y-h/2.)*2*M_PI/h,
+                                         init_p1, init_p2};
+            }
+        }
+    }
+
+    void iterate_physics(int multiplier, double step_size) {
+        for (int i = 0; i < multiplier; i++) {
+            for (int y = 0; y < h; ++y) {
+                for (int x = 0; x < w; ++x) {
+                    pendulum_states[y][x] = rk4Step(pendulum_states[y][x], step_size);
+                    pendulum_pairs [y][x] = rk4Step(pendulum_pairs [y][x], step_size);
+                }
+            }
+        }
+        mark_updated();
+    }
+};

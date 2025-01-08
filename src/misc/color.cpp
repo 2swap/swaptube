@@ -40,6 +40,24 @@ int color_combine(int base_color, int over_color, float overlay_opacity_multipli
     return (final_alpha << 24) | (final_rgb);
 }
 
+// Map 2 angles onto a torus in YUV space
+int map_to_torus(double angle1, double angle2) {
+    const double R = 96.0; // Major radius in UV space
+    const double r = 32.0; // Minor radius in UV space
+    const double centerY = 128.0;
+    const double centerU = 128.0;
+    const double centerV = 128.0;
+
+    double y_f = centerY + r * sin(angle1);
+    double u_f = centerU + (R + r * cos(angle2)) * cos(angle1);
+    double v_f = centerV + (R + r * cos(angle2)) * sin(angle1);
+
+    int y = clamp(static_cast<int>(round(y_f)), 0, 255);
+    int u = clamp(static_cast<int>(round(u_f)), 0, 255);
+    int v = clamp(static_cast<int>(round(v_f)), 0, 255);
+    return argb_to_col(255, y, u, v);
+}
+
 // Convert RGB to YUV
 int RGBtoYUV(const int rgb) {
     int r = getr(rgb);
