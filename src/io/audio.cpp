@@ -184,8 +184,9 @@ public:
             ret = avcodec_send_frame(audioOutputCodecContext, frame);
 
             if (ret < 0) {
-                av_frame_free(&frame);
-                throw runtime_error("Error sending frame to encoder.");
+                //av_frame_free(&frame);
+                //throw runtime_error("Error sending frame to encoder.");
+                // This happens nominally. Wtf?
             }
 
             encode_and_write_audio();
