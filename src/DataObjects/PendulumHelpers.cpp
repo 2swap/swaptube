@@ -15,6 +15,7 @@ const double pend_m = 1.0; // mass of pendulums (kg)
 
 struct PendulumState {
     double theta1, theta2, p1, p2;
+    int iteration_number;
 };
 
 struct Derivatives {
@@ -75,6 +76,7 @@ inline PendulumState rk4Step(const PendulumState &state, double dt) {
     newState.theta2 = state.theta2 + (dt / 6.0) * (k1.dtheta2 + 2 * k2.dtheta2 + 2 * k3.dtheta2 + k4.dtheta2);
     newState.p1 = state.p1 + (dt / 6.0) * (k1.dp1 + 2 * k2.dp1 + 2 * k3.dp1 + k4.dp1);
     newState.p2 = state.p2 + (dt / 6.0) * (k1.dp2 + 2 * k2.dp2 + 2 * k3.dp2 + k4.dp2);
+    newState.iteration_number = state.iteration_number+1;
 
     return newState;
 }

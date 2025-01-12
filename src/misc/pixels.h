@@ -203,25 +203,23 @@ public:
     void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness) {
         int dx = abs(x2 - x1);
         int dy = abs(y2 - y1);
+        if(dx > 10000 || dy > 10000){
+            cout << "Bresenham Overflow. Quitting without finishing line." << endl;
+            cout << "x1: " << x1 << endl;
+            cout << "y1: " << y1 << endl;
+            cout << "x2: " << x2 << endl;
+            cout << "y2: " << y2 << endl;
+            cout << "col: " << col << endl;
+            cout << "thickness: " << thickness << endl;
+            return;
+        }
 
         int sx = (x1 < x2) ? 1 : -1; // Direction of drawing on x axis
         int sy = (y1 < y2) ? 1 : -1; // Direction of drawing on y axis
 
         int err = dx - dy;
 
-        int count = 0;
         while(true) {
-            count++;
-            if(count > 1000000){
-                cout << "Bresenham Overflow. Quitting without finishing line." << endl;
-                cout << "x1: " << x1 << endl;
-                cout << "y1: " << y1 << endl;
-                cout << "x2: " << x2 << endl;
-                cout << "y2: " << y2 << endl;
-                cout << "col: " << col << endl;
-                cout << "thickness: " << thickness << endl;
-                return;
-            }
             overlay_pixel(x1, y1, col, opacity);
             for(int i = 1; i < thickness; i++){
                 overlay_pixel(x1+i, y1  , col, opacity);

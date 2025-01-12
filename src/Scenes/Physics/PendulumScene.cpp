@@ -4,7 +4,7 @@
 
 class PendulumScene : public Scene {
 public:
-    PendulumScene(PendulumState s, int c, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s) { }
+    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s) { }
 
     const StateQuery populate_state_query() const override {
         return StateQuery{"physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
@@ -22,7 +22,7 @@ public:
         vector<double> thetas = {pend.state.theta1, pend.state.theta2};
         int pendulum_count = 2;
         int color = YUVtoRGB(map_to_torus(thetas[0], thetas[1]));
-        pix.fill(colorlerp(OPAQUE_BLACK, color, state["background_opacity"]));
+        //pix.fill(colorlerp(OPAQUE_BLACK, color, state["background_opacity"]));
 
         if(state["pendulum_opacity"] > 0.01) {
             int pendulum_color = colorlerp(OPAQUE_BLACK, color, state["pendulum_opacity"]);

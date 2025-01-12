@@ -8,14 +8,19 @@ void render_video() {
     CompositeScene cs;
     vector<PendulumScene> vps;
     for(int i = 0; i < 5; i++){
-        PendulumState pendulum_state = {2+i*.00001, 3.1415, .0, .0};
-        PendulumScene ps(pendulum_state, 0xffff0000 + 50*i*256 + 50*(5-i));
+        PendulumState pendulum_state = {2.49+(i/3-1)*.01, .25 + (i%3-1) * .01, .0, .0};
+        PendulumScene ps(pendulum_state);
+        ps.state_manager.set({
+            {"background_opacity", "0"},
+            {"pendulum_opacity", "1"},
+            {"physics_multiplier", "16"},
+            {"rk4_step_size", "1 30 / <physics_multiplier> /"},
+        });
         vps.push_back(ps);
     }
     for(int i = 0; i < 5; i++){
         string key = "ps" + to_string(i);
         cs.add_scene(&(vps[i]), key);
-        cs.state_manager.add_equation(key + ".opacity", "0.4");
     }
-    cs.inject_audio_and_render(SilenceSegment(9));
+    cs.inject_audio_and_render(SilenceSegment(25));
 }
