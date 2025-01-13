@@ -56,39 +56,41 @@ public:
         const double log_decimal = log10z-floor(log10z);
         bool not_fiveish = log_decimal < .5;
         const double interpolator = (log_decimal >= .5 ? -1 : 0) + log_decimal * 2;
+        unordered_set<string> done_numbers_x;
+        unordered_set<string> done_numbers_y;
         for(int d_om = 0; d_om < 2; d_om++){
             double increment = pow(10, order_mag) * (not_fiveish ? 1 : 0.5);
             for(double x = floor(lx/increment)*increment; x < rx; x += increment) {
-                double modified_interpolator = interpolator;
-                if(static_cast<int>(round(x / increment)) % 10 == 0) {
-                    if(d_om == 1) continue;
-                    modified_interpolator = 1;
-                }
-                double tick_length = (1+modified_interpolator-d_om) *5; 
-                double number_opacity = d_om == 1 ? (modified_interpolator<.5? 0 : modified_interpolator*2-1) : 1;
+                string truncated = truncate_tick(x);
+                if(done_numbers_x.find(truncated) != done_numbers_x.end()) continue;
+                done_numbers_x.insert(truncated);
+                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * w / 128.; 
                 double frac = (x - lx) / (rx - lx);
+                double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
+                number_opacity *= 1-square(square(2.5*(.5-frac)));
+                if(number_opacity < 0) number_opacity = 0;
                 int x_pix = frac * w;
-                pix.bresenham(x_pix, 0, x_pix, tick_length, OPAQUE_WHITE, 1, 1);
-                ScalingParams sp(40, 20);
+                pix.bresenham(x_pix, h-1, x_pix, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
-                    Pixels latex = latex_to_pix(truncate_tick(x), sp);
-                    pix.overlay(latex, x_pix - latex.w/2, tick_length * 1.5, number_opacity);
+                    ScalingParams sp(w/12., w/24.);
+                    Pixels latex = latex_to_pix(truncated, sp).rotate_90();
+                    pix.overlay(latex, x_pix - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
                 }
             }
             for(double y = floor(ty/increment)*increment; y < by; y += increment) {
-                double modified_interpolator = interpolator;
-                if(static_cast<int>(round(y / increment)) % 10 == 0) {
-                    if(d_om == 1) continue;
-                    modified_interpolator = 1;
-                }
-                double tick_length = (1+modified_interpolator-d_om) *5; 
-                double number_opacity = d_om == 1 ? (modified_interpolator<.5? 0 : modified_interpolator*2-1) : 1;
+                string truncated = truncate_tick(y);
+                if(done_numbers_y.find(truncated) != done_numbers_y.end()) continue;
+                done_numbers_y.insert(truncated);
+                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * w / 128.; 
                 double frac = 1 - (y - ty) / (by - ty);
+                double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
+                number_opacity *= 1-square(square(2.5*(.5-frac)));
+                if(number_opacity < 0) number_opacity = 0;
                 int y_pix = frac * h;
-                pix.bresenham(0, y_pix, tick_length, y_pix, OPAQUE_WHITE, 1, 1);
-                ScalingParams sp(40, 20);
+                pix.bresenham(0, y_pix, tick_length, y_pix, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
-                    Pixels latex = latex_to_pix(truncate_tick(y), sp);
+                    ScalingParams sp(w/12., w/24.);
+                    Pixels latex = latex_to_pix(truncated, sp);
                     pix.overlay(latex, tick_length * 1.5, y_pix - latex.h/2, number_opacity);
                 }
             }

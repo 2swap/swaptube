@@ -17,17 +17,6 @@ void render_video() {
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
-        {"center_x", "0"},
-        {"center_y", "0"},
-        {"zoom", "1 6.28 /"},
-        {"physics_multiplier", "0"},
-    });
-    pgs.inject_audio_and_render(SilenceSegment(2));
-    pgs.inject_audio_and_render(SilenceSegment(2));
-    pgs.state_manager.microblock_transition({
-        {"center_x", "0"},
-        {"center_y", "0"},
-        {"zoom", "1 24 /"},
         {"physics_multiplier", "0"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));

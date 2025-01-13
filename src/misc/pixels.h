@@ -387,6 +387,20 @@ public:
         return result;
     }
 
+    Pixels rotate_90() const {
+        // Create a new Pixels object with swapped dimensions
+        Pixels rotated(h, w);
+
+        // Map each pixel to its new location
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                rotated.set_pixel(y, w-1-x, get_pixel(x, y));
+            }
+        }
+
+        return rotated;
+    }
+
     Pixels bicubic_scale(int new_width, int new_height) const {
         Pixels result(new_width, new_height);
 
