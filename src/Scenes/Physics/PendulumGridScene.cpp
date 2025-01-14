@@ -35,8 +35,8 @@ public:
             for (int x = 0; x < w; ++x) {
                 double pos_x = (x - w/2.0) / (w * zoom) + cx;
                 double pos_y = (h/2.0 - y) / (h * zoom) + cy;
-                int arr_x = (w*50 + static_cast<int>(pos_x * w / (M_PI*2))) % w;
-                int arr_y = (h*50 + static_cast<int>(pos_y * h / (M_PI*2))) % h;
+                int arr_x = (w*50 + static_cast<int>(pos_x * w / (20./*M_PI*2*/))) % w;
+                int arr_y = (h*50 + static_cast<int>(pos_y * h / (20.))) % h;
                 int i = arr_x + arr_y * w;
 
                 double theta1  = grid.pendulum_states[i].theta1;

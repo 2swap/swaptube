@@ -29,6 +29,7 @@ private:
     AVFormatContext *fc = nullptr;
     AVPacket inputPacket = {0};
     unsigned audframe = 0;
+    vector<vector<float>> sampleBuffer;
 
     bool file_exists(const string& filename){
         struct stat buffer;
@@ -67,7 +68,7 @@ private:
     }
 
 public:
-    AudioWriter(AVFormatContext *fc_) : fc(fc_) {
+    AudioWriter(AVFormatContext *fc_) : fc(fc_), sampleBuffer(2) {
         shtooka_file.open(PATH_MANAGER.record_list_path);
         if (!shtooka_file.is_open()) {
             cerr << "Error opening recorder list: " << PATH_MANAGER.record_list_path << endl;
@@ -130,73 +131,68 @@ public:
         }*/
         audiotime = t_samples;
     }
+
     void add_silence(double duration) {
-        // Calculate the number of samples needed for the specified duration
         int numSamples = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
+        int channels = audioOutputCodecContext->ch_layout.nb_channels;
 
-        // Calculate the frame size based on the codec context's frame size
-        int frameSize = audioOutputCodecContext->frame_size;
-
-        // Calculate the number of frames needed to accommodate the specified duration
-        int numFrames = ceil(static_cast<double>(numSamples) / frameSize);
-
-        // Allocate buffer for audio data
-        int bufferSize = numSamples * audioOutputCodecContext->ch_layout.nb_channels;
-        vector<int16_t> audioBuffer(bufferSize, 0);
-
-        // Split the audio data into multiple frames
-        int samplesRemaining = numSamples;
-
-        for (int i = 0; i < numFrames; i++) {
-            int samples_this_frame = min(frameSize, samplesRemaining);
-
-            // Fill the audio buffer with silence
-            for (int ch = 0; ch < audioOutputCodecContext->ch_layout.nb_channels; ch++) {
-                int offset = ch * samples_this_frame;
-                for (int s = 0; s < samples_this_frame; s++) {
-                    audioBuffer[offset + s] = 0;
-                }
-            }
-
-            // Create a frame and set its properties
-            AVFrame* frame = av_frame_alloc();
-            frame->nb_samples = samples_this_frame;
-            frame->ch_layout = audioOutputCodecContext->ch_layout;
-            frame->sample_rate = audioOutputCodecContext->sample_rate;
-            frame->format = audioOutputCodecContext->sample_fmt;
-
-            // Allocate buffer for the frame
-            int ret = av_frame_get_buffer(frame, 0);
-            if (ret < 0) {
-                av_frame_free(&frame);
-                throw runtime_error("Error allocating audio frame buffer.");
-            }
-
-            for (int ch = 0; ch < audioOutputCodecContext->ch_layout.nb_channels; ch++) {
-                frame->linesize[ch] = samples_this_frame * av_get_bytes_per_sample(audioOutputCodecContext->sample_fmt);
-            }
-
-            ret = avcodec_fill_audio_frame(frame, audioOutputCodecContext->ch_layout.nb_channels, audioOutputCodecContext->sample_fmt, reinterpret_cast<const uint8_t*>(audioBuffer.data()), bufferSize, 0);
-
-            frame->pts = audframe;
-            audframe++;
-
-            // Send the frame to the encoder
-            ret = avcodec_send_frame(audioOutputCodecContext, frame);
-
-            if (ret < 0) {
-                //av_frame_free(&frame);
-                //throw runtime_error("Error sending frame to encoder.");
-                // This happens nominally. Wtf?
-            }
-
-            encode_and_write_audio();
-
-            av_frame_unref(frame);
-            av_frame_free(&frame);
-
-            samplesRemaining -= samples_this_frame;
+        // Add to buffer and process frames
+        for (int ch = 0; ch < channels; ++ch) {
+        for (int i = 0; i < numSamples * channels; ++i) {
+            sampleBuffer[ch].push_back(0);
         }
+        }
+        while (process_frame_from_buffer());
+    }
+
+    bool process_frame_from_buffer() {
+        int channels = audioOutputCodecContext->ch_layout.nb_channels;
+        int frameSize = audioOutputCodecContext->frame_size;
+        if(sampleBuffer[0].size() != sampleBuffer[1].size()) throw runtime_error("Audio planar buffer mismatch!");
+        if(sampleBuffer[0].size() < frameSize) return false;
+
+        // Create a frame and set its properties
+        AVFrame* frame = av_frame_alloc();
+        if (!frame) { throw runtime_error("Frame allocation failed."); }
+        frame->nb_samples = frameSize;
+        frame->ch_layout = audioOutputCodecContext->ch_layout;
+        frame->sample_rate = audioOutputCodecContext->sample_rate;
+        frame->format = audioOutputCodecContext->sample_fmt;
+
+        // Allocate buffer for the frame
+        int ret = av_frame_get_buffer(frame, 0);
+        if (ret < 0) {
+            av_frame_free(&frame);
+            throw runtime_error("Error allocating audio frame buffer.");
+        }
+
+        for (int ch = 0; ch < channels; ++ch) {
+            memcpy(frame->data[ch], 
+                   sampleBuffer[ch].data(), 
+                   frameSize * sizeof(float));
+        }
+
+        frame->pts = audframe;
+        audframe++;
+
+        // Send the frame to the encoder
+        ret = avcodec_send_frame(audioOutputCodecContext, frame);
+
+        if (ret < 0) {
+            //av_frame_free(&frame);
+            //throw runtime_error("Error sending frame to encoder.");
+            // This happens nominally. Wtf?
+        }
+
+        encode_and_write_audio();
+
+        av_frame_unref(frame);
+        av_frame_free(&frame);
+
+        for (int ch = 0; ch < channels; ++ch) {
+            sampleBuffer[ch].erase(sampleBuffer[ch].begin(), sampleBuffer[ch].begin() + frameSize);
+        }
+        return true;
     }
 
     double add_generated_audio_get_length(const vector<float>& leftBuffer, const vector<float>& rightBuffer) {
@@ -205,8 +201,6 @@ public:
         }
 
         int numSamples = leftBuffer.size();
-        int frameSize = audioOutputCodecContext->frame_size;
-        int numFrames = ceil(static_cast<double>(numSamples) / frameSize);
         int channels = audioOutputCodecContext->ch_layout.nb_channels;
 
         if (channels != 2) {
@@ -218,53 +212,12 @@ public:
         planarBuffer[0] = leftBuffer;
         planarBuffer[1] = rightBuffer;
 
-        // Process the audio buffer frame by frame
-        int samplesRemaining = numSamples;
-        for (int i = 0; i < numFrames; ++i) {
-            int samples_this_frame = min(frameSize, samplesRemaining);
-
-            // Create a frame and set its properties
-            AVFrame* frame = av_frame_alloc();
-            if (!frame) {
-                throw runtime_error("Frame allocation failed.");
+        for (int ch = 0; ch < channels; ++ch) {
+            for(int i = 0; i < numSamples; i++){
+                sampleBuffer[ch].push_back(planarBuffer[ch][i]);
             }
-
-            frame->nb_samples = samples_this_frame;
-            frame->ch_layout = audioOutputCodecContext->ch_layout;
-            frame->sample_rate = audioOutputCodecContext->sample_rate;
-            frame->format = audioOutputCodecContext->sample_fmt;
-
-            // Allocate buffer for the frame
-            int ret = av_frame_get_buffer(frame, 0);
-            if (ret < 0) {
-                av_frame_free(&frame);
-                throw runtime_error("Error allocating frame buffer.");
-            }
-
-            // Copy data from the planar buffers into the frame
-            for (int ch = 0; ch < channels; ++ch) {
-                memcpy(frame->data[ch], 
-                       planarBuffer[ch].data() + (numSamples - samplesRemaining), 
-                       samples_this_frame * sizeof(float));
-            }
-
-            frame->pts = audframe;
-            audframe++;
-
-            // Send the frame to the encoder
-            ret = avcodec_send_frame(audioOutputCodecContext, frame);
-            if (ret < 0) {
-                av_frame_free(&frame);
-                throw runtime_error("Error sending frame to encoder.");
-            }
-
-            encode_and_write_audio();
-
-            av_frame_unref(frame);
-            av_frame_free(&frame);
-
-            samplesRemaining -= samples_this_frame;
         }
+        while (process_frame_from_buffer());
         return static_cast<double>(leftBuffer.size()) / audioOutputCodecContext->sample_rate;
     }
 
@@ -324,6 +277,7 @@ public:
         shtooka_file << filename << "\t" << text << "\n";
     }
     void cleanup() {
+        while (process_frame_from_buffer());
         avcodec_send_frame(audioOutputCodecContext, NULL);
         encode_and_write_audio();
         av_packet_unref(&inputPacket);

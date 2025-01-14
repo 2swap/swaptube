@@ -30,12 +30,11 @@ public:
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 int i = x + y * w;
-/*                PendulumState ps = {x*2*M_PI/w,
-                                    y*2*M_PI/h,
-                                    init_p1, init_p2,};*/
                 PendulumState ps = {init_p1, init_p2,
-                                    x*2*M_PI/w,
-                                    y*2*M_PI/h,};
+                                    //x*2*M_PI/w,
+                                    //y*2*M_PI/h,};
+                                    x*20./w,
+                                    y*20./h,};
                 pendulum_states[i] = ps;
                 ps.theta1 += 0.001;
                 pendulum_pairs [i] = ps;
