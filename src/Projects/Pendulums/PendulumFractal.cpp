@@ -3,7 +3,7 @@
 #include "../Scenes/Physics/PendulumScene.cpp"
 
 void render_video() {
-    //PRINT_TO_TERMINAL = false;
+    PRINT_TO_TERMINAL = false;
     //SAVE_FRAME_PNGS = false;
 
     PendulumGridScene pgs(0, 0);

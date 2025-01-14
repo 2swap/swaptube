@@ -27,6 +27,7 @@ private:
     AVCodecContext *audioOutputCodecContext = nullptr;
     AVStream *audioStream = nullptr;
     AVFormatContext *fc = nullptr;
+    AVPacket inputPacket = {0};
     unsigned audframe = 0;
 
     bool file_exists(const string& filename){
@@ -286,7 +287,6 @@ public:
         }
 
         // Read input audio frames and write to output format context
-        AVPacket inputPacket = {0};
         while (av_read_frame(inputAudioFormatContext, &inputPacket) >= 0) {
             if (inputPacket.stream_index == audioStreamIndex) {
                 AVFrame* frame = av_frame_alloc();
@@ -308,7 +308,6 @@ public:
                 av_frame_free(&frame);
             }
         }
-        av_packet_unref(&inputPacket);
 
         avformat_close_input(&inputAudioFormatContext);
 
@@ -327,6 +326,7 @@ public:
     void cleanup() {
         avcodec_send_frame(audioOutputCodecContext, NULL);
         encode_and_write_audio();
+        av_packet_unref(&inputPacket);
         
         avcodec_free_context(&audioOutputCodecContext);
         avcodec_free_context(&audioInputCodecContext);
