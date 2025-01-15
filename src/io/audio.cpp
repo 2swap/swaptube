@@ -138,9 +138,9 @@ public:
 
         // Add to buffer and process frames
         for (int ch = 0; ch < channels; ++ch) {
-        for (int i = 0; i < numSamples * channels; ++i) {
-            sampleBuffer[ch].push_back(0);
-        }
+            for (int i = 0; i < numSamples; ++i) {
+                sampleBuffer[ch].push_back(0);
+            }
         }
         while (process_frame_from_buffer());
     }

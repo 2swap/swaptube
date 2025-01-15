@@ -9,14 +9,14 @@ void render_video() {
     PendulumGridScene pgs(0, 0);
     pgs.state_manager.set({
         {"physics_multiplier", "16"},
-        {"mode", "0"},
+        {"mode", "1"},
         {"rk4_step_size", "1 30 / .1 *"},
-        {"center_x", "10"},
-        {"center_y", "10"},
+        {"center_x", "9.999"},
+        {"center_y", "9.999"},
         {"zoom", "1 20 /"},
     });
-    pgs.inject_audio_and_render(SilenceSegment(6));
-    pgs.state_manager.microblock_transition({
+    pgs.inject_audio_and_render(SilenceSegment(20));
+    /*pgs.state_manager.microblock_transition({
         {"physics_multiplier", "0"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
@@ -26,4 +26,5 @@ void render_video() {
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.inject_audio_and_render(SilenceSegment(2));
+*/
 }
