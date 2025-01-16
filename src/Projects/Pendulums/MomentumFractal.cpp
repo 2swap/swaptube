@@ -15,7 +15,7 @@ void render_video() {
         {"center_y", "0"},
         {"zoom", "1 40 /"},
     });
-    pgs.inject_audio_and_render(SilenceSegment(15));
+    pgs.inject_audio_and_render(SilenceSegment(10));
     /*pgs.state_manager.microblock_transition({
         {"physics_multiplier", "0"},
     });

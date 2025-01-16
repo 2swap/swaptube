@@ -24,10 +24,17 @@ public:
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
     virtual void on_end_transition() = 0;
+    virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
+    void publish_global(const unordered_map<string, double>& s) const {
+        for(const auto& p : s) {
+            global_state[p.first] = p.second;
+        }
+    }
     void update() {
         has_updated_since_last_query = true;
         update_state();
         change_data();
+        publish_global(stage_publish_to_global());
     }
     virtual bool needs_redraw() const {
         bool state_change = check_if_state_changed();
@@ -122,6 +129,7 @@ public:
     }
 
     StateManager state_manager;
+    bool global_publisher_key = false; // Scenes can publish to global state only if this is manually set to true in the project
 
 private:
     void render_one_frame(int microblock_frame_number){

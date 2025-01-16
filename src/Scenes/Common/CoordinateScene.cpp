@@ -31,6 +31,7 @@ string truncate_tick(double value) {
 
 class CoordinateScene : public Scene {
 public:
+    vector<pair<double, double>> trail;
     CoordinateScene(const double width = 1, const double height = 1)
         : Scene(width, height) {
         state_manager.add_equation("left_x"  , "<center_x> .5 <zoom> / -");
@@ -39,8 +40,32 @@ public:
         state_manager.add_equation("bottom_y", "<center_y> .5 <zoom> / +");
     }
 
+    pair<int, int> point_to_pixel(pair<double, double> p) {
+        const int w = get_width();
+        const int h = get_height();
+        const double rx = state["right_x"];
+        const double ty = state["top_y"];
+        const double lx = state["left_x"];
+        const double by = state["bottom_y"];
+        return make_pair(
+            w*   (p. first-lx)/(rx-lx),
+            h*(1-(p.second-ty)/(by-ty))
+        );
+    }
+
+    void draw_trail() {
+        for(int i = 0; i < trail.size()-1; i++) {
+            const pair<double, double> last_point = trail[i];
+            const pair<double, double> next_point = trail[i+1];
+            pair<int, int> last_pixel = point_to_pixel(last_point);
+            pair<int, int> next_pixel = point_to_pixel(next_point);
+            pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, OPAQUE_WHITE, 1, 1);
+        }
+    }
+
     void draw() override {
         render_axes();
+        draw_trail();
     }
 
     void render_axes() {
@@ -100,12 +125,12 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"left_x", "right_x", "top_y", "bottom_y", "zoom"};
+        return StateQuery{"left_x", "right_x", "top_y", "bottom_y", "zoom", "trail_x", "trail_y"};
     }
 
     void mark_data_unchanged() override {}
-    void change_data() override {}
-    bool check_if_data_changed() const override { return false; }
+    void change_data() override { trail.push_back(make_pair(state["trail_x"], state["trail_y"])); }
+    bool check_if_data_changed() const override { return true; }
     void on_end_transition(){}
 };
 

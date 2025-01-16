@@ -92,6 +92,11 @@ static unordered_map<string, double> global_state{
     {"macroblock_fraction", 0},
     {"microblock_fraction", 0},
 };
+double get_global_state(string key){
+    const auto& pair = global_state.find(key);
+    if(pair == global_state.end()) throw runtime_error("global state access failed on element " + key);
+    return pair->second;
+}
 
 class StateManager {
 public:
@@ -318,19 +323,39 @@ private:
             }
         }
 
-        // Logic to replace substrings in square brackets [] with the parent's value
-        size_t start_pos = equation.find('[');
-        while (start_pos != string::npos) {
-            size_t end_pos = equation.find(']', start_pos);
-            if (end_pos != string::npos) {
-                string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
-                string value_from_parent = to_string(get_value_from_parent(content));
-                equation.replace(start_pos, end_pos - start_pos + 1, value_from_parent);
-                // Update start_pos to search for the next occurrence
-                start_pos = equation.find('[', start_pos + value_from_parent.length());
-            } else {
-                // If no matching closing bracket is found, exit the loop
-                break;
+        {
+            // Logic to replace substrings in square brackets [] with the parent's value
+            size_t start_pos = equation.find('[');
+            while (start_pos != string::npos) {
+                size_t end_pos = equation.find(']', start_pos);
+                if (end_pos != string::npos) {
+                    string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
+                    string value_from_parent = to_string(get_value_from_parent(content));
+                    equation.replace(start_pos, end_pos - start_pos + 1, value_from_parent);
+                    // Update start_pos to search for the next occurrence
+                    start_pos = equation.find('[', start_pos + value_from_parent.length());
+                } else {
+                    // If no matching closing bracket is found, exit the loop
+                    break;
+                }
+            }
+        }
+
+        {
+            // Logic to replace substrings in curly braces {} with the global data-published value
+            size_t start_pos = equation.find('{');
+            while (start_pos != string::npos) {
+                size_t end_pos = equation.find('}', start_pos);
+                if (end_pos != string::npos) {
+                    string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
+                    string value = to_string(get_global_state(content));
+                    equation.replace(start_pos, end_pos - start_pos + 1, value);
+                    // Update start_pos to search for the next occurrence
+                    start_pos = equation.find('{', start_pos + value.length());
+                } else {
+                    // If no matching closing brace is found, exit the loop
+                    break;
+                }
             }
         }
 

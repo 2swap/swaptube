@@ -14,6 +14,12 @@ public:
     void mark_data_unchanged() override { pend.mark_unchanged(); }
     void change_data() override { pend.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]); }
     bool check_if_data_changed() const override { return pend.has_been_updated_since_last_scene_query(); }
+    unordered_map<string, double> stage_publish_to_global() const override {
+        return unordered_map<string, double> {
+            {"pendulum_theta1", pend.state.theta1},
+            {"pendulum_theta2", pend.state.theta2},
+        };
+    }
 
     void draw() override {
         double w = get_width(); double h = get_height();
