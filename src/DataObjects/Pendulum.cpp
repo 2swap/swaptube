@@ -33,8 +33,8 @@ public:
                 PendulumState ps = {init_p1, init_p2,
                                     //x*2*M_PI/w,
                                     //y*2*M_PI/h,};
-                                    x*20./w,
-                                    y*20./h,};
+                                    x*40./w-20,
+                                    y*40./h-20,};
                 pendulum_states[i] = ps;
                 ps.theta1 += 0.001;
                 pendulum_pairs [i] = ps;

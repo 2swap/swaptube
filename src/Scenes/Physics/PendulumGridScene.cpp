@@ -21,11 +21,11 @@ public:
     void on_end_transition() override {}
 
     void mark_data_unchanged() override { grid.mark_unchanged(); }
-    void change_data() override { cout << "Physicsing..."; grid.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]); cout << "Done!" << endl; }
+    void change_data() override { cout << "Physicsing..." << endl; grid.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]); cout << "Done!" << endl; }
     bool check_if_data_changed() const override { return grid.has_been_updated_since_last_scene_query(); }
 
     void draw() override {
-        cout << "Drawing...";
+        cout << "Drawing..." << endl;
         int w = get_width();
         int h = get_height();
 
@@ -34,11 +34,11 @@ public:
         const double cy = state["center_y"];
 
         for (int y = 0; y < h; ++y) {
+            double pos_y = (h/2.0 - y) / (h * zoom) + cy;
+            int arr_y = (static_cast<int>(h*50.5 + pos_y * h / (40.))) % h;
             for (int x = 0; x < w; ++x) {
                 double pos_x = (x - w/2.0) / (w * zoom) + cx;
-                double pos_y = (h/2.0 - y) / (h * zoom) + cy;
-                int arr_x = (w*50 + static_cast<int>(pos_x * w / (20./*M_PI*2*/))) % w;
-                int arr_y = (h*50 + static_cast<int>(pos_y * h / (20.))) % h;
+                int arr_x = (static_cast<int>(w*50.5 + pos_x * w / (40./*M_PI*2*/))) % w;
                 int i = arr_x + arr_y * w;
 
                 double theta1  = grid.pendulum_states[i].theta1;
@@ -46,7 +46,8 @@ public:
                 double thetap1 = grid.pendulum_pairs [i].theta1;
                 double thetap2 = grid.pendulum_pairs [i].theta2;
 
-                int color_mode0 = colorlerp(OPAQUE_BLACK, YUVtoRGB(map_to_torus(theta1, theta2)), 0.5);
+                int color_mode0 = 0;
+                if(state["mode"] != 1) color_mode0 = colorlerp(OPAQUE_BLACK, YUVtoRGB(map_to_torus(theta1, theta2)), 0.5);
                 double distance = square(theta1-thetap1) + square(theta2-thetap2);
                 distance = min(distance, .01);
                 sums[i] += distance;
