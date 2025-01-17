@@ -7,7 +7,7 @@ public:
     PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s) { }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
     void on_end_transition() override {}
@@ -30,6 +30,7 @@ public:
         int color = YUVtoRGB(map_to_torus(thetas[0], thetas[1]));
         //pix.fill(colorlerp(OPAQUE_BLACK, color, state["background_opacity"]));
 
+        bool positive;
         if(state["pendulum_opacity"] > 0.01) {
             int pendulum_color = colorlerp(OPAQUE_BLACK, color, state["pendulum_opacity"]);
             for (int i = 0; i < pendulum_count; i++) {
@@ -40,22 +41,37 @@ public:
                 pix.bresenham(posx, posy, posx + dx, posy + dy, pendulum_color, 1, line_thickness);
                 posx += dx; posy += dy;
             }
+            positive = posx > w / 2.;
             pix.fill_circle(posx, posy, line_thickness*2, pendulum_color);
         }
+        if(positive != last_positive) generate_beep(0.1);
+        last_positive = positive;
+    }
+
+    void generate_beep(double duration){
+        vector<float> left;
+        vector<float> right;
+        for(int i = 0; i < duration*44100; i++){
+            double val = sin(i*440./44100.);
+            left.push_back(val);
+            right.push_back(val);
+        }
+        WRITER.add_sfx(left, right, state["t"]);
     }
 
     void generate_audio(double duration, vector<float>& left, vector<float>& right){
-        PendulumState state = start_state;
+        PendulumState ps = start_state;
         for(int i = 0; i < duration*44100; i++){
             for(int j = 0; j < 10; j++) {
-                state = rk4Step(state, 0.003);
+                ps = rk4Step(ps, 0.003);
             }
-            left.push_back(sin(state.theta1));
-            right.push_back(sin(state.theta2));
+            left.push_back(sin(ps.theta1));
+            right.push_back(sin(ps.theta2));
         }
     }
 
 private:
     PendulumState start_state;
     Pendulum pend;
+    bool last_positive = true;
 };

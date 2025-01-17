@@ -74,10 +74,10 @@ void fractal() {
 void lissajous() {
     vector<PendulumState> ps;
     ps.push_back({0.3, .3, .0, .0});
-    ps.push_back({3.6, 3, .0, .0});
-    ps.push_back({2.49, .25, .0, .0});
-    ps.push_back({2, .3, .0, .0});
-    ps.push_back({0.1, .3, .0, .0});
+    //ps.push_back({3.6, 3, .0, .0});
+    //ps.push_back({2.49, .25, .0, .0});
+    //ps.push_back({2, .3, .0, .0});
+    //ps.push_back({0.1, .3, .0, .0});
     vector<double> zooms{0.5, .01, .02, .01, 0.5};
     for(int i = 0; i < ps.size(); i++){
         vector<float> left;
@@ -102,7 +102,8 @@ void lissajous() {
         cs.add_scene(&this_ps, "this_ps", 0.25, 0.25);
         cs.add_scene(&coord, "coord", 0.5, 0.5);
         this_ps.generate_audio(6, left, right);
-        cs.inject_audio_and_render(GeneratedSegment(left, right));
+        //cs.inject_audio_and_render(GeneratedSegment(left, right));
+        cs.inject_audio_and_render(SilenceSegment(6));
     }
 }
 

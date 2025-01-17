@@ -53,6 +53,10 @@ public:
         subswriter.set_substime(t_seconds);
     }
 
+    void add_sfx(const vector<float>& left_buffer, const vector<float>& right_buffer, double macroblock_elapsed_seconds) {
+        audiowriter.add_sfx(left_buffer, right_buffer, macroblock_elapsed_seconds);
+    }
+
     void add_frame(const Pixels& p) {
         videowriter.add_frame(p);
         video_seconds_so_far += 1./VIDEO_FRAMERATE;

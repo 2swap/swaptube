@@ -27,8 +27,10 @@ private:
     AVStream *audioStream = nullptr;
     AVFormatContext *fc = nullptr;
     unsigned audframe = 0;
-    vector<vector<float>> sampleBuffer;
-    int sampleBuffer_offset = 0;
+    vector<vector<float>> sample_buffer;
+    vector<vector<float>>    sfx_buffer;
+    int sample_buffer_offset = 0; // The index in the sample_buffer at which the latest macroblock starts, since some samples from the last one may not have flushed entirely.
+    int total_samples_processed = 0;
 
     bool file_exists(const string& filename){
         struct stat buffer;
@@ -67,7 +69,7 @@ private:
     }
 
 public:
-    AudioWriter(AVFormatContext *fc_) : fc(fc_), sampleBuffer(2) {
+    AudioWriter(AVFormatContext *fc_) : fc(fc_), sample_buffer(2), sfx_buffer(2) {
         shtooka_file.open(PATH_MANAGER.record_list_path);
         if (!shtooka_file.is_open()) {
             cerr << "Error opening recorder list: " << PATH_MANAGER.record_list_path << endl;
@@ -113,28 +115,54 @@ public:
         }
     }
 
-    double add_generated_audio(const vector<float>& leftBuffer, const vector<float>& rightBuffer) {
+    void add_sfx(const vector<float>& left_buffer, const vector<float>& right_buffer, double t) {
+        if (left_buffer.size() != right_buffer.size()) {
+            throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
+        }
+
+        int numSamples = left_buffer.size();
+        int sample_copy_start = t * audioOutputCodecContext->sample_rate - total_samples_processed + sample_buffer_offset;
+        int sample_copy_end = sample_copy_start + numSamples;
+
+        // Pointers to the input buffers for each channel
+        const vector<float>* input_buffers[2] = {&left_buffer, &right_buffer};
+
+        // Ensure sfx_buffer has enough capacity and add samples
+        for (int ch = 0; ch < 2; ++ch) {
+            // Resize if necessary to accommodate the samples
+            if (sfx_buffer[ch].size() < sample_copy_end) {
+                sfx_buffer[ch].resize(sample_copy_end, 0.0f); // Extend channel with silence
+            }
+
+            // Add the SFX samples to the buffer
+            for (int i = 0; i < numSamples; ++i) {
+                sfx_buffer[ch][i + sample_copy_start] += (*input_buffers[ch])[i];
+            }
+        }
+    }
+
+    double add_generated_audio(const vector<float>& left_buffer, const vector<float>& right_buffer) {
         process_frame_from_buffer();
-        if (leftBuffer.size() != rightBuffer.size()) {
-            throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(leftBuffer.size()) + ", right: " + to_string(rightBuffer.size()));
+        if (left_buffer.size() != right_buffer.size()) {
+            throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
 
-        int numSamples = leftBuffer.size();
+        int num_samples = left_buffer.size();
 
-        for(int i = 0; i < numSamples; i++){
-            sampleBuffer[0].push_back( leftBuffer[i]);
-            sampleBuffer[1].push_back(rightBuffer[i]);
+        for(int i = 0; i < num_samples; i++){
+            sample_buffer[0].push_back( left_buffer[i]);
+            sample_buffer[1].push_back(right_buffer[i]);
         }
-        return static_cast<double>(numSamples) / audioOutputCodecContext->sample_rate;
+        return static_cast<double>(num_samples) / audioOutputCodecContext->sample_rate;
     }
 
     void add_silence(double duration) {
         process_frame_from_buffer();
-        int numSamples = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
+        int num_samples = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
 
-        for (int i = 0; i < numSamples; ++i) {
-            sampleBuffer[0].push_back(0);
-            sampleBuffer[1].push_back(0);
+        for (int i = 0; i < num_samples; ++i) {
+            sample_buffer[0].push_back(0);
+            sample_buffer[1].push_back(0);
         }
     }
 
@@ -236,16 +264,16 @@ public:
                         break;
                     }
 
-                    int numSamples = frame->nb_samples;
+                    int num_samples = frame->nb_samples;
 
                     // Map channels to sample buffer
-                    for (int i = 0; i < numSamples; ++i) {
-                        sampleBuffer[0].push_back(reinterpret_cast<float*>(frame->data[0])[i]); // Left channel
-                        sampleBuffer[1].push_back(reinterpret_cast<float*>(frame->data[1])[i]); // Right channel
+                    for (int i = 0; i < num_samples; ++i) {
+                        sample_buffer[0].push_back(reinterpret_cast<float*>(frame->data[0])[i]); // Left channel
+                        sample_buffer[1].push_back(reinterpret_cast<float*>(frame->data[1])[i]); // Right channel
                     }
 
                     // Update total length
-                    length_in_seconds += static_cast<double>(numSamples) / codecContext->sample_rate;
+                    length_in_seconds += static_cast<double>(num_samples) / codecContext->sample_rate;
 
                     av_frame_unref(frame);
                 }
@@ -259,8 +287,6 @@ public:
         avcodec_free_context(&codecContext);
         avformat_close_input(&inputAudioFormatContext);
 
-        cout << "Audio added successfully, length " << length_in_seconds << " seconds." << endl;
-
         return length_in_seconds;
     }
 
@@ -268,8 +294,13 @@ public:
         while(true){
             int channels = audioOutputCodecContext->ch_layout.nb_channels;
             int frameSize = audioOutputCodecContext->frame_size;
-            if(sampleBuffer[0].size() != sampleBuffer[1].size()) throw runtime_error("Audio planar buffer mismatch!");
-            if(sampleBuffer[0].size() < frameSize) break;
+            if(sample_buffer[0].size() != sample_buffer[1].size()) throw runtime_error("Audio planar buffer mismatch!");
+            if(sample_buffer[0].size() < frameSize) break;
+            for (int ch = 0; ch < channels; ++ch) {
+                if (sfx_buffer[ch].size() < sample_buffer[ch].size()) {
+                    sfx_buffer[ch].resize(sample_buffer[ch].size(), 0.0f); // Extend channel with silence
+                }
+            }
 
             // Create a frame and set its properties
             AVFrame* frame = av_frame_alloc();
@@ -287,9 +318,15 @@ public:
             }
 
             for (int ch = 0; ch < channels; ++ch) {
-                memcpy(frame->data[ch], 
-                       sampleBuffer[ch].data(), 
-                       frameSize * sizeof(float));
+                // Ensure bounds for `sample_buffer`, `sfx_buffer`, and `frame->data[ch]`
+                if (sample_buffer[ch].size() < frameSize || sfx_buffer[ch].size() < frameSize) {
+                    throw runtime_error("Audio buffer size is smaller than the required frame size.");
+                }
+
+                float* frameData = reinterpret_cast<float*>(frame->data[ch]); // Properly cast `frame->data[ch]` to `float*`
+                for (int i = 0; i < frameSize; ++i) {
+                    frameData[i] = sample_buffer[ch][i] + sfx_buffer[ch][i]; // Perform element-wise addition
+                }
             }
 
             frame->pts = audframe;
@@ -310,10 +347,12 @@ public:
             av_frame_free(&frame);
 
             for (int ch = 0; ch < channels; ++ch) {
-                sampleBuffer[ch].erase(sampleBuffer[ch].begin(), sampleBuffer[ch].begin() + frameSize);
+                sample_buffer[ch].erase(sample_buffer[ch].begin(), sample_buffer[ch].begin() + frameSize);
+                   sfx_buffer[ch].erase(   sfx_buffer[ch].begin(),    sfx_buffer[ch].begin() + frameSize);
             }
+            total_samples_processed += frameSize;
         }
-        sampleBuffer_offset = sampleBuffer[0].size();
+        sample_buffer_offset = sample_buffer[0].size();
     }
 
     void add_shtooka_entry(const string& filename, const string& text) {

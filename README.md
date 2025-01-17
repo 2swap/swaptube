@@ -24,9 +24,6 @@ The following external dependencies are required for specific functionalities wi
 | LibPNG | PNG scenes | visual_media.cpp | Reads PNG files and converts them to pixel data | `sudo apt install libpng-dev` |
 | CUDA or HIP | Accelerating simulations and video rendering | Anything that references the CUDA or ROCm src dirs | Various | Hardware-dependent |
 
-### Further Setup
-You should record an audio file at `<repo_base>/media/testaudio.mp3`. The program will look at this at startup to make conclusions about your audio recording environment. If it is missing, the program will gracefully fail out with a kind error message.
-
 ## How to Run
 
 When you have created a project file in `projects/yourprojectname.cpp`, you can compile and run the whole project by executing:
