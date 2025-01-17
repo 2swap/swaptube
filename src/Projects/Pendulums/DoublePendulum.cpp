@@ -110,9 +110,9 @@ void render_video() {
     PRINT_TO_TERMINAL = false;
     SAVE_FRAME_PNGS = false;
 
+    //butterfly(1, 1.25);
     //butterfly(2.49, .25);
     lissajous();
-    //audio();
     //grid();
     //fractal();
 }

@@ -8,6 +8,8 @@
 #include <filesystem>
 #include <sys/stat.h>
 #include "AudioSegment.cpp"
+#include "DebugPlot.h"
+
 extern "C"
 {
     #include <libavcodec/avcodec.h>
@@ -30,6 +32,7 @@ private:
     AVPacket inputPacket = {0};
     unsigned audframe = 0;
     vector<vector<float>> sampleBuffer;
+    int sampleBuffer_offset = 0;
 
     bool file_exists(const string& filename){
         struct stat buffer;
@@ -51,8 +54,8 @@ private:
             outputPacket.stream_index = audioStream->index;
 
             // Set the correct PTS and DTS values for the output packet
-            outputPacket.dts = av_rescale_q(audiotime, audioStream->time_base, audioOutputCodecContext->time_base);
-            outputPacket.pts = outputPacket.dts;
+            outputPacket.dts = outputPacket.pts = av_rescale_q(audiotime, audioStream->time_base, audioOutputCodecContext->time_base);
+            pts_dts_plot.add_datapoint(vector<double>{static_cast<double>(outputPacket.pts)});
             audiotime += outputPacket.duration;
 
             length_in_seconds += static_cast<double>(outputPacket.duration) / audioOutputCodecContext->sample_rate;
@@ -123,151 +126,209 @@ public:
         avformat_close_input(&inputAudioFormatContext);
     }
 
-    void set_audiotime(double t_seconds) {
-        double t_samples = audioOutputCodecContext->sample_rate * t_seconds;
-        /*if(t_samples < audiotime){
-            cerr << "Audio PTS latchup!" << endl << "Was: " << audiotime << " and is being set to " << t_samples << "!" << endl << "Aborting!" << endl;
-            exit(1);
-        }*/
-        audiotime = t_samples;
-    }
-
-    void add_silence(double duration) {
-        int numSamples = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
-        int channels = audioOutputCodecContext->ch_layout.nb_channels;
-
-        // Add to buffer and process frames
-        for (int ch = 0; ch < channels; ++ch) {
-            for (int i = 0; i < numSamples; ++i) {
-                sampleBuffer[ch].push_back(0);
-            }
-        }
-        while (process_frame_from_buffer());
-    }
-
-    bool process_frame_from_buffer() {
-        int channels = audioOutputCodecContext->ch_layout.nb_channels;
-        int frameSize = audioOutputCodecContext->frame_size;
-        if(sampleBuffer[0].size() != sampleBuffer[1].size()) throw runtime_error("Audio planar buffer mismatch!");
-        if(sampleBuffer[0].size() < frameSize) return false;
-
-        // Create a frame and set its properties
-        AVFrame* frame = av_frame_alloc();
-        if (!frame) { throw runtime_error("Frame allocation failed."); }
-        frame->nb_samples = frameSize;
-        frame->ch_layout = audioOutputCodecContext->ch_layout;
-        frame->sample_rate = audioOutputCodecContext->sample_rate;
-        frame->format = audioOutputCodecContext->sample_fmt;
-
-        // Allocate buffer for the frame
-        int ret = av_frame_get_buffer(frame, 0);
-        if (ret < 0) {
-            av_frame_free(&frame);
-            throw runtime_error("Error allocating audio frame buffer.");
-        }
-
-        for (int ch = 0; ch < channels; ++ch) {
-            memcpy(frame->data[ch], 
-                   sampleBuffer[ch].data(), 
-                   frameSize * sizeof(float));
-        }
-
-        frame->pts = audframe;
-        audframe++;
-
-        // Send the frame to the encoder
-        ret = avcodec_send_frame(audioOutputCodecContext, frame);
-
-        if (ret < 0) {
-            //av_frame_free(&frame);
-            //throw runtime_error("Error sending frame to encoder.");
-            // This happens nominally. Wtf?
-        }
-
-        encode_and_write_audio();
-
-        av_frame_unref(frame);
-        av_frame_free(&frame);
-
-        for (int ch = 0; ch < channels; ++ch) {
-            sampleBuffer[ch].erase(sampleBuffer[ch].begin(), sampleBuffer[ch].begin() + frameSize);
-        }
-        return true;
-    }
-
-    double add_generated_audio_get_length(const vector<float>& leftBuffer, const vector<float>& rightBuffer) {
+    double add_generated_audio(const vector<float>& leftBuffer, const vector<float>& rightBuffer) {
+        process_frame_from_buffer();
         if (leftBuffer.size() != rightBuffer.size()) {
             throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(leftBuffer.size()) + ", right: " + to_string(rightBuffer.size()));
         }
 
         int numSamples = leftBuffer.size();
-        int channels = audioOutputCodecContext->ch_layout.nb_channels;
 
-        if (channels != 2) {
-            throw runtime_error("This function only supports stereo (2 channels).");
+        for(int i = 0; i < numSamples; i++){
+            sampleBuffer[0].push_back( leftBuffer[i]);
+            sampleBuffer[1].push_back(rightBuffer[i]);
         }
-
-        // Convert left and right buffers into planar format
-        vector<vector<float>> planarBuffer(2);
-        planarBuffer[0] = leftBuffer;
-        planarBuffer[1] = rightBuffer;
-
-        for (int ch = 0; ch < channels; ++ch) {
-            for(int i = 0; i < numSamples; i++){
-                sampleBuffer[ch].push_back(planarBuffer[ch][i]);
-            }
-        }
-        while (process_frame_from_buffer());
-        return static_cast<double>(leftBuffer.size()) / audioOutputCodecContext->sample_rate;
+        return static_cast<double>(numSamples) / audioOutputCodecContext->sample_rate;
     }
 
-    double add_audio_get_length(const string& audioname) {
+    void add_silence(double duration) {
+        process_frame_from_buffer();
+        int numSamples = static_cast<int>(duration * audioOutputCodecContext->sample_rate);
+
+        for (int i = 0; i < numSamples; ++i) {
+            sampleBuffer[0].push_back(0);
+            sampleBuffer[1].push_back(0);
+        }
+    }
+
+    double add_audio_from_file(const string& filename) {
         double length_in_seconds = 0;
 
-        string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + audioname;
+        // Build full path to the input audio file
+        string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + filename;
 
-        // Check if the input audio file exists
+        // Check if the file exists
         if (!file_exists(fullInputAudioFilename)) {
-            length_in_seconds = 3.0;
-            add_silence(length_in_seconds);
-            return length_in_seconds;
+            throw runtime_error("Error: Audio file not found: " + fullInputAudioFilename);
         }
 
+        // Open the input file and its format context
         AVFormatContext* inputAudioFormatContext = nullptr;
-        int ret = avformat_open_input(&inputAudioFormatContext, fullInputAudioFilename.c_str(), nullptr, nullptr);
-        if (ret < 0) {
-            throw runtime_error("Error opening input audio file.");
+        if (avformat_open_input(&inputAudioFormatContext, fullInputAudioFilename.c_str(), nullptr, nullptr) < 0) {
+            throw runtime_error("Error: Could not open input audio file: " + fullInputAudioFilename);
         }
 
-        // Read input audio frames and write to output format context
-        while (av_read_frame(inputAudioFormatContext, &inputPacket) >= 0) {
-            if (inputPacket.stream_index == audioStreamIndex) {
-                AVFrame* frame = av_frame_alloc();
-                int ret = avcodec_send_packet(audioInputCodecContext, &inputPacket);
+        // Find stream information
+        if (avformat_find_stream_info(inputAudioFormatContext, nullptr) < 0) {
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: Could not retrieve stream info from file: " + fullInputAudioFilename);
+        }
 
+        // Find the audio stream and ensure it is FLAC
+        AVStream* audioStream = nullptr;
+        for (unsigned int i = 0; i < inputAudioFormatContext->nb_streams; ++i) {
+            if (inputAudioFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+                audioStream = inputAudioFormatContext->streams[i];
+                break;
+            }
+        }
+        if (!audioStream) {
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: No audio stream found in file: " + fullInputAudioFilename);
+        }
+
+        if (audioStream->codecpar->codec_id != AV_CODEC_ID_FLAC) {
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: Input file is not in FLAC format: " + fullInputAudioFilename);
+        }
+
+        // Check sample rate
+        if (audioStream->codecpar->sample_rate != 44100) {
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: Unsupported sample rate: " + to_string(audioStream->codecpar->sample_rate) + ". Expected 44100 Hz.");
+        }
+
+        // Ensure the audio is stereo
+        if (audioStream->codecpar->ch_layout.nb_channels != 2) {
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: Unsupported channel count: " + to_string(audioStream->codecpar->ch_layout.nb_channels) + ". Expected stereo (2 channels).");
+        }
+
+        // Set up the FLAC decoder
+        const AVCodec* flacDecoder = avcodec_find_decoder(AV_CODEC_ID_FLAC);
+        if (!flacDecoder) {
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: FLAC decoder not found.");
+        }
+
+        AVCodecContext* codecContext = avcodec_alloc_context3(flacDecoder);
+        if (!codecContext) {
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: Could not allocate codec context for FLAC decoder.");
+        }
+
+        if (avcodec_parameters_to_context(codecContext, audioStream->codecpar) < 0) {
+            avcodec_free_context(&codecContext);
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: Could not initialize codec context from stream parameters.");
+        }
+
+        if (avcodec_open2(codecContext, flacDecoder, nullptr) < 0) {
+            avcodec_free_context(&codecContext);
+            avformat_close_input(&inputAudioFormatContext);
+            throw runtime_error("Error: Could not open FLAC decoder.");
+        }
+
+        // Decode and process the audio samples
+        AVPacket packet;
+        av_init_packet(&packet);
+        while (av_read_frame(inputAudioFormatContext, &packet) >= 0) {
+            if (packet.stream_index == audioStream->index) {
+                AVFrame* frame = av_frame_alloc();
+                if (!frame) {
+                    av_packet_unref(&packet);
+                    avcodec_free_context(&codecContext);
+                    avformat_close_input(&inputAudioFormatContext);
+                    throw runtime_error("Error: Could not allocate frame.");
+                }
+
+                int ret = avcodec_send_packet(codecContext, &packet);
                 while (ret >= 0) {
-                    ret = avcodec_receive_frame(audioInputCodecContext, frame);
+                    ret = avcodec_receive_frame(codecContext, frame);
                     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
                         break;
                     }
 
-                    frame->pts = audframe;
-                    audframe++;
-                    avcodec_send_frame(audioOutputCodecContext, frame);
+                    int numSamples = frame->nb_samples;
 
-                    length_in_seconds += encode_and_write_audio();
+                    // Map channels to sample buffer
+                    for (int i = 0; i < numSamples; ++i) {
+                        sampleBuffer[0].push_back(reinterpret_cast<float*>(frame->data[0])[i]); // Left channel
+                        sampleBuffer[1].push_back(reinterpret_cast<float*>(frame->data[1])[i]); // Right channel
+                    }
+
+                    // Update total length
+                    length_in_seconds += static_cast<double>(numSamples) / codecContext->sample_rate;
+
+                    av_frame_unref(frame);
                 }
-                av_frame_unref(frame);
+
                 av_frame_free(&frame);
             }
+            av_packet_unref(&packet);
         }
 
+        // Clean up
+        avcodec_free_context(&codecContext);
         avformat_close_input(&inputAudioFormatContext);
 
-        cout << "Audio added successfully, length " << length_in_seconds << endl;
+        cout << "Audio added successfully, length " << length_in_seconds << " seconds." << endl;
 
         return length_in_seconds;
     }
+
+    void process_frame_from_buffer() {
+        while(true){
+            int channels = audioOutputCodecContext->ch_layout.nb_channels;
+            int frameSize = audioOutputCodecContext->frame_size;
+            if(sampleBuffer[0].size() != sampleBuffer[1].size()) throw runtime_error("Audio planar buffer mismatch!");
+            if(sampleBuffer[0].size() < frameSize) break;
+
+            // Create a frame and set its properties
+            AVFrame* frame = av_frame_alloc();
+            if (!frame) { throw runtime_error("Frame allocation failed."); }
+            frame->nb_samples = frameSize;
+            frame->ch_layout = audioOutputCodecContext->ch_layout;
+            frame->sample_rate = audioOutputCodecContext->sample_rate;
+            frame->format = audioOutputCodecContext->sample_fmt;
+
+            // Allocate buffer for the frame
+            int ret = av_frame_get_buffer(frame, 0);
+            if (ret < 0) {
+                av_frame_free(&frame);
+                throw runtime_error("Error allocating audio frame buffer.");
+            }
+
+            for (int ch = 0; ch < channels; ++ch) {
+                memcpy(frame->data[ch], 
+                       sampleBuffer[ch].data(), 
+                       frameSize * sizeof(float));
+            }
+
+            frame->pts = audframe;
+            audframe++;
+
+            // Send the frame to the encoder
+            ret = avcodec_send_frame(audioOutputCodecContext, frame);
+
+            if (ret < 0) {
+                //av_frame_free(&frame);
+                //throw runtime_error("Error sending frame to encoder.");
+                // This happens nominally. Wtf?
+            }
+
+            encode_and_write_audio();
+
+            av_frame_unref(frame);
+            av_frame_free(&frame);
+
+            for (int ch = 0; ch < channels; ++ch) {
+                sampleBuffer[ch].erase(sampleBuffer[ch].begin(), sampleBuffer[ch].begin() + frameSize);
+            }
+        }
+        sampleBuffer_offset = sampleBuffer[0].size();
+    }
+
     void add_shtooka_entry(const string& filename, const string& text) {
         if (!shtooka_file.is_open()) {
             std::cerr << "Shtooka file is not open. Cannot add entry." << std::endl;
@@ -277,7 +338,7 @@ public:
         shtooka_file << filename << "\t" << text << "\n";
     }
     void cleanup() {
-        while (process_frame_from_buffer());
+        process_frame_from_buffer();
         avcodec_send_frame(audioOutputCodecContext, NULL);
         encode_and_write_audio();
         av_packet_unref(&inputPacket);

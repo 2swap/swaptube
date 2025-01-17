@@ -57,7 +57,6 @@ public:
 
     void set_time(double t_seconds){
         subswriter.set_substime(t_seconds);
-        audiowriter.set_audiotime(t_seconds);
     }
 
     void add_frame(const Pixels& p) {
@@ -77,10 +76,10 @@ public:
             duration_seconds = silence->get_duration_seconds();
             audiowriter.add_silence(duration_seconds);
         } else if (const auto* talking = dynamic_cast<const TalkingSegment*>(&audio)) {
-            duration_seconds = audiowriter.add_audio_get_length(talking->get_audio_filename());
+            duration_seconds = audiowriter.add_audio_from_file(talking->get_audio_filename());
             subswriter.add_subtitle(duration_seconds, talking->get_subtitle_text());
         } else if (const auto* generated = dynamic_cast<const GeneratedSegment*>(&audio)) {
-            duration_seconds = audiowriter.add_generated_audio_get_length(generated->get_left_buffer(), generated->get_right_buffer());
+            duration_seconds = audiowriter.add_generated_audio(generated->get_left_buffer(), generated->get_right_buffer());
             subswriter.add_subtitle(duration_seconds, "[Computer Generated Sound]");
         }
         audio_seconds_so_far += duration_seconds;
