@@ -22,14 +22,10 @@ using namespace std;
 class AudioWriter {
 private:
     ofstream shtooka_file;
-    int audioStreamIndex;
     double audiotime = 0;
-    double substime = 0;
-    AVCodecContext *audioInputCodecContext = nullptr;
     AVCodecContext *audioOutputCodecContext = nullptr;
     AVStream *audioStream = nullptr;
     AVFormatContext *fc = nullptr;
-    AVPacket inputPacket = {0};
     unsigned audframe = 0;
     vector<vector<float>> sampleBuffer;
     int sampleBuffer_offset = 0;
@@ -76,54 +72,45 @@ public:
         if (!shtooka_file.is_open()) {
             cerr << "Error opening recorder list: " << PATH_MANAGER.record_list_path << endl;
         }
-    }
 
-    void init_audio() {
-        // Check if the input file exists
-        if (!filesystem::exists(PATH_MANAGER.testaudio_path)) {
-            throw runtime_error("Error: Input audio file " + PATH_MANAGER.testaudio_path + " does not exist.");
+        // Set up MP3 codec for output
+        const AVCodec* audioOutputCodec = avcodec_find_encoder(AV_CODEC_ID_MP3);
+        if (!audioOutputCodec) {
+            throw runtime_error("Error: Could not find MP3 encoder.");
         }
 
-        AVFormatContext* inputAudioFormatContext = nullptr;
-        if (avformat_open_input(&inputAudioFormatContext, PATH_MANAGER.testaudio_path.c_str(), nullptr, nullptr) < 0) {
-            throw runtime_error("Error: Could not open input audio file " + PATH_MANAGER.testaudio_path);
-        }
-
-        // Find input audio stream information
-        if (avformat_find_stream_info(inputAudioFormatContext, nullptr) < 0){
-            avformat_close_input(&inputAudioFormatContext);
-            throw runtime_error("Error: Could not find stream information in input audio file " + PATH_MANAGER.testaudio_path);
-        }
-
-        // Find input audio stream
-        audioStreamIndex = -1;
-        AVCodecParameters* codecParams = nullptr;
-        for (unsigned int i = 0; i < inputAudioFormatContext->nb_streams; ++i) {
-            if (inputAudioFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-                audioStreamIndex = i;
-                codecParams = inputAudioFormatContext->streams[i]->codecpar;
-                break;
-            }
-        }
-
-        // INPUT
-        const AVCodec* audioInputCodec = avcodec_find_decoder(codecParams->codec_id);
-        audioInputCodecContext = avcodec_alloc_context3(audioInputCodec);
-        avcodec_parameters_to_context(audioInputCodecContext, codecParams);
-        avcodec_open2(audioInputCodecContext, audioInputCodec, nullptr);
-
-        // Create a new audio stream in the output format context
-        // Copy codec parameters to the new audio stream
-        audioStream = avformat_new_stream(fc, audioInputCodec);
-        avcodec_parameters_copy(audioStream->codecpar, codecParams);
-
-        // OUTPUT
-        const AVCodec* audioOutputCodec = avcodec_find_encoder(codecParams->codec_id);
         audioOutputCodecContext = avcodec_alloc_context3(audioOutputCodec);
-        avcodec_parameters_to_context(audioOutputCodecContext, codecParams);
-        avcodec_open2(audioOutputCodecContext, audioOutputCodec, nullptr);
+        if (!audioOutputCodecContext) {
+            throw runtime_error("Error: Could not allocate codec context for MP3 encoder.");
+        }
 
-        avformat_close_input(&inputAudioFormatContext);
+        // Configure codec context
+        audioOutputCodecContext->bit_rate = 128000; // 128 kbps
+        audioOutputCodecContext->sample_rate = 44100; // 44.1 kHz
+        audioOutputCodecContext->ch_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO; // Stereo
+        audioOutputCodecContext->sample_fmt = AV_SAMPLE_FMT_FLTP; // Floating-point planar format
+        audioOutputCodecContext->time_base = {1, audioOutputCodecContext->sample_rate}; // Time base of 1/sample_rate
+
+        // Open codec
+        if (avcodec_open2(audioOutputCodecContext, audioOutputCodec, nullptr) < 0) {
+            avcodec_free_context(&audioOutputCodecContext);
+            throw runtime_error("Error: Could not open MP3 encoder.");
+        }
+
+        // Create an audio stream in the output format context
+        audioStream = avformat_new_stream(fc, audioOutputCodec);
+        if (!audioStream) {
+            avcodec_free_context(&audioOutputCodecContext);
+            throw runtime_error("Error: Could not create audio stream in output format context.");
+        }
+
+        audioStream->time_base = audioOutputCodecContext->time_base;
+
+        // Copy codec parameters from codec context to the audio stream
+        if (avcodec_parameters_from_context(audioStream->codecpar, audioOutputCodecContext) < 0) {
+            avcodec_free_context(&audioOutputCodecContext);
+            throw runtime_error("Error: Could not initialize stream codec parameters.");
+        }
     }
 
     double add_generated_audio(const vector<float>& leftBuffer, const vector<float>& rightBuffer) {
@@ -341,10 +328,8 @@ public:
         process_frame_from_buffer();
         avcodec_send_frame(audioOutputCodecContext, NULL);
         encode_and_write_audio();
-        av_packet_unref(&inputPacket);
         
         avcodec_free_context(&audioOutputCodecContext);
-        avcodec_free_context(&audioInputCodecContext);
         
         if (shtooka_file.is_open()) {
             shtooka_file.close();

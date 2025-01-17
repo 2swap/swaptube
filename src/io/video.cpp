@@ -147,9 +147,7 @@ private:
     }
 
 public:
-    VideoWriter(AVFormatContext *fc_) : fc(fc_) { }
-
-    void init_video() {
+    VideoWriter(AVFormatContext *fc_) : fc(fc_) {
         av_log_set_level(AV_LOG_DEBUG);
 
         // Setting up the codec.
@@ -160,7 +158,7 @@ public:
 
         videoStream = avformat_new_stream(fc, codec);
         if (!videoStream) {
-            cout << "Failed create new videostream!" << endl;
+            cout << "Failed to create new videostream!" << endl;
             exit(1);
         }
 
@@ -195,6 +193,7 @@ public:
         av_frame_get_buffer(rgbpic, 1);
         av_frame_get_buffer(yuvpic, 1);
     }
+
     void add_frame(const Pixels& p) {
         if (p.w != VIDEO_WIDTH || p.h != VIDEO_HEIGHT)
             throw runtime_error("Frame dimensions were expected to be (" + to_string(VIDEO_WIDTH) + ", " + to_string(VIDEO_HEIGHT) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");

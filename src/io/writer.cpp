@@ -40,7 +40,6 @@ public:
       subswriter(),
       audiowriter(fc),
       videowriter(fc) {
-        init();
     }
 
     ~MovieWriter(){
@@ -48,11 +47,6 @@ public:
         // the shared fc resource complicates things and ordering of cleanup is crucial.
         audiowriter.cleanup();
         videowriter.cleanup();
-    }
-
-    void init() {
-        audiowriter.init_audio();
-        videowriter.init_video();
     }
 
     void set_time(double t_seconds){
