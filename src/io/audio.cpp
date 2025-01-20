@@ -75,15 +75,15 @@ public:
             cerr << "Error opening recorder list: " << PATH_MANAGER.record_list_path << endl;
         }
 
-        // Set up MP3 codec for output
-        const AVCodec* audioOutputCodec = avcodec_find_encoder(AV_CODEC_ID_MP3);
+        // Set up codec for output
+        const AVCodec* audioOutputCodec = avcodec_find_encoder(AV_CODEC_ID_AAC);
         if (!audioOutputCodec) {
-            throw runtime_error("Error: Could not find MP3 encoder.");
+            throw runtime_error("Error: Could not find audio encoder.");
         }
 
         audioOutputCodecContext = avcodec_alloc_context3(audioOutputCodec);
         if (!audioOutputCodecContext) {
-            throw runtime_error("Error: Could not allocate codec context for MP3 encoder.");
+            throw runtime_error("Error: Could not allocate codec context for encoder.");
         }
 
         // Configure codec context
@@ -93,10 +93,13 @@ public:
         audioOutputCodecContext->sample_fmt = AV_SAMPLE_FMT_FLTP; // Floating-point planar format
         audioOutputCodecContext->time_base = {1, audioOutputCodecContext->sample_rate}; // Time base of 1/sample_rate
 
+        // AAC-only
+        audioOutputCodecContext->profile = FF_PROFILE_AAC_LOW; // Low complexity AAC (LC-AAC)
+
         // Open codec
         if (avcodec_open2(audioOutputCodecContext, audioOutputCodec, nullptr) < 0) {
             avcodec_free_context(&audioOutputCodecContext);
-            throw runtime_error("Error: Could not open MP3 encoder.");
+            throw runtime_error("Error: Could not open encoder.");
         }
 
         // Create an audio stream in the output format context

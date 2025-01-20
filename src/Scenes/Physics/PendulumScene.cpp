@@ -44,15 +44,18 @@ public:
             positive = posx > w / 2.;
             pix.fill_circle(posx, posy, line_thickness*2, pendulum_color);
         }
-        if(positive != last_positive) generate_beep(0.1);
+        if(positive != last_positive) generate_beep(0.2);
         last_positive = positive;
     }
 
     void generate_beep(double duration){
         vector<float> left;
         vector<float> right;
+        int total_samples = duration*44100;
         for(int i = 0; i < duration*44100; i++){
-            double val = sin(i*440./44100.);
+            double pct_complete = i/static_cast<double>(total_samples);
+            float val = .03*sin(i*2200./44100.);// + .08*sin(i*1800./44100.);
+            val *= pow(.5, 4*pct_complete);
             left.push_back(val);
             right.push_back(val);
         }
@@ -65,8 +68,8 @@ public:
             for(int j = 0; j < 10; j++) {
                 ps = rk4Step(ps, 0.003);
             }
-            left.push_back(sin(ps.theta1));
-            right.push_back(sin(ps.theta2));
+            left.push_back(.1*sin(ps.theta1));
+            right.push_back(.1*sin(ps.theta2));
         }
     }
 

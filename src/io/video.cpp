@@ -108,7 +108,6 @@ private:
 
     AVStream *videoStream = nullptr;
     AVCodecContext *videoCodecContext = nullptr;
-    AVFrame *rgbpic = nullptr;
     AVFrame *yuvpic = nullptr;
     AVPacket pkt = {0};
     unsigned outframe = 0;
@@ -184,13 +183,10 @@ public:
         av_dict_free(&opt);
 
         // Allocating memory for each RGB and YUV frame.
-        rgbpic = av_frame_alloc();
         yuvpic = av_frame_alloc();
-        rgbpic->format = AV_PIX_FMT_RGB24;
         yuvpic->format = AV_PIX_FMT_YUV420P;
-        rgbpic->width = yuvpic->width = VIDEO_WIDTH;
-        rgbpic->height = yuvpic->height = VIDEO_HEIGHT;
-        av_frame_get_buffer(rgbpic, 1);
+        yuvpic->width = VIDEO_WIDTH;
+        yuvpic->height = VIDEO_HEIGHT;
         av_frame_get_buffer(yuvpic, 1);
     }
 
@@ -254,7 +250,6 @@ public:
         avcodec_close(videoCodecContext);
 
         // Freeing video specific resources
-        av_frame_free(&rgbpic);
         av_frame_free(&yuvpic);
 
         av_packet_unref(&pkt);
