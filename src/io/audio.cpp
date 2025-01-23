@@ -125,6 +125,7 @@ public:
 
         int numSamples = left_buffer.size();
         int sample_copy_start = t * audioOutputCodecContext->sample_rate - total_samples_processed + sample_buffer_offset;
+        if(sample_copy_start < 0) sample_copy_start = 0;
         int sample_copy_end = sample_copy_start + numSamples;
 
         // Pointers to the input buffers for each channel
@@ -177,7 +178,10 @@ public:
 
         // Check if the file exists
         if (!file_exists(fullInputAudioFilename)) {
-            throw runtime_error("Error: Audio file not found: " + fullInputAudioFilename);
+            int seconds = 2;
+            cout << "Audio file not found: " << fullInputAudioFilename << ". Adding " << seconds << " seconds of silence instead." << endl;
+            add_silence(seconds);
+            return seconds;
         }
 
         // Open the input file and its format context
@@ -201,50 +205,40 @@ public:
             }
         }
         if (!audioStream) {
-            avformat_close_input(&inputAudioFormatContext);
             throw runtime_error("Error: No audio stream found in file: " + fullInputAudioFilename);
         }
 
-        if (audioStream->codecpar->codec_id != AV_CODEC_ID_FLAC) {
-            avformat_close_input(&inputAudioFormatContext);
-            throw runtime_error("Error: Input file is not in FLAC format: " + fullInputAudioFilename);
+        if (audioStream->codecpar->codec_id != AV_CODEC_ID_AAC) {
+            throw runtime_error("Error: Input file is not in expected format: " + fullInputAudioFilename);
         }
 
         // Check sample rate
         if (audioStream->codecpar->sample_rate != 44100) {
-            avformat_close_input(&inputAudioFormatContext);
             throw runtime_error("Error: Unsupported sample rate: " + to_string(audioStream->codecpar->sample_rate) + ". Expected 44100 Hz.");
         }
 
         // Ensure the audio is stereo
         if (audioStream->codecpar->ch_layout.nb_channels != 2) {
-            avformat_close_input(&inputAudioFormatContext);
             throw runtime_error("Error: Unsupported channel count: " + to_string(audioStream->codecpar->ch_layout.nb_channels) + ". Expected stereo (2 channels).");
         }
 
-        // Set up the FLAC decoder
-        const AVCodec* flacDecoder = avcodec_find_decoder(AV_CODEC_ID_FLAC);
-        if (!flacDecoder) {
-            avformat_close_input(&inputAudioFormatContext);
-            throw runtime_error("Error: FLAC decoder not found.");
+        // Set up the audio decoder
+        const AVCodec* audioDecoder = avcodec_find_decoder(AV_CODEC_ID_AAC);
+        if (!audioDecoder) {
+            throw runtime_error("Error: appropriate audio decoder not found.");
         }
 
-        AVCodecContext* codecContext = avcodec_alloc_context3(flacDecoder);
+        AVCodecContext* codecContext = avcodec_alloc_context3(audioDecoder);
         if (!codecContext) {
-            avformat_close_input(&inputAudioFormatContext);
-            throw runtime_error("Error: Could not allocate codec context for FLAC decoder.");
+            throw runtime_error("Error: Could not allocate codec context for audio decoder.");
         }
 
         if (avcodec_parameters_to_context(codecContext, audioStream->codecpar) < 0) {
-            avcodec_free_context(&codecContext);
-            avformat_close_input(&inputAudioFormatContext);
             throw runtime_error("Error: Could not initialize codec context from stream parameters.");
         }
 
-        if (avcodec_open2(codecContext, flacDecoder, nullptr) < 0) {
-            avcodec_free_context(&codecContext);
-            avformat_close_input(&inputAudioFormatContext);
-            throw runtime_error("Error: Could not open FLAC decoder.");
+        if (avcodec_open2(codecContext, audioDecoder, nullptr) < 0) {
+            throw runtime_error("Error: Could not open audio decoder.");
         }
 
         // Decode and process the audio samples
@@ -254,9 +248,6 @@ public:
             if (packet.stream_index == audioStream->index) {
                 AVFrame* frame = av_frame_alloc();
                 if (!frame) {
-                    av_packet_unref(&packet);
-                    avcodec_free_context(&codecContext);
-                    avformat_close_input(&inputAudioFormatContext);
                     throw runtime_error("Error: Could not allocate frame.");
                 }
 

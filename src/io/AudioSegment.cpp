@@ -14,7 +14,7 @@ string sanitize_filename(const string& text) {
     sanitized.erase(remove_if(sanitized.begin(), sanitized.end(),
         [](char c) { return !isalnum(c) && c != '_'; }),
         sanitized.end());
-    return sanitized + ".mp3";
+    return sanitized + ".aac";
 }
 
 class AudioSegment {
@@ -39,10 +39,10 @@ private:
     double duration_seconds;
 };
 
-class TalkingSegment : public AudioSegment {
+class FileSegment : public AudioSegment {
 public:
-    TalkingSegment(const string& subtitle_text, const string& filename = "")
-        : subtitle_text(subtitle_text), audio_filename(filename) {}
+    FileSegment(const string& subtitle_text)
+        : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
 
     string get_audio_filename() const {
         return audio_filename;

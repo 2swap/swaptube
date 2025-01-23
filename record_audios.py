@@ -65,7 +65,7 @@ def main():
             print("Recording... Press Enter to stop.")
             ffmpeg_log = os.path.join(PROJECT_DIR, "ffmpeg.log")
             ffmpeg_cmd = [
-                'ffmpeg', '-f', 'alsa', '-i', 'default', 
+                'ffmpeg', '-f', 'alsa', '-ar', '44100', '-i', 'default', 
                 os.path.join(PROJECT_DIR, current_filename)
             ]
 

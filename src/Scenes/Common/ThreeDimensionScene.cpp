@@ -283,9 +283,7 @@ public:
 
     void mark_data_unchanged() override { }
     void change_data() override {
-        for(const auto& surface : surfaces){
-            surface.scenePointer->change_data();
-        }
+        // I think this is a noop since data will be changed when each of the subscenes is queried
     }
 
     bool check_if_data_changed() const override {

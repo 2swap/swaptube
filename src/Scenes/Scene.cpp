@@ -34,7 +34,7 @@ public:
         has_updated_since_last_query = true;
         update_state();
         change_data();
-        publish_global(stage_publish_to_global());
+        if(global_publisher_key) publish_global(stage_publish_to_global());
     }
     virtual bool needs_redraw() const {
         bool state_change = check_if_state_changed();

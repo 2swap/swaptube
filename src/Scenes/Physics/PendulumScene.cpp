@@ -23,16 +23,17 @@ public:
 
     void draw() override {
         double w = get_width(); double h = get_height();
-        double line_thickness = h/60;
+        double line_thickness = h/100;
         double posx = w/2; double posy = h/2;
         vector<double> thetas = {pend.state.theta1, pend.state.theta2};
         int pendulum_count = 2;
         int color = YUVtoRGB(map_to_torus(thetas[0], thetas[1]));
-        //pix.fill(colorlerp(OPAQUE_BLACK, color, state["background_opacity"]));
+        if(state["background_opacity"] > 0.01)
+            pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
 
         bool positive;
         if(state["pendulum_opacity"] > 0.01) {
-            int pendulum_color = colorlerp(OPAQUE_BLACK, color, state["pendulum_opacity"]);
+            int pendulum_color = colorlerp(TRANSPARENT_BLACK, color, state["pendulum_opacity"]);
             for (int i = 0; i < pendulum_count; i++) {
                 double theta = thetas[i];
                 int divider = pendulum_count * 2 + 1;
