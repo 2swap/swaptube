@@ -110,7 +110,6 @@ void lissajous() {
 }
 
 void intro() {
-FOR_REAL = false;
     ThreeDimensionScene tds;
     for(int i = 0; i < 4; i++){
         PendulumState pendulum_state = {5+.0001*i, 8, .0, .0};
@@ -121,7 +120,7 @@ FOR_REAL = false;
             {"physics_multiplier", "16"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
         });
-        tds.add_surface(Surface(glm::vec3(0,0,6+i*.01), glm::vec3(5,0,0), glm::vec3(0,5,0), ps));
+        tds.add_surface(Surface(glm::vec3(0,0,i), glm::vec3(2,0,0), glm::vec3(0,2,0), ps));
     }
     vector<shared_ptr<LatexScene>> ls;
     ls.push_back(make_shared<LatexScene>(latex_text("Double"), 1));
@@ -135,8 +134,9 @@ FOR_REAL = false;
         {"points_opacity", "1"},
         {"x", "0"},
         {"y", "0"},
-        {"z", "3"},
-        {"d", "6"},
+        {"z", "0"},
+        {"d", "30"},
+        {"fov", "1.5"},
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
@@ -144,15 +144,15 @@ FOR_REAL = false;
     });
     tds.inject_audio(FileSegment("Double pendulums are NOT chaotic."), 6);
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,-.6,-.8), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[0]));
+    tds.add_surface(Surface(glm::vec3(0,-.6,27-.8), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[0]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,-.25,-.5), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[1]));
+    tds.add_surface(Surface(glm::vec3(0,-.25,27-.5), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[1]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,.1,-.4), glm::vec3(.35,0,0), glm::vec3(0,.35,0), ls[2]));
+    tds.add_surface(Surface(glm::vec3(0,.1,27-.4), glm::vec3(.35,0,0), glm::vec3(0,.35,0), ls[2]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,.45,-.7), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[3]));
+    tds.add_surface(Surface(glm::vec3(0,.45,27-.7), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[3]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,0.9,-.7), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[4]));
+    tds.add_surface(Surface(glm::vec3(0,0.9,27-.7), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[4]));
     tds.render();
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
     tds.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
@@ -176,9 +176,11 @@ FOR_REAL = false;
         ps->state_manager.macroblock_transition({
             {"pendulum_opacity", "1"},
         });
-        tds.add_surface(Surface(glm::vec3(0,4+i*0.2,6+i*.01), glm::vec3(5,0,0), glm::vec3(0,5,0), ps));
+        tds.add_surface(Surface(glm::vec3(2, 0 ,i), glm::vec3(2,0,0), glm::vec3(0,2,0), ps));
     }
-FOR_REAL = true;
+    tds.state_manager.macroblock_transition({
+        {"x", "1"},
+    });
     tds.state_manager.set({
         {"stable_physics_multiplier", "0"},
     });

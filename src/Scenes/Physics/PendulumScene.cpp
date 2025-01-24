@@ -23,7 +23,7 @@ public:
 
     void draw() override {
         double w = get_width(); double h = get_height();
-        double line_thickness = h/100;
+        double line_thickness = h/80;
         double posx = w/2; double posy = h/2;
         vector<double> thetas = {pend.state.theta1, pend.state.theta2};
         int pendulum_count = 2;

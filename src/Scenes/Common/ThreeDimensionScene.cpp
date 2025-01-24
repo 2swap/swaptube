@@ -82,8 +82,8 @@ public:
     float iur2;
     glm::vec3 normal;
 
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, shared_ptr<Scene> sc, float op = 1)
-        : ThreeDimensionalObject(c, 0, op), pos_x_dir(l), pos_y_dir(u), scenePointer(sc),
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, float op = 1)
+        : ThreeDimensionalObject(c, 0, op), pos_x_dir(l), pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))), scenePointer(sc),
           ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     void render(ThreeDimensionScene& scene) const override;
 };
