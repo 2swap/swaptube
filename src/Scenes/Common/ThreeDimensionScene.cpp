@@ -296,6 +296,8 @@ public:
     void on_end_transition() override {
         for(const auto& surface : surfaces){
             surface.scenePointer->on_end_transition();
+            surface.scenePointer->state_manager.close_microblock_transitions();
+            surface.scenePointer->state_manager.close_macroblock_transitions();
         }
     }
 

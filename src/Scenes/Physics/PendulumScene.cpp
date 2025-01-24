@@ -4,10 +4,10 @@
 
 class PendulumScene : public Scene {
 public:
-    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s) { }
+    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s), path_background(get_width(), get_height()) { }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
     void on_end_transition() override {}
@@ -47,6 +47,18 @@ public:
         }
         if(positive != last_positive) generate_beep(0.2);
         last_positive = positive;
+        if(state["path_opacity"] > 0.01 && (last_posx != 0 || last_posy != 0)) {
+            path_background.bresenham(last_posx, last_posy, posx, posy, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
+            pix.underlay(path_background, 0, 0);
+        }
+        last_posx = posx; last_posy = posy;
+        for(int x = 0; x < path_background.w; x++) {
+            for(int y = 0; y < path_background.h; y++) {
+                int alpha = geta(path_background.get_pixel(x, y));
+                alpha = alpha==0?0:alpha-1;
+                path_background.set_pixel(x, y, argb_to_col(alpha, 255, 255, 255));
+            }
+        }
     }
 
     void generate_beep(double duration){
@@ -75,7 +87,9 @@ public:
     }
 
 private:
+    double last_posx; double last_posy;
     PendulumState start_state;
     Pendulum pend;
     bool last_positive = true;
+    Pixels path_background;
 };

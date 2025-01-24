@@ -4,27 +4,6 @@
 #include "../Scenes/Physics/PendulumScene.cpp"
 #include "../Scenes/Physics/PendulumGridScene.cpp"
 
-void butterfly(const double sx, const double sy) {
-    CompositeScene cs;
-    vector<PendulumScene> vps;
-    for(int i = 0; i < 9; i++){
-        PendulumState pendulum_state = {sx+(i/3-1)*.01, sy + (i%3-1) * .01, .0, .0};
-        PendulumScene ps(pendulum_state);
-        ps.state_manager.set({
-            {"background_opacity", "0"},
-            {"pendulum_opacity", "1"},
-            {"physics_multiplier", "16"},
-            {"rk4_step_size", "1 30 / <physics_multiplier> /"},
-        });
-        vps.push_back(ps);
-    }
-    for(int i = 0; i < vps.size(); i++){
-        string key = "ps" + to_string(i);
-        cs.add_scene(&(vps[i]), key);
-    }
-    cs.inject_audio_and_render(SilenceSegment(10));
-}
-
 void grid() {
     CompositeScene cs;
     vector<PendulumScene> vps;
@@ -58,19 +37,6 @@ void grid() {
     };
     cs.state_manager.set(state);
     cs.inject_audio_and_render(SilenceSegment(2));
-}
-
-void fractal() {
-    PendulumGridScene pgs(0, 0);
-    pgs.state_manager.set({
-        {"physics_multiplier", "32"},
-        {"mode", "1"},
-        {"rk4_step_size", "1 30 / .05 *"},
-        {"center_x", "0"},
-        {"center_y", "0"},
-        {"zoom", "1 40 /"},
-    });
-    pgs.inject_audio_and_render(SilenceSegment(5));
 }
 
 void lissajous() {
@@ -111,16 +77,17 @@ void lissajous() {
 
 void intro() {
     ThreeDimensionScene tds;
-    for(int i = 0; i < 4; i++){
-        PendulumState pendulum_state = {5+.0001*i, 8, .0, .0};
+    for(int i = 0; i < 5; i++){
+        PendulumState pendulum_state = {5+.0000001*i, 8, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
         ps->state_manager.set({
+            {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
             {"pendulum_opacity", "1"},
             {"physics_multiplier", "16"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
         });
-        tds.add_surface(Surface(glm::vec3(0,0,i), glm::vec3(2,0,0), glm::vec3(0,2,0), ps));
+        tds.add_surface(Surface(glm::vec3(0,0,i-2), glm::vec3(8,0,0), glm::vec3(0,8,0), ps));
     }
     vector<shared_ptr<LatexScene>> ls;
     ls.push_back(make_shared<LatexScene>(latex_text("Double"), 1));
@@ -128,46 +95,60 @@ void intro() {
     ls.push_back(make_shared<LatexScene>(latex_text("are"), 1));
     ls.push_back(make_shared<LatexScene>(latex_text("NOT"), 1));
     ls.push_back(make_shared<LatexScene>(latex_text("Chaotic"), 1));
+    int start_dist = 60;
     tds.state_manager.set({
+        {"parent_path_opacity", "0"},
         {"surfaces_opacity", "1"},
         {"lines_opacity", "0"},
         {"points_opacity", "1"},
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "30"},
-        {"fov", "1.5"},
+        {"d", to_string(start_dist)},
+        {"fov", "4"},
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"},
     });
-    tds.inject_audio(FileSegment("Double pendulums are NOT chaotic."), 6);
+    tds.inject_audio(FileSegment("Double pendulums are NOT chaotic."), 14);
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,-.6,27-.8), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[0]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,-.25,27-.5), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[1]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,.1,27-.4), glm::vec3(.35,0,0), glm::vec3(0,.35,0), ls[2]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,.45,27-.7), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[3]));
+    tds.add_surface(Surface(glm::vec3(0,-.06,-start_dist+3-.8), glm::vec3(.1,0,0), glm::vec3(0,.1,0), ls[0]));
     tds.render();
-    tds.add_surface(Surface(glm::vec3(0,0.9,27-.7), glm::vec3(1,0,0), glm::vec3(0,1,0), ls[4]));
+    tds.add_surface(Surface(glm::vec3(0,-.025,-start_dist+3-.5), glm::vec3(.1,0,0), glm::vec3(0,.1,0), ls[1]));
+    tds.render();
+    tds.render();
+    tds.add_surface(Surface(glm::vec3(0,.01,-start_dist+3-.4), glm::vec3(.035,0,0), glm::vec3(0,.035,0), ls[2]));
+    tds.render();
+    tds.add_surface(Surface(glm::vec3(0,.045,-start_dist+3-.7), glm::vec3(.1,0,0), glm::vec3(0,.1,0), ls[3]));
+    tds.render();
+    tds.add_surface(Surface(glm::vec3(0,0.09,-start_dist+3-.7), glm::vec3(.1,0,0), glm::vec3(0,.1,0), ls[4]));
+    tds.render();
+    tds.render();
+    tds.render();
     tds.render();
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
+return;
     tds.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
     tds.state_manager.macroblock_transition({
-        {"d", "3"},
+        {"d", to_string(start_dist - 3)},
     });
     tds.inject_audio_and_render(FileSegment("You've probably seen videos like these,"));
     for(int i = 0; i < ls.size(); i++) tds.remove_surface(ls[i]);
+    tds.state_manager.macroblock_transition({
+        {"qj", ".2"},
+    });
     tds.inject_audio_and_render(FileSegment("where a tiny deviation in similar double pendulums amplifies over time,"));
     tds.inject_audio_and_render(FileSegment("until they eventually completely desynchronize."));
     tds.inject_audio_and_render(FileSegment("This is known as a chaotic system, because small changes in starting conditions yield vastly different behavior in the long run."));
-    for(int i = 0; i < 4; i++){
-        PendulumState pendulum_state = {2.49+.0001*i, 25, .0, .0};
+    for(int i = 0; i < 5; i++){
+        PendulumState pendulum_state = {2.49+.0001*i, .25, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
         ps->state_manager.set({
+            {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
             {"pendulum_opacity", "0"},
             {"physics_multiplier", "[stable_physics_multiplier]"},
@@ -176,10 +157,10 @@ void intro() {
         ps->state_manager.macroblock_transition({
             {"pendulum_opacity", "1"},
         });
-        tds.add_surface(Surface(glm::vec3(2, 0 ,i), glm::vec3(2,0,0), glm::vec3(0,2,0), ps));
+        tds.add_surface(Surface(glm::vec3(18, 0, i-2), glm::vec3(8,0,0), glm::vec3(0,8,0), ps));
     }
     tds.state_manager.macroblock_transition({
-        {"x", "1"},
+        {"x", "18"},
     });
     tds.state_manager.set({
         {"stable_physics_multiplier", "0"},
@@ -189,16 +170,59 @@ void intro() {
         {"stable_physics_multiplier", "16"},
     });
     tds.inject_audio_and_render(FileSegment("Here are a few more pendulums with slightly different starting positions."));
+    tds.inject_audio_and_render(FileSegment("Unlike the others, these will _not_ diverge."));
+    tds.state_manager.macroblock_transition({
+        {"parent_path_opacity", "1"},
+        {"qj", "0"},
+        {"fov", "8"},
+        {"d", to_string(start_dist*2)},
+    });
+    tds.inject_audio_and_render(FileSegment("Not only that, but they trace a regular, repeating pattern."));
+    tds.inject_audio_and_render(SilenceSegment(3));
+    tds.state_manager.macroblock_transition({
+        {"x", "0"},
+    });
+    tds.inject_audio_and_render(FileSegment("A stark contrast with the first ones, which are... all over the place."));
+    tds.inject_audio_and_render(SilenceSegment(1));
+    tds.inject_audio_and_render(FileSegment("So... what's going on here?"));
+    tds.state_manager.macroblock_transition({
+        {"x", "9"},
+        {"fov", "4"},
+    });
+    tds.inject_audio_and_render(FileSegment("These pendulums follow the same laws of physics."));
+    tds.state_manager.macroblock_transition({
+        {"z", "100"},
+    });
+    tds.inject_audio_and_render(FileSegment("The only difference is what their starting position was."));
+}
+
+void fractal() {
+    PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, 0, 6.28, 0, 6.28, 0, 0, 0, 0);
+    PendulumGridScene pgs(0, 6.28, 0, 6.28, pg);
+    pgs.state_manager.set({
+        {"physics_multiplier", "32"},
+        {"mode", "1"},
+        {"rk4_step_size", "1 30 / .05 *"},
+        {"center_x", "0"},
+        {"center_y", "0"},
+        {"zoom", "1 40 /"},
+    });
+    pgs.inject_audio_and_render(SilenceSegment(1));
+    pgs.state_manager.macroblock_transition({
+        {"center_x", "3.14"},
+        {"center_y", "3.14"},
+        {"zoom", "1 6.28 /"},
+    });
+    pgs.inject_audio_and_render(SilenceSegment(1));
+    pgs.inject_audio_and_render(SilenceSegment(1));
 }
 
 void render_video() {
     PRINT_TO_TERMINAL = false;
     SAVE_FRAME_PNGS = false;
 
-    intro();
-    /*butterfly(1, 1.25);
-    butterfly(2.49, .25);
-    lissajous();
-    grid();
-    fractal();*/
+    //intro();
+    fractal();
+    //lissajous();
+    //grid();
 }

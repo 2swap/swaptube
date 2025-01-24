@@ -65,7 +65,7 @@ public:
 
     void draw() override {
         render_axes();
-        draw_trail();
+        //draw_trail();
     }
 
     void render_axes() {
@@ -125,7 +125,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"left_x", "right_x", "top_y", "bottom_y", "zoom", "trail_x", "trail_y"};
+        return StateQuery{"left_x", "right_x", "top_y", "bottom_y", "zoom"};//, "trail_x", "trail_y"};
     }
 
     void mark_data_unchanged() override {}
