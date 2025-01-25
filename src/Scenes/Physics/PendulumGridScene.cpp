@@ -6,7 +6,7 @@
 
 class PendulumGridScene : public CoordinateScene {
 public:
-    PendulumGridScene(const double min_x, const double max_x, const double min_y, const double max_y, const PendulumGrid& pg, const double width = 1, const double height = 1) : CoordinateScene(width, height), grid(pg), min_x(min_x), max_x(max_x), min_y(min_y), max_y(max_y), sums(get_width() * get_height()) {}
+    PendulumGridScene(const double min_x, const double max_x, const double min_y, const double max_y, const PendulumGrid& pg, const double width = 1, const double height = 1) : CoordinateScene(width, height), grid(pg), min_x(min_x), max_x(max_x), min_y(min_y), max_y(max_y) {}
 
     const StateQuery populate_state_query() const override {
         StateQuery s = CoordinateScene::populate_state_query();
@@ -35,29 +35,20 @@ public:
 
         for (int y = 0; y < h; ++y) {
             double pos_y = (h/2.0 - y) / (h * zoom) + cy;
-            int arr_y = static_cast<int>((pos_y-min_y)/max_y * grid.h);
+            int arr_y = static_cast<int>(((pos_y-min_y)/max_y+100) * grid.h)%grid.h;
             if(arr_y >= grid.h || arr_y < 0) continue;
             for (int x = 0; x < w; ++x) {
                 double pos_x = (x - w/2.0) / (w * zoom) + cx;
-                int arr_x = static_cast<int>((pos_x-min_x)/max_x * grid.w);
+                int arr_x = static_cast<int>(((pos_x-min_x)/max_x+100) * grid.w)%grid.w;
                 if(arr_x >= grid.w || arr_x < 0) continue;
 
                 int i = arr_x + arr_y * grid.w;
 
-                double theta1  = grid.pendulum_states[i].theta1;
-                double theta2  = grid.pendulum_states[i].theta2;
-                double thetap1 = grid.pendulum_pairs [i].theta1;
-                double thetap2 = grid.pendulum_pairs [i].theta2;
-
-                int color_mode0 = 0;
-                if(state["mode"] != 1) color_mode0 = colorlerp(OPAQUE_BLACK, YUVtoRGB(map_to_torus(theta1, theta2)), 0.5);
-                double distance = sqrt(square(theta1-thetap1) + square(theta2-thetap2));
-                //distance = min(distance, .01);
-                //sums[i] += distance;
-                //int color_mode1 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0.,log(sums[i]*10000)/15));
-                int color_mode1 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(distance*100)/15));
-                int color = colorlerp(color_mode0, color_mode1, state["mode"]);
-
+                int color_mode0 = 0; int color_mode1 = 0;
+                double mode = state["mode"];
+                if(mode < 0.999) color_mode0 = colorlerp(OPAQUE_BLACK, YUVtoRGB(map_to_torus(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2)), 0.5);
+                if(mode > 0.001) color_mode1 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*10)/10));
+                int color = colorlerp(color_mode0, color_mode1, mode);
                 pix.set_pixel(x, y, color);
             }
         }
@@ -71,6 +62,5 @@ private:
     const double max_x;
     const double min_y;
     const double max_y;
-    vector<double> sums;
 };
 

@@ -39,42 +39,6 @@ void grid() {
     cs.inject_audio_and_render(SilenceSegment(2));
 }
 
-void lissajous() {
-    vector<PendulumState> ps;
-    ps.push_back({0.3, .3, .0, .0});
-    //ps.push_back({3.6, 3, .0, .0});
-    //ps.push_back({2.49, .25, .0, .0});
-    //ps.push_back({2, .3, .0, .0});
-    //ps.push_back({0.1, .3, .0, .0});
-    vector<double> zooms{0.5, .01, .02, .01, 0.5};
-    for(int i = 0; i < ps.size(); i++){
-        vector<float> left;
-        vector<float> right;
-        CompositeScene cs;
-        PendulumScene this_ps(ps[i], 0.5, 0.5);
-        this_ps.global_publisher_key = true;
-        this_ps.state_manager.set({
-            {"physics_multiplier", "16"},
-            {"pendulum_opacity", "1"},
-            {"background_opacity", "0.1"},
-            {"rk4_step_size", "1 30 / <physics_multiplier> /"},
-        });
-        CoordinateScene coord;
-        coord.state_manager.set({
-            {"center_x", "0"},
-            {"center_y", "0"},
-            {"zoom", to_string(zooms[i])},
-            {"trail_x", "{pendulum_theta1}"},
-            {"trail_y", "{pendulum_theta2}"},
-        });
-        cs.add_scene(&this_ps, "this_ps", 0.25, 0.25);
-        cs.add_scene(&coord, "coord", 0.5, 0.5);
-        this_ps.generate_audio(6, left, right);
-        //cs.inject_audio_and_render(GeneratedSegment(left, right));
-        cs.inject_audio_and_render(SilenceSegment(6));
-    }
-}
-
 void intro() {
     ThreeDimensionScene tds;
     for(int i = 0; i < 5; i++){
@@ -131,7 +95,6 @@ void intro() {
     tds.render();
     tds.render();
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
-return;
     tds.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
     tds.state_manager.macroblock_transition({
         {"d", to_string(start_dist - 3)},
@@ -200,28 +163,70 @@ void fractal() {
     PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, 0, 6.28, 0, 6.28, 0, 0, 0, 0);
     PendulumGridScene pgs(0, 6.28, 0, 6.28, pg);
     pgs.state_manager.set({
-        {"physics_multiplier", "32"},
+        {"physics_multiplier", "16"},
         {"mode", "1"},
         {"rk4_step_size", "1 30 / .05 *"},
         {"center_x", "0"},
         {"center_y", "0"},
         {"zoom", "1 40 /"},
     });
-    pgs.inject_audio_and_render(SilenceSegment(1));
+    pgs.inject_audio_and_render(FileSegment("And behavior as a function of starting position can be graphed,"));
     pgs.state_manager.macroblock_transition({
         {"center_x", "3.14"},
         {"center_y", "3.14"},
         {"zoom", "1 6.28 /"},
     });
+    pgs.inject_audio_and_render(FileSegment("revealing fractals like these,"));
     pgs.inject_audio_and_render(SilenceSegment(1));
-    pgs.inject_audio_and_render(SilenceSegment(1));
+    CompositeScene cs;
+    cs.add_scene(&pgs, "pgs");
+    cs.inject_audio_and_render(FileSegment("where each point shows how chaotic a certain pendulum's behavior is."));
+    PendulumScene p1({0.1, 0.3, 0, 0});
+    PendulumScene p2({2.49, 0.25, 0, 0});
+    PendulumScene p3({1, 0.5, 0, 0});
+}
+
+void lissajous() {
+    vector<PendulumState> ps;
+    ps.push_back({0.3, .3, .0, .0});
+    //ps.push_back({3.6, 3, .0, .0});
+    //ps.push_back({2.49, .25, .0, .0});
+    //ps.push_back({2, .3, .0, .0});
+    //ps.push_back({0.1, .3, .0, .0});
+    vector<double> zooms{0.5, .01, .02, .01, 0.5};
+    for(int i = 0; i < ps.size(); i++){
+        vector<float> left;
+        vector<float> right;
+        CompositeScene cs;
+        PendulumScene this_ps(ps[i], 0.5, 0.5);
+        this_ps.global_publisher_key = true;
+        this_ps.state_manager.set({
+            {"physics_multiplier", "16"},
+            {"pendulum_opacity", "1"},
+            {"background_opacity", "0.1"},
+            {"rk4_step_size", "1 30 / <physics_multiplier> /"},
+        });
+        CoordinateScene coord;
+        coord.state_manager.set({
+            {"center_x", "0"},
+            {"center_y", "0"},
+            {"zoom", to_string(zooms[i])},
+            {"trail_x", "{pendulum_theta1}"},
+            {"trail_y", "{pendulum_theta2}"},
+        });
+        cs.add_scene(&this_ps, "this_ps", 0.25, 0.25);
+        cs.add_scene(&coord, "coord", 0.5, 0.5);
+        this_ps.generate_audio(6, left, right);
+        //cs.inject_audio_and_render(GeneratedSegment(left, right));
+        cs.inject_audio_and_render(SilenceSegment(6));
+    }
 }
 
 void render_video() {
     PRINT_TO_TERMINAL = false;
     SAVE_FRAME_PNGS = false;
 
-    //intro();
+    intro();
     fractal();
     //lissajous();
     //grid();
