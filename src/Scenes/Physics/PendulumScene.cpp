@@ -7,7 +7,7 @@ public:
     PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s), path_background(get_width(), get_height()) { }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"angles_opacity", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
     void on_end_transition() override {}
@@ -36,10 +36,19 @@ public:
             int pendulum_color = colorlerp(TRANSPARENT_BLACK, color, state["pendulum_opacity"]);
             for (int i = 0; i < pendulum_count; i++) {
                 double theta = thetas[i];
-                int divider = pendulum_count * 2 + 1;
-                double dx = sin(theta) * h / divider; double dy = cos(theta) * h / divider;
+                double length = h/(pendulum_count * 2 + 1.);
+                double dx = sin(theta) * length; double dy = cos(theta) * length;
                 pix.fill_circle(posx, posy, line_thickness * 2, pendulum_color);
                 pix.bresenham(posx, posy, posx + dx, posy + dy, pendulum_color, 1, line_thickness);
+                double ao = state["angles_opacity"];
+                if(ao > 0.01){
+                    double theta_modified = theta+199*M_PI;
+                    theta_modified -= static_cast<int>(theta_modified/(2*M_PI))*2*M_PI + M_PI;
+                    pix.bresenham(posx, posy, posx, posy + length, OPAQUE_WHITE, ao, .5*line_thickness);
+                    for(double angle = 0; angle < 1; angle+=.01) {
+                        pix.overlay_pixel(posx + sin(angle*theta_modified)*length*.5, posy + cos(angle*theta_modified)*length*.5, OPAQUE_WHITE, ao);
+                    }
+                }
                 posx += dx; posy += dy;
             }
             positive = posx > w / 2.;

@@ -32,6 +32,9 @@ public:
     void add_scene(Scene* sc, string state_manager_name, double x = 0.5, double y = 0.5){
         sc->state_manager.set_parent(&state_manager);
         state_manager.set(unordered_map<string, string> {
+            {state_manager_name + ".pointer_x", to_string(x)},
+            {state_manager_name + ".pointer_y", to_string(y)},
+            {state_manager_name + ".pointer_opacity", "0"},
             {state_manager_name + ".x", to_string(x)},
             {state_manager_name + ".y", to_string(y)},
             {state_manager_name + ".opacity", "1"},
@@ -80,13 +83,23 @@ public:
     }
 
     void draw() override {
+        int w = get_width();
+        int h = get_height();
         for (auto& swp : scenes){
             double opa = state[swp.state_manager_name + ".opacity"];
             if(opa < 0.01) continue;
             Pixels* p = nullptr;
             swp.scenePointer->query(p);
-            pix.overlay(*p, state[swp.state_manager_name + ".x"] * get_width () - swp.scenePointer->get_width ()/2,
-                            state[swp.state_manager_name + ".y"] * get_height() - swp.scenePointer->get_height()/2, opa);
+            double pointer_opa = state[swp.state_manager_name + ".pointer_opacity"];
+            int x = w*state[swp.state_manager_name + ".x"];
+            int y = h*state[swp.state_manager_name + ".y"];
+            if(pointer_opa > 0.01) {
+                int px = w*state[swp.state_manager_name + ".pointer_x"];
+                int py = h*state[swp.state_manager_name + ".pointer_y"];
+                pix.bresenham(x, y, px, py, OPAQUE_WHITE, pointer_opa, h/100.);
+            }
+            pix.overlay(*p, x - swp.scenePointer->get_width ()/2,
+                            y - swp.scenePointer->get_height()/2, opa);
         }
     }
 
@@ -104,6 +117,9 @@ public:
             ret.insert(swp.state_manager_name + ".x");
             ret.insert(swp.state_manager_name + ".y");
             ret.insert(swp.state_manager_name + ".opacity");
+            ret.insert(swp.state_manager_name + ".pointer_x");
+            ret.insert(swp.state_manager_name + ".pointer_y");
+            ret.insert(swp.state_manager_name + ".pointer_opacity");
         };
         return ret;
     }

@@ -12,9 +12,9 @@
 class Scene {
 public:
     Scene(const double width = 1, const double height = 1)
-        : state_manager(), pix(width*VIDEO_WIDTH, height*VIDEO_HEIGHT) {
-        state_manager.add_equation("w", to_string(pix.w));
-        state_manager.add_equation("h", to_string(pix.h));
+        : state_manager() {
+        state_manager.add_equation("w", to_string(width));
+        state_manager.add_equation("h", to_string(height));
         state_manager.evaluate_all();
     }
 
@@ -121,11 +121,11 @@ public:
     }
 
     int get_width() const{
-        return state_manager.get_state({"w"})["w"];
+        return VIDEO_WIDTH * state_manager.get_state({"w"})["w"];
     }
 
     int get_height() const{
-        return state_manager.get_state({"h"})["h"];
+        return VIDEO_HEIGHT * state_manager.get_state({"h"})["h"];
     }
 
     StateManager state_manager;

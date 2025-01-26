@@ -38,6 +38,9 @@ public:
         state_manager.add_equation("right_x" , "<center_x> .5 <zoom> / +");
         state_manager.add_equation("top_y"   , "<center_y> .5 <zoom> / -");
         state_manager.add_equation("bottom_y", "<center_y> .5 <zoom> / +");
+        state_manager.add_equation("trail_opacity", "0");
+        state_manager.add_equation("trail_x", "0");
+        state_manager.add_equation("trail_y", "0");
     }
 
     pair<int, int> point_to_pixel(pair<double, double> p) {
@@ -65,7 +68,7 @@ public:
 
     void draw() override {
         render_axes();
-        //draw_trail();
+        if(state["trail_opacity"] > 0.01) draw_trail();
     }
 
     void render_axes() {
@@ -125,11 +128,12 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"left_x", "right_x", "top_y", "bottom_y", "zoom"};//, "trail_x", "trail_y"};
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom", "trail_opacity", "trail_x", "trail_y"};
+        return sq;
     }
 
     void mark_data_unchanged() override {}
-    void change_data() override { trail.push_back(make_pair(state["trail_x"], state["trail_y"])); }
+    void change_data() override { if(state["trail_opacity"] > 0.01) trail.push_back(make_pair(state["trail_x"], state["trail_y"])); else trail.clear();}
     bool check_if_data_changed() const override { return true; }
     void on_end_transition(){}
 };

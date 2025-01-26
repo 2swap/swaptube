@@ -47,7 +47,7 @@ public:
                 int color_mode0 = 0; int color_mode1 = 0;
                 double mode = state["mode"];
                 if(mode < 0.999) color_mode0 = colorlerp(OPAQUE_BLACK, YUVtoRGB(map_to_torus(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2)), 0.5);
-                if(mode > 0.001) color_mode1 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*10)/10));
+                if(mode > 0.001) color_mode1 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i])/9));
                 int color = colorlerp(color_mode0, color_mode1, mode);
                 pix.set_pixel(x, y, color);
             }
