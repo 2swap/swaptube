@@ -18,11 +18,9 @@ public:
     void add_scene_fade_in(Scene* sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true){
         add_scene(sc, state_manager_name, x, y);
         state_manager.set(unordered_map<string, string> {
-            {state_manager_name + ".y", to_string(y+.1)},
             {state_manager_name + ".opacity", "0"},
         });
         unordered_map<string, string> map = {
-            {state_manager_name + ".y", to_string(y)},
             {state_manager_name + ".opacity", "1"},
         };
         if(micro) state_manager.microblock_transition(map);

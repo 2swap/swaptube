@@ -4,6 +4,20 @@
 #include "../Scenes/Physics/PendulumScene.cpp"
 #include "../Scenes/Physics/PendulumGridScene.cpp"
 
+void simple() {
+    PendulumState pendulum_state = {5, 8, .0, .0};
+    PendulumScene ps(pendulum_state);
+    ps.state_manager.set({
+        {"path_opacity", "0"},
+        {"background_opacity", "0"},
+        {"angles_opacity", "0"},
+        {"pendulum_opacity", "1"},
+        {"physics_multiplier", "30"},
+        {"rk4_step_size", "1 30 / <physics_multiplier> /"},
+    });
+    ps.inject_audio_and_render(SilenceSegment(4));
+}
+
 void grid() {
     CompositeScene cs;
     vector<PendulumScene> vps;
@@ -41,15 +55,18 @@ void grid() {
 
 void intro() {
     ThreeDimensionScene tds;
+    vector<double> notes{pow(2, 0/12.), pow(2, 5/12.), pow(2, 7/12.), pow(2, 12/12.), pow(2, 17/12.), };
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {5+.0000001*i, 8, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
         ps->state_manager.set({
             {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
+            {"tone", to_string(notes[i])},
             {"angles_opacity", "0"},
+            {"volume", "[volume_set1]"},
             {"pendulum_opacity", "1"},
-            {"physics_multiplier", "16"},
+            {"physics_multiplier", "30"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
         });
         tds.add_surface(Surface(glm::vec3(0,0,i-2), glm::vec3(8,0,0), glm::vec3(0,8,0), ps));
@@ -66,6 +83,8 @@ void intro() {
         {"surfaces_opacity", "1"},
         {"lines_opacity", "0"},
         {"points_opacity", "1"},
+        {"volume_set1", "1"},
+        {"volume_set2", "0"},
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
@@ -108,6 +127,7 @@ void intro() {
     tds.inject_audio_and_render(FileSegment("where a tiny deviation in similar double pendulums amplifies over time,"));
     tds.inject_audio_and_render(FileSegment("until they eventually completely desynchronize."));
     tds.inject_audio_and_render(FileSegment("This is known as a chaotic system, because small changes in starting conditions yield vastly different behavior in the long run."));
+    vector<double> notes2{pow(2, 2/12.), pow(2, 9/12.), pow(2, 14/12.), pow(2, 21/12.), pow(2, 28/12.), };
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {2.49+.0001*i, .25, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
@@ -115,6 +135,8 @@ void intro() {
             {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
             {"angles_opacity", "0"},
+            {"volume", "[volume_set2]"},
+            {"tone", to_string(notes2[i])},
             {"pendulum_opacity", "0"},
             {"physics_multiplier", "[stable_physics_multiplier]"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
@@ -126,13 +148,15 @@ void intro() {
     }
     tds.state_manager.macroblock_transition({
         {"x", "18"},
+        {"volume_set1", "0"},
+        {"volume_set2", "1"},
     });
     tds.state_manager.set({
         {"stable_physics_multiplier", "0"},
     });
     tds.inject_audio_and_render(FileSegment("But you probably haven't seen this:"));
     tds.state_manager.set({
-        {"stable_physics_multiplier", "16"},
+        {"stable_physics_multiplier", "30"},
     });
     tds.inject_audio_and_render(FileSegment("Here are a few more pendulums with slightly different starting positions."));
     tds.inject_audio_and_render(FileSegment("Unlike the others, these will _not_ diverge."));
@@ -142,6 +166,7 @@ void intro() {
         {"fov", "8"},
         {"d", to_string(start_dist*2)},
     });
+    return;
     tds.inject_audio_and_render(FileSegment("Not only that, but they trace a regular, repeating pattern."));
     tds.inject_audio_and_render(SilenceSegment(3));
     tds.state_manager.macroblock_transition({
@@ -165,7 +190,7 @@ void fractal() {
     PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, 0, 6.283, 0, 6.283, 0, 0, 0, 0);
     PendulumGridScene pgs(0, 6.283, 0, 6.283, pg);
     pgs.state_manager.set({
-        {"physics_multiplier", "16"},
+        {"physics_multiplier", "10"},
         {"mode", "1"},
         {"rk4_step_size", "1 30 / .05 *"},
         {"center_x", "0"},
@@ -193,7 +218,7 @@ void fractal() {
         {"background_opacity", "0"},
         {"angles_opacity", "0"},
         {"pendulum_opacity", "1"},
-        {"physics_multiplier", "16"},
+        {"physics_multiplier", "10"},
         {"rk4_step_size", "1 30 / <physics_multiplier> /"},
     };
     cs.inject_audio(FileSegment("But before diving into the fractals, let's get to know a few particular specimen."), 3);
@@ -296,6 +321,29 @@ void fractal() {
     cs.inject_audio_and_render(FileSegment("This particular pendulum is drawing what's known as a Lissajous curve,"));
     cs.inject_audio_and_render(FileSegment("which is basically what you get when you plot two different sinusoid frequencies against each other."));
     cs.inject_audio_and_render(FileSegment("Now... it's actually rotated at an angle, so both of the frequencies have components present in both of the pendulums."));
+    CoordinateScene left(0.5, 1);
+    left.state_manager.set({
+        {"center_x", "<t>"},
+        {"center_y", "0"},
+        {"trail_opacity", "1"},
+        {"ticks_opacity", "0"},
+        {"zoom", ".1"},
+        {"trail_x", "<t>"},
+        {"trail_y", "{pendulum_theta2}"},
+    });
+    CoordinateScene right(0.5, 1);
+    right.state_manager.set({
+        {"center_x", "0"},
+        {"center_y", "<t>"},
+        {"trail_opacity", "1"},
+        {"ticks_opacity", "0"},
+        {"zoom", ".1"},
+        {"trail_x", "{pendulum_theta1}"},
+        {"trail_y", "<t>"},
+    });
+    cs.add_scene_fade_in(&left , "left" , 0.25, 0.5);
+    cs.add_scene_fade_in(&right, "right", 0.25, 0.5);
+    cs.inject_audio_and_render(FileSegment("Here is the sinusoid for the top and bottom angles, separated out."));
 }
 
 void lissajous() {
@@ -313,7 +361,7 @@ void lissajous() {
         PendulumScene this_ps(ps[i], 0.5, 0.5);
         this_ps.global_publisher_key = true;
         this_ps.state_manager.set({
-            {"physics_multiplier", "16"},
+            {"physics_multiplier", "10"},
             {"pendulum_opacity", "1"},
             {"background_opacity", "0.1"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
@@ -340,7 +388,8 @@ void render_video() {
 
     //FOR_REAL = false;
     intro();
-    fractal();
+    //simple();
+    //fractal();
     //lissajous();
     //grid();
 }

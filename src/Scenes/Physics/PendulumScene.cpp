@@ -4,15 +4,22 @@
 
 class PendulumScene : public Scene {
 public:
-    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s), path_background(get_width(), get_height()) { }
+    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s), path_background(get_width(), get_height()) {
+        state_manager.add_equation("tone", "1");
+    }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"angles_opacity", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"angles_opacity", "volume", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
     void on_end_transition() override {}
     void mark_data_unchanged() override { pend.mark_unchanged(); }
-    void change_data() override { pend.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]); }
+    void change_data() override {
+        for(int i = 0; i < state["physics_multiplier"]; i++) {
+            pend.iterate_physics(1, state["rk4_step_size"]);
+            generate_tone(square(compute_kinetic_energy(pend.state)));
+        }
+    }
     bool check_if_data_changed() const override { return pend.has_been_updated_since_last_scene_query(); }
     unordered_map<string, double> stage_publish_to_global() const override {
         return unordered_map<string, double> {
@@ -31,7 +38,6 @@ public:
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
 
-        bool positive;
         if(state["pendulum_opacity"] > 0.01) {
             int pendulum_color = colorlerp(TRANSPARENT_BLACK, color, state["pendulum_opacity"]);
             for (int i = 0; i < pendulum_count; i++) {
@@ -51,11 +57,8 @@ public:
                 }
                 posx += dx; posy += dy;
             }
-            positive = posx > w / 2.;
             pix.fill_circle(posx, posy, line_thickness*2, pendulum_color);
         }
-        if(positive != last_positive) generate_beep(0.2);
-        last_positive = positive;
         if(state["path_opacity"] > 0.01 && (last_posx != 0 || last_posy != 0)) {
             path_background.bresenham(last_posx, last_posy, posx, posy, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
             pix.underlay(path_background, 0, 0);
@@ -70,18 +73,35 @@ public:
         }
     }
 
+    void generate_tone(double strength){
+        vector<float> left;
+        vector<float> right;
+        int total_samples = 44100/VIDEO_FRAMERATE/state["physics_multiplier"];
+        int tonegen_save = tonegen;
+        double note = state["tone"];
+        double vol = state["volume"];
+        for(int i = 0; i < total_samples; i++){
+            float val = .00002*vol*strength*sin(tonegen*2200.*note/44100.)/sqrt(note);
+            tonegen++;
+            left.push_back(val);
+            right.push_back(val);
+        }
+        WRITER.add_sfx(left, right, tonegen_save);
+    }
+
     void generate_beep(double duration){
         vector<float> left;
         vector<float> right;
         int total_samples = duration*44100;
-        for(int i = 0; i < duration*44100; i++){
+        double note = state["tone"];
+        for(int i = 0; i < total_samples; i++){
             double pct_complete = i/static_cast<double>(total_samples);
-            float val = .03*sin(i*2200./44100.);// + .08*sin(i*1800./44100.);
+            float val = .03*sin(i*note*2200./44100.)/note;
             val *= pow(.5, 4*pct_complete);
             left.push_back(val);
             right.push_back(val);
         }
-        WRITER.add_sfx(left, right, state["t"]);
+        WRITER.add_sfx(left, right, state["t"]*44100);
     }
 
     void generate_audio(double duration, vector<float>& left, vector<float>& right){
@@ -96,9 +116,9 @@ public:
     }
 
 private:
+    int tonegen = 0;
     double last_posx; double last_posy;
     PendulumState start_state;
     Pendulum pend;
-    bool last_positive = true;
     Pixels path_background;
 };

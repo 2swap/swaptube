@@ -39,6 +39,7 @@ public:
         state_manager.add_equation("top_y"   , "<center_y> .5 <zoom> / -");
         state_manager.add_equation("bottom_y", "<center_y> .5 <zoom> / +");
         state_manager.add_equation("trail_opacity", "0");
+        state_manager.add_equation("ticks_opacity", "1");
         state_manager.add_equation("trail_x", "0");
         state_manager.add_equation("trail_y", "0");
     }
@@ -57,21 +58,25 @@ public:
     }
 
     void draw_trail() {
+        const double trail_opacity = state["trail_opacity"];
+        if(trail_opacity < 0.01) return;
         for(int i = 0; i < trail.size()-1; i++) {
             const pair<double, double> last_point = trail[i];
             const pair<double, double> next_point = trail[i+1];
             pair<int, int> last_pixel = point_to_pixel(last_point);
             pair<int, int> next_pixel = point_to_pixel(next_point);
-            pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, OPAQUE_WHITE, 1, 1);
+            pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, OPAQUE_WHITE, trail_opacity, 1);
         }
     }
 
     void draw() override {
+        draw_trail();
         render_axes();
-        if(state["trail_opacity"] > 0.01) draw_trail();
     }
 
     void render_axes() {
+        const double ticks_opacity = state["ticks_opacity"];
+        if(ticks_opacity < 0.01) return;
         const int w = get_width();
         const int h = get_height();
         const double z = state["zoom"] + 0.0001;
@@ -96,6 +101,7 @@ public:
                 double frac = (x - lx) / (rx - lx);
                 double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
                 number_opacity *= 1-square(square(2.5*(.5-frac)));
+                number_opacity *= ticks_opacity;
                 if(number_opacity < 0) number_opacity = 0;
                 int x_pix = frac * w;
                 pix.bresenham(x_pix, h-1, x_pix, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
@@ -113,6 +119,7 @@ public:
                 double frac = 1 - (y - ty) / (by - ty);
                 double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
                 number_opacity *= 1-square(square(2.5*(.5-frac)));
+                number_opacity *= ticks_opacity;
                 if(number_opacity < 0) number_opacity = 0;
                 int y_pix = frac * h;
                 pix.bresenham(0, y_pix, tick_length, y_pix, OPAQUE_WHITE, number_opacity, 1);
@@ -128,7 +135,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom", "trail_opacity", "trail_x", "trail_y"};
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom", "ticks_opacity", "trail_opacity", "trail_x", "trail_y"};
         return sq;
     }
 

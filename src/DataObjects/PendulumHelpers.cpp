@@ -23,6 +23,24 @@ struct Derivatives {
 };
 
 HOST_DEVICE
+inline double compute_kinetic_energy(const PendulumState &state) {
+    double theta1 = state.theta1;
+    double theta2 = state.theta2;
+    double p1 = state.p1;
+    double p2 = state.p2;
+
+    // Calculate angular velocities
+    double delta = theta1 - theta2;
+    double denominator = 16 - 9 * cos(delta) * cos(delta);
+    double mll = pend_m * pend_l * pend_l;
+    double dtheta1 = (6 / mll) * (2 * p1 - 3 * cos(delta) * p2) / denominator;
+    double dtheta2 = (6 / mll) * (8 * p2 - 3 * cos(delta) * p1) / denominator;
+
+    // Kinetic Energy
+    return 0.5 * mll * (dtheta1 * dtheta1 + 2 * dtheta2 * dtheta2 + 2 * dtheta1 * dtheta2 * cos(delta));
+}
+
+HOST_DEVICE
 inline Derivatives computeDerivatives(const PendulumState &state) {
     double theta1 = state.theta1;
     double theta2 = state.theta2;

@@ -118,13 +118,13 @@ public:
         }
     }
 
-    void add_sfx(const vector<float>& left_buffer, const vector<float>& right_buffer, double t) {
+    void add_sfx(const vector<float>& left_buffer, const vector<float>& right_buffer, int t) {
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
 
         int numSamples = left_buffer.size();
-        int sample_copy_start = t * audioOutputCodecContext->sample_rate - total_samples_processed + sample_buffer_offset;
+        int sample_copy_start = t - total_samples_processed + sample_buffer_offset;
         if(sample_copy_start < 0) sample_copy_start = 0;
         int sample_copy_end = sample_copy_start + numSamples;
 

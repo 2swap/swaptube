@@ -12,7 +12,7 @@ public:
     : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) { }
 
     pair<int, int> get_coords_from_pixels(const Pixels& p){
-        return make_pair((pix.w-p.w)/2, (pix.h-p.h)/2);
+        return make_pair((get_width()-p.w)/2, (get_height()-p.h)/2);
     }
 
     void begin_transition(const Pixels& p) {
