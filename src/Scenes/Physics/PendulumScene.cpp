@@ -6,10 +6,14 @@ class PendulumScene : public Scene {
 public:
     PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s), path_background(get_width(), get_height()) {
         state_manager.add_equation("tone", "1");
+        state_manager.add_equation("volume", "0");
+        state_manager.add_equation("path_opacity", "0");
+        state_manager.add_equation("angles_opacity", "0");
+        state_manager.add_equation("rainbow", "1");
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"angles_opacity", "volume", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"angles_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
     void on_end_transition() override {}
@@ -17,7 +21,8 @@ public:
     void change_data() override {
         for(int i = 0; i < state["physics_multiplier"]; i++) {
             pend.iterate_physics(1, state["rk4_step_size"]);
-            generate_tone(square(compute_kinetic_energy(pend.state)));
+            energy_slew = square(compute_kinetic_energy(pend.state));
+            generate_tone();
         }
     }
     bool check_if_data_changed() const override { return pend.has_been_updated_since_last_scene_query(); }
@@ -34,12 +39,15 @@ public:
         double posx = w/2; double posy = h/2;
         vector<double> thetas = {pend.state.theta1, pend.state.theta2};
         int pendulum_count = 2;
-        int color = YUVtoRGB(map_to_torus(thetas[0], thetas[1]));
+        int color = YUVtoRGB(map_to_torus(thetas[1], thetas[0]));
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
 
         if(state["pendulum_opacity"] > 0.01) {
-            int pendulum_color = colorlerp(TRANSPARENT_BLACK, color, state["pendulum_opacity"]);
+            double rainbow = state["rainbow"];
+            int pendulum_color = OPAQUE_WHITE;
+            if(rainbow > 0.01)
+                pendulum_color = colorlerp(OPAQUE_WHITE, colorlerp(TRANSPARENT_BLACK, color, state["pendulum_opacity"]), rainbow);
             for (int i = 0; i < pendulum_count; i++) {
                 double theta = thetas[i];
                 double length = h/(pendulum_count * 2 + 1.);
@@ -73,35 +81,24 @@ public:
         }
     }
 
-    void generate_tone(double strength){
+    void generate_tone(){
+        double vol = state["volume"];
+        if(vol < 0.01) return;
+        if(tonegen == 0) tonegen = state["t"]*44100;
         vector<float> left;
         vector<float> right;
         int total_samples = 44100/VIDEO_FRAMERATE/state["physics_multiplier"];
         int tonegen_save = tonegen;
         double note = state["tone"];
-        double vol = state["volume"];
         for(int i = 0; i < total_samples; i++){
+            double strength = lerp(energy, energy_slew, static_cast<double>(i)/total_samples);
             float val = .00002*vol*strength*sin(tonegen*2200.*note/44100.)/sqrt(note);
             tonegen++;
             left.push_back(val);
             right.push_back(val);
         }
         WRITER.add_sfx(left, right, tonegen_save);
-    }
-
-    void generate_beep(double duration){
-        vector<float> left;
-        vector<float> right;
-        int total_samples = duration*44100;
-        double note = state["tone"];
-        for(int i = 0; i < total_samples; i++){
-            double pct_complete = i/static_cast<double>(total_samples);
-            float val = .03*sin(i*note*2200./44100.)/note;
-            val *= pow(.5, 4*pct_complete);
-            left.push_back(val);
-            right.push_back(val);
-        }
-        WRITER.add_sfx(left, right, state["t"]*44100);
+        energy = energy_slew;
     }
 
     void generate_audio(double duration, vector<float>& left, vector<float>& right){
@@ -117,6 +114,8 @@ public:
 
 private:
     int tonegen = 0;
+    double energy = 0;
+    double energy_slew = 0;
     double last_posx; double last_posy;
     PendulumState start_state;
     Pendulum pend;

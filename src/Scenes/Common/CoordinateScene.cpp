@@ -31,6 +31,7 @@ string truncate_tick(double value) {
 
 class CoordinateScene : public Scene {
 public:
+    int trail_color = OPAQUE_WHITE;
     vector<pair<double, double>> trail;
     CoordinateScene(const double width = 1, const double height = 1)
         : Scene(width, height) {
@@ -65,8 +66,12 @@ public:
             const pair<double, double> next_point = trail[i+1];
             pair<int, int> last_pixel = point_to_pixel(last_point);
             pair<int, int> next_pixel = point_to_pixel(next_point);
-            pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, OPAQUE_WHITE, trail_opacity, 1);
+            pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, trail_color, trail_opacity, 1);
         }
+
+        const pair<double, double> curr_point = make_pair(state["trail_x"], state["trail_y"]);
+        const pair<int, int> curr_pixel = point_to_pixel(curr_point);
+        pix.fill_circle(curr_pixel.first, curr_pixel.second, 3, colorlerp(TRANSPARENT_BLACK, trail_color, trail_opacity));
     }
 
     void draw() override {
