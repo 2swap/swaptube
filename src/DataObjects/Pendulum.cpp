@@ -44,7 +44,7 @@ public:
                                     lerp(p2_min, p2_max, y/(h-1.)),
                                    };
                 pendulum_states[i] = ps;
-                ps.theta1 += 0.001;
+                ps.theta1 += 0.0001;
                 pendulum_pairs [i] = ps;
             }
         }
@@ -61,7 +61,7 @@ public:
                 PendulumState pp = pendulum_pairs[i];
                 
                 double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2));
-                distance = min(distance, .1);
+                distance = min(distance, 1.);
                 diff_sums[i] += distance;
             }
         mark_updated();

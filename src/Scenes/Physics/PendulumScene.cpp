@@ -19,11 +19,9 @@ public:
     void on_end_transition() override {}
     void mark_data_unchanged() override { pend.mark_unchanged(); }
     void change_data() override {
-        for(int i = 0; i < state["physics_multiplier"]; i++) {
-            pend.iterate_physics(1, state["rk4_step_size"]);
-            energy_slew = square(compute_kinetic_energy(pend.state));
-            generate_tone();
-        }
+        pend.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]);
+        energy_slew = square(compute_kinetic_energy(pend.state));
+        generate_tone();
     }
     bool check_if_data_changed() const override { return pend.has_been_updated_since_last_scene_query(); }
     unordered_map<string, double> stage_publish_to_global() const override {
@@ -87,7 +85,7 @@ public:
         if(tonegen == 0) tonegen = state["t"]*44100;
         vector<float> left;
         vector<float> right;
-        int total_samples = 44100/VIDEO_FRAMERATE/state["physics_multiplier"];
+        int total_samples = 44100/VIDEO_FRAMERATE;
         int tonegen_save = tonegen;
         double note = state["tone"];
         for(int i = 0; i < total_samples; i++){
