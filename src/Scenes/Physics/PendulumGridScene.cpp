@@ -83,7 +83,7 @@ public:
         Pendulum p(grid.start_states[i]);
         vector<pair<double, double>> trail;
         for(int i = 0; i < 1000; i++){
-            p.iterate_physics(1, 0.1);
+            p.iterate_physics(1, 0.01);
             trail.push_back(make_pair(p.state.theta1, p.state.theta2));
         }
         draw_trail(trail, 0xffff0000, trail_opacity);

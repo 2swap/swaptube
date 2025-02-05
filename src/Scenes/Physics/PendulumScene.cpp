@@ -105,8 +105,8 @@ public:
             for(int j = 0; j < 10; j++) {
                 ps = rk4Step(ps, 0.003);
             }
-            left.push_back(.1*sin(ps.theta1));
-            right.push_back(.1*sin(ps.theta2));
+            left.push_back(.05*sin(ps.theta1));
+            right.push_back(.05*sin(ps.theta2));
         }
     }
 

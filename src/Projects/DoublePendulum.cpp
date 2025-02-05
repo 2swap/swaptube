@@ -14,24 +14,59 @@ void fine_grid_2(){
         {"physics_multiplier", "16"},
         {"mode", "1"},
         {"rk4_step_size", "1 30 / .05 *"},
-        {"zoom", "1 6.283 /"},
-        {"trail_start_x", "3"},
-        {"trail_start_y", "3"},
+        {"zoom", "1 8 /"},
+        {"trail_start_x", "0.5"},
+        {"trail_start_y", "0.5"},
+        {"center_x", "3.1415"},
+        {"center_y", "3.1415"},
     });
     pgs.inject_audio_and_render(FileSegment("Here we go!"));
     pgs.inject_audio_and_render(SilenceSegment(7));
     pgs.state_manager.microblock_transition({
-        {"center_x", "3.1415"},
-        {"center_y", "3.1415"},
+        {"zoom", "1 6.283 /"},
+        {"center_x", "0"},
+        {"center_y", "0"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
         {"trail_opacity", "1"},
     });
+    pgs.inject_audio_and_render(FileSegment("Now, I'm gonna pick a certain point, corresponding to a pendulum in the black region meaning its behavior is non-chaotic."));
+    pgs.inject_audio_and_render(FileSegment("We can plot its path in angle-space just like we did before!"));
+    pgs.state_manager.microblock_transition({
+        {"center_x", "1"},
+        {"center_y", "1"},
+    });
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.inject_audio_and_render(SilenceSegment(2));
+    pgs.state_manager.microblock_transition({
+        {"trail_start_x", "<t> sin"},
+        {"trail_start_y", "<t> cos 2 /"},
+    });
+    pgs.inject_audio_and_render(FileSegment("Moving the point around in the black region, this curve moves smoothly and traces a recognizable pattern."));
+    pgs.state_manager.microblock_transition({
+        {"zoom", "1 12 /"},
+        {"trail_start_x", "1.2"},
+        {"trail_start_y", "1.1"},
+    });
+    pgs.inject_audio_and_render(FileSegment("But as soon as you step into the chaotic region..."));
+    pgs.state_manager.microblock_transition({
+        {"trail_start_x", "1.2"},
+        {"trail_start_y", "1.4"},
+    });
     pgs.inject_audio_and_render(SilenceSegment(2));
+}
+
+void what_is_chaos(){
+    pgs.inject_audio_and_render(FileSegment("What even is chaos though?"));
+    pgs.inject_audio_and_render(FileSegment("It's quite hard to define."));
+    pgs.inject_audio_and_render(FileSegment("I draw these plots showing a clear white and black region, subtly implying a sort of phase transition, if you will, between a dichotomous chaotic and orderly state."));
+    pgs.inject_audio_and_render(FileSegment("But this plot shows that it isn't that simple."));
+    pgs.inject_audio_and_render(FileSegment("This band here is somewhere halfway in between, diverging faster than the coherent section, but slower than the chaotic sections."));
+    pgs.inject_audio_and_render(FileSegment("It is the case that the differential equations for double pendulums has no closed form solution, regardless of starting position,"));
+    pgs.inject_audio_and_render(FileSegment("But still, some of these pendulums are evidently much more well-behaved than the others."));
+    pgs.inject_audio_and_render(FileSegment("We can formalize this by plotting the difference between our two pendulums over time."));
 }
 
 void fine_grid(){
@@ -41,8 +76,8 @@ void fine_grid(){
         {"physics_multiplier", "0"},
         {"mode", "0"},
         {"rk4_step_size", "1 30 / .05 *"},
-        {"center_x", "3.1415"},
-        {"center_y", "3.1415"},
+        {"center_x", "0"},
+        {"center_y", "0"},
         {"zoom", "1 6.283 /"},
     });
     pgs.inject_audio_and_render(FileSegment("Let's up the resolution, with one pendulum per pixel."));
@@ -52,8 +87,8 @@ void fine_grid(){
     pgs.inject_audio_and_render(SilenceSegment(9));
     pgs.inject_audio(FileSegment("A nice feature of this fractal is that it tiles the plane- in other words, since rotating either angle by 2pi yields the exact same position, the image itself is periodic."), 7);
     pgs.state_manager.microblock_transition({
-        {"center_x", "0"},
-        {"center_y", "0"},
+        {"center_x", "3.1415"},
+        {"center_y", "3.1415"},
         {"zoom", "1 8 /"},
     });
     pgs.render();
@@ -66,8 +101,8 @@ void fine_grid(){
     pgs.render();
     pgs.render();
     pgs.state_manager.microblock_transition({
-        {"center_x", "3.1415"},
-        {"center_y", "3.1415"},
+        {"center_x", "0"},
+        {"center_y", "0"},
         {"zoom", "1 40 /"},
     });
     pgs.render();
@@ -82,14 +117,14 @@ void fine_grid(){
     pgs.inject_audio_and_render(FileSegment("Now I want you to pay attention to how there are seemingly two distinct modes of behavior here."));
     pgs.inject_audio(FileSegment("There is a region of chaotic noise, as well as a region of coherent behavior."), 4);
     pgs.state_manager.microblock_transition({
-        {"center_x", "0"},
-        {"center_y", "0"},
+        {"center_x", "3.1415"},
+        {"center_y", "3.1415"},
     });
     pgs.render();
     pgs.render();
     pgs.state_manager.microblock_transition({
-        {"center_x", "3.1415"},
-        {"center_y", "3.1415"},
+        {"center_x", "0"},
+        {"center_y", "0"},
     });
     pgs.render();
     pgs.render();
@@ -99,8 +134,8 @@ void fine_grid(){
     pgs.inject_audio_and_render(FileSegment("Now what we can do is, for each pixel, track not only one pendulum but instead two, separated by a microscopic difference in angle, and plot their difference as time passes."));
     pgs.inject_audio_and_render(FileSegment("This is what you get."));
     pgs.state_manager.microblock_transition({
-        {"center_x", "0"},
-        {"center_y", "0"},
+        {"center_x", "3.1415"},
+        {"center_y", "3.1415"},
         {"zoom", "1 10 /"},
     });
     pgs.inject_audio_and_render(SilenceSegment(4));
@@ -172,7 +207,7 @@ void grid() {
     meta_cs.state_manager.set({
         {"physics_multiplier", "16"},
     });
-    meta_cs.inject_audio_and_render(SilenceSegment(7));
+    meta_cs.inject_audio_and_render(SilenceSegment(10));
     cs.state_manager.macroblock_transition({
         {"w", "1"},
     });
@@ -329,17 +364,23 @@ void intro() {
     tds.inject_audio_and_render(FileSegment("Not only that, but they trace a regular, repeating pattern."));
     tds.inject_audio_and_render(SilenceSegment(3));
     tds.state_manager.macroblock_transition({
+        {"volume_set1", "1"},
+        {"volume_set2", "0"},
         {"x", "0"},
     });
     tds.inject_audio_and_render(FileSegment("A stark contrast with the first ones, which are... all over the place."));
     tds.inject_audio_and_render(SilenceSegment(1));
     tds.inject_audio_and_render(FileSegment("So... what's going on here?"));
     tds.state_manager.macroblock_transition({
+        {"volume_set1", "0.5"},
+        {"volume_set2", "0.5"},
         {"x", "9"},
         {"fov", "4"},
     });
     tds.inject_audio_and_render(FileSegment("These pendulums follow the same laws of physics."));
     tds.state_manager.macroblock_transition({
+        {"volume_set1", "0"},
+        {"volume_set2", "0"},
         {"z", "100"},
     });
     tds.inject_audio_and_render(FileSegment("The only difference is what their starting position was."));
@@ -349,7 +390,7 @@ void fractal() {
     PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, 0, 6.283, 0, 6.283, 0, 0, 0, 0);
     PendulumGridScene pgs(-M_PI, M_PI, -M_PI, M_PI, pg);
     pgs.state_manager.set({
-        {"physics_multiplier", "10"},
+        {"physics_multiplier", "16"},
         {"mode", "1"},
         {"rk4_step_size", "1 30 / .05 *"},
         {"center_x", "0"},
@@ -358,8 +399,8 @@ void fractal() {
     });
     pgs.inject_audio_and_render(FileSegment("And behavior as a function of starting position can be graphed,"));
     pgs.state_manager.macroblock_transition({
-        {"center_x", "3.1415"},
-        {"center_y", "3.1415"},
+        {"center_x", "0"},
+        {"center_y", "0"},
         {"zoom", "1 6.283 /"},
     });
     pgs.inject_audio_and_render(FileSegment("revealing fractals like these,"));
@@ -389,6 +430,7 @@ void fractal() {
     for(int i = 0; i < start_states.size(); i++) {
         PendulumScene& ps = specimens[i];
         ps.state_manager.set(state);
+        ps.state_manager.set({{"tone", to_string(i/2.+1)}});
         string name = "p" + to_string(i);
         cs.add_scene_fade_in(&ps, name, 0.25*(1+i), 0.8);
         cs.state_manager.set({
@@ -455,7 +497,7 @@ void fractal() {
     });
     cs.inject_audio_and_render(FileSegment("You can sort of already tell that this pendulum is chaotic from this graph."));
     cs.inject_audio_and_render(SilenceSegment(5));
-    cs.inject_audio_and_render(SilenceSegment(5));
+    cs.inject_audio_and_render(SilenceSegment(10));
     specimens[0].state_manager.microblock_transition({
         {"volume", "0"},
     });
@@ -476,14 +518,14 @@ void fractal() {
         {"h", "1"},
         {"angles_opacity", "1"},
     });
-    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(FileSegment("Here's a non-chaotic pendulum."));
     specimens[0].global_publisher_key = false;
     specimens[2].global_publisher_key = true;
     coord.state_manager.microblock_transition({
         {"trail_opacity", "1"},
         {"zoom", ".1"},
     });
-    cs.inject_audio_and_render(FileSegment("Here's a non-chaotic pendulum."));
+    cs.inject_audio_and_render(SilenceSegment(1));
     cs.inject_audio_and_render(SilenceSegment(5));
     coord.state_manager.microblock_transition({
         {"zoom", ".2"},
@@ -509,7 +551,7 @@ void fractal() {
         {"ticks_opacity", "0"},
         {"zoom", ".2"},
         {"trail_x", "{pendulum_theta1}"},
-        {"trail_y", "<t> 2 / 1 -"},
+        {"trail_y", "<t> 2 / 1.5 -"},
     });
     left.trail_color = 0xffff00ff;
     right.trail_color = 0xff00ffff;
@@ -534,11 +576,11 @@ void fractal() {
     coord.state_manager.microblock_transition({
         {"trail_opacity", "0"},
     });
-    cs.inject_audio_and_render(FileSegment("It doesn't precisely sound beautiful, but compare that with the chaotic pendulum!"));
     cs.state_manager.microblock_transition({
         {"p2.y", "1.5"},
         {"p0.y", ".5"},
     });
+    cs.inject_audio_and_render(FileSegment("It doesn't precisely sound beautiful, but compare that with the chaotic pendulum!"));
     coord.state_manager.set({
         {"zoom", ".05"},
         {"trail_opacity", "1"},
@@ -562,20 +604,20 @@ void fractal() {
     left.state_manager.microblock_transition({
         {"trail_opacity", "0"},
         {"zoom", ".02"},
-        {"trail_x", "{pendulum_theta1}"},
-        {"trail_y", "{pendulum_theta2}"},
+        {"center_x", "5"},
+        {"center_y", "5"},
     });
     right.state_manager.microblock_transition({
         {"trail_opacity", "0"},
         {"zoom", ".02"},
-        {"trail_x", "{pendulum_theta1}"},
-        {"trail_y", "{pendulum_theta2}"},
+        {"center_x", "5"},
+        {"center_y", "5"},
     });
     coord.state_manager.microblock_transition({
         {"trail_opacity", "0"},
         {"zoom", ".02"},
-        {"trail_x", "{pendulum_theta1}"},
-        {"trail_y", "{pendulum_theta2}"},
+        {"center_x", "5"},
+        {"center_y", "5"},
     });
     cs.inject_audio_and_render(SilenceSegment(2));
     cs.state_manager.microblock_transition({
@@ -605,13 +647,14 @@ void fractal() {
 }
 
 void render_video() {
-    PRINT_TO_TERMINAL = false;
+    //PRINT_TO_TERMINAL = false;
     SAVE_FRAME_PNGS = false;
-
     //FOR_REAL = false;
-    //intro();
-    //fractal();
-    //grid();
-    //fine_grid();
+
+    /*intro();
+    fractal();
+    grid();
+    fine_grid();
+*/
     fine_grid_2();
 }
