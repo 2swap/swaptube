@@ -1,41 +1,42 @@
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
+#include "../Scenes/Common/CoordinateSceneWithTrail.cpp"
+#include "../Scenes/Common/CoordinateScene.cpp"
 #include "../Scenes/Physics/PendulumScene.cpp"
 #include "../Scenes/Physics/PendulumGridScene.cpp"
 #include "../Scenes/Physics/PendulumPointsScene.cpp"
 
 void fine_grid_2(){
     PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0);
-    PendulumGridScene pgs(0, 6.283, 0, 6.283, pg);
+    PendulumGridScene pgs(-M_PI, M_PI, -M_PI, M_PI, pg);
     pgs.state_manager.set({
         {"physics_multiplier", "16"},
         {"mode", "1"},
         {"rk4_step_size", "1 30 / .05 *"},
         {"zoom", "1 6.283 /"},
+        {"trail_start_x", "3"},
+        {"trail_start_y", "3"},
     });
     pgs.inject_audio_and_render(FileSegment("Here we go!"));
-    pgs.inject_audio_and_render(SilenceSegment(9));
+    pgs.inject_audio_and_render(SilenceSegment(7));
     pgs.state_manager.microblock_transition({
         {"center_x", "3.1415"},
         {"center_y", "3.1415"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.inject_audio_and_render(SilenceSegment(2));
-    CompositeScene cs;
-    cs.add_scene(&pgs, "pgs", 0.5, 0.5);
-    cs.state_manager.microblock_transition({
-        {"pgs.x", ".25"},
-    });
     pgs.state_manager.microblock_transition({
-        {"w", ".5"},
+        {"trail_opacity", "1"},
     });
-    cs.inject_audio_and_render(SilenceSegment(2));
+    pgs.inject_audio_and_render(SilenceSegment(2));
+    pgs.inject_audio_and_render(SilenceSegment(2));
+    pgs.inject_audio_and_render(SilenceSegment(2));
 }
 
 void fine_grid(){
     PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0);
-    PendulumGridScene pgs(0, 6.283, 0, 6.283, pg);
+    PendulumGridScene pgs(-M_PI, M_PI, -M_PI, M_PI, pg);
     pgs.state_manager.set({
         {"physics_multiplier", "0"},
         {"mode", "0"},
@@ -346,7 +347,7 @@ void intro() {
 
 void fractal() {
     PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, 0, 6.283, 0, 6.283, 0, 0, 0, 0);
-    PendulumGridScene pgs(0, 6.283, 0, 6.283, pg);
+    PendulumGridScene pgs(-M_PI, M_PI, -M_PI, M_PI, pg);
     pgs.state_manager.set({
         {"physics_multiplier", "10"},
         {"mode", "1"},
@@ -424,7 +425,7 @@ void fractal() {
     cs.inject_audio_and_render(FileSegment("This first pendulum is one of the chaotic ones."));
     cs.inject_audio_and_render(FileSegment("We are particularly interested in the angles that separate each bar from the vertical."));
     specimens[0].global_publisher_key = true;
-    CoordinateScene coord(.5, 1);
+    CoordinateSceneWithTrail coord(.5, 1);
     cs.state_manager.microblock_transition({
         {"p0.x", ".75"},
     });
@@ -490,7 +491,7 @@ void fractal() {
     cs.inject_audio_and_render(FileSegment("This particular pendulum is drawing what's known as a Lissajous curve,"));
     cs.inject_audio_and_render(FileSegment("which is basically what you get when you plot two different sinusoid frequencies against each other."));
     cs.inject_audio_and_render(FileSegment("Now... it's actually rotated at an angle, so both of the frequencies have components present in both of the pendulums."));
-    CoordinateScene left(0.5, 1);
+    CoordinateSceneWithTrail left(0.5, 1);
     left.state_manager.set({
         {"center_x", "<t> 2 /"},
         {"center_y", "0"},
@@ -500,7 +501,7 @@ void fractal() {
         {"trail_x", "<t> 2 / 1 -"},
         {"trail_y", "{pendulum_theta2}"},
     });
-    CoordinateScene right(0.5, 1);
+    CoordinateSceneWithTrail right(0.5, 1);
     right.state_manager.set({
         {"center_x", "0"},
         {"center_y", "<t> 2 /"},

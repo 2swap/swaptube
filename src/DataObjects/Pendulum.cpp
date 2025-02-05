@@ -22,6 +22,7 @@ public:
 class PendulumGrid : public DataObject {
 public:
     int w; int h;
+    vector<PendulumState> start_states;
     vector<PendulumState> pendulum_states;
     vector<PendulumState> pendulum_pairs;
     vector<double> diff_sums;
@@ -31,6 +32,7 @@ public:
         const double p1_min, const double p1_max,
         const double p2_min, const double p2_max
     ) : w(width), h(height) {
+        start_states    = vector<PendulumState>(h*w);
         pendulum_states = vector<PendulumState>(h*w);
         pendulum_pairs  = vector<PendulumState>(h*w);
         diff_sums       = vector<double       >(h*w);
@@ -44,6 +46,7 @@ public:
                                     lerp(p2_min, p2_max, y/(h-1.)),
                                    };
                 pendulum_states[i] = ps;
+                start_states[i] = ps;
                 ps.theta1 += 0.0001;
                 pendulum_pairs [i] = ps;
             }

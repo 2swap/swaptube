@@ -31,21 +31,16 @@ string truncate_tick(double value) {
 
 class CoordinateScene : public Scene {
 public:
-    int trail_color = OPAQUE_WHITE;
-    vector<pair<double, double>> trail;
     CoordinateScene(const double width = 1, const double height = 1)
         : Scene(width, height) {
         state_manager.add_equation("left_x"  , "<center_x> .5 <zoom> / -");
         state_manager.add_equation("right_x" , "<center_x> .5 <zoom> / +");
         state_manager.add_equation("top_y"   , "<center_y> .5 <zoom> / -");
         state_manager.add_equation("bottom_y", "<center_y> .5 <zoom> / +");
-        state_manager.add_equation("trail_opacity", "0");
         state_manager.add_equation("ticks_opacity", "1");
-        state_manager.add_equation("trail_x", "0");
-        state_manager.add_equation("trail_y", "0");
     }
 
-    pair<int, int> point_to_pixel(pair<double, double> p) {
+    pair<int, int> point_to_pixel(const pair<double, double>& p) {
         const int w = get_width();
         const int h = get_height();
         const double rx = state["right_x"];
@@ -58,28 +53,24 @@ public:
         );
     }
 
-    void draw_trail() {
-        const double trail_opacity = state["trail_opacity"];
+    // This is not used here, but it is used in some classes which inherit from CoordinateScene
+    void draw_trail(const vector<pair<double, double>>& trail, const int trail_color, const double trail_opacity) {
         if(trail_opacity < 0.01) return;
         for(int i = 0; i < trail.size()-1; i++) {
             const pair<double, double> last_point = trail[i];
             const pair<double, double> next_point = trail[i+1];
-            pair<int, int> last_pixel = point_to_pixel(last_point);
-            pair<int, int> next_pixel = point_to_pixel(next_point);
+            const pair<int, int> last_pixel = point_to_pixel(last_point);
+            const pair<int, int> next_pixel = point_to_pixel(next_point);
             pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, trail_color, trail_opacity, 1);
         }
+    }
 
-        const pair<double, double> curr_point = make_pair(state["trail_x"], state["trail_y"]);
-        const pair<int, int> curr_pixel = point_to_pixel(curr_point);
-        pix.fill_circle(curr_pixel.first, curr_pixel.second, 3, colorlerp(TRANSPARENT_BLACK, trail_color, trail_opacity));
+    void draw_point(const pair<double, double> point, int point_color, double point_opacity) {
+        const pair<int, int> pixel = point_to_pixel(point);
+        pix.fill_circle(pixel.first, pixel.second, 3, colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
     }
 
     void draw() override {
-        draw_trail();
-        render_axes();
-    }
-
-    void render_axes() {
         const double ticks_opacity = state["ticks_opacity"];
         if(ticks_opacity < 0.01) return;
         const int w = get_width();
@@ -140,13 +131,13 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom", "ticks_opacity", "trail_opacity", "trail_x", "trail_y"};
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom", "ticks_opacity"};
         return sq;
     }
 
     void mark_data_unchanged() override {}
-    void change_data() override { if(state["trail_opacity"] > 0.01) trail.push_back(make_pair(state["trail_x"], state["trail_y"])); else trail.clear();}
-    bool check_if_data_changed() const override { return true; }
+    void change_data() override { }
+    bool check_if_data_changed() const override { return false; }
     void on_end_transition(){}
 };
 
