@@ -55,19 +55,21 @@ public:
 
     // This is not used here, but it is used in some classes which inherit from CoordinateScene
     void draw_trail(const vector<pair<double, double>>& trail, const int trail_color, const double trail_opacity) {
+        if(trail.size() == 0) return;
         if(trail_opacity < 0.01) return;
+        int line_width = get_height()/250;
         for(int i = 0; i < trail.size()-1; i++) {
             const pair<double, double> last_point = trail[i];
             const pair<double, double> next_point = trail[i+1];
             const pair<int, int> last_pixel = point_to_pixel(last_point);
             const pair<int, int> next_pixel = point_to_pixel(next_point);
-            pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, trail_color, trail_opacity, 1);
+            pix.bresenham(last_pixel.first, last_pixel.second, next_pixel.first, next_pixel.second, trail_color, trail_opacity, line_width);
         }
     }
 
     void draw_point(const pair<double, double> point, int point_color, double point_opacity) {
         const pair<int, int> pixel = point_to_pixel(point);
-        pix.fill_circle(pixel.first, pixel.second, 3, colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
+        pix.fill_circle(pixel.first, pixel.second, get_height()/200., colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
     }
 
     void draw() override {

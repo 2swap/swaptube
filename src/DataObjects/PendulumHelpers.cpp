@@ -90,10 +90,11 @@ inline PendulumState rk4Step(const PendulumState &state, double dt) {
     Derivatives k4 = computeDerivatives(s4);
 
     PendulumState newState;
-    newState.theta1 = state.theta1 + (dt / 6.0) * (k1.dtheta1 + 2 * k2.dtheta1 + 2 * k3.dtheta1 + k4.dtheta1);
-    newState.theta2 = state.theta2 + (dt / 6.0) * (k1.dtheta2 + 2 * k2.dtheta2 + 2 * k3.dtheta2 + k4.dtheta2);
-    newState.p1 = state.p1 + (dt / 6.0) * (k1.dp1 + 2 * k2.dp1 + 2 * k3.dp1 + k4.dp1);
-    newState.p2 = state.p2 + (dt / 6.0) * (k1.dp2 + 2 * k2.dp2 + 2 * k3.dp2 + k4.dp2);
+    double dt6 = dt/6.0;
+    newState.theta1 = state.theta1 + dt6 * (k1.dtheta1 + 2 * k2.dtheta1 + 2 * k3.dtheta1 + k4.dtheta1);
+    newState.theta2 = state.theta2 + dt6 * (k1.dtheta2 + 2 * k2.dtheta2 + 2 * k3.dtheta2 + k4.dtheta2);
+    newState.p1 = state.p1 + dt6 * (k1.dp1 + 2 * k2.dp1 + 2 * k3.dp1 + k4.dp1);
+    newState.p2 = state.p2 + dt6 * (k1.dp2 + 2 * k2.dp2 + 2 * k3.dp2 + k4.dp2);
     newState.iteration_number = state.iteration_number+1;
 
     return newState;

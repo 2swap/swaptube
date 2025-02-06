@@ -19,9 +19,28 @@ public:
     void on_end_transition() override {}
     void mark_data_unchanged() override { pend.mark_unchanged(); }
     void change_data() override {
-        pend.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]);
+        double w = get_width(); double h = get_height();
+        double line_thickness = h/80;
+        double length = h/(pendulum_count * 2 + 1.);
+        double pm = state["physics_multiplier"];
+        double last_x = w/2 + (sin(pend.state.theta1)+sin(pend.state.theta2))*length;
+        double last_y = h/2 + (cos(pend.state.theta1)+cos(pend.state.theta2))*length;
+        for(int i = 0; i < pm; i++) {
+            pend.iterate_physics(1, state["rk4_step_size"]);
+            double x = w/2 + (sin(pend.state.theta1)+sin(pend.state.theta2))*length;
+            double y = h/2 + (cos(pend.state.theta1)+cos(pend.state.theta2))*length;
+            path_background.bresenham(last_x, last_y, x, y, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
+            last_x = x; last_y = y;
+        }
         energy_slew = square(compute_kinetic_energy(pend.state));
         generate_tone();
+        for(int x = 0; x < path_background.w; x++) {
+            for(int y = 0; y < path_background.h; y++) {
+                int alpha = geta(path_background.get_pixel(x, y));
+                alpha = alpha==0?0:alpha-1;
+                path_background.set_pixel(x, y, argb_to_col(alpha, 255, 255, 255));
+            }
+        }
     }
     bool check_if_data_changed() const override { return pend.has_been_updated_since_last_scene_query(); }
     unordered_map<string, double> stage_publish_to_global() const override {
@@ -36,7 +55,6 @@ public:
         double line_thickness = h/80;
         double posx = w/2; double posy = h/2;
         vector<double> thetas = {pend.state.theta1, pend.state.theta2};
-        int pendulum_count = 2;
         int color = YUVtoRGB(map_to_torus(thetas[1], thetas[0]));
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
@@ -65,17 +83,8 @@ public:
             }
             pix.fill_circle(posx, posy, line_thickness*2, pendulum_color);
         }
-        if(state["path_opacity"] > 0.01 && (last_posx != 0 || last_posy != 0)) {
-            path_background.bresenham(last_posx, last_posy, posx, posy, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
+        if(state["path_opacity"] > 0.01) {
             pix.underlay(path_background, 0, 0);
-        }
-        last_posx = posx; last_posy = posy;
-        for(int x = 0; x < path_background.w; x++) {
-            for(int y = 0; y < path_background.h; y++) {
-                int alpha = geta(path_background.get_pixel(x, y));
-                alpha = alpha==0?0:alpha-1;
-                path_background.set_pixel(x, y, argb_to_col(alpha, 255, 255, 255));
-            }
         }
     }
 
@@ -114,8 +123,8 @@ private:
     int tonegen = 0;
     double energy = 0;
     double energy_slew = 0;
-    double last_posx; double last_posy;
     PendulumState start_state;
     Pendulum pend;
     Pixels path_background;
+    const int pendulum_count = 2;
 };
