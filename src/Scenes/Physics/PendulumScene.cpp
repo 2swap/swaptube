@@ -112,7 +112,7 @@ public:
         PendulumState ps = start_state;
         for(int i = 0; i < duration*44100; i++){
             for(int j = 0; j < 10; j++) {
-                ps = rk4Step(ps, 0.003);
+                ps = rk4Step(rk4Step(rk4Step(ps, 0.001), 0.001), 0.001);
             }
             left.push_back(.05*sin(ps.theta1));
             right.push_back(.05*sin(ps.theta2));
