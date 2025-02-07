@@ -72,7 +72,7 @@ public:
 
     void draw_point(const pair<double, double> point, int point_color, double point_opacity) {
         const pair<int, int> pixel = point_to_pixel(point);
-        pix.fill_circle(pixel.first, pixel.second, get_height()/200., colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
+        pix.fill_circle(pixel.first, pixel.second, get_height()/100., colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
     }
 
     void draw() override {
@@ -81,12 +81,14 @@ public:
     }
 
     void draw_circles() {
+        const double z = state["zoom"] + 0.0001;
+        const double w = get_width();
         for(int i = 0; i < circles_to_render; i++){
             const double x = state["circle"+to_string(i)+"_x"];
             const double y = state["circle"+to_string(i)+"_y"];
+            const double r = state["circle"+to_string(i)+"_r"];
             const pair<int, int> pixel = point_to_pixel(make_pair(x,y));
-            pix.fill_circle(pixel.first, pixel.second, get_height()/20., 0xffff0000);
-            pix.fill_circle(pixel.first, pixel.second, get_height()/25., OPAQUE_BLACK);
+            pix.fill_donut(pixel.first, pixel.second, w*r*z*0.9, w*r*z*1.1, 0xffff0000);
         }
     }
 
@@ -155,6 +157,7 @@ public:
         for(int i = 0; i < circles_to_render; i++) {
             sq.insert("circle"+to_string(i)+"_x");
             sq.insert("circle"+to_string(i)+"_y");
+            sq.insert("circle"+to_string(i)+"_r");
         }
         return sq;
     }

@@ -8,12 +8,13 @@ public:
         state_manager.add_equation("tone", "1");
         state_manager.add_equation("volume", "0");
         state_manager.add_equation("path_opacity", "0");
-        state_manager.add_equation("angles_opacity", "0");
+        state_manager.add_equation("top_angle_opacity", "0");
+        state_manager.add_equation("bottom_angle_opacity", "0");
         state_manager.add_equation("rainbow", "1");
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"angles_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
     void on_end_transition() override {}
@@ -70,13 +71,17 @@ public:
                 double dx = sin(theta) * length; double dy = cos(theta) * length;
                 pix.fill_circle(posx, posy, line_thickness * 2, pendulum_color);
                 pix.bresenham(posx, posy, posx + dx, posy + dy, pendulum_color, 1, line_thickness);
-                double ao = state["angles_opacity"];
+                double ao = i==0?state["top_angle_opacity"]:state["bottom_angle_opacity"];
                 if(ao > 0.01){
                     double theta_modified = theta+199*M_PI;
                     theta_modified -= static_cast<int>(theta_modified/(2*M_PI))*2*M_PI + M_PI;
                     pix.bresenham(posx, posy, posx, posy + length, OPAQUE_WHITE, ao, .5*line_thickness);
-                    for(double angle = 0; angle < 1; angle+=.01) {
-                        pix.overlay_pixel(posx + sin(angle*theta_modified)*length*.5, posy + cos(angle*theta_modified)*length*.5, OPAQUE_WHITE, ao);
+                    const double d_angle = .01;
+                    for(double angle = 0; angle < 1; angle+=d_angle) {
+                        pix.bresenham(posx + sin( angle         *theta_modified)*length*.5,
+                                      posy + cos( angle         *theta_modified)*length*.5,
+                                      posx + sin((angle-d_angle)*theta_modified)*length*.5,
+                                      posy + cos((angle-d_angle)*theta_modified)*length*.5, OPAQUE_WHITE, ao, .25*line_thickness);
                     }
                 }
                 posx += dx; posy += dy;
@@ -90,11 +95,11 @@ public:
 
     void generate_tone(){
         double vol = state["volume"];
-        if(vol < 0.01) return;
+        int total_samples = 44100/VIDEO_FRAMERATE;
+        if(vol < 0.01) {tonegen = 0; return;}
         if(tonegen == 0) tonegen = state["t"]*44100;
         vector<float> left;
         vector<float> right;
-        int total_samples = 44100/VIDEO_FRAMERATE;
         int tonegen_save = tonegen;
         double note = state["tone"];
         for(int i = 0; i < total_samples; i++){

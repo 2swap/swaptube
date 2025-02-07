@@ -179,15 +179,27 @@ public:
                 set_pixel(x+dx, y+dy, col);
     }
 
+    void fill_donut(double x, double y, double inner_r, double outer_r, int col){
+        for(double dx = -outer_r+1; dx < outer_r; dx++)
+            for(double dy = -outer_r+1; dy < outer_r; dy++){
+                double inner_dist = square(dx/inner_r)+square(dy/inner_r);
+                double outer_dist = square(dx/outer_r)+square(dy/outer_r);
+                if(inner_dist > 1 && outer_dist < 1)
+                    set_pixel(x+dx, y+dy, col);
+            }
+    }
+
     void fill_circle(double x, double y, double r, int col){
         fill_ellipse(x, y, r, r, col);
     }
 
     void fill_ellipse(double x, double y, double rw, double rh, int col){
-        for(double dx = -rw+1; dx < rw; dx++)
+        for(double dx = -rw+1; dx < rw; dx++){
+            double sdx = square(dx/rw);
             for(double dy = -rh+1; dy < rh; dy++)
-                if(square(dx/rw)+square(dy/rh) < 1)
+                if(sdx+square(dy/rh) < 1)
                     set_pixel(x+dx, y+dy, col);
+        }
     }
 
     void fill(int col){

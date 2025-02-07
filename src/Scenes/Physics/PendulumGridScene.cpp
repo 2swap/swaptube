@@ -6,7 +6,7 @@
 
 class PendulumGridScene : public CoordinateScene {
 public:
-    PendulumGridScene(const double min_x, const double max_x, const double min_y, const double max_y, const PendulumGrid& pg, const double width = 1, const double height = 1) : CoordinateScene(width, height), grid(pg), min_x(min_x), max_x(max_x), min_y(min_y), max_y(max_y) {
+    PendulumGridScene(const vector<PendulumGrid>& pgv, const double width = 1, const double height = 1) : CoordinateScene(width, height), grids(pgv) {
         state_manager.add_equation("contrast", ".1");
         state_manager.add_equation("mode", "0");
         state_manager.add_equation("center_x", "0");
@@ -32,9 +32,28 @@ public:
         return s;
     }
 
-    void mark_data_unchanged() override { grid.mark_unchanged(); }
-    void change_data() override { grid.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]); }
-    bool check_if_data_changed() const override { return grid.has_been_updated_since_last_scene_query(); }
+    void mark_data_unchanged() override {
+        for(PendulumGrid& grid : grids)
+            grid.mark_unchanged();
+    }
+    void change_data() override {
+        for(PendulumGrid& grid : grids)
+            grid.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]);
+    }
+    bool check_if_data_changed() const override {
+        for(const PendulumGrid& grid : grids)
+            if(grid.has_been_updated_since_last_scene_query())
+                return true;
+        return false;
+    }
+
+    double extended_mod(double a, double b) {
+        double result = fmod(a, b);
+        if (result < 0) {
+            result += b;  // Ensures non-negative remainder
+        }
+        return result;
+    }
 
     void draw_grid() {
         int w = get_width();
@@ -49,18 +68,30 @@ public:
         const double coloration = 1000;
         const double log_coloration = log(coloration);
 
-        const double inv_y_range = 1./(max_y-min_y);
-        const double inv_x_range = 1./(max_x-min_x);
+        const PendulumGrid& g0 = grids[0];
+        const double inv_y_range = 1./(g0.t2_max-g0.t2_min);
+        const double inv_x_range = 1./(g0.t1_max-g0.t1_min);
         for (int y = 0; y < h; ++y) {
             double pos_y = (h/2.0 - y) / (h * zoom) + cy;
-            int arr_y = static_cast<int>(((pos_y-min_y)*inv_y_range+100) * grid.h)%grid.h;
-            if(arr_y >= grid.h || arr_y < 0) continue;
+            pos_y = extended_mod(pos_y-g0.t2_min, g0.t2_max-g0.t2_min)+g0.t2_min;
             for (int x = 0; x < w; ++x) {
                 double pos_x = (x - w/2.0) / (w * zoom) + cx;
-                int arr_x = static_cast<int>(((pos_x-min_x)*inv_x_range+100) * grid.w)%grid.w;
-                if(arr_x >= grid.w || arr_x < 0) continue;
+                pos_x = extended_mod(pos_x-g0.t1_min, g0.t1_max-g0.t1_min)+g0.t1_min;
 
-                int i = arr_x + arr_y * grid.w;
+                int last_grid = 0;
+                for(int i = grids.size() - 1; i >= 0; i--){
+                    const PendulumGrid& grid = grids[i];
+                    if(pos_x < grid.t1_max && pos_x > grid.t1_min && pos_y < grid.t2_max && pos_y > grid.t2_min){
+                        last_grid = i;
+                        break;
+                    }
+                }
+                const PendulumGrid& grid = grids[last_grid];
+                int arr_x = grid.w * (pos_x - grid.t1_min) / (grid.t1_max-grid.t1_min);
+                if(arr_x < 0 || arr_x >= grid.w) continue;
+                int arr_y = grid.h * (pos_y - grid.t2_min) / (grid.t2_max-grid.t2_min);
+                if(arr_y < 0 || arr_y >= grid.h) continue;
+                int i = arr_x+arr_y*grid.w;
 
                 int color_mode0 = 0; int color_mode1 = 0; int color_mode2 = 0; int color_mode3 = 0;
                 int color = 0xffff0000;
@@ -112,10 +143,6 @@ public:
     }
 
 private:
-    PendulumGrid grid;
-    const double min_x;
-    const double max_x;
-    const double min_y;
-    const double max_y;
+    vector<PendulumGrid> grids;
 };
 

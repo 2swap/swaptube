@@ -22,6 +22,14 @@ public:
 class PendulumGrid : public DataObject {
 public:
     int w; int h;
+    double t1_min;
+    double t1_max;
+    double t2_min;
+    double t2_max;
+    double p1_min;
+    double p1_max;
+    double p2_min;
+    double p2_max;
     vector<PendulumState> start_states;
     vector<PendulumState> pendulum_states;
     vector<PendulumState> pendulum_pairs;
@@ -31,7 +39,7 @@ public:
         const double t2_min, const double t2_max,
         const double p1_min, const double p1_max,
         const double p2_min, const double p2_max
-    ) : w(width), h(height) {
+    ) : w(width), h(height), t1_min(t1_min), t1_max(t1_max), t2_min(t2_min), t2_max(t2_max), p1_min(p1_min), p1_max(p1_max), p2_min(p2_min), p2_max(p2_max) {
         start_states    = vector<PendulumState>(h*w);
         pendulum_states = vector<PendulumState>(h*w);
         pendulum_pairs  = vector<PendulumState>(h*w);
