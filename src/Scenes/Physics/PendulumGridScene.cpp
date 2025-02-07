@@ -46,6 +46,9 @@ public:
         const double contrast = state["contrast"];
         const double mode = state["mode"];
 
+        const double coloration = 1000;
+        const double log_coloration = log(coloration);
+
         const double inv_y_range = 1./(max_y-min_y);
         const double inv_x_range = 1./(max_x-min_x);
         for (int y = 0; y < h; ++y) {
@@ -71,7 +74,7 @@ public:
                     
                     double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2));
                     distance = min(distance, 1.);
-                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(distance)));
+                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance)/log_coloration));
                 }
 
                 if(mode < 0.001) color = color_mode0;

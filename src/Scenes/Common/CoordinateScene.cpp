@@ -4,6 +4,8 @@
 #include <vector>
 
 string truncate_tick(double value) {
+    if(abs(value) < 0.00000000001) return "0";
+
     // Convert double to string with a stream
     ostringstream oss;
     oss << value;
@@ -31,6 +33,7 @@ string truncate_tick(double value) {
 
 class CoordinateScene : public Scene {
 public:
+    int circles_to_render = 0;
     CoordinateScene(const double width = 1, const double height = 1)
         : Scene(width, height) {
         state_manager.add_equation("left_x"  , "<center_x> .5 <zoom> / -");
@@ -73,6 +76,20 @@ public:
     }
 
     void draw() override {
+        draw_circles();
+        draw_axes();
+    }
+
+    void draw_circles() {
+        for(int i = 0; i < circles_to_render; i++){
+            const double x = state["circle"+to_string(i)+"_x"];
+            const double y = state["circle"+to_string(i)+"_y"];
+            const pair<int, int> pixel = point_to_pixel(make_pair(x,y));
+            pix.fill_circle(pixel.first, pixel.second, get_height()/20., 0xffff0000);
+        }
+    }
+
+    void draw_axes() {
         const double ticks_opacity = state["ticks_opacity"];
         if(ticks_opacity < 0.01) return;
         const int w = get_width();
@@ -134,6 +151,10 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom", "ticks_opacity"};
+        for(int i = 0; i < circles_to_render; i++) {
+            sq.insert("circle"+to_string(i)+"_x");
+            sq.insert("circle"+to_string(i)+"_y");
+        }
         return sq;
     }
 
