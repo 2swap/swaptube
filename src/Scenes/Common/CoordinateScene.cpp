@@ -86,6 +86,7 @@ public:
             const double y = state["circle"+to_string(i)+"_y"];
             const pair<int, int> pixel = point_to_pixel(make_pair(x,y));
             pix.fill_circle(pixel.first, pixel.second, get_height()/20., 0xffff0000);
+            pix.fill_circle(pixel.first, pixel.second, get_height()/25., OPAQUE_BLACK);
         }
     }
 

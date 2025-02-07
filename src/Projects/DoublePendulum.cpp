@@ -326,7 +326,7 @@ void grid() {
         {"pendulum_opacity", "1"},
         {"background_opacity", "0"},
         {"physics_multiplier", "0"},
-        {"rk4_step_size", "1 30 / <physics_multiplier> /"},
+        {"rk4_step_size", "1 30 / <physics_multiplier> .0001 + /"},
         {"rainbow", "0"},
     };
     cs.state_manager.set(state);
@@ -334,6 +334,9 @@ void grid() {
     cs.inject_audio_and_render(FileSegment("The pendulum's x position corresponds to the top angle,"));
     //TODO zoom in on one pendulum and show angles
     cs.inject_audio_and_render(FileSegment("and its y position corresponds to the bottom angle."));
+    cs.state_manager.microblock_transition({
+        {"rainbow", "1"},
+    });
     cs.inject_audio_and_render(FileSegment("If we associate each pendulum position with a particular color, it makes it easier to tell what is going on."));
     cs.state_manager.set({
         {"physics_multiplier", "5"},
@@ -343,6 +346,7 @@ void grid() {
         {"background_opacity", "1"},
         {"pendulum_opacity", "0"},
     });
+    cs.inject_audio_and_render(SilenceSegment(2));
 }
 
 void grids_and_points(){
@@ -872,7 +876,7 @@ void fractal() {
 void render_video() {
     //PRINT_TO_TERMINAL = false;
     SAVE_FRAME_PNGS = false;
-    FOR_REAL = false;
+    //FOR_REAL = false;
 
     intro();
     fractal();
