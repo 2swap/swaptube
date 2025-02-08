@@ -50,16 +50,17 @@ public:
 
         const double coloration = 1000;
         const double log_coloration = log(coloration);
+        const double tom = state["theta_or_momentum"];
 
         PendulumGrid grid(w, h,
-            state["left_x"  ] * (  state["theta_or_momentum"]) + state["theta1"],
-            state["right_x" ] * (  state["theta_or_momentum"]) + state["theta1"],
-            state["bottom_y"] * (  state["theta_or_momentum"]) + state["theta2"],
-            state["top_y"   ] * (  state["theta_or_momentum"]) + state["theta2"],
-            state["left_x"  ] * (1-state["theta_or_momentum"]) + state["p1"    ],
-            state["right_x" ] * (1-state["theta_or_momentum"]) + state["p1"    ],
-            state["bottom_y"] * (1-state["theta_or_momentum"]) + state["p2"    ],
-            state["top_y"   ] * (1-state["theta_or_momentum"]) + state["p2"    ]
+            state["left_x"  ] * (1-tom) + state["theta1"],
+            state["right_x" ] * (1-tom) + state["theta1"],
+            state["bottom_y"] * (1-tom) + state["theta2"],
+            state["top_y"   ] * (1-tom) + state["theta2"],
+            state["left_x"  ] * (  tom) + state["p1"    ],
+            state["right_x" ] * (  tom) + state["p1"    ],
+            state["bottom_y"] * (  tom) + state["p2"    ],
+            state["top_y"   ] * (  tom) + state["p2"    ]
         );
         grid.iterate_physics(state["iterations"], state["rk4_step_size"]);
         for (int y = 0; y < h; ++y) {

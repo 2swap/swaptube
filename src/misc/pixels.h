@@ -68,36 +68,41 @@ public:
 
     void print_to_terminal() const {
         cout << endl;
+        
         struct winsize wsz;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsz);
 
-        const int twidth = wsz.ws_col;
-        const int theight = wsz.ws_row;
-        const int width = min(twidth, theight*w/h);
-        const int height = min(theight, twidth*h/w);
+        const int termWidth = wsz.ws_col;
+        const int termHeight = wsz.ws_row;
+
+        // character aspect ratio correction (on gnome-terminal I measured 18x8 pixels per character)
+        const double charAspect = 18./8;
+
+        // Compute the effective width and height while maintaining aspect ratio
+        const double pixelAspectRatio = static_cast<double>(w) / h;
+        int width = termWidth;
+        int height = static_cast<int>(width / pixelAspectRatio / charAspect);
+
         const int xStep = max(w / width, 1);
         const int yStep = max(h / height, 1);
 
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
-                int sampleX = x * xStep / 3 + w / 3;
+                int sampleX = x * xStep;
                 int sampleY = y * yStep;
 
                 int a, r, g, b;
-                //there is something weird going on here, dont know why the params have to be in reverse
                 get_pixel_by_channels(sampleX, sampleY, a, b, g, r);
 
-                // Map the RGB values to ANSI color codes
-                int rCode = static_cast<int>((1-cube(1-(r / 255.0*a/255.))) * 5);
-                int gCode = static_cast<int>((1-cube(1-(g / 255.0*a/255.))) * 5);
-                int bCode = static_cast<int>((1-cube(1-(b / 255.0*a/255.))) * 5);
+                // Map RGB values to ANSI color codes
+                int rCode = static_cast<int>((1 - cube(1 - (r / 255.0 * a / 255.0))) * 5);
+                int gCode = static_cast<int>((1 - cube(1 - (g / 255.0 * a / 255.0))) * 5);
+                int bCode = static_cast<int>((1 - cube(1 - (b / 255.0 * a / 255.0))) * 5);
 
-                // Calculate the ANSI color code based on RGB values
                 int colorCode = 16 + 36 * bCode + 6 * gCode + rCode;
 
-                // Output the colored ASCII character
-                cout << "\033[48;5;" << colorCode << "m";
-                cout << ' ';
+                // Output colored ASCII block
+                cout << "\033[48;5;" << colorCode << "m ";
             }
             cout << "\033[0m" << endl;
         }

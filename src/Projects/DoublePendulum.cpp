@@ -9,18 +9,61 @@
 #include "../Scenes/Physics/PendulumPointsScene.cpp"
 
 void move_fractal(){
+    pgs.state_manager.microblock_transition({
+        {"center_x", "0"},
+        {"center_y", "0"},
+        {"circles_opacity", "0"},
+        {"zoom", "1 6.283 /"},
+    });
+    pgs.inject_audio_and_render(SilenceSegment(2));
+
     MovingPendulumGridScene mpgs;
     mpgs.state_manager.set({
-        {"iterations", "1000"},
+        {"iterations", "6000"},
         {"mode", "2"},
-        {"rk4_step_size", "1 30 /"},
+        {"rk4_step_size", "1 30 / .04 *"},
         {"zoom", "1 6.283 /"},
         {"theta_or_momentum", "0"},
+        {"contrast", "100"},
     });
+    CompositeScene cs;
+    cs.add_scene(&pgs, "pgs", 0.5, 0.5);
+    cs.add_scene(&mpgs, "mpgs", 0.5, 0.5);
+    cs.state_manager.set({
+        {"pgs.opacity", "1"},
+        {"mpgs.opacity", "0"},
+    });
+    cs.state_manager.microblock_transition({
+        {"pgs.opacity", "0"},
+        {"mpgs.opacity", "1"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(2));
+    cs.remove_scene(&mpgs);
+    cs.remove_scene(& pgs);
+
+    mpgs.inject_audio_and_render(FileSegment("So far, I've only been dropping the pendulums from a motionless state."));
+    mpgs.inject_audio_and_render(FileSegment("What if, instead, we start the pendulum off with some momentum?"));
     mpgs.state_manager.microblock_transition({
         {"p1", ".888160052"},
     });
     mpgs.inject_audio_and_render(SilenceSegment(2));
+    mpgs.inject_audio_and_render(FileSegment("Now, looking at these graphs, you might notice:"));
+    mpgs.inject_audio_and_render(FileSegment("the area closest to when the pendulum is straight up is chaotic,"));
+    mpgs.inject_audio_and_render(FileSegment("and the area around 0 always tends to be non-chaotic,"));
+    mpgs.inject_audio_and_render(FileSegment("maybe it's really a matter of how energetic the pendulum is."));
+    mpgs.inject_audio_and_render(FileSegment("Taking this borderline-chaotic pendulum,"));
+    mpgs.inject_audio_and_render(FileSegment("If I color in red all the pendulums with less mechanical energy than this one"));
+    mpgs.inject_audio_and_render(FileSegment("You'll see that it overlaps rather well with the set of lissajous-esque pendulums."));
+    mpgs.inject_audio_and_render(FileSegment("So, is that it? Are low-energy pendulums coherent, while high-energy pendulums are chaotic?"));
+    mpgs.state_manager.microblock_transition({
+        {"theta_or_momentum", "1"},
+    });
+    mpgs.inject_audio_and_render(FileSegment("To answer that, we'll need a change in perspective."));
+    mpgs.inject_audio_and_render(FileSegment("I've now reoriented the axes of our fractal to be in momentum-space instead of angle-space."));
+    mpgs.inject_audio_and_render(FileSegment("In other words, we are looking at a grid of pendulums all with starting angle at 0, but with different starting speeds."));
+    mpgs.inject_audio_and_render(FileSegment("It's still the case that the pendulums with low energy are stable,"));
+    mpgs.inject_audio_and_render(FileSegment("and the area of pendulums with slightly higher energy tends to be chaotic,"));
+    mpgs.inject_audio_and_render(FileSegment("But these ultra-high-energy pendulums don't easily fit into one box or another."));
 }
 
 struct IslandShowcase {
@@ -408,7 +451,7 @@ void grid() {
         {"rainbow", "0"},
     };
     cs.state_manager.set(state);
-    int selected_pendulum = vps.size()*.6;
+    int selected_pendulum = vps.size()*.4;
     string key_str = "ps" + to_string(selected_pendulum);
     cs.inject_audio_and_render(FileSegment("Well, we can try creating a large array of pendulums like this."));
     string return_x = to_string(cs.state_manager.get_state({key_str + ".x"})[key_str + ".x"]);
@@ -947,5 +990,5 @@ void render_video() {
     fine_grid_2(pgs);
     showcase_islands(pgs);
 */
-    move_fractal();
+    move_fractal(pgs);
 }
