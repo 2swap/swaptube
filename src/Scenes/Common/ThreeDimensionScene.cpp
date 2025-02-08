@@ -283,7 +283,9 @@ public:
 
     void mark_data_unchanged() override { }
     void change_data() override {
-        // I think this is a noop since data will be changed when each of the subscenes is queried
+        for(const auto& surface : surfaces){
+            surface.scenePointer->update();
+        }
     }
 
     bool check_if_data_changed() const override {
@@ -303,7 +305,7 @@ public:
 
     bool subscene_needs_redraw() const override {
         for(const auto& surface : surfaces){
-            surface.scenePointer->update();
+            //surface.scenePointer->update();
             if(surface.scenePointer->needs_redraw()) return true;
         }
         return false;

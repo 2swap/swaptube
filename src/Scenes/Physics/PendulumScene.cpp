@@ -4,7 +4,7 @@
 
 class PendulumScene : public Scene {
 public:
-    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), start_state(s), pend(s), path_background(get_width(), get_height()) {
+    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), pend(s), start_state(s), path_background(get_width(), get_height()) {
         state_manager.add_equation("tone", "1");
         state_manager.add_equation("volume", "0");
         state_manager.add_equation("path_opacity", "0");
@@ -123,13 +123,13 @@ public:
             right.push_back(.05*sin(ps.theta2));
         }
     }
+    Pendulum pend;
 
 private:
     int tonegen = 0;
     double energy = 0;
     double energy_slew = 0;
     PendulumState start_state;
-    Pendulum pend;
     Pixels path_background;
     const int pendulum_count = 2;
 };

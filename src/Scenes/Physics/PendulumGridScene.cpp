@@ -47,14 +47,6 @@ public:
         return false;
     }
 
-    double extended_mod(double a, double b) {
-        double result = fmod(a, b);
-        if (result < 0) {
-            result += b;  // Ensures non-negative remainder
-        }
-        return result;
-    }
-
     void draw_grid() {
         int w = get_width();
         int h = get_height();

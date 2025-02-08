@@ -24,6 +24,14 @@ inline double smoothlerp(double a, double b, double w){double v = smoother2(w);r
 inline string latex_text(string in){return "\\text{" + in + "}";}
 inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
 
+double extended_mod(double a, double b) {
+    double result = fmod(a, b);
+    if (result < 0) {
+        result += b;  // Ensures non-negative remainder
+    }
+    return result;
+}
+
 void signal_handler(int signal) {
     if (signal == SIGINT) {
         throw runtime_error("Control-C interrupt detected. Exiting gracefully.");

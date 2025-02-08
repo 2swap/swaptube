@@ -61,12 +61,14 @@ public:
     bool check_if_data_changed() const override {return false;}
 
     void change_data() override {
-        // I think this is a noop since data will be changed when each of the subscenes is queried
+        for(const auto& swp : scenes){
+            swp.scenePointer->update();
+        }
     }
 
     bool subscene_needs_redraw() const override {
         for (auto& swp : scenes){
-            swp.scenePointer->update();
+            //swp.scenePointer->update();
             if(state[swp.state_manager_name + ".opacity"] > 0.01 && swp.scenePointer->needs_redraw()) return true;
         }
         return false;

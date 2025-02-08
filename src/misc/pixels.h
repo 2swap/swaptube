@@ -179,13 +179,13 @@ public:
                 set_pixel(x+dx, y+dy, col);
     }
 
-    void fill_donut(double x, double y, double inner_r, double outer_r, int col){
+    void fill_donut(double x, double y, double inner_r, double outer_r, int col, const double opacity){
         for(double dx = -outer_r+1; dx < outer_r; dx++)
             for(double dy = -outer_r+1; dy < outer_r; dy++){
                 double inner_dist = square(dx/inner_r)+square(dy/inner_r);
                 double outer_dist = square(dx/outer_r)+square(dy/outer_r);
                 if(inner_dist > 1 && outer_dist < 1)
-                    set_pixel(x+dx, y+dy, col);
+                    overlay_pixel(x+dx, y+dy, col, opacity);
             }
     }
 

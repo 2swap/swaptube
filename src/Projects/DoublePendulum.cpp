@@ -5,7 +5,23 @@
 #include "../Scenes/Common/CoordinateScene.cpp"
 #include "../Scenes/Physics/PendulumScene.cpp"
 #include "../Scenes/Physics/PendulumGridScene.cpp"
+#include "../Scenes/Physics/MovingPendulumGridScene.cpp"
 #include "../Scenes/Physics/PendulumPointsScene.cpp"
+
+void move_fractal(){
+    MovingPendulumGridScene mpgs;
+    mpgs.state_manager.set({
+        {"iterations", "1000"},
+        {"mode", "2"},
+        {"rk4_step_size", "1 30 /"},
+        {"zoom", "1 6.283 /"},
+        {"theta_or_momentum", "0"},
+    });
+    mpgs.state_manager.microblock_transition({
+        {"p1", ".888160052"},
+    });
+    mpgs.inject_audio_and_render(SilenceSegment(2));
+}
 
 struct IslandShowcase {
     PendulumState ps;
@@ -17,6 +33,99 @@ vector<IslandShowcase> iss{{{2.49, .25     , .0, .0}, 0.4 , "The Pretzel"},
                            {{2.658, -2.19  , .0, .0}, 0.2 , "The Shoelace"},
                            {{2.453, -2.7727, .0, .0}, 0.05, "The Heart"},
                            {{1.351, 2.979  , .0, .0}, 0.2 , "The Bird"}};
+
+//                           {{2.533, 2.173  , .888160052, .0}, 0.2 , "The Balancer"}};
+
+void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const string& script) {
+    const double range = is.range;
+    const double cx = is.ps.theta1;
+    const double cy = is.ps.theta2;
+    pgs.state_manager.set({
+        {"physics_multiplier", "0"},
+        {"mode", "2"},
+        {"ticks_opacity", "0"},
+        {"rk4_step_size", "0"},
+        {"zoom", "1 6.283 /"},
+    });
+    pgs.state_manager.microblock_transition({
+        {"center_x", to_string(cx)},
+        {"center_y", to_string(cy)},
+    });
+    pgs.inject_audio_and_render(SilenceSegment(2));
+    pgs.state_manager.microblock_transition({
+        {"zoom", to_string(1/is.range)},
+        {"circles_opacity", "0"},
+    });
+    pgs.inject_audio_and_render(SilenceSegment(2));
+
+    CompositeScene cs;
+    PendulumScene ps(is.ps, 0.5, 1);
+    ps.global_publisher_key = true;
+    LatexScene ls(latex_text(is.name), 1, 0.5, 0.2);
+
+    // delete trailing zeros
+    string str_cx = to_string(cx);
+    string str_cy = to_string(cy);
+    str_cx = str_cx.erase(str_cx.find_last_not_of('0') + 1);
+    str_cy = str_cy.erase(str_cy.find_last_not_of('0') + 1);
+    LatexScene ls2("\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy, 1, 0.3, 0.2);
+
+    CoordinateSceneWithTrail ts(0.5, 1);
+    cs.add_scene        (&pgs, "pgs", 0.5 , 0.5 );
+    cs.add_scene_fade_in(&ps , "ps" , 0.75, 0.5 );
+    cs.add_scene_fade_in(&ls , "ls" , 0.5 , 0.15);
+    cs.add_scene_fade_in(&ls2, "ls2", 0.5 , 0.25);
+    cs.add_scene_fade_in(&ts , "ts" , 0.25, 0.5 );
+    cs.state_manager.microblock_transition({
+        {"pgs.opacity", ".4"},
+    });
+    ts.state_manager.set({
+        {"center_x", to_string(cx)},
+        {"center_y", to_string(cy)},
+        {"zoom", ".02"},
+        {"trail_opacity", "1"},
+        {"trail_x", "{pendulum_theta1}"},
+        {"trail_y", "{pendulum_theta2}"},
+        {"center_x", "{pendulum_theta1}"},
+        {"center_y", "{pendulum_theta2}"},
+    });
+    ps.state_manager.set({
+        {"background_opacity", "0"},
+        {"top_angle_opacity", "0"},
+        {"bottom_angle_opacity", "0"},
+        {"pendulum_opacity", "1"},
+        {"physics_multiplier", "400"},
+        {"path_opacity", "1"},
+        {"rk4_step_size", "1 30 / <physics_multiplier> /"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(2));
+    //vector<float> audio_left;
+    //vector<float> audio_right;
+    //ps.generate_audio(10, audio_left, audio_right);
+    cs.inject_audio_and_render(FileSegment(script));
+    //cs.inject_audio_and_render(GeneratedSegment(audio_left, audio_right));
+    cs.state_manager.microblock_transition({
+        {"pgs.opacity", "1"},
+        {"ps.opacity", "0"},
+        {"ls.opacity", "0"},
+        {"ls2.opacity", "0"},
+        {"ts.opacity", "0"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(2));
+    pgs.state_manager.microblock_transition({
+        {"zoom", "1 6.283 /"},
+        {"circles_opacity", "1"},
+    });
+    pgs.inject_audio_and_render(SilenceSegment(2));
+    cs.remove_scene(&pgs);
+}
+
+void showcase_islands(PendulumGridScene& pgs) {
+    showcase_an_island(pgs, iss[0], "The pretzel is the biggest island of stability which involves the pendulum arm making at least one complete flip.");
+    showcase_an_island(pgs, iss[1], "This one which I call the shoelace traces a more complex pattern.");
+    showcase_an_island(pgs, iss[2], "This one seems to draw a picture of a heart. Of the ones I'm showing, it's the smallest.");
+    showcase_an_island(pgs, iss[3], "Although the bird is distinct from the lissajous pendulums, it does not make any flips.");
+}
 
 void island(const double cx, const double cy, const double range){
     const double zoom = 1/range; 
@@ -57,11 +166,9 @@ void island(const double cx, const double cy, const double range){
     pgs2.inject_audio_and_render(SilenceSegment(2));
 }
 
-void fine_grid_2(){
-    PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0);
-    PendulumGridScene pgs(vector<PendulumGrid>{pg});
+void fine_grid_2(PendulumGridScene& pgs){
     pgs.state_manager.set({
-        {"physics_multiplier", "20"},
+        {"physics_multiplier", "30"},
         {"mode", "3"},
         {"rk4_step_size", "1 30 / .1 *"},
         {"zoom", "1 8 /"},
@@ -138,21 +245,17 @@ void fine_grid_2(){
     });
     pgs.inject_audio_and_render(FileSegment("This main black region is the home of all the lissajous style pendulums."));
     pgs.state_manager.microblock_transition({
-        {"trail_start_x", "1.5"},
-        {"trail_start_y", "1.8"},
+        {"trail_start_x", "1.6"},
+        {"trail_start_y", "1.9"},
         {"mode", "2"},
         {"zoom", "0.05"},
     });
     pgs.inject_audio_and_render(FileSegment("But as soon as you leave and step into the chaotic region..."));
     pgs.state_manager.microblock_transition({
-        {"trail_start_x", "1.6"},
-        {"trail_start_y", "1.8"},
+        {"trail_start_x", "1.7 <t> sin 4 / +"},
+        {"trail_start_y", "1.9 <t> cos 4 / +"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
-    pgs.state_manager.microblock_transition({
-        {"trail_start_x", "1.5 <t> sin 5 / +"},
-        {"trail_start_y", "1.8 <t> cos 5 / +"},
-    });
     pgs.inject_audio_and_render(FileSegment("It goes crazy."));
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
@@ -168,7 +271,7 @@ void fine_grid_2(){
         IslandShowcase is = iss[i];
         circles.insert(make_pair("circle" + to_string(i) + "_x", to_string(is.ps.theta1)));
         circles.insert(make_pair("circle" + to_string(i) + "_y", to_string(is.ps.theta2)));
-        circles.insert(make_pair("circle" + to_string(i) + "_r", to_string(is.range * 2)));
+        circles.insert(make_pair("circle" + to_string(i) + "_r", to_string(max(is.range/2, .1))));
     }
     pgs.state_manager.set(circles);
     pgs.circles_to_render = iss.size();
@@ -176,20 +279,9 @@ void fine_grid_2(){
     pgs.state_manager.microblock_transition({
         {"center_x", "2.49"},
         {"center_y", ".25"},
-        {"trail_start_x", "2.49"},
-        {"trail_start_y", ".25"},
+        {"ticks_opacity", "0"},
     });
-    pgs.inject_audio_and_render(FileSegment("Let's check out this one."));
-    pgs.state_manager.microblock_transition({
-        {"zoom", "1"},
-    });
-    pgs.inject_audio_and_render(SilenceSegment(2));
-    pgs.circles_to_render = 0;
-    pgs.inject_audio_and_render(FileSegment("This small black island of stability is the home of the pretzel pendulum!"));
-    pgs.state_manager.microblock_transition({
-        {"zoom", "2.5"},
-    });
-    pgs.inject_audio_and_render(FileSegment("Let's increase the resolution and try that again from the start..."));
+    pgs.inject_audio_and_render(FileSegment("Let's take a closer look."));
 }
 
 
@@ -306,7 +398,6 @@ void grid() {
         for(int y = 0; y < gridsize; y++){
             string key = "ps" + to_string(x+y*gridsize);
             cs.add_scene_fade_in(&(vps[x+y*gridsize]), key, gridstep*(x+.5), gridstep*(y+.5));
-            cs.state_manager.set({{key+".opacity", "<all_opacity>"}});
         }
     }
     StateSet state = {
@@ -315,7 +406,6 @@ void grid() {
         {"physics_multiplier", "0"},
         {"rk4_step_size", "1 30 / <physics_multiplier> .0001 + /"},
         {"rainbow", "0"},
-        {"all_opacity", "1"},
     };
     cs.state_manager.set(state);
     int selected_pendulum = vps.size()*.6;
@@ -323,6 +413,9 @@ void grid() {
     cs.inject_audio_and_render(FileSegment("Well, we can try creating a large array of pendulums like this."));
     string return_x = to_string(cs.state_manager.get_state({key_str + ".x"})[key_str + ".x"]);
     string return_y = to_string(cs.state_manager.get_state({key_str + ".y"})[key_str + ".y"]);
+    vps[selected_pendulum].state_manager.set({
+        {"pendulum_opacity", "1"},
+    });
     vps[selected_pendulum].state_manager.microblock_transition({
         {"w", "1"},
         {"h", "1"},
@@ -331,8 +424,7 @@ void grid() {
     cs.state_manager.microblock_transition({
         {key_str + ".x", ".5"},
         {key_str + ".y", ".5"},
-        {key_str + ".opacity", "1"},
-        {"all_opacity", "0.4"},
+        {"pendulum_opacity", "0.4"},
     });
     cs.inject_audio(FileSegment("The pendulum's x position corresponds to the top angle,"), 3);
     cs.render();
@@ -361,8 +453,7 @@ void grid() {
     });
     cs.inject_audio_and_render(SilenceSegment(2));
     cs.state_manager.microblock_transition({
-        {"background_opacity", ".5"},
-        {"pendulum_opacity", "0"},
+        {"background_opacity", "1"},
     });
     cs.inject_audio_and_render(SilenceSegment(2));
     cs.inject_audio_and_render(SilenceSegment(5));
@@ -401,7 +492,7 @@ void grids_and_points(){
     PendulumPointsScene pps(pointgrid, 0.5, 1);
     pps.state_manager.set({
         {"physics_multiplier", "[parent_physics_multiplier]"},
-        {"rk4_step_size", "1 30 / "+phys_mult+" /"},
+        {"rk4_step_size", "1 30 / "+phys_mult+" / 4 /"},
         {"center_x", "0"},
         {"center_y", "0"},
         {"zoom", "1 6.283 /"},
@@ -420,68 +511,6 @@ void grids_and_points(){
         {"pps.opacity", "0"},
     });
     meta_cs.inject_audio_and_render(SilenceSegment(2));
-}
-
-void simple() {
-    for(IslandShowcase is : iss){
-        const double range = is.range;
-        const double cx = is.ps.theta1;
-        const double cy = is.ps.theta2;
-        const double addsub = range/2;
-        CompositeScene cs;
-        PendulumScene ps(is.ps, 0.5, 1);
-        ps.global_publisher_key = true;
-        LatexScene ls(latex_text(is.name), 1, 0.5, 0.2);
-
-        // delete trailing zeros
-        string str_cx = to_string(cx);
-        string str_cy = to_string(cy);
-        str_cx = str_cx.erase(str_cx.find_last_not_of('0') + 1);
-        str_cy = str_cy.erase(str_cy.find_last_not_of('0') + 1);
-        LatexScene ls2("\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy, 1, 0.3, 0.2);
-
-        CoordinateSceneWithTrail ts(0.5, 0.5);
-        PendulumGrid pg(VIDEO_WIDTH, VIDEO_HEIGHT, cx-addsub, cx+addsub, cy-addsub, cy+addsub, 0, 0, 0, 0);
-        PendulumGridScene pgs(vector<PendulumGrid>{pg});
-        cs.add_scene(&pgs, "pgs", 0.5, 0.5);
-        cs.add_scene(&ps, "ps", 0.75, 0.5);
-        cs.add_scene(&ls, "ls", 0.5, 0.15);
-        cs.add_scene(&ls2, "ls2", 0.5, 0.25);
-        cs.add_scene(&ts, "ts", 0.25, 0.25);
-        pgs.state_manager.set({
-            {"physics_multiplier", "100 1 <microblock_fraction> - *"},
-            {"mode", "2.5"},
-            {"ticks_opacity", "0"},
-            {"rk4_step_size", "1 30 / .15 *"},
-            {"zoom", to_string(1/is.range)},
-            {"center_x", to_string(cx)},
-            {"center_y", to_string(cy)},
-        });
-        cs.state_manager.set({
-            {"pgs.opacity", ".4"},
-        });
-        ts.state_manager.set({
-            {"center_x", to_string(cx)},
-            {"center_y", to_string(cy)},
-            {"zoom", ".02"},
-            {"trail_opacity", "1"},
-            {"trail_x", "{pendulum_theta1}"},
-            {"trail_y", "{pendulum_theta2}"},
-        });
-        ps.state_manager.set({
-            {"background_opacity", "0"},
-            {"top_angle_opacity", "0"},
-            {"bottom_angle_opacity", "0"},
-            {"pendulum_opacity", "1"},
-            {"physics_multiplier", "400"},
-            {"path_opacity", "1"},
-            {"rk4_step_size", "1 30 / <physics_multiplier> /"},
-        });
-        vector<float> audio_left;
-        vector<float> audio_right;
-        ps.generate_audio(10, audio_left, audio_right);
-        cs.inject_audio_and_render(GeneratedSegment(audio_left, audio_right));
-    }
 }
 
 void intro() {
@@ -901,11 +930,22 @@ void render_video() {
     SAVE_FRAME_PNGS = false;
     //FOR_REAL = false;
 
-    //intro();
-    //fractal();
+/*
+    intro();
+    fractal();
     grid();
     grids_and_points();
     fine_grid();
-    fine_grid_2();
-    //simple();
+    vector<PendulumGrid> grids{PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
+    for(const IslandShowcase& is : iss) {
+        const double ro2 = is.range/2;
+        const double t1 = is.ps.theta1;
+        const double t2 = is.ps.theta2;
+        grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, t1-ro2, t1+ro2, t2-ro2, t2+ro2, 0, 0, 0, 0));
+    }
+    PendulumGridScene pgs(grids);
+    fine_grid_2(pgs);
+    showcase_islands(pgs);
+*/
+    move_fractal();
 }
