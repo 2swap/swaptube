@@ -306,7 +306,7 @@ void grid() {
         for(int y = 0; y < gridsize; y++){
             string key = "ps" + to_string(x+y*gridsize);
             cs.add_scene_fade_in(&(vps[x+y*gridsize]), key, gridstep*(x+.5), gridstep*(y+.5));
-            cs.state_manager.set({{key+".opacity", "all_opacity"}});
+            cs.state_manager.set({{key+".opacity", "<all_opacity>"}});
         }
     }
     StateSet state = {
@@ -486,8 +486,7 @@ void simple() {
 
 void intro() {
     ThreeDimensionScene tds;
-    //vector<double> notes{pow(2, 0/12.), pow(2, 5/12.), pow(2, 7/12.), pow(2, 12/12.), pow(2, 17/12.), };
-    vector<double> notes{pow(2, 0/12.), pow(2, 4/12.), pow(2, 7/12.), pow(2, 11/12.), pow(2, 12/12.), };
+    vector<double> notes{pow(2, 3/12.), pow(2, 8/12.), pow(2, 10/12.), pow(2, 15/12.), pow(2, 20/12.), };
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {5+.0000001*i, 8, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
@@ -558,7 +557,7 @@ void intro() {
     tds.inject_audio_and_render(FileSegment("where a tiny deviation in similar double pendulums amplifies over time,"));
     tds.inject_audio_and_render(FileSegment("until they eventually completely desynchronize."));
     tds.inject_audio_and_render(FileSegment("This is known as a chaotic system, because small changes in starting conditions yield vastly different behavior in the long run."));
-    vector<double> notes2{pow(2, 3/12.), pow(2, 8/12.), pow(2, 10/12.), pow(2, 15/12.), pow(2, 20/12.), };
+    vector<double> notes2{pow(2, 0/12.), pow(2, 4/12.), pow(2, 7/12.), pow(2, 11/12.), pow(2, 12/12.), };
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {2.49+.0001*i, .25, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
@@ -671,14 +670,14 @@ void fractal() {
         ps.state_manager.set({{"tone", to_string(i/4.+1)}});
         string name = "p" + to_string(i);
         cs.add_scene_fade_in(&ps, name, (M_PI+start_states[i].theta1)/6.283, 1-(M_PI+start_states[i].theta2)/6.283);
-        cs.state_manager.set({
-            {"circle"+to_string(i)+".x", to_string(start_states[i].theta1)},
-            {"circle"+to_string(i)+".y", to_string(start_states[i].theta2)},
-            {"circle"+to_string(i)+".r", to_string(0.1)},
+        pgs.state_manager.set({
+            {"circle"+to_string(i)+"_x", to_string(start_states[i].theta1)},
+            {"circle"+to_string(i)+"_y", to_string(start_states[i].theta2)},
+            {"circle"+to_string(i)+"_r", to_string(0.1)},
         });
+        pgs.circles_to_render = i+1;
         cs.render();
     }
-    pgs.circles_to_render = start_states.size();
     cs.inject_audio_and_render(SilenceSegment(2));
     cs.state_manager.microblock_transition({
         {"pgs.opacity", "0"},
@@ -821,17 +820,23 @@ void fractal() {
         {"p0.y", ".5"},
     });
     cs.inject_audio_and_render(FileSegment("It doesn't precisely sound beautiful, but compare that with the chaotic pendulum!"));
+    double pendulum_center_x = specimens[2].pend.state.theta1;
+    double pendulum_center_y = specimens[2].pend.state.theta2;
     coord.state_manager.set({
-        {"zoom", ".01"},
+        {"zoom", ".2"},
         {"trail_opacity", "1"},
+        {"trail_x", to_string(pendulum_center_x)},
+        {"trail_y", to_string(pendulum_center_y)},
     });
     left.state_manager.set({
-        {"zoom", ".01"},
+        {"zoom", ".2"},
         {"trail_opacity", "1"},
+        {"trail_x", to_string(pendulum_center_x)},
     });
     right.state_manager.set({
-        {"zoom", ".01"},
+        {"zoom", ".2"},
         {"trail_opacity", "1"},
+        {"trail_y", to_string(pendulum_center_y)},
     });
     specimens[0].global_publisher_key = true;
     specimens[2].global_publisher_key = false;
@@ -896,13 +901,11 @@ void render_video() {
     SAVE_FRAME_PNGS = false;
     //FOR_REAL = false;
 
-    /*
-    intro();
-    fractal();
+    //intro();
+    //fractal();
     grid();
     grids_and_points();
     fine_grid();
-*/
     fine_grid_2();
     //simple();
 }

@@ -21,7 +21,7 @@ public:
                 int i = x + y * grid.w;
                 PendulumState this_ps = grid.pendulum_states[i];
                 PendulumState start_ps = grid.start_states[i];
-                int point_color = YUVtoRGB(map_to_torus(start_ps.theta2, start_ps.theta1));
+                int point_color = pendulum_color(start_ps.theta1, start_ps.theta2);
                 const pair<double, double> curr_point = make_pair(this_ps.theta1, this_ps.theta2);
                 const pair<int, int> curr_pixel = point_to_pixel(curr_point);
                 pix.fill_circle(curr_pixel.first, curr_pixel.second, 2, colorlerp(TRANSPARENT_BLACK, point_color, points_opacity));

@@ -96,7 +96,7 @@ public:
                 int color_mode0 = 0; int color_mode1 = 0; int color_mode2 = 0; int color_mode3 = 0;
                 int color = 0xffff0000;
 
-                if(mode < 1.999) color_mode0 = colorlerp(OPAQUE_BLACK, YUVtoRGB(map_to_torus(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2)), 0.5);
+                if(mode < 1.999) color_mode0 = colorlerp(OPAQUE_BLACK, pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2), 0.5);
                 if(mode > 0.001 && mode < 1.999) color_mode1 = colorlerp(color_mode0, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*contrast)/5));
                 if(mode > 1.001 && mode < 2.999) color_mode2 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*contrast)/5));
                 if(mode > 2.001) {

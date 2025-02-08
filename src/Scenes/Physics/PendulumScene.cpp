@@ -56,7 +56,7 @@ public:
         double line_thickness = h/80;
         double posx = w/2; double posy = h/2;
         vector<double> thetas = {pend.state.theta1, pend.state.theta2};
-        int color = YUVtoRGB(map_to_torus(thetas[1], thetas[0]));
+        int color = pendulum_color(thetas[0], thetas[1]);
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
 
