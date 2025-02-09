@@ -15,6 +15,8 @@ public:
         state_manager.add_equation("trail_start_y", "0");
         state_manager.add_equation("trail_opacity", "0");
         state_manager.add_equation("trail_length", "0");
+        state_manager.add_equation("energy_min", "0");
+        state_manager.add_equation("energy_max", "0");
     }
 
     const StateQuery populate_state_query() const override {
@@ -29,6 +31,8 @@ public:
         s.insert("trail_length");
         s.insert("trail_start_y");
         s.insert("trail_start_x");
+        s.insert("energy_min");
+        s.insert("energy_max");
         return s;
     }
 
@@ -56,6 +60,8 @@ public:
         const double cy = state["center_y"];
         const double contrast = state["contrast"];
         const double mode = state["mode"];
+        const double emin = state["energy_min"];
+        const double emax = state["energy_max"];
 
         const double coloration = 1000;
         const double log_coloration = log(coloration);
@@ -88,14 +94,14 @@ public:
                 int color_mode0 = 0; int color_mode1 = 0; int color_mode2 = 0; int color_mode3 = 0;
                 int color = 0xffff0000;
 
-                if(mode < 1.999) color_mode0 = colorlerp(OPAQUE_BLACK, pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2), 0.5);
+                if(mode < 1.999) color_mode0 = pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2);
                 if(mode > 0.001 && mode < 1.999) color_mode1 = colorlerp(color_mode0, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*contrast)/5));
                 if(mode > 1.001 && mode < 2.999) color_mode2 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*contrast)/5));
                 if(mode > 2.001) {
                     PendulumState ps = grid.pendulum_states[i];
                     PendulumState pp = grid.pendulum_pairs[i];
                     
-                    double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2));
+                    double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2))*contrast;
                     distance = min(distance, 1.);
                     color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance)/log_coloration));
                 }
@@ -107,6 +113,12 @@ public:
                 else if(mode <= 1.999 && mode >= 1.001) color = colorlerp(color_mode1, color_mode2, mode-1);
                 else if(mode > 2.999) color = color_mode3;
                 else if(mode <= 2.999 && mode >= 2.001) color = colorlerp(color_mode2, color_mode3, mode-2);
+                if(emax>0.01) {
+                    double energy = compute_potential_energy(grid.pendulum_states[i]) + compute_kinetic_energy(grid.pendulum_states[i]);
+                    if(energy>emin && energy<emax) {
+                        color = colorlerp(color, 0xffff0000, 0.5);
+                    }
+                }
                 pix.set_pixel(x, y, color);
             }
         }

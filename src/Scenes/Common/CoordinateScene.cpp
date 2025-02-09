@@ -61,7 +61,7 @@ public:
     void draw_trail(const vector<pair<double, double>>& trail, const int trail_color, const double trail_opacity) {
         if(trail.size() == 0) return;
         if(trail_opacity < 0.01) return;
-        int line_width = get_height()/250;
+        int line_width = get_geom_mean_size()/350;
         for(int i = 0; i < trail.size()-1; i++) {
             const pair<double, double> last_point = trail[i];
             const pair<double, double> next_point = trail[i+1];
@@ -73,7 +73,7 @@ public:
 
     void draw_point(const pair<double, double> point, int point_color, double point_opacity) {
         const pair<int, int> pixel = point_to_pixel(point);
-        pix.fill_circle(pixel.first, pixel.second, get_height()/100., colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
+        pix.fill_circle(pixel.first, pixel.second, get_geom_mean_size()/100., colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
     }
 
     void draw() override {
@@ -85,7 +85,7 @@ public:
         const double z = state["zoom"] + 0.0001;
         const double opa = state["circles_opacity"];
         if(opa < 0.01) return;
-        const double w = get_width();
+        const double w = get_geom_mean_size();
         for(int i = 0; i < circles_to_render; i++){
             const double x = state["circle"+to_string(i)+"_x"];
             const double y = state["circle"+to_string(i)+"_y"];
@@ -100,6 +100,7 @@ public:
         if(ticks_opacity < 0.01) return;
         const int w = get_width();
         const int h = get_height();
+        const double gmsz = get_geom_mean_size();
         const double z = state["zoom"] + 0.0001;
         const double rx = state["right_x"];
         const double ty = state["top_y"];
@@ -127,7 +128,7 @@ public:
                 int x_pix = frac * w;
                 pix.bresenham(x_pix, h-1, x_pix, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
-                    ScalingParams sp(w/12., w/24.);
+                    ScalingParams sp(gmsz/12., gmsz/24.);
                     Pixels latex = latex_to_pix(truncated, sp).rotate_90();
                     pix.overlay(latex, x_pix - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
                 }

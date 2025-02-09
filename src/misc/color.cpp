@@ -40,17 +40,6 @@ int color_combine(int base_color, int over_color, float overlay_opacity_multipli
     return (final_alpha << 24) | (final_rgb);
 }
 
-int pendulum_color(double angle1, double angle2) {
-    double r_f = 191.5 + 64 * (sin(angle1)*cos(angle2));
-    double g_f = 191.5 + 64 * (sin(angle1)*sin(angle2));
-    double b_f = 191.5 + 64 * (cos(angle1)            );
-
-    int r = clamp(static_cast<int>(round(r_f)), 0, 255);
-    int g = clamp(static_cast<int>(round(g_f)), 0, 255);
-    int b = clamp(static_cast<int>(round(b_f)), 0, 255);
-    return argb_to_col(255, r, g, b);
-}
-
 // Convert RGB to YUV
 int RGBtoYUV(const int rgb) {
     int r = getr(rgb);
@@ -85,6 +74,26 @@ int YUVtoRGB(const int yuv) {
     int g = clamp(static_cast<int>(round(g_f)), 0, 255);
     int b = clamp(static_cast<int>(round(b_f)), 0, 255);
     return argb_to_col(255, r, g, b);
+}
+
+int pendulum_color_old(double angle1, double angle2) {
+    double r_f = 127.5 + 128 * (sin(angle1)*cos(angle2));
+    double g_f = 127.5 + 128 * (sin(angle1)*sin(angle2));
+    double b_f = 127.5 + 128 * (cos(angle1)            );
+
+    int r = clamp(static_cast<int>(round(r_f)), 0, 255);
+    int g = clamp(static_cast<int>(round(g_f)), 0, 255);
+    int b = clamp(static_cast<int>(round(b_f)), 0, 255);
+    return argb_to_col(255, r, g, b);
+}
+
+int pendulum_color(double angle1, double angle2) {
+    double u_f = 127.5 + 128 * sin(angle1)*cos(angle2);
+    double v_f = 127.5 + 128 * sin(angle2);
+
+    int u = clamp(static_cast<int>(round(u_f)), 0, 255);
+    int v = clamp(static_cast<int>(round(v_f)), 0, 255);
+    return YUVtoRGB(argb_to_col(255, 128, u, v));
 }
 
 string latex_color(unsigned int color, string text) {

@@ -83,13 +83,10 @@ public:
         int width = termWidth;
         int height = static_cast<int>(width / pixelAspectRatio / charAspect);
 
-        const int xStep = max(w / width, 1);
-        const int yStep = max(h / height, 1);
-
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
-                int sampleX = x * xStep;
-                int sampleY = y * yStep;
+                int sampleX = x * w / width;
+                int sampleY = y * h / height;
 
                 int a, r, g, b;
                 get_pixel_by_channels(sampleX, sampleY, a, b, g, r);

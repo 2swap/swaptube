@@ -8,6 +8,8 @@ public:
         state_manager.add_equation("tone", "1");
         state_manager.add_equation("volume", "0");
         state_manager.add_equation("path_opacity", "0");
+        state_manager.add_equation("background_opacity", "0");
+        state_manager.add_equation("pendulum_opacity", "1");
         state_manager.add_equation("top_angle_opacity", "0");
         state_manager.add_equation("bottom_angle_opacity", "0");
         state_manager.add_equation("rainbow", "1");

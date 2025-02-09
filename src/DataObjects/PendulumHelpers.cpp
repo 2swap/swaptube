@@ -41,6 +41,11 @@ inline double compute_kinetic_energy(const PendulumState &state) {
 }
 
 HOST_DEVICE
+inline double compute_potential_energy(const PendulumState &state) {
+    return pend_m * pend_g * pend_l * (4 - 3 * cos(state.theta1) - cos(state.theta2));
+}
+
+HOST_DEVICE
 inline Derivatives computeDerivatives(const PendulumState &state) {
     double theta1 = state.theta1;
     double theta2 = state.theta2;
