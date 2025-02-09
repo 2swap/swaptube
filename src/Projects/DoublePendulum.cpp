@@ -1,5 +1,6 @@
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
+#include "../Scenes/Media/StateSliderScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Common/CoordinateSceneWithTrail.cpp"
 #include "../Scenes/Common/CoordinateScene.cpp"
@@ -8,28 +9,36 @@
 #include "../Scenes/Physics/MovingPendulumGridScene.cpp"
 #include "../Scenes/Physics/PendulumPointsScene.cpp"
 
-void move_fractal(){
-    pgs.state_manager.microblock_transition({
+void move_fractal(PendulumGridScene& pgs){
+    pgs.state_manager.set({
+        {"physics_multiplier", "0"},
+        {"rk4_step_size", "0"},
         {"center_x", "0"},
         {"center_y", "0"},
         {"circles_opacity", "0"},
         {"zoom", "1 6.283 /"},
+        {"mode", "2"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
 
     MovingPendulumGridScene mpgs;
     mpgs.state_manager.set({
-        {"iterations", "6000"},
-        {"mode", "2"},
-        {"rk4_step_size", "1 30 / .04 *"},
-        {"zoom", "1 6.283 /"},
+        {"iterations", "200"},
+        {"mode", "0"},
+        {"rk4_step_size", "1 30 / .4 *"},
+        {"zoomexp", "1 6.283 / log"},
+        {"zoom", "2.718281828 <zoomexp> ^"},
         {"theta_or_momentum", "0"},
         {"contrast", "100"},
+        {"p1", "[p1]"},
+        {"p2", "[p2]"},
     });
     CompositeScene cs;
     cs.add_scene(&pgs, "pgs", 0.5, 0.5);
     cs.add_scene(&mpgs, "mpgs", 0.5, 0.5);
     cs.state_manager.set({
+        {"p1", "0"},
+        {"p2", "0"},
         {"pgs.opacity", "1"},
         {"mpgs.opacity", "0"},
     });
@@ -38,16 +47,41 @@ void move_fractal(){
         {"mpgs.opacity", "1"},
     });
     cs.inject_audio_and_render(SilenceSegment(2));
-    cs.remove_scene(&mpgs);
-    cs.remove_scene(& pgs);
+    StateSliderScene ssp1("[p1]", "l_1", -1, 1, .4, .16);
+    StateSliderScene ssp2("[p2]", "l_2", -1, 1, .4, .16);
+    cs.add_scene(&ssp1, "ssp1", 0.25, 0.92); 
+    cs.add_scene(&ssp2, "ssp2", 0.25, 0.92); 
 
-    mpgs.inject_audio_and_render(FileSegment("So far, I've only been dropping the pendulums from a motionless state."));
-    mpgs.inject_audio_and_render(FileSegment("What if, instead, we start the pendulum off with some momentum?"));
-    mpgs.state_manager.microblock_transition({
+    cs.inject_audio_and_render(FileSegment("So far, I've only been dropping the pendulums from a motionless state."));
+    cs.inject_audio_and_render(FileSegment("What if, instead, we start the pendulum off with some momentum?"));
+    cs.state_manager.microblock_transition({
         {"p1", ".888160052"},
     });
-    mpgs.inject_audio_and_render(SilenceSegment(2));
-    mpgs.inject_audio_and_render(FileSegment("Now, looking at these graphs, you might notice:"));
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.state_manager.microblock_transition({
+        {"p2", "-1"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.state_manager.microblock_transition({
+        {"p1", "0"},
+        {"p2", "0"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.state_manager.microblock_transition({
+        {"theta_or_momentum", "1"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(FileSegment("Now, looking at these graphs, you might notice:"));
+    mpgs.state_manager.microblock_transition({
+        {"zoomexp", "1 20 / log"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(SilenceSegment(1));
+return;
     mpgs.inject_audio_and_render(FileSegment("the area closest to when the pendulum is straight up is chaotic,"));
     mpgs.inject_audio_and_render(FileSegment("and the area around 0 always tends to be non-chaotic,"));
     mpgs.inject_audio_and_render(FileSegment("maybe it's really a matter of how energetic the pendulum is."));
@@ -55,9 +89,6 @@ void move_fractal(){
     mpgs.inject_audio_and_render(FileSegment("If I color in red all the pendulums with less mechanical energy than this one"));
     mpgs.inject_audio_and_render(FileSegment("You'll see that it overlaps rather well with the set of lissajous-esque pendulums."));
     mpgs.inject_audio_and_render(FileSegment("So, is that it? Are low-energy pendulums coherent, while high-energy pendulums are chaotic?"));
-    mpgs.state_manager.microblock_transition({
-        {"theta_or_momentum", "1"},
-    });
     mpgs.inject_audio_and_render(FileSegment("To answer that, we'll need a change in perspective."));
     mpgs.inject_audio_and_render(FileSegment("I've now reoriented the axes of our fractal to be in momentum-space instead of angle-space."));
     mpgs.inject_audio_and_render(FileSegment("In other words, we are looking at a grid of pendulums all with starting angle at 0, but with different starting speeds."));
@@ -72,7 +103,7 @@ struct IslandShowcase {
     string name;
 };
 
-vector<IslandShowcase> iss{{{2.49, .25     , .0, .0}, 0.4 , "The Pretzel"},
+vector<IslandShowcase> isv{{{2.49, .25     , .0, .0}, 0.4 , "The Pretzel"},
                            {{2.658, -2.19  , .0, .0}, 0.2 , "The Shoelace"},
                            {{2.453, -2.7727, .0, .0}, 0.05, "The Heart"},
                            {{1.351, 2.979  , .0, .0}, 0.2 , "The Bird"}};
@@ -88,7 +119,8 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const 
         {"mode", "2"},
         {"ticks_opacity", "0"},
         {"rk4_step_size", "0"},
-        {"zoom", "1 6.283 /"},
+        {"zoom", "2.718281828 <zoomexp> ^"},
+        {"zoomexp", "1 6.283 / log"},
     });
     pgs.state_manager.microblock_transition({
         {"center_x", to_string(cx)},
@@ -96,7 +128,7 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const 
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
-        {"zoom", to_string(1/is.range)},
+        {"zoomexp", to_string(log(1/is.range))},
         {"circles_opacity", "0"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
@@ -156,7 +188,7 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const 
     });
     cs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
-        {"zoom", "1 6.283 /"},
+        {"zoomexp", "1 6.283 / log"},
         {"circles_opacity", "1"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
@@ -164,49 +196,10 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const 
 }
 
 void showcase_islands(PendulumGridScene& pgs) {
-    showcase_an_island(pgs, iss[0], "The pretzel is the biggest island of stability which involves the pendulum arm making at least one complete flip.");
-    showcase_an_island(pgs, iss[1], "This one which I call the shoelace traces a more complex pattern.");
-    showcase_an_island(pgs, iss[2], "This one seems to draw a picture of a heart. Of the ones I'm showing, it's the smallest.");
-    showcase_an_island(pgs, iss[3], "Although the bird is distinct from the lissajous pendulums, it does not make any flips.");
-}
-
-void island(const double cx, const double cy, const double range){
-    const double zoom = 1/range; 
-    const double addsub = range/2;
-    PendulumGrid pg2(VIDEO_WIDTH, VIDEO_HEIGHT, cx-addsub, cx+addsub, cy-addsub, cy+addsub, 0, 0, 0, 0);
-    PendulumGridScene pgs2(vector<PendulumGrid>{pg2});
-    pgs2.state_manager.set({
-        {"physics_multiplier", "40"},
-        {"mode", "0"},
-        {"trail_opacity", "1"},
-        {"trail_start_x", "<center_x>"},
-        {"trail_start_y", "<center_y>"},
-        {"rk4_step_size", "1 30 / .05 *"},
-        {"zoom", to_string(zoom)},
-        {"center_x", to_string(cx)},
-        {"center_y", to_string(cy)},
-    });
-    pgs2.inject_audio_and_render(SilenceSegment(20));
-    pgs2.state_manager.microblock_transition({
-        {"mode", "2"},
-        {"physics_multiplier", "0"},
-    });
-    pgs2.inject_audio_and_render(SilenceSegment(2));
-    pgs2.state_manager.set({
-        {"trail_start_x", "<center_x> 0.0000005 +"},
-        {"trail_start_y", "<center_y> 0.0000010 -"},
-    });
-    pgs2.inject_audio_and_render(SilenceSegment(2));
-    pgs2.state_manager.set({
-        {"trail_start_x", "<center_x> 0.0000006 +"},
-        {"trail_start_y", "<center_y> 0.0000010 -"},
-    });
-    pgs2.inject_audio_and_render(SilenceSegment(2));
-    pgs2.state_manager.set({
-        {"trail_start_x", "<center_x> 0.0000004 +"},
-        {"trail_start_y", "<center_y> 0.0000010 -"},
-    });
-    pgs2.inject_audio_and_render(SilenceSegment(2));
+    showcase_an_island(pgs, isv[0], "The pretzel is the biggest island of stability which involves the pendulum arm making at least one complete flip.");
+    showcase_an_island(pgs, isv[1], "This one which I call the shoelace traces a more complex pattern.");
+    showcase_an_island(pgs, isv[2], "This one seems to draw a picture of a heart. Of the ones I'm showing, it's the smallest.");
+    showcase_an_island(pgs, isv[3], "Although the bird is distinct from the lissajous pendulums, it does not make any flips.");
 }
 
 void fine_grid_2(PendulumGridScene& pgs){
@@ -310,14 +303,14 @@ void fine_grid_2(PendulumGridScene& pgs){
     pgs.inject_audio_and_render(FileSegment("Let's look a little closer at the chaotic region colored in white."));
     pgs.inject_audio_and_render(FileSegment("You'll notice there are a few islands of black in here."));
     StateSet circles;
-    for(int i = 0; i < iss.size(); i++){
-        IslandShowcase is = iss[i];
+    for(int i = 0; i < isv.size(); i++){
+        IslandShowcase is = isv[i];
         circles.insert(make_pair("circle" + to_string(i) + "_x", to_string(is.ps.theta1)));
         circles.insert(make_pair("circle" + to_string(i) + "_y", to_string(is.ps.theta2)));
         circles.insert(make_pair("circle" + to_string(i) + "_r", to_string(max(is.range/2, .1))));
     }
     pgs.state_manager.set(circles);
-    pgs.circles_to_render = iss.size();
+    pgs.circles_to_render = isv.size();
     pgs.inject_audio_and_render(FileSegment("These so-called 'islands of stability' correspond to special groups of pendulums which take stable paths without diverging into chaos."));
     pgs.state_manager.microblock_transition({
         {"center_x", "2.49"},
@@ -979,16 +972,16 @@ void render_video() {
     grid();
     grids_and_points();
     fine_grid();
+*/
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
-    for(const IslandShowcase& is : iss) {
+    /*for(const IslandShowcase& is : isv) {
         const double ro2 = is.range/2;
         const double t1 = is.ps.theta1;
         const double t2 = is.ps.theta2;
         grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, t1-ro2, t1+ro2, t2-ro2, t2+ro2, 0, 0, 0, 0));
-    }
+    }*/
     PendulumGridScene pgs(grids);
-    fine_grid_2(pgs);
-    showcase_islands(pgs);
-*/
+    //fine_grid_2(pgs);
+    //showcase_islands(pgs);
     move_fractal(pgs);
 }
