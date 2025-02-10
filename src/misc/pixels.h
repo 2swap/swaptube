@@ -191,16 +191,16 @@ public:
             }
     }
 
-    void fill_circle(double x, double y, double r, int col){
+    void fill_circle(double x, double y, double r, int col, double opa=1){
         fill_ellipse(x, y, r, r, col);
     }
 
-    void fill_ellipse(double x, double y, double rw, double rh, int col){
+    void fill_ellipse(double x, double y, double rw, double rh, int col, double opa=1){
         for(double dx = -rw+1; dx < rw; dx++){
             double sdx = square(dx/rw);
             for(double dy = -rh+1; dy < rh; dy++)
                 if(sdx+square(dy/rh) < 1)
-                    set_pixel(x+dx, y+dy, col);
+                    overlay_pixel(x+dx, y+dy, col, opa);
         }
     }
 

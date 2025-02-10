@@ -62,17 +62,16 @@ public:
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
 
-        if(state["pendulum_opacity"] > 0.01) {
+        double pend_opa = state["pendulum_opacity"];
+        if(pend_opa > 0.01) {
             double rainbow = state["rainbow"];
-            int pendulum_color = OPAQUE_WHITE;
-            if(rainbow > 0.01)
-                pendulum_color = colorlerp(OPAQUE_WHITE, colorlerp(TRANSPARENT_BLACK, color, state["pendulum_opacity"]), rainbow);
+            int pendulum_color = colorlerp(OPAQUE_WHITE, color, rainbow);
             for (int i = 0; i < pendulum_count; i++) {
                 double theta = thetas[i];
                 double length = h/(pendulum_count * 2 + 1.);
                 double dx = sin(theta) * length; double dy = cos(theta) * length;
-                pix.fill_circle(posx, posy, line_thickness * 2, pendulum_color);
-                pix.bresenham(posx, posy, posx + dx, posy + dy, pendulum_color, 1, line_thickness);
+                pix.fill_circle(posx, posy, line_thickness * 2, pendulum_color, pend_opa);
+                pix.bresenham(posx, posy, posx + dx, posy + dy, pendulum_color, pend_opa, line_thickness);
                 double ao = i==0?state["top_angle_opacity"]:state["bottom_angle_opacity"];
                 if(ao > 0.01){
                     double theta_modified = theta+199*M_PI;

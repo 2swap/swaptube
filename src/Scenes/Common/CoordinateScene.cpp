@@ -73,7 +73,7 @@ public:
 
     void draw_point(const pair<double, double> point, int point_color, double point_opacity) {
         const pair<int, int> pixel = point_to_pixel(point);
-        pix.fill_circle(pixel.first, pixel.second, get_geom_mean_size()/100., colorlerp(TRANSPARENT_BLACK, point_color, point_opacity));
+        pix.fill_circle(pixel.first, pixel.second, get_geom_mean_size()/100., point_color, point_opacity);
     }
 
     void draw() override {
@@ -119,7 +119,7 @@ public:
                 string truncated = truncate_tick(x);
                 if(done_numbers_x.find(truncated) != done_numbers_x.end()) continue;
                 done_numbers_x.insert(truncated);
-                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * w / 128.; 
+                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 128.; 
                 double frac = (x - lx) / (rx - lx);
                 double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
                 number_opacity *= 1-square(square(2.5*(.5-frac)));
@@ -128,7 +128,7 @@ public:
                 int x_pix = frac * w;
                 pix.bresenham(x_pix, h-1, x_pix, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
-                    ScalingParams sp(gmsz/12., gmsz/24.);
+                    ScalingParams sp(gmsz/8., gmsz/16.);
                     Pixels latex = latex_to_pix(truncated, sp).rotate_90();
                     pix.overlay(latex, x_pix - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
                 }
@@ -137,7 +137,7 @@ public:
                 string truncated = truncate_tick(y);
                 if(done_numbers_y.find(truncated) != done_numbers_y.end()) continue;
                 done_numbers_y.insert(truncated);
-                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * w / 128.; 
+                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 128.; 
                 double frac = 1 - (y - ty) / (by - ty);
                 double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
                 number_opacity *= 1-square(square(2.5*(.5-frac)));
@@ -146,7 +146,7 @@ public:
                 int y_pix = frac * h;
                 pix.bresenham(0, y_pix, tick_length, y_pix, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
-                    ScalingParams sp(w/12., w/24.);
+                    ScalingParams sp(gmsz/8., gmsz/16.);
                     Pixels latex = latex_to_pix(truncated, sp);
                     pix.overlay(latex, tick_length * 1.5, y_pix - latex.h/2, number_opacity);
                 }
