@@ -105,8 +105,8 @@ public:
                     PendulumState pp = grid.pendulum_pairs[i];
                     
                     double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2))*contrast;
-                    distance = min(distance, 1.);
-                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance)/log_coloration));
+                    distance = min(distance, 1/contrast);
+                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance*contrast)/log_coloration));
                 }
 
                 if(mode < 0.001) color = color_mode0;

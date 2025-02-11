@@ -88,12 +88,14 @@ int pendulum_color_old(double angle1, double angle2) {
 }
 
 int pendulum_color(double angle1, double angle2) {
+    double y_f = 127.5 +  64 * sin(angle1 + angle2);
     double u_f = 127.5 + 128 * sin(angle1)*cos(angle2);
     double v_f = 127.5 + 128 * sin(angle2);
 
+    int y = clamp(static_cast<int>(round(y_f)), 0, 255);
     int u = clamp(static_cast<int>(round(u_f)), 0, 255);
     int v = clamp(static_cast<int>(round(v_f)), 0, 255);
-    return YUVtoRGB(argb_to_col(255, 128, u, v));
+    return YUVtoRGB(argb_to_col(255, y, u, v));
 }
 
 string latex_color(unsigned int color, string text) {

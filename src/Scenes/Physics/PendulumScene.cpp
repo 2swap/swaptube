@@ -87,7 +87,7 @@ public:
                 }
                 posx += dx; posy += dy;
             }
-            pix.fill_circle(posx, posy, line_thickness*2, pendulum_color);
+            pix.fill_circle(posx, posy, line_thickness*2, pendulum_color, pend_opa);
         }
         if(state["path_opacity"] > 0.01) {
             pix.underlay(path_background, 0, 0);
