@@ -181,7 +181,7 @@ void move_fractal(PendulumGridScene& pgs){
     });
     cs.inject_audio_and_render(FileSegment("What if, instead, we start the pendulum off with some momentum?"));
     cs.inject_audio_and_render(SilenceSegment(2));
-    cs.inject_audio(SilenceSegment(2));
+    cs.inject_audio(SilenceSegment(2), 2);
     cs.state_manager.macroblock_transition({
         {"p1", to_string(momentum_island.ps.p1)},
         {"p2", to_string(momentum_island.ps.p2)},
@@ -262,10 +262,10 @@ void move_fractal(PendulumGridScene& pgs){
         {"ps2.y", ".5"},
     });
     cs.inject_audio_and_render(FileSegment("Taking this borderline-chaotic starting position,"));
-    string vert_energy = to_string(compute_kinetic_energy(vert) + compute_potential_energy(vert));
+    double vert_energy = compute_kinetic_energy(vert) + compute_potential_energy(vert);
     cout << "Vert energy: " << vert_energy << endl;
     pgs.state_manager.microblock_transition({
-        {"energy_max", vert_energy},
+        {"energy_max", to_string(vert_energy)},
     });
     cs.inject_audio(FileSegment("If I color in red all the pendulums with less mechanical energy than this one"), 2);
     cs.render();
@@ -303,17 +303,17 @@ void move_fractal(PendulumGridScene& pgs){
     });
     cs.inject_audio_and_render(FileSegment("It's still the case that the pendulums with low energy are stable,"));
     perp.state_manager.microblock_transition({
-        {"energy_max", vert_energy},
+        {"energy_max", to_string(vert_energy)},
     });
     cs.inject_audio_and_render(FileSegment("and the area of pendulums with slightly higher energy tends to be chaotic,"));
     perp.state_manager.microblock_transition({
-        {"energy_min", vert_energy},
-        {"energy_max", 2*vert_energy},
+        {"energy_min", to_string(vert_energy)},
+        {"energy_max", to_string(2*vert_energy)},
     });
     cs.inject_audio_and_render(FileSegment("But these ultra-high-energy pendulums don't easily fit into one box or another."));
     perp.state_manager.microblock_transition({
-        {"energy_min", 2*vert_energy},
-        {"energy_max", 50*vert_energy},
+        {"energy_min", to_string(2*vert_energy)},
+        {"energy_max", to_string(50*vert_energy)},
     });
 }
 
@@ -492,7 +492,7 @@ void grids_and_points(){
     cs.add_scene(&pend, "pend");
     
     cs.inject_audio_and_render(FileSegment("A nice feature of this fractal is that it tiles the plane."));
-    cs.inject_audio_and_render(FileSegment("Since rotating either angle by 2pi yields the exact same pendulum, the image itself is periodic."), 2);
+    cs.inject_audio(FileSegment("Since rotating either angle by 2pi yields the exact same pendulum, the image itself is periodic."), 2);
     pgs.state_manager.microblock_transition({
         {"center_x", "6.283"},
     });
@@ -647,7 +647,7 @@ void grid() {
     PendulumPointsScene pps(pointgrid, 0.5, 1);
     pps.state_manager.set({
         {"physics_multiplier", "[parent_physics_multiplier]"},
-        {"rk4_step_size", "1 30 / "+phys_mult+" / 4 /"},
+        {"rk4_step_size", "1 30 / 5 /"},
         {"center_x", "0"},
         {"center_y", "0"},
         {"zoom", "1 6.283 /"},
@@ -659,6 +659,9 @@ void grid() {
     });
     cs.inject_audio_and_render(FileSegment("As a bonus, we can add points in angle space for these pendulums and see how they move."));
     cs.state_manager.set({
+        {"physics_multiplier", "5"},
+    });
+    pps.state_manager.set({
         {"physics_multiplier", "5"},
     });
     cs.inject_audio_and_render(SilenceSegment(10));
@@ -688,7 +691,7 @@ void intro() {
             {"physics_multiplier", "30"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
         });
-        tds.add_surface(Surface(glm::vec3(0,fov*.3,(i-2)*fov*.5), glm::vec3(fov,0,0), glm::vec3(0,fov,0), ps));
+        tds.add_surface(Surface(glm::vec3(0,-fov*.1,(i-2)*fov*.5), glm::vec3(fov,0,0), glm::vec3(0,fov,0), ps));
     }
     vector<shared_ptr<LatexScene>> ls;
     ls.push_back(make_shared<LatexScene>(latex_text("Double"), 1));
@@ -746,7 +749,7 @@ void intro() {
     tds.inject_audio_and_render(FileSegment("where a tiny deviation in similar double pendulums amplifies over time,"));
     tds.inject_audio_and_render(FileSegment("until they completely desynchronize."));
     shared_ptr<LatexScene> chaotic = make_shared<LatexScene>(latex_text("Chaos: Differences in state amplify over time"), 1);
-    tds.add_surface(Surface(glm::vec3(0, fov*.5, 0), glm::vec3(fov,0,0), glm::vec3(0,fov,0), ps));
+    tds.add_surface(Surface(glm::vec3(0, -fov*.2, 0), glm::vec3(fov,0,0), glm::vec3(0,fov,0), chaotic));
     tds.inject_audio_and_render(FileSegment("This sensitivity to initial conditions renders the system unpredictable, and so we call it chaotic."));
     vector<double> notes2{pow(2, 0/12.), pow(2, 4/12.), pow(2, 7/12.), pow(2, 11/12.), pow(2, 12/12.), };
     for(int i = 0; i < 5; i++){
