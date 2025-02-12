@@ -256,7 +256,7 @@ public:
     }
 
     void fill_circle(double x, double y, double r, int col, double opa=1){
-        fill_ellipse(x, y, r, r, col);
+        fill_ellipse(x, y, r, r, col, opa);
     }
 
     void fill_ellipse(double x, double y, double rw, double rh, int col, double opa=1){
