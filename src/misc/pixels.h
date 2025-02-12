@@ -66,44 +66,108 @@ public:
         pixels[w*y+x] = (pixels[w*y+x] & 0x00ffffff) | (a << 24);
     }
 
-    void print_to_terminal() const {
-        cout << endl;
+    // ---------------------------------------------------------------------
+    // get_average_color:
+    // Given a rectangle from (x_start, y_start) up to (but not including) (x_end, y_end),
+    // average the pixel colors in that region. The averages for the R, G, and B channels
+    // are returned via the reference parameters.
+    void get_average_color(int x_start, int y_start, int x_end, int y_end,
+                           int &avgR, int &avgG, int &avgB) {
+        long long sumR = 0, sumG = 0, sumB = 0;
+        int count = 0;
         
+        // Loop over the rectangular region.
+        for (int y = y_start; y < y_end; ++y) {
+            for (int x = x_start; x < x_end; ++x) {
+                int a, r_pixel, g_pixel, b_pixel;
+                get_pixel_by_channels(x, y, a, b_pixel, g_pixel, r_pixel);
+                sumR += r_pixel;
+                sumG += g_pixel;
+                sumB += b_pixel;
+                ++count;
+            }
+        }
+        
+        if (count > 0) {
+            avgR = static_cast<int>(sumR / count);
+            avgG = static_cast<int>(sumG / count);
+            avgB = static_cast<int>(sumB / count);
+        } else {
+            avgR = avgG = avgB = 0;
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // This function outputs the image to the terminal using Unicode half-block
+    // characters (▀). Each printed character cell represents two rows of supersampled
+    // image data. The top half of the block uses the foreground color and the bottom
+    // half uses the background color.
+    // 
+    // We compute the sampling regions by mapping the terminal grid to the source image
+    // and then average over each corresponding rectangle.
+    void print_to_terminal() {
+        // Print an empty line first.
+        cout << endl;
+
+        // Get terminal dimensions.
         struct winsize wsz;
         ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsz);
-
         const int termWidth = wsz.ws_col;
-        const int termHeight = wsz.ws_row;
+        // Note: we are not using termHeight here.
 
-        // character aspect ratio correction (on gnome-terminal I measured 18x8 pixels per character)
-        const double charAspect = 18./8;
+        // The measured aspect ratio of your terminal characters.
+        // (e.g. 18 pixels wide by 8 pixels tall)
+        const double charAspect = 18.0 / 8.0;
 
-        // Compute the effective width and height while maintaining aspect ratio
-        const double pixelAspectRatio = static_cast<double>(w) / h;
-        int width = termWidth;
-        int height = static_cast<int>(width / pixelAspectRatio / charAspect);
+        // We'll use the terminal’s full width for our output.
+        int outputWidth = termWidth;
 
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                int sampleX = x * w / width;
-                int sampleY = y * h / height;
+        // Compute the aspect ratio of the source image.
+        double imageAspect = static_cast<double>(w) / h;
 
-                int a, r, g, b;
-                get_pixel_by_channels(sampleX, sampleY, a, b, g, r);
+        // Determine the effective vertical resolution (in image pixels) that we wish to sample.
+        // We multiply by 2 because each printed line represents two image rows.
+        int sample_height = static_cast<int>(outputWidth / (imageAspect * charAspect) * 2);
+        // Ensure sample_height is even.
+        sample_height -= sample_height % 2;
+        int printedLines = sample_height / 2;
 
-                // Map RGB values to ANSI color codes
-                int rCode = static_cast<int>((1 - cube(1 - (r / 255.0 * a / 255.0))) * 5);
-                int gCode = static_cast<int>((1 - cube(1 - (g / 255.0 * a / 255.0))) * 5);
-                int bCode = static_cast<int>((1 - cube(1 - (b / 255.0 * a / 255.0))) * 5);
+        // For each terminal character cell, we determine the corresponding region in the image.
+        for (int y = 0; y < printedLines; ++y) {
+            for (int x = 0; x < outputWidth; ++x) {
+                // Determine the horizontal region that maps to this terminal column.
+                int x0 = x * w / outputWidth;
+                int x1 = (x + 1) * w / outputWidth;
 
-                int colorCode = 16 + 36 * bCode + 6 * gCode + rCode;
+                // For the top half of the character cell:
+                int top_y0 = (2 * y) * h / sample_height;
+                int top_y1 = (2 * y + 1) * h / sample_height;
 
-                // Output colored ASCII block
-                cout << "\033[48;5;" << colorCode << "m ";
+                // For the bottom half of the character cell:
+                int bot_y0 = (2 * y + 1) * h / sample_height;
+                int bot_y1 = (2 * y + 2) * h / sample_height;
+
+                int r_top, g_top, b_top;
+                int r_bot, g_bot, b_bot;
+
+                // Supersample (average) over the regions.
+                get_average_color(x0, top_y0, x1, top_y1, r_top, g_top, b_top);
+                get_average_color(x0, bot_y0, x1, bot_y1, r_bot, g_bot, b_bot);
+
+                // Use ANSI true-color escape sequences:
+                //  - Set foreground to the average top color.
+                //  - Set background to the average bottom color.
+                // Then print the Unicode upper half block (▀), which renders the top half in
+                // the foreground color and the bottom half in the background color.
+                cout << "\033[38;2;" << b_top << ";" << g_top << ";" << r_top << "m"
+                     << "\033[48;2;" << b_bot << ";" << g_bot << ";" << r_bot << "m"
+                     << "\u2580";
             }
+            // Reset colors at the end of each line.
             cout << "\033[0m" << endl;
         }
-        cout << endl;
+        // Reset at the end.
+        cout << "\033[0m" << endl;
     }
 
     bool is_empty() const {

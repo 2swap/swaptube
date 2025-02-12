@@ -81,7 +81,6 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const 
         cs.inject_audio(FileSegment(script), 4);
     }
 
-    cs.render();
     cs.state_manager.microblock_transition({
         {"pgs.opacity", ".4"},
     });
@@ -104,6 +103,7 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const 
         {"path_opacity", "1"},
         {"rk4_step_size", "1 30 / <physics_multiplier> /"},
     });
+    cs.render();
     cs.render();
     cs.render();
     cs.state_manager.microblock_transition({
@@ -485,6 +485,8 @@ void grids_and_points(){
     PendulumScene pend(pendulum_state);
     pend.state_manager.set({
         {"manual_mode", "1"},
+        {"rk4_step_size", "1"},
+        {"physics_multiplier", "0"},
         {"theta1_manual", "5"},
         {"theta2_manual", "8"},
     });
@@ -534,7 +536,7 @@ void grids_and_points(){
     pgs.state_manager.microblock_transition({
         {"zoom", "1 3.1415 /"},
     });
-    pgs.inject_audio_and_render(FileSegment("Pay attention to how there are seemingly two distinct modes of behavior here."));
+    pgs.inject_audio_and_render(FileSegment("Pay attention to how there are two distinct modes of behavior here."));
     pgs.inject_audio(FileSegment("There is a region of chaotic noise, as well as a region of coherent behavior."), 4);
     pgs.state_manager.microblock_transition({
         {"center_x", "3.1415"},
@@ -552,6 +554,7 @@ void grids_and_points(){
         {"mode", "2"},
     });
     pgs.inject_audio_and_render(FileSegment("Now, for each pixel, I'll track not only one pendulum but instead two, separated by a microscopic starting difference in angle, and plot their difference as time passes."));
+//TODO the grid is insufficiently developed.
     pgs.inject_audio_and_render(FileSegment("In other words, this plot shows how quickly the pendulums in our grid diverge to chaos."));
     pgs.state_manager.microblock_transition({
         {"center_x", "3.1415"},
@@ -603,7 +606,7 @@ void grid() {
         {"rainbow", "0"},
     };
     cs.state_manager.set(state);
-    int selected_pendulum = vps.size()*.4;
+    int selected_pendulum = vps.size()*.2;
     string key_str = "ps" + to_string(selected_pendulum);
     cs.inject_audio_and_render(FileSegment("Instead, we can make a large array of pendulums like this."));
     string return_x = to_string(cs.state_manager.get_state({key_str + ".x"})[key_str + ".x"]);
@@ -646,7 +649,7 @@ void grid() {
     PendulumGrid pointgrid(100, 100, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0);
     PendulumPointsScene pps(pointgrid, 0.5, 1);
     pps.state_manager.set({
-        {"physics_multiplier", "[parent_physics_multiplier]"},
+        {"physics_multiplier", "0"},
         {"rk4_step_size", "1 30 / 5 /"},
         {"center_x", "0"},
         {"center_y", "0"},
@@ -748,8 +751,8 @@ void intro() {
     });
     tds.inject_audio_and_render(FileSegment("where a tiny deviation in similar double pendulums amplifies over time,"));
     tds.inject_audio_and_render(FileSegment("until they completely desynchronize."));
-    shared_ptr<LatexScene> chaotic = make_shared<LatexScene>(latex_text("Chaos: Differences in state amplify over time"), 1);
-    tds.add_surface(Surface(glm::vec3(0, -fov*.2, 0), glm::vec3(fov,0,0), glm::vec3(0,fov,0), chaotic));
+    shared_ptr<LatexScene> chaotic = make_shared<LatexScene>(latex_text("Chaotic System"), 1);
+    tds.add_surface(Surface(glm::vec3(0, -fov*.2, 0), glm::vec3(fov/2.,0,0), glm::vec3(0,fov/2.,0), chaotic));
     tds.inject_audio_and_render(FileSegment("This sensitivity to initial conditions renders the system unpredictable, and so we call it chaotic."));
     vector<double> notes2{pow(2, 0/12.), pow(2, 4/12.), pow(2, 7/12.), pow(2, 11/12.), pow(2, 12/12.), };
     for(int i = 0; i < 5; i++){
@@ -767,10 +770,10 @@ void intro() {
         ps->state_manager.macroblock_transition({
             {"pendulum_opacity", "1"},
         });
-        tds.add_surface(Surface(glm::vec3(18, fov*.3, (i-2)*fov*.5), glm::vec3(fov,0,0), glm::vec3(0,fov,0), ps));
+        tds.add_surface(Surface(glm::vec3(fov*3, -fov*.1, (i-2)*fov*.5), glm::vec3(fov,0,0), glm::vec3(0,fov,0), ps));
     }
     tds.state_manager.macroblock_transition({
-        {"x", "18"},
+        {"x", to_string(fov*3)},
         {"volume_set1", "0"},
         {"volume_set2", "1"},
     });
@@ -786,7 +789,6 @@ void intro() {
     tds.state_manager.macroblock_transition({
         {"parent_path_opacity", "1"},
         {"qj", "0"},
-        {"fov", "8"},
         {"d", to_string(start_dist*1.5)},
     });
     tds.inject_audio_and_render(FileSegment("They even trace a repeating pattern,"));
@@ -805,8 +807,7 @@ void intro() {
     tds.state_manager.macroblock_transition({
         {"volume_set1", "0.5"},
         {"volume_set2", "0.5"},
-        {"x", "9"},
-        {"fov", "4"},
+        {"x", to_string(fov*1.5)},
     });
     tds.inject_audio_and_render(FileSegment("These pendulums follow the same laws of physics."));
     tds.state_manager.macroblock_transition({
@@ -1095,12 +1096,13 @@ void fractal() {
     cs.inject_audio_and_render(GeneratedSegment(audio_left_p, audio_right_p));
     coord.state_manager.microblock_transition({
         {"zoom", ".04"},
+//TODO these numbers are off
         {"center_x", "8"},
         {"center_y", "14"},
     });
-    cs.inject_audio_and_render(FileSegment("It traces a completely repetitive curve in angle-space, so it unsurprisingly sounds the cleanest."));
+    cs.inject_audio_and_render(FileSegment("It traces a repetitive curve in angle-space, so it sounds the cleanest."));
     cs.fade_out_all_scenes();
-    cs.inject_audio_and_render(FileSegment("Listening to a pendulum can tell us if it is chaotic, but unfortunately, we have to do it one-by-one, pendulum-by-pendulum."));
+    cs.inject_audio_and_render(FileSegment("Listening to a pendulum can tell us if it's chaotic, but unfortunately, we have to do it one-by-one, pendulum-by-pendulum."));
 }
 
 void render_video() {
@@ -1119,7 +1121,7 @@ void render_video() {
         const double t2 = is.ps.theta2;
         grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, t1-ro2, t1+ro2, t2-ro2, t2+ro2, 0, 0, 0, 0));
     }
-    if(!FOR_REAL) for (PendulumGrid& g : grids) g.iterate_physics(10000, .1/30);
+    for (PendulumGrid& g : grids) g.iterate_physics(10000, .1/30);
     PendulumGridScene pgs(grids);
     fine_grid(pgs);
     showcase_islands(pgs);

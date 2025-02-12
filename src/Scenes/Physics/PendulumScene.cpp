@@ -8,15 +8,20 @@ public:
         state_manager.add_equation("tone", "1");
         state_manager.add_equation("volume", "0");
         state_manager.add_equation("path_opacity", "0");
+        state_manager.add_equation("physics_multiplier", "30");
+        state_manager.add_equation("rk4_step_size", "1 30 / <physics_multiplier> 0.01 + /");
         state_manager.add_equation("background_opacity", "0");
         state_manager.add_equation("pendulum_opacity", "1");
         state_manager.add_equation("top_angle_opacity", "0");
         state_manager.add_equation("bottom_angle_opacity", "0");
         state_manager.add_equation("rainbow", "1");
+        state_manager.add_equation("manual_mode", "0");
+        state_manager.add_equation("theta1_manual", "0");
+        state_manager.add_equation("theta2_manual", "0");
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
     void on_end_transition() override {}
@@ -57,7 +62,9 @@ public:
         double w = get_width(); double h = get_height();
         double line_thickness = h/80;
         double posx = w/2; double posy = h/2;
-        vector<double> thetas = {pend.state.theta1, pend.state.theta2};
+        double in_manual_mode = state["manual_mode"];
+        vector<double> thetas = {lerp(pend.state.theta1, state["theta1_manual"], in_manual_mode),
+                                 lerp(pend.state.theta2, state["theta2_manual"], in_manual_mode)};
         int color = pendulum_color(thetas[0], thetas[1]);
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));

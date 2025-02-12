@@ -63,7 +63,7 @@ double calculator(const string& expression) {
     stack<double> stack;
     unordered_map<string, OperatorInfo> operators = {
         {"smoothlerp", {[](vector<double>& operands) { return smoothlerp(operands[0], operands[1], operands[2]); }, 3}},
-        {"smoothlerp", {[](vector<double>& operands) { return lerp(operands[0], operands[1], operands[2]); }, 3}},
+        {"lerp", {[](vector<double>& operands) { return lerp(operands[0], operands[1], operands[2]); }, 3}},
         {"+", {[](vector<double>& operands) { return operands[0] + operands[1]; }, 2}},
         {"-", {[](vector<double>& operands) { return operands[0] - operands[1]; }, 2}},
         {"*", {[](vector<double>& operands) { return operands[0] * operands[1]; }, 2}},

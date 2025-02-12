@@ -88,6 +88,7 @@ int pendulum_color_old(double angle1, double angle2) {
 }
 
 int pendulum_color(double angle1, double angle2) {
+    angle1 += M_PI;
     double y_f = 127.5 +  64 * sin(angle1 + angle2);
     double u_f = 127.5 + 128 * sin(angle1)*cos(angle2);
     double v_f = 127.5 + 128 * sin(angle2);
