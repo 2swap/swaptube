@@ -36,12 +36,15 @@ public:
     int circles_to_render = 0;
     CoordinateScene(const double width = 1, const double height = 1)
         : Scene(width, height) {
-        state_manager.add_equation("left_x"  , "<center_x> .5 <zoom> / -");
-        state_manager.add_equation("right_x" , "<center_x> .5 <zoom> / +");
-        state_manager.add_equation("top_y"   , "<center_y> .5 <zoom> / -");
-        state_manager.add_equation("bottom_y", "<center_y> .5 <zoom> / +");
+        state_manager.add_equation("left_x"   , "<center_x> .5 <zoom> / -");
+        state_manager.add_equation("right_x"  , "<center_x> .5 <zoom> / +");
+        state_manager.add_equation("top_y"    , "<center_y> .5 <zoom> / -");
+        state_manager.add_equation("bottom_y" , "<center_y> .5 <zoom> / +");
         state_manager.add_equation("ticks_opacity", "1");
         state_manager.add_equation("circles_opacity", "0");
+        state_manager.add_equation("center_x", "0");
+        state_manager.add_equation("center_y", "0");
+        state_manager.add_equation("zoom", "1");
     }
 
     pair<int, int> point_to_pixel(const pair<double, double>& p) {
