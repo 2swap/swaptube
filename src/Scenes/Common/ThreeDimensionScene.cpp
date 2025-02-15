@@ -305,7 +305,6 @@ public:
 
     bool subscene_needs_redraw() const override {
         for(const auto& surface : surfaces){
-            //surface.scenePointer->update();
             if(surface.scenePointer->needs_redraw()) return true;
         }
         return false;

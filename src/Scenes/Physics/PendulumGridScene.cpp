@@ -70,27 +70,27 @@ public:
         const double log_coloration = log(coloration);
 
         const PendulumGrid& g0 = grids[0];
-        const double inv_y_range = 1./(g0.t2_max-g0.t2_min);
-        const double inv_x_range = 1./(g0.t1_max-g0.t1_min);
+        const double inv_y_range = 1./(g0.max2-g0.min2);
+        const double inv_x_range = 1./(g0.max1-g0.min1);
         for (int y = 0; y < h; ++y) {
             double pos_y = (h/2.0 - y) / (h * zoom) + cy;
-            pos_y = extended_mod(pos_y-g0.t2_min, g0.t2_max-g0.t2_min)+g0.t2_min;
+            pos_y = extended_mod(pos_y-g0.min2, g0.max2-g0.min2)+g0.min2;
             for (int x = 0; x < w; ++x) {
                 double pos_x = (x - w/2.0) / (w * zoom) + cx;
-                pos_x = extended_mod(pos_x-g0.t1_min, g0.t1_max-g0.t1_min)+g0.t1_min;
+                pos_x = extended_mod(pos_x-g0.min1, g0.max1-g0.min1)+g0.min1;
 
                 int last_grid = 0;
                 for(int i = grids.size() - 1; i >= 0; i--){
                     const PendulumGrid& grid = grids[i];
-                    if(pos_x < grid.t1_max && pos_x > grid.t1_min && pos_y < grid.t2_max && pos_y > grid.t2_min){
+                    if(pos_x < grid.max1 && pos_x > grid.min1 && pos_y < grid.max2 && pos_y > grid.min2){
                         last_grid = i;
                         break;
                     }
                 }
                 const PendulumGrid& grid = grids[last_grid];
-                int arr_x = grid.w * (pos_x - grid.t1_min) / (grid.t1_max-grid.t1_min);
+                int arr_x = grid.w * (pos_x - grid.min1) / (grid.max1-grid.min1);
                 if(arr_x < 0 || arr_x >= grid.w) continue;
-                int arr_y = grid.h * (pos_y - grid.t2_min) / (grid.t2_max-grid.t2_min);
+                int arr_y = grid.h * (pos_y - grid.min2) / (grid.max2-grid.min2);
                 if(arr_y < 0 || arr_y >= grid.h) continue;
                 int i = arr_x+arr_y*grid.w;
 
@@ -149,6 +149,7 @@ public:
         draw_point(make_pair(trail_start_x, trail_start_y), 0xffff0000, trail_opacity);
     }
 
+    bool momentum_mode = false;
 private:
     vector<PendulumGrid> grids;
 };

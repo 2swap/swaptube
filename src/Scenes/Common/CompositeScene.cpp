@@ -68,7 +68,6 @@ public:
 
     bool subscene_needs_redraw() const override {
         for (auto& swp : scenes){
-            //swp.scenePointer->update();
             if(state[swp.state_manager_name + ".opacity"] > 0.01 && swp.scenePointer->needs_redraw()) return true;
         }
         return false;
