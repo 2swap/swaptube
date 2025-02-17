@@ -117,7 +117,7 @@ public:
                 else if(mode > 2.999) color = color_mode3;
                 else if(mode <= 2.999 && mode >= 2.001) color = colorlerp(color_mode2, color_mode3, mode-2);
                 if(emax>0.01) {
-                    double energy = compute_potential_energy(grid.start_states[i]) + compute_kinetic_energy(grid.start_states[i]);
+                    double energy = compute_potential_energy(grid.pendulum_states[i]) + compute_kinetic_energy(grid.pendulum_states[i]);
                     if(energy>emin && energy<emax) {
                         color = colorlerp(color, 0xffff0000, 0.5);
                     }

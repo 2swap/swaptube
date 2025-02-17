@@ -12,6 +12,7 @@
 const double pend_g = 9.8; // gravitational acceleration (m/s^2)
 const double pend_l = 1.0; // length of pendulum arms (m)
 const double pend_m = 1.0; // mass of pendulums (kg)
+const double mll = pend_m * pend_l * pend_l;
 
 struct PendulumState {
     double theta1, theta2, p1, p2;
@@ -29,15 +30,16 @@ inline double compute_kinetic_energy(const PendulumState &state) {
     double p1 = state.p1;
     double p2 = state.p2;
 
-    // Calculate angular velocities
     double delta = theta1 - theta2;
-    double denominator = 16 - 9 * cos(delta) * cos(delta);
-    double mll = pend_m * pend_l * pend_l;
-    double dtheta1 = (6 / mll) * (2 * p1 - 3 * cos(delta) * p2) / denominator;
-    double dtheta2 = (6 / mll) * (8 * p2 - 3 * cos(delta) * p1) / denominator;
+    double cos_delta_3 = cos(delta)*3.-;
+    double sin_delta = sin(delta);
+    double denominator = mll * (1 + 1.5 * sin_delta * sin_delta);
 
-    // Kinetic Energy
-    return 0.5 * mll * (dtheta1 * dtheta1 + 2 * dtheta2 * dtheta2 + 2 * dtheta1 * dtheta2 * cos(delta));
+    double mll_recip_6_denom = 6./(mll*denominator);
+    double dtheta1 = mll_recip_6_denom * (2.0 * p1 - cos_delta_3 * p2);
+    double dtheta2 = mll_recip_6_denom * (8.0 * p2 - cos_delta_3 * p1);
+
+    return 0.5 * mll * (dtheta1 * dtheta1 + 0.5 * dtheta2 * dtheta2 + dtheta1 * dtheta2 * cos_delta);
 }
 
 HOST_DEVICE

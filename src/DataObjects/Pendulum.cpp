@@ -48,7 +48,7 @@ public:
         max1 = (t1_min == t1_max) ? p1_max : t1_max;
         min2 = (t2_min == t2_max) ? p2_min : t2_min;
         max2 = (t2_min == t2_max) ? p2_max : t2_max;
-        start_states    = vector<PendulumState>(h*w);
+        start_states = vector<PendulumState>(h*w);
         pendulum_states = vector<PendulumState>(h*w);
         pendulum_pairs  = vector<PendulumState>(h*w);
         diff_sums       = vector<double       >(h*w);
@@ -64,25 +64,14 @@ public:
                 pendulum_states[i] = ps;
                 start_states[i] = ps;
                 ps.theta1 += 0.0001;
-                pendulum_pairs [i] = ps;
+                pendulum_pairs[i] = ps;
             }
         }
     }
 
     void iterate_physics(int multiplier, double step_size) {
         if(multiplier == 0) return;
-        simulatePendulum(pendulum_states.data(), pendulum_states.size(), multiplier, step_size);
-        simulatePendulum(pendulum_pairs .data(), pendulum_pairs .size(), multiplier, step_size);
-        for(int y = 0; y < h; y++)
-            for(int x = 0; x < w; x++) {
-                int i = x+y*w;
-                PendulumState ps = pendulum_states[i];
-                PendulumState pp = pendulum_pairs[i];
-                
-                double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2));
-                distance = min(distance, 1.);
-                diff_sums[i] += distance;
-            }
+        simulate_pendulum_pair(pendulum_states.data(), pendulum_pairs.data(), diff_sums.data(), pendulum_states.size(), multiplier, step_size);
         mark_updated();
     }
 };

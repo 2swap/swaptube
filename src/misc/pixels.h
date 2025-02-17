@@ -81,9 +81,10 @@ public:
             for (int x = x_start; x < x_end; ++x) {
                 int a, r_pixel, g_pixel, b_pixel;
                 get_pixel_by_channels(x, y, a, b_pixel, g_pixel, r_pixel);
-                sumR += r_pixel;
-                sumG += g_pixel;
-                sumB += b_pixel;
+                double a_decimal = a/255.;
+                sumR += r_pixel*a_decimal;
+                sumG += g_pixel*a_decimal;
+                sumB += b_pixel*a_decimal;
                 ++count;
             }
         }
