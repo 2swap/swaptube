@@ -7,7 +7,7 @@
 class PendulumGridScene : public CoordinateScene {
 public:
     PendulumGridScene(const vector<PendulumGrid>& pgv, const double width = 1, const double height = 1) : CoordinateScene(width, height), grids(pgv) {
-        state_manager.add_equation("contrast", ".1");
+        state_manager.add_equation("contrast", ".001");
         state_manager.add_equation("mode", "0");
         state_manager.add_equation("physics_multiplier", "0");
         state_manager.add_equation("rk4_step_size", "1 30 / .1 *");
@@ -104,9 +104,9 @@ public:
                     PendulumState ps = grid.pendulum_states[i];
                     PendulumState pp = grid.pendulum_pairs[i];
                     
-                    double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2))*contrast;
-                    distance = min(distance, 1/contrast);
-                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance*contrast)/log_coloration));
+                    double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2))*contrast*100.;
+                    distance = min(distance, .01/contrast);
+                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance*contrast*100.)/log_coloration));
                 }
 
                 if(mode < 0.001) color = color_mode0;

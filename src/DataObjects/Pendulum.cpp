@@ -7,6 +7,7 @@ using namespace std;
 #include "PendulumHelpers.cpp"
 
 extern "C" void simulatePendulum(PendulumState* states, int n, int multiplier, double dt);
+extern "C" void simulate_pendulum_pair(PendulumState* states, PendulumState* pairs, double* diffs, int n, int multiplier, double dt);
 
 class Pendulum : public DataObject {
 public:

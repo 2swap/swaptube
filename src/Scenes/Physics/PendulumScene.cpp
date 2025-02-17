@@ -40,7 +40,7 @@ public:
             path_background.bresenham(last_x, last_y, x, y, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
             last_x = x; last_y = y;
         }
-        energy_slew = square(compute_kinetic_energy(pend.state));
+        energy_slew = square(compute_kinetic_energy(pend.state))/100.;
         generate_tone();
         for(int x = 0; x < path_background.w; x++) {
             for(int y = 0; y < path_background.h; y++) {

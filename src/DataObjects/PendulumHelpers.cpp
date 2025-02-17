@@ -31,13 +31,13 @@ inline double compute_kinetic_energy(const PendulumState &state) {
     double p2 = state.p2;
 
     double delta = theta1 - theta2;
-    double cos_delta_3 = cos(delta)*3.-;
+    double cos_delta = cos(delta);
     double sin_delta = sin(delta);
     double denominator = mll * (1 + 1.5 * sin_delta * sin_delta);
 
     double mll_recip_6_denom = 6./(mll*denominator);
-    double dtheta1 = mll_recip_6_denom * (2.0 * p1 - cos_delta_3 * p2);
-    double dtheta2 = mll_recip_6_denom * (8.0 * p2 - cos_delta_3 * p1);
+    double dtheta1 = mll_recip_6_denom * (2.0 * p1 - cos_delta * 3.0 * p2);
+    double dtheta2 = mll_recip_6_denom * (8.0 * p2 - cos_delta * 3.0 * p1);
 
     return 0.5 * mll * (dtheta1 * dtheta1 + 0.5 * dtheta2 * dtheta2 + dtheta1 * dtheta2 * cos_delta);
 }

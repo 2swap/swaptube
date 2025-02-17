@@ -61,7 +61,11 @@ __global__ void double_pendulum_simulation_kernel(
     for(int i = 0; i < multiplier; i++) {
         d_states[idx] = rk4Step(d_states[idx], dt);
         d_pairs[idx] = rk4Step(d_pairs[idx], dt);
-        double distance = sqrt(square(d_states[idx].p1 - d_pairs[idx].p1) + square(d_states[idx].p2 - d_pairs[idx].p2) + square(d_states[idx].theta1-d_pairs[idx].theta1) + square(d_states[idx].theta2-d_pairs[idx].theta2));
+        double p1_dist = d_states[idx].p1 - d_pairs[idx].p1;
+        double p2_dist = d_states[idx].p2 - d_pairs[idx].p2;
+        double theta1_dist = d_states[idx].theta1 - d_pairs[idx].theta1;
+        double theta2_dist = d_states[idx].theta2 - d_pairs[idx].theta2;
+        double distance = sqrt(p1_dist*p1_dist + p2_dist*p2_dist + theta1_dist*theta1_dist + theta2_dist*theta2_dist);
         distance = min(distance, 1.);
         d_diffs[i] += distance;
     }

@@ -116,14 +116,10 @@ public:
         const int termWidth = wsz.ws_col;
         // Note: we are not using termHeight here.
 
-        // The measured aspect ratio of your terminal characters.
-        // (e.g. 18 pixels wide by 8 pixels tall)
-        const double charAspect = 18.0 / 8.0;
+        // Assume a half-block is square
+        const double charAspect = 2.0;
 
-        // We'll use the terminal’s full width for our output.
-        int outputWidth = termWidth;
-
-        // Compute the aspect ratio of the source image.
+        int outputWidth = min(w, termWidth);
         double imageAspect = static_cast<double>(w) / h;
 
         // Determine the effective vertical resolution (in image pixels) that we wish to sample.
