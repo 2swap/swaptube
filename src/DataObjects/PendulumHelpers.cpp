@@ -23,30 +23,6 @@ struct Derivatives {
 };
 
 HOST_DEVICE
-inline double compute_kinetic_energy(const PendulumState &state) {
-    double theta1 = state.theta1;
-    double theta2 = state.theta2;
-    double p1 = state.p1;
-    double p2 = state.p2;
-
-    double delta = theta1 - theta2;
-    double cos_delta = cos(delta);
-    double sin_delta = sin(delta);
-    double denominator = mll * (1 + 1.5 * sin_delta * sin_delta);
-
-    double mll_recip_6_denom = 6./(mll*denominator);
-    double dtheta1 = mll_recip_6_denom * (2.0 * p1 - cos_delta * 3.0 * p2);
-    double dtheta2 = mll_recip_6_denom * (8.0 * p2 - cos_delta * 3.0 * p1);
-
-    return mll * (dtheta1 * dtheta1 + 0.5 * dtheta2 * dtheta2 + dtheta1 * dtheta2 * cos_delta);
-}
-
-HOST_DEVICE
-inline double compute_potential_energy(const PendulumState &state) {
-    return pend_m * pend_g * pend_l * (4 - 3 * cos(state.theta1) - cos(state.theta2));
-}
-
-HOST_DEVICE
 inline Derivatives computeDerivatives(const PendulumState &state) {
     double theta1 = state.theta1;
     double theta2 = state.theta2;
@@ -68,6 +44,18 @@ inline Derivatives computeDerivatives(const PendulumState &state) {
     double dp2 = coeff2 * (    pend_g * sin(theta2) - endbit);
 
     return {dtheta1, dtheta2, dp1, dp2};
+}
+
+HOST_DEVICE
+inline double compute_kinetic_energy(const PendulumState &state) {
+    Derivatives d = computeDerivatives(state);
+    double cos_delta = cos(state.theta1-state.theta2);
+    return mll * (d.dtheta1 * d.dtheta1 + 0.5 * d.dtheta2 * d.dtheta2 + d.dtheta1 * d.dtheta2 * cos_delta);
+}
+
+HOST_DEVICE
+inline double compute_potential_energy(const PendulumState &state) {
+    return pend_m * pend_g * pend_l * (4 - 3 * cos(state.theta1) - cos(state.theta2));
 }
 
 HOST_DEVICE
