@@ -16,7 +16,6 @@ const double mll = pend_m * pend_l * pend_l;
 
 struct PendulumState {
     double theta1, theta2, p1, p2;
-    int iteration_number;
 };
 
 struct Derivatives {
@@ -39,7 +38,7 @@ inline double compute_kinetic_energy(const PendulumState &state) {
     double dtheta1 = mll_recip_6_denom * (2.0 * p1 - cos_delta * 3.0 * p2);
     double dtheta2 = mll_recip_6_denom * (8.0 * p2 - cos_delta * 3.0 * p1);
 
-    return 0.5 * mll * (dtheta1 * dtheta1 + 0.5 * dtheta2 * dtheta2 + dtheta1 * dtheta2 * cos_delta);
+    return mll * (dtheta1 * dtheta1 + 0.5 * dtheta2 * dtheta2 + dtheta1 * dtheta2 * cos_delta);
 }
 
 HOST_DEVICE
@@ -58,7 +57,7 @@ inline Derivatives computeDerivatives(const PendulumState &state) {
     double cos_delta = cos(delta);
     double sin_delta = sin(delta);
     double denominator = 16 - 9 * cos_delta * cos_delta;
-    double coeff = 6/(pend_m*pend_l*pend_l*denominator);
+    double coeff = 6/(mll*denominator);
 
     double dtheta1 = coeff * (2 * p1 - 3 * cos_delta * p2);
     double dtheta2 = coeff * (8 * p2 - 3 * cos_delta * p1);
@@ -102,7 +101,6 @@ inline PendulumState rk4Step(const PendulumState &state, double dt) {
     newState.theta2 = state.theta2 + dt6 * (k1.dtheta2 + 2 * k2.dtheta2 + 2 * k3.dtheta2 + k4.dtheta2);
     newState.p1 = state.p1 + dt6 * (k1.dp1 + 2 * k2.dp1 + 2 * k3.dp1 + k4.dp1);
     newState.p2 = state.p2 + dt6 * (k1.dp2 + 2 * k2.dp2 + 2 * k3.dp2 + k4.dp2);
-    newState.iteration_number = state.iteration_number+1;
 
     return newState;
 }

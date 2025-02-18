@@ -1,4 +1,3 @@
-//TODO instead of diff sums, make it a true average
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Media/StateSliderScene.cpp"
@@ -405,18 +404,17 @@ void fine_grid(PendulumGridScene& pgs){
     pgs.state_manager.microblock_transition({
         {"trail_start_x", "1"},
         {"trail_start_y", "1.1"},
+        {"mode", "2"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
         {"trail_start_x", "1.2"},
         {"trail_start_y", "1.1"},
     });
-//TODO I say black but it isn't black at this time
     pgs.inject_audio_and_render(FileSegment("This main black region is the home of all the lissajous style pendulums."));
     pgs.state_manager.microblock_transition({
         {"trail_start_x", "1.6"},
         {"trail_start_y", "1.9"},
-        {"mode", "2"},
         {"zoom", "0.05"},
     });
     pgs.inject_audio_and_render(FileSegment("But as soon as you leave and step into the chaotic region..."));
@@ -689,7 +687,6 @@ void grid() {
         {"pend.opacity", "0"},
     });
     cs.render();
-//TODO data seems to be bugged here
     pgs.state_manager.microblock_transition({
         {"center_x", "0"},
         {"center_y", "0"},
@@ -808,9 +805,12 @@ void intro() {
     tds.inject_audio_and_render(FileSegment("until they completely desynchronize."));
 //TODO make tds more like composite
     shared_ptr<LatexScene> chaotic = make_shared<LatexScene>(latex_text("Chaotic System"), 1);
-//TODO drop the words in when I say "so we call it chaotic"
-    tds.add_surface(Surface(glm::vec3(0, -fov*.2, 0), glm::vec3(fov/2.,0,0), glm::vec3(0,fov/2.,0), chaotic));
-    tds.inject_audio_and_render(FileSegment("This sensitivity to initial conditions renders the system unpredictable, and so we call it chaotic."));
+    int num_renders = 5;
+    tds.inject_audio(FileSegment("This sensitivity to initial conditions renders the system unpredictable, and so we call it chaotic."), num_renders);
+    for(int i = 0; i < num_renders; i++){
+        if(i == num_renders-1) tds.add_surface(Surface(glm::vec3(0, -fov*.2, 0), glm::vec3(fov/2.,0,0), glm::vec3(0,fov/2.,0), chaotic));
+        tds.render();
+    }
     vector<double> notes2{pow(2, 0/12.), pow(2, 4/12.), pow(2, 7/12.), pow(2, 11/12.), pow(2, 12/12.), };
     double x_separation = fov*1.4;
     for(int i = 0; i < 5; i++){
@@ -941,6 +941,7 @@ void fractal() {
         ps.state_manager.set(state);
         ps.state_manager.set({{"tone", to_string(i/4.+1)}});
         string name = "p" + to_string(i);
+//TODO set x and y as function of the circles
         cs.add_scene_fade_in(&ps, name, (start_states[i].theta1 + 0.2)/6.283, 1-(start_states[i].theta2)/6.283);
         cs.render();
     }
@@ -1090,8 +1091,12 @@ void fractal() {
     cs.inject_audio_and_render(FileSegment("We can run this pendulum for several hours, re-interpret these signals as sound waves on the left and right speaker, and 'listen' to the pendulum!"));
     vector<float> audio_left;
     vector<float> audio_right;
+    coord.state_manager.microblock_transition({
+        {"trail_opacity", "0"},
+    });
     specimens[2].generate_audio(4, audio_left, audio_right);
     cs.inject_audio_and_render(GeneratedSegment(audio_left, audio_right));
+//TODO still wrong
     double pendulum_center_x = specimens[0].pend.state.theta1;
     double pendulum_center_y = specimens[0].pend.state.theta2;
     specimens[0].global_publisher_key = true;
@@ -1107,7 +1112,6 @@ void fractal() {
         {"p0.opacity", "1"},
     });
     coord.state_manager.microblock_transition({
-        {"trail_opacity", "0"},
         {"zoom", ".05"},
         {"center_x", to_string(pendulum_center_x)},
         {"center_y", to_string(pendulum_center_y)},
