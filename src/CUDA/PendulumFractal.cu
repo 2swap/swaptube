@@ -67,7 +67,7 @@ __global__ void double_pendulum_simulation_kernel(
         double theta2_dist = d_states[idx].theta2 - d_pairs[idx].theta2;
         double distance = sqrt(p1_dist*p1_dist + p2_dist*p2_dist + theta1_dist*theta1_dist + theta2_dist*theta2_dist);
         distance = min(distance, 1.);
-        d_diffs[i] += distance;
+        d_diffs[idx] += distance;
     }
 }
 

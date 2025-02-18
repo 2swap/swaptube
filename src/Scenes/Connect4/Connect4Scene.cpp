@@ -95,7 +95,7 @@ public:
     }
     void mark_data_unchanged() override { }
     void change_data() override { } // No DataObjects
-    void on_end_transition() override { }
+    void on_end_transition(bool is_macroblock) override { }
     bool check_if_data_changed() const override { return false; } // No DataObjects
 
     void draw() override{

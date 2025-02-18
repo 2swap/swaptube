@@ -23,7 +23,7 @@ public:
         Pixels swaptube_pix = latex_to_pix(" \\normalsize" + latex_text("\\textbf{Rendered with love, using SwapTube}") + "\\\\\\\\" + "\\tiny" + latex_text("Commit Hash: " + swaptube_commit_hash()), sp2);
         pix.overlay(swaptube_pix, pix.h*.03, pix.h*.03, .4);
     }
-    void on_end_transition() override{}
+    void on_end_transition(bool is_macroblock) override{}
 
     string swaptube_commit_hash() {
         const char* command = "git rev-parse HEAD";

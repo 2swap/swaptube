@@ -96,7 +96,6 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, const 
         {"pendulum_opacity", "1"},
         {"physics_multiplier", "400"},
         {"path_opacity", "1"},
-        {"rk4_step_size", "1 30 / <physics_multiplier> /"},
     });
     cs.render();
     cs.render();
@@ -149,10 +148,6 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.add_scene(&pgs, "pgs");
     cs.inject_audio(FileSegment("We've seen how the pendulums which start near the angle zero-zero are very well-behaved."), 2);
     PendulumScene ps(down, .5, 1);
-    ps.state_manager.set({
-        {"physics_multiplier", "30"},
-        {"rk4_step_size", "1 30 / <physics_multiplier> /"},
-    });
     cs.add_scene_fade_in(&ps, "ps", 0.75, 0.5);
     cs.render();
     cs.render();
@@ -160,10 +155,6 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.inject_audio_and_render(FileSegment("So maybe energy is somehow involved?"));
     PendulumState vert = {0, 3, .0, .0};
     PendulumScene ps2(vert, .5, 1);
-    ps2.state_manager.set({
-        {"physics_multiplier", "30"},
-        {"rk4_step_size", "1 30 / <physics_multiplier> /"},
-    });
     pgs.state_manager.microblock_transition({
         {"circle0_x", to_string(vert.theta1)},
         {"circle0_y", to_string(vert.theta2)},
@@ -253,8 +244,7 @@ void move_fractal(PendulumGridScene& pgs){
     }
     PendulumGridScene mom(grids);
     mom.state_manager.set({
-        {"physics_multiplier", "3000"},
-        {"rk4_step_size", "1 30 / 0.1 *"},
+        {"physics_multiplier", "300"},
         {"center_x", "0"},
         {"center_y", "0"},
     });
@@ -313,7 +303,6 @@ void move_fractal(PendulumGridScene& pgs){
     perp.state_manager.set({
         {"mode", "3"},
         {"physics_multiplier", "300"},
-        {"rk4_step_size", "1 30 / 0.1 *"},
     });
     cs.inject_audio_and_render(SilenceSegment(1));
     perp.state_manager.microblock_transition({

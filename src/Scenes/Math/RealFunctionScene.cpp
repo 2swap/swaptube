@@ -106,7 +106,7 @@ public:
     void change_data() override {} // ComplexPlotScene has no DataObjects
     bool check_if_data_changed() const override { return false; } // ComplexPlotScene has no DataObjects
 
-    void on_end_transition() {
+    void on_end_transition(bool is_macroblock) {
         for(int i = 0; i < functions.size(); i++){
             if(functions[i].transition_function != "")
                 functions[i].function = functions[i].transition_function;

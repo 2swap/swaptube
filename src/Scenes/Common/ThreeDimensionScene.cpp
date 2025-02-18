@@ -295,11 +295,11 @@ public:
         return false;
     }
 
-    void on_end_transition() override {
+    void on_end_transition(bool is_macroblock) override {
         for(const auto& surface : surfaces){
-            surface.scenePointer->on_end_transition();
+            surface.scenePointer->on_end_transition(is_macroblock);
             surface.scenePointer->state_manager.close_microblock_transitions();
-            surface.scenePointer->state_manager.close_macroblock_transitions();
+            if(is_macroblock) surface.scenePointer->state_manager.close_macroblock_transitions();
         }
     }
 

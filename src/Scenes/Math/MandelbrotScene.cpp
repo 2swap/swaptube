@@ -23,7 +23,7 @@ public:
         return StateQuery{"zoom_r", "zoom_i", "max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "side_panel", "point_path_length", "point_path_r", "point_path_i", "gradation", "internal_shade", "breath"};
     }
 
-    void on_end_transition() override {}
+    void on_end_transition(bool is_macroblock) override {}
     void mark_data_unchanged() override {}
     void change_data() override {}
     bool check_if_data_changed() const override {return false;}

@@ -16,6 +16,6 @@ public:
     void mark_data_unchanged() override { }
     void change_data() override { }
     bool check_if_data_changed() const override { return true; }
-    void on_end_transition() override { }
+    void on_end_transition(bool is_macroblock) override { }
     void draw() override{pix = exposed_pixels;}
 };

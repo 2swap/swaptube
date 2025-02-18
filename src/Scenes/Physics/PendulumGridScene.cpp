@@ -7,7 +7,7 @@
 class PendulumGridScene : public CoordinateScene {
 public:
     PendulumGridScene(const vector<PendulumGrid>& pgv, const double width = 1, const double height = 1) : CoordinateScene(width, height), grids(pgv) {
-        state_manager.add_equation("contrast", ".001");
+        state_manager.add_equation("contrast", "1");
         state_manager.add_equation("mode", "0");
         state_manager.add_equation("physics_multiplier", "0");
         state_manager.add_equation("rk4_step_size", "1 30 / .1 *");
@@ -97,16 +97,17 @@ public:
                 int color_mode0 = 0; int color_mode1 = 0; int color_mode2 = 0; int color_mode3 = 0;
                 int color = 0xffff0000;
 
+                double how_chaotic = max(0.,grid.diff_sums[i]/grid.samples*contrast);
                 if(mode < 1.999) color_mode0 = pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2);
-                if(mode > 0.001 && mode < 1.999) color_mode1 = colorlerp(color_mode0, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*contrast)/5));
-                if(mode > 1.001 && mode < 2.999) color_mode2 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0.,log(grid.diff_sums[i]*contrast)/5));
+                if(mode > 0.001 && mode < 1.999) color_mode1 = colorlerp(color_mode0, OPAQUE_WHITE, how_chaotic);
+                if(mode > 1.001 && mode < 2.999) color_mode2 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, how_chaotic);
                 if(mode > 2.001) {
                     PendulumState ps = grid.pendulum_states[i];
                     PendulumState pp = grid.pendulum_pairs[i];
                     
-                    double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2))*contrast*100.;
-                    distance = min(distance, .01/contrast);
-                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance*contrast*100.)/log_coloration));
+                    double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2));
+                    distance = min(distance, 1.);
+                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance)/log_coloration));
                 }
 
                 if(mode < 0.001) color = color_mode0;

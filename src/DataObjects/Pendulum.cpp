@@ -39,6 +39,7 @@ public:
     vector<PendulumState> pendulum_states;
     vector<PendulumState> pendulum_pairs;
     vector<double> diff_sums;
+    int samples = 0;
     PendulumGrid(const int width, const int height,
         const double t1_min, const double t1_max,
         const double t2_min, const double t2_max,
@@ -73,6 +74,7 @@ public:
     void iterate_physics(int multiplier, double step_size) {
         if(multiplier == 0) return;
         simulate_pendulum_pair(pendulum_states.data(), pendulum_pairs.data(), diff_sums.data(), pendulum_states.size(), multiplier, step_size);
+        samples += multiplier;
         mark_updated();
     }
 };

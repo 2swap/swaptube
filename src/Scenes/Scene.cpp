@@ -23,7 +23,7 @@ public:
     virtual void draw() = 0;
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
-    virtual void on_end_transition() = 0;
+    virtual void on_end_transition(bool is_macroblock) = 0;
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
     void publish_global(const unordered_map<string, double>& s) const {
         for(const auto& p : s) {
@@ -86,7 +86,7 @@ public:
         if(!FOR_REAL){
             state_manager.close_microblock_transitions();
             state_manager.close_macroblock_transitions();
-            on_end_transition();
+            on_end_transition(true);
             state_manager.evaluate_all();
             return;
         }
@@ -107,9 +107,13 @@ public:
         if(remaining_microblocks == 0){
             global_state["macroblock_number"]++;
             state_manager.close_macroblock_transitions();
+            state_manager.close_microblock_transitions();
+            on_end_transition(true);
         }
-        state_manager.close_microblock_transitions();
-        on_end_transition();
+        else {
+            state_manager.close_microblock_transitions();
+            on_end_transition(false);
+        }
     }
 
     void update_state() {
