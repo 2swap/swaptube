@@ -112,7 +112,7 @@ public:
         double note = state["tone"];
         for(int i = 0; i < total_samples; i++){
             double strength = lerp(energy, energy_slew, static_cast<double>(i)/total_samples);
-            float val = .00002*vol*strength*sin(tonegen*2200.*note/44100.)/sqrt(note);
+            float val = .0002*vol*strength*sin(tonegen*2200.*note/44100.)/sqrt(note);
             tonegen++;
             left.push_back(val);
             right.push_back(val);
