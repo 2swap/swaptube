@@ -32,9 +32,7 @@ public:
     }
     void update() {
         has_updated_since_last_query = true;
-        update_state();
         change_data();
-        if(global_publisher_key) publish_global(stage_publish_to_global());
     }
     virtual bool needs_redraw() const {
         bool state_change = check_if_state_changed();
@@ -46,11 +44,10 @@ public:
     }
     void query(Pixels*& p) {
         State temp_state = state;
+        update_state();
         if(!has_updated_since_last_query){
             update();
-            has_updated_since_last_query = false;
         }
-        update_state(); // We already called update, but it is possible that state was changed in a parent statemanager's values
         if(needs_redraw()){
             pix = Pixels(get_width(), get_height());
             has_ever_rendered = true;
@@ -58,6 +55,7 @@ public:
         }
         last_state = temp_state;
         mark_data_unchanged();
+        has_updated_since_last_query = false;
         p=&pix;
     }
 
@@ -83,14 +81,6 @@ public:
     }
 
     void render(){
-        if(!FOR_REAL){
-            state_manager.close_microblock_transitions();
-            state_manager.close_macroblock_transitions();
-            on_end_transition(true);
-            state_manager.evaluate_all();
-            return;
-        }
-
         int complete_microblocks = total_microblocks - remaining_microblocks;
         int complete_macroblock_frames = total_macroblock_frames - remaining_macroblock_frames;
         double num_frames_per_session = static_cast<double>(total_macroblock_frames) / total_microblocks;
@@ -122,6 +112,7 @@ public:
         sq.insert("w");
         sq.insert("h");
         state = state_manager.get_state(sq);
+        if(global_publisher_key) publish_global(stage_publish_to_global());
     }
 
     int get_width() const{
@@ -139,6 +130,7 @@ public:
 
 private:
     void render_one_frame(int microblock_frame_number){
+        if(!FOR_REAL) return;
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
 
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_macroblock_frames) / total_macroblock_frames;

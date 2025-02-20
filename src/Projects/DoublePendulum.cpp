@@ -27,12 +27,13 @@ vector<IslandShowcase> isv{{{2.49  ,  .25   , .0, .0}, 0.4 , .02, "The Pretzel",
                            {{1.244 , -0.258 , .0, .0}, 0.2 , .06, "The 3", "empty blurb"},
                            {{1.238 , -0.854 , .0, .0}, 0.2 , .06, "The 4", "empty blurb"},
                            {{1.311 , -0.804 , .0, .0}, 0.2 , .06, "The 5", "empty blurb"},
+                           {{-.478 ,  2.633 , .0, .0}, 0.2 , .06, "The 9", "empty blurb"},
                            {{1.348 , -0.299 , .0, .0}, 0.2 , .06, "The 6", "empty blurb"},
-                           {{0.573 ,  2.543 , .0, .0}, 0.2 , .06, "Seneca Lake (miss)", "empty blurb"},
+                           {{0.572 ,  2.539 , .0, .0}, 0.2 , .06, "Seneca Lake", "empty blurb"},
                            {{0.028 ,  2.971 , .0, .0}, 0.2 , .06, "The 7", "empty blurb"},
                            {{2.808 ,  0.046 , .0, .0}, 0.2 , .06, "The Jumper", "empty blurb"},
                            {{3.0224,  0.0295, .0, .0}, 0.2 , .06, "The High-Jumper", "empty blurb"},
-                           {{1.779 ,  0.129 , .0, .0}, 0.2 , .06, "The 8 (miss)", "empty blurb"}};
+                           {{1.782 ,  0.137 , .0, .0}, 0.2 , .06, "The 8", "empty blurb"}};
 
 IslandShowcase momentum_island = {{2.14, 0.8  , .4, .6}, 0.2, 0.04, "Island with a starting momentum", "Sure enough, there are islands of stability for other starting momenta too."};
 
@@ -130,6 +131,55 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is) {
     cs.remove_scene(&pgs);
 }
 
+void showcase_momentum_space(PendulumGridScene& perp, double p1, double p2, string blurb) {
+    perp.state_manager.set({
+        {"circle0_x", to_string(p1)},
+        {"circle0_y", to_string(p2)},
+        {"circle0_r", "1"},
+    });
+    perp.circles_to_render = 1;
+    perp.state_manager.microblock_transition({
+        {"circles_opacity", "1"},
+    });
+    perp.inject_audio_and_render(SilenceSegment(2));
+
+    CompositeScene cs;
+    PendulumScene ps({0, 0, p1, p2}, 0.5, 1);
+
+    cs.add_scene        (&perp, "perp", 0.5 , 0.5 );
+    cs.add_scene_fade_in(&ps  , "ps"  , 0.75, 0.5 );
+
+    cs.inject_audio(FileSegment(blurb), 3);
+
+    cs.state_manager.microblock_transition({
+        {"perp.opacity", ".4"},
+    });
+    ps.state_manager.set({
+        {"background_opacity", "0"},
+        {"top_angle_opacity", "0"},
+        {"bottom_angle_opacity", "0"},
+        {"pendulum_opacity", "1"},
+        {"physics_multiplier", "400"},
+        {"path_opacity", "1"},
+    });
+    cs.render();
+    cs.render();
+    cs.render();
+    vector<float> audio_left;
+    vector<float> audio_right;
+    ps.generate_audio(3, audio_left, audio_right);
+    cs.inject_audio_and_render(GeneratedSegment(audio_left, audio_right));
+    cs.state_manager.microblock_transition({
+        {"perp.opacity", "1"},
+        {"ps.opacity", "0"},
+    });
+    perp.state_manager.microblock_transition({
+        {"circles_opacity", "0"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.remove_scene(&perp);
+}
+
 void discuss_energy(PendulumGridScene& pgs){
     pgs.state_manager.set({
         {"physics_multiplier", "0"},
@@ -202,7 +252,7 @@ void move_fractal(PendulumGridScene& pgs){
     mpgs.state_manager.set({
         {"iterations", "300"},
         {"mode", "0"},
-        {"rk4_step_size", "1 30 / .4 *"},
+        {"rk4_step_size", ".4 30 /"},
         {"zoomexp", "1 6.283 / log"},
         {"zoom", "2.718281828 <zoomexp> ^"},
         {"theta_or_momentum", "0"},
@@ -256,30 +306,33 @@ void move_fractal(PendulumGridScene& pgs){
         grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, t1-ro2, t1+ro2, t2-ro2, t2+ro2, momentum_island.ps.p1, momentum_island.ps.p1, momentum_island.ps.p2, momentum_island.ps.p2));
     }
     for(PendulumGrid& g : grids) {
-        g.iterate_physics(350*4, .1/30);
+        g.iterate_physics(300*4, .1/30);
     }
     PendulumGridScene mom(grids);
     mom.state_manager.set({
         {"physics_multiplier", "0"},
         {"center_x", "0"},
         {"center_y", "0"},
-        {"mode", "2"},
-    });
-    mom.state_manager.microblock_transition({
-        {"physics_multiplier", "600"},
+        {"mode", "3"},
     });
     cs.add_scene_fade_in(&mom, "mom");
-    cs.state_manager.microblock_transition({
+    cs.state_manager.macroblock_transition({
         {"pgs.opacity", "0"},
         {"mpgs.opacity", "0"},
     });
-    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio(SilenceSegment(1), 2);
+    render();
+    mom.state_manager.microblock_transition({
+        {"physics_multiplier", "600"},
+    });
+    render();
     mom.state_manager.set({
         {"physics_multiplier", "0"},
     });
     mom.state_manager.microblock_transition({
         {"center_x", to_string(momentum_island.ps.theta1)},
         {"center_y", to_string(momentum_island.ps.theta2)},
+        {"mode", "2"},
     });
     cs.inject_audio_and_render(SilenceSegment(1));
     cs.remove_scene(&mom);
@@ -324,6 +377,8 @@ void move_fractal(PendulumGridScene& pgs){
         {"rk4_step_size", "1 30 / .05 *"},
     });
     cs.inject_audio_and_render(SilenceSegment(1));
+    cs.remove_scene(&pgs);
+    cs.remove_scene(&perp);
     perp.state_manager.microblock_transition({
         {"physics_multiplier", "0"},
     });
@@ -341,6 +396,32 @@ void move_fractal(PendulumGridScene& pgs){
         {"energy_max", to_string(250*vert_energy)},
     });
     perp.inject_audio_and_render(FileSegment("But these ultra-high-energy pendulums don't easily fit into one box or another."));
+    showcase_momentum_space(perp, 1, 1, "");
+    showcase_momentum_space(perp, 4, 2, "");
+    showcase_momentum_space(perp, 10, 0, "");
+    showcase_momentum_space(perp, 0, 15, "");
+    cs.add_scene(&perp, "perp");
+    cs.state_manager.microblock_transition({
+        {"mpgs.opacity", "1"},
+        {"perp.opacity", "0"},
+    });
+    mpgs.state_manager.set({
+        {"mode", "3"},
+    });
+    mpgs.state_manager.microblock_transition({
+        {"zoomexp", "1 40 / log"},
+        {"theta_or_momentum", "0"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(2));
+    cs.remove_scene(&perp);
+    cs.add_scene_fade_in(&pgs, "pgs");
+    pgs.state_manager.set({
+        {"energy_max", "0"},
+    });
+    cs.state_manager.microblock_transition({
+        {"mpgs.opacity", "0"},
+    });
+    cs.inject_audio_and_render(FileSegment("I hope you enjoyed. As a parting gift, here's some more islands of stability."));
 }
 
 void showcase_more_islands(PendulumGridScene& pgs) {
@@ -664,6 +745,9 @@ void intro() {
     tds_cs.inject_audio_and_render(FileSegment("The only difference is the position from which they started."));
     tds_cs.remove_scene(&pgs);
     tds_cs.remove_scene(&tds);
+    pgs.state_manager.set({
+        {"physics_multiplier", "16"},
+    });
     pgs.state_manager.macroblock_transition({
         {"physics_multiplier", "32"},
         {"ticks_opacity", "1"},
@@ -698,20 +782,18 @@ void intro() {
     cs.state_manager.microblock_transition({
         {"pgs.opacity", "1"},
     });
-    for(int i = 0; i < start_states.size(); i++) {
-        pgs.state_manager.set({
-            {"circle"+to_string(i)+"_x", to_string(start_states[i].theta1)},
-            {"circle"+to_string(i)+"_y", to_string(start_states[i].theta2)},
-            {"circle"+to_string(i)+"_r", to_string(0.1)},
-        });
-    }
-    pgs.circles_to_render = start_states.size();
     cs.inject_audio(FileSegment("But before diving into the fractals, let's get to know a few particular specimen."), 3);
     vector<PendulumScene> specimens;
     for(int i = 0; i < start_states.size(); i++) {
         specimens.push_back(PendulumScene(start_states[i], 1./3, 1./3));
     }
     for(int i = 0; i < start_states.size(); i++) {
+        pgs.state_manager.set({
+            {"circle"+to_string(i)+"_x", to_string(start_states[i].theta1)},
+            {"circle"+to_string(i)+"_y", to_string(start_states[i].theta2)},
+            {"circle"+to_string(i)+"_r", to_string(0.1)},
+        });
+        pgs.circles_to_render = i+1;
         PendulumScene& ps = specimens[i];
         ps.state_manager.set(state);
         ps.state_manager.set({{"tone", to_string(i/4.+1)}});
@@ -767,7 +849,7 @@ void intro() {
         {"trail_y", "{pendulum_theta2}"},
     });
     cs.add_scene_fade_in(&coord, "coord", 0.5, 0.5);
-    cs.inject_audio_and_render(FileSegment("Plotting the top pendulum's angle as X and the bottom pendulum's angle as Y, we can make a graph like this."));
+    cs.inject_audio_and_render(FileSegment("Plotting the top angle as X and the bottom angle as Y, we can make a graph like this."));
     coord.state_manager.microblock_transition({
         {"center_x", "<trail_x>"},
         {"center_y", "<trail_y>"},
@@ -987,15 +1069,15 @@ void intro() {
     cs.remove_scene(&ear_right);
     cs.remove_scene(&left);
     cs.remove_scene(&right);
-    cs.remove_scene(&coord);
     cs.remove_scene(&specimens[0]);
-    cs.remove_scene(&specimens[1]);
     cs.remove_scene(&specimens[2]);
     int selected_pendulum_x = gridsize*.1;
     int selected_pendulum_y = gridsize*.2;
     int selected_pendulum = gridsize*selected_pendulum_y + selected_pendulum_x;
     string key_str = "ps" + to_string(selected_pendulum);
     cs.inject_audio_and_render(FileSegment("Instead, we can make a large array of pendulums like this."));
+    cs.remove_scene(&coord);
+    cs.remove_scene(&specimens[1]);
     vps[selected_pendulum].state_manager.set({
         {"pendulum_opacity", "1"},
     });
@@ -1110,7 +1192,7 @@ void intro() {
         {"pgs13.opacity", "0"},
         {"pendulum_opacity", "0"},
     });
-    cs.inject_audio_and_render(FileSegment("Let's increase the resolution to one pendulum per pixel."));
+    cs.inject_audio_and_render(FileSegment("Let's up the resolution to one pendulum per pixel."));
     for(int x = 0; x < gridsize; x++){
         for(int y = 0; y < gridsize; y++){
             cs.remove_scene(&(vps[x+y*gridsize]));
@@ -1227,4 +1309,5 @@ void render_video() {
     discuss_energy(pgs);
     move_fractal(pgs);
     showcase_more_islands(pgs);
+    //TODO outtro(pgs);
 }
