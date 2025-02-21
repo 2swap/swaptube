@@ -32,7 +32,7 @@ def main():
     entries = []
     with open(tsv_file_path, 'r') as tsv_file:
         for line in tsv_file:
-            current_filename, current_text = line.strip().split('\t')
+            current_filename, current_text = line.rstrip('\n').split('\t')
             entries.append((current_filename, current_text))
 
     if not entries:

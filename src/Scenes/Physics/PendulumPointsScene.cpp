@@ -24,7 +24,7 @@ public:
                 int point_color = pendulum_color(start_ps.theta1, start_ps.theta2);
                 const pair<double, double> curr_point = make_pair(this_ps.theta1, this_ps.theta2);
                 const pair<int, int> curr_pixel = point_to_pixel(curr_point);
-                pix.fill_circle(curr_pixel.first, curr_pixel.second, 2, colorlerp(TRANSPARENT_BLACK, point_color, points_opacity));
+                pix.fill_circle(curr_pixel.first, curr_pixel.second, get_geom_mean_size()/200, colorlerp(TRANSPARENT_BLACK, point_color, points_opacity));
             }
         }
     }
