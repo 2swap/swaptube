@@ -58,7 +58,8 @@ public:
         int w = get_width();
         int h = get_height();
 
-        const double zoom = state["zoom"];
+        const double zoomy = state["zoom_y"];
+        const double zoomx = state["zoom_x"];
         const double cx = state["center_x"];
         const double cy = state["center_y"];
         const double contrast = state["contrast"];
@@ -73,10 +74,10 @@ public:
         const double inv_y_range = 1./(g0.max2-g0.min2);
         const double inv_x_range = 1./(g0.max1-g0.min1);
         for (int y = 0; y < h; ++y) {
-            double pos_y = (h/2.0 - y) / (h * zoom) + cy;
+            double pos_y = (h/2.0 - y) / (h * zoomy) + cy;
             pos_y = extended_mod(pos_y-g0.min2, g0.max2-g0.min2)+g0.min2;
             for (int x = 0; x < w; ++x) {
-                double pos_x = (x - w/2.0) / (w * zoom) + cx;
+                double pos_x = (x - w/2.0) / (w * zoomx) + cx;
                 pos_x = extended_mod(pos_x-g0.min1, g0.max1-g0.min1)+g0.min1;
 
                 int last_grid = 0;
@@ -107,7 +108,11 @@ public:
                     
                     double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2));
                     distance = min(distance, 1.);
-                    color_mode3 = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, max(0., log(coloration*distance)/log_coloration));
+                    double rainbow = max(0., log(coloration*distance)/log_coloration);
+                    int rainbow_part1 = max(0.,min(1.,rainbow*3-0))*255.;
+                    int rainbow_part2 = max(0.,min(1.,rainbow*3-1))*255.;
+                    int rainbow_part3 = max(0.,min(1.,rainbow*3-2))*255.;
+                    color_mode3 = argb_to_col(255, rainbow_part1, rainbow_part2, rainbow_part3);
                 }
 
                 if(mode < 0.001) color = color_mode0;

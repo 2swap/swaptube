@@ -36,15 +36,17 @@ public:
     int circles_to_render = 0;
     CoordinateScene(const double width = 1, const double height = 1)
         : Scene(width, height) {
-        state_manager.add_equation("left_x"   , "<center_x> .5 <zoom> / -");
-        state_manager.add_equation("right_x"  , "<center_x> .5 <zoom> / +");
-        state_manager.add_equation("top_y"    , "<center_y> .5 <zoom> / -");
-        state_manager.add_equation("bottom_y" , "<center_y> .5 <zoom> / +");
+        state_manager.add_equation("left_x"   , "<center_x> .5 <zoom_x> / -");
+        state_manager.add_equation("right_x"  , "<center_x> .5 <zoom_x> / +");
+        state_manager.add_equation("top_y"    , "<center_y> .5 <zoom_y> / -");
+        state_manager.add_equation("bottom_y" , "<center_y> .5 <zoom_y> / +");
         state_manager.add_equation("ticks_opacity", "1");
         state_manager.add_equation("circles_opacity", "0");
         state_manager.add_equation("center_x", "0");
         state_manager.add_equation("center_y", "0");
         state_manager.add_equation("zoom", "1");
+        state_manager.add_equation("zoom_x", "<zoom> <w> <VIDEO_WIDTH> * / <h> <VIDEO_HEIGHT> * *");
+        state_manager.add_equation("zoom_y", "<zoom>");
     }
 
     pair<int, int> point_to_pixel(const pair<double, double>& p) {
@@ -85,7 +87,7 @@ public:
     }
 
     void draw_circles() {
-        const double z = state["zoom"] + 0.0001;
+        const double z = state["zoom_x"] + 0.0001;
         const double opa = state["circles_opacity"];
         if(opa < 0.01) return;
         const double w = get_geom_mean_size();
@@ -99,59 +101,49 @@ public:
     }
 
     void draw_axes() {
+        draw_one_axis(true);
+        draw_one_axis(false);
+    }
+
+    void draw_one_axis(bool ymode) {
         const double ticks_opacity = state["ticks_opacity"];
         if(ticks_opacity < 0.01) return;
         const int w = get_width();
         const int h = get_height();
         const double gmsz = get_geom_mean_size();
-        const double z = state["zoom"] + 0.0001;
-        const double rx = state["right_x"];
-        const double ty = state["top_y"];
-        const double lx = state["left_x"];
-        const double by = state["bottom_y"];
+
+        string x_y_str = ymode?"y":"x";
+        const double z = state["zoom_"+x_y_str] + 0.00000001;
+        const double upper_bound = ymode?state["bottom_y"]:state["right_x"];
+        const double lower_bound = ymode?state[   "top_y"]:state[ "left_x"];
         const double log10z = log10(z);
         int order_mag = floor(-log10z);
         const double log_decimal = log10z-floor(log10z);
         bool not_fiveish = log_decimal < .5;
         const double interpolator = (log_decimal >= .5 ? -1 : 0) + log_decimal * 2;
-        unordered_set<string> done_numbers_x;
-        unordered_set<string> done_numbers_y;
+        unordered_set<string> done_numbers;
         for(int d_om = 0; d_om < 2; d_om++){
             double increment = pow(10, order_mag) * (not_fiveish ? 1 : 0.5);
-            for(double x = floor(lx/increment)*increment; x < rx; x += increment) {
-                string truncated = truncate_tick(x);
-                if(done_numbers_x.find(truncated) != done_numbers_x.end()) continue;
-                done_numbers_x.insert(truncated);
-                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 128.; 
-                double frac = (x - lx) / (rx - lx);
+            for(double x_y = floor(lower_bound/increment)*increment; x_y < upper_bound; x_y += increment) {
+                string truncated = truncate_tick(x_y);
+                if(done_numbers.find(truncated) != done_numbers.end()) continue;
+                done_numbers.insert(truncated);
+                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 128.;
+                double frac = (x_y - lower_bound) / (upper_bound - lower_bound);
+                if(ymode) frac = 1-frac;
                 double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
                 number_opacity *= 1-square(square(2.5*(.5-frac)));
                 number_opacity *= ticks_opacity;
                 if(number_opacity < 0) number_opacity = 0;
-                int x_pix = frac * w;
-                pix.bresenham(x_pix, h-1, x_pix, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
-                if(number_opacity > 0){
-                    ScalingParams sp(gmsz/8., gmsz/16.);
-                    Pixels latex = latex_to_pix(truncated, sp).rotate_90();
-                    pix.overlay(latex, x_pix - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
-                }
-            }
-            for(double y = floor(ty/increment)*increment; y < by; y += increment) {
-                string truncated = truncate_tick(y);
-                if(done_numbers_y.find(truncated) != done_numbers_y.end()) continue;
-                done_numbers_y.insert(truncated);
-                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 128.; 
-                double frac = 1 - (y - ty) / (by - ty);
-                double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
-                number_opacity *= 1-square(square(2.5*(.5-frac)));
-                number_opacity *= ticks_opacity;
-                if(number_opacity < 0) number_opacity = 0;
-                int y_pix = frac * h;
-                pix.bresenham(0, y_pix, tick_length, y_pix, OPAQUE_WHITE, number_opacity, 1);
+                int coordinate = frac * (ymode?h:w);
+                if(ymode) pix.bresenham(0, coordinate, tick_length, coordinate, OPAQUE_WHITE, number_opacity, 1);
+                else      pix.bresenham(coordinate, h-1, coordinate, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
                     ScalingParams sp(gmsz/8., gmsz/16.);
                     Pixels latex = latex_to_pix(truncated, sp);
-                    pix.overlay(latex, tick_length * 1.5, y_pix - latex.h/2, number_opacity);
+                    if(!ymode) latex = latex.rotate_90();
+                    if(ymode) pix.overlay(latex, tick_length * 1.5, coordinate - latex.h/2, number_opacity);
+                    if(!ymode)pix.overlay(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
                 }
             }
             if(!not_fiveish) order_mag--;
@@ -160,7 +152,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom", "ticks_opacity", "circles_opacity"};
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "circles_opacity"};
         for(int i = 0; i < circles_to_render; i++) {
             sq.insert("circle"+to_string(i)+"_x");
             sq.insert("circle"+to_string(i)+"_y");

@@ -53,6 +53,8 @@ public:
     bool check_if_data_changed() const override { return pend.has_been_updated_since_last_scene_query(); }
     unordered_map<string, double> stage_publish_to_global() const override {
         return unordered_map<string, double> {
+            {"pendulum_p1", pend.state.p1},
+            {"pendulum_p2", pend.state.p2},
             {"pendulum_theta1", pend.state.theta1},
             {"pendulum_theta2", pend.state.theta2},
         };

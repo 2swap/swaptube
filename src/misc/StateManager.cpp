@@ -91,6 +91,8 @@ static unordered_map<string, double> global_state{
     {"microblock_number", 0},
     {"macroblock_fraction", 0},
     {"microblock_fraction", 0},
+    {"VIDEO_WIDTH", VIDEO_WIDTH},
+    {"VIDEO_HEIGHT", VIDEO_HEIGHT},
 };
 double get_global_state(string key){
     const auto& pair = global_state.find(key);

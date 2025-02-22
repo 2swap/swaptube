@@ -42,7 +42,6 @@ public:
         int w = get_width();
         int h = get_height();
 
-        const double zoom = state["zoom"];
         const double cx = state["center_x"];
         const double cy = state["center_y"];
         const double contrast = state["contrast"];
