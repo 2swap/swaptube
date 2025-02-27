@@ -79,8 +79,8 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
     str_p2 = str_p2.erase(str_cy.find_last_not_of('0') + 1);
     string latex_str = "\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy;
 //TODO this l is wrong
-    if(is.ps.p1 != 0) latex_str += ", \\l_1 = " + str_p1;
-    if(is.ps.p2 != 0) latex_str += ", \\l_1 = " + str_p2;
+    if(is.ps.p1 != 0) latex_str += ", p_1 = " + str_p1;
+    if(is.ps.p2 != 0) latex_str += ", p_1 = " + str_p2;
     LatexScene ls2(latex_str, 1, 1, 0.12);
 
     CoordinateSceneWithTrail ts(0.5, 1);
@@ -303,8 +303,8 @@ void move_fractal(PendulumGridScene& pgs){
         {"mpgs.opacity", "1"},
     });
     cs.inject_audio_and_render(FileSegment("It's time for a change in perspective."));
-    StateSliderScene ssp1("[p1]", "l_1", -1, 1, .4, .1);
-    StateSliderScene ssp2("[p2]", "l_2", -1, 1, .4, .1);
+    StateSliderScene ssp1("[p1]", "p_1", -1, 1, .4, .1);
+    StateSliderScene ssp2("[p2]", "p_2", -1, 1, .4, .1);
     cs.add_scene(&ssp1, "ssp1", 0.25, 0.9); 
     cs.add_scene(&ssp2, "ssp2", 0.75, 0.9); 
     cs.state_manager.set({
@@ -496,7 +496,6 @@ void move_fractal(PendulumGridScene& pgs){
     cs.state_manager.microblock_transition({
         {"mpgs.opacity", "0"},
     });
-    cs.inject_audio_and_render(FileSegment("I hope you enjoyed. As a parting gift, here's some more islands of stability."));
     cs.remove_scene(&pgs);
 }
 
@@ -807,7 +806,7 @@ void intro() {
 //TODO make tds more like composite
     shared_ptr<LatexScene> chaotic = make_shared<LatexScene>(latex_text("Chaotic System"), 1);
     int num_renders = 5;
-    tds_cs.inject_audio(FileSegment("This sensitivity to initial conditions renders the system unpredictable, and so we call it chaotic."), num_renders);
+    tds_cs.inject_audio(FileSegment("This system is so sensitive to its initial conditions that it is practically unpredictable, and so we call it chaotic."), num_renders);
     for(int i = 0; i < num_renders; i++){
         if(i == num_renders-1) tds.add_surface(Surface(glm::vec3(0, -fov*.2, 0), glm::vec3(fov/2.,0,0), glm::vec3(0,fov/2.,0), chaotic));
         tds_cs.render();
@@ -843,8 +842,7 @@ void intro() {
     tds.state_manager.set({
         {"stable_physics_multiplier", "30"},
     });
-    tds_cs.inject_audio_and_render(FileSegment("These pendulums also have slightly different starting positions."));
-    tds_cs.inject_audio_and_render(FileSegment("However, these will _not_ diverge."));
+    tds_cs.inject_audio_and_render(FileSegment("These pendulums also have slightly different starting positions, but they will _not_ diverge."));
     tds.state_manager.macroblock_transition({
         {"parent_path_opacity", "1"},
         {"qj", "0"},
@@ -863,7 +861,7 @@ void intro() {
         {"volume_set2", "0"},
         {"x", "0"},
     });
-    tds_cs.inject_audio_and_render(FileSegment("A stark contrast with the first ones, which are... all over the place."));
+    tds_cs.inject_audio_and_render(FileSegment("A stark contrast with the first ones, which are... making a complete mess."));
     tds_cs.inject_audio_and_render(SilenceSegment(1));
     tds.remove_surface(pretzel);
     pgs.state_manager.set({
@@ -941,7 +939,7 @@ void intro() {
         ps.state_manager.set({{"tone", to_string(i/4.+1)}});
         string name = "p" + to_string(i);
 //TODO this is bugged
-        cs.add_scene_fade_in(&ps, name, VIDEO_WIDTH/VIDEO_HEIGHT*((start_states[i].theta1 + 2)/6.283-.5)+.5, 1-(start_states[i].theta2 + 2)/6.283);
+        cs.add_scene_fade_in(&ps, name, VIDEO_WIDTH/VIDEO_HEIGHT*((start_states[i].theta1 + 2)/6.283+.5)-.5, 1-(start_states[i].theta2 + 2)/6.283);
         cs.render();
     }
     cs.state_manager.microblock_transition({
@@ -1002,7 +1000,7 @@ void intro() {
     });
     cs.inject_audio_and_render(FileSegment("You can sort of already tell that this pendulum is chaotic from the graph."));
     cs.inject_audio_and_render(FileSegment("There's no consistent pattern that it follows."));
-    cs.inject_audio_and_render(SilenceSegment(6));
+    cs.inject_audio_and_render(SilenceSegment(3));
     specimens[0].state_manager.microblock_transition({
         {"volume", "0"},
     });
@@ -1032,10 +1030,10 @@ void intro() {
         {"zoom", ".1"},
     });
     cs.inject_audio_and_render(SilenceSegment(1));
-    cs.inject_audio_and_render(SilenceSegment(5));
     coord.state_manager.microblock_transition({
         {"zoom", ".2"},
     });
+    cs.inject_audio_and_render(SilenceSegment(5));
     cs.inject_audio_and_render(FileSegment("It's drawing a shape known as a Lissajous curve."));
     CoordinateSceneWithTrail left(1, 1);
     left.state_manager.set({
@@ -1354,7 +1352,7 @@ void intro() {
     pgs.state_manager.microblock_transition({
         {"zoom", "1 8 /"},
     });
-    cs.inject_audio_and_render(SilenceSegment(10));
+    cs.inject_audio_and_render(SilenceSegment(4));
     PendulumState pendulum_state = {5, 7, .0, .0};
     PendulumScene pend(pendulum_state);
     pend.state_manager.set({
@@ -1526,6 +1524,5 @@ void render_video() {
     showcase_islands(pgs);
     discuss_energy(pgs);
     move_fractal(pgs);
-    showcase_more_islands(pgs);
     outtro(pgs);
 }

@@ -109,10 +109,9 @@ public:
                     double distance = sqrt(square(ps.p1 - pp.p1) + square(ps.p2 - pp.p2) + square(ps.theta1-pp.theta1) + square(ps.theta2-pp.theta2));
                     distance = min(distance, 1.);
                     double rainbow = max(0., log(coloration*distance)/log_coloration);
-                    int rainbow_part1 = max(0.,min(1.,rainbow*3-0))*255.;
-                    int rainbow_part2 = max(0.,min(1.,rainbow*3-1))*255.;
-                    int rainbow_part3 = max(0.,min(1.,rainbow*3-2))*255.;
-                    color_mode3 = argb_to_col(255, rainbow_part1, rainbow_part2, rainbow_part3);
+                    int rainbow_part1 = max(0.,min(1.,rainbow*2-0))*255.;
+                    int rainbow_part2 = max(0.,min(1.,rainbow*2-1))*255.;
+                    color_mode3 = argb_to_col(255, rainbow_part2, rainbow_part2, rainbow_part1);
                 }
 
                 if(mode < 0.001) color = color_mode0;
