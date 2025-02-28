@@ -45,7 +45,7 @@ public:
         for(int x = 0; x < path_background.w; x++) {
             for(int y = 0; y < path_background.h; y++) {
                 int alpha = geta(path_background.get_pixel(x, y));
-                alpha = alpha==0?0:alpha-1;
+                alpha = max(0,alpha-2);
                 path_background.set_pixel(x, y, argb_to_col(alpha, 255, 255, 255));
             }
         }
@@ -123,14 +123,14 @@ public:
         energy = energy_slew;
     }
 
-    void generate_audio(double duration, vector<float>& left, vector<float>& right){
+    void generate_audio(double duration, vector<float>& left, vector<float>& right, double volume_mult = 1){
         PendulumState ps = start_state;
         for(int i = 0; i < duration*44100; i++){
             for(int j = 0; j < 10; j++) {
                 ps = rk4Step(rk4Step(rk4Step(ps, 0.001), 0.001), 0.001);
             }
-            left.push_back(.05*sin(ps.theta1));
-            right.push_back(.05*sin(ps.theta2));
+            left.push_back(.05*volume_mult*sin(ps.theta1));
+            right.push_back(.05*volume_mult*sin(ps.theta2));
         }
     }
     Pendulum pend;

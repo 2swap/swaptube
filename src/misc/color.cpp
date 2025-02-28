@@ -40,6 +40,12 @@ int color_combine(int base_color, int over_color, float overlay_opacity_multipli
     return (final_alpha << 24) | (final_rgb);
 }
 
+int black_to_blue_to_white(double w){
+    int rainbow_part1 = max(0.,min(1.,w*2-0))*255.;
+    int rainbow_part2 = max(0.,min(1.,w*2-1))*255.;
+    return argb_to_col(255, rainbow_part2, rainbow_part2, rainbow_part1);
+}
+
 // Convert RGB to YUV
 int RGBtoYUV(const int rgb) {
     int r = getr(rgb);
