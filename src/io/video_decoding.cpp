@@ -6,17 +6,23 @@
 
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
 #include <libavcodec/avcodec.h>
 #include <libswscale/swscale.h>
 }
 
-#include "Pixels.h"  // Assumes Pixels is defined elsewhere in your project
+#include "../misc/pixels.h"
 
 // mp4_to_pix_bounding_box:
 // Loads the specified frame (by index) from the given MP4 file,
 // scales it to (target_width x target_height) using a bounding box approach,
 // and returns the result as a Pixels object.
-Pixels mp4_to_pix_bounding_box(const std::string &filename, int target_width, int target_height, int frame_index) {
+Pixels mp4_to_pix_bounding_box(const std::string &video_name, int target_width, int target_height, int frame_index) {
+    string filename = video_name;
+    if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".mp4") {
+        filename += ".mp4";
+    }
+    filename = PATH_MANAGER.this_project_media_dir + filename; 
     // Open the input file and read header
     AVFormatContext* fmtCtx = nullptr;
     if (avformat_open_input(&fmtCtx, filename.c_str(), nullptr, nullptr) != 0) {
@@ -41,7 +47,7 @@ Pixels mp4_to_pix_bounding_box(const std::string &filename, int target_width, in
     }
 
     AVCodecParameters* codecPar = fmtCtx->streams[videoStreamIdx]->codecpar;
-    AVCodec* codec = avcodec_find_decoder(codecPar->codec_id);
+    const AVCodec* codec = avcodec_find_decoder(codecPar->codec_id);
     if (!codec) {
         avformat_close_input(&fmtCtx);
         throw std::runtime_error("Unsupported codec in file: " + filename);

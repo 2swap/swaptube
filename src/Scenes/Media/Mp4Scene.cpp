@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../io/VisualMedia.cpp"
+#include "../../io/video_decoding.cpp"
 #include "../Scene.cpp"
 
 class Mp4Scene : public Scene {

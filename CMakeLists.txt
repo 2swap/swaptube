@@ -12,7 +12,7 @@ set(ENV{GLIBCXX_FORCE_NEW} 1)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(FFMPEG REQUIRED libavcodec libavformat libavdevice libavutil libavfilter)
+pkg_check_modules(FFMPEG REQUIRED libswscale libavcodec libavformat libavdevice libavutil libavfilter)
 message(STATUS "FFMPEG Libraries -> ${FFMPEG_LIBRARIES}")
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 find_package(Cairo REQUIRED)

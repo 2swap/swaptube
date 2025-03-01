@@ -12,6 +12,7 @@ public:
         state_manager.add_equation("center_x", "0");
         state_manager.add_equation("center_y", "0");
         state_manager.add_equation("theta_or_momentum", "0");
+        state_manager.add_equation("physics_multiplier", "0");
         state_manager.add_equation("theta1", "0");
         state_manager.add_equation("theta2", "0");
         state_manager.add_equation("p1", "0");
@@ -20,7 +21,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery s = CoordinateScene::populate_state_query();
-        s.insert("iterations");
+        s.insert("physics_multiplier");
         s.insert("rk4_step_size");
         s.insert("mode");
         s.insert("center_x");
@@ -61,7 +62,7 @@ public:
             state["bottom_y"] * (  tom) + state["p2"    ],
             state["top_y"   ] * (  tom) + state["p2"    ]
         );
-        grid.iterate_physics(state["iterations"], state["rk4_step_size"]);
+        grid.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]);
         for (int y = 0; y < h; ++y) {
             for (int x = 0; x < w; ++x) {
                 int i = x+y*w;
