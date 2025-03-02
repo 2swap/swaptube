@@ -39,7 +39,7 @@ vector<IslandShowcase> isv2{{{1.351 ,  2.979 , .0, .0}, 0.2 , .06, "The Bird", "
 
 IslandShowcase momentum_island = {{2.14, 0.8  , .4, .6}, 0.2, 0.04, "", "Sure enough, there are islands of stability for other starting momenta too."};
 
-void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool spoken) {
+void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool spoken, bool first = false) {
     cout << "Showcasing " << is.name << endl;
     const double range = is.range;
     const double cx = is.ps.theta1;
@@ -57,7 +57,9 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
         {"center_y", to_string(cy)},
         {"ticks_opacity", "0"},
     });
-    pgs.inject_audio_and_render(SilenceSegment(2));
+    if(first)
+        pgs.inject_audio_and_render(FileSegment("These 'islands of stability' contain special pendulums which follow stable paths."));
+    else pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
         {"zoomexp", to_string(log(1/is.range))},
         {"circles_opacity", "0"},
@@ -228,8 +230,8 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.add_scene_fade_in(&ps, "ps", 0.75, 0.5);
     cs.render();
     cs.render();
-    LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .5, .2);
-    cs.add_scene_fade_in(&low_energy, "low_energy", .75, .3);
+    LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .3, .2);
+    cs.add_scene_fade_in(&low_energy, "low_energy", .75, .38);
     cs.inject_audio_and_render(FileSegment("Those pendulums have extremely low mechanical energy."));
     cs.inject_audio_and_render(FileSegment("So maybe energy is somehow involved?"));
     PendulumState vert = {0, 3.1, .0, .0};
@@ -514,7 +516,8 @@ void showcase_more_islands(PendulumGridScene& pgs) {
 
 void showcase_islands(PendulumGridScene& pgs) {
     cout << "Doing showcase_islands" << endl;
-    for(IslandShowcase is : isv) showcase_an_island(pgs, is, true);
+    bool yet = true;
+    for(IslandShowcase is : isv) {showcase_an_island(pgs, is, true, yet); yet = false;}
 }
 
 void fine_grid(PendulumGridScene& pgs){
@@ -606,7 +609,7 @@ void fine_grid(PendulumGridScene& pgs){
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
         {"center_x", "3.1415"},
-        {"center_y", "0"},
+        {"center_y", "-1.8"},
         {"trail_opacity", "0"},
         {"zoom", "1 6.283 /"},
     });
@@ -627,12 +630,11 @@ void fine_grid(PendulumGridScene& pgs){
     pgs.state_manager.microblock_transition({
         {"ticks_opacity", "0"},
     });
-    pgs.inject_audio_and_render(FileSegment("These 'islands of stability' correspond to special pendulums which trace stable paths."));
 }
 
 void outtro(){
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
-    for(PendulumGrid& p : grids) p.iterate_physics(300, .05/30);
+    for(PendulumGrid& p : grids) p.iterate_physics(300*8, .05/30);
     PendulumGridScene pgs(grids);
     pgs.state_manager.set({
         {"mode", "3"},
@@ -720,6 +722,9 @@ void outtro(){
     cs.state_manager.microblock_transition({{"pgs.opacity", "0.0"}});
     cs.add_scene_fade_in(&ts, "ts");
     cs.inject_audio_and_render(FileSegment("This has been 2swap."));
+    cs.state_manager.set({
+        {"ps3.opacity", "0"},
+    });
     cs.state_manager.microblock_transition({
         {"ts.opacity", "0"},
     });
@@ -880,7 +885,7 @@ void intro() {
     });
     int iterations = 400;
     mpgs.state_manager.microblock_transition({
-        {"physics_multiplier", to_string(iterations/2)},
+        {"physics_multiplier", to_string(iterations)},
     });
     tds_cs.inject_audio_and_render(FileSegment("So... what's the deal?"));
     tds.state_manager.macroblock_transition({
@@ -907,7 +912,6 @@ void intro() {
     tds_cs.remove_scene(&mpgs);
     tds_cs.remove_scene(&tds);
     mpgs.state_manager.macroblock_transition({
-        {"physics_multiplier", to_string(iterations)},
         {"ticks_opacity", "1"},
         {"theta_or_momentum", "0.5"},
         {"center_x", "1.14159"},
@@ -1171,7 +1175,7 @@ void intro() {
     });
     specimens[1].global_publisher_key = true;
     specimens[0].global_publisher_key = false;
-    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(SilenceSegment(.1));
     vector<float> audio_left_p;
     vector<float> audio_right_p;
     specimens[1].generate_audio(2.5, audio_left_p, audio_right_p);
@@ -1294,7 +1298,7 @@ void intro() {
         {"bottom_angle_opacity", "0"},
     });
     cs.inject_audio_and_render(FileSegment("By associating angle positions with colors, it's easier to tell what is going on."));
-    PendulumGrid pointgrid(100, 100, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0);
+    PendulumGrid pointgrid(100, 100, -M_PI*.8, M_PI*.8, -M_PI*.8, M_PI*.8, 0, 0, 0, 0);
     PendulumPointsScene pps(pointgrid, 0.5, 1);
     vps[selected_pendulum].state_manager.set({
         {"pendulum_opacity", "[pendulum_opacity]"},
@@ -1537,7 +1541,7 @@ void render_video() {
 
     intro();
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
-    for (const vector<IslandShowcase>& isvh : {isv, isv2}) for(const IslandShowcase& is : isvh) {
+    for (const vector<IslandShowcase>& isvh : {isv/*, isv2*/}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
         const double t1 = is.ps.theta1;
         const double t2 = is.ps.theta2;
