@@ -20,8 +20,8 @@ struct IslandShowcase {
 };
 
 vector<IslandShowcase> isv{{{2.49  ,  .25   , .0, .0}, 0.4 , .02, "The Pretzel", "This big island of stability contains the Pretzel we saw earlier."},
-                           {{2.658 , -2.19  , .0, .0}, 0.2 , .02, "The Shoelace", "This one which I call the shoelace traces a more complex pattern."},
-                           {{2.453 , -2.7727, .0, .0}, 0.05, .02, "The Heart", "This one draws a picture of a heart. Of the islands I'm showing, it's the smallest."}};
+                           {{2.658 , -2.19  , .0, .0}, 0.2 , .02, "The Shoelace", "This one, which I call the shoelace, traces a more complex pattern."},
+                           {{2.453 , -2.7727, .0, .0}, 0.05, .02, "The Heart", "This one draws a picture of a heart. This island is particularly small."}};
 
 vector<IslandShowcase> isv2{{{1.351 ,  2.979 , .0, .0}, 0.2 , .06, "The Bird", "Although on a separate island from the lissajous pendulums,\\\\\\\\neither of its two arms does a flip."},
                            {{0.567 ,  2.995 , .0, .0}, 0.2 , .08, "Big-Ears", "Similar to The Bird,\\\\\\\\this pendulum makes no flips."},
@@ -159,6 +159,7 @@ void showcase_momentum_space(PendulumGridScene& perp, double p1, double p2, doub
     perp.state_manager.microblock_transition({
         {"circles_opacity", "1"},
     });
+    cs.inject_audio_and_render(SilenceSegment(.3));
 
     CompositeScene cs;
     PendulumScene ps({0, 0, p1, p2}, 0.5, 1);
@@ -172,7 +173,7 @@ void showcase_momentum_space(PendulumGridScene& perp, double p1, double p2, doub
     cs.inject_audio(GeneratedSegment(audio_left, audio_right), 3);
 
     cs.state_manager.microblock_transition({
-        {"perp.opacity", ".4"},
+        {"perp.opacity", ".7"},
     });
     ps.state_manager.set({
         {"background_opacity", "0"},
@@ -246,13 +247,13 @@ void discuss_energy(PendulumGridScene& pgs){
         {"low_energy.opacity", "0"},
         {"ps2.y", ".5"},
     });
-    cs.inject_audio_and_render(FileSegment("Taking this borderline-chaotic starting position,"));
+    cs.inject_audio_and_render(FileSegment("Taking this borderline-chaotic pendulum,"));
     double vert_energy = compute_kinetic_energy(vert) + compute_potential_energy(vert);
     cout << "Vert energy: " << vert_energy << endl;
     pgs.state_manager.microblock_transition({
         {"energy_max", to_string(vert_energy)},
     });
-    cs.inject_audio(FileSegment("If I color in red all the pendulums with less mechanical energy than this one"), 2);
+    cs.inject_audio(FileSegment("If I color red all the pendulums with less mechanical energy than this one"), 2);
     cs.render();
     cs.render();
     cs.inject_audio_and_render(FileSegment("It overlaps nicely with the lissajous-esque pendulums."));
@@ -318,7 +319,7 @@ void move_fractal(PendulumGridScene& pgs){
         {"ssp2.opacity", ".6"},
     });
 
-    cs.inject_audio_and_render(FileSegment("So far, I've only been dropping the pendulums from a motionless state."));
+    cs.inject_audio_and_render(FileSegment("So far, I've been dropping the pendulums from a motionless state."));
     cs.state_manager.microblock_transition({
         {"p1", "<t> sin"},
         {"p2", "<t> cos"},
@@ -406,10 +407,10 @@ void move_fractal(PendulumGridScene& pgs){
         {"mode", "2"},
         {"center_y", "-0.0001"},
         {"zoom", "1 40 /"},
-        {"physics_multiplier", "300"},
-        {"rk4_step_size", "1 30 / .05 *"},
+        {"physics_multiplier", "600"},
+        {"rk4_step_size", "1 30 / .025 *"},
     });
-    cs.inject_audio_and_render(FileSegment("In other words, we're looking at a grid of pendulums all with starting angle at 0, but with different starting speeds."));
+    cs.inject_audio_and_render(FileSegment("In other words, we're looking at a grid of pendulums all with starting angles at 0, but with different starting speeds."));
     cs.remove_scene(&pgs);
     cs.remove_scene(&perp);
     perp.state_manager.microblock_transition({
@@ -424,13 +425,13 @@ void move_fractal(PendulumGridScene& pgs){
         {"energy_min", to_string(2*vert_energy)},
         {"energy_max", to_string(5*vert_energy)},
     });
-    perp.inject_audio_and_render(FileSegment("and the pendulums with slightly higher energy tend to be chaotic,"));
+    perp.inject_audio_and_render(FileSegment("and the pendulums with slightly higher energy are chaotic,"));
     showcase_momentum_space(perp, 4, 3);
     perp.state_manager.microblock_transition({
         {"energy_min", to_string(5*vert_energy)},
         {"energy_max", to_string(2000*vert_energy)},
     });
-    perp.inject_audio_and_render(FileSegment("But these ultra-high-energy pendulums don't easily fit into one box or another."));
+    perp.inject_audio_and_render(FileSegment("But these ultra-high-energy pendulums don't nicely fit into one box or another."));
     perp.state_manager.microblock_transition({
         {"energy_min", to_string(40000*vert_energy)},
         {"energy_max", "0"},
@@ -472,7 +473,7 @@ void move_fractal(PendulumGridScene& pgs){
         {"perp.opacity", "0.4"},
         {"spiro_opacity", "1"},
     });
-    cs_spiro.inject_audio_and_render(FileSegment("Here's the spirographs associated with pendulums in momentum-space."));
+    cs_spiro.inject_audio_and_render(FileSegment("Here's some spirographs from all over momentum-space."));
     cs_spiro.inject_audio_and_render(SilenceSegment(4));
     cs_spiro.state_manager.microblock_transition({
         {"spiro_opacity", "0"},
@@ -593,7 +594,7 @@ void fine_grid(PendulumGridScene& pgs){
         {"trail_start_x", "1"},
         {"trail_start_y", "1.1"},
     });
-    pgs.inject_audio_and_render(FileSegment("This main black region is the home of all the lissajous style pendulums."));
+    pgs.inject_audio_and_render(FileSegment("This main black region is home to all the lissajous style pendulums."));
     pgs.state_manager.microblock_transition({
         {"trail_start_x", "1.6"},
         {"trail_start_y", "1.9"},
@@ -637,19 +638,20 @@ void outtro(){
     for(PendulumGrid& p : grids) p.iterate_physics(300*8, .05/30);
     PendulumGridScene pgs(grids);
     pgs.state_manager.set({
+        {"rk4_step_size", ".05 30 /"},
         {"mode", "3"},
     });
     pgs.state_manager.microblock_transition({
+        {"physics_multiplier", "10"},
         {"mode", "0"},
     });
     CompositeScene cs;
     cs.add_scene(&pgs, "pgs");
-    cs.inject_audio_and_render(FileSegment("Chaos is a hard thing to define."));
+    cs.inject_audio(FileSegment("Chaos is a hard thing to define."), 3);
+    cs.render();
+    cs.render();
+    cs.render();
     cs.state_manager.microblock_transition({{"pgs.opacity", "0.3"}});
-    pgs.state_manager.set({
-        {"physics_multiplier", "10"},
-        {"rk4_step_size", ".05 30 /"},
-    });
     cs.inject_audio_and_render(FileSegment("You may have even noticed that I subtly changed definitions throughout the video: aperiodicity, unpredictibility, divergence..."));
 
     LatexScene ls1("\\Delta = \\theta_1 - \\theta_2", 1, 1, 0.1);
@@ -659,7 +661,7 @@ void outtro(){
     LatexScene ls5("\\dot{p}_1 = -\\frac{1}{2} m l \\left( 3 g \\sin\\theta_1 + l \\dot{\\theta}_1 \\dot{\\theta}_2 \\sin\\Delta \\right)", 1, 1, 0.1);
     LatexScene ls6("\\dot{p}_2 = -\\frac{1}{2} m l \\left( g \\sin\\theta_2 - l \\dot{\\theta}_1 \\dot{\\theta}_2 \\sin\\Delta \\right)", 1, 1, 0.1);
     LatexScene ls7(latex_text("...have no analytic solution."), 1, 1, 0.1);
-    cs.inject_audio(FileSegment("It is the case that the differential equations describing double pendulums have no analytic solution for _any_ starting position,"), 11);
+    cs.inject_audio(FileSegment("These definitions usually match up... but, the differential equations describing double pendulums have no analytic solution for _any_ starting position,"), 11);
     cs.add_scene_fade_in(&ls1, "ls1", .5, .2);
     cs.render();
     cs.add_scene_fade_in(&ls2, "ls2", .5, .3);
@@ -733,10 +735,15 @@ void outtro(){
 
 void intro() {
     cout << "Doing intro()" << endl;
+//TODO build a double pendulum
     const double fov = 12;
     const double start_dist = 15*fov;
     const double after_move = start_dist-3;
+    Mp4Scene mp4s("pendulum");
+    CompositeScene cs_mp4;
     ThreeDimensionScene tds;
+    cs_mp4.add_scene(&mp4s, "mp4s");
+    cs_mp4.add_scene(&tds, "tds");
     vector<double> notes{pow(2, 3/12.), pow(2, 8/12.), pow(2, 10/12.), pow(2, 15/12.), pow(2, 20/12.), };
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {5+.0000001*i, 8, .0, .0};
@@ -776,30 +783,34 @@ void intro() {
         {"qk", "0"},
     });
     double word_size = .4/fov;
-    tds.inject_audio(FileSegment("Double pendulums are NOT chaotic."), 13);
-    tds.render();
-    tds.render();
-    tds.render();
-    tds.render();
+    cs_mp4.inject_audio(FileSegment("Double pendulums are NOT chaotic."), 13);
+    cs_mp4.render();
+    cs_mp4.render();
+    cs_mp4.render();
+    cs_mp4.render();
     tds.add_surface(Surface(glm::vec3(0,-.24/fov,-after_move-.8), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[0]));
-    tds.render();
+    cs_mp4.render();
     tds.add_surface(Surface(glm::vec3(0,-.1/fov,-after_move-.5), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[1]));
-    tds.render();
-    tds.render();
+    cs_mp4.render();
+    cs_mp4.render();
     tds.add_surface(Surface(glm::vec3(0,.04/fov,-after_move-.4), glm::vec3(.35*word_size,0,0), glm::vec3(0,.35*word_size,0), ls[2]));
-    tds.render();
+    cs_mp4.render();
     tds.add_surface(Surface(glm::vec3(0,.18/fov,-after_move-.7), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[3]));
-    tds.render();
+    cs_mp4.render();
     tds.add_surface(Surface(glm::vec3(0,0.36/fov,-after_move-.7), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[4]));
-    tds.render();
-    tds.render();
-    tds.render();
-    tds.render();
+    cs_mp4.render();
+    cs_mp4.render();
+    cs_mp4.render();
+    cs_mp4.render();
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
-    tds.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
+    cs_mp4.state_manager.microblock_transition({
+        {"mp4s.opacity", "0"},
+    });
+    cs_mp4.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
     tds.state_manager.macroblock_transition({
         {"d", to_string(after_move)},
     });
+    cs_mp4.remove_scene(&tds);
     tds.inject_audio_and_render(FileSegment("You've probably seen videos like these,"));
     for(int i = 0; i < ls.size(); i++) tds.remove_surface(ls[i]);
     tds.state_manager.macroblock_transition({
@@ -905,36 +916,36 @@ void intro() {
     });
 
 
-    mpgs.state_manager.macroblock_transition({
-        {"mode", "2"},
-    });
     tds_cs.inject_audio_and_render(FileSegment("The only difference is the position from which they started."));
     tds_cs.remove_scene(&mpgs);
     tds_cs.remove_scene(&tds);
     mpgs.state_manager.macroblock_transition({
         {"ticks_opacity", "1"},
-        {"theta_or_momentum", "0.5"},
+        {"theta_or_momentum", "1"},
         {"center_x", "1.14159"},
         {"center_y", "1.14159"},
         {"zoom", "1 6.283 /"},
     });
     mpgs.inject_audio_and_render(FileSegment("And behavior as a function of starting position can be graphed,"));
     mpgs.state_manager.macroblock_transition({
-        {"theta_or_momentum", "0"},
+        {"theta_or_momentum", "0.5"},
     });
     mpgs.inject_audio_and_render(FileSegment("revealing fractals like these,"));
+    mpgs.state_manager.macroblock_transition({
+        {"theta_or_momentum", "0"},
+    });
+    mpgs.inject_audio_and_render(FileSegment("where each point shows how chaotic a certain pendulum is."));
     CompositeScene cs;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for(PendulumGrid& p : grids) p.iterate_physics(iterations*8, .05/30);
     PendulumGridScene pgs(grids);
     cs.add_scene(&pgs, "pgs");
     pgs.state_manager.set({
-        {"mode", "2"},
+        {"mode", "3"},
         {"center_x", "1.14159"},
         {"center_y", "1.14159"},
         {"zoom", "1 6.283 /"},
     });
-    cs.inject_audio_and_render(FileSegment("where each point shows how chaotic a certain pendulum is."));
     vector<PendulumState> start_states = {
                                           {1.3, 1.5, 0, 0},
                                           {2.49, 0.25, 0, 0},
@@ -954,7 +965,7 @@ void intro() {
     cs.state_manager.microblock_transition({
         {"pgs.opacity", "1"},
     });
-    cs.inject_audio(FileSegment("But before diving into the fractals, let's get to know a few particular specimen."), 3);
+    cs.inject_audio(FileSegment("But before diving into the fractals, let's get to know a few individual specimen."), 3);
     vector<PendulumScene> specimens;
     for(int i = 0; i < start_states.size(); i++) {
         specimens.push_back(PendulumScene(start_states[i], 1./3, 1./3));
@@ -970,7 +981,6 @@ void intro() {
         ps.state_manager.set(state);
         ps.state_manager.set({{"tone", to_string(i/4.+1)}});
         string name = "p" + to_string(i);
-//TODO this is bugged
         cs.add_scene_fade_in(&ps, name, VIDEO_HEIGHT*((start_states[i].theta1 + 2)/6.283-.5)/VIDEO_WIDTH+.5, 1-(start_states[i].theta2 + 2)/6.283);
         cs.render();
     }
@@ -1030,8 +1040,8 @@ void intro() {
         {"center_x", "<trail_x>"},
         {"center_y", "<trail_y>"},
     });
-    cs.inject_audio_and_render(FileSegment("You can sort of already tell that this pendulum is chaotic from the graph."));
-    cs.inject_audio_and_render(FileSegment("There's no consistent pattern that it follows."));
+    cs.inject_audio_and_render(FileSegment("This pendulum is evidently chaotic from the graph."));
+    cs.inject_audio_and_render(FileSegment("It follows no consistent pattern."));
     cs.inject_audio_and_render(SilenceSegment(3));
     specimens[0].state_manager.microblock_transition({
         {"volume", "0"},
@@ -1066,6 +1076,8 @@ void intro() {
         {"zoom", ".2"},
     });
     cs.inject_audio_and_render(SilenceSegment(5));
+    LatexScene lissa(latex_text("Lissajous Curve"), 1, 0.3. 0.1);
+    cs.add_scene_fade_in(&lissa, "lissa", 0.5, 0.7);
     cs.inject_audio_and_render(FileSegment("It's drawing a shape known as a Lissajous curve."));
     CoordinateSceneWithTrail left(1, 1);
     left.state_manager.set({
@@ -1091,7 +1103,11 @@ void intro() {
     right.trail_color = 0xff00ffff;
     cs.add_scene_fade_in(&left , "left" , 0.5, 0.5);
     cs.add_scene_fade_in(&right, "right", 0.5, 0.5);
+    cs.state_manager.microblock_transition({
+        {"lissa.opacity", "0"},
+    });
     cs.inject_audio_and_render(FileSegment("Here's the signal from the top and bottom angles, separated out."));
+    cs.remove_scene(&lissa);
     cs.inject_audio_and_render(SilenceSegment(2));
     specimens[2].state_manager.macroblock_transition({
         {"volume", "0"},
@@ -1118,7 +1134,7 @@ void intro() {
         {"coord.opacity", ".3"},
         {"p2.opacity", ".3"},
     });
-    cs.inject_audio_and_render(FileSegment("We can run this pendulum for several hours, re-interpret these signals as sound waves on the left and right speaker, and 'listen' to the pendulum!"));
+    cs.inject_audio_and_render(FileSegment("We can run this pendulum for a long time, re-interpret these signals as sound waves on the left and right speaker, and 'listen' to the pendulum!"));
     vector<float> audio_left;
     vector<float> audio_right;
     coord.state_manager.microblock_transition({
@@ -1273,7 +1289,7 @@ void intro() {
     cs.state_manager.microblock_transition({
         {"manual_transition_1", "1"},
     });
-    cs.inject_audio(FileSegment("The pendulum's x position corresponds to the top angle,"), 2);
+    cs.inject_audio(FileSegment("The pendulum's x position in the grid corresponds to the top angle,"), 2);
     cs.render();
     cs.render();
     vps[selected_pendulum].state_manager.microblock_transition({
@@ -1297,8 +1313,8 @@ void intro() {
         {"h", size_str},
         {"bottom_angle_opacity", "0"},
     });
-    cs.inject_audio_and_render(FileSegment("By associating angle positions with colors, it's easier to tell what is going on."));
-    PendulumGrid pointgrid(100, 100, -M_PI*.8, M_PI*.8, -M_PI*.8, M_PI*.8, 0, 0, 0, 0);
+    cs.inject_audio_and_render(FileSegment("By associating angle positions with colors, it's easier to tell what's going on."));
+    PendulumGrid pointgrid(100, 100, -M_PI*.7, M_PI*.7, -M_PI*.7, M_PI*.7, 0, 0, 0, 0);
     PendulumPointsScene pps(pointgrid, 0.5, 1);
     vps[selected_pendulum].state_manager.set({
         {"pendulum_opacity", "[pendulum_opacity]"},
@@ -1368,7 +1384,7 @@ void intro() {
         {"pgs13.opacity", "0"},
         {"pendulum_opacity", "0"},
     });
-    cs.inject_audio_and_render(FileSegment("Let's up the resolution to one pendulum per pixel."));
+    cs.inject_audio_and_render(FileSegment("Let's increase the resolution to one pendulum per pixel."));
     for(int x = 0; x < gridsize; x++){
         for(int y = 0; y < gridsize; y++){
             cs.remove_scene(&(vps[x+y*gridsize]));
@@ -1399,7 +1415,7 @@ void intro() {
     });
     
     cs.inject_audio_and_render(FileSegment("A nice feature of this fractal is that it tiles the plane."));
-    cs.inject_audio(FileSegment("Rotating either angle by 2pi yields the exact same pendulum, so the pattern is periodic."), 3);
+    cs.inject_audio(FileSegment("Rotating either pendulum arm by 2pi yields the exact same position, so the fractal is periodic."), 3);
     pgs.state_manager.microblock_transition({
         {"center_x", "6.283"},
     });
@@ -1439,7 +1455,7 @@ void intro() {
     });
     pgs.render();
     pgs.render();
-    pgs.inject_audio(FileSegment("as well as a region of coherent ones."), 2);
+    pgs.inject_audio(FileSegment("as well as a region of coherent ones which are not."), 2);
     pgs.state_manager.microblock_transition({
         {"center_x", "0"},
         {"center_y", "0"},
@@ -1455,7 +1471,7 @@ void intro() {
         {"center_y", "3.1415"},
         {"zoom", "1 8 /"},
     });
-    pgs.inject_audio_and_render(FileSegment("So, this plot shows how quickly the pendulums in our grid diverge to chaos."));
+    pgs.inject_audio_and_render(FileSegment("So, this plot shows how quickly the pendulums in our grid diverge."));
     pgs.state_manager.microblock_transition({
         {"mode", "2"},
         {"contrast", ".000005"},

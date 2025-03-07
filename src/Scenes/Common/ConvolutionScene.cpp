@@ -9,7 +9,9 @@ inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
 class ConvolutionScene : public Scene {
 public:
     ConvolutionScene(const Pixels& p, const double width = 1, const double height = 1)
-    : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) { }
+    : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) {
+        state_manager.add_equation("transparency_profile", "<microblock_fraction>");
+    }
 
     pair<int, int> get_coords_from_pixels(const Pixels& p){
         return make_pair((get_width()-p.w)/2, (get_height()-p.h)/2);
@@ -32,7 +34,7 @@ public:
     }
 
     void on_end_transition(bool is_macroblock){
-        if(in_transition_state) end_transition();
+        if(in_transition_state && !override_transition_end) end_transition();
     }
 
     void end_transition(){
@@ -44,9 +46,9 @@ public:
 
     void draw() override{
         if(in_transition_state) {
-            double tp = transparency_profile(state["microblock_fraction"]);
-            double tp1 = transparency_profile(1-state["microblock_fraction"]);
-            double smooth = smoother2(state["microblock_fraction"]);
+            double tp = transparency_profile(state["transparency_profile"]);
+            double tp1 = transparency_profile(1-state["transparency_profile"]);
+            double smooth = smoother2(state["transparency_profile"]);
 
             double top_vx = 0;
             double top_vy = 0;
@@ -79,12 +81,16 @@ public:
 
     const StateQuery populate_state_query() const override {
         return in_transition_state ?
-               StateQuery{"microblock_fraction"}
+               StateQuery{"transparency_profile"}
                : StateQuery{};
     }
     void mark_data_unchanged() override { }
     void change_data() override { }
     bool check_if_data_changed() const override { return in_transition_state; } // No DataObjects, but we treat transitioning as changing data
+    bool override_transition_end = false;
+    Pixels get_copy_p1() const {
+        return p1;
+    }
 
 protected:
     bool in_transition_state = false;
