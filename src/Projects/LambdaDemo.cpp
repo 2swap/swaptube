@@ -4,7 +4,7 @@ const string project_name = "LambdaDemo";
 #include "../io/PathManager.cpp"
 const int width_base = 640;
 const int height_base = 360;
-const float mult = 6; // 4K!!!
+const float mult = 1; // TODO 4K!!!
 
 // PROJECT GLOBALS
 const int VIDEO_WIDTH = width_base * mult;
@@ -118,14 +118,11 @@ void intro() {
 
     tds.inject_audio_and_render(AudioSegment("We can make all sorts of other values."));
 
-    tds.state_manager.subscene_transition(unordered_map<string, string>{
+    tds.state_manager.superscene_transition(unordered_map<string, string>{
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
-        {"qk", "0"}
-    });
-
-    tds.state_manager.subscene_transition(unordered_map<string, string>{
+        {"qk", "0"},
         {"z", "-10"},
     });
 
@@ -135,18 +132,23 @@ void intro() {
     shared_ptr<LambdaScene> church1scene = make_shared<LambdaScene>(church1, 800, 800);
     tds.add_surface(Surface(glm::vec3(-2,-2,-1), glm::vec3(1,0,0), glm::vec3(0,1,0), church1scene));
 
-    shared_ptr<LambdaExpression> church2 = parse_lambda_from_string("(\\f. (\\x. (f (f x))))");
-    church2->set_color_recursive(0xff00ff00);
-    church2->flush_uid_recursive();
-    shared_ptr<LambdaScene> church2scene = make_shared<LambdaScene>(church2, 800, 800);
-    tds.add_surface(Surface(glm::vec3(2,2,-3), glm::vec3(1,0,0), glm::vec3(0,1,0), church2scene));
 
+    tds.inject_audio(AudioSegment("We've got one, two, three..."), 4);
+    tds.render();
     shared_ptr<LambdaExpression> church3 = parse_lambda_from_string("(\\f. (\\x. (f (f (f x)))))");
     church3->set_color_recursive(0xff0088ff);
     church3->flush_uid_recursive();
     shared_ptr<LambdaScene> church3scene = make_shared<LambdaScene>(church3, 800, 800);
     tds.add_surface(Surface(glm::vec3(2,-2,-5), glm::vec3(1,0,0), glm::vec3(0,1,0), church3scene));
-    tds.inject_audio_and_render(AudioSegment("We've got one, two, three..."));
+
+    shared_ptr<LambdaExpression> church2 = parse_lambda_from_string("(\\f. (\\x. (f (f x))))");
+    church2->set_color_recursive(0xff00ff00);
+    church2->flush_uid_recursive();
+    shared_ptr<LambdaScene> church2scene = make_shared<LambdaScene>(church2, 800, 800);
+    tds.add_surface(Surface(glm::vec3(2,2,-3), glm::vec3(1,0,0), glm::vec3(0,1,0), church2scene));
+    tds.render();
+    tds.render();
+    tds.render();
     
     tds.state_manager.subscene_transition(unordered_map<string, string>{
         {"q1", "1"},
@@ -728,6 +730,7 @@ void history() {
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_app.y", "1.5"},
         {"lambda_rule_abs.y", "1.5"},
+        {"fnarg.y", "1.6"},
         {"lambda_title.y"   , "-1"},
     });
     cs.fade_out_all_scenes();
@@ -1090,10 +1093,16 @@ void beta_reduction(){
     // Show final result
     latexbeta.begin_latex_transition("(E\\ b)");
     cs.inject_audio_and_render(AudioSegment("And we're left with the reduced expression."));
-    cs.inject_audio(AudioSegment("Ok, let's try a slightly trickier one."), 2);
-    latexbeta.begin_latex_transition("");
+    cs.inject_audio(AudioSegment("Ok, let's try a slightly trickier one."), 3);
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
+        {"latex_beta.opacity", "0"},
+    });
     cs.render();
     latexbeta.begin_latex_transition("\\bigg(\\Big(\\lambda x. \\big(x \\big(y x\\big)\\big)\\Big) (f f)\\bigg)");
+    cs.render();
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
+        {"latex_beta.opacity", "1"},
+    });
     cs.render();
     cs.inject_audio(AudioSegment("To make it clear, this is the function, and this is the value."), 3);
     cs.render();
@@ -1193,13 +1202,19 @@ void beta_reduction(){
     term->flush_uid_recursive();
     LambdaScene betadiagram(term, 0.4*VIDEO_WIDTH, 0.4*VIDEO_HEIGHT);
     cs.add_scene_fade_in(&betadiagram, "betadiagram", 0.3, 0.3, true);
-    cs.inject_audio(AudioSegment("Let's try one more, but alongside the diagram this time."), 2);
-    quadratic_equation.begin_latex_transition("");
+    cs.inject_audio(AudioSegment("Let's try one more, but alongside the diagram this time."), 3);
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
+        {"quadratic_equation.opacity", "0"},
+    });
     cs.render();
+    quadratic_equation.begin_latex_transition("((\\lambda x. (\\lambda w. (x w))) " + latex_color(0xff0088ff, "(\\lambda a. (\\lambda f. f))") + ")");
     cs.state_manager.set(unordered_map<string, string>{
         {"quadratic_equation.y", "0.58"},
     });
-    quadratic_equation.begin_latex_transition("((\\lambda x. (\\lambda w. (x w))) " + latex_color(0xff0088ff, "(\\lambda a. (\\lambda f. f))") + ")");
+    cs.render();
+    cs.state_manager.subscene_transition(unordered_map<string, string>{
+        {"quadratic_equation.opacity", "1"},
+    });
     cs.render();
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff0088ff);
     betadiagram.set_expression(term);
@@ -1412,8 +1427,8 @@ void booleans() {
     cs.inject_audio_and_render(AudioSegment(.5));
 
     // Transition to a conditional expression
-    LatexScene conditional(latex_text("IF_THEN_ELSE") + " = \\big(X\\ t\\ f\\big)", 0.5, VIDEO_WIDTH / 2, VIDEO_HEIGHT / 2);
-    cs.add_scene_fade_in(&conditional, "conditional", 0.75, 0.3, true);
+    LatexScene conditional(latex_text("IF_THEN_ELSE") + " = \\big(X\\ t\\ f\\big)", 0.5, VIDEO_WIDTH * .8, VIDEO_HEIGHT / 2);
+    cs.add_scene_fade_in(&conditional, "conditional", 0.1, 0.3, true);
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"true_scene.opacity", "0.4"},
         {"false_scene.opacity", "0.4"},
@@ -1633,14 +1648,12 @@ void numerals() {
     // Create Lambda scenes for Church numerals
     cs.fade_out_all_scenes();
 
-    cs.inject_audio(AudioSegment("So, we can give 2 the function sin and the value 5,"), 3);
+    cs.inject_audio(AudioSegment("So, we can give 2 the function sin and the value 5,"), 2);
     cs.render();
     LatexScene two_sin_5("2\\ sin\\ 5", 0.8, VIDEO_WIDTH, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&two_sin_5, "2s5", 0, .375, true);
     cs.render();
-    two_sin_5.begin_latex_transition("(sin\\ 5)");
-    cs.render();
-    two_sin_5.begin_latex_transition("(sin\\ (sin\\ 5))");
+    two_sin_5.begin_latex_transition("sin\\ (sin\\ 5)");
     cs.inject_audio_and_render(AudioSegment("and 2 will apply sin to 5 twice."));
 
 
@@ -1730,7 +1743,7 @@ void numerals() {
     LatexScene addition_help("n + 1 = SUCC\\ n", 0.6, VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
     cs.add_scene(&addition_help, "addition_help", 0.25, 0.65);
     cs.inject_audio_and_render(AudioSegment("Calling successor adds one to a number!"));
-    addition_help.begin_latex_transition("n + m = SUCC\\big(...\\ SUCC\\ n)\\big)");
+    addition_help.begin_latex_transition("n + m = SUCC\\big(...(SUCC\\ n)\\big)");
     cs.inject_audio_and_render(AudioSegment("To get n+m, we just have to call successor on n, m times over."));
     cs.inject_audio_and_render(AudioSegment("Remember, the number m itself _is a function_,"));
     addition_help.begin_latex_transition("n + m = \\big(m\\ SUCC\\ n\\big)");
@@ -2025,7 +2038,6 @@ shared_ptr<LambdaExpression> factorial(){
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (\\scriptsize(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))\\normalsize(-\\ n\\ 1))))\\big)");
     cs.inject_audio_and_render(AudioSegment("You could argue, as is, this definition's infinitely long."));
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (\\scriptsize(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(\\tiny(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))(-\\ n\\ 1)))))\\normalsize(-\\ n\\ 1))))\\big)");
-    fac.begin_latex_transition(latex_text("fac = ") + "\\scriptsize(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(\\tiny(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))(-\\ n\\ 1)))))\\scriptsize (-\\ n\\ 1)))))");
     cs.inject_audio_and_render(AudioSegment("How on earth are we gonna define recursion?"));
     cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment("Time for a mind-blowing detour."));
@@ -2101,10 +2113,15 @@ shared_ptr<LambdaExpression> factorial(){
     cs.inject_audio_and_render(AudioSegment("In other words, up to beta reduction, theta F = F(theta F)..."));
     cs.inject_audio_and_render(AudioSegment("So theta F is a fixed point of F!"));
     cs.fade_out_all_scenes();
-    cs.add_scene_fade_in(&rfs, "rfs", 0, 0, true);
+    cs.add_scene(&rfs, "rfs", 0, 0);
+    cs.state_manager.set(unordered_map<string, string>{
+        {"rfs.opacity", "0"},
+    });
+    cs.state_manager.superscene_transition(unordered_map<string, string>{
+        {"rfs.opacity", "1"},
+    });
     rfs.begin_transition(0, "? 6 * sin ? 1.1 * cos ? 2.5 sin * 1.6 ? cos * + + +");
     cs.inject_audio_and_render(AudioSegment("Just think about that for a second. Unlike real valued functions, not only does every function in the Lambda Calculus have a fixed point, but there is a trivial way to find them too."));
-    cs.remove_all_scenes();
     cs.inject_audio_and_render(AudioSegment(1));
     rfs.begin_transition(0, "? 6 * sin ? 2.1 * cos ? 1.5 sin * 1.6 ? cos * + + + ? 4 * sin *");
     cs.inject_audio_and_render(AudioSegment("But, wait... if that's the case,"));
@@ -2117,7 +2134,7 @@ shared_ptr<LambdaExpression> factorial(){
         {"rfs.opacity", ".2"},
     });
     cs.inject_audio_and_render(AudioSegment("In our case, Theta F isn't necessarily a real number."));
-    ls3.begin_latex_transition("(\\Theta F)=" + latex_text("potentially nonsense"));
+    ls3.begin_latex_transition("\\Big(\\Theta F\\Big)=" + latex_text("potentially nonsense"));
     cs.inject_audio_and_render(AudioSegment("It can be an arbitrary, non-numerical lambda expression."));
     shared_ptr<LambdaExpression> xsqp2 = parse_lambda_from_string("(\\x. (((\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x)))))) (((\\m. (\\n. (\\s. (n (m s))))) x) x)) (\\f. (\\x. (f (f x))))))");
     xsqp2->set_color_recursive(0xffff3333);
@@ -2131,7 +2148,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.fade_out_all_scenes();
     cs.add_scene_fade_in(&xsqp2_scene, "xsqp2", 0.25, 0.25, true);
     LatexScene nofixedpoint("x^2+2" + latex_text(" has no fixed point... or does it?"), 1, VIDEO_WIDTH*0.5, VIDEO_HEIGHT*0.25);
-    cs.add_scene_fade_in(&nofixedpoint, "nofixedpoint", 0.25, 0, true);
+    //cs.add_scene_fade_in(&nofixedpoint, "nofixedpoint", 0.25, 0, true);
     cs.inject_audio_and_render(AudioSegment("So we can go ahead and define x^2+2,"));
     xsqp2_scene.set_expression(txsqp2);
     cs.inject_audio_and_render(AudioSegment("slap theta in front of it,"));
@@ -2170,7 +2187,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.inject_audio_and_render(AudioSegment("and beta reducing once,"));
     cs.inject_audio_and_render(AudioSegment("we get this expression...!"));
     cs.inject_audio_and_render(AudioSegment("Now, remember that there's no recursive nesting this time."));
-    fac_solution.begin_latex_transition(latex_color(0xff0088ff, "(\\Theta F)") + " =_\\beta (\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (" + latex_color(0xff0088ff, "\\Theta F") + "(-\\ n\\ 1)))))");
+    fac_solution.begin_latex_transition(latex_color(0xff0088ff, "\\big(\\Theta F\\big)") + " =_\\beta (\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (" + latex_color(0xff0088ff, "\\Theta F") + "(-\\ n\\ 1)))))");
     cs.inject_audio_and_render(AudioSegment("This component is finite and closed-form."));
     cs.inject_audio_and_render(AudioSegment("but this time, through beta reduction,"));
     LatexScene oldfac(latex_color(0xffff7777,latex_text("fac")) + "= (\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffff7777,latex_text("fac"))+"(-\\ n\\ 1)))))", 0.85, VIDEO_WIDTH, VIDEO_HEIGHT/4);
@@ -2852,7 +2869,7 @@ void render_thumbnail(){
 
 int main() {
     Timer timer;
-    FOR_REAL = true;
+    //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
     shared_ptr<LambdaExpression> TF3 = parse_lambda_from_string("(\\x. x)");
     intro();

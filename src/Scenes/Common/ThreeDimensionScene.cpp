@@ -385,7 +385,7 @@ public:
         pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, state["lines_opacity"] * line.opacity, 3);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, state["lines_opacity"] * line.opacity, 2);
     }
 
     void add_point(const Point& p) {
