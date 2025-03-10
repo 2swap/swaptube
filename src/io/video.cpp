@@ -157,7 +157,7 @@ public:
                                  VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P, SWS_FAST_BILINEAR, NULL, NULL, NULL);
 
         // Setting up the codec.
-        AVCodec* codec = avcodec_find_encoder_by_name("libx264");
+        const AVCodec* codec = avcodec_find_encoder_by_name("libx264");
         AVDictionary* opt = NULL;
         av_dict_set(&opt, "preset", "ultrafast", 0);
         av_dict_set(&opt, "crf", "18", 0);

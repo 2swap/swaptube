@@ -10,6 +10,9 @@
 #include "AudioSegment.cpp"
 extern "C"
 {
+    #include <libavcodec/avcodec.h>
+    #include <libavformat/avformat.h>
+    #include <libavutil/channel_layout.h>
     #include <libswscale/swscale.h>
     #include <libavformat/avformat.h>
 }
@@ -104,7 +107,7 @@ public:
         }
 
         // INPUT
-        AVCodec* audioInputCodec = avcodec_find_decoder(codecParams->codec_id);
+        const AVCodec* audioInputCodec = avcodec_find_decoder(codecParams->codec_id);
         audioInputCodecContext = avcodec_alloc_context3(audioInputCodec);
         avcodec_parameters_to_context(audioInputCodecContext, codecParams);
         avcodec_open2(audioInputCodecContext, audioInputCodec, nullptr);
@@ -115,7 +118,7 @@ public:
         avcodec_parameters_copy(audioStream->codecpar, codecParams);
 
         // OUTPUT
-        AVCodec* audioOutputCodec = avcodec_find_encoder(codecParams->codec_id);
+        const AVCodec* audioOutputCodec = avcodec_find_encoder(codecParams->codec_id);
         audioOutputCodecContext = avcodec_alloc_context3(audioOutputCodec);
         avcodec_parameters_to_context(audioOutputCodecContext, codecParams);
         avcodec_open2(audioOutputCodecContext, audioOutputCodec, nullptr);

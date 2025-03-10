@@ -86,11 +86,11 @@ public:
                 val = call_the_function(x, func_data);
                 const pair<double, double> point = make_pair(x, val);
                 const pair<int, int> pixel = coordinate_to_pixel(point);
-                render_dot(make_pair<int, int>(pixel.first  , pixel.second  ), func_data.color);
-                render_dot(make_pair<int, int>(pixel.first+1, pixel.second  ), func_data.color);
-                render_dot(make_pair<int, int>(pixel.first-1, pixel.second  ), func_data.color);
-                render_dot(make_pair<int, int>(pixel.first  , pixel.second+1), func_data.color);
-                render_dot(make_pair<int, int>(pixel.first  , pixel.second-1), func_data.color);
+                render_dot(make_pair(pixel.first  , pixel.second  ), func_data.color);
+                render_dot(make_pair(pixel.first+1, pixel.second  ), func_data.color);
+                render_dot(make_pair(pixel.first-1, pixel.second  ), func_data.color);
+                render_dot(make_pair(pixel.first  , pixel.second+1), func_data.color);
+                render_dot(make_pair(pixel.first  , pixel.second-1), func_data.color);
                 subtr += val * mult;
                 mult = -1;
             }

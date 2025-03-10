@@ -702,7 +702,7 @@ void history() {
     cs.inject_audio_and_render(AudioSegment("The letter that we put in is the name of the input,"));
     lambda_rule_abs.begin_latex_transition("(\\lambda " + latex_color(0xff8888ff, "a") + "." + latex_color(0xffff0000, "a") + ")");
     PngScene io("inputoutput", VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&io, "io", 0, 0.65);
+    cs.add_scene_fade_in(&io, "io", 0, 0.65, true);
     cs.inject_audio_and_render(AudioSegment("and the blank represents the return-statement of the function."));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"python_identity.x", "-.5"},
@@ -718,7 +718,7 @@ void history() {
 
     // Show an example where a function is applied to a variable.
     PngScene fnarg("functionargument", VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
-    cs.add_scene_fade_in(&fnarg, "fnarg", .5, 0.65);
+    cs.add_scene_fade_in(&fnarg, "fnarg", .5, 0.65, true);
     lambda_rule_app.begin_latex_transition("(" + latex_color(0xffff88ff, "a") + latex_color(0xff88ff88, "b") + ")");
     cs.inject_audio(AudioSegment("In this case, we're suggesting the thing on the left, 'a', is gonna be used as a function which takes in 'b'."), 2);
     cs.render();
@@ -1193,7 +1193,7 @@ void beta_reduction(){
     term->flush_uid_recursive();
     LambdaScene betadiagram(term, 0.4*VIDEO_WIDTH, 0.4*VIDEO_HEIGHT);
     cs.add_scene_fade_in(&betadiagram, "betadiagram", 0.3, 0.3, true);
-    cs.inject_audio(AudioSegment("Let's try one more, but alongside the diagram this time.", 2));
+    cs.inject_audio(AudioSegment("Let's try one more, but alongside the diagram this time."), 2);
     quadratic_equation.begin_latex_transition("");
     cs.render();
     cs.state_manager.set(unordered_map<string, string>{
@@ -2853,9 +2853,10 @@ void render_thumbnail(){
 int main() {
     Timer timer;
     FOR_REAL = true;
-    PRINT_TO_TERMINAL = true;
+    //PRINT_TO_TERMINAL = true;
     shared_ptr<LambdaExpression> TF3 = parse_lambda_from_string("(\\x. x)");
     intro();
+    return 0;
     chapter_number(1, "The Way of the Lambda");
     history();
     chapter_number(2, "Tromp's Diagrams");

@@ -5,7 +5,10 @@ project(swaptube LANGUAGES CXX)
 set(ENV{GLIBCXX_FORCE_NEW} 1)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-find_package(FFmpeg REQUIRED)
+
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFMPEG REQUIRED libswscale libavcodec libavformat libavdevice libavutil libavfilter)
+message(STATUS "FFMPEG Libraries -> ${FFMPEG_LIBRARIES}")
 find_package(Cairo REQUIRED)
 find_package(RSVG REQUIRED)
 find_package(PkgConfig REQUIRED)
