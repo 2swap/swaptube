@@ -194,10 +194,10 @@ public:
         }
         //cout << "Added silence: " << duration << " seconds" << endl;
     }
-    double add_audio_get_length(const string& audioname) {
-        double length_in_seconds = 0;
+    double add_audio_get_length(const std::string& audioname) {
+        double length_in_seconds = 0.0;
 
-        string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + audioname;
+        std::string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + audioname;
 
         // Check if the input audio file exists
         if (!file_exists(fullInputAudioFilename)) {
@@ -207,38 +207,31 @@ public:
         }
 
         AVFormatContext* inputAudioFormatContext = nullptr;
-        int ret = avformat_open_input(&inputAudioFormatContext, fullInputAudioFilename.c_str(), nullptr, nullptr);
-        if (ret < 0) {
-            failout("Error opening input audio file.");
+
+        // Open the audio file
+        if (avformat_open_input(&inputAudioFormatContext, fullInputAudioFilename.c_str(), nullptr, nullptr) != 0) {
+            std::cerr << "Could not open audio file: " << fullInputAudioFilename << std::endl;
+            return 3.0; // Default duration in case of failure
         }
 
-        // Read input audio frames and write to output format context
-        while (av_read_frame(inputAudioFormatContext, &inputPacket) >= 0) {
-            if (inputPacket.stream_index == audioStreamIndex) {
-                AVFrame* frame = av_frame_alloc();
-                int ret = avcodec_send_packet(audioInputCodecContext, &inputPacket);
-
-                while (ret >= 0) {
-                    ret = avcodec_receive_frame(audioInputCodecContext, frame);
-                    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
-                        break;
-                    }
-
-                    frame->pts = audframe;
-                    audframe++;
-                    avcodec_send_frame(audioOutputCodecContext, frame);
-
-                    length_in_seconds += encode_and_write_audio();
-                }
-                av_frame_unref(frame);
-                av_frame_free(&frame);
-            }
+        // Retrieve stream information
+        if (avformat_find_stream_info(inputAudioFormatContext, nullptr) < 0) {
+            std::cerr << "Could not retrieve stream info." << std::endl;
+            avformat_close_input(&inputAudioFormatContext);
+            return 3.0;
         }
 
+        // Get duration in seconds
+        if (inputAudioFormatContext->duration != AV_NOPTS_VALUE) {
+            length_in_seconds = inputAudioFormatContext->duration / static_cast<double>(AV_TIME_BASE);
+        }
+
+        // Close the format context
         avformat_close_input(&inputAudioFormatContext);
 
-        cout << "Audio added successfully, length " << length_in_seconds << endl;
+        std::cout << "Audio added successfully, length " << length_in_seconds << " seconds" << std::endl;
 
+        add_silence(length_in_seconds);
         return length_in_seconds;
     }
     void add_shtooka_entry(const string& filename, const string& text) {

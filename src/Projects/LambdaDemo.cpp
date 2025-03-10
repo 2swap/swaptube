@@ -2853,10 +2853,9 @@ void render_thumbnail(){
 int main() {
     Timer timer;
     FOR_REAL = true;
-    //PRINT_TO_TERMINAL = true;
+    //PRINT_TO_TERMINAL = false;
     shared_ptr<LambdaExpression> TF3 = parse_lambda_from_string("(\\x. x)");
     intro();
-    return 0;
     chapter_number(1, "The Way of the Lambda");
     history();
     chapter_number(2, "Tromp's Diagrams");
