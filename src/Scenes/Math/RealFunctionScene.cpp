@@ -70,8 +70,8 @@ public:
         std::pair<int, int> i_neg = coordinate_to_pixel(make_pair(0, -10));
         std::pair<int, int> r_pos = coordinate_to_pixel(make_pair(10, 0));
         std::pair<int, int> r_neg = coordinate_to_pixel(make_pair(-10, 0));
-        pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff004488, 1, 2);
-        pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff004488, 1, 2);
+        pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff004488, 1, 4);
+        pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff004488, 1, 4);
     }
 
     void render_functions() {
@@ -85,14 +85,19 @@ public:
             for (const auto& func_data : functions) {
                 val = call_the_function(x, func_data);
                 const pair<double, double> point = make_pair(x, val);
-                render_dot(coordinate_to_pixel(point), func_data.color);
+                const pair<int, int> pixel = coordinate_to_pixel(point);
+                render_dot(make_pair<int, int>(pixel.first  , pixel.second  ), func_data.color);
+                render_dot(make_pair<int, int>(pixel.first+1, pixel.second  ), func_data.color);
+                render_dot(make_pair<int, int>(pixel.first-1, pixel.second  ), func_data.color);
+                render_dot(make_pair<int, int>(pixel.first  , pixel.second+1), func_data.color);
+                render_dot(make_pair<int, int>(pixel.first  , pixel.second-1), func_data.color);
                 subtr += val * mult;
                 mult = -1;
             }
             if(last_subtr * subtr < 0 && functions.size() == 2) {
                 pair<int, int> collide = coordinate_to_pixel(make_pair(x, val));
                 render_point(collide);
-                pix.bresenham(collide.first, collide.second, collide.first, get_height()/2, 0xffffffff, 1, 2);
+                pix.bresenham(collide.first, collide.second, collide.first, get_height()/2, 0xffffffff, 1, 4);
             }
             last_subtr = subtr;
         }
