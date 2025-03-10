@@ -14,6 +14,7 @@ extern "C"
 {
     #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
+    #include <libavutil/channel_layout.h>
 }
 
 using namespace std;
@@ -89,7 +90,7 @@ public:
         // Configure codec context
         audioOutputCodecContext->bit_rate = 128000; // 128 kbps
         audioOutputCodecContext->sample_rate = 44100; // 44.1 kHz
-        audioOutputCodecContext->ch_layout = (AVChannelLayout)AV_CHANNEL_LAYOUT_STEREO; // Stereo
+        av_channel_layout_default(&audioOutputCodecContext->ch_layout, 2); // 2 for stereo
         audioOutputCodecContext->sample_fmt = AV_SAMPLE_FMT_FLTP; // Floating-point planar format
         audioOutputCodecContext->time_base = {1, audioOutputCodecContext->sample_rate}; // Time base of 1/sample_rate
 
@@ -171,6 +172,7 @@ public:
     }
 
     double add_audio_from_file(const string& filename) {
+        process_frame_from_buffer();
         double length_in_seconds = 0;
 
         // Build full path to the input audio file
@@ -218,8 +220,14 @@ public:
         }
 
         // Ensure the audio is stereo
-        if (audioStream->codecpar->ch_layout.nb_channels != 2) {
-            throw runtime_error("Error: Unsupported channel count: " + to_string(audioStream->codecpar->ch_layout.nb_channels) + ". Expected stereo (2 channels).");
+        int num_channels = 0;
+        if (audioStream->codecpar->ch_layout.order != AV_CHANNEL_ORDER_UNSPEC) {
+            num_channels = audioStream->codecpar->ch_layout.nb_channels;
+        } else {
+            throw runtime_error("Error: Channel order is unspecified.");
+        }
+        if (num_channels != 2) {
+            throw runtime_error("Error: Unsupported channel count: " + to_string(num_channels) + ". Expected stereo (2 channels).");
         }
 
         // Set up the audio decoder
@@ -242,16 +250,18 @@ public:
         }
 
         // Decode and process the audio samples
-        AVPacket packet;
-        av_init_packet(&packet);
-        while (av_read_frame(inputAudioFormatContext, &packet) >= 0) {
-            if (packet.stream_index == audioStream->index) {
+        AVPacket* packet = av_packet_alloc();
+        if(!packet){
+            throw runtime_error("Error: Failed to allocate AVPacket.");
+        }
+        while (av_read_frame(inputAudioFormatContext, packet) >= 0) {
+            if (packet->stream_index == audioStream->index) {
                 AVFrame* frame = av_frame_alloc();
                 if (!frame) {
                     throw runtime_error("Error: Could not allocate frame.");
                 }
 
-                int ret = avcodec_send_packet(codecContext, &packet);
+                int ret = avcodec_send_packet(codecContext, packet);
                 while (ret >= 0) {
                     ret = avcodec_receive_frame(codecContext, frame);
                     if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
@@ -274,7 +284,7 @@ public:
 
                 av_frame_free(&frame);
             }
-            av_packet_unref(&packet);
+            av_packet_unref(packet);
         }
 
         // Clean up
@@ -300,7 +310,7 @@ public:
             AVFrame* frame = av_frame_alloc();
             if (!frame) { throw runtime_error("Frame allocation failed."); }
             frame->nb_samples = frameSize;
-            frame->ch_layout = audioOutputCodecContext->ch_layout;
+            av_channel_layout_default(&frame->ch_layout, 2); // 2 for stereo
             frame->sample_rate = audioOutputCodecContext->sample_rate;
             frame->format = audioOutputCodecContext->sample_fmt;
 
@@ -312,14 +322,18 @@ public:
             }
 
             for (int ch = 0; ch < channels; ++ch) {
+                float* dst = reinterpret_cast<float*>(frame->data[ch]);
                 // Ensure bounds for `sample_buffer`, `sfx_buffer`, and `frame->data[ch]`
                 if (sample_buffer[ch].size() < frameSize || sfx_buffer[ch].size() < frameSize) {
                     throw runtime_error("Audio buffer size is smaller than the required frame size.");
                 }
 
-                float* frameData = reinterpret_cast<float*>(frame->data[ch]); // Properly cast `frame->data[ch]` to `float*`
                 for (int i = 0; i < frameSize; ++i) {
-                    frameData[i] = sample_buffer[ch][i] + sfx_buffer[ch][i]; // Perform element-wise addition
+                    float sample = sample_buffer[ch][i] + sfx_buffer[ch][i]; // Perform element-wise addition
+                    if(isnan(sample) || isinf(sample)) {
+                        throw runtime_error("Audio was either inf or nan. SampleBuffer: " + to_string(sample_buffer[ch][i]) + ", SFXBuffer: " + to_string(sfx_buffer[ch][i]));
+                    }
+                    dst[i] = sample;
                 }
             }
 
@@ -332,7 +346,7 @@ public:
             if (ret < 0) {
                 //av_frame_free(&frame);
                 //throw runtime_error("Error sending frame to encoder.");
-                // This happens nominally. Wtf?
+                // TODO This happens nominally. Wtf?
             }
 
             encode_and_write_audio();

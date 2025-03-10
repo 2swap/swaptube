@@ -100,6 +100,93 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     fclose(fp);
 }
 
+Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
+    // Check if the filename already ends with ".svg"
+    string filename = filename_with_or_without_suffix;
+    if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".svg") {
+        filename += ".svg";  // Append the ".svg" suffix if it's not present
+    }
+
+    // Load SVG
+    GError* error = nullptr;
+    RsvgHandle* handle = rsvg_handle_new_from_file(filename.c_str(), &error);
+    if (!handle) {
+        string error_str = "Error loading SVG file " + filename + ": " + error->message;
+        g_error_free(error);
+        throw runtime_error(error_str);
+    }
+
+    // Get intrinsic dimensions
+    RsvgDimensionData dimensions;
+    rsvg_handle_get_dimensions(handle, &dimensions);
+    double out_width = dimensions.width;
+    double out_height = dimensions.height;
+
+    // Calculate scale factor
+    if (scaling_params.mode == ScalingMode::BoundingBox) {
+        scaling_params.scale_factor = min(
+            static_cast<double>(scaling_params.max_width) / out_width,
+            static_cast<double>(scaling_params.max_height) / out_height
+        );
+    }
+
+    int width  = round(out_width  * scaling_params.scale_factor);
+    int height = round(out_height * scaling_params.scale_factor);
+
+    Pixels ret(width, height);
+
+    // Allocate pixel buffer
+    vector<uint8_t> raw_data(width * height * 4, 0);
+
+    // Create cairo surface and context
+    cairo_surface_t* surface = cairo_image_surface_create_for_data(
+        raw_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4
+    ); 
+    cairo_t* cr = cairo_create(surface);
+
+    // Set scale
+    cairo_scale(cr, scaling_params.scale_factor, scaling_params.scale_factor);
+
+    // Define viewport for rendering
+    RsvgRectangle viewport = {
+        .x = 0,
+        .y = 0,
+        .width = out_width,
+        .height = out_height
+    };
+
+    // Render SVG
+    if (!rsvg_handle_render_document(handle, cr, &viewport, &error)) {
+        fprintf(stderr, "SVG rendering error: %s\n", error->message);
+        g_error_free(error);
+        cairo_destroy(cr);
+        cairo_surface_destroy(surface);
+        g_object_unref(handle);
+        exit(-1);
+    }
+
+    // Copy pixels into Pixels object
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            int offset = (y * width + x) * 4;
+            ret.set_pixel(x, y, argb_to_col(
+                raw_data[offset + 3],  // Alpha
+                raw_data[offset + 2],  // Red
+                raw_data[offset + 1],  // Green
+                raw_data[offset]       // Blue
+            ));
+        }
+    }
+
+    // Cleanup
+    cairo_destroy(cr);
+    cairo_surface_destroy(surface);
+    g_object_unref(handle);
+
+    ret.grayscale_to_alpha();
+    return crop(ret);
+}
+
 Pixels png_to_pix(const string& filename_with_or_without_suffix) {
     // Check if the filename already ends with ".png"
     string filename = filename_with_or_without_suffix;
@@ -212,58 +299,6 @@ Pixels png_to_pix_bounding_box(const string& filename, int w, int h) {
 
     // Scale the image using bicubic interpolation
     return image.bicubic_scale(new_width, new_height);
-}
-
-Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
-    // Check if the filename already ends with ".svg"
-    string filename = filename_with_or_without_suffix;
-    if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".svg") {
-        filename += ".svg";  // Append the ".svg" suffix if it's not present
-    }
-
-    // Open svg and get its dimensions
-    RsvgHandle* handle = rsvg_handle_new_from_file(filename.c_str(), NULL);
-    if (!handle) {
-        fprintf(stderr, "Error loading SVG data from file \"%s\"\n", filename.c_str());
-        exit(-1);
-    }
-
-    // Get the intrinsic dimensions of the SVG
-    gdouble out_width, out_height;
-    rsvg_handle_get_intrinsic_size_in_pixels(handle, &out_width, &out_height);
-
-    if (scaling_params.mode == ScalingMode::BoundingBox) {
-        // Calculate the scale factor to fit within the bounding box
-        scaling_params.scale_factor = min(static_cast<double>(scaling_params.max_width) / out_width, static_cast<double>(scaling_params.max_height) / out_height);
-    }
-    int width  = round(out_width  * scaling_params.scale_factor);
-    int height = round(out_height * scaling_params.scale_factor);
-
-    Pixels ret(width, height);
-
-    // Create a uint8_t array to store the raw pixel data
-    vector<uint8_t> raw_data(width * height * 4);
-
-    // Render the SVG
-    cairo_surface_t* surface = cairo_image_surface_create_for_data(raw_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4);
-    cairo_t* cr = cairo_create(surface);
-    cairo_scale(cr, scaling_params.scale_factor, scaling_params.scale_factor);
-    rsvg_handle_render_cairo(handle, cr);
-
-    // Copy the uint8_t array to the Pixels object
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int offset = (y * width + x) * 4;
-            ret.set_pixel(x, y, argb_to_col(raw_data[offset + 3], raw_data[offset + 2], raw_data[offset + 1], raw_data[offset]));
-        }
-    }
-
-    // Clean up
-    g_object_unref(handle);
-    cairo_destroy(cr);
-    cairo_surface_destroy(surface);
-    ret.grayscale_to_alpha();
-    return crop(ret);
 }
 
 // Create an unordered_map to store the cached results

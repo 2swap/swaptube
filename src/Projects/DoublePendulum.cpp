@@ -9,6 +9,7 @@
 #include "../Scenes/Physics/MovingPendulumGridScene.cpp"
 #include "../Scenes/Physics/PendulumPointsScene.cpp"
 #include "../Scenes/Media/PngScene.cpp"
+#include "../Scenes/Media/Mp4Scene.cpp"
 #include "../Scenes/Common/TwoswapScene.cpp"
 
 struct IslandShowcase {
@@ -159,7 +160,7 @@ void showcase_momentum_space(PendulumGridScene& perp, double p1, double p2, doub
     perp.state_manager.microblock_transition({
         {"circles_opacity", "1"},
     });
-    cs.inject_audio_and_render(SilenceSegment(.3));
+    perp.inject_audio_and_render(SilenceSegment(.3));
 
     CompositeScene cs;
     PendulumScene ps({0, 0, p1, p2}, 0.5, 1);
@@ -231,8 +232,8 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.add_scene_fade_in(&ps, "ps", 0.75, 0.5);
     cs.render();
     cs.render();
-    LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .3, .2);
-    cs.add_scene_fade_in(&low_energy, "low_energy", .75, .38);
+    LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .2, .2);
+    cs.add_scene_fade_in(&low_energy, "low_energy", .75, .4);
     cs.inject_audio_and_render(FileSegment("Those pendulums have extremely low mechanical energy."));
     cs.inject_audio_and_render(FileSegment("So maybe energy is somehow involved?"));
     PendulumState vert = {0, 3.1, .0, .0};
@@ -407,7 +408,7 @@ void move_fractal(PendulumGridScene& pgs){
         {"mode", "2"},
         {"center_y", "-0.0001"},
         {"zoom", "1 40 /"},
-        {"physics_multiplier", "600"},
+        {"physics_multiplier", "300"},
         {"rk4_step_size", "1 30 / .025 *"},
     });
     cs.inject_audio_and_render(FileSegment("In other words, we're looking at a grid of pendulums all with starting angles at 0, but with different starting speeds."));
@@ -426,7 +427,7 @@ void move_fractal(PendulumGridScene& pgs){
         {"energy_max", to_string(5*vert_energy)},
     });
     perp.inject_audio_and_render(FileSegment("and the pendulums with slightly higher energy are chaotic,"));
-    showcase_momentum_space(perp, 4, 3);
+    showcase_momentum_space(perp, 4, 3, 0.7);
     perp.state_manager.microblock_transition({
         {"energy_min", to_string(5*vert_energy)},
         {"energy_max", to_string(2000*vert_energy)},
@@ -436,11 +437,11 @@ void move_fractal(PendulumGridScene& pgs){
         {"energy_min", to_string(40000*vert_energy)},
         {"energy_max", "0"},
     });
-    showcase_momentum_space(perp, 10, 0, 0.3);
-    showcase_momentum_space(perp, 0, 15);
-    showcase_momentum_space(perp, 10, 10, 0.4);
-    showcase_momentum_space(perp, -10, 10);
-    showcase_momentum_space(perp, 15, 10, 0.5);
+    showcase_momentum_space(perp, 10, 0, 0.2);
+    showcase_momentum_space(perp, 0, 15, 0.6);
+    showcase_momentum_space(perp, 10, 10, 0.3);
+    showcase_momentum_space(perp, -10, 10, 0.7);
+    showcase_momentum_space(perp, 15, 10, 0.4);
     CompositeScene cs_spiro;
     cs_spiro.add_scene(&perp, "perp");
     int gridsize = 10;
@@ -739,10 +740,10 @@ void intro() {
     const double fov = 12;
     const double start_dist = 15*fov;
     const double after_move = start_dist-3;
-    Mp4Scene mp4s("pendulum");
+    //Mp4Scene mp4s("pendulum");
     CompositeScene cs_mp4;
     ThreeDimensionScene tds;
-    cs_mp4.add_scene(&mp4s, "mp4s");
+    //cs_mp4.add_scene(&mp4s, "mp4s");
     cs_mp4.add_scene(&tds, "tds");
     vector<double> notes{pow(2, 3/12.), pow(2, 8/12.), pow(2, 10/12.), pow(2, 15/12.), pow(2, 20/12.), };
     for(int i = 0; i < 5; i++){
@@ -804,7 +805,7 @@ void intro() {
     cs_mp4.render();
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
     cs_mp4.state_manager.microblock_transition({
-        {"mp4s.opacity", "0"},
+        //{"mp4s.opacity", "0"},
     });
     cs_mp4.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
     tds.state_manager.macroblock_transition({
@@ -924,7 +925,7 @@ void intro() {
         {"theta_or_momentum", "1"},
         {"center_x", "1.14159"},
         {"center_y", "1.14159"},
-        {"zoom", "1 6.283 /"},
+        {"zoom", "1 15 /"},
     });
     mpgs.inject_audio_and_render(FileSegment("And behavior as a function of starting position can be graphed,"));
     mpgs.state_manager.macroblock_transition({
@@ -933,6 +934,7 @@ void intro() {
     mpgs.inject_audio_and_render(FileSegment("revealing fractals like these,"));
     mpgs.state_manager.macroblock_transition({
         {"theta_or_momentum", "0"},
+        {"zoom", "1 6.283 /"},
     });
     mpgs.inject_audio_and_render(FileSegment("where each point shows how chaotic a certain pendulum is."));
     CompositeScene cs;
@@ -1076,8 +1078,8 @@ void intro() {
         {"zoom", ".2"},
     });
     cs.inject_audio_and_render(SilenceSegment(5));
-    LatexScene lissa(latex_text("Lissajous Curve"), 1, 0.3. 0.1);
-    cs.add_scene_fade_in(&lissa, "lissa", 0.5, 0.7);
+    LatexScene lissa(latex_text("Lissajous Curve"), 1, 0.3, 0.1);
+    cs.add_scene_fade_in(&lissa, "lissa", 0.5, 0.75);
     cs.inject_audio_and_render(FileSegment("It's drawing a shape known as a Lissajous curve."));
     CoordinateSceneWithTrail left(1, 1);
     left.state_manager.set({
@@ -1131,10 +1133,10 @@ void intro() {
         {"right.x", "0.75"},
         {"left.y", "0.5"},
         {"right.y", "0.5"},
-        {"coord.opacity", ".3"},
-        {"p2.opacity", ".3"},
+        {"coord.opacity", ".1"},
+        {"p2.opacity", ".1"},
     });
-    cs.inject_audio_and_render(FileSegment("We can run this pendulum for a long time, re-interpret these signals as sound waves on the left and right speaker, and 'listen' to the pendulum!"));
+    cs.inject_audio_and_render(FileSegment("We can run this pendulum for a long time, reinterpret these signals as sound waves on the left and right speaker, and 'listen' to the pendulum!"));
     vector<float> audio_left;
     vector<float> audio_right;
     coord.state_manager.microblock_transition({
@@ -1314,7 +1316,7 @@ void intro() {
         {"bottom_angle_opacity", "0"},
     });
     cs.inject_audio_and_render(FileSegment("By associating angle positions with colors, it's easier to tell what's going on."));
-    PendulumGrid pointgrid(100, 100, -M_PI*.7, M_PI*.7, -M_PI*.7, M_PI*.7, 0, 0, 0, 0);
+    PendulumGrid pointgrid(80, 80, -M_PI*.6, M_PI*.6, -M_PI*.6, M_PI*.6, 0, 0, 0, 0);
     PendulumPointsScene pps(pointgrid, 0.5, 1);
     vps[selected_pendulum].state_manager.set({
         {"pendulum_opacity", "[pendulum_opacity]"},
