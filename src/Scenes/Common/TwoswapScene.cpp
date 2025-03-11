@@ -5,10 +5,13 @@
 
 class TwoswapScene : public Scene {
 public:
-    TwoswapScene(const double width = 1, const double height = 1) : Scene(width, height) {}
+    TwoswapScene(const double width = 1, const double height = 1) : Scene(width, height) {
+        state_manager.add_equation("circle_opacity", "1");
+        state_manager.add_equation("swaptube_opacity", ".4");
+    }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"circle_opacity"};
+        return StateQuery{"circle_opacity", "swaptube_opacity"};
     }
     void mark_data_unchanged() override { }
     void change_data() override {}
@@ -19,9 +22,11 @@ public:
         pix.fill_ellipse(pix.w/4, pix.h/2, pix.w/14, pix.w/14, colorlerp(TRANSPARENT_BLACK, OPAQUE_WHITE, state["circle_opacity"]));
         double yval = (pix.h-twoswap_pix.h)/2+pix.w/48;
         pix.overwrite(twoswap_pix, pix.w/4+pix.w/14+pix.w/48, yval);
-        ScalingParams sp2(pix.w*.4, pix.h*.2);
-        Pixels swaptube_pix = latex_to_pix(" \\normalsize" + latex_text("\\textbf{Rendered with love, using SwapTube}") + "\\\\\\\\" + "\\tiny" + latex_text("Commit Hash: " + swaptube_commit_hash()), sp2);
-        pix.overlay(swaptube_pix, pix.h*.03, pix.h*.03, .4);
+        if(state["swaptube_opacity"] > 0.01){
+            ScalingParams sp2(pix.w*.4, pix.h*.2);
+            Pixels swaptube_pix = latex_to_pix(" \\normalsize" + latex_text("\\textbf{Rendered with love, using SwapTube}") + "\\\\\\\\" + "\\tiny" + latex_text("Commit Hash: " + swaptube_commit_hash()), sp2);
+            pix.overlay(swaptube_pix, pix.h*.03, pix.h*.03, state["swaptube_opacity"]);
+        }
     }
     void on_end_transition(bool is_macroblock) override{}
 

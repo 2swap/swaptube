@@ -344,14 +344,14 @@ bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins
         int columnToPlay = query_steady_state(b.representation);
         C4Board child = b;
         if (columnToPlay >= 1 && columnToPlay <= 7) child.play_piece(columnToPlay);
-        else { return false; }
+        else { cout << "No unique move suggested!" << child.representation << endl; return false; }
         if(child.who_won() == RED) return true;
         else if(!validate_recursive_call(child, wins_cache)) { return false; }
     } else {
         for (int i = 1; i <= 7; i++){
             if(!b.is_legal(i)) continue;
             C4Board child = b.child(i);
-            if(child.who_won() != INCOMPLETE) { return false;}
+            if(child.who_won() != INCOMPLETE) {cout << "Yellow won!" << child.representation << endl; return false;}
             if(!validate_recursive_call(child, wins_cache)) { return false; }
         }
     }

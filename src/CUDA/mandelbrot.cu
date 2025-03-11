@@ -47,28 +47,23 @@ __device__ unsigned int get_mandelbrot_color(double iterations, int max_iteratio
         0xffff2e63,
         0xffffffff,
         0xff08d9d6,
-    }; */
-    const unsigned int color_palette[] = {
+    }; Pastel red and blue and black POP */
+    /* const unsigned int color_palette[] = {
         0xffffffff,
         0xffff33fc,
         0xff5d21a7,
         0xff1571df,
         0xff25f7ff,
+    }; Used in the mandelbrot thumbnail */
+    const unsigned int color_palette[] = {
+        0xffffffff,
+        0xff000088,
+        0xff000000,
+        0xff000088,
     };
-    /*const unsigned int color_palette[] = {
-        0xff0e7c4a,
-        0xff2258a5,
-        0xff002347,
-        0xff000000,
-    };*/
-    /*const unsigned int color_palette[] = {
-        0xff5d0e41,
-        0xff00224d,
-        0xff000000,
-    };*/
     const int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
 
-    iterations = (iterations + 70 - breath) / 2.;
+    iterations = (iterations + 50 - breath) / 5.;
     int idx = floor(iterations);
     double w = iterations - idx;
     idx %= palette_size;

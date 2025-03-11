@@ -5,6 +5,24 @@
 #include "../DataObjects/Connect4/TreeValidator.cpp"
 
 void render_video() {
+    array<string, C4_HEIGHT> ss_list = {
+        "   @   ",
+        "   1   ",
+        " 2 2   ",
+        "+1+1+  ",
+        "=1-2=  ",
+        "21@12  "
+    };
+    SteadyState ss(ss_list);
+    C4Board board("45212422444");
+    cout << ss.validate(board) << endl;
+    return;
+
+
+
+
+
+
     try{
         PRINT_TO_TERMINAL = false;
         SAVE_FRAME_PNGS = false;
@@ -36,7 +54,7 @@ void render_video() {
                 {"physics_multiplier", "30"},
             };
             gs.state_manager.set(state);
-            cs.inject_audio_and_render(AudioSegment(3));
+            cs.inject_audio_and_render(SilenceSegment(3));
             g.render_json("../../Klotski/viewer/data/c4_"+variation+".json");
         }
     }
