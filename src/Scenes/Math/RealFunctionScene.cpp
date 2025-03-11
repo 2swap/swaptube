@@ -91,6 +91,14 @@ public:
                 render_dot(make_pair(pixel.first-1, pixel.second  ), func_data.color);
                 render_dot(make_pair(pixel.first  , pixel.second+1), func_data.color);
                 render_dot(make_pair(pixel.first  , pixel.second-1), func_data.color);
+                render_dot(make_pair(pixel.first+2, pixel.second  ), func_data.color);
+                render_dot(make_pair(pixel.first-2, pixel.second  ), func_data.color);
+                render_dot(make_pair(pixel.first  , pixel.second+2), func_data.color);
+                render_dot(make_pair(pixel.first  , pixel.second-2), func_data.color);
+                render_dot(make_pair(pixel.first+1, pixel.second+1), func_data.color);
+                render_dot(make_pair(pixel.first-1, pixel.second+1), func_data.color);
+                render_dot(make_pair(pixel.first+1, pixel.second-1), func_data.color);
+                render_dot(make_pair(pixel.first-1, pixel.second-1), func_data.color);
                 subtr += val * mult;
                 mult = -1;
             }

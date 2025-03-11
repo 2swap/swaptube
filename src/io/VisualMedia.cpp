@@ -295,16 +295,18 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
     hash<string> hasher;
     char full_directory_path[PATH_MAX];
     realpath(PATH_MANAGER.latex_dir.c_str(), full_directory_path);
-    string name = string(full_directory_path) + "/" + to_string(hasher(latex)) + ".svg";
+    string name = to_string(hasher(latex)) + ".svg";
+    string name_with_path = string(full_directory_path) + "/" + name;
 
-    if (access(name.c_str(), F_OK) == -1) {
-        string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -output=" + name + " >/dev/null 2>&1";
+    if (access(name_with_path.c_str(), F_OK) == -1) {
+        string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -outputdir="+full_directory_path+" -output=" + name_with_path + " >/dev/null 2>&1";
         int result = system(command.c_str());
+        cout << "COMMAND: " << command << endl;
         if(result != 0) failout("Failed to generate LaTeX.");
     }
 
     // System call successful, return the generated SVG
-    Pixels pixels = svg_to_pix(name, scaling_params);
+    Pixels pixels = svg_to_pix(name_with_path, scaling_params);
     latex_cache[cache_key] = make_pair(pixels, scaling_params.scale_factor); // Cache the result before returning
     return pixels;
 }
