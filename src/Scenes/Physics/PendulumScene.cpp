@@ -121,6 +121,7 @@ public:
         }
         WRITER.add_sfx(left, right, tonegen_save);
         energy = energy_slew;
+	cout << tonegen_save / 44100. << endl;
     }
 
     void generate_audio(double duration, vector<float>& left, vector<float>& right, double volume_mult = 1){

@@ -126,6 +126,7 @@ public:
 
         int numSamples = left_buffer.size();
         int sample_copy_start = t - total_samples_processed + sample_buffer_offset;
+	// TODO I think this next line is causing tiny skips in the audio track
         if(sample_copy_start < 0) sample_copy_start = 0;
         int sample_copy_end = sample_copy_start + numSamples;
 

@@ -739,7 +739,6 @@ void outtro(){
 
 void intro() {
     cout << "Doing intro()" << endl;
-//TODO build a double pendulum
     const double fov = 12;
     const double start_dist = 15*fov;
     const double after_move = start_dist-3;
