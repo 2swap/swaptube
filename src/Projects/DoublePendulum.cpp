@@ -279,6 +279,7 @@ void discuss_energy(PendulumGridScene& pgs){
 }
 
 void move_fractal(PendulumGridScene& pgs){
+    pgs.inject_audio_and_render(SilenceSegment(0.5));
     PendulumState vert = {0, 3, .0, .0};
     double vert_energy = compute_kinetic_energy(vert) + compute_potential_energy(vert);
     MovingPendulumGridScene mpgs;
@@ -397,6 +398,7 @@ void move_fractal(PendulumGridScene& pgs){
         {"zoomexp", "1 40 / log"},
     });
     cs.inject_audio_and_render(FileSegment("I'm now reorienting the axes of our fractal to be in momentum-space instead of angle-space."));
+    cs.inject_audio_and_render(SilenceSegment(0.5));
     vector<PendulumGrid> grids_momentum{PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, 0,0,0,0, -20.*VIDEO_WIDTH/VIDEO_HEIGHT, 20.*VIDEO_WIDTH/VIDEO_HEIGHT, -20, 20)};
     if(FOR_REAL) for(PendulumGrid& g : grids_momentum) g.iterate_physics(4000, .05/30);
     PendulumGridScene perp(grids_momentum);
@@ -732,6 +734,7 @@ void outtro(){
         {"ts.opacity", "0"},
     });
     cs.inject_audio_and_render(SilenceSegment(2));
+    cs.inject_audio_and_render(SilenceSegment(0.5));
 }
 
 void intro() {
@@ -900,6 +903,7 @@ void intro() {
         {"physics_multiplier", to_string(iterations)},
     });
     tds_cs.inject_audio_and_render(FileSegment("So... what's the deal?"));
+    tds_cs.inject_audio_and_render(SilenceSegment(0.5));
     tds.state_manager.macroblock_transition({
         {"volume_set1", "0.5"},
         {"volume_set2", "0.5"},
@@ -920,6 +924,7 @@ void intro() {
     tds_cs.inject_audio_and_render(FileSegment("The only difference is the position from which they started."));
     tds_cs.remove_scene(&mpgs);
     tds_cs.remove_scene(&tds);
+    mpgs.inject_audio_and_render(SilenceSegment(0.5));
     mpgs.state_manager.macroblock_transition({
         {"ticks_opacity", "1"},
         {"theta_or_momentum", "1"},
@@ -986,6 +991,7 @@ void intro() {
         cs.add_scene_fade_in(&ps, name, VIDEO_HEIGHT*((start_states[i].theta1 + 2)/6.283-.5)/VIDEO_WIDTH+.5, 1-(start_states[i].theta2 + 2)/6.283);
         cs.render();
     }
+    cs.inject_audio_and_render(SilenceSegment(0.5));
     cs.state_manager.microblock_transition({
         {"pgs.opacity", "0"},
         {"p0.pointer_opacity", "0"},
@@ -1203,7 +1209,7 @@ void intro() {
         {"center_x", "<trail_x>"},
         {"center_y", "<trail_y>"},
     });
-    cs.inject_audio_and_render(FileSegment("It traces a repetitive curve in angle-space, so it sounds the cleanest."));
+    cs.inject_audio_and_render(FileSegment("This one traces a repetitive curve in angle-space, so it sounds the cleanest."));
     cs.inject_audio_and_render(FileSegment("Listening to a pendulum tells us if it's chaotic, but we have to listen one-by-one."));
 
 
@@ -1302,6 +1308,10 @@ void intro() {
         {"manual_transition_2", "1"},
     });
     cs.inject_audio_and_render(FileSegment("and its y position corresponds to the bottom angle."));
+    vps[selected_pendulum].state_manager.microblock_transition({
+        {"bottom_angle_opacity", "0"},
+    });
+    cs.inject_audio_and_render(SilenceSegment(0.5));
     string size_str = to_string(gridstep*2.5);
     double selected_x_mod = selected_pendulum_x + ((selected_pendulum_y%2==0) ? 0.75 : 0.25);
     cs.state_manager.microblock_transition({
@@ -1313,7 +1323,6 @@ void intro() {
     vps[selected_pendulum].state_manager.microblock_transition({
         {"w", size_str},
         {"h", size_str},
-        {"bottom_angle_opacity", "0"},
     });
     cs.inject_audio_and_render(FileSegment("By associating angle positions with colors, it's easier to tell what's going on."));
     PendulumGrid pointgrid(80, 80, -M_PI*.6, M_PI*.6, -M_PI*.6, M_PI*.6, 0, 0, 0, 0);
@@ -1417,7 +1426,7 @@ void intro() {
     });
     
     cs.inject_audio_and_render(FileSegment("A nice feature of this fractal is that it tiles the plane."));
-    cs.inject_audio(FileSegment("Rotating either pendulum arm by 2pi yields the exact same position, so the fractal is periodic."), 3);
+    cs.inject_audio(FileSegment("Rotating either pendulum arm by 2pi yields the exact same position, so the fractal is periodic."), 2);
     pgs.state_manager.microblock_transition({
         {"center_x", "6.283"},
     });
@@ -1444,7 +1453,7 @@ void intro() {
     pgs.state_manager.set({
         {"physics_multiplier", "5"},
     });
-    cs.render();
+    cs.inject_audio_and_render(SilenceSegment(1));
     cs.remove_scene(&pgs);
     pgs.state_manager.microblock_transition({
         {"zoom", "1 3.1415 /"},
@@ -1464,10 +1473,12 @@ void intro() {
     });
     pgs.render();
     pgs.render();
+    pgs.inject_audio_and_render(SilenceSegment(0.5));
     pgs.state_manager.microblock_transition({
         {"mode", "2.5"},
     });
     pgs.inject_audio_and_render(FileSegment("Now, for each pixel, we track two pendulums, separated by a slight starting difference, and plot their difference over time."));
+    pgs.inject_audio_and_render(SilenceSegment(0.5));
     pgs.state_manager.microblock_transition({
         {"center_x", "3.1415"},
         {"center_y", "3.1415"},

@@ -90,7 +90,15 @@ def main():
                 if successes%10 == 1:
                     input("ARE YOU HYPED")
                 if successes == 1:
-                    input("Remember to check the first audio output file...")
+                    input("Let's check the first audio output file...")
+                    ffplay_cmd = [ 'ffplay', os.path.join(PROJECT_DIR, current_filename) ]
+                    ffplay_process = subprocess.Popen(ffplay_cmd, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                    ffmpeg_process.wait()
+                    user_check = input("Was it good? [y/n]")
+                    if user_check != 'y':
+                        print(f"Deleting {PROJECT_DIR}/{current_filename}...")
+                        os.remove(os.path.join(PROJECT_DIR, current_filename))
+                        continue
                 break
 
 if __name__ == "__main__":
