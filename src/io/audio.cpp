@@ -126,8 +126,6 @@ public:
 
         int numSamples = left_buffer.size();
         int sample_copy_start = t - total_samples_processed + sample_buffer_offset;
-	// TODO I think this next line is causing tiny skips in the audio track
-        if(sample_copy_start < 0) sample_copy_start = 0;
         int sample_copy_end = sample_copy_start + numSamples;
 
         // Pointers to the input buffers for each channel
@@ -295,12 +293,12 @@ public:
         return length_in_seconds;
     }
 
-    void process_frame_from_buffer() {
+    void process_frame_from_buffer(const bool last = false) {
         while(true){
             int channels = audioOutputCodecContext->ch_layout.nb_channels;
             int frameSize = audioOutputCodecContext->frame_size;
             if(sample_buffer[0].size() != sample_buffer[1].size()) throw runtime_error("Audio planar buffer mismatch!");
-            if(sample_buffer[0].size() < frameSize) break;
+            if(sample_buffer[0].size() < frameSize*(last?1:2)) break;
             for (int ch = 0; ch < channels; ++ch) {
                 if (sfx_buffer[ch].size() < sample_buffer[ch].size()) {
                     sfx_buffer[ch].resize(sample_buffer[ch].size(), 0.0f); // Extend channel with silence
@@ -373,7 +371,7 @@ public:
         shtooka_file << filename << "\t" << text << "\n";
     }
     void cleanup() {
-        process_frame_from_buffer();
+        process_frame_from_buffer(true);
         avcodec_send_frame(audioOutputCodecContext, NULL);
         encode_and_write_audio();
         
