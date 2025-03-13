@@ -81,15 +81,16 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
     str_p1 = str_p1.erase(str_cx.find_last_not_of('0') + 1);
     str_p2 = str_p2.erase(str_cy.find_last_not_of('0') + 1);
     string latex_str = "\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy;
-    if(is.ps.p1 != 0) latex_str += ", p_1 = " + str_p1;
-    if(is.ps.p2 != 0) latex_str += ", p_1 = " + str_p2;
+    bool moveup = false;
+    if(is.ps.p1 != 0) { latex_str += ", p_1 = " + str_p1; ps.alpha_subtract = 1; moveup = true; }
+    if(is.ps.p2 != 0)   latex_str += ", p_2 = " + str_p2;
     LatexScene ls2(latex_str, 1, 1, 0.12);
 
     CoordinateSceneWithTrail ts(0.5, 1);
     cs.add_scene        (&pgs, "pgs", 0.5 , 0.5 );
     cs.add_scene_fade_in(&ps , "ps" , 0.75, 0.5 );
     cs.add_scene_fade_in(&ls , "ls" , 0.5 , 0.15);
-    cs.add_scene_fade_in(&ls2, "ls2", 0.5 , 0.25);
+    cs.add_scene_fade_in(&ls2, "ls2", 0.5 , moveup?0.15:0.25);
     cs.add_scene_fade_in(&ts , "ts" , 0.25, 0.5 );
     LatexScene blurb(latex_text(is.blurb), .5, .2, 0.12);
     if(!spoken){
@@ -166,7 +167,7 @@ void showcase_momentum_space(PendulumGridScene& perp, double p1, double p2, doub
     PendulumScene ps({0, 0, p1, p2}, 0.5, 1);
 
     cs.add_scene        (&perp, "perp", 0.5 , 0.5 );
-    cs.add_scene_fade_in(&ps  , "ps"  , 0.75, 0.5 );
+    cs.add_scene_fade_in(&ps  , "ps"  , 0.5 , 0.5 );
 
     vector<float> audio_left;
     vector<float> audio_right;
