@@ -1,11 +1,7 @@
 To-Do List
 
-Composite Child can't own its own transitions?? this is a bug i think
 Three-dimension scene is a total mess, refactor. Also refactor its interface with Graph/GraphScene
 Graph has random pointers all over and it probably shouldn't
-Perhaps check for correctness of the number of render/inject_audio calls before running somehow?
-Abstract out a ParentScene class so that non-parent classes need not implement parenty functions
-Rubik's Scene
 Scenes for making line graphs, bar charts, etc?
 Prepare c4 scene for steady state diagrams
 increase Bitrate? Somehow fight the youtube compression algorithm?

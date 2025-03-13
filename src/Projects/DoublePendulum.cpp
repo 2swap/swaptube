@@ -630,10 +630,10 @@ void fine_grid(PendulumGridScene& pgs){
         {"circles_opacity", "1"},
     });
     pgs.circles_to_render = isv.size();
-    pgs.inject_audio_and_render(FileSegment("There are a few spots of black in here."));
     pgs.state_manager.microblock_transition({
         {"ticks_opacity", "0"},
     });
+    pgs.inject_audio_and_render(FileSegment("There are a few spots of black in here."));
 }
 
 void outtro(){
