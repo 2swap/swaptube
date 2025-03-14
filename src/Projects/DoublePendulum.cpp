@@ -806,7 +806,6 @@ void intro() {
     cs_mp4.render();
     cs_mp4.render();
     cs_mp4.render();
-    return;
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
     cs_mp4.state_manager.microblock_transition({
         //{"mp4s.opacity", "0"},
@@ -1570,7 +1569,6 @@ void render_video() {
 
 
     intro();
-    return;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv/*, isv2*/}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
