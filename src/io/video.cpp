@@ -221,9 +221,18 @@ public:
 
                 double alpha = a / 255.0;
                 double one_minus_alpha = 1.0 - alpha;
-                const int background_r = 0;
-                const int background_g = 0;
-                const int background_b = 0;
+
+		// Lambda Blue
+                const int background_r = 10;
+                const int background_g = 10;
+                const int background_b = 30;
+
+		/* Charcoal gray
+                const int background_r = 32;
+                const int background_g = 32;
+                const int background_b = 32;
+		*/
+
                 r = r * alpha + background_r * one_minus_alpha;
                 g = g * alpha + background_g * one_minus_alpha;
                 b = b * alpha + background_b * one_minus_alpha;
