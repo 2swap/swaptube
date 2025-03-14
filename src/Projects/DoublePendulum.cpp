@@ -811,6 +811,7 @@ void intro() {
         //{"mp4s.opacity", "0"},
     });
     cs_mp4.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
+    return;
     tds.state_manager.macroblock_transition({
         {"d", to_string(after_move)},
     });
@@ -1569,6 +1570,7 @@ void render_video() {
 
 
     intro();
+    return;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv/*, isv2*/}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;

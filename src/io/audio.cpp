@@ -23,11 +23,9 @@ using namespace std;
 class AudioWriter {
 private:
     ofstream shtooka_file;
-    double audiotime = 0;
     AVCodecContext *audioOutputCodecContext = nullptr;
     AVStream *audioStream = nullptr;
     AVFormatContext *fc = nullptr;
-    unsigned audframe = 0;
     vector<vector<float>> sample_buffer;
     vector<vector<float>>    sfx_buffer;
     int sample_buffer_offset = 0; // The index in the sample_buffer at which the latest macroblock starts, since some samples from the last one may not have flushed entirely.
@@ -52,11 +50,7 @@ private:
             // Set the stream index of the output packet to the audio stream index
             outputPacket.stream_index = audioStream->index;
 
-            // Set the correct PTS and DTS values for the output packet
-            outputPacket.dts = outputPacket.pts = av_rescale_q(audiotime, audioStream->time_base, audioOutputCodecContext->time_base);
             pts_dts_plot.add_datapoint(vector<double>{static_cast<double>(outputPacket.pts)});
-            audiotime += outputPacket.duration;
-
             length_in_seconds += static_cast<double>(outputPacket.duration) / audioOutputCodecContext->sample_rate;
 
             // Rescale PTS and DTS values before writing the packet
@@ -336,16 +330,13 @@ public:
                 }
             }
 
-            frame->pts = audframe;
-            audframe++;
+            frame->pts = total_samples_processed;
 
             // Send the frame to the encoder
             ret = avcodec_send_frame(audioOutputCodecContext, frame);
-
-            if (ret < 0) {
-                //av_frame_free(&frame);
-                //throw runtime_error("Error sending frame to encoder.");
-                // TODO This happens nominally. Wtf?
+            if (ret < 0 && frame) {
+                av_frame_free(&frame);
+                throw runtime_error("Error sending frame to encoder.");
             }
 
             encode_and_write_audio();
