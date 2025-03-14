@@ -806,12 +806,12 @@ void intro() {
     cs_mp4.render();
     cs_mp4.render();
     cs_mp4.render();
+    return;
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
     cs_mp4.state_manager.microblock_transition({
         //{"mp4s.opacity", "0"},
     });
     cs_mp4.inject_audio_and_render(FileSegment("Or, at least, not all of them."));
-    return;
     tds.state_manager.macroblock_transition({
         {"d", to_string(after_move)},
     });

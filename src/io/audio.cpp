@@ -56,7 +56,7 @@ private:
             // Rescale PTS and DTS values before writing the packet
             av_packet_rescale_ts(&outputPacket, audioOutputCodecContext->time_base, audioStream->time_base);
 
-            ret = av_write_frame(fc, &outputPacket);
+            ret = av_interleaved_write_frame(fc, &outputPacket);
 
             av_packet_unref(&outputPacket);
         }
@@ -67,7 +67,7 @@ public:
     AudioWriter(AVFormatContext *fc_) : fc(fc_), sample_buffer(2), sfx_buffer(2) {
         shtooka_file.open(PATH_MANAGER.record_list_path);
         if (!shtooka_file.is_open()) {
-            cerr << "Error opening recorder list: " << PATH_MANAGER.record_list_path << endl;
+            throw runtime_error("Error opening recorder list: " + PATH_MANAGER.record_list_path);
         }
 
         // Set up codec for output
@@ -355,8 +355,7 @@ public:
 
     void add_shtooka_entry(const string& filename, const string& text) {
         if (!shtooka_file.is_open()) {
-            std::cerr << "Shtooka file is not open. Cannot add entry." << std::endl;
-            return;
+            throw runtime_error("Shtooka file is not open. Cannot add entry.");
         }
 
         shtooka_file << filename << "\t" << text << "\n";

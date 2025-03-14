@@ -95,7 +95,7 @@ ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 if [ -n "$ultimate_subdir" ]; then
     cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"
     rm "$TEMPFILE"
-    file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
+    file_path="$ultimate_subdir/${PROJECT_NAME}.mkv"
 
     if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
         vlc "$file_path" > /dev/null 2>&1

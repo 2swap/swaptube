@@ -82,6 +82,7 @@ void parse_debug_output(const string& output) {
         } else {
             // If the string did not match the expected format, dump it to stderr
             cerr << "Failed to parse cerr output from encoder: " << line << endl;
+	    // This is plausible in nominal conditions, do not failout!
         }
     }
 }
@@ -182,7 +183,6 @@ public:
             throw runtime_error("Failed avcodec_parameters_from_context!");
         }
 
-        av_dump_format(fc, 0, PATH_MANAGER.video_output.c_str(), 1);
         ret = avio_open(&fc->pb, PATH_MANAGER.video_output.c_str(), AVIO_FLAG_WRITE);
         if (ret < 0) {
             throw runtime_error("Failed avio_open!");
