@@ -7,6 +7,7 @@ void render_video() {
     MandelbrotScene ms;
     CompositeScene cs;
     cs.add_scene(&ts, "ts");
+    cs.add_scene(&ms, "ms");
     ts.state_manager.set(unordered_map<string,string>{
         {"swaptube_opacity", "0"},
     });
@@ -31,10 +32,12 @@ void render_video() {
         {"seed_x_r", "2"},
         {"seed_x_i", "0"},
     });
-    cs.inject_audio_and_render(SilenceSegment(1));
+    cs.inject_audio_and_render(SilenceSegment(2));
+    /*
     Pixels *pix;
     ms.query(pix);
     pix_to_png(*pix, "mandelbrot");
     cs.query(pix);
     pix_to_png(*pix, "2swap");
+    */
 }

@@ -113,20 +113,16 @@ private:
     unsigned outframe = 0;
 
     bool encode_and_write_frame(AVFrame* frame){
-        if(frame != NULL){
-            int ret = send_frame(videoCodecContext, frame);
-            if (ret<0) {
-                cout << "Failed encoding video!" << endl;
-                exit(1);
-            }
+        int ret = send_frame(videoCodecContext, frame);
+        if (ret<0 && frame != NULL){
+	    throw runtime_error("Failed to encode video!");
         }
 
         int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
         if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) {
             return false;
         } else if (ret2!=0) {
-            cout << "Failed to receive video packet!" << endl;
-            exit(1);
+            throw runtime_error("Failed to receive video packet!");
         }
 
         // We set the packet PTS and DTS taking in the account our FPS (second argument),
@@ -151,36 +147,52 @@ public:
 
         // Setting up the codec.
         const AVCodec* codec = avcodec_find_encoder_by_name("libx264");
+        if (!codec) {
+            throw runtime_error("Failed to find video codec");
+        }
+
         AVDictionary* opt = NULL;
         av_dict_set(&opt, "preset", "ultrafast", 0);
         av_dict_set(&opt, "crf", "18", 0);
 
         videoStream = avformat_new_stream(fc, codec);
         if (!videoStream) {
-            cout << "Failed to create new videostream!" << endl;
-            exit(1);
+            throw runtime_error("Failed to create new videostream!");
         }
+	//videoStream->id = fc->nb_streams - 1;
 
         videoCodecContext = avcodec_alloc_context3(codec);
+        if (!videoStream) {
+            throw runtime_error("Failed to allocate video codec context.");
+        }
         videoCodecContext->width = VIDEO_WIDTH;
         videoCodecContext->height = VIDEO_HEIGHT;
         videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
-        videoCodecContext->time_base = { 1, VIDEO_FRAMERATE };
+        videoCodecContext->time_base = videoStream->time_base = { 1, VIDEO_FRAMERATE };
+        videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-        avcodec_parameters_from_context(videoStream->codecpar, videoCodecContext);
-
-        avcodec_open2(videoCodecContext, codec, &opt);
-        av_dict_free(&opt);
-
-        videoStream->time_base = { 1, VIDEO_FRAMERATE };
-        av_dump_format(fc, 0, PATH_MANAGER.video_output.c_str(), 1);
-        avio_open(&fc->pb, PATH_MANAGER.video_output.c_str(), AVIO_FLAG_WRITE);
-        int ret = avformat_write_header(fc, &opt);
+        int ret = avcodec_open2(videoCodecContext, codec, &opt);
         if (ret < 0) {
-            cout << "Failed to write header!" << endl;
-            exit(1);
+            throw runtime_error("Failed avcodec_open2!");
         }
         av_dict_free(&opt);
+
+        ret = avcodec_parameters_from_context(videoStream->codecpar, videoCodecContext);
+        if (ret < 0) {
+            throw runtime_error("Failed avcodec_parameters_from_context!");
+        }
+
+        av_dump_format(fc, 0, PATH_MANAGER.video_output.c_str(), 1);
+        ret = avio_open(&fc->pb, PATH_MANAGER.video_output.c_str(), AVIO_FLAG_WRITE);
+        if (ret < 0) {
+            throw runtime_error("Failed avio_open!");
+        }
+
+        ret = avformat_write_header(fc, &opt);
+        if (ret < 0) {
+            cout << ret << endl;
+            throw runtime_error("Failed to write header!");
+        }
 
         // Allocating memory for each RGB and YUV frame.
         yuvpic = av_frame_alloc();

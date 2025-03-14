@@ -27,10 +27,13 @@ private:
     AudioWriter audiowriter;
     VideoWriter videowriter;
 
-    // Function to initialize 'fc'
     AVFormatContext* initFC() {
         AVFormatContext* temp_fc = nullptr;
-        avformat_alloc_output_context2(&temp_fc, NULL, NULL, PATH_MANAGER.video_output.c_str());
+	int ret = avformat_alloc_output_context2(&temp_fc, NULL, NULL, PATH_MANAGER.video_output.c_str());
+        if(ret<0)
+	    throw runtime_error("Failed to allocate AVFormatContext: " + to_string(ret));
+        if(!temp_fc)
+	    throw runtime_error("AVFormatContext was null upon creation!");
         return temp_fc;
     }
 
