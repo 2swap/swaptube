@@ -281,35 +281,6 @@ public:
         );
     }
 
-    void mark_data_unchanged() override { }
-    void change_data() override {
-        for(const auto& surface : surfaces){
-            surface.scenePointer->update();
-        }
-    }
-
-    bool check_if_data_changed() const override {
-        for(const auto& surface : surfaces){
-            if(surface.scenePointer->check_if_data_changed()) return true;
-        }
-        return false;
-    }
-
-    void on_end_transition(bool is_macroblock) override {
-        for(const auto& surface : surfaces){
-            surface.scenePointer->on_end_transition(is_macroblock);
-            surface.scenePointer->state_manager.close_microblock_transitions();
-            if(is_macroblock) surface.scenePointer->state_manager.close_macroblock_transitions();
-        }
-    }
-
-    bool subscene_needs_redraw() const override {
-        for(const auto& surface : surfaces){
-            if(surface.scenePointer->needs_redraw()) return true;
-        }
-        return false;
-    }
-
     void set_camera_direction() {
         camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);

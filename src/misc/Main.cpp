@@ -9,6 +9,10 @@ static bool SAVE_FRAME_PNGS = true;   // Whether to save every 30th frame to dis
 #include <string>
 const string project_name = PROJECT_NAME_MACRO;
 const int VIDEO_FRAMERATE = 30;
+
+const int VIDEO_BACKGROUND_COLOR = 0xff0a0a1e; // Lambda Blue
+//const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
+
 #include "../io/writer.cpp"
 #include "Timer.cpp"
 

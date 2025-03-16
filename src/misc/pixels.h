@@ -72,29 +72,30 @@ public:
     // average the pixel colors in that region. The averages for the R, G, and B channels
     // are returned via the reference parameters.
     void get_average_color(int x_start, int y_start, int x_end, int y_end,
-                           int &avgR, int &avgG, int &avgB) {
-        long long sumR = 0, sumG = 0, sumB = 0;
+                           int &avgA, int &avgR, int &avgG, int &avgB) {
+        long long sumA = 0, sumR = 0, sumG = 0, sumB = 0;
         int count = 0;
         
         // Loop over the rectangular region.
         for (int y = y_start; y < y_end; ++y) {
             for (int x = x_start; x < x_end; ++x) {
-                int a, r_pixel, g_pixel, b_pixel;
-                get_pixel_by_channels(x, y, a, b_pixel, g_pixel, r_pixel);
-                double a_decimal = a/255.;
-                sumR += r_pixel*a_decimal;
-                sumG += g_pixel*a_decimal;
-                sumB += b_pixel*a_decimal;
+                int a_pixel, r_pixel, g_pixel, b_pixel;
+                get_pixel_by_channels(x, y, a_pixel, r_pixel, g_pixel, b_pixel);
+                sumA += a_pixel;
+                sumR += r_pixel;
+                sumG += g_pixel;
+                sumB += b_pixel;
                 ++count;
             }
         }
         
         if (count > 0) {
+            avgA = static_cast<int>(sumA / count);
             avgR = static_cast<int>(sumR / count);
             avgG = static_cast<int>(sumG / count);
             avgB = static_cast<int>(sumB / count);
         } else {
-            avgR = avgG = avgB = 0;
+            avgA = avgR = avgG = avgB = 0;
         }
     }
 
@@ -144,20 +145,32 @@ public:
                 int bot_y0 = (2 * y + 1) * h / sample_height;
                 int bot_y1 = (2 * y + 2) * h / sample_height;
 
-                int r_top, g_top, b_top;
-                int r_bot, g_bot, b_bot;
+                int a_top, r_top, g_top, b_top;
+                int a_bot, r_bot, g_bot, b_bot;
 
                 // Supersample (average) over the regions.
-                get_average_color(x0, top_y0, x1, top_y1, r_top, g_top, b_top);
-                get_average_color(x0, bot_y0, x1, bot_y1, r_bot, g_bot, b_bot);
+                get_average_color(x0, top_y0, x1, top_y1, a_top, r_top, g_top, b_top);
+                get_average_color(x0, bot_y0, x1, bot_y1, a_bot, r_bot, g_bot, b_bot);
+
+                double alpha_top = a_top / 255.;
+                double one_minus_alpha_top = 1-alpha_top;
+                r_top = r_top * alpha_top + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
+                g_top = g_top * alpha_top + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
+                b_top = b_top * alpha_top + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
+
+                double alpha_bot = a_bot / 255.;
+                double one_minus_alpha_bot = 1-alpha_bot;
+                r_bot = r_bot * alpha_bot + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
+                g_bot = g_bot * alpha_bot + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
+                b_bot = b_bot * alpha_bot + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
 
                 // Use ANSI true-color escape sequences:
                 //  - Set foreground to the average top color.
                 //  - Set background to the average bottom color.
                 // Then print the Unicode upper half block (▀), which renders the top half in
                 // the foreground color and the bottom half in the background color.
-                cout << "\033[38;2;" << b_top << ";" << g_top << ";" << r_top << "m"
-                     << "\033[48;2;" << b_bot << ";" << g_bot << ";" << r_bot << "m"
+                cout << "\033[38;2;" << r_top << ";" << g_top << ";" << b_top << "m"
+                     << "\033[48;2;" << r_bot << ";" << g_bot << ";" << b_bot << "m"
                      << "\u2580";
             }
             // Reset colors at the end of each line.

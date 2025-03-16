@@ -5,11 +5,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-struct SceneWithPosition {
-    Scene* scenePointer;
-    string state_manager_name;
-};
-
 class CompositeScene : public SuperScene {
 public:
     CompositeScene(const double width = 1, const double height = 1)
@@ -37,124 +32,73 @@ public:
             {state_manager_name + ".y", to_string(y)},
             {state_manager_name + ".opacity", "1"},
         });
-        SceneWithPosition swp = {sc, state_manager_name};
-        scenes.push_back(swp);
-    }
-
-    void fade_out_all_scenes() {
-        for (auto& swp : scenes) {
-            unordered_map<string, string> map = {
-                {swp.state_manager_name + ".opacity", "0"}
-            };
-            state_manager.microblock_transition(map);
-        }
-    }
-
-    void remove_all_scenes() {
-        for (auto& swp : scenes){
-            swp.scenePointer->state_manager.set_parent(nullptr);
-        }
-        scenes.clear();
-    }
-
-    void mark_data_unchanged() override { }
-    bool check_if_data_changed() const override {return false;}
-
-    void change_data() override {
-        for(const auto& swp : scenes){
-            swp.scenePointer->update();
-        }
-    }
-
-    bool subscene_needs_redraw() const override {
-        for (auto& swp : scenes){
-            if(state[swp.state_manager_name + ".opacity"] > 0.01 && swp.scenePointer->needs_redraw()) return true;
-        }
-        return false;
-    }
-
-    void on_end_transition(bool is_macroblock) override {
-        for(const auto& swp : scenes){
-            swp.scenePointer->on_end_transition(is_macroblock);
-            if(is_macroblock) swp.scenePointer->state_manager.close_macroblock_transitions();
-            swp.scenePointer->state_manager.close_microblock_transitions();
-        }
+        NamedSubscene subscene = {sc, state_manager_name};
+        subscenes.push_back(subscene);
     }
 
     void draw() override {
         int w = get_width();
         int h = get_height();
-        for (auto& swp : scenes){
-            double opa = state[swp.state_manager_name + ".opacity"];
+        for (auto& subscene : subscenes){
+            double opa = state[subscene.state_manager_name + ".opacity"];
             if(opa < 0.01) continue;
             Pixels* p = nullptr;
-            swp.scenePointer->query(p);
-            double pointer_opa = state[swp.state_manager_name + ".pointer_opacity"];
-            int x = w*state[swp.state_manager_name + ".x"];
-            int y = h*state[swp.state_manager_name + ".y"];
+            subscene.ptr->query(p);
+            double pointer_opa = state[subscene.state_manager_name + ".pointer_opacity"];
+            int x = w*state[subscene.state_manager_name + ".x"];
+            int y = h*state[subscene.state_manager_name + ".y"];
             if(pointer_opa > 0.01) {
-                int px = w*state[swp.state_manager_name + ".pointer_x"];
-                int py = h*state[swp.state_manager_name + ".pointer_y"];
+                int px = w*state[subscene.state_manager_name + ".pointer_x"];
+                int py = h*state[subscene.state_manager_name + ".pointer_y"];
                 pix.bresenham(x, y, px, py, OPAQUE_WHITE, pointer_opa, h/100.);
             }
-            pix.overlay(*p, x - swp.scenePointer->get_width ()/2,
-                            y - swp.scenePointer->get_height()/2, opa);
+            pix.overlay(*p, x - subscene.ptr->get_width ()/2,
+                            y - subscene.ptr->get_height()/2, opa);
         }
-    }
-
-    void remove_scene(Scene* sc) {
-        sc->state_manager.set_parent(nullptr);
-        scenes.erase(std::remove_if(scenes.begin(), scenes.end(),
-                                    [sc](const SceneWithPosition& swp) {
-                                        return swp.scenePointer == sc;
-                                    }), scenes.end());
     }
 
     const StateQuery populate_state_query() const override {
         StateQuery ret;
-        for (auto& swp : scenes){
-            ret.insert(swp.state_manager_name + ".x");
-            ret.insert(swp.state_manager_name + ".y");
-            ret.insert(swp.state_manager_name + ".opacity");
-            ret.insert(swp.state_manager_name + ".pointer_x");
-            ret.insert(swp.state_manager_name + ".pointer_y");
-            ret.insert(swp.state_manager_name + ".pointer_opacity");
+        for (auto& subscene : subscenes){
+            ret.insert(subscene.state_manager_name + ".x");
+            ret.insert(subscene.state_manager_name + ".y");
+            ret.insert(subscene.state_manager_name + ".opacity");
+            ret.insert(subscene.state_manager_name + ".pointer_x");
+            ret.insert(subscene.state_manager_name + ".pointer_y");
+            ret.insert(subscene.state_manager_name + ".pointer_opacity");
         };
         return ret;
     }
 
     void send_to_front(const string& state_manager_name) {
         // Find the scene by its state_manager_name
-        auto it = std::find_if(scenes.begin(), scenes.end(),
-                               [&state_manager_name](const SceneWithPosition& swp) {
-                                   return swp.state_manager_name == state_manager_name;
+        auto it = std::find_if(subscenes.begin(), subscenes.end(),
+                               [&state_manager_name](const NamedSubscene& subscene) {
+                                   return subscene.state_manager_name == state_manager_name;
                                });
-        if (it == scenes.end()) {
-            throw std::runtime_error("Scene with specified name not found");
+        if (it == subscenes.end()) {
+            throw runtime_error("Scene with specified name not found");
         }
 
         // Move the scene to the "front" (end of the vector, since reverse order)
-        SceneWithPosition swp = *it;
-        scenes.erase(it);
-        scenes.push_back(swp);
+        NamedSubscene subscene = *it;
+        subscenes.erase(it);
+        subscenes.push_back(subscene);
     }
 
     void send_to_back(const string& state_manager_name) {
         // Find the scene by its state_manager_name
-        auto it = std::find_if(scenes.begin(), scenes.end(),
-                               [&state_manager_name](const SceneWithPosition& swp) {
-                                   return swp.state_manager_name == state_manager_name;
+        auto it = std::find_if(subscenes.begin(), subscenes.end(),
+                               [&state_manager_name](const NamedSubscene& subscene) {
+                                   return subscene.state_manager_name == state_manager_name;
                                });
-        if (it == scenes.end()) {
-            throw std::runtime_error("Scene with specified name not found");
+        if (it == subscenes.end()) {
+            throw runtime_error("Scene with specified name not found");
         }
 
         // Move the scene to the "back" (beginning of the vector, since reverse order)
-        SceneWithPosition swp = *it;
-        scenes.erase(it);
-        scenes.insert(scenes.begin(), swp);
+        NamedSubscene subscene = *it;
+        subscenes.erase(it);
+        subscenes.insert(subscenes.begin(), subscene);
     }
-
-private:
-    vector<SceneWithPosition> scenes;
 };

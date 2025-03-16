@@ -183,7 +183,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
 
     // If not found in cache, compute using fhourstones
     char command[150];
-    sprintf(command, "echo %s | ~/Unduhan/Fhourstones/SearchGame", representation.c_str());
+    sprintf(command, "echo %s | ~/Fhourstones/SearchGame", representation.c_str());
     if (verbose) cout << "Calling fhourstones on " << command << "... ";
     FILE* pipe = popen(command, "r");
     if (!pipe) {

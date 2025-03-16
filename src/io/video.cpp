@@ -222,20 +222,9 @@ public:
                 double alpha = a / 255.0;
                 double one_minus_alpha = 1.0 - alpha;
 
-		// Lambda Blue
-                const int background_r = 10;
-                const int background_g = 10;
-                const int background_b = 30;
-
-		/* Charcoal gray
-                const int background_r = 32;
-                const int background_g = 32;
-                const int background_b = 32;
-		*/
-
-                r = r * alpha + background_r * one_minus_alpha;
-                g = g * alpha + background_g * one_minus_alpha;
-                b = b * alpha + background_b * one_minus_alpha;
+                r = r * alpha + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha;
+                g = g * alpha + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha;
+                b = b * alpha + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha;
 
                 // Convert RGB to YUV
                 double y_value = 0.299 * r + 0.587 * g + 0.114 * b;
