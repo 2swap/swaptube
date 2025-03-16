@@ -77,14 +77,18 @@ class Surface : public ThreeDimensionalObject {
 public:
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
+    bool use_state_for_center;
     shared_ptr<Scene> scenePointer;
     float ilr2;
     float iur2;
+    string name;
     glm::vec3 normal;
 
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, float op = 1)
-        : ThreeDimensionalObject(c, 0, op), pos_x_dir(l), pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))), scenePointer(sc),
-          ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, const string& n, float op = 1, bool usfc = true)
+        : ThreeDimensionalObject(c, 0, op), pos_x_dir(l),
+          pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))), use_state_for_center(usfc), scenePointer(sc),
+          ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))),
+          name(n), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     void render(ThreeDimensionScene& scene) const override;
 };
 
@@ -224,16 +228,18 @@ public:
     virtual void render_surface(const Surface& surface) {
         float this_surface_opacity = surface.opacity * state["surfaces_opacity"];
 
+        glm::vec3 surface_center = surface.center;
+        if(surface.use_state_for_center) (state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
         // Attempt to skip this render if possible
         if(this_surface_opacity < .001) return;
 
         vector<pair<int, int>> corners(4);
         // note, ordering matters here
         bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
-        corners[0] = coordinate_to_pixel(surface.center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
-        corners[1] = coordinate_to_pixel(surface.center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
-        corners[2] = coordinate_to_pixel(surface.center - surface.pos_x_dir - surface.pos_y_dir, behind_camera_3);
-        corners[3] = coordinate_to_pixel(surface.center + surface.pos_x_dir - surface.pos_y_dir, behind_camera_4);
+        corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
+        corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
+        corners[2] = coordinate_to_pixel(surface_center - surface.pos_x_dir - surface.pos_y_dir, behind_camera_3);
+        corners[3] = coordinate_to_pixel(surface_center + surface.pos_x_dir - surface.pos_y_dir, behind_camera_4);
         if(behind_camera_1 && behind_camera_2 && behind_camera_3 && behind_camera_4) return;
 
         if(!should_render_surface(corners)) return;
@@ -328,10 +334,18 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{
+        StateQuery sq{
             "fov", "x", "y", "z", "d", "q1", "qi", "qj",
             "qk", "surfaces_opacity", "lines_opacity", "points_opacity"
         };
+        for(const Surface& surface : surfaces){
+            if(surface.use_state_for_center) {
+                sq.insert(surface.name + ".x");
+                sq.insert(surface.name + ".y");
+                sq.insert(surface.name + ".z");
+            }
+        }
+        return sq;
     }
 
     void render_point(const Point& point) {

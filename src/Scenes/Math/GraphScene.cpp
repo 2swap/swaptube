@@ -106,6 +106,7 @@ public:
             glm::vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
             glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
             surface.scenePointer,
+            surface.name,
             surface.opacity
         );
 
