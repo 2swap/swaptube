@@ -8,7 +8,7 @@ ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
 # Check if the compile and run were successful
 if [ -n "$ultimate_subdir" ]; then
-    file_path="$ultimate_subdir/${PROJECT_NAME}.mkv"
+    file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
 
     if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
         vlc "$file_path" > /dev/null 2>&1

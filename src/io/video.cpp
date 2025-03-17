@@ -240,7 +240,6 @@ public:
                     int v_idx = (y / 2) * v_stride + (x / 2);
                     u_plane[u_idx] = static_cast<uint8_t>(std::clamp(u_value, 0.0, 255.0));
                     v_plane[v_idx] = static_cast<uint8_t>(std::clamp(v_value, 0.0, 255.0));
-                if(y==0&&x==0) cout << r << " " << g << " " << b << " " << y_value << " " << u_value << " " << v_value << endl;
                 }
             }
         }

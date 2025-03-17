@@ -66,7 +66,7 @@ public:
         data_dir(this_run_output_dir + "data/"),
         latex_dir(this_project_media_dir + "latex/"),
         sfx_dir(repo_root + "sfx/"),
-        video_output(this_run_output_dir + project_name + ".mkv"),
+        video_output(this_run_output_dir + project_name + ".mp4"),
         subtitle_output(this_run_output_dir + project_name + ".srt"),
         record_list_path(this_project_media_dir + "record_list.tsv")
     {

@@ -23,6 +23,10 @@ const int VIDEO_BACKGROUND_COLOR = 0xff0a0a1e; // Lambda Blue
 // (2) define a function "render_video" which uses those scenes to define the video timeline.
 
 int main() {
+    if (44100%VIDEO_FRAMERATE != 0){
+        throw runtime_error("Video framerate must be divisible by audio sample rate.");
+    }
+
     Timer timer;
     signal(SIGINT, signal_handler);
     try {

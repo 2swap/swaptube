@@ -41,7 +41,7 @@ public:
         state_manager.add_equation("top_y"    , "<center_y> .5 <zoom_y> / -");
         state_manager.add_equation("bottom_y" , "<center_y> .5 <zoom_y> / +");
         state_manager.add_equation("ticks_opacity", "1");
-        state_manager.add_equation("circles_opacity", "0");
+        state_manager.add_equation("circles_opacity", "1");
         state_manager.add_equation("center_x", "0");
         state_manager.add_equation("center_y", "0");
         state_manager.add_equation("zoom", "1");
