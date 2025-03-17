@@ -6,7 +6,7 @@
 
 void render_video() {
     try{
-        PRINT_TO_TERMINAL = false;
+        //PRINT_TO_TERMINAL = false;
         SAVE_FRAME_PNGS = false;
 
         vector<string> variations{
@@ -33,10 +33,10 @@ void render_video() {
                 {"qk", "0"},
                 {"surfaces_opacity", "0"},
                 {"points_opacity", "0"},
-                {"physics_multiplier", "30"},
+                {"physics_multiplier", "3"},
             };
             gs.state_manager.set(state);
-            cs.inject_audio_and_render(SilenceSegment(3));
+            cs.inject_audio_and_render(SilenceSegment(1));
             g.render_json("../../Klotski/viewer/data/c4_"+variation+".json");
         }
     } catch (exception& e){

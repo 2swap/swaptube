@@ -170,6 +170,7 @@ public:
         videoCodecContext->height = VIDEO_HEIGHT;
         videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
         videoCodecContext->time_base = videoStream->time_base = { 1, VIDEO_FRAMERATE };
+        videoCodecContext->color_range = AVCOL_RANGE_JPEG;
         videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
         int ret = avcodec_open2(videoCodecContext, codec, &opt);
@@ -220,26 +221,26 @@ public:
                 p.get_pixel_by_channels(x, y, a, r, g, b);
 
                 double alpha = a / 255.0;
-                double one_minus_alpha = 1.0 - alpha;
 
-                r = r * alpha + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha;
-                g = g * alpha + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha;
-                b = b * alpha + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha;
+                r = lerp(getr(VIDEO_BACKGROUND_COLOR), r, alpha);
+                g = lerp(getg(VIDEO_BACKGROUND_COLOR), g, alpha);
+                b = lerp(getb(VIDEO_BACKGROUND_COLOR), b, alpha);
 
                 // Convert RGB to YUV
-                double y_value = 0.299 * r + 0.587 * g + 0.114 * b;
+                double y_value = 0.257 * r + 0.504 * g + 0.098 * b + 16;
 
                 // Assign to Y plane
                 y_plane[y * y_stride + x] = static_cast<uint8_t>(std::clamp(y_value, 0.0, 255.0));
 
                 // Assign to U and V planes (downsample 2x2)
                 if (x % 2 == 0 && y % 2 == 0) {
-                    double u_value = -0.14713 * r - 0.28886 * g + 0.436 * b + 128;
-                    double v_value = 0.615 * r - 0.51499 * g - 0.10001 * b + 128;
+                    double u_value = -0.148 * r - 0.291 * g + 0.439 * b + 128;
+                    double v_value = 0.439 * r - 0.368 * g - 0.071 * b + 128;
                     int u_idx = (y / 2) * u_stride + (x / 2);
                     int v_idx = (y / 2) * v_stride + (x / 2);
                     u_plane[u_idx] = static_cast<uint8_t>(std::clamp(u_value, 0.0, 255.0));
                     v_plane[v_idx] = static_cast<uint8_t>(std::clamp(v_value, 0.0, 255.0));
+                if(y==0&&x==0) cout << r << " " << g << " " << b << " " << y_value << " " << u_value << " " << v_value << endl;
                 }
             }
         }
