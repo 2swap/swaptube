@@ -47,7 +47,7 @@ public:
     const string data_dir;
     const string latex_dir;
     const string sfx_dir;
-    //Fles
+    //Files
     const string video_output;
     const string subtitle_output;
     const string record_list_path;
@@ -65,7 +65,7 @@ public:
         plots_dir(this_run_output_dir + "plots/"),
         data_dir(this_run_output_dir + "data/"),
         latex_dir(this_project_media_dir + "latex/"),
-        sfx_dir(repo_root + "sfx/"),
+        sfx_dir(repo_root + "src/sfx/"),
         video_output(this_run_output_dir + project_name + ".mp4"),
         subtitle_output(this_run_output_dir + project_name + ".srt"),
         record_list_path(this_project_media_dir + "record_list.tsv")

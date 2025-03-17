@@ -47,11 +47,11 @@ Tetromino generateTetromino() {
     return tetromino;
 }
 
-Tetromino generateScatteredTetromino() {
+Tetromino generateScatteredTetromino(int num_sounds) {
     Tetromino scattered;
-    while (scattered.size() < 4) {
-        int x = rand() % 2; // Random x in range [-1, 1]
-        int y = rand() % 3; // Random y in range [-1, 1]
+    while (scattered.size() < num_sounds) {
+        int x = rand() % 2-1; // Random x in range [-1, 1]
+        int y = rand() % 3-1; // Random y in range [-1, 1]
         Point p = {x, y};
 
         // Ensure uniqueness
@@ -66,10 +66,9 @@ Tetromino generateScatteredTetromino() {
             scattered.push_back(p);
         }
     }
-    // Apply random shift
-    int dx = rand() % 3 - 1; // Shift between -2 and 2 on x-axis
+    /*int dx = rand() % 3 - 1; // Shift between -2 and 2 on x-axis
     int dy = rand() % 3 - 1; // Shift between -2 and 2 on y-axis
-    scattered = shiftTetromino(scattered, dx, dy);
+    scattered = shiftTetromino(scattered, dx, dy);*/
     return scattered;
 }
 
@@ -77,30 +76,20 @@ void render_video() {
     srand(time(0));
     MicrotoneScene ms;
 
-    FourierSound fs("C");
-    ms.add_sound(fs);
-    ms.add_sound(fs);
-    ms.add_sound(fs);
-    ms.add_sound(fs);
-    ms.state_manager.set({
-        {"zoom", ".2"},
-        {"circle0_x", "0"},
-        {"circle0_y", "0"},
-        {"circle0_r", ".1"},
-        {"circle1_x", "0"},
-        {"circle1_y", "0"},
-        {"circle1_r", ".1"},
-        {"circle2_x", "0"},
-        {"circle2_y", "0"},
-        {"circle2_r", ".1"},
-        {"circle3_x", "0"},
-        {"circle3_y", "0"},
-        {"circle3_r", ".1"},
-    });
+    FourierSound fs("guitar.fft");
+    StateSet init{ {"zoom", ".2"}, };
+    int num_sounds = 1;
+    for(int j = 0; j < num_sounds; j++){
+        ms.add_sound(fs);
+        init["circle"+to_string(j)+"_x"] = "0";
+        init["circle"+to_string(j)+"_y"] = "0";
+        init["circle"+to_string(j)+"_r"] = ".1";
+    }
+    ms.state_manager.set(init);
     for(int i = 0; i < 10; i++) {
-        Tetromino rand_tet = generateScatteredTetromino();
+        Tetromino rand_tet = generateScatteredTetromino(num_sounds);
         StateSet ss;
-        for(int j = 0; j < 4; j++){
+        for(int j = 0; j < num_sounds; j++){
             ss["circle"+to_string(j)+"_x"] = to_string(rand_tet[j].first);
             ss["circle"+to_string(j)+"_y"] = to_string(rand_tet[j].second);
         }
