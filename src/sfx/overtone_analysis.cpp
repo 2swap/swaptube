@@ -1,196 +1,235 @@
 #include <iostream>
-#include <vector>
-#include <cmath>
 #include <fstream>
-extern "C" {
-#include <fftw3.h>
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/opt.h>
-#include <libavutil/samplefmt.h>
-#include <libswresample/swresample.h>
-}
+#include <vector>
+#include <string>
+#include <cmath>
+#include <stdexcept>
+#include <cstdlib>
+#include <cstdint>
+#include <cstring>
 
-#define SAMPLE_RATE 44100  // Assumed sample rate (adjust as needed)
+using namespace std;
 
-// Apply Hann window to the samples
-void apply_hann_window(std::vector<double>& samples) {
-    int N = samples.size();
-    for (int i = 0; i < N; ++i) {
-        double hann = 0.5 * (1 - cos((2 * M_PI * i) / (N - 1)));
-        samples[i] *= hann;
-    }
-}
+const double two_pi = 2.0 * M_PI;
 
-// Perform FFT and extract frequency amplitudes
-std::vector<std::pair<double, double>> analyze_frequencies(std::vector<double>& samples) {
-    int N = samples.size();
-    fftw_complex *out;
-    fftw_plan plan;
-    std::vector<std::pair<double, double>> frequencies;
+// Dummy PATH_MANAGER (set directory to current directory)
+struct PATH_MANAGER {
+    static const string sfx_dir;
+};
+const string PATH_MANAGER::sfx_dir = "";
 
-    // Apply Hann window
-    apply_hann_window(samples);
+// Struct to hold a single sine wave's parameters
+struct SineWave {
+    double frequency; // in Hz
+    double amplitude;
+};
 
-    // Allocate FFTW memory
-    out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
-    fftw_complex* in = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * N);
+// FourierSound class that stores multiple sine waves and writes them in the expected format.
+class FourierSound {
+public:
+    vector<SineWave> sine_waves;
 
-    // Copy input data
-    for (int i = 0; i < N; ++i) {
-        in[i][0] = samples[i]; // Real part
-        in[i][1] = 0.0; // Imaginary part
+    // Add a sine wave to the FourierSound object.
+    void add_sine_wave(double frequency, double amplitude) {
+        sine_waves.push_back({frequency, amplitude});
     }
 
-    // Perform FFT
-    plan = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-    fftw_execute(plan);
-
-    // Identify frequency peaks
-    double bin_width = SAMPLE_RATE / (double) N;
-    for (int i = 1; i < N / 2; ++i) {
-        double freq = i * bin_width;
-        double amplitude = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
-        frequencies.emplace_back(freq, amplitude);
-    }
-
-    // Normalize amplitudes relative to the fundamental
-    if (!frequencies.empty()) {
-        double fundamental_amplitude = frequencies[0].second;
-        for (auto& f : frequencies) {
-            f.second /= fundamental_amplitude;
+    // Save to file.
+    // File format:
+    //   <number_of_sine_waves>
+    //   <frequency> <amplitude>
+    //   ...
+    bool save(const string& filename) const {
+        ofstream ofs(PATH_MANAGER::sfx_dir + filename);
+        if (!ofs) {
+            throw runtime_error("Error opening file for writing: " + filename);
         }
+        ofs << sine_waves.size() << "\n";
+        for (const auto& sine : sine_waves) {
+            ofs << sine.frequency << " " << sine.amplitude << "\n";
+        }
+        return true;
     }
+};
 
-    // Cleanup FFTW
-    fftw_destroy_plan(plan);
-    fftw_free(in);
-    fftw_free(out);
+// --- WAV file reading functions ---
+// A minimal WAV header parser. (This code expects 16-bit PCM mono data.)
+struct WAVHeader {
+    char chunkID[4];     // "RIFF"
+    uint32_t chunkSize;
+    char format[4];      // "WAVE"
+};
 
-    return frequencies;
-}
+struct FMTSubchunk {
+    char subchunk1ID[4]; // "fmt "
+    uint32_t subchunk1Size;
+    uint16_t audioFormat;
+    uint16_t numChannels;
+    uint32_t sampleRate;
+    uint32_t byteRate;
+    uint16_t blockAlign;
+    uint16_t bitsPerSample;
+};
 
-// Function to decode audio using FFmpeg
-std::vector<double> decode_audio(const char* filename) {
-    AVFormatContext* formatCtx = nullptr;
-    AVCodecContext* codecCtx = nullptr;
-    AVPacket* packet = av_packet_alloc();
-    AVFrame* frame = av_frame_alloc();
-    SwrContext* swrCtx = nullptr;
-    int audioStreamIndex = -1;
+struct DataSubchunk {
+    char subchunk2ID[4]; // "data"
+    uint32_t subchunk2Size;
+};
 
-    std::vector<double> samples;
-
-    // Initialize FFmpeg
-    avformat_open_input(&formatCtx, filename, nullptr, nullptr);
-    avformat_find_stream_info(formatCtx, nullptr);
-
-    // Find audio stream
-    for (unsigned int i = 0; i < formatCtx->nb_streams; i++) {
-        if (formatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            audioStreamIndex = i;
+// Reads a WAV file and outputs normalized samples in the range [-1, 1].
+bool read_wav(const string& filename, vector<double>& samples, int& sample_rate) {
+    ifstream file(filename, ios::binary);
+    if (!file) {
+        cerr << "Error opening WAV file: " << filename << "\n";
+        return false;
+    }
+    
+    WAVHeader header;
+    file.read(reinterpret_cast<char*>(&header), sizeof(WAVHeader));
+    if (strncmp(header.chunkID, "RIFF", 4) != 0 || strncmp(header.format, "WAVE", 4) != 0) {
+        cerr << "Not a valid WAV file.\n";
+        return false;
+    }
+    
+    FMTSubchunk fmt;
+    file.read(reinterpret_cast<char*>(&fmt), sizeof(FMTSubchunk));
+    if (strncmp(fmt.subchunk1ID, "fmt ", 4) != 0) {
+        cerr << "Invalid fmt subchunk.\n";
+        return false;
+    }
+    
+    sample_rate = fmt.sampleRate;
+    if (fmt.bitsPerSample != 16) {
+        cerr << "Only 16-bit WAV files are supported.\n";
+        return false;
+    }
+    
+    // Skip any extra bytes in the fmt subchunk if needed.
+    if (fmt.subchunk1Size > 16) {
+        file.seekg(fmt.subchunk1Size - 16, ios::cur);
+    }
+    
+    // Look for the "data" subchunk.
+    DataSubchunk dataSubchunk;
+    while (true) {
+        file.read(reinterpret_cast<char*>(&dataSubchunk), sizeof(DataSubchunk));
+        if (strncmp(dataSubchunk.subchunk2ID, "data", 4) == 0) {
             break;
+        } else {
+            // Skip the unknown chunk.
+            file.seekg(dataSubchunk.subchunk2Size, ios::cur);
+        }
+        if (file.eof()) {
+            cerr << "Data chunk not found.\n";
+            return false;
         }
     }
-    if (audioStreamIndex == -1) {
-        std::cerr << "No audio stream found\n";
-        return samples;
+    
+    int num_samples = dataSubchunk.subchunk2Size / (fmt.numChannels * (fmt.bitsPerSample / 8));
+    samples.resize(num_samples);
+    for (int i = 0; i < num_samples; i++) {
+        int16_t sample;
+        file.read(reinterpret_cast<char*>(&sample), sizeof(int16_t));
+        // Since we forced mono (-ac 1) with ffmpeg, we expect one channel.
+        samples[i] = sample / 32768.0;
     }
-
-    // Open codec
-    const AVCodec* codec = avcodec_find_decoder(formatCtx->streams[audioStreamIndex]->codecpar->codec_id);
-    codecCtx = avcodec_alloc_context3(codec);
-    avcodec_parameters_to_context(codecCtx, formatCtx->streams[audioStreamIndex]->codecpar);
-    avcodec_open2(codecCtx, codec, nullptr);
-
-    // Resampling context
-    swrCtx = swr_alloc();
-#if LIBAVUTIL_VERSION_MAJOR >= 57
-    av_opt_set_chlayout(swrCtx, "in_chlayout", &codecCtx->ch_layout, 0);
-    AVChannelLayout mono_layout;
-    av_channel_layout_default(&mono_layout, 1);
-    av_opt_set_chlayout(swrCtx, "out_chlayout", &mono_layout, 0);
-#else
-    av_opt_set_int(swrCtx, "in_channel_layout", codecCtx->channel_layout, 0);
-    av_opt_set_int(swrCtx, "out_channel_layout", AV_CH_LAYOUT_MONO, 0);
-#endif
-    av_opt_set_int(swrCtx, "in_sample_rate", codecCtx->sample_rate, 0);
-    av_opt_set_int(swrCtx, "out_sample_rate", SAMPLE_RATE, 0);
-    av_opt_set_sample_fmt(swrCtx, "in_sample_fmt", codecCtx->sample_fmt, 0);
-    av_opt_set_sample_fmt(swrCtx, "out_sample_fmt", AV_SAMPLE_FMT_FLT, 0);
-    swr_init(swrCtx);
-
-    // Read frames
-    while (av_read_frame(formatCtx, packet) >= 0) {
-        if (packet->stream_index == audioStreamIndex) {
-            avcodec_send_packet(codecCtx, packet);
-            while (avcodec_receive_frame(codecCtx, frame) == 0) {
-                float* buffer = new float[frame->nb_samples];
-                swr_convert(swrCtx, (uint8_t**)&buffer, frame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
-                for (int i = 0; i < frame->nb_samples; i++) {
-                    samples.push_back(buffer[i]);
-                }
-                delete[] buffer;
-            }
-        }
-        av_packet_unref(packet);
-    }
-
-    // Cleanup
-    av_frame_free(&frame);
-    av_packet_free(&packet);
-    swr_free(&swrCtx);
-    avcodec_free_context(&codecCtx);
-    avformat_close_input(&formatCtx);
-
-    return samples;
+    return true;
 }
 
-// Function to generate output filename with .fft extension
-std::string generate_output_filename(const std::string& input_filename) {
-    size_t dot_pos = input_filename.find_last_of('.');
-    if (dot_pos != std::string::npos) {
-        return input_filename.substr(0, dot_pos) + ".fft";
-    } else {
-        return input_filename + ".fft";
+// --- Goertzel algorithm ---
+// Computes the amplitude of the frequency component (target_freq) in the samples.
+double goertzel(const vector<double>& samples, double target_freq, int sample_rate) {
+    int N = samples.size();
+    double omega = 2.0 * M_PI * target_freq / sample_rate;
+    double coeff = 2.0 * cos(omega);
+    double s_prev = 0.0;
+    double s_prev2 = 0.0;
+    for (int i = 0; i < N; i++) {
+        double s = samples[i] + coeff * s_prev - s_prev2;
+        s_prev2 = s_prev;
+        s_prev = s;
     }
+    double real = s_prev - s_prev2 * cos(omega);
+    double imag = s_prev2 * sin(omega);
+    double magnitude = sqrt(real * real + imag * imag);
+    // Normalize by the number of samples.
+    return magnitude / N;
 }
 
-// Main function
+// --- Helper function to get base name (remove extension) ---
+string get_basename(const string& filename) {
+    size_t last_slash = filename.find_last_of("/\\");
+    size_t start = (last_slash == string::npos) ? 0 : last_slash + 1;
+    size_t last_dot = filename.find_last_of('.');
+    if (last_dot == string::npos || last_dot < start) {
+        return filename;
+    }
+    return filename.substr(0, last_dot);
+}
+
+// --- Main program ---
+// Usage: ./a.out input_audio_file fundamental_frequency
 int main(int argc, char* argv[]) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <audio_file>\n";
+    if (argc < 3) {
+        cerr << "Usage: " << argv[0] << " <input_audio_file> <fundamental_frequency>\n";
         return 1;
     }
-
-    const char* filename = argv[1];
-    std::string output_filename = generate_output_filename(filename);
-
-    std::vector<double> samples = decode_audio(filename);
-    if (samples.empty()) {
-        std::cerr << "Failed to extract samples from audio\n";
+    
+    string input_file = argv[1];
+    double fundamental;
+    try {
+        fundamental = stod(argv[2]);
+    } catch (const exception& e) {
+        cerr << "Invalid fundamental frequency: " << argv[2] << "\n";
         return 1;
     }
-
-    std::vector<std::pair<double, double>> frequencies = analyze_frequencies(samples);
-
-    // Open output file
-    std::ofstream outFile(output_filename);
-    if (!outFile) {
-        std::cerr << "Error opening output file: " << output_filename << "\n";
+    
+    // Convert the input audio file to a 44100 Hz mono WAV using ffmpeg.
+    // Make sure ffmpeg is installed and in your PATH.
+    string wav_file = "temp.wav";
+    string command = "ffmpeg -y -i \"" + input_file + "\" -ac 1 -ar 44100 -f wav " + wav_file;
+    cout << "Converting " << input_file << " to WAV format...\n";
+    int ret = system(command.c_str());
+    if (ret != 0) {
+        cerr << "Error converting file with ffmpeg.\n";
         return 1;
     }
-
-    // Print total count as first line
-    int num_overtones = 10;
-    outFile << num_overtones << "\n";
-
-    // Write frequency and relative amplitude to file
-    for (const auto& f : frequencies) {
-        outFile << f.first << " " << f.second << "\n";
+    
+    // Read the WAV file.
+    vector<double> samples;
+    int sample_rate;
+    if (!read_wav(wav_file, samples, sample_rate)) {
+        cerr << "Error reading WAV file.\n";
+        return 1;
     }
-
-    std::cout << "FFT analysis saved to: " << output_filename << "\n";
+    cout << "Read " << samples.size() << " samples at " << sample_rate << " Hz.\n";
+    
+    // Optionally remove the temporary WAV file.
+    remove(wav_file.c_str());
+    
+    // Perform harmonic analysis using the Goertzel algorithm.
+    // We compute each harmonic (n * fundamental) until we exceed the Nyquist frequency.
+    FourierSound fs;
+    int harmonic_index = 1;
+    while (true) {
+        double freq = harmonic_index * fundamental;
+        if (freq > sample_rate / 2) break; // do not exceed the Nyquist limit
+        double amplitude = goertzel(samples, freq, sample_rate);
+        fs.add_sine_wave(freq, amplitude);
+        harmonic_index++;
+    }
+    
+    // Write the output file in the expected FFT format.
+    string base = get_basename(input_file);
+    string output_file = base + ".fft";
+    try {
+        fs.save(output_file);
+    } catch (const exception& e) {
+        cerr << "Error saving FFT file: " << e.what() << "\n";
+        return 1;
+    }
+    
+    cout << "FFT analysis complete. Output saved to " << output_file << "\n";
     return 0;
 }
 

@@ -76,7 +76,7 @@ void render_video() {
     srand(time(0));
     MicrotoneScene ms;
 
-    FourierSound fs("guitar.fft");
+    FourierSound fs("recip.fft");
     StateSet init{ {"zoom", ".2"}, };
     int num_sounds = 1;
     for(int j = 0; j < num_sounds; j++){

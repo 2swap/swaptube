@@ -90,7 +90,6 @@ public:
                 integrators[e] += two_pi * lerp(frequencies[e], new_frequencies[e], w) / sample_rate;
             }
 
-            sample_value *= 0.03;
             // Write the resulting sample value to both the left and right channels
             left.push_back(sample_value);
             right.push_back(sample_value);
