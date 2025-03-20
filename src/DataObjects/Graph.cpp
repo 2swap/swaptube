@@ -19,7 +19,7 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
-extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes);
+extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes, double repel);
 
 class Edge {
 public:
@@ -42,26 +42,24 @@ public:
 };
 using EdgeSet = unordered_set<Edge, Edge::HashFunction, equal_to<Edge>>;
 
-template <class T>
 class Node {
 public:
     /**
      * Constructor to create a new node.
      * @param t The data associated with the node.
      */
-    Node(T* t, double hash) : data(t), hash(hash),
+    Node(GenericBoard* t, double hash) : data(t), hash(hash),
         velocity(1 * static_cast<double>(rand()) / RAND_MAX,
                  1 * static_cast<double>(rand()) / RAND_MAX,
                  1 * static_cast<double>(rand()) / RAND_MAX,
-                 1 * static_cast<double>(rand()) / RAND_MAX), 
+                 1 * static_cast<double>(rand()) / RAND_MAX),
         position(1 * static_cast<double>(rand()) / RAND_MAX,
                  1 * static_cast<double>(rand()) / RAND_MAX,
                  1 * static_cast<double>(rand()) / RAND_MAX,
                  1 * static_cast<double>(rand()) / RAND_MAX) {}
 
-    T* data;
+    GenericBoard* data;
     double hash = 0;
-    bool highlight = false;
     unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
     double opacity = 1;
@@ -74,7 +72,6 @@ public:
  * A template class representing a graph.
  * @tparam T The type of data stored in the nodes of the graph.
  */
-template <class T>
 class Graph : public DataObject {
 public:
     int size() const {
@@ -82,7 +79,7 @@ public:
     }
 
     deque<double> traverse_deque;
-    unordered_map<double, Node<T>> nodes;
+    unordered_map<double, Node> nodes;
     double root_node_hash = 0;
 
     double gravity_strength = 0;
@@ -105,10 +102,10 @@ public:
         }
     }
 
-    void add_to_stack(T* t){
+    void add_to_stack(GenericBoard* t){
         //cout << "Adding to stack... length before adding is " << traverse_deque.size() << endl;
         double hash = t->get_hash();
-        add_node(t);
+        add_node_without_edges(t);
         traverse_deque.push_front(hash);
     }
 
@@ -117,20 +114,20 @@ public:
      * @param t The data associated with the node.
      * @return hash The hash/id of the node which was added
      */
-    double add_node(T* t){
+    double add_node(GenericBoard* t){
         double x = add_node_without_edges(t);
         //cout << "Manually adding missing edges cause a human manually added a node" << endl;
         add_missing_edges(true);
         return x;
     }
-    double add_node_without_edges(T* t){
+    double add_node_without_edges(GenericBoard* t){
         //cout << "total nodes: " << size() << endl;
         double hash = t->get_hash();
         if (node_exists(hash)) {
             delete t;
             return hash;
         }
-        Node<T> new_node(t, hash);
+        Node new_node(t, hash);
         if (size() == 0) {
             root_node_hash = hash;
         }
@@ -147,7 +144,7 @@ public:
             double id = traverse_deque.front();
             traverse_deque.pop_front();
             cout << "Looking for " << id << endl;
-            unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
+            unordered_set<GenericBoard*> child_nodes = nodes.at(id).data->get_children();
             bool done = false;
             for (const auto& child : child_nodes) {
                 double child_hash = child->get_hash();
@@ -177,7 +174,7 @@ public:
             double id = traverse_deque.front();
             traverse_deque.pop_front();
 
-            unordered_set<T*> child_nodes = nodes.at(id).data->get_children();
+            unordered_set<GenericBoard*> child_nodes = nodes.at(id).data->get_children();
             for (const auto& child : child_nodes) {
                 double child_hash = child->get_hash();
                 if (node_exists(child_hash)) delete child;
@@ -192,18 +189,16 @@ public:
         return new_nodes_added;
     }
 
-    void add_node_with_position(T* t, double x, double y, double z) {
+    void add_node_with_position(GenericBoard* t, double x, double y, double z) {
         double hash = add_node(t);
         move_node(hash, x, y, z);
     }
 
-    void move_node(double hash, double x, double y, double z) {
+    void move_node(double hash, double x, double y, double z, double w=0) {
         auto it = nodes.find(hash);
         if (it == nodes.end()) return;
-        Node<T>& node = it->second;
-        node.x = x;
-        node.y = y;
-        node.z = z;
+        Node& node = it->second;
+        node.position = glm::vec4(x,y,z,w);
     }
 
     /**
@@ -225,7 +220,7 @@ public:
     void remove_edge(double from, double to) {
         if (!node_exists(from) || !node_exists(to)) return;
         
-        Node<T>& from_node = nodes.at(from);
+        Node& from_node = nodes.at(from);
         Edge edge_to_remove(from, to);
         
         from_node.neighbors.erase(edge_to_remove);
@@ -252,14 +247,14 @@ public:
      */
     void add_missing_edges(bool teleport_orphans_to_parents) {
         for (auto& pair : nodes) {
-            Node<T>& parent = pair.second;
+            Node& parent = pair.second;
             if(parent.expected_children_hashes.size() == 0)
                 parent.expected_children_hashes = parent.data->get_children_hashes();
 
             for (double child_hash : parent.expected_children_hashes) {
                 // this theoretical child isn't guaranteed to be in the graph
                 if(!node_exists(child_hash)) continue;
-                Node<T>& child = nodes.find(child_hash)->second;
+                Node& child = nodes.find(child_hash)->second;
                 if(teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)){//if child is orphan
                     child.position = parent.position;
                 }
@@ -284,7 +279,7 @@ public:
     void remove_node(double id) {
         cout << "Trying to remove a node" << endl;
         if (!node_exists(id)) return;
-        Node<T>& node = nodes.at(id);
+        Node& node = nodes.at(id);
         for (const auto& neighbor_edge : node.neighbors) {
             double neighbor_id = neighbor_edge.to;
             nodes.at(neighbor_id).neighbors.erase(Edge(neighbor_id, id));
@@ -350,6 +345,29 @@ public:
         return {path, edges};
     }
 
+    void delete_isolated() {
+        unordered_set<double> non_isolated;
+
+        // Mark all nodes that are in the "to" position of any edge
+        for (const auto& node_pair : nodes) {
+            const Node& node = node_pair.second;
+            for (const auto& edge : node.neighbors) {
+                non_isolated.insert(edge.to);
+                non_isolated.insert(edge.from);
+            }
+        }
+
+        // Iterate through the nodes and remove those that are not in the non_isolated set
+        for (auto it = nodes.begin(); it != nodes.end(); ) {
+            if (non_isolated.find(it->first) == non_isolated.end() && it->first != root_node_hash) {
+                delete it->second.data;
+                it = nodes.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
     void delete_orphans() {
         bool orphan_found;
         do {
@@ -358,7 +376,7 @@ public:
 
             // Mark all nodes that are in the "to" position of any edge
             for (const auto& node_pair : nodes) {
-                const Node<T>& node = node_pair.second;
+                const Node& node = node_pair.second;
                 for (const auto& edge : node.neighbors) {
                     non_orphans.insert(edge.to);
                 }
@@ -381,9 +399,9 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(int iterations){
+    void iterate_physics(int iterations, double repel, double attract){
         //cout << "Spreading out graph for " << iterations << " iterations... " << flush;
-        vector<Node<T>*> node_vector;
+        vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) {
             node_vector.push_back(&node_pair.second);
@@ -392,12 +410,12 @@ public:
         for (int n = 0; n < iterations; n++) {
             cout << ".";
             fflush(stdout);
-            perform_single_physics_iteration(node_vector);
+            perform_single_physics_iteration(node_vector, repel, attract);
         }
         //cout << "done!" << endl;
     }
 
-    void perform_single_physics_iteration(const vector<Node<T>*>& node_vector) {
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract) {
         int s = node_vector.size();
 
         // Create arrays for node positions and velocity deltas
@@ -410,30 +428,30 @@ public:
         }
 
         // Use CUDA to compute repulsion velocity deltas
-        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s);
+        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s, repel);
 
         // Apply velocity deltas from CUDA and calculate attraction forces on the CPU
         for (int i = 0; i < s; ++i) {
-            Node<T>* node = node_vector[i];
+            Node* node = node_vector[i];
             node->velocity += velocity_deltas[i]; // Repulsion forces from CUDA
 
             // Add symmetry forces
-            const auto& mirror = nodes.find(node->data->reverse_hash());
+            /* const auto& mirror = nodes.find(node->data->reverse_hash());
             if(mirror != nodes.end()) {
                 node->velocity.x += .01*(-mirror->second.position.x - node->position.x);
                 node->velocity.y += .01*( mirror->second.position.y - node->position.y);
                 node->velocity.z += .01*( mirror->second.position.z - node->position.z);
                 node->velocity.w += .01*( mirror->second.position.w - node->position.w);
-            }
+            }*/
 
             // Calculate attraction forces (CPU)
             const EdgeSet& neighbor_nodes = node->neighbors;
             for (const Edge& neighbor_edge : neighbor_nodes) {
                 double neighbor_id = neighbor_edge.to;
-                Node<T>* neighbor = &nodes.at(neighbor_id);
+                Node* neighbor = &nodes.at(neighbor_id);
                 glm::dvec4 diff = node->position - neighbor->position;
                 double dist_sq = glm::dot(diff, diff) + 1;
-                glm::dvec4 force = diff * get_attraction_force(dist_sq);
+                glm::dvec4 force = diff * attract * get_attraction_force(dist_sq);
 
                 node->velocity -= force; // Apply attraction forces
                 neighbor->velocity += force; // Apply attraction forces
@@ -442,7 +460,7 @@ public:
 
         // Second loop: scale node positions and apply physics
         for (size_t i = 0; i < s; ++i) {
-            Node<T>* node = node_vector[i];
+            Node* node = node_vector[i];
 
             double magnitude = glm::length(node->velocity);
             if (magnitude > speedlimit) {
@@ -476,7 +494,7 @@ public:
         double max_distance_sq = 0.0; // Maximum squared distance
 
         for (const auto& node_pair : nodes) {
-            const Node<T>& node = node_pair.second;
+            const Node& node = node_pair.second;
             double distance_sq = glm::dot(node.position, node.position);
             max_distance_sq = max(max_distance_sq, distance_sq);
         }
@@ -485,6 +503,7 @@ public:
         return sqrt(max_distance_sq);
     }
 
+    /*
     void render_json(string json_out_filename) {
         ofstream myfile;
         myfile.open(json_out_filename);
@@ -493,7 +512,7 @@ public:
 
         json nodes_to_use;
         for (auto it = nodes.begin(); it != nodes.end(); ++it) {
-            const Node<T>& node = it->second;
+            const Node& node = it->second;
             json node_info;
             node_info["x"] = node.position.x;
             node_info["y"] = node.position.y;
@@ -529,5 +548,6 @@ public:
         myfile.close();
         cout << "Rendered json!" << endl;
     }
+    */
 };
 

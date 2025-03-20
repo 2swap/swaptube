@@ -2,26 +2,31 @@
 
 #include "../Scene.cpp"
 #include "../Common/ThreeDimensionScene.cpp"
+#include "../Media/LatexScene.cpp"
 #include "../../DataObjects/Graph.cpp"
 
-template <typename T>
 class GraphScene : public ThreeDimensionScene {
 public:
-    GraphScene(Graph<T>* g, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), graph(g) {}
+    GraphScene(Graph* g, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), graph(g) {
+        state_manager.set(unordered_map<string, string>{
+            {"repel", "1"},
+            {"attract", "1"},
+        });
+    }
 
     void graph_to_3d(){
         clear_lines();
         clear_points();
 
-        for(pair<double, Node<T>> p : graph->nodes){
-            Node<T> node = p.second;
+        for(pair<double, Node> p : graph->nodes){
+            Node node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position);
-            NodeHighlightType highlight = NORMAL;//(node.data->get_hash() == graph->root_node_hash) ? BULLSEYE : (node.highlight? RING : NORMAL);
+            NodeHighlightType highlight = (node.data->get_highlight_type() == 0) ? NORMAL : RING;
             add_point(Point(node_pos, node.color, highlight, 1));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
-                Node<T> neighbor = graph->nodes.find(neighbor_id)->second;
+                Node neighbor = graph->nodes.find(neighbor_id)->second;
                 glm::vec3 neighbor_pos = glm::vec3(neighbor.position);
                 add_line(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor), neighbor_edge.opacity));
             }
@@ -31,19 +36,21 @@ public:
         auto_distance = 1.9*graph->farthest_node_distance_from_origin();
     }
 
-    virtual int get_edge_color(const Node<T>& node, const Node<T>& neighbor){
+    virtual int get_edge_color(const Node& node, const Node& neighbor){
         return OPAQUE_WHITE;
     }
 
     const StateQuery populate_state_query() const override {
         StateQuery s = ThreeDimensionScene::populate_state_query();
         s.insert("physics_multiplier");
+        s.insert("repel");
+        s.insert("attract");
         return s;
     }
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
-        graph->iterate_physics(state["physics_multiplier"]);
+        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"]);
         graph_to_3d();
         clear_surfaces();
         update_surfaces();
@@ -58,8 +65,9 @@ public:
         }
         unordered_set<string> updated_ids;
 
-        for(pair<double, Node<T>> p : graph->nodes){
-            Node<T>& node = p.second;
+        for(pair<double, Node> p : graph->nodes){
+            Node& node = p.second;
+            if(node.data->get_highlight_type() == 1) continue;
             string rep = node.data->representation;
 
             auto it = graph_surface_map.find(rep);
@@ -85,7 +93,9 @@ public:
         }
     }
 
-    virtual Surface make_surface(Node<T> node) const = 0;
+    virtual Surface make_surface(Node node) const {
+        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LatexScene>(node.data->representation, 1), node.data->representation, node.opacity);
+    }
 
     // Override the default surface render routine to make all graph surfaces point at the camera
     void render_surface(const Surface& surface) override {
@@ -120,6 +130,6 @@ public:
     bool surfaces_override_unsafe = false; // For really big graphs, you can permanently turn off node stuff. Careful.
 
 protected:
-    Graph<T>* graph;
+    Graph* graph;
     unordered_map<string, Surface> graph_surface_map;
 };

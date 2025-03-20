@@ -48,7 +48,6 @@ public:
     string reverse_representation() const;
     double reverse_hash();
     json get_data() const;
-    int symmetry_class();
     int burst() const;
     Bitboard legal_moves() const;
     int get_instant_win() const;

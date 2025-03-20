@@ -77,16 +77,15 @@ class Surface : public ThreeDimensionalObject {
 public:
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
-    bool use_state_for_center;
     shared_ptr<Scene> scenePointer;
     float ilr2;
     float iur2;
     string name;
     glm::vec3 normal;
 
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, const string& n, float op = 1, bool usfc = true)
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, const string& n, float op = 1)
         : ThreeDimensionalObject(c, 0, op), pos_x_dir(l),
-          pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))), use_state_for_center(usfc), scenePointer(sc),
+          pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))), scenePointer(sc),
           ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))),
           name(n), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     void render(ThreeDimensionScene& scene) const override;
@@ -109,8 +108,9 @@ public:
 
 class ThreeDimensionScene : public SuperScene {
 public:
+    bool use_state_for_center;
     ThreeDimensionScene(const double width = 1, const double height = 1)
-        : SuperScene(width, height), sketchpad(width, height) {
+        : SuperScene(width, height), use_state_for_center(false), sketchpad(width, height) {
         state_manager.set(unordered_map<string, string>{
             {"fov", ".5"},
             {"x", "0"},
@@ -229,7 +229,7 @@ public:
         float this_surface_opacity = surface.opacity * state["surfaces_opacity"];
 
         glm::vec3 surface_center = surface.center;
-        if(surface.use_state_for_center) (state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
+        if(use_state_for_center) surface_center = glm::vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
         // Attempt to skip this render if possible
         if(this_surface_opacity < .001) return;
 
@@ -338,8 +338,8 @@ public:
             "fov", "x", "y", "z", "d", "q1", "qi", "qj",
             "qk", "surfaces_opacity", "lines_opacity", "points_opacity"
         };
-        for(const Surface& surface : surfaces){
-            if(surface.use_state_for_center) {
+        if(use_state_for_center) {
+            for(const Surface& surface : surfaces){
                 sq.insert(surface.name + ".x");
                 sq.insert(surface.name + ".y");
                 sq.insert(surface.name + ".z");
@@ -373,7 +373,7 @@ public:
         pair<int, int> pixel1 = coordinate_to_pixel(line.start, behind_camera);
         pair<int, int> pixel2 = coordinate_to_pixel(line.end, behind_camera);
         if(behind_camera) return;
-        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, state["lines_opacity"] * line.opacity, 1);
+        pix.bresenham(pixel1.first, pixel1.second, pixel2.first, pixel2.second, line.color, state["lines_opacity"] * line.opacity, get_geom_mean_size()/640.);
     }
 
     void add_point(const Point& p) {

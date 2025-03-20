@@ -105,10 +105,6 @@ bool C4Board::is_solution() {
     return winner == RED || winner == YELLOW;
 }
 
-int C4Board::symmetry_class() {
-    return get_hash() < reverse_hash();
-}
-
 double C4Board::board_specific_hash() const {
     double a = 1;
     double hash_in_progress = 0;
