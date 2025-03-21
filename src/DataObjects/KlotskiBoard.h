@@ -6,7 +6,7 @@
 #include <string>
 #include <memory>
 
-#include "GenericBoard.h"
+#include "GenericBoard.cpp"
 
 class KlotskiScene;  // Forward declaration
 

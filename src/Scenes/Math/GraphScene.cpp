@@ -11,6 +11,7 @@ public:
         state_manager.set(unordered_map<string, string>{
             {"repel", "1"},
             {"attract", "1"},
+            {"decay", ".95"},
             {"physics_multiplier", "1"},
         });
     }
@@ -46,12 +47,13 @@ public:
         s.insert("physics_multiplier");
         s.insert("repel");
         s.insert("attract");
+        s.insert("decay");
         return s;
     }
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
-        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"]);
+        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"]);
         graph_to_3d();
         clear_surfaces();
         update_surfaces();

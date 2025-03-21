@@ -83,7 +83,6 @@ public:
     double root_node_hash = 0;
 
     double gravity_strength = 0;
-    double decay = .95;
     double speedlimit = 20;
     int dimensions = 3;
 
@@ -409,7 +408,7 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(int iterations, double repel, double attract){
+    void iterate_physics(int iterations, double repel, double attract, double decay){
         //cout << "Spreading out graph for " << iterations << " iterations... " << flush;
         vector<Node*> node_vector;
 
@@ -420,13 +419,13 @@ public:
         for (int n = 0; n < iterations; n++) {
             cout << ".";
             fflush(stdout);
-            perform_single_physics_iteration(node_vector, repel, attract);
+            perform_single_physics_iteration(node_vector, repel, attract, decay);
         }
         mark_updated();
         //cout << "done!" << endl;
     }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract) {
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract, double decay) {
         int s = node_vector.size();
 
         // Create arrays for node positions and velocity deltas
