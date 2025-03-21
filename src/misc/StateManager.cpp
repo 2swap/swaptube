@@ -80,6 +80,7 @@ public:
     bool operator!=(const State& other) const {
         return !(*this == other);
     }
+
 private:
     unordered_map<string, double> map;
 };
@@ -269,6 +270,28 @@ public:
                     throw runtime_error("error: variable dependency graph appears not to be a DAG! State has been printed above.");
                 }
             }
+        }
+    }
+
+    void pop_it(bool micro) {
+        for (const string& wh : {"w", "h"}) {
+
+            // Nested transitions not supported
+            if(in_microblock_transition.find(wh) != in_microblock_transition.end() ||
+               in_macroblock_transition.find(wh) != in_macroblock_transition.end()){
+                throw runtime_error("Pop added to a width or height already in transition.");
+            }
+
+            if (micro)
+                in_microblock_transition.insert(wh);
+            else
+                in_macroblock_transition.insert(wh);
+            string eq = get_equation(wh);
+            string pop = "<" + wh + ".post_transition> <" + (micro?"micro":"macro") + "block_fraction> 3.1415 * sin .2 * 1 + *";
+            add_equation(wh + ".post_transition", eq);
+            add_equation(wh + ".pre_transition", eq);
+            add_equation(wh, pop);
+
         }
     }
 

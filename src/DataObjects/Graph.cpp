@@ -139,7 +139,7 @@ public:
      * Expand the graph by adding neighboring nodes.
      * Return amount of new nodes that were added.
      */
-    int expand_graph_once() {
+    int expand_once() {
         while (!traverse_deque.empty()) {
             double id = traverse_deque.front();
             traverse_deque.pop_front();
@@ -158,7 +158,10 @@ public:
                     done = true;
                 }
             }
-            if(done) return 1;
+            if(done) {
+                mark_updated();
+                return 1;
+            }
         }
         return 0;
     }
@@ -167,7 +170,7 @@ public:
      * Expand the graph by adding neighboring nodes.
      * Return amount of new nodes that were added.
      */
-    int expand_graph_completely() {
+    int expand_completely() {
         int new_nodes_added = 0;
         while (!traverse_deque.empty()) {
             //cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
@@ -186,6 +189,7 @@ public:
             }
         }
         add_missing_edges(true);
+        mark_updated();
         return new_nodes_added;
     }
 
@@ -199,6 +203,7 @@ public:
         if (it == nodes.end()) return;
         Node& node = it->second;
         node.position = glm::vec4(x,y,z,w);
+        mark_updated();
     }
 
     /**
@@ -210,6 +215,7 @@ public:
         // Check if both nodes exist in the graph
         if (!node_exists(from) || !node_exists(to)) return;
         nodes.at(from).neighbors.insert(Edge(from, to));
+        mark_updated();
     }
     
     /**
@@ -224,6 +230,7 @@ public:
         Edge edge_to_remove(from, to);
         
         from_node.neighbors.erase(edge_to_remove);
+        mark_updated();
     }
 
     bool does_edge_exist(double from, double to){
@@ -287,6 +294,7 @@ public:
         delete node.data;
         nodes.erase(id);
         cout << "removed a node" << endl;
+        mark_updated();
     }
 
     // Function to find the shortest path between two nodes using Dijkstra's algorithm
@@ -366,6 +374,7 @@ public:
                 ++it;
             }
         }
+        mark_updated();
     }
 
     void delete_orphans() {
@@ -393,6 +402,7 @@ public:
                 }
             }
         } while (orphan_found);
+        mark_updated();
     }
 
     /**
@@ -412,6 +422,7 @@ public:
             fflush(stdout);
             perform_single_physics_iteration(node_vector, repel, attract);
         }
+        mark_updated();
         //cout << "done!" << endl;
     }
 
@@ -483,6 +494,7 @@ public:
                 node->position.w = 0;
             }
         }
+        mark_updated();
     }
 
     double get_attraction_force(double dist_sq){

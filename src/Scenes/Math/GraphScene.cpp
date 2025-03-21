@@ -11,6 +11,7 @@ public:
         state_manager.set(unordered_map<string, string>{
             {"repel", "1"},
             {"attract", "1"},
+            {"physics_multiplier", "1"},
         });
     }
 
@@ -94,7 +95,7 @@ public:
     }
 
     virtual Surface make_surface(Node node) const {
-        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LatexScene>(node.data->representation, 1), node.data->representation, node.opacity);
+        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH,0), node.data->make_scene(), node.data->representation, node.opacity);
     }
 
     // Override the default surface render routine to make all graph surfaces point at the camera

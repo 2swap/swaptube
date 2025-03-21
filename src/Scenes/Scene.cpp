@@ -65,6 +65,10 @@ public:
         render();
     }
 
+    bool microblocks_remaining() {
+        return remaining_microblocks != 0;
+    }
+
     void inject_audio(const AudioSegment& audio, int expected_microblocks){
         WRITER.add_shtooka(audio);
         if(!FOR_REAL)

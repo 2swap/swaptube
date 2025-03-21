@@ -4,12 +4,14 @@
 #include <cstring>
 #include <cmath>
 #include <set>
+#include "../Scenes/Media/LatexScene.cpp"
+#include "../Scenes/Scene.cpp"
 
 class GenericBoard {
 public:
     GenericBoard(const string& s) : representation(s) {}
-    virtual unordered_set<GenericBoard*> get_children() const = 0;
-    unordered_set<double> get_children_hashes() const {
+    virtual unordered_set<GenericBoard*> get_children() = 0;
+    unordered_set<double> get_children_hashes() {
         unordered_set<GenericBoard*> kids = get_children();
         unordered_set<double> ret;
         for(GenericBoard* kid : kids){
@@ -32,9 +34,13 @@ public:
         return highlight_type;
     }
 
+    virtual shared_ptr<Scene> make_scene() const {
+        return make_shared<LatexScene>(representation, 1);
+    }
+
 private:
     virtual bool is_solution() = 0;
-    virtual double type_specific_hash() const = 0;
+    virtual double type_specific_hash() = 0;
     double hash = 0;
     int highlight_type = -1;
 };

@@ -36,10 +36,6 @@ public:
         return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
     }
 
-    Surface make_surface(Node<C4Board> node) const override {
-        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<C4Scene>(node.data->representation, .25, .25), node.data->representation, node.opacity);
-    }
-
     bool color_edges = true;
 
 private:
