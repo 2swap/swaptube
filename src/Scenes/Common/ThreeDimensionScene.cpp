@@ -57,8 +57,9 @@ public:
 class Point : public ThreeDimensionalObject {
 public:
     NodeHighlightType highlight;
-    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1)
-        : ThreeDimensionalObject(pos, clr, op), highlight(hlt) {}
+    float size;
+    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1, float sz = 1)
+        : ThreeDimensionalObject(pos, clr, op), highlight(hlt), size(sz) {}
 
     void render(ThreeDimensionScene& scene) const override;
 };
@@ -354,7 +355,8 @@ public:
         bool behind_camera = false;
         pair<int, int> pixel = coordinate_to_pixel(point.center, behind_camera);
         if(behind_camera) return;
-        double dot_size = pix.w/400.; if(point.highlight == RING){
+        double dot_size = pix.w * point.size / 400.;
+        if(point.highlight == RING){
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*2  , dot_size*2  , point.color);
             pix.fill_ellipse(pixel.first, pixel.second, dot_size*1.5, dot_size*1.5, OPAQUE_BLACK);
         } else if(point.highlight == BULLSEYE){

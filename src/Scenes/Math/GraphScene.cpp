@@ -5,6 +5,10 @@
 #include "../Media/LatexScene.cpp"
 #include "../../DataObjects/Graph.cpp"
 
+double age_to_size(double x){
+    return ((3*x - 1) * exp(-.5*x)) + 1;
+}
+
 class GraphScene : public ThreeDimensionScene {
 public:
     GraphScene(Graph* g, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), graph(g) {
@@ -24,7 +28,7 @@ public:
             Node node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position);
             NodeHighlightType highlight = (node.data->get_highlight_type() == 0) ? NORMAL : RING;
-            add_point(Point(node_pos, node.color, highlight, 1));
+            add_point(Point(node_pos, node.color, highlight, 1, age_to_size(node.age)));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
@@ -35,7 +39,7 @@ public:
         }
 
         // automagical camera distancing
-        auto_distance = 1.9*graph->farthest_node_distance_from_origin();
+        auto_distance = 2.5*graph->af_dist();
     }
 
     virtual int get_edge_color(const Node& node, const Node& neighbor){

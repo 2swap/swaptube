@@ -21,6 +21,10 @@ using json = nlohmann::json;
 
 extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes, double repel);
 
+double age_to_mass(double a) {
+    return 1-exp(-a*.1);
+}
+
 class Edge {
 public:
     Edge(double f, double t) : from(f), to(t), opacity(1) {}
@@ -64,6 +68,7 @@ public:
     EdgeSet neighbors;
     double opacity = 1;
     int color = 0xffffffff;
+    int age = 0;
     glm::dvec4 velocity;
     glm::dvec4 position;
 };
@@ -142,18 +147,16 @@ public:
         while (!traverse_deque.empty()) {
             double id = traverse_deque.front();
             traverse_deque.pop_front();
-            cout << "Looking for " << id << endl;
             unordered_set<GenericBoard*> child_nodes = nodes.at(id).data->get_children();
             bool done = false;
             for (const auto& child : child_nodes) {
                 double child_hash = child->get_hash();
                 if (done || node_exists(child_hash)) delete child;
                 else {
-                    cout << "added" << child_hash << endl;
                     add_node_without_edges(child);
                     traverse_deque.push_front(id);
                     traverse_deque.push_back(child_hash); // push_back: bfs // push_front: dfs
-                    add_missing_edges(true);
+                    add_missing_edges(false);
                     done = true;
                 }
             }
@@ -409,11 +412,11 @@ public:
      * @param iterations The number of iterations to perform.
      */
     void iterate_physics(int iterations, double repel, double attract, double decay){
-        //cout << "Spreading out graph for " << iterations << " iterations... " << flush;
         vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) {
             node_vector.push_back(&node_pair.second);
+            node_pair.second.age++;
         }
 
         for (int n = 0; n < iterations; n++) {
@@ -455,13 +458,15 @@ public:
             }*/
 
             // Calculate attraction forces (CPU)
+            //double inv_node_mass = 1/age_to_mass(node->age);
             const EdgeSet& neighbor_nodes = node->neighbors;
             for (const Edge& neighbor_edge : neighbor_nodes) {
                 double neighbor_id = neighbor_edge.to;
                 Node* neighbor = &nodes.at(neighbor_id);
                 glm::dvec4 diff = node->position - neighbor->position;
                 double dist_sq = glm::dot(diff, diff) + 1;
-                glm::dvec4 force = diff * attract * get_attraction_force(dist_sq);
+                //double inv_neig_mass = 1/age_to_mass(neighbor->age);
+                glm::dvec4 force = diff * attract * get_attraction_force(dist_sq);// * inv_node_mass * inv_neig_mass;
 
                 node->velocity -= force; // Apply attraction forces
                 neighbor->velocity += force; // Apply attraction forces
@@ -478,7 +483,7 @@ public:
                 node->velocity *= scale;
             }
 
-            if (node->hash == root_node_hash) node->position *= 0;
+            //if (node->hash == root_node_hash) node->position *= 0;
             node->velocity.y += gravity_strength / size();
             node->velocity *= decay;
             node->position += node->velocity;
@@ -501,6 +506,20 @@ public:
         return (dist_6th-1)/(dist_6th+1)*.2-.1;
     }
 
+    double af_dist() const {
+        double sum_distance_sq = 0.0;
+        int ct = 0;
+
+        for (const auto& node_pair : nodes) {
+            const Node& node = node_pair.second;
+            sum_distance_sq += square(glm::dot(node.position, node.position));
+            ct++;
+        }
+
+        return pow(sum_distance_sq / ct, .25);
+    }
+
+    /*
     double farthest_node_distance_from_origin() const {
         double max_distance_sq = 0.0; // Maximum squared distance
 
@@ -513,6 +532,7 @@ public:
         // Return the square root of the maximum squared distance
         return sqrt(max_distance_sq);
     }
+    */
 
     /*
     void render_json(string json_out_filename) {

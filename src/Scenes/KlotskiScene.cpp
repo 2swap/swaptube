@@ -28,6 +28,9 @@ public:
         }
         staged_char = '.';
     }
+    KlotskiBoard copy_board() {
+        return kb;
+    }
     const StateQuery populate_state_query() const override {
         return StateQuery{"dots", "margin", "microblock_fraction"};
     }

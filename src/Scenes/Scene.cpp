@@ -98,12 +98,12 @@ public:
         double num_frames_per_session = static_cast<double>(total_macroblock_frames) / total_microblocks;
         int num_frames_to_be_done_after_this_time = round(num_frames_per_session * (complete_microblocks + 1));
         scene_duration_frames = num_frames_to_be_done_after_this_time - complete_macroblock_frames;
-        cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (microblocks left: " << remaining_microblocks << ", " << remaining_macroblock_frames << " frames total)" << endl;
+        if(total_microblocks < 10) cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (microblocks left: " << remaining_microblocks << ", " << remaining_macroblock_frames << " frames total)" << endl;
 
         for (int frame = 0; frame < scene_duration_frames; frame++) {
             render_one_frame(frame);
         }
-        cout << endl;
+        if(total_microblocks < 10) cout << endl;
         remaining_microblocks--;
         global_state["microblock_number"]++;
         if(remaining_microblocks == 0){
