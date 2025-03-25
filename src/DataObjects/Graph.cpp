@@ -25,6 +25,13 @@ double age_to_mass(double a) {
     return 1-exp(-a*.1);
 }
 
+glm::dvec4 random_unit_cube_vector() {
+    return glm::dvec4(1 * static_cast<double>(rand()) / RAND_MAX,
+                      1 * static_cast<double>(rand()) / RAND_MAX,
+                      1 * static_cast<double>(rand()) / RAND_MAX,
+                      1 * static_cast<double>(rand()) / RAND_MAX);
+}
+
 class Edge {
 public:
     Edge(double f, double t) : from(f), to(t), opacity(1) {}
@@ -53,14 +60,8 @@ public:
      * @param t The data associated with the node.
      */
     Node(GenericBoard* t, double hash) : data(t), hash(hash),
-        velocity(1 * static_cast<double>(rand()) / RAND_MAX,
-                 1 * static_cast<double>(rand()) / RAND_MAX,
-                 1 * static_cast<double>(rand()) / RAND_MAX,
-                 1 * static_cast<double>(rand()) / RAND_MAX),
-        position(1 * static_cast<double>(rand()) / RAND_MAX,
-                 1 * static_cast<double>(rand()) / RAND_MAX,
-                 1 * static_cast<double>(rand()) / RAND_MAX,
-                 1 * static_cast<double>(rand()) / RAND_MAX) {}
+        velocity(random_unit_cube_vector()),
+        position(random_unit_cube_vector()) {}
 
     GenericBoard* data;
     double hash = 0;
@@ -68,9 +69,10 @@ public:
     EdgeSet neighbors;
     double opacity = 1;
     int color = 0xffffffff;
-    int age = 0;
+    double age = 0;
     glm::dvec4 velocity;
     glm::dvec4 position;
+    double weight() const { return sigmoid(age/5. + 0.01); }
 };
 
 /**
@@ -156,7 +158,7 @@ public:
                     add_node_without_edges(child);
                     traverse_deque.push_front(id);
                     traverse_deque.push_back(child_hash); // push_back: bfs // push_front: dfs
-                    add_missing_edges(false);
+                    add_missing_edges(true);
                     done = true;
                 }
             }
@@ -175,7 +177,6 @@ public:
     int expand_completely() {
         int new_nodes_added = 0;
         while (!traverse_deque.empty()) {
-            //cout << "Queue size: " << traverse_deque.size() << ", total nodes: " << size() << endl;
             double id = traverse_deque.front();
             traverse_deque.pop_front();
 
@@ -264,8 +265,8 @@ public:
                 // this theoretical child isn't guaranteed to be in the graph
                 if(!node_exists(child_hash)) continue;
                 Node& child = nodes.find(child_hash)->second;
-                if(teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)){//if child is orphan
-                    child.position = parent.position;
+                if(child.age == 0 && teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)){//if child is orphan
+                    child.position = parent.position + random_unit_cube_vector();
                 }
                 add_directed_edge(parent.hash, child_hash);
             }
@@ -416,20 +417,20 @@ public:
 
         for (auto& node_pair : nodes) {
             node_vector.push_back(&node_pair.second);
-            node_pair.second.age++;
         }
 
         for (int n = 0; n < iterations; n++) {
+            for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
             cout << ".";
             fflush(stdout);
             perform_single_physics_iteration(node_vector, repel, attract, decay);
         }
         mark_updated();
-        //cout << "done!" << endl;
     }
 
     void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract, double decay) {
         int s = node_vector.size();
+        glm::dvec4 com = center_of_mass();
 
         // Create arrays for node positions and velocity deltas
         vector<glm::dvec4> positions(s);
@@ -458,15 +459,13 @@ public:
             }*/
 
             // Calculate attraction forces (CPU)
-            //double inv_node_mass = 1/age_to_mass(node->age);
             const EdgeSet& neighbor_nodes = node->neighbors;
             for (const Edge& neighbor_edge : neighbor_nodes) {
                 double neighbor_id = neighbor_edge.to;
                 Node* neighbor = &nodes.at(neighbor_id);
                 glm::dvec4 diff = node->position - neighbor->position;
                 double dist_sq = glm::dot(diff, diff) + 1;
-                //double inv_neig_mass = 1/age_to_mass(neighbor->age);
-                glm::dvec4 force = diff * attract * get_attraction_force(dist_sq);// * inv_node_mass * inv_neig_mass;
+                glm::dvec4 force = diff * attract * get_attraction_force(dist_sq);
 
                 node->velocity -= force; // Apply attraction forces
                 neighbor->velocity += force; // Apply attraction forces
@@ -486,7 +485,7 @@ public:
             //if (node->hash == root_node_hash) node->position *= 0;
             node->velocity.y += gravity_strength / size();
             node->velocity *= decay;
-            node->position += node->velocity;
+            node->position += node->velocity - com;
 
             // Dimensional constraints
             if (dimensions < 3) {
@@ -506,14 +505,30 @@ public:
         return (dist_6th-1)/(dist_6th+1)*.2-.1;
     }
 
-    double af_dist() const {
-        double sum_distance_sq = 0.0;
-        int ct = 0;
+    glm::dvec4 center_of_mass() const {
+        glm::dvec4 sum_position;
+        double mass = 0.1;
 
         for (const auto& node_pair : nodes) {
             const Node& node = node_pair.second;
-            sum_distance_sq += square(glm::dot(node.position, node.position));
-            ct++;
+            double sig = node.weight();
+            glm::dvec4 addy = sig*node.position;
+            sum_position += addy;
+            mass += sig;
+        }
+
+        return sum_position / mass;
+    }
+
+    double af_dist() const {
+        double sum_distance_sq = 0.0;
+        double ct = 0.1;
+
+        for (const auto& node_pair : nodes) {
+            const Node& node = node_pair.second;
+            double sig = node.weight();
+            sum_distance_sq += sig * square(glm::dot(node.position, node.position));
+            ct += sig;
         }
 
         return pow(sum_distance_sq / ct, .25);

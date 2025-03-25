@@ -72,7 +72,7 @@ public:
         double margin = state["margin"] * square_size;
         double qm = margin * .25;
         double hm = margin * .5;
-        double dots   = state["dots"  ];
+        double dots   = (kb.rushhour ? 1 : 0) * state["dots"];
         double micro  = smoothlerp(0,1,state["microblock_fraction"]);
 
         pix.fill_rect(offset_x-qm, offset_y-qm, hm, hm + board_height, OPAQUE_WHITE);

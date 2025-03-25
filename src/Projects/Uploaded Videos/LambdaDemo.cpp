@@ -2758,9 +2758,6 @@ void credits(){
     cs.fade_out_all_scenes();
     cs.inject_audio_and_render(AudioSegment(1.5));
     cs.inject_audio_and_render(AudioSegment(.5));
-    // Visual Lambda Calculus (Viktor Massalogin): https://bntr.planet.ee/lambda/work/visual_lambda.pdf / https://github.com/bntre/visual-lambda
-    // Vex (Wayne Citrin, Richard Hall, Benjamin Zorn): https://www.researchgate.net/publication/2726047_Programming_with_Visual_Expressions
-    // David C Keenan's Graphical Notation for the Lambda Calculus: https://dkeenan.com/Lambda/
 }
 
 void chapter_number(int number, string subtitle){
