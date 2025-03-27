@@ -9,6 +9,24 @@ double age_to_size(double x){
     return ((3*x - 1) * exp(-.5*x)) + 1;
 }
 
+vector<int> tones = {0,4,7};
+int tone_incr = 0;
+void node_pop() {
+    double tone = pow(2,tones[tone_incr%tones.size()]/12.);
+    tone_incr++;
+    int num_samples = 44100*.1;
+    vector<float> left;
+    vector<float> right;
+     left.reserve(num_samples);
+    right.reserve(num_samples);
+    for(int i = 0; i < num_samples; i++){
+        float val = .07 * pow(.5,i*80/44100.) * sin(tone*i*6.283*440/44100.);
+         left.push_back(val);
+        right.push_back(val);
+    }
+    WRITER.add_sfx(left, right, get_global_state("t")*44100);
+}
+
 class GraphScene : public ThreeDimensionScene {
 public:
     double curr_hash = 0;
@@ -58,7 +76,7 @@ public:
         }
 
         // automagical camera distancing
-        auto_distance = lerp(1, .35, opa) * 3*graph->af_dist();
+        auto_distance = lerp(1, .35, opa) * 2.5*graph->af_dist();
         auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
     }
 
@@ -78,6 +96,8 @@ public:
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
+        if(last_node_count > -1 && last_node_count != graph->size()) node_pop();
+        last_node_count = graph->size();
         graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"]);
         graph_to_3d();
         clear_surfaces();
@@ -164,4 +184,8 @@ public:
 protected:
     Graph* graph;
     unordered_map<string, Surface> graph_surface_map;
+
+private:
+    int last_node_count = -1;
 };
+

@@ -67,9 +67,10 @@ void render_video(){
     auto rushhours = {beginner, intermediate, advanced, expert, reddit, guh3, guh4, video, thinkfun1, thinkfun2, thinkfun3};
     auto big = {sun};
     auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2};
-    for(KlotskiScene ks : {gpt2}){
+    for(KlotskiScene ks : other){
+        ks.state_manager.set({{"h", to_string(1.0*VIDEO_WIDTH/VIDEO_HEIGHT)}});
         CompositeScene cs;
-        cs.add_scene(&ks, "ks", 0.25*VIDEO_HEIGHT/VIDEO_WIDTH, 0.25);
+        cs.add_scene(&ks, "ks", 0.25, 0.25*VIDEO_WIDTH/VIDEO_HEIGHT);
 
         //ks.state_manager.pop_it(true);
 
@@ -91,11 +92,12 @@ void render_video(){
             {"surfaces_opacity","0"},
         });
         cs.add_scene(&gs, "gs");
-        cs.inject_audio(SilenceSegment(2), g2.size());
+        cs.inject_audio(SilenceSegment(2), g2.size()*1.2);
         while(cs.microblocks_remaining()) {
             g.expand_once();
             cs.render();
         }
+        continue;
         cs.inject_audio(SilenceSegment(8), 25);
         while(cs.microblocks_remaining()) {
             ks.stage_random_move();

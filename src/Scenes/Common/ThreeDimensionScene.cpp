@@ -133,7 +133,7 @@ public:
         coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
         if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
-        double scale = (get_width()*fov) / coordinate.z; // perspective projection
+        double scale = (get_geom_mean_size()*fov) / coordinate.z; // perspective projection
         double x = scale * coordinate.x + get_width()/2;
         double y = scale * coordinate.y + get_height()/2;
 
@@ -304,7 +304,7 @@ public:
 
     void draw() override {
         fov = state["fov"];
-        over_w_fov = 1/(get_width()*fov);
+        over_w_fov = 1/(get_geom_mean_size()*fov);
         halfwidth = get_width()*.5;
         halfheight = get_height()*.5;
 

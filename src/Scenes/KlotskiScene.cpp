@@ -75,10 +75,10 @@ public:
         double dots   = (kb.rushhour ? 1 : 0) * state["dots"];
         double micro  = smoothlerp(0,1,state["microblock_fraction"]);
 
-        pix.fill_rect(offset_x-qm, offset_y-qm, hm, hm + board_height, OPAQUE_WHITE);
-        pix.fill_rect(offset_x-qm, offset_y-qm, hm + board_width, hm, OPAQUE_WHITE);
-        pix.fill_rect(offset_x+board_width-qm, offset_y-qm, hm, hm + board_height, OPAQUE_WHITE);
-        pix.fill_rect(offset_x-qm, offset_y+board_height-qm, hm + board_width, hm, OPAQUE_WHITE);
+        pix.fill_rect(offset_x-margin, offset_y-margin, hm, 2*margin + board_height, OPAQUE_WHITE);
+        pix.fill_rect(offset_x-margin, offset_y-margin, 2*margin + board_width, hm, OPAQUE_WHITE);
+        pix.fill_rect(offset_x+board_width+hm, offset_y-margin, hm, 2*margin + board_height, OPAQUE_WHITE);
+        pix.fill_rect(offset_x-margin, offset_y+board_height+hm, 2*margin + board_width, hm, OPAQUE_WHITE);
         if (kb.rushhour && kb.w == 6 && kb.h == 6) {
             pix.fill_rect(offset_x+board_width-qm, offset_y+qm+square_size*2, hm, square_size-hm, TRANSPARENT_BLACK);
         }
