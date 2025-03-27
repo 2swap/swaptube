@@ -761,7 +761,7 @@ void intro() {
             {"physics_multiplier", "30"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
         });
-        tds.add_surface(Surface(glm::vec3(0,-fov*.1,(i-2)*fov*.5), glm::vec3(fov/2,0,0), glm::vec3(0,fov/2,0), ps));
+        tds.add_surface(Surface(glm::dvec3(0,-fov*.1,(i-2)*fov*.5), glm::dvec3(fov/2,0,0), glm::dvec3(0,fov/2,0), ps));
     }
     vector<shared_ptr<LatexScene>> ls;
     ls.push_back(make_shared<LatexScene>(latex_text("Double"), 1));
@@ -792,16 +792,16 @@ void intro() {
     cs_mp4.render();
     cs_mp4.render();
     cs_mp4.render();
-    tds.add_surface(Surface(glm::vec3(0,-.24/fov,-after_move-.8), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[0]));
+    tds.add_surface(Surface(glm::dvec3(0,-.24/fov,-after_move-.8), glm::dvec3(word_size,0,0), glm::dvec3(0,word_size,0), ls[0]));
     cs_mp4.render();
-    tds.add_surface(Surface(glm::vec3(0,-.1/fov,-after_move-.5), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[1]));
+    tds.add_surface(Surface(glm::dvec3(0,-.1/fov,-after_move-.5), glm::dvec3(word_size,0,0), glm::dvec3(0,word_size,0), ls[1]));
     cs_mp4.render();
     cs_mp4.render();
-    tds.add_surface(Surface(glm::vec3(0,.04/fov,-after_move-.4), glm::vec3(.35*word_size,0,0), glm::vec3(0,.35*word_size,0), ls[2]));
+    tds.add_surface(Surface(glm::dvec3(0,.04/fov,-after_move-.4), glm::dvec3(.35*word_size,0,0), glm::dvec3(0,.35*word_size,0), ls[2]));
     cs_mp4.render();
-    tds.add_surface(Surface(glm::vec3(0,.18/fov,-after_move-.7), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[3]));
+    tds.add_surface(Surface(glm::dvec3(0,.18/fov,-after_move-.7), glm::dvec3(word_size,0,0), glm::dvec3(0,word_size,0), ls[3]));
     cs_mp4.render();
-    tds.add_surface(Surface(glm::vec3(0,0.36/fov,-after_move-.7), glm::vec3(word_size,0,0), glm::vec3(0,word_size,0), ls[4]));
+    tds.add_surface(Surface(glm::dvec3(0,0.36/fov,-after_move-.7), glm::dvec3(word_size,0,0), glm::dvec3(0,word_size,0), ls[4]));
     cs_mp4.render();
     cs_mp4.render();
     cs_mp4.render();
@@ -827,7 +827,7 @@ void intro() {
     int num_renders = 5;
     tds.inject_audio(FileSegment("This system is so sensitive to initial conditions that it's practically unpredictable, so we call it chaotic."), num_renders);
     for(int i = 0; i < num_renders; i++){
-        if(i == num_renders-1) tds.add_surface(Surface(glm::vec3(0, -fov*.2, 0), glm::vec3(fov/2.,0,0), glm::vec3(0,fov/2.,0), chaotic));
+        if(i == num_renders-1) tds.add_surface(Surface(glm::dvec3(0, -fov*.2, 0), glm::dvec3(fov/2.,0,0), glm::dvec3(0,fov/2.,0), chaotic));
         tds.render();
     }
     vector<double> notes2{pow(2, 0/12.), pow(2, 4/12.), pow(2, 7/12.), pow(2, 11/12.), pow(2, 12/12.), };
@@ -847,7 +847,7 @@ void intro() {
         ps->state_manager.macroblock_transition({
             {"pendulum_opacity", "1"},
         });
-        tds.add_surface(Surface(glm::vec3(x_separation, -fov*.1, (i-2)*fov*.5), glm::vec3(fov/2,0,0), glm::vec3(0,fov/2,0), ps));
+        tds.add_surface(Surface(glm::dvec3(x_separation, -fov*.1, (i-2)*fov*.5), glm::dvec3(fov/2,0,0), glm::dvec3(0,fov/2,0), ps));
     }
     tds.state_manager.macroblock_transition({
         {"x", to_string(x_separation)},
@@ -871,7 +871,7 @@ void intro() {
     shared_ptr<PngScene> pretzel = make_shared<PngScene>("pretzel");
     tds.render();
     tds.render();
-    tds.add_surface(Surface(glm::vec3(x_separation, -fov*.1, 3*fov*.5), glm::vec3(fov/2,0,0), glm::vec3(0,fov/2,0), pretzel));
+    tds.add_surface(Surface(glm::dvec3(x_separation, -fov*.1, 3*fov*.5), glm::dvec3(fov/2,0,0), glm::dvec3(0,fov/2,0), pretzel));
     tds.render();
     tds.remove_surface(chaotic);
     tds.inject_audio_and_render(SilenceSegment(1));

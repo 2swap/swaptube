@@ -23,18 +23,18 @@ extern "C" void cuda_render_surface(
     int surface_w,
     int surface_h,
     float opacity,
-    glm::vec3 camera_pos,
-    glm::quat camera_direction,
-    glm::quat conjugate_camera_direction,
-    const glm::vec3& surface_normal,
-    const glm::vec3& surface_center,
-    const glm::vec3& surface_pos_x_dir,
-    const glm::vec3& surface_pos_y_dir,
-    const float surface_ilr2,
-    const float surface_iur2,
-    float halfwidth,
-    float halfheight,
-    float over_w_fov);
+    glm::dvec3 camera_pos,
+    glm::dquat camera_direction,
+    glm::dquat conjugate_camera_direction,
+    const glm::dvec3& surface_normal,
+    const glm::dvec3& surface_center,
+    const glm::dvec3& surface_pos_x_dir,
+    const glm::dvec3& surface_pos_y_dir,
+    const double surface_ilr2,
+    const double surface_iur2,
+    double halfwidth,
+    double halfheight,
+    double over_w_fov);
 
 enum NodeHighlightType {
     NORMAL,
@@ -46,10 +46,10 @@ class ThreeDimensionScene;
 
 class ThreeDimensionalObject {
 public:
-    glm::vec3 center;
+    glm::dvec3 center;
     int color;
     float opacity;
-    ThreeDimensionalObject(const glm::vec3& pos, int col, float op) : center(pos), color(col), opacity(op) {}
+    ThreeDimensionalObject(const glm::dvec3& pos, int col, float op) : center(pos), color(col), opacity(op) {}
     virtual ~ThreeDimensionalObject() = default;
     virtual void render(ThreeDimensionScene& scene) const = 0;
 };
@@ -58,7 +58,7 @@ class Point : public ThreeDimensionalObject {
 public:
     NodeHighlightType highlight;
     float size;
-    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1, float sz = 1)
+    Point(const glm::dvec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1, float sz = 1)
         : ThreeDimensionalObject(pos, clr, op), highlight(hlt), size(sz) {}
 
     void render(ThreeDimensionScene& scene) const override;
@@ -66,25 +66,25 @@ public:
 
 class Line : public ThreeDimensionalObject {
 public:
-    glm::vec3 start;
-    glm::vec3 end;
-    Line(const glm::vec3& s, const glm::vec3& e, int clr, float op = 1)
-        : ThreeDimensionalObject((s + e) * glm::vec3(0.5f), clr, op), start(s), end(e) {}
+    glm::dvec3 start;
+    glm::dvec3 end;
+    Line(const glm::dvec3& s, const glm::dvec3& e, int clr, float op = 1)
+        : ThreeDimensionalObject((s + e) * glm::dvec3(0.5f), clr, op), start(s), end(e) {}
 
     void render(ThreeDimensionScene& scene) const override;
 };
 
 class Surface : public ThreeDimensionalObject {
 public:
-    glm::vec3 pos_x_dir;
-    glm::vec3 pos_y_dir;
+    glm::dvec3 pos_x_dir;
+    glm::dvec3 pos_y_dir;
     shared_ptr<Scene> scenePointer;
-    float ilr2;
-    float iur2;
+    double ilr2;
+    double iur2;
     string name;
-    glm::vec3 normal;
+    glm::dvec3 normal;
 
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, const string& n, float op = 1)
+    Surface(const glm::dvec3& c, const glm::dvec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, const string& n, float op = 1)
         : ThreeDimensionalObject(c, 0, op), pos_x_dir(l),
           pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))), scenePointer(sc),
           ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))),
@@ -92,17 +92,17 @@ public:
     void render(ThreeDimensionScene& scene) const override;
 };
 
-glm::vec3 midpoint(const vector<glm::vec3>& vecs){
-    glm::vec3 ret(0.0f, 0.0f, 0.0f);
-    for(const glm::vec3& vec : vecs) ret += vec;
-    return ret * (1.0f/vecs.size());
+glm::dvec3 midpoint(const vector<glm::dvec3>& vecs){
+    glm::dvec3 ret(0.0f, 0.0f, 0.0f);
+    for(const glm::dvec3& vec : vecs) ret += vec;
+    return ret * (1.0/vecs.size());
 }
 
 class Polygon : public ThreeDimensionalObject {
 public:
-    vector<glm::vec3> vertices;
+    vector<glm::dvec3> vertices;
 
-    Polygon(const vector<glm::vec3>& verts, int _color)
+    Polygon(const vector<glm::dvec3>& verts, int _color)
         : ThreeDimensionalObject(midpoint(verts), _color, 1), vertices(verts) {}
     void render(ThreeDimensionScene& scene) const override;
 };
@@ -128,7 +128,7 @@ public:
         });
     }
 
-    pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
+    pair<double, double> coordinate_to_pixel(glm::dvec3 coordinate, bool& behind_camera) {
         // Rotate the coordinate based on the camera's orientation
         coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
         if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
@@ -229,8 +229,8 @@ public:
     virtual void render_surface(const Surface& surface) {
         float this_surface_opacity = surface.opacity * state["surfaces_opacity"];
 
-        glm::vec3 surface_center = surface.center;
-        if(use_state_for_center) surface_center = glm::vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
+        glm::dvec3 surface_center = surface.center;
+        if(use_state_for_center) surface_center = glm::dvec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
         // Attempt to skip this render if possible
         if(this_surface_opacity < .001) return;
 
@@ -289,15 +289,16 @@ public:
     }
 
     void set_camera_direction() {
-        camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
+        camera_direction = glm::normalize(glm::dquat(state["q1"], state["qi"], state["qj"], state["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);
         double dist_to_use = auto_distance>0?max(1.0, auto_distance):state["d"];
-        camera_pos = glm::vec3(state["x"], state["y"], state["z"]) + conjugate_camera_direction * glm::vec3(0,0,-dist_to_use) * camera_direction;
+        glm::dvec3 camera_to_use = auto_distance>0?auto_camera:glm::dvec3(state["x"], state["y"], state["z"]);
+        camera_pos = camera_to_use + conjugate_camera_direction * glm::dvec3(0,0,-dist_to_use) * camera_direction;
     }
 
     // Function to compute squared distance between two points
-    float squaredDistance(const glm::vec3& a, const glm::vec3& b) {
-        glm::vec3 diff = a - b;
+    float squaredDistance(const glm::dvec3& a, const glm::dvec3& b) {
+        glm::dvec3 diff = a - b;
         return glm::dot(diff, diff);
     }
 
@@ -415,16 +416,17 @@ public:
         obj_ptrs.clear();
     }
 
-    glm::vec3 camera_pos;
-    glm::quat camera_direction;  // Quaternion representing the camera's orientation
-    glm::quat conjugate_camera_direction;
-    float fov;
-    float over_w_fov;
-    float halfwidth;
-    float halfheight;
+    glm::dvec3 camera_pos;
+    glm::dquat camera_direction;  // Quaternion representing the camera's orientation
+    glm::dquat conjugate_camera_direction;
+    double fov;
+    double over_w_fov;
+    double halfwidth;
+    double halfheight;
     Pixels sketchpad;
 protected:
     double auto_distance = -1;
+    glm::dvec3 auto_camera;
     vector<const ThreeDimensionalObject*> obj_ptrs;
     vector<Point> points;
     vector<Line> lines;

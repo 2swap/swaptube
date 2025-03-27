@@ -7,7 +7,7 @@
 extern "C" void mandelbrot_render(
     const int width, const int height,
     const complex<double> seed_z, const complex<double> seed_x, const complex<double> seed_c,
-    const glm::vec3 pixel_parameter_multipliers,
+    const glm::dvec3 pixel_parameter_multipliers,
     const complex<double> zoom,
     int max_iterations,
     float gradation,
@@ -29,7 +29,7 @@ public:
     bool check_if_data_changed() const override {return false;}
     void draw() override {
         unsigned int internal_color = colorlerp(OPAQUE_BLACK, OPAQUE_WHITE, state["internal_shade"]);
-        glm::vec3 pixel_params = glm::normalize(glm::vec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
+        glm::dvec3 pixel_params = glm::normalize(glm::dvec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
         complex seed_z(state["seed_z_r"], state["seed_z_i"]);
         complex seed_x(state["seed_x_r"], state["seed_x_i"]);
         complex seed_c(state["seed_c_r"], state["seed_c_i"]);
@@ -55,7 +55,7 @@ public:
                 Pixels panel(side_panel_widths, remaining_height/remaining_panels);
                 mandelbrot_render(panel.w, panel.h,
                                   seed_z, seed_x, seed_c,
-                                  glm::vec3(i==0,i==1,i==2),
+                                  glm::dvec3(i==0,i==1,i==2),
                                   1,
                                   state["max_iterations"],
                                   i==1?0:1,

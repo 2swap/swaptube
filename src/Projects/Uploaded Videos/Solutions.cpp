@@ -816,12 +816,12 @@ void prisoner() {
     flashcard3_front.expose_pixels()->underlay(roundrect, 0, 0);
     flashcard3_back.expose_pixels()->underlay(roundrect, 0, 0);
 
-    tds.add_surface(Surface(glm::vec3(0,0  , 0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_front));
-    tds.add_surface(Surface(glm::vec3(0,0  ,-0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_back));
-    tds.add_surface(Surface(glm::vec3(0,100, 0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_front));
-    tds.add_surface(Surface(glm::vec3(0,100,-0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_back));
-    tds.add_surface(Surface(glm::vec3(0,200, 0.01),glm::vec3(-1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_front));
-    tds.add_surface(Surface(glm::vec3(0,200,-0.01),glm::vec3( 1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_back));
+    tds.add_surface(Surface(glm::dvec3(0,0  , 0.01),glm::dvec3(-1, 0, 0),glm::dvec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_front));
+    tds.add_surface(Surface(glm::dvec3(0,0  ,-0.01),glm::dvec3( 1, 0, 0),glm::dvec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard1_back));
+    tds.add_surface(Surface(glm::dvec3(0,100, 0.01),glm::dvec3(-1, 0, 0),glm::dvec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_front));
+    tds.add_surface(Surface(glm::dvec3(0,100,-0.01),glm::dvec3( 1, 0, 0),glm::dvec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard2_back));
+    tds.add_surface(Surface(glm::dvec3(0,200, 0.01),glm::dvec3(-1, 0, 0),glm::dvec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_front));
+    tds.add_surface(Surface(glm::dvec3(0,200,-0.01),glm::dvec3( 1, 0, 0),glm::dvec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&flashcard3_back));
 
     state_manager.set(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1"},
@@ -867,11 +867,11 @@ void prisoner() {
     for(int x = -22; x < 22; x++){
         for(int y = -59; y < 59; y++){
             Scene* sc = ((x+y)%3 == 0) ? &flashcard1_back : (((x+y)%3 == 1) ? &flashcard2_back : &flashcard3_back);
-            cardgrid.add_surface(Surface(glm::vec3((x+.5)*2.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*2,2),glm::vec3(1, 0, 0),glm::vec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),sc));
+            cardgrid.add_surface(Surface(glm::dvec3((x+.5)*2.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*2,2),glm::dvec3(1, 0, 0),glm::dvec3(0, static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),sc));
         }
     }
     PngScene mona_lisa("Mona_Lisa_Hands");
-    Surface s(glm::vec3(0,0,1),glm::vec3(mona_lisa.w*.1, 0, 0),glm::vec3(0, mona_lisa.h*.1, 0),&mona_lisa);
+    Surface s(glm::dvec3(0,0,1),glm::dvec3(mona_lisa.w*.1, 0, 0),glm::dvec3(0, mona_lisa.h*.1, 0),&mona_lisa);
     cardgrid.add_surface(s);
     cardgrid.inject_audio(AudioSegment("The prison guard forgot to mention that the color codes on the back of the cards document the precise color of the Mona Lisa painting at those two coordinates, and, sadly, our prisoner was too caught up memorizing numbers to realize the structure underlying the data.", "The_prison_guard_forgot_to_mention_that_the_color_codes_on_the_back_of_the_cards_document_the_precise_color_of_the_Mona_Lisa_painting.mp3"), 100);
     for(int i = 0; i < 100; i++){
@@ -900,7 +900,7 @@ void prisoner() {
     int count = 0;
     for(int y = 12; y >= -12; y--){
         for(int x = 5; x >= -5; x--){
-            black_squares.add_surface(Surface(glm::vec3((x+.5)*10.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*10,0),glm::vec3(10, 0, 0),glm::vec3(0, 10*static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&black_screen));
+            black_squares.add_surface(Surface(glm::dvec3((x+.5)*10.*VIDEO_WIDTH/VIDEO_HEIGHT,(y+.5)*10,0),glm::dvec3(10, 0, 0),glm::dvec3(0, 10*static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH, 0),&black_screen));
             count++;
         }
     }
@@ -911,11 +911,11 @@ void prisoner() {
     }
 
     PngScene mona_lisa_no_hands("Mona_Lisa");
-    Surface no_hands(glm::vec3(0,0,0.9),glm::vec3(mona_lisa_no_hands.w*.1, 0, 0),glm::vec3(0, mona_lisa_no_hands.h*.1, 0),&mona_lisa_no_hands);
+    Surface no_hands(glm::dvec3(0,0,0.9),glm::dvec3(mona_lisa_no_hands.w*.1, 0, 0),glm::dvec3(0, mona_lisa_no_hands.h*.1, 0),&mona_lisa_no_hands);
     cardgrid.add_surface(no_hands);
     cardgrid.inject_audio(AudioSegment("But until that happens, if you were to go up to him and ask 'Is Mona Lisa's left hand on top of her right, or is it the other way around?', he would have no idea."), 1000);
     for(int x = 0; x < 1000; x++){
-        glm::vec3 dir(.1,0,0);
+        glm::dvec3 dir(.1,0,0);
         cardgrid.surfaces[cardgrid.surfaces.size()-1].center += dir;
         cardgrid.surfaces[0].center -= dir;
         cardgrid.render();
@@ -942,7 +942,7 @@ void prisoner() {
     composite.add_scene(&c4      , 0, 0, 1, 1);
     composite.add_scene(&cardgrid, 0, 0, 1, 1);
 
-    glm::vec3 dir(0,200,0);
+    glm::dvec3 dir(0,200,0);
     cardgrid.surfaces[0].center += dir;
     cardgrid.surfaces[1].center += dir;
     c4.skip_surfaces = true;
@@ -1136,9 +1136,9 @@ void render_weak_trees(){
         claimeven.expose_pixels()->add_border(0xff444444, 15);
         LatexScene words1("\\text{If you haven't already seen my Claimeven video...}", 1);
         LatexScene words2("\\text{Check it out now!}", 1);
-        double t = 1.2; Surface c (glm::vec3(20 ,0 ,-170),glm::vec3(claimeven.w*.005*sin(t), claimeven.w*.005*cos(t), 0),glm::vec3(claimeven.h*.005*-cos(t), claimeven.h*.005*sin(t), 0),&claimeven);
-               t = 1.8; Surface w1(glm::vec3(-12,-5,-165),glm::vec3(words1.w   *.04 *sin(t)/3, words1.w   *.04 *cos(t)/3, 0),glm::vec3(words1.h   *.04 *-cos(t)/3, words1.h   *.04 *sin(t)/3, 0),&words1   );
-               t = 1.4; Surface w2(glm::vec3(-10,5 ,-175),glm::vec3(words2.w   *.02 *sin(t)/3, words2.w   *.02 *cos(t)/3, 0),glm::vec3(words2.h   *.02 *-cos(t)/3, words2.h   *.02 *sin(t)/3, 0),&words2   );
+        double t = 1.2; Surface c (glm::dvec3(20 ,0 ,-170),glm::dvec3(claimeven.w*.005*sin(t), claimeven.w*.005*cos(t), 0),glm::dvec3(claimeven.h*.005*-cos(t), claimeven.h*.005*sin(t), 0),&claimeven);
+               t = 1.8; Surface w1(glm::dvec3(-12,-5,-165),glm::dvec3(words1.w   *.04 *sin(t)/3, words1.w   *.04 *cos(t)/3, 0),glm::dvec3(words1.h   *.04 *-cos(t)/3, words1.h   *.04 *sin(t)/3, 0),&words1   );
+               t = 1.4; Surface w2(glm::dvec3(-10,5 ,-175),glm::dvec3(words2.w   *.02 *sin(t)/3, words2.w   *.02 *cos(t)/3, 0),glm::dvec3(words2.h   *.02 *-cos(t)/3, words2.h   *.02 *sin(t)/3, 0),&words2   );
         shill.add_surface(c );
         shill.add_surface(w1);
         shill.add_surface(w2);

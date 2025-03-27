@@ -18,7 +18,7 @@ public:
     Surface make_surface(Node<T> node) const override {
         shared_ptr<LambdaExpression> lambda = parse_lambda_from_string(node.data->representation);
         lambda->set_color_recursive(node.color);
-        return Surface(glm::vec3(node.position),glm::vec3(1,0,0),glm::vec3(0,1,0), make_shared<LambdaScene>(lambda, .25, .25), node.opacity);
+        return Surface(glm::dvec3(node.position),glm::dvec3(1,0,0),glm::dvec3(0,1,0), make_shared<LambdaScene>(lambda, .25, .25), node.opacity);
     }
 
 private:

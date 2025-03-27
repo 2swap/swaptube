@@ -292,13 +292,15 @@ public:
         int dx = abs(x2 - x1);
         int dy = abs(y2 - y1);
         if(dx > 10000 || dy > 10000){
-            cout << "Bresenham Overflow. Quitting without finishing line." << endl;
-            cout << "x1: " << x1 << endl;
-            cout << "y1: " << y1 << endl;
-            cout << "x2: " << x2 << endl;
-            cout << "y2: " << y2 << endl;
-            cout << "col: " << col << endl;
-            cout << "thickness: " << thickness << endl;
+            if (false) {
+                cout << "Bresenham Overflow. Quitting without finishing line." << endl;
+                cout << "x1: " << x1 << endl;
+                cout << "y1: " << y1 << endl;
+                cout << "x2: " << x2 << endl;
+                cout << "y2: " << y2 << endl;
+                cout << "col: " << col << endl;
+                cout << "thickness: " << thickness << endl;
+            }
             return;
         }
 

@@ -46,7 +46,7 @@ void intro() {
     PngScene boolean("BooleanAlgebra", VIDEO_WIDTH/2, VIDEO_HEIGHT);
 
     shared_ptr<LambdaScene> ls = make_shared<LambdaScene>(term, 800, 800);
-    tds.add_surface(Surface(glm::vec3(0,0,0), glm::vec3(1,0,0), glm::vec3(0,1,0), ls));
+    tds.add_surface(Surface(glm::dvec3(0,0,0), glm::dvec3(1,0,0), glm::dvec3(0,1,0), ls));
     tds.state_manager.set(unordered_map<string, string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "0"},
@@ -133,19 +133,19 @@ void intro() {
     church1->set_color_recursive(0xffff0000);
     church1->flush_uid_recursive();
     shared_ptr<LambdaScene> church1scene = make_shared<LambdaScene>(church1, 800, 800);
-    tds.add_surface(Surface(glm::vec3(-2,-2,-1), glm::vec3(1,0,0), glm::vec3(0,1,0), church1scene));
+    tds.add_surface(Surface(glm::dvec3(-2,-2,-1), glm::dvec3(1,0,0), glm::dvec3(0,1,0), church1scene));
 
     shared_ptr<LambdaExpression> church2 = parse_lambda_from_string("(\\f. (\\x. (f (f x))))");
     church2->set_color_recursive(0xff00ff00);
     church2->flush_uid_recursive();
     shared_ptr<LambdaScene> church2scene = make_shared<LambdaScene>(church2, 800, 800);
-    tds.add_surface(Surface(glm::vec3(2,2,-3), glm::vec3(1,0,0), glm::vec3(0,1,0), church2scene));
+    tds.add_surface(Surface(glm::dvec3(2,2,-3), glm::dvec3(1,0,0), glm::dvec3(0,1,0), church2scene));
 
     shared_ptr<LambdaExpression> church3 = parse_lambda_from_string("(\\f. (\\x. (f (f (f x)))))");
     church3->set_color_recursive(0xff0088ff);
     church3->flush_uid_recursive();
     shared_ptr<LambdaScene> church3scene = make_shared<LambdaScene>(church3, 800, 800);
-    tds.add_surface(Surface(glm::vec3(2,-2,-5), glm::vec3(1,0,0), glm::vec3(0,1,0), church3scene));
+    tds.add_surface(Surface(glm::dvec3(2,-2,-5), glm::dvec3(1,0,0), glm::dvec3(0,1,0), church3scene));
     tds.inject_audio_and_render(AudioSegment("We've got one, two, three..."));
     
     tds.state_manager.subscene_transition(unordered_map<string, string>{
@@ -162,13 +162,13 @@ void intro() {
     churchplus->set_color_recursive(0xffff8800);
     churchplus->flush_uid_recursive();
     shared_ptr<LambdaScene> churchplusscene = make_shared<LambdaScene>(churchplus, 800, 800);
-    tds.add_surface(Surface(glm::vec3(-5,1,-9), glm::vec3(0,0,1), glm::vec3(0,1,0), churchplusscene));
+    tds.add_surface(Surface(glm::dvec3(-5,1,-9), glm::dvec3(0,0,1), glm::dvec3(0,1,0), churchplusscene));
 
     shared_ptr<LambdaExpression> churchtimes = parse_lambda_from_string("(\\m. (\\n. (\\a. (m (n a)))))");
     churchtimes->set_color_recursive(0xff0088ff);
     churchtimes->flush_uid_recursive();
     shared_ptr<LambdaScene> churchtimesscene = make_shared<LambdaScene>(churchtimes, 800, 800);
-    tds.add_surface(Surface(glm::vec3(-5,-1,-11), glm::vec3(0,0,1), glm::vec3(0,1,0), churchtimesscene));
+    tds.add_surface(Surface(glm::dvec3(-5,-1,-11), glm::dvec3(0,0,1), glm::dvec3(0,1,0), churchtimesscene));
     tds.inject_audio_and_render(AudioSegment("as well as plus and times."));
     tds.remove_surface(church1scene);
     tds.remove_surface(church2scene);
@@ -184,7 +184,7 @@ void intro() {
     le_church_3->set_color_recursive(0xffffff00);
     shared_ptr<LambdaExpression> term1 = apply(le_factorial, le_church_3, 0xff222222);
     shared_ptr<LambdaScene> ls1 = make_shared<LambdaScene>(term1, 600, 600);
-    tds.add_surface(Surface(glm::vec3(0,0,-8), glm::vec3(1,0,0), glm::vec3(0,1,0), ls1));
+    tds.add_surface(Surface(glm::dvec3(0,0,-8), glm::dvec3(1,0,0), glm::dvec3(0,1,0), ls1));
 
     tds.inject_audio(AudioSegment("We can express any computational procedure, such as the factorial function."), 2);
     tds.render();
@@ -249,7 +249,7 @@ void intro() {
 
     // Create text which says Lambda Calculus behind where the camera currently is
     shared_ptr<LatexScene> title = make_shared<LatexScene>(latex_text("The \\lambda -Calculus"), 1, 1000, 1000);
-    tds.add_surface(Surface(glm::vec3(0,0,-14), glm::vec3(1,0,0), glm::vec3(0,1,0), title));
+    tds.add_surface(Surface(glm::dvec3(0,0,-14), glm::dvec3(1,0,0), glm::dvec3(0,1,0), title));
 
     // Also add a bunch of grey lambda diagrams parallel to the title with z=12
     vector<shared_ptr<LambdaScene>> lots_of_lambdas;
@@ -286,10 +286,10 @@ void intro() {
         float y_position = ((i / 5) + ((rand() % 1000) / 1000.0f * scatter_range_y - scatter_range_y / 2) - 1.5) * 1.5 + i%2- .5;
         float z_position = -13.5 + 2.5 * (rand()%1000)/1000.0;
         float theta = ((rand()%1000)/1000.0f-0.5) * 0.2;
-        glm::vec3 random_tilt_x(cos(theta), sin(theta), 0);
-        glm::vec3 random_tilt_y(-sin(theta), cos(theta), 0);
+        glm::dvec3 random_tilt_x(cos(theta), sin(theta), 0);
+        glm::dvec3 random_tilt_y(-sin(theta), cos(theta), 0);
 
-        tds.add_surface(Surface(glm::vec3(x_position, y_position, z_position), random_tilt_x * 0.8f, random_tilt_y * 0.8f, lambda_scene));
+        tds.add_surface(Surface(glm::dvec3(x_position, y_position, z_position), random_tilt_x * 0.8f, random_tilt_y * 0.8f, lambda_scene));
         
         // Store the lambda scene in the vector for later reduction
         lots_of_lambdas.push_back(lambda_scene);
@@ -2331,7 +2331,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.render();
 
     string iter2 = "((\\n. (\\f. (\\x. (((\\f. (\\x. (f x))) f) ((n f) x))))) (\\f. (\\x. (f x))))";
-    glm::vec4 iter2pos;
+    glm::dvec4 iter2pos;
     for(auto& p : g.nodes){
         Node<HashableString>& n = p.second;
         lastid = p.first;
@@ -2775,9 +2775,9 @@ void chapter_number(int number, string subtitle){
     LambdaScene lam(lex, 800, 800);
     ThreeDimensionScene tds1;
     ThreeDimensionScene tds2;
-    tds1.add_surface(Surface(glm::vec3(0, .25,0),glm::vec3(1,0,0),glm::vec3(0, 1        , 0),make_shared<LambdaScene>(lam)));
-    tds2.add_surface(Surface(glm::vec3(0, .1,0),glm::vec3(1,0,0),glm::vec3(0, 500/1800., 0),make_shared<LatexScene>(ls)));
-    tds2.add_surface(Surface(glm::vec3(0,-.25,0),glm::vec3(1,0,0),glm::vec3(0, 500/1800., 0),make_shared<LatexScene>(ls2)));
+    tds1.add_surface(Surface(glm::dvec3(0, .25,0),glm::dvec3(1,0,0),glm::dvec3(0, 1        , 0),make_shared<LambdaScene>(lam)));
+    tds2.add_surface(Surface(glm::dvec3(0, .1,0),glm::dvec3(1,0,0),glm::dvec3(0, 500/1800., 0),make_shared<LatexScene>(ls)));
+    tds2.add_surface(Surface(glm::dvec3(0,-.25,0),glm::dvec3(1,0,0),glm::dvec3(0, 500/1800., 0),make_shared<LatexScene>(ls2)));
 
     tds1.state_manager.set(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1 <subscene_transition_fraction> 4 ^ -"},

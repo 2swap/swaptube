@@ -54,9 +54,9 @@ void render_3d(){
     for(int i = -7; i <= 7; i+=2)
     for(int j = -7; j <= 7; j+=2)
     for(int k = -7; k <= 7; k+=2)
-        tds.add_point(Point(""+i+j+k, glm::vec3(i, j, k), OPAQUE_WHITE));
+        tds.add_point(Point(""+i+j+k, glm::dvec3(i, j, k), OPAQUE_WHITE));
 
-    glm::quat q(1,0,0,0);
+    glm::dquat q(1,0,0,0);
     state_manager.add_equation("x", "0");
     state_manager.add_equation("y", "0");
     state_manager.add_equation("z", "0");
@@ -70,8 +70,8 @@ void render_3d(){
     state_manager.add_equation("qk", std::to_string(q.z));
     tds.inject_audio_and_render(AudioSegment(2));
 
-    glm::quat quats[6] = {PITCH_DOWN,PITCH_UP,YAW_RIGHT,YAW_LEFT,ROLL_CW,ROLL_CCW};
-    for(glm::quat mult : quats){
+    glm::dquat quats[6] = {PITCH_DOWN,PITCH_UP,YAW_RIGHT,YAW_LEFT,ROLL_CW,ROLL_CCW};
+    for(glm::dquat mult : quats){
         q *= mult;
         state_manager.add_transition("q1", std::to_string(q.w));
         state_manager.add_transition("qi", std::to_string(q.x));

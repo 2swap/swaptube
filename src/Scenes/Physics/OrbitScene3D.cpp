@@ -7,8 +7,8 @@
 #include <vector>
 
 extern "C" void render_predictions_cuda(
-const std::vector<glm::vec3>& positions, // Planet data
-const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
+const std::vector<glm::dvec3>& positions, // Planet data
+const int width, const int height, const int depth, const glm::dvec3 screen_center, const float zoom, // Geometry of query
 const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, const float eps, // Adjustable parameters
 int* colors, int* times // outputs
 );
@@ -29,16 +29,16 @@ public:
         int height = round(state["wireframe_height"]);
         int depth  = round(state["wireframe_depth" ]);
 
-        glm::vec3 bounding_box(width, height, depth);
-        glm::vec3 midpoint = bounding_box*0.5f;
+        glm::dvec3 bounding_box(width, height, depth);
+        glm::dvec3 midpoint = bounding_box*0.5f;
 
         float boundingbox_opacity = state["boundingbox.opacity"];
         if(boundingbox_opacity > 0.001){
             for(int x = 0; x < 2; x++) for(int y = 0; y < 2; y++) for(int z = 0; z < 2; z++) {
-                glm::vec3 corner1 = (glm::vec3(x,y,z)-glm::vec3(0.5f)) * bounding_box / zoom;
-                glm::vec3 corner2 = (glm::vec3(.5,y,z)-glm::vec3(0.5f)) * bounding_box / zoom;
-                glm::vec3 corner3 = (glm::vec3(x,.5,z)-glm::vec3(0.5f)) * bounding_box / zoom;
-                glm::vec3 corner4 = (glm::vec3(x,y,.5)-glm::vec3(0.5f)) * bounding_box / zoom;
+                glm::dvec3 corner1 = (glm::dvec3(x,y,z)-glm::dvec3(0.5f)) * bounding_box / zoom;
+                glm::dvec3 corner2 = (glm::dvec3(.5,y,z)-glm::dvec3(0.5f)) * bounding_box / zoom;
+                glm::dvec3 corner3 = (glm::dvec3(x,.5,z)-glm::dvec3(0.5f)) * bounding_box / zoom;
+                glm::dvec3 corner4 = (glm::dvec3(x,y,.5)-glm::dvec3(0.5f)) * bounding_box / zoom;
                 add_line(Line(corner1, corner2, OPAQUE_WHITE, boundingbox_opacity));
                 add_line(Line(corner1, corner3, OPAQUE_WHITE, boundingbox_opacity));
                 add_line(Line(corner1, corner4, OPAQUE_WHITE, boundingbox_opacity));
@@ -49,7 +49,7 @@ public:
         float tick_duration = state["tick_duration"];
         float drag = pow(state["drag"], tick_duration);
 
-        vector<glm::vec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
+        vector<glm::dvec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
         simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, state_manager);
 
         // Early bailout if we wont render anything
@@ -61,7 +61,7 @@ public:
         vector<int> times  (width * height * depth);
         vector<int> borders(width * height * depth);
 
-        render_predictions_cuda(planet_positions, width, height, depth, glm::vec3(0.f,0,0), zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, eps, colors.data(), times.data());
+        render_predictions_cuda(planet_positions, width, height, depth, glm::dvec3(0.f,0,0), zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, eps, colors.data(), times.data());
 
         // Identify border points
         for (int x = 0; x < width; ++x) for (int y = 0; y < height; ++y) for (int z = 0; z < depth; ++z) {
@@ -90,8 +90,8 @@ public:
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height && nz >= 0 && nz < depth) {
                         int neighbor_idx = nx + (ny + nz * height) * width;
                         if (borders[neighbor_idx] && colors[neighbor_idx] == colors[idx]) {
-                            glm::vec3 a = (glm::vec3( x, y, z) - midpoint) / zoom;
-                            glm::vec3 b = (glm::vec3(nx,ny,nz) - midpoint) / zoom;
+                            glm::dvec3 a = (glm::dvec3( x, y, z) - midpoint) / zoom;
+                            glm::dvec3 b = (glm::dvec3(nx,ny,nz) - midpoint) / zoom;
                             add_line(Line(a, b, line_color, line_opacity));
                         }
                     }

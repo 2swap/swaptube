@@ -43,6 +43,7 @@ void render_video(){
 
     //geometry
     KlotskiScene jam3x3        (6, 6, "cea...cea...cea......bbb...ddd...fff", true , 0.5, 0.5);
+    KlotskiScene cube_3d       (5, 5, "caa...aa..aaaaa..a....a.b"           , false, 0.5, 0.5);
     KlotskiScene cube_4d       (5, 5, "c.a....a..aaaaa..a....a.b"           , false, 0.5, 0.5);
     KlotskiScene cube_6d       (5, 5, "c.a.d..a..aaaaa..a....a.b"           , false, 0.5, 0.5);
     KlotskiScene big_block     (5, 5, "cea..cea..ceabb...dd...ff"           , true , 0.5, 0.5);
@@ -53,11 +54,12 @@ void render_video(){
     KlotskiScene plus_4_corners(5, 5, "cc.ddcca...aaa.eea..ee..."           , false, 0.5, 0.5);
     KlotskiScene ring          (5, 5, "..a....a..bb............."           , true , 0.5, 0.5);
     KlotskiScene ring_big      (9, 9, "....a........a......................bb...........................................", true , 0.5, 0.5);
-    KlotskiScene rows          (6, 6, "aaa.........aaa...bbb.........bbb...", true , 0.5, 0.5);
+    KlotskiScene rows          (6, 6, "aaa.........aaa...bbb.........bbb...", false, 0.5, 0.5);
     KlotskiScene small_block   (4, 4, "ceadcead..bb.fbb"                    , false, 0.5, 0.5);
     KlotskiScene t_shapes      (6, 6, "aa...b.a.bbb.a..bbd.....ddd.ccd..cc.", false, 0.5, 0.5);
     KlotskiScene triangles     (6, 6, "c.f...ccff..b.e.h.bbeehha.d.i.aaddii", false, 0.5, 0.5);
     KlotskiScene triangles2    (6, 6, "ccffggc..f.gbbb..hb..hhha.d..iaaddii", false, 0.5, 0.5);
+    KlotskiScene daanbe        (7, 7, ".aabcc.aaa.cccaadddcc..ddd...edddf..ee.ff..e...f.", false, 0.5, 0.5);
 
     auto gpt = {gpt2, gpt3, weird1, weird2, weird3};
     auto other = {apk, mathgames_12_13_04, euler766_easy};
@@ -65,32 +67,18 @@ void render_video(){
     auto rushhours = {beginner, intermediate, advanced, expert, reddit, guh3, guh4, video, thinkfun1, thinkfun2, thinkfun3};
     auto big = {sun};
     auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2};
-    for(KlotskiScene ks : geometry){
+    for(KlotskiScene ks : {gpt2}){
         CompositeScene cs;
-        cs.add_scene(&ks, "ks", 0.14, 0.25);
+        cs.add_scene(&ks, "ks", 0.25*VIDEO_HEIGHT/VIDEO_WIDTH, 0.25);
 
-        /*cs.inject_audio(SilenceSegment(5), 10);
-        cs.render();
-        while(cs.microblocks_remaining()) {
-            ks.stage_random_move();
-            cs.render();
-        }
-        ks.stage_move('b', 0, 10);
-        cs.inject_audio_and_render(SilenceSegment(.5));
-        ks.state_manager.pop_it(true);
-        cs.inject_audio_and_render(SilenceSegment(.5));
-        cs.inject_audio_and_render(SilenceSegment(.5));
-        */
-
-        Graph gt;
-        gt.add_to_stack(new KlotskiBoard(ks.copy_board()));
-        gt.expand_completely();
-        int size = gt.size();
-        cout << endl << size;
+        //ks.state_manager.pop_it(true);
 
         Graph g;
         g.add_to_stack(new KlotskiBoard(ks.copy_board()));
-        GraphScene gs(&g, .8, 1);
+        Graph g2;
+        g2.add_to_stack(new KlotskiBoard(ks.copy_board()));
+        g2.expand_completely();
+        GraphScene gs(&g);
         gs.state_manager.set({
             {"q1", "<t> .1 * cos"},
             {"qi", "0"},
@@ -102,10 +90,16 @@ void render_video(){
             {"decay",".8"},
             {"surfaces_opacity","0"},
         });
-        cs.add_scene(&gs, "gs", .6, .5);
-        cs.inject_audio(SilenceSegment(8), size*2);
+        cs.add_scene(&gs, "gs");
+        cs.inject_audio(SilenceSegment(2), g2.size());
         while(cs.microblocks_remaining()) {
             g.expand_once();
+            cs.render();
+        }
+        cs.inject_audio(SilenceSegment(8), 25);
+        while(cs.microblocks_remaining()) {
+            ks.stage_random_move();
+            gs.next_hash = ks.copy_board().get_hash();
             cs.render();
         }
     }

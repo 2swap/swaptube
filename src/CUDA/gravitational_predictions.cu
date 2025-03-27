@@ -2,14 +2,14 @@
 #include <glm/glm.hpp>
 #include <vector>
 
-__device__ float magnitude_force_given_distance_squared_device(float eps, float force_constant, float d2) {
+__device__ double magnitude_force_given_distance_squared_device(float eps, float force_constant, float d2) {
     return force_constant / (eps + d2);
 }
 
 __global__ void predict_fate_of_object_kernel(
-glm::vec3* positions, const int num_positions, // Planet data
-const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
-const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, const float eps, // adjustable parameters
+glm::dvec3* positions, const int num_positions, // Planet data
+const int width, const int height, const int depth, const glm::dvec3 screen_center, const float zoom, // Geometry of query
+const float force_constant, const float collision_threshold_squared, const float drag, const double tick_duration, const float eps, // adjustable parameters
 int* colors, int* times // Outputs
 ) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -18,17 +18,17 @@ int* colors, int* times // Outputs
 
     if (x >= width || y >= height || z >= depth) return;
 
-    glm::vec3 object_pos(x - width/2.f, y - height/2.f, z - depth/2.f);
+    glm::dvec3 object_pos(x - width/2.f, y - height/2.f, z - depth/2.f);
     object_pos /= zoom;
     object_pos += screen_center;
-    glm::vec3 velocity(0.f, 0, 0);
+    glm::dvec3 velocity(0.f, 0, 0);
     const int arr_idx = x + (y + z * height) * width;
     times[arr_idx] = 0;
 
     while (times[arr_idx] < 30000) {
         float v2 = glm::dot(velocity, velocity);
         for (int i = 0; i < num_positions; ++i) {
-            glm::vec3 direction = positions[i] - object_pos;
+            glm::dvec3 direction = positions[i] - object_pos;
             float distance2 = glm::dot(direction, direction);
             if (times[arr_idx] > 5 && distance2 < collision_threshold_squared && v2 < force_constant) {
                 colors[arr_idx] = i;
@@ -46,21 +46,21 @@ int* colors, int* times // Outputs
 }
 
 extern "C" void render_predictions_cuda(
-const std::vector<glm::vec3>& positions, // Planet data
-const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
-const float force_constant, const float collision_threshold_squared, const float drag, const float tick_duration, const float eps, // Adjustable parameters
+const std::vector<glm::dvec3>& positions, // Planet data
+const int width, const int height, const int depth, const glm::dvec3 screen_center, const float zoom, // Geometry of query
+const float force_constant, const float collision_threshold_squared, const float drag, const double tick_duration, const float eps, // Adjustable parameters
 int* colors, int* times // outputs
 ) {
-    glm::vec3* d_positions;
+    glm::dvec3* d_positions;
     int* d_colors;
     int* d_times;
     const int num_positions = positions.size();
 
-    cudaMalloc(&d_positions   , num_positions * sizeof(glm::vec3));
+    cudaMalloc(&d_positions   , num_positions * sizeof(glm::dvec3));
     cudaMalloc(&d_colors, width * height * depth * sizeof(int));
     cudaMalloc(&d_times , width * height * depth * sizeof(int));
 
-    cudaMemcpy(d_positions, positions.data(), num_positions * sizeof(glm::vec3), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_positions, positions.data(), num_positions * sizeof(glm::dvec3), cudaMemcpyHostToDevice);
 
     dim3 threadsPerBlock_thin (16, 16, 4);
     dim3 threadsPerBlock_thick(32, 32, 1);

@@ -205,7 +205,7 @@ public:
         auto it = nodes.find(hash);
         if (it == nodes.end()) return;
         Node& node = it->second;
-        node.position = glm::vec4(x,y,z,w);
+        node.position = glm::dvec4(x,y,z,w);
         mark_updated();
     }
 

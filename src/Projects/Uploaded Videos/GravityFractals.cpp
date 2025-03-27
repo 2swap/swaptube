@@ -79,7 +79,7 @@ void render_2d() {
 
 
     // Drop an object
-    if(FOR_REAL) sim.add_mobile_object(glm::vec3(.6, -.4, 0), OPAQUE_WHITE);
+    if(FOR_REAL) sim.add_mobile_object(glm::dvec3(.6, -.4, 0), OPAQUE_WHITE);
     comp.inject_audio_and_render(AudioSegment("Which planet is this falling particle going to crash into?"));
     scene.state_manager.transition(unordered_map<string, string>{
         {"physics_multiplier", "6"},
@@ -126,9 +126,9 @@ void render_2d() {
         float radius = (rand() / double(RAND_MAX)) * 0.12;
         float dx = radius * cos(theta);
         float dy = radius * sin(theta);
-        sim.add_mobile_object(glm::vec3((*scene.state_manager["planet1.x"] + dx, (*scene.state_manager["planet1.y"] + dy, 0), planet1_color);
-        sim.add_mobile_object(glm::vec3((*scene.state_manager["planet2.x"] + dx, (*scene.state_manager["planet2.y"] + dy, 0), planet2_color);
-        sim.add_mobile_object(glm::vec3((*scene.state_manager["planet3.x"] + dx, (*scene.state_manager["planet3.y"] + dy, 0), planet3_color);
+        sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet1.x"] + dx, (*scene.state_manager["planet1.y"] + dy, 0), planet1_color);
+        sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet2.x"] + dx, (*scene.state_manager["planet2.y"] + dy, 0), planet2_color);
+        sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet3.x"] + dx, (*scene.state_manager["planet3.y"] + dy, 0), planet3_color);
     }
     comp.inject_audio_and_render(AudioSegment("We know for sure that the ones which start sufficiently close to each planet will indeed crash into it,"));
     scene.state_manager.transition(unordered_map<string, string>{
@@ -147,7 +147,7 @@ void render_2d() {
         float radius = (rand() / double(RAND_MAX)) * 0.12;
         float dx = 0.6 + radius * cos(theta);
         float dy = -.4 + radius * sin(theta);
-        glm::vec3 pos(dx, dy, 0);
+        glm::dvec3 pos(dx, dy, 0);
         int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
         sim.add_mobile_object(pos, color);
     }
@@ -195,7 +195,7 @@ void render_2d() {
         {"physics_multiplier", "0"},
     });
     if(FOR_REAL) for(float x = -bounds; x < bounds; x+=delta) for(float y = -bounds; y < bounds; y+=delta){
-        glm::vec3 pos(x,y,0);
+        glm::dvec3 pos(x,y,0);
         int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
         sim.add_mobile_object(pos, color);
     }
@@ -429,7 +429,7 @@ void render_2d() {
         {"predictions_opacity", "0"},
     });
     if(FOR_REAL) for(float x = -bounds; x < bounds; x+=delta) for(float y = -bounds; y < bounds; y+=delta){
-        glm::vec3 pos(x,y,0);
+        glm::dvec3 pos(x,y,0);
         int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
         sim.add_mobile_object(pos, color);
     }
@@ -499,7 +499,7 @@ void render_2d() {
 
 
     // Drop an object, which since drag is now zero, should spin around forever.
-    if(FOR_REAL) sim.add_mobile_object(glm::vec3(0.5, -0.5, 0), OPAQUE_WHITE);
+    if(FOR_REAL) sim.add_mobile_object(glm::dvec3(0.5, -0.5, 0), OPAQUE_WHITE);
     comp.inject_audio_and_render(AudioSegment("You might fall into a stable orbit or spin around chaotically forever, but your kinetic energy wouldn't dissipate enough to cause your orbit to decay into a crash."));
 
 
@@ -610,9 +610,9 @@ void render_2d() {
     });
     sim.fixed_objects.clear();
     if(FOR_REAL) {
-        sim.add_mobile_object(glm::vec3(-0.5, 0, 0), cs.get_color());
-        sim.add_mobile_object(glm::vec3(0.3, 0, 0), cs.get_color());
-        sim.add_mobile_object(glm::vec3(0, 0.5, 0), cs.get_color());
+        sim.add_mobile_object(glm::dvec3(-0.5, 0, 0), cs.get_color());
+        sim.add_mobile_object(glm::dvec3(0.3, 0, 0), cs.get_color());
+        sim.add_mobile_object(glm::dvec3(0, 0.5, 0), cs.get_color());
         sim.mobile_interactions = true;
     }
     comp.inject_audio_and_render(AudioSegment("This phenomenon is reminiscent of the three-body problem, where predicting the exact trajectory of each body becomes incredibly complex."));

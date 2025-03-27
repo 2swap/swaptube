@@ -73,7 +73,7 @@ __device__ unsigned int get_mandelbrot_color(double iterations, int max_iteratio
 __device__ void compute_z_x_c(
     int pixel_x, int pixel_y, int width, int height,
     const cuDoubleComplex seed_z, const cuDoubleComplex seed_x, const cuDoubleComplex seed_c,
-    const glm::vec3 pixel_parameter_multipliers,
+    const glm::dvec3 pixel_parameter_multipliers,
     const cuDoubleComplex zoom,
     cuDoubleComplex& z, cuDoubleComplex& x, cuDoubleComplex& c, double& log_real_part_exp
 ) {
@@ -158,7 +158,7 @@ __device__ int mandelbrot_iterations_2or3(
 __global__ void go(
     const int width, const int height,
     const cuDoubleComplex seed_z, const cuDoubleComplex seed_x, const cuDoubleComplex seed_c,
-    const glm::vec3 pixel_parameter_multipliers,
+    const glm::dvec3 pixel_parameter_multipliers,
     const cuDoubleComplex zoom,
     int max_iterations,
     float gradation,
@@ -194,7 +194,7 @@ __global__ void go(
 extern "C" void mandelbrot_render(
     const int width, const int height,
     const std::complex<double> seed_z, const std::complex<double> seed_x, const std::complex<double> seed_c,
-    const glm::vec3 pixel_parameter_multipliers,
+    const glm::dvec3 pixel_parameter_multipliers,
     const std::complex<double> zoom,
     int max_iterations,  // Pass max_iterations as a parameter
     float gradation,
