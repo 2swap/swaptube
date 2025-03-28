@@ -32,7 +32,7 @@ public:
         return kb;
     }
     const StateQuery populate_state_query() const override {
-        return StateQuery{"dots", "margin", "microblock_fraction"};
+        return StateQuery{"dots", "margin", "microblock_fraction", "t"};
     }
     void mark_data_unchanged() override { }
     void change_data() override { }

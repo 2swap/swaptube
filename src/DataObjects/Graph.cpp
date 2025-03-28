@@ -531,7 +531,7 @@ public:
             ct += sig;
         }
 
-        return pow(sum_distance_sq / ct, .25);
+        return 8 + 3*pow(sum_distance_sq / ct, .25);
     }
 
     /*

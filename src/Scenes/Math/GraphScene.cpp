@@ -11,7 +11,7 @@ double age_to_size(double x){
 
 vector<int> tones = {0,4,7};
 int tone_incr = 0;
-void node_pop() {
+void node_pop(double subdiv) {
     double tone = pow(2,tones[tone_incr%tones.size()]/12.);
     tone_incr++;
     int num_samples = 44100*.1;
@@ -24,7 +24,7 @@ void node_pop() {
          left.push_back(val);
         right.push_back(val);
     }
-    WRITER.add_sfx(left, right, get_global_state("t")*44100);
+    WRITER.add_sfx(left, right, (get_global_state("t")+subdiv/VIDEO_FRAMERATE)*44100);
 }
 
 class GraphScene : public ThreeDimensionScene {
@@ -70,14 +70,14 @@ public:
             double smooth_interp = smoother2(state["microblock_fraction"]);
             if     (!curr_found) pos_to_render = next_pos;
             else if(!next_found) pos_to_render = curr_pos;
-            else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp); // i should define veclerp
+            else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
             opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
             add_point(Point(pos_to_render, 0xffff0000, BULLSEYE, opa, 1.1*opa));
         }
 
         // automagical camera distancing
-        auto_distance = lerp(1, .35, opa) * 2.5*graph->af_dist();
-        auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
+        auto_distance = /*lerp(1, .35, opa) * */graph->af_dist();
+        auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
     }
 
     virtual int get_edge_color(const Node& node, const Node& neighbor){
@@ -96,7 +96,10 @@ public:
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
-        if(last_node_count > -1 && last_node_count != graph->size()) node_pop();
+        if(last_node_count > -1){
+            int diff = graph->size() - last_node_count;
+            for(int i = 0; i < diff; i++) node_pop(static_cast<double>(i)/diff);
+        }
         last_node_count = graph->size();
         graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"]);
         graph_to_3d();

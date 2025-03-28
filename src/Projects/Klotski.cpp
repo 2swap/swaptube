@@ -85,20 +85,31 @@ void render_video(){
             {"qi", "0"},
             {"qj", "<t> .1 * sin"},
             {"qk", "0"},
-            {"physics_multiplier","3"},
+            {"physics_multiplier","5"},
             {"attract","1"},
             {"repel","1"},
             {"decay",".8"},
             {"surfaces_opacity","0"},
         });
         cs.add_scene(&gs, "gs");
+
+        cs.inject_audio(SilenceSegment(5), 1600);
+        while(cs.microblocks_remaining()) {
+            ks.stage_random_move();
+            g.add_to_stack(new KlotskiBoard(ks.copy_board()));
+            g.add_missing_edges(true);
+            gs.next_hash = ks.copy_board().get_hash();
+            cs.render();
+        }
+
         cs.inject_audio(SilenceSegment(2), g2.size()*1.2);
         while(cs.microblocks_remaining()) {
             g.expand_once();
             cs.render();
         }
         continue;
-        cs.inject_audio(SilenceSegment(8), 25);
+
+        cs.inject_audio(SilenceSegment(2), 5);
         while(cs.microblocks_remaining()) {
             ks.stage_random_move();
             gs.next_hash = ks.copy_board().get_hash();
