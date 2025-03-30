@@ -117,7 +117,7 @@ public:
             {"x", "0"},
             {"y", "0"},
             {"z", "0"},
-            {"d", "2"},
+            {"d", "1"},
             {"q1", "1"},
             {"qi", "0"},
             {"qj", "0"},
@@ -291,7 +291,7 @@ public:
     void set_camera_direction() {
         camera_direction = glm::normalize(glm::dquat(state["q1"], state["qi"], state["qj"], state["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);
-        double dist_to_use = auto_distance>0?max(1.0, auto_distance):state["d"];
+        double dist_to_use = (auto_distance>0?max(1.0, auto_distance):1)*state["d"];
         glm::dvec3 camera_to_use = auto_distance>0?auto_camera:glm::dvec3(state["x"], state["y"], state["z"]);
         camera_pos = camera_to_use + conjugate_camera_direction * glm::dvec3(0,0,-dist_to_use) * camera_direction;
     }

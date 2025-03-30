@@ -76,7 +76,7 @@ public:
         }
 
         // automagical camera distancing
-        auto_distance = /*lerp(1, .35, opa) * */graph->af_dist();
+        auto_distance = graph->af_dist();
         auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
     }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import subprocess
+import re
 
 # Function to print the next 5 lines for lookahead
 def print_lookahead(entries, start_index, lines=5):
@@ -39,6 +40,29 @@ def main():
         print("Error: record_list.tsv is empty.")
         return
 
+    try:
+        devices_output = subprocess.check_output(["arecord", "-l"], stderr=subprocess.STDOUT).decode()
+        available_devices = []
+        for line in devices_output.splitlines():
+            if line.strip().startswith("card"):
+                available_devices.append(line.strip())
+        for idx, device in enumerate(available_devices):
+            print(f"{idx}: {device}")
+    except Exception as e:
+        print("Error listing audio devices:", e)
+        return
+
+    selected_index = int(input("Enter the corresponding number: "))
+    selected_line = available_devices[selected_index]
+    m = re.search(r"card (\d+).*device (\d+):", selected_line)
+    if m:
+        card_num = m.group(1)
+        device_num = m.group(2)
+        selected_device = f"hw:{card_num},{device_num}"
+    else:
+        print("Could not parse device info.")
+        return
+
     input("Unplug crappy mics...")
     input("Do 100 jumping jacks...")
     input("Smile...")
@@ -65,7 +89,7 @@ def main():
             print("Recording... Press Enter to stop.")
             ffmpeg_log = os.path.join(PROJECT_DIR, "ffmpeg.log")
             ffmpeg_cmd = [
-                'ffmpeg', '-f', 'alsa', '-ar', '44100', '-i', 'default', 
+                'ffmpeg', '-f', 'alsa', '-ar', '44100', '-i', selected_device, 
                 os.path.join(PROJECT_DIR, current_filename)
             ]
 
@@ -86,13 +110,13 @@ def main():
                 os.remove(os.path.join(PROJECT_DIR, current_filename))
                 # It will loop back to re-record this file
             else:
-                successes+=1
-                if successes%10 == 1:
+                successes += 1
+                if successes % 10 == 1:
                     input("ARE YOU HYPED")
                 if successes == 1:
                     input("Let's check the first audio output file...")
                     ffplay_cmd = [ 'ffplay', os.path.join(PROJECT_DIR, current_filename) ]
-                    ffplay_process = subprocess.Popen(ffplay_cmd, stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                    ffplay_process = subprocess.Popen(ffplay_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     ffmpeg_process.wait()
                     user_check = input("Was it good? [y/n]")
                     if user_check != 'y':

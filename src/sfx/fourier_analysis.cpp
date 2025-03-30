@@ -316,12 +316,13 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < num_sines; i++) {
             double frequency, amplitude, phase;
             ifs >> frequency >> amplitude >> phase;
+            phase = rand();
             bins.push_back({ frequency, amplitude, phase });
         }
         ifs.close();
         
         // Generate one second of audio regardless of the original sample count.
-        int N = sample_rate;
+        int N = sample_rate * 2;
         vector<double> synthesis(N, 0.0);
         for (int n = 0; n < N; n++) {
             double sample = 0.0;

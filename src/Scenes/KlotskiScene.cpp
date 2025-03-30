@@ -13,6 +13,7 @@ private:
     int staged_dy;
 
 public:
+    char highlight_char = '.';
     KlotskiScene(const int bw, const int bh, const string& rep, const bool rushhour, const double width = 1, const double height = 1)
         : Scene(width, height), kb(bw, bh, rep, rushhour) {
             state_manager.set({
@@ -27,6 +28,7 @@ public:
             kb = kb.move_piece(staged_char, staged_dx, staged_dy);
         }
         staged_char = '.';
+        highlight_char = '.';
     }
     KlotskiBoard copy_board() {
         return kb;
@@ -73,17 +75,18 @@ public:
         double qm = margin * .25;
         double hm = margin * .5;
         double dots   = (kb.rushhour ? 1 : 0) * state["dots"];
-        double micro  = smoothlerp(0,1,state["microblock_fraction"]);
+        double microblock_fraction = state["microblock_fraction"];
+        double micro  = smoothlerp(0,1,microblock_fraction);
 
         pix.fill_rect(offset_x-margin, offset_y-margin, hm, 2*margin + board_height, OPAQUE_WHITE);
         pix.fill_rect(offset_x-margin, offset_y-margin, 2*margin + board_width, hm, OPAQUE_WHITE);
         pix.fill_rect(offset_x+board_width+hm, offset_y-margin, hm, 2*margin + board_height, OPAQUE_WHITE);
         pix.fill_rect(offset_x-margin, offset_y+board_height+hm, 2*margin + board_width, hm, OPAQUE_WHITE);
         if (kb.rushhour && kb.w == 6 && kb.h == 6) {
-            pix.fill_rect(offset_x+board_width-qm, offset_y+qm+square_size*2, hm, square_size-hm, TRANSPARENT_BLACK);
+            pix.fill_rect(offset_x+board_width+hm, offset_y+qm+square_size*2, hm, square_size-hm, TRANSPARENT_BLACK);
         }
         if (!kb.rushhour && kb.w == 4 && kb.h == 5) {
-            pix.fill_rect(offset_x+qm+square_size, offset_y+board_height-qm, 2*square_size-hm, hm, TRANSPARENT_BLACK);
+            pix.fill_rect(offset_x+qm+square_size, offset_y+board_height+hm, 2*square_size-hm, hm, TRANSPARENT_BLACK);
         }
         if(dots > 0.01){
             // Loop over every cell in the board.
@@ -131,11 +134,13 @@ public:
                 // Simple pseudo-random color based on the character value.
                 uint32_t color = rainbow(cell*.618034);
 
+                double add = (cell==highlight_char ? .25-square(microblock_fraction - .5) : 0)*square_size;
+
                 // Draw the block.
-                            pix.fill_rect(mx+rect_x             , my+rect_y              , rect_width, rect_height, color);
-                if(hor_ext) pix.fill_rect(mx+rect_x+rect_width-1, my+rect_y              , margin+2    , rect_height, color);
-                if(ver_ext) pix.fill_rect(mx+rect_x             , my+rect_y+rect_height-1, rect_width, margin+2     , color);
-                if(mid_squ) pix.fill_rect(mx+rect_x+rect_width-1, my+rect_y+rect_height-1, margin+2    , margin+2     , color);
+                            pix.fill_rect(mx+rect_x             -add, my+rect_y              -add, rect_width+add*2, rect_height+add*2, color);
+                if(hor_ext) pix.fill_rect(mx+rect_x+rect_width-1-add, my+rect_y              -add, margin+2  +add*2, rect_height+add*2, color);
+                if(ver_ext) pix.fill_rect(mx+rect_x             -add, my+rect_y+rect_height-1-add, rect_width+add*2, margin+2   +add*2, color);
+                if(mid_squ) pix.fill_rect(mx+rect_x+rect_width-1-add, my+rect_y+rect_height-1-add, margin+2  +add*2, margin+2   +add*2, color);
             }
         }
     }
