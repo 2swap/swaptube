@@ -14,8 +14,8 @@ private:
 
 public:
     char highlight_char = '.';
-    KlotskiScene(const int bw, const int bh, const string& rep, const bool rushhour, const double width = 1, const double height = 1)
-        : Scene(width, height), kb(bw, bh, rep, rushhour) {
+    KlotskiScene(const KlotskiBoard& _kb, const double width = 1, const double height = 1)
+        : Scene(width, height), kb(_kb) {
             state_manager.set({
                 {"margin", "0.2"},
                 {"dots", "1"},
@@ -25,10 +25,13 @@ public:
     // No interactive state is needed for this static klotski scene.
     void on_end_transition(bool is_macroblock) override {
         if (staged_char != '.') {
-            kb = kb.move_piece(staged_char, staged_dx, staged_dy);
+            kb = copy_staged_board();
         }
         staged_char = '.';
         highlight_char = '.';
+    }
+    KlotskiBoard copy_staged_board() {
+        return kb.move_piece(staged_char, staged_dx, staged_dy);
     }
     KlotskiBoard copy_board() {
         return kb;
@@ -134,7 +137,9 @@ public:
                 // Simple pseudo-random color based on the character value.
                 uint32_t color = rainbow(cell*.618034);
 
-                double add = (cell==highlight_char ? .25-square(microblock_fraction - .5) : 0)*square_size;
+                double triple_micro = microblock_fraction*3;
+                double frac_triple_micro = triple_micro - static_cast<int>(triple_micro);
+                double add = (cell==highlight_char ? .25-square(frac_triple_micro - .5) : 0)*square_size;
 
                 // Draw the block.
                             pix.fill_rect(mx+rect_x             -add, my+rect_y              -add, rect_width+add*2, rect_height+add*2, color);

@@ -19,7 +19,7 @@ KlotskiBoard::KlotskiBoard(int w, int h, const string& rep, const bool rush)
 KlotskiBoard::~KlotskiBoard() { }
 
 shared_ptr<Scene> KlotskiBoard::make_scene() const {
-    return make_shared<KlotskiScene>(w, h, representation, rushhour);
+    return make_shared<KlotskiScene>(KlotskiBoard(*this));
 }
 
 bool KlotskiBoard::is_solution() {

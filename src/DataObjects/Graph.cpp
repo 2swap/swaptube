@@ -487,6 +487,9 @@ public:
             node->velocity *= decay;
             node->position += node->velocity - com;
 
+            // Slight force which tries to flatten the thinnest axis onto the view plane
+            node->position.z *= 0.99;
+
             // Dimensional constraints
             if (dimensions < 3) {
                 node->velocity.z = 0;
