@@ -11,8 +11,9 @@ double age_to_size(double x){
 
 vector<int> tones = {0,4,7};
 int tone_incr = 0;
-void node_pop(double subdiv) {
-    double tone = pow(2,tones[tone_incr%tones.size()]/12.);
+void node_pop(double subdiv, bool added_not_deleted) {
+    int tone_number = added_not_deleted?tones[tone_incr%tones.size()]:-6;
+    double tone = pow(2,tone_number/12.);
     tone_incr++;
     int num_samples = 44100*.1;
     vector<float> left;
@@ -37,6 +38,7 @@ public:
             {"attract", "1"},
             {"decay", ".95"},
             {"physics_multiplier", "1"},
+            {"centering_strength", "1"},
         });
     }
 
@@ -76,7 +78,7 @@ public:
         }
 
         // automagical camera distancing
-        auto_distance = graph->af_dist();
+        auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
         auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
     }
 
@@ -91,6 +93,7 @@ public:
         s.insert("attract");
         s.insert("decay");
         s.insert("microblock_fraction");
+        s.insert("centering_strength");
         return s;
     }
 
@@ -98,10 +101,10 @@ public:
     void change_data() override {
         if(last_node_count > -1){
             int diff = graph->size() - last_node_count;
-            for(int i = 0; i < diff; i++) node_pop(static_cast<double>(i)/diff);
+            for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/diff, diff>0);
         }
         last_node_count = graph->size();
-        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"]);
+        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"]);
         graph_to_3d();
         clear_surfaces();
         update_surfaces();

@@ -99,6 +99,10 @@ public:
         clear();
     }
 
+    void clear_queue() {
+        traverse_deque.clear();
+    }
+
     void clear() {
         traverse_deque.clear();
         while (nodes.size()>0) {
@@ -412,7 +416,7 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(int iterations, double repel, double attract, double decay){
+    void iterate_physics(int iterations, double repel, double attract, double decay, double centering_strength){
         vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) {
@@ -423,12 +427,12 @@ public:
             for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
             cout << ".";
             fflush(stdout);
-            perform_single_physics_iteration(node_vector, repel, attract, decay);
+            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength);
         }
         mark_updated();
     }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract, double decay) {
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract, double decay, double centering_strength) {
         int s = node_vector.size();
         glm::dvec4 com = center_of_mass();
 
@@ -485,7 +489,7 @@ public:
             //if (node->hash == root_node_hash) node->position *= 0;
             node->velocity.y += gravity_strength / size();
             node->velocity *= decay;
-            node->position += node->velocity - com;
+            node->position += node->velocity - com*centering_strength;
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
             node->position.z *= 0.99;

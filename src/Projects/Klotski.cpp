@@ -16,7 +16,10 @@ void step1(){
     CompositeScene cs;
 
     // Add KlotskiScene and GraphScene for Intermediate puzzle, begin making 50 random moves.
-    KlotskiScene ks(intermediate, .3, .3*VIDEO_WIDTH/VIDEO_HEIGHT);
+    KlotskiScene ks(intermediate);
+    StateSet board_width_height{{"w",".3"},{"h",to_string(.3*VIDEO_WIDTH/VIDEO_HEIGHT)}};
+    StateSet board_position    {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}};
+    ks.state_manager.set(board_width_height);
     Graph g;
     g.add_to_stack(new KlotskiBoard(ks.copy_board()));
     GraphScene gs(&g);
@@ -30,8 +33,9 @@ void step1(){
         {"physics_multiplier","5"}, // How many times to iterate the graph-spreader
     });
     cs.add_scene(&gs, "gs");
-    cs.add_scene(&ks, "ks", 0.15, 0.15*VIDEO_WIDTH/VIDEO_HEIGHT);
-    cs.inject_audio(FileSegment("What you're looking at is a random agent exploring the state-space graph of a slidy puzzle."), 100);
+    cs.add_scene(&ks, "ks");
+    cs.state_manager.set(board_position);
+    cs.inject_audio(FileSegment("What you're looking at is a random agent exploring the state-space graph of a slidy puzzle."), 200);
     while(cs.microblocks_remaining()) {
         ks.stage_random_move();
         // Add the new node
@@ -43,29 +47,45 @@ void step1(){
     }
 
     // Set ks.highlight_char to highlight the block which needs to get freed.
+    cs.inject_audio(FileSegment("It wants to free this block from the hole on the right side of the board."), 4);
+    cs.state_manager.microblock_transition({{"ks.x",".5"},{"ks.y",".5"}});
+    ks.state_manager.microblock_transition({{"w","1"},{"h","1"}});
+    cs.render();
     ks.highlight_char = 'b';
-    cs.inject_audio(FileSegment("It wants to free this block from the hole on the right side of the board."), 5);
-    cs.state_manager.microblock_transition();
-    ks.state_manager.microblock_transition();
+    cs.render();
+    ks.stage_move('b', 4, 0);
+    cs.render();
+    ks.stage_move('b', -4, 0);
     cs.render();
 
-    cs.render();
-    cs.render();
-    cs.render();
+    ks.highlight_char = 'a';
+    cs.inject_audio_and_render(FileSegment("However, this piece is in the way..."));
 
-    cs.state_manager.microblock_transition();
-    ks.state_manager.microblock_transition();
-    cs.render();
+    cs.state_manager.microblock_transition(board_position);
+    ks.state_manager.microblock_transition(board_width_height);
+    cs.inject_audio_and_render(SilenceSegment(1));
 
     // Delete all nodes of the graph except for the current one. Turn on surface opacity, and turn off edge opacity.
-    g.clear();
-    g.add_to_stack(new KlotskiBoard(ks.copy_board()));
-    g.add_missing_edges(true);
-    gs.state_manager.set({{"surfaces_opacity","1"}});
+    cs.inject_audio(SilenceSegment(3), g.size()-1);
+    double kb_to_keep = ks.copy_board().get_hash();
+    gs.state_manager.macroblock_transition({{"surfaces_opacity",".5"},{"lines_opacity","0"}});
+    gs.state_manager.set({{"centering_strength","0"}});
+    unordered_map<double,Node> nodes_copy = g.nodes;
+    for(auto it = nodes_copy.begin(); it != nodes_copy.end(); ++it){
+        double id_here = it->first;
+        if(id_here == kb_to_keep) continue;
+        g.remove_node(id_here);
+        cs.render();
+    }
+    g.clear_queue();
+
+    // Re-center
+    gs.state_manager.microblock_transition({{"centering_strength","1"}});
     cs.inject_audio_and_render(FileSegment("We'll represent the current position of the puzzle as a single node."));
 
     // Make one move and insert it on the graph.
     ks.stage_random_move();
+    ks.highlight_char = 'c';
     cs.inject_audio_and_render(FileSegment("If we make a single move on the puzzle,"));
     g.add_to_stack(new KlotskiBoard(ks.copy_staged_board()));
     g.add_missing_edges(true);
@@ -81,7 +101,7 @@ void step1(){
 
     // Make a few random moves.
     gs.state_manager.macroblock_transition({{"surfaces_opacity","0"}});
-    cs.inject_audio(FileSegment("Each node is connected to a few more, and drawing them, we construct this labyrinth of paths."), 5);
+    cs.inject_audio(FileSegment("Each node is connected to a few more, and drawing them, we construct this labyrinth of paths."), 8);
     while(cs.microblocks_remaining()) {
         ks.stage_random_move();
         g.add_to_stack(new KlotskiBoard(ks.copy_board()));
@@ -103,11 +123,14 @@ void step1(){
         g2.expand_completely();
         g_size = g2.size();
     }
-    cs.inject_audio(FileSegment("If we grow out the graph in its entirety, we can see that the random agent is still quite far away from the solutions."), g_size);
+    cs.inject_audio(FileSegment("If we grow out the graph in its entirety..."), g_size);
     while(cs.microblocks_remaining()) {
         g.expand_once();
         cs.render();
     }
+
+    //TODO highlight the solutions
+    cs.inject_audio(FileSegment("we can see that the random agent is still quite far away from the solutions."), g_size);
 
     // No-op, the topology should be apparent.
     cs.inject_audio_and_render(FileSegment("We can also make a lot more observations about the topology of this puzzle!"));

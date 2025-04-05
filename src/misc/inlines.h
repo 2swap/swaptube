@@ -20,6 +20,7 @@ inline double smoother1(double x){return 3*x*x-2*x*x*x;}
 inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
 inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
 inline glm::dvec3 veclerp(glm::dvec3 a, glm::dvec3 b, double w){return a*(1-w)+b*w;}
+inline glm::dvec4 veclerp(glm::dvec4 a, glm::dvec4 b, double w){return a*(1-w)+b*w;}
 inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
 inline string latex_text(string in){return "\\text{" + in + "}";}
 inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}

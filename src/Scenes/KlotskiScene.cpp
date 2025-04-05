@@ -28,7 +28,7 @@ public:
             kb = copy_staged_board();
         }
         staged_char = '.';
-        highlight_char = '.';
+        if(is_macroblock)highlight_char = '.';
     }
     KlotskiBoard copy_staged_board() {
         return kb.move_piece(staged_char, staged_dx, staged_dy);
@@ -139,13 +139,13 @@ public:
 
                 double triple_micro = microblock_fraction*3;
                 double frac_triple_micro = triple_micro - static_cast<int>(triple_micro);
-                double add = (cell==highlight_char ? .25-square(frac_triple_micro - .5) : 0)*square_size;
+                if(cell!=highlight_char && highlight_char != '.') color = colorlerp(color, OPAQUE_BLACK, .6);
 
                 // Draw the block.
-                            pix.fill_rect(mx+rect_x             -add, my+rect_y              -add, rect_width+add*2, rect_height+add*2, color);
-                if(hor_ext) pix.fill_rect(mx+rect_x+rect_width-1-add, my+rect_y              -add, margin+2  +add*2, rect_height+add*2, color);
-                if(ver_ext) pix.fill_rect(mx+rect_x             -add, my+rect_y+rect_height-1-add, rect_width+add*2, margin+2   +add*2, color);
-                if(mid_squ) pix.fill_rect(mx+rect_x+rect_width-1-add, my+rect_y+rect_height-1-add, margin+2  +add*2, margin+2   +add*2, color);
+                            pix.fill_rect(mx+rect_x             , my+rect_y              , rect_width, rect_height, color);
+                if(hor_ext) pix.fill_rect(mx+rect_x+rect_width-1, my+rect_y              , margin+2  , rect_height, color);
+                if(ver_ext) pix.fill_rect(mx+rect_x             , my+rect_y+rect_height-1, rect_width, margin+2   , color);
+                if(mid_squ) pix.fill_rect(mx+rect_x+rect_width-1, my+rect_y+rect_height-1, margin+2  , margin+2   , color);
             }
         }
     }
