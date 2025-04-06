@@ -63,7 +63,6 @@ def main():
         print("Could not parse device info.")
         return
 
-    input("Unplug crappy mics...")
     input("Do 100 jumping jacks...")
     input("Smile...")
     input("Don't breathe in the mic...")

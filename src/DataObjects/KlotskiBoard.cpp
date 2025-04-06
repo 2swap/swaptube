@@ -154,13 +154,13 @@ void KlotskiBoard::get_random_move(char& rc, int& rdx, int& rdy) {
 KlotskiBoard advanced      (6, 6, ".affo..aiko.bbiko.ecghh.ecgm..eddm..", true );
 KlotskiBoard intermediate  (6, 6, "..afff..a..cbba..c.dd..e.....e..hhhe", true );
 KlotskiBoard beginner      (6, 6, "...a.....a..bb.a..cddd..c.....c.....", true );
-KlotskiBoard expert        (6, 6, "bbb..i.....i..ajji..aghhe.cgffe.cddd", true );
-KlotskiBoard reddit        (6, 6, ".abbbm.ac..mddc.ikffhhike.g.lle.gjjj", true );
-KlotskiBoard guh3          (6, 6, "akjjhhaknnigaklligcffeigc..eppbbdd..", true );
-KlotskiBoard guh4          (6, 6, "bbbaff...ahhddca.eg.cppeg.nnikjjllik", true );
-KlotskiBoard video         (6, 6, "acbbe.acdde.ffkg....kgm...igm...i...", true );
-KlotskiBoard thinkfun1     (6, 6, "a.cbbba.c....dde...i.e...ifffg.....g", true );
-KlotskiBoard thinkfun2     (6, 6, ".a.ffe.a...e.a.dde...c.....cbb......", true );
+KlotskiBoard expert        (6, 6, "jjj..i.....i..abbi..aghhe.cgffe.cddd", true );
+KlotskiBoard reddit        (6, 6, ".adddm.ac..mbbc.ikffhhike.g.lle.gjjj", true );
+KlotskiBoard guh3          (6, 6, "akjjhhaknnigakbbigcffeigc..epplldd..", true );
+KlotskiBoard guh4          (6, 6, "dddaff...ahhbbca.eg.cppeg.nnikjjllik", true );
+KlotskiBoard video         (6, 6, "acdde.acdde.bbkg....kgm...igm...i...", true );
+KlotskiBoard thinkfun1     (6, 6, "a.cddda.c....bbe...i.e...ifffg.....g", true );
+KlotskiBoard thinkfun2     (6, 6, ".a.ffe.a...e.a.bbe...c.....cdd......", true );
 KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true );
 
 //big
@@ -185,6 +185,8 @@ KlotskiBoard truncatedsun  (4, 4, "abbcabbc.dd.efgh"                    , false)
 
 //geometry
 KlotskiBoard jam3x3        (6, 6, "cea...cea...cea......bbb...ddd...fff", true );
+KlotskiBoard manifold_2d   (6, 6, "ac..................................", true);
+KlotskiBoard manifold_3d   (6, 6, "ace.................................", true);
 KlotskiBoard cube_3d       (5, 5, "caa...aa..aaaaa..a....a.b"           , false);
 KlotskiBoard cube_4d       (5, 5, "c.a....a..aaaaa..a....a.b"           , false);
 KlotskiBoard cube_6d       (5, 5, "c.a.d..a..aaaaa..a....a.b"           , false);

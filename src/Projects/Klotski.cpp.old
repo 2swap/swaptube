@@ -11,13 +11,6 @@ auto rushhours = {beginner, intermediate, advanced, expert, reddit, guh3, guh4, 
 auto big = {sun};
 auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2, manifold_2d, manifold_3d};
 
-int get_graph_size(const KlotskiBoard& kb){
-    Graph g;
-    g.add_to_stack(new KlotskiBoard(kb));
-    g.expand_completely();
-    return g.size();
-}
-
 void step1(){
     CompositeScene cs;
 
@@ -67,7 +60,7 @@ void step1(){
     cs.render();
 
     ks.highlight_char = 'a';
-    cs.inject_audio_and_render(FileSegment("However, it can't do that yet, since this piece is in the way..."));
+    cs.inject_audio_and_render(FileSegment("However, this piece is in the way..."));
 
     cs.state_manager.microblock_transition(board_position);
     ks.state_manager.microblock_transition(board_width_height);
@@ -92,18 +85,9 @@ void step1(){
     cs.inject_audio_and_render(FileSegment("We'll represent the current position of the puzzle as a single node."));
 
     // Make one move and insert it on the graph.
+    ks.stage_random_move();
     ks.highlight_char = 'c';
-    cs.inject_audio(FileSegment("If we make a single move on the puzzle,"), 5);
-    ks.stage_move('c', 0, 1);
-    cs.render();
-    ks.stage_move('c', 0, -1);
-    cs.render();
-    ks.stage_move('c', 0, 1);
-    cs.render();
-    ks.stage_move('c', 0, -1);
-    cs.render();
-    ks.stage_move('c', 0, 1);
-    cs.render();
+    cs.inject_audio_and_render(FileSegment("If we make a single move on the puzzle,"));
     g.add_to_stack(new KlotskiBoard(ks.copy_staged_board()));
     g.add_missing_edges(true);
     gs.next_hash = ks.copy_board().get_hash();
@@ -132,9 +116,18 @@ void step1(){
     cs.state_manager.macroblock_transition({{"ks.opacity","0"}});
     cs.inject_audio_and_render(SilenceSegment(2));
 
-    // Expand the graph by one node until it is halfway complete. Fade out everything from the CompositeScene and then delete scenes when faded out.
+    // Expand the graph by one node until it is halfway complete.
+    int g_size;
+    {
+        // Compute how big the graph should be (and thus the number of microblocks needed)
+        Graph g2;
+        g2.add_to_stack(new KlotskiBoard(ks.copy_board()));
+        g2.expand_completely();
+        g_size = g2.size();
+    }
+    // Fade out everything from the CompositeScene and then delete scenes when faded out.
     cs.fade_out_all_scenes();
-    cs.inject_audio(FileSegment("If we make all of the possible moves, what do you think the graph would look like?"), get_graph_size(intermediate) * .1);
+    cs.inject_audio(FileSegment("If we make all of the possible moves, what do you think the graph would look like?"), g_size * .5);
     while(cs.microblocks_remaining()) {
         g.expand_once();
         cs.render();
@@ -142,7 +135,15 @@ void step1(){
     cs.remove_all_scenes();
 
     // TODO Create new GraphScene (with no corresponding KlotskiScene) for manifold_2d, fade it in while expanding the graph completely
-    cs.inject_audio(FileSegment("Maybe there would be some overarching structure..."), get_graph_size(manifold_2d));
+    int microblocks_2d;
+    {
+        // Compute how big the graph should be (and thus the number of microblocks needed)
+        Graph g2;
+        g2.add_to_stack(new KlotskiBoard(manifold_2d));
+        g2.expand_completely();
+        microblocks_2d = g2.size();
+    }
+    cs.inject_audio(FileSegment("Maybe there would be some overarching structure..."), microblocks_2d);
     Graph g2d;
     g2d.add_to_stack(new KlotskiBoard(manifold_2d));
     GraphScene gs2d(&g2d);
@@ -160,12 +161,20 @@ void step1(){
     cs.inject_audio_and_render(FileSegment("such as a two-dimensional grid,"));
 
     // TODO Create new GraphScene for manifold_3d on the right side of the screen and fade it in while expanding the graph completely 
-    cs.inject_audio(FileSegment("or a three-dimensional crystal lattice!"), get_graph_size(manifold_3d));
+    int microblocks_3d;
+    {
+        // Compute how big the graph should be (and thus the number of microblocks needed)
+        Graph g2;
+        g2.add_to_stack(new KlotskiBoard(manifold_3d));
+        g2.expand_completely();
+        microblocks_3d = g2.size();
+    }
+    cs.inject_audio(FileSegment("or a three-dimensional crystal lattice!"), microblocks_3d);
     Graph g3d;
     g3d.add_to_stack(new KlotskiBoard(manifold_3d));
-    GraphScene gs3d(&g3d, .5, 1);
+    GraphScene gs3d(&g3d);
     gs3d.state_manager.set(default_graph_state);
-    cs.add_scene_fade_in(&gs3d, "gs3d", 0.75, 0.5);
+    cs.add_scene_fade_in(&gs3d, "gs3d", 0.75, 0.25*VIDEO_WIDTH/VIDEO_HEIGHT);
     while(cs.microblocks_remaining()){
         g3d.expand_once();
         cs.render();
@@ -177,12 +186,20 @@ void step1(){
     cs.remove_all_scenes();
 
     // TODO fade in and expand a GraphScene for intermediate again, but this time override "physics_multiplier" to be zero so the graph structure is indiscernable.
-    cs.inject_audio(FileSegment("Maybe it's an incomprehensibly dense mesh of interconnected nodes with no grand structure."), 100);
+    int microblocks_intermediate;
+    {
+        // Compute how big the graph should be (and thus the number of microblocks needed)
+        Graph g2;
+        g2.add_to_stack(new KlotskiBoard(intermediate));
+        g2.expand_completely();
+        microblocks_intermediate = g2.size();
+    }
+    cs.inject_audio(FileSegment("Maybe it's an incomprehensibly dense mesh of interconnected nodes with no grand structure."), microblocks_intermediate);
     Graph g_int;
     g_int.add_to_stack(new KlotskiBoard(intermediate));
     GraphScene gs_int(&g_int);
     gs_int.state_manager.set(default_graph_state);
-    gs_int.state_manager.set({{"physics_multiplier","1"},{"attract","0"}});
+    gs_int.state_manager.set({{"physics_multiplier","0"}});
     cs.add_scene_fade_in(&gs_int, "gs_int");
     while(cs.microblocks_remaining()){
         g_int.expand_once();

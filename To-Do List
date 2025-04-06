@@ -1,8 +1,5 @@
 To-Do List
 
-Three-dimension scene is a total mess, refactor. Also refactor its interface with Graph/GraphScene
 Graph has random pointers all over and it probably shouldn't
 Scenes for making line graphs, bar charts, etc?
 Prepare c4 scene for steady state diagrams
-increase Bitrate? Somehow fight the youtube compression algorithm?
-Abstract out the idea of Coordinate Systems
