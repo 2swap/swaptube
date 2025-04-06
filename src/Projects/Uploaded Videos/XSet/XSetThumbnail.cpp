@@ -67,7 +67,7 @@ void intro() {
         {"seed_x_r", "0"},
         {"seed_x_i", "3"},
     });
-    ms.inject_audio_and_render(AudioSegment(2));
+    ms.stage_macroblock_and_render(AudioSegment(2));
 }
 
 int main() {

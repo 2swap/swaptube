@@ -65,7 +65,7 @@ void render_video() {
     comp.add_scene(&drag, "drag_s", 0, .8, 1, .1, true); 
     scene.physics_multiplier = 1;
 
-    comp.inject_audio_and_render(AudioSegment(2));
+    comp.stage_macroblock_and_render(AudioSegment(2));
 }
 int main() {
     Timer timer;

@@ -20,7 +20,7 @@ void render_complex() {
     state_manager.add_equation("root_i1", "<t> 3 * cos");
     state_manager.add_equation("root_r2", "<t> 4 * sin");
     state_manager.add_equation("root_i2", "<t> 5 * cos");
-    composite.inject_audio_and_render(AudioSegment(2));
+    composite.stage_macroblock_and_render(AudioSegment(2));
 
     state_manager.add_transition("root_r0", "0");
     state_manager.add_transition("root_i0", ".5");
@@ -28,24 +28,24 @@ void render_complex() {
     state_manager.add_transition("root_i1", "-1.5");
     state_manager.add_transition("root_r2", ".5");
     state_manager.add_transition("root_i2", ".7");
-    composite.inject_audio_and_render(AudioSegment(2));
+    composite.stage_macroblock_and_render(AudioSegment(2));
 
     for(int i = 0; i < 3; i++){
         coefficients.state_manager_roots_to_coefficients();
         state_manager.add_transition("mouse_x", "<coefficient_r2_pixel>");
         state_manager.add_transition("mouse_y", "<coefficient_i2_pixel>");
-        composite.inject_audio_and_render(AudioSegment(1));
+        composite.stage_macroblock_and_render(AudioSegment(1));
         state_manager.add_transition("coefficient_i2", "1.2");
         state_manager.add_transition("coefficient_r2", "1.2");
-        composite.inject_audio_and_render(AudioSegment(2));
+        composite.stage_macroblock_and_render(AudioSegment(2));
 
         coefficients.state_manager_coefficients_to_roots();
         state_manager.add_transition("mouse_x", "<root_r2_pixel> "+to_string(VIDEO_WIDTH/2)+" +");
         state_manager.add_transition("mouse_y", "<root_i2_pixel>");
-        composite.inject_audio_and_render(AudioSegment(1));
+        composite.stage_macroblock_and_render(AudioSegment(1));
         state_manager.add_transition("root_i2", "-1.2");
         state_manager.add_transition("root_r2", "1.6");
-        composite.inject_audio_and_render(AudioSegment(2));
+        composite.stage_macroblock_and_render(AudioSegment(2));
     }
 }
 
@@ -68,7 +68,7 @@ void render_3d(){
     state_manager.add_equation("qi", std::to_string(q.x));
     state_manager.add_equation("qj", std::to_string(q.y));
     state_manager.add_equation("qk", std::to_string(q.z));
-    tds.inject_audio_and_render(AudioSegment(2));
+    tds.stage_macroblock_and_render(AudioSegment(2));
 
     glm::dquat quats[6] = {PITCH_DOWN,PITCH_UP,YAW_RIGHT,YAW_LEFT,ROLL_CW,ROLL_CCW};
     for(glm::dquat mult : quats){
@@ -77,7 +77,7 @@ void render_3d(){
         state_manager.add_transition("qi", std::to_string(q.x));
         state_manager.add_transition("qj", std::to_string(q.y));
         state_manager.add_transition("qk", std::to_string(q.z));
-        tds.inject_audio_and_render(AudioSegment(2));
+        tds.stage_macroblock_and_render(AudioSegment(2));
     }
 }
 

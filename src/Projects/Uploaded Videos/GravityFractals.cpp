@@ -80,7 +80,7 @@ void render_2d() {
 
     // Drop an object
     if(FOR_REAL) sim.add_mobile_object(glm::dvec3(.6, -.4, 0), OPAQUE_WHITE);
-    comp.inject_audio_and_render(AudioSegment("Which planet is this falling particle going to crash into?"));
+    comp.stage_macroblock_and_render(AudioSegment("Which planet is this falling particle going to crash into?"));
     scene.state_manager.transition(unordered_map<string, string>{
         {"physics_multiplier", "6"},
         {"screen_center_x", "0"},
@@ -91,11 +91,11 @@ void render_2d() {
 
 
     // Do nothing, let the object keep falling
-    comp.inject_audio_and_render(AudioSegment("It's not an easy question."));
+    comp.stage_macroblock_and_render(AudioSegment("It's not an easy question."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
-    comp.inject_audio_and_render(AudioSegment("If you said the green one, you're right!"));
+    comp.stage_macroblock_and_render(AudioSegment("If you said the green one, you're right!"));
     scene.state_manager.set(unordered_map<string, string>{
         {"point_path.x", ".6"},
         {"point_path.y", "-.4"},
@@ -103,16 +103,16 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"point_path.opacity", "1"},
     });
-    comp.inject_audio_and_render(AudioSegment("But, it's hard to foresee this trajectory."));
+    comp.stage_macroblock_and_render(AudioSegment("But, it's hard to foresee this trajectory."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"point_path.x", "0.6 <t> 2 / sin 10 / +"},
         {"point_path.y", "-.4 <t> 2 / cos 10 / +"},
     });
-    comp.inject_audio_and_render(AudioSegment("Moving the starting point only a little bit causes a huge change in behavior."));
+    comp.stage_macroblock_and_render(AudioSegment("Moving the starting point only a little bit causes a huge change in behavior."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"point_path.opacity", "0"},
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
 
 
@@ -130,18 +130,18 @@ void render_2d() {
         sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet2.x"] + dx, (*scene.state_manager["planet2.y"] + dy, 0), planet2_color);
         sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet3.x"] + dx, (*scene.state_manager["planet3.y"] + dy, 0), planet3_color);
     }
-    comp.inject_audio_and_render(AudioSegment("We know for sure that the ones which start sufficiently close to each planet will indeed crash into it,"));
+    comp.stage_macroblock_and_render(AudioSegment("We know for sure that the ones which start sufficiently close to each planet will indeed crash into it,"));
     scene.state_manager.transition(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
-    comp.inject_audio_and_render(AudioSegment("due to a lack of energy to escape that planet's gravity well."));
+    comp.stage_macroblock_and_render(AudioSegment("due to a lack of energy to escape that planet's gravity well."));
 
 
 
     scene.state_manager.set(unordered_map<string, string>{
         {"physics_multiplier", "20"},
     });
-    comp.inject_audio_and_render(AudioSegment("But that reasoning only goes so far."));
+    comp.stage_macroblock_and_render(AudioSegment("But that reasoning only goes so far."));
     if(FOR_REAL)for (int i = 0; i < 500; i++) {
         float theta  = (rand() / double(RAND_MAX)) * 6.283;
         float radius = (rand() / double(RAND_MAX)) * 0.12;
@@ -151,9 +151,9 @@ void render_2d() {
         int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
         sim.add_mobile_object(pos, color);
     }
-    comp.inject_audio_and_render(AudioSegment("It's a mess when we look at points far away from the planets."));
-    comp.inject_audio_and_render(AudioSegment(3));
-    comp.inject_audio_and_render(AudioSegment("Now, I won't lead you on- this is not a problem with a clean solution. There's no simple equation here to tell you."));
+    comp.stage_macroblock_and_render(AudioSegment("It's a mess when we look at points far away from the planets."));
+    comp.stage_macroblock_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment("Now, I won't lead you on- this is not a problem with a clean solution. There's no simple equation here to tell you."));
     scene.state_manager.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
@@ -167,8 +167,8 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"predictions_opacity", "1"},
     });
-    comp.inject_audio_and_render(AudioSegment("I'll just go ahead and spoil the pattern."));
-    comp.inject_audio_and_render(AudioSegment("This plot shows, if an object is dropped at each point, the planet which it would crash into."));
+    comp.stage_macroblock_and_render(AudioSegment("I'll just go ahead and spoil the pattern."));
+    comp.stage_macroblock_and_render(AudioSegment("This plot shows, if an object is dropped at each point, the planet which it would crash into."));
 
 
 
@@ -178,12 +178,12 @@ void render_2d() {
         {"screen_center_y", "<t> 5 / sin"},
         {"zoom", "1.5"}
     });
-    comp.inject_audio_and_render(AudioSegment("There's a lot of emergent complexity going on here."));
+    comp.stage_macroblock_and_render(AudioSegment("There's a lot of emergent complexity going on here."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"zoom", "2"}
     });
-    comp.inject_audio_and_render(AudioSegment(6));
-    comp.inject_audio_and_render(AudioSegment("But, it seems like the complexity is finite... more about that later."));
+    comp.stage_macroblock_and_render(AudioSegment(6));
+    comp.stage_macroblock_and_render(AudioSegment("But, it seems like the complexity is finite... more about that later."));
 
 
 
@@ -205,19 +205,19 @@ void render_2d() {
         {"predictions_opacity", "0"},
         {"zoom", "0.5"}
     });
-    comp.inject_audio_and_render(AudioSegment("Let's watch an object at every point fall."));
+    comp.stage_macroblock_and_render(AudioSegment("Let's watch an object at every point fall."));
     scene.state_manager.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
 
 
 
-    comp.inject_audio_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
-    comp.inject_audio_and_render(AudioSegment("Wow."));
+    comp.stage_macroblock_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment("Wow."));
     scene.state_manager.set(unordered_map<string, string>{
         {"physics_multiplier", "20"},
     });
-    comp.inject_audio_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
     scene.state_manager.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
@@ -231,7 +231,7 @@ void render_2d() {
         {"planet2.y", "-.3"},
         {"planet2.z", "0"},
     });
-    comp.inject_audio_and_render(AudioSegment("We can also move around the planets and see how the plot changes."));
+    comp.stage_macroblock_and_render(AudioSegment("We can also move around the planets and see how the plot changes."));
 
 
 
@@ -244,7 +244,7 @@ void render_2d() {
         {"planet3.x", "-0.5 .75 *"},
         {"planet3.y", "0.288675 .75 *"}
     });
-    comp.inject_audio_and_render(AudioSegment("If their shape is symmetric, so is the plot."));
+    comp.stage_macroblock_and_render(AudioSegment("If their shape is symmetric, so is the plot."));
 
 
 
@@ -257,7 +257,7 @@ void render_2d() {
         {"planet3.x", "-0.3"},
         {"planet3.y", "0.2"}
     });
-    comp.inject_audio_and_render(AudioSegment("We can play around with some different shapes and watch what happens to the design."));
+    comp.stage_macroblock_and_render(AudioSegment("We can play around with some different shapes and watch what happens to the design."));
 
 
 
@@ -270,7 +270,7 @@ void render_2d() {
         {"planet3.x", "0"},
         {"planet3.y", "0"}
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
 
 
@@ -283,7 +283,7 @@ void render_2d() {
         {"planet3.x", "0.2"},
         {"planet3.y", "0.3"}
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
 
 
@@ -299,7 +299,7 @@ void render_2d() {
 
 
 
-    comp.inject_audio_and_render(AudioSegment("Let's drop a fourth one in there too and see what happens."));
+    comp.stage_macroblock_and_render(AudioSegment("Let's drop a fourth one in there too and see what happens."));
     // Add fourth planet far in the distance, and using the transition mechanics, slide it in from far away.
     sim.add_fixed_object(planet4_color, "planet4");
     scene.state_manager.set(unordered_map<string, string>{
@@ -311,11 +311,11 @@ void render_2d() {
         {"planet4.x", "0.5"},
         {"planet4.y", "-.5"}
     });
-    comp.inject_audio_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
 
 
 
-    comp.inject_audio_and_render(AudioSegment("And here's a fifth."));
+    comp.stage_macroblock_and_render(AudioSegment("And here's a fifth."));
     // Add fifth planet far in the distance, but using the transition mechanics, slide it in from far away.
     sim.add_fixed_object(planet5_color, "planet5");
     scene.state_manager.set(unordered_map<string, string>{
@@ -327,7 +327,7 @@ void render_2d() {
         {"planet5.x", "0"},
         {"planet5.y", "0"}
     });
-    comp.inject_audio_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
 
 
 
@@ -342,8 +342,8 @@ void render_2d() {
         {"planet4.x", "-.5"},
         {"planet4.y", "0.5"},
     });
-    comp.inject_audio_and_render(AudioSegment(5)); // Leave some time (3s) to appreciate the simulation
-    comp.inject_audio_and_render(AudioSegment(1)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(5)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(1)); // Leave some time (3s) to appreciate the simulation
     scene.state_manager.transition(unordered_map<string, string>{
         {"planet1.x", "-.3"},
         {"planet1.y", "-.5"},
@@ -354,8 +354,8 @@ void render_2d() {
         {"planet4.x", "-.8"},
         {"planet4.y", "0.5"},
     });
-    comp.inject_audio_and_render(AudioSegment(5)); // Leave some time (3s) to appreciate the simulation
-    comp.inject_audio_and_render(AudioSegment(1)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(5)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(1)); // Leave some time (3s) to appreciate the simulation
 
 
 
@@ -376,8 +376,8 @@ void render_2d() {
         }
         scene.state_manager.transition(pentagon_transitions);
     }
-    comp.inject_audio_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
-    comp.inject_audio_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
 
 
 
@@ -397,7 +397,7 @@ void render_2d() {
 
 
 
-    comp.inject_audio_and_render(AudioSegment("You might also be surprised to the amount of complexity observed from merely 2 planets."));
+    comp.stage_macroblock_and_render(AudioSegment("You might also be surprised to the amount of complexity observed from merely 2 planets."));
     // Remove all but 2 planets
     sim.remove_fixed_object("planet3");
     sim.remove_fixed_object("planet4");
@@ -408,16 +408,16 @@ void render_2d() {
         {"planet2.x", "-.1"},
         {"planet2.y", "-.1"},
     });
-    comp.inject_audio_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
-    comp.inject_audio_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
     scene.state_manager.transition(unordered_map<string, string>{
         {"planet1.x", "0.3"},
         {"planet1.y", "0.3"},
         {"planet2.x", "-.3"},
         {"planet2.y", "-.3"},
     });
-    comp.inject_audio_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
-    comp.inject_audio_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
 
 
 
@@ -433,11 +433,11 @@ void render_2d() {
         int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
         sim.add_mobile_object(pos, color);
     }
-    comp.inject_audio_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
     scene.state_manager.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
-    comp.inject_audio_and_render(AudioSegment(6)); // Leave some time (3s) to appreciate the simulation
+    comp.stage_macroblock_and_render(AudioSegment(6)); // Leave some time (3s) to appreciate the simulation
 
 
 
@@ -455,8 +455,8 @@ void render_2d() {
         {"planet3.z", "0"}
     });
     // Set the planets to be all black with the exception of planet 1, by accessing their data in the sim.
-    comp.inject_audio_and_render(AudioSegment("Now, one thing that I found super interesting is the presence of disjoint areas of the same color."));
-    comp.inject_audio_and_render(AudioSegment("What would cause two distinct areas which don't contact each other to drop to the same point?"));
+    comp.stage_macroblock_and_render(AudioSegment("Now, one thing that I found super interesting is the presence of disjoint areas of the same color."));
+    comp.stage_macroblock_and_render(AudioSegment("What would cause two distinct areas which don't contact each other to drop to the same point?"));
 
 
 
@@ -467,26 +467,26 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"point_path.opacity", "1"},
     });
-    comp.inject_audio_and_render(AudioSegment("Well, let's look around and see!"));
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment("Well, let's look around and see!"));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     scene.state_manager.transition(unordered_map<string, string>{
         {"point_path.x", "-.285 <t> cos 40 / +"},
         {"point_path.y", "-.8 <t> sin 10 / +"},
     });
-    comp.inject_audio_and_render(AudioSegment("The answer seems to be that a different region is associated with a different path of winding around the planets to get to the same spot."));
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment("The answer seems to be that a different region is associated with a different path of winding around the planets to get to the same spot."));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     scene.state_manager.transition(unordered_map<string, string>{
         {"point_path.x", "-.49 <t> cos 40 / +"},
         {"point_path.y", "-.88 <t> cos 10 / +"},
     });
-    comp.inject_audio_and_render(AudioSegment("But I wasn't really able to formalize that idea- leave a comment if you know of a way."));
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment("But I wasn't really able to formalize that idea- leave a comment if you know of a way."));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     //Disable predictions cause we are about to set drag to 0, so there is no convergence
     scene.state_manager.transition(unordered_map<string, string>{
         {"predictions_opacity", "0"},
         {"point_path.opacity", "0"},
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
 
 
@@ -494,31 +494,31 @@ void render_2d() {
     scene.state_manager.set(unordered_map<string, string>{
         {"drag", "1"},
     });
-    comp.inject_audio_and_render(AudioSegment("Now, those who know a thing or two about physics could probably tell you that, if these gravitational attractors are actually points, then in reality, you shouldn't ever actually crash."));
+    comp.stage_macroblock_and_render(AudioSegment("Now, those who know a thing or two about physics could probably tell you that, if these gravitational attractors are actually points, then in reality, you shouldn't ever actually crash."));
 
 
 
     // Drop an object, which since drag is now zero, should spin around forever.
     if(FOR_REAL) sim.add_mobile_object(glm::dvec3(0.5, -0.5, 0), OPAQUE_WHITE);
-    comp.inject_audio_and_render(AudioSegment("You might fall into a stable orbit or spin around chaotically forever, but your kinetic energy wouldn't dissipate enough to cause your orbit to decay into a crash."));
+    comp.stage_macroblock_and_render(AudioSegment("You might fall into a stable orbit or spin around chaotically forever, but your kinetic energy wouldn't dissipate enough to cause your orbit to decay into a crash."));
 
 
 
     // Start increasing drag back to what it was
     StateSliderScene drag("drag_slider", latex_text("Drag"), OPAQUE_WHITE, 0, .1, VIDEO_WIDTH*.4, VIDEO_HEIGHT*.1);
     comp.add_scene(&drag, "drag_s", .05, .85, .4, .1, true); 
-    comp.inject_audio_and_render(AudioSegment("And that's true! I am slightly cheating here- I am applying a constant force, a 'drag', per se, which slows the particle down."));
+    comp.stage_macroblock_and_render(AudioSegment("And that's true! I am slightly cheating here- I am applying a constant force, a 'drag', per se, which slows the particle down."));
 
 
 
     scene.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.94"},
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     scene.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.98"},
     });
-    comp.inject_audio_and_render(AudioSegment(1));
+    comp.stage_macroblock_and_render(AudioSegment(1));
 
 
 
@@ -526,7 +526,7 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"predictions_opacity", "1"},
     });
-    comp.inject_audio_and_render(AudioSegment("Let's mess around with this parameter and see what happens...!"));
+    comp.stage_macroblock_and_render(AudioSegment("Let's mess around with this parameter and see what happens...!"));
 
 
 
@@ -534,7 +534,7 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.94"},
     });
-    comp.inject_audio_and_render(AudioSegment("Check that out. Perhaps unsurprisingly, the greater the drag, the less complicated the orbital patterns are, because each particle will just slowly march to the nearest attractor."));
+    comp.stage_macroblock_and_render(AudioSegment("Check that out. Perhaps unsurprisingly, the greater the drag, the less complicated the orbital patterns are, because each particle will just slowly march to the nearest attractor."));
 
 
 
@@ -542,7 +542,7 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.91"},
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
 
 
@@ -550,7 +550,7 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.9925"},
     });
-    comp.inject_audio_and_render(AudioSegment("As drag decreases, the more time the object spends winding in complicated orbits before its fate is decided, and thus, the more scrambled the colors get."));
+    comp.stage_macroblock_and_render(AudioSegment("As drag decreases, the more time the object spends winding in complicated orbits before its fate is decided, and thus, the more scrambled the colors get."));
 
 
 
@@ -558,7 +558,7 @@ void render_2d() {
     scene.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.98"},
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
 
 
@@ -573,31 +573,31 @@ void render_2d() {
         {"planet3.x", "<t> 24 / sin .5 *"},
         {"planet3.y", "<t> 24 / cos .5 *"},
     });
-    comp.inject_audio_and_render(AudioSegment("Let me show you one other parameter which affects the output of the plot."));
+    comp.stage_macroblock_and_render(AudioSegment("Let me show you one other parameter which affects the output of the plot."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"tick_duration", "1.3"},
     });
-    comp.inject_audio_and_render(AudioSegment("This represents the resolution of time between which we recompute the forces and velocities on the falling objects."));
+    comp.stage_macroblock_and_render(AudioSegment("This represents the resolution of time between which we recompute the forces and velocities on the falling objects."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"tick_duration", ".1"},
     });
-    comp.inject_audio_and_render(AudioSegment("As it decreases, the lines between areas become perfectly flat."));
+    comp.stage_macroblock_and_render(AudioSegment("As it decreases, the lines between areas become perfectly flat."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"tick_duration", ".6"},
     });
-    comp.inject_audio_and_render(AudioSegment("As it increases- that is, as our simulation loses precision, these ripple-like artifacts are produced."));
+    comp.stage_macroblock_and_render(AudioSegment("As it increases- that is, as our simulation loses precision, these ripple-like artifacts are produced."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"tick_duration", "1.5"},
     });
-    comp.inject_audio_and_render(AudioSegment("This isn't representative of any physical property, but it was a hurdle for me to overcome while rendering these animations."));
+    comp.stage_macroblock_and_render(AudioSegment("This isn't representative of any physical property, but it was a hurdle for me to overcome while rendering these animations."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"tick_duration", ".05"},
     });
-    comp.inject_audio_and_render(AudioSegment("At first I wasn't certain whether they were an artifact of imprecise computations, or actually part of the diagram."));
+    comp.stage_macroblock_and_render(AudioSegment("At first I wasn't certain whether they were an artifact of imprecise computations, or actually part of the diagram."));
     scene.state_manager.transition(unordered_map<string, string>{
         {"predictions_opacity", "0"},
     });
-    comp.inject_audio_and_render(AudioSegment("But it seems like they're indeed a mirage!"));
+    comp.stage_macroblock_and_render(AudioSegment("But it seems like they're indeed a mirage!"));
 
 
 
@@ -615,8 +615,8 @@ void render_2d() {
         sim.add_mobile_object(glm::dvec3(0, 0.5, 0), cs.get_color());
         sim.mobile_interactions = true;
     }
-    comp.inject_audio_and_render(AudioSegment("This phenomenon is reminiscent of the three-body problem, where predicting the exact trajectory of each body becomes incredibly complex."));
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment("This phenomenon is reminiscent of the three-body problem, where predicting the exact trajectory of each body becomes incredibly complex."));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 }
 
 void render_3d() {
@@ -692,13 +692,13 @@ void render_3d() {
         {"d", "6"},
     });
 
-    comp.inject_audio_and_render(AudioSegment("We can try the same thing in 3D too! I've picked 4 tetrahedrally arranged points."));
+    comp.stage_macroblock_and_render(AudioSegment("We can try the same thing in 3D too! I've picked 4 tetrahedrally arranged points."));
     comp.state_manager.transition(unordered_map<string, string>{
         {"planet1.opacity", "0.5"},
         {"boundingbox.opacity", "1"},
     });
 
-    comp.inject_audio_and_render(AudioSegment("This shape in blue is the boundary of the area which converges towards the blue planet."));
+    comp.stage_macroblock_and_render(AudioSegment("This shape in blue is the boundary of the area which converges towards the blue planet."));
     comp.state_manager.transition(unordered_map<string, string>{
         {"planet1.opacity", "0.5"},
         {"planet2.opacity", ".03"},
@@ -711,7 +711,7 @@ void render_3d() {
         {"nonconverge.opacity", ".03"},
     });
 
-    comp.inject_audio_and_render(AudioSegment("Let's move the planets around a little and see what happens."));
+    comp.stage_macroblock_and_render(AudioSegment("Let's move the planets around a little and see what happens."));
     comp.state_manager.transition(unordered_map<string, string>{
         {"planet1.x", "-.6"},
         {"planet1.y", "-.3"},
@@ -727,36 +727,36 @@ void render_3d() {
         {"planet4.z", "0.3"}
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     StateSliderScene drag("drag_slider", latex_text("Drag"), OPAQUE_WHITE, 0, 0.08, VIDEO_WIDTH*.4, VIDEO_HEIGHT*.1);
     comp.add_scene(&drag, "drag_s", .05, .85, .4, .1, true);
 
-    comp.inject_audio_and_render(AudioSegment("Let's try playing with drag too!"));
+    comp.stage_macroblock_and_render(AudioSegment("Let's try playing with drag too!"));
     comp.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.99"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     comp.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.93"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     comp.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.97"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     comp.state_manager.transition(unordered_map<string, string>{
         {"planet3.x", "11"},
         {"planet4.x", "-11"},
     });
-    comp.inject_audio_and_render(AudioSegment("Now, let's simplify to just two planets."));
+    comp.stage_macroblock_and_render(AudioSegment("Now, let's simplify to just two planets."));
 
     // Demonstrate a 2-planet configuration, and comment on its radial symmetry
     sim.remove_fixed_object("planet3");
     sim.remove_fixed_object("planet4");
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     comp.state_manager.transition(unordered_map<string, string>{
         {"planet1.x", "0"}, {"planet1.y", "0"}, {"planet1.z", "0.45"},
         {"planet2.x", "0"}, {"planet2.y", "0"}, {"planet2.z", "-.45"},
@@ -766,14 +766,14 @@ void render_3d() {
         {"planet2.opacity", "0.5"},
     });
 
-    comp.inject_audio_and_render(AudioSegment("Check out the radial symmetry!"));
+    comp.stage_macroblock_and_render(AudioSegment("Check out the radial symmetry!"));
 
     // Subscene 3: Increase drag
     comp.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.96"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Demonstrate a 3-planet configuration, and comment on its mirror-plane symmetry
     sim.add_fixed_object(planet3_color, "planet3");
@@ -782,13 +782,13 @@ void render_3d() {
         {"planet3.y", "0"},
         {"planet3.z", "0"}
     });
-    comp.inject_audio_and_render(AudioSegment("With 3 planets you get this nice mirror-plane symmetry about the plane all 3 points lie on."));
+    comp.stage_macroblock_and_render(AudioSegment("With 3 planets you get this nice mirror-plane symmetry about the plane all 3 points lie on."));
 
     comp.state_manager.transition(unordered_map<string, string>{
         {"planet3.opacity", "0.5"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 1: Initial positions
     comp.state_manager.transition(unordered_map<string, string>{
@@ -797,17 +797,17 @@ void render_3d() {
         {"planet3.z", "0"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 3: Increase drag
     comp.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.98"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Introduce a configuration with 5 arbitrarily arranged planets
-    comp.inject_audio_and_render(AudioSegment("Here's 5 planets."));
+    comp.stage_macroblock_and_render(AudioSegment("Here's 5 planets."));
     sim.add_fixed_object(planet4_color, "planet4");
     sim.add_fixed_object(planet5_color, "planet5");
     comp.state_manager.set(unordered_map<string, string>{
@@ -824,7 +824,7 @@ void render_3d() {
         {"planet3.opacity", "0.03"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(5));
+    comp.stage_macroblock_and_render(AudioSegment(5));
     comp.state_manager.transition(unordered_map<string, string>{
         {"planet1.x", "-.4"}, {"planet1.y", "-.4"}, {"planet1.z", "-.4"},
         {"planet2.x", "0.4"}, {"planet2.y", "0.4"}, {"planet2.z", "0.4"},
@@ -833,14 +833,14 @@ void render_3d() {
         {"planet5.x", "-.4"}, {"planet5.y", "0.4"}, {"planet5.z", "0.4"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 3: Increase drag
     comp.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.96"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Demonstrate a configuration with 8 planets arranged in a cube
     sim.add_fixed_object(planet6_color, "planet6");
@@ -865,8 +865,8 @@ void render_3d() {
     });
 
 
-    comp.inject_audio_and_render(AudioSegment("And here's 8."));
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment("And here's 8."));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 2: Rotate positions
     comp.state_manager.transition(unordered_map<string, string>{
@@ -876,19 +876,19 @@ void render_3d() {
         {"planet3.x", "-.4"}, {"planet3.y", "0.4"}, {"planet3.z", "0.4"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 3: Increase drag
     comp.state_manager.transition(unordered_map<string, string>{
         {"drag", "0.94"},
     });
 
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
     comp.state_manager.transition(unordered_map<string, string>{
         {"lines_opacity", "0"},
         {"points_opacity", "0"},
     });
-    comp.inject_audio_and_render(AudioSegment(3));
+    comp.stage_macroblock_and_render(AudioSegment(3));
 }
 
 void render_credits() {
@@ -903,14 +903,14 @@ void render_credits() {
         {"l_s.x", "0.375 8 0.6 <transition_fraction> - 6 * ^ +"},
         {"l_s.y", "0.375"},
     });
-    cs.inject_audio_and_render(AudioSegment("This has been 2swap, with music from 6884!"));
+    cs.stage_macroblock_and_render(AudioSegment("This has been 2swap, with music from 6884!"));
     cs.state_manager.set(unordered_map<string, string>{
         {"t_s.x", "0.125"},
         {"t_s.y", "0.125"},
         {"l_s.x", "0.375"},
         {"l_s.y", "0.375"},
     });
-    cs.inject_audio_and_render(AudioSegment(2));
+    cs.stage_macroblock_and_render(AudioSegment(2));
 }
 
 int main() {

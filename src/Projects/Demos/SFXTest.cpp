@@ -94,7 +94,7 @@ void render_video() {
             ss["circle"+to_string(j)+"_y"] = to_string(rand_tet[j].second);
         }
         ms.state_manager.macroblock_transition(ss);
-        ms.inject_audio_and_render(SilenceSegment(.2));
-        ms.inject_audio_and_render(SilenceSegment(.8));
+        ms.stage_macroblock_and_render(SilenceSegment(.2));
+        ms.stage_macroblock_and_render(SilenceSegment(.8));
     }
 }

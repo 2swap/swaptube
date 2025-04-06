@@ -32,7 +32,7 @@ void render_video() {
         {"seed_x_r", "2"},
         {"seed_x_i", "0"},
     });
-    cs.inject_audio_and_render(SilenceSegment(2));
+    cs.stage_macroblock_and_render(SilenceSegment(2));
     /*
     Pixels *pix;
     ms.query(pix);

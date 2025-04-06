@@ -18,6 +18,6 @@ void render_video() {
         {"points_opacity", "0"},
         {"physics_multiplier", "1"},
     });
-    gs.inject_audio_and_render(AudioSegment(4));
+    gs.stage_macroblock_and_render(AudioSegment(4));
 }
 

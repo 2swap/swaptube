@@ -63,6 +63,6 @@ void render_video() {
         {"seed_z_i", "<t> 2.9 / cos 2 *"},
         {"zoom_exp", "2"},
     });
-    cs.inject_audio_and_render(AudioSegment("Here's a tour of the X-Set, by moving the origin around in 6-space. Enjoy!"));
-    cs.inject_audio_and_render(AudioSegment(35));
+    cs.stage_macroblock_and_render(AudioSegment("Here's a tour of the X-Set, by moving the origin around in 6-space. Enjoy!"));
+    cs.stage_macroblock_and_render(AudioSegment(35));
 }

@@ -18,5 +18,5 @@ void render_video() {
         {"physics_multiplier", "3"},
     });
     g.add_node(make_shared<HashableString>("Life"));
-    gs.inject_audio_and_render(SilenceSegment(1));
+    gs.stage_macroblock_and_render(SilenceSegment(1));
 }

@@ -36,7 +36,7 @@ void render_video() {
                 {"physics_multiplier", "3"},
             };
             gs.state_manager.set(state);
-            cs.inject_audio_and_render(SilenceSegment(1));
+            cs.stage_macroblock_and_render(SilenceSegment(1));
             g.render_json("../../Klotski/viewer/data/c4_"+variation+".json");
         }
     } catch (exception& e){

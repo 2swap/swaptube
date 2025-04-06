@@ -18,20 +18,20 @@ const int VIDEO_FRAMERATE = 30;
 void render_video(){
     PRINT_TO_TERMINAL = false;
     LatexScene latex(      "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline \\end{tabular}", 0.5);
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline \\end{tabular}");
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline \\end{tabular}");
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline\\end{tabular}");
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline \\end{tabular}");
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline \\end{tabular}");
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline ... & ... \\\\\\\\ \\hline \\text{Total} & 4,531,985,219,092 \\\\\\\\ \\hline \\end{tabular}");
-    latex.inject_audio_and_render(AudioSegment(1));
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
 }
 
 void render_latex_demo(){
@@ -39,16 +39,16 @@ void render_latex_demo(){
     
     // Initial LaTeX content: Introduction to LaTeX
     LatexScene latex("abc", 0.5);
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("a=bc");
-    latex.inject_audio_and_render(AudioSegment(1));
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("a=\\frac{b}{c}");
-    latex.inject_audio_and_render(AudioSegment(1));
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
     latex.begin_latex_transition("abcdef");
-    latex.inject_audio_and_render(AudioSegment(1));
-    latex.inject_audio_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
+    latex.stage_macroblock_and_render(AudioSegment(1));
 }
 
 int main() {

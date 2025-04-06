@@ -46,5 +46,5 @@ void render_video() {
     }
     g.expand_graph_completely();
     cout << g.size() << endl;
-    gs.inject_audio_and_render(SilenceSegment(5));
+    gs.stage_macroblock_and_render(SilenceSegment(5));
 }

@@ -60,7 +60,7 @@ void intro() {
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"tss.opacity", "1"},
     });
-    cs.inject_audio(AudioSegment("This has been 2swap."), 3);
+    cs.stage_macroblock(AudioSegment("This has been 2swap."), 3);
     cs.render();
     cs.render();
     ms.state_manager.microblock_transition(unordered_map<string,string>{
@@ -72,8 +72,8 @@ void intro() {
     LatexScene seef(latex_text("6884"), 1, .6, .27);
     cs.add_scene_fade_in(&seef, "seef", 0.6, 0.73);
     cs.add_scene_fade_in(&note, "note", 0.44, 0.73);
-    cs.inject_audio_and_render(AudioSegment("with music by 6884"));
-    cs.inject_audio_and_render(AudioSegment(1));
+    cs.stage_macroblock_and_render(AudioSegment("with music by 6884"));
+    cs.stage_macroblock_and_render(AudioSegment(1));
 }
 
 int main() {

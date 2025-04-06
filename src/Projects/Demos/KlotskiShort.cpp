@@ -38,7 +38,7 @@ void demo(){
         cs.add_scene(&gs, "gs");
 
         // Let a random agent make move around on the board and build the graph as it does, for 50 moves
-        cs.inject_audio(SilenceSegment(5), 50); // Stage a macroblock with 50 microblocks
+        cs.stage_macroblock(SilenceSegment(5), 50); // Stage a macroblock with 50 microblocks
         while(cs.microblocks_remaining()) {
             ks.stage_random_move();
             // Add the new node
@@ -50,7 +50,7 @@ void demo(){
         }
 
         // Expand the graph until all nodes are present
-        cs.inject_audio(SilenceSegment(2), (g_size-g.size())*1.2); // Stage a macroblock with more microblocks than graph nodes
+        cs.stage_macroblock(SilenceSegment(2), (g_size-g.size())*1.2); // Stage a macroblock with more microblocks than graph nodes
         while(cs.microblocks_remaining()) {
         }
     }

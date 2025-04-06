@@ -60,15 +60,15 @@ void render_video() {
     StateSliderScene drag("eps", "\\epsilon", 0, 1);
     comp.add_scene(&drag, "eps_s", 0, .9, 1, .1, true); 
 
-    scene.inject_audio_and_render(AudioSegment(3));
+    scene.stage_macroblock_and_render(AudioSegment(3));
     scene.state_manager.set(unordered_map<string, string>{
         {"eps", "0.0001"},
     });
-    scene.inject_audio_and_render(AudioSegment(3));
+    scene.stage_macroblock_and_render(AudioSegment(3));
     scene.state_manager.set(unordered_map<string, string>{
         {"eps", "0.00001"},
     });
-    scene.inject_audio_and_render(AudioSegment(3));
+    scene.stage_macroblock_and_render(AudioSegment(3));
 }
 int main() {
     Timer timer;

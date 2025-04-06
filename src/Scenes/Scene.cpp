@@ -60,8 +60,8 @@ public:
         p=&pix;
     }
 
-    void inject_audio_and_render(const AudioSegment& audio){
-        inject_audio(audio, 1);
+    void stage_macroblock_and_render(const AudioSegment& audio){
+        stage_macroblock(audio, 1);
         render();
     }
 
@@ -69,7 +69,7 @@ public:
         return remaining_microblocks != 0;
     }
 
-    void inject_audio(const AudioSegment& audio, int expected_microblocks){
+    void stage_macroblock(const AudioSegment& audio, int expected_microblocks){
         WRITER.add_shtooka(audio);
         if(!FOR_REAL)
             return;
@@ -152,7 +152,7 @@ private:
         state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"]});
 
         if (remaining_microblocks == 0) {
-            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
+            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock() or stage_macroblock_and_render()!");
         }
 
         Pixels* p = nullptr;
