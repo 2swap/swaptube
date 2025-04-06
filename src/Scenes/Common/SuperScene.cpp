@@ -47,12 +47,13 @@ public:
         return false;
     }
 
-    void fade_out_all_scenes() {
+    void fade_out_all_scenes(bool micro = true) {
         for (auto& subscene : subscenes) {
             unordered_map<string, string> map = {
                 {subscene.state_manager_name + ".opacity", "0"}
             };
-            state_manager.microblock_transition(map);
+            if(micro) state_manager.microblock_transition(map);
+            else      state_manager.macroblock_transition(map);
         }
     }
 
