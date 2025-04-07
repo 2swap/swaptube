@@ -3,3 +3,4 @@ To-Do List
 Graph has random pointers all over and it probably shouldn't
 Scenes for making line graphs, bar charts, etc?
 Prepare c4 scene for steady state diagrams
+AudioSegment object should handle converting filenames and silence durations to samples in the constructor

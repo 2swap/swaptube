@@ -18,7 +18,7 @@ public:
         : Scene(width, height), kb(_kb) {
             state_manager.set({
                 {"margin", "0.2"},
-                {"dots", "1"},
+                {"dots", kb.rushhour?"1":"0"},
             });
         }
 
@@ -77,7 +77,7 @@ public:
         double margin = state["margin"] * square_size;
         double qm = margin * .25;
         double hm = margin * .5;
-        double dots   = (kb.rushhour ? 1 : 0) * state["dots"];
+        double dots   = state["dots"];
         double microblock_fraction = state["microblock_fraction"];
         double micro  = smoothlerp(0,1,microblock_fraction);
 
