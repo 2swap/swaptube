@@ -477,6 +477,9 @@ void move_fractal(PendulumGridScene& pgs){
         {"perp.opacity", "0.3"},
         {"spiro_opacity", "1"},
     });
+    perp.state_manager.microblock_transition({
+        {"ticks_opacity", "0"},
+    });
     cs_spiro.inject_audio_and_render(FileSegment("Here's some spirographs from all over momentum-space."));
     cs_spiro.inject_audio_and_render(SilenceSegment(8));
     cs_spiro.state_manager.microblock_transition({
@@ -723,6 +726,7 @@ void outtro(){
         {"ps2.opacity", "0"},
     });
     cs.render();
+    cs.inject_audio_and_render(SilenceSegment(2));
     TwoswapScene ts;
     ts.state_manager.set({{"circle_opacity", "1"}});
     cs.state_manager.microblock_transition({{"pgs.opacity", "0.0"}});
@@ -736,10 +740,7 @@ void outtro(){
     cs.add_scene_fade_in(&seef, "seef", 0.6, 0.73);
     cs.add_scene_fade_in(&note, "note", 0.44, 0.73);
     cs.inject_audio_and_render(FileSegment("with music by 6884"));
-    cs.inject_audio_and_render(SilenceSegment(1));
-    cs.state_manager.microblock_transition({
-        {"ts.opacity", "0"},
-    });
+    cs.fade_out_all_scenes();
     cs.inject_audio_and_render(SilenceSegment(2));
     cs.inject_audio_and_render(SilenceSegment(0.5));
     cs.inject_audio_and_render(FileSegment("Oh! Also, I made a patreon page, and 6884 has a ko-fi. If you are interested in supporting the channel, I would greatly appreciate it! Links are in the description. Thanks for watching!"));
@@ -1577,7 +1578,7 @@ void render_video() {
 
     intro();
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
-    for (const vector<IslandShowcase>& isvh : {isv/*, isv2*/}) for(const IslandShowcase& is : isvh) {
+    for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
         const double t1 = is.ps.theta1;
         const double t2 = is.ps.theta2;

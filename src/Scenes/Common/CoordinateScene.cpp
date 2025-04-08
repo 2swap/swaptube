@@ -128,7 +128,7 @@ public:
                 string truncated = truncate_tick(x_y);
                 if(done_numbers.find(truncated) != done_numbers.end()) continue;
                 done_numbers.insert(truncated);
-                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 128.;
+                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 192.;
                 double frac = (x_y - lower_bound) / (upper_bound - lower_bound);
                 if(ymode) frac = 1-frac;
                 double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
