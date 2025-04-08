@@ -2,6 +2,8 @@
 #include "../../DataObjects/Pendulum.cpp"
 #include "../Scene.cpp"
 
+static DebugPlot pendulum_plot("Pendulum Position", vector<string>{"frame", "p1", "p2", "t1", "t2", "x", "y"});
+
 class PendulumScene : public Scene {
 public:
     PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), pend(s), start_state(s), path_background(get_width(), get_height()) {
@@ -53,6 +55,7 @@ public:
     }
     bool check_if_data_changed() const override { return pend.has_been_updated_since_last_scene_query(); }
     unordered_map<string, double> stage_publish_to_global() const override {
+        pendulum_plot.add_datapoint(vector<double>{global_state["frame_number"], pend.state.p1, pend.state.p2, pend.state.theta1, pend.state.theta2, sin(pend.state.theta1)+sin(pend.state.theta2), cos(pend.state.theta1)+cos(pend.state.theta2)});
         return unordered_map<string, double> {
             {"pendulum_p1", pend.state.p1},
             {"pendulum_p2", pend.state.p2},

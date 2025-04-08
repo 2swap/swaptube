@@ -20,6 +20,8 @@ struct IslandShowcase {
     string blurb;
 };
 
+int which_pendulum_record = 9;
+
 vector<IslandShowcase> isv{{{2.49  ,  .25   , .0, .0}, 0.4 , .02, "The Pretzel", "This big island of stability contains the Pretzel we saw earlier."},
                            {{2.658 , -2.19  , .0, .0}, 0.2 , .02, "The Shoelace", "This one, which I call the shoelace, traces a more complex pattern."},
                            {{2.453 , -2.7727, .0, .0}, 0.05, .02, "The Heart", "This one draws a picture of a heart. This island is particularly small."}};
@@ -760,11 +762,13 @@ void intro() {
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {5+.0000001*i, 8, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
+        ps->global_publisher_key = i==which_pendulum_record;
+        cout << i << " " << ps->global_publisher_key << endl;
         ps->state_manager.set({
             {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
             {"tone", to_string(notes[i])},
-            {"volume", "[volume_set1]"},
+            {"volume", to_string(ps->global_publisher_key?1:0)},//"[volume_set1]"},
             {"pendulum_opacity", "1"},
             {"physics_multiplier", "30"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
@@ -843,10 +847,11 @@ void intro() {
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {2.49+.0001*i, .25, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
+        ps->global_publisher_key = i+5==which_pendulum_record;
         ps->state_manager.set({
             {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
-            {"volume", "[volume_set2]"},
+            {"volume", to_string(ps->global_publisher_key?1:0)},//"[volume_set2]"},
             {"tone", to_string(notes2[i])},
             {"pendulum_opacity", "0"},
             {"physics_multiplier", "[stable_physics_multiplier]"},
@@ -932,6 +937,7 @@ void intro() {
     tds_cs.inject_audio_and_render(FileSegment("The only difference is the position from which they started."));
     tds_cs.remove_scene(&mpgs);
     tds_cs.remove_scene(&tds);
+    return;
     mpgs.inject_audio_and_render(SilenceSegment(0.5));
     mpgs.state_manager.macroblock_transition({
         {"ticks_opacity", "1"},
@@ -1577,6 +1583,7 @@ void render_video() {
 
 
     intro();
+    return;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
