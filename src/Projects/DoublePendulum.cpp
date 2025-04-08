@@ -474,11 +474,11 @@ void move_fractal(PendulumGridScene& pgs){
         {"spiro_opacity", "0"},
     });
     cs_spiro.state_manager.microblock_transition({
-        {"perp.opacity", "0.4"},
+        {"perp.opacity", "0.3"},
         {"spiro_opacity", "1"},
     });
     cs_spiro.inject_audio_and_render(FileSegment("Here's some spirographs from all over momentum-space."));
-    cs_spiro.inject_audio_and_render(SilenceSegment(4));
+    cs_spiro.inject_audio_and_render(SilenceSegment(8));
     cs_spiro.state_manager.microblock_transition({
         {"spiro_opacity", "0"},
     });
@@ -665,7 +665,7 @@ void outtro(){
     LatexScene ls5("\\dot{p}_1 = -\\frac{1}{2} m l \\left( 3 g \\sin\\theta_1 + l \\dot{\\theta}_1 \\dot{\\theta}_2 \\sin\\Delta \\right)", 1, 1, 0.1);
     LatexScene ls6("\\dot{p}_2 = -\\frac{1}{2} m l \\left( g \\sin\\theta_2 - l \\dot{\\theta}_1 \\dot{\\theta}_2 \\sin\\Delta \\right)", 1, 1, 0.1);
     LatexScene ls7(latex_text("...have no analytic solution."), 1, 1, 0.1);
-    cs.inject_audio(FileSegment("These definitions usually match up... but, the differential equations describing double pendulums have no analytic solution for _any_ starting position,"), 11);
+    cs.inject_audio(FileSegment("These definitions usually match up... but, the differential equations describing double pendulums have no analytic solution for _any_ nontrivial starting position,"), 11);
     cs.add_scene_fade_in(&ls1, "ls1", .5, .2);
     cs.render();
     cs.add_scene_fade_in(&ls2, "ls2", .5, .3);
@@ -694,9 +694,9 @@ void outtro(){
         {"ls7.opacity", "0"},
     });
     cs.inject_audio_and_render(FileSegment("but even so,"));
-    PendulumScene ps1({2.49, .25, .0, .0}, .31, .31);
-    PendulumScene ps2({1.5 , 1  , 8, 5}, .31, .31);
-    PendulumScene ps3({.0  , .0 ,10.,-15.}, .31, .31);
+    PendulumScene ps1({2.49, .25, .0, .0}, .3, .3);
+    PendulumScene ps2({1.5 , 1  , 8, 5}, .3, .3);
+    PendulumScene ps3({.0  , .0 ,10.,-15.}, .3, .3);
     StateSet ss = {
         {"rainbow", "0"},
         {"path_opacity", "1"},
@@ -704,7 +704,7 @@ void outtro(){
     ps1.state_manager.set(ss);
     ps2.state_manager.set(ss);
     ps3.state_manager.set(ss);
-    cs.inject_audio(FileSegment("this system is sufficiently fertile to support little gems of order in the rough, as any good chaos should."), 9);
+    cs.inject_audio(FileSegment("this system is sufficiently fertile to support little gems of order in the rough."), 9);
     cs.add_scene_fade_in(&ps1, "ps1", .5, .5);
     cs.render();
     cs.render();
@@ -731,11 +731,18 @@ void outtro(){
     cs.state_manager.set({
         {"ps3.opacity", "0"},
     });
+    PngScene note("note", 0.18, 0.18);
+    LatexScene seef(latex_text("6884"), 1, .6, .27);
+    cs.add_scene_fade_in(&seef, "seef", 0.6, 0.73);
+    cs.add_scene_fade_in(&note, "note", 0.44, 0.73);
+    cs.inject_audio_and_render(FileSegment("with music by 6884"));
+    cs.inject_audio_and_render(SilenceSegment(1));
     cs.state_manager.microblock_transition({
         {"ts.opacity", "0"},
     });
     cs.inject_audio_and_render(SilenceSegment(2));
     cs.inject_audio_and_render(SilenceSegment(0.5));
+    cs.inject_audio_and_render(FileSegment("Oh! Also, I made a patreon page, and 6884 has a ko-fi. If you are interested in supporting the channel, I would greatly appreciate it! Links are in the description. Thanks for watching!"));
 }
 
 void intro() {

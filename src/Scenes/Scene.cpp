@@ -145,7 +145,7 @@ private:
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
         global_state["t"] = global_state["frame_number"] / VIDEO_FRAMERATE;
 
-        state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"]});
+        state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
 
         if (remaining_microblocks == 0) {
             throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to inject_audio() or inject_audio_and_render()!");
