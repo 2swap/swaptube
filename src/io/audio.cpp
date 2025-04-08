@@ -322,7 +322,7 @@ public:
                 }
 
                 for (int i = 0; i < frameSize; ++i) {
-                    float sample = 0*sample_buffer[ch][i] + sfx_buffer[ch][i]; // Perform element-wise addition
+                    float sample = sample_buffer[ch][i] + sfx_buffer[ch][i]; // Perform element-wise addition
                     if(isnan(sample) || isinf(sample)) {
                         throw runtime_error("Audio was either inf or nan. SampleBuffer: " + to_string(sample_buffer[ch][i]) + ", SFXBuffer: " + to_string(sfx_buffer[ch][i]));
                     }
