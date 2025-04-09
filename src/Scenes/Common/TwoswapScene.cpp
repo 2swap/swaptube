@@ -24,7 +24,7 @@ public:
         pix.overwrite(twoswap_pix, pix.w/4+pix.w/14+pix.w/48, yval);
         if(state["swaptube_opacity"] > 0.01){
             ScalingParams sp2(pix.w*.4, pix.h*.2);
-            Pixels swaptube_pix = latex_to_pix(" \\normalsize" + latex_text("\\textbf{Rendered with love, using SwapTube}") + "\\\\\\\\" + "\\tiny" + latex_text("Commit Hash: " + swaptube_commit_hash()), sp2);
+            Pixels swaptube_pix = latex_to_pix(" \\normalsize" + latex_text("\\textbf{Animated with love, using SwapTube}") + "\\\\\\\\" + "\\tiny" + latex_text("Commit Hash: " + swaptube_commit_hash()), sp2);
             pix.overlay(swaptube_pix, pix.h*.03, pix.h*.03, state["swaptube_opacity"]);
         }
     }

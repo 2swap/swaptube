@@ -71,7 +71,7 @@ public:
                 int color = 0xffff0000;
 
                 double how_chaotic = max(0.,grid.diff_sums[i]/grid.samples*contrast);
-                if(mode < 1.999) color_mode0 = pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2);
+                if(mode < 1.999) color_mode0 = pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2, grid.pendulum_states[i].p1, grid.pendulum_states[i].p2);
                 if(mode > 0.001 && mode < 1.999) color_mode1 = colorlerp(color_mode0, OPAQUE_WHITE, how_chaotic);
                 if(mode > 1.001 && mode < 2.999) color_mode2 = black_to_blue_to_white(how_chaotic);
                 if(mode > 2.001) {

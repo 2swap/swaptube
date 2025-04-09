@@ -184,6 +184,7 @@ void showcase_momentum_space(PendulumGridScene& perp, double p1, double p2, doub
         {"pendulum_opacity", "1"},
         {"physics_multiplier", "400"},
         {"path_opacity", "1"},
+        {"rainbow", "0"},
     });
     cs.render();
     cs.render();
@@ -230,7 +231,7 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.add_scene(&pgs, "pgs");
     cs.inject_audio(FileSegment("We've seen how the pendulums which start near the angle zero-zero are very well-behaved."), 2);
     PendulumScene ps(down, .5, 1);
-    cs.add_scene_fade_in(&ps, "ps", 0.75, 0.5);
+    cs.add_scene_fade_in(&ps, "ps", 0.5, 0.5);
     cs.render();
     cs.render();
     LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .2, .2);
@@ -397,6 +398,7 @@ void move_fractal(PendulumGridScene& pgs){
     mpgs.state_manager.microblock_transition({
         {"theta_or_momentum", "1"},
         {"zoomexp", "1 40 / log"},
+        {"mode", "2"},
     });
     cs.inject_audio_and_render(FileSegment("I'm now reorienting the axes of our fractal to be in momentum-space instead of angle-space."));
     cs.inject_audio_and_render(SilenceSegment(0.5));
