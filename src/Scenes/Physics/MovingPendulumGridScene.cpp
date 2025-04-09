@@ -17,6 +17,7 @@ public:
         state_manager.add_equation("theta2", "0");
         state_manager.add_equation("p1", "0");
         state_manager.add_equation("p2", "0");
+        state_manager.add_equation("momentum_value_gradient", "1");
     }
 
     const StateQuery populate_state_query() const override {
@@ -32,6 +33,7 @@ public:
         s.insert("theta2");
         s.insert("p1");
         s.insert("p2");
+        s.insert("momentum_value_gradient");
         return s;
     }
 
@@ -47,6 +49,7 @@ public:
         const double cy = state["center_y"];
         const double contrast = state["contrast"];
         const double mode = state["mode"];
+        const double mvg = state["momentum_value_gradient"];
 
         const double coloration = 1000;
         const double log_coloration = log(coloration);
@@ -71,7 +74,9 @@ public:
                 int color = 0xffff0000;
 
                 double how_chaotic = max(0.,grid.diff_sums[i]/grid.samples*contrast);
-                if(mode < 1.999) color_mode0 = pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2, grid.pendulum_states[i].p1, grid.pendulum_states[i].p2);
+                double use_p1 = grid.pendulum_states[i].p1 * mvg;
+                double use_p2 = grid.pendulum_states[i].p2 * mvg;
+                if(mode < 1.999) color_mode0 = pendulum_color(grid.pendulum_states[i].theta1, grid.pendulum_states[i].theta2, use_p1, use_p2);
                 if(mode > 0.001 && mode < 1.999) color_mode1 = colorlerp(color_mode0, OPAQUE_WHITE, how_chaotic);
                 if(mode > 1.001 && mode < 2.999) color_mode2 = black_to_blue_to_white(how_chaotic);
                 if(mode > 2.001) {

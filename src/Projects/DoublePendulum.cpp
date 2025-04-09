@@ -231,11 +231,11 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.add_scene(&pgs, "pgs");
     cs.inject_audio(FileSegment("We've seen how the pendulums which start near the angle zero-zero are very well-behaved."), 2);
     PendulumScene ps(down, .5, 1);
-    cs.add_scene_fade_in(&ps, "ps", 0.5, 0.5);
+    cs.add_scene_fade_in(&ps, "ps", 0.5, 0.4);
     cs.render();
     cs.render();
     LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .2, .2);
-    cs.add_scene_fade_in(&low_energy, "low_energy", .75, .4);
+    cs.add_scene_fade_in(&low_energy, "low_energy", .5, .3);
     cs.inject_audio_and_render(FileSegment("Those pendulums have extremely low mechanical energy."));
     cs.inject_audio_and_render(FileSegment("So maybe energy is somehow involved?"));
     PendulumState vert = {0, 3.1, .0, .0};
@@ -398,7 +398,7 @@ void move_fractal(PendulumGridScene& pgs){
     mpgs.state_manager.microblock_transition({
         {"theta_or_momentum", "1"},
         {"zoomexp", "1 40 / log"},
-        {"mode", "2"},
+        {"momentum_value_gradient", "0"},
     });
     cs.inject_audio_and_render(FileSegment("I'm now reorienting the axes of our fractal to be in momentum-space instead of angle-space."));
     cs.inject_audio_and_render(SilenceSegment(0.5));
@@ -483,7 +483,7 @@ void move_fractal(PendulumGridScene& pgs){
         {"ticks_opacity", "0"},
     });
     cs_spiro.inject_audio_and_render(FileSegment("Here's some spirographs from all over momentum-space."));
-    cs_spiro.inject_audio_and_render(SilenceSegment(8));
+    cs_spiro.inject_audio_and_render(SilenceSegment(11));
     cs_spiro.state_manager.microblock_transition({
         {"spiro_opacity", "0"},
     });
@@ -728,7 +728,7 @@ void outtro(){
         {"ps2.opacity", "0"},
     });
     cs.render();
-    cs.inject_audio_and_render(SilenceSegment(2));
+    cs.inject_audio_and_render(SilenceSegment(1));
     TwoswapScene ts;
     ts.state_manager.set({{"circle_opacity", "1"}});
     cs.state_manager.microblock_transition({{"pgs.opacity", "0.0"}});
@@ -743,9 +743,9 @@ void outtro(){
     cs.add_scene_fade_in(&note, "note", 0.44, 0.73);
     cs.inject_audio_and_render(FileSegment("with music by 6884"));
     cs.fade_out_all_scenes();
-    cs.inject_audio_and_render(SilenceSegment(2));
-    cs.inject_audio_and_render(SilenceSegment(0.5));
-    cs.inject_audio_and_render(FileSegment("Oh! Also, I made a patreon page, and 6884 has a ko-fi. If you are interested in supporting the channel, I would greatly appreciate it! Links are in the description. Thanks for watching!"));
+    cs.inject_audio_and_render(FileSegment("Oh! Also, I made a patreon page, and 6884 has a ko-fi."));
+    cs.inject_audio_and_render(FileSegment("If you are interested in supporting the channel, I would greatly appreciate it!"));
+    cs.inject_audio_and_render(FileSegment("Links are in the description. Thanks for watching!"));
 }
 
 void intro() {
@@ -1578,7 +1578,7 @@ void render_video() {
     //FOR_REAL = false;
 
 
-    intro();
+    //intro();
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
@@ -1588,9 +1588,9 @@ void render_video() {
     }
     if(!FOR_REAL) for(PendulumGrid& p : grids) p.iterate_physics(50, .2/30);
     PendulumGridScene pgs(grids);
-    fine_grid(pgs);
-    showcase_islands(pgs);
-    discuss_energy(pgs);
+    //fine_grid(pgs);
+    //showcase_islands(pgs);
+    //discuss_energy(pgs);
     move_fractal(pgs);
-    outtro();
+    //outtro();
 }
