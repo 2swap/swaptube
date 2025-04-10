@@ -749,6 +749,7 @@ void outtro(){
 }
 
 void intro() {
+    FOR_REAL = false;
     cout << "Doing intro()" << endl;
     const double fov = 12;
     const double start_dist = 15*fov;
@@ -1229,10 +1230,11 @@ void intro() {
     int gridsize = 13;
     vector<PendulumScene> vps;
     double gridstep = 1./gridsize;
+    double wh_ratio = static_cast<double>(VIDEO_WIDTH)/VIDEO_HEIGHT;
     for(int x = 0; x < gridsize; x++){
         for(int y = 0; y < gridsize; y++){
             double x_mod = x + ((y%2==0) ? 0.75 : 0.25);
-            PendulumState pendulum_state = {-(x_mod-gridsize/2)*.2, (y-gridsize/2)*.2, .0, .0};
+            PendulumState pendulum_state = {(y-gridsize/2)*.1*wh_ratio, -(x_mod-gridsize/2)*.1, .0, .0};
             PendulumScene ps(pendulum_state, gridstep*2.5, gridstep*2.5);
             StateSet state = {
                 {"pendulum_opacity",   "[pendulum_opacity]"  },
@@ -1250,7 +1252,7 @@ void intro() {
             vps.push_back(ps);
         }
     }
-    PendulumGrid pg13(gridsize*2, gridsize*2, -.2*gridsize/2, .2*gridsize/2, -.2*gridsize/2, .2*gridsize/2, 0, 0, 0, 0);
+    PendulumGrid pg13(gridsize*2.*wh_ratio, gridsize*2, -.1*gridsize*wh_ratio/2, .1*gridsize*wh_ratio/2, -.1*gridsize/2, .1*gridsize/2, 0, 0, 0, 0);
     PendulumGridScene pgs13(vector<PendulumGrid>{pg13});
     PendulumGrid pgfull(VIDEO_HEIGHT, VIDEO_HEIGHT, 0, M_PI*2, 0, M_PI*2, 0, 0, 0, 0);
     pgs = PendulumGridScene(vector<PendulumGrid>{pgfull});
@@ -1318,6 +1320,7 @@ void intro() {
         {"manual_transition_2", "1"},
     });
     cs.inject_audio_and_render(FileSegment("and its y position corresponds to the bottom angle."));
+    FOR_REAL = true;
     vps[selected_pendulum].state_manager.microblock_transition({
         {"bottom_angle_opacity", "0"},
     });
@@ -1352,7 +1355,7 @@ void intro() {
         {"physics_multiplier", "0"},
         {"rk4_step_size", "1 30 / 5 /"},
     });
-    string zoomval = "5 " + to_string(gridsize) + " /";
+    string zoomval = "10 " + to_string(gridsize) + " /";
     pgs13.state_manager.set({
         {"physics_multiplier", "0"},
         {"zoom", zoomval},
@@ -1436,6 +1439,7 @@ void intro() {
     });
     
     cs.inject_audio_and_render(FileSegment("A nice feature of this fractal is that it tiles the plane."));
+    return;
     cs.inject_audio(FileSegment("Rotating either pendulum arm by 2pi yields the exact same position, so the fractal is periodic."), 2);
     pgs.state_manager.microblock_transition({
         {"center_x", "6.283"},
@@ -1578,7 +1582,8 @@ void render_video() {
     //FOR_REAL = false;
 
 
-    //intro();
+    intro();
+    return;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
@@ -1588,9 +1593,9 @@ void render_video() {
     }
     if(!FOR_REAL) for(PendulumGrid& p : grids) p.iterate_physics(50, .2/30);
     PendulumGridScene pgs(grids);
-    //fine_grid(pgs);
-    //showcase_islands(pgs);
-    //discuss_energy(pgs);
+    fine_grid(pgs);
+    showcase_islands(pgs);
+    discuss_energy(pgs);
     move_fractal(pgs);
-    //outtro();
+    outtro();
 }
