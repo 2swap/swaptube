@@ -235,7 +235,7 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.render();
     cs.render();
     LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .2, .2);
-    cs.add_scene_fade_in(&low_energy, "low_energy", .5, .3);
+    cs.add_scene_fade_in(&low_energy, "low_energy", .5, .35);
     cs.inject_audio_and_render(FileSegment("Those pendulums have extremely low mechanical energy."));
     cs.inject_audio_and_render(FileSegment("So maybe energy is somehow involved?"));
     PendulumState vert = {0, 3.1, .0, .0};
@@ -615,7 +615,7 @@ void fine_grid(PendulumGridScene& pgs){
         {"trail_start_y", "1.9 <t> 2 * cos 4 / +"},
     });
     pgs.inject_audio_and_render(SilenceSegment(2));
-    pgs.inject_audio_and_render(FileSegment("All hell breaks loose."));
+    pgs.inject_audio_and_render(FileSegment("The path becomes unpredictable."));
     pgs.inject_audio_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
         {"center_x", "3.1415"},
@@ -749,7 +749,6 @@ void outtro(){
 }
 
 void intro() {
-    FOR_REAL = false;
     cout << "Doing intro()" << endl;
     const double fov = 12;
     const double start_dist = 15*fov;
@@ -1320,7 +1319,6 @@ void intro() {
         {"manual_transition_2", "1"},
     });
     cs.inject_audio_and_render(FileSegment("and its y position corresponds to the bottom angle."));
-    FOR_REAL = true;
     vps[selected_pendulum].state_manager.microblock_transition({
         {"bottom_angle_opacity", "0"},
     });
@@ -1439,7 +1437,6 @@ void intro() {
     });
     
     cs.inject_audio_and_render(FileSegment("A nice feature of this fractal is that it tiles the plane."));
-    return;
     cs.inject_audio(FileSegment("Rotating either pendulum arm by 2pi yields the exact same position, so the fractal is periodic."), 2);
     pgs.state_manager.microblock_transition({
         {"center_x", "6.283"},
@@ -1583,7 +1580,6 @@ void render_video() {
 
 
     intro();
-    return;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
