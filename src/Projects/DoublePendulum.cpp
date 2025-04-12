@@ -184,6 +184,7 @@ void showcase_momentum_space(PendulumGridScene& perp, double p1, double p2, doub
         {"pendulum_opacity", "1"},
         {"physics_multiplier", "400"},
         {"path_opacity", "1"},
+        {"rainbow", "0"},
     });
     cs.render();
     cs.render();
@@ -230,11 +231,11 @@ void discuss_energy(PendulumGridScene& pgs){
     cs.add_scene(&pgs, "pgs");
     cs.stage_macroblock(FileSegment("We've seen how the pendulums which start near the angle zero-zero are very well-behaved."), 2);
     PendulumScene ps(down, .5, 1);
-    cs.add_scene_fade_in(&ps, "ps", 0.75, 0.5);
+    cs.add_scene_fade_in(&ps, "ps", 0.5, 0.4);
     cs.render();
     cs.render();
     LatexScene low_energy(latex_color(0xffff0000, latex_text("Low-Energy Pendulum")), 1, .2, .2);
-    cs.add_scene_fade_in(&low_energy, "low_energy", .75, .4);
+    cs.add_scene_fade_in(&low_energy, "low_energy", .5, .35);
     cs.stage_macroblock_and_render(FileSegment("Those pendulums have extremely low mechanical energy."));
     cs.stage_macroblock_and_render(FileSegment("So maybe energy is somehow involved?"));
     PendulumState vert = {0, 3.1, .0, .0};
@@ -397,6 +398,7 @@ void move_fractal(PendulumGridScene& pgs){
     mpgs.state_manager.microblock_transition({
         {"theta_or_momentum", "1"},
         {"zoomexp", "1 40 / log"},
+        {"momentum_value_gradient", "0"},
     });
     cs.stage_macroblock_and_render(FileSegment("I'm now reorienting the axes of our fractal to be in momentum-space instead of angle-space."));
     cs.stage_macroblock_and_render(SilenceSegment(0.5));
@@ -474,11 +476,14 @@ void move_fractal(PendulumGridScene& pgs){
         {"spiro_opacity", "0"},
     });
     cs_spiro.state_manager.microblock_transition({
-        {"perp.opacity", "0.4"},
+        {"perp.opacity", "0.3"},
         {"spiro_opacity", "1"},
     });
+    perp.state_manager.microblock_transition({
+        {"ticks_opacity", "0"},
+    });
     cs_spiro.stage_macroblock_and_render(FileSegment("Here's some spirographs from all over momentum-space."));
-    cs_spiro.stage_macroblock_and_render(SilenceSegment(4));
+    cs_spiro.stage_macroblock_and_render(SilenceSegment(11));
     cs_spiro.state_manager.microblock_transition({
         {"spiro_opacity", "0"},
     });
@@ -610,7 +615,7 @@ void fine_grid(PendulumGridScene& pgs){
         {"trail_start_y", "1.9 <t> 2 * cos 4 / +"},
     });
     pgs.stage_macroblock_and_render(SilenceSegment(2));
-    pgs.stage_macroblock_and_render(FileSegment("All hell breaks loose."));
+    pgs.stage_macroblock_and_render(FileSegment("The path becomes unpredictable."));
     pgs.stage_macroblock_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
         {"center_x", "3.1415"},
@@ -665,7 +670,7 @@ void outtro(){
     LatexScene ls5("\\dot{p}_1 = -\\frac{1}{2} m l \\left( 3 g \\sin\\theta_1 + l \\dot{\\theta}_1 \\dot{\\theta}_2 \\sin\\Delta \\right)", 1, 1, 0.1);
     LatexScene ls6("\\dot{p}_2 = -\\frac{1}{2} m l \\left( g \\sin\\theta_2 - l \\dot{\\theta}_1 \\dot{\\theta}_2 \\sin\\Delta \\right)", 1, 1, 0.1);
     LatexScene ls7(latex_text("...have no analytic solution."), 1, 1, 0.1);
-    cs.stage_macroblock(FileSegment("These definitions usually match up... but, the differential equations describing double pendulums have no analytic solution for _any_ starting position,"), 11);
+    cs.stage_macroblock(FileSegment("These definitions usually match up... but, the differential equations describing double pendulums have no analytic solution for _any_ nontrivial starting position,"), 11);
     cs.add_scene_fade_in(&ls1, "ls1", .5, .2);
     cs.render();
     cs.add_scene_fade_in(&ls2, "ls2", .5, .3);
@@ -694,9 +699,9 @@ void outtro(){
         {"ls7.opacity", "0"},
     });
     cs.stage_macroblock_and_render(FileSegment("but even so,"));
-    PendulumScene ps1({2.49, .25, .0, .0}, .31, .31);
-    PendulumScene ps2({1.5 , 1  , 8, 5}, .31, .31);
-    PendulumScene ps3({.0  , .0 ,10.,-15.}, .31, .31);
+    PendulumScene ps1({2.49, .25, .0, .0}, .3, .3);
+    PendulumScene ps2({1.5 , 1  , 8, 5}, .3, .3);
+    PendulumScene ps3({.0  , .0 ,10.,-15.}, .3, .3);
     StateSet ss = {
         {"rainbow", "0"},
         {"path_opacity", "1"},
@@ -704,7 +709,7 @@ void outtro(){
     ps1.state_manager.set(ss);
     ps2.state_manager.set(ss);
     ps3.state_manager.set(ss);
-    cs.stage_macroblock(FileSegment("this system is sufficiently fertile to support little gems of order in the rough, as any good chaos should."), 9);
+    cs.stage_macroblock(FileSegment("this system is sufficiently fertile to support little gems of order in the rough."), 9);
     cs.add_scene_fade_in(&ps1, "ps1", .5, .5);
     cs.render();
     cs.render();
@@ -723,6 +728,7 @@ void outtro(){
         {"ps2.opacity", "0"},
     });
     cs.render();
+    cs.stage_macroblock_and_render(SilenceSegment(1));
     TwoswapScene ts;
     ts.state_manager.set({{"circle_opacity", "1"}});
     cs.state_manager.microblock_transition({{"pgs.opacity", "0.0"}});
@@ -731,11 +737,15 @@ void outtro(){
     cs.state_manager.set({
         {"ps3.opacity", "0"},
     });
-    cs.state_manager.microblock_transition({
-        {"ts.opacity", "0"},
-    });
-    cs.stage_macroblock_and_render(SilenceSegment(2));
-    cs.stage_macroblock_and_render(SilenceSegment(0.5));
+    PngScene note("note", 0.18, 0.18);
+    LatexScene seef(latex_text("6884"), 1, .6, .27);
+    cs.add_scene_fade_in(&seef, "seef", 0.6, 0.73);
+    cs.add_scene_fade_in(&note, "note", 0.44, 0.73);
+    cs.stage_macroblock_and_render(FileSegment("with music by 6884"));
+    cs.fade_out_all_scenes();
+    cs.stage_macroblock_and_render(FileSegment("Oh! Also, I made a patreon page, and 6884 has a ko-fi."));
+    cs.stage_macroblock_and_render(FileSegment("If you are interested in supporting the channel, I would greatly appreciate it!"));
+    cs.stage_macroblock_and_render(FileSegment("Links are in the description. Thanks for watching!"));
 }
 
 void intro() {
@@ -1219,10 +1229,11 @@ void intro() {
     int gridsize = 13;
     vector<PendulumScene> vps;
     double gridstep = 1./gridsize;
+    double wh_ratio = static_cast<double>(VIDEO_WIDTH)/VIDEO_HEIGHT;
     for(int x = 0; x < gridsize; x++){
         for(int y = 0; y < gridsize; y++){
             double x_mod = x + ((y%2==0) ? 0.75 : 0.25);
-            PendulumState pendulum_state = {-(x_mod-gridsize/2)*.2, (y-gridsize/2)*.2, .0, .0};
+            PendulumState pendulum_state = {(y-gridsize/2)*.1*wh_ratio, -(x_mod-gridsize/2)*.1, .0, .0};
             PendulumScene ps(pendulum_state, gridstep*2.5, gridstep*2.5);
             StateSet state = {
                 {"pendulum_opacity",   "[pendulum_opacity]"  },
@@ -1240,7 +1251,7 @@ void intro() {
             vps.push_back(ps);
         }
     }
-    PendulumGrid pg13(gridsize*2, gridsize*2, -.2*gridsize/2, .2*gridsize/2, -.2*gridsize/2, .2*gridsize/2, 0, 0, 0, 0);
+    PendulumGrid pg13(gridsize*2.*wh_ratio, gridsize*2, -.1*gridsize*wh_ratio/2, .1*gridsize*wh_ratio/2, -.1*gridsize/2, .1*gridsize/2, 0, 0, 0, 0);
     PendulumGridScene pgs13(vector<PendulumGrid>{pg13});
     PendulumGrid pgfull(VIDEO_HEIGHT, VIDEO_HEIGHT, 0, M_PI*2, 0, M_PI*2, 0, 0, 0, 0);
     pgs = PendulumGridScene(vector<PendulumGrid>{pgfull});
@@ -1342,7 +1353,7 @@ void intro() {
         {"physics_multiplier", "0"},
         {"rk4_step_size", "1 30 / 5 /"},
     });
-    string zoomval = "5 " + to_string(gridsize) + " /";
+    string zoomval = "10 " + to_string(gridsize) + " /";
     pgs13.state_manager.set({
         {"physics_multiplier", "0"},
         {"zoom", zoomval},
@@ -1570,7 +1581,7 @@ void render_video() {
 
     intro();
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
-    for (const vector<IslandShowcase>& isvh : {isv/*, isv2*/}) for(const IslandShowcase& is : isvh) {
+    for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
         const double t1 = is.ps.theta1;
         const double t2 = is.ps.theta2;

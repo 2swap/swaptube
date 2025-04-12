@@ -61,7 +61,7 @@ int RGBtoYUV(const int rgb) {
     int y = clamp(static_cast<int>(round(y_f)), 0, 255);
     int u = clamp(static_cast<int>(round(u_f)), 0, 255);
     int v = clamp(static_cast<int>(round(v_f)), 0, 255);
-    return argb_to_col(255, y, u, v);
+    return argb_to_col(geta(rgb), y, u, v);
 }
 
 // Convert YUV to RGB
@@ -79,21 +79,42 @@ int YUVtoRGB(const int yuv) {
     int r = clamp(static_cast<int>(round(r_f)), 0, 255);
     int g = clamp(static_cast<int>(round(g_f)), 0, 255);
     int b = clamp(static_cast<int>(round(b_f)), 0, 255);
-    return argb_to_col(255, r, g, b);
+    return argb_to_col(geta(yuv), r, g, b);
+}
+
+// Convert HSV to RGB
+int HSVtoRGB(double h, double s, double v, int alpha = 255) {
+    double r_f, g_f, b_f;
+
+    if (s == 0.0) {
+        // Achromatic (grey)
+        r_f = g_f = b_f = v;
+    } else {
+        h = fmod(h, 1.0) * 6.0;  // Hue sector [0, 6)
+        int i = static_cast<int>(floor(h));
+        double f = h - i;
+        double p = v * (1.0 - s);
+        double q = v * (1.0 - s * f);
+        double t = v * (1.0 - s * (1.0 - f));
+
+        switch (i) {
+            case 0: r_f = v; g_f = t; b_f = p; break;
+            case 1: r_f = q; g_f = v; b_f = p; break;
+            case 2: r_f = p; g_f = v; b_f = t; break;
+            case 3: r_f = p; g_f = q; b_f = v; break;
+            case 4: r_f = t; g_f = p; b_f = v; break;
+            case 5: default: r_f = v; g_f = p; b_f = q; break;
+        }
+    }
+
+    // Scale to [0, 255] and clamp
+    int r = clamp(static_cast<int>(round(r_f * 255.0)), 0, 255);
+    int g = clamp(static_cast<int>(round(g_f * 255.0)), 0, 255);
+    int b = clamp(static_cast<int>(round(b_f * 255.0)), 0, 255);
+    return argb_to_col(alpha, r, g, b);
 }
 
 int pendulum_color_old(double angle1, double angle2) {
-    double r_f = 127.5 + 128 * (sin(angle1)*cos(angle2));
-    double g_f = 127.5 + 128 * (sin(angle1)*sin(angle2));
-    double b_f = 127.5 + 128 * (cos(angle1)            );
-
-    int r = clamp(static_cast<int>(round(r_f)), 0, 255);
-    int g = clamp(static_cast<int>(round(g_f)), 0, 255);
-    int b = clamp(static_cast<int>(round(b_f)), 0, 255);
-    return argb_to_col(255, r, g, b);
-}
-
-int pendulum_color(double angle1, double angle2) {
     angle1 += M_PI;
     double y_f = 127.5 +  64 * sin(angle1 + angle2);
     double u_f = 127.5 + 128 * sin(angle1)*cos(angle2);
@@ -103,6 +124,15 @@ int pendulum_color(double angle1, double angle2) {
     int u = clamp(static_cast<int>(round(u_f)), 0, 255);
     int v = clamp(static_cast<int>(round(v_f)), 0, 255);
     return YUVtoRGB(argb_to_col(255, y, u, v));
+}
+
+int pendulum_color(double angle1, double angle2, double p1, double p2) {
+    float sa1 = sin(angle1) + 0.000001;
+    float sa2 = sin(angle2);
+    float h = atan2(sa2, sa1)/6.283+1;
+    float s = min((square(sa1) + square(sa2))*5.,1.);
+    float v = 1-min(.1 * sqrt(p1*p1+p2*p2), 1.0);
+    return HSVtoRGB(h, s, v);
 }
 
 string latex_color(unsigned int color, string text) {

@@ -68,7 +68,7 @@ public:
         double in_manual_mode = state["manual_mode"];
         vector<double> thetas = {lerp(pend.state.theta1, state["theta1_manual"], in_manual_mode),
                                  lerp(pend.state.theta2, state["theta2_manual"], in_manual_mode)};
-        int color = pendulum_color(thetas[0], thetas[1]);
+        int color = pendulum_color(thetas[0], thetas[1], pend.state.p1, pend.state.p2);
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
 

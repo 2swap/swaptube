@@ -128,7 +128,7 @@ public:
                 string truncated = truncate_tick(x_y);
                 if(done_numbers.find(truncated) != done_numbers.end()) continue;
                 done_numbers.insert(truncated);
-                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 128.;
+                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 192.;
                 double frac = (x_y - lower_bound) / (upper_bound - lower_bound);
                 if(ymode) frac = 1-frac;
                 double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
@@ -139,9 +139,9 @@ public:
                 if(ymode) pix.bresenham(0, coordinate, tick_length, coordinate, OPAQUE_WHITE, number_opacity, 1);
                 else      pix.bresenham(coordinate, h-1, coordinate, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
-                    ScalingParams sp(gmsz/8., gmsz/16.);
+                    ScalingParams sp(gmsz/12., gmsz/24.);
                     Pixels latex = latex_to_pix(truncated, sp);
-                    if(!ymode) latex = latex.rotate_90();
+                    if(ymode) latex = latex.rotate_90();
                     if(ymode) pix.overlay(latex, tick_length * 1.5, coordinate - latex.h/2, number_opacity);
                     if(!ymode)pix.overlay(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
                 }

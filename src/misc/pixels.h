@@ -477,7 +477,7 @@ public:
         return result;
     }
 
-    Pixels rotate_90() const {
+    Pixels rotate_90_inverse() const {
         // Create a new Pixels object with swapped dimensions
         Pixels rotated(h, w);
 
@@ -485,6 +485,20 @@ public:
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
                 rotated.set_pixel(y, w-1-x, get_pixel(x, y));
+            }
+        }
+
+        return rotated;
+    }
+
+    Pixels rotate_90() const {
+        // Create a new Pixels object with swapped dimensions
+        Pixels rotated(h, w);
+
+        // Map each pixel to its new location
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                rotated.set_pixel(h-1-y, x, get_pixel(x, y));
             }
         }
 
