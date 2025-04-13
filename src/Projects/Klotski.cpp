@@ -200,13 +200,31 @@ void part2() {
     // Start over by adding a KlotskiScene.
     KlotskiScene ks(sun);
 
-    // TODO Make moves according to the shortest path to the position given by "abbcabbc.gehj.ehddif"
-    KlotskiBoard transition1(4, 5, "abbcabbc.gehj.ehddif", false);
-    ks.stage_macroblock_and_render(FileSegment("I fell down this rabbit hole when I was shown this particular slidy puzzle."));
+    // Abstracted function for performing shortest path moves.
+    auto perform_shortest_path = [&](KlotskiBoard end, const string &msg) {
+        Graph g;
+        g.add_to_stack(new KlotskiBoard(sun));
+        g.expand_completely();
+        auto path = g.shortest_path(ks.copy_board().get_hash(), end.get_hash()).first;
+        ks.stage_macroblock(FileSegment(msg), path.size()-1);
+        path.pop_front();
+        while(ks.microblocks_remaining()){
+            double next = *(path.begin());
+            path.pop_front();
+            Node node = g.nodes.at(next);
+            KlotskiBoard* next_board = dynamic_cast<KlotskiBoard*>(node.data);
+            ks.stage_move(ks.copy_board().move_required_to_reach(*next_board));
+            ks.render();
+        }
+    };
 
-    // TODO Make moves following the shortest path to the position given by "abbcabbcfidde.gheijh"
-    KlotskiBoard transition2(4, 5, "abbcabbcfidde.gheijh", false);
-    ks.stage_macroblock_and_render(FileSegment("It's called Klotski, and it's quite old."));
+    // Make moves according to the shortest path to the position given
+    perform_shortest_path(KlotskiBoard(4, 5, "abbcabbc.gehj.ehddif", false),
+                          "I fell down this rabbit hole when I was shown this particular slidy puzzle.");
+
+    // Make moves following the shortest path to the position given
+    perform_shortest_path(KlotskiBoard(4, 5, "abbcabbcfidde.ghe.jh", false),
+                          "It's called Klotski, and it's quite old.");
 
     // Hotswap to a new KlotskiScene "ks2" with only the sun on it.
     KlotskiScene ks2(KlotskiBoard(4, 5, ".bb..bb.............", false));
@@ -264,13 +282,16 @@ void part2() {
     las.render();
 
     // Transition to subpuzzle containing only blocks b and d
-    cs.remove_scene(&ks_intermediate);
-    cs.state_manager.set({{"ks.x",".5"}});
-    ks.state_manager.set({{"w","1"}});
+    cs.remove_all_scenes();
+    ks = KlotskiScene(sun);
+    cs.add_scene(&ks, "ks");
     cs.fade_out_all_scenes();
     KlotskiScene ks_bd(KlotskiBoard(4, 5, ".bb..bb..dd.........", false));
     cs.add_scene_fade_in(&ks_bd, "ks_bd");
     cs.stage_macroblock_and_render(SilenceSegment(1));
+    cs.remove_scene(&ks);
+
+    // Animate big piece going under small piece.
     cs.stage_macroblock(FileSegment("His conjecture was that the hardest part of the puzzle was moving the big piece underneath this horizontal block."), 5);
     ks_bd.stage_move({'b', 1, 0});
     cs.render();
@@ -283,28 +304,27 @@ void part2() {
     ks_bd.stage_move({'b', -1, 0});
     cs.render();
 
-    ks.stage_macroblock_and_render(FileSegment("To be honest, I still haven't even bothered solving it myself..."));
-    ks.stage_macroblock_and_render(FileSegment("I became more interested in seeing what this thing really looks like under the hood."));
-}
+    // Fade ks back in from ks_bd.
+    cs.fade_out_all_scenes();
+    cs.add_scene_fade_in(&ks, "ks", 0.5, 0.5);
+    cs.stage_macroblock_and_render(FileSegment("To be honest, I still haven't even bothered solving it myself..."));
 
-void part3() {
-    CompositeScene cs;
-    cs.stage_macroblock_and_render(FileSegment("Step 1 is the easy part."));
-    cs.stage_macroblock_and_render(FileSegment("Just make every possible move on the puzzle, and keep track of which states are reachable from which other states."));
-    cs.stage_macroblock_and_render(FileSegment("The hard part is representing this mess of data visually."));
-    cs.stage_macroblock_and_render(FileSegment("Now, there are lots of papers about how to do just that,"));
-    cs.stage_macroblock_and_render(FileSegment("but papers are for party poopers!"));
-    cs.stage_macroblock_and_render(FileSegment("Think of it like this... if it only takes one move to get from position A to position B, we want those two nodes to be close to each other."));
-    cs.stage_macroblock_and_render(FileSegment("If it takes longer, we want them to be further away."));
-    cs.stage_macroblock_and_render(FileSegment("So, how about we just make nearby nodes pull each other closer, as though there was some rubber band tying them together?"));
-    cs.stage_macroblock_and_render(FileSegment("Well, without any force to counteract it, they will all just get sucked together."));
-    cs.stage_macroblock_and_render(FileSegment("So, we will have non-neighbor nodes repel each other."));
-    cs.stage_macroblock_and_render(FileSegment("In other words, this whole graph is basically just simulated physically, where the nodes are protons and the edges are springs."));
+    // Start to grow a graph (a hundred nodes or so) in the background
+    cs.stage_macroblock(FileSegment("I became more interested in seeing what this thing really looks like under the hood."), 100);
+    Graph bg_graph;
+    bg_graph.add_to_stack(new KlotskiBoard(sun));
+    GraphScene bggs(&bg_graph);
+    bggs.state_manager.set({{"surfaces_opacity", "0.3"}, {"lines_opacity", "0.5"}});
+    cs.add_scene(&bggs, "bggs");
+    while(cs.microblocks_remaining()){
+        bg_graph.expand_once();
+        cs.render();
+    }
 }
 
 void render_video() {
+    //FOR_REAL = false;
+    //PRINT_TO_TERMINAL = false;
     part1();
     part2();
-    //part3();
-    // TODO Add a section analyzing the terrain of the final klotski graph
 }

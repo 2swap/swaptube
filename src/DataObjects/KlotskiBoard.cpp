@@ -22,6 +22,16 @@ shared_ptr<Scene> KlotskiBoard::make_scene() const {
     return make_shared<KlotskiScene>(KlotskiBoard(*this));
 }
 
+void KlotskiBoard::print() {
+    cout << endl;
+    for(int y = 0; y < h; y++) {
+        for(int x = 0; x < w; x++)
+            cout << representation[y*w+x];
+        cout << endl;
+    }
+    cout << endl;
+}
+
 bool KlotskiBoard::is_solution() {
     if (rushhour)
         return representation[17] == representation[16] && representation[16] != EMPTY_SPACE;
@@ -146,6 +156,28 @@ void KlotskiBoard::get_random_move(KlotskiMove& km) {
         }
         idx = rand() % idx;
     }
+}
+
+KlotskiMove KlotskiBoard::move_required_to_reach(const KlotskiBoard& kb) {
+    compute_letters();
+    double kb_hash = KlotskiBoard(kb).get_hash();
+    for (const char& letter: letters) {
+        for (int dy = -1; dy <= 1; dy++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                if ((dx + dy) % 2 == 0)
+                    continue;
+                if (rushhour && (letter - 'a' + dy) % 2 == 0)
+                    continue;
+                KlotskiMove cmove{letter, dx, dy};
+                if (can_move_piece(cmove)) {
+                    KlotskiBoard newBoard = move_piece(cmove);
+                    if (newBoard.get_hash() == kb_hash)
+                        return cmove;
+                }
+            }
+        }
+    }
+    return KlotskiMove{EMPTY_SPACE, 0, 0};
 }
 
 // Common Boards

@@ -35,10 +35,12 @@ public:
     bool is_solution() override;
     double type_specific_hash() override;
 
+    void print();
     void compute_letters();
     bool can_move_piece(const KlotskiMove& km);
     KlotskiBoard move_piece(const KlotskiMove& km);
     unordered_set<GenericBoard*> get_children();
     void get_random_move(KlotskiMove& km);
+    KlotskiMove move_required_to_reach(const KlotskiBoard& kb);
 };
 
