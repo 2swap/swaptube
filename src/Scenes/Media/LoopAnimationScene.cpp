@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_map>
 #include "../../io/VisualMedia.cpp"
 #include "../Scene.cpp"
 
@@ -23,10 +24,20 @@ public:
             throw runtime_error("Looped animation frame out of bounds!");
         const string& picture_name = picture_names[frame_no];
 
-        cout << "rendering png: " << picture_name << endl;
-        
-        // Load the PNG image into a Pixels object
-        Pixels image = png_to_pix_bounding_box(picture_name, get_width(), get_height());
+        int w = get_width();
+        int h = get_height();
+
+        // Retrieve or create the cached PNG image Pixels object
+        if(memo_w != w || memo_h != h){
+            pixel_cache.clear();
+            memo_w = w;
+            memo_h = h;
+        }
+        if(pixel_cache.find(picture_name) == pixel_cache.end()) {
+            cout << "rendering png: " << picture_name << endl;
+            pixel_cache[picture_name] = png_to_pix_bounding_box(picture_name, w, h);
+        }
+        Pixels image = pixel_cache[picture_name];
 
         // Calculate the position to center the image within the bounding box
         int x_offset = (get_width() - image.w) / 2;
@@ -43,5 +54,8 @@ public:
 
 private:
     const vector<string> picture_names;
+    int memo_w = 0;
+    int memo_h = 0;
+    unordered_map<string, Pixels> pixel_cache;
 };
 

@@ -66,31 +66,31 @@ double KlotskiBoard::type_specific_hash() {
     return hash_in_progress;
 }
 
-bool KlotskiBoard::can_move_piece(char letter, int dx, int dy) {
+bool KlotskiBoard::can_move_piece(const KlotskiMove& km) {
     for(int y = 0; y < h; y++)
         for(int x = 0; x < w; x++) {
-            if(representation[y*w + x] == letter) {
-                bool inside = in_bounds(0, y+dy, h) && in_bounds(0, x+dx, w);
+            if(representation[y*w + x] == km.piece) {
+                bool inside = in_bounds(0, y+km.dy, h) && in_bounds(0, x+km.dx, w);
                 if(!inside) return false;
-                char target = representation[(y+dy)*w + (x+dx)];
-                if(target != EMPTY_SPACE && target != letter)
+                char target = representation[(y+km.dy)*w + (x+km.dx)];
+                if(target != EMPTY_SPACE && target != km.piece)
                     return false;
             }
         }
     return true;
 }
 
-KlotskiBoard KlotskiBoard::move_piece(char letter, int dx, int dy) {
+KlotskiBoard KlotskiBoard::move_piece(const KlotskiMove& km) {
     string rep(h*w, EMPTY_SPACE);
     for(int y = 0; y < h; y++)
         for(int x = 0; x < w; x++) {
             int pos = y*w + x;
             char letter_here = representation[pos];
-            if(letter_here == letter) {
-                bool inside = in_bounds(0, y+dy, h) && in_bounds(0, x+dx, w);
+            if(letter_here == km.piece) {
+                bool inside = in_bounds(0, y+km.dy, h) && in_bounds(0, x+km.dx, w);
                 if(inside) {
-                    int target = (y+dy)*w + (x+dx);
-                    rep[target] = letter;
+                    int target = (y+km.dy)*w + (x+km.dx);
+                    rep[target] = km.piece;
                 }
             } else if(letter_here != EMPTY_SPACE)
                 rep[pos] = letter_here;
@@ -110,15 +110,16 @@ unordered_set<GenericBoard*> KlotskiBoard::get_children() {
                 if((dx+dy)%2 == 0) continue;
                 if(rushhour && (letter - 'a' + dy)%2 == 0) continue;
 
-                if(can_move_piece(letter, dx, dy))
-                    children.insert(new KlotskiBoard(move_piece(letter, dx, dy)));
+                KlotskiMove cmove{letter, dx, dy};
+                if(can_move_piece(cmove))
+                    children.insert(new KlotskiBoard(move_piece(cmove)));
             }
     }
 
     return children;
 }
 
-void KlotskiBoard::get_random_move(char& rc, int& rdx, int& rdy) {
+void KlotskiBoard::get_random_move(KlotskiMove& km) {
     int idx = 0;
     compute_letters();
 
@@ -129,14 +130,12 @@ void KlotskiBoard::get_random_move(char& rc, int& rdx, int& rdy) {
                     if((dx+dy)%2 == 0) continue;
                     if(rushhour && (letter - 'a' + dy)%2 == 0) continue;
 
-                    if(can_move_piece(letter, dx, dy)) {
+                    if(can_move_piece({letter, dx, dy})) {
                         if(count_dir == 0)
                             idx++;
                         else {
                             if(idx == 0) {
-                                rc = letter;
-                                rdx = dx;
-                                rdy = dy;
+                                km = {letter, dx, dy};
                                 return;
                             }
                             idx--;

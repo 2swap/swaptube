@@ -12,6 +12,12 @@ class KlotskiScene;  // Forward declaration
 
 #define EMPTY_SPACE '.'
 
+struct KlotskiMove {
+    char piece = '.';
+    int dx = 0;
+    int dy = 0;
+};
+
 bool in_bounds(int min, int val, int max);
 
 class KlotskiBoard : public GenericBoard {
@@ -30,9 +36,9 @@ public:
     double type_specific_hash() override;
 
     void compute_letters();
-    bool can_move_piece(char letter, int dx, int dy);
-    KlotskiBoard move_piece(char letter, int dx, int dy);
+    bool can_move_piece(const KlotskiMove& km);
+    KlotskiBoard move_piece(const KlotskiMove& km);
     unordered_set<GenericBoard*> get_children();
-    void get_random_move(char& rc, int& rdx, int& rdy);
+    void get_random_move(KlotskiMove& km);
 };
 

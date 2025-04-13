@@ -8,9 +8,7 @@
 class KlotskiScene : public Scene {
 private:
     KlotskiBoard kb;
-    char staged_char;
-    int staged_dx;
-    int staged_dy;
+    KlotskiMove staged_move{'.', 0, 0};
 
 public:
     char highlight_char = '.';
@@ -24,14 +22,14 @@ public:
 
     // No interactive state is needed for this static klotski scene.
     void on_end_transition(bool is_macroblock) override {
-        if (staged_char != '.') {
+        if (staged_move.piece != '.') {
             kb = copy_staged_board();
         }
-        staged_char = '.';
+        staged_move = {'.', 0, 0};
         if(is_macroblock)highlight_char = '.';
     }
     KlotskiBoard copy_staged_board() {
-        return kb.move_piece(staged_char, staged_dx, staged_dy);
+        return kb.move_piece(staged_move);
     }
     KlotskiBoard copy_board() {
         return kb;
@@ -43,18 +41,14 @@ public:
     void change_data() override { }
     bool check_if_data_changed() const override { return false; }
 
-    void stage_move(char c, int dx, int dy) {
-        staged_char = c;
-        staged_dx = dx;
-        staged_dy = dy;
+    void stage_move(const KlotskiMove& km) {
+        staged_move = km;
     }
 
     void stage_random_move() {
-        char sc;
-        int sdx;
-        int sdy;
-        kb.get_random_move(sc, sdx, sdy);
-        stage_move(sc, sdx, sdy);
+        KlotskiMove km{'.',0,0};
+        kb.get_random_move(km);
+        stage_move(km);
     }
 
     // The draw method renders the board.
@@ -116,8 +110,8 @@ public:
                 if (cell == '.')
                     continue;
 
-                double mx = staged_char == cell ? staged_dx * micro * square_size : 0;
-                double my = staged_char == cell ? staged_dy * micro * square_size : 0;
+                double mx = staged_move.piece == cell ? staged_move.dx * micro * square_size : 0;
+                double my = staged_move.piece == cell ? staged_move.dy * micro * square_size : 0;
 
                 // Determine the horizontal extent of the block.
                 bool hor_ext = x < kb.w - 1 && cell == kb.representation[index+1];
@@ -150,4 +144,3 @@ public:
         }
     }
 };
-

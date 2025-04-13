@@ -62,9 +62,9 @@ void part1(){
     ks.highlight_char = 'b';
     cs.render();
     int shift_dist = 4;
-    ks.stage_move('b', shift_dist, 0);
+    ks.stage_move({'b', shift_dist, 0});
     cs.render();
-    ks.stage_move('b', -shift_dist, 0);
+    ks.stage_move({'b', -shift_dist, 0});
     cs.render();
 
     ks.highlight_char = 'a';
@@ -95,15 +95,15 @@ void part1(){
     // Make one move and insert it on the graph.
     ks.highlight_char = 'c';
     cs.stage_macroblock(FileSegment("If we make a single move on the puzzle,"), 5);
-    ks.stage_move('c', 0, 1);
+    ks.stage_move({'c', 0, 1});
     cs.render();
-    ks.stage_move('c', 0, -1);
+    ks.stage_move({'c', 0, -1});
     cs.render();
-    ks.stage_move('c', 0, 1);
+    ks.stage_move({'c', 0, 1});
     cs.render();
-    ks.stage_move('c', 0, -1);
+    ks.stage_move({'c', 0, -1});
     cs.render();
-    ks.stage_move('c', 0, 1);
+    ks.stage_move({'c', 0, 1});
     cs.render();
     g.add_to_stack(new KlotskiBoard(ks.copy_staged_board()));
     g.add_missing_edges(true);
@@ -211,7 +211,11 @@ void part2() {
     // Hotswap to a new KlotskiScene "ks2" with only the sun on it.
     KlotskiScene ks2(KlotskiBoard(4, 5, ".bb..bb.............", false));
     // Show piece 'b' getting moved 3 units downward and back.
-    ks2.stage_macroblock_and_render(FileSegment("The goal is to get this big piece out of the bottom."));
+    ks2.stage_macroblock(FileSegment("The goal is to get this big piece out of the bottom."), 3);
+    ks2.stage_move({'b', 0, 3});
+    ks2.render();
+    ks2.stage_move({'b', 0, -3});
+    ks2.render();
 
     // Swap back to ks. Transition "dots" state element to 1 and back to 0 to introduce the pins over two microblocks
     ks.stage_macroblock(FileSegment("This one is slightly different in that there are no pins in the intersections,"), 2);
@@ -221,20 +225,27 @@ void part2() {
     ks.render();
 
     // Now that dots are back to 0, demonstrate a lateral move. (move piece 'e' right one space)
-    ks.stage_move('e', 1, 0);
+    ks.stage_move({'e', 1, 0});
     ks.stage_macroblock_and_render(FileSegment("meaning blocks are free to move laterally."));
 
-    // TODO Show the intermediate puzzle from before.
+    // Show the intermediate puzzle from before.
     CompositeScene cs;
     cs.add_scene(&ks, "ks");
-    KlotskiScene ks_intermediate(intermediate);
-    cs.add_scene_fade_in(&ks_intermediate, "ks_intermediate", .75, .5);
-    cs.state_manager.microblock_transition({{"ks.x",".25"}});
+    KlotskiScene ks_intermediate(intermediate, .5, 1);
+    cs.add_scene_fade_in(&ks_intermediate, "ks_intermediate", .25, .5);
+    cs.state_manager.microblock_transition({{"ks.x",".75"}});
     ks.state_manager.microblock_transition({{"w",".5"}});
-    ks.stage_macroblock_and_render(FileSegment("Compared to the previous puzzle, it's _much harder_."));
+    cs.stage_macroblock_and_render(FileSegment("Compared to the previous puzzle, it's _much harder_."));
 
     // Looping animation scene - me and coworker
-    LoopAnimationScene las({"coworker1", "coworker2", "coworker3", "give1", "give2", "give3", "trying1", "trying2", "trying3", "solved1", "solved2", "solved3", "dizzy1", "dizzy2", "dizzy3"});
+    LoopAnimationScene las({"coworker1", "coworker2", "coworker3", 
+                            //"give1", "give2", "give3",
+                            "trying1", "trying2", "trying3",
+                            "trying1", "trying2", "trying3",
+                            "trying1", "trying2", "trying3",
+                            "trying1", "trying2", "trying3"});
+                            //"solved1", "solved2", "solved3",
+                            //"dizzy1", "dizzy2", "dizzy3"});
     las.state_manager.set({{"loop_length", "3"}});
     las.stage_macroblock(FileSegment("I showed this one to a coworker before heading home,"), 2);
     las.render();
@@ -253,12 +264,24 @@ void part2() {
     las.render();
 
     // Transition to subpuzzle containing only blocks b and d
+    cs.remove_scene(&ks_intermediate);
     cs.state_manager.set({{"ks.x",".5"}});
     ks.state_manager.set({{"w","1"}});
     cs.fade_out_all_scenes();
     KlotskiScene ks_bd(KlotskiBoard(4, 5, ".bb..bb..dd.........", false));
     cs.add_scene_fade_in(&ks_bd, "ks_bd");
-    cs.stage_macroblock_and_render(FileSegment("His conjecture was that the hardest part of the puzzle was moving the big piece underneath this horizontal block."));
+    cs.stage_macroblock_and_render(SilenceSegment(1));
+    cs.stage_macroblock(FileSegment("His conjecture was that the hardest part of the puzzle was moving the big piece underneath this horizontal block."), 5);
+    ks_bd.stage_move({'b', 1, 0});
+    cs.render();
+    ks_bd.stage_move({'d', -1, 0});
+    cs.render();
+    ks_bd.stage_move({'b', 0, 3});
+    cs.render();
+    ks_bd.stage_move({'d', 1, 0});
+    cs.render();
+    ks_bd.stage_move({'b', -1, 0});
+    cs.render();
 
     ks.stage_macroblock_and_render(FileSegment("To be honest, I still haven't even bothered solving it myself..."));
     ks.stage_macroblock_and_render(FileSegment("I became more interested in seeing what this thing really looks like under the hood."));
@@ -280,7 +303,7 @@ void part3() {
 }
 
 void render_video() {
-    //part1();
+    part1();
     part2();
     //part3();
     // TODO Add a section analyzing the terrain of the final klotski graph
