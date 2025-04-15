@@ -55,7 +55,7 @@ public:
         const double log_coloration = log(coloration);
         const double tom = state["theta_or_momentum"];
 
-        PendulumGrid grid(w, h,
+        PendulumGrid grid(w, h, 0.0001,
             state["left_x"  ] * (1-tom) + state["theta1"],
             state["right_x" ] * (1-tom) + state["theta1"],
             state["bottom_y"] * (1-tom) + state["theta2"],

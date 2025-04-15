@@ -23,6 +23,7 @@ public:
 class PendulumGrid : public DataObject {
 public:
     int w; int h;
+    double delta;
     double t1_min;
     double t1_max;
     double t2_min;
@@ -40,12 +41,12 @@ public:
     vector<PendulumState> pendulum_pairs;
     vector<double> diff_sums;
     int samples = 0;
-    PendulumGrid(const int width, const int height,
+    PendulumGrid(const int width, const int height, const double d,
         const double t1_min, const double t1_max,
         const double t2_min, const double t2_max,
         const double p1_min, const double p1_max,
         const double p2_min, const double p2_max
-    ) : w(width), h(height), t1_min(t1_min), t1_max(t1_max), t2_min(t2_min), t2_max(t2_max), p1_min(p1_min), p1_max(p1_max), p2_min(p2_min), p2_max(p2_max) {
+    ) : w(width), h(height), delta(d), t1_min(t1_min), t1_max(t1_max), t2_min(t2_min), t2_max(t2_max), p1_min(p1_min), p1_max(p1_max), p2_min(p2_min), p2_max(p2_max) {
         min1 = (t1_min == t1_max) ? p1_min : t1_min;
         max1 = (t1_min == t1_max) ? p1_max : t1_max;
         min2 = (t2_min == t2_max) ? p2_min : t2_min;
@@ -65,7 +66,7 @@ public:
                                    };
                 pendulum_states[i] = ps;
                 start_states[i] = ps;
-                ps.theta1 += 0.0001;
+                ps.theta1 += delta;
                 pendulum_pairs[i] = ps;
             }
         }
