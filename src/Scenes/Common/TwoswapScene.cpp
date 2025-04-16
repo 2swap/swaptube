@@ -36,7 +36,7 @@ public:
         string result;
 
         // Open pipe to file
-        unique_ptr<FILE, decltype(&pclose)> pipe(popen(command, "r"), pclose);
+        unique_ptr<FILE, int(*)(FILE*)> pipe(popen(command, "r"), pclose);
         if (!pipe) {
             throw runtime_error("popen() failed!");
         }

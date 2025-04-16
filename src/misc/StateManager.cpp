@@ -140,9 +140,9 @@ public:
          */
         last_compute_order.clear();
         VariableContents new_vc(equation);
-        cout << "A: " << variable << ": " << new_vc.equation << endl; // This shows up correctly
+        //cout << "A: " << variable << ": " << new_vc.equation << endl; // This shows up correctly
         variables[variable] = new_vc;
-        cout << "B" << endl; // This doesn't show up
+        //cout << "B" << endl; // This doesn't show up
 
         // Parse equation to find dependencies and add them to the list
         size_t pos = 0;
@@ -206,9 +206,9 @@ public:
 
     void evaluate_all() {
         for(const pair<string, double> p : global_state){
-            cout << "0" << endl;
+            //cout << "0" << endl;
             add_equation(p.first, to_string(p.second));
-            cout << "1" << endl << endl;
+            //cout << "1" << endl << endl;
         }
 
         /* Step 1: Iterate through all variables,

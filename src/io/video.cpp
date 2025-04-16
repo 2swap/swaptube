@@ -256,8 +256,8 @@ public:
         // Writing the delayed video frames
         while(encode_and_write_frame(NULL));
 
-        // Closing the video codec.
-        avcodec_close(videoCodecContext);
+        // Free the video codec context.
+        avcodec_free_context(&videoCodecContext);
 
         // Freeing video specific resources
         av_frame_free(&yuvpic);

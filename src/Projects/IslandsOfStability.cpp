@@ -14,24 +14,27 @@ struct IslandShowcase {
     string blurb;
 };
 
-vector<IslandShowcase> isv{{{2.49  ,  .25   , .0, .0}, 0.4 , .02, "The Pretzel", "This big island of stability contains the Pretzel we saw earlier."},
-                           {{2.658 , -2.19  , .0, .0}, 0.2 , .02, "The Shoelace", "This one, which I call the shoelace, traces a more complex pattern."},
-                           {{2.453 , -2.7727, .0, .0}, 0.05, .02, "The Heart", "This one draws a picture of a heart. This island is particularly small."},
-                           {{1.351 ,  2.979 , .0, .0}, 0.2 , .06, "The Bird", "Although on a separate island from the lissajous pendulums,\\\\\\\\neither of its two arms does a flip."},
-                           {{0.567 ,  2.995 , .0, .0}, 0.2 , .08, "Big-Ears", "Similar to The Bird,\\\\\\\\this pendulum makes no flips."},
-                           {{1.484 ,  2.472 , .0, .0}, 0.2 , .06, "The Fishbowl", "Also makes no flips."},
-                           {{1.244 , -0.258 , .0, .0}, 0.2 , .05, "The Pistachio", "This island is in a region dotted with small islands of stability."},
-                           {{1.238 , -0.854 , .0, .0}, 0.2 , .06, "The ???", "This pendulum's period is very long,\\\\\\\\hence its sound being so deep."},
-                           {{1.311 , -0.804 , .0, .0}, 0.2 , .06, "Jake the Dog", "This pendulum lives right next to the ???"},
-                           {{0.028 ,  2.971 , .0, .0}, 0.2 , .06, "Asymmetric A", "The majority of the pendulums I found exhibit left-right symmetry.\\\\\\\\This is the first of 3 exceptions."},
-                           {{-.478 ,  2.633 , .0, .0}, 0.2 , .06, "Asymmetric B", "The second asymmetric island."},
-                           {{1.348 , -0.299 , .0, .0}, 0.2 , .06, "Asymmetric C", "This island is very close to the Pistachio."},
-                           {{0.572 ,  2.539 , .0, .0}, 0.2 , .06, "Seneca Lake", "This island is the largest of a region rich with\\\\\\\\long but thin islands of stability, named after\\\\\\\\the largest of the Fingerlakes of Upstate New York."},
-                           {{2.808 ,  0.046 , .0, .0}, 0.2 , .06, "The Jumper", "Nothing too complicated."},
-                           {{3.0224,  0.0295, .0, .0}, 0.2 , .06, "The High-Jumper", "This island is particularly close\\\\\\\\to the top angle being pi and the bottom angle being 0."},
-                           {{1.782 ,  0.137 , .0, .0}, 0.2 , .02, "The Necktie", "This pendulum traces a path very similar to the Pretzel,\\\\\\\\and its island is close to the Pretzel island of stability."}};
+vector<IslandShowcase> isv{//{{2.49  ,  .25   , .0, .0}, 0.6 , .02, "The Pretzel", "This big island of stability contains the Pretzel we saw earlier."},
+                           //{{2.658 , -2.19  , .0, .0}, 0.2 , .02, "The Shoelace", "This one, which I call the shoelace, traces a more complex pattern."},
+                           //{{2.453 , -2.7727, .0, .0}, 0.05, .02, "The Heart", "This one draws a picture of a heart. This island is particularly small."},
+                           //{{2.2486 , 0.4565, .0, .0}, 0.05, .02, "The Micro", "aaaa"},
+                           {{2.07302 , 0.32, .0, .0}, 0.02, .02, "The Micro", "aaaa"},
+                           //{{1.351 ,  2.979 , .0, .0}, 0.2 , .06, "The Bird", "Although on a separate island from the lissajous pendulums,\\\\\\\\neither of its two arms does a flip."},
+                           //{{0.567 ,  2.995 , .0, .0}, 0.2 , .08, "Big-Ears", "Similar to The Bird,\\\\\\\\this pendulum makes no flips."},
+                           //{{1.484 ,  2.472 , .0, .0}, 0.2 , .06, "The Fishbowl", "Also makes no flips."},
+                           //{{1.244 , -0.258 , .0, .0}, 0.2 , .05, "The Pistachio", "This island is in a region dotted with small islands of stability."},
+                           //{{1.238 , -0.854 , .0, .0}, 0.2 , .06, "The ???", "This pendulum's period is very long,\\\\\\\\hence its sound being so deep."},
+                           //{{1.311 , -0.804 , .0, .0}, 0.2 , .06, "Jake the Dog", "This pendulum lives right next to the ???"},
+                           //{{0.028 ,  2.971 , .0, .0}, 0.2 , .06, "Asymmetric A", "The majority of the pendulums I found exhibit left-right symmetry.\\\\\\\\This is the first of 3 exceptions."},
+                           //{{-.478 ,  2.633 , .0, .0}, 0.2 , .06, "Asymmetric B", "The second asymmetric island."},
+                           //{{1.348 , -0.299 , .0, .0}, 0.2 , .06, "Asymmetric C", "This island is very close to the Pistachio."},
+                           //{{0.572 ,  2.539 , .0, .0}, 0.2 , .06, "Seneca Lake", "This island is the largest of a region rich with\\\\\\\\long but thin islands of stability, named after\\\\\\\\the largest of the Fingerlakes of Upstate New York."},
+                           //{{2.808 ,  0.046 , .0, .0}, 0.2 , .06, "The Jumper", "Nothing too complicated."},
+                           //{{3.0224,  0.0295, .0, .0}, 0.2 , .06, "The High-Jumper", "This island is particularly close\\\\\\\\to the top angle being pi and the bottom angle being 0."},
+                           //{{1.782 ,  0.137 , .0, .0}, 0.2 , .02, "The Necktie", "This pendulum traces a path very similar to the Pretzel,\\\\\\\\and its island is close to the Pretzel island of stability."}
+};
 
-void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool spoken, bool first = false) {
+void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is) {
     cout << "Showcasing " << is.name << endl;
     const double range = is.range;
     const double cx = is.ps.theta1;
@@ -49,9 +52,7 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
         {"center_y", to_string(cy)},
         {"ticks_opacity", "0"},
     });
-    if(first)
-        pgs.stage_macroblock_and_render(FileSegment("These 'islands of stability' contain special pendulums which follow stable paths."));
-    else pgs.stage_macroblock_and_render(SilenceSegment(2));
+    pgs.stage_macroblock_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
         {"zoomexp", to_string(log(1/is.range))},
         {"circles_opacity", "0"},
@@ -84,17 +85,13 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
     cs.add_scene_fade_in(&ls2, "ls2", 0.5 , moveup?0.15:0.25);
     cs.add_scene_fade_in(&ts , "ts" , 0.25, 0.5 );
     LatexScene blurb(latex_text(is.blurb), .5, .2, 0.12);
-    if(!spoken){
-        cs.add_scene_fade_in(&blurb , "blurb" , 0.75, 0.9 );
-    }
+        //cs.add_scene_fade_in(&blurb , "blurb" , 0.75, 0.9 );
 
-    if(spoken) cs.stage_macroblock(FileSegment(is.blurb), 3);
-    else {
-        vector<float> audio_left;
-        vector<float> audio_right;
-        ps.generate_audio(5, audio_left, audio_right);
-        cs.stage_macroblock(GeneratedSegment(audio_left, audio_right), 3);
-    }
+    //cs.stage_macroblock(FileSegment(is.blurb), 3);
+    vector<float> audio_left;
+    vector<float> audio_right;
+    ps.generate_audio(10, audio_left, audio_right);
+    cs.stage_macroblock(GeneratedSegment(audio_left, audio_right), 3);
 
     cs.state_manager.microblock_transition({
         {"pgs.opacity", ".4"},
@@ -120,13 +117,6 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
     cs.render();
     cs.render();
     cs.render();
-    vector<float> audio2_left;
-    vector<float> audio2_right;
-    ps.generate_audio(3, audio2_left, audio2_right);
-    cs.stage_macroblock_and_render(GeneratedSegment(audio2_left, audio2_right));
-    if(!spoken) cs.state_manager.microblock_transition({
-        {"blurb.opacity", "0"},
-    });
     cs.state_manager.microblock_transition({
         {"pgs.opacity", "1"},
         {"ps.opacity", "0"},
@@ -140,12 +130,6 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
     });
     cs.stage_macroblock_and_render(SilenceSegment(1));
     cs.remove_scene(&pgs);
-}
-
-void showcase_islands(PendulumGridScene& pgs) {
-    cout << "Doing showcase_islands" << endl;
-    bool yet = true;
-    for(IslandShowcase is : isv) {showcase_an_island(pgs, is, true, yet); yet = false;}
 }
 
 void identify_vibrations(float t1, float t2) {
@@ -249,8 +233,15 @@ void render_video() {
     //PRINT_TO_TERMINAL = false;
     //FOR_REAL = false;
 
+    const int frequency = 300;
+    const int physmult = frequency/30;
+    const double stepsize = 1./frequency;
+    //stack_diagrams();
+    //return;
 
-    double delta = 0.0001;
+
+
+    double delta = 0.00001;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT*2, VIDEO_HEIGHT*2, delta, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
@@ -259,11 +250,6 @@ void render_video() {
         grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, delta, t1-ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t1+ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t2-ro2, t2+ro2, 0, 0, 0, 0));
     }
     PendulumGridScene pgs(grids);
-    const int frequency = 300;
-    const int physmult = frequency/30;
-    const double stepsize = 1./frequency;
-    stack_diagrams();
-    return;
     pgs.state_manager.set({
         {"rk4_step_size", to_string(stepsize)},
         {"physics_multiplier", to_string(physmult)},
@@ -274,8 +260,10 @@ void render_video() {
     });
     pgs.stage_macroblock_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
-        {"physics_multiplier", "5000"},
+        {"physics_multiplier", "500"},
     });
     pgs.stage_macroblock_and_render(SilenceSegment(2));
-    showcase_islands(pgs);
+    for(IslandShowcase is : isv) {
+        showcase_an_island(pgs, is);
+    }
 }
