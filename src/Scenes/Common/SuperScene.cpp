@@ -19,6 +19,14 @@ public:
         return !has_ever_rendered || state_change || data_change || subscene_change;
     }
 
+    void add_subscene_check_dupe(const NamedSubscene& subscene){
+        for(const NamedSubscene& ns : subscenes){
+            if(subscene.state_manager_name == ns.state_manager_name)
+                throw runtime_error("Error: Added two subscenes of the same name to superscene: " + subscene.state_manager_name);
+        }
+        subscenes.push_back(subscene);
+    }
+
     void change_data() override {
         for(const auto& subscene : subscenes){
             subscene.ptr->update();

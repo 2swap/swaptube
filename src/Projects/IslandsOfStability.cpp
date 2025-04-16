@@ -1,15 +1,9 @@
-#include "../Scenes/Common/ThreeDimensionScene.cpp"
-#include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Media/StateSliderScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Common/CoordinateSceneWithTrail.cpp"
 #include "../Scenes/Common/CoordinateScene.cpp"
 #include "../Scenes/Physics/PendulumScene.cpp"
 #include "../Scenes/Physics/PendulumGridScene.cpp"
-#include "../Scenes/Physics/MovingPendulumGridScene.cpp"
-#include "../Scenes/Physics/PendulumPointsScene.cpp"
-#include "../Scenes/Media/PngScene.cpp"
-#include "../Scenes/Media/Mp4Scene.cpp"
+#include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Common/TwoswapScene.cpp"
 
 struct IslandShowcase {
@@ -225,6 +219,31 @@ void sample_vibrations(){
     for(int x = -2; x <= 2; x++) for(int y = -2; y <= 2; y++) identify_vibrations(2.496147+.0000004*x, .2505+.000008*y);
 }
 
+void stack_diagrams(){
+    CompositeScene cs;
+
+    vector<PendulumScene> vps;
+    for(int i = 0; i < isv.size(); i++){
+        vps.push_back(PendulumScene(isv[i].ps, .5, 1));
+    }
+    for(int i = 0; i < isv.size(); i++){
+        PendulumScene& ps = vps[i];
+        string key = to_string(i);
+        cs.add_scene(&ps, "ps"+key, .75, .5);
+        ps.global_publisher_key = true;
+        ps.global_identifier = "p"+key+".";
+        CoordinateSceneWithTrail coord(.5, 1);
+        coord.state_manager.set({
+            {"zoom", "0.05"},
+            {"trail_opacity", "1"},
+            {"trail_x", "{p"+key+".pendulum_theta1}"},
+            {"trail_y", "{p"+key+".pendulum_theta2}"},
+        });
+        cs.add_scene(&coord, "coord"+key, 0.25, 0.5);
+    }
+    cs.stage_macroblock_and_render(SilenceSegment(10));
+}
+
 void render_video() {
     SAVE_FRAME_PNGS = false;
     //PRINT_TO_TERMINAL = false;
@@ -240,11 +259,16 @@ void render_video() {
         grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, delta, t1-ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t1+ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t2-ro2, t2+ro2, 0, 0, 0, 0));
     }
     PendulumGridScene pgs(grids);
+    const int frequency = 300;
+    const int physmult = frequency/30;
+    const double stepsize = 1./frequency;
+    stack_diagrams();
+    return;
     pgs.state_manager.set({
-        {"rk4_step_size", "1 300 /"},
-        {"physics_multiplier", "10"},
+        {"rk4_step_size", to_string(stepsize)},
+        {"physics_multiplier", to_string(physmult)},
     });
-    //pgs.stage_macroblock_and_render(SilenceSegment(4));
+    pgs.stage_macroblock_and_render(SilenceSegment(4));
     pgs.state_manager.microblock_transition({
         {"mode", "2"},
     });
@@ -253,5 +277,5 @@ void render_video() {
         {"physics_multiplier", "5000"},
     });
     pgs.stage_macroblock_and_render(SilenceSegment(2));
-    //showcase_islands(pgs);
+    showcase_islands(pgs);
 }

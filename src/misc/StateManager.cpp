@@ -131,7 +131,7 @@ public:
     void add_equation(string variable, string equation) {
         // Validate variable name to contain only letters, numbers, dots, and underscores
         regex valid_variable_regex("^[a-zA-Z0-9._]+$");
-        if (!std::regex_match(variable, valid_variable_regex)) {
+        if (!regex_match(variable, valid_variable_regex)) {
             throw runtime_error("Error adding equation to state manager: Variable name '" + variable + "' contains invalid characters.");
         }
 
@@ -139,7 +139,10 @@ public:
          * correct compute order anymore since there are new equations.
          */
         last_compute_order.clear();
-        variables[variable] = VariableContents(equation);
+        VariableContents new_vc(equation);
+        cout << "A: " << variable << ": " << new_vc.equation << endl; // This shows up correctly
+        variables[variable] = new_vc;
+        cout << "B" << endl; // This doesn't show up
 
         // Parse equation to find dependencies and add them to the list
         size_t pos = 0;
@@ -172,22 +175,22 @@ public:
     }
 
     /* Bulk Modifiers. Naive. One per modifier. */
-    void microblock_transition(std::unordered_map<std::string, std::string> equations) {
+    void microblock_transition(unordered_map<string, string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             add_microblock_transition(it->first, it->second);
         }
     }
-    void macroblock_transition(std::unordered_map<std::string, std::string> equations) {
+    void macroblock_transition(unordered_map<string, string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             add_macroblock_transition(it->first, it->second);
         }
     }
-    void set(std::unordered_map<std::string, std::string> equations) {
+    void set(unordered_map<string, string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             add_equation(it->first, it->second);
         }
     }
-    void remove_equations(std::unordered_map<std::string, std::string> equations) {
+    void remove_equations(unordered_map<string, string> equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             remove_equation(it->first);
         }
@@ -203,7 +206,9 @@ public:
 
     void evaluate_all() {
         for(const pair<string, double> p : global_state){
+            cout << "0" << endl;
             add_equation(p.first, to_string(p.second));
+            cout << "1" << endl << endl;
         }
 
         /* Step 1: Iterate through all variables,
@@ -491,4 +496,3 @@ void test_state_manager() {
     assert(state1 == state1);  // State1 and State1 should be equal
     assert(state2 == state2);  // State2 and State2 should be equal
 }
-

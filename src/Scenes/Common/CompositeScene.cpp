@@ -33,7 +33,7 @@ public:
             {state_manager_name + ".opacity", "1"},
         });
         NamedSubscene subscene = {sc, state_manager_name};
-        subscenes.push_back(subscene);
+        add_subscene_check_dupe(subscene);
     }
 
     void draw() override {
