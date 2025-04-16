@@ -19,6 +19,7 @@ inline double fourth(double x){return square(square(x));}
 inline double smoother1(double x){return 3*x*x-2*x*x*x;}
 inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
 inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
+inline float float_lerp(float a, float b, float w){return a*(1-w)+b*w;}
 inline glm::dvec3 veclerp(glm::dvec3 a, glm::dvec3 b, double w){return a*(1-w)+b*w;}
 inline glm::dvec4 veclerp(glm::dvec4 a, glm::dvec4 b, double w){return a*(1-w)+b*w;}
 inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}

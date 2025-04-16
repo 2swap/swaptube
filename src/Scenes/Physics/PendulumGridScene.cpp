@@ -144,9 +144,9 @@ public:
     void draw_pendulum_trail(){
         const double trail_opacity = state["trail_opacity"];
         if(trail_opacity < 0.01) return;
-        const double trail_start_x = state["trail_start_x"];
-        const double trail_start_y = state["trail_start_y"];
-        const double trail_length = state["trail_length"];
+        const float trail_start_x = state["trail_start_x"];
+        const float trail_start_y = state["trail_start_y"];
+        const float trail_length = state["trail_length"];
         Pendulum p({trail_start_x, trail_start_y, 0, 0});
         vector<pair<double, double>> trail;
         for(int i = 0; i < trail_length; i++){

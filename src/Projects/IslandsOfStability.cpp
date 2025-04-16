@@ -79,7 +79,7 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is, bool s
     str_p2 = str_p2.erase(str_cy.find_last_not_of('0') + 1);
     string latex_str = "\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy;
     bool moveup = false;
-    if(is.ps.p1 != 0) { latex_str += ", p_1 = " + str_p1; ps.alpha_subtract = 1; moveup = true; }
+    if(is.ps.p1 != 0) { latex_str += ", p_1 = " + str_p1; moveup = true; }
     if(is.ps.p2 != 0)   latex_str += ", p_2 = " + str_p2;
     LatexScene ls2(latex_str, 1, 1, 0.12);
 
@@ -154,7 +154,7 @@ void showcase_islands(PendulumGridScene& pgs) {
     for(IslandShowcase is : isv) {showcase_an_island(pgs, is, true, yet); yet = false;}
 }
 
-void identify_vibrations(double t1, double t2) {
+void identify_vibrations(float t1, float t2) {
     CompositeScene cs;
     vector<PendulumState> start_states = {
                                           {t1, t2, 0, 0},
@@ -244,14 +244,14 @@ void render_video() {
         {"rk4_step_size", "1 300 /"},
         {"physics_multiplier", "10"},
     });
-    pgs.stage_macroblock_and_render(SilenceSegment(4));
+    //pgs.stage_macroblock_and_render(SilenceSegment(4));
     pgs.state_manager.microblock_transition({
         {"mode", "2"},
     });
     pgs.stage_macroblock_and_render(SilenceSegment(2));
     pgs.state_manager.microblock_transition({
-        {"physics_multiplier", "1000"},
+        {"physics_multiplier", "5000"},
     });
     pgs.stage_macroblock_and_render(SilenceSegment(2));
-    showcase_islands(pgs);
+    //showcase_islands(pgs);
 }
