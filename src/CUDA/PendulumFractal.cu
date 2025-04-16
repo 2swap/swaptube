@@ -7,7 +7,7 @@ __global__ void pendulum_simulation_kernel(
     PendulumState* d_states,
     int n,
     int multiplier,
-    float dt
+    pendulum_type dt
 ) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= n) return;
@@ -21,7 +21,7 @@ extern "C" void simulatePendulum(
     PendulumState* states, // Pointer to pendulum states in host memory
     int n,                 // Number of pendulums
     int multiplier,
-    float dt              // Time step
+    pendulum_type dt              // Time step
 ) {
     PendulumState* d_states;
 
@@ -49,10 +49,10 @@ extern "C" void simulatePendulum(
 __global__ void double_pendulum_simulation_kernel(
     PendulumState* d_states,
     PendulumState* d_pairs,
-    float* d_diffs,
+    pendulum_type* d_diffs,
     int n,
     int multiplier,
-    float dt
+    pendulum_type dt
 ) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= n) return;
@@ -61,11 +61,11 @@ __global__ void double_pendulum_simulation_kernel(
     for(int i = 0; i < multiplier; i++) {
         d_states[idx] = rk4Step(d_states[idx], dt);
         d_pairs[idx] = rk4Step(d_pairs[idx], dt);
-        float p1_dist = d_states[idx].p1 - d_pairs[idx].p1;
-        float p2_dist = d_states[idx].p2 - d_pairs[idx].p2;
-        float theta1_dist = d_states[idx].theta1 - d_pairs[idx].theta1;
-        float theta2_dist = d_states[idx].theta2 - d_pairs[idx].theta2;
-        float distance = sqrt(p1_dist*p1_dist + p2_dist*p2_dist + theta1_dist*theta1_dist + theta2_dist*theta2_dist);
+        pendulum_type p1_dist = d_states[idx].p1 - d_pairs[idx].p1;
+        pendulum_type p2_dist = d_states[idx].p2 - d_pairs[idx].p2;
+        pendulum_type theta1_dist = d_states[idx].theta1 - d_pairs[idx].theta1;
+        pendulum_type theta2_dist = d_states[idx].theta2 - d_pairs[idx].theta2;
+        pendulum_type distance = sqrt(p1_dist*p1_dist + p2_dist*p2_dist + theta1_dist*theta1_dist + theta2_dist*theta2_dist);
         distance = min(distance, 1.f);
         d_diffs[idx] += distance;
     }
@@ -75,24 +75,24 @@ __global__ void double_pendulum_simulation_kernel(
 extern "C" void simulate_pendulum_pair(
     PendulumState* states, // Pointer to pendulum states in host memory
     PendulumState* pairs, // Pointer to pendulum states in host memory
-    float* diffs, // Pointer to pendulum states in host memory
+    pendulum_type* diffs, // Pointer to pendulum states in host memory
     int n,                 // Number of pendulums
     int multiplier,
-    float dt              // Time step
+    pendulum_type dt              // Time step
 ) {
     PendulumState* d_states;
     PendulumState* d_pairs;
-    float* d_diffs;
+    pendulum_type* d_diffs;
 
     // Allocate memory on the device for pendulum states
     cudaMalloc(&d_states, n * sizeof(PendulumState));
     cudaMalloc(&d_pairs, n * sizeof(PendulumState));
-    cudaMalloc(&d_diffs, n * sizeof(float));
+    cudaMalloc(&d_diffs, n * sizeof(pendulum_type));
 
     // Copy initial states from host to device
     cudaMemcpy(d_states, states, n * sizeof(PendulumState), cudaMemcpyHostToDevice);
     cudaMemcpy(d_pairs, pairs, n * sizeof(PendulumState), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_diffs, diffs, n * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_diffs, diffs, n * sizeof(pendulum_type), cudaMemcpyHostToDevice);
 
     // Define grid and block dimensions
     int threadsPerBlock = 256;
@@ -104,7 +104,7 @@ extern "C" void simulate_pendulum_pair(
     // Copy updated states back from device to host
     cudaMemcpy(states, d_states, n * sizeof(PendulumState), cudaMemcpyDeviceToHost);
     cudaMemcpy(pairs, d_pairs, n * sizeof(PendulumState), cudaMemcpyDeviceToHost);
-    cudaMemcpy(diffs, d_diffs, n * sizeof(float), cudaMemcpyDeviceToHost);
+    cudaMemcpy(diffs, d_diffs, n * sizeof(pendulum_type), cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_states);
