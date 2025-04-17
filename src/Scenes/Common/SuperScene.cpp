@@ -3,7 +3,7 @@
 #include "../Scene.cpp"
 
 struct NamedSubscene {
-    Scene* ptr;
+    shared_ptr<Scene> ptr;
     string state_manager_name;
 };
 
@@ -78,7 +78,7 @@ public:
         }
     }
 
-    void remove_scene(Scene* sc) {
+    void remove_scene(shared_ptr<Scene> sc) {
         sc->state_manager.set_parent(nullptr);
         subscenes.erase(std::remove_if(subscenes.begin(), subscenes.end(),
                                     [sc](const NamedSubscene& subscene) {

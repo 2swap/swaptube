@@ -95,9 +95,17 @@ static unordered_map<string, double> global_state{
     {"VIDEO_WIDTH", VIDEO_WIDTH},
     {"VIDEO_HEIGHT", VIDEO_HEIGHT},
 };
+void print_global_state(){
+    for(const auto& pair : global_state){
+        cout << pair.first << ": " << pair.second << endl;
+    }
+}
 double get_global_state(string key){
     const auto& pair = global_state.find(key);
-    if(pair == global_state.end()) throw runtime_error("global state access failed on element " + key);
+    if(pair == global_state.end()){
+        print_global_state();
+        throw runtime_error("global state access failed on element " + key);
+    }
     return pair->second;
 }
 
@@ -139,10 +147,7 @@ public:
          * correct compute order anymore since there are new equations.
          */
         last_compute_order.clear();
-        VariableContents new_vc(equation);
-        //cout << "A: " << variable << ": " << new_vc.equation << endl; // This shows up correctly
-        variables[variable] = new_vc;
-        //cout << "B" << endl; // This doesn't show up
+        variables[variable] = VariableContents(equation);
 
         // Parse equation to find dependencies and add them to the list
         size_t pos = 0;
@@ -206,9 +211,7 @@ public:
 
     void evaluate_all() {
         for(const pair<string, double> p : global_state){
-            //cout << "0" << endl;
             add_equation(p.first, to_string(p.second));
-            //cout << "1" << endl << endl;
         }
 
         /* Step 1: Iterate through all variables,

@@ -391,7 +391,7 @@ public:
 
     void add_surface(const Surface& s) {
         surfaces.push_back(s);
-        TODO this isn't even making use of the superscene logic. Be sure to call to check if there are duplicate subscenes.
+        // TODO IMPORTANT this isn't even making use of the superscene logic. Be sure to call to check if there are duplicate subscenes.
         s.scenePointer->state_manager.set_parent(&state_manager);
         obj_ptrs.clear();
     }

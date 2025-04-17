@@ -10,7 +10,7 @@ public:
     CompositeScene(const double width = 1, const double height = 1)
         : SuperScene(width, height) {}
 
-    void add_scene_fade_in(Scene* sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true){
+    void add_scene_fade_in(shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true){
         add_scene(sc, state_manager_name, x, y);
         state_manager.set(unordered_map<string, string> {
             {state_manager_name + ".opacity", "0"},
@@ -22,7 +22,7 @@ public:
         else      state_manager.macroblock_transition(map);
     }
 
-    void add_scene(Scene* sc, string state_manager_name, double x = 0.5, double y = 0.5){
+    void add_scene(shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5){
         sc->state_manager.set_parent(&state_manager);
         state_manager.set(unordered_map<string, string> {
             {state_manager_name + ".pointer_x", to_string(x)},
