@@ -54,7 +54,6 @@ public:
         return StateQuery{"value"};
     }
     void mark_data_unchanged() override { }
-    void on_end_transition(bool is_macroblock) override{}
     void change_data() override { }
     bool check_if_data_changed() const override { return false; } // No DataObjects
 

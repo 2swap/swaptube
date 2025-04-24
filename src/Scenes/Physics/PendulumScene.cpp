@@ -24,7 +24,6 @@ public:
         return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
     }
 
-    void on_end_transition(bool is_macroblock) override {}
     void mark_data_unchanged() override { pend.mark_unchanged(); }
     void change_data() override {
         double w = get_width(); double h = get_height();

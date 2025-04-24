@@ -128,9 +128,9 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is) {
         {"physics_multiplier", "400"},
         {"path_opacity", "1"},
     });
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.state_manager.microblock_transition({
         {"pgs.opacity", "1"},
         {"ps.opacity", "0"},

@@ -40,10 +40,11 @@ public:
         return false;
     }
 
-    void on_end_transition(bool is_macroblock) override {
+    void on_end_transition_extra_behavior(bool is_macroblock) override {
+        cout << "Ending!" << is_macroblock << endl;
         for(const auto& subscene : subscenes){
             subscene.ptr->on_end_transition(is_macroblock);
-            subscene.ptr->state_manager.close_microblock_transitions();
+                              subscene.ptr->state_manager.close_microblock_transitions();
             if(is_macroblock) subscene.ptr->state_manager.close_macroblock_transitions();
         }
     }

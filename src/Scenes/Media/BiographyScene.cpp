@@ -52,7 +52,6 @@ public:
         }
     }
 
-    void on_end_transition(bool is_macroblock) override { }
     const StateQuery populate_state_query() const override {
         return StateQuery{};
     }

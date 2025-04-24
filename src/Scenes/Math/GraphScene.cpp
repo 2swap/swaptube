@@ -113,7 +113,7 @@ public:
         return graph->has_been_updated_since_last_scene_query();
     }
 
-    void on_end_transition(bool is_macroblock) {
+    void on_end_transition_extra_behavior(bool is_macroblock) {
         curr_hash = next_hash;
     }
 

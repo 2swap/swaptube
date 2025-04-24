@@ -40,13 +40,13 @@ void beginning() {
     if(FOR_REAL){
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board("444" + to_string(i)));
-        c4.render();
+        c4.render_microblock();
     }
     g.dimensions = 3;
     for(int i = 1; i <= 7; i++){
         for(int j = 1; j <= 7; j++){
             g.add_node(new C4Board("444" + to_string(i) + to_string(j)));
-            c4.render();
+            c4.render_microblock();
         }
     }
     }
@@ -89,7 +89,7 @@ void beginning() {
     c4.stage_macroblock(AudioSegment("and so on successively."), 5);
     for(int i = 3; i <= 7; i++){
         g.add_node_with_position(new C4Board("436" + to_string(i)), (x+=1.5), y, 0);
-        c4.render();
+        c4.render_microblock();
     }
     g.immobilize_all_nodes();
 
@@ -106,7 +106,7 @@ void beginning() {
     });
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
         g.add_node_with_position(new C4Board("436" + to_string(i) + to_string(j)), (i-4)*1.5, 4, 0);
-        c4.render();
+        c4.render_microblock();
     }
 
 
@@ -119,7 +119,7 @@ void beginning() {
     for(auto& node : g.nodes)
         for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors))
             const_cast<Edge&>(edge).opacity = 0.2;
-    c4.render();
+    c4.render_microblock();
     for(auto& node : g.nodes)
         for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
             bool highlight = false;
@@ -129,7 +129,7 @@ void beginning() {
             highlight |= g.nodes.find(edge.to)->second.data->representation == "436" && g.nodes.find(edge.from)->second.data->representation == "4366";
             const_cast<Edge&>(edge).opacity = highlight ? 1 : 0.2;
         }
-    c4.render();
+    c4.render_microblock();
     for(auto& node : g.nodes)
         for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
             bool highlight = false;
@@ -139,7 +139,7 @@ void beginning() {
             highlight |= g.nodes.find(edge.to)->second.data->representation == "436" && g.nodes.find(edge.from)->second.data->representation == "4362";
             const_cast<Edge&>(edge).opacity = highlight ? 1 : 0.2;
         }
-    c4.render();
+    c4.render_microblock();
     for(auto& node : g.nodes)
         for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors)){
             bool highlight = false;
@@ -149,7 +149,7 @@ void beginning() {
             highlight |= g.nodes.find(edge.to)->second.data->representation == "436" && g.nodes.find(edge.from)->second.data->representation == "4365";
             const_cast<Edge&>(edge).opacity = highlight ? 1 : 0.2;
         }
-    c4.render();
+    c4.render_microblock();
     for(auto& node : g.nodes)
         for (auto& edge : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(node.second.neighbors))
             const_cast<Edge&>(edge).opacity = 1;
@@ -188,7 +188,7 @@ void beginning() {
     latex.begin_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline \\end{tabular}");
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board(to_string(i)));
-        composite.render();
+        composite.render_microblock();
     }
     state_manager.transition(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "0"},
@@ -202,7 +202,7 @@ void beginning() {
     latex.begin_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline\\end{tabular}");
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
         g.add_node(new C4Board(to_string(i) + to_string(j)));
-        composite.render();
+        composite.render_microblock();
     }
     g.gravity_strength = 0;
 
@@ -214,7 +214,7 @@ void beginning() {
     latex.begin_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline \\end{tabular}");
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 7; k++){
         g.add_node(new C4Board(to_string(i) + to_string(j) + to_string(k)));
-        composite.render();
+        composite.render_microblock();
     }
 
     state_manager.transition(std::unordered_map<std::string, std::string>{
@@ -224,7 +224,7 @@ void beginning() {
     latex.begin_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline \\end{tabular}");
     if(FOR_REAL)for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++)for(int k = 1; k <= 7; k++)for(int l = 1; l <= 7; l++){
         g.add_node(new C4Board(to_string(i) + to_string(j) + to_string(k) + to_string(l)));
-        composite.render();
+        composite.render_microblock();
     }
     composite.stage_macroblock_and_render(AudioSegment("Now this is just a mess. You can't tell the structure of this graph whatsoever, and we're only 4 moves in."));
     latex.begin_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline ... & ... \\\\\\\\ \\hline \\text{Total} & 4,531,985,219,092 \\\\\\\\ \\hline \\end{tabular}");
@@ -265,11 +265,11 @@ void beginning() {
     just_the_graph.stage_macroblock(AudioSegment("Instead of growing the graph from the beginning of the game out,"), 7+49);
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board(to_string(i)));
-        just_the_graph.render();
+        just_the_graph.render_microblock();
     }
     for(int i = 1; i <= 7; i++)for(int j = 1; j <= 7; j++){
         g.add_node(new C4Board(to_string(i) + to_string(j)));
-        just_the_graph.render();
+        just_the_graph.render_microblock();
     }
     just_the_graph.stage_macroblock_and_render(AudioSegment("Let's start with an endgame position to make life a little easier on ourselves."));
 
@@ -314,10 +314,10 @@ void endgame_examination(){
     while(true){
         int new_nodes = g.expand_graph(true);
         if(new_nodes == 0) break;
-        c4.render();
+        c4.render_microblock();
     }
     g.expand_graph(false);
-    c4.render();
+    c4.render_microblock();
     state_manager.transition(std::unordered_map<std::string, std::string>{
         {"lines_opacity", "0.2"},
     });
@@ -331,32 +331,32 @@ void endgame_examination(){
     });
     c4.stage_macroblock_and_render(AudioSegment("Let's identify all the terminal states- that is, the nodes which have no children."));
     c4.stage_macroblock(AudioSegment("In other words, we're identifying the games which either Red won,"), 2);
-    c4.render();
+    c4.render_microblock();
     double some_red_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == RED){
             node.second.color = C4_RED;
             some_red_node = node.second.hash;
         }
-    c4.render();
+    c4.render_microblock();
     c4.stage_macroblock(AudioSegment("Yellow won,"), 2);
-    c4.render();
+    c4.render_microblock();
     double some_yellow_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == YELLOW){
             node.second.color = 0xffaaaa00;
             some_yellow_node = node.second.hash;
         }
-    c4.render();
+    c4.render_microblock();
     c4.stage_macroblock(AudioSegment("or completely filled without a winner, making it a tie."), 2);
-    c4.render();
+    c4.render_microblock();
     double some_tie_node = -1;
     for(auto& node : g.nodes)
         if(node.second.data->who_won() == TIE){
             node.second.color = 0xff5555ff;
             some_tie_node = node.second.hash;
         }
-    c4.render();
+    c4.render_microblock();
 
     g.nodes.at(g.root_node_hash).highlight = true;
     auto result = g.shortest_path(g.root_node_hash, some_red_node);
@@ -437,12 +437,12 @@ void endgame_examination(){
         if(consider == NULL) break;
         consider->highlight = true;
         board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-        composite.render();
+        composite.render_microblock();
         C4Result winner = consider->data->who_is_winning(dummy);
         consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
         consider->opacity = 1;
         consider->highlight = false;
-        composite.render();
+        composite.render_microblock();
     }
     composite.stage_macroblock_and_render(AudioSegment("Awesome! But, now, we're out of obvious nodes to fill in."));
     for(auto& node : g.nodes){
@@ -498,13 +498,13 @@ void endgame_examination(){
         for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 5;
         consider->highlight = true;
         board = C4Scene(VIDEO_WIDTH/3, VIDEO_HEIGHT/3, consider->data->representation);
-        composite.render();
+        composite.render_microblock();
         for (auto& e : const_cast<std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>&>(consider->neighbors)) const_cast<Edge&>(e).opacity = 1;
         winner = consider->data->who_is_winning(dummy);
         consider->color = winner==RED?C4_RED:(winner==YELLOW?0xffaaaa00:0xff5555ff);
         consider->opacity = 1;
         consider->highlight = false;
-        composite.render();
+        composite.render_microblock();
     }
     composite.stage_macroblock_and_render(AudioSegment("The algorithm we just used is called Minimax."));
 
@@ -685,7 +685,7 @@ void endgame_examination(){
                     g.remove_edge(e.from, e.to);
                     g.delete_orphans();
                     still_an_edge = true;
-                    composite.render();
+                    composite.render_microblock();
                     break;
                 }
     }
@@ -701,11 +701,11 @@ void endgame_examination(){
     composite.stage_macroblock_and_render(AudioSegment("For that reason it shouldn't be a surprise that all the nodes which were yellow-to-win have been removed."));
 
     composite.stage_macroblock(AudioSegment("That would've required a red blunder to get to, and we've removed all branches which contain red blunders."), 2);
-    composite.render();
+    composite.render_microblock();
     state_manager.transition(std::unordered_map<std::string, std::string>{
         {"y", "-50 <subscene_transition_fraction> 0"},
     });
-    composite.render();
+    composite.render_microblock();
 }
 
 void minimax_the_opening(){
@@ -841,15 +841,15 @@ void prisoner() {
         {"qk", "0"}
     });
     tds.stage_macroblock(AudioSegment("Lemme make an analogy. Imagine a prisoner is forced to memorize a deck of flash cards. On the front of each card is a 2-dimensional coordinate, and the back of the flash card is a hexadecimal number."), 3);
-    tds.render();
+    tds.render_microblock();
     state_manager.set(std::unordered_map<std::string, std::string>{
         {"y", "100"}
     });
-    tds.render();
+    tds.render_microblock();
     state_manager.set(std::unordered_map<std::string, std::string>{
         {"y", "200"}
     });
-    tds.render();
+    tds.render_microblock();
 
 
 
@@ -879,7 +879,7 @@ void prisoner() {
             cardgrid.surfaces[j].opacity = 1-i/100.;
         }
         cardgrid.surfaces[cardgrid.surfaces.size()-1].opacity = cube(i/100.);
-        cardgrid.render();
+        cardgrid.render_microblock();
     }
     state_manager.set(std::unordered_map<std::string, std::string>{
         {"d", "256"},
@@ -907,7 +907,7 @@ void prisoner() {
     cardgrid_with_black_squares.stage_macroblock(AudioSegment("At least in the sense that, if somebody held a contest to recreate the painting from memory, he'd win it, pixel-by-pixel. As long as the prison guard remembers to tell him that's what the data represents."), count);
     for(int x = 0; x < count; x++){
         black_squares.surfaces.pop_back();
-        cardgrid_with_black_squares.render();
+        cardgrid_with_black_squares.render_microblock();
     }
 
     PngScene mona_lisa_no_hands("Mona_Lisa");
@@ -918,7 +918,7 @@ void prisoner() {
         glm::dvec3 dir(.1,0,0);
         cardgrid.surfaces[cardgrid.surfaces.size()-1].center += dir;
         cardgrid.surfaces[0].center -= dir;
-        cardgrid.render();
+        cardgrid.render_microblock();
     }
 
     Graph<C4Board> g;

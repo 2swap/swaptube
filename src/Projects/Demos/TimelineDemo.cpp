@@ -17,8 +17,8 @@ void render_video() {
     cs.add_scene(&timer, "timer", 0.5, 0.2);
     cs.stage_macroblock_and_render(SilenceSegment(2));
     cs.stage_macroblock(SilenceSegment(5), 3);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
 }
 

@@ -21,7 +21,7 @@ public:
         }
 
     // No interactive state is needed for this static klotski scene.
-    void on_end_transition(bool is_macroblock) override {
+    void on_end_transition_extra_behavior(bool is_macroblock) override {
         if (staged_move.piece != '.') {
             kb = copy_staged_board();
         }

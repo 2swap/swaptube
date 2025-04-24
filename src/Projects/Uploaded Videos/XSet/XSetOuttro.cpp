@@ -61,13 +61,13 @@ void intro() {
         {"tss.opacity", "1"},
     });
     cs.stage_macroblock(AudioSegment("This has been 2swap."), 3);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     ms.state_manager.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0"},
         {"seed_c_i", "0"},
     });
-    cs.render();
+    cs.render_microblock();
     PngScene note("note", 0.18, 0.18);
     LatexScene seef(latex_text("6884"), 1, .6, .27);
     cs.add_scene_fade_in(&seef, "seef", 0.6, 0.73);

@@ -87,7 +87,7 @@ void intro() {
         cs.stage_macroblock(AudioSegment(blurbs[i]), num_reductions / 5);
         for(int j = 0; j < num_reductions/5; j++) {
             ls->reduce();
-            cs.render();
+            cs.render_microblock();
         }
     }
 
@@ -100,21 +100,21 @@ void intro() {
     dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xffff00ff);
     ls->set_expression(term);
     tds.stage_macroblock(AudioSegment("This pink chunk represents the factorial function."), 3);
-    tds.render();
-    tds.render();
-    tds.render();
+    tds.render_microblock();
+    tds.render_microblock();
+    tds.render_microblock();
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xffffff00);
     ls->set_expression(term);
     tds.stage_macroblock(AudioSegment("This yellow chunk represents the number 3."), 3);
-    tds.render();
-    tds.render();
-    tds.render();
+    tds.render_microblock();
+    tds.render_microblock();
+    tds.render_microblock();
     term->set_color(0xff0088ff);
     ls->set_expression(term);
     tds.stage_macroblock(AudioSegment("And this blue chunk represents the application of the function to the number."), 3);
-    tds.render();
-    tds.render();
-    tds.render();
+    tds.render_microblock();
+    tds.render_microblock();
+    tds.render_microblock();
 
     tds.stage_macroblock_and_render(AudioSegment("We can make all sorts of other values."));
 
@@ -187,7 +187,7 @@ void intro() {
     tds.add_surface(Surface(glm::dvec3(0,0,-8), glm::dvec3(1,0,0), glm::dvec3(0,1,0), ls1));
 
     tds.stage_macroblock(AudioSegment("We can express any computational procedure, such as the factorial function."), 2);
-    tds.render();
+    tds.render_microblock();
     tds.state_manager.subscene_transition(unordered_map<string, string>{
         {"q1", "1"},
         {"qi", "0"},
@@ -195,33 +195,33 @@ void intro() {
         {"qk", "0"},
         {"d", "2"},
     });
-    tds.render();
+    tds.render_microblock();
     tds.remove_surface(churchtimesscene);
     tds.remove_surface(churchplusscene);
     tds.stage_macroblock(AudioSegment("But... the magic is that it's not immediately obvious whether a certain expression is a number,"), 4);
     dynamic_pointer_cast<LambdaApplication>(term1)->get_first()->set_color_recursive(0xff222222);
     dynamic_pointer_cast<LambdaApplication>(term1)->get_second()->set_color_recursive(0xff222222);
     ls1->set_expression(term1);
-    tds.render();
-    tds.render();
+    tds.render_microblock();
+    tds.render_microblock();
     dynamic_pointer_cast<LambdaApplication>(term1)->get_first()->set_color_recursive(0xff222222);
     dynamic_pointer_cast<LambdaApplication>(term1)->get_second()->set_color_recursive(0xffffffff);
     ls1->set_expression(term1);
-    tds.render();
-    tds.render();
+    tds.render_microblock();
+    tds.render_microblock();
     dynamic_pointer_cast<LambdaApplication>(term1)->get_first()->set_color_recursive(0xffffffff);
     dynamic_pointer_cast<LambdaApplication>(term1)->get_second()->set_color_recursive(0xff222222);
     ls1->set_expression(term1);
     tds.stage_macroblock(AudioSegment("a function that operates on numbers,"), 2);
-    tds.render();
-    tds.render();
+    tds.render_microblock();
+    tds.render_microblock();
     dynamic_pointer_cast<LambdaApplication>(term1)->get_first()->set_color_recursive(0xffff00ff);
     dynamic_pointer_cast<LambdaApplication>(term1)->get_second()->set_color_recursive(0xffffff00);
     term1->set_color(0xff00ffff);
     ls1->set_expression(term1);
     tds.stage_macroblock(AudioSegment("or something else entirely."), 2);
-    tds.render();
-    tds.render();
+    tds.render_microblock();
+    tds.render_microblock();
 
     tds.stage_macroblock_and_render(AudioSegment("And that's because, in this language, there _is no difference_."));
     shared_ptr<LambdaExpression> term2 = apply(le_factorial, le_church_3, 0xff00ffff);
@@ -238,13 +238,13 @@ void intro() {
     tds.stage_macroblock(AudioSegment("Well, you can... but it's certainly not the case that when evaluating it, the answer would make any sense... right?"), num_reductions);
     for(int j = 0; j < num_reductions; j++) {
         ls1->reduce();
-        tds.render();
+        tds.render_microblock();
     }
 
     tds.stage_macroblock(AudioSegment("We're gonna have to totally unlearn the concepts of functions, programs, values, and datatypes."), num_reductions);
     for(int j = 0; j < num_reductions; j++) {
         ls1->reduce();
-        tds.render();
+        tds.render_microblock();
     }
 
     // Create text which says Lambda Calculus behind where the camera currently is
@@ -309,7 +309,7 @@ void intro() {
             for (auto& lambda_scene : lots_of_lambdas) {
                 lambda_scene->reduce();  // Reduce the lambda expression
             }
-        tds.render();  // Render the scene after each reduction
+        tds.render_microblock();  // Render the scene after each reduction
     }
 
     tds.state_manager.superscene_transition(unordered_map<string, string>{
@@ -324,7 +324,7 @@ void intro() {
         for (auto& lambda_scene : lots_of_lambdas) {
             lambda_scene->reduce(); // Reduce the lambda expression
         }
-        tds.render(); // Render the scene after each reduction
+        tds.render_microblock(); // Render the scene after each reduction
     }
 }
 
@@ -337,11 +337,11 @@ void history() {
     cs.add_scene_fade_in(&hilbert, "hilbert", 0, 0, true);
     LatexScene hilbert_quote(latex_text("Is there a program which can tell\\\\\\\\if a theorem is true or false?"), 0.9, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
     cs.stage_macroblock(AudioSegment("David Hilbert, one of the greatest mathematicians of the 1900s, wanted to know whether there was some procedure, some algorithm, which can determine whether any given mathematical statement is true or false."), 4);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.add_scene_fade_in(&hilbert_quote, "hilbert_quote", .5, .25, true);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
 
     // Move Hilbert to the top half to make room for other mathematicians
     hilbert.state_manager.set(unordered_map<string, string>{
@@ -393,8 +393,8 @@ void history() {
     });
 
     cs.stage_macroblock(AudioSegment("But Hilbert's question is a question about procedures. About ways of doing computation."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     hilbert_quote.begin_latex_transition(latex_text("Is there a program which can tell\\\\\\\\if a theorem is true or false?"));
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"hilbert_quote.x", "0.5"},
@@ -428,9 +428,9 @@ void history() {
     LatexScene calc("\\frac{d}{dx}", 1, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.5);
     cs.add_scene_fade_in(&calc, "calc", 0.4, 0.25, true);
     cs.stage_macroblock(AudioSegment("His 'Lambda Calculus', to be clear, had nothing to do with derivatives or integrals or what you learned in Calculus class in High School."), 2);
-    cs.render();
+    cs.render_microblock();
     calc.begin_latex_transition("\\int_a^b");
-    cs.render();
+    cs.render_microblock();
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"calc.opacity", "0"},
     });
@@ -457,13 +457,13 @@ void history() {
     cs.stage_macroblock_and_render(AudioSegment("It's fundamentally a system for manipulating strings of symbols,"));
     cs.stage_macroblock(AudioSegment("just like Algebra teaches us to manipulate numbers and pluses and equals signs."), 4);
     algebra.begin_latex_transition("x+4-1=2x+1-1");
-    cs.render();
+    cs.render_microblock();
     algebra.begin_latex_transition("x+3=2x");
-    cs.render();
+    cs.render_microblock();
     algebra.begin_latex_transition("x-x+3=2x-x");
-    cs.render();
+    cs.render_microblock();
     algebra.begin_latex_transition("3=x");
-    cs.render();
+    cs.render_microblock();
     lambda_examples1.begin_latex_transition(latex_color(0xff00ff00, "(\\lambda x. x)"                  ));
     lambda_examples2.begin_latex_transition(latex_color(0xff00ff00, "y"                                ));
     lambda_examples3.begin_latex_transition(latex_color(0xff00ff00, "(\\lambda z. (z (\\lambda w. w)))"));
@@ -476,35 +476,35 @@ void history() {
         {"algebra.opacity", "0"},
     });
     cs.stage_macroblock(AudioSegment("In the lambda calculus, the strings look something like this."), 2);
-    cs.render();
+    cs.render_microblock();
     lambda_examples1.begin_latex_transition("(\\lambda x. x)"                  );
     lambda_examples2.begin_latex_transition("y"                                );
     lambda_examples3.begin_latex_transition("(\\lambda z. (z (\\lambda w. w)))");
     lambda_examples4.begin_latex_transition("(a (b c))"                        );
-    cs.render();
+    cs.render_microblock();
     lambda_examples1.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda x. x") + latex_color(0xffff0000, ")"));
     lambda_examples2.begin_latex_transition(latex_color(0xff444444, "y"));
     lambda_examples3.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda z. ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "z ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "\\lambda w. w") + latex_color(0xffff0000, ")))"));
     lambda_examples4.begin_latex_transition(latex_color(0xffff0000, "(") + latex_color(0xff444444, "a ") + latex_color(0xffff0000, "(") + latex_color(0xff444444, "b c") + latex_color(0xffff0000, "))"));
     cs.stage_macroblock(AudioSegment("They're composed of parentheses,"), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment(.5));
     lambda_examples1.begin_latex_transition(latex_color(0xff444444, "(\\lambda") + latex_color(0xff00ff00, "x") + latex_color(0xff444444, ".") + latex_color(0xff00ff00, "x") + latex_color(0xff444444, ")"));
     lambda_examples2.begin_latex_transition(latex_color(0xff00ff00, "y"));
     lambda_examples3.begin_latex_transition(latex_color(0xff444444, "(\\lambda ") + latex_color(0xff00ff00, "z") + latex_color(0xff444444, ". (") + latex_color(0xff00ff00, "z ") + latex_color(0xff444444, "(\\lambda") + latex_color(0xff00ff00, "w") + latex_color(0xff444444, ".") + latex_color(0xff00ff00, "w") + latex_color(0xff444444, ")))"));
     lambda_examples4.begin_latex_transition(latex_color(0xff444444, "(") + latex_color(0xff00ff00, "a ") + latex_color(0xff444444, "(") + latex_color(0xff00ff00, "b c") + latex_color(0xff444444, "))"));
     cs.stage_macroblock(AudioSegment("letters of the alphabet,"), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment(.5));
     lambda_examples1.begin_latex_transition(latex_color(0xff444444, "(") + latex_color(0xff0044ff, "\\lambda") + latex_color(0xff444444, "x") + latex_color(0xff0044ff, ".") + latex_color(0xff444444, "x)"));
     lambda_examples2.begin_latex_transition(latex_color(0xff444444, "y"));
     lambda_examples3.begin_latex_transition(latex_color(0xff444444, "(") + latex_color(0xff0044ff, "\\lambda") + latex_color(0xff444444, "z ") + latex_color(0xff0044ff, ".") + latex_color(0xff444444, "(z (") + latex_color(0xff0044ff, "\\lambda") + latex_color(0xff444444, "w ") + latex_color(0xff0044ff, ".") + latex_color(0xff444444, "w)))"));
     lambda_examples4.begin_latex_transition(latex_color(0xff444444, "(a (b c))"));
     cs.stage_macroblock(AudioSegment("and this notation involving a lambda and a dot. Those two always come together in a pair."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment(.5));
 
     // On the left, add the production rules of the lambda calculus
@@ -537,22 +537,22 @@ void history() {
     lambda_rule_abs.begin_latex_transition(latex_color(0xffff00ff, "(\\lambda a. "+latex_color(0xffffffff, "\\_") + ")"));
     lambda_rule_app.begin_latex_transition(latex_color(0xff00ffff, "("+latex_color(0xffffffff, "\\_ \\_") + ")"        ));
     cs.stage_macroblock(AudioSegment("The blanks are places where you can put any other template."), 3);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     lambda_rule_var.begin_latex_transition(latex_color(0xffffff00, "a"));
     lambda_rule_abs.begin_latex_transition(latex_color(0xffff00ff, "(\\lambda a. \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xff00ffff, "(\\_ \\_)"));
-    cs.render();
+    cs.render_microblock();
     lambda_rule_var.begin_latex_transition(latex_color(0xffffffff, "a"));
     lambda_rule_abs.begin_latex_transition(latex_color(0xffff00ff, "(\\lambda "+latex_color(0xffffffff, "a") + ". \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xff00ffff, "(\\_ \\_)"));
     cs.stage_macroblock(AudioSegment("and the 'a's can be substituted for any letter in the alphabet."), 3);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     lambda_rule_var.begin_latex_transition(latex_color(0xffffff00, "a"));
     lambda_rule_abs.begin_latex_transition(latex_color(0xffff00ff, "(\\lambda a. \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xff00ffff, "(\\_ \\_)"));
-    cs.render();
+    cs.render_microblock();
     LatexScene lambda_construct(latex_color(0xff00ffff, "(\\_ \\_)"), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
     cs.add_scene(&lambda_construct, "lambda_construct", 0, 0.65);
 
@@ -580,29 +580,29 @@ void history() {
     cs.add_scene_fade_in(&lc2, "lc2", 0.5, 0.4, true);
     cs.stage_macroblock(AudioSegment("Any combination of these templates forms a valid expression."), 12);
     lc2.begin_latex_transition("(\\_ (\\_ \\_))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(\\_ (\\_ (\\_ \\_)))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(\\_ (\\_ (\\_ (\\_ \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(\\_ (\\_ (\\_ ((\\_ \\_) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(\\_ (\\_ (\\_ (((\\_ \\_) \\_) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(t (\\_ (\\_ (((\\_ \\_) \\_) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(t (w (\\_ (((\\_ \\_) \\_) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(t (w (o (((\\_ \\_) \\_) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(t (w (o (((s \\_) \\_) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(t (w (o (((s w) \\_) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(t (w (o (((s w) a) \\_))))");
-    cs.render();
+    cs.render_microblock();
     lc2.begin_latex_transition("(t (w (o (((s w) a) p))))");
-    cs.render();
+    cs.render_microblock();
     LatexScene lc3("(\\lambda a. (\\lambda b. (a b)))", 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&lc3, "lc3", 0.5, 0.55, true);
     cs.stage_macroblock_and_render(AudioSegment("Using them, we can create all sorts of different lambda terms."));
@@ -622,8 +622,8 @@ void history() {
         {"lambda_rule_app.y", ".45"},
     });
     cs.stage_macroblock(AudioSegment("Now, one thing you should know- these two templates have special interpretations."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     /*
     cs.stage_macroblock_and_render(AudioSegment("The first rule says that any letter is a valid lambda expression."));
 
@@ -631,20 +631,20 @@ void history() {
     cs.stage_macroblock(AudioSegment("a, b, c, you name it."), 4);
 
     lambda_rule_var.begin_latex_transition("b");
-    cs.render();
+    cs.render_microblock();
 
     lambda_rule_var.begin_latex_transition("c");
-    cs.render();
+    cs.render_microblock();
 
     lambda_rule_var.begin_latex_transition("a");
-    cs.render();
+    cs.render_microblock();
 
     // Fade out the first rule by transitioning its opacity to 0.
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.x", "0"},
         {"lambda_rule_var.y", ".25"},
     });
-    cs.render();
+    cs.render_microblock();
 
     // Move out the second rule.
     cs.state_manager.superscene_transition(unordered_map<string, string>{
@@ -658,9 +658,9 @@ void history() {
     cs.stage_macroblock(AudioSegment("Once again, the 'a' represents any letter."), 3);
 
     // Shuffle through letters, transitioning back to 'a' like before
-    lambda_rule_abs.begin_latex_transition("(\\lambda b. \\_)"); cs.render();
-    lambda_rule_abs.begin_latex_transition("(\\lambda c. \\_)"); cs.render();
-    lambda_rule_abs.begin_latex_transition("(\\lambda a. \\_)"); cs.render();
+    lambda_rule_abs.begin_latex_transition("(\\lambda b. \\_)"); cs.render_microblock();
+    lambda_rule_abs.begin_latex_transition("(\\lambda c. \\_)"); cs.render_microblock();
+    lambda_rule_abs.begin_latex_transition("(\\lambda a. \\_)"); cs.render_microblock();
 
     // Highlight the blank in white, make the rest of the term gray.
     lambda_rule_abs.begin_latex_transition(latex_color(0xff444444, "(\\lambda a. ") + latex_color(0xffffffff, "\\_") + latex_color(0xff444444, ")"));
@@ -676,9 +676,9 @@ void history() {
     // Slide out another modifiable copy of the abstraction rule and place the last expression inside of it.
     cs.stage_macroblock(AudioSegment("And therefore, it can also be placed inside the blank of the same rule."), 2);
     lambda_rule_abs.begin_latex_transition("(\\lambda x. \\_)\\\\\\\\(\\lambda a. a)");
-    cs.render();
+    cs.render_microblock();
     lambda_rule_abs.begin_latex_transition("(\\lambda x. (\\lambda a. a))");
-    cs.render();
+    cs.render_microblock();
     */
 
     cs.state_manager.superscene_transition(unordered_map<string, string>{
@@ -712,8 +712,8 @@ void history() {
     // Show an example where a function is applied to a variable.
     lambda_rule_app.begin_latex_transition("(" + latex_color(0xff0088ff, "a") + latex_color(0xffff0000, "b") + ")");
     cs.stage_macroblock(AudioSegment("In this case, we're suggesting the thing on the left, 'a', is gonna be used as a function which takes in 'b'."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
 
     // Show an example where a function is applied to a variable.
     cs.state_manager.superscene_transition(unordered_map<string, string>{
@@ -756,7 +756,7 @@ void visualize(){
     });
     cs.stage_macroblock_and_render(AudioSegment("We'll try evaluating these expressions in a sec, but first let's visualize them."));
     cs.stage_macroblock(AudioSegment("There's a ton of styles, but the one I chose is John Tromp's Lambda Diagrams."), 2);
-    cs.render();
+    cs.render_microblock();
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"rep_classic.y", "-1.5"},
         {"rep_keenan.y", "-1.5"},
@@ -771,7 +771,7 @@ void visualize(){
         {"w", to_string(VIDEO_WIDTH)},
         {"h", to_string(VIDEO_HEIGHT)},
     });
-    cs.render();
+    cs.render_microblock();
     C4Scene c4s("43334444343", VIDEO_WIDTH*1.2, VIDEO_HEIGHT*1.2);
     cs.add_scene(&c4s, "c4s", -.1, -.1);
     cs.state_manager.set(unordered_map<string, string>{
@@ -829,8 +829,8 @@ void visualize(){
     lambda_rule_app.begin_latex_transition(latex_color(0xff222222, "(\\_ \\_)"        ));
     cs.stage_macroblock_and_render(AudioSegment(.5));
     cs.stage_macroblock(AudioSegment("Lambda Abstractions, or template 2, are the horizontal bars at the top."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
@@ -899,9 +899,9 @@ void visualize(){
     }
     cs.stage_macroblock(AudioSegment("Variables touch the bars which bind them."), 3);
     rep_tromp.set_expression(term);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     for(int i = 0; i < 8; i++){
         string ch = "y";
         if(((i+3)/2)%2 == 0) ch = latex_color(0xffff0000, "x");
@@ -919,9 +919,9 @@ void visualize(){
         current->set_color(color);
     }
     rep_tromp.set_expression(term);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     for(int i = 0; i < 8; i++){
         string ch = latex_color(0xff0044ff, "y");
         if(((i+3)/2)%2 == 0) ch = "x";
@@ -939,9 +939,9 @@ void visualize(){
         current->set_color(color);
     }
     rep_tromp.set_expression(term);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     lambda_rule_var.begin_latex_transition(latex_color(0xff222222, "a"                ));
     lambda_rule_abs.begin_latex_transition(latex_color(0xff222222, "(\\lambda a. \\_)"));
     lambda_rule_app.begin_latex_transition(latex_color(0xffffffff, "(\\_ \\_)"        ));
@@ -967,16 +967,16 @@ void visualize(){
     });
     cs.stage_macroblock_and_render(AudioSegment(1));
     cs.stage_macroblock(AudioSegment("Template 3, for function application, has two subexpressions corresponding to the two blanks."), 3);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff006600);
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff660066);
     rep_tromp.set_expression(term);
     cs.stage_macroblock(AudioSegment("This lambda expression, as a whole, has an application surrounding everything."), 3);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff003300);
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff330033);
     rep_tromp.set_expression(term);
@@ -989,13 +989,13 @@ void visualize(){
     dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff00ff00);
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xff330033);
     rep_tromp.set_expression(term);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     dynamic_pointer_cast<LambdaApplication>(term)->get_first()->set_color_recursive(0xff003300);
     dynamic_pointer_cast<LambdaApplication>(term)->get_second()->set_color_recursive(0xffff00ff);
     rep_tromp.set_expression(term);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     it = LambdaExpression::Iterator(term);
     while (it.has_next()) {
         shared_ptr<LambdaExpression> current = it.next();
@@ -1039,10 +1039,10 @@ void beta_reduction(){
         {"latex_beta.x", ".125"},
     });
     cs.stage_macroblock(AudioSegment("Remember that template 2 can be interpreted as a function."), 2);
-    cs.render(); cs.render();
+    cs.render_microblock(); cs.render_microblock();
     latexbeta.begin_latex_transition("(\\lambda x. \\_)\\\\\\\\ \\big(\\_ \\_\\big)");
     cs.stage_macroblock(AudioSegment("And template 3 can be interpreted as applying a value to a function."), 3);
-    cs.render(); cs.render(); cs.render();
+    cs.render_microblock(); cs.render_microblock(); cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("We wanna create a template for evaluation that combines these interpretations."));
 
     // Scene showing lambda abstraction
@@ -1085,11 +1085,11 @@ void beta_reduction(){
     latexbeta.begin_latex_transition("\\Big(\\big(\\lambda x. (x (y x))\\big) (f f)\\Big)");
     cs.stage_macroblock_and_render(AudioSegment("Ok, let's try a slightly trickier one."));
     cs.stage_macroblock(AudioSegment("To make it clear, this is the function, and this is the value."), 3);
-    cs.render();
+    cs.render_microblock();
     latexbeta.begin_latex_transition("\\Big("+latex_color(0xffff7777, "\\big(\\lambda x. (x (y x))\\big)") + "(f f)\\Big)");
-    cs.render();
+    cs.render_microblock();
     latexbeta.begin_latex_transition("\\Big("+latex_color(0xffff7777, "\\big(\\lambda x. (x (y x))\\big) ")+latex_color(0xff0088ff, "(f f)")+"\\Big)");
-    cs.render();
+    cs.render_microblock();
 
     // Show substitution
     latexbeta.begin_latex_transition("\\Big("+latex_color(0xffff7777, "\\big(\\lambda " + latex_color(0xff00ff00, "x") + ". (x (y x))\\big) ")+latex_color(0xff0088ff, "(f f)")+"\\Big)");
@@ -1148,11 +1148,11 @@ void beta_reduction(){
     cs.stage_macroblock_and_render(AudioSegment("and shove it everywhere we had an x."));
     cs.stage_macroblock(AudioSegment("We're left with an algebraic expression which represents the answer."), 3);
     quadratic_equation.begin_latex_transition("25 + 5 + 3");
-    cs.render();
+    cs.render_microblock();
     quadratic_equation.begin_latex_transition("30 + 3");
-    cs.render();
+    cs.render_microblock();
     quadratic_equation.begin_latex_transition("33");
-    cs.render();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("Not too alien now, is it?"));
 
     /*
@@ -1222,8 +1222,8 @@ void beta_reduction(){
     cs.stage_macroblock_and_render(AudioSegment("Let's make a big expression which contains this somewhere inside."));
     betadiagram.reduce();
     cs.stage_macroblock(AudioSegment("We can still beta-reduce the entire expression by reducing this subcomponent."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment(0.5));
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"betadiagram.opacity", "0"},
@@ -1455,9 +1455,9 @@ void booleans() {
     cs.stage_macroblock_and_render(AudioSegment("If we wanna write it in full, we can substitute in the TRUEs and FALSEs."));
     cs.stage_macroblock(AudioSegment("But for now, let's leave it like this."), 2);
     not_gate.begin_latex_transition(latex_text("NOT = ") + "\\Big(\\lambda x. \\big(x\\ "+latex_text("FALSE")+"\\ "+latex_text("TRUE")+"\\big)\\Big)");
-    cs.render();
+    cs.render_microblock();
     not_gate.begin_latex_transition("\\Big(\\lambda x. \\big(x\\ "+latex_text("FALSE")+"\\ "+latex_text("TRUE")+"\\big)\\Big)");
-    cs.render();
+    cs.render_microblock();
     not_gate.begin_latex_transition("\\bigg(\\Big(\\lambda x. \\big(x\\ "+latex_text("FALSE")+"\\ "+latex_text("TRUE")+"\\big)\\Big)\\ " + latex_text("FALSE") + "\\bigg)");
     cs.stage_macroblock_and_render(AudioSegment("Let's see what happens, by passing in FALSE."));
     cs.stage_macroblock_and_render(AudioSegment("We're expecting TRUE out, since NOT FALSE is TRUE."));
@@ -1543,11 +1543,11 @@ void numerals() {
     LatexScene one ("1", 1, VIDEO_WIDTH/7, VIDEO_HEIGHT/7);
     LatexScene two ("2", 1, VIDEO_WIDTH/7, VIDEO_HEIGHT/7);
     cs.add_scene_fade_in(&zero, "zero", 0.15, 0.1, true);
-    cs.render();
+    cs.render_microblock();
     cs.add_scene_fade_in(&one , "one" , 0.15, 0.3, true);
-    cs.render();
+    cs.render_microblock();
     cs.add_scene_fade_in(&two , "two" , 0.15, 0.5, true);
-    cs.render();
+    cs.render_microblock();
     cs.stage_macroblock(AudioSegment("The underlying inspiration here is to represent 1 as f(x), 2 as f(f(x)), and so on."), 3);
     LatexScene f_zero("x"      , 0.8, VIDEO_WIDTH/3, VIDEO_HEIGHT/7);
     LatexScene f_one ("(f\\ x)"   , 1, VIDEO_WIDTH/3, VIDEO_HEIGHT/7);
@@ -1566,13 +1566,13 @@ void numerals() {
 
     cs.add_scene_fade_in(&f_zero, "f_zero", 0.333, 0.1, true);
     cs.add_scene_fade_in(&zero_scene, "zero_scene", 0.6, .07, true);
-    cs.render();
+    cs.render_microblock();
     cs.add_scene_fade_in(&f_one , "f_one" , 0.333, 0.3, true);
     cs.add_scene_fade_in(&one_scene, "one_scene", 0.6, .27, true);
-    cs.render();
+    cs.render_microblock();
     cs.add_scene_fade_in(&f_two , "f_two" , 0.333, 0.5, true);
     cs.add_scene_fade_in(&two_scene, "two_scene", 0.6, .47, true);
-    cs.render();
+    cs.render_microblock();
 
     LatexScene f_n("(f^n\\ x)", 1, VIDEO_WIDTH/3, VIDEO_HEIGHT/7);
     cs.add_scene_fade_in(&f_n, "f_n", 0.333, 0.7, true);
@@ -1589,18 +1589,18 @@ void numerals() {
     cs.stage_macroblock_and_render(AudioSegment("Well, almost- the numbers are really two-argument functions which take in f and x, and then apply f to x n times."));
     cs.stage_macroblock_and_render(AudioSegment("It's important to understand the difference there."));
     cs.stage_macroblock(AudioSegment("These numbers ARE FUNCTIONS that TAKE IN A FUNCTION AND A VARIABLE, and then iterate that function on that variable."), 4);
-    cs.render();
+    cs.render_microblock();
     f_zero.begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+"x.\\ x)");
     f_one .begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+"x.\\ (f\\ x))");
     f_two .begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+"x.\\ (f\\ (f\\ x)))");
     f_n   .begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+"x.\\ (f^n\\ x))");
-    cs.render();
+    cs.render_microblock();
     f_zero.begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+latex_color(0xff0088ff, "x") + ".\\ x)");
     f_one .begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+latex_color(0xff0088ff, "x") + ".\\ (f\\ x))");
     f_two .begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+latex_color(0xff0088ff, "x") + ".\\ (f\\ (f\\ x)))");
     f_n   .begin_latex_transition("(\\lambda "+latex_color(0xffff0000, "f")+latex_color(0xff0088ff, "x") + ".\\ (f^n\\ x))");
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     f_zero.begin_latex_transition("(\\lambda fx.\\ x)");
     f_one .begin_latex_transition("(\\lambda fx.\\ (f\\ x))");
     f_two .begin_latex_transition("(\\lambda fx.\\ (f\\ (f\\ x)))");
@@ -1609,10 +1609,10 @@ void numerals() {
     cs.fade_out_all_scenes();
 
     cs.stage_macroblock(AudioSegment("So, we can give 2 the function sin and the value 5,"), 2);
-    cs.render();
+    cs.render_microblock();
     LatexScene two_sin_5("2\\ sin\\ 5", 0.8, VIDEO_WIDTH, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&two_sin_5, "2s5", 0, .375, true);
-    cs.render();
+    cs.render_microblock();
     two_sin_5.begin_latex_transition("(sin\\ (sin\\ 5))");
     cs.stage_macroblock_and_render(AudioSegment("and 2 will apply sin to 5 twice."));
 
@@ -1640,11 +1640,11 @@ void numerals() {
     cs.stage_macroblock_and_render(AudioSegment("We can start by applying f to x n times."));
     cs.stage_macroblock(AudioSegment("We do this by using the numeral as a function and passing f and x into it."), 3);
     succ_gate.begin_latex_transition(latex_text("SUCC = ") + "\\bigg(\\lambda n.\\ \\Big(\\lambda fx.\\ \\big("+latex_color(0xffff0000, "n") + " f x\\big)\\Big)\\bigg)");
-    cs.render();
+    cs.render_microblock();
     succ_gate.begin_latex_transition(latex_text("SUCC = ") + "\\bigg(\\lambda n.\\ \\Big(\\lambda fx.\\ \\big("+latex_color(0xffff0000, "n")+latex_color(0xff00ff00, "f") + " x\\big)\\Big)\\bigg)");
-    cs.render();
+    cs.render_microblock();
     succ_gate.begin_latex_transition(latex_text("SUCC = ") + "\\bigg(\\lambda n.\\ \\Big(\\lambda fx.\\ \\big("+latex_color(0xffff0000, "n")+latex_color(0xff00ff00, "f") + latex_color(0xff0088ff, "x") + "\\big)\\Big)\\bigg)");
-    cs.render();
+    cs.render_microblock();
 
     succ_gate.begin_latex_transition(latex_text("SUCC = ") + "\\bigg(\\lambda n.\\ \\Big(\\lambda fx.\\ \\big(f (n f x)\\big)\\Big)\\bigg)");
     cs.stage_macroblock_and_render(AudioSegment("All that's left is to apply f just one more time!"));
@@ -1746,7 +1746,7 @@ void numerals() {
     cs.stage_macroblock(AudioSegment(6), num_reductions);
     for(int i = 0; i < num_reductions; i++) {
         add_5_3_scene.reduce();
-        cs.render();
+        cs.render_microblock();
     }
     cs.stage_macroblock_and_render(AudioSegment("It's eight!"));
 
@@ -1846,17 +1846,17 @@ void numerals() {
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"ptp.opacity", "1"},
     });
-    cs.render();
+    cs.render_microblock();
     ptp.begin_latex_transition("((\\times +) +)");
-    cs.render();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("so here goes."));
     ptp.begin_latex_transition("(((\\lambda nms. (n(ms))) +) +)");
     cs.stage_macroblock_and_render(AudioSegment("Let's plug in the function for times."));
     cs.stage_macroblock(AudioSegment("Reducing, we get this."), 2);
     ptp.begin_latex_transition("((\\lambda ms. (+(ms))) +)");
-    cs.render();
+    cs.render_microblock();
     ptp.begin_latex_transition("(\\lambda s. (+(+s)))");
-    cs.render();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("Ok, that's kinda weird,"));
     ptp.begin_latex_transition("("+latex_color(0xffff4444, "\\lambda s.") + "(+(+s)))");
     cs.stage_macroblock_and_render(AudioSegment("we get another function."));
@@ -1894,8 +1894,8 @@ void numerals() {
     cs.stage_macroblock_and_render(AudioSegment(1));
     ptp.begin_latex_transition("+\\times+(a,b,c,d) = (d^{(c^b)})^{a+c}");
     cs.stage_macroblock(AudioSegment("Ok, so what we learned here is that 'plus times plus' is a function of four arguments which spits out this power tower."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("Obviously this is completely ridiculous."));
     cs.stage_macroblock_and_render(AudioSegment("But it serves to prove a point..."));
     cs.state_manager.subscene_transition(unordered_map<string, string>{
@@ -1982,19 +1982,19 @@ shared_ptr<LambdaExpression> factorial(){
     py_fac.begin_transition(png_to_pix_bounding_box("factorial", VIDEO_WIDTH*.6, VIDEO_HEIGHT*.6));
     cs.stage_macroblock_and_render(AudioSegment("But a lambda calculus term is self-contained."));
     cs.stage_macroblock(AudioSegment("How would I draw a diagram of this term, if I don't know what this component is?"), 7);
-    cs.render();
+    cs.render_microblock();
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffffffff,latex_text("fac"))+"(-\\ n\\ 1))))\\big)");
-    cs.render();
+    cs.render_microblock();
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffff0000,latex_text("fac"))+"(-\\ n\\ 1))))\\big)");
-    cs.render();
+    cs.render_microblock();
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffffffff,latex_text("fac"))+"(-\\ n\\ 1))))\\big)");
-    cs.render();
+    cs.render_microblock();
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffff0000,latex_text("fac"))+"(-\\ n\\ 1))))\\big)");
-    cs.render();
+    cs.render_microblock();
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffffffff,latex_text("fac"))+"(-\\ n\\ 1))))\\big)");
-    cs.render();
+    cs.render_microblock();
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ("+latex_color(0xffff0000,latex_text("fac"))+"(-\\ n\\ 1))))\\big)");
-    cs.render();
+    cs.render_microblock();
     fac.begin_latex_transition(latex_text("fac = ") + "\\big(\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (\\scriptsize(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))\\normalsize(-\\ n\\ 1))))\\big)");
     cs.stage_macroblock_and_render(AudioSegment("You could argue, as is, this definition's infinitely long."));
     fac.begin_latex_transition(latex_text("fac = ") + "\\scriptsize(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(\\tiny(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n(...(-\\ n\\ 1)))))(-\\ n\\ 1)))))\\scriptsize (-\\ n\\ 1)))))");
@@ -2011,8 +2011,8 @@ shared_ptr<LambdaExpression> factorial(){
     LatexScene fp_math("x = f(x)", 0.5, VIDEO_WIDTH/2, VIDEO_HEIGHT/3);
     cs.add_scene_fade_in(&fp_math, "fp_math", 0, 0.06, true);
     cs.stage_macroblock(AudioSegment("In other words, x is a fixed point if f(x) matches x."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     rfs.add_function("?", 0xff0088ff);
     cs.stage_macroblock_and_render(AudioSegment("Graphing this, it's where the line y=x intersects with your function."));
     rfs.begin_transition(0, "? sin");
@@ -2131,8 +2131,8 @@ shared_ptr<LambdaExpression> factorial(){
     cs.stage_macroblock_and_render(AudioSegment("Now, let's consider what a fixed point of big F would be like."));
     fac_solution.begin_latex_transition("(\\Theta F) =_\\beta (F (\\Theta F))");
     cs.stage_macroblock(AudioSegment("We already know that this is true of any fixed point by definition, using the magic of Turing's Fixed Point Combinator."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     fac_solution.begin_latex_transition("(\\Theta F) =_\\beta ((\\lambda fn.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (f(-\\ n\\ 1))))) (\\Theta F))");
     cs.stage_macroblock_and_render(AudioSegment("Plugging in the first F,"));
     fac_solution.begin_latex_transition("(\\Theta F) =_\\beta (\\lambda n.\\ (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ (\\Theta F(-\\ n\\ 1)))))");
@@ -2198,7 +2198,7 @@ shared_ptr<LambdaExpression> factorial(){
     for(int i = 0; i < num_reductions; i++) {
         TF3 = TF3->reduce();
         fac_lambda.reduce();
-        cs.render();
+        cs.render_microblock();
     }
     cout << TF3->get_string() << endl;
     cs.stage_macroblock_and_render(AudioSegment("It's six!!"));
@@ -2214,11 +2214,11 @@ shared_ptr<LambdaExpression> factorial(){
     cs.stage_macroblock_and_render(AudioSegment("Given our knowledge that the numeral 3 iterates a function 3 times,"));
     cs.stage_macroblock(AudioSegment("you can probably guess what 3(factorial) is now."), 3);
     three_fac.begin_latex_transition("(3(fac))(x) = fac(fac(x!))");
-    cs.render();
+    cs.render_microblock();
     three_fac.begin_latex_transition("(3(fac))(x) = fac(x!!)");
-    cs.render();
+    cs.render_microblock();
     three_fac.begin_latex_transition("(3(fac))(x) = x!!!");
-    cs.render();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("It's the triple factorial function!"));
     cs.fade_out_all_scenes();
     */
@@ -2285,31 +2285,31 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
         lastid = g.add_node(child);
         break;
     }
-    cs.render();
+    cs.render_microblock();
     children = g.nodes.find(lastid)->second.data->get_children();
     for(HashableString* child : children){
         lastid = g.add_node(child);
         break;
     }
-    cs.render();
+    cs.render_microblock();
     children = g.nodes.find(lastid)->second.data->get_children();
     for(HashableString* child : children){
         lastid = g.add_node(child);
         break;
     }
-    cs.render();
+    cs.render_microblock();
     children = g.nodes.find(lastid)->second.data->get_children();
     for(HashableString* child : children){
         lastid = g.add_node(child);
         break;
     }
-    cs.render();
+    cs.render_microblock();
     children = g.nodes.find(lastid)->second.data->get_children();
     for(HashableString* child : children){
         lastid = g.add_node(child);
         break;
     }
-    cs.render();
+    cs.render_microblock();
     for(auto& p : g.nodes){
         Node<HashableString>& n = p.second;
         if(n.data->representation.size() == 21)
@@ -2321,14 +2321,14 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.stage_macroblock(AudioSegment("The fancy word for this is 'Beta Normal Form'."), 3);
     LatexScene bnf(latex_text("Beta Normal Form")+"\\rightarrow", 0.9, VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&bnf, "bnf", 0, 0.69, true);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.state_manager.subscene_transition(unordered_map<string, string>{
         {"bnf.opacity", "0"},
     });
-    cs.render();
+    cs.render_microblock();
     cs.stage_macroblock(AudioSegment("But I wanna take a closer look at the second node."), 2);
-    cs.render();
+    cs.render_microblock();
 
     string iter2 = "((\\n. (\\f. (\\x. (((\\f. (\\x. (f x))) f) ((n f) x))))) (\\f. (\\x. (f x))))";
     glm::dvec4 iter2pos;
@@ -2352,7 +2352,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
         }
     }
     g.iterate_physics(100);
-    cs.render();
+    cs.render_microblock();
 
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"lgs.x", "0"},
@@ -2366,8 +2366,8 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.stage_macroblock_and_render(AudioSegment("it looks like this."));
     lam.set_expression(lam_iter2);
     cs.stage_macroblock(AudioSegment("But... stepping back,"), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("Lemme highlight the function-value pair which just got reduced."));
     dynamic_pointer_cast<LambdaApplication>(lam_iter2)->get_first()->set_color_recursive(0xffff7700);
     lam.set_expression(lam_iter2);
@@ -2512,7 +2512,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.stage_macroblock(AudioSegment("It is reducible, but it doesn't reduce to a _different_ lambda term..."), 2);
     for(int i = 0; i < 2; i++){
         omega.reduce();
-        cs.render();
+        cs.render_microblock();
     }
     omega.reduce();
     PngScene self_arrow("self_arrow", VIDEO_WIDTH/3, VIDEO_HEIGHT/3);
@@ -2520,7 +2520,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.stage_macroblock(AudioSegment("There's not much of a graph to draw, because it reduces to itself!"), 2);
     for(int i = 0; i < 2; i++){
         omega.reduce();
-        cs.render();
+        cs.render_microblock();
     }
     cs.fade_out_all_scenes();
     cs.stage_macroblock_and_render(AudioSegment(1));
@@ -2549,7 +2549,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.stage_macroblock(AudioSegment("The search tree on this is suuuper deep, so I'll just show you the tip of the iceberg."), num_bfs);
     if(FOR_REAL) for(int i = 0; i < num_bfs; i++){
         g.expand_graph_once();
-        cs.render();
+        cs.render_microblock();
     }
 
     cs.stage_macroblock_and_render(AudioSegment("That's the first thousand nodes."));
@@ -2572,7 +2572,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
                 n.opacity = 1;
             }
         }
-        cs.render();
+        cs.render_microblock();
     }
     cs.state_manager.superscene_transition(unordered_map<string, string>{
         {"d", "1800"},
@@ -2595,7 +2595,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
                 n.opacity = 1;
             }
         }
-        cs.render();
+        cs.render_microblock();
     }
     cs.stage_macroblock_and_render(AudioSegment("In fact, this alternate reduction path goes on indefinitely, sort of like Omega."));
     LatexScene unroll("(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ((\\Theta F)(-\\ n\\ 1)))))", 0.5, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
@@ -2633,13 +2633,13 @@ void extra(){
     LatexScene ctt(latex_text("Church-Turing Thesis"), 1, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&ctt, "ctt", 0, 0.125, true);
     lc.begin_latex_transition(latex_text("The \\lambda-Calculus is as powerful as a Turing Machine"));
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     ctt.begin_latex_transition(latex_text("Typed \\lambda-Calculus"));
     lc.begin_latex_transition(latex_text("Variables in the \\lambda-Calculus can take datatypes"));
     cs.stage_macroblock(AudioSegment("There's also the entire field of typed lambda calculus, where we assign datatypes to variables."), 2);
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("It even turns out that any given typed program in the Lambda Calculus corresponds to some proof."));
     cs.stage_macroblock_and_render(AudioSegment("_Merely writing a program in the typed Lambda Calculus proves something._"));
     PngScene coq("coq", VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
@@ -2653,23 +2653,23 @@ void extra(){
     cs.add_scene_fade_in(&functional, "functional", 0, 0, true);
     LatexScene imperative(latex_text("Imperative Languages"), 0.8, VIDEO_WIDTH/2, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&imperative, "imperative", 0.5, 0, true);
-    cs.render();
+    cs.render_microblock();
     PngScene lisp("lisp", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&lisp, "lisp", 2/16., 4/16., true);
-    cs.render();
+    cs.render_microblock();
     PngScene haskell("haskell", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&haskell, "haskell", 2/16., 9/16., true);
-    cs.render();
-    cs.render();
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     PngScene c_lang("c_lang", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&c_lang, "c_lang", 10/16., 4/16., true);
-    cs.render();
+    cs.render_microblock();
     PngScene rust("rust", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&rust, "rust", 10/16., 9/16., true);
-    cs.render();
+    cs.render_microblock();
     cs.fade_out_all_scenes();
     PngScene python("python", VIDEO_WIDTH/4, VIDEO_HEIGHT/4);
     cs.add_scene_fade_in(&python, "python", .375, .375, true);
@@ -2696,21 +2696,21 @@ void credits(){
     cs.add_scene_fade_in(&seef, "seef", 0, .1, true);
     cs.add_scene_fade_in(&seef_text, "seef_text", 0, .533, true);
     cs.stage_macroblock(AudioSegment("I wanna give an enormous thank-you to 6884, who made all the music which made this video come to life."), 3);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.add_scene_fade_in(&tromp, "tromp", .333, .1, true);
     cs.add_scene_fade_in(&tromp_text, "tromp_text", .333, .533, true);
     cs.stage_macroblock(AudioSegment("This also couldn't have been possible if not for John Tromp, the inventor of this sick diagrammatic notation for lambda expressions."), 3);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.add_scene_fade_in(&selinger, "selinger", .666, .1, true);
     cs.add_scene_fade_in(&selinger_text, "selinger_text", .666, .533, true);
     cs.stage_macroblock(AudioSegment("Or Peter Selinger, who wrote this book, Lecture Notes on the Lambda Calculus."), 3);
-    cs.render();
-    cs.render();
-    cs.render();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
 
     shared_ptr<LambdaExpression> add = parse_lambda_from_string("(\\m. (\\n. (\\f. (\\x. ((m f) ((n f) x))))))");
     shared_ptr<LambdaExpression> mult = parse_lambda_from_string("(\\m. (\\n. (\\s. (n (m s)))))");
@@ -2720,22 +2720,22 @@ void credits(){
     cs.fade_out_all_scenes();
     cs.add_scene_fade_in(&ptp_scene, "ptp_scene", .2, .2, true);
     cs.stage_macroblock(AudioSegment("His clear formalizations of a lot of the things I _thought_ I understood helped me get through plenty of snags in rendering these diagrams."), 4);
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
     cs.stage_macroblock(AudioSegment("This video, to the best of my knowledge, is the first which shows beta-reduction animations of _any_ visualization method for the Lambda Calculus."), 4);
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
-    cs.render();
+    cs.render_microblock();
     ptp_scene.reduce();
     cs.fade_out_all_scenes();
     cs.stage_macroblock_and_render(AudioSegment("And geez, did it take a while to make."));
@@ -2744,9 +2744,9 @@ void credits(){
     PngScene discord("discord", VIDEO_WIDTH/3, VIDEO_HEIGHT/3);
     cs.add_scene_fade_in(&discord, "discord", .333, .333, true);
     cs.stage_macroblock(AudioSegment("If you like this content, then there's nothing I would appreciate more than you joining our discord server!"), 2);
-    cs.render();
+    cs.render_microblock();
     cs.add_scene_fade_in(&links, "links", 0, .666, true);
-    cs.render();
+    cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("We talk about math, puzzles, game theory, and so on!"));
     cs.fade_out_all_scenes();
     cs.stage_macroblock_and_render(AudioSegment("I can't wait to see you there."));

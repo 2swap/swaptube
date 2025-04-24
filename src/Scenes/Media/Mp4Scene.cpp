@@ -39,9 +39,6 @@ public:
         current_frame_index++;
     }
 
-    // Called at the end of a transition; no special cleanup is needed here.
-    void on_end_transition(bool is_macroblock) override { }
-
     // Mp4Scene doesn't publish any additional state.
     const StateQuery populate_state_query() const override { return StateQuery{}; }
 

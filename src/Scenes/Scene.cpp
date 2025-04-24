@@ -23,7 +23,7 @@ public:
     virtual void draw() = 0;
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
-    virtual void on_end_transition(bool is_macroblock) = 0;
+    virtual void on_end_transition_extra_behavior(bool is_macroblock){};
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
     void publish_global(const unordered_map<string, double>& s) const {
         for(const auto& p : s) {
@@ -59,10 +59,10 @@ public:
         has_updated_since_last_query = false;
         p=&pix;
     }
-
-    void stage_macroblock_and_render(const AudioSegment& audio){
-        stage_macroblock(audio, 1);
-        render();
+    void on_end_transition(bool is_macroblock) {
+                           state_manager.close_microblock_transitions();
+        if (is_macroblock) state_manager.close_macroblock_transitions();
+        on_end_transition_extra_behavior(is_macroblock);
     }
 
     bool microblocks_remaining() {
@@ -70,29 +70,25 @@ public:
     }
 
     void stage_macroblock(const AudioSegment& audio, int expected_microblocks){
-        WRITER.add_shtooka(audio);
-        if(!FOR_REAL)
-            return;
-
         if (remaining_microblocks != 0) {
-            throw runtime_error("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render()!\n"
-                    "This macroblock was created with " + to_string(total_microblocks) + " total microblocks, "
-                    "but render() was only called " + to_string(total_microblocks - remaining_microblocks) + " times.");
+            throw runtime_error("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render_microblock()!\n"
+                    "This macroblock had" + to_string(total_microblocks) + " microblocks, "
+                    "but render_microblock() was only called " + to_string(total_microblocks - remaining_microblocks) + " times.");
         }
 
-        total_macroblock_frames = remaining_macroblock_frames = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
         total_microblocks = remaining_microblocks = expected_microblocks;
-        cout << "Macroblock will last " << remaining_macroblock_frames << " frames, with " << expected_microblocks << " microblock(s)." << endl;
+        cout << "Macroblock staged to last " << expected_microblocks << " microblock(s)." << endl;
+        if(FOR_REAL) {
+            WRITER.add_shtooka(audio);
+            total_macroblock_frames = remaining_macroblock_frames = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
+        }
     }
 
-    void render(){
-        if(!FOR_REAL){
-            state_manager.close_microblock_transitions();
-            state_manager.close_macroblock_transitions();
-            on_end_transition(true);
-            state_manager.evaluate_all();
-            return;
+    void render_microblock(){
+        if (remaining_microblocks == 0) {
+            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock()!");
         }
+
         int complete_microblocks = total_microblocks - remaining_microblocks;
         int complete_macroblock_frames = total_macroblock_frames - remaining_macroblock_frames;
         double num_frames_per_session = static_cast<double>(total_macroblock_frames) / total_microblocks;
@@ -103,19 +99,11 @@ public:
         for (int frame = 0; frame < scene_duration_frames; frame++) {
             render_one_frame(frame);
         }
-        if(total_microblocks < 10) cout << endl;
         remaining_microblocks--;
-        global_state["microblock_number"]++;
-        if(remaining_microblocks == 0){
-            global_state["macroblock_number"]++;
-            state_manager.close_macroblock_transitions();
-            state_manager.close_microblock_transitions();
-            on_end_transition(true);
-        }
-        else {
-            state_manager.close_microblock_transitions();
-            on_end_transition(false);
-        }
+        bool done_macroblock = remaining_microblocks == 0;
+                            global_state["microblock_number"]++;
+        if(done_macroblock) global_state["macroblock_number"]++;
+        on_end_transition(done_macroblock);
     }
 
     void update_state() {
@@ -149,33 +137,30 @@ private:
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
         global_state["t"] = global_state["frame_number"] / VIDEO_FRAMERATE;
 
-        state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
+        if(FOR_REAL) {
+            state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
+            WRITER.set_time(global_state["frame_number"] / VIDEO_FRAMERATE);
+            Pixels* p = nullptr;
+            query(p);
+            if(PRINT_TO_TERMINAL && (int(global_state["frame_number"]) % 5 == 0)) p->print_to_terminal();
+            if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % VIDEO_FRAMERATE == 0)) {
+                int roundedFrameNumber = round(global_state["frame_number"]);
+                ostringstream stream;
+                stream << setw(6) << setfill('0') << roundedFrameNumber;
+                ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
+                pix_to_png(p->naive_scale_down(4), "frames/frame_"+stream.str());
+            }
+            WRITER.add_frame(*p);
 
-        if (remaining_microblocks == 0) {
-            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock() or stage_macroblock_and_render()!");
+            auto end_time = chrono::high_resolution_clock::now(); // End timing
+            chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
+            time_per_frame_plot.add_datapoint(frame_duration.count());
+            cumulative_time_plot.add_datapoint(std::chrono::duration_cast<std::chrono::nanoseconds>(start_time.time_since_epoch()).count() / 1000000000.0);
+            memutil_plot.add_datapoint(get_free_memory());
         }
 
-        Pixels* p = nullptr;
-        WRITER.set_time(global_state["frame_number"] / VIDEO_FRAMERATE);
-        query(p);
-        if(PRINT_TO_TERMINAL && (int(global_state["frame_number"]) % 5 == 0)) p->print_to_terminal();
-        if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % VIDEO_FRAMERATE == 0)) {
-            int roundedFrameNumber = round(global_state["frame_number"]);
-            ostringstream stream;
-            stream << setw(6) << setfill('0') << roundedFrameNumber;
-            ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
-            pix_to_png(p->naive_scale_down(4), "frames/frame_"+stream.str());
-        }
-        WRITER.add_frame(*p);
         remaining_macroblock_frames--;
         global_state["frame_number"]++;
-
-        auto end_time = chrono::high_resolution_clock::now(); // End timing
-        chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
-        time_per_frame_plot.add_datapoint(frame_duration.count());
-        cumulative_time_plot.add_datapoint(std::chrono::duration_cast<std::chrono::nanoseconds>(start_time.time_since_epoch()).count() / 1000000000.0);
-        memutil_plot.add_datapoint(get_free_memory());
-
         cout << "#";
         fflush(stdout);
     }

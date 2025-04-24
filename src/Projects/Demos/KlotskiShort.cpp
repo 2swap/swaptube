@@ -46,7 +46,7 @@ void demo(){
             g.add_missing_edges(true);
             // Highlight the node of the board on the state-space graph
             gs.next_hash = ks.copy_board().get_hash();
-            cs.render(); // Render a microblock
+            cs.render_microblock(); // Render a microblock
         }
 
         // Expand the graph until all nodes are present

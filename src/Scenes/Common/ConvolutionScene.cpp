@@ -33,7 +33,7 @@ public:
         coords = get_coords_from_pixels(p);
     }
 
-    void on_end_transition(bool is_macroblock){
+    void on_end_transition_extra_behavior(bool is_macroblock){
         if(in_transition_state && !override_transition_end) end_transition();
     }
 

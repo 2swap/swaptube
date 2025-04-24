@@ -28,7 +28,6 @@ public:
             pix.overlay(swaptube_pix, pix.h*.03, pix.h*.03, state["swaptube_opacity"]);
         }
     }
-    void on_end_transition(bool is_macroblock) override{}
 
     string swaptube_commit_hash() {
         const char* command = "git rev-parse HEAD";
