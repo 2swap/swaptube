@@ -1,14 +1,36 @@
 #pragma once
 
 #include "../Scene.cpp"
-
-struct NamedSubscene {
-    shared_ptr<Scene> ptr;
-    string state_manager_name;
-};
+#include <unordered_map>
 
 class SuperScene : public Scene {
 public:
+    void remove_subscene(const string& name) {
+        auto it = subscenes.find(name);
+        if(it != subscenes.end()){
+            it->second->state_manager.set_parent(nullptr);
+            subscenes.erase(it);
+        }
+    }
+
+    void fade_out_all_subscenes(bool micro = true) {
+        for (auto& kv : subscenes) {
+            unordered_map<string, string> map = {
+                {kv.first + ".opacity", "0"}
+            };
+            if(micro) state_manager.microblock_transition(map);
+            else      state_manager.macroblock_transition(map);
+        }
+    }
+
+    void remove_all_subscenes() {
+        for (auto& kv : subscenes){
+            kv.second->state_manager.set_parent(nullptr);
+        }
+        subscenes.clear();
+    }
+
+protected:
     SuperScene(const double width = 1, const double height = 1)
         : Scene(width, height) {}
 
@@ -19,73 +41,58 @@ public:
         return !has_ever_rendered || state_change || data_change || subscene_change;
     }
 
-    void add_subscene_check_dupe(const NamedSubscene& subscene){
-        for(const NamedSubscene& ns : subscenes){
-            if(subscene.state_manager_name == ns.state_manager_name)
-                throw runtime_error("Error: Added two subscenes of the same name to superscene: " + subscene.state_manager_name);
-        }
-        subscenes.push_back(subscene);
+    void add_subscene_check_dupe(const string& name, shared_ptr<Scene> scene) {
+        if(subscenes.find(name) != subscenes.end())
+            throw runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
+        scene->state_manager.set_parent(&state_manager);
+        subscenes[name] = scene;
+        if(name == "...fff.....cbba..cdda..e..a..e..hhhe") cout << "ASCD" << endl;
+        state_manager.set({
+            {name + ".opacity", "1"},
+        });
     }
 
     void change_data() override {
-        for(const auto& subscene : subscenes){
-            subscene.ptr->update();
+        for(const auto& kv : subscenes){
+            kv.second->update();
         }
     }
 
     bool check_if_data_changed() const override {
-        for(const auto& subscene : subscenes){
-            if(subscene.ptr->check_if_data_changed()) return true;
+        for(const auto& kv : subscenes){
+            if(kv.second->check_if_data_changed()) return true;
         }
         return false;
     }
 
     void on_end_transition_extra_behavior(bool is_macroblock) override {
-        cout << "Ending!" << is_macroblock << endl;
-        for(const auto& subscene : subscenes){
-            subscene.ptr->on_end_transition(is_macroblock);
-                              subscene.ptr->state_manager.close_microblock_transitions();
-            if(is_macroblock) subscene.ptr->state_manager.close_macroblock_transitions();
+        for(const auto& kv : subscenes){
+            kv.second->on_end_transition(is_macroblock);
         }
     }
 
     bool subscene_needs_redraw() const {
-        for (auto& subscene : subscenes){
-            if(state[subscene.state_manager_name + ".opacity"] > 0.01 && subscene.ptr->needs_redraw()) return true;
+        for (const auto& kv : subscenes){
+            if(kv.first == "...fff.....cbba..cdda..e..a..e..hhhe") cout << "SNR" << endl;
+            if(state[kv.first + ".opacity"] > 0.01 && kv.second->needs_redraw()) return true;
         }
         return false;
     }
 
-    void fade_out_all_scenes(bool micro = true) {
-        for (auto& subscene : subscenes) {
-            unordered_map<string, string> map = {
-                {subscene.state_manager_name + ".opacity", "0"}
-            };
-            if(micro) state_manager.microblock_transition(map);
-            else      state_manager.macroblock_transition(map);
-        }
-    }
-
-    void remove_all_scenes() {
-        for (auto& subscene : subscenes){
-            subscene.ptr->state_manager.set_parent(nullptr);
-        }
-        subscenes.clear();
-    }
-
     void mark_data_unchanged() override {
-        for(const auto& subscene : subscenes){
-            subscene.ptr->mark_data_unchanged();
+        for(const auto& kv : subscenes){
+            kv.second->mark_data_unchanged();
         }
     }
 
-    void remove_scene(shared_ptr<Scene> sc) {
-        sc->state_manager.set_parent(nullptr);
-        subscenes.erase(std::remove_if(subscenes.begin(), subscenes.end(),
-                                    [sc](const NamedSubscene& subscene) {
-                                        return subscene.ptr == sc;
-                                    }), subscenes.end());
+    const StateQuery populate_state_query() const override {
+        StateQuery ret;
+        for (const auto& kv : subscenes){
+            if(kv.first == "...fff.....cbba..cdda..e..a..e..hhhe") cout << "PSQ" << endl;
+            ret.insert(kv.first + ".opacity");
+        };
+        return ret;
     }
-protected:
-    vector<NamedSubscene> subscenes;
+
+    unordered_map<string, shared_ptr<Scene>> subscenes;
 };

@@ -291,7 +291,6 @@ public:
      * @param id The hash of the node to be removed.
      */
     void remove_node(double id) {
-        cout << "Trying to remove a node" << endl;
         if (!node_exists(id)) return;
         Node& node = nodes.at(id);
         for (const auto& neighbor_edge : node.neighbors) {
@@ -300,7 +299,6 @@ public:
         }
         delete node.data;
         nodes.erase(id);
-        cout << "removed a node" << endl;
         mark_updated();
     }
 
@@ -538,7 +536,8 @@ public:
             ct += sig;
         }
 
-        return 3 + 2.4*pow(sum_distance_sq / ct, .25);
+        double ans = 3 + 2.4*pow(sum_distance_sq / ct, .25);
+        return ans;
     }
 
     /*

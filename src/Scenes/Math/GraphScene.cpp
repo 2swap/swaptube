@@ -110,10 +110,10 @@ public:
         update_surfaces();
     }
     bool check_if_data_changed() const override {
-        return graph->has_been_updated_since_last_scene_query();
+        return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();
     }
 
-    void on_end_transition_extra_behavior(bool is_macroblock) {
+    void on_end_transition_extra_behavior(bool is_macroblock) override {
         curr_hash = next_hash;
     }
 
@@ -129,11 +129,12 @@ public:
             string rep = node.data->representation;
 
             auto it = graph_surface_map.find(rep);
-            if(graph_surface_map.find(rep) != graph_surface_map.end()) {
-                it->second.opacity = node.opacity;
-                it->second.center = glm::dvec3(node.position);
+            if(it != graph_surface_map.end()) {
+                it->second.first.opacity = node.opacity;
+                it->second.first.center = glm::dvec3(node.position);
             } else {
-                graph_surface_map.emplace(rep, make_surface(node));
+                if(rep== "...fff.....cbba..cdda..e..a..e..hhhe") cout << "ADDD" << endl;
+                graph_surface_map.emplace(rep, make_pair(make_surface(node), node.data->make_scene()));
             }
 
             // Add this id to the set of updated or created surfaces
@@ -145,14 +146,14 @@ public:
             if (updated_ids.find(it->first) == updated_ids.end()) {
                 it = graph_surface_map.erase(it);
             } else {
-                add_surface(it->second);
+                add_surface(it->second.first, it->second.second);
                 ++it;
             }
         }
     }
 
     virtual Surface make_surface(Node node) const {
-        return Surface(glm::dvec3(node.position),glm::dvec3(1,0,0),glm::dvec3(0,static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH,0), node.data->make_scene(), node.data->representation, node.opacity);
+        return Surface(glm::dvec3(node.position),glm::dvec3(1,0,0),glm::dvec3(0,static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH,0), node.data->representation, node.opacity);
     }
 
     // Override the default surface render routine to make all graph surfaces point at the camera
@@ -173,7 +174,6 @@ public:
             surface.center,
             glm::dvec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
             glm::dvec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
-            surface.scenePointer,
             surface.name,
             surface.opacity
         );
@@ -189,7 +189,7 @@ public:
 
 protected:
     Graph* graph;
-    unordered_map<string, Surface> graph_surface_map;
+    unordered_map<string, pair<Surface, shared_ptr<Scene>>> graph_surface_map;
 
 private:
     int last_node_count = -1;

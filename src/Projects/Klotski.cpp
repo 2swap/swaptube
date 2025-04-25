@@ -19,6 +19,16 @@ int get_graph_size(const KlotskiBoard& kb){
     return g.size();
 }
 
+StateSet default_graph_state{
+    {"q1", "1"},
+    {"qi", "<t> .1 * cos"},
+    {"qj", "<t> .1 * sin"},
+    {"qk", "0"}, // Camera orientation quaternion
+    {"decay",".8"},
+    {"surfaces_opacity","0"}, // Whether we want to draw the board at every node
+    {"physics_multiplier","5"}, // How many times to iterate the graph-spreader
+};
+
 void part1(){
     CompositeScene cs;
 
@@ -30,28 +40,19 @@ void part1(){
     Graph g;
     g.add_to_stack(new KlotskiBoard(ks_ptr->copy_board()));
     auto gs_ptr = std::make_shared<GraphScene>(&g);
-    StateSet default_graph_state{
-        {"q1", "1"},
-        {"qi", "<t> .1 * cos"},
-        {"qj", "<t> .1 * sin"},
-        {"qk", "0"}, // Camera orientation quaternion
-        {"decay",".8"},
-        {"surfaces_opacity","0"}, // Whether we want to draw the board at every node
-        {"physics_multiplier","5"}, // How many times to iterate the graph-spreader
-    };
     gs_ptr->state_manager.set(default_graph_state);
     cs.add_scene(gs_ptr, "gs");
     cs.add_scene(ks_ptr, "ks");
     cs.state_manager.set(board_position);
-    cs.stage_macroblock(FileSegment("What you're looking at is a random agent exploring the state-space graph of a slidy puzzle."), 200);
+    cs.stage_macroblock(FileSegment("You're looking at a random agent exploring the state-space graph of a slidy puzzle."), 100);
     while(cs.microblocks_remaining()) {
         ks_ptr->stage_random_move();
         // Add the new node
-        g.add_to_stack(new KlotskiBoard(ks_ptr->copy_board()));
+        g.add_to_stack(new KlotskiBoard(ks_ptr->copy_staged_board()));
         g.add_missing_edges(true);
         // Highlight the node of the board on the state-space graph
-        gs_ptr->next_hash = ks_ptr->copy_board().get_hash();
-        cs.render_microblock(); // Render a microblock
+        gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
+        cs.render_microblock();
     }
 
     // Set ks.highlight_char to highlight the block which needs to get freed.
@@ -78,13 +79,12 @@ void part1(){
 
     // Delete all nodes of the graph except for the current one. Turn on surface opacity, and turn off edge opacity.
     cs.stage_macroblock(SilenceSegment(3), g.size()-1);
-    double kb_to_keep = ks_ptr->copy_board().get_hash();
     gs_ptr->state_manager.macroblock_transition({{"surfaces_opacity",".5"},{"lines_opacity","0"}});
     gs_ptr->state_manager.set({{"centering_strength","0"}});
     unordered_map<double,Node> nodes_copy = g.nodes;
     for(auto it = nodes_copy.begin(); it != nodes_copy.end(); ++it){
         double id_here = it->first;
-        if(id_here == kb_to_keep) continue;
+        if(id_here == gs_ptr->curr_hash) continue;
         g.remove_node(id_here);
         cs.render_microblock();
     }
@@ -92,12 +92,12 @@ void part1(){
 
     // Re-center
     gs_ptr->state_manager.microblock_transition({{"centering_strength","1"}});
-    cs.stage_macroblock(FileSegment("We'll represent the current position of the puzzle as a single node."), 1);
+    cs.stage_macroblock(FileSegment("We'll represent the current position of the puzzle as a node."), 1);
     cs.render_microblock();
 
     // Make one move and insert it on the graph.
     ks_ptr->highlight_char = 'c';
-    cs.stage_macroblock(FileSegment("If we make a single move on the puzzle,"), 5);
+    cs.stage_macroblock(FileSegment("If we make one move on the puzzle,"), 5);
     ks_ptr->stage_move({'c', 0, 1});
     cs.render_microblock();
     ks_ptr->stage_move({'c', 0, -1});
@@ -110,7 +110,7 @@ void part1(){
     cs.render_microblock();
     g.add_to_stack(new KlotskiBoard(ks_ptr->copy_staged_board()));
     g.add_missing_edges(true);
-    gs_ptr->next_hash = ks_ptr->copy_board().get_hash();
+    gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
     cs.stage_macroblock(FileSegment("we arrive at a different node."), 1);
     cs.render_microblock();
 
@@ -128,9 +128,9 @@ void part1(){
     cs.stage_macroblock(FileSegment("Each node is connected to a few more, and drawing them, we construct this labyrinth of paths."), 8);
     while(cs.microblocks_remaining()) {
         ks_ptr->stage_random_move();
-        g.add_to_stack(new KlotskiBoard(ks_ptr->copy_board()));
+        g.add_to_stack(new KlotskiBoard(ks_ptr->copy_staged_board()));
         g.add_missing_edges(true);
-        gs_ptr->next_hash = ks_ptr->copy_board().get_hash();
+        gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
         cs.render_microblock();
     }
 
@@ -141,76 +141,82 @@ void part1(){
     cs.render_microblock();
 
     // Expand the graph by one node until it is halfway complete. Fade out everything from the CompositeScene and then delete scenes when faded out.
-    cs.fade_out_all_scenes(false);
-    cs.stage_macroblock(FileSegment("If we make all of the possible moves, what do you think the graph would look like?"), get_graph_size(intermediate) * .7);
+    cs.fade_out_all_subscenes(false);
+    cs.stage_macroblock(FileSegment("Take a minute to think- if we make all of the possible nodes, what would the graph look like?"), get_graph_size(intermediate) * .7);
     while(cs.microblocks_remaining()) {
         g.expand_once();
         cs.render_microblock();
     }
-    cs.remove_all_scenes();
-
-    // Create new GraphScene (with no corresponding KlotskiScene) for manifold_2d, fade it in while expanding the graph completely
-    cs.stage_macroblock(FileSegment("Maybe there would be some overarching structure..."), get_graph_size(manifold_2d));
-    Graph g2d;
-    g2d.add_to_stack(new KlotskiBoard(manifold_2d));
-    auto gs2d_ptr = make_shared<GraphScene>(&g2d);
-    gs2d_ptr->state_manager.set(default_graph_state);
-    cs.add_scene_fade_in(gs2d_ptr, "gs2d");
-    while(cs.microblocks_remaining()){
-        g2d.expand_once();
-        cs.render_microblock();
-    }
-
-    // Transition the 2D grid scene to the left (by setting its width to .5 and moving its x position to .25)
-    StateSet grid_transition{{"w","0.5"},{"x","0.25"}};
-    gs2d_ptr->state_manager.microblock_transition(grid_transition);
-    cs.state_manager.microblock_transition({{"gs2d.x",".25"}});
-    cs.stage_macroblock(FileSegment("such as a two-dimensional grid,"), 1);
-    cs.render_microblock();
-
-    // Create new GraphScene for manifold_3d on the right side of the screen and fade it in while expanding the graph completely 
-    cs.stage_macroblock(FileSegment("or a three-dimensional crystal lattice!"), get_graph_size(manifold_3d));
-    Graph g3d;
-    g3d.add_to_stack(new KlotskiBoard(manifold_3d));
-    auto gs3d_ptr = make_shared<GraphScene>(&g3d, .5, 1);
-    gs3d_ptr->state_manager.set(default_graph_state);
-    cs.add_scene_fade_in(gs3d_ptr, "gs3d", 0.75, 0.5);
-    while(cs.microblocks_remaining()){
-        g3d.expand_once();
-        cs.render_microblock();
-    }
-
-    // Fade out all scenes and then delete them
-    cout << "A" << endl;
-    cs.fade_out_all_scenes();
-    cout << "B" << endl;
-    cs.stage_macroblock(SilenceSegment(1), 1);
-    cout << "C" << endl;
-    cs.render_microblock();
-    cout << "D" << endl;
-    cs.remove_all_scenes();
-
-    // Fade in and expand a GraphScene for intermediate again, but this time override "physics_multiplier" to be zero so the graph structure is indiscernable.
-    cs.stage_macroblock(FileSegment("Maybe it's an incomprehensibly dense mesh of interconnected nodes with no grand structure."), 100);
-    Graph g_int;
-    g_int.add_to_stack(new KlotskiBoard(intermediate));
-    auto gs_int_ptr = make_shared<GraphScene>(&g_int);
-    gs_int_ptr->state_manager.set(default_graph_state);
-    gs_int_ptr->state_manager.set({{"attract","-1"}, {"repel","-1"}});
-    cs.add_scene_fade_in(gs_int_ptr, "gs_int");
-    while(cs.microblocks_remaining()){
-        g_int.expand_once();
-        cs.render_microblock();
-    }
-
-    // Fade out all scenes and then delete them
-    cs.fade_out_all_scenes();
-    cs.stage_macroblock(SilenceSegment(1), 1);
-    cs.render_microblock();
-    cs.remove_all_scenes();
+    cs.remove_all_subscenes();
 }
 
 void part2() {
+    CompositeScene cs;
+
+    {
+        // Create new GraphScene (with no corresponding KlotskiScene) for manifold_2d, fade it in while expanding the graph completely
+        Graph g2d;
+        g2d.add_to_stack(new KlotskiBoard(manifold_3d));
+        auto gs2d_ptr = make_shared<GraphScene>(&g2d);
+        gs2d_ptr->state_manager.set(default_graph_state);
+        cs.add_scene(gs2d_ptr, "gs2d");
+        cs.stage_macroblock(FileSegment("Maybe there would be some overarching structure..."), get_graph_size(manifold_3d));
+        while(cs.microblocks_remaining()){
+            g2d.expand_once();
+            cs.render_microblock();
+        }
+
+        // Transition the 2D grid scene to the left (by setting its width to .5 and moving its x position to .25)
+        StateSet grid_transition{{"w","0.5"},{"x","0.25"}};
+        gs2d_ptr->state_manager.microblock_transition(grid_transition);
+        cs.state_manager.microblock_transition({{"gs2d.x",".25"}});
+        cs.stage_macroblock(FileSegment("such as a two-dimensional grid,"), 1);
+        cs.render_microblock();
+    }
+
+    {
+        // Create new GraphScene for manifold_3d on the right side of the screen and fade it in while expanding the graph completely 
+        cs.stage_macroblock(FileSegment("or a three-dimensional crystal lattice!"), get_graph_size(manifold_3d));
+        Graph g3d;
+        g3d.add_to_stack(new KlotskiBoard(manifold_3d));
+        auto gs3d_ptr = make_shared<GraphScene>(&g3d, .5, 1);
+        gs3d_ptr->state_manager.set(default_graph_state);
+        cs.add_scene(gs3d_ptr, "gs3d", 0.75, 0.5);
+        while(cs.microblocks_remaining()){
+            g3d.expand_once();
+            cs.render_microblock();
+        }
+
+        // Fade out all scenes and then delete them
+        cs.fade_out_all_subscenes();
+        cs.stage_macroblock(SilenceSegment(1), 1);
+        cs.render_microblock();
+        cs.remove_all_subscenes();
+    }
+
+    {
+        // Fade in and expand a GraphScene for intermediate again, but this time override "physics_multiplier" to be zero so the graph structure is indiscernable.
+        cs.stage_macroblock(FileSegment("Maybe it's an incomprehensibly dense mesh of interconnected nodes with no grand structure."), 100);
+        Graph g_int;
+        g_int.add_to_stack(new KlotskiBoard(intermediate));
+        auto gs_int_ptr = make_shared<GraphScene>(&g_int);
+        gs_int_ptr->state_manager.set(default_graph_state);
+        gs_int_ptr->state_manager.set({{"attract","-1"}, {"repel","-1"}});
+        cs.add_scene_fade_in(gs_int_ptr, "gs_int");
+        while(cs.microblocks_remaining()){
+            g_int.expand_once();
+            cs.render_microblock();
+        }
+
+        // Fade out all scenes and then delete them
+        cs.fade_out_all_subscenes();
+        cs.stage_macroblock(SilenceSegment(1), 1);
+        cs.render_microblock();
+        cs.remove_all_subscenes();
+    }
+}
+
+void part3() {
     // Start over by adding a KlotskiScene.
     shared_ptr<KlotskiScene> ks_ptr = make_shared<KlotskiScene>(sun);
 
@@ -258,7 +264,7 @@ void part2() {
 
     // Now that dots are back to 0, demonstrate a lateral move. (move piece 'e' right one space)
     ks_ptr->stage_move({'e', 1, 0});
-    ks_ptr->stage_macroblock(FileSegment("meaning blocks are free to move laterally."), 1);
+    ks_ptr->stage_macroblock(FileSegment("so blocks are free to move laterally."), 1);
     ks_ptr->render_microblock();
 
     // Show the intermediate puzzle from before.
@@ -267,7 +273,7 @@ void part2() {
     cs.add_scene_fade_in(make_shared<KlotskiScene>(intermediate, .5, 1), "ks_intermediate", .25, .5);
     cs.state_manager.microblock_transition({{"ks.x",".75"}});
     ks_ptr->state_manager.microblock_transition({{"w",".5"}});
-    cs.stage_macroblock(FileSegment("Compared to the previous puzzle, it's _much harder_."), 1);
+    cs.stage_macroblock(FileSegment("Compared to the last puzzle, it's _much harder_."), 1);
     cs.render_microblock();
 
     // Looping animation scene - me and coworker
@@ -295,23 +301,32 @@ void part2() {
     las.render_microblock();
 
     // Transition to subpuzzle containing only blocks b and d
-    cs.remove_all_scenes();
+    cs.remove_all_subscenes();
     ks_ptr = make_shared<KlotskiScene>(sun);
     cs.add_scene(ks_ptr, "ks");
-    cs.fade_out_all_scenes();
+    cs.fade_out_all_subscenes();
     auto ks_bd_ptr = make_shared<KlotskiScene>(KlotskiBoard(4, 5, ".bb..bb..dd.........", false));
     cs.add_scene_fade_in(ks_bd_ptr, "ks_bd");
     cs.stage_macroblock(SilenceSegment(1), 1);
     cs.render_microblock();
-    cs.remove_scene(ks_ptr);
+    cs.remove_subscene("ks");
 
     // Animate big piece going under small piece.
-    cs.stage_macroblock(FileSegment("His conjecture was that the hardest part of the puzzle was moving the big piece underneath this horizontal block."), 5);
+    cs.stage_macroblock(FileSegment("His conjecture was that the hardest part of the puzzle was moving the big piece underneath this horizontal block."), 4);
     ks_bd_ptr->stage_move({'b', 1, 0});
     cs.render_microblock();
     ks_bd_ptr->stage_move({'d', -1, 0});
     cs.render_microblock();
     ks_bd_ptr->stage_move({'b', 0, 3});
+    cs.render_microblock();
+    ks_bd_ptr->stage_move({'b', -1, 0});
+    cs.render_microblock();
+
+    // Go back
+    cs.stage_macroblock(SilenceSegment(2), 4);
+    ks_bd_ptr->stage_move({'b', 1, 0});
+    cs.render_microblock();
+    ks_bd_ptr->stage_move({'b', 0, -3});
     cs.render_microblock();
     ks_bd_ptr->stage_move({'d', 1, 0});
     cs.render_microblock();
@@ -319,10 +334,10 @@ void part2() {
     cs.render_microblock();
 
     // Fade ks back in from ks_bd.
-    cs.fade_out_all_scenes();
+    cs.fade_out_all_subscenes();
+    cs.state_manager.microblock_transition({{"ks_bd.x","1.5"}});
     cs.add_scene_fade_in(ks_ptr, "ks", 0.5, 0.5);
     cs.stage_macroblock(FileSegment("To be honest, I still haven't even bothered solving it myself..."), 1);
-    cs.render_microblock();
     cs.render_microblock();
 
     // Start to grow a graph (a hundred nodes or so) in the background
@@ -339,8 +354,9 @@ void part2() {
 }
 
 void render_video() {
-    FOR_REAL = false;
+    //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
     part1();
     part2();
+    part3();
 }

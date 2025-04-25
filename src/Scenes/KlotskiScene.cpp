@@ -91,11 +91,11 @@ public:
                 for (int x = 1; x < kb.w; x++) {
 
                     // Calculate pixel coordinates for the block.
-                    double rect_x = (offset_x + x * square_size) - qm;
-                    double rect_y = (offset_y + y * square_size) - qm;
+                    double rect_x = (offset_x + x * square_size);
+                    double rect_y = (offset_y + y * square_size);
 
                     // Draw the block.
-                    pix.fill_rect(rect_x, rect_y, dots*hm, dots*hm, OPAQUE_WHITE);
+                    pix.fill_rect(rect_x - dots*qm, rect_y - dots*qm, dots*hm, dots*hm, OPAQUE_WHITE);
                 }
             }
         }

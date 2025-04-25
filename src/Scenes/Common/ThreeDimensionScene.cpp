@@ -78,15 +78,14 @@ class Surface : public ThreeDimensionalObject {
 public:
     glm::dvec3 pos_x_dir;
     glm::dvec3 pos_y_dir;
-    shared_ptr<Scene> scenePointer;
     double ilr2;
     double iur2;
     string name;
     glm::dvec3 normal;
 
-    Surface(const glm::dvec3& c, const glm::dvec3& l, const glm::dvec3& u, shared_ptr<Scene> sc, const string& n, float op = 1)
+    Surface(const glm::dvec3& c, const glm::dvec3& l, const glm::dvec3& u, const string& n, float op = 1)
         : ThreeDimensionalObject(c, 0, op), pos_x_dir(l),
-          pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))), scenePointer(sc),
+          pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))),
           ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))),
           name(n), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
     void render(ThreeDimensionScene& scene) const override;
@@ -264,14 +263,14 @@ public:
         int plot_h = y2 - y1 + 1;
 
         Pixels* queried = NULL;
-        surface.scenePointer->query(queried);
+        subscenes[surface.name]->query(queried);
 
         cuda_render_surface(
             pix.pixels,
             x1, y1, plot_w, plot_h, pix.w,
             queried->pixels.data(),
-            surface.scenePointer->get_width(),
-            surface.scenePointer->get_height(),
+            subscenes[surface.name]->get_width(),
+            subscenes[surface.name]->get_height(),
             this_surface_opacity,
             camera_pos,
             camera_direction,
@@ -336,10 +335,12 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq{
-            "fov", "x", "y", "z", "d", "q1", "qi", "qj",
+        StateQuery sq = SuperScene::populate_state_query();
+        StateQuery extras{
+            "fov","x", "y", "z", "d", "q1", "qi", "qj",
             "qk", "surfaces_opacity", "lines_opacity", "points_opacity"
         };
+        for(const string& x : extras) sq.insert(x);
         if(use_state_for_center) {
             for(const Surface& surface : surfaces){
                 sq.insert(surface.name + ".x");
@@ -355,6 +356,7 @@ public:
 
         bool behind_camera = false;
         pair<int, int> pixel = coordinate_to_pixel(point.center, behind_camera);
+        //cout << point.center.x << " " << pixel.first << endl;
         if(behind_camera) return;
         double dot_size = pix.w * point.size / 400.;
         if(point.highlight == RING){
@@ -389,17 +391,16 @@ public:
         obj_ptrs.clear();
     }
 
-    void add_surface(const Surface& s) {
+    void add_surface(const Surface& s, shared_ptr<Scene> sc) {
         surfaces.push_back(s);
-        // TODO IMPORTANT this isn't even making use of the superscene logic. Be sure to call to check if there are duplicate subscenes.
-        s.scenePointer->state_manager.set_parent(&state_manager);
+        add_subscene_check_dupe(s.name, sc);
         obj_ptrs.clear();
     }
 
-    void remove_surface(shared_ptr<Scene> s) {
+    void remove_surface(const string& name) {
+        remove_subscene(name);
         for (auto it = surfaces.begin(); it != surfaces.end(); ){
-            if (it->scenePointer == s){
-                it->scenePointer->state_manager.set_parent(nullptr);
+            if (it->name == name){
                 it = surfaces.erase(it);
             }
             else ++it;
@@ -410,9 +411,7 @@ public:
     void clear_lines(){ lines.clear(); obj_ptrs.clear(); }
     void clear_points(){ points.clear(); obj_ptrs.clear(); }
     void clear_surfaces(){
-        for (auto it = surfaces.begin(); it != surfaces.end(); ++it){
-            it->scenePointer->state_manager.set_parent(nullptr);
-        }
+        remove_all_subscenes();
         surfaces.clear();
         obj_ptrs.clear();
     }

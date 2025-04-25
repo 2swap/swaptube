@@ -32,8 +32,10 @@ public:
     }
     void update() {
         has_updated_since_last_query = true;
+        // Data and state can be co-dependent, so update state before and after.
         update_state();
         change_data();
+        update_state();
     }
     virtual bool needs_redraw() const {
         bool state_change = check_if_state_changed();
@@ -45,7 +47,6 @@ public:
     }
     void query(Pixels*& p) {
         State temp_state = state;
-        update_state();
         if(!has_updated_since_last_query){
             update();
         }
