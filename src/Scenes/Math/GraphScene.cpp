@@ -46,13 +46,13 @@ public:
         clear_lines();
         clear_points();
 
-        glm::dvec3 curr_pos;
-        glm::dvec3 next_pos;
+        glm::vec3 curr_pos;
+        glm::vec3 next_pos;
         bool curr_found = false;
         bool next_found = false;
         for(pair<double, Node> p : graph->nodes){
             Node node = p.second;
-            glm::dvec3 node_pos = glm::dvec3(node.position);
+            glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);
             if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
             if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
             NodeHighlightType highlight = (node.data->get_highlight_type() == 0) ? NORMAL : RING;
@@ -61,13 +61,13 @@ public:
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
                 Node neighbor = graph->nodes.find(neighbor_id)->second;
-                glm::dvec3 neighbor_pos = glm::dvec3(neighbor.position);
+                glm::vec3 neighbor_pos = glm::vec3(neighbor.position);
                 add_line(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor), neighbor_edge.opacity));
             }
         }
 
-        double opa = 0;
-        glm::dvec3 pos_to_render;
+        float opa = 0;
+        glm::vec3 pos_to_render;
         if(curr_found || next_found){
             double smooth_interp = smoother2(state["microblock_fraction"]);
             if     (!curr_found) pos_to_render = next_pos;
@@ -131,7 +131,7 @@ public:
             auto it = graph_surface_map.find(rep);
             if(it != graph_surface_map.end()) {
                 it->second.first.opacity = node.opacity;
-                it->second.first.center = glm::dvec3(node.position);
+                it->second.first.center = glm::vec3(node.position.x, node.position.y, node.position.z);
             } else {
                 if(rep== "...fff.....cbba..cdda..e..a..e..hhhe") cout << "ADDD" << endl;
                 graph_surface_map.emplace(rep, make_pair(make_surface(node), node.data->make_scene()));
@@ -153,7 +153,10 @@ public:
     }
 
     virtual Surface make_surface(Node node) const {
-        return Surface(glm::dvec3(node.position),glm::dvec3(1,0,0),glm::dvec3(0,static_cast<double>(VIDEO_HEIGHT)/VIDEO_WIDTH,0), node.data->representation, node.opacity);
+        return Surface(glm::vec3(node.position.x, node.position.y, node.position.z),
+                       glm::vec3(1,0,0),
+                       glm::vec3(0,static_cast<float>(VIDEO_HEIGHT)/VIDEO_WIDTH,0),
+                       node.data->representation, node.opacity);
     }
 
     // Override the default surface render routine to make all graph surfaces point at the camera
@@ -172,8 +175,8 @@ public:
 
         Surface surface_rotated(
             surface.center,
-            glm::dvec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
-            glm::dvec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
+            glm::vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
+            glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
             surface.name,
             surface.opacity
         );

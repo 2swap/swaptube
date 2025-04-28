@@ -26,10 +26,10 @@ double age_to_mass(double a) {
 }
 
 glm::vec4 random_unit_cube_vector() {
-    return glm::vec4(1 * static_cast<double>(rand()) / RAND_MAX,
-                     1 * static_cast<double>(rand()) / RAND_MAX,
-                     1 * static_cast<double>(rand()) / RAND_MAX,
-                     1 * static_cast<double>(rand()) / RAND_MAX);
+    return glm::vec4(1 * static_cast<float>(rand()) / RAND_MAX,
+                     1 * static_cast<float>(rand()) / RAND_MAX,
+                     1 * static_cast<float>(rand()) / RAND_MAX,
+                     1 * static_cast<float>(rand()) / RAND_MAX);
 }
 
 class Edge {
@@ -70,9 +70,9 @@ public:
     double opacity = 1;
     int color = 0xffffffff;
     double age = 0;
-    glm::vec4 velocity(0);
-    glm::vec4 position(0);
-    double weight() const { return sigmoid(age/5. + 0.01); }
+    glm::vec4 velocity;
+    glm::vec4 position;
+    float weight() const { return sigmoid(age*.2f + 0.01f); }
 };
 
 /**
@@ -414,7 +414,7 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(int iterations, double repel, double attract, double decay, double centering_strength){
+    void iterate_physics(int iterations, float repel, float attract, float decay, float centering_strength){
         vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) {
@@ -430,7 +430,7 @@ public:
         mark_updated();
     }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract, double decay, double centering_strength) {
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, float repel, float attract, float decay, float centering_strength) {
         int s = node_vector.size();
         glm::vec4 com = center_of_mass();
 
@@ -466,7 +466,7 @@ public:
                 double neighbor_id = neighbor_edge.to;
                 Node* neighbor = &nodes.at(neighbor_id);
                 glm::vec4 diff = node->position - neighbor->position;
-                double dist_sq = glm::dot(diff, diff) + 1;
+                float dist_sq = glm::dot(diff, diff) + 1;
                 glm::vec4 force = diff * attract * get_attraction_force(dist_sq);
 
                 node->velocity -= force; // Apply attraction forces
@@ -505,18 +505,18 @@ public:
         mark_updated();
     }
 
-    double get_attraction_force(double dist_sq){
-        double dist_6th = dist_sq*dist_sq*dist_sq*.05;
-        return (dist_6th-1)/(dist_6th+1)*.2-.1;
+    float get_attraction_force(float dist_sq){
+        float dist_6th = dist_sq*dist_sq*dist_sq*.05f;
+        return (dist_6th-1)/(dist_6th+1)*.2f-.1f;
     }
 
     glm::vec4 center_of_mass() const {
         glm::vec4 sum_position(0.0f);
-        double mass = 0.1;
+        float mass = 0.1;
 
         for (const auto& node_pair : nodes) {
             const Node& node = node_pair.second;
-            double sig = node.weight();
+            float sig = node.weight();
             glm::vec4 addy = sig*node.position;
             sum_position += addy;
             mass += sig;
@@ -526,18 +526,18 @@ public:
         return ret;
     }
 
-    double af_dist() const {
+    float af_dist() const {
         double sum_distance_sq = 0.0;
         double ct = 0.1;
 
         for (const auto& node_pair : nodes) {
             const Node& node = node_pair.second;
-            double sig = node.weight();
+            float sig = node.weight();
             sum_distance_sq += sig * square(glm::dot(node.position, node.position));
             ct += sig;
         }
 
-        double ans = 3 + 2.4*pow(sum_distance_sq / ct, .25);
+        float ans = 3 + 2.4*pow(sum_distance_sq / ct, .25);
         return ans;
     }
 
