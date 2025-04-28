@@ -376,7 +376,7 @@ void showcase_graph(const KlotskiBoard& kb, const string& script) {
         g.expand_once();
         cs.render_microblock();
     }
-    cs.stage_macroblock(SilenceSegment(10), 1);
+    cs.stage_macroblock(SilenceSegment(4), 1);
     cs.render_microblock();
     cs.fade_out_all_subscenes();
     cs.stage_macroblock(SilenceSegment(1), 1);

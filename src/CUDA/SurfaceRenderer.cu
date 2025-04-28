@@ -6,7 +6,7 @@
 
 using namespace std;
 
-__device__ inline double d_lerp(double a, double b, double w) { return a * (1 - w) + b * w; }
+__device__ inline float d_lerp(float a, float b, float w) { return a * (1 - w) + b * w; }
 __device__ inline int d_argb_to_col(int a, int r, int g, int b) {
     return (a << 24) +
            (r << 16) +
@@ -24,11 +24,11 @@ __device__ inline int d_colorlerp(int col1, int col2, float w) {
                          round(d_lerp(d_getb(col1), d_getb(col2), w)));
 }
 __device__ int color_combine_device(int base_color, int over_color, float overlay_opacity_multiplier = 1) {
-    float base_opacity = d_geta(base_color) / 255.0;
-    float over_opacity = d_geta(over_color) / 255.0 * overlay_opacity_multiplier;
+    float base_opacity = d_geta(base_color) / 255.0f;
+    float over_opacity = d_geta(over_color) / 255.0f * overlay_opacity_multiplier;
     float final_opacity = 1 - (1 - base_opacity) * (1 - over_opacity);
     if (final_opacity == 0) return 0x00000000;
-    int final_alpha = round(final_opacity * 255.0);
+    int final_alpha = round(final_opacity * 255.0f);
     float chroma_weight = over_opacity / final_opacity;
     int final_rgb = d_colorlerp(base_color, over_color, chroma_weight) & 0x00ffffff;
     return (final_alpha << 24) | (final_rgb);
@@ -46,14 +46,14 @@ __global__ void render_surface_kernel(
     int surface_w,
     int surface_h,
     float opacity,
-    glm::dvec3 camera_pos,
-    glm::dquat camera_direction,
-    glm::dquat conjugate_camera_direction,
+    glm::vec3 camera_pos,
+    glm::quat camera_direction,
+    glm::quat conjugate_camera_direction,
     float dotnormcam,
-    const glm::dvec3 surface_normal,
-    const glm::dvec3 surface_center,
-    const glm::dvec3 surface_pos_x_dir,
-    const glm::dvec3 surface_pos_y_dir,
+    const glm::vec3 surface_normal,
+    const glm::vec3 surface_center,
+    const glm::vec3 surface_pos_x_dir,
+    const glm::vec3 surface_pos_y_dir,
     const float surface_ilr2,
     const float surface_iur2,
     float halfwidth,
@@ -70,14 +70,14 @@ __global__ void render_surface_kernel(
     int py = idx / plot_w + y1;
 
     // Compute the ray direction from the camera through the screen point
-    glm::dvec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1);
+    glm::vec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1.0f);
     ray_dir = conjugate_camera_direction * ray_dir * camera_direction;
 
     // Compute the intersection point in 3D space
-    const double t = dotnormcam / glm::dot(surface_normal, ray_dir);
+    const float t = dotnormcam / glm::dot(surface_normal, ray_dir);
 
     // Convert 3D intersection point to surface's local 2D coordinates
-    glm::dvec3 centered = camera_pos + t * ray_dir - surface_center;
+    glm::vec3 centered = camera_pos + t * ray_dir - surface_center;
 
     glm::vec2 surface_coords(
         glm::dot(centered, surface_pos_x_dir) * surface_ilr2 + 0.5f,
@@ -108,18 +108,18 @@ extern "C" void cuda_render_surface(
     int surface_w,
     int surface_h,
     float opacity,
-    glm::dvec3 camera_pos,
-    glm::dquat camera_direction,
-    glm::dquat conjugate_camera_direction,
-    const glm::dvec3& surface_normal,
-    const glm::dvec3& surface_center,
-    const glm::dvec3& surface_pos_x_dir,
-    const glm::dvec3& surface_pos_y_dir,
-    const double surface_ilr2,
-    const double surface_iur2,
-    double halfwidth,
-    double halfheight,
-    double over_w_fov) {
+    glm::vec3 camera_pos,
+    glm::quat camera_direction,
+    glm::quat conjugate_camera_direction,
+    const glm::vec3& surface_normal,
+    const glm::vec3& surface_center,
+    const glm::vec3& surface_pos_x_dir,
+    const glm::vec3& surface_pos_y_dir,
+    const float surface_ilr2,
+    const float surface_iur2,
+    float halfwidth,
+    float halfheight,
+    float over_w_fov) {
     
     float dotnormcam = glm::dot(surface_normal, (surface_center - camera_pos));
 
@@ -155,4 +155,3 @@ extern "C" void cuda_render_surface(
     cudaFree(d_pixels_dev);
     cudaFree(d_surface_dev);
 }
-

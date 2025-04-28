@@ -1,3 +1,207 @@
+#include <cuda_runtime.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+//////////////////////
+// Helper functions //
+//////////////////////
+
+__device__ inline int geta(int color) { 
+    return (color >> 24) & 0xFF; 
+}
+
+__device__ inline int colorlerp(int c1, int c2, float t) {
+    int a1 = (c1 >> 24) & 0xFF; int r1 = (c1 >> 16) & 0xFF; int g1 = (c1 >> 8) & 0xFF; int b1 = c1 & 0xFF;
+    int a2 = (c2 >> 24) & 0xFF; int r2 = (c2 >> 16) & 0xFF; int g2 = (c2 >> 8) & 0xFF; int b2 = c2 & 0xFF;
+    int a = roundf((1 - t) * a1 + t * a2);
+    int r = roundf((1 - t) * r1 + t * r2);
+    int g = roundf((1 - t) * g1 + t * g2);
+    int b = roundf((1 - t) * b1 + t * b2);
+    return (a << 24) | (r << 16) | (g << 8) | b;
+}
+
+__device__ inline double square(double x) { 
+    return x * x; 
+}
+
+//////////////////////////////
+// Device pixel overlaying  //
+//////////////////////////////
+
+__device__ void overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return;
+    int index = y * width + x;
+    int base = pixels[index];
+    int blended = color_combine(base, col, opacity);
+    pixels[index] = blended;
+}
+
+//////////////////////////////
+// Device Drawing Functions //
+//////////////////////////////
+
+//TODO this is defined in color.cpp too, deduplicate!
+__device__ int color_combine(int base_color, int over_color, float overlay_opacity_multiplier = 1) {
+    float base_opacity = geta(base_color) / 255.0f;
+    float over_opacity = geta(over_color) / 255.0f * overlay_opacity_multiplier;
+    float final_opacity = 1 - (1 - base_opacity) * (1 - over_opacity);
+    if (final_opacity == 0) return 0x00000000;
+    int final_alpha = roundf(final_opacity * 255.0f);
+    float chroma_weight = over_opacity / final_opacity;
+    int final_rgb = colorlerp(base_color, over_color, chroma_weight) & 0x00ffffff;
+    return (final_alpha << 24) | (final_rgb);
+}
+
+// TODO this is also defined in Pixels.cpp, please de-dupe
+__device__ void device_fill_circle(int cx, int cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
+    int i_r = (int)r;
+    for (int dx = -i_r + 1; dx < i_r; dx++) {
+        float sdx = (dx / r) * (dx / r);
+        for (int dy = -i_r + 1; dy < i_r; dy++) {
+            float sdy = (dy / r) * (dy / r);
+            if (sdx + sdy < 1.0f)
+                overlay_pixel(cx + dx, cy + dy, col, opa, pixels, width, height);
+        }
+    }
+}
+
+// TODO this is defined also in pixels.cpp, pls deduplicate!
+__device__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height) {
+    int dx = abs(x2 - x1);
+    int dy = abs(y2 - y1);
+    if(dx > 10000 || dy > 10000){
+        return;
+    }
+
+    int sx = (x1 < x2) ? 1 : -1; // Direction on x axis
+    int sy = (y1 < y2) ? 1 : -1; // Direction on y axis
+    int err = dx - dy;
+
+    while(true) {
+        overlay_pixel(x1, y1, col, opacity, pixels, width, height);
+        for(int i = 1; i < thickness; i++){
+            overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
+            overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
+            overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
+            overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
+        }
+
+        if (x1 == x2 && y1 == y2) break;
+
+        int e2 = err * 2;
+        if (e2 > -dy) {
+            err -= dy;
+            x1 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y1 += sy;
+        }
+    }
+}
+
+//////////////////////////////
+// Kernels                  //
+//////////////////////////////
+
+__global__ void render_points_kernel(unsigned int* pixels, int width, int height,
+                                     Point* points, int num_points) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < num_points) {
+        Point p = points[idx];
+        int px = (int)roundf(p.center.x);
+        int py = (int)roundf(p.center.y);
+        float dot_size = p.size;
+        if (p.highlight == 1) { // RING
+            device_fill_ellipse(px, py, dot_size * 2.0f, dot_size * 2.0f, p.color, pixels, width, height, 1.0f);
+            device_fill_ellipse(px, py, dot_size * 1.5f, dot_size * 1.5f, 0xFF000000, pixels, width, height, 1.0f);
+        } else if (p.highlight == 2) { // BULLSEYE
+            device_fill_ellipse(px, py, dot_size * 3.0f, dot_size * 3.0f, p.color, pixels, width, height, 1.0f);
+            device_fill_ellipse(px, py, dot_size * 2.5f, dot_size * 2.5f, 0xFF000000, pixels, width, height, 1.0f);
+            device_fill_ellipse(px, py, dot_size * 2.0f, dot_size * 2.0f, p.color, pixels, width, height, 1.0f);
+            device_fill_ellipse(px, py, dot_size * 1.5f, dot_size * 1.5f, 0xFF000000, pixels, width, height, 1.0f);
+        } else {
+            device_fill_ellipse(px, py, dot_size, dot_size, p.color, pixels, width, height, p.opacity);
+        }
+    }
+}
+
+__global__ void render_lines_kernel(unsigned int* pixels, int width, int height,
+                                    Line* lines, int num_lines, int thickness) {
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < num_lines) {
+        Line ln = lines[idx];
+        int x0 = (int)roundf(ln.start.x);
+        int y0 = (int)roundf(ln.start.y);
+        int x1 = (int)roundf(ln.end.x);
+        int y1 = (int)roundf(ln.end.y);
+        bresenham(x0, y0, x1, y1, ln.color, ln.opacity, thickness, pixels, width, height);
+    }
+}
+
+//////////////////////////////
+// Host Rendering Functions //
+//////////////////////////////
+
+void cuda_render_points(unsigned int* d_pixels, int width, int height,
+                          Point* d_points, int num_points) {
+    int blockSize = 256;
+    int numBlocks = (num_points + blockSize - 1) / blockSize;
+    render_points_kernel<<<numBlocks, blockSize>>>(d_pixels, width, height, d_points, num_points);
+    cudaDeviceSynchronize();
+}
+
+void cuda_render_lines(unsigned int* d_pixels, int width, int height, int thickness,
+                         Line* d_lines, int num_lines) {
+    int blockSize = 256;
+    int numBlocks = (num_lines + blockSize - 1) / blockSize;
+    render_lines_kernel<<<numBlocks, blockSize>>>(d_pixels, width, height, d_lines, num_lines, thickness);
+    cudaDeviceSynchronize();
+}
+
+//////////////////////////////
+// Entry Points (externed)  //
+//////////////////////////////
+
+extern "C" void render_points_on_gpu(unsigned int** d_pixels, int width, int height,
+                                     Point* h_points, int num_points) {
+    size_t buffer_size = width * height * sizeof(unsigned int);
+    cudaMalloc((void**)d_pixels, buffer_size);
+    cudaMemset(*d_pixels, 0, buffer_size);
+
+    Point* d_points;
+    cudaMalloc((void**)&d_points, num_points * sizeof(Point));
+    cudaMemcpy(d_points, h_points, num_points * sizeof(Point), cudaMemcpyHostToDevice);
+
+    cuda_render_points(*d_pixels, width, height, d_points, num_points);
+
+    cudaFree(d_points);
+}
+
+extern "C" void render_lines_on_gpu(unsigned int** d_pixels, int width, int height, int thickness,
+                                    Line* h_lines, int num_lines) {
+    size_t buffer_size = width * height * sizeof(unsigned int);
+    cudaMalloc((void**)d_pixels, buffer_size);
+    cudaMemset(*d_pixels, 0, buffer_size);
+
+    Line* d_lines;
+    cudaMalloc((void**)&d_lines, num_lines * sizeof(Line));
+    cudaMemcpy(d_lines, h_lines, num_lines * sizeof(Line), cudaMemcpyHostToDevice);
+
+    cuda_render_lines(*d_pixels, width, height, thickness, d_lines, num_lines);
+
+    cudaFree(d_lines);
+}
+
+
+
+
+
+
+
+
+
 #pragma once
 
 #include "SuperScene.cpp"
@@ -12,50 +216,35 @@
 #include <limits>
 #include <glm/gtx/string_cast.hpp>
 
-// Extern the CUDA rendering functions and include CUDA device structure definitions
 extern "C" {
-    struct DevicePoint {
-        double3 center;
-        int color;
-        float opacity;
-        int highlight;
-        float size;
-    };
-    struct DeviceLine {
-        double3 start;
-        double3 end;
-        int color;
-        float opacity;
-    };
     void render_points_on_gpu(unsigned int** d_pixels, int width, int height,
-                                DevicePoint* h_points, int num_points);
+                                Point* h_points, int num_points);
     void render_lines_on_gpu(unsigned int** d_pixels, int width, int height, int thickness,
-                               DeviceLine* h_lines, int num_lines);
+                               Line* h_lines, int num_lines);
+    void cuda_render_surface(
+        vector<unsigned int>& pix,
+        int x1,
+        int y1,
+        int plot_w,
+        int plot_h,
+        int pixels_w,
+        unsigned int* d_surface,
+        int surface_w,
+        int surface_h,
+        float opacity,
+        glm::vec3 camera_pos,
+        glm::quat camera_direction,
+        glm::quat conjugate_camera_direction,
+        const glm::vec3& surface_normal,
+        const glm::vec3& surface_center,
+        const glm::vec3& surface_pos_x_dir,
+        const glm::vec3& surface_pos_y_dir,
+        const float surface_ilr2,
+        const float surface_iur2,
+        float halfwidth,
+        float halfheight,
+        float over_w_fov);
 }
-
-extern "C" void cuda_render_surface(
-    vector<unsigned int>& pix,
-    int x1,
-    int y1,
-    int plot_w,
-    int plot_h,
-    int pixels_w,
-    unsigned int* d_surface,
-    int surface_w,
-    int surface_h,
-    float opacity,
-    glm::vec3 camera_pos,
-    glm::quat camera_direction,
-    glm::quat conjugate_camera_direction,
-    const glm::vec3& surface_normal,
-    const glm::vec3& surface_center,
-    const glm::vec3& surface_pos_x_dir,
-    const glm::vec3& surface_pos_y_dir,
-    const float surface_ilr2,
-    const float surface_iur2,
-    float halfwidth,
-    float halfheight,
-    float over_w_fov);
 
 enum NodeHighlightType {
     NORMAL,
@@ -63,63 +252,50 @@ enum NodeHighlightType {
     BULLSEYE,
 };
 
-class ThreeDimensionScene;
-
-class ThreeDimensionalObject {
-public:
-    glm::dvec3 center;
+struct Point : public ThreeDimensionalObject {
+    glm::vec3 center;
     int color;
     float opacity;
-    ThreeDimensionalObject(const glm::dvec3& pos, int col, float op) : center(pos), color(col), opacity(op) {}
-    virtual ~ThreeDimensionalObject() = default;
-};
-
-class Point : public ThreeDimensionalObject {
-public:
     NodeHighlightType highlight;
     float size;
-    Point(const glm::dvec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1, float sz = 1)
-        : ThreeDimensionalObject(pos, clr, op), highlight(hlt), size(sz) {}
+    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1, float sz = 1)
+        : highlight(hlt), size(sz) { center = pos; color = clr; opacity = op; }
 };
 
-class Line : public ThreeDimensionalObject {
-public:
-    glm::dvec3 start;
-    glm::dvec3 end;
-    Line(const glm::dvec3& s, const glm::dvec3& e, int clr, float op = 1)
-        : ThreeDimensionalObject((s + e) * glm::dvec3(0.5f), clr, op), start(s), end(e) {}
+struct Line : public ThreeDimensionalObject {
+    int color;
+    float opacity;
+    glm::vec3 start;
+    glm::vec3 end;
+    Line(const glm::vec3& s, const glm::vec3& e, int clr, float op = 1)
+        : color(clr), opacity(op), start(s), end(e) {}
 };
 
-class Surface : public ThreeDimensionalObject {
-public:
-    glm::dvec3 pos_x_dir;
-    glm::dvec3 pos_y_dir;
-    double ilr2;
-    double iur2;
+struct Surface : public ThreeDimensionalObject {
+    glm::vec3 center;
+    float opacity;
+    glm::vec3 pos_x_dir;
+    glm::vec3 pos_y_dir;
+    float ilr2;
+    float iur2;
     string name;
-    glm::dvec3 normal;
+    glm::vec3 normal;
 
-    Surface(const glm::dvec3& c, const glm::dvec3& l, const glm::dvec3& u, const string& n, float op = 1)
-        : ThreeDimensionalObject(c, 0, op), pos_x_dir(l),
-          pos_y_dir(u*(VIDEO_WIDTH/static_cast<double>(VIDEO_HEIGHT))),
-          ilr2(0.5 / square(glm::length(l))), iur2(0.5 / square(glm::length(u))),
-          name(n), normal(glm::cross(pos_x_dir, pos_y_dir)) {}
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, const string& n, float op = 1)
+        : center(c), opacity(op), pos_x_dir(l),
+          pos_y_dir(u*(VIDEO_WIDTH/static_cast<float>(VIDEO_HEIGHT))),
+          name(n) {
+        ilr2 = 0.5f / (l.x*l.x + l.y*l.y + l.z*l.z);
+        iur2 = 0.5f / (u.x*u.x + u.y*u.y + u.z*u.z);
+        normal = glm::cross(pos_x_dir, pos_y_dir);
+    }
 };
 
-glm::dvec3 midpoint(const vector<glm::dvec3>& vecs){
-    glm::dvec3 ret(0.0f, 0.0f, 0.0f);
-    for(const glm::dvec3& vec : vecs) ret += vec;
-    return ret * (1.0/vecs.size());
+glm::vec3 midpoint(const vector<glm::vec3>& vecs){
+    glm::vec3 ret(0.0f, 0.0f, 0.0f);
+    for(const glm::vec3& vec : vecs) ret += vec;
+    return ret * (1.0f/vecs.size());
 }
-
-class Polygon : public ThreeDimensionalObject {
-public:
-    vector<glm::dvec3> vertices;
-
-    Polygon(const vector<glm::dvec3>& verts, int _color)
-        : ThreeDimensionalObject(midpoint(verts), _color, 1), vertices(verts) {}
-    void render(ThreeDimensionScene& scene) const override;
-};
 
 class ThreeDimensionScene : public SuperScene {
 public:
@@ -142,15 +318,13 @@ public:
         });
     }
 
-    pair<double, double> coordinate_to_pixel(glm::dvec3 coordinate, bool& behind_camera) {
-        // Rotate the coordinate based on the camera's orientation
+    pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
         if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
-        double scale = (get_geom_mean_size()*fov) / coordinate.z; // perspective projection
+        double scale = (get_geom_mean_size()*fov) / coordinate.z;
         double x = scale * coordinate.x + get_width()/2;
         double y = scale * coordinate.y + get_height()/2;
-
         return {x, y};
     }
 
@@ -177,8 +351,7 @@ public:
 
         // Extend the point to the right infinitely
         pair<int, int> extreme = {100000, point.second};
-
-        for(int i = 0; i < polygon.size(); i++) {
+        for (int i = 0; i < polygon.size(); i++) {
             int next = (i + 1) % polygon.size();
             if (lineSegmentsIntersect(polygon[i], polygon[next], point, extreme)) {
                 return true;
@@ -193,11 +366,8 @@ public:
         int o2 = orientation(p1, q1, q2);
         int o3 = orientation(p2, q2, p1);
         int o4 = orientation(p2, q2, q1);
-
-        // General case
         if (o1 != o2 && o3 != o4)
-            return true;
-
+            return true; // General case
         return false; // Doesn't fall in any of the above cases
     }
 
@@ -232,19 +402,17 @@ public:
             for (int j = 0; j < 4; j++)
                 if (lineSegmentsIntersect(corners[i], corners[(i + 1) % 4], screenCorners[j], screenCorners[(j + 1) % 4]))
                     return true;
-
         return false;
     }
 
     virtual void render_surface(const Surface& surface) {
         float this_surface_opacity = surface.opacity * state["surfaces_opacity"];
 
-        glm::dvec3 surface_center = surface.center;
-        if(use_state_for_center) surface_center = glm::dvec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
+        glm::vec3 surface_center = surface.center;
+        if(use_state_for_center) surface_center = glm::vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
         if(this_surface_opacity < .001) return;
 
         vector<pair<int, int>> corners(4);
-        // note, ordering matters here
         bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
         corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
         corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
@@ -297,23 +465,23 @@ public:
     }
 
     void set_camera_direction() {
-        camera_direction = glm::normalize(glm::dquat(state["q1"], state["qi"], state["qj"], state["qk"]));
+        camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);
-        double dist_to_use = (auto_distance>0?max(1.0, auto_distance):1)*state["d"];
-        glm::dvec3 camera_to_use = auto_distance>0?auto_camera:glm::dvec3(state["x"], state["y"], state["z"]);
-        camera_pos = camera_to_use + conjugate_camera_direction * glm::dvec3(0,0,-dist_to_use) * camera_direction;
+        double dist_to_use = (auto_distance > 0 ? max(1.0, auto_distance) : 1)*state["d"];
+        glm::vec3 camera_to_use = auto_distance > 0 ? auto_camera : glm::vec3(state["x"], state["y"], state["z"]);
+        camera_pos = camera_to_use + conjugate_camera_direction * glm::vec3(0,0,-(float)dist_to_use) * camera_direction;
     }
 
-    float squaredDistance(const glm::dvec3& a, const glm::dvec3& b) {
-        glm::dvec3 diff = a - b;
+    float squaredDistance(const glm::vec3& a, const glm::vec3& b) {
+        glm::vec3 diff = a - b;
         return glm::dot(diff, diff);
     }
 
     void draw() override {
         fov = state["fov"];
         over_w_fov = 1/(get_geom_mean_size()*fov);
-        halfwidth = get_width()*.5;
-        halfheight = get_height()*.5;
+        halfwidth = get_width()*0.5;
+        halfheight = get_height()*0.5;
 
         set_camera_direction();
         sketchpad.fill(OPAQUE_BLACK);
@@ -322,6 +490,8 @@ public:
         for (const Surface& surface : surfaces)
             surface.render(*this);
 
+        // TODO Render points and lines on GPU.
+        // (Preparation of GPU arrays and invocation of CUDA functions happens elsewhere.)
     }
 
     const StateQuery populate_state_query() const override {
@@ -341,6 +511,7 @@ public:
         return sq;
     }
 
+    // TODO delete this and call the functions on the GPU
     void render_point(const Point& point) {
         if(point.opacity < .001 || state["points_opacity"] < .001) return;
 
@@ -405,9 +576,9 @@ public:
         obj_ptrs.clear();
     }
 
-    glm::dvec3 camera_pos;
-    glm::dquat camera_direction;
-    glm::dquat conjugate_camera_direction;
+    glm::vec3 camera_pos;
+    glm::quat camera_direction;
+    glm::quat conjugate_camera_direction;
     double fov;
     double over_w_fov;
     double halfwidth;
@@ -415,7 +586,7 @@ public:
     Pixels sketchpad;
 protected:
     double auto_distance = -1;
-    glm::dvec3 auto_camera;
+    glm::vec3 auto_camera;
     vector<const ThreeDimensionalObject*> obj_ptrs;
     vector<Point> points;
     vector<Line> lines;
