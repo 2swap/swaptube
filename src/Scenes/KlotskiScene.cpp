@@ -133,7 +133,7 @@ public:
 
                 double triple_micro = microblock_fraction*3;
                 double frac_triple_micro = triple_micro - static_cast<int>(triple_micro);
-                if(cell!=highlight_char && highlight_char != '.') color = colorlerp(color, OPAQUE_BLACK, .6);
+                if(cell!=highlight_char && highlight_char != '.') color = colorlerp(color, OPAQUE_BLACK, 1);
 
                 // Draw the block.
                             pix.fill_rect(mx+rect_x             , my+rect_y              , rect_width, rect_height, color);

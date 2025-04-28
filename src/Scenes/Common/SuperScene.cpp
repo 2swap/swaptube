@@ -46,7 +46,6 @@ protected:
             throw runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
         scene->state_manager.set_parent(&state_manager);
         subscenes[name] = scene;
-        if(name == "...fff.....cbba..cdda..e..a..e..hhhe") cout << "ASCD" << endl;
         state_manager.set({
             {name + ".opacity", "1"},
         });
@@ -73,7 +72,6 @@ protected:
 
     bool subscene_needs_redraw() const {
         for (const auto& kv : subscenes){
-            if(kv.first == "...fff.....cbba..cdda..e..a..e..hhhe") cout << "SNR" << endl;
             if(state[kv.first + ".opacity"] > 0.01 && kv.second->needs_redraw()) return true;
         }
         return false;
@@ -88,7 +86,6 @@ protected:
     const StateQuery populate_state_query() const override {
         StateQuery ret;
         for (const auto& kv : subscenes){
-            if(kv.first == "...fff.....cbba..cdda..e..a..e..hhhe") cout << "PSQ" << endl;
             ret.insert(kv.first + ".opacity");
         };
         return ret;

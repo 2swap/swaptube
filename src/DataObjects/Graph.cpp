@@ -19,17 +19,17 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
-extern "C" void compute_repulsion_cuda(const glm::dvec4* host_positions, glm::dvec4* host_velocity_deltas, int num_nodes, double repel);
+extern "C" void compute_repulsion_cuda(const glm::vec4* host_positions, glm::vec4* host_velocity_deltas, int num_nodes, float repel);
 
 double age_to_mass(double a) {
     return 1-exp(-a*.1);
 }
 
-glm::dvec4 random_unit_cube_vector() {
-    return glm::dvec4(1 * static_cast<double>(rand()) / RAND_MAX,
-                      1 * static_cast<double>(rand()) / RAND_MAX,
-                      1 * static_cast<double>(rand()) / RAND_MAX,
-                      1 * static_cast<double>(rand()) / RAND_MAX);
+glm::vec4 random_unit_cube_vector() {
+    return glm::vec4(1 * static_cast<double>(rand()) / RAND_MAX,
+                     1 * static_cast<double>(rand()) / RAND_MAX,
+                     1 * static_cast<double>(rand()) / RAND_MAX,
+                     1 * static_cast<double>(rand()) / RAND_MAX);
 }
 
 class Edge {
@@ -70,8 +70,8 @@ public:
     double opacity = 1;
     int color = 0xffffffff;
     double age = 0;
-    glm::dvec4 velocity;
-    glm::dvec4 position;
+    glm::vec4 velocity(0);
+    glm::vec4 position(0);
     double weight() const { return sigmoid(age/5. + 0.01); }
 };
 
@@ -209,7 +209,7 @@ public:
         auto it = nodes.find(hash);
         if (it == nodes.end()) return;
         Node& node = it->second;
-        node.position = glm::dvec4(x,y,z,w);
+        node.position = glm::vec4(x,y,z,w);
         mark_updated();
     }
 
@@ -432,11 +432,11 @@ public:
 
     void perform_single_physics_iteration(const vector<Node*>& node_vector, double repel, double attract, double decay, double centering_strength) {
         int s = node_vector.size();
-        glm::dvec4 com = center_of_mass();
+        glm::vec4 com = center_of_mass();
 
         // Create arrays for node positions and velocity deltas
-        vector<glm::dvec4> positions(s);
-        vector<glm::dvec4> velocity_deltas(s, glm::dvec4(0.0));
+        vector<glm::vec4> positions(s);
+        vector<glm::vec4> velocity_deltas(s, glm::vec4(0.0f));
 
         // Populate positions array
         for (int i = 0; i < s; ++i) {
@@ -465,9 +465,9 @@ public:
             for (const Edge& neighbor_edge : neighbor_nodes) {
                 double neighbor_id = neighbor_edge.to;
                 Node* neighbor = &nodes.at(neighbor_id);
-                glm::dvec4 diff = node->position - neighbor->position;
+                glm::vec4 diff = node->position - neighbor->position;
                 double dist_sq = glm::dot(diff, diff) + 1;
-                glm::dvec4 force = diff * attract * get_attraction_force(dist_sq);
+                glm::vec4 force = diff * attract * get_attraction_force(dist_sq);
 
                 node->velocity -= force; // Apply attraction forces
                 neighbor->velocity += force; // Apply attraction forces
@@ -510,19 +510,20 @@ public:
         return (dist_6th-1)/(dist_6th+1)*.2-.1;
     }
 
-    glm::dvec4 center_of_mass() const {
-        glm::dvec4 sum_position;
+    glm::vec4 center_of_mass() const {
+        glm::vec4 sum_position(0.0f);
         double mass = 0.1;
 
         for (const auto& node_pair : nodes) {
             const Node& node = node_pair.second;
             double sig = node.weight();
-            glm::dvec4 addy = sig*node.position;
+            glm::vec4 addy = sig*node.position;
             sum_position += addy;
             mass += sig;
         }
 
-        return sum_position / mass;
+        glm::vec4 ret = sum_position / mass;
+        return ret;
     }
 
     double af_dist() const {

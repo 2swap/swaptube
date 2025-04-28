@@ -79,8 +79,8 @@ public:
 
         total_microblocks = remaining_microblocks = expected_microblocks;
         cout << "Macroblock staged to last " << expected_microblocks << " microblock(s)." << endl;
+        WRITER.add_shtooka(audio);
         if(FOR_REAL) {
-            WRITER.add_shtooka(audio);
             total_macroblock_frames = remaining_macroblock_frames = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
         }
     }

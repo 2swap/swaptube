@@ -356,7 +356,6 @@ public:
 
         bool behind_camera = false;
         pair<int, int> pixel = coordinate_to_pixel(point.center, behind_camera);
-        //cout << point.center.x << " " << pixel.first << endl;
         if(behind_camera) return;
         double dot_size = pix.w * point.size / 400.;
         if(point.highlight == RING){
