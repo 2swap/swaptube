@@ -259,7 +259,6 @@ extern "C" void compute_repulsion_cuda(const glm::vec4* host_positions, glm::vec
         // Host data for bounds and bin size
         glm::vec4 h_min_bounds(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
         glm::vec4 h_max_bounds(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
-        glm::vec4 h_bin_size;
 
         Bin* d_bins;
         int* d_node_bins;
@@ -287,7 +286,7 @@ extern "C" void compute_repulsion_cuda(const glm::vec4* host_positions, glm::vec
         cudaFree(d_max_bounds);
 
         // Calculate bin size dynamically
-        h_bin_size = (h_max_bounds - h_min_bounds) / float(GRID_SIZE);
+        glm::vec4 h_bin_size = (h_max_bounds - h_min_bounds) / float(GRID_SIZE);
 
         // Step 2: Compute node bin mapping on the host
         int* host_node_bins = new int[num_nodes];

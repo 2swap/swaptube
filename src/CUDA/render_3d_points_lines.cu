@@ -64,13 +64,11 @@ __device__ void device_coordinate_to_pixel(
     outy = scale * coordinate.y + height * 0.5f;
 }
 
-__device__ void device_fill_circle(int cx, int cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
-    int i_r = (int)r;
-    for (int dx = -i_r+1; dx < i_r; dx++) {
-        float sdx = (dx / r) * (dx / r);
-        for (int dy = -i_r+1; dy < i_r; dy++) {
-            float sdy = (dy / r) * (dy / r);
-            if (sdx + sdy < 1.0f)
+__device__ void device_fill_circle(float cx, float cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
+    for (float dx = -r; dx < r; dx++) {
+        float sdx = square(dx);
+        for (float dy = -r; dy < r; dy++) {
+            if (sdx + square(dy) < r*r)
                 overlay_pixel(cx + dx, cy + dy, col, opa, pixels, width, height);
         }
     }

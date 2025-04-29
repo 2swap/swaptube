@@ -432,17 +432,17 @@ void part8() {
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
-    //part1();
-    //part2();
-    //part3();
-    //part4();
-    //part5();
-    //part6();
-    //part7();
-    //part8();
-    for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
+    part1();
+    part2();
+    part3();
+    part4();
+    part5();
+    part6();
+    part7();
+    part8();
+    /*for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
         for (const KlotskiBoard& kb : kb_set) {
             showcase_graph(kb, "aaaa");
         }
-    }
+    }*/
 }
