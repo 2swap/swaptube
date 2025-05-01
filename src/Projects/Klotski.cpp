@@ -10,7 +10,7 @@ auto other = {apk, mathgames_12_13_04, euler766_easy};
 auto suns = {fatsun, sun_no_minis, truncatedsun};
 auto rushhours = {beginner, intermediate, advanced, expert, reddit, guh3, guh4, video, thinkfun1, thinkfun2, thinkfun3};
 auto big = {sun};
-auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2, manifold_2d, manifold_3d};
+auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2, manifold_1d, manifold_2d, manifold_3d};
 
 int get_graph_size(const KlotskiBoard& kb){
     Graph g;
@@ -386,31 +386,254 @@ void showcase_graph(const KlotskiBoard& kb, const string& script) {
 
 void part5() {
     CompositeScene cs;
-    // Showing a few examples of geometric graphs using showcase_graph
-    cs.stage_macroblock(FileSegment("To help build some intuition, here are some contrived puzzles first."), 5);
-    cs.stage_macroblock(FileSegment(""), 5);
+
+    // Add a klotski scene for manifold_1d
+    auto ks1d = make_shared<KlotskiScene>(manifold_1d);
+    ks1d->state_manager.set(board_width_height);
+    cs.add_scene(ks1d, "ks1d");
+    Graph g1d;
+    g1d.add_to_stack(new KlotskiBoard(manifold_1d));
+    auto gs1d = make_shared<GraphScene>(&g1d);
+    gs1d->state_manager.set(default_graph_state);
+    cs.add_scene(gs1d, "gs1d");
+
+    cs.stage_macroblock(FileSegment("To help build some intuition, here are some contrived puzzles first."), 1);
+    while(cs.microblocks_remaining()) {
+        g1d.expand_once();
+        cs.render_microblock();
+    }
+
+    // start building the graph
+    cs.stage_macroblock(FileSegment("To start off, with just a single long block, there is only one degree of freedom in movement."), 1);
+    cs.render_microblock();
+
+    // Fade out 1D and slide in 2D, then build 2D graph
+    cs.stage_macroblock(FileSegment("With two, you get the cartesian product of both of their movement, yielding a grid."), 2);
+    // microblock 1: fade out 1D
+    ks1d->state_manager.microblock_transition({{"opacity","0"}});
+    gs1d->state_manager.microblock_transition({{"opacity","0"}});
+    cs.render_microblock();
+    // microblock 2: bring in 2D
+    auto ks2d = make_shared<KlotskiScene>(manifold_2d);
+    ks2d->state_manager.set(board_width_height);
+    cs.add_scene(ks2d, "ks2d");
+    Graph g2d;
+    g2d.add_to_stack(new KlotskiBoard(manifold_2d));
+    auto gs2d = make_shared<GraphScene>(&g2d);
+    gs2d->state_manager.set(default_graph_state);
+    cs.add_scene(gs2d, "gs2d");
+    cs.render_microblock();
+    while(cs.microblocks_remaining()) {
+        g2d.expand_once();
+        cs.render_microblock();
+    }
+
+    // Slide in 3D and leave a pause
+    cs.stage_macroblock(FileSegment("Three blocks make for a 3d grid,"), 1);
+    auto ks3d = make_shared<KlotskiScene>(manifold_3d);
+    ks3d->state_manager.set(board_width_height);
+    cs.add_scene(ks3d, "ks3d");
+    Graph g3d;
+    g3d.add_to_stack(new KlotskiBoard(manifold_3d));
+    auto gs3d = make_shared<GraphScene>(&g3d);
+    gs3d->state_manager.set(default_graph_state);
+    cs.add_scene(gs3d, "gs3d");
+    cs.render_microblock();
+    cs.stage_macroblock(SilenceSegment(1), 1);
+    cs.render_microblock();
+
+    // 4D hypercube
+    cs.stage_macroblock(FileSegment("and when we have 4 degrees of symmetry, the graph naturally takes the shape of a 4-d hypercube!"), 1);
+    auto ks4d = make_shared<KlotskiScene>(cube_4d);
+    ks4d->state_manager.set(board_width_height);
+    cs.add_scene(ks4d, "ks4d");
+    Graph g4d;
+    g4d.add_to_stack(new KlotskiBoard(cube_4d));
+    auto gs4d = make_shared<GraphScene>(&g4d);
+    gs4d->state_manager.set(default_graph_state);
+    cs.add_scene(gs4d, "gs4d");
+    cs.render_microblock();
+
+    // Bring back 2D without recreating it
+    cs.stage_macroblock(FileSegment("But things get more fun when the pieces are capable of self-intersection."), 1);
+    cs.state_manager.microblock_transition({{"ks2d.x",".25"},{"ks2d.w",".5"},{"gs2d.x",".25"}});
+    cs.render_microblock();
+
+    // Move 2D to left, show ring_big on right
+    cs.stage_macroblock(FileSegment("If we put our two blocks opposing each other,"), 1);
+    cs.state_manager.macroblock_transition({{"ks2d.x","0"},{"gs2d.x","0"}});
+    auto ksrb = make_shared<KlotskiScene>(ring_big);
+    ksrb->state_manager.set(board_width_height);
+    cs.add_scene(ksrb, "ksrb");
+    Graph grb;
+    grb.add_to_stack(new KlotskiBoard(ring_big));
+    auto gsr = make_shared<GraphScene>(&grb);
+    gsr->state_manager.set(default_graph_state);
+    cs.add_scene(gsr, "gsrb");
+    while(cs.microblocks_remaining()) {
+        grb.expand_once();
+        cs.render_microblock();
+    }
+
+    // Overlap invalid region
+    cs.stage_macroblock(FileSegment("a section of the 2d structure is no longer valid, representing a state of overlapping pieces."), 1);
+    cs.render_microblock();
+
+    // Triangle puzzle
+    cs.stage_macroblock(FileSegment("If we put the two blocks on the same lane,"), 1);
+    auto kstri = make_shared<KlotskiScene>(triangles);
+    kstri->state_manager.set(board_width_height);
+    cs.add_scene(kstri, "kstri");
+    cs.render_microblock();
+    cs.stage_macroblock(FileSegment("we get this triangle shape."), 1);
+    cs.render_microblock();
+
+    // Move top then bottom
+    kstri->stage_move({'a', 0, 1});
+    cs.render_microblock();
+    for(int i=0; i<3; ++i){
+        kstri->stage_move({'b', 0, i});
+        cs.render_microblock();
+    }
+
+    // Mirror-triangle graph
+    cs.stage_macroblock(FileSegment("Wherever the top block is, that serves as a bound for the bottom block."), 1);
+    Graph gtri;
+    gtri.add_to_stack(new KlotskiBoard(triangles));
+    auto gstri = make_shared<GraphScene>(&gtri);
+    gstri->state_manager.set(default_graph_state);
+    cs.add_scene(gstri, "gstri");
+    while(cs.microblocks_remaining()){
+        gtri.expand_once();
+        cs.render_microblock();
+    }
+
+    // Illegal move & mirror highlight
+    cs.stage_macroblock(FileSegment("With a graph like this, we implicitly create an imaginary counterpart structure,"), 1);
+    // unhighlight original, highlight mirror
+    gstri->state_manager.macroblock_transition({{"opacity","0.3"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 1);
+    cs.render_microblock();
+
+    // 3-intersecting blocks example
+    cs.stage_macroblock(FileSegment("For example, 3 intersecting pieces still form a cube, there are just some excavated areas."), 1);
+    auto ks3rb = make_shared<KlotskiScene>(ring);
+    ks3rb->state_manager.set(board_width_height);
+    cs.add_scene(ks3rb, "ks3rb");
+    Graph g3rb;
+    g3rb.add_to_stack(new KlotskiBoard(ring));
+    auto gs3rb = make_shared<GraphScene>(&g3rb);
+    gs3rb->state_manager.set(default_graph_state);
+    cs.add_scene(gs3rb, "gs3rb");
+    while(cs.microblocks_remaining()){
+        g3rb.expand_once();
+        cs.render_microblock();
+    }
+
+    // Fade out all
+    cs.stage_macroblock(FileSegment("But as the piece number gets higher, the dimensionality of the graph has less and less to do with the number of pieces, and more to do with the number of unblocked pieces."), 1);
+    cs.fade_out_all_subscenes();
+    cs.render_microblock();
 }
 
 void part6() {
     CompositeScene cs;
-    // Section discussing local manifold-esque behavior on specifically the 'apk' puzzle
-    cs.stage_macroblock(FileSegment("This puzzle has some cool behavior."), 1);
+
+    // apk puzzle and full expansion
+    auto ks_apk = make_shared<KlotskiScene>(apk);
+    ks_apk->state_manager.set(board_width_height);
+    cs.add_scene(ks_apk, "ks_apk");
+    Graph g_apk;
+    g_apk.add_to_stack(new KlotskiBoard(apk));
+    auto gs_apk = make_shared<GraphScene>(&g_apk);
+    gs_apk->state_manager.set(default_graph_state);
+    cs.add_scene(gs_apk, "gs_apk");
+
+    cs.stage_macroblock(FileSegment("As an example, this puzzle has some cool behavior."), 1);
+    while(cs.microblocks_remaining()){
+        g_apk.expand_once();
+        cs.render_microblock();
+    }
+
     cs.stage_macroblock(FileSegment("If I expand it out entirely,"), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileSegment("Notice that it has some overall superstructure,"), 1);
+    cs.render_microblock();
+
+    // Zoom in by shrinking dist
     cs.stage_macroblock(FileSegment("but also, if we zoom in,"), 1);
+    gs_apk->state_manager.macroblock_transition({{"dist","5"}});
+    cs.render_microblock();
+
     cs.stage_macroblock(FileSegment("the local behavior is quite nicely patterned as well."), 1);
-    cs.stage_macroblock(FileSegment("We get a cute euclidean manifold with two degrees of freedom."), 1);
-    cs.stage_macroblock(FileSegment("A grid!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("It's a cute little local euclidean manifold with two degrees of freedom."), 1);
+    cs.render_microblock();
+
+    // show available actions on puzzle
+    cs.stage_macroblock(FileSegment("On the puzzle, there are correspondingly only two available actions."), 1);
+    ks_apk->stage_random_move();
+    cs.render_microblock();
+
+    // swap to full_15_puzzle
+    cs.stage_macroblock(FileSegment("In the extreme case, you can think about it not as the pieces moving, but rather as the empty spaces defining the number of degrees of freedom."), 1);
+    cs.remove_all_subscenes();
+    auto ks15 = make_shared<KlotskiScene>(full_15_puzzle);
+    ks15->state_manager.set(board_width_height);
+    cs.add_scene(ks15, "ks15");
+    cs.render_microblock();
+
+    // side‐by‐side: manifold_1d, rushhour_advanced, full_15_puzzle
+    cs.stage_macroblock(FileSegment("So, somewhere in between a full board and an empty one, we get complex structures of tangled intersections between pieces."), 1);
+    cs.state_manager.macroblock_transition({
+        {"ks1d.x","0"}, {"ks1d.w",".3"},
+        {"ks15.x",".35"}, {"ks15.w",".3"},
+        {"ks_apk.x",".7"}, {"ks_apk.w",".3"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment(""), 1);
+    cs.fade_out_all_subscenes();
+    cs.render_microblock();
 }
 
 void part7() {
     CompositeScene cs;
-    // Section discussing the high-level superstructure of the intermediate puzzle
+
+    // intermediate graph overlay
+    Graph g_int;
+    g_int.add_to_stack(new KlotskiBoard(intermediate));
+    auto gs_int = make_shared<GraphScene>(&g_int);
+    gs_int->state_manager.set(default_graph_state);
+    cs.add_scene(gs_int, "gs_int");
+
     cs.stage_macroblock(FileSegment("This is the puzzle we started with."), 1);
+    cs.render_microblock();
+
+    // grow five different graphs and overlay
+    vector<const KlotskiBoard*> boards = {&weird1, &euler766_easy, &beginner, &diamond};
+    vector<string> names = {"w1","eul","beg","dia"};
+    for(int i=0;i<boards.size();++i){
+        Graph* g = new Graph();
+        g->add_to_stack(new KlotskiBoard(*boards[i]));
+        auto gs = make_shared<GraphScene>(g);
+        gs->state_manager.set(default_graph_state);
+        cs.add_scene(gs, names[i], i*0.2, i*0.2);
+        for(int step=0; step<5; ++step){
+            g->expand_once();
+            cs.render_microblock();
+        }
+    }
+    // question mark
     cs.stage_macroblock(FileSegment("It has a very well-defined superstructure."), 1);
-    cs.stage_macroblock(FileSegment("I'll give you a few seconds to try to think through what it might be."), 1);
-    cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces are more or less latched in one of two spots."), 1);
-    cs.stage_macroblock(FileSegment(""), 1);
+    cs.render_microblock();
+
+    // pause scene
+    cs.stage_macroblock(FileSegment("I'll give you a few seconds to try to think through what it might be. You might be able to guess what shape it takes from the structure of the pieces and their available actions!"), 1);
+    //cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces are more or less latched in one of two spots."), 1);
 }
 
 void part8() {
@@ -429,6 +652,14 @@ void part8() {
     cs_sun.render_microblock();
 }
 
+void showcase_all_graphs(){
+    /*for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
+        for (const KlotskiBoard& kb : kb_set) {
+            showcase_graph(kb, "aaaa");
+        }
+    }*/
+}
+
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
@@ -440,9 +671,4 @@ void render_video() {
     part6();
     part7();
     part8();
-    /*for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
-        for (const KlotskiBoard& kb : kb_set) {
-            showcase_graph(kb, "aaaa");
-        }
-    }*/
 }
