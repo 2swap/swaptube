@@ -25,6 +25,8 @@ inline glm::dvec4 veclerp(glm::dvec4 a, glm::dvec4 b, double w){return a*(1-w)+b
 inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
 inline string latex_text(string in){return "\\text{" + in + "}";}
 inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
+inline void print_vec3(glm::vec3 v){cout << "VEC3(" << v.x << ", " << v.y << ", " << v.z << ")" << endl;}
+inline void print_vec4(glm::vec4 v){cout << "VEC4(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")" << endl;}
 
 double extended_mod(double a, double b) {
     double result = fmod(a, b);

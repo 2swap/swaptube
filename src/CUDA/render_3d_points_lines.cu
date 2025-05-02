@@ -45,11 +45,11 @@ __device__ void overlay_pixel(int x, int y, int col, float opacity, unsigned int
 }
 
 __device__ void device_coordinate_to_pixel(
-    glm::vec3 coordinate,
+    const glm::vec3& coordinate,
     bool &behind_camera,
-    glm::quat camera_direction,
-    glm::vec3 camera_pos,
-    glm::quat conjugate_camera_direction,
+    const glm::quat& camera_direction,
+    const glm::vec3& camera_pos,
+    const glm::quat& conjugate_camera_direction,
     float fov,
     float geom_mean_size,
     int width,
@@ -57,11 +57,12 @@ __device__ void device_coordinate_to_pixel(
     float& outx,
     float& outy)
 {
-    coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
-    if (coordinate.z <= 0) { behind_camera = true; return; }
-    float scale = (geom_mean_size * fov) / coordinate.z;
-    outx = scale * coordinate.x + width * 0.5f;
-    outy = scale * coordinate.y + height * 0.5f;
+    glm::vec3 rotated = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
+    if (rotated.z <= 0) { behind_camera = true; return; }
+    float scale = (geom_mean_size * fov) / rotated.z;
+    outx = scale * rotated.x + width * 0.5f;
+    outy = scale * rotated.y + height * 0.5f;
+    //printf("circle: (%f, %f) from point (%f, %f, %f)\n", outx, outy, coordinate.x, coordinate.y, coordinate.z);
 }
 
 __device__ void device_fill_circle(float cx, float cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {

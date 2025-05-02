@@ -527,17 +527,17 @@ public:
     }
 
     float af_dist() const {
-        double sum_distance_sq = 0.0;
-        double ct = 0.1;
+        float sum_distance_sq = 0.0;
+        float ct = 0.1;
 
         for (const auto& node_pair : nodes) {
             const Node& node = node_pair.second;
             float sig = node.weight();
-            sum_distance_sq += sig * square(glm::dot(node.position, node.position));
+            sum_distance_sq += sig * glm::dot(node.position, node.position);
             ct += sig;
         }
 
-        float ans = 3 + 2.4*pow(sum_distance_sq / ct, .25);
+        float ans = 3 + 2.4*pow(sum_distance_sq / ct, .5);
         return ans;
     }
 

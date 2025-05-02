@@ -241,9 +241,9 @@ public:
     void set_camera_direction() {
         camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
         conjugate_camera_direction = glm::conjugate(camera_direction);
-        double dist_to_use = (auto_distance > 0 ? max(1.0, auto_distance) : 1)*state["d"];
+        float dist_to_use = (auto_distance > 0 ? max(1.0, auto_distance) : 1)*state["d"];
         glm::vec3 camera_to_use = auto_distance > 0 ? auto_camera : glm::vec3(state["x"], state["y"], state["z"]);
-        camera_pos = camera_to_use + conjugate_camera_direction * glm::vec3(0,0,-(float)dist_to_use) * camera_direction;
+        camera_pos = camera_to_use + conjugate_camera_direction * glm::vec3(0,0,-dist_to_use) * camera_direction;
     }
 
     float squaredDistance(const glm::vec3& a, const glm::vec3& b) {
@@ -355,7 +355,7 @@ public:
     Pixels sketchpad;
 protected:
     double auto_distance = -1;
-    glm::vec3 auto_camera;
+    glm::vec3 auto_camera = glm::vec3(0,0,0); // This needs to be constructed explicitly since it carries state.
     vector<Point> points;
     vector<Line> lines;
     vector<Surface> surfaces;

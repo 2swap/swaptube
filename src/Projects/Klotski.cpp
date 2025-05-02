@@ -117,13 +117,14 @@ void part1(){
     gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
     cs.stage_macroblock(FileSegment("we arrive at a different node."), 1);
     cs.render_microblock();
-    gs_ptr->state_manager.microblock_transition({{"physics_multiplier","2"}});
+    gs_ptr->state_manager.microblock_transition({{"physics_multiplier","1"}});
 
     cs.stage_macroblock(FileSegment("Since these positions are just one move apart,"), 1);
     cs.render_microblock();
 
     // Turn edge opacity on.
     gs_ptr->state_manager.macroblock_transition({{"lines_opacity","1"}});
+    gs_ptr->state_manager.microblock_transition({{"physics_multiplier","5"}});
     cs.stage_macroblock(FileSegment("We draw an edge connecting their two nodes."), 1);
     cs.render_microblock();
 
@@ -202,7 +203,8 @@ void part2() {
         g_int.add_to_stack(new KlotskiBoard(intermediate));
         auto gs_int_ptr = make_shared<GraphScene>(&g_int);
         gs_int_ptr->state_manager.set(default_graph_state);
-        gs_int_ptr->state_manager.set({{"attract","-1"}, {"repel","-1"}});
+        gs_int_ptr->state_manager.set({{"attract","0"}, {"repel","0"}});
+        //gs_int_ptr->state_manager.set({{"attract","-1"}, {"repel","-1"}});
         cs.add_scene_fade_in(gs_int_ptr, "gs_int");
         while(cs.microblocks_remaining()){
             g_int.expand_once();
@@ -397,6 +399,7 @@ void part5() {
     auto gs1d = make_shared<GraphScene>(&g1d);
     gs1d->state_manager.set(default_graph_state);
     cs.add_scene(gs1d, "gs1d");
+    gs1d->next_hash = ks1d->copy_board().get_hash();
 
     cs.stage_macroblock(FileSegment("To help build some intuition, here are some contrived puzzles first."), get_graph_size(manifold_1d));
     while(cs.microblocks_remaining()) {
@@ -426,6 +429,7 @@ void part5() {
     g2d.add_to_stack(new KlotskiBoard(manifold_2d));
     auto gs2d = make_shared<GraphScene>(&g2d);
     gs2d->state_manager.set(default_graph_state);
+    gs2d->next_hash = ks2d->copy_board().get_hash();
     cs.add_scene(gs2d, "gs2d");
     cs.render_microblock();
     while(cs.microblocks_remaining()) {
@@ -446,40 +450,60 @@ void part5() {
     }
 
     // Slide in 3D and leave a pause
-    cs.stage_macroblock(FileSegment("Three blocks make for a 3d grid,"), 1);
+    cs.stage_macroblock(SilenceSegment(.5), 1);
+    cs.state_manager.macroblock_transition({{"ks2d.x","1"},{"ks2d.y","-1"}});
+    cs.state_manager.macroblock_transition({{"gs2d.x","1"},{"gs2d.y","-1"}});
     auto ks3d = make_shared<KlotskiScene>(manifold_3d);
     ks3d->state_manager.set(board_width_height);
-    cs.add_scene(ks3d, "ks3d");
+    cs.add_scene(ks3d, "ks3d", -1, 1);
     Graph g3d;
     g3d.add_to_stack(new KlotskiBoard(manifold_3d));
+    g3d.expand_completely();
     auto gs3d = make_shared<GraphScene>(&g3d);
     gs3d->state_manager.set(default_graph_state);
-    cs.add_scene(gs3d, "gs3d");
+    cs.add_scene(gs3d, "gs3d", -1, 1);
+    cs.state_manager.macroblock_transition({{"ks3d.x",".15"},{"ks3d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs.state_manager.macroblock_transition({{"gs3d.x",".6"},{"gs3d.y",".5"}});
     cs.render_microblock();
-    cs.stage_macroblock(SilenceSegment(1), 1);
+
+    // Show it off a sec
+    cs.stage_macroblock(FileSegment("Three blocks make for a 3d grid,"), 1);
     cs.render_microblock();
 
     // 4D hypercube
-    cs.stage_macroblock(FileSegment("and with 4 degrees of freedom, the graph naturally extends to a 4-d structure!"), 1);
+    cs.stage_macroblock(SilenceSegment(.5), 1);
+    cs.state_manager.macroblock_transition({{"ks3d.x","1"},{"ks3d.y","-1"}});
+    cs.state_manager.macroblock_transition({{"gs3d.x","1"},{"gs3d.y","-1"}});
     auto ks4d = make_shared<KlotskiScene>(manifold_4d);
     ks4d->state_manager.set(board_width_height);
-    cs.add_scene(ks4d, "ks4d");
+    cs.add_scene(ks4d, "ks4d", -1, 1);
     Graph g4d;
     g4d.add_to_stack(new KlotskiBoard(manifold_4d));
+    g4d.expand_completely();
     auto gs4d = make_shared<GraphScene>(&g4d);
     gs4d->state_manager.set(default_graph_state);
-    cs.add_scene(gs4d, "gs4d");
+    cs.add_scene(gs4d, "gs4d", -1, 1);
+    cs.state_manager.macroblock_transition({{"ks4d.x",".15"},{"ks4d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs.state_manager.macroblock_transition({{"gs4d.x",".6"},{"gs4d.y",".5"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("and with 4 degrees of freedom, the graph naturally extends to a 4-d structure!"), 1);
     cs.render_microblock();
 
     // Bring back 2D without recreating it
     cs.fade_out_all_subscenes();
-    cs.stage_macroblock(FileSegment("But things get more fun when the pieces are capable of self-intersection."), 1);
-    cs.state_manager.microblock_transition({{"ks2d.x",".25"},{"ks2d.w",".5"},{"gs2d.x",".25"}});
+    cs.stage_macroblock(FileSegment("But things get more fun when the pieces are capable of intersection."), 1);
+    cs.state_manager.macroblock_transition({{"ks4d.x","1"},{"ks4d.y","-1"}});
+    cs.state_manager.macroblock_transition({{"gs4d.x","1"},{"gs4d.y","-1"}});
+    cs.state_manager.microblock_transition({{"gs2d.x",".25"}});
+    gs2d->state_manager.microblock_transition({{"w",".5"}});
     cs.render_microblock();
 
     // Move 2D to left, show ring_big on right
-    cs.stage_macroblock(FileSegment("If we put our two blocks opposing each other,"), 1);
-    cs.state_manager.macroblock_transition({{"ks2d.x","0"},{"gs2d.x","0"}});
+    cs.stage_macroblock(FileSegment("If we take our two-block puzzle,"), 1);
+    cs.state_manager.macroblock_transition({{"ks2d.x",".15"},{"ks2d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs.state_manager.macroblock_transition({{"gs2d.x",".5"},{"gs2d.y",".5"}});
+    cs.stage_macroblock(FileSegment("and put the blocks opposing each other,"), 1);
     auto ksrb = make_shared<KlotskiScene>(ring_big);
     ksrb->state_manager.set(board_width_height);
     cs.add_scene(ksrb, "ksrb");
@@ -499,7 +523,7 @@ void part5() {
 
     // Triangle puzzle
     cs.stage_macroblock(FileSegment("If we put the two blocks on the same lane,"), 1);
-    auto kstri = make_shared<KlotskiScene>(triangles);
+    auto kstri = make_shared<KlotskiScene>(triangle);
     kstri->state_manager.set(board_width_height);
     cs.add_scene(kstri, "kstri");
     cs.render_microblock();
@@ -681,12 +705,12 @@ void showcase_all_graphs(){
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
-    part1();
-    part2();
-    part3();
-    part4();
+    //part1();
+    //part2();
+    //part3();
+    //part4();
     part5();
-    part6();
-    part7();
-    part8();
+    //part6();
+    //part7();
+    //part8();
 }
