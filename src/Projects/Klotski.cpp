@@ -10,7 +10,7 @@ auto other = {apk, mathgames_12_13_04, euler766_easy};
 auto suns = {fatsun, sun_no_minis, truncatedsun};
 auto rushhours = {beginner, intermediate, advanced, expert, reddit, guh3, guh4, video, thinkfun1, thinkfun2, thinkfun3};
 auto big = {sun};
-auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2, manifold_1d, manifold_2d, manifold_3d};
+auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2, manifold_1d, manifold_2d, manifold_3d, manifold_4d, full_15_puzzle};
 
 int get_graph_size(const KlotskiBoard& kb){
     Graph g;
@@ -391,32 +391,37 @@ void part5() {
     auto ks1d = make_shared<KlotskiScene>(manifold_1d);
     ks1d->state_manager.set(board_width_height);
     cs.add_scene(ks1d, "ks1d");
+    cs.state_manager.set({{"ks1d.x",".15"},{"ks1d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     Graph g1d;
     g1d.add_to_stack(new KlotskiBoard(manifold_1d));
     auto gs1d = make_shared<GraphScene>(&g1d);
     gs1d->state_manager.set(default_graph_state);
     cs.add_scene(gs1d, "gs1d");
 
-    cs.stage_macroblock(FileSegment("To help build some intuition, here are some contrived puzzles first."), 1);
+    cs.stage_macroblock(FileSegment("To help build some intuition, here are some contrived puzzles first."), get_graph_size(manifold_1d));
     while(cs.microblocks_remaining()) {
         g1d.expand_once();
         cs.render_microblock();
     }
-
-    // start building the graph
-    cs.stage_macroblock(FileSegment("To start off, with just a single long block, there is only one degree of freedom in movement."), 1);
-    cs.render_microblock();
+    cs.stage_macroblock(FileSegment("To start off, with just a single long block, there is only one degree of freedom in movement."), 8);
+    for(int i = 0; i < 8; i++){
+        ks1d->stage_move({'a', 0, i<=3?1:-1});
+        gs1d->next_hash = ks1d->copy_staged_board().get_hash();
+        cs.render_microblock();
+    }
 
     // Fade out 1D and slide in 2D, then build 2D graph
-    cs.stage_macroblock(FileSegment("With two, you get the cartesian product of both of their movement, yielding a grid."), 2);
-    // microblock 1: fade out 1D
-    ks1d->state_manager.microblock_transition({{"opacity","0"}});
-    gs1d->state_manager.microblock_transition({{"opacity","0"}});
+    cs.stage_macroblock(FileSegment("With two,"), 2);
+    cs.fade_out_all_subscenes();
     cs.render_microblock();
-    // microblock 2: bring in 2D
+    cs.remove_all_subscenes();
     auto ks2d = make_shared<KlotskiScene>(manifold_2d);
     ks2d->state_manager.set(board_width_height);
-    cs.add_scene(ks2d, "ks2d");
+    cs.add_scene_fade_in(ks2d, "ks2d");
+    cs.state_manager.set({{"ks2d.x",".15"},{"ks2d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("you get the cartesian product of both pieces, yielding a grid."), get_graph_size(manifold_2d));
     Graph g2d;
     g2d.add_to_stack(new KlotskiBoard(manifold_2d));
     auto gs2d = make_shared<GraphScene>(&g2d);
@@ -425,6 +430,18 @@ void part5() {
     cs.render_microblock();
     while(cs.microblocks_remaining()) {
         g2d.expand_once();
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(FileSegment("Each block defines an axis of motion."), 16);
+    for(int i = 0; i < 8; i++){
+        ks2d->stage_move({'a', 0, i<=3?1:-1});
+        gs2d->next_hash = ks2d->copy_staged_board().get_hash();
+        cs.render_microblock();
+    }
+    for(int i = 0; i < 8; i++){
+        ks2d->stage_move({'c', 0, i<=3?1:-1});
+        gs2d->next_hash = ks2d->copy_staged_board().get_hash();
         cs.render_microblock();
     }
 
@@ -443,18 +460,19 @@ void part5() {
     cs.render_microblock();
 
     // 4D hypercube
-    cs.stage_macroblock(FileSegment("and when we have 4 degrees of symmetry, the graph naturally takes the shape of a 4-d hypercube!"), 1);
-    auto ks4d = make_shared<KlotskiScene>(cube_4d);
+    cs.stage_macroblock(FileSegment("and with 4 degrees of freedom, the graph naturally extends to a 4-d structure!"), 1);
+    auto ks4d = make_shared<KlotskiScene>(manifold_4d);
     ks4d->state_manager.set(board_width_height);
     cs.add_scene(ks4d, "ks4d");
     Graph g4d;
-    g4d.add_to_stack(new KlotskiBoard(cube_4d));
+    g4d.add_to_stack(new KlotskiBoard(manifold_4d));
     auto gs4d = make_shared<GraphScene>(&g4d);
     gs4d->state_manager.set(default_graph_state);
     cs.add_scene(gs4d, "gs4d");
     cs.render_microblock();
 
     // Bring back 2D without recreating it
+    cs.fade_out_all_subscenes();
     cs.stage_macroblock(FileSegment("But things get more fun when the pieces are capable of self-intersection."), 1);
     cs.state_manager.microblock_transition({{"ks2d.x",".25"},{"ks2d.w",".5"},{"gs2d.x",".25"}});
     cs.render_microblock();
