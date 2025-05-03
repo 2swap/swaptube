@@ -73,7 +73,7 @@ public:
     void stage_macroblock(const AudioSegment& audio, int expected_microblocks){
         if (remaining_microblocks != 0) {
             throw runtime_error("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render_microblock()!\n"
-                    "This macroblock had" + to_string(total_microblocks) + " microblocks, "
+                    "This macroblock had " + to_string(total_microblocks) + " microblocks, "
                     "but render_microblock() was only called " + to_string(total_microblocks - remaining_microblocks) + " times.");
         }
 

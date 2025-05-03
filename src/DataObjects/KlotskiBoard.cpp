@@ -217,11 +217,12 @@ KlotskiBoard truncatedsun  (4, 4, "abbcabbc.dd.efgh"                    , false)
 //geometry
 KlotskiBoard jam3x3        (6, 6, "cea...cea...cea......bbb...ddd...fff", true );
 KlotskiBoard full_15_puzzle(4, 4, "abcdefghijklmno."                    , false);
-KlotskiBoard manifold_1d   (4, 6, "a...a...................", true );
-KlotskiBoard manifold_2d   (4, 6, "ac..ac..................", true );
-KlotskiBoard manifold_3d   (4, 6, "ace.ace.................", true );
-KlotskiBoard manifold_4d   (4, 6, "acegaceg................", true );
-KlotskiBoard triangle      (4, 6, "a...a...c...c...........", true );
+KlotskiBoard manifold_1d   (7, 7, "a......a.........................................", true );
+KlotskiBoard manifold_2d   (7, 7, "ac.....ac........................................", true );
+KlotskiBoard manifold_3d   (7, 7, "ace....ace.......................................", true );
+KlotskiBoard manifold_4d   (7, 7, "aceg...aceg......................................", true );
+KlotskiBoard triangle      (7, 7, "a......a......c......c...........................", true );
+KlotskiBoard ring_7x7      (7, 7, "...a......a..........bb..........................", true );
 KlotskiBoard cube_3d       (5, 5, "caa...aa..aaaaa..a....a.b"           , false);
 KlotskiBoard cube_4d       (5, 5, "c.a....a..aaaaa..a....a.b"           , false);
 KlotskiBoard cube_6d       (5, 5, "c.a.d..a..aaaaa..a....a.b"           , false);

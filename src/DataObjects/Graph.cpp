@@ -490,7 +490,7 @@ public:
             node->position += node->velocity - com*centering_strength;
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
-            node->position.z *= 0.99;
+            node->position.z *= 0.98;
 
             // Dimensional constraints
             if (dimensions < 3) {

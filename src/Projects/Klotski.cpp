@@ -398,7 +398,7 @@ void part5() {
     g1d.add_to_stack(new KlotskiBoard(manifold_1d));
     auto gs1d = make_shared<GraphScene>(&g1d);
     gs1d->state_manager.set(default_graph_state);
-    cs.add_scene(gs1d, "gs1d");
+    cs.add_scene(gs1d, "gs1d", .6, .5);
     gs1d->next_hash = ks1d->copy_board().get_hash();
 
     cs.stage_macroblock(FileSegment("To help build some intuition, here are some contrived puzzles first."), get_graph_size(manifold_1d));
@@ -406,23 +406,23 @@ void part5() {
         g1d.expand_once();
         cs.render_microblock();
     }
-    cs.stage_macroblock(FileSegment("To start off, with just a single long block, there is only one degree of freedom in movement."), 8);
-    for(int i = 0; i < 8; i++){
-        ks1d->stage_move({'a', 0, i<=3?1:-1});
+    cs.stage_macroblock(FileSegment("To start off, with just a single long block, there is only one degree of freedom in movement."), 10);
+    for(int i = 0; i < 10; i++){
+        ks1d->stage_move({'a', 0, i<=4?1:-1});
         gs1d->next_hash = ks1d->copy_staged_board().get_hash();
         cs.render_microblock();
     }
 
     // Fade out 1D and slide in 2D, then build 2D graph
-    cs.stage_macroblock(FileSegment("With two,"), 2);
+    cs.stage_macroblock(FileSegment("With two,"), 1);
     cs.fade_out_all_subscenes();
-    cs.render_microblock();
-    cs.remove_all_subscenes();
     auto ks2d = make_shared<KlotskiScene>(manifold_2d);
     ks2d->state_manager.set(board_width_height);
     cs.add_scene_fade_in(ks2d, "ks2d");
     cs.state_manager.set({{"ks2d.x",".15"},{"ks2d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     cs.render_microblock();
+    cs.remove_subscene("ks1d");
+    cs.remove_subscene("gs1d");
 
     cs.stage_macroblock(FileSegment("you get the cartesian product of both pieces, yielding a grid."), get_graph_size(manifold_2d));
     Graph g2d;
@@ -430,21 +430,21 @@ void part5() {
     auto gs2d = make_shared<GraphScene>(&g2d);
     gs2d->state_manager.set(default_graph_state);
     gs2d->next_hash = ks2d->copy_board().get_hash();
-    cs.add_scene(gs2d, "gs2d");
+    cs.add_scene(gs2d, "gs2d", .6, .5);
     cs.render_microblock();
     while(cs.microblocks_remaining()) {
         g2d.expand_once();
         cs.render_microblock();
     }
 
-    cs.stage_macroblock(FileSegment("Each block defines an axis of motion."), 16);
-    for(int i = 0; i < 8; i++){
-        ks2d->stage_move({'a', 0, i<=3?1:-1});
+    cs.stage_macroblock(FileSegment("Each block defines an axis of motion."), 20);
+    for(int i = 0; i < 10; i++){
+        ks2d->stage_move({'a', 0, i<=4?1:-1});
         gs2d->next_hash = ks2d->copy_staged_board().get_hash();
         cs.render_microblock();
     }
-    for(int i = 0; i < 8; i++){
-        ks2d->stage_move({'c', 0, i<=3?1:-1});
+    for(int i = 0; i < 10; i++){
+        ks2d->stage_move({'c', 0, i<=4?1:-1});
         gs2d->next_hash = ks2d->copy_staged_board().get_hash();
         cs.render_microblock();
     }
@@ -486,34 +486,39 @@ void part5() {
     cs.state_manager.macroblock_transition({{"ks4d.x",".15"},{"ks4d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     cs.state_manager.macroblock_transition({{"gs4d.x",".6"},{"gs4d.y",".5"}});
     cs.render_microblock();
+    cs.remove_subscene("ks3d");
+    cs.remove_subscene("gs3d");
 
     cs.stage_macroblock(FileSegment("and with 4 degrees of freedom, the graph naturally extends to a 4-d structure!"), 1);
     cs.render_microblock();
 
     // Bring back 2D without recreating it
-    cs.fade_out_all_subscenes();
     cs.stage_macroblock(FileSegment("But things get more fun when the pieces are capable of intersection."), 1);
     cs.state_manager.macroblock_transition({{"ks4d.x","1"},{"ks4d.y","-1"}});
     cs.state_manager.macroblock_transition({{"gs4d.x","1"},{"gs4d.y","-1"}});
-    cs.state_manager.microblock_transition({{"gs2d.x",".25"}});
-    gs2d->state_manager.microblock_transition({{"w",".5"}});
+    cs.state_manager.macroblock_transition({{"ks2d.x",".15"},{"ks2d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs.state_manager.macroblock_transition({{"gs2d.x",".5"},{"gs2d.y",".5"}});
     cs.render_microblock();
+    cs.remove_subscene("ks4d");
+    cs.remove_subscene("gs4d");
 
     // Move 2D to left, show ring_big on right
     cs.stage_macroblock(FileSegment("If we take our two-block puzzle,"), 1);
-    cs.state_manager.macroblock_transition({{"ks2d.x",".15"},{"ks2d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
-    cs.state_manager.macroblock_transition({{"gs2d.x",".5"},{"gs2d.y",".5"}});
+    cs.fade_out_all_subscenes();
+    cs.render_microblock();
     cs.stage_macroblock(FileSegment("and put the blocks opposing each other,"), 1);
-    auto ksrb = make_shared<KlotskiScene>(ring_big);
-    ksrb->state_manager.set(board_width_height);
-    cs.add_scene(ksrb, "ksrb");
-    Graph grb;
-    grb.add_to_stack(new KlotskiBoard(ring_big));
-    auto gsr = make_shared<GraphScene>(&grb);
+    auto ksr7 = make_shared<KlotskiScene>(ring_7x7);
+    ksr7->state_manager.set(board_width_height);
+    cs.add_scene_fade_in(ksr7, "ksr7");
+    cs.state_manager.set({{"ksr7.x",".15"},{"ksr7.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    Graph gr7;
+    gr7.add_to_stack(new KlotskiBoard(ring_7x7));
+    gr7.expand_completely();
+    auto gsr = make_shared<GraphScene>(&gr7);
     gsr->state_manager.set(default_graph_state);
-    cs.add_scene(gsr, "gsrb");
+    cs.add_scene_fade_in(gsr, "gsr");
     while(cs.microblocks_remaining()) {
-        grb.expand_once();
+        gr7.expand_once();
         cs.render_microblock();
     }
 
@@ -522,10 +527,12 @@ void part5() {
     cs.render_microblock();
 
     // Triangle puzzle
+    cs.fade_out_all_subscenes();
     cs.stage_macroblock(FileSegment("If we put the two blocks on the same lane,"), 1);
     auto kstri = make_shared<KlotskiScene>(triangle);
     kstri->state_manager.set(board_width_height);
     cs.add_scene(kstri, "kstri");
+    cs.state_manager.set({{"kstri.x",".15"},{"kstri.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     cs.render_microblock();
     cs.stage_macroblock(FileSegment("we get this triangle shape."), 1);
     cs.render_microblock();
