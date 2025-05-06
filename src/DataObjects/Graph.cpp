@@ -302,6 +302,10 @@ public:
         mark_updated();
     }
 
+    int dist(double start, double end) {
+        return shortest_path(start, end).first.size();
+    }
+
     // Function to find the shortest path between two nodes using Dijkstra's algorithm
     pair<list<double>, list<Edge*>> shortest_path(double start, double end) {
         unordered_map<double, double> distances;
@@ -490,7 +494,7 @@ public:
             node->position += node->velocity - com*centering_strength;
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
-            node->position.z *= 0.98;
+            //node->position.z *= 0.98;
 
             // Dimensional constraints
             if (dimensions < 3) {

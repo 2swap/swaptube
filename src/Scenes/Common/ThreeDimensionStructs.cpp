@@ -1,18 +1,11 @@
 // TODO includes for GLM
-enum NodeHighlightType {
-    NORMAL,
-    RING,
-    BULLSEYE,
-};
-
 struct Point {
     glm::vec3 center;
     int color;
     float opacity;
-    NodeHighlightType highlight;
     float size;
-    Point(const glm::vec3& pos, int clr, NodeHighlightType hlt = NORMAL, float op = 1, float sz = 1)
-        : highlight(hlt), size(sz) { center = pos; color = clr; opacity = op; }
+    Point(const glm::vec3& pos, int clr, float op = 1, float sz = 1)
+        : size(sz) { center = pos; color = clr; opacity = op; }
 };
 
 struct Line {

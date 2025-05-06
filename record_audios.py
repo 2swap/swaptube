@@ -40,6 +40,7 @@ def main():
         print("Error: record_list.tsv is empty.")
         return
 
+    """
     try:
         devices_output = subprocess.check_output(["arecord", "-l"], stderr=subprocess.STDOUT).decode()
         available_devices = []
@@ -62,6 +63,7 @@ def main():
     else:
         print("Could not parse device info.")
         return
+    """
 
     input("Do 100 jumping jacks...")
     input("Smile...")
@@ -88,7 +90,7 @@ def main():
             print("Recording... Press Enter to stop.")
             ffmpeg_log = os.path.join(PROJECT_DIR, "ffmpeg.log")
             ffmpeg_cmd = [
-                'ffmpeg', '-f', 'alsa', '-ar', '44100', '-i', selected_device, 
+                'ffmpeg', '-f', 'alsa', '-ar', '44100',#, '-i', selected_device, 
                 os.path.join(PROJECT_DIR, current_filename)
             ]
 

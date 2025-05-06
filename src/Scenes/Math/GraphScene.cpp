@@ -55,8 +55,7 @@ public:
             glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);
             if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
             if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
-            NodeHighlightType highlight = (node.data->get_highlight_type() == 0) ? NORMAL : RING;
-            add_point(Point(node_pos, node.color, highlight, 1, age_to_size(node.age)));
+            add_point(Point(node_pos, node.color, 1, age_to_size(node.age)));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
@@ -74,7 +73,7 @@ public:
             else if(!next_found) pos_to_render = curr_pos;
             else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
             opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
-            add_point(Point(pos_to_render, 0xffff0000, BULLSEYE, opa, 1.1*opa));
+            add_point(Point(pos_to_render, 0xffff0000, opa, 6*opa));
         }
 
         // automagical camera distancing

@@ -264,6 +264,7 @@ public:
         for (const Surface& surface : surfaces)
             render_surface(surface);
 
+        // TODO profile the time each of these take, see which is worse
         if (!points.empty() && state["points_opacity"] > .001) {
             render_points_on_gpu(
                 pix.pixels.data(),

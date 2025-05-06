@@ -21,12 +21,17 @@ int get_graph_size(const KlotskiBoard& kb){
 
 StateSet default_graph_state{
     {"q1", "1"},
-    {"qi", "<t> .1 * cos"},
-    {"qj", "<t> .1 * sin"},
+    {"qi", "<t> .2 * cos"},
+    {"qj", "<t> .314 * sin"},
     {"qk", "0"}, // Camera orientation quaternion
     {"decay",".8"},
     {"surfaces_opacity","0"}, // Whether we want to draw the board at every node
     {"physics_multiplier","5"}, // How many times to iterate the graph-spreader
+};
+StateSet spinny{
+    {"qi", "<t> .8 * cos"},
+    {"qj", "<t> .6 * sin"},
+    {"qk", "<t> .9 * sin"},
 };
 StateSet board_width_height{{"w",".3"},{"h",to_string(.3*VIDEO_WIDTH/VIDEO_HEIGHT)}};
 StateSet board_position    {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}};
@@ -497,26 +502,27 @@ void part5() {
     cs.state_manager.macroblock_transition({{"ks4d.x","1"},{"ks4d.y","-1"}});
     cs.state_manager.macroblock_transition({{"gs4d.x","1"},{"gs4d.y","-1"}});
     cs.state_manager.macroblock_transition({{"ks2d.x",".15"},{"ks2d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
-    cs.state_manager.macroblock_transition({{"gs2d.x",".5"},{"gs2d.y",".5"}});
+    cs.state_manager.macroblock_transition({{"gs2d.x",".6"},{"gs2d.y",".5"}});
     cs.render_microblock();
-    cs.remove_subscene("ks4d");
-    cs.remove_subscene("gs4d");
 
     // Move 2D to left, show ring_big on right
     cs.stage_macroblock(FileSegment("If we take our two-block puzzle,"), 1);
-    cs.fade_out_all_subscenes();
+    cs.state_manager.macroblock_transition({{"ks2d.x",".25"},{"ks2d.y",".15"}});
+    cs.state_manager.macroblock_transition({{"gs2d.x",".25"},{"gs2d.y",".75"}});
+    gs2d->state_manager.macroblock_transition({{"w",".5"},{"h",".5"}});
     cs.render_microblock();
+
     cs.stage_macroblock(FileSegment("and put the blocks opposing each other,"), 1);
     auto ksr7 = make_shared<KlotskiScene>(ring_7x7);
     ksr7->state_manager.set(board_width_height);
     cs.add_scene_fade_in(ksr7, "ksr7");
-    cs.state_manager.set({{"ksr7.x",".15"},{"ksr7.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs.state_manager.set({{"ksr7.x",".75"},{"ksr7.y",".15"}});
     Graph gr7;
     gr7.add_to_stack(new KlotskiBoard(ring_7x7));
     gr7.expand_completely();
-    auto gsr = make_shared<GraphScene>(&gr7);
+    auto gsr = make_shared<GraphScene>(&gr7, 0.5,0.5);
     gsr->state_manager.set(default_graph_state);
-    cs.add_scene_fade_in(gsr, "gsr");
+    cs.add_scene_fade_in(gsr, "gsr", 0.75, 0.75);
     while(cs.microblocks_remaining()) {
         gr7.expand_once();
         cs.render_microblock();
@@ -528,30 +534,56 @@ void part5() {
 
     // Triangle puzzle
     cs.fade_out_all_subscenes();
-    cs.stage_macroblock(FileSegment("If we put the two blocks on the same lane,"), 1);
+    cs.stage_macroblock(FileSegment("If we put the two blocks on the same lane,"), get_graph_size(triangle));
     auto kstri = make_shared<KlotskiScene>(triangle);
     kstri->state_manager.set(board_width_height);
-    cs.add_scene(kstri, "kstri");
+    cs.add_scene_fade_in(kstri, "kstri");
     cs.state_manager.set({{"kstri.x",".15"},{"kstri.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
-    cs.render_microblock();
+    Graph grt;
+    grt.add_to_stack(new KlotskiBoard(triangle));
+    auto gst = make_shared<GraphScene>(&grt);
+    gst->state_manager.set(default_graph_state);
+    cs.add_scene_fade_in(gst, "gst", 0.6, 0.5);
+    gst->next_hash = kstri->copy_board().get_hash();
+    while(cs.microblocks_remaining()) {
+        grt.expand_once();
+        cs.render_microblock();
+    }
     cs.stage_macroblock(FileSegment("we get this triangle shape."), 1);
     cs.render_microblock();
 
     // Move top then bottom
-    kstri->stage_move({'a', 0, 1});
-    cs.render_microblock();
-    for(int i=0; i<3; ++i){
-        kstri->stage_move({'b', 0, i});
+    //cs.stage_macroblock(FileSegment("Wherever the top block is, that serves as a bound for the bottom block."), 35);
+    cs.stage_macroblock(SilenceSegment(10), 35);
+    for(int j = 0; j < 5; j++) {
+        for(int i=0; i<5-j; ++i){
+            kstri->stage_move({'c', 0, -1});
+            gst->next_hash = kstri->copy_staged_board().get_hash();
+            cs.render_microblock();
+        }
+        for(int i=0; i<5-j; ++i){
+            kstri->stage_move({'c', 0, 1});
+            gst->next_hash = kstri->copy_staged_board().get_hash();
+            cs.render_microblock();
+        }
+        kstri->stage_move({'a', 0, 1});
+        gst->next_hash = kstri->copy_staged_board().get_hash();
         cs.render_microblock();
     }
 
     // Mirror-triangle graph
-    cs.stage_macroblock(FileSegment("Wherever the top block is, that serves as a bound for the bottom block."), 1);
+    cs.stage_macroblock(SilenceSegment(2), 1);
+    kstri->stage_move({'c', 0, -4});
+    gst->next_hash = 0;
+    cs.render_microblock();
+    cs.stage_macroblock(SilenceSegment(2), get_graph_size(triangle_inv));
     Graph gtri;
-    gtri.add_to_stack(new KlotskiBoard(triangles));
+    gtri.add_to_stack(new KlotskiBoard(triangle_inv));
     auto gstri = make_shared<GraphScene>(&gtri);
+    gstri->next_hash = kstri->copy_staged_board().get_hash();
     gstri->state_manager.set(default_graph_state);
     cs.add_scene(gstri, "gstri");
+    cs.state_manager.macroblock_transition({{"gstri.opacity","0.3"}});
     while(cs.microblocks_remaining()){
         gtri.expand_once();
         cs.render_microblock();
@@ -560,19 +592,26 @@ void part5() {
     // Illegal move & mirror highlight
     cs.stage_macroblock(FileSegment("With a graph like this, we implicitly create an imaginary counterpart structure,"), 1);
     // unhighlight original, highlight mirror
-    gstri->state_manager.macroblock_transition({{"opacity","0.3"}});
+    cs.state_manager.macroblock_transition({{"gstri.opacity","1"}});
+    cs.state_manager.macroblock_transition({{"gst.opacity","0.3"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 1);
     cs.render_microblock();
 
     // 3-intersecting blocks example
-    cs.stage_macroblock(FileSegment("For example, 3 intersecting pieces still form a cube, there are just some excavated areas."), 1);
-    auto ks3rb = make_shared<KlotskiScene>(ring);
+    cs.stage_macroblock(FileSegment("For example,"), 1);
+    cs.fade_out_all_subscenes();
+    cs.render_microblock();
+    cs.remove_all_subscenes();
+
+    cs.stage_macroblock(FileSegment("3 intersecting pieces still form a cube, there are just some excavated areas."), get_graph_size(iblock));
+    auto ks3rb = make_shared<KlotskiScene>(iblock);
     ks3rb->state_manager.set(board_width_height);
     cs.add_scene(ks3rb, "ks3rb");
+    cs.state_manager.set({{"ks3rb.x",".15"},{"ks3rb.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     Graph g3rb;
-    g3rb.add_to_stack(new KlotskiBoard(ring));
+    g3rb.add_to_stack(new KlotskiBoard(iblock));
     auto gs3rb = make_shared<GraphScene>(&g3rb);
     gs3rb->state_manager.set(default_graph_state);
     cs.add_scene(gs3rb, "gs3rb");
@@ -580,6 +619,8 @@ void part5() {
         g3rb.expand_once();
         cs.render_microblock();
     }
+    cs.stage_macroblock(SilenceSegment(2), 1);
+    cs.render_microblock();
 
     // Fade out all
     cs.stage_macroblock(FileSegment("But as the piece number gets higher, the dimensionality of the graph has less and less to do with the number of pieces, and more to do with the number of unblocked pieces."), 1);
@@ -590,32 +631,52 @@ void part5() {
 void part6() {
     CompositeScene cs;
 
+    KlotskiBoard use = gpt2;
     // apk puzzle and full expansion
-    auto ks_apk = make_shared<KlotskiScene>(apk);
+    auto ks_apk = make_shared<KlotskiScene>(use);
     ks_apk->state_manager.set(board_width_height);
-    cs.add_scene(ks_apk, "ks_apk");
+    cs.add_scene_fade_in(ks_apk, "ks_apk");
+    cs.state_manager.set({{"ks_apk.x",".15"},{"ks_apk.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     Graph g_apk;
-    g_apk.add_to_stack(new KlotskiBoard(apk));
+    g_apk.dimensions = 4;
+    g_apk.add_to_stack(new KlotskiBoard(use));
     auto gs_apk = make_shared<GraphScene>(&g_apk);
     gs_apk->state_manager.set(default_graph_state);
-    cs.add_scene(gs_apk, "gs_apk");
+    gs_apk->state_manager.microblock_transition({{"physics_multiplier","50"}});
+    cs.add_scene(gs_apk, "gs_apk", 0.6, 0.5);
 
-    cs.stage_macroblock(FileSegment("As an example, this puzzle has some cool behavior."), 1);
+    cs.stage_macroblock(FileSegment("As an example, this puzzle has some cool behavior."), get_graph_size(use));
     while(cs.microblocks_remaining()){
         g_apk.expand_once();
         cs.render_microblock();
     }
+    g_apk.dimensions = 3;
 
+    gs_apk->state_manager.microblock_transition(spinny);
     cs.stage_macroblock(FileSegment("If I expand it out entirely,"), 1);
     cs.render_microblock();
 
+    FOR_REAL = true;
     cs.stage_macroblock(FileSegment("Notice that it has some overall superstructure,"), 1);
     cs.render_microblock();
 
+    gs_apk->next_hash = ks_apk->copy_board().get_hash();
     // Zoom in by shrinking dist
-    cs.stage_macroblock(FileSegment("but also, if we zoom in,"), 1);
-    gs_apk->state_manager.macroblock_transition({{"dist","5"}});
+    /*
+    gs_apk->state_manager.macroblock_transition({{"d","5"}});
     cs.render_microblock();
+    */
+
+    cs.stage_macroblock(FileSegment("but also, if we zoom in,"), 466);
+    gs_apk->state_manager.set({{"centering_strength","0"}});
+    unordered_map<double,Node> nodes_copy = g_apk.nodes;
+    for(auto it = nodes_copy.begin(); it != nodes_copy.end(); ++it){
+        double id_here = it->first;
+        if(g_apk.dist(id_here, ks_apk->copy_board().get_hash()) < 5) continue;
+        g_apk.remove_node(id_here);
+        cs.render_microblock();
+    }
+    g_apk.clear_queue();
 
     cs.stage_macroblock(FileSegment("the local behavior is quite nicely patterned as well."), 1);
     cs.render_microblock();
@@ -710,14 +771,14 @@ void showcase_all_graphs(){
 }
 
 void render_video() {
-    //FOR_REAL = false;
+    FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
     //part1();
     //part2();
     //part3();
     //part4();
-    part5();
-    //part6();
+    //part5();
+    part6();
     //part7();
     //part8();
 }

@@ -115,7 +115,7 @@ __global__ void render_points_kernel(
         geom_mean_size, width, height, px, py);
     if (behind_camera) return;
     float dot_size = size_scale * p.size;
-    device_fill_circle(px, py, dot_size*(p.highlight+1), p.color, pixels, width, height, points_opacity * p.opacity);
+    device_fill_circle(px, py, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
 }
 
 __global__ void render_lines_kernel(
