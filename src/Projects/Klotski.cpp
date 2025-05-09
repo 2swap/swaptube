@@ -628,7 +628,8 @@ void part5() {
     cs.render_microblock();
 }
 
-void part6() {
+void part6(int n) {
+    FOR_REAL = false;
     CompositeScene cs;
 
     KlotskiBoard use = gpt2;
@@ -642,7 +643,7 @@ void part6() {
     g_apk.add_to_stack(new KlotskiBoard(use));
     auto gs_apk = make_shared<GraphScene>(&g_apk);
     gs_apk->state_manager.set(default_graph_state);
-    gs_apk->state_manager.microblock_transition({{"physics_multiplier","50"}});
+    //gs_apk->state_manager.microblock_transition({{"physics_multiplier","5"}});
     cs.add_scene(gs_apk, "gs_apk", 0.6, 0.5);
 
     cs.stage_macroblock(FileSegment("As an example, this puzzle has some cool behavior."), get_graph_size(use));
@@ -656,30 +657,41 @@ void part6() {
     cs.stage_macroblock(FileSegment("If I expand it out entirely,"), 1);
     cs.render_microblock();
 
-    FOR_REAL = true;
+    //TODO just to find a good starting position
+    cs.stage_macroblock(FileSegment("If I expand it out entirely,"), n*100);
+    while (cs.microblocks_remaining()) {
+        cs.render_microblock();
+        ks_apk->stage_random_move();
+    }
+    //END TODO
+
     cs.stage_macroblock(FileSegment("Notice that it has some overall superstructure,"), 1);
     cs.render_microblock();
 
     gs_apk->next_hash = ks_apk->copy_board().get_hash();
-    // Zoom in by shrinking dist
-    /*
-    gs_apk->state_manager.macroblock_transition({{"d","5"}});
-    cs.render_microblock();
-    */
 
-    cs.stage_macroblock(FileSegment("but also, if we zoom in,"), 466);
     gs_apk->state_manager.set({{"centering_strength","0"}});
     unordered_map<double,Node> nodes_copy = g_apk.nodes;
+    list<double> to_remove;
     for(auto it = nodes_copy.begin(); it != nodes_copy.end(); ++it){
         double id_here = it->first;
-        if(g_apk.dist(id_here, ks_apk->copy_board().get_hash()) < 5) continue;
-        g_apk.remove_node(id_here);
-        cs.render_microblock();
+        if(g_apk.dist(id_here, ks_apk->copy_board().get_hash()) < 10) continue;
+        to_remove.push_back(id_here);
     }
     g_apk.clear_queue();
 
+    cs.stage_macroblock(FileSegment("but also, if we zoom in,"), to_remove.size());
+    for(double d : to_remove){
+        g_apk.remove_node(d);
+        cs.render_microblock();
+    }
+
+    FOR_REAL = true;
+    // Zoom in by shrinking dist
+    gs_apk->state_manager.macroblock_transition({{"d","1"}});
     cs.stage_macroblock(FileSegment("the local behavior is quite nicely patterned as well."), 1);
     cs.render_microblock();
+    return;
 
     cs.stage_macroblock(FileSegment("It's a cute little local euclidean manifold with two degrees of freedom."), 1);
     cs.render_microblock();
@@ -771,14 +783,21 @@ void showcase_all_graphs(){
 }
 
 void render_video() {
-    FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
     //part1();
     //part2();
     //part3();
     //part4();
     //part5();
-    part6();
+    part6(1);
+    part6(2);
+    part6(3);
+    part6(4);
+    part6(5);
+    part6(6);
+    part6(7);
+    part6(8);
+    part6(9);
     //part7();
     //part8();
 }
