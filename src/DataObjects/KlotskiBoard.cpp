@@ -222,7 +222,7 @@ KlotskiBoard manifold_2d   (7, 7, "ac.....ac....................................
 KlotskiBoard manifold_3d   (7, 7, "ace....ace.......................................", true );
 KlotskiBoard manifold_4d   (7, 7, "aceg...aceg......................................", true );
 KlotskiBoard triangle      (9, 9, "....a........a.....................................................c........c....", true );
-KlotskiBoard triangle_inv  (9, 9, "....c........c.....................................................a........a....", true );
+KlotskiBoard triangle_inv  (9, 9, "....cc.......c.....................................................a........a....", true );
 KlotskiBoard ring_7x7      (7, 7, "...a......a..........bb..........................", true );
 KlotskiBoard iblock        (7, 7, ".....a.bb...a..................................dd", true );
 KlotskiBoard cube_3d       (5, 5, "caa...aa..aaaaa..a....a.b"           , false);

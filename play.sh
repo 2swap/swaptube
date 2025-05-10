@@ -11,7 +11,7 @@ if [ -n "$ultimate_subdir" ]; then
     file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
 
     if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
-        ffplay "$file_path" > /dev/null 2>&1
+        vlc "$file_path" > /dev/null 2>&1
     else
         echo "play.sh: The output file is either empty or smaller than 1KB."
     fi

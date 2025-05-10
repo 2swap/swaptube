@@ -252,7 +252,7 @@ void part3() {
 
     // Make moves following the shortest path to the position given
     perform_shortest_path(KlotskiBoard(4, 5, "abbcabbcfidde.ghe.jh", false),
-                          "It's called Klotski, and it's quite old.");
+                          "It's called Klotski.");
 
     // Hotswap to a new KlotskiScene "ks2" with only the sun on it.
     CompositeScene cs;
@@ -296,18 +296,18 @@ void part3() {
                             "solved1", "solved2", "solved3",
                             "dizzy1", "dizzy2", "dizzy3"});
     las.state_manager.set({{"loop_length", "3"}});
-    las.stage_macroblock(FileSegment("I showed this one to a coworker before heading home,"), 2);
+    las.stage_macroblock(FileSegment("I showed it to a coworker,"), 2);
     las.render_microblock();
     las.state_manager.set({{"loop_start", "3"}});
     las.render_microblock();
 
     // Looping animation scene - coworker struggling to solve
     las.state_manager.set({{"loop_start", "6"}});
-    las.stage_macroblock(FileSegment("but without telling me, he decided to stay until it was solved."), 1);
+    las.stage_macroblock(FileSegment("I went home, but he refused to leave until he solved it."), 1);
     las.render_microblock();
 
     // Looping animation scene - coworker dizzy, puzzle solved
-    las.stage_macroblock(FileSegment("He told me he finally got it... around 11:00 PM."), 2);
+    las.stage_macroblock(FileSegment("He finally got it... around 11:00 PM."), 2);
     las.state_manager.set({{"loop_start", "9"}});
     las.render_microblock();
     las.state_manager.set({{"loop_start", "12"}});
@@ -328,7 +328,7 @@ void part4() {
     cs.remove_subscene("ks");
 
     // Animate big piece going under small piece.
-    cs.stage_macroblock(FileSegment("His conjecture was that the hardest part of the puzzle was moving the big piece underneath this horizontal block."), 6);
+    cs.stage_macroblock(FileSegment("He thought the hardest part was moving the big piece underneath this horizontal bar."), 6);
     ks_bd_ptr->stage_move({'b', 1, 0});
     cs.render_microblock();
     ks_bd_ptr->stage_move({'d', -1, 0});
@@ -345,11 +345,12 @@ void part4() {
     // Fade ks back in from ks_bd.
     cs.fade_out_all_subscenes();
     cs.add_scene_fade_in(ks_ptr, "ks", 0.5, 0.5);
-    cs.stage_macroblock(FileSegment("I still haven't even bothered solving it myself..."), 1);
+    cs.stage_macroblock(FileSegment("I still haven't bothered solving it myself..."), 1);
     cs.render_microblock();
 
     // Start to grow a graph (a hundred nodes or so) in the background
     cs.stage_macroblock(FileSegment("I was more interested in seeing what it looks like under the hood."), 100);
+    cs.fade_out_subscene("ks");
     Graph bg_graph;
     bg_graph.add_to_stack(new KlotskiBoard(sun));
     auto bggs_ptr = make_shared<GraphScene>(&bg_graph);
@@ -359,6 +360,9 @@ void part4() {
         bg_graph.expand_once();
         cs.render_microblock();
     }
+    cs.stage_macroblock(FileSegment("Is getting the box under the bar actually the hardest part?"), 1);
+    cs.stage_macroblock(FileSegment("What makes it so hard?"), 1);
+    cs.stage_macroblock(FileSegment("The object defined by this puzzle- what is its _form_?"), 1);
 }
 
 void showcase_graph(const KlotskiBoard& kb, const string& script) {
@@ -494,7 +498,7 @@ void part5() {
     cs.remove_subscene("ks3d");
     cs.remove_subscene("gs3d");
 
-    cs.stage_macroblock(FileSegment("and with 4 degrees of freedom, the graph naturally extends to a 4-d structure!"), 1);
+    cs.stage_macroblock(FileSegment("and with 4 degrees of freedom, the graph naturally extends to a hypercube!"), 1);
     cs.render_microblock();
 
     // Bring back 2D without recreating it
@@ -510,11 +514,12 @@ void part5() {
     cs.state_manager.macroblock_transition({{"ks2d.x",".25"},{"ks2d.y",".15"}});
     cs.state_manager.macroblock_transition({{"gs2d.x",".25"},{"gs2d.y",".75"}});
     gs2d->state_manager.macroblock_transition({{"w",".5"},{"h",".5"}});
+    ks2d->state_manager.macroblock_transition({{"w",".5"},{"h",".5"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment("and put the blocks opposing each other,"), 1);
     auto ksr7 = make_shared<KlotskiScene>(ring_7x7);
-    ksr7->state_manager.set(board_width_height);
+    ksr7->state_manager.macroblock_transition({{"w",".5"},{"h",".5"}});
     cs.add_scene_fade_in(ksr7, "ksr7");
     cs.state_manager.set({{"ksr7.x",".75"},{"ksr7.y",".15"}});
     Graph gr7;
@@ -574,18 +579,12 @@ void part5() {
     // Mirror-triangle graph
     cs.stage_macroblock(SilenceSegment(2), 1);
     kstri->stage_move({'c', 0, -4});
-    gst->next_hash = 0;
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(2), get_graph_size(triangle_inv));
-    Graph gtri;
-    gtri.add_to_stack(new KlotskiBoard(triangle_inv));
-    auto gstri = make_shared<GraphScene>(&gtri);
-    gstri->next_hash = kstri->copy_staged_board().get_hash();
-    gstri->state_manager.set(default_graph_state);
-    cs.add_scene(gstri, "gstri");
-    cs.state_manager.macroblock_transition({{"gstri.opacity","0.3"}});
+    grt.add_to_stack(new KlotskiBoard(triangle_inv));
+    gst->next_hash = kstri->copy_staged_board().get_hash();
     while(cs.microblocks_remaining()){
-        gtri.expand_once();
+        gst.expand_once();
         cs.render_microblock();
     }
 
@@ -597,6 +596,17 @@ void part5() {
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 1);
+    gst->state_manager.set({{"physics_multiplier","1"}});
+    for(int i = 0; i < 5; i++) {
+        string s = i*'.' + "....cx.......c........a........a...." + (5-i)*'.';
+        KlotskiBoard a(9, 9, s.replace('x', '.'), true );
+        KlotskiBoard b(9, 9, s.replace('x', 'c'), true );
+        gst.add_directed_edge(a, b);
+        gst.add_directed_edge(b, a);
+        cs.render_microblock();
+    }
+    kstri->stage_move({'c', 0, 4});
+    gst->next_hash = kstri->copy_staged_board().get_hash();
     cs.render_microblock();
 
     // 3-intersecting blocks example
@@ -605,7 +615,7 @@ void part5() {
     cs.render_microblock();
     cs.remove_all_subscenes();
 
-    cs.stage_macroblock(FileSegment("3 intersecting pieces still form a cube, there are just some excavated areas."), get_graph_size(iblock));
+    cs.stage_macroblock(FileSegment("3 intersecting pieces still form a cube, there's just some excavated areas."), get_graph_size(iblock));
     auto ks3rb = make_shared<KlotskiScene>(iblock);
     ks3rb->state_manager.set(board_width_height);
     cs.add_scene(ks3rb, "ks3rb");
@@ -629,7 +639,6 @@ void part5() {
 }
 
 void part6(int n) {
-    FOR_REAL = false;
     CompositeScene cs;
 
     KlotskiBoard use = gpt2;
@@ -686,12 +695,10 @@ void part6(int n) {
         cs.render_microblock();
     }
 
-    FOR_REAL = true;
     // Zoom in by shrinking dist
     gs_apk->state_manager.macroblock_transition({{"d","1"}});
     cs.stage_macroblock(FileSegment("the local behavior is quite nicely patterned as well."), 1);
     cs.render_microblock();
-    return;
 
     cs.stage_macroblock(FileSegment("It's a cute little local euclidean manifold with two degrees of freedom."), 1);
     cs.render_microblock();
@@ -783,21 +790,14 @@ void showcase_all_graphs(){
 }
 
 void render_video() {
+    //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
-    //part1();
-    //part2();
-    //part3();
-    //part4();
-    //part5();
+    part1();
+    part2();
+    part3();
+    part4();
+    part5();
     part6(1);
-    part6(2);
-    part6(3);
-    part6(4);
-    part6(5);
-    part6(6);
-    part6(7);
-    part6(8);
-    part6(9);
     //part7();
     //part8();
 }
