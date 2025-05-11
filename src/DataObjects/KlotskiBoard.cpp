@@ -200,7 +200,8 @@ KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true )
 KlotskiBoard sun           (4, 5, "abbcabbc.dd.efgheijh"                , false);
 
 //other
-KlotskiBoard apk           (4, 4, "abccefii.gii.ghh"                    , false);
+//KlotskiBoard apk           (4, 4, "abccefii.gii.ghh"                    , false);
+KlotskiBoard apk           (4, 4, "cc.agiibgiiefhh."                    , false);
 KlotskiBoard mathgames_12_13_04(4, 4, "..a.bbaa.cd..cdd"                    , false);
 KlotskiBoard euler766_easy (4, 3, "aab.acd.efgh"                        , false);
 

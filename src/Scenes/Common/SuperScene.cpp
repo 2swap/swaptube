@@ -15,8 +15,26 @@ public:
 
     void fade_out_all_subscenes(bool micro = true) {
         for (auto& kv : subscenes) {
+            fade_out_subscene(kv.first, micro);
+        }
+    }
+
+    void fade_out_subscene(const string& name, bool micro = true) {
+        auto it = subscenes.find(name);
+        if(it != subscenes.end()){
             unordered_map<string, string> map = {
-                {kv.first + ".opacity", "0"}
+                {name + ".opacity", "0"}
+            };
+            if(micro) state_manager.microblock_transition(map);
+            else      state_manager.macroblock_transition(map);
+        }
+    }
+
+    void fade_in_subscene(const string& name, bool micro = true) {
+        auto it = subscenes.find(name);
+        if(it != subscenes.end()){
+            unordered_map<string, string> map = {
+                {name + ".opacity", "1"}
             };
             if(micro) state_manager.microblock_transition(map);
             else      state_manager.macroblock_transition(map);

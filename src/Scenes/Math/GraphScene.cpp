@@ -6,7 +6,7 @@
 #include "../../DataObjects/Graph.cpp"
 
 double age_to_size(double x){
-    return ((3*x - 1) * exp(-.5*x)) + 2;
+    return ((3*x - 1) * exp(-.5*x)) + 1;
 }
 
 vector<int> tones = {0,4,7};
@@ -73,7 +73,7 @@ public:
             else if(!next_found) pos_to_render = curr_pos;
             else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
             opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
-            add_point(Point(pos_to_render, 0xffff0000, opa, 4*opa));
+            add_point(Point(pos_to_render, 0xffff0000, opa, 3*opa));
         }
 
         // automagical camera distancing
