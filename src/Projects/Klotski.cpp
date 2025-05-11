@@ -350,7 +350,6 @@ void part4() {
 
     // Start to grow a graph (a hundred nodes or so) in the background
     cs.stage_macroblock(FileSegment("I was more interested in seeing what it looks like under the hood."), 100);
-    cs.fade_out_subscene("ks");
     Graph bg_graph;
     bg_graph.add_to_stack(new KlotskiBoard(sun));
     auto bggs_ptr = make_shared<GraphScene>(&bg_graph);
@@ -361,8 +360,12 @@ void part4() {
         cs.render_microblock();
     }
     cs.stage_macroblock(FileSegment("Is getting the box under the bar actually the hardest part?"), 1);
+    cs.state_manager.microblock_transition({{"ks.opacity", "0"}});
+    cs.render_microblock();
     cs.stage_macroblock(FileSegment("What makes it so hard?"), 1);
+    cs.render_microblock();
     cs.stage_macroblock(FileSegment("The object defined by this puzzle- what is its _form_?"), 1);
+    cs.render_microblock();
 }
 
 void showcase_graph(const KlotskiBoard& kb, const string& script) {
@@ -474,6 +477,7 @@ void part5() {
     cs.state_manager.macroblock_transition({{"ks3d.x",".15"},{"ks3d.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     cs.state_manager.macroblock_transition({{"gs3d.x",".6"},{"gs3d.y",".5"}});
     cs.render_microblock();
+    gs2d->next_hash = 0;
 
     // Show it off a sec
     cs.stage_macroblock(FileSegment("Three blocks make for a 3d grid,"), 1);
@@ -511,7 +515,7 @@ void part5() {
 
     // Move 2D to left, show ring_big on right
     cs.stage_macroblock(FileSegment("If we take our two-block puzzle,"), 1);
-    cs.state_manager.macroblock_transition({{"ks2d.x",".25"},{"ks2d.y",".15"}});
+    cs.state_manager.macroblock_transition({{"ks2d.x",".25"},{"ks2d.y",".25"}});
     cs.state_manager.macroblock_transition({{"gs2d.x",".25"},{"gs2d.y",".75"}});
     gs2d->state_manager.macroblock_transition({{"w",".5"},{"h",".5"}});
     ks2d->state_manager.macroblock_transition({{"w",".5"},{"h",".5"}});
@@ -521,7 +525,7 @@ void part5() {
     auto ksr7 = make_shared<KlotskiScene>(ring_7x7);
     ksr7->state_manager.macroblock_transition({{"w",".5"},{"h",".5"}});
     cs.add_scene_fade_in(ksr7, "ksr7");
-    cs.state_manager.set({{"ksr7.x",".75"},{"ksr7.y",".15"}});
+    cs.state_manager.set({{"ksr7.x",".75"},{"ksr7.y",".25"}});
     Graph gr7;
     gr7.add_to_stack(new KlotskiBoard(ring_7x7));
     gr7.expand_completely();
@@ -558,8 +562,7 @@ void part5() {
     cs.render_microblock();
 
     // Move top then bottom
-    //cs.stage_macroblock(FileSegment("Wherever the top block is, that serves as a bound for the bottom block."), 35);
-    cs.stage_macroblock(SilenceSegment(10), 35);
+    cs.stage_macroblock(FileSegment("Wherever the top block is, that serves as a bound for the bottom block."), 35);
     for(int j = 0; j < 5; j++) {
         for(int i=0; i<5-j; ++i){
             kstri->stage_move({'c', 0, -1});
@@ -584,27 +587,29 @@ void part5() {
     grt.add_to_stack(new KlotskiBoard(triangle_inv));
     gst->next_hash = kstri->copy_staged_board().get_hash();
     while(cs.microblocks_remaining()){
-        gst.expand_once();
+        grt.expand_once();
         cs.render_microblock();
     }
 
     // Illegal move & mirror highlight
     cs.stage_macroblock(FileSegment("With a graph like this, we implicitly create an imaginary counterpart structure,"), 1);
-    // unhighlight original, highlight mirror
-    cs.state_manager.macroblock_transition({{"gstri.opacity","1"}});
-    cs.state_manager.macroblock_transition({{"gst.opacity","0.3"}});
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 1);
+    cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 5);
     gst->state_manager.set({{"physics_multiplier","1"}});
     for(int i = 0; i < 5; i++) {
-        string s = i*'.' + "....cx.......c........a........a...." + (5-i)*'.';
-        KlotskiBoard a(9, 9, s.replace('x', '.'), true );
-        KlotskiBoard b(9, 9, s.replace('x', 'c'), true );
-        gst.add_directed_edge(a, b);
-        gst.add_directed_edge(b, a);
+        const std::string s = std::string(9*i, '.') + "....cx.......c........a........a...." + std::string((5 - i)*9, '.');
+        std::string s_dot = s;
+        std::replace(s_dot.begin(), s_dot.end(), 'x', '.');
+        std::string s_c = s;
+        std::replace(s_c.begin(), s_c.end(), 'x', 'c');
+        KlotskiBoard a(9, 9, s_dot, true);
+        KlotskiBoard b(9, 9, s_c, true);
+        grt.add_directed_edge(a.get_hash(), b.get_hash());
+        grt.add_directed_edge(b.get_hash(), a.get_hash());
         cs.render_microblock();
     }
+    cs.stage_macroblock(SilenceSegment(1), 1);
     kstri->stage_move({'c', 0, 4});
     gst->next_hash = kstri->copy_staged_board().get_hash();
     cs.render_microblock();
@@ -782,11 +787,11 @@ void part8() {
 }
 
 void showcase_all_graphs(){
-    /*for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
+    for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
         for (const KlotskiBoard& kb : kb_set) {
             showcase_graph(kb, "aaaa");
         }
-    }*/
+    }
 }
 
 void render_video() {
@@ -798,6 +803,6 @@ void render_video() {
     part4();
     part5();
     part6(1);
-    //part7();
-    //part8();
+    part7();
+    part8();
 }

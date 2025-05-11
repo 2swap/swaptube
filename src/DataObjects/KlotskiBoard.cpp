@@ -14,7 +14,9 @@ bool in_bounds(int min, int val, int max) {
 }
 
 KlotskiBoard::KlotskiBoard(int w, int h, const string& rep, const bool rush)
-    : GenericBoard(rep), h(h), w(w), rushhour(rush) { }
+    : GenericBoard(rep), h(h), w(w), rushhour(rush) {
+    if(rep.size() != w*h) throw runtime_error("Rushhour board: invalid string length");
+}
 
 KlotskiBoard::~KlotskiBoard() { }
 
