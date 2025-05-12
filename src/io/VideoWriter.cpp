@@ -4,6 +4,7 @@
 #include <regex>
 #include <cassert>
 #include "DebugPlot.h"
+#include "../misc/pixels.h"
 extern "C"
 {
     #include <libavcodec/avcodec.h>
@@ -254,7 +255,7 @@ public:
         encode_and_write_frame(yuvpic);
         video_seconds_so_far += 1./VIDEO_FRAMERATE;
     }
-    void cleanup() {
+    ~VideoWriter() {
         // Writing the delayed video frames
         while(encode_and_write_frame(NULL));
 
@@ -271,5 +272,3 @@ public:
         avformat_free_context(fc);
     }
 };
-
-VideoWriter VIDEO_WRITER(FORMAT_CONTEXT);

@@ -13,28 +13,17 @@ public:
         }
     }
 
-    void fade_out_all_subscenes(bool micro = true) {
+    void fade_all_subscenes(double opacity, bool micro = true) {
         for (auto& kv : subscenes) {
-            fade_out_subscene(kv.first, micro);
+            fade_subscene(kv.first, opacity, micro);
         }
     }
 
-    void fade_out_subscene(const string& name, bool micro = true) {
+    void fade_subscene(const string& name, double opacity, bool micro = true) {
         auto it = subscenes.find(name);
         if(it != subscenes.end()){
             unordered_map<string, string> map = {
-                {name + ".opacity", "0"}
-            };
-            if(micro) state_manager.microblock_transition(map);
-            else      state_manager.macroblock_transition(map);
-        }
-    }
-
-    void fade_in_subscene(const string& name, bool micro = true) {
-        auto it = subscenes.find(name);
-        if(it != subscenes.end()){
-            unordered_map<string, string> map = {
-                {name + ".opacity", "1"}
+                {name + ".opacity", to_string(opacity)}
             };
             if(micro) state_manager.microblock_transition(map);
             else      state_manager.macroblock_transition(map);

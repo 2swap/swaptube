@@ -79,8 +79,8 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 
     if [ $? -ne 0 ]; then
         echo "go.sh: Execution failed in runtime."
-        exit 1
     fi
+    exit 0
 )
 
 SUCCESS=$?

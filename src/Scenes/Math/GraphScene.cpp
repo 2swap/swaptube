@@ -26,7 +26,7 @@ void node_pop(double subdiv, bool added_not_deleted) {
         right.push_back(val);
     }
     double time = get_global_state("t");
-    WRITER.add_sfx(left, right, (time+subdiv/VIDEO_FRAMERATE)*44100);
+    AUDIO_WRITER.add_sfx(left, right, (time+subdiv/VIDEO_FRAMERATE)*44100);
 }
 
 class GraphScene : public ThreeDimensionScene {
@@ -40,6 +40,7 @@ public:
             {"decay", ".95"},
             {"physics_multiplier", "1"},
             {"centering_strength", "1"},
+            {"z_dilation", ".98"},
         });
     }
 
@@ -94,6 +95,7 @@ public:
         s.insert("decay");
         s.insert("microblock_fraction");
         s.insert("centering_strength");
+        s.insert("z_dilation");
         return s;
     }
 
@@ -104,7 +106,7 @@ public:
             for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/abs(diff), diff>0);
         }
         last_node_count = graph->size();
-        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"]);
+        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["z_dilation"]);
         graph_to_3d();
         clear_surfaces();
         update_surfaces();

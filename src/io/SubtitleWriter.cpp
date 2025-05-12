@@ -95,5 +95,3 @@ public:
         srt_file << endl << text << endl << endl;
     }
 };
-
-SubtitleWriter SUBTITLE_WRITER;

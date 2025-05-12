@@ -7,7 +7,6 @@
 #include <vector>
 #include <filesystem>
 #include <sys/stat.h>
-#include "AudioSegment.cpp"
 #include "DebugPlot.h"
 
 extern "C"
@@ -22,7 +21,6 @@ using namespace std;
 
 class AudioWriter {
 private:
-    ofstream shtooka_file;
     AVCodecContext *audioOutputCodecContext = nullptr;
     AVStream *audioStream = nullptr;
     AVFormatContext *fc = nullptr;
@@ -66,11 +64,6 @@ private:
 public:
     double audio_seconds_so_far = 0;
     AudioWriter(AVFormatContext *fc_) : fc(fc_), sample_buffer(2), sfx_buffer(2) {
-        shtooka_file.open(PATH_MANAGER.record_list_path);
-        if (!shtooka_file.is_open()) {
-            throw runtime_error("Error opening recorder list: " + PATH_MANAGER.record_list_path);
-        }
-
         // Set up codec for output
         const AVCodec* audioOutputCodec = avcodec_find_encoder(AV_CODEC_ID_AAC);
         if (!audioOutputCodec) {
@@ -358,24 +351,11 @@ public:
         sample_buffer_offset = sample_buffer[0].size();
     }
 
-    void add_shtooka_entry(const string& filename, const string& text) {
-        if (!shtooka_file.is_open()) {
-            throw runtime_error("Shtooka file is not open. Cannot add entry.");
-        }
-
-        shtooka_file << filename << "\t" << text << "\n";
-    }
-    void cleanup() {
+    ~AudioWriter() {
         process_frame_from_buffer(true);
         avcodec_send_frame(audioOutputCodecContext, NULL);
         encode_and_write_audio();
         
         avcodec_free_context(&audioOutputCodecContext);
-        
-        if (shtooka_file.is_open()) {
-            shtooka_file.close();
-        }
     }
 };
-
-AudioWriter AUDIO_WRITER(FORMAT_CONTEXT);

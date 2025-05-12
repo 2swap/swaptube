@@ -21,30 +21,31 @@ string sanitize_filename(const string& text) {
 class AudioSegment {
 public:
     virtual ~AudioSegment() = default;
-    double invoke_get_macroblock_length_seconds() {
+    double invoke_get_macroblock_length_seconds() const {
         AUDIO_WRITER.audio_seconds_so_far += write_and_get_duration_seconds();
         return AUDIO_WRITER.audio_seconds_so_far - VIDEO_WRITER.video_seconds_so_far;
     }
+    virtual void write_shtooka() const {}
 private:
-    virtual double write_and_get_duration_seconds() = 0;
+    virtual double write_and_get_duration_seconds() const = 0;
 };
 
 class SilenceSegment : public AudioSegment {
 public:
-    SilenceSegment(double duration_seconds)
+    SilenceSegment(const double duration_seconds)
         : duration_seconds(duration_seconds) {
         if (duration_seconds <= 0) {
             throw invalid_argument("Duration must be greater than 0");
         }
     }
 
-    double invoke() override {
+    double write_and_get_duration_seconds() const override {
         AUDIO_WRITER.add_silence(duration_seconds);
-        return duration_seconds();
+        return duration_seconds;
     }
 
 private:
-    double duration_seconds;
+    const double duration_seconds;
 };
 
 class FileSegment : public AudioSegment {
@@ -52,16 +53,19 @@ public:
     FileSegment(const string& subtitle_text)
         : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
 
-    double invoke() override {
+    double write_and_get_duration_seconds() const override {
         double duration_seconds = AUDIO_WRITER.add_audio_from_file(audio_filename);
         SUBTITLE_WRITER.add_subtitle(duration_seconds, subtitle_text);
-        AUDIO_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
         return duration_seconds;
     }
 
+    void write_shtooka() const override {
+        SHTOOKA_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
+    }
+
 private:
-    string subtitle_text;
-    string audio_filename;
+    const string subtitle_text;
+    const string audio_filename;
 };
 
 class GeneratedSegment : public AudioSegment {
@@ -73,13 +77,13 @@ public:
         }
     }
 
-    double invoke() override {
+    double write_and_get_duration_seconds() const override {
         double duration_seconds = AUDIO_WRITER.add_generated_audio(leftBuffer, rightBuffer);
         SUBTITLE_WRITER.add_subtitle(duration_seconds, "[Computer Generated Sound]");
         return duration_seconds;
     }
 
 private:
-    vector<float> leftBuffer;
-    vector<float> rightBuffer;
+    const vector<float> leftBuffer;
+    const vector<float> rightBuffer;
 };

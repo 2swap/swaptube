@@ -418,7 +418,7 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(int iterations, float repel, float attract, float decay, float centering_strength){
+    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation) {
         vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) {
@@ -429,12 +429,12 @@ public:
             for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
             cout << ".";
             fflush(stdout);
-            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength);
+            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, z_dilation);
         }
         mark_updated();
     }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, float repel, float attract, float decay, float centering_strength) {
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation) {
         int s = node_vector.size();
         glm::vec4 com = center_of_mass();
 
@@ -494,7 +494,7 @@ public:
             node->position += node->velocity - com*centering_strength;
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
-            node->position.z *= 0.98;
+            node->position.z *= z_dilation;
 
             // Dimensional constraints
             if (dimensions < 3) {
