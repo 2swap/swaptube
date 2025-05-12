@@ -27,14 +27,27 @@ int main() {
         throw runtime_error("Video framerate must be divisible by audio sample rate.");
     }
 
+    // Setup Output Format Context
+    AVFormatContext* fc = nullptr;
+    int ret = avformat_alloc_output_context2(&fc, NULL, NULL, PATH_MANAGER.video_output.c_str());
+    if(ret<0) throw runtime_error("Failed to allocate AVFormatContext: " + to_string(ret));
+    if(!fc) throw runtime_error("AVFormatContext was null upon creation!");
+
+    // Main Render Loop
     Timer timer;
     signal(SIGINT, signal_handler);
     try {
         render_video();
-    }
-    catch(std::exception& e) {
+    } catch(std::exception& e) {
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
+        cout << "Last Shtooka Entry: " << WRITER.get_last_shtooka() << endl;
     }
+
+    // We babysit these cleanup functions instead of delegating to destructors because
+    // the shared fc resource complicates things and ordering of cleanup is crucial.
+    AUDIO_WRITER.cleanup();
+    VIDEO_WRITER.cleanup();
+
     return 0;
 }

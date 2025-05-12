@@ -17,9 +17,16 @@ string sanitize_filename(const string& text) {
     return sanitized + ".aac";
 }
 
+// TODO should this class just be renamed to Macroblock?
 class AudioSegment {
 public:
     virtual ~AudioSegment() = default;
+    double invoke_get_macroblock_length_seconds() {
+        AUDIO_WRITER.audio_seconds_so_far += write_and_get_duration_seconds();
+        return AUDIO_WRITER.audio_seconds_so_far - VIDEO_WRITER.video_seconds_so_far;
+    }
+private:
+    virtual double write_and_get_duration_seconds() = 0;
 };
 
 class SilenceSegment : public AudioSegment {
@@ -31,8 +38,9 @@ public:
         }
     }
 
-    double get_duration_seconds() const {
-        return duration_seconds;
+    double invoke() override {
+        AUDIO_WRITER.add_silence(duration_seconds);
+        return duration_seconds();
     }
 
 private:
@@ -44,12 +52,11 @@ public:
     FileSegment(const string& subtitle_text)
         : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
 
-    string get_audio_filename() const {
-        return audio_filename;
-    }
-
-    string get_subtitle_text() const {
-        return subtitle_text;
+    double invoke() override {
+        double duration_seconds = AUDIO_WRITER.add_audio_from_file(audio_filename);
+        SUBTITLE_WRITER.add_subtitle(duration_seconds, subtitle_text);
+        AUDIO_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
+        return duration_seconds;
     }
 
 private:
@@ -66,12 +73,10 @@ public:
         }
     }
 
-    const vector<float>& get_left_buffer() const {
-        return leftBuffer;
-    }
-
-    const vector<float>& get_right_buffer() const {
-        return rightBuffer;
+    double invoke() override {
+        double duration_seconds = AUDIO_WRITER.add_generated_audio(leftBuffer, rightBuffer);
+        SUBTITLE_WRITER.add_subtitle(duration_seconds, "[Computer Generated Sound]");
+        return duration_seconds;
     }
 
 private:

@@ -96,3 +96,4 @@ public:
     }
 };
 
+SubtitleWriter SUBTITLE_WRITER;

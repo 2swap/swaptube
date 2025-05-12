@@ -70,18 +70,15 @@ void part1(){
     cs.state_manager.microblock_transition({{"ks.x",".5"},{"ks.y",".5"}});
     cs.state_manager.microblock_transition({{"ksb.x",".5"},{"ksb.y",".5"}});
     cs.fade_in_subscene("gs");
-    cs.fade_in_subscene("ks");
     ks_ptr->state_manager.microblock_transition({{"w","1"},{"h","1"}});
     ksb_ptr->state_manager.microblock_transition({{"w","1"},{"h","1"}});
+    cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("It wants to free this block from the hole on the right side."), 4);
+    cs.stage_macroblock(FileSegment("It wants to free this block from the hole on the right side."), 3);
     cs.render_microblock();
     ksb_ptr->highlight_char = 'b';
     cs.render_microblock();
-    int shift_dist = 4;
-    ksb_ptr->stage_move({'b', shift_dist, 0});
-    cs.render_microblock();
-    ksb_ptr->stage_move({'b', -shift_dist, 0});
+    ksb_ptr->stage_move({'b', 12, 0});
     cs.render_microblock();
 
     cs.fade_out_subscene("ksb");
@@ -146,10 +143,10 @@ void part1(){
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceSegment(1.5), 2);
-    ks_ptr->stage_move({'c', 0, 1});
+    ks_ptr->stage_move({'c', 0, -1});
     gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
     cs.render_microblock();
-    ks_ptr->stage_move({'c', 0, -1});
+    ks_ptr->stage_move({'c', 0, 1});
     gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
     cs.render_microblock();
 
@@ -204,7 +201,7 @@ void part2() {
     Graph g3d;
     {
         // Create new GraphScene for manifold_3d on the right side of the screen and fade it in while expanding the graph completely 
-        cs.stage_macroblock(FileSegment("or a three-dimensional crystal lattice!"), get_graph_size(manifold_3d));
+        cs.stage_macroblock(FileSegment("or a 3d crystal lattice!"), get_graph_size(manifold_3d));
         g3d.add_to_stack(new KlotskiBoard(manifold_3d));
         auto gs3d_ptr = make_shared<GraphScene>(&g3d, .5, 1);
         gs3d_ptr->state_manager.set(default_graph_state);
@@ -223,7 +220,7 @@ void part2() {
 
     {
         // Fade in and expand a GraphScene for intermediate again, but this time override "physics_multiplier" to be zero so the graph structure is indiscernable.
-        cs.stage_macroblock(FileSegment("Maybe it's an incomprehensibly dense mesh of interconnected nodes with no grand structure."), 100);
+        cs.stage_macroblock(FileSegment("Maybe it's a dense mesh of interconnected nodes with no grand structure."), 100);
         Graph g_int;
         g_int.add_to_stack(new KlotskiBoard(intermediate));
         auto gs_int_ptr = make_shared<GraphScene>(&g_int);
@@ -272,7 +269,7 @@ void part3() {
     cs.render_microblock();
 
     // Make moves according to the shortest path to the position given
-    perform_shortest_path(KlotskiBoard(4, 5, "abbcabbc.gehj.ehddif", false), "I fell down this rabbit hole when I was shown this particular slidy puzzle.");
+    perform_shortest_path(KlotskiBoard(4, 5, "abbcabbc.gehj.ehddif", false), "I fell down this rabbit hole when I was shown this puzzle.");
 
     // Make moves following the shortest path to the position given
     perform_shortest_path(KlotskiBoard(4, 5, "abbcabbcfidde.ghe.jh", false), "It's called Klotski.");
@@ -282,6 +279,7 @@ void part3() {
     // Show piece 'b' getting moved 3 units downward and back.
     cs.add_scene(ks2_ptr, "ks2");
     cs.stage_macroblock(FileSegment("The goal is to get this big piece out of the bottom."), 2);
+    cs.fade_out_subscene("ks");
     cs.render_microblock();
     ks2_ptr->stage_move({'b', 0, 8});
     cs.render_microblock();
@@ -650,7 +648,7 @@ void part5() {
     g3rb.add_to_stack(new KlotskiBoard(iblock));
     auto gs3rb = make_shared<GraphScene>(&g3rb);
     gs3rb->state_manager.set(default_graph_state);
-    cs.add_scene(gs3rb, "gs3rb");
+    cs.add_scene(gs3rb, "gs3rb", 0.6, 0.5);
     while(cs.microblocks_remaining()){
         g3rb.expand_once();
         cs.render_microblock();
@@ -733,10 +731,10 @@ void part6() {
 
     // side‐by‐side: manifold_1d, rushhour_advanced, full_15_puzzle
     cs.stage_macroblock(FileSegment("So, somewhere in between a full board and an empty one, we get complex structures of tangled intersections between pieces."), 1);
-    cs.state_manager.macroblock_transition({
-        {"ks1d.x","0"}, {"ks1d.w",".3"},
-        {"ks15.x",".35"}, {"ks15.w",".3"},
-        {"ks_apk.x",".7"}, {"ks_apk.w",".3"}});
+    ks1d->state_manager.macroblock_transition({{"w",".3"}});
+    ks15->state_manager.macroblock_transition({{"w",".3"}});
+    ks_apk->state_manager.macroblock_transition({{"w",".3"}});
+    cs.state_manager.macroblock_transition({{"ks1d.x","0"}, {"ks15.x",".35"}, {"ks_apk.x",".7"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment(""), 1);
@@ -807,8 +805,6 @@ void showcase_all_graphs(){
 void render_video() {
     //FOR_REAL = false;
     PRINT_TO_TERMINAL = false;
-    part6();
-    return;
     part1();
     part2();
     part3();

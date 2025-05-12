@@ -64,6 +64,7 @@ private:
     }
 
 public:
+    double audio_seconds_so_far = 0;
     AudioWriter(AVFormatContext *fc_) : fc(fc_), sample_buffer(2), sfx_buffer(2) {
         shtooka_file.open(PATH_MANAGER.record_list_path);
         if (!shtooka_file.is_open()) {
@@ -123,12 +124,11 @@ public:
         int sample_copy_end = sample_copy_start + numSamples;
 
         if(sample_copy_start < 0)
-            throw runtime_error("Sample copy start was negative: " + to_string(sample_copy_start) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset);
+            throw runtime_error("Sample copy start was negative: " + to_string(sample_copy_start) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset));
 
         // Pointers to the input buffers for each channel
         const vector<float>* input_buffers[2] = {&left_buffer, &right_buffer};
 
-        cout << numSamples << " " << sample_copy_start << " " << sample_copy_end << " " << endl;
         // Ensure sfx_buffer has enough capacity and add samples
         for (int ch = 0; ch < 2; ++ch) {
             // Resize if necessary to accommodate the samples
@@ -377,3 +377,5 @@ public:
         }
     }
 };
+
+AudioWriter AUDIO_WRITER(FORMAT_CONTEXT);

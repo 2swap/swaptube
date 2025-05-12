@@ -79,9 +79,10 @@ public:
 
         total_microblocks = remaining_microblocks = expected_microblocks;
         cout << "Macroblock staged to last " << expected_microblocks << " microblock(s)." << endl;
-        WRITER.add_shtooka(audio);
+        SHTOOKA_WRITER.add_shtooka(audio);
         if(FOR_REAL) {
-            total_macroblock_frames = remaining_macroblock_frames = WRITER.add_audio_segment(audio) * VIDEO_FRAMERATE;
+            double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds;
+            total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * VIDEO_FRAMERATE;
         }
     }
 
@@ -140,7 +141,7 @@ private:
 
         if(FOR_REAL) {
             state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
-            WRITER.set_time(global_state["frame_number"] / VIDEO_FRAMERATE);
+            SUBTITLE_WRITER.set_substime(global_state["frame_number"] / VIDEO_FRAMERATE);
             Pixels* p = nullptr;
             query(p);
             if(PRINT_TO_TERMINAL && (int(global_state["frame_number"]) % 5 == 0)) p->print_to_terminal();
@@ -151,7 +152,7 @@ private:
                 ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
                 pix_to_png(p->naive_scale_down(4), "frames/frame_"+stream.str());
             }
-            WRITER.add_frame(*p);
+            VIDEO_WRITER.add_frame(*p);
 
             auto end_time = chrono::high_resolution_clock::now(); // End timing
             chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds

@@ -143,6 +143,7 @@ private:
     }
 
 public:
+    double video_seconds_so_far = 0;
     VideoWriter(AVFormatContext *fc_) : fc(fc_) {
         av_log_set_level(AV_LOG_DEBUG);
 
@@ -251,6 +252,7 @@ public:
         outframe++;
 
         encode_and_write_frame(yuvpic);
+        video_seconds_so_far += 1./VIDEO_FRAMERATE;
     }
     void cleanup() {
         // Writing the delayed video frames
@@ -269,3 +271,5 @@ public:
         avformat_free_context(fc);
     }
 };
+
+VideoWriter VIDEO_WRITER(FORMAT_CONTEXT);
