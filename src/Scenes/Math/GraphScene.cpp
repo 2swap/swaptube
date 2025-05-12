@@ -25,7 +25,8 @@ void node_pop(double subdiv, bool added_not_deleted) {
          left.push_back(val);
         right.push_back(val);
     }
-    WRITER.add_sfx(left, right, (get_global_state("t")+subdiv/VIDEO_FRAMERATE)*44100);
+    double time = get_global_state("t");
+    WRITER.add_sfx(left, right, (time+subdiv/VIDEO_FRAMERATE)*44100);
 }
 
 class GraphScene : public ThreeDimensionScene {
@@ -100,7 +101,7 @@ public:
     void change_data() override {
         if(last_node_count > -1){
             int diff = graph->size() - last_node_count;
-            for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/diff, diff>0);
+            for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/abs(diff), diff>0);
         }
         last_node_count = graph->size();
         graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"]);
@@ -132,7 +133,6 @@ public:
                 it->second.first.opacity = node.opacity;
                 it->second.first.center = glm::vec3(node.position.x, node.position.y, node.position.z);
             } else {
-                if(rep== "...fff.....cbba..cdda..e..a..e..hhhe") cout << "ADDD" << endl;
                 graph_surface_map.emplace(rep, make_pair(make_surface(node), node.data->make_scene()));
             }
 

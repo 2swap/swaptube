@@ -122,9 +122,13 @@ public:
         int sample_copy_start = t - total_samples_processed + sample_buffer_offset;
         int sample_copy_end = sample_copy_start + numSamples;
 
+        if(sample_copy_start < 0)
+            throw runtime_error("Sample copy start was negative: " + to_string(sample_copy_start) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset);
+
         // Pointers to the input buffers for each channel
         const vector<float>* input_buffers[2] = {&left_buffer, &right_buffer};
 
+        cout << numSamples << " " << sample_copy_start << " " << sample_copy_end << " " << endl;
         // Ensure sfx_buffer has enough capacity and add samples
         for (int ch = 0; ch < 2; ++ch) {
             // Resize if necessary to accommodate the samples

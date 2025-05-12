@@ -707,11 +707,8 @@ void part6() {
 
     cs.stage_macroblock(FileSegment("but also, if we zoom in,"), to_remove.size());
     for(double d : to_remove){
-    cout << "b" << endl;
         g_apk.remove_node(d);
-    cout << "c" << endl;
         cs.render_microblock();
-    cout << "d" << endl;
     }
 
     gs_apk->state_manager.set({{"centering_strength","1"}});
