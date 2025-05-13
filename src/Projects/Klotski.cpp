@@ -803,7 +803,7 @@ void part6() {
     g2d.add_to_stack(new KlotskiBoard(manifold_2d));
     auto gs2d = make_shared<GraphScene>(&g2d);
     gs2d->state_manager.set(default_graph_state);
-    gs2d.expand_completely();
+    g2d.expand_completely();
     ks_apk->state_manager.set({{"w",".3"}, {"h",".5"}});
     ks2d->state_manager.set({{"w",".3"}, {"h",".5"}});
     ks15->state_manager.macroblock_transition({{"w",".3"}, {"h",".5"}});
@@ -825,14 +825,19 @@ void part7() {
     CompositeScene cs;
 
     // intermediate graph overlay
+    cs.stage_macroblock(FileSegment("So now, this is the puzzle we started with."), get_graph_size(intermediate));
+    auto ks_int = make_shared<KlotskiScene>(intermediate);
+    ks_int->state_manager.set(board_width_height);
+    cs.add_scene(ks_int, "ks_int");
     Graph g_int;
     g_int.add_to_stack(new KlotskiBoard(intermediate));
     auto gs_int = make_shared<GraphScene>(&g_int);
     gs_int->state_manager.set(default_graph_state);
     cs.add_scene(gs_int, "gs_int");
-
-    cs.stage_macroblock(FileSegment("So now, this is the puzzle we started with."), 1);
-    cs.render_microblock();
+    while(cs.microblocks_remaining()) {
+        g_int.expand_once();
+        cs.render_microblock();
+    }
 
     // grow five different graphs and overlay
     vector<const KlotskiBoard*> boards = {&weird1, &euler766_easy, &beginner, &diamond};
@@ -884,13 +889,11 @@ void showcase_all_graphs(){
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
-    /*
     part1();
     part2();
     part3();
     part4();
     part5();
-    */
     part6();
     part7();
     part8();
