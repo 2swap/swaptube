@@ -1,8 +1,10 @@
 #include "../Scenes/KlotskiScene.cpp"
 #include "../DataObjects/KlotskiBoard.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
+#include "../Scenes/Common/PauseScene.cpp"
 #include "../Scenes/Math/GraphScene.cpp"
 #include "../Scenes/Media/LoopAnimationScene.cpp"
+#include "../Scenes/Media/LatexScene.cpp"
 
 // Lists of KlotskiBoards
 auto gpt = {gpt2, gpt3, weird1, weird2, weird3};
@@ -140,7 +142,7 @@ void part1(){
     // Turn edge opacity on.
     gs_ptr->state_manager.macroblock_transition({{"lines_opacity","1"}});
     gs_ptr->state_manager.microblock_transition({{"physics_multiplier","5"}});
-    cs.stage_macroblock(FileSegment("We draw an edge connecting their two nodes."), 1);
+    cs.stage_macroblock(FileSegment("We draw an edge connecting the two nodes."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceSegment(1.5), 2);
@@ -286,7 +288,7 @@ void part3() {
     cs.render_microblock();
 
     // Swap back to ks. Transition "dots" state element to 1 and back to 0 to introduce the pins over two microblocks
-    cs.stage_macroblock(FileSegment("This one is slightly different since the intersections don't have pins,"), 3);
+    cs.stage_macroblock(FileSegment("It's slightly different since the intersections don't have pins,"), 3);
     cs.state_manager.microblock_transition({{"ks.opacity","1"},});
     cs.render_microblock();
     ks_ptr->state_manager.microblock_transition({{"dots", "1"}});
@@ -384,7 +386,7 @@ void part4() {
     cs.stage_macroblock(FileSegment("Is getting the box under the bar actually the hardest part?"), 1);
     cs.render_microblock();
     cs.stage_macroblock(FileSegment("The structure defined by this puzzle- what is its _form_?"), 100);
-    cs.fade_subscene("bggs", 0);
+    cs.fade_subscene("bggs", 0, false);
     while(cs.microblocks_remaining()){
         bg_graph.expand_once();
         cs.render_microblock();
@@ -566,13 +568,17 @@ void part5() {
 
     // Overlap invalid region
     cs.stage_macroblock(FileSegment("a section of the 2d structure is no longer valid, representing a state of overlapping pieces."), 1);
+    cs.state_manager.macroblock_transition({{"ks2d.x","-.25"}, {"gs2d.x","-.25"}});
+    cs.state_manager.macroblock_transition({{"gsr.x",".6"}, {"gsr.y",".5"}});
+    gsr->state_manager.macroblock_transition({{"w","1"}, {"h","1"}});
+    cs.state_manager.macroblock_transition({{"ksr7.x",".15"}, {"ksr7.y",to_string(yval)}});
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceSegment(1), 2);
     ksr7->stage_move({'a', 0, 1});
     gsr->next_hash = ksr7->copy_staged_board().get_hash();
     cs.render_microblock();
-    ksr7->stage_move({'b', 0, 2});
+    ksr7->stage_move({'b', 2, 0});
     gsr->next_hash = ksr7->copy_staged_board().get_hash();
     cs.render_microblock();
 
@@ -635,11 +641,12 @@ void part5() {
     }
 
     // Illegal move & mirror highlight
+    gst->state_manager.microblock_transition({{"repel","1"}});
     gst->next_hash = 0;
     cs.stage_macroblock(FileSegment("With a graph like this, we implicitly create an imaginary counterpart structure,"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 5);
+    cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 6);
     gst->state_manager.set({{"physics_multiplier","1"}});
     for(int i = 0; i < 6; i++) {
         const std::string s = std::string(9*i, '.') + "....cx.......c........a........a...." + std::string((5 - i)*9, '.');
@@ -653,6 +660,9 @@ void part5() {
         grt.add_directed_edge(b.get_hash(), a.get_hash());
         cs.render_microblock();
     }
+    cs.stage_macroblock(SilenceSegment(1), 1);
+    gst->next_hash = kstri->copy_board().get_hash();
+    cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(1), 1);
     kstri->stage_move({'c', 0, -7});
     gst->next_hash = kstri->copy_staged_board().get_hash();
@@ -728,6 +738,7 @@ void part6() {
     g_apk.clear_queue();
 
     cs.stage_macroblock(FileSegment("but also, if we zoom in,"), to_remove.size());
+    gs_apk->state_manager.microblock_transition({{"z_dilation", ".98"}});
     for(double d : to_remove){
         g_apk.remove_node(d);
         cs.render_microblock();
@@ -810,7 +821,7 @@ void part6() {
     gs2d->state_manager.macroblock_transition({{"w",".3"}, {"h",".5"}});
     gs_apk->state_manager.macroblock_transition({{"w",".3"}, {"h",".5"}});
     gs_15->state_manager.macroblock_transition({{"w",".3"}, {"h",".5"}});
-    cs.add_scene_fade_in(ks_apk, "ks_apk", .5, .25);
+    cs.add_scene_fade_in(ks_apk, "ks_apk", .5, yval);
     cs.add_scene_fade_in(gs_apk, "gs_apk", .5, .75);
     cs.add_scene_fade_in(gs2d, "gs2d", .1666, .75);
     cs.state_manager.macroblock_transition({{"ks2d.x",".1666"}, {"ks_apk.x",".5"}, {"ks15.x",".8333"}, {"gs_15.x",".8333"}, {"gs_15.y",".75"}});
@@ -825,11 +836,12 @@ void part7() {
     CompositeScene cs;
 
     // intermediate graph overlay
-    cs.stage_macroblock(FileSegment("So now, this is the puzzle we started with."), get_graph_size(intermediate));
+    cs.stage_macroblock(FileSegment("So now, this is the puzzle we started with."), 1/*get_graph_size(intermediate)*/);
     auto ks_int = make_shared<KlotskiScene>(intermediate);
     ks_int->state_manager.set(board_width_height);
-    cs.add_scene(ks_int, "ks_int");
-    Graph g_int;
+    cs.add_scene_fade_in(ks_int, "ks_int");
+    cs.render_microblock();
+    /*Graph g_int;
     g_int.add_to_stack(new KlotskiBoard(intermediate));
     auto gs_int = make_shared<GraphScene>(&g_int);
     gs_int->state_manager.set(default_graph_state);
@@ -837,9 +849,10 @@ void part7() {
     while(cs.microblocks_remaining()) {
         g_int.expand_once();
         cs.render_microblock();
-    }
+    }*/
 
     // grow five different graphs and overlay
+    cs.stage_macroblock(SilenceSegment(.5), 1);
     vector<const KlotskiBoard*> boards = {&weird1, &euler766_easy, &beginner, &diamond};
     vector<string> names = {"w1","eul","beg","dia"};
     for(int i=0;i<boards.size();++i){
@@ -847,18 +860,22 @@ void part7() {
         g->add_to_stack(new KlotskiBoard(*boards[i]));
         auto gs = make_shared<GraphScene>(g);
         gs->state_manager.set(default_graph_state);
-        cs.add_scene(gs, names[i], i*0.2, i*0.2);
-        for(int step=0; step<5; ++step){
-            g->expand_once();
-            cs.render_microblock();
-        }
+        cs.add_scene_fade_in(gs, names[i]);
     }
+    cs.render_microblock();
+
     // question mark
-    cs.stage_macroblock(FileSegment("I'll assure you- it has a very well-defined superstructure."), 1);
+    cs.stage_macroblock(FileSegment("It has a very well-defined superstructure."), 1);
+    shared_ptr<LatexScene> ls = make_shared<LatexScene>("?", 1);
+    cs.add_scene_fade_in(ls, "ls");
     cs.render_microblock();
 
     // pause scene
-    cs.stage_macroblock(FileSegment("Take a moment to think through what it might be. You might be able to guess what shape it takes from the structure of the pieces and their available actions!"), 1);
+    cs.stage_macroblock(FileSegment("Take a moment to think through what it might be. You might be able to guess its form from the arrangement of the pieces!"), 1);
+    shared_ptr<PauseScene> ps = make_shared<PauseScene>();
+    cs.add_scene_fade_in(ps, "ps");
+    cs.render_microblock();
+
     //cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces are more or less latched in one of two spots."), 1);
 }
 
@@ -889,12 +906,14 @@ void showcase_all_graphs(){
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
+    /*
     part1();
     part2();
     part3();
     part4();
     part5();
     part6();
+    */
     part7();
     part8();
 }
