@@ -21,19 +21,10 @@ public:
 
         double timer_value = state["timer"]; // expected to be between 0 and 1
 
-        // Draw pause button in the center
-        const double pause_width = w * 0.1;
-        const double pause_height = h * 0.4;
-        const double gap = pause_width * 0.5;
-
         double center_x = w / 2.0;
         double center_y = h / 2.0;
 
         int color = OPAQUE_WHITE;
-
-        // bars of pause symbol
-        pix.fill_rect(center_x - gap - pause_width, center_y - pause_height/2, pause_width, pause_height, color);
-        pix.fill_rect(center_x + gap, center_y - pause_height/2, pause_width, pause_height, color);
 
         // Draw expanding borders from center of each side outward towards corners
         // At 0 timer_value nothing drawn, at 1 timer_value the fill_rect reaches the corners

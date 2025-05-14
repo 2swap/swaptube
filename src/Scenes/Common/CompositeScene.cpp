@@ -53,38 +53,4 @@ public:
         };
         return ret;
     }
-
-    /*
-    void send_to_front(const string& state_manager_name) {
-        // Find the scene by its state_manager_name
-        auto it = std::find_if(subscenes.begin(), subscenes.end(),
-                               [&state_manager_name](const NamedSubscene& subscene) {
-                                   return subscene.state_manager_name == state_manager_name;
-                               });
-        if (it == subscenes.end()) {
-            throw runtime_error("Scene with specified name not found");
-        }
-
-        // Move the scene to the "front" (end of the vector, since reverse order)
-        NamedSubscene subscene = *it;
-        subscenes.erase(it);
-        subscenes.push_back(subscene);
-    }
-
-    void send_to_back(const string& state_manager_name) {
-        // Find the scene by its state_manager_name
-        auto it = std::find_if(subscenes.begin(), subscenes.end(),
-                               [&state_manager_name](const NamedSubscene& subscene) {
-                                   return subscene.state_manager_name == state_manager_name;
-                               });
-        if (it == subscenes.end()) {
-            throw runtime_error("Scene with specified name not found");
-        }
-
-        // Move the scene to the "back" (beginning of the vector, since reverse order)
-        NamedSubscene subscene = *it;
-        subscenes.erase(it);
-        subscenes.insert(subscenes.begin(), subscene);
-    }
-    */
 };

@@ -39,6 +39,23 @@ StateSet board_width_height{{"w",".3"},{"h",to_string(.3*VIDEO_WIDTH/VIDEO_HEIGH
 StateSet board_position    {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}};
 double yval = .15*VIDEO_WIDTH/VIDEO_HEIGHT;
 
+auto perform_shortest_path = [&](shared_ptr<KlotskiScene> ks_ptr, KlotskiBoard end, const string &msg) {
+    Graph g;
+    g.add_to_stack(new KlotskiBoard(sun));
+    g.expand_completely();
+    auto path = g.shortest_path(ks_ptr->copy_board().get_hash(), end.get_hash()).first;
+    ks_ptr->stage_macroblock(FileSegment(msg), path.size()-1);
+    path.pop_front();
+    while(ks_ptr->microblocks_remaining()){
+        double next = *(path.begin());
+        path.pop_front();
+        Node node = g.nodes.at(next);
+        KlotskiBoard* next_board = dynamic_cast<KlotskiBoard*>(node.data);
+        ks_ptr->stage_move(ks_ptr->copy_board().move_required_to_reach(*next_board));
+        ks_ptr->render_microblock();
+    }
+};
+
 void part1(){
     CompositeScene cs;
 
@@ -248,34 +265,16 @@ void part3() {
     // Start over by adding a KlotskiScene.
     shared_ptr<KlotskiScene> ks_ptr = make_shared<KlotskiScene>(sun);
 
-    // Abstracted function for performing shortest path moves.
-    auto perform_shortest_path = [&](KlotskiBoard end, const string &msg) {
-        Graph g;
-        g.add_to_stack(new KlotskiBoard(sun));
-        g.expand_completely();
-        auto path = g.shortest_path(ks_ptr->copy_board().get_hash(), end.get_hash()).first;
-        ks_ptr->stage_macroblock(FileSegment(msg), path.size()-1);
-        path.pop_front();
-        while(ks_ptr->microblocks_remaining()){
-            double next = *(path.begin());
-            path.pop_front();
-            Node node = g.nodes.at(next);
-            KlotskiBoard* next_board = dynamic_cast<KlotskiBoard*>(node.data);
-            ks_ptr->stage_move(ks_ptr->copy_board().move_required_to_reach(*next_board));
-            ks_ptr->render_microblock();
-        }
-    };
-
     CompositeScene cs;
     cs.add_scene_fade_in(ks_ptr, "ks");
     cs.stage_macroblock(SilenceSegment(.8), 1);
     cs.render_microblock();
 
     // Make moves according to the shortest path to the position given
-    perform_shortest_path(KlotskiBoard(4, 5, "abbcabbc.gehj.ehddif", false), "I fell down this rabbit hole when I was shown this puzzle.");
+    perform_shortest_path(ks_ptr, KlotskiBoard(4, 5, "abbcabbc.gehj.ehddif", false), "I fell down this rabbit hole when I was shown this puzzle.");
 
     // Make moves following the shortest path to the position given
-    perform_shortest_path(KlotskiBoard(4, 5, "abbcabbcfidde.ghe.jh", false), "It's called Klotski.");
+    perform_shortest_path(ks_ptr, KlotskiBoard(4, 5, "abbcabbcfidde.ghe.jh", false), "It's called Klotski.");
 
     // Hotswap to a new KlotskiScene "ks2" with only the sun on it.
     auto ks2_ptr = make_shared<KlotskiScene>(KlotskiBoard(4, 5, ".bb..bb.............", false));
@@ -836,7 +835,7 @@ void part7() {
     CompositeScene cs;
 
     // intermediate graph overlay
-    cs.stage_macroblock(FileSegment("So now, this is the puzzle we started with."), 1/*get_graph_size(intermediate)*/);
+    cs.stage_macroblock(FileSegment("This is the puzzle we started with."), 1/*get_graph_size(intermediate)*/);
     auto ks_int = make_shared<KlotskiScene>(intermediate);
     ks_int->state_manager.set(board_width_height);
     cs.add_scene_fade_in(ks_int, "ks_int");
@@ -866,17 +865,32 @@ void part7() {
 
     // question mark
     cs.stage_macroblock(FileSegment("It has a very well-defined superstructure."), 1);
-    shared_ptr<LatexScene> ls = make_shared<LatexScene>("?", 1);
-    cs.add_scene_fade_in(ls, "ls");
     cs.render_microblock();
 
     // pause scene
     cs.stage_macroblock(FileSegment("Take a moment to think through what it might be. You might be able to guess its form from the arrangement of the pieces!"), 1);
     shared_ptr<PauseScene> ps = make_shared<PauseScene>();
-    cs.add_scene_fade_in(ps, "ps");
+    cs.add_scene(ps, "ps");
     cs.render_microblock();
+    cs.remove_subscene("ps");
 
-    //cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces are more or less latched in one of two spots."), 1);
+/*
+fff..c
+..a..c
+bba...
+dda..e
+.....e
+hhh..e
+*/
+
+    perform_shortest_path(ks_int, KlotskiBoard(6, 6, "fff..c..a..cbba...dda..e.....ehhh..e", true), "...");
+    KlotskiBoard bd_only(6, 6, "............bb....dd................", true);
+    cs.stage_macroblock(FileSegment("From this perspective, the puzzle is more or less symmetrical."), 1);
+    cs.render_microblock();
+    cs.fade_all_subscenes(0);
+    cs.add_scene_fade_in(bd_only, "bd_only");
+    cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces stay latched in one of two spots."), 1);
+    cs.render_microblock();
 }
 
 void part8() {
