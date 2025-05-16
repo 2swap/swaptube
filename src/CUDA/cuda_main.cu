@@ -1,0 +1,10 @@
+#include "Convolution.cu"
+#include "GraphSpread.cu"
+#include "gravitational_predictions.cu"
+#include "mandelbrot.cu"
+#include "overlay_underlay.cu"
+#include "PendulumFractal.cu"
+#include "render_3d_points_lines.cu"
+#include "SelfCheck.cu"
+#include "SurfaceRenderer.cu"
+

@@ -39,9 +39,9 @@ StateSet board_width_height{{"w",".3"},{"h",to_string(.3*VIDEO_WIDTH/VIDEO_HEIGH
 StateSet board_position    {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}};
 double yval = .15*VIDEO_WIDTH/VIDEO_HEIGHT;
 
-auto perform_shortest_path = [&](shared_ptr<KlotskiScene> ks_ptr, KlotskiBoard end, const string &msg) {
+void perform_shortest_path(shared_ptr<KlotskiScene> ks_ptr, KlotskiBoard end, const string &msg) {
     Graph g;
-    g.add_to_stack(new KlotskiBoard(sun));
+    g.add_to_stack(new KlotskiBoard(ks_ptr->copy_board()));
     g.expand_completely();
     auto path = g.shortest_path(ks_ptr->copy_board().get_hash(), end.get_hash()).first;
     ks_ptr->stage_macroblock(FileSegment(msg), path.size()-1);
@@ -837,7 +837,7 @@ void part7() {
     // intermediate graph overlay
     cs.stage_macroblock(FileSegment("This is the puzzle we started with."), 1/*get_graph_size(intermediate)*/);
     auto ks_int = make_shared<KlotskiScene>(intermediate);
-    ks_int->state_manager.set(board_width_height);
+    //ks_int->state_manager.set(board_width_height);
     cs.add_scene_fade_in(ks_int, "ks_int");
     cs.render_microblock();
     /*Graph g_int;
@@ -885,11 +885,23 @@ hhh..e
 
     perform_shortest_path(ks_int, KlotskiBoard(6, 6, "fff..c..a..cbba...dda..e.....ehhh..e", true), "...");
     KlotskiBoard bd_only(6, 6, "............bb....dd................", true);
+    shared_ptr<KlotskiScene> bds = make_shared<KlotskiScene>(bd_only);
     cs.stage_macroblock(FileSegment("From this perspective, the puzzle is more or less symmetrical."), 1);
     cs.render_microblock();
-    cs.fade_all_subscenes(0);
-    cs.add_scene_fade_in(bd_only, "bd_only");
+    cs.fade_all_subscenes(.3);
+    cs.add_scene_fade_in(bds, "bds");
     cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces stay latched in one of two spots."), 1);
+    cs.render_microblock();
+    cs.fade_subscene("bds", 0);
+    cs.fade_subscene("ks_int", 1);
+    cs.add_scene(make_shared(*ks_int), "copy");
+    cs.fade_subscene("copy", 0.5);
+    cs.stage_macroblock(FileSegment("They can either be here,"), 1);
+    cs.render_microblock();
+    perform_shortest_path(ks_int, KlotskiBoard(6, 6, "fff..c..a..c..abb...adde.....ehhh..e", true), "or they can be here.");
+    cs.stage_macroblock(FileSegment("This red vertical bar acts as a gate, permitting them to transition between the two states."), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(FileSegment("Furthermore, it can only permit one to transition at a time."), 1);
     cs.render_microblock();
 }
 
