@@ -5,10 +5,6 @@
 #include "../Media/LatexScene.cpp"
 #include "../../DataObjects/Graph.cpp"
 
-double age_to_size(double x){
-    return ((3*x - 1) * exp(-.5*x)) + 1;
-}
-
 vector<int> tones = {0,4,7};
 int tone_incr = 0;
 void node_pop(double subdiv, bool added_not_deleted) {
@@ -57,7 +53,7 @@ public:
             glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);
             if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
             if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
-            add_point(Point(node_pos, node.color, 1, age_to_size(node.age)));
+            add_point(Point(node_pos, node.color, 1, node.radius()));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;

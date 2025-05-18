@@ -69,10 +69,12 @@ public:
     EdgeSet neighbors;
     double opacity = 1;
     int color = 0xffffffff;
+    float radius_multiplier = 1;
     double age = 0;
     glm::vec4 velocity;
     glm::vec4 position;
     float weight() const { return sigmoid(age*.2f + 0.01f); }
+    double radius() const { return radius_multiplier * (((3*age - 1) * exp(-.5*age)) + 1); }
 };
 
 /**

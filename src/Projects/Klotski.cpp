@@ -39,20 +39,20 @@ StateSet board_width_height{{"w",".3"},{"h",to_string(.3*VIDEO_WIDTH/VIDEO_HEIGH
 StateSet board_position    {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}};
 double yval = .15*VIDEO_WIDTH/VIDEO_HEIGHT;
 
-void perform_shortest_path(shared_ptr<KlotskiScene> ks_ptr, KlotskiBoard end, const string &msg) {
+void perform_shortest_path(CompositeScene& cs, shared_ptr<KlotskiScene> ks_ptr, KlotskiBoard end, const AudioSegment &msg) {
     Graph g;
     g.add_to_stack(new KlotskiBoard(ks_ptr->copy_board()));
     g.expand_completely();
     auto path = g.shortest_path(ks_ptr->copy_board().get_hash(), end.get_hash()).first;
-    ks_ptr->stage_macroblock(FileSegment(msg), path.size()-1);
+    cs.stage_macroblock(msg, path.size()-1);
     path.pop_front();
-    while(ks_ptr->microblocks_remaining()){
+    while(cs.microblocks_remaining()){
         double next = *(path.begin());
         path.pop_front();
         Node node = g.nodes.at(next);
         KlotskiBoard* next_board = dynamic_cast<KlotskiBoard*>(node.data);
         ks_ptr->stage_move(ks_ptr->copy_board().move_required_to_reach(*next_board));
-        ks_ptr->render_microblock();
+        cs.render_microblock();
     }
 };
 
@@ -271,10 +271,10 @@ void part3() {
     cs.render_microblock();
 
     // Make moves according to the shortest path to the position given
-    perform_shortest_path(ks_ptr, KlotskiBoard(4, 5, "abbcabbc.gehj.ehddif", false), "I fell down this rabbit hole when I was shown this puzzle.");
+    perform_shortest_path(cs, ks_ptr, KlotskiBoard(4, 5, "abbcabbc.gehj.ehddif", false), FileSegment("I fell down this rabbit hole when I was shown this puzzle."));
 
     // Make moves following the shortest path to the position given
-    perform_shortest_path(ks_ptr, KlotskiBoard(4, 5, "abbcabbcfidde.ghe.jh", false), "It's called Klotski.");
+    perform_shortest_path(cs, ks_ptr, KlotskiBoard(4, 5, "abbcabbcfidde.ghe.jh", false), FileSegment("It's called Klotski."));
 
     // Hotswap to a new KlotskiScene "ks2" with only the sun on it.
     auto ks2_ptr = make_shared<KlotskiScene>(KlotskiBoard(4, 5, ".bb..bb.............", false));
@@ -840,39 +840,36 @@ void part7() {
     //ks_int->state_manager.set(board_width_height);
     cs.add_scene_fade_in(ks_int, "ks_int");
     cs.render_microblock();
-    /*Graph g_int;
-    g_int.add_to_stack(new KlotskiBoard(intermediate));
-    auto gs_int = make_shared<GraphScene>(&g_int);
-    gs_int->state_manager.set(default_graph_state);
-    cs.add_scene(gs_int, "gs_int");
-    while(cs.microblocks_remaining()) {
-        g_int.expand_once();
-        cs.render_microblock();
-    }*/
 
-    // grow five different graphs and overlay
-    cs.stage_macroblock(SilenceSegment(.5), 1);
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "fff..c..a..cbba...dda..e.....ehhh..e", true), FileSegment("It has a very well-defined superstructure."));
+
+    // pause scene
+    cs.stage_macroblock(FileSegment("Take a moment to think through what it might be. You might be able to guess its form from the arrangement of the pieces!"), 1);
     vector<const KlotskiBoard*> boards = {&weird1, &euler766_easy, &beginner, &diamond};
     vector<string> names = {"w1","eul","beg","dia"};
     for(int i=0;i<boards.size();++i){
         Graph* g = new Graph();
         g->add_to_stack(new KlotskiBoard(*boards[i]));
-        auto gs = make_shared<GraphScene>(g);
+        g->expand_completely();
+        auto gs = make_shared<GraphScene>(g, .65, .65);
         gs->state_manager.set(default_graph_state);
-        cs.add_scene_fade_in(gs, names[i]);
+        bool top = (i&1)==1;
+        bool left = (i&2)==2;
+        gs->state_manager.set({
+            {"qi",string(top ?"":"-") + "<t> .2 * cos"},
+            {"qj",string(left?"":"-") + "<t> .314 * sin"}
+        });
+        cs.add_scene_fade_in(gs, names[i], top?.25:.75, left?.25:.75, true, .5);
     }
-    cs.render_microblock();
-
-    // question mark
-    cs.stage_macroblock(FileSegment("It has a very well-defined superstructure."), 1);
-    cs.render_microblock();
-
-    // pause scene
-    cs.stage_macroblock(FileSegment("Take a moment to think through what it might be. You might be able to guess its form from the arrangement of the pieces!"), 1);
     shared_ptr<PauseScene> ps = make_shared<PauseScene>();
     cs.add_scene(ps, "ps");
     cs.render_microblock();
     cs.remove_subscene("ps");
+
+    cs.stage_macroblock(SilenceSegment(1), 1);
+    cs.fade_all_subscenes_except("ks_int", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("ks_int");
 
 /*
 fff..c
@@ -883,25 +880,109 @@ dda..e
 hhh..e
 */
 
-    perform_shortest_path(ks_int, KlotskiBoard(6, 6, "fff..c..a..cbba...dda..e.....ehhh..e", true), "...");
     KlotskiBoard bd_only(6, 6, "............bb....dd................", true);
     shared_ptr<KlotskiScene> bds = make_shared<KlotskiScene>(bd_only);
+    // TODO flip in 3d
     cs.stage_macroblock(FileSegment("From this perspective, the puzzle is more or less symmetrical."), 1);
     cs.render_microblock();
-    cs.fade_all_subscenes(.3);
+
+    cs.fade_all_subscenes(0);
     cs.add_scene_fade_in(bds, "bds");
-    cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces stay latched in one of two spots."), 1);
+    cs.stage_macroblock(FileSegment("The key is recognizing that these two pieces stay latched in one of two spots."), 2);
     cs.render_microblock();
+    cs.render_microblock();
+
     cs.fade_subscene("bds", 0);
     cs.fade_subscene("ks_int", 1);
-    cs.add_scene(make_shared(*ks_int), "copy");
-    cs.fade_subscene("copy", 0.5);
-    cs.stage_macroblock(FileSegment("They can either be here,"), 1);
+    shared_ptr<KlotskiScene> copy = make_shared<KlotskiScene>(KlotskiBoard(6,6,"fff..c..a..cbba...dda..e.....ehhh..e",true));
+    cs.add_scene_fade_in(copy, "copy", 0.5, 0.5, true, 0.25);
+    cs.stage_macroblock(FileSegment("They can either be to the left of the vertical red bar,"), 1);
     cs.render_microblock();
-    perform_shortest_path(ks_int, KlotskiBoard(6, 6, "fff..c..a..c..abb...adde.....ehhh..e", true), "or they can be here.");
-    cs.stage_macroblock(FileSegment("This red vertical bar acts as a gate, permitting them to transition between the two states."), 1);
+
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "fff..c..a..c..abb...adde.....ehhh..e", true), FileSegment("or they can be to the right of it."));
+    cs.fade_subscene("copy", 0);
+    cs.stage_macroblock(FileSegment("This red bar acts as a gate, permitting them to transition between the two states."), 3);
     cs.render_microblock();
-    cs.stage_macroblock(FileSegment("Furthermore, it can only permit one to transition at a time."), 1);
+    ks_int->highlight_char = 'a';
+    cs.render_microblock();
+    cs.render_microblock();
+
+    cs.remove_subscene("copy");
+    ks_int->highlight_char = '.';
+    cs.stage_macroblock(FileSegment("Furthermore, only one can transition at a time."), 1);
+    cs.render_microblock();
+
+/*
+..afff
+..a..c
+..abbc
+...dde
+.....e
+hhh..e
+*/
+
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..afff..a..c..abbc...dde.....ehhh..e", true), SilenceSegment(1.5));
+
+    cs.stage_macroblock(FileSegment("When the red bar is up, the orange block can transition."), 4);
+    ks_int->stage_move({'d', -3, 0});
+    cs.render_microblock();
+    ks_int->stage_move({'d', 3, 0});
+    cs.render_microblock();
+    ks_int->stage_move({'d', -3, 0});
+    cs.render_microblock();
+    ks_int->stage_move({'d', 3, 0});
+    cs.render_microblock();
+
+/*
+..fffc
+.....c
+...bbe
+..adde
+..a..e
+..ahhh
+*/
+
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..fffc.....c...bbe..adde..a..e..ahhh", true), SilenceSegment(1.5));
+
+    cs.stage_macroblock(FileSegment("But when it's down, the green block can transition."), 4);
+    ks_int->stage_move({'b', -3, 0});
+    cs.render_microblock();
+    ks_int->stage_move({'b', 3, 0});
+    cs.render_microblock();
+    ks_int->stage_move({'b', -3, 0});
+    cs.render_microblock();
+    ks_int->stage_move({'b', 3, 0});
+    cs.render_microblock();
+
+    cs.state_manager.microblock_transition({{"ks_int.x",".15"},{"ks_int.y",to_string(yval)}});
+    ks_int->state_manager.microblock_transition(board_width_height);
+    cs.stage_macroblock(FileSegment("Let's build the graph."), 1);
+    cs.render_microblock();
+
+    Graph g_int;
+    g_int.add_to_stack(new KlotskiBoard(intermediate));
+    auto gs_int = make_shared<GraphScene>(&g_int);
+    gs_int->state_manager.set(default_graph_state);
+    cs.add_scene(gs_int, "gs_int", .6, .5);
+    cs.stage_macroblock(SilenceSegment(4), get_graph_size(intermediate));
+    while(cs.microblocks_remaining()) {
+        g_int.expand_once();
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(FileSegment("It's a square connecting 4 corners."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("We can color the nodes on the graph in correspondence with the position of the puzzle."), g_int.nodes.size());
+    for(auto p = g_int.nodes.begin(); p != g_int.nodes.end(); p++){
+        Node n = p->second;
+        if(n.data->representation[15] == 'b' && 'b' == n.data->representation[16]) n.color = 0xffff00ff;
+        if(n.data->representation[12] == 'b' && 'b' == n.data->representation[13]) n.color = 0xff00ff00;
+        n.radius_multiplier = 5;
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(FileSegment("It's a square connecting 4 corners."), 1);
     cs.render_microblock();
 }
 
@@ -941,5 +1022,5 @@ void render_video() {
     part6();
     */
     part7();
-    part8();
+    //part8();
 }

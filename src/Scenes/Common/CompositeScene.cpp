@@ -16,14 +16,11 @@ public:
     CompositeScene(const double width = 1, const double height = 1)
         : SuperScene(width, height) {}
 
-    void add_scene_fade_in(shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true){
+    void add_scene_fade_in(shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true, double opa=1){
         add_scene(sc, state_manager_name, x, y);
-        state_manager.set(unordered_map<string, string> {
-            {state_manager_name + ".opacity", "0"},
-        });
-        unordered_map<string, string> map = {
-            {state_manager_name + ".opacity", "1"},
-        };
+        const string key = state_manager_name + ".opacity";
+        state_manager.set({{key, "0"}});
+        StateSet map = {{key, to_string(opa)}};
         if(micro) state_manager.microblock_transition(map);
         else      state_manager.macroblock_transition(map);
     }

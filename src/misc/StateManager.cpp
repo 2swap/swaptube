@@ -173,9 +173,9 @@ public:
         last_compute_order.clear();
         variables.erase(variable);
     }
-    void set_parent(StateManager* p) {
+    void set_parent(StateManager* p, const string& name) {
         if((parent == nullptr) == (p == nullptr))
-            throw runtime_error("Parent must change state from set to unset or vice versa. Current: " + to_string(reinterpret_cast<uintptr_t>(parent)) + ", setting to: " + to_string(reinterpret_cast<uintptr_t>(p)));
+            throw runtime_error("Parent must change state from set to unset or vice versa. Current: " + to_string(reinterpret_cast<uintptr_t>(parent)) + ", setting to: " + to_string(reinterpret_cast<uintptr_t>(p)) + ". This scene's child identifier was " + name + ".");
         parent = p;
     }
 

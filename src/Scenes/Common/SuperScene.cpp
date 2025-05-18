@@ -8,7 +8,7 @@ public:
     void remove_subscene(const string& name) {
         auto it = subscenes.find(name);
         if(it != subscenes.end()){
-            it->second->state_manager.set_parent(nullptr);
+            it->second->state_manager.set_parent(nullptr, name);
             subscenes.erase(it);
         }
     }
@@ -16,6 +16,12 @@ public:
     void fade_all_subscenes(double opacity, bool micro = true) {
         for (auto& kv : subscenes) {
             fade_subscene(kv.first, opacity, micro);
+        }
+    }
+
+    void fade_all_subscenes_except(const string& name, double opacity, bool micro = true) {
+        for (auto& kv : subscenes) {
+            if(kv.first != name) fade_subscene(kv.first, opacity, micro);
         }
     }
 
@@ -32,9 +38,17 @@ public:
 
     void remove_all_subscenes() {
         for (auto& kv : subscenes){
-            kv.second->state_manager.set_parent(nullptr);
+            kv.second->state_manager.set_parent(nullptr, kv.first);
         }
         subscenes.clear();
+    }
+
+    void remove_all_subscenes_except(const string& name) {
+        unordered_set<string> to_remove;
+        for (auto& kv : subscenes){
+            if(kv.first != name) to_remove.insert(kv.first);
+        }
+        for(const string& s : to_remove) remove_subscene(s);
     }
 
 protected:
@@ -51,7 +65,7 @@ protected:
     void add_subscene_check_dupe(const string& name, shared_ptr<Scene> scene) {
         if(subscenes.find(name) != subscenes.end())
             throw runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
-        scene->state_manager.set_parent(&state_manager);
+        scene->state_manager.set_parent(&state_manager, name);
         subscenes[name] = scene;
         state_manager.set({
             {name + ".opacity", "1"},
