@@ -476,7 +476,7 @@ void part5() {
         cs.render_microblock();
     }
 
-    cs.stage_macroblock(FileSegment("Each block defines an axis of motion."), 20);
+    cs.stage_macroblock(FileSegment("Each block defines a different axis of motion."), 20);
     for(int i = 0; i < 10; i++){
         ks2d->stage_move({'a', 0, i<=4?1:-1});
         gs2d->next_hash = ks2d->copy_staged_board().get_hash();
@@ -591,6 +591,9 @@ void part5() {
 
     // Triangle puzzle
     cs.fade_all_subscenes(0);
+    cs.stage_macroblock(SilenceSegment(2), 2);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileSegment("If we put the two blocks on the same lane,"), get_graph_size(triangle));
     auto kstri = make_shared<KlotskiScene>(triangle);
     kstri->state_manager.set(board_width_height);
@@ -663,6 +666,7 @@ void part5() {
     gst->next_hash = kstri->copy_board().get_hash();
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(1), 1);
+    // TODO this is wrong
     kstri->stage_move({'c', 0, -7});
     gst->next_hash = kstri->copy_staged_board().get_hash();
     cs.render_microblock();
@@ -737,6 +741,7 @@ void part6() {
     g_apk.clear_queue();
 
     cs.stage_macroblock(FileSegment("but also, if we zoom in,"), to_remove.size());
+    // TODO zoom in more peacefully
     gs_apk->state_manager.microblock_transition({{"z_dilation", ".98"}});
     for(double d : to_remove){
         g_apk.remove_node(d);
@@ -750,10 +755,11 @@ void part6() {
     cs.stage_macroblock(FileSegment("It's a cute little local euclidean manifold with two degrees of freedom."), 1);
     cs.render_microblock();
 
-    // show available actions on puzzle
+    // TODO show available actions on puzzle or empty spaces
     cs.stage_macroblock(FileSegment("On the puzzle, there are correspondingly only two available actions for each open hole."), 1);
     cs.render_microblock();
 
+    // TODO stop twisting
     cs.stage_macroblock(FileSegment("One axis characterized by moving the top hole,"), 4);
     ks_apk->stage_move({'c', 1, 0});
     gs_apk->next_hash = ks_apk->copy_staged_board().get_hash();
@@ -783,6 +789,7 @@ void part6() {
     cs.render_microblock();
 
     // swap to full_15_puzzle
+    // TODO this should not be rainbow-ed
     cs.stage_macroblock(SilenceSegment(1), 1);
     auto ks15 = make_shared<KlotskiScene>(full_15_puzzle);
     ks15->state_manager.set(board_width_height);
@@ -841,7 +848,7 @@ void part7() {
     cs.add_scene_fade_in(ks_int, "ks_int");
     cs.render_microblock();
 
-    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "fff..c..a..cbba...dda..e.....ehhh..e", true), FileSegment("It has a very well-defined superstructure."));
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..fffc..a..cbba...dda..e.....e..hhhe", true), FileSegment("It has a very well-defined superstructure."));
 
     // pause scene
     cs.stage_macroblock(FileSegment("Take a moment to think through what it might be. You might be able to guess its form from the arrangement of the pieces!"), 1);
@@ -894,12 +901,12 @@ hhh..e
 
     cs.fade_subscene("bds", 0);
     cs.fade_subscene("ks_int", 1);
-    shared_ptr<KlotskiScene> copy = make_shared<KlotskiScene>(KlotskiBoard(6,6,"fff..c..a..cbba...dda..e.....ehhh..e",true));
+    shared_ptr<KlotskiScene> copy = make_shared<KlotskiScene>(KlotskiBoard(6,6,"..fffc..a..cbba...dda..e.....e..hhhe",true));
     cs.add_scene_fade_in(copy, "copy", 0.5, 0.5, true, 0.25);
     cs.stage_macroblock(FileSegment("They can either be to the left of the vertical red bar,"), 1);
     cs.render_microblock();
 
-    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "fff..c..a..c..abb...adde.....ehhh..e", true), FileSegment("or they can be to the right of it."));
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..fffc..a..c..abb...adde.....e..hhhe", true), FileSegment("or they can be to the right of it."));
     cs.fade_subscene("copy", 0);
     cs.stage_macroblock(FileSegment("This red bar acts as a gate, permitting them to transition between the two states."), 3);
     cs.render_microblock();
@@ -909,7 +916,7 @@ hhh..e
 
     cs.remove_subscene("copy");
     ks_int->highlight_char = '.';
-    cs.stage_macroblock(FileSegment("Furthermore, only one can transition at a time."), 1);
+    cs.stage_macroblock(FileSegment("Only one can transition at a time."), 1);
     cs.render_microblock();
 
 /*
@@ -921,7 +928,7 @@ hhh..e
 hhh..e
 */
 
-    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..afff..a..c..abbc...dde.....ehhh..e", true), SilenceSegment(1.5));
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..afff..a..c..abbc...dde.....e..hhhe", true), SilenceSegment(1.5));
 
     cs.stage_macroblock(FileSegment("When the red bar is up, the orange block can transition."), 4);
     ks_int->stage_move({'d', -3, 0});
@@ -956,15 +963,12 @@ hhh..e
 
     cs.state_manager.microblock_transition({{"ks_int.x",".15"},{"ks_int.y",to_string(yval)}});
     ks_int->state_manager.microblock_transition(board_width_height);
-    cs.stage_macroblock(FileSegment("Let's build the graph."), 1);
-    cs.render_microblock();
-
+    cs.stage_macroblock(FileSegment("Let's build the graph."), get_graph_size(intermediate));
     Graph g_int;
     g_int.add_to_stack(new KlotskiBoard(intermediate));
     auto gs_int = make_shared<GraphScene>(&g_int);
     gs_int->state_manager.set(default_graph_state);
     cs.add_scene(gs_int, "gs_int", .6, .5);
-    cs.stage_macroblock(SilenceSegment(4), get_graph_size(intermediate));
     while(cs.microblocks_remaining()) {
         g_int.expand_once();
         cs.render_microblock();
@@ -973,16 +977,16 @@ hhh..e
     cs.stage_macroblock(FileSegment("It's a square connecting 4 corners."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("We can color the nodes on the graph in correspondence with the position of the puzzle."), g_int.nodes.size());
+    cs.stage_macroblock(FileSegment("We can color the nodes on the graph in correspondence with the position of the puzzle."), 1);
+    gs_int->state_manager.macroblock_transition({{"lines_opacity","0"}, {"points_radius_multiplier","5"}});
     for(auto p = g_int.nodes.begin(); p != g_int.nodes.end(); p++){
-        Node n = p->second;
-        if(n.data->representation[15] == 'b' && 'b' == n.data->representation[16]) n.color = 0xffff00ff;
-        if(n.data->representation[12] == 'b' && 'b' == n.data->representation[13]) n.color = 0xff00ff00;
-        n.radius_multiplier = 5;
-        cs.render_microblock();
+        Node& n = p->second;
+        n.color = 0xff888888;
+        if(n.data->representation[15] == 'b' && 'b' == n.data->representation[16]) n.color |= 0xff0000;
+        if(n.data->representation[12] == 'b' && 'b' == n.data->representation[13]) n.color &= 0x00ffff;
+        if(n.data->representation[21] == 'd' && 'd' == n.data->representation[22]) n.color |= 0x00ff00;
+        if(n.data->representation[18] == 'd' && 'd' == n.data->representation[19]) n.color &= 0xff00ff;
     }
-
-    cs.stage_macroblock(FileSegment("It's a square connecting 4 corners."), 1);
     cs.render_microblock();
 }
 
@@ -1011,7 +1015,7 @@ void showcase_all_graphs(){
 }
 
 void render_video() {
-    //FOR_REAL = false;
+    FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
     /*
     part1();

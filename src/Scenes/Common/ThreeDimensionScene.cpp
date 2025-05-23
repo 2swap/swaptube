@@ -18,7 +18,7 @@
 extern "C" {
     void render_points_on_gpu(
         unsigned int* h_pixels, int width, int height,
-        float geom_mean_size, float points_opacity,
+        float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
         glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov);
 
@@ -90,6 +90,7 @@ public:
             {"qk", "0"},
             {"surfaces_opacity", "1"},
             {"lines_opacity", "1"},
+            {"points_radius_multiplier", "1"},
             {"points_opacity", "1"}
         });
     }
@@ -275,13 +276,14 @@ public:
 
         // TODO profile the time each of these take, see which is worse
         auto start_points = std::chrono::high_resolution_clock::now();
-        if (!points.empty() && state["points_opacity"] > .001) {
+        if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
             render_points_on_gpu(
                 pix.pixels.data(),
                 get_width(),
                 get_height(),
                 get_geom_mean_size(),
                 state["points_opacity"],
+                state["points_radius_multiplier"],
                 points.data(),
                 static_cast<int>(points.size()),
                 camera_direction,
@@ -336,7 +338,7 @@ public:
         StateQuery sq = SuperScene::populate_state_query();
         StateQuery extras{
             "fov","x", "y", "z", "d", "q1", "qi", "qj",
-            "qk", "surfaces_opacity", "lines_opacity", "points_opacity"
+            "qk", "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
         };
         for(const string& x : extras) sq.insert(x);
         if(use_state_for_center) {

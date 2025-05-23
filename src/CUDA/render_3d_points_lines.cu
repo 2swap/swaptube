@@ -26,7 +26,6 @@ __device__ void device_coordinate_to_pixel(
     float scale = (geom_mean_size * fov) / rotated.z;
     outx = scale * rotated.x + width * 0.5f;
     outy = scale * rotated.y + height * 0.5f;
-    //printf("circle: (%f, %f) from point (%f, %f, %f)\n", outx, outy, coordinate.x, coordinate.y, coordinate.z);
 }
 
 __device__ void device_fill_circle(float cx, float cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
@@ -62,11 +61,10 @@ __device__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity
 
 __global__ void render_points_kernel(
     unsigned int* pixels, int width, int height,
-    float geom_mean_size, float points_opacity,
+    float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Point* points, int num_points,
     glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov)
 {
-    float size_scale = geom_mean_size / 400.f;
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= num_points) return;
     Point p = points[idx];
@@ -78,7 +76,7 @@ __global__ void render_points_kernel(
         camera_direction, camera_pos, conjugate_camera_direction, fov,
         geom_mean_size, width, height, px, py);
     if (behind_camera) return;
-    float dot_size = size_scale * p.size;
+    float dot_size = p.size * points_radius_multiplier * geom_mean_size/400.0f;
     device_fill_circle(px, py, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
 }
 
@@ -111,7 +109,7 @@ __global__ void render_lines_kernel(
 
 extern "C" void render_points_on_gpu(
     unsigned int* h_pixels, int width, int height,
-    float geom_mean_size, float points_opacity,
+    float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Point* h_points, int num_points,
     glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov)
 {
@@ -130,7 +128,7 @@ extern "C" void render_points_on_gpu(
     int numBlocks = (num_points + blockSize - 1) / blockSize;
     render_points_kernel<<<numBlocks, blockSize>>>(
         d_pixels, width, height,
-        geom_mean_size, points_opacity,
+        geom_mean_size, points_opacity, points_radius_multiplier,
         d_points, num_points,
         camera_direction, camera_pos, conjugate_camera_direction, fov);
     cudaDeviceSynchronize();
