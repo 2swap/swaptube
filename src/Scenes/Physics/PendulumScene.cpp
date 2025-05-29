@@ -19,6 +19,7 @@ public:
         state_manager.add_equation("theta1_manual", "0");
         state_manager.add_equation("theta2_manual", "0");
     }
+    int alpha_subtract = 2;
 
     const StateQuery populate_state_query() const override {
         return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
@@ -44,7 +45,7 @@ public:
         for(int x = 0; x < path_background.w; x++) {
             for(int y = 0; y < path_background.h; y++) {
                 int alpha = geta(path_background.get_pixel(x, y));
-                alpha = max(0,alpha-1);
+                alpha = max(0,alpha-alpha_subtract);
                 path_background.set_pixel(x, y, argb_to_col(alpha, 255, 255, 255));
             }
         }
@@ -118,7 +119,7 @@ public:
             left.push_back(val);
             right.push_back(val);
         }
-        WRITER.add_sfx(left, right, tonegen_save);
+        AUDIO_WRITER.add_sfx(left, right, tonegen_save);
         energy = energy_slew;
     }
 
