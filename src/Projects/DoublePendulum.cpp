@@ -104,7 +104,6 @@ void showcase_an_island(shared_ptr<PendulumGridScene> pgs, const IslandShowcase&
 
     if(spoken) {
         cs.stage_macroblock(FileSegment(is.blurb), 3);
-        cs.render_microblock();
     } else {
         vector<float> audio_left;
         vector<float> audio_right;
@@ -1058,9 +1057,9 @@ void intro() {
         {"pgs.opacity", "1"},
     });
     cs.stage_macroblock(FileSegment("But before diving into the fractals, let's get to know a few individual specimen."), 3);
-    vector<PendulumScene> specimens;
+    vector<shared_ptr<PendulumScene>> specimens;
     for(int i = 0; i < start_states.size(); i++) {
-        specimens.push_back(PendulumScene(start_states[i], 1./3, 1./3));
+        specimens.push_back(make_shared<PendulumScene>(start_states[i], 1./3, 1./3));
     }
     for(int i = 0; i < start_states.size(); i++) {
         pgs->state_manager.set({
@@ -1069,7 +1068,7 @@ void intro() {
             {"circle"+to_string(i)+"_r", to_string(0.1)},
         });
         pgs->circles_to_render = i+1;
-        shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(specimens[i]);
+        shared_ptr<PendulumScene> ps = specimens[i];
         ps->state_manager.set(state);
         ps->state_manager.set({{"tone", to_string(i/4.+1)}});
         string name = "p" + to_string(i);
@@ -1090,7 +1089,7 @@ void intro() {
         {"p1.y", "1.5"},
         {"p2.y", "1.5"},
     });
-    specimens[0].state_manager.microblock_transition({
+    specimens[0]->state_manager.microblock_transition({
         {"w", ".5"},
         {"h", "1"},
         {"volume", "1"},
@@ -1098,13 +1097,13 @@ void intro() {
     cs.stage_macroblock(FileSegment("This pendulum is one of the chaotic ones."), 1);
     cs.render_microblock();
     cs.remove_subscene("pgs");
-    specimens[0].state_manager.microblock_transition({
+    specimens[0]->state_manager.microblock_transition({
         {"top_angle_opacity", "1"},
         {"bottom_angle_opacity", "1"},
     });
     cs.stage_macroblock(FileSegment("We are particularly interested in the angles that separate each bar from the vertical."), 1);
     cs.render_microblock();
-    specimens[0].global_publisher_key = true;
+    specimens[0]->global_publisher_key = true;
     shared_ptr<CoordinateSceneWithTrail> coord = make_shared<CoordinateSceneWithTrail>(1, 1);
     coord->state_manager.set({
         {"center_y", "-5"},
@@ -1112,7 +1111,7 @@ void intro() {
     cs.state_manager.microblock_transition({
         {"p0.x", ".75"},
     });
-    specimens[1].state_manager.microblock_transition({
+    specimens[1]->state_manager.microblock_transition({
         {"w", ".5"},
         {"h", "1"},
     });
@@ -1143,7 +1142,7 @@ void intro() {
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(3), 1);
     cs.render_microblock();
-    specimens[0].state_manager.microblock_transition({
+    specimens[0]->state_manager.microblock_transition({
         {"volume", "0"},
     });
     cs.state_manager.microblock_transition({
@@ -1155,10 +1154,10 @@ void intro() {
         {"center_x", "0"},
         {"center_y", "0"},
     });
-    specimens[2].state_manager.microblock_transition({
+    specimens[2]->state_manager.microblock_transition({
         {"volume", "25"},
     });
-    specimens[2].state_manager.set({
+    specimens[2]->state_manager.set({
         {"w", ".5"},
         {"h", "1"},
         {"top_angle_opacity", "1"},
@@ -1166,8 +1165,8 @@ void intro() {
     });
     cs.stage_macroblock(FileSegment("Here's a non-chaotic pendulum."), 1);
     cs.render_microblock();
-    specimens[0].global_publisher_key = false;
-    specimens[2].global_publisher_key = true;
+    specimens[0]->global_publisher_key = false;
+    specimens[2]->global_publisher_key = true;
     coord->state_manager.microblock_transition({
         {"trail_opacity", "1"},
         {"zoom", ".1"},
@@ -1215,7 +1214,7 @@ void intro() {
     cs.remove_subscene("lissa");
     cs.stage_macroblock(SilenceSegment(2), 1);
     cs.render_microblock();
-    specimens[2].state_manager.macroblock_transition({
+    specimens[2]->state_manager.macroblock_transition({
         {"volume", "0"},
     });
     shared_ptr<PngScene> ear_left  = make_shared<PngScene>("ear_left", .2, .2);
@@ -1247,11 +1246,11 @@ void intro() {
     coord->state_manager.microblock_transition({
         {"trail_opacity", "0"},
     });
-    specimens[2].generate_audio(4, audio_left, audio_right);
+    specimens[2]->generate_audio(4, audio_left, audio_right);
     cs.stage_macroblock(GeneratedSegment(audio_left, audio_right), 1);
     cs.render_microblock();
-    specimens[0].global_publisher_key = true;
-    specimens[2].global_publisher_key = false;
+    specimens[0]->global_publisher_key = true;
+    specimens[2]->global_publisher_key = false;
     cs.state_manager.microblock_transition({
         {"left.opacity", "0"},
         {"right.opacity", "0"},
@@ -1274,7 +1273,7 @@ void intro() {
     cs.render_microblock();
     vector<float> audio_left_c;
     vector<float> audio_right_c;
-    specimens[0].generate_audio(2.5, audio_left_c, audio_right_c);
+    specimens[0]->generate_audio(2.5, audio_left_c, audio_right_c);
     cs.stage_macroblock(GeneratedSegment(audio_left_c, audio_right_c), 1);
     cs.render_microblock();
     left->state_manager.microblock_transition({
@@ -1300,13 +1299,13 @@ void intro() {
     coord->state_manager.set({
         {"trail_opacity", "1"},
     });
-    specimens[1].global_publisher_key = true;
-    specimens[0].global_publisher_key = false;
+    specimens[1]->global_publisher_key = true;
+    specimens[0]->global_publisher_key = false;
     cs.stage_macroblock(SilenceSegment(.1), 1);
     cs.render_microblock();
     vector<float> audio_left_p;
     vector<float> audio_right_p;
-    specimens[1].generate_audio(2.5, audio_left_p, audio_right_p);
+    specimens[1]->generate_audio(2.5, audio_left_p, audio_right_p);
     cs.stage_macroblock(GeneratedSegment(audio_left_p, audio_right_p), 1);
     cs.render_microblock();
     coord->state_manager.microblock_transition({
@@ -1581,7 +1580,7 @@ void intro() {
         {"zoom", "1 3.1415 /"},
     });
     pgs->stage_macroblock(FileSegment("Pay attention to how there are two distinct modes of behavior here."), 1);
-    cs.render_microblock();
+    pgs->render_microblock();
     pgs->stage_macroblock(FileSegment("There's a region of chaotic pendulums sensitive to their initial conditions,"), 2);
     pgs->state_manager.microblock_transition({
         {"center_x", "3.1415"},
@@ -1597,27 +1596,27 @@ void intro() {
     pgs->render_microblock();
     pgs->render_microblock();
     pgs->stage_macroblock(SilenceSegment(0.5), 1);
-    cs.render_microblock();
+    pgs->render_microblock();
     pgs->state_manager.microblock_transition({
         {"mode", "2.5"},
     });
     pgs->stage_macroblock(FileSegment("Now, for each pixel, we track two pendulums, separated by a slight starting difference, and plot their difference over time."), 1);
-    cs.render_microblock();
+    pgs->render_microblock();
     pgs->stage_macroblock(SilenceSegment(0.5), 1);
-    cs.render_microblock();
+    pgs->render_microblock();
     pgs->state_manager.microblock_transition({
         {"center_x", "3.1415"},
         {"center_y", "3.1415"},
         {"zoom", "1 8 /"},
     });
     pgs->stage_macroblock(FileSegment("So, this plot shows how quickly the pendulums in our grid diverge."), 1);
-    cs.render_microblock();
+    pgs->render_microblock();
     pgs->state_manager.microblock_transition({
         {"mode", "2"},
         {"contrast", ".000005"},
     });
     pgs->stage_macroblock(FileSegment("Let's reset the pendulums and watch that again from the start."), 1);
-    cs.render_microblock();
+    pgs->render_microblock();
 }
 
 void identify_vibrations(double t1, double t2) {
@@ -1647,13 +1646,13 @@ void identify_vibrations(double t1, double t2) {
         start_states[0] = rk4Step(start_states[0], step_sz);
         start_states[1] = rk4Step(start_states[1], step_sz);
     }
-    vector<PendulumScene> specimens;
+    vector<shared_ptr<PendulumScene>> specimens;
     for(int i = 0; i < start_states.size(); i++) {
-        specimens.push_back(PendulumScene(start_states[i], .5, .5));
+        specimens.push_back(make_shared<PendulumScene>(start_states[i], .5, .5));
     }
     double anim_step = 1800;
     for(int i = 0; i < start_states.size(); i++) {
-        shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(specimens[i]);
+        shared_ptr<PendulumScene> ps = specimens[i];
         ps->state_manager.set({
             {"rk4_step_size", "1 "+to_string(anim_step)+" /"},
             {"physics_multiplier", to_string(anim_step/30)},
@@ -1662,10 +1661,10 @@ void identify_vibrations(double t1, double t2) {
         string name = "p" + to_string(i);
         cs.add_scene(ps, name, .75, .25+.5*i);
     }
-    specimens[0].global_publisher_key = true;
-    specimens[0].global_identifier = "p0.";
-    specimens[1].global_publisher_key = true;
-    specimens[1].global_identifier = "p1.";
+    specimens[0]->global_publisher_key = true;
+    specimens[0]->global_identifier = "p0.";
+    specimens[1]->global_publisher_key = true;
+    specimens[1]->global_identifier = "p1.";
     shared_ptr<CoordinateSceneWithTrail> coord = make_shared<CoordinateSceneWithTrail>(.5, 1);
     coord->state_manager.set({
         {"zoom", "0.05"},
@@ -1694,7 +1693,7 @@ void sample_vibrations(){
 void render_video() {
     SAVE_FRAME_PNGS = false;
     //PRINT_TO_TERMINAL = false;
-    FOR_REAL = false;
+    //FOR_REAL = false;
 
 
     intro();
