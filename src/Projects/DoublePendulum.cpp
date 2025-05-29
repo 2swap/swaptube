@@ -1101,9 +1101,9 @@ void intro() {
         {"top_angle_opacity", "1"},
         {"bottom_angle_opacity", "1"},
     });
+    specimens[0]->global_publisher_key = true;
     cs.stage_macroblock(FileSegment("We are particularly interested in the angles that separate each bar from the vertical."), 1);
     cs.render_microblock();
-    specimens[0]->global_publisher_key = true;
     shared_ptr<CoordinateSceneWithTrail> coord = make_shared<CoordinateSceneWithTrail>(1, 1);
     coord->state_manager.set({
         {"center_y", "-5"},

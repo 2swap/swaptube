@@ -67,7 +67,7 @@ public:
         if(trail.size() == 0) return;
         if(trail_opacity < 0.01) return;
         int line_width = get_geom_mean_size()/350;
-        for(int i = 0; i < trail.size()-1; i++) {
+        for(int i = 1; i < trail.size()-1; i++) {
             const pair<double, double> last_point = trail[i];
             const pair<double, double> next_point = trail[i+1];
             const pair<int, int> last_pixel = point_to_pixel(last_point);
