@@ -596,11 +596,14 @@ void part5() {
     cs.state_manager.macroblock_transition({{"ksr7.x",".15"}, {"ksr7.y",to_string(yval)}});
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceSegment(1), 2);
+    cs.stage_macroblock(SilenceSegment(1), 3);
     ksr7->stage_move({'a', 0, 1});
     gsr->next_hash = ksr7->copy_staged_board().get_hash();
     cs.render_microblock();
-    ksr7->stage_move({'b', 2, 0});
+    ksr7->stage_move({'b', 1, 0});
+    gsr->next_hash = ksr7->copy_staged_board().get_hash();
+    cs.render_microblock();
+    ksr7->stage_move({'b', 1, 0});
     gsr->next_hash = ksr7->copy_staged_board().get_hash();
     cs.render_microblock();
 
@@ -1059,7 +1062,7 @@ hhh..e
 
     perform_shortest_path_with_graph(cs, gs_int, ks_int, intermediate, SilenceSegment(5));
     KlotskiBoard swaparound(6, 6, "..afff..a..c..abbc...dde.....e..hhhe", true );
-    perform_shortest_path_with_graph(cs, gs_int, ks_int, intermediate, SilenceSegment(5));
+    perform_shortest_path_with_graph(cs, gs_int, ks_int, swaparound, SilenceSegment(5));
 
     cs.stage_macroblock(SilenceSegment(1), 1);
     cs.fade_all_subscenes(0);
