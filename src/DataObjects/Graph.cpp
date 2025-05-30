@@ -543,7 +543,7 @@ public:
             ct += sig;
         }
 
-        float ans = 3 + 2.4*pow(sum_distance_sq / ct, .5);
+        float ans = 6 + 4.8*pow(sum_distance_sq / ct, .5);
         return ans;
     }
 

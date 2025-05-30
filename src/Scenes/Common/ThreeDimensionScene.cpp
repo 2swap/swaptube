@@ -64,8 +64,9 @@ struct Surface {
     glm::vec3 normal;
 
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, const string& n, float op = 1)
-        : center(c), opacity(op), pos_x_dir(l),
-          pos_y_dir(u*(VIDEO_WIDTH/static_cast<float>(VIDEO_HEIGHT))),
+        : center(c), opacity(op),
+          pos_x_dir(l * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_WIDTH)),
+          pos_y_dir(u * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_HEIGHT)),
           name(n) {
         ilr2 = 0.5f / (l.x*l.x + l.y*l.y + l.z*l.z);
         iur2 = 0.5f / (u.x*u.x + u.y*u.y + u.z*u.z);
@@ -79,7 +80,7 @@ public:
     ThreeDimensionScene(const double width = 1, const double height = 1)
         : SuperScene(width, height), use_state_for_center(false), sketchpad(width, height) {
         state_manager.set(unordered_map<string, string>{
-            {"fov", ".5"},
+            {"fov", "1"},
             {"x", "0"},
             {"y", "0"},
             {"z", "0"},
@@ -274,7 +275,7 @@ public:
             render_surface(surface);
         auto end_surfaces = std::chrono::high_resolution_clock::now();
 
-        // TODO profile the time each of these take, see which is worse
+        // TODO remove profiler
         auto start_points = std::chrono::high_resolution_clock::now();
         if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
             render_points_on_gpu(

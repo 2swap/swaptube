@@ -125,7 +125,7 @@ public:
         return VIDEO_HEIGHT * state_manager.get_state({"h"})["h"];
     }
 
-    double get_geom_mean_size() const{ return sqrt(get_width()*get_height()); }
+    double get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }
 
     StateManager state_manager;
     bool global_publisher_key = false; // Scenes can publish to global state only if this is manually set to true in the project
