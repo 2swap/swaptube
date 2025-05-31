@@ -14,7 +14,7 @@ __device__ inline int colorlerp(int c1, int c2, float t) {
     return (a << 24) | (r << 16) | (g << 8) | b;
 }
 
-__device__ inline double square(double x) {
+__device__ inline float square(float x) {
     return x * x;
 }
 
@@ -27,6 +27,11 @@ __device__ int device_color_combine(int base_color, int over_color, float overla
     float chroma_weight = over_opacity / final_opacity;
     int final_rgb = colorlerp(base_color, over_color, chroma_weight) & 0x00ffffff;
     return (final_alpha << 24) | (final_rgb);
+}
+
+__device__ void set_pixel(int x, int y, int col, unsigned int* pixels, int width, int height) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return;
+    pixels[y * width + x] = col;
 }
 
 __device__ void overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {

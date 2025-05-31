@@ -20,6 +20,11 @@
  * StateManager will intentionally run the second equation first.
  */
 
+enum TransitionType {
+    MICRO,
+    MACRO
+};
+
 struct VariableContents {
     // The numerical value currently stored by this variable
     double value;
@@ -160,12 +165,6 @@ public:
             } else break;
         }
     }
-    void add_microblock_transition(string variable, string equation) {
-        add_transition(variable, equation, true);
-    }
-    void add_macroblock_transition(string variable, string equation) {
-        add_transition(variable, equation, false);
-    }
     void remove_equation(string variable) {
         /* When a new component is removed, we do not know the
          * correct compute order anymore.
@@ -180,33 +179,24 @@ public:
     }
 
     /* Bulk Modifiers. Naive. One per modifier. */
-    void microblock_transition(unordered_map<string, string> equations) {
+    void transition(const TransitionType tt, const unordered_map<string, string>& equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
-            add_microblock_transition(it->first, it->second);
+            add_transition(tt, it->first, it->second);
         }
     }
-    void macroblock_transition(unordered_map<string, string> equations) {
-        for(auto it = equations.begin(); it != equations.end(); it++){
-            add_macroblock_transition(it->first, it->second);
-        }
-    }
-    void set(unordered_map<string, string> equations) {
+    void set(const unordered_map<string, string>& equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             add_equation(it->first, it->second);
         }
     }
-    void remove_equations(unordered_map<string, string> equations) {
+    void remove(const unordered_map<string, string>& equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
             remove_equation(it->first);
         }
     }
-
-    void close_microblock_transitions(){
-        close_all_transitions(in_microblock_transition);
-    }
-
-    void close_macroblock_transitions(){
-        close_all_transitions(in_macroblock_transition);
+    void close_transitions(const TransitionType tt){
+        if(tt == MICRO) close_all_transitions(in_microblock_transition);
+        if(tt == MACRO) close_all_transitions(in_macroblock_transition);
     }
 
     void evaluate_all() {
@@ -303,6 +293,19 @@ public:
         }
     }
 
+    string get_equation(const string& variable) const {
+        return get_variable(variable).equation;
+    }
+
+    double get_value(const string& variable) const {
+        VariableContents vc = get_variable(variable);
+
+        // We should never ever read from a stale variable.
+        assert(vc.fresh);
+
+        return vc.value;
+    }
+
     const void set_subjugated(bool b) {
         subjugated = b;
     }
@@ -322,6 +325,27 @@ public:
             result.set(varname, get_value(varname));
         }
         return result;
+    }
+
+    void add_transition(const TransitionType tt, const string& variable, const string& equation) {
+        // No point in doing a noop transition
+        if(get_equation(variable) == equation) return;
+
+        // Nested transitions not supported
+        if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
+           in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
+            throw runtime_error("Transition added to a variable already in transition: " + variable);
+        }
+
+             if(tt == MICRO) in_microblock_transition.insert(variable);
+        else if(tt == MACRO) in_macroblock_transition.insert(variable);
+        else throw runtime_error("Invalid transition type: " + to_string(tt));
+        string eq1 = get_equation(variable);
+        string eq2 = equation;
+        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (tt==MICRO?"micro":"macro") + "block_fraction> smoothlerp";
+        add_equation(variable+".pre_transition", eq1);
+        add_equation(variable+".post_transition", eq2);
+        add_equation(variable, lerp_both);
     }
 
 private:
@@ -411,19 +435,6 @@ private:
         return variables.at(variable);
     }
 
-    string get_equation(const string& variable) const {
-        return get_variable(variable).equation;
-    }
-
-    double get_value(const string& variable) const {
-        VariableContents vc = get_variable(variable);
-
-        // We should never ever read from a stale variable.
-        assert(vc.fresh);
-
-        return vc.value;
-    }
-
     double get_value_from_parent(const string& variable) const {
         if(parent == nullptr)
             throw runtime_error("Parent was a nullptr while looking for [" + variable + "]");
@@ -441,27 +452,6 @@ private:
         in_transition.clear();
     }
 
-    void add_transition(string variable, string equation, bool micro) {
-        // No point in doing a noop transition
-        if(get_equation(variable) == equation) return;
-
-        // Nested transitions not supported
-        if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
-           in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
-            throw runtime_error("Transition added to a variable already in transition: " + variable);
-        }
-
-        if(micro)
-            in_microblock_transition.insert(variable);
-        else
-            in_macroblock_transition.insert(variable);
-        string eq1 = get_equation(variable);
-        string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (micro?"micro":"macro") + "block_fraction> smoothlerp";
-        add_equation(variable+".pre_transition", eq1);
-        add_equation(variable+".post_transition", eq2);
-        add_equation(variable, lerp_both);
-    }
 };
 
 void test_state_manager() {

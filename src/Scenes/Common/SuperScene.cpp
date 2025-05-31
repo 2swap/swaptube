@@ -13,26 +13,25 @@ public:
         }
     }
 
-    void fade_all_subscenes(double opacity, bool micro = true) {
+    void fade_all_subscenes(const TransitionType tt, const double opacity) {
         for (auto& kv : subscenes) {
-            fade_subscene(kv.first, opacity, micro);
+            fade_subscene(tt, kv.first, opacity);
         }
     }
 
-    void fade_all_subscenes_except(const string& name, double opacity, bool micro = true) {
+    void fade_all_subscenes_except(const TransitionType tt, const string& name, const double opacity) {
         for (auto& kv : subscenes) {
-            if(kv.first != name) fade_subscene(kv.first, opacity, micro);
+            if(kv.first != name) fade_subscene(tt, kv.first, opacity);
         }
     }
 
-    void fade_subscene(const string& name, double opacity, bool micro = true) {
+    void fade_subscene(const TransitionType tt, const string& name, const double opacity) {
         auto it = subscenes.find(name);
         if(it != subscenes.end()){
             unordered_map<string, string> map = {
                 {name + ".opacity", to_string(opacity)}
             };
-            if(micro) state_manager.microblock_transition(map);
-            else      state_manager.macroblock_transition(map);
+            state_manager.transition(tt, map);
         }
     }
 
@@ -85,9 +84,9 @@ protected:
         return false;
     }
 
-    void on_end_transition_extra_behavior(bool is_macroblock) override {
+    void on_end_transition_extra_behavior(const TransitionType tt) override {
         for(const auto& kv : subscenes){
-            kv.second->on_end_transition(is_macroblock);
+            kv.second->on_end_transition(tt);
         }
     }
 

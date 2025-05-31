@@ -33,7 +33,8 @@ __device__ void device_fill_circle(float cx, float cy, float r, int col, unsigne
         float sdx = square(dx);
         for (float dy = -r; dy < r; dy++) {
             if (sdx + square(dy) < r*r)
-                overlay_pixel(cx + dx, cy + dy, col, opa, pixels, width, height);
+                //overlay_pixel(cx + dx, cy + dy, col, opa, pixels, width, height);
+                    set_pixel(cx + dx, cy + dy, col     , pixels, width, height);
         }
     }
 }
@@ -45,12 +46,17 @@ __device__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity
     int sy = (y1 < y2) ? 1 : -1;
     int err = dx - dy;
     while (true) {
+            set_pixel(x1, y1, col,          pixels, width, height);
         overlay_pixel(x1, y1, col, opacity, pixels, width, height);
         for (int i = 1; i < thickness; i++) {
-            overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
-            overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
-            overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
-            overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
+            set_pixel(x1 + i, y1, col, pixels, width, height);
+            set_pixel(x1 - i, y1, col, pixels, width, height);
+            set_pixel(x1, y1 + i, col, pixels, width, height);
+            set_pixel(x1, y1 - i, col, pixels, width, height);
+            //overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
+            //overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
+            //overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
+            //overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
         }
         if (x1 == x2 && y1 == y2) break;
         int e2 = err * 2;

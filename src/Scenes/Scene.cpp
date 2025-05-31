@@ -23,7 +23,7 @@ public:
     virtual void draw() = 0;
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
-    virtual void on_end_transition_extra_behavior(bool is_macroblock){};
+    virtual void on_end_transition_extra_behavior(const TransitionType tt){};
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
     void publish_global(const unordered_map<string, double>& s) const {
         for(const auto& p : s) {
@@ -60,10 +60,9 @@ public:
         has_updated_since_last_query = false;
         p=&pix;
     }
-    void on_end_transition(bool is_macroblock) {
-                           state_manager.close_microblock_transitions();
-        if (is_macroblock) state_manager.close_macroblock_transitions();
-        on_end_transition_extra_behavior(is_macroblock);
+    void on_end_transition(const TransitionType tt) {
+        state_manager.close_transitions(tt);
+        on_end_transition_extra_behavior(tt);
     }
 
     bool microblocks_remaining() {
@@ -98,14 +97,12 @@ public:
         scene_duration_frames = num_frames_to_be_done_after_this_time - complete_macroblock_frames;
         if(total_microblocks < 10) cout << "Rendering a scene. Frame Count: " << scene_duration_frames << " (microblocks left: " << remaining_microblocks << ", " << remaining_macroblock_frames << " frames total)" << endl;
 
-        for (int frame = 0; frame < scene_duration_frames; frame++) {
-            render_one_frame(frame);
-        }
+        for (int frame = 0; frame < scene_duration_frames; frame++) render_one_frame(frame);
         remaining_microblocks--;
         bool done_macroblock = remaining_microblocks == 0;
                             global_state["microblock_number"]++;
         if(done_macroblock) global_state["macroblock_number"]++;
-        on_end_transition(done_macroblock);
+        on_end_transition(done_macroblock ? MACRO : MICRO);
     }
 
     void update_state() {

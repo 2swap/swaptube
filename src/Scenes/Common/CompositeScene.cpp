@@ -16,16 +16,14 @@ public:
     CompositeScene(const double width = 1, const double height = 1)
         : SuperScene(width, height) {}
 
-    void add_scene_fade_in(shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, bool micro = true, double opa=1){
+    void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, double opa=1){
         add_scene(sc, state_manager_name, x, y);
         const string key = state_manager_name + ".opacity";
         state_manager.set({{key, "0"}});
-        StateSet map = {{key, to_string(opa)}};
-        if(micro) state_manager.microblock_transition(map);
-        else      state_manager.macroblock_transition(map);
+        state_manager.transition(tt, {{key, to_string(opa)}});
     }
 
-    void add_scene(shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5){
+    void add_scene(shared_ptr<Scene> sc, const string& state_manager_name, double x = 0.5, double y = 0.5){
         state_manager.set({
             {state_manager_name + ".pointer_x", to_string(x)},
             {state_manager_name + ".pointer_y", to_string(y)},
@@ -34,6 +32,13 @@ public:
             {state_manager_name + ".y", to_string(y)},
         });
         add_subscene_check_dupe(state_manager_name, sc);
+    }
+
+    void slide_scene(const TransitionType tt, const string& name, const double dx, const double dy){
+        state_manager.transition(tt, {
+            {name + ".x", state_manager.get_equation(name + ".x") + " " + to_string(dx) + " +"},
+            {name + ".y", state_manager.get_equation(name + ".y") + " " + to_string(dy) + " +"},
+        });
     }
 
     void draw() override {

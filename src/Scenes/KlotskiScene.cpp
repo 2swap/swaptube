@@ -21,12 +21,10 @@ public:
         }
 
     // No interactive state is needed for this static klotski scene.
-    void on_end_transition_extra_behavior(bool is_macroblock) override {
-        if (staged_move.piece != '.') {
-            kb = copy_staged_board();
-        }
+    void on_end_transition_extra_behavior(const TransitionType tt) override {
+        if (staged_move.piece != '.') kb = copy_staged_board();
         staged_move = {'.', 0, 0};
-        if(is_macroblock)highlight_char = '.';
+        if (tt == MACRO) highlight_char = '.';
     }
     KlotskiBoard copy_staged_board() {
         return kb.move_piece(staged_move);

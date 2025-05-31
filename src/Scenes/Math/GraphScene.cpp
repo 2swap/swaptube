@@ -29,7 +29,7 @@ class GraphScene : public ThreeDimensionScene {
 public:
     double curr_hash = 0;
     double next_hash = 0;
-    GraphScene(Graph* g, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), graph(g) {
+    GraphScene(Graph* g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g) {
         state_manager.set(unordered_map<string, string>{
             {"repel", "1"},
             {"attract", "1"},
@@ -111,7 +111,7 @@ public:
         return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();
     }
 
-    void on_end_transition_extra_behavior(bool is_macroblock) override {
+    void on_end_transition_extra_behavior(const TransitionType tt) override {
         curr_hash = next_hash;
     }
 
@@ -185,7 +185,7 @@ public:
         ThreeDimensionScene::draw();
     }
 
-    bool surfaces_override_unsafe = false; // For really big graphs, you can permanently turn off node stuff. Careful.
+    bool surfaces_override_unsafe = false; // For really big graphs, you can permanently turn off node stuff. This happens in the constructor, but careful when handling manually.
 
 protected:
     Graph* graph;

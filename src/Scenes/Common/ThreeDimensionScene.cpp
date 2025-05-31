@@ -271,8 +271,7 @@ public:
 
         // Render surfaces via their CUDA integration.
         auto start_surfaces = std::chrono::high_resolution_clock::now();
-        for (const Surface& surface : surfaces)
-            render_surface(surface);
+        if (state["surfaces_opacity"] > 0.001) for (const Surface& surface : surfaces) render_surface(surface);
         auto end_surfaces = std::chrono::high_resolution_clock::now();
 
         // TODO remove profiler
