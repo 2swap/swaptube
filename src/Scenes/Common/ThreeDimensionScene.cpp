@@ -276,6 +276,7 @@ public:
 
         // TODO remove profiler
         auto start_points = std::chrono::high_resolution_clock::now();
+        cout << "(P";
         if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
             render_points_on_gpu(
                 pix.pixels.data(),
@@ -292,9 +293,11 @@ public:
                 fov
             );
         }
+        cout << ")" << flush;
         auto end_points = std::chrono::high_resolution_clock::now();
 
         auto start_lines = std::chrono::high_resolution_clock::now();
+        cout << "(L";
         if (!lines.empty() && state["lines_opacity"] > .001) {
             int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
             render_lines_on_gpu(
@@ -312,6 +315,7 @@ public:
                 fov
             );
         }
+        cout << ")" << flush;
         auto end_lines = std::chrono::high_resolution_clock::now();
 
         auto end_total = std::chrono::high_resolution_clock::now();

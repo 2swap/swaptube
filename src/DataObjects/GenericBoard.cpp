@@ -26,6 +26,11 @@ public:
             hash = type_specific_hash();
         return hash;
     }
+    double get_reverse_hash() {
+        if(hash == 0)
+            reverse_hash = type_specific_reverse_hash();
+        return reverse_hash;
+    }
     string representation;
 
     int get_highlight_type() {
@@ -41,6 +46,7 @@ public:
 private:
     virtual bool is_solution() = 0;
     virtual double type_specific_hash() = 0;
+    virtual double type_specific_reverse_hash() {return -3.1415;}
     double hash = 0;
     int highlight_type = -1;
 };

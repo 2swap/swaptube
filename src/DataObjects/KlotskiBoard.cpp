@@ -56,6 +56,28 @@ void KlotskiBoard::compute_letters() {
     }
 }
 
+double KlotskiBoard::type_specific_reverse_hash() {
+    compute_letters();
+    double hash_in_progress = 0;
+    set<double> s;
+
+    for (const char& letter: letters) {
+        double sum = 0;
+        for(int y = 0; y < h; y++)
+            for(int x = w - 1; x >= 0; x--)
+                if(representation[y*w + x] == letter) {
+                    int i = y*w + x;
+                    sum += sin((i+1)*cbrt(i+2));
+                }
+        s.insert(cbrt(sum));
+    }
+
+    for(double d : s)
+        hash_in_progress += d;
+
+    return hash_in_progress;
+}
+
 double KlotskiBoard::type_specific_hash() {
     compute_letters();
     double hash_in_progress = 0;

@@ -17,7 +17,7 @@ auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer
 int get_graph_size(const KlotskiBoard& kb){
     Graph g;
     g.add_to_stack(new KlotskiBoard(kb));
-    g.expand_completely();
+    g.expand();
     return g.size();
 }
 
@@ -47,7 +47,7 @@ double yval = .15*VIDEO_WIDTH/VIDEO_HEIGHT;
 void perform_shortest_path_with_graph(CompositeScene& cs, shared_ptr<GraphScene> gs_ptr, shared_ptr<KlotskiScene> ks_ptr, KlotskiBoard end, const AudioSegment &msg) {
     Graph g;
     g.add_to_stack(new KlotskiBoard(ks_ptr->copy_board()));
-    g.expand_completely();
+    g.expand();
     auto path = g.shortest_path(ks_ptr->copy_board().get_hash(), end.get_hash()).first;
     cs.stage_macroblock(msg, path.size()-1);
     path.pop_front();
@@ -65,7 +65,7 @@ void perform_shortest_path_with_graph(CompositeScene& cs, shared_ptr<GraphScene>
 void perform_shortest_path(CompositeScene& cs, shared_ptr<KlotskiScene> ks_ptr, KlotskiBoard end, const AudioSegment &msg) {
     Graph g;
     g.add_to_stack(new KlotskiBoard(ks_ptr->copy_board()));
-    g.expand_completely();
+    g.expand();
     auto path = g.shortest_path(ks_ptr->copy_board().get_hash(), end.get_hash()).first;
     cs.stage_macroblock(msg, path.size()-1);
     path.pop_front();
@@ -211,7 +211,7 @@ void part1(){
     // Expand the graph by one node until it is halfway complete. Fade out everything from the CompositeScene and then delete scenes when faded out.
     cs.stage_macroblock(FileSegment("You might start to wonder- if we add all the nodes, what would the graph look like?"), get_graph_size(intermediate) * .7);
     while(cs.microblocks_remaining()) {
-        g.expand_once();
+        g.expand(1);
         cs.render_microblock();
     }
     cs.remove_all_subscenes();
@@ -229,7 +229,7 @@ void part2() {
         cs.add_scene(gs2d_ptr, "gs2d");
         cs.stage_macroblock(FileSegment("Maybe it has some overarching structure..."), get_graph_size(manifold_2d));
         while(cs.microblocks_remaining()){
-            g2d.expand_once();
+            g2d.expand(1);
             cs.render_microblock();
         }
 
@@ -250,7 +250,7 @@ void part2() {
         gs3d_ptr->state_manager.set(default_graph_state);
         cs.add_scene(gs3d_ptr, "gs3d", 0.75, 0.5);
         while(cs.microblocks_remaining()){
-            g3d.expand_once();
+            g3d.expand(1);
             cs.render_microblock();
         }
 
@@ -272,7 +272,7 @@ void part2() {
         //gs_int_ptr->state_manager.set({{"attract","-1"}, {"repel","-1"}});
         cs.add_scene_fade_in(MICRO, gs_int_ptr, "gs_int");
         while(cs.microblocks_remaining()){
-            g_int.expand_once();
+            g_int.expand(1);
             cs.render_microblock();
         }
 
@@ -399,7 +399,7 @@ void part4() {
     bggs_ptr->state_manager.set(default_graph_state);
     cs.add_scene(bggs_ptr, "bggs");
     while(cs.microblocks_remaining()){
-        bg_graph.expand_once();
+        bg_graph.expand(1);
         cs.render_microblock();
     }
     cs.stage_macroblock(FileSegment("What makes it so hard?"), 1);
@@ -410,7 +410,7 @@ void part4() {
     cs.stage_macroblock(FileSegment("The structure defined by this puzzle- what is its _form_?"), 100);
     cs.fade_subscene(MACRO, "bggs", 0);
     while(cs.microblocks_remaining()){
-        bg_graph.expand_once();
+        bg_graph.expand(1);
         cs.render_microblock();
     }
 }
@@ -434,7 +434,7 @@ void showcase_graph(const KlotskiBoard& kb, const string& script) {
     int expansion_steps = get_graph_size(kb);
     cs.stage_macroblock(FileSegment(script), expansion_steps);
     while (cs.microblocks_remaining()) {
-        g.expand_once();
+        g.expand(1);
         cs.render_microblock();
     }
     cs.stage_macroblock(SilenceSegment(4), 1);
@@ -465,7 +465,7 @@ void part5() {
 
     cs.stage_macroblock(FileSegment("To help build some intuition, here are some contrived puzzles first."), get_graph_size(manifold_1d));
     while(cs.microblocks_remaining()) {
-        g1d.expand_once();
+        g1d.expand(1);
         cs.render_microblock();
     }
     cs.stage_macroblock(FileSegment("To start off, with just a single long block, there is only one degree of freedom in movement."), 10);
@@ -495,7 +495,7 @@ void part5() {
     cs.add_scene(gs2d, "gs2d", .6, .5);
     cs.render_microblock();
     while(cs.microblocks_remaining()) {
-        g2d.expand_once();
+        g2d.expand(1);
         cs.render_microblock();
     }
 
@@ -520,7 +520,7 @@ void part5() {
     cs.add_scene(ks3d, "ks3d", -1, 1);
     Graph g3d;
     g3d.add_to_stack(new KlotskiBoard(manifold_3d));
-    g3d.expand_completely();
+    g3d.expand();
     auto gs3d = make_shared<GraphScene>(&g3d, false);
     gs3d->state_manager.set(default_graph_state);
     cs.add_scene(gs3d, "gs3d", -1, 1);
@@ -542,7 +542,7 @@ void part5() {
     cs.add_scene(ks4d, "ks4d", -1, 1);
     Graph g4d;
     g4d.add_to_stack(new KlotskiBoard(manifold_4d));
-    g4d.expand_completely();
+    g4d.expand();
     auto gs4d = make_shared<GraphScene>(&g4d, false);
     gs4d->state_manager.set(default_graph_state);
     cs.add_scene(gs4d, "gs4d", -1, 1);
@@ -579,12 +579,12 @@ void part5() {
     cs.state_manager.set({{"ksr7.x",".75"},{"ksr7.y",".25"}});
     Graph gr7;
     gr7.add_to_stack(new KlotskiBoard(ring_7x7));
-    gr7.expand_completely();
+    gr7.expand();
     auto gsr = make_shared<GraphScene>(&gr7, false, 0.5,0.5);
     gsr->state_manager.set(default_graph_state);
     cs.add_scene_fade_in(MICRO, gsr, "gsr", 0.75, 0.75);
     while(cs.microblocks_remaining()) {
-        gr7.expand_once();
+        gr7.expand(1);
         cs.render_microblock();
     }
 
@@ -633,7 +633,7 @@ void part5() {
     cs.add_scene_fade_in(MICRO, gst, "gst", 0.6, 0.5);
     gst->next_hash = kstri->copy_board().get_hash();
     while(cs.microblocks_remaining()) {
-        grt.expand_once();
+        grt.expand(1);
         cs.render_microblock();
     }
     cs.stage_macroblock(FileSegment("we get this triangle shape."), 1);
@@ -665,7 +665,7 @@ void part5() {
     grt.add_to_stack(new KlotskiBoard(triangle_inv));
     gst->next_hash = kstri->copy_staged_board().get_hash();
     while(cs.microblocks_remaining()){
-        grt.expand_once();
+        grt.expand(1);
         cs.render_microblock();
     }
 
@@ -715,7 +715,7 @@ void part5() {
     gs3rb->state_manager.set(default_graph_state);
     cs.add_scene(gs3rb, "gs3rb", 0.6, 0.5);
     while(cs.microblocks_remaining()){
-        g3rb.expand_once();
+        g3rb.expand(1);
         cs.render_microblock();
     }
     cs.stage_macroblock(SilenceSegment(2), 1);
@@ -745,7 +745,7 @@ void part6() {
 
     cs.stage_macroblock(FileSegment("As an example, this puzzle has some cool behavior."), get_graph_size(apk));
     while(cs.microblocks_remaining()){
-        g_apk.expand_once();
+        g_apk.expand(1);
         cs.render_microblock();
     }
 
@@ -834,7 +834,7 @@ void part6() {
     gs_15->state_manager.set(default_graph_state);
     cs.add_scene(gs_15, "gs_15", 0.4, 0.5);
     while(cs.microblocks_remaining()){
-        g_15.expand_once();
+        g_15.expand(1);
         cs.render_microblock();
     }
 
@@ -847,7 +847,7 @@ void part6() {
     g2d.add_to_stack(new KlotskiBoard(manifold_2d));
     auto gs2d = make_shared<GraphScene>(&g2d, false);
     gs2d->state_manager.set(default_graph_state);
-    g2d.expand_completely();
+    g2d.expand();
     ks_apk->state_manager.set({{"w",".3"}, {"h",".5"}});
     ks2d->state_manager.set({{"w",".3"}, {"h",".5"}});
     ks15->state_manager.transition(MACRO, {{"w",".3"}, {"h",".5"}});
@@ -884,7 +884,7 @@ void part7() {
     for(int i=0;i<boards.size();++i){
         Graph* g = new Graph();
         g->add_to_stack(new KlotskiBoard(*boards[i]));
-        g->expand_completely();
+        g->expand();
         auto gs = make_shared<GraphScene>(g, false, .65, .65);
         gs->state_manager.set(default_graph_state);
         bool top = (i&1)==1;
@@ -1004,7 +1004,7 @@ hhh..e
     gs_int->state_manager.set(less_spinny);
     cs.add_scene(gs_int, "gs_int", .6, .5);
     while(cs.microblocks_remaining()) {
-        g_int.expand_once();
+        g_int.expand(1);
         cs.render_microblock();
     }
 
@@ -1072,6 +1072,7 @@ hhh..e
 
 void part8() {
     // Show the full klotski "sun" puzzle for the first time.
+    FOR_REAL = false;
     CompositeScene cs;
     auto ks = make_shared<KlotskiScene>(sun);
     cs.add_scene(ks, "ks", .5, 1.5);
@@ -1091,16 +1092,20 @@ void part8() {
 
     Graph g;
     g.add_to_stack(new KlotskiBoard(sun));
+    g.dimensions = 4;
     auto gs = std::make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
     gs->state_manager.set({{"physics_multiplier", "50"}, {"z_dilation", "1"}/*, {"points_opacity","0"}*/});
     cs.add_scene(gs, "gs");
-    cs.stage_macroblock(SilenceSegment(4), get_graph_size(sun));
+    FOR_REAL = true;
+
+    cs.stage_macroblock(SilenceSegment(4), get_graph_size(sun)/10);
     while(cs.microblocks_remaining()) {
-        g.expand_once();
+        g.expand(10);
         cs.render_microblock();
     }
 
+    g.dimensions = 3;
     cs.stage_macroblock(SilenceSegment(6), 1);
     cs.render_microblock();
 }

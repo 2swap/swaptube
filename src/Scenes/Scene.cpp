@@ -46,10 +46,12 @@ public:
         return state != last_state;
     }
     void query(Pixels*& p) {
+        cout << "(" << flush;
         State temp_state = state;
         if(!has_updated_since_last_query){
             update();
         }
+        cout << "|" << flush;
         if(needs_redraw()){
             pix = Pixels(get_width(), get_height());
             has_ever_rendered = true;
@@ -59,6 +61,7 @@ public:
         mark_data_unchanged();
         has_updated_since_last_query = false;
         p=&pix;
+        cout << ")" << flush;
     }
     void on_end_transition(const TransitionType tt) {
         state_manager.close_transitions(tt);
@@ -131,6 +134,7 @@ public:
 private:
     void render_one_frame(int microblock_frame_number){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
+        cout << "[" << flush;
 
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_macroblock_frames) / total_macroblock_frames;
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
@@ -160,8 +164,7 @@ private:
 
         remaining_macroblock_frames--;
         global_state["frame_number"]++;
-        cout << "#";
-        fflush(stdout);
+        cout << "]" << flush;
     }
 
     bool has_updated_since_last_query = false;

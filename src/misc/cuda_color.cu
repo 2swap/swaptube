@@ -14,7 +14,7 @@ __device__ inline int colorlerp(int c1, int c2, float t) {
     return (a << 24) | (r << 16) | (g << 8) | b;
 }
 
-__device__ inline float square(float x) {
+__device__ __forceinline__ float square(float x) {
     return x * x;
 }
 

@@ -21,10 +21,6 @@ using json = nlohmann::json;
 
 extern "C" void compute_repulsion_cuda(const glm::vec4* host_positions, glm::vec4* host_velocity_deltas, int num_nodes, float repel);
 
-double age_to_mass(double a) {
-    return 1-exp(-a*.1);
-}
-
 glm::vec4 random_unit_cube_vector() {
     return glm::vec4(1 * static_cast<float>(rand()) / RAND_MAX,
                      1 * static_cast<float>(rand()) / RAND_MAX,
@@ -151,10 +147,13 @@ public:
      * Expand the graph by adding neighboring nodes.
      * Return amount of new nodes that were added.
      */
-    int expand_once() {
+    int expand(int n = -1) {
+        if(n == 0) throw runtime_error("expand argument was 0. positive: finite node count. negative: full graph.");
+        int added = 0;
         while (!traverse_deque.empty()) {
             double id = traverse_deque.front();
             traverse_deque.pop_front();
+
             unordered_set<GenericBoard*> child_nodes = nodes.at(id).data->get_children();
             bool done = false;
             for (const auto& child : child_nodes) {
@@ -162,44 +161,21 @@ public:
                 if (done || node_exists(child_hash)) delete child;
                 else {
                     add_node_without_edges(child);
-                    traverse_deque.push_front(id);
+                    if(n>0) traverse_deque.push_front(id); // No need to save progress if expanding whole graph
                     traverse_deque.push_back(child_hash); // push_back: bfs // push_front: dfs
-                    add_missing_edges(true);
-                    done = true;
+                    added++;
+                    if(added >= n && n > 0) done = true;
                 }
             }
             if(done) {
+                add_missing_edges(true);
                 mark_updated();
-                return 1;
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Expand the graph by adding neighboring nodes.
-     * Return amount of new nodes that were added.
-     */
-    int expand_completely() {
-        int new_nodes_added = 0;
-        while (!traverse_deque.empty()) {
-            double id = traverse_deque.front();
-            traverse_deque.pop_front();
-
-            unordered_set<GenericBoard*> child_nodes = nodes.at(id).data->get_children();
-            for (const auto& child : child_nodes) {
-                double child_hash = child->get_hash();
-                if (node_exists(child_hash)) delete child;
-                else {
-                    add_node_without_edges(child);
-                    new_nodes_added++;
-                    traverse_deque.push_front(child_hash); // push_back: bfs // push_front: dfs
-                }
+                return added;
             }
         }
         add_missing_edges(true);
-        mark_updated();
-        return new_nodes_added;
+        if(added > 0) mark_updated();
+        return added;
     }
 
     void add_node_with_position(GenericBoard* t, double x, double y, double z) {
@@ -420,27 +396,25 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation) {
+    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation, const float mirror_force) {
         vector<Node*> node_vector;
 
-        for (auto& node_pair : nodes) {
-            node_vector.push_back(&node_pair.second);
-        }
-
+        for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
         for (int n = 0; n < iterations; n++) {
             for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
-            cout << ".";
-            fflush(stdout);
-            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, z_dilation);
+            cout << "." << flush;
+            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, z_dilation, mirror_force);
+        }
+        glm::vec4 com = center_of_mass();
+        for (int n = 0; n < size(); n++) {
+            node_vector[n]->position -= com*centering_strength;
         }
         mark_updated();
     }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation) {
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation, const float mirror_force) {
         int s = node_vector.size();
-        glm::vec4 com = center_of_mass();
 
-        // Create arrays for node positions and velocity deltas
         vector<glm::vec4> positions(s);
         vector<glm::vec4> velocity_deltas(s, glm::vec4(0.0f));
 
@@ -455,16 +429,20 @@ public:
         // Apply velocity deltas from CUDA and calculate attraction forces on the CPU
         for (int i = 0; i < s; ++i) {
             Node* node = node_vector[i];
+            if(glm::any(glm::isnan(velocity_deltas[i]))) velocity_deltas[i] = glm::vec4(0, 0, 0, 0);
+            if(glm::any(glm::isnan(node->position))) node->position = glm::vec4(0, 0, 0, 0);
             node->velocity += velocity_deltas[i]; // Repulsion forces from CUDA
 
             // Add symmetry forces
-            /* const auto& mirror = nodes.find(node->data->reverse_hash());
-            if(mirror != nodes.end()) {
-                node->velocity.x += .01*(-mirror->second.position.x - node->position.x);
-                node->velocity.y += .01*( mirror->second.position.y - node->position.y);
-                node->velocity.z += .01*( mirror->second.position.z - node->position.z);
-                node->velocity.w += .01*( mirror->second.position.w - node->position.w);
-            }*/
+            if (mirror_force > 0.0001) {
+                const auto& mirror = nodes.find(node->data->reverse_hash());
+                if(mirror != nodes.end()) {
+                    node->velocity.x += .01*(-mirror->second.position.x - node->position.x);
+                    node->velocity.y += .01*( mirror->second.position.y - node->position.y);
+                    node->velocity.z += .01*( mirror->second.position.z - node->position.z);
+                    node->velocity.w += .01*( mirror->second.position.w - node->position.w);
+                }
+            }
 
             // Calculate attraction forces (CPU)
             const EdgeSet& neighbor_nodes = node->neighbors;
@@ -490,10 +468,9 @@ public:
                 node->velocity *= scale;
             }
 
-            //if (node->hash == root_node_hash) node->position *= 0;
             node->velocity.y += gravity_strength / size();
             node->velocity *= decay;
-            node->position += node->velocity - com*centering_strength;
+            node->position += node->velocity;
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
             node->position.z *= z_dilation;
@@ -546,21 +523,6 @@ public:
         float ans = 6 + 4.8*pow(sum_distance_sq / ct, .5);
         return ans;
     }
-
-    /*
-    double farthest_node_distance_from_origin() const {
-        double max_distance_sq = 0.0; // Maximum squared distance
-
-        for (const auto& node_pair : nodes) {
-            const Node& node = node_pair.second;
-            double distance_sq = glm::dot(node.position, node.position);
-            max_distance_sq = max(max_distance_sq, distance_sq);
-        }
-
-        // Return the square root of the maximum squared distance
-        return sqrt(max_distance_sq);
-    }
-    */
 
     /*
     void render_json(string json_out_filename) {

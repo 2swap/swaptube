@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "../Scenes/Common/ThreeDimensionStructs.cpp"
-#include "../misc/cuda_color.cu" // Contains overlay_pixel
+#include "../misc/cuda_color.cu" // Contains overlay_pixel and set_pixel
 
 __device__ void device_coordinate_to_pixel(
     const glm::vec3& coordinate,
@@ -39,15 +39,16 @@ __device__ void device_fill_circle(float cx, float cy, float r, int col, unsigne
     }
 }
 
-__device__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height) {
+__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height) {
     int dx = abs(x2 - x1), dy = abs(y2 - y1);
     if (dx > 10000 || dy > 10000) return;
     int sx = (x1 < x2) ? 1 : -1;
     int sy = (y1 < y2) ? 1 : -1;
     int err = dx - dy;
+
     while (true) {
-            set_pixel(x1, y1, col,          pixels, width, height);
-        overlay_pixel(x1, y1, col, opacity, pixels, width, height);
+        set_pixel(x1, y1, col,          pixels, width, height);
+        //overlay_pixel(x1, y1, col, opacity, pixels, width, height);
         for (int i = 1; i < thickness; i++) {
             set_pixel(x1 + i, y1, col, pixels, width, height);
             set_pixel(x1 - i, y1, col, pixels, width, height);
@@ -59,7 +60,7 @@ __device__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity
             //overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
         }
         if (x1 == x2 && y1 == y2) break;
-        int e2 = err * 2;
+        int e2 = 2 * err;
         if (e2 > -dy) { err -= dy; x1 += sx; }
         if (e2 <  dx) { err += dx; y1 += sy; }
     }
@@ -82,7 +83,7 @@ __global__ void render_points_kernel(
         camera_direction, camera_pos, conjugate_camera_direction, fov,
         geom_mean_size, width, height, px, py);
     if (behind_camera) return;
-    float dot_size = p.size * points_radius_multiplier * geom_mean_size/400.0f;
+    float dot_size = p.size * points_radius_multiplier * geom_mean_size / 400.0f;
     device_fill_circle(px, py, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
 }
 
@@ -96,17 +97,17 @@ __global__ void render_lines_kernel(
     if (idx >= num_lines) return;
     Line ln = lines[idx];
     if (ln.opacity == 0) return;
-    bool behind_camera = false;
+    bool behind_camera1 = false, behind_camera2 = false;
     float p1x, p1y, p2x, p2y;
     device_coordinate_to_pixel(
-        ln.start, behind_camera,
+        ln.start, behind_camera1,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
         geom_mean_size, width, height, p1x, p1y);
     device_coordinate_to_pixel(
-        ln.end,   behind_camera,
+        ln.end,   behind_camera2,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
         geom_mean_size, width, height, p2x, p2y);
-    if (behind_camera) return;
+    if (behind_camera1 || behind_camera2) return;
     bresenham(
         p1x, p1y, p2x, p2y,
         ln.color, lines_opacity * ln.opacity, thickness,
