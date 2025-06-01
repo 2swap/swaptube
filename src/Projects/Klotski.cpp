@@ -682,8 +682,8 @@ void part5() {
     cs.stage_macroblock(FileSegment("With a graph like this, we implicitly create an imaginary counterpart structure,"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 6);
-    gst->state_manager.set({{"physics_multiplier","1"}});
+    cs.stage_macroblock(FileSegment("corresponding to the valid states which are unreachable without one block passing through the other."), 1);
+    gst->state_manager.transition(MACRO, {{"physics_multiplier","1"}});
     /*for(int i = 0; i < 6; i++) {
         const std::string s = std::string(9*i, '.') + "....cx.......c........a........a...." + std::string((5 - i)*9, '.');
         std::string s_dot = s;
@@ -696,11 +696,9 @@ void part5() {
         grt.add_directed_edge(b.get_hash(), a.get_hash());
         cs.render_microblock();
     }*/
-    cs.stage_macroblock(SilenceSegment(1), 1);
     gst->next_hash = kstri->copy_board().get_hash();
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(1), 1);
-    // TODO this is wrong
     kstri->stage_move({'c', 0, -7});
     KlotskiBoard lie(9, 9, "....cc.......c...................................a........a......................", true );
     gst->next_hash = lie.get_hash();
@@ -824,7 +822,6 @@ void part6() {
     cs.render_microblock();
 
     // swap to full_15_puzzle
-    // TODO this should not be rainbow-ed
     cs.stage_macroblock(SilenceSegment(1), 1);
     auto ks15 = make_shared<KlotskiScene>(full_15_puzzle);
     ks15->state_manager.set(board_width_height);
@@ -1159,7 +1156,7 @@ void part8() {
     cs.render_microblock();
 
     gs->state_manager.set({{"physics_multiplier", "0"}});
-    gs->state_manager.microblock_transition({{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
     cs.stage_macroblock(SilenceSegment(5), 1);
     cs.render_microblock();
 }

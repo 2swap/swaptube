@@ -17,6 +17,7 @@ public:
             state_manager.set({
                 {"margin", "0.2"},
                 {"dots", kb.rushhour?"1":"0"},
+                {"rainbow", "1"},
             });
         }
 
@@ -33,7 +34,7 @@ public:
         return kb;
     }
     const StateQuery populate_state_query() const override {
-        return StateQuery{"dots", "margin", "microblock_fraction", "t"};
+        return StateQuery{"dots", "margin", "microblock_fraction", "t", "rainbow"};
     }
     void mark_data_unchanged() override { }
     void change_data() override { }
@@ -98,6 +99,8 @@ public:
             }
         }
 
+        double rainbow = state["rainbow"];
+
         // Loop over every cell in the board.
         for (int y = 0; y < kb.h; y++) {
             for (int x = 0; x < kb.w; x++) {
@@ -128,6 +131,7 @@ public:
 
                 // Simple pseudo-random color based on the character value.
                 uint32_t color = rainbow(cell*.618034);
+                if(rainbow<0.999) color = color_lerp(OPAQUE_WHITE, color, rainbow);
 
                 double triple_micro = microblock_fraction*3;
                 double frac_triple_micro = triple_micro - static_cast<int>(triple_micro);
