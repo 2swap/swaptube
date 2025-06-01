@@ -141,7 +141,7 @@ public:
 
 
     /* Modifiers */
-    void add_equation(string variable, string equation) {
+    void add_equation(const string& variable, const string& equation) {
         // Validate variable name to contain only letters, numbers, dots, and underscores
         regex valid_variable_regex("^[a-zA-Z0-9._]+$");
         if (!regex_match(variable, valid_variable_regex)) {
@@ -165,7 +165,7 @@ public:
             } else break;
         }
     }
-    void remove_equation(string variable) {
+    void remove_equation(const string& variable) {
         /* When a new component is removed, we do not know the
          * correct compute order anymore.
          */

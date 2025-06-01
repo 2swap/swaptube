@@ -48,5 +48,6 @@ private:
     virtual double type_specific_hash() = 0;
     virtual double type_specific_reverse_hash() {return -3.1415;}
     double hash = 0;
+    double reverse_hash = 0;
     int highlight_type = -1;
 };

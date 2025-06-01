@@ -37,6 +37,7 @@ public:
             {"physics_multiplier", "1"},
             {"centering_strength", "1"},
             {"z_dilation", ".98"},
+            {"mirror_force", "0"},
         });
     }
 
@@ -92,6 +93,7 @@ public:
         s.insert("microblock_fraction");
         s.insert("centering_strength");
         s.insert("z_dilation");
+        s.insert("mirror_force");
         return s;
     }
 
@@ -102,7 +104,7 @@ public:
             for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/abs(diff), diff>0);
         }
         last_node_count = graph->size();
-        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["z_dilation"]);
+        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["z_dilation"], state["mirror_force"]);
         graph_to_3d();
         clear_surfaces();
         update_surfaces();

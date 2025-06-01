@@ -434,14 +434,10 @@ public:
             node->velocity += velocity_deltas[i]; // Repulsion forces from CUDA
 
             // Add symmetry forces
-            if (mirror_force > 0.0001) {
-                const auto& mirror = nodes.find(node->data->reverse_hash());
-                if(mirror != nodes.end()) {
-                    node->velocity.x += .01*(-mirror->second.position.x - node->position.x);
-                    node->velocity.y += .01*( mirror->second.position.y - node->position.y);
-                    node->velocity.z += .01*( mirror->second.position.z - node->position.z);
-                    node->velocity.w += .01*( mirror->second.position.w - node->position.w);
-                }
+            if (mirror_force > 0.001) {
+                const auto& mirror = nodes.find(node->data->get_reverse_hash());
+                if(mirror != nodes.end())
+                    node->velocity += mirror_force*(-mirror->second.position - node->position);
             }
 
             // Calculate attraction forces (CPU)

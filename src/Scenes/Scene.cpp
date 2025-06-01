@@ -64,7 +64,8 @@ public:
         cout << ")" << flush;
     }
     void on_end_transition(const TransitionType tt) {
-        state_manager.close_transitions(tt);
+        if(tt == MACRO) state_manager.close_transitions(tt);
+                        state_manager.close_transitions(MICRO);
         on_end_transition_extra_behavior(tt);
     }
 
