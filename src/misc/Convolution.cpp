@@ -256,7 +256,7 @@ TranslatedPixels subtract(const TranslatedPixels& original, const TranslatedPixe
 
             int alpha_diff = geta(pixel1) - geta(pixel2);
             int new_alpha = max(alpha_diff, 0);
-            int new_pixel = argb_to_col(new_alpha, getr(pixel1), getg(pixel1), getb(pixel1));
+            int new_pixel = argb(new_alpha, getr(pixel1), getg(pixel1), getb(pixel1));
 
             result.set_pixel(x, y, new_pixel);
         }

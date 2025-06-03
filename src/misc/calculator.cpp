@@ -64,6 +64,9 @@ double calculator(const string& expression) {
     unordered_map<string, OperatorInfo> operators = {
         {"smoothlerp", {[](vector<double>& operands) { return smoothlerp(operands[0], operands[1], operands[2]); }, 3}},
         {"lerp", {[](vector<double>& operands) { return lerp(operands[0], operands[1], operands[2]); }, 3}},
+        {"argb", {[](vector<double>& operands) { return           (argb(operands[0], operands[1], operands[2], operands[3])); }, 4}},
+        {"ahsv", {[](vector<double>& operands) { return HSV_to_RGB(argb(operands[0], operands[1], operands[2], operands[3])); }, 4}},
+        {"ayuv", {[](vector<double>& operands) { return YUV_to_RGB(argb(operands[0], operands[1], operands[2], operands[3])); }, 4}},
         {"+", {[](vector<double>& operands) { return operands[0] + operands[1]; }, 2}},
         {"-", {[](vector<double>& operands) { return operands[0] - operands[1]; }, 2}},
         {"*", {[](vector<double>& operands) { return operands[0] * operands[1]; }, 2}},

@@ -99,7 +99,7 @@ public:
             }
         }
 
-        double rainbow = state["rainbow"];
+        double rainbow_pct = state["rainbow"];
 
         // Loop over every cell in the board.
         for (int y = 0; y < kb.h; y++) {
@@ -131,7 +131,7 @@ public:
 
                 // Simple pseudo-random color based on the character value.
                 uint32_t color = rainbow(cell*.618034);
-                if(rainbow<0.999) color = color_lerp(OPAQUE_WHITE, color, rainbow);
+                if(rainbow_pct<0.999) color = colorlerp(OPAQUE_WHITE, color, rainbow_pct);
 
                 double triple_micro = microblock_fraction*3;
                 double frac_triple_micro = triple_micro - static_cast<int>(triple_micro);

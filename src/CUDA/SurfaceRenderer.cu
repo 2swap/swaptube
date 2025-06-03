@@ -7,7 +7,7 @@
 using namespace std;
 
 __device__ inline float d_lerp(float a, float b, float w) { return a * (1 - w) + b * w; }
-__device__ inline int d_argb_to_col(int a, int r, int g, int b) {
+__device__ inline int d_argb(int a, int r, int g, int b) {
     return (a << 24) +
            (r << 16) +
            (g << 8) +
@@ -18,7 +18,7 @@ __device__ inline int d_getr(int col) { return (col & 0x00ff0000) >> 16; }
 __device__ inline int d_getg(int col) { return (col & 0x0000ff00) >> 8; }
 __device__ inline int d_getb(int col) { return (col & 0x000000ff); }
 __device__ inline int d_colorlerp(int col1, int col2, float w) {
-    return d_argb_to_col(round(d_lerp(d_geta(col1), d_geta(col2), w)),
+    return d_argb(round(d_lerp(d_geta(col1), d_geta(col2), w)),
                          round(d_lerp(d_getr(col1), d_getr(col2), w)),
                          round(d_lerp(d_getg(col1), d_getg(col2), w)),
                          round(d_lerp(d_getb(col1), d_getb(col2), w)));

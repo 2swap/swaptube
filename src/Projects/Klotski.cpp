@@ -1113,8 +1113,8 @@ hhh..e
 
 void part8() {
     // Show the full klotski "sun" puzzle for the first time.
-    KlotskiBoard to_use = sun_no_minis;
-    FOR_REAL = false;
+    KlotskiBoard to_use = sun_small;
+    //FOR_REAL = false;
     CompositeScene cs;
     auto ks = make_shared<KlotskiScene>(to_use);
     cs.add_scene(ks, "ks", .5, 1.5);
@@ -1141,7 +1141,7 @@ void part8() {
     cs.add_scene(gs, "gs");
     FOR_REAL = true;
 
-    for(int i = 0; i < 100; i++) {
+    for(int i = 1; i < 101; i++) {
         int num_nodes_to_add = i*6;
         cs.stage_macroblock(SilenceSegment(.1), num_nodes_to_add);
         for(int j = 0; j < num_nodes_to_add; j++) {
@@ -1150,7 +1150,6 @@ void part8() {
         }
     }
 
-    cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(15), 1);
     g.dimensions = 3;
     cs.render_microblock();
@@ -1158,6 +1157,21 @@ void part8() {
     gs->state_manager.set({{"physics_multiplier", "0"}});
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
     cs.stage_macroblock(SilenceSegment(5), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("That's a whopping 25,955 nodes."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("Here is the starting position."), 1);
+    gs->next_hash = ks->copy_staged_board().get_hash();
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("Now, let's look at all of the pieces with the square at the bottom."), 1);
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        n.color = 0x22888888;
+        if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color |= 0xffff0000;
+    }
     cs.render_microblock();
 }
 
@@ -1172,13 +1186,16 @@ void showcase_all_graphs(){
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
-    part1();
-    part2();
-    part3();
-    part4();
-    part5();
-    part6();
-    part7();
-    return;
+    bool whole = false;
+    if(whole) {
+        part1();
+        part2();
+        part3();
+        part4();
+        part5();
+        part6();
+        part7();
+    }
+    cout << get_graph_size(sun_small) << endl;
     part8();
 }

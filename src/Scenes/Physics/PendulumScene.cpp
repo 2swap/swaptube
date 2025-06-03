@@ -46,7 +46,7 @@ public:
             for(int y = 0; y < path_background.h; y++) {
                 int alpha = geta(path_background.get_pixel(x, y));
                 alpha = max(0,alpha-alpha_subtract);
-                path_background.set_pixel(x, y, argb_to_col(alpha, 255, 255, 255));
+                path_background.set_pixel(x, y, argb(alpha, 255, 255, 255));
             }
         }
     }

@@ -186,7 +186,7 @@ Pixels mp4_to_pix_bounding_box(const std::string &video_name, int target_width, 
             uint8_t b = frameRGBA->data[0][offset + 2];
             uint8_t a = frameRGBA->data[0][offset + 3];
             // Combine the channels into a single integer using your helper function.
-            int color = argb_to_col(a, r, g, b);
+            int color = argb(a, r, g, b);
             pix.set_pixel(x, y, color);
         }
     }

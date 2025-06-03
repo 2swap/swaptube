@@ -237,6 +237,7 @@ KlotskiBoard weird3        (8, 8, "....bbb.ccccccb...d..eb...d..e....d.eef..gdde
 //suns
 KlotskiBoard fatsun        (4, 5, "abbcabbc.bb.e..he..h"                , false);
 KlotskiBoard sun_no_minis  (4, 5, "abbcabbc.dd.e..he..h"                , false);
+KlotskiBoard sun_small     (4, 5, ".bb..bb..dd.e..ee..e"                , false);
 KlotskiBoard truncatedsun  (4, 4, "abbcabbc.dd.efgh"                    , false);
 
 //geometry

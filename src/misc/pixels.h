@@ -244,7 +244,7 @@ public:
                 int a, r, g, b;
                 get_pixel_by_channels(x, y, a, r, g, b);
                 if(r != b || g != r) continue; // if this pixel is not true grayscale
-                pixels[x+y*w] = argb_to_col(r, 255, 255, 255);
+                pixels[x+y*w] = argb(r, 255, 255, 255);
             }
         }
     }
@@ -550,7 +550,7 @@ public:
                 pg = std::clamp(static_cast<int>(pg), 0, 255);
                 pb = std::clamp(static_cast<int>(pb), 0, 255);
 
-                result.set_pixel(x, y, argb_to_col(pa, pr, pg, pb));
+                result.set_pixel(x, y, argb(pa, pr, pg, pb));
             }
         }
 

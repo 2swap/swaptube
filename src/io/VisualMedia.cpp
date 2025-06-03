@@ -169,7 +169,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int offset = (y * width + x) * 4;
-            ret.set_pixel(x, y, argb_to_col(
+            ret.set_pixel(x, y, argb(
                 raw_data[offset + 3],  // Alpha
                 raw_data[offset + 2],  // Red
                 raw_data[offset + 1],  // Green
@@ -273,7 +273,7 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
             uint8_t g = px[1];
             uint8_t b = px[2];
             uint8_t a = px[3];
-            ret.set_pixel(x, y, argb_to_col(a, r, g, b));
+            ret.set_pixel(x, y, argb(a, r, g, b));
         }
     }
 
