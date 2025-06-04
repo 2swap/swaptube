@@ -32,7 +32,7 @@ public:
     }
     void update() {
         has_updated_since_last_query = true;
-        // Data and state can be co-dependent, so update state before and after.
+        // Data and state can be co-dependent, so update state before and after since state changes are idempotent.
         update_state();
         change_data();
         update_state();

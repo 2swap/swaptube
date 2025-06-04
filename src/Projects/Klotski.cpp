@@ -468,7 +468,7 @@ void part5() {
         g1d.expand(1);
         cs.render_microblock();
     }
-    cs.stage_macroblock(FileSegment("To start off, with just a single long block, there is only one degree of freedom in movement."), 10);
+    cs.stage_macroblock(FileSegment("To start off, with just a single long block, there's only one degree of freedom in movement."), 10);
     for(int i = 0; i < 10; i++){
         ks1d->stage_move({'a', 0, i<=4?1:-1});
         gs1d->next_hash = ks1d->copy_staged_board().get_hash();
@@ -678,7 +678,6 @@ void part5() {
 
     // Illegal move & mirror highlight
     gst->state_manager.transition(MICRO, {{"repel","1"}});
-    gst->next_hash = 0;
     cs.stage_macroblock(FileSegment("With a graph like this, we implicitly create an imaginary counterpart structure,"), 1);
     cs.render_microblock();
 
@@ -696,7 +695,6 @@ void part5() {
         grt.add_directed_edge(b.get_hash(), a.get_hash());
         cs.render_microblock();
     }*/
-    gst->next_hash = kstri->copy_board().get_hash();
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(1), 1);
     kstri->stage_move({'c', 0, -7});
@@ -789,7 +787,8 @@ void part6() {
     cs.render_microblock();
 
     // TODO show available actions on puzzle or empty spaces
-    cs.stage_macroblock(FileSegment("This is because on the puzzle, there are two available holes to permit movement."), 1);
+    // TODO show holes
+    cs.stage_macroblock(FileSegment("That's because on the puzzle, there are two available holes to permit movement."), 1);
     cs.render_microblock();
 
     // TODO stop twisting
@@ -865,7 +864,7 @@ void part6() {
     cs.state_manager.transition(MACRO, {{"ks2d.x",".1666"}, {"ks_apk.x",".5"}, {"ks15.x",".8333"}, {"gs_15.x",".8333"}, {"gs_15.y",".75"}});
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceSegment(.5), 1);
+    cs.stage_macroblock(SilenceSegment(1.5), 1);
     cs.fade_all_subscenes(MICRO, 0);
     cs.render_microblock();
 }
@@ -874,7 +873,7 @@ void part7() {
     CompositeScene cs;
 
     // intermediate graph overlay
-    cs.stage_macroblock(FileSegment("This is the puzzle we started with."), 1/*get_graph_size(intermediate)*/);
+    cs.stage_macroblock(FileSegment("Here's the puzzle we started with."), 1/*get_graph_size(intermediate)*/);
     auto ks_int = make_shared<KlotskiScene>(intermediate);
     //ks_int->state_manager.set(board_width_height);
     cs.add_scene_fade_in(MICRO, ks_int, "ks_int");
@@ -884,7 +883,7 @@ void part7() {
     cs.render_microblock();
 
     // pause scene
-    cs.stage_macroblock(FileSegment("Take a moment to think through what it might be. You might be able to guess its form from the arrangement of the pieces!"), 1);
+    cs.stage_macroblock(FileSegment("Take a moment to think through what it might look like. You might be able to guess its form from the arrangement of the pieces!"), 1);
     vector<const KlotskiBoard*> boards = {&weird1, &euler766_easy, &beginner, &diamond};
     vector<string> names = {"w1","eul","beg","dia"};
     for(int i=0;i<boards.size();++i){
@@ -906,7 +905,12 @@ void part7() {
     cs.render_microblock();
     cs.remove_subscene("ps");
 
+    cs.stage_macroblock(SilenceSegment(.7), 1);
+    cs.render_microblock();
+
     perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..fffc..a..cbba...dda..e.....e..hhhe", true), SilenceSegment(1));
+
+    cs.stage_macroblock(SilenceSegment(.7), 1);
     cs.fade_all_subscenes_except(MICRO, "ks_int", 0);
     cs.render_microblock();
     cs.remove_all_subscenes_except("ks_int");
@@ -955,7 +959,7 @@ hhh..e
 
     cs.remove_subscene("copy");
     ks_int->highlight_char = '.';
-    cs.stage_macroblock(FileSegment("Only one can transition at a time."), 1);
+    cs.stage_macroblock(SilenceSegment(.7), 1);
     cs.render_microblock();
 
 /*
@@ -967,7 +971,7 @@ hhh..e
 hhh..e
 */
 
-    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..afff..a..c..abbc...dde.....e..hhhe", true), SilenceSegment(1.5));
+    perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..afff..a..c..abbc...dde.....e..hhhe", true), FileSegment("Only one can transition at a time."));
 
     cs.stage_macroblock(FileSegment("When the red bar is up, the orange block can transition."), 4);
     ks_int->stage_move({'d', -3, 0});
@@ -1000,9 +1004,12 @@ hhh..e
     ks_int->stage_move({'b', 3, 0});
     cs.render_microblock();
 
-    cs.state_manager.transition(MICRO, {{"ks_int.x",".15"},{"ks_int.y",to_string(yval)}});
-    ks_int->state_manager.transition(MICRO, board_width_height);
-    cs.stage_macroblock(FileSegment("Let's build the graph."), get_graph_size(intermediate));
+    cs.state_manager.transition(MACRO, {{"ks_int.x",".15"},{"ks_int.y",to_string(yval)}});
+    ks_int->state_manager.transition(MACRO, board_width_height);
+    cs.stage_macroblock(FileSegment("Let's build the graph."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceSegment(4), get_graph_size(intermediate));
     Graph g_int;
     g_int.add_to_stack(new KlotskiBoard(intermediate));
     auto gs_int = make_shared<GraphScene>(&g_int, false);
@@ -1029,6 +1036,9 @@ hhh..e
     }
     cs.render_microblock();
 
+    cs.stage_macroblock(SilenceSegment(1), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileSegment("Nodes in this half have the green block right of the bar,"), 1);
     for(auto p = g_int.nodes.begin(); p != g_int.nodes.end(); p++){
         Node& n = p->second;
@@ -1040,7 +1050,7 @@ hhh..e
     }
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("and this half has the orange block right of the bar."), 1);
+    cs.stage_macroblock(FileSegment("and nodes in this half have the orange block right of the bar."), 1);
     for(auto p = g_int.nodes.begin(); p != g_int.nodes.end(); p++){
         Node& n = p->second;
         n.color = 0x22888888;
@@ -1109,6 +1119,9 @@ hhh..e
     cs.stage_macroblock(FileSegment("Can you figure out why the graph has a higher dimensionality near the corners?"), 1);
     cs.fade_all_subscenes(MICRO, 0);
     cs.render_microblock();
+
+    cs.stage_macroblock(SilenceSegment(.8), 1);
+    cs.render_microblock();
 }
 
 void part8() {
@@ -1117,15 +1130,16 @@ void part8() {
     //FOR_REAL = false;
     CompositeScene cs;
     auto ks = make_shared<KlotskiScene>(to_use);
-    cs.add_scene(ks, "ks", .5, 1.5);
+    cs.add_scene(ks, "ks", .6, 1.5);
     cs.slide_scene(MACRO, "ks", 0, -1);
-    cs.stage_macroblock(FileSegment("Alright, so what about Klotski?"), num_moves);
+    cs.stage_macroblock(FileSegment("Alright, so what about Klotski?"), 1/*num_moves TODO*/);
     // Demonstrate a few random moves on the sun puzzle.
     /*const int num_moves = 10;
     for (int i = 0; i < num_moves; i++) {
         ks->stage_random_move();
         cs.render_microblock();
     }*/
+    cs.render_microblock();
 
     ks->state_manager.transition(MICRO, board_width_height);
     cs .state_manager.transition(MICRO, {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
@@ -1139,7 +1153,6 @@ void part8() {
     gs->state_manager.set(default_graph_state);
     gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "50"}, {"z_dilation", "1"}/*, {"points_opacity","0"}*/});
     cs.add_scene(gs, "gs");
-    FOR_REAL = true;
 
     int x = get_graph_size(to_use);
     float i = 1;
@@ -1149,6 +1162,7 @@ void part8() {
         cs.stage_macroblock(SilenceSegment(.1), 1); // TODO change to 0.033333 before rendering, and third the num_nodes_to_add.
         cs.render_microblock();
         i+=.2;
+        cout << g.size() << endl;
     }
 
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
@@ -1160,16 +1174,16 @@ void part8() {
     cs.stage_macroblock(FileSegment("That's a whopping 25,955 nodes."), 1);
     cs.render_microblock();
 
-    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", ".5"}, {"qj", "0"}, {"qk", "0"}, });
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}, });
     cs.stage_macroblock(FileSegment("Turning the graph 90 degrees, we see two primary clusters of nodes."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("Here is the starting position."), 1);
+    cs.stage_macroblock(FileSegment("Here's the starting position."), 1);
     gs->next_hash = ks->copy_staged_board().get_hash();
     cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"points_radius_multiplier","2"}});
-    cs.stage_macroblock(FileSegment("Now, let's look at all of the pieces with the square at the bottom."), 1);
+    cs.stage_macroblock(FileSegment("Now, let's look at all the pieces with the square at the bottom."), 1);
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
         n.color = 0x22888888;
@@ -1177,10 +1191,10 @@ void part8() {
     }
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("All of these solution nodes are on the opposite half of the graph as the starting position."), 1);
+    cs.stage_macroblock(FileSegment("All the solution nodes are on the opposite half of the graph as the starting position."), 1);
     cs.render_microblock();
 
-    const int num_random_moves = 100;
+    const int num_random_moves = 500;
     cs.stage_macroblock(FileSegment("By making random moves from the starting position,"), num_random_moves);
     for (int i = 0; i < num_random_moves; i++) {
         ks->stage_random_move();
@@ -1191,8 +1205,8 @@ void part8() {
     cs.stage_macroblock(FileSegment("unless we have exceptional foresight, or we get very lucky,"), 1);
     cs.render_microblock();
 
-    gs->state_manager.transition(MICRO, {{"d", ".1"});
-    cs.stage_macroblock(FileSegment("there is a very high chance that we crash into this dense pit."), 1);
+    gs->state_manager.transition(MICRO, {{"d", ".1"}});
+    cs.stage_macroblock(FileSegment("there's a very high chance that we crash into this dense pit."), 1);
     cs.render_microblock();
 }
 
@@ -1207,7 +1221,7 @@ void showcase_all_graphs(){
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
-    bool whole = false;
+    bool whole = true;
     if(whole) {
         part1();
         part2();
@@ -1217,6 +1231,5 @@ void render_video() {
         part6();
         part7();
     }
-    cout << get_graph_size(sun_small) << endl;
     part8();
 }
