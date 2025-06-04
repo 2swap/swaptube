@@ -27,7 +27,7 @@ public:
         return hash;
     }
     double get_reverse_hash() {
-        if(hash == 0)
+        if(reverse_hash == 0)
             reverse_hash = type_specific_reverse_hash();
         return reverse_hash;
     }

@@ -436,8 +436,12 @@ public:
             // Add symmetry forces
             if (mirror_force > 0.001) {
                 const auto& mirror = nodes.find(node->data->get_reverse_hash());
-                if(mirror != nodes.end())
-                    node->velocity += mirror_force*(-mirror->second.position - node->position);
+                if(mirror != nodes.end()) {
+                    glm::vec4 mirror_pos = mirror->second.position;
+                    mirror_pos.x *= -1;
+                    node->velocity += mirror_force*(mirror_pos - node->position);
+                }
+               //else {cout << "Mirror not found!" << endl;}
             }
 
             // Calculate attraction forces (CPU)
@@ -470,6 +474,7 @@ public:
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
             node->position.z *= z_dilation;
+            node->position.w *= 0.99;
 
             // Dimensional constraints
             if (dimensions < 3) {

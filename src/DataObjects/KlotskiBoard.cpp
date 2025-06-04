@@ -57,6 +57,7 @@ void KlotskiBoard::compute_letters() {
 }
 
 double KlotskiBoard::type_specific_reverse_hash() {
+    //cout << "reverse hash computed" << endl;
     compute_letters();
     double hash_in_progress = 0;
     set<double> s;
@@ -64,8 +65,8 @@ double KlotskiBoard::type_specific_reverse_hash() {
     for (const char& letter: letters) {
         double sum = 0;
         for(int y = 0; y < h; y++)
-            for(int x = w - 1; x >= 0; x--)
-                if(representation[y*w + x] == letter) {
+            for(int x = 0; x < w; x++)
+                if(representation[y*w + (w-1-x)] == letter) {
                     int i = y*w + x;
                     sum += sin((i+1)*cbrt(i+2));
                 }

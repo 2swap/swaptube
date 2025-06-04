@@ -1113,19 +1113,19 @@ hhh..e
 
 void part8() {
     // Show the full klotski "sun" puzzle for the first time.
-    KlotskiBoard to_use = sun_small;
+    KlotskiBoard to_use = sun;
     //FOR_REAL = false;
     CompositeScene cs;
     auto ks = make_shared<KlotskiScene>(to_use);
     cs.add_scene(ks, "ks", .5, 1.5);
     cs.slide_scene(MACRO, "ks", 0, -1);
-    const int num_moves = 10;
     cs.stage_macroblock(FileSegment("Alright, so what about Klotski?"), num_moves);
     // Demonstrate a few random moves on the sun puzzle.
+    /*const int num_moves = 10;
     for (int i = 0; i < num_moves; i++) {
         ks->stage_random_move();
         cs.render_microblock();
-    }
+    }*/
 
     ks->state_manager.transition(MICRO, board_width_height);
     cs .state_manager.transition(MICRO, {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
@@ -1137,41 +1137,62 @@ void part8() {
     g.dimensions = 4;
     auto gs = std::make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
-    gs->state_manager.set({{"mirror_force", "1"}, {"physics_multiplier", "50"}, {"z_dilation", "1"}/*, {"points_opacity","0"}*/});
+    gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "50"}, {"z_dilation", "1"}/*, {"points_opacity","0"}*/});
     cs.add_scene(gs, "gs");
     FOR_REAL = true;
 
-    for(int i = 1; i < 101; i++) {
-        int num_nodes_to_add = i*6;
-        cs.stage_macroblock(SilenceSegment(.1), num_nodes_to_add);
-        for(int j = 0; j < num_nodes_to_add; j++) {
-            g.expand(6);
-            cs.render_microblock();
-        }
+    int x = get_graph_size(to_use);
+    float i = 1;
+    while (g.size() < x) {
+        int num_nodes_to_add = i*i;
+        g.expand(num_nodes_to_add);
+        cs.stage_macroblock(SilenceSegment(.1), 1); // TODO change to 0.033333 before rendering, and third the num_nodes_to_add.
+        cs.render_microblock();
+        i+=.2;
     }
 
-    cs.stage_macroblock(SilenceSegment(15), 1);
-    g.dimensions = 3;
-    cs.render_microblock();
-
-    gs->state_manager.set({{"physics_multiplier", "0"}});
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
-    cs.stage_macroblock(SilenceSegment(5), 1);
+    gs->state_manager.transition(MICRO, {{"physics_multiplier", "0"}});
+    g.dimensions = 3;
+    cs.stage_macroblock(SilenceSegment(15), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment("That's a whopping 25,955 nodes."), 1);
+    cs.render_microblock();
+
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", ".5"}, {"qj", "0"}, {"qk", "0"}, });
+    cs.stage_macroblock(FileSegment("Turning the graph 90 degrees, we see two primary clusters of nodes."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment("Here is the starting position."), 1);
     gs->next_hash = ks->copy_staged_board().get_hash();
     cs.render_microblock();
 
+    gs->state_manager.transition(MICRO, {{"points_radius_multiplier","2"}});
     cs.stage_macroblock(FileSegment("Now, let's look at all of the pieces with the square at the bottom."), 1);
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
         n.color = 0x22888888;
         if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color |= 0xffff0000;
     }
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("All of these solution nodes are on the opposite half of the graph as the starting position."), 1);
+    cs.render_microblock();
+
+    const int num_random_moves = 100;
+    cs.stage_macroblock(FileSegment("By making random moves from the starting position,"), num_random_moves);
+    for (int i = 0; i < num_random_moves; i++) {
+        ks->stage_random_move();
+        gs->next_hash = ks->copy_staged_board().get_hash();
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(FileSegment("unless we have exceptional foresight, or we get very lucky,"), 1);
+    cs.render_microblock();
+
+    gs->state_manager.transition(MICRO, {{"d", ".1"});
+    cs.stage_macroblock(FileSegment("there is a very high chance that we crash into this dense pit."), 1);
     cs.render_microblock();
 }
 
