@@ -49,6 +49,9 @@ public:
         glm::vec3 next_pos;
         bool curr_found = false;
         bool next_found = false;
+        // TODO Although this loop is quite naive, it turns out to be very slow, and is often the bottleneck.
+        // A solution would be to somehow merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
+        // Also, it can be naively skipped whenever the graph has not had its data updated.
         for(pair<double, Node> p : graph->nodes){
             Node node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);

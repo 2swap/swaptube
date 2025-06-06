@@ -2,7 +2,7 @@
 #include <iomanip>
 #include "inlines.h"
 
-// Colors are everywhere. For the sake of speed, we do not give them a dedicated child class.
+// Colors are everywhere. For the sake of speed, we do not give them a dedicated class.
 // They are ints under the hood, and are always 32-bit, 4-channel ARGB.
 
 inline int argb(int a, int r, int g, int b){return (a<<24)+
