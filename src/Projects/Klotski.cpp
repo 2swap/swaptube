@@ -702,17 +702,20 @@ void part5() {
     gst->next_hash = lie.get_hash();
     cs.render_microblock();
 
-    // 3-intersecting blocks example
-    cs.stage_macroblock(FileSegment("For example,"), 1);
+    cs.stage_macroblock(SilenceSegment(1), 1);
     cs.fade_all_subscenes(MICRO, 0);
     cs.render_microblock();
     cs.remove_all_subscenes();
 
-    cs.stage_macroblock(FileSegment("3 intersecting pieces still form a cube, there's just some excavated areas."), get_graph_size(iblock));
+    // 3-intersecting blocks example
     auto ks3rb = make_shared<KlotskiScene>(iblock);
     ks3rb->state_manager.set(board_width_height);
     cs.add_scene(ks3rb, "ks3rb");
     cs.state_manager.set({{"ks3rb.x",".15"},{"ks3rb.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs.stage_macroblock(FileSegment("For example,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("3 intersecting pieces still form a cube, there's just some excavated areas."), get_graph_size(iblock));
     Graph g3rb;
     g3rb.add_to_stack(new KlotskiBoard(iblock));
     auto gs3rb = make_shared<GraphScene>(&g3rb, false);
@@ -791,7 +794,7 @@ void part6() {
     cs.stage_macroblock(FileSegment("That's because on the puzzle, there are two available holes to permit movement."), 1);
     cs.render_microblock();
 
-    // TODO stop twisting
+    gs_apk->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
     cs.stage_macroblock(FileSegment("One axis characterized by moving the top hole,"), 4);
     ks_apk->stage_move({'c', 1, 0});
     gs_apk->next_hash = ks_apk->copy_staged_board().get_hash();
@@ -929,7 +932,9 @@ hhh..e
     ThreeDimensionScene tds;
     cs.remove_subscene("ks_int");
     tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "ks_int"), ks_int);
-    tds.stage_macroblock(FileSegment("From this perspective, the puzzle is more or less symmetrical."), 3);
+    tds.stage_macroblock(FileSegment("From this perspective, the puzzle is more or less symmetrical."), 5);
+    tds.render_microblock();
+    tds.render_microblock();
     tds.state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "1"}});
     tds.render_microblock();
     tds.render_microblock();
@@ -952,6 +957,10 @@ hhh..e
     cs.render_microblock();
 
     perform_shortest_path(cs, ks_int, KlotskiBoard(6, 6, "..fffc..a..c..abb...adde.....e..hhhe", true), FileSegment("or they can be to the right of it."));
+
+    cs.stage_macroblock(SilenceSegment(.6), 1);
+    cs.render_microblock();
+
     cs.fade_subscene(MICRO, "copy", 0);
     cs.stage_macroblock(FileSegment("This red bar acts as a gate, permitting them to transition between the two states."), 1);
     ks_int->highlight_char = 'a';
@@ -1025,6 +1034,7 @@ hhh..e
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment("We can color the nodes on the graph in correspondence with the position of the puzzle."), 1);
+    //TODO before final render, turn GPU alpha back on
     gs_int->state_manager.transition(MACRO, {{"lines_opacity","0"}, {"points_radius_multiplier","2"}});
     for(auto p = g_int.nodes.begin(); p != g_int.nodes.end(); p++){
         Node& n = p->second;
@@ -1102,6 +1112,7 @@ hhh..e
 
     KlotskiBoard intermediate_solution(6, 6, "..fffc.....c..a.bb..adde..a..e..hhhe", true);
 
+    gs_int->state_manager.transition(MACRO, {{"lines_opacity",".2"}});
     perform_shortest_path_with_graph(cs, gs_int, ks_int, intermediate_solution, SilenceSegment(5));
 
     cs.stage_macroblock(FileSegment("Unsurprisingly, they all live in the area with the green block right of the bar."), 1);
@@ -1151,7 +1162,7 @@ void part8() {
     g.dimensions = 4;
     auto gs = std::make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
-    gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "50"}, {"z_dilation", "1"}/*, {"points_opacity","0"}*/});
+    gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "100"}, {"points_opacity", "0"}, {"z_dilation", "1"}});
     cs.add_scene(gs, "gs");
 
     int x = get_graph_size(to_use);
@@ -1171,7 +1182,7 @@ void part8() {
     cs.stage_macroblock(SilenceSegment(15), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("That's a whopping 25,955 nodes."), 1);
+    cs.stage_macroblock(FileSegment("That's 25,955 nodes."), 1);
     cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}, });
@@ -1182,11 +1193,11 @@ void part8() {
     gs->next_hash = ks->copy_staged_board().get_hash();
     cs.render_microblock();
 
-    gs->state_manager.transition(MICRO, {{"points_radius_multiplier","2"}});
     cs.stage_macroblock(FileSegment("Now, let's look at all the pieces with the square at the bottom."), 1);
+    gs->state_manager.transition(MICRO, {{"lines_opacity", ".2"}, {"points_radius_multiplier","2.5"}, {"points_opacity", "1"}});
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
-        n.color = 0x22888888;
+        n.color = 0x00000000;
         if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color |= 0xffff0000;
     }
     cs.render_microblock();
@@ -1194,7 +1205,7 @@ void part8() {
     cs.stage_macroblock(FileSegment("All the solution nodes are on the opposite half of the graph as the starting position."), 1);
     cs.render_microblock();
 
-    const int num_random_moves = 500;
+    const int num_random_moves = 2000;
     cs.stage_macroblock(FileSegment("By making random moves from the starting position,"), num_random_moves);
     for (int i = 0; i < num_random_moves; i++) {
         ks->stage_random_move();
@@ -1207,6 +1218,59 @@ void part8() {
 
     gs->state_manager.transition(MICRO, {{"d", ".1"}});
     cs.stage_macroblock(FileSegment("there's a very high chance that we crash into this dense pit."), 1);
+    cs.render_microblock();
+
+    // TODO Highlight shortest solution
+    cs.stage_macroblock(FileSegment("The only alternative is to walk one of these very fine lines to the other side."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("This line is the shortest path to a solution- here's what it looks like."), 1);
+    cs.render_microblock();
+
+    perform_shortest_path_with_graph(cs, gs, ks, klotski_solution, SilenceSegment(15));
+
+    cs.stage_macroblock(FileSegment("What else can we learn?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("Was my friend right about the horizontal bar?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileSegment("Let's go ahead and highlight every node-"), 1);
+    cs.render_microblock();
+
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        float b_avg = 0, d_avg = 0;
+        for(int x = 0; x < 4; x++) for(int y = 0; y < 5; y++) {
+            if(representation[x+y*4] == 'b') b_avg += y;
+            if(representation[x+y*4] == 'd') d_avg += y;
+        }
+        b_avg /= 4;
+        d_avg /= 2;
+        n.color = (b_avg < d_avg + 1 ? 0xff0000 : 0) | (b_avg > d_avg - 1 ? 0x0000ff : 0);
+    }
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        n.color = 0x00000000;
+        if(n.color == 0xff0000) n.color |= 0xff000000;
+    }
+    cs.stage_macroblock(FileSegment("Red for when the bar is under the block,"), 1);
+    cs.render_microblock();
+
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        n.color = 0x00000000;
+        if(n.color == 0xff00ff) n.color |= 0xff000000;
+    }
+    cs.stage_macroblock(FileSegment("Yellow for when the bar is beside the block,"), 1);
+    cs.render_microblock();
+
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        n.color = 0x00000000;
+        if(n.color == 0x0000ff) n.color |= 0xff000000;
+    }
+    cs.stage_macroblock(FileSegment("and Green for when the block has been moved under the bar."), 1);
     cs.render_microblock();
 }
 
@@ -1221,7 +1285,7 @@ void showcase_all_graphs(){
 void render_video() {
     //FOR_REAL = false;
     //PRINT_TO_TERMINAL = false;
-    bool whole = true;
+    bool whole = false;
     if(whole) {
         part1();
         part2();
