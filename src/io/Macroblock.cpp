@@ -17,92 +17,90 @@ string sanitize_filename(const string& text) {
     return sanitized + ".aac";
 }
 
-// TODO should this class just be renamed to Macroblock?
-class AudioSegment {
+class Macroblock {
 public:
-    virtual ~AudioSegment() = default;
+    virtual ~Macroblock() = default;
     double invoke_get_macroblock_length_seconds() const {
         AUDIO_WRITER.audio_seconds_so_far += write_and_get_duration_seconds();
         return AUDIO_WRITER.audio_seconds_so_far - VIDEO_WRITER.video_seconds_so_far;
     }
     virtual void write_shtooka() const {}
-private:
     virtual double write_and_get_duration_seconds() const = 0;
 };
 
-class SilenceSegment : public AudioSegment {
+class SilenceBlock : public Macroblock {
 public:
-    SilenceSegment(const double duration_seconds)
+    SilenceBlock(const double duration_seconds)
         : duration_seconds(duration_seconds) {
         if (duration_seconds <= 0) {
             throw invalid_argument("Duration must be greater than 0");
         }
     }
 
-private:
     double write_and_get_duration_seconds() const override {
         AUDIO_WRITER.add_silence(duration_seconds);
         return duration_seconds;
     }
 
+private:
     const double duration_seconds;
 };
 
-class FileSegment : public AudioSegment {
+class FileBlock : public Macroblock {
 public:
-    FileSegment(const string& subtitle_text)
+    FileBlock(const string& subtitle_text)
         : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
 
     void write_shtooka() const override {
         SHTOOKA_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
     }
 
-private:
     double write_and_get_duration_seconds() const override {
         double duration_seconds = AUDIO_WRITER.add_audio_from_file(audio_filename);
         SUBTITLE_WRITER.add_subtitle(duration_seconds, subtitle_text);
         return duration_seconds;
     }
 
+private:
     const string subtitle_text;
     const string audio_filename;
 };
 
-class GeneratedSegment : public AudioSegment {
+class GeneratedBlock : public Macroblock {
 public:
-    GeneratedSegment(const vector<float>& leftBuffer, const vector<float>& rightBuffer)
+    GeneratedBlock(const vector<float>& leftBuffer, const vector<float>& rightBuffer)
         : leftBuffer(leftBuffer), rightBuffer(rightBuffer) {
         if (leftBuffer.size() != rightBuffer.size()) {
             throw invalid_argument("Left and right buffers must have the same size");
         }
     }
 
-private:
     double write_and_get_duration_seconds() const override {
         double duration_seconds = AUDIO_WRITER.add_generated_audio(leftBuffer, rightBuffer);
         SUBTITLE_WRITER.add_subtitle(duration_seconds, "[Computer Generated Sound]");
         return duration_seconds;
     }
 
+private:
     const vector<float> leftBuffer;
     const vector<float> rightBuffer;
 };
 
-class CompositeSegment : public AudioSegment {
+class CompositeBlock : public Macroblock {
 public:
-    CompositeSegment(const AudioSegment a, const AudioSegment b) {
-        if (leftBuffer.size() != rightBuffer.size()) {
-            throw invalid_argument("Left and right buffers must have the same size");
-        }
-    }
+    CompositeBlock(const Macroblock& a, const Macroblock& b)
+        : a(a), b(b) {}
 
     void write_shtooka() const override {
         a.write_shtooka();
         b.write_shtooka();
     }
 
-private:
     double write_and_get_duration_seconds() const override {
         return a.write_and_get_duration_seconds() + b.write_and_get_duration_seconds();
     }
+
+private:
+    const Macroblock& a;
+    const Macroblock& b;
 };

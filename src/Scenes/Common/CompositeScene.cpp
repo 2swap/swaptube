@@ -25,16 +25,13 @@ public:
 
     void add_scene(shared_ptr<Scene> sc, const string& state_manager_name, double x = 0.5, double y = 0.5){
         state_manager.set({
-            {state_manager_name + ".pointer_x", to_string(x)},
-            {state_manager_name + ".pointer_y", to_string(y)},
-            {state_manager_name + ".pointer_opacity", "0"},
             {state_manager_name + ".x", to_string(x)},
             {state_manager_name + ".y", to_string(y)},
         });
         add_subscene_check_dupe(state_manager_name, sc);
     }
 
-    void slide_scene(const TransitionType tt, const string& name, const double dx, const double dy){
+    void slide_subscene(const TransitionType tt, const string& name, const double dx, const double dy){
         state_manager.transition(tt, {
             {name + ".x", state_manager.get_equation(name + ".x") + " " + to_string(dx) + " +"},
             {name + ".y", state_manager.get_equation(name + ".y") + " " + to_string(dy) + " +"},
@@ -51,12 +48,6 @@ public:
             subscene.second->query(p);
             int x = w*state[subscene.first + ".x"];
             int y = h*state[subscene.first + ".y"];
-            double pointer_opa = state[subscene.first + ".pointer_opacity"];
-            if(pointer_opa > 0.01) {
-                int px = w*state[subscene.first + ".pointer_x"];
-                int py = h*state[subscene.first + ".pointer_y"];
-                pix.bresenham(x, y, px, py, OPAQUE_WHITE, pointer_opa, h/100.);
-            }
 
             cuda_overlay(pix.pixels.data(), pix.w, pix.h,
                            p->pixels.data(), p->w, p->h,
@@ -69,9 +60,6 @@ public:
         for (auto& subscene : subscenes){
             ret.insert(subscene.first + ".x");
             ret.insert(subscene.first + ".y");
-            ret.insert(subscene.first + ".pointer_x");
-            ret.insert(subscene.first + ".pointer_y");
-            ret.insert(subscene.first + ".pointer_opacity");
         };
         return ret;
     }

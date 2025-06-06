@@ -7,7 +7,7 @@
 #include "../io/VisualMedia.cpp"
 #include "../io/DebugPlot.h"
 #include "../misc/pixels.h"
-#include "../io/AudioSegment.cpp"
+#include "../io/Macroblock.cpp"
 
 class Scene {
 public:
@@ -73,7 +73,7 @@ public:
         return remaining_microblocks != 0;
     }
 
-    void stage_macroblock(const AudioSegment& audio, int expected_microblocks){
+    void stage_macroblock(const Macroblock& audio, int expected_microblocks){
         if (expected_microblocks <= 0){
             throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count.");
         }
