@@ -26,7 +26,7 @@ StateSet default_graph_state{
     {"qi", "<t> .2 * cos"},
     {"qj", "<t> .314 * sin"},
     {"qk", "0"}, // Camera orientation quaternion
-    {"decay",".8"},
+    {"decay",".93"},
     {"surfaces_opacity","0"}, // Whether we want to draw the board at every node
     {"physics_multiplier","5"}, // How many times to iterate the graph-spreader
 };
@@ -1141,7 +1141,7 @@ void part8() {
     //FOR_REAL = false;
     CompositeScene cs;
     auto ks = make_shared<KlotskiScene>(to_use);
-    cs.add_scene(ks, "ks", .6, 1.5);
+    cs.add_scene(ks, "ks", .5, 1.5);
     cs.slide_scene(MACRO, "ks", 0, -1);
     cs.stage_macroblock(FileSegment("Alright, so what about Klotski?"), 1/*num_moves TODO*/);
     // Demonstrate a few random moves on the sun puzzle.
@@ -1162,8 +1162,8 @@ void part8() {
     g.dimensions = 4;
     auto gs = std::make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
-    gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "100"}, {"points_opacity", "0"}, {"z_dilation", "1"}});
-    cs.add_scene(gs, "gs");
+    gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "40"}, {"points_opacity", "0"}, {"z_dilation", "1"}});
+    cs.add_scene(gs, "gs", .6, .5);
 
     int x = get_graph_size(to_use);
     float i = 1;
@@ -1242,8 +1242,8 @@ void part8() {
         Node& n = p->second;
         float b_avg = 0, d_avg = 0;
         for(int x = 0; x < 4; x++) for(int y = 0; y < 5; y++) {
-            if(representation[x+y*4] == 'b') b_avg += y;
-            if(representation[x+y*4] == 'd') d_avg += y;
+            if(n.data->representation[x+y*4] == 'b') b_avg += y;
+            if(n.data->representation[x+y*4] == 'd') d_avg += y;
         }
         b_avg /= 4;
         d_avg /= 2;
@@ -1254,7 +1254,7 @@ void part8() {
         n.color = 0x00000000;
         if(n.color == 0xff0000) n.color |= 0xff000000;
     }
-    cs.stage_macroblock(FileSegment("Red for when the bar is under the block,"), 1);
+    cs.stage_macroblock(FileSegment("Red when the bar is under the block,"), 1);
     cs.render_microblock();
 
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1262,7 +1262,7 @@ void part8() {
         n.color = 0x00000000;
         if(n.color == 0xff00ff) n.color |= 0xff000000;
     }
-    cs.stage_macroblock(FileSegment("Yellow for when the bar is beside the block,"), 1);
+    cs.stage_macroblock(FileSegment("yellow when the bar is beside the block,"), 1);
     cs.render_microblock();
 
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1270,7 +1270,7 @@ void part8() {
         n.color = 0x00000000;
         if(n.color == 0x0000ff) n.color |= 0xff000000;
     }
-    cs.stage_macroblock(FileSegment("and Green for when the block has been moved under the bar."), 1);
+    cs.stage_macroblock(FileSegment("and green when the block was moved under the bar."), 1);
     cs.render_microblock();
 }
 

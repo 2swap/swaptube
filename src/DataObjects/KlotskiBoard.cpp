@@ -221,6 +221,7 @@ KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true )
 
 //big
 KlotskiBoard sun           (4, 5, "abbcabbc.dd.efgheijh"                , false);
+KlotskiBoard klotski_solution(4, 5, "fgacehacehdd.bbi.bbj"                , false);
 
 //other
 //KlotskiBoard apk           (4, 4, "abccefii.gii.ghh"                    , false);

@@ -19,7 +19,7 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
-extern "C" void compute_repulsion_cuda(const glm::vec4* host_positions, glm::vec4* host_velocity_deltas, int num_nodes, float repel);
+extern "C" void compute_repulsion_cuda(const glm::vec4* h_positions, glm::vec4* h_velocity_deltas, int num_nodes);
 
 glm::vec4 random_unit_cube_vector() {
     return glm::vec4(1 * static_cast<float>(rand()) / RAND_MAX,
@@ -424,14 +424,14 @@ public:
         }
 
         // Use CUDA to compute repulsion velocity deltas
-        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s, repel);
+        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s);
 
         // Apply velocity deltas from CUDA and calculate attraction forces on the CPU
         for (int i = 0; i < s; ++i) {
             Node* node = node_vector[i];
             if(glm::any(glm::isnan(velocity_deltas[i]))) velocity_deltas[i] = glm::vec4(0, 0, 0, 0);
             if(glm::any(glm::isnan(node->position))) node->position = glm::vec4(0, 0, 0, 0);
-            node->velocity += velocity_deltas[i]; // Repulsion forces from CUDA
+            node->velocity += repel * velocity_deltas[i]; // Repulsion forces from CUDA
 
             // Add symmetry forces
             if (mirror_force > 0.001) {

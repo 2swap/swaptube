@@ -1,9 +1,10 @@
-if [ $# -ne 1 ]; then
-    echo "play.sh: Usage: $0 <ProjectName>"
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "play.sh: Usage: $0 <ProjectName> [MediaPlayer]"
     exit 1
 fi
 
 PROJECT_NAME=$1
+MEDIA_PLAYER=${2:-vlc}
 ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
 # Check if the compile and run were successful
@@ -11,7 +12,7 @@ if [ -n "$ultimate_subdir" ]; then
     file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
 
     if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
-        vlc "$file_path" > /dev/null 2>&1
+        $MEDIA_PLAYER "$file_path" > /dev/null 2>&1
     else
         echo "play.sh: The output file is either empty or smaller than 1KB."
     fi
