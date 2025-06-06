@@ -249,6 +249,7 @@ public:
                 Node& child = nodes.find(child_hash)->second;
                 if(child.age == 0 && teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)){//if child is orphan
                     child.position = parent.position + random_unit_cube_vector();
+                    child.velocity = parent.velocity;
                 }
                 add_directed_edge(parent.hash, child_hash);
             }

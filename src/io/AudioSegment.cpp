@@ -39,12 +39,12 @@ public:
         }
     }
 
+private:
     double write_and_get_duration_seconds() const override {
         AUDIO_WRITER.add_silence(duration_seconds);
         return duration_seconds;
     }
 
-private:
     const double duration_seconds;
 };
 
@@ -53,17 +53,17 @@ public:
     FileSegment(const string& subtitle_text)
         : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
 
+    void write_shtooka() const override {
+        SHTOOKA_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
+    }
+
+private:
     double write_and_get_duration_seconds() const override {
         double duration_seconds = AUDIO_WRITER.add_audio_from_file(audio_filename);
         SUBTITLE_WRITER.add_subtitle(duration_seconds, subtitle_text);
         return duration_seconds;
     }
 
-    void write_shtooka() const override {
-        SHTOOKA_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
-    }
-
-private:
     const string subtitle_text;
     const string audio_filename;
 };
@@ -77,13 +77,32 @@ public:
         }
     }
 
+private:
     double write_and_get_duration_seconds() const override {
         double duration_seconds = AUDIO_WRITER.add_generated_audio(leftBuffer, rightBuffer);
         SUBTITLE_WRITER.add_subtitle(duration_seconds, "[Computer Generated Sound]");
         return duration_seconds;
     }
 
-private:
     const vector<float> leftBuffer;
     const vector<float> rightBuffer;
+};
+
+class CompositeSegment : public AudioSegment {
+public:
+    CompositeSegment(const AudioSegment a, const AudioSegment b) {
+        if (leftBuffer.size() != rightBuffer.size()) {
+            throw invalid_argument("Left and right buffers must have the same size");
+        }
+    }
+
+    void write_shtooka() const override {
+        a.write_shtooka();
+        b.write_shtooka();
+    }
+
+private:
+    double write_and_get_duration_seconds() const override {
+        return a.write_and_get_duration_seconds() + b.write_and_get_duration_seconds();
+    }
 };

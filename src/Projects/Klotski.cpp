@@ -1176,7 +1176,6 @@ void part8() {
         cout << g.size() << endl;
     }
 
-    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
     gs->state_manager.transition(MICRO, {{"physics_multiplier", "0"}});
     g.dimensions = 3;
     cs.stage_macroblock(SilenceSegment(15), 1);
@@ -1185,27 +1184,35 @@ void part8() {
     cs.stage_macroblock(FileSegment("That's 25,955 nodes."), 1);
     cs.render_microblock();
 
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
+    cs.stage_macroblock(FileSegment("The puzzle is symmetrical, so the graph is too."), 1);
+    cs.render_microblock();
+
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}, });
     cs.stage_macroblock(FileSegment("Turning the graph 90 degrees, we see two primary clusters of nodes."), 1);
     cs.render_microblock();
 
+    gs->state_manager.transition(MICRO, {{"d", ".3"}});
+    gs->state_manager.transition(MICRO, less_spinny);
     cs.stage_macroblock(FileSegment("Here's the starting position."), 1);
     gs->next_hash = ks->copy_staged_board().get_hash();
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("Now, let's look at all the pieces with the square at the bottom."), 1);
-    gs->state_manager.transition(MICRO, {{"lines_opacity", ".2"}, {"points_radius_multiplier","2.5"}, {"points_opacity", "1"}});
+    gs->state_manager.transition(MICRO, {{"d", "1"}});
+    gs->state_manager.transition(MICRO, {{"lines_opacity", ".2"}, {"points_radius_multiplier","1.5"}, {"points_opacity", "1"}});
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}, });
+    cs.stage_macroblock(FileSegment("Now, let's look at all the solutions- the nodes with the square at the bottom."), 1);
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
         n.color = 0x00000000;
-        if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color |= 0xffff0000;
+        if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color |= 0xff00ff00;
     }
     cs.render_microblock();
 
     cs.stage_macroblock(FileSegment("All the solution nodes are on the opposite half of the graph as the starting position."), 1);
     cs.render_microblock();
 
-    const int num_random_moves = 2000;
+    const int num_random_moves = 5000;
     cs.stage_macroblock(FileSegment("By making random moves from the starting position,"), num_random_moves);
     for (int i = 0; i < num_random_moves; i++) {
         ks->stage_random_move();
@@ -1220,11 +1227,17 @@ void part8() {
     cs.stage_macroblock(FileSegment("there's a very high chance that we crash into this dense pit."), 1);
     cs.render_microblock();
 
-    // TODO Highlight shortest solution
+    auto path = g.shortest_path(ks_ptr->copy_board().get_hash(), end.get_hash()).second;
+    for(const Edge e : g.edges()){
+        e.opacity = .2;
+    }
+    for(const Edge* e : path){
+        e->opacity = 1;
+    }
     cs.stage_macroblock(FileSegment("The only alternative is to walk one of these very fine lines to the other side."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileSegment("This line is the shortest path to a solution- here's what it looks like."), 1);
+    cs.stage_macroblock(FileSegment("This line is the shortest path to a solution- let's follow it."), 1);
     cs.render_microblock();
 
     perform_shortest_path_with_graph(cs, gs, ks, klotski_solution, SilenceSegment(15));
