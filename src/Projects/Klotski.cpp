@@ -1402,11 +1402,12 @@ void recursive_placer(unordered_set<string>& set, const string& rep, int piece_n
                 }
             }
             recursive_placer(set, child, piece_number+1);
-            next:
+            next: ;
         }
     }
 }
 
+/*
 void part9(){
     // Recursively find all of the possible states including those which are unreachable
     unordered_set<string> set;
@@ -1416,6 +1417,7 @@ void part9(){
         g.add_missing_edges();
     }
 }
+*/
 
 void part10(){
     for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {

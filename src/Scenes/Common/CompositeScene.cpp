@@ -45,7 +45,7 @@ public:
             double opa = state[name + ".opacity"];
             if(opa < 0.01) continue;
             Pixels* p = nullptr;
-            Scene* subscene = subscenes[name];
+            shared_ptr<Scene> subscene = subscenes[name];
             subscene->query(p);
             int x = w*state[name + ".x"];
             int y = h*state[name + ".y"];
