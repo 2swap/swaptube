@@ -80,6 +80,7 @@ void perform_shortest_path(CompositeScene& cs, shared_ptr<KlotskiScene> ks_ptr, 
 };
 
 void part1(){
+    // TODO let's see multiple graphs expanded fully in the first 10 seconds, like the short
     CompositeScene cs;
 
     // Add KlotskiScene and GraphScene for Intermediate puzzle, begin making 50 random moves.
@@ -1368,7 +1369,55 @@ void part8() {
     cs.render_microblock();
 }
 
-void showcase_all_graphs(){
+void recursive_placer(unordered_set<string>& set, const string& rep, int piece_number){
+    if(piece_number == 10) { set.insert(rep); return; }
+    int piece_w = 0;
+    int piece_h = 0;
+    char piece_c = 'a' + piece_number;
+    if(piece_number == 0){ // Sun
+        piece_w = 2;
+        piece_h = 2;
+    }
+    else if(piece_number == 1){ // Horizontal
+        piece_w = 2;
+        piece_h = 1;
+    }
+    else if(piece_number < 6){ // Verticals
+        piece_w = 1;
+        piece_h = 2;
+    }
+    else if(piece_number < 10){ // Dots
+        piece_w = 1;
+        piece_h = 1;
+    }
+    for(int x = 0; x < 4 - piece_w; x++){
+        for(int y = 0; y < 5 - piece_h; y++){
+            string child = rep;
+            for(int dx = 0; dx < piece_w; dx++) {
+                for(int dy = 0; dy < piece_h; dy++) {
+                    if(child[x+dx + (y+dy)*4] != '.') {
+                        goto next;
+                    }
+                    child[x+dx + (y+dy)*4] = piece_c;
+                }
+            }
+            recursive_placer(set, child, piece_number+1);
+            next:
+        }
+    }
+}
+
+void part9(){
+    // Recursively find all of the possible states including those which are unreachable
+    unordered_set<string> set;
+    recursive_placer(set, "....................", 0);
+    while(set.size() > 0) {
+        g.add_to_stack(new KlotskiBoard(4, 5, set.pop(), false));
+        g.add_missing_edges();
+    }
+}
+
+void part10(){
     for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
         for (const KlotskiBoard& kb : kb_set) {
             showcase_graph(kb, "aaaa");
@@ -1390,4 +1439,5 @@ void render_video() {
         part7();
     }
     part8();
+    //part9();
 }
