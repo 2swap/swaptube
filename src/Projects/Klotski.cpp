@@ -1156,7 +1156,7 @@ void part8() {
     g.dimensions = 4;
     auto gs = std::make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
-    gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "40"}, {"points_opacity", "0"}, {"z_dilation", "1"}});
+    gs->state_manager.set({{"physics_multiplier", "40"}, {"points_opacity", "0"}, {"z_dilation", "1"}});
     cs.add_scene(gs, "gs", .6, .5);
 
     int x = get_graph_size(to_use);
@@ -1170,9 +1170,10 @@ void part8() {
         cout << g.size() << endl;
     }
 
-    gs->state_manager.transition(MICRO, {{"physics_multiplier", "0"}});
+    gs->state_manager.transition(MICRO, {{"mirror_force", ".1"}, {"physics_multiplier", "0"}});
+    cs.stage_macroblock(SilenceBlock(15), 2);
+    cs.render_microblock();
     g.dimensions = 3;
-    cs.stage_macroblock(SilenceBlock(15), 1);
     cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
@@ -1212,7 +1213,7 @@ void part8() {
     cs.stage_macroblock(FileBlock("All the solution nodes are on the opposite half of the graph as the starting position."), 1);
     cs.render_microblock();
 
-    const int num_random_moves = 20;
+    const int num_random_moves = 40;
     cs.stage_macroblock(FileBlock("By making random moves from the starting position,"), num_random_moves);
     for (int i = 0; i < num_random_moves; i++) {
         ks->stage_random_move();
@@ -1220,13 +1221,13 @@ void part8() {
         cs.render_microblock();
     }
 
-    gs->state_manager.transition(MACRO, {{"d", "1"}});
-    perform_shortest_path_with_graph(cs, gs, ks, sun_pit, SilenceBlock(2));
+    gs->state_manager.transition(MACRO, {{"d", ".2"}});
+    perform_shortest_path_with_graph(cs, gs, ks, sun_pit, SilenceBlock(4));
 
     cs.stage_macroblock(FileBlock("unless we have exceptional foresight, or we get very lucky,"), 1);
     cs.render_microblock();
 
-    gs->state_manager.transition(MICRO, {{"d", ".1"}});
+    gs->state_manager.transition(MICRO, {{"d", "1"}});
     cs.stage_macroblock(FileBlock("there's a very high chance that we crash into this dense pit."), 1);
     cs.render_microblock();
 
@@ -1258,7 +1259,7 @@ void part8() {
         EdgeSet& es = p->second.neighbors;
         for(auto& e : es){
             Edge& ed = const_cast<Edge&>(e);
-            ed.opacity = 1;
+            ed.opacity = .1;
         }
     }
     cs.stage_macroblock(FileBlock("What else can we learn?"), 1);
@@ -1273,7 +1274,7 @@ void part8() {
     cs.stage_macroblock(FileBlock("Let's go ahead and highlight every node-"), 1);
     gs->next_hash = 0;
     cs.state_manager.transition(MICRO, {{"ks_bd.x",".15"},{"ks_bd.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
-    ks->state_manager.transition(MICRO, board_width_height);
+    ks_bd_ptr->state_manager.transition(MICRO, board_width_height);
     cs.render_microblock();
 
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
