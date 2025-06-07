@@ -1372,6 +1372,7 @@ void part8() {
 }
 
 void recursive_placer(unordered_set<string>& set, const string& rep, int piece_number){
+    //TODO this is bugged- it doublecounts transpositions.
     if(piece_number == 10) { set.insert(rep); return; }
     int piece_w = 0;
     int piece_h = 0;
@@ -1392,8 +1393,8 @@ void recursive_placer(unordered_set<string>& set, const string& rep, int piece_n
         piece_w = 1;
         piece_h = 1;
     }
-    for(int x = 0; x < 4 - piece_w; x++){
-        for(int y = 0; y < 5 - piece_h; y++){
+    for(int x = 0; x < 4 + 1 - piece_w; x++){
+        for(int y = 0; y < 5 + 1 - piece_h; y++){
             string child = rep;
             for(int dx = 0; dx < piece_w; dx++) {
                 for(int dy = 0; dy < piece_h; dy++) {
@@ -1410,6 +1411,7 @@ void recursive_placer(unordered_set<string>& set, const string& rep, int piece_n
 }
 
 void part9(){
+    /*
     cs.stage_macroblock(FileBlock("Remember how this puzzle has positions that can't be reached?"), 1);
     cs.render_microblock();
 
@@ -1445,38 +1447,42 @@ void part9(){
 
     cs.stage_macroblock(FileBlock(""), 1);
     cs.render_microblock();
+    */
 
     // Recursively find all of the possible states including those which are unreachable
     Graph omni;
     unordered_set<string> set;
     recursive_placer(set, "....................", 0);
-    for(const string& s : set) omni.add_to_stack(new KlotskiBoard(4, 5, s, false));
-    omni.sanitize_edges();
+    for(const string& s : set) omni.add_node(new KlotskiBoard(4, 5, s, false));
+    cout << "Set size: " << set.size() << endl;
 
     while(set.size() > 0) {
         Graph g;
         auto it = set.begin();
 
         KlotskiBoard* kb = new KlotskiBoard(4, 5, *it, false); 
-        KlotskiBoard* m0 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash()).second.data.representation, false);
-        KlotskiBoard* m1 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash_2()).second.data.representation, false);
-        KlotskiBoard* m2 = new KlotskiBoard(4, 5, omni.nodes.find(m0->get_reverse_hash_2()).second.data.representation, false);
+        KlotskiBoard* m0 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash())->second.data->representation, false);
+        KlotskiBoard* m1 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash_2())->second.data->representation, false);
+        KlotskiBoard* m2 = new KlotskiBoard(4, 5, omni.nodes.find(m0->get_reverse_hash_2())->second.data->representation, false);
         g.add_to_stack(kb);
         g.add_to_stack(m0);
         g.add_to_stack(m1);
         g.add_to_stack(m2);
 
-        g.expand_completely();
+        g.expand(-1);
 
         CompositeScene cs;
-        shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
-        shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + g.size(), 1, .3, .3);
+        shared_ptr<GraphScene> gs = make_shared<GraphScene>(&g, false);
+        //shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + g.size(), 1, .3, .3);
         cs.add_scene(gs, "gs");
-        cs.add_scene(ls, "ls", .15, .15);
-        cs.stage_macroblock(SilenceSegment(4), 1);
+        //cs.add_scene(ls, "ls", .15, .15);
+        cs.stage_macroblock(SilenceBlock(4), 1);
         cs.render_microblock();
 
-        for(Node& n : g.nodes) set.remove(n.data->representation);
+        for(auto& p : g.nodes) {
+            Node& n = p.second;
+            set.erase(n.data->representation);
+        }
     }
 }
 
@@ -1515,6 +1521,6 @@ void render_video() {
         part7();
     }
     //part8();
-    //part9();
-    part10();
+    part9();
+    //part10();
 }
