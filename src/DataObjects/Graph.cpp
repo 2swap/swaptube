@@ -22,10 +22,12 @@ using json = nlohmann::json;
 extern "C" void compute_repulsion_cuda(const glm::vec4* h_positions, glm::vec4* h_velocity_deltas, int num_nodes);
 
 glm::vec4 random_unit_cube_vector() {
-    return glm::vec4(1 * static_cast<float>(rand()) / RAND_MAX,
-                     1 * static_cast<float>(rand()) / RAND_MAX,
-                     1 * static_cast<float>(rand()) / RAND_MAX,
-                     1 * static_cast<float>(rand()) / RAND_MAX);
+    return glm::vec4(
+        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f,
+        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f,
+        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f,
+        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f
+    );
 }
 
 class Edge {

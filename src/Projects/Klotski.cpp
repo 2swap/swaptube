@@ -1157,7 +1157,7 @@ void part8() {
     auto gs = std::make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
     gs->state_manager.set({{"physics_multiplier", "40"}, {"points_opacity", "0"}, {"z_dilation", "1"}});
-    cs.add_scene(gs, "gs", .6, .5);
+    cs.add_scene(gs, "gs");
 
     int x = get_graph_size(to_use);
     float i = 1;
@@ -1199,13 +1199,13 @@ void part8() {
     cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"lines_opacity", ".2"}});
-    gs->state_manager.transition(MACRO, {{"d", "1"}});
+    gs->state_manager.transition(MACRO, {{"d", "1.5"}});
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}, });
     cs.stage_macroblock(FileBlock("Now, let's look at all the solutions- the nodes with the square at the bottom."), 1);
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
         n.color = 0x00000000;
-        if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color |= 0xff00ff00;
+        if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color |= 0xff00ffff;
     }
     cs.render_microblock();
 
@@ -1231,28 +1231,34 @@ void part8() {
     cs.stage_macroblock(FileBlock("there's a very high chance that we crash into this dense pit."), 1);
     cs.render_microblock();
 
-    gs->state_manager.transition(MACRO, {{"lines_opacity", "1"}});
+    gs->state_manager.transition(MACRO, {{"lines_opacity", ".1"}});
     perform_shortest_path_with_graph(cs, gs, ks, sun, SilenceBlock(2));
 
     auto path = g.shortest_path(ks->copy_board().get_hash(), klotski_solution.get_hash()).second;
-    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+    /*for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         EdgeSet& es = p->second.neighbors;
         for(auto& e : es){
             Edge& ed = const_cast<Edge&>(e);
             ed.opacity = .1;
         }
-    }
+    }*/
     for(Edge* e : path){
-        e->opacity = 1;
+        e->opacity = 10;
     }
+    cs.stage_macroblock(FileBlock("The only alternative is to walk one of these very fine lines to the other side."), 2);
+    cs.render_microblock();
     gs->state_manager.transition(MICRO, {{"d", ".4"}});
-    cs.stage_macroblock(FileBlock("The only alternative is to walk one of these very fine lines to the other side."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("This line is the shortest path to a solution- let's follow it."), 1);
     cs.render_microblock();
 
     perform_shortest_path_with_graph(cs, gs, ks, klotski_solution, SilenceBlock(15));
+
+    cs.stage_macroblock(SilenceBlock(.6), 3);
+    ks->stage_move({'b', 0, 5});
+    cs.fade_subscene(MICRO, "ks", 0);
+    cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"d", "1"}});
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1262,7 +1268,7 @@ void part8() {
             ed.opacity = .1;
         }
     }
-    cs.stage_macroblock(FileBlock("What else can we learn?"), 1);
+    cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Was my friend right about the horizontal bar?"), 1);
@@ -1291,6 +1297,7 @@ void part8() {
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
         if(n.color == 0xff0000) n.color |= 0xff000000;
+        else n.color &= 0x00ffffff;
     }
     cs.stage_macroblock(FileBlock("Red when the bar is under the block,"), 1);
     cs.render_microblock();
@@ -1306,6 +1313,7 @@ void part8() {
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
         if(n.color == 0xffff00) n.color |= 0xff000000;
+        else n.color &= 0x00ffffff;
     }
     cs.stage_macroblock(FileBlock("yellow when the bar is beside the block,"), 1);
     cs.render_microblock();
@@ -1319,8 +1327,44 @@ void part8() {
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
         if(n.color == 0x00ff00) n.color |= 0xff000000;
+        else n.color &= 0x00ffffff;
     }
     cs.stage_macroblock(FileBlock("and green when the block has been moved under the bar."), 1);
+    cs.render_microblock();
+
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        if('b' == n.data->representation[13] && 'b' == n.data->representation[18]) n.color = 0xff00ffff;
+        else n.color &= 0x00ffffff;
+    }
+    cs.stage_macroblock(FileBlock("Now once again, take a peek at the solution set..."), 1);
+    cs.render_microblock();
+
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        if(n.color == 0x00ff00) n.color |= 0xff000000;
+    }
+    cs.stage_macroblock(FileBlock("Sure enough, they have an extremely close overlap!"), 1);
+    cs.render_microblock();
+
+    gs->state_manager.transition(MACRO, {{"points_opacity", "0"}});
+    cs.fade_subscene(MICRO, "ks_bd", 0);
+    cs.stage_macroblock(FileBlock("So, my friend's intuition was right."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("What else can we learn?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("I'm going to travel to a faraway land."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Let's consider a small region of nodes here."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Now I'm going to show you the boards for all of those nodes,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("but blurred together so that we can only see the shared patterns."), 1);
     cs.render_microblock();
 }
 

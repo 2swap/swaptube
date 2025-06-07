@@ -16,19 +16,19 @@ public:
     CompositeScene(const double width = 1, const double height = 1)
         : SuperScene(width, height) {}
 
-    void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, double opa=1){
-        add_scene(sc, state_manager_name, x, y);
+    void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, double opa=1, bool behind = false){
+        add_scene(sc, state_manager_name, x, y, behind);
         const string key = state_manager_name + ".opacity";
         state_manager.set({{key, "0"}});
         state_manager.transition(tt, {{key, to_string(opa)}});
     }
 
-    void add_scene(shared_ptr<Scene> sc, const string& state_manager_name, double x = 0.5, double y = 0.5){
+    void add_scene(shared_ptr<Scene> sc, const string& state_manager_name, double x = 0.5, double y = 0.5, bool behind = false){
         state_manager.set({
             {state_manager_name + ".x", to_string(x)},
             {state_manager_name + ".y", to_string(y)},
         });
-        add_subscene_check_dupe(state_manager_name, sc);
+        add_subscene_check_dupe(state_manager_name, sc, behind);
     }
 
     void slide_subscene(const TransitionType tt, const string& name, const double dx, const double dy){
@@ -41,17 +41,18 @@ public:
     void draw() override {
         int w = get_width();
         int h = get_height();
-        for (auto& subscene : subscenes){
-            double opa = state[subscene.first + ".opacity"];
+        for (const string& name : render_order){
+            double opa = state[name + ".opacity"];
             if(opa < 0.01) continue;
             Pixels* p = nullptr;
-            subscene.second->query(p);
-            int x = w*state[subscene.first + ".x"];
-            int y = h*state[subscene.first + ".y"];
+            Scene* subscene = subscenes[name];
+            subscene->query(p);
+            int x = w*state[name + ".x"];
+            int y = h*state[name + ".y"];
 
             cuda_overlay(pix.pixels.data(), pix.w, pix.h,
                            p->pixels.data(), p->w, p->h,
-                           x - subscene.second->get_width ()/2, y - subscene.second->get_height()/2, opa);
+                           x - subscene->get_width ()/2, y - subscene->get_height()/2, opa);
         }
     }
 
