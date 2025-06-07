@@ -12,7 +12,7 @@
 using namespace std;
 
 inline double sigmoid(double x){return 2/(1+exp(-x))-1;}
-inline double bound(double bottom, double val, double top){return min(top, max(val, bottom));}
+inline double clamp(double bottom, double val, double top){return min(top, max(val, bottom));}
 inline double square(double x){return x * x;}
 inline double cube(double x){return x * x * x;}
 inline double fourth(double x){return square(square(x));}

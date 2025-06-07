@@ -35,6 +35,7 @@ public:
     bool is_solution() override;
     double type_specific_hash() override;
     double type_specific_reverse_hash();
+    double type_specific_reverse_hash_2();
 
     void print();
     void compute_letters();

@@ -6,14 +6,6 @@
 #include "../Scenes/Media/LoopAnimationScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 
-// Lists of KlotskiBoards
-auto gpt = {gpt2, gpt3, weird1, weird2, weird3};
-auto other = {apk, mathgames_12_13_04, euler766_easy};
-auto suns = {fatsun, sun_no_minis, truncatedsun};
-auto rushhours = {beginner, intermediate, advanced, expert, reddit, guh3, guh4, video, thinkfun1, thinkfun2, thinkfun3};
-auto big = {sun};
-auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2, manifold_1d, manifold_2d, manifold_3d, manifold_4d, full_15_puzzle};
-
 int get_graph_size(const KlotskiBoard& kb){
     Graph g;
     g.add_to_stack(new KlotskiBoard(kb));
@@ -416,7 +408,7 @@ void part4() {
     }
 }
 
-void showcase_graph(const KlotskiBoard& kb, const string& script) {
+void showcase_graph(const KlotskiBoard& kb, const Macroblock& mb) {
     CompositeScene cs;
     // Create a KlotskiScene for the given board and set its state
     auto ks_ptr = make_shared<KlotskiScene>(kb);
@@ -431,9 +423,12 @@ void showcase_graph(const KlotskiBoard& kb, const string& script) {
     gs_ptr->state_manager.set(default_graph_state);
     cs.add_scene(gs_ptr, "gs");
 
+    shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + get_graph_size(kb), 1, .3, .3);
+    cs.add_scene(ls, "ls", .15, .15);
+
     // Gradually expand the graph to reveal its structure
     int expansion_steps = get_graph_size(kb);
-    cs.stage_macroblock(FileBlock(script), expansion_steps);
+    cs.stage_macroblock(mb, expansion_steps);
     while (cs.microblocks_remaining()) {
         g.expand(1);
         cs.render_microblock();
@@ -749,7 +744,6 @@ void part6() {
     gs_apk->state_manager.set(default_graph_state);
     //gs_apk->state_manager.transition(MICRO, {{"physics_multiplier","5"}});
     cs.add_scene(gs_apk, "gs_apk", 0.6, 0.5);
-    gs_apk->state_manager.set({{"z_dilation", "1"}});
 
     cs.stage_macroblock(FileBlock("As an example, this puzzle has some cool behavior."), get_graph_size(apk));
     while(cs.microblocks_remaining()){
@@ -777,7 +771,7 @@ void part6() {
 
     cs.stage_macroblock(FileBlock("but also, if we zoom in on a small portion of the graph,"), to_remove.size());
     // TODO zoom in more peacefully
-    gs_apk->state_manager.transition(MICRO, {{"z_dilation", ".98"}});
+    gs_apk->state_manager.transition(MICRO, {{"dimensions", "2.98"}});
     for(double d : to_remove){
         g_apk.remove_node(d);
         cs.render_microblock();
@@ -1137,30 +1131,27 @@ hhh..e
 }
 
 void part8() {
-    // Show the full klotski "sun" puzzle for the first time.
-    KlotskiBoard to_use = sun;
     //FOR_REAL = false;
     CompositeScene cs;
-    auto ks = make_shared<KlotskiScene>(to_use);
+    auto ks = make_shared<KlotskiScene>(sun);
     cs.add_scene(ks, "ks", .5, 1.5);
     cs.slide_subscene(MACRO, "ks", 0, -1);
     cs.stage_macroblock(FileBlock("Alright, so what about Klotski?"), 1/*num_moves TODO*/);
     cs.render_microblock();
 
     ks->state_manager.transition(MICRO, board_width_height);
-    cs .state_manager.transition(MICRO, {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    cs .state_manager.transition(MICRO, {{"ks.x",".85"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
     Graph g;
-    g.add_to_stack(new KlotskiBoard(to_use));
-    g.dimensions = 4;
+    g.add_to_stack(new KlotskiBoard(sun));
     auto gs = std::make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
-    gs->state_manager.set({{"physics_multiplier", "40"}, {"points_opacity", "0"}, {"z_dilation", "1"}});
+    gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "40"}, {"points_opacity", "0"}, {"dimensions", "3.98"}});
     cs.add_scene(gs, "gs");
 
-    int x = get_graph_size(to_use);
+    int x = get_graph_size(sun);
     float i = 1;
     while (g.size() < x) {
         int num_nodes_to_add = i*i;
@@ -1171,16 +1162,15 @@ void part8() {
         cout << g.size() << endl;
     }
 
-    gs->state_manager.transition(MICRO, {{"mirror_force", ".1"}, {"physics_multiplier", "0"}});
-    cs.stage_macroblock(SilenceBlock(15), 2);
-    cs.render_microblock();
-    g.dimensions = 3;
+    gs->state_manager.transition(MICRO, {{"physics_multiplier", "0"}, {"dimensions", "3.7"}});
+    cs.stage_macroblock(SilenceBlock(15), 1);
     cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
     cs.stage_macroblock(FileBlock("That's 25,955 nodes."), 1);
     cs.render_microblock();
 
+    // TODO show a symmetrical board pair!
     cs.stage_macroblock(FileBlock("The puzzle is symmetrical, so the graph is too."), 1);
     cs.render_microblock();
 
@@ -1188,10 +1178,13 @@ void part8() {
     cs.stage_macroblock(FileBlock("Turning the graph 90 degrees, we see two primary clusters of nodes."), 1);
     cs.render_microblock();
 
+    gs->next_hash = ks->copy_staged_board().get_hash();
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
     gs->state_manager.transition(MACRO, {{"d", ".2"}, {"points_opacity", "1"}, {"points_radius_multiplier","1.5"}});
     gs->state_manager.transition(MACRO, less_spinny);
     cs.stage_macroblock(FileBlock("Here's the starting position."), 3);
-    gs->next_hash = ks->copy_staged_board().get_hash();
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
@@ -1210,8 +1203,11 @@ void part8() {
     }
     cs.render_microblock();
 
-    gs->state_manager.transition(MACRO, {{"d", ".4"}});
     cs.stage_macroblock(FileBlock("All the solution nodes are on the opposite half of the graph as the starting position."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    gs->state_manager.transition(MACRO, {{"d", ".4"}});
     cs.render_microblock();
 
     const int num_random_moves = 40;
@@ -1233,7 +1229,7 @@ void part8() {
     cs.render_microblock();
 
     gs->state_manager.transition(MACRO, {{"lines_opacity", ".1"}});
-    perform_shortest_path_with_graph(cs, gs, ks, sun, SilenceBlock(2));
+    perform_shortest_path_with_graph(cs, gs, ks, sun, FileBlock("Going back to the start,"));
 
     auto path = g.shortest_path(ks->copy_board().get_hash(), klotski_solution.get_hash()).second;
     /*for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1256,12 +1252,14 @@ void part8() {
 
     perform_shortest_path_with_graph(cs, gs, ks, klotski_solution, SilenceBlock(15));
 
-    cs.stage_macroblock(SilenceBlock(.6), 3);
+    cs.stage_macroblock(SilenceBlock(.5), 2);
     ks->stage_move({'b', 0, 5});
+    cs.render_microblock();
     cs.fade_subscene(MICRO, "ks", 0);
     cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"d", "1"}});
+    gs->state_manager.set({{"lines_opacity", "1"}});
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         EdgeSet& es = p->second.neighbors;
         for(auto& e : es){
@@ -1270,6 +1268,10 @@ void part8() {
         }
     }
     cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Interestingly, this is not the path chosen by the world record speedsolver..."), 1);
+    //TODO
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Was my friend right about the horizontal bar?"), 1);
@@ -1356,10 +1358,10 @@ void part8() {
     cs.stage_macroblock(FileBlock("What else can we learn?"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("I'm going to travel to a faraway land."), 1);
+    cs.stage_macroblock(FileBlock("I'm going to zoom in on a faraway land."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Let's consider a small region of nodes here."), 1);
+    cs.stage_macroblock(FileBlock("Let's select a small region of nodes here."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Now I'm going to show you the boards for all of those nodes,"), 1);
@@ -1407,24 +1409,96 @@ void recursive_placer(unordered_set<string>& set, const string& rep, int piece_n
     }
 }
 
-/*
 void part9(){
+    cs.stage_macroblock(FileBlock("Remember how this puzzle has positions that can't be reached?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Klotski is the same way."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("You might notice that although the board is symmetrical in the y axis, "), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("why not the x axis too?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Although you can theoretically rearrange all the pieces upside down,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("there is no valid set of moves that will transition between these two areas."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Let's add in the second half."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Are there any other disconnected islands?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Let's add them!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock(""), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock(""), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock(""), 1);
+    cs.render_microblock();
+
     // Recursively find all of the possible states including those which are unreachable
+    Graph omni;
     unordered_set<string> set;
     recursive_placer(set, "....................", 0);
+    for(const string& s : set) omni.add_to_stack(new KlotskiBoard(4, 5, s, false));
+    omni.sanitize_edges();
+
     while(set.size() > 0) {
-        g.add_to_stack(new KlotskiBoard(4, 5, set.pop(), false));
-        g.add_missing_edges();
+        Graph g;
+        auto it = set.begin();
+
+        KlotskiBoard* kb = new KlotskiBoard(4, 5, *it, false); 
+        KlotskiBoard* m0 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash()).second.data.representation, false);
+        KlotskiBoard* m1 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash_2()).second.data.representation, false);
+        KlotskiBoard* m2 = new KlotskiBoard(4, 5, omni.nodes.find(m0->get_reverse_hash_2()).second.data.representation, false);
+        g.add_to_stack(kb);
+        g.add_to_stack(m0);
+        g.add_to_stack(m1);
+        g.add_to_stack(m2);
+
+        g.expand_completely();
+
+        CompositeScene cs;
+        shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
+        shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + g.size(), 1, .3, .3);
+        cs.add_scene(gs, "gs");
+        cs.add_scene(ls, "ls", .15, .15);
+        cs.stage_macroblock(SilenceSegment(4), 1);
+        cs.render_microblock();
+
+        for(Node& n : g.nodes) set.remove(n.data->representation);
     }
 }
-*/
 
 void part10(){
-    for (const auto& kb_set : {gpt, other, suns, rushhours, geometry}) {
-        for (const KlotskiBoard& kb : kb_set) {
-            showcase_graph(kb, "aaaa");
-        }
-    }
+    // Lists of KlotskiBoards
+    auto gpt = {gpt2, gpt3, weird1, weird2, weird3};
+    auto other = {apk, mathgames_12_13_04, euler766_easy};
+    auto suns = {fatsun, truncatedsun};
+    auto geometry = {jam3x3, cube_4d, cube_6d, big_block, diamond, doublering, outer_ring, plus_3_corners, plus_4_corners, ring, ring_big, rows, small_block, t_shapes, triangles, triangles2, manifold_1d, manifold_2d, manifold_3d, manifold_4d, full_15_puzzle};
+
+    showcase_graph(beginner, FileBlock("Just for fun, let's check out some more graphs!"));
+    showcase_graph(advanced, FileBlock("Here are some block puzzles I found online."));
+    showcase_graph(expert, SilenceBlock(5));
+    showcase_graph(reddit, SilenceBlock(5));
+    showcase_graph(thinkfun1, SilenceBlock(5));
+    showcase_graph(thinkfun2, SilenceBlock(5));
+    showcase_graph(thinkfun3, SilenceBlock(5));
+    showcase_graph(video, SilenceBlock(5));
+    showcase_graph(guh3, SilenceBlock(5));
+    showcase_graph(guh4, SilenceBlock(5));
+
+    showcase_graph(sun_no_minis, FileBlock("Here's the Klotski puzzle, but without the small blocks!"));
 }
 
 void render_video() {
@@ -1440,6 +1514,7 @@ void render_video() {
         part6();
         part7();
     }
-    part8();
+    //part8();
     //part9();
+    part10();
 }

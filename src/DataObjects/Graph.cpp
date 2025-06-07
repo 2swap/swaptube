@@ -400,14 +400,14 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation, const float mirror_force) {
+    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force) {
         vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
         for (int n = 0; n < iterations; n++) {
             for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
             cout << "." << flush;
-            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, z_dilation, mirror_force);
+            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, dimension, mirror_force);
         }
         glm::vec4 com = center_of_mass();
         for (int n = 0; n < size(); n++) {
@@ -416,7 +416,7 @@ public:
         mark_updated();
     }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double z_dilation, const float mirror_force) {
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force) {
         int s = node_vector.size();
 
         vector<glm::vec4> positions(s);
@@ -439,13 +439,27 @@ public:
 
             // Add symmetry forces
             if (mirror_force > 0.001) {
-                const auto& mirror = nodes.find(node->data->get_reverse_hash());
-                if(mirror != nodes.end()) {
-                    glm::vec4 mirror_pos = mirror->second.position;
-                    mirror_pos.x *= -1;
-                    node->velocity += mirror_force*(mirror_pos - node->position);
+                {
+                    const auto& mirror = nodes.find(node->data->get_reverse_hash());
+                    if(mirror != nodes.end()) {
+                        glm::vec4 mirror_pos = mirror->second.position;
+                        mirror_pos.x *= -1;
+                        glm::vec4 mirror_force_vec = mirror_force*(mirror_pos - node->position);
+                        mirror_force_vec.w = 0; // Allow 4th dimension for mirror bypass
+                        node->velocity += mirror_force_vec;
+                    }
                 }
-               //else {cout << "Mirror not found!" << endl;}
+
+                {
+                    const auto& mirror = nodes.find(node->data->get_reverse_hash_2());
+                    if(mirror != nodes.end()) {
+                        glm::vec4 mirror_pos = mirror->second.position;
+                        mirror_pos.y *= -1;
+                        glm::vec4 mirror_force_vec = mirror_force*(mirror_pos - node->position);
+                        mirror_force_vec.w = 0; // Allow 4th dimension for mirror bypass
+                        node->velocity += mirror_force_vec;
+                    }
+                }
             }
 
             // Calculate attraction forces (CPU)
@@ -477,18 +491,10 @@ public:
             node->position += node->velocity;
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
+            float z_dilation = clamp(0, dimension - 2, 1);
+            float w_dilation = clamp(0, dimension - 3, 1);
             node->position.z *= z_dilation;
-            node->position.w *= 0.99;
-
-            // Dimensional constraints
-            if (dimensions < 3) {
-                node->velocity.z = 0;
-                node->position.z = 0;
-            }
-            if (dimensions < 4) {
-                node->velocity.w = 0;
-                node->position.w = 0;
-            }
+            node->position.w *= w_dilation;
         }
         mark_updated();
     }
