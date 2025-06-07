@@ -97,7 +97,7 @@ void part1(){
         ks_ptr->stage_random_move();
         // Add the new node
         g.add_to_stack(new KlotskiBoard(ks_ptr->copy_staged_board()));
-        g.add_missing_edges(true);
+        g.add_missing_edges();
         // Highlight the node of the board on the state-space graph
         gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
         cs.render_microblock();
@@ -170,7 +170,7 @@ void part1(){
     ks_ptr->stage_move({'c', 0, 1});
     cs.render_microblock();
     g.add_to_stack(new KlotskiBoard(ks_ptr->copy_staged_board()));
-    g.add_missing_edges(true);
+    g.add_missing_edges();
     gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
     cs.stage_macroblock(FileBlock("we arrive at a different node."), 1);
     cs.render_microblock();
@@ -199,7 +199,7 @@ void part1(){
     while(cs.microblocks_remaining()) {
         ks_ptr->stage_random_move();
         g.add_to_stack(new KlotskiBoard(ks_ptr->copy_staged_board()));
-        g.add_missing_edges(true);
+        g.add_missing_edges();
         gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
         cs.render_microblock();
     }
@@ -1188,12 +1188,17 @@ void part8() {
 
     gs->state_manager.transition(MACRO, {{"d", ".2"}, {"points_opacity", "1"}, {"points_radius_multiplier","1.5"}});
     gs->state_manager.transition(MACRO, less_spinny);
-    cs.stage_macroblock(FileBlock("Here's the starting position."), 2);
+    cs.stage_macroblock(FileBlock("Here's the starting position."), 3);
     gs->next_hash = ks->copy_staged_board().get_hash();
     cs.render_microblock();
     cs.render_microblock();
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(2), 1);
+    cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"lines_opacity", ".2"}});
+    gs->state_manager.transition(MACRO, {{"d", "1"}});
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}, });
     cs.stage_macroblock(FileBlock("Now, let's look at all the solutions- the nodes with the square at the bottom."), 1);
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1203,11 +1208,11 @@ void part8() {
     }
     cs.render_microblock();
 
+    gs->state_manager.transition(MACRO, {{"d", ".4"}});
     cs.stage_macroblock(FileBlock("All the solution nodes are on the opposite half of the graph as the starting position."), 1);
     cs.render_microblock();
 
-    int num_random_moves = 500;
-    gs->state_manager.transition(MACRO, {{"d", ".4"}});
+    const int num_random_moves = 20;
     cs.stage_macroblock(FileBlock("By making random moves from the starting position,"), num_random_moves);
     for (int i = 0; i < num_random_moves; i++) {
         ks->stage_random_move();
@@ -1215,14 +1220,8 @@ void part8() {
         cs.render_microblock();
     }
 
-    num_random_moves = 5000;
     gs->state_manager.transition(MACRO, {{"d", "1"}});
-    cs.stage_macroblock(SilenceBlock(3), num_random_moves);
-    for (int i = 0; i < num_random_moves; i++) {
-        ks->stage_random_move();
-        gs->next_hash = ks->copy_staged_board().get_hash();
-        cs.render_microblock();
-    }
+    perform_shortest_path_with_graph(cs, gs, ks, sun_pit, SilenceBlock(2));
 
     cs.stage_macroblock(FileBlock("unless we have exceptional foresight, or we get very lucky,"), 1);
     cs.render_microblock();
@@ -1255,6 +1254,13 @@ void part8() {
     perform_shortest_path_with_graph(cs, gs, ks, klotski_solution, SilenceBlock(15));
 
     gs->state_manager.transition(MICRO, {{"d", "1"}});
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        EdgeSet& es = p->second.neighbors;
+        for(auto& e : es){
+            Edge& ed = const_cast<Edge&>(e);
+            ed.opacity = 1;
+        }
+    }
     cs.stage_macroblock(FileBlock("What else can we learn?"), 1);
     cs.render_microblock();
 
@@ -1267,6 +1273,7 @@ void part8() {
     cs.stage_macroblock(FileBlock("Let's go ahead and highlight every node-"), 1);
     gs->next_hash = 0;
     cs.state_manager.transition(MICRO, {{"ks_bd.x",".15"},{"ks_bd.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}});
+    ks->state_manager.transition(MICRO, board_width_height);
     cs.render_microblock();
 
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1278,7 +1285,7 @@ void part8() {
         }
         b_avg /= 4;
         d_avg /= 2;
-        n.color = (b_avg < d_avg + 1 ? 0xff0000 : 0) | (b_avg > d_avg - 1 ? 0x0000ff : 0);
+        n.color = (b_avg < d_avg + 1 ? 0xff0000 : 0) | (b_avg > d_avg - 1 ? 0x00ff00 : 0);
     }
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
@@ -1297,26 +1304,22 @@ void part8() {
 
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
-        if(n.color == 0xff00ff) n.color |= 0xff000000;
+        if(n.color == 0xffff00) n.color |= 0xff000000;
     }
     cs.stage_macroblock(FileBlock("yellow when the bar is beside the block,"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(.6), 3);
+    cs.stage_macroblock(SilenceBlock(.6), 2);
     ks_bd_ptr->stage_move({'b', 0, 2});
     cs.render_microblock();
     ks_bd_ptr->stage_move({'b', -1, 0});
     cs.render_microblock();
-    ks_bd_ptr->stage_move({'b', 0, 6});
-    cs.render_microblock();
-    ks_bd_ptr->stage_move({'d', 1, 0});
-    cs.render_microblock();
 
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
         Node& n = p->second;
-        if(n.color == 0x0000ff) n.color |= 0xff000000;
+        if(n.color == 0x00ff00) n.color |= 0xff000000;
     }
-    cs.stage_macroblock(FileBlock("and green when the block was moved under the bar."), 1);
+    cs.stage_macroblock(FileBlock("and green when the block has been moved under the bar."), 1);
     cs.render_microblock();
 }
 

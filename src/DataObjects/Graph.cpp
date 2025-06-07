@@ -64,7 +64,7 @@ public:
     unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
     double opacity = 1;
-    int color = 0xffffffff;
+    int color = 0;
     float radius_multiplier = 1;
     double age = 0;
     glm::vec4 velocity;
@@ -125,7 +125,7 @@ public:
     double add_node(GenericBoard* t){
         double x = add_node_without_edges(t);
         //cout << "Manually adding missing edges cause a human manually added a node" << endl;
-        add_missing_edges(true);
+        add_missing_edges();
         return x;
     }
     double add_node_without_edges(GenericBoard* t){
@@ -168,12 +168,12 @@ public:
                 }
             }
             if(done) {
-                add_missing_edges(true);
+                add_missing_edges();
                 mark_updated();
                 return added;
             }
         }
-        add_missing_edges(true);
+        add_missing_edges();
         if(added > 0) mark_updated();
         return added;
     }
@@ -237,7 +237,7 @@ public:
     /**
      * Sanitize the graph by adding edges which should be present but are not.
      */
-    void add_missing_edges(bool teleport_orphans_to_parents) {
+    void add_missing_edges() {
         for (auto& pair : nodes) {
             Node& parent = pair.second;
             if(parent.expected_children_hashes.size() == 0)
@@ -247,7 +247,8 @@ public:
                 // this theoretical child isn't guaranteed to be in the graph
                 if(!node_exists(child_hash)) continue;
                 Node& child = nodes.find(child_hash)->second;
-                if(child.age == 0 && teleport_orphans_to_parents && !does_edge_exist(parent.hash, child.hash)){//if child is orphan
+                if(child.age == 0 && parent.age != 0 && !does_edge_exist(parent.hash, child_hash)){//if child is orphaned
+                    // Teleport children to parents
                     child.position = parent.position + random_unit_cube_vector();
                     child.velocity = parent.velocity;
                 }

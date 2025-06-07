@@ -220,8 +220,11 @@ KlotskiBoard thinkfun2     (6, 6, ".a.ffe.a...e.a.bbe...c.....cdd......", true )
 KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true );
 
 //big
-KlotskiBoard sun           (4, 5, "abbcabbc.dd.efgheijh"                , false);
-KlotskiBoard klotski_solution(4, 5, "fgacehacehdd.bbi.bbj"                , false);
+KlotskiBoard sun_mine      (4, 5, "abbcabbc.dd.efgheijh"                , false);
+KlotskiBoard sun           (4, 5, "abbcabbceddhefghi..j"                , false);
+KlotskiBoard sun_pit       (4, 5, "abbfabbcg.ecijeh.ddh"                , false);
+KlotskiBoard klotski_solution_slow(4, 5, "fgacehacehdd.bbi.bbj"                , false);
+KlotskiBoard klotski_solution     (4, 5, "acehacehfgdd.bbi.bbj"                , false);
 
 //other
 //KlotskiBoard apk           (4, 4, "abccefii.gii.ghh"                    , false);

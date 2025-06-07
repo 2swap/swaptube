@@ -1,6 +1,5 @@
 #pragma once
 
-#include <chrono>
 #include <fstream>
 #include "SuperScene.cpp"
 #include <string>
@@ -256,26 +255,18 @@ public:
     }
 
     void draw() override {
-        auto start_total = std::chrono::high_resolution_clock::now();
-
         fov = state["fov"];
         over_w_fov = 1/(get_geom_mean_size()*fov);
         halfwidth = get_width()*0.5f;
         halfheight = get_height()*0.5f;
 
-        auto start_set_camera = std::chrono::high_resolution_clock::now();
         set_camera_direction();
-        auto end_set_camera = std::chrono::high_resolution_clock::now();
 
         sketchpad.fill(OPAQUE_BLACK);
 
         // Render surfaces via their CUDA integration.
-        auto start_surfaces = std::chrono::high_resolution_clock::now();
         if (state["surfaces_opacity"] > 0.001) for (const Surface& surface : surfaces) render_surface(surface);
-        auto end_surfaces = std::chrono::high_resolution_clock::now();
 
-        // TODO remove profiler
-        auto start_points = std::chrono::high_resolution_clock::now();
         cout << "(P";
         if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
             render_points_on_gpu(
@@ -294,9 +285,7 @@ public:
             );
         }
         cout << ")" << flush;
-        auto end_points = std::chrono::high_resolution_clock::now();
 
-        auto start_lines = std::chrono::high_resolution_clock::now();
         cout << "(L";
         if (!lines.empty() && state["lines_opacity"] > .001) {
             int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
@@ -316,26 +305,6 @@ public:
             );
         }
         cout << ")" << flush;
-        auto end_lines = std::chrono::high_resolution_clock::now();
-
-        auto end_total = std::chrono::high_resolution_clock::now();
-
-        using ms = std::chrono::duration<double, std::milli>;
-        double dur_set_camera = std::chrono::duration_cast<ms>(end_set_camera - start_set_camera).count();
-        double dur_surfaces = std::chrono::duration_cast<ms>(end_surfaces - start_surfaces).count();
-        double dur_points = std::chrono::duration_cast<ms>(end_points - start_points).count();
-        double dur_lines = std::chrono::duration_cast<ms>(end_lines - start_lines).count();
-        double dur_total = std::chrono::duration_cast<ms>(end_total - start_total).count();
-
-        std::ofstream profile_file("draw_profile.log", std::ios::app);
-        if(profile_file.is_open()){
-            profile_file << dur_set_camera << " "
-                         << dur_surfaces << " "
-                         << dur_points << " "
-                         << dur_lines << " "
-                         << dur_total << "\n";
-            profile_file.close();
-        }
     }
 
     const StateQuery populate_state_query() const override {
