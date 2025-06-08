@@ -423,7 +423,7 @@ void showcase_graph(const KlotskiBoard& kb, const Macroblock& mb) {
     gs_ptr->state_manager.set(default_graph_state);
     cs.add_scene(gs_ptr, "gs");
 
-    shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + get_graph_size(kb), 1, .3, .3);
+    shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + to_string(get_graph_size(kb)), 1, .3, .3);
     cs.add_scene(ls, "ls", .15, .15);
 
     // Gradually expand the graph to reveal its structure
@@ -1371,9 +1371,12 @@ void part8() {
     cs.render_microblock();
 }
 
-void recursive_placer(unordered_set<string>& set, const string& rep, int piece_number){
-    //TODO this is bugged- it doublecounts transpositions.
-    if(piece_number == 10) { set.insert(rep); return; }
+void recursive_placer(unordered_set<string>& set, const string& rep, int piece_number, int min_index = -1){
+    if(piece_number == 10) { set.insert(rep);
+        if(set.size() % 1000 == 0)
+            cout<<set.size()<<endl;
+        return;
+    }
     int piece_w = 0;
     int piece_h = 0;
     char piece_c = 'a' + piece_number;
@@ -1395,6 +1398,8 @@ void recursive_placer(unordered_set<string>& set, const string& rep, int piece_n
     }
     for(int x = 0; x < 4 + 1 - piece_w; x++){
         for(int y = 0; y < 5 + 1 - piece_h; y++){
+            int index = x + y * 4;
+            if(index <= min_index && (piece_number > 2 && piece_number != 6)) continue; // Dodge transpositions
             string child = rep;
             for(int dx = 0; dx < piece_w; dx++) {
                 for(int dy = 0; dy < piece_h; dy++) {
@@ -1404,7 +1409,7 @@ void recursive_placer(unordered_set<string>& set, const string& rep, int piece_n
                     child[x+dx + (y+dy)*4] = piece_c;
                 }
             }
-            recursive_placer(set, child, piece_number+1);
+            recursive_placer(set, child, piece_number+1, index);
             next: ;
         }
     }
@@ -1453,14 +1458,19 @@ void part9(){
     Graph omni;
     unordered_set<string> set;
     recursive_placer(set, "....................", 0);
-    for(const string& s : set) omni.add_node(new KlotskiBoard(4, 5, s, false));
     cout << "Set size: " << set.size() << endl;
+    for(const string& s : set) {
+        omni.add_to_stack(new KlotskiBoard(4, 5, s, false));
+        if(omni.size() % 1000 == 0)
+            cout<<omni.size()<<endl;
+    }
 
-    while(set.size() > 0) {
+    while(omni.nodes.size() > 0) {
+        cout << "REMAINING NODES: " << omni.nodes.size() << endl;
         Graph g;
-        auto it = set.begin();
+        auto it = omni.nodes.begin();
 
-        KlotskiBoard* kb = new KlotskiBoard(4, 5, *it, false); 
+        KlotskiBoard* kb = new KlotskiBoard(4, 5, it->second.data->representation, false); 
         KlotskiBoard* m0 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash())->second.data->representation, false);
         KlotskiBoard* m1 = new KlotskiBoard(4, 5, omni.nodes.find(kb->get_reverse_hash_2())->second.data->representation, false);
         KlotskiBoard* m2 = new KlotskiBoard(4, 5, omni.nodes.find(m0->get_reverse_hash_2())->second.data->representation, false);
@@ -1470,20 +1480,26 @@ void part9(){
         g.add_to_stack(m2);
 
         g.expand(-1);
+        int sz = g.size();
 
-        CompositeScene cs;
-        shared_ptr<GraphScene> gs = make_shared<GraphScene>(&g, false);
-        //shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + g.size(), 1, .3, .3);
-        cs.add_scene(gs, "gs");
-        //cs.add_scene(ls, "ls", .15, .15);
-        cs.stage_macroblock(SilenceBlock(4), 1);
-        cs.render_microblock();
-
-        for(auto& p : g.nodes) {
-            Node& n = p.second;
-            set.erase(n.data->representation);
+        if(sz > 150 && sz < 20000){
+            CompositeScene cs;
+            shared_ptr<KlotskiScene> ks = make_shared<KlotskiScene>(KlotskiBoard(*kb));
+            shared_ptr<GraphScene> gs = make_shared<GraphScene>(&g, false);
+            gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", "10"}, {"points_opacity", "0"}, {"dimensions", "3.98"}});
+            shared_ptr<LatexScene> ls = make_shared<LatexScene>("Node Count: " + to_string(g.size()), 1, .3, .3);
+            cs.add_scene(ks, "ks");
+            cs.add_scene(gs, "gs");
+            cs.state_manager.set(board_position);
+            ks->state_manager.set(board_width_height);
+            cs.add_scene(ls, "ls", .15, .9);
+            cs.stage_macroblock(SilenceBlock(1), 1);
+            cs.render_microblock();
         }
+
+        for(auto& p : g.nodes) omni.remove_node(p.first);
     }
+    // TODO Drop em all in together. It's just 60k nodes, can handle it.
 }
 
 void part10(){
