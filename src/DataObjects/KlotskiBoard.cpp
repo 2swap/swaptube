@@ -235,7 +235,6 @@ KlotskiBoard expert        (6, 6, "jjj..i.....i..abbi..aghhe.cgffe.cddd", true )
 KlotskiBoard reddit        (6, 6, ".adddm.ac..mbbc.ikffhhike.g.lle.gjjj", true );
 KlotskiBoard guh3          (6, 6, "akjjhhaknnigakbbigcffeigc..epplldd..", true );
 KlotskiBoard guh4          (6, 6, "dddaff...ahhbbca.eg.cppeg.nnikjjllik", true );
-KlotskiBoard video         (6, 6, "acdde.acdde.bbkg....kgm...igm...i...", true );
 KlotskiBoard thinkfun1     (6, 6, "a.cddda.c....bbe...i.e...ifffg.....g", true );
 KlotskiBoard thinkfun2     (6, 6, ".a.ffe.a...e.a.bbe...c.....cdd......", true );
 KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true );
@@ -243,6 +242,8 @@ KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true )
 //big
 KlotskiBoard sun_mine      (4, 5, "abbcabbc.dd.efgheijh"                , false);
 KlotskiBoard sun           (4, 5, "abbcabbceddhefghi..j"                , false);
+KlotskiBoard klotski_flip  (4, 5, "j..ihgfehddecbbacbba"                , false);
+KlotskiBoard klotski_bonus (4, 5, "jbbaibba.fddcehgceh."                , false);
 KlotskiBoard sun_pit       (4, 5, "abbfabbcg.ecijeh.ddh"                , false);
 KlotskiBoard klotski_solution_slow(4, 5, "fgacehacehdd.bbi.bbj"                , false);
 KlotskiBoard klotski_solution     (4, 5, "acehacehfgdd.bbi.bbj"                , false);

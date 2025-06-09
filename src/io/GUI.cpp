@@ -45,6 +45,7 @@ public:
 
     void update(const Pixels* newpix) {
         pix = *newpix;
+        print();
     }
 
     // ---------------------------------------------------------------------
@@ -59,10 +60,15 @@ public:
         // Move cursor to this window's top-left
         move_cursor();
 
+
         int sample_height = h * 2;
 
         // For each terminal character cell, we determine the corresponding region in the image.
         for (int ycell = 0; ycell < h; ++ycell) {
+            if(!FOR_REAL && ycell == 1) {
+                cout << "In Smoketest Mode. No video is being rendered." << endl;
+                continue;
+            }
             for (int xcell = 0; xcell < w; ++xcell) {
                 // Determine the horizontal region that maps to this terminal column.
                 int x0 = xcell * pix.w / w;
@@ -104,8 +110,7 @@ public:
                      << "\033[48;2;" << r_bot << ";" << g_bot << ";" << b_bot << "m"
                      << "\u2580";
             }
-            // Reset colors at the end of each line.
-            cout << "\033[0m" << endl;
+            cout << endl;
         }
         // Reset at the end.
         cout << "\033[0m" << endl;
@@ -124,77 +129,13 @@ public:
     void print() override {
         move_cursor();
 
-        // Draw border
-        if(w < 2 || h < 2) return; // need minimum size
-        cout << "+" << string(w-2, '-') << "+" << endl;
-
-        int rows_for_graph = h-3;
-        if(rows_for_graph <= 0) {
-            // Fill empty lines
-            for(int i=0; i<h-2; ++i){
-                cout << "|" << string(w-2,' ') << "|" << endl;
-            }
-            cout << "+" << string(w-2, '-') << "+" << endl;
-            return;
-        }
-
-        int n_vars = (int)s.size();
-        if(n_vars == 0) {
-            for(int i=0; i<rows_for_graph; ++i){
-                cout << "|" << string(w-2,' ') << "|" << endl;
-            }
-            cout << "+" << string(w-2, '-') << "+" << endl;
-            return;
-        }
-
-        // Extract values for graphing: show all vars
-        int name_width = 10;
-        double max_val = numeric_limits<double>::lowest();
-        double min_val = numeric_limits<double>::max();
-        unordered_map<string, double> map = s.get_map();
-        for(auto& p : map) {
-            if(p.second > max_val) max_val = p.second;
-            if(p.second < min_val) min_val = p.second;
-        }
-        double val_range = max_val - min_val;
-        if(val_range < 1e-6) val_range = 1.0; // Avoid zero division
-
-        int max_bar_len = w - name_width - 4;
-        if (max_bar_len < 1) max_bar_len = 1;
-
-        int lines_printed = 0;
-        for (auto p : map) {
-            if(lines_printed >= rows_for_graph) break;
-            // Format name (truncate/pad)
-            string name = p.first;
-            if ((int)name.size() > name_width) name = name.substr(0, name_width);
-            else if ((int)name.size() < name_width) name += string(name_width - name.size(), ' ');
-
-            int bar_len = static_cast<int>((p.second - min_val) / val_range * max_bar_len);
-            if (bar_len < 0) bar_len = 0;
-            if (bar_len > max_bar_len) bar_len = max_bar_len;
-
-            // Print line: | name bar |
-            cout << "| " << name << " ";
-            cout << string(bar_len, '#') << string(max_bar_len - bar_len, ' ');
-            cout << "|" << endl;
-            lines_printed++;
-        }
-
-        // Fill leftover lines with empty space inside box
-        for(int i = lines_printed; i < rows_for_graph; ++i) {
-            cout << "|" << string(w-2, ' ') << "|" << endl;
-        }
-
-        // Bottom border
-        cout << "+" << string(w-2, '-') << "+" << endl;
+        // TODO
     }
 };
 
 // Shows the timeline status. Remembers basic statistics about timeline history.
 class TimelineWindow : public Window {
 public:
-    int num_macroblocks_completed = 0;
     int num_frames_rendered = 0;
     double num_seconds_rendered = 0.0;
     int num_microblocks_completed_this_macroblock = 0;
@@ -202,40 +143,53 @@ public:
     int total_frames_this_microblock = 0;
     int completed_frames_this_microblock = 0;
 
-    void update(int macroblocks_completed, int frames_rendered, double seconds_rendered,
+    void update(int frames_rendered, double seconds_rendered,
                 int microblocks_completed, int microblocks_total, int completed_frames_micro, int total_frames_micro) {
-        num_macroblocks_completed = macroblocks_completed;
         num_frames_rendered = frames_rendered;
         num_seconds_rendered = seconds_rendered;
         num_microblocks_completed_this_macroblock = microblocks_completed;
         num_microblocks_total_this_macroblock = microblocks_total;
         total_frames_this_microblock = total_frames_micro;
         completed_frames_this_microblock = completed_frames_micro;
+        print();
     }
 
     void print() override {
         move_cursor();
 
-        if(w < 2 || h < 2) return; // need minimum size
-        // Draw border
-        cout << "+" << string(w-2, '-') << "+" << endl;
-
         // Print stats lines inside box
         vector<string> lines;
-        lines.push_back("Macroblocks: " + to_string(num_macroblocks_completed));
         lines.push_back("Total Seconds: " + to_string(num_seconds_rendered));
         lines.push_back("Total Frames: " + to_string(num_frames_rendered));
-        lines.push_back("Microblocks this macroblock: " + string(num_microblocks_completed_this_macroblock, '#') + string(num_microblocks_total_this_macroblock - num_microblocks_completed_this_macroblock, '.'));
-        lines.push_back("Frames this microblock: " + string(completed_frames_this_microblock, '#') + string(total_frames_this_microblock - completed_frames_this_microblock, '.'));
+
+        // Construct microblocks progress bar or numeric representation
+        string microblocks_str;
+        if (num_microblocks_total_this_macroblock <= w - 23) {
+            // sufficient space: show progress bar
+            microblocks_str = string(num_microblocks_completed_this_macroblock, '#') + string(num_microblocks_total_this_macroblock - num_microblocks_completed_this_macroblock, '.');
+        } else {
+            // not enough space: show "completed/total"
+            microblocks_str = to_string(num_microblocks_completed_this_macroblock) + "/" + to_string(num_microblocks_total_this_macroblock);
+        }
+        lines.push_back("Microblocks this macroblock: " + microblocks_str);
+
+        // Construct frames progress bar or numeric representation
+        string frames_str;
+        if (total_frames_this_microblock <= w - 18) {
+            // sufficient space: show progress bar
+            frames_str = string(completed_frames_this_microblock, '#') + string(total_frames_this_microblock - completed_frames_this_microblock, '.');
+        } else {
+            // not enough space: show "completed/total"
+            frames_str = to_string(completed_frames_this_microblock) + "/" + to_string(total_frames_this_microblock);
+        }
+        lines.push_back("Frames this microblock: " + frames_str);
 
         int line_count = (int)lines.size();
-        int max_lines = h - 2;
-        for(int i=0; i<max_lines; ++i) {
+        for(int i=0; i<h; ++i) {
             string content = (i < line_count) ? lines[i] : "";
-            if ((int)content.length() > w-2) content = content.substr(0, w-2);
-            cout << "|" << content << string(w-2 - content.length(), ' ') << "|" << endl;
+            if ((int)content.length() > w) content = content.substr(0, w);
+            cout << content << string(w - content.length(), ' ') << endl;
         }
-        cout << "+" << string(w-2, '-') << "+" << endl;
     }
 };
 
@@ -250,27 +204,22 @@ public:
 
     void append(const string& partial) {
         logs[logs.size()-1] += partial;
+        print();
     }
 
     void print() override {
         move_cursor();
 
-        if(w < 2 || h < 2) return; // need minimum size
-        // Draw border
-        cout << "+" << string(w-2, '-') << "+" << endl;
-
-        int max_lines = h - 2;
-        int start_log = max(0, (int)logs.size() - max_lines);
+        int start_log = max(0, (int)logs.size() - h);
         int end_log = (int)logs.size();
 
-        for(int i=0; i<max_lines; ++i) {
+        for(int i=0; i<h; ++i) {
             string content = "";
             int idx = start_log + i;
             if (idx < end_log) content = logs[idx];
-            if ((int)content.length() > w-2) content = content.substr(0, w-2);
-            cout << "|" << content << string(w-2 - content.length(), ' ') << "|" << endl;
+            if ((int)content.length() > w) content = content.substr(0, w);
+            cout << content << string(w - content.length(), ' ') << endl;
         }
-        cout << "+" << string(w-2, '-') << "+" << endl;
     }
 };
 
@@ -301,12 +250,13 @@ public:
         termHeight = wsz.ws_row;
 
         {
-            double imageAspect = static_cast<double>(frame_window.pix.w) / frame_window.pix.h;
+            double imageAspect = static_cast<double>(VIDEO_WIDTH) / VIDEO_HEIGHT;
 
             // Set FrameWindow size and position
             frame_window.x = 1;
             frame_window.y = 1;
-            frame_window.w = min(frame_window.pix.w, termWidth);
+            frame_window.w = termWidth;
+            //frame_window.w = min(frame_window.pix.w, termWidth);
 
             // Determine the effective vertical resolution (in image pixels) that we wish to sample.
             // We multiply by 2 because each printed line represents two image rows.
@@ -317,18 +267,12 @@ public:
             frame_window.h = sample_height / 2;
         }
 
-        // StateWindow takes remaining height (below frame window), full left half
-        int bottom_height = termHeight - frame_window.h;
-        state_window.x = 1;
-        state_window.y = frame_window.h + 1;
-        state_window.w = termWidth / 2;
-        state_window.h = bottom_height;
-
         // Timeline and Log windows take right half width and split bottom height half and half
+        int bottom_height = termHeight - frame_window.h;
         int right_width = termWidth - state_window.w;
         timeline_window.x = state_window.w + 1;
         timeline_window.y = frame_window.h + 1;
-        timeline_window.w = right_width;
+        timeline_window.w = termWidth;
         timeline_window.h = bottom_height / 2;
 
         log_window.x = state_window.w + 1;
@@ -343,16 +287,9 @@ public:
         // Update sizes and positions
         update_sizes();
 
-        // Print the frame window at top left
         frame_window.print();
-
-        // Print state window below frame left half
-        state_window.print();
-
-        // Print timeline right top half
+        //state_window.print();
         timeline_window.print();
-
-        // Print logs right bottom half
         log_window.print();
 
         // Move cursor to bottom right after drawing

@@ -6,7 +6,6 @@ using namespace std;
 class ShtookaWriter {
 private:
     ofstream shtooka_file;
-    string last = "";
 public:
     ShtookaWriter() {
         shtooka_file.open(PATH_MANAGER.record_list_path);
@@ -16,14 +15,9 @@ public:
     void add_shtooka_entry(const string& filename, const string& text) {
         if (!shtooka_file.is_open()) throw runtime_error("Shtooka file is not open. Cannot add entry.");
         shtooka_file << filename << "\t" << text << "\n";
-        last = text;
     }
 
     ~ShtookaWriter() {
         if (shtooka_file.is_open()) shtooka_file.close();
-    }
-
-    string get_last_shtooka() const {
-        return last;
     }
 };

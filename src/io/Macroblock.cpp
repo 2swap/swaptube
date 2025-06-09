@@ -25,7 +25,7 @@ public:
         return AUDIO_WRITER.audio_seconds_so_far - VIDEO_WRITER.video_seconds_so_far;
     }
     virtual void write_shtooka() const {}
-    virtual void get_log_output() const {}
+    virtual string blurb() const = 0; // This is how the macroblock identifies itself in log outputs
     virtual double write_and_get_duration_seconds() const = 0;
 };
 
@@ -42,6 +42,7 @@ public:
         AUDIO_WRITER.add_silence(duration_seconds);
         return duration_seconds;
     }
+    string blurb() const override { return "SilenceBlock(" + to_string(duration_seconds) + ")"; }
 
 private:
     const double duration_seconds;
@@ -61,6 +62,7 @@ public:
         SUBTITLE_WRITER.add_subtitle(duration_seconds, subtitle_text);
         return duration_seconds;
     }
+    string blurb() const override { return "FileBlock(" + subtitle_text + ")"; }
 
 private:
     const string subtitle_text;
@@ -81,6 +83,7 @@ public:
         SUBTITLE_WRITER.add_subtitle(duration_seconds, "[Computer Generated Sound]");
         return duration_seconds;
     }
+    string blurb() const override { return "GeneratedBlock(" + to_string(leftBuffer.size()/44100) + ")"; }
 
 private:
     const vector<float> leftBuffer;
@@ -100,6 +103,7 @@ public:
     double write_and_get_duration_seconds() const override {
         return a.write_and_get_duration_seconds() + b.write_and_get_duration_seconds();
     }
+    string blurb() const override { return "CompositeBlock(" + a.blurb() + ", " + b.blurb() + ")"; }
 
 private:
     const Macroblock& a;

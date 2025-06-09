@@ -147,7 +147,7 @@ public:
      * Return amount of new nodes that were added.
      */
     int expand(int n = -1) {
-        if(n == 0) throw runtime_error("expand argument was 0. positive: finite node count. negative: full graph.");
+        if(n == 0) return 0;
         int added = 0;
         while (!traverse_deque.empty()) {
             double id = traverse_deque.front();

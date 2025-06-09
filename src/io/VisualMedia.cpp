@@ -183,7 +183,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     cairo_surface_destroy(surface);
     g_object_unref(handle);
 
-    ret.grayscale_to_alpha();
+    //ret.grayscale_to_alpha();
     return crop(ret);
 }
 

@@ -6,7 +6,6 @@
 using namespace std;
 
 static bool FOR_REAL = true;          // Whether to write AV output (Turn off to smoketest)
-static bool PRINT_TO_TERMINAL = true; // Whether to print every 5th frame for user
 static bool SAVE_FRAME_PNGS = true;   // Whether to save every 30th frame to disk as PNG
 
 #include <string>
@@ -43,10 +42,7 @@ struct FCInitializer {
     ~FCInitializer() {
         // These destructors have to happen in this specific order
         delete audio_writer;
-        delete video_writer;
-        if (format_context) {
-            avformat_free_context(format_context);
-        }
+        delete video_writer; // This also frees the FC
     }
 };
 
@@ -80,7 +76,6 @@ int main() {
     } catch(std::exception& e) {
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
-        cout << "Last Shtooka Entry: " << SHTOOKA_WRITER.get_last_shtooka() << endl;
     }
 
     return 0;

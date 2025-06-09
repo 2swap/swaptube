@@ -95,13 +95,7 @@ ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 if [ -n "$ultimate_subdir" ]; then
     cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"
     rm "$TEMPFILE"
-    file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
-
-    if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
-        vlc "$file_path" > /dev/null 2>&1 &
-    else
-        echo "go.sh: The output file is either empty or smaller than 1KB."
-    fi
+    ./play.sh ${PROJECT_NAME}
 else
     echo "go.sh: No output directory found for project ${PROJECT_NAME}."
 fi

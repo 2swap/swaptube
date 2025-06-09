@@ -21,7 +21,7 @@ public:
     // scales it to fit within the scene's bounding box,
     // and centers it just as in PngScene.
     void draw() override {
-        cout << "rendering mp4: " << video_filename << ", frame " << current_frame_index << endl;
+        GUI.log_window.log("rendering mp4: " + video_filename + ", frame " + to_string(current_frame_index));
         
         // Load the current video frame into a Pixels object.
         // Assumes a function mp4_to_pix_bounding_box that takes the filename, target width,

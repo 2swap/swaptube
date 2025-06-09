@@ -5,6 +5,7 @@
 #include <cassert>
 #include "DebugPlot.h"
 #include "../misc/pixels.h"
+#include "IoHelpers.cpp"
 extern "C"
 {
     #include <libavcodec/avcodec.h>
@@ -14,49 +15,6 @@ extern "C"
 using namespace std;
 
 static DebugPlot ffmpeg_output_plot("ffmpeg output", vector<string>{"frame", "qp", "nal", "poc", "i", "p", "skip", "size"});
-
-// Function to redirect stderr to a pipe
-int redirect_stderr(int pipefd[2]) {
-    fflush(stderr);
-    if (pipe(pipefd) == -1) {
-        perror("pipe");
-        return -1;
-    }
-
-    // Save the original stderr
-    int original_stderr = dup(STDERR_FILENO);
-
-    // Redirect stderr to the write end of the pipe
-    if (dup2(pipefd[1], STDERR_FILENO) == -1) {
-        perror("dup2");
-        return -1;
-    }
-
-    // Close the write end of the pipe in the parent process
-    close(pipefd[1]);
-
-    return original_stderr;
-}
-
-// Function to restore the original stderr
-void restore_stderr(int original_stderr) {
-    fflush(stderr);
-    dup2(original_stderr, STDERR_FILENO);
-    close(original_stderr);
-}
-
-// Function to read from a file descriptor into a string
-string read_from_fd(int fd) {
-    string output;
-    char buffer[1024];
-    ssize_t bytes_read;
-
-    while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0) {
-        output.append(buffer, bytes_read);
-    }
-
-    return output;
-}
 
 // Function to parse the debug output
 void parse_debug_output(const string& output) {
@@ -256,6 +214,9 @@ public:
         video_seconds_so_far += 1./VIDEO_FRAMERATE;
     }
     ~VideoWriter() {
+        int pipefd[2];
+        int original_stderr = redirect_stderr(pipefd);
+
         // Writing the delayed video frames
         while(encode_and_write_frame(NULL));
 
@@ -270,5 +231,6 @@ public:
         av_write_trailer(fc);
         avio_closep(&fc->pb);
         avformat_free_context(fc);
+        restore_stderr(original_stderr);
     }
 };

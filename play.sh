@@ -9,12 +9,17 @@ ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
 # Check if the compile and run were successful
 if [ -n "$ultimate_subdir" ]; then
-    file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
+    file_path=""
+    if [ -f "$ultimate_subdir/${PROJECT_NAME}.mkv" ]; then
+        file_path="$ultimate_subdir/${PROJECT_NAME}.mkv"
+    elif [ -f "$ultimate_subdir/${PROJECT_NAME}.mp4" ]; then
+        file_path="$ultimate_subdir/${PROJECT_NAME}.mp4"
+    fi
 
-    if [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
+    if [ -n "$file_path" ] && [ -s "$file_path" ] && [ $(stat -c%s "$file_path") -ge 1024 ]; then
         $MEDIA_PLAYER "$file_path" > /dev/null 2>&1
     else
-        echo "play.sh: The output file is either empty or smaller than 1KB."
+        echo "play.sh: The output file is either smaller than 1KB, or does not exist."
     fi
 else
     echo "play.sh: No output directory found for project ${PROJECT_NAME}."

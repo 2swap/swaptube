@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <sys/stat.h>
 #include "DebugPlot.h"
+#include "IoHelpers.cpp"
 
 extern "C"
 {
@@ -285,6 +286,8 @@ public:
     }
 
     void process_frame_from_buffer(const bool last = false) {
+        int pipefd[2];
+        int original_stderr = redirect_stderr(pipefd);
         while(true){
             int channels = audioOutputCodecContext->ch_layout.nb_channels;
             int frameSize = audioOutputCodecContext->frame_size;
@@ -349,13 +352,17 @@ public:
             total_samples_processed += frameSize;
         }
         sample_buffer_offset = sample_buffer[0].size();
+        restore_stderr(original_stderr);
     }
 
     ~AudioWriter() {
+        int pipefd[2];
+        int original_stderr = redirect_stderr(pipefd);
         process_frame_from_buffer(true);
         avcodec_send_frame(audioOutputCodecContext, NULL);
         encode_and_write_audio();
         
         avcodec_free_context(&audioOutputCodecContext);
+        restore_stderr(original_stderr);
     }
 };

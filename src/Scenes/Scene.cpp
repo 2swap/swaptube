@@ -75,6 +75,7 @@ public:
     }
 
     void stage_macroblock(const Macroblock& audio, int expected_microblocks){
+        GUI.print_all();
         if (expected_microblocks <= 0){
             throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count.");
         }
@@ -85,7 +86,7 @@ public:
         }
 
         total_microblocks = remaining_microblocks = expected_microblocks;
-        GUI.log_window.log("Macroblock staged to last " + to_string(expected_microblocks) + " microblock(s).");
+        GUI.log_window.log(audio.blurb() + " staged to last " + to_string(expected_microblocks) + " microblock(s).");
         audio.write_shtooka();
         if(FOR_REAL) {
             double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
@@ -103,8 +104,8 @@ public:
         double num_frames_per_session = static_cast<double>(total_macroblock_frames) / total_microblocks;
         int num_frames_to_be_done_after_this_time = round(num_frames_per_session * (complete_microblocks + 1));
         scene_duration_frames = num_frames_to_be_done_after_this_time - complete_macroblock_frames;
-        if(total_microblocks < 10)
-            GUI.log_window.log("Rendering a scene. Frame Count: " + to_string(scene_duration_frames) +
+        if(total_microblocks < 5)
+            GUI.log_window.log("Rendering a microblock. Frame Count: " + to_string(scene_duration_frames) +
                 " (microblocks left: " + to_string(remaining_microblocks) + ", " +
                 to_string(remaining_macroblock_frames) + " frames total)");
 
@@ -154,8 +155,6 @@ private:
             Pixels* p = nullptr;
             query(p);
             GUI.frame_window.update(p);
-            GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
-            GUI.print_all();
             if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % VIDEO_FRAMERATE == 0)) {
                 int roundedFrameNumber = round(global_state["frame_number"]);
                 ostringstream stream;
@@ -174,7 +173,10 @@ private:
 
         remaining_macroblock_frames--;
         global_state["frame_number"]++;
+        GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
         GUI.log_window.append("]");
+        if(int(global_state["frame_number"]) % 5 == 0)
+            GUI.print_all();
     }
 
     bool has_updated_since_last_query = false;
