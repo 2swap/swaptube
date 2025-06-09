@@ -113,7 +113,6 @@ public:
     }
 
     void add_to_stack(GenericBoard* t){
-        //cout << "Adding to stack... length before adding is " << traverse_deque.size() << endl;
         double hash = t->get_hash();
         add_node_without_edges(t);
         traverse_deque.push_front(hash);
@@ -126,12 +125,10 @@ public:
      */
     double add_node(GenericBoard* t){
         double x = add_node_without_edges(t);
-        //cout << "Manually adding missing edges cause a human manually added a node" << endl;
         add_missing_edges();
         return x;
     }
     double add_node_without_edges(GenericBoard* t){
-        //cout << "total nodes: " << size() << endl;
         double hash = t->get_hash();
         if (node_exists(hash)) {
             delete t;
@@ -406,7 +403,7 @@ public:
         for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
         for (int n = 0; n < iterations; n++) {
             for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
-            cout << "." << flush;
+            GUI.log_window.append(".");
             perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, dimension, mirror_force);
         }
         glm::vec4 com = center_of_mass();

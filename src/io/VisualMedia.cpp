@@ -336,9 +336,9 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
         string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -output=" + name + " >/dev/null 2>&1";
         int result = system(command.c_str());
         if(result != 0) {
-	    cout << command << endl;
-	    throw runtime_error("Failed to generate LaTeX. Command printed above.");
-	}
+            cout << command << endl;
+            throw runtime_error("Failed to generate LaTeX. Command printed above.");
+        }
     }
 
     // System call successful, return the generated SVG

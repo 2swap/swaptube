@@ -25,6 +25,7 @@ public:
         return AUDIO_WRITER.audio_seconds_so_far - VIDEO_WRITER.video_seconds_so_far;
     }
     virtual void write_shtooka() const {}
+    virtual void get_log_output() const {}
     virtual double write_and_get_duration_seconds() const = 0;
 };
 

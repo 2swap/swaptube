@@ -53,7 +53,7 @@ using StateSet = unordered_map<string, string>;
 class State {
 public:
     State() {}
-    State(unordered_map<string, double> m) : map(m) {}
+    State(const unordered_map<string, double>& m) : map(m) {}
 
     void print() const {
         cout << endl << "STATE vvv" << endl;
@@ -61,6 +61,10 @@ public:
             cout << pair.first << ": " << pair.second << endl;
         }
         cout << "STATE ^^^" << endl << endl;
+    }
+
+    int size() const {
+        return map.size();
     }
 
     void set(const string& key, const double value) {
@@ -84,6 +88,10 @@ public:
     // Implement inequality operator
     bool operator!=(const State& other) const {
         return !(*this == other);
+    }
+
+    unordered_map<string, double> get_map() const {
+        return map;
     }
 
 private:

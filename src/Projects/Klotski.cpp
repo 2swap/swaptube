@@ -623,7 +623,6 @@ void part5() {
     cs.stage_macroblock(SilenceBlock(2), 1);
     cs.render_microblock();
 
-    //TODO cut out this section??
     cs.stage_macroblock(FileBlock("If we put the two blocks on the same lane,"), get_graph_size(triangle));
     auto kstri = make_shared<KlotskiScene>(triangle);
     kstri->state_manager.set(board_width_height);
@@ -1159,7 +1158,7 @@ void part8() {
         cs.stage_macroblock(SilenceBlock(.1), 1); // TODO change to 0.033333 before rendering, and third the num_nodes_to_add.
         cs.render_microblock();
         i+=.2;
-        cout << g.size() << endl;
+        GUI.log_window.log(to_string(g.size()));
     }
 
     gs->state_manager.transition(MICRO, {{"physics_multiplier", "0"}, {"dimensions", "3.7"}});
@@ -1347,7 +1346,16 @@ void part8() {
         Node& n = p->second;
         if(n.color == 0x00ff00) n.color |= 0xff000000;
     }
+
+    gs->state_manager.set(less_spinny);
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("Sure enough, they have an extremely close overlap!"), 1);
+    cs.render_microblock();
+
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}, });
+    cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
     gs->state_manager.transition(MACRO, {{"points_opacity", "0"}});
@@ -1372,11 +1380,7 @@ void part8() {
 }
 
 void recursive_placer(unordered_set<string>& set, const string& rep, int piece_number, int min_index = -1){
-    if(piece_number == 10) { set.insert(rep);
-        if(set.size() % 1000 == 0)
-            cout<<set.size()<<endl;
-        return;
-    }
+    if(piece_number == 10) { set.insert(rep); return; }
     int piece_w = 0;
     int piece_h = 0;
     char piece_c = 'a' + piece_number;
@@ -1458,11 +1462,9 @@ void part9(){
     Graph omni;
     unordered_set<string> set;
     recursive_placer(set, "....................", 0);
-    cout << "Set size: " << set.size() << endl;
+    GUI.log_window.log("Set size: " + to_string(set.size()));
     for(const string& s : set) {
         omni.add_to_stack(new KlotskiBoard(4, 5, s, false));
-        if(omni.size() % 1000 == 0)
-            cout<<omni.size()<<endl;
     }
 
     while(omni.nodes.size() > 0) {
@@ -1511,14 +1513,14 @@ void part10(){
 
     showcase_graph(beginner, FileBlock("Just for fun, let's check out some more graphs!"));
     showcase_graph(advanced, FileBlock("Here are some block puzzles I found online."));
-    showcase_graph(expert, SilenceBlock(5));
-    showcase_graph(reddit, SilenceBlock(5));
-    showcase_graph(thinkfun1, SilenceBlock(5));
-    showcase_graph(thinkfun2, SilenceBlock(5));
-    showcase_graph(thinkfun3, SilenceBlock(5));
-    showcase_graph(video, SilenceBlock(5));
-    showcase_graph(guh3, SilenceBlock(5));
-    showcase_graph(guh4, SilenceBlock(5));
+    showcase_graph(expert, SilenceBlock(1));
+    showcase_graph(reddit, SilenceBlock(1));
+    showcase_graph(thinkfun1, SilenceBlock(1));
+    showcase_graph(thinkfun2, SilenceBlock(1));
+    showcase_graph(thinkfun3, SilenceBlock(1));
+    showcase_graph(video, SilenceBlock(1));
+    showcase_graph(guh3, SilenceBlock(1));
+    showcase_graph(guh4, SilenceBlock(1));
 
     showcase_graph(sun_no_minis, FileBlock("Here's the Klotski puzzle, but without the small blocks!"));
 }
@@ -1536,7 +1538,7 @@ void render_video() {
         part6();
         part7();
     }
-    //part8();
+    part8();
     part9();
-    //part10();
+    part10();
 }
