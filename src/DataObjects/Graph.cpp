@@ -66,7 +66,7 @@ public:
     unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
     double opacity = 1;
-    int color = 0;
+    int color = 0xffffffff;
     float radius_multiplier = 1;
     double age = 0;
     glm::vec4 velocity;

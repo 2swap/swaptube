@@ -332,10 +332,7 @@ public:
             frame->pts = total_samples_processed;
 
             // Send the frame to the encoder
-            int pipefd[2];
-            int original_stderr = redirect_stderr(pipefd);
             ret = avcodec_send_frame(audioOutputCodecContext, frame);
-            restore_stderr(original_stderr);
             if (ret < 0 && frame) {
                 av_frame_free(&frame);
                 throw runtime_error("Error sending frame to encoder.");

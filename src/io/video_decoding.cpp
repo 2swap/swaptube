@@ -19,9 +19,6 @@ extern "C" {
 // scales it to (target_width x target_height) using a bounding box approach,
 // and returns the result as a Pixels object.
 Pixels mp4_to_pix_bounding_box(const std::string &video_name, int target_width, int target_height, int frame_index) {
-    int pipefd[2];
-    int original_stderr = redirect_stderr(pipefd);
-
     string filename = video_name;
     if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".mp4") {
         filename += ".mp4";
@@ -204,7 +201,6 @@ Pixels mp4_to_pix_bounding_box(const std::string &video_name, int target_width, 
     avcodec_free_context(&codecCtx);
     avformat_close_input(&fmtCtx);
 
-    restore_stderr(original_stderr);
     return pix;
 }
 
