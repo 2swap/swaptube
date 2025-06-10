@@ -48,73 +48,6 @@ public:
         print();
     }
 
-    // ---------------------------------------------------------------------
-    // This function outputs the image to the terminal using Unicode half-block
-    // characters (▀). Each printed character cell represents two rows of supersampled
-    // image data. The top half of the block uses the foreground color and the bottom
-    // half uses the background color.
-    // 
-    // We compute the sampling regions by mapping the terminal grid to the source image
-    // and then average over each corresponding rectangle.
-    void print() override {
-        // Move cursor to this window's top-left
-        move_cursor();
-
-
-        int sample_height = h * 2;
-
-        // For each terminal character cell, we determine the corresponding region in the image.
-        for (int ycell = 0; ycell < h; ++ycell) {
-            if(!FOR_REAL && ycell == 1) {
-                cout << "In Smoketest Mode. No video is being rendered." << endl;
-                continue;
-            }
-            for (int xcell = 0; xcell < w; ++xcell) {
-                // Determine the horizontal region that maps to this terminal column.
-                int x0 = xcell * pix.w / w;
-                int x1 = (xcell + 1) * pix.w / w;
-
-                // For the top half of the character cell:
-                int top_y0 = (2 * ycell) * pix.h / sample_height;
-                int top_y1 = (2 * ycell + 1) * pix.h / sample_height;
-
-                // For the bottom half of the character cell:
-                int bot_y0 = (2 * ycell + 1) * pix.h / sample_height;
-                int bot_y1 = (2 * ycell + 2) * pix.h / sample_height;
-
-                int a_top = 0, r_top = 0, g_top = 0, b_top = 0;
-                int a_bot = 0, r_bot = 0, g_bot = 0, b_bot = 0;
-
-                // Supersample (average) over the regions.
-                pix.get_average_color(x0, top_y0, x1, top_y1, a_top, r_top, g_top, b_top);
-                pix.get_average_color(x0, bot_y0, x1, bot_y1, a_bot, r_bot, g_bot, b_bot);
-
-                double alpha_top = a_top / 255.;
-                double one_minus_alpha_top = 1-alpha_top;
-                r_top = r_top * alpha_top + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
-                g_top = g_top * alpha_top + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
-                b_top = b_top * alpha_top + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
-
-                double alpha_bot = a_bot / 255.;
-                double one_minus_alpha_bot = 1-alpha_bot;
-                r_bot = r_bot * alpha_bot + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
-                g_bot = g_bot * alpha_bot + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
-                b_bot = b_bot * alpha_bot + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
-
-                // Use ANSI true-color escape sequences:
-                //  - Set foreground to the average top color.
-                //  - Set background to the average bottom color.
-                // Then print the Unicode upper half block (▀), which renders the top half in
-                // the foreground color and the bottom half in the background color.
-                cout << "\033[38;2;" << r_top << ";" << g_top << ";" << b_top << "m"
-                     << "\033[48;2;" << r_bot << ";" << g_bot << ";" << b_bot << "m"
-                     << "\u2580";
-            }
-            cout << endl;
-        }
-        // Reset at the end.
-        cout << "\033[0m" << endl;
-    }
 };
 
 // Draws a graph of State variables. Remembers a State as data.
@@ -258,13 +191,6 @@ public:
             frame_window.w = termWidth;
             //frame_window.w = min(frame_window.pix.w, termWidth);
 
-            // Determine the effective vertical resolution (in image pixels) that we wish to sample.
-            // We multiply by 2 because each printed line represents two image rows.
-            int sample_height = static_cast<int>(frame_window.w / imageAspect);
-
-            // Implicitly ensure sample_height is taken as even.
-            // Assume a half-block is square
-            frame_window.h = sample_height / 2;
         }
 
         // Timeline and Log windows take right half width and split bottom height half and half

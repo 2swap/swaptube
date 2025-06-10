@@ -403,7 +403,7 @@ public:
         for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
         for (int n = 0; n < iterations; n++) {
             for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
-            GUI.log_window.append(".");
+            cout << ".";
             perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, dimension, mirror_force);
         }
         glm::vec4 com = center_of_mass();

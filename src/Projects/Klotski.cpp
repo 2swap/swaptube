@@ -232,13 +232,22 @@ void part1(){
         cs.render_microblock();
     }
 
+        cout << "a" << endl;
     // Unhighlight and fade out the KlotskiScene
     gs_ptr->next_hash = 0;
+        cout << "b" << endl;
     cs.state_manager.transition(MACRO, {{"ks.opacity","-2"}});
+        cout << "c" << endl;
     cs.state_manager.transition(MACRO, {{"gs.opacity","0"}});
+        cout << "d" << endl;
     // Expand the graph by one node until it is halfway complete. Fade out everything from the CompositeScene and then delete scenes when faded out.
-    cs.stage_macroblock(FileBlock("You might start to wonder- if we add all the nodes, what would the graph look like?"), get_graph_size(intermediate) * .7);
+    int micros = get_graph_size(intermediate) * .7;
+        cout << to_string(micros) << endl;
+    cs.stage_macroblock(FileBlock("You might start to wonder- if we add all the nodes, what would the graph look like?"), micros);
+        cout << "f" << endl;
+        cout << "F" << endl;
     while(cs.microblocks_remaining()) {
+        cout << "g" << endl;
         g.expand(FOR_REAL?1:0);
         cs.render_microblock();
     }
@@ -1149,7 +1158,7 @@ void part8(Graph* g, shared_ptr<KlotskiScene> ks, shared_ptr<GraphScene> gs) {
         cs.stage_macroblock(SilenceBlock(.1), 1); // TODO change to 0.033333 before rendering, and third the num_nodes_to_add.
         cs.render_microblock();
         i+=.2;
-        GUI.log_window.log(to_string(g->size()));
+        cout << to_string(g->size()) << endl;
     }
 
     gs->state_manager.transition(MICRO, {{"physics_multiplier", "0"}, {"dimensions", "3.7"}});
@@ -1379,7 +1388,7 @@ void part8(Graph* g, shared_ptr<KlotskiScene> ks, shared_ptr<GraphScene> gs) {
     cs.stage_macroblock(FileBlock("but blurred together so that we can only see the shared patterns."), 1);
     cs.render_microblock();
     // TODO incomplete
-    GUI.log_window.log("End P8");
+    cout << "End P8" << endl;
 }
 
 void recursive_placer(unordered_set<string>& set, const string& rep, int piece_number, int min_index = -1){
@@ -1423,12 +1432,12 @@ void recursive_placer(unordered_set<string>& set, const string& rep, int piece_n
 }
 
 void part9(Graph* klotski, shared_ptr<KlotskiScene> tks, shared_ptr<GraphScene> tgs, shared_ptr<KlotskiScene> ks, shared_ptr<GraphScene> gs){
-    GUI.log_window.log("Entered P9");
+    cout << "Entered P9" << endl;
     CompositeScene cs;
 
-    GUI.log_window.log("Entered P9.");
+    cout << "Entered P9." << endl;
     cs.stage_macroblock(FileBlock("Remember how this puzzle has positions that can't be reached?"), 1);
-    GUI.log_window.log("Entered P9..");
+    cout << "Entered P9.." << endl;
     cs.add_scene_fade_in(MACRO, tks, "tks");
     cs.add_scene_fade_in(MACRO, tgs, "tgs");
     cs.render_microblock();
@@ -1467,7 +1476,7 @@ void part9(Graph* klotski, shared_ptr<KlotskiScene> tks, shared_ptr<GraphScene> 
 
     unordered_set<string> set;
     recursive_placer(set, "....................", 0);
-    GUI.log_window.log("Set size: " + to_string(set.size()));
+    cout << "Set size: " + to_string(set.size()) << endl;
     for(const string& s : set) {
         klotski->add_to_stack(new KlotskiBoard(4, 5, s, false));
     }
@@ -1481,7 +1490,7 @@ void part9_old(){
     Graph omni;
     unordered_set<string> set;
     recursive_placer(set, "....................", 0);
-    GUI.log_window.log("Set size: " + to_string(set.size()));
+    cout << "Set size: " + to_string(set.size()) << endl;
     for(const string& s : set) {
         omni.add_to_stack(new KlotskiBoard(4, 5, s, false));
     }
@@ -1544,7 +1553,7 @@ void render_video() {
         part7();
     }
     part8(klotski, ks, gs);
-    GUI.log_window.log("Between");
+    cout << "Between" << endl;
     //part9(klotski, tks, tgs, ks, gs);
     delete klotski;
     delete tri;

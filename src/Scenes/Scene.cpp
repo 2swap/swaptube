@@ -8,7 +8,6 @@
 #include "../io/DebugPlot.h"
 #include "../misc/pixels.h"
 #include "../io/Macroblock.cpp"
-#include "../io/GUI.cpp"
 
 class Scene {
 public:
@@ -47,12 +46,12 @@ public:
         return state != last_state;
     }
     void query(Pixels*& p) {
-        GUI.log_window.append("(");
+        cout << "(" << flush;
         State temp_state = state;
         if(!has_updated_since_last_query){
             update();
         }
-        GUI.log_window.append("|");
+        cout << "|" << flush;
         if(needs_redraw()){
             pix = Pixels(get_width(), get_height());
             has_ever_rendered = true;
@@ -62,7 +61,7 @@ public:
         mark_data_unchanged();
         has_updated_since_last_query = false;
         p=&pix;
-        GUI.log_window.append(")");
+        cout << ")" << flush;
     }
     void on_end_transition(const TransitionType tt) {
         if(tt == MACRO) state_manager.close_transitions(tt);
@@ -75,7 +74,6 @@ public:
     }
 
     void stage_macroblock(const Macroblock& audio, int expected_microblocks){
-        GUI.print_all();
         if (expected_microblocks <= 0){
             throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count.");
         }
@@ -86,7 +84,7 @@ public:
         }
 
         total_microblocks = remaining_microblocks = expected_microblocks;
-        GUI.log_window.log(audio.blurb() + " staged to last " + to_string(expected_microblocks) + " microblock(s).");
+        cout << audio.blurb() << " staged to last " << to_string(expected_microblocks) << " microblock(s)." << endl;
         audio.write_shtooka();
         if(FOR_REAL) {
             double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
@@ -105,9 +103,9 @@ public:
         int num_frames_to_be_done_after_this_time = round(num_frames_per_session * (complete_microblocks + 1));
         scene_duration_frames = num_frames_to_be_done_after_this_time - complete_macroblock_frames;
         if(total_microblocks < 5)
-            GUI.log_window.log("Rendering a microblock. Frame Count: " + to_string(scene_duration_frames) +
-                " (microblocks left: " + to_string(remaining_microblocks) + ", " +
-                to_string(remaining_macroblock_frames) + " frames total)");
+            cout << "Rendering a microblock. Frame Count: " << scene_duration_frames <<
+                " (microblocks left: " << remaining_microblocks << ", " <<
+                remaining_macroblock_frames << " frames total)" << endl;
 
         for (int frame = 0; frame < scene_duration_frames; frame++) render_one_frame(frame);
         remaining_microblocks--;
@@ -143,7 +141,7 @@ public:
 private:
     void render_one_frame(int microblock_frame_number){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
-        GUI.log_window.append("[");
+        cout << "[" << flush;
 
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_macroblock_frames) / total_macroblock_frames;
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
@@ -154,7 +152,7 @@ private:
             SUBTITLE_WRITER.set_substime(global_state["frame_number"] / VIDEO_FRAMERATE);
             Pixels* p = nullptr;
             query(p);
-            GUI.frame_window.update(p);
+            if(int(global_state["frame_number"]) % 5 == 0 && PRINT_TO_TERMINAL) p->print_to_terminal();
             if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % VIDEO_FRAMERATE == 0)) {
                 int roundedFrameNumber = round(global_state["frame_number"]);
                 ostringstream stream;
@@ -173,10 +171,8 @@ private:
 
         remaining_macroblock_frames--;
         global_state["frame_number"]++;
-        GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
-        GUI.log_window.append("]");
-        if(int(global_state["frame_number"]) % 5 == 0)
-            GUI.print_all();
+        //GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
+        cout << "]" << flush;
     }
 
     bool has_updated_since_last_query = false;

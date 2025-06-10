@@ -7,6 +7,7 @@ using namespace std;
 
 static bool FOR_REAL = true;          // Whether to write AV output (Turn off to smoketest)
 static bool SAVE_FRAME_PNGS = true;   // Whether to save every 30th frame to disk as PNG
+static bool PRINT_TO_TERMINAL = true;
 
 #include <string>
 #include <stdexcept>
