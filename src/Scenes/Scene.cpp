@@ -75,7 +75,7 @@ public:
 
     void stage_macroblock(const Macroblock& audio, int expected_microblocks){
         if (expected_microblocks <= 0){
-            throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count.");
+            throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count. (" + to_string(expected_microblocks) + " microblocks)");
         }
         if (remaining_microblocks != 0) {
             throw runtime_error("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render_microblock()!\n"
