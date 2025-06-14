@@ -42,6 +42,7 @@ public:
     }
 
     void graph_to_3d(){
+        cout << "<" << endl;
         clear_lines();
         clear_points();
 
@@ -81,6 +82,7 @@ public:
         // automagical camera distancing
         auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
         auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
+        cout << ">" << endl;
     }
 
     virtual int get_edge_color(const Node& node, const Node& neighbor){
@@ -108,9 +110,11 @@ public:
         }
         last_node_count = graph->size();
         graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["dimensions"], state["mirror_force"]);
-        graph_to_3d();
-        clear_surfaces();
-        update_surfaces();
+        if(graph->has_been_updated_since_last_scene_query()) {
+            graph_to_3d();
+            clear_surfaces();
+            update_surfaces();
+        }
     }
     bool check_if_data_changed() const override {
         return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();
