@@ -578,4 +578,30 @@ public:
         cout << "Rendered json!" << endl;
     }
     */
+
+    unordered_set<double> get_neighborhood(double hash, int dist) {
+        unordered_set<double> neighborhood;
+        if (!node_exists(hash) || dist < 0) return neighborhood;
+        neighborhood.insert(hash);
+
+        unordered_set<double> current_level_nodes;
+        current_level_nodes.insert(hash);
+
+        for (int d = 0; d < dist; ++d) {
+            unordered_set<double> next_level_nodes;
+            for (double node_hash : current_level_nodes) {
+                const Node& node = nodes.at(node_hash);
+                for (const Edge& edge : node.neighbors) {
+                    if (neighborhood.find(edge.to) == neighborhood.end()) {
+                        neighborhood.insert(edge.to);
+                        next_level_nodes.insert(edge.to);
+                    }
+                }
+            }
+            if (next_level_nodes.empty()) break;
+            current_level_nodes = std::move(next_level_nodes);
+        }
+
+        return neighborhood;
+    }
 };

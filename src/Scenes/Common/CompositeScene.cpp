@@ -43,9 +43,7 @@ public:
         int h = get_height();
         for (const string& name : render_order){
             double opa = state[name + ".opacity"];
-            cout << "A" << endl;
             if(opa < 0.01) continue;
-            cout << "B" << endl;
             Pixels* p = nullptr;
             shared_ptr<Scene> subscene = subscenes[name];
             subscene->query(p);

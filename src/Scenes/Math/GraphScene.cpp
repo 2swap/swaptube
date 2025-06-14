@@ -154,6 +154,8 @@ public:
         }
     }
 
+    Graph* expose_graph_ptr() { return graph; }
+
     virtual Surface make_surface(Node node) const {
         return Surface(glm::vec3(node.position.x, node.position.y, node.position.z),
                        glm::vec3(1,0,0),

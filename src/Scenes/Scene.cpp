@@ -94,7 +94,7 @@ public:
 
     void render_microblock(){
         if (remaining_microblocks == 0) {
-            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock()!");
+            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock()!\nOr perhaps you staged too many microblocks- it should have been " + to_string(total_microblocks) + ".");
         }
 
         int complete_microblocks = total_microblocks - remaining_microblocks;

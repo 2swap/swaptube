@@ -242,6 +242,7 @@ KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true )
 //big
 KlotskiBoard sun_mine      (4, 5, "abbcabbc.dd.efgheijh"                , false);
 KlotskiBoard sun           (4, 5, "abbcabbceddhefghi..j"                , false);
+KlotskiBoard sun_no_b      (4, 5, "a..ca..ceddhefghi..j"                , false);
 KlotskiBoard klotski_flip  (4, 5, "j..ihgfehddecbbacbba"                , false);
 KlotskiBoard klotski_bonus (4, 5, "jbbaibba.fddcehgceh."                , false);
 KlotskiBoard sun_pit       (4, 5, "abbfabbcg.ecijeh.ddh"                , false);
