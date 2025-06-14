@@ -79,7 +79,8 @@ public:
 
         // automagical camera distancing
         auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
-        auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
+        //auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
+        auto_camera = pos_to_render * opa;
         cout << ">";
     }
 
