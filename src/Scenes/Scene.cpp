@@ -93,6 +93,7 @@ public:
     }
 
     void render_microblock(){
+        cout << "{" << flush;
         if (remaining_microblocks == 0) {
             throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock()!\nOr perhaps you staged too many microblocks- it should have been " + to_string(total_microblocks) + ".");
         }
@@ -107,12 +108,15 @@ public:
                 " (microblocks left: " << remaining_microblocks << ", " <<
                 remaining_macroblock_frames << " frames total)" << endl;
 
-        for (int frame = 0; frame < scene_duration_frames; frame++) render_one_frame(frame);
+        for (int frame = 0; frame < scene_duration_frames; frame++) {
+            render_one_frame(frame);
+        }
         remaining_microblocks--;
         bool done_macroblock = remaining_microblocks == 0;
                             global_state["microblock_number"]++;
         if(done_macroblock) global_state["macroblock_number"]++;
         on_end_transition(done_macroblock ? MACRO : MICRO);
+        cout << "}" << flush;
     }
 
     void update_state() {

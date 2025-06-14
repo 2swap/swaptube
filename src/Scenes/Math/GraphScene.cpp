@@ -42,7 +42,7 @@ public:
     }
 
     void graph_to_3d(){
-        cout << "<" << endl;
+        cout << "<";
         clear_lines();
         clear_points();
 
@@ -50,9 +50,7 @@ public:
         glm::vec3 next_pos;
         bool curr_found = false;
         bool next_found = false;
-        // TODO Although this loop is quite naive, it turns out to be very slow, and is often the bottleneck.
-        // A solution would be to somehow merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
-        // Also, it can be naively skipped whenever the graph has not had its data updated.
+        // Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
         for(pair<double, Node> p : graph->nodes){
             Node node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);
@@ -82,7 +80,7 @@ public:
         // automagical camera distancing
         auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
         auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
-        cout << ">" << endl;
+        cout << ">";
     }
 
     virtual int get_edge_color(const Node& node, const Node& neighbor){

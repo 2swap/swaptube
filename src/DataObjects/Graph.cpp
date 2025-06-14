@@ -91,7 +91,6 @@ public:
 
     double gravity_strength = 0;
     double speedlimit = 20;
-    int dimensions = 3;
 
     Graph(){}
 
@@ -488,10 +487,8 @@ public:
             node->position += node->velocity;
 
             // Slight force which tries to flatten the thinnest axis onto the view plane
-            float z_dilation = clamp(0, dimension - 2, 1);
-            float w_dilation = clamp(0, dimension - 3, 1);
-            node->position.z *= z_dilation;
-            node->position.w *= w_dilation;
+            node->position.z *= clamp(0, dimension - 2, 1);
+            node->position.w *= clamp(0, dimension - 3, 1);
         }
         mark_updated();
     }
