@@ -240,7 +240,7 @@ void part1(){
 
     // Delete all nodes of the graph except for the current one. Turn on surface opacity, and turn off edge opacity.
     cs.stage_macroblock(SilenceBlock(3), g.size()-1);
-    gs_ptr->state_manager.transition(MACRO, {{"surfaces_opacity",".5"},{"lines_opacity","0"}});
+    gs_ptr->state_manager.transition(MACRO, {{"surfaces_opacity",".5"},{"lines_opacity","0"},{"points_radius_multiplier",".5"}});
     gs_ptr->state_manager.set({{"centering_strength","0"}});
     unordered_map<double,Node> nodes_copy = g.nodes;
     for(auto it = nodes_copy.begin(); it != nodes_copy.end(); ++it){
@@ -288,10 +288,10 @@ void part1(){
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1.5), 2);
-    ks_ptr->stage_move({'h', -1, 0});
+    ks_ptr->stage_move({'h', 1, 0});
     gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
     cs.render_microblock();
-    ks_ptr->stage_move({'h', 1, 0});
+    ks_ptr->stage_move({'h', -1, 0});
     gs_ptr->next_hash = ks_ptr->copy_staged_board().get_hash();
     cs.render_microblock();
 
@@ -726,6 +726,7 @@ void part5(Graph* grt, shared_ptr<KlotskiScene>& tks, shared_ptr<GraphScene>& tg
     cs.render_microblock();
 
     // Move top then bottom
+    tgs->state_manager.transition(MICRO, {{"d","1.5"}});
     cs.stage_macroblock(FileBlock("Wherever the top block is, that serves as a bound for the bottom block."), 35);
     for(int j = 0; j < 5; j++) {
         for(int i=0; i<5-j; ++i){
@@ -744,7 +745,8 @@ void part5(Graph* grt, shared_ptr<KlotskiScene>& tks, shared_ptr<GraphScene>& tg
     }
 
     // Mirror-triangle graph
-    tgs->state_manager.transition(MICRO, {{"repel",".1"}});
+    tgs->state_manager.transition(MACRO, {{"repel",".1"}});
+    tgs->state_manager.transition(MACRO, {{"physics_multiplier","1"}});
     cs.stage_macroblock(SilenceBlock(.5), 1);
     cs.render_microblock();
     cs.stage_macroblock(SilenceBlock(2), 21);
@@ -755,6 +757,7 @@ void part5(Graph* grt, shared_ptr<KlotskiScene>& tks, shared_ptr<GraphScene>& tg
         cs.render_microblock();
     }
 
+    cs.stage_macroblock(FileBlock("With a graph like this, we implicitly create an imaginary counterpart structure,"), 6);
     for(int i = 0; i < 6; i++) {
         const std::string s = std::string(9*i, '.') + "....cx.......c........a........a...." + std::string((5 - i)*9, '.');
         string s_dot = s;
@@ -767,15 +770,10 @@ void part5(Graph* grt, shared_ptr<KlotskiScene>& tks, shared_ptr<GraphScene>& tg
         double bh = b.get_hash();
         grt->add_directed_edge(ah, bh, 0);
         grt->add_directed_edge(bh, ah, 0);
+        cs.render_microblock();
     }
 
-    // Illegal move & mirror highlight
-    tgs->state_manager.transition(MICRO, {{"repel","1"}});
-    cs.stage_macroblock(FileBlock("With a graph like this, we implicitly create an imaginary counterpart structure,"), 1);
-    cs.render_microblock();
-
     cs.stage_macroblock(FileBlock("corresponding to the valid states which are unreachable without one block passing through the other."), 3);
-    tgs->state_manager.transition(MACRO, {{"physics_multiplier","1"}});
     cs.render_microblock();
     cs.render_microblock();
 
@@ -852,7 +850,7 @@ void part6() {
 
     gs_apk->next_hash = ks_apk->copy_board().get_hash();
 
-    gs_apk->state_manager.transition(MACRO, {{"centering_strength","0.2"}, {"d", "2"}});
+    gs_apk->state_manager.transition(MACRO, {{"centering_strength","0.2"}, {"d", "1"}});
     unordered_map<double,Node> nodes_copy = g_apk.nodes;
     list<double> to_remove;
     for(auto it = nodes_copy.begin(); it != nodes_copy.end(); ++it){
@@ -1053,13 +1051,13 @@ hhh..e
     cs.remove_subscene("ks_int");
 
     cs.stage_macroblock(SilenceBlock(.5), 2);
-    ks_int->stage_move({'b', 3, 0});
+    bds->stage_move({'b', 3, 0});
     cs.render_microblock();
-    ks_int->stage_move({'d', 3, 0});
+    bds->stage_move({'d', 3, 0});
     cs.render_microblock();
 
     ks_int = make_shared<KlotskiScene>(KlotskiBoard(6,6,"..fffc..a..c..abb...adde.....e..hhhe",true));
-    cs.fade_subscene(MICRO, "bds", 1);
+    cs.fade_subscene(MICRO, "bds", 0);
     cs.add_scene_fade_in(MICRO, ks_int, "ks_int");
     cs.stage_macroblock(FileBlock("or they can be to the right of it."), 1);
     cs.render_microblock();
@@ -1267,14 +1265,14 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     auto gs = make_shared<GraphScene>(&g, false);
     gs->state_manager.set(default_graph_state);
     gs->state_manager.set({{"mirror_force", ".1"}, {"physics_multiplier", barely_spread?"5":"50"}, {"points_opacity", "0"}, {"decay", ".96"}, {"dimensions", "3.98"}});
-    cs.add_scene(gs, "gs");
+    cs.add_scene(gs, "gs", .5, .5, true);
 
     int x = get_graph_size(sun);
     float ii = 1;
     while (g.size() < x) {
-        int num_nodes_to_add = ii*ii; // TODO divide this by 7
+        int num_nodes_to_add = ii*ii / 7;
         g.expand(num_nodes_to_add);
-        cs.stage_macroblock(SilenceBlock(0.1), 1); // TODO change to 0.033333 before rendering.
+        cs.stage_macroblock(SilenceBlock(0.033333), 1);
         cs.render_microblock();
         ii+=.2;
         cout << to_string(g.size()) << endl;
@@ -1284,12 +1282,12 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.stage_macroblock(SilenceBlock(15), 1);
     cs.render_microblock();
 
-    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}});
     cs.stage_macroblock(FileBlock("That's 25,955 nodes."), 3);
     gs->state_manager.transition(MICRO, {{"lines_opacity", "0"}, {"points_opacity", "1"}});
     cs.render_microblock();
     cs.render_microblock();
     gs->state_manager.transition(MICRO, {{"lines_opacity", "1"}, {"points_opacity", "0"}});
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}});
     cs.render_microblock();
     gs->state_manager.set({{"points_opacity", "1"}});
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1586,7 +1584,7 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         for(auto& p : g.nodes){ p.second.color = 0x00000000; }
 
         cs.stage_macroblock(FileBlock("Let's zoom in on a faraway land,"), 2);
-        double hash = gs->next_hash = sun_pit.get_hash();
+        double hash = gs->next_hash = whichboard.get_hash();
         cs.render_microblock();
         gs->state_manager.transition(MICRO, {{"d", ".1"}});
         cs.render_microblock();
@@ -1601,6 +1599,7 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
             n.color = 0xffffff00;
             strings.push_back(n.data->representation);
         }
+        // TODO do not show the red node
         cs.stage_macroblock(FileBlock("and select a small region of nodes here."), 1);
         cs.render_microblock();
 
@@ -1620,6 +1619,7 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         for(int i = 0; i < strings.size(); i++) {
             cs.fade_subscene(MICRO, "tks" + to_string(i), 0);
         }
+        // TODO this fade-out is weird
         gs->state_manager.transition(MACRO, {{"d", "1"}});
         gs->state_manager.transition(MACRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, });
         gs->state_manager.transition(MACRO, {{"points_opacity", "0"}});
@@ -1637,6 +1637,7 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.add_scene(tgs, "tgs", 1.75, .75);
     cs.state_manager.transition(MACRO, {{"tks.x",".85"},{"tks.y",to_string(yval)}});
     tks->state_manager.set(board_width_height);
+    tgs->state_manager.set({{"w",".5"},{"h",".5"}});
     cs.slide_subscene(MACRO, "tgs", -1, 0);
     cs.render_microblock();
 
@@ -1759,6 +1760,11 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.add_scene(ks, "ks");
     cs.state_manager.set(board_position);
     ks->state_manager.set(board_width_height);
+    for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
+        Node& n = p->second;
+        n.color = 0x00000000;
+    }
+    gs->state_manager.set({{"points_opacity", "1"}});
     cs.stage_macroblock(FileBlock("Here's the biggest one, with only 248 nodes."), 1);
     cs.render_microblock();
 

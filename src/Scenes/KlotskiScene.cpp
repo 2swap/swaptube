@@ -5,6 +5,10 @@
 #include <string>
 #include <vector>
 
+int piece_color(int cell){
+    rainbow(cell*.618034);
+}
+
 class KlotskiScene : public Scene {
 private:
     KlotskiBoard kb;
@@ -83,6 +87,7 @@ public:
         }
         if (!kb.rushhour && kb.w == 4 && kb.h == 5) {
             pix.fill_rect(offset_x+qm+square_size, offset_y+board_height+hm, 2*square_size-hm, hm, TRANSPARENT_BLACK);
+            pix.fill_rect(offset_x+hm+square_size, offset_y+board_height+qm, 2*square_size-hm, hm, piece_color('b'));
         }
         if(dots > 0.01){
             // Loop over every cell in the board.
@@ -130,7 +135,7 @@ public:
                 double rect_height = square_size - margin;
 
                 // Simple pseudo-random color based on the character value.
-                uint32_t color = rainbow(cell*.618034);
+                uint32_t color = piece_color(cell);
                 if(rainbow_pct<0.999) color = colorlerp(OPAQUE_WHITE, color, rainbow_pct);
 
                 double triple_micro = microblock_fraction*3;

@@ -267,7 +267,6 @@ public:
         // Render surfaces via their CUDA integration.
         if (state["surfaces_opacity"] > 0.001) for (const Surface& surface : surfaces) render_surface(surface);
 
-        cout << "(P";
         if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
             render_points_on_gpu(
                 pix.pixels.data(),
@@ -284,7 +283,6 @@ public:
                 fov
             );
         }
-        cout << ")(L";
         if (!lines.empty() && state["lines_opacity"] > .001) {
             int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
             render_lines_on_gpu(
@@ -302,7 +300,6 @@ public:
                 fov
             );
         }
-        cout << ")";
     }
 
     const StateQuery populate_state_query() const override {
