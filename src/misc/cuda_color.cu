@@ -41,3 +41,14 @@ __device__ void overlay_pixel(int x, int y, int col, float opacity, unsigned int
     int blended = device_color_combine(base, col, opacity);
     pixels[idx] = blended;
 }
+
+__device__ void atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return;
+    int idx = y * width + x;
+
+    unsigned int old_pixel = pixels[idx];
+    int base = old_pixel;
+    int blended = device_color_combine(base, col, opacity);
+    int new_pixel = blended;
+    atomicCAS(&pixels[idx], old_pixel, new_pixel);
+}

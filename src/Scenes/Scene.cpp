@@ -70,7 +70,7 @@ public:
     }
 
     bool microblocks_remaining() {
-        return remaining_microblocks != 0;
+        return remaining_microblocks;
     }
 
     void stage_macroblock(const Macroblock& audio, int expected_microblocks){
@@ -84,7 +84,7 @@ public:
         }
 
         total_microblocks = remaining_microblocks = expected_microblocks;
-        cout << audio.blurb() << " staged to last " << to_string(expected_microblocks) << " microblock(s)." << endl;
+        cout << endl << audio.blurb() << " staged to last " << to_string(expected_microblocks) << " microblock(s)." << endl;
         audio.write_shtooka();
         if(FOR_REAL) {
             double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
@@ -94,7 +94,7 @@ public:
 
     int render_microblock(){
         if (remaining_microblocks == 0) {
-            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock()!\nOr perhaps you staged too many microblocks- it should have been " + to_string(total_microblocks) + ".");
+            throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock()!\nOr perhaps you staged too few microblocks- " + to_string(total_microblocks) + " were staged, but there should have been more.");
         }
 
         int complete_microblocks = total_microblocks - remaining_microblocks;
@@ -180,16 +180,17 @@ private:
         cout << "]" << flush;
     }
 
+protected:
+    Pixels pix;
+    State state;
+    bool has_ever_rendered = false;
+
+private:
+    State last_state;
     bool has_updated_since_last_query = false;
     int remaining_microblocks = 0;
     int total_microblocks = 0;
     int scene_duration_frames = 0;
     int remaining_macroblock_frames = 0;
     int total_macroblock_frames = 0;
-    State last_state;
-
-protected:
-    Pixels pix;
-    State state;
-    bool has_ever_rendered = false;
 };

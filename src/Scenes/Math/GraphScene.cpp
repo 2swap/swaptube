@@ -106,6 +106,7 @@ public:
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
+        cout << "\\" << flush;
         if(last_node_count > -1){
             int diff = graph->size() - last_node_count;
             for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/abs(diff), diff>0);
@@ -117,6 +118,7 @@ public:
             clear_surfaces();
             update_surfaces();
         }
+        cout << "/" << flush;
     }
     bool check_if_data_changed() const override {
         return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();

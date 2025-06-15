@@ -245,6 +245,9 @@ KlotskiBoard sun           (4, 5, "abbcabbceddhefghi..j"                , false)
 KlotskiBoard sun_no_b      (4, 5, "a..ca..ceddhefghi..j"                , false);
 KlotskiBoard klotski_flip  (4, 5, "j..ihgfehddecbbacbba"                , false);
 KlotskiBoard klotski_bonus (4, 5, "jbbaibba.fddcehgceh."                , false);
+KlotskiBoard klotski_necklace(4, 5, "afgca..cebbhebbhiddj"                , false);
+KlotskiBoard klotski_whisker(4, 5, "fbbagbba.cehiceh.ddj"                , false);
+KlotskiBoard klotski_earring(4, 5, "fgijbbddbbacehaceh.."                , false);
 KlotskiBoard sun_pit       (4, 5, "abbfabbcg.ecijeh.ddh"                , false);
 KlotskiBoard klotski_solution_slow(4, 5, "fgacehacehdd.bbi.bbj"                , false);
 KlotskiBoard klotski_solution     (4, 5, "acehacehfgdd.bbi.bbj"                , false);

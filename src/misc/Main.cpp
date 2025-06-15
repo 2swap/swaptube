@@ -75,6 +75,7 @@ int main() {
     try {
         render_video();
     } catch(std::exception& e) {
+        cout << "====================" << endl;
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
     }

@@ -32,7 +32,7 @@ glm::vec4 random_unit_cube_vector() {
 
 class Edge {
 public:
-    Edge(double f, double t) : from(f), to(t), opacity(1) {}
+    Edge(double f, double t, double opa = 1) : from(f), to(t), opacity(opa) {}
     double from;
     double to;
     double opacity;
@@ -74,7 +74,7 @@ public:
     float weight() const { return sigmoid(age*.2f + 0.01f); }
     double radius() const { return size * (((3*age - 1) * exp(-.5*age)) + 1); }
     double splash_opacity() const { return exp(-.2*age)-.1; }
-    double splash_radius() const { return size * age; }
+    double splash_radius() const { return size * age * .7; }
 };
 
 /**
@@ -196,13 +196,13 @@ public:
      * @param node1 The hash of the first node.
      * @param node2 The hash of the second node.
      */
-    void add_directed_edge(double from, double to) {
+    void add_directed_edge(double from, double to, double opacity = 1) {
         // Check if both nodes exist in the graph
         if (!node_exists(from) || !node_exists(to)) return;
-        nodes.at(from).neighbors.insert(Edge(from, to));
+        nodes.at(from).neighbors.insert(Edge(from, to, opacity));
         mark_updated();
     }
-    
+
     /**
      * Remove an edge between two nodes.
      * @param from The hash of the source node.
@@ -216,6 +216,17 @@ public:
         
         from_node.neighbors.erase(edge_to_remove);
         mark_updated();
+    }
+
+    const Edge* get_edge(double from, double to) {
+        if (!node_exists(from)) return nullptr;
+        Node& from_node = nodes.at(from);
+        for (const Edge& edge : from_node.neighbors) {
+            if (edge.to == to) {
+                return &edge;
+            }
+        }
+        return nullptr;
     }
 
     bool does_edge_exist(double from, double to){
@@ -404,7 +415,7 @@ public:
         for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
         for (int n = 0; n < iterations; n++) {
             for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
-            cout << ".";
+            cout << "." << flush;
             perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, dimension, mirror_force);
         }
         glm::vec4 com = center_of_mass();
