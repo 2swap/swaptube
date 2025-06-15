@@ -76,3 +76,7 @@ vector<ColorScheme> get_color_schemes(){
     color_schemes.push_back(ColorScheme(list<unsigned int>{0xfffdefef, 0xfff4dfd0, 0xffdad0c2, 0xffcdbba7}));
     return color_schemes;
 }
+ColorScheme get_random_color_scheme() {
+    vector<ColorScheme> css = get_color_schemes();
+    return css[rand()%css.size()];
+}

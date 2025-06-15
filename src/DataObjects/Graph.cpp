@@ -73,6 +73,8 @@ public:
     glm::vec4 position;
     float weight() const { return sigmoid(age*.2f + 0.01f); }
     double radius() const { return size * (((3*age - 1) * exp(-.5*age)) + 1); }
+    double splash_opacity() const { return exp(-.2*age)-.1; }
+    double splash_radius() const { return size * age; }
 };
 
 /**

@@ -2,6 +2,7 @@
 
 #include "../Scene.cpp"
 #include "../Common/ThreeDimensionScene.cpp"
+#include "../../misc/ColorScheme.cpp"
 #include "../Media/LatexScene.cpp"
 #include "../../DataObjects/Graph.cpp"
 
@@ -29,7 +30,7 @@ class GraphScene : public ThreeDimensionScene {
 public:
     double curr_hash = 0;
     double next_hash = 0;
-    GraphScene(Graph* g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g) {
+    GraphScene(Graph* g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g), color_scheme(get_random_color_scheme()) {
         state_manager.set(unordered_map<string, string>{
             {"repel", "1"},
             {"attract", "1"},
@@ -57,6 +58,8 @@ public:
             if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
             if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
             add_point(Point(node_pos, node.color, 1, node.radius()));
+            double so = node.splash_opacity();
+            if(so>0) add_point(Point(node_pos, color_scheme.get_color()|0xff000000, so, node.splash_radius()));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
@@ -79,8 +82,8 @@ public:
 
         // automagical camera distancing
         auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
-        //auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.02);
-        auto_camera = pos_to_render * opa;
+        auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
+        //auto_camera = pos_to_render * opa;
         cout << ">";
     }
 
@@ -203,5 +206,6 @@ protected:
 
 private:
     int last_node_count = -1;
+    ColorScheme color_scheme;
 };
 
