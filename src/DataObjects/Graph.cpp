@@ -19,10 +19,7 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
-//extern "C" void compute_attraction_cuda(const glm::vec4* h_positions, const int* adjacency_matrix, glm::vec4* h_velocity_deltas,
-//                                    int num_nodes, int max_degree, float attract);
-extern "C" void compute_repulsion_cuda(const glm::vec4* h_positions, const int* h_adjacency_matrix, glm::vec4* h_attr_velocity_deltas, glm::vec4* h_velocity_deltas,
-                                    int num_nodes, int max_degree, float attract, float repel);
+extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension);
 
 glm::vec4 random_unit_cube_vector() {
     return glm::vec4(
@@ -93,9 +90,6 @@ public:
     deque<double> traverse_deque;
     unordered_map<double, Node> nodes;
     double root_node_hash = 0;
-
-    double gravity_strength = 0;
-    double speedlimit = 20;
 
     Graph(){}
 
@@ -448,11 +442,8 @@ public:
         vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
-        for (int n = 0; n < iterations; n++) {
-            for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age += 1./iterations; }
-            cout << "." << flush;
-            perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, dimension, mirror_force);
-        }
+        for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age++; }
+        perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, dimension, mirror_force, iterations);
         glm::vec4 com = center_of_mass();
         for (int n = 0; n < size(); n++) {
             node_vector[n]->position -= com*centering_strength;
@@ -460,77 +451,51 @@ public:
         mark_updated();
     }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force) {
-        int s = node_vector.size();
+    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const int iterations) {
+        for (int n = 0; n < iterations; n++) {
+            int s = node_vector.size();
+            vector<glm::vec4> positions(s);
+            vector<glm::vec4> velocities(s);
 
-        vector<glm::vec4> positions(s);
-        vector<glm::vec4> velocity_deltas(s, glm::vec4(0.0f));
-        vector<glm::vec4> attr_velocity_deltas(s, glm::vec4(0.0f));
-
-        // Populate positions array
-        for (int i = 0; i < s; ++i) {
-            positions[i] = node_vector[i]->position;
-        }
-
-        // Prepare adjacency matrix for attraction force computation on GPU
-        int max_degree = 0;
-        vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
-
-        compute_repulsion_cuda(positions.data(), adjacency_matrix.data(), attr_velocity_deltas.data(), velocity_deltas.data(), s, max_degree, attract, repel);
-        //compute_attraction_cuda(positions.data(), adjacency_matrix.data(), attr_velocity_deltas.data(), s, max_degree, attract);
-
-        for (int i = 0; i < s; ++i) {
-            Node* node = node_vector[i];
-            if(glm::any(glm::isnan(velocity_deltas[i]))) { velocity_deltas[i] = glm::vec4(0, 0, 0, 0); cout << "BAD" << endl; }
-            if(glm::any(glm::isnan(node->position))) { node->position = glm::vec4(0, 0, 0, 0); cout << "BAD2" << endl; }
-            node->velocity += velocity_deltas[i];
-            node->velocity -= attr_velocity_deltas[i];
-
-            // symmetry forces
-            if (mirror_force > 0.001) {
-                {
-                    const auto& mirror = nodes.find(node->data->get_reverse_hash());
-                    if(mirror != nodes.end()) {
-                        glm::vec4 mirror_pos = mirror->second.position;
-                        mirror_pos.x *= -1;
-                        glm::vec4 mirror_force_vec = mirror_force*(mirror_pos - node->position);
-                        mirror_force_vec.w = 0; // Allow 4th dimension for mirror bypass
-                        node->velocity += mirror_force_vec;
-                    }
-                }
-
-                {
-                    const auto& mirror = nodes.find(node->data->get_reverse_hash_2());
-                    if(mirror != nodes.end()) {
-                        glm::vec4 mirror_pos = mirror->second.position;
-                        mirror_pos.y *= -1;
-                        glm::vec4 mirror_force_vec = mirror_force*(mirror_pos - node->position);
-                        mirror_force_vec.w = 0; // Allow 4th dimension for mirror bypass
-                        node->velocity += mirror_force_vec;
-                    }
-                }
-            }
-        }
-
-        // Second loop: scale node positions and apply physics
-        for (size_t i = 0; i < s; ++i) {
-            Node* node = node_vector[i];
-
-            double magnitude = glm::length(node->velocity);
-            if (magnitude > speedlimit) {
-                double scale = speedlimit / magnitude;
-                node->velocity *= scale;
+            // Populate positions array
+            for (int i = 0; i < s; ++i) {
+                 positions[i] = node_vector[i]->position;
+                velocities[i] = node_vector[i]->velocity;
             }
 
-            node->velocity.y += gravity_strength / size();
-            node->velocity *= decay;
-            node->position += node->velocity;
+            // Prepare adjacency matrix for attraction force computation on GPU
+            int max_degree = 0;
+            vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
 
-            // Slight force which tries to flatten the thinnest axis onto the view plane
-            node->position.z *= clamp(0, dimension - 2, 1);
-            node->position.w *= clamp(0, dimension - 3, 1);
+            unordered_map<double, int> node_index_map;
+            for (int i = 0; i < s; ++i) {
+                node_index_map[node_vector[i]->hash] = i;
+            }
+            // Construct the mirrors and mirror2s vectors containing indices of reverse hashes
+            vector<int> mirrors(s, -1);
+            vector<int> mirror2s(s, -1);
+
+            for (int i = 0; i < s; ++i) {
+                const auto& node = node_vector[i];
+                double rev_hash = node->data->get_reverse_hash();
+                double rev_hash_2 = node->data->get_reverse_hash_2();
+
+                auto it_mirror = node_index_map.find(rev_hash);
+                if (it_mirror != node_index_map.end()) {
+                    mirrors[i] = it_mirror->second;
+                }
+                auto it_mirror2 = node_index_map.find(rev_hash_2);
+                if (it_mirror2 != node_index_map.end()) {
+                    mirror2s[i] = it_mirror2->second;
+                }
+            }
+
+            compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension);
+            for (int i = 0; i < s; ++i) {
+                node_vector[i]->position = positions[i];
+                node_vector[i]->velocity = velocities[i];
+            }
         }
-        mark_updated();
     }
 
     glm::vec4 center_of_mass() const {
