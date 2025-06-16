@@ -19,7 +19,7 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
-extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension);
+extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
 
 glm::vec4 random_unit_cube_vector() {
     return glm::vec4(
@@ -452,49 +452,44 @@ public:
     }
 
     void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const int iterations) {
-        for (int n = 0; n < iterations; n++) {
-            int s = node_vector.size();
-            vector<glm::vec4> positions(s);
-            vector<glm::vec4> velocities(s);
+        int s = node_vector.size();
+        vector<glm::vec4> positions(s);
+        vector<glm::vec4> velocities(s);
 
-            // Populate positions array
-            for (int i = 0; i < s; ++i) {
-                 positions[i] = node_vector[i]->position;
-                velocities[i] = node_vector[i]->velocity;
+        // Populate positions array
+        for (int i = 0; i < s; ++i) {
+             positions[i] = node_vector[i]->position;
+            velocities[i] = node_vector[i]->velocity;
+        }
+        int max_degree = 0;
+        vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
+        unordered_map<double, int> node_index_map;
+        for (int i = 0; i < s; ++i) {
+            node_index_map[node_vector[i]->hash] = i;
+        }
+        // Construct the mirrors and mirror2s vectors containing indices of reverse hashes
+        vector<int> mirrors(s, -1);
+        vector<int> mirror2s(s, -1);
+
+        for (int i = 0; i < s; ++i) {
+            const auto& node = node_vector[i];
+            double rev_hash = node->data->get_reverse_hash();
+            double rev_hash_2 = node->data->get_reverse_hash_2();
+
+            auto it_mirror = node_index_map.find(rev_hash);
+            if (it_mirror != node_index_map.end()) {
+                mirrors[i] = it_mirror->second;
             }
-
-            // Prepare adjacency matrix for attraction force computation on GPU
-            int max_degree = 0;
-            vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
-
-            unordered_map<double, int> node_index_map;
-            for (int i = 0; i < s; ++i) {
-                node_index_map[node_vector[i]->hash] = i;
+            auto it_mirror2 = node_index_map.find(rev_hash_2);
+            if (it_mirror2 != node_index_map.end()) {
+                mirror2s[i] = it_mirror2->second;
             }
-            // Construct the mirrors and mirror2s vectors containing indices of reverse hashes
-            vector<int> mirrors(s, -1);
-            vector<int> mirror2s(s, -1);
+        }
 
-            for (int i = 0; i < s; ++i) {
-                const auto& node = node_vector[i];
-                double rev_hash = node->data->get_reverse_hash();
-                double rev_hash_2 = node->data->get_reverse_hash_2();
-
-                auto it_mirror = node_index_map.find(rev_hash);
-                if (it_mirror != node_index_map.end()) {
-                    mirrors[i] = it_mirror->second;
-                }
-                auto it_mirror2 = node_index_map.find(rev_hash_2);
-                if (it_mirror2 != node_index_map.end()) {
-                    mirror2s[i] = it_mirror2->second;
-                }
-            }
-
-            compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension);
-            for (int i = 0; i < s; ++i) {
-                node_vector[i]->position = positions[i];
-                node_vector[i]->velocity = velocities[i];
-            }
+        compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension, iterations);
+        for (int i = 0; i < s; ++i) {
+            node_vector[i]->position = positions[i];
+            node_vector[i]->velocity = velocities[i];
         }
     }
 

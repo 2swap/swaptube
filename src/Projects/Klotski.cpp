@@ -1831,6 +1831,7 @@ void part9_old(){
 
 void render_video() {
     //FOR_REAL = false;
+    showcase_graph(sun, SilenceBlock(4));
 
     Graph* tri = new Graph;
     shared_ptr<GraphScene> tgs;
