@@ -443,15 +443,7 @@ public:
 
         for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
         for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age++; }
-        perform_single_physics_iteration(node_vector, repel, attract, decay, centering_strength, dimension, mirror_force, iterations);
-        glm::vec4 com = center_of_mass();
-        for (int n = 0; n < size(); n++) {
-            node_vector[n]->position -= com*centering_strength;
-        }
-        mark_updated();
-    }
 
-    void perform_single_physics_iteration(const vector<Node*>& node_vector, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const int iterations) {
         int s = node_vector.size();
         vector<glm::vec4> positions(s);
         vector<glm::vec4> velocities(s);
@@ -487,10 +479,14 @@ public:
         }
 
         compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension, iterations);
+
+        glm::vec4 com = center_of_mass();
         for (int i = 0; i < s; ++i) {
-            node_vector[i]->position = positions[i];
+            node_vector[i]->position = positions[i] - com*centering_strength;
             node_vector[i]->velocity = velocities[i];
         }
+
+        mark_updated();
     }
 
     glm::vec4 center_of_mass() const {
