@@ -233,13 +233,12 @@ __device__ float get_attraction_force (float dist_sq) {
     return (dist_6th - 1.0f) / (dist_6th + 1.0f) * .2f - .1f;
 };
 
-// Kernel to compute attraction forces
-// Each thread corresponds to one node
-__global__ void attraction_kernel(const glm::vec4* positions, const int* adjacency_matrix, glm::vec4* velocities, int num_nodes, int max_degree, float attract) {
-    if (adjacency_matrix != nullptr && max_degree > 0) {
-        int i = blockIdx.x * blockDim.x + threadIdx.x;
-        if (i >= num_nodes) return;
+// Kernel to compute mirror forces
+__global__ void mirror_kernel(glm::vec4* positions, glm::vec4* velocities, const int* adjacency_matrix, const int* mirrors, const int* mirror2s, int num_nodes, float mirror_force, const float decay, const float dimension, const float attract, const int max_degree) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= num_nodes) return;
 
+    if (adjacency_matrix != nullptr && max_degree > 0) {
         glm::vec4 pos_i = positions[i];
         glm::vec4 delta(0.0f);
 
@@ -257,12 +256,6 @@ __global__ void attraction_kernel(const glm::vec4* positions, const int* adjacen
 
         velocities[i] -= attract * delta;
     }
-}
-
-// Kernel to compute mirror forces
-__global__ void mirror_kernel(glm::vec4* positions, glm::vec4* velocities, const int* mirrors, const int* mirror2s, int num_nodes, float mirror_force, const float decay, const float dimension) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= num_nodes) return;
 
     if (mirror_force > 0.001) {
         glm::vec4 pos_i = positions[i];
@@ -286,6 +279,14 @@ __global__ void mirror_kernel(glm::vec4* positions, glm::vec4* velocities, const
 
     if(glm::any(glm::isnan(velocities[i]))) { velocities[i] = glm::vec4(0, 0, 0, 0); }
     if(glm::any(glm::isnan( positions[i]))) {  positions[i] = glm::vec4(0, 0, 0, 0); }
+
+    float speedlimit = 20;
+    float magnitude = glm::length(velocities[i]);
+    if (magnitude > speedlimit) {
+        float scale = speedlimit / magnitude;
+        velocities[i] *= scale;
+    }
+
     velocities[i] *= decay;
     positions[i] += velocities[i];
     positions[i].z *= clamp(0, dimension - 2, 1);
@@ -323,116 +324,118 @@ extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velo
         cudaMemcpy(d_adjacency_matrix, h_adjacency_matrix, adjacency_size, cudaMemcpyHostToDevice);
     }
 
-    for(int i = 0; i < iterations; i++){
-        printf(".");
-        if (num_nodes < 5000) {
-            // Use naive algorithm for repulsion for small graphs
+    if (num_nodes < 5000) {
+        for(int i = 0; i < iterations; i++){
+            printf(".");
+            fflush(stdout);
             compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, num_nodes, repel);
             cudaDeviceSynchronize();
-        } else {
-            int num_bins = GRID_SIZE * GRID_SIZE * GRID_SIZE;
-
-            // Host data for bounds and bin size
-            glm::vec4 h_min_bounds(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
-            glm::vec4 h_max_bounds(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
-
-            Bin* d_bins;
-            int* d_node_bins;
-
-            size_t bin_size_bytes = num_bins * sizeof(Bin);
-            size_t node_bins_size = num_nodes * sizeof(int);
-
-            cudaMalloc(&d_bins, bin_size_bytes);
-            cudaMalloc(&d_node_bins, node_bins_size);
-
-            cudaMemset(d_bins, 0, bin_size_bytes);
-
-            // Step 1: Compute AABB
-            glm::vec4 *d_min_bounds, *d_max_bounds;
-            cudaMalloc(&d_min_bounds, sizeof(glm::vec4));
-            cudaMalloc(&d_max_bounds, sizeof(glm::vec4));
-            cudaMemcpy(d_min_bounds, &h_min_bounds, sizeof(glm::vec4), cudaMemcpyHostToDevice);
-            cudaMemcpy(d_max_bounds, &h_max_bounds, sizeof(glm::vec4), cudaMemcpyHostToDevice);
-
-            compute_aabb<<<gridSize, blockSize>>>(d_positions, num_nodes, d_min_bounds, d_max_bounds);
+            mirror_kernel<<<gridSize, blockSize>>>(d_positions, d_velocities, d_adjacency_matrix, d_mirrors, d_mirror2s, num_nodes, mirror_force, decay, dimension, attract, max_degree);
             cudaDeviceSynchronize();
+        }
+    } else {
+        int num_bins = GRID_SIZE * GRID_SIZE * GRID_SIZE;
 
-            cudaMemcpy(&h_min_bounds, d_min_bounds, sizeof(glm::vec4), cudaMemcpyDeviceToHost);
-            cudaMemcpy(&h_max_bounds, d_max_bounds, sizeof(glm::vec4), cudaMemcpyDeviceToHost);
+        // Host data for bounds and bin size
+        glm::vec4 h_min_bounds(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
+        glm::vec4 h_max_bounds(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
 
-            cudaFree(d_min_bounds);
-            cudaFree(d_max_bounds);
+        Bin* d_bins;
+        int* d_node_bins;
 
-            // Calculate bin size dynamically
-            glm::vec4 h_bin_size = (h_max_bounds - h_min_bounds) / float(GRID_SIZE);
+        size_t bin_size_bytes = num_bins * sizeof(Bin);
+        size_t node_bins_size = num_nodes * sizeof(int);
 
-            // Step 2: Compute node bin mapping on the host
-            int* h_node_bins = new int[num_nodes];
-            compute_node_bins(h_positions, h_node_bins, num_nodes, h_min_bounds, h_bin_size);
+        cudaMalloc(&d_bins, bin_size_bytes);
+        cudaMalloc(&d_node_bins, node_bins_size);
 
-            // Allocate memory for sorted positions and node bins
-            glm::vec4* h_sorted_positions = new glm::vec4[num_nodes];
-            int* h_sorted_indices = new int[num_nodes];
+        cudaMemset(d_bins, 0, bin_size_bytes);
 
-            // Populate bin counts and sort positions
-            int bin_counts[num_bins] = {0};
-            for (int i = 0; i < num_nodes; ++i) {
-                bin_counts[h_node_bins[i]]++;
-            }
+        // Step 1: Compute AABB
+        glm::vec4 *d_min_bounds, *d_max_bounds;
+        cudaMalloc(&d_min_bounds, sizeof(glm::vec4));
+        cudaMalloc(&d_max_bounds, sizeof(glm::vec4));
+        cudaMemcpy(d_min_bounds, &h_min_bounds, sizeof(glm::vec4), cudaMemcpyHostToDevice);
+        cudaMemcpy(d_max_bounds, &h_max_bounds, sizeof(glm::vec4), cudaMemcpyHostToDevice);
 
-            sort_positions_by_bins_with_indices(h_positions, h_sorted_positions, h_node_bins, 
-                                                h_sorted_indices, num_nodes, bin_counts);
+        compute_aabb<<<gridSize, blockSize>>>(d_positions, num_nodes, d_min_bounds, d_max_bounds);
+        cudaDeviceSynchronize();
 
-            // Copy sorted data to device
-            glm::vec4 *d_sorted_positions;
-            cudaMalloc(&d_sorted_positions, vec4_size);
-            cudaMemcpy(d_sorted_positions, h_sorted_positions, vec4_size, cudaMemcpyHostToDevice);
+        cudaMemcpy(&h_min_bounds, d_min_bounds, sizeof(glm::vec4), cudaMemcpyDeviceToHost);
+        cudaMemcpy(&h_max_bounds, d_max_bounds, sizeof(glm::vec4), cudaMemcpyDeviceToHost);
 
-            // Compute bin start indices using prefix sum on host
-            int* h_bin_start_indices = new int[num_bins];
-            h_bin_start_indices[0] = 0;
-            for (int i = 1; i < num_bins; ++i) {
-                h_bin_start_indices[i] = h_bin_start_indices[i - 1] + bin_counts[i - 1];
-            }
+        cudaFree(d_min_bounds);
+        cudaFree(d_max_bounds);
 
-            int* d_bin_start_indices;
-            cudaMalloc(&d_bin_start_indices, num_bins * sizeof(int));
-            cudaMemcpy(d_bin_start_indices, h_bin_start_indices, num_bins * sizeof(int), cudaMemcpyHostToDevice);
+        // Calculate bin size dynamically
+        glm::vec4 h_bin_size = (h_max_bounds - h_min_bounds) / float(GRID_SIZE);
 
-            int* d_sorted_indices;
-            cudaMalloc(&d_sorted_indices, num_nodes * sizeof(int));
-            cudaMemcpy(d_sorted_indices, h_sorted_indices, num_nodes * sizeof(int), cudaMemcpyHostToDevice);
+        // Step 2: Compute node bin mapping on the host
+        int* h_node_bins = new int[num_nodes];
+        compute_node_bins(h_positions, h_node_bins, num_nodes, h_min_bounds, h_bin_size);
 
-            // Step 3: Populate bins
-            populate_bins<<<gridSize, blockSize>>>(d_sorted_positions, d_bins, num_nodes, h_min_bounds, h_bin_size);
-            cudaDeviceSynchronize();
+        // Allocate memory for sorted positions and node bins
+        glm::vec4* h_sorted_positions = new glm::vec4[num_nodes];
+        int* h_sorted_indices = new int[num_nodes];
 
-            // Step 4: Finalize bins
-            finalize_bins<<<(num_bins + blockSize - 1) / blockSize, blockSize>>>(d_bins, num_bins);
-            cudaDeviceSynchronize();
+        // Populate bin counts and sort positions
+        int bin_counts[num_bins] = {0};
+        for (int i = 0; i < num_nodes; ++i) {
+            bin_counts[h_node_bins[i]]++;
+        }
 
-            // Step 5: Compute repulsion forces
+        sort_positions_by_bins_with_indices(h_positions, h_sorted_positions, h_node_bins, 
+                                            h_sorted_indices, num_nodes, bin_counts);
+
+        // Copy sorted data to device
+        glm::vec4 *d_sorted_positions;
+        cudaMalloc(&d_sorted_positions, vec4_size);
+        cudaMemcpy(d_sorted_positions, h_sorted_positions, vec4_size, cudaMemcpyHostToDevice);
+
+        // Compute bin start indices using prefix sum on host
+        int* h_bin_start_indices = new int[num_bins];
+        h_bin_start_indices[0] = 0;
+        for (int i = 1; i < num_bins; ++i) {
+            h_bin_start_indices[i] = h_bin_start_indices[i - 1] + bin_counts[i - 1];
+        }
+
+        int* d_bin_start_indices;
+        cudaMalloc(&d_bin_start_indices, num_bins * sizeof(int));
+        cudaMemcpy(d_bin_start_indices, h_bin_start_indices, num_bins * sizeof(int), cudaMemcpyHostToDevice);
+
+        int* d_sorted_indices;
+        cudaMalloc(&d_sorted_indices, num_nodes * sizeof(int));
+        cudaMemcpy(d_sorted_indices, h_sorted_indices, num_nodes * sizeof(int), cudaMemcpyHostToDevice);
+
+        // Step 3: Populate bins
+        populate_bins<<<gridSize, blockSize>>>(d_sorted_positions, d_bins, num_nodes, h_min_bounds, h_bin_size);
+        cudaDeviceSynchronize();
+
+        // Step 4: Finalize bins
+        finalize_bins<<<(num_bins + blockSize - 1) / blockSize, blockSize>>>(d_bins, num_bins);
+        cudaDeviceSynchronize();
+
+        // Step 5: Compute repulsion forces
+        for(int i = 0; i < iterations; i++){
             compute_repulsion_kernel_binned<<<gridSize, blockSize>>>(d_sorted_positions, d_velocities, d_bins, 
                                                                      d_bin_start_indices, d_sorted_indices, num_nodes, 
                                                                      h_min_bounds, h_bin_size, repel);
             cudaDeviceSynchronize();
-
-            // Cleanup
-            delete[] h_sorted_positions;
-            delete[] h_sorted_indices;
-            delete[] h_node_bins;
-            delete[] h_bin_start_indices;
-            cudaFree(d_bins);
-            cudaFree(d_node_bins);
-            cudaFree(d_sorted_indices);
-            cudaFree(d_bin_start_indices);
+            mirror_kernel<<<gridSize, blockSize>>>(d_positions, d_velocities, d_adjacency_matrix, d_mirrors, d_mirror2s, num_nodes, mirror_force, decay, dimension, attract, max_degree);
+            cudaDeviceSynchronize();
+            printf(",");
+            fflush(stdout);
         }
 
-        attraction_kernel<<<gridSize, blockSize>>>(d_positions, d_adjacency_matrix, d_velocities, num_nodes, max_degree, attract);
-        cudaDeviceSynchronize();
-
-        mirror_kernel<<<gridSize, blockSize>>>(d_positions, d_velocities, d_mirrors, d_mirror2s, num_nodes, mirror_force, decay, dimension);
-        cudaDeviceSynchronize();
+        // Cleanup
+        delete[] h_sorted_positions;
+        delete[] h_sorted_indices;
+        delete[] h_node_bins;
+        delete[] h_bin_start_indices;
+        cudaFree(d_bins);
+        cudaFree(d_node_bins);
+        cudaFree(d_sorted_indices);
+        cudaFree(d_bin_start_indices);
     }
     cudaFree(d_mirror2s);
     cudaFree(d_mirrors);

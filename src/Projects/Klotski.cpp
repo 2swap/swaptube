@@ -152,6 +152,7 @@ void showcase_graph(const KlotskiBoard& kb, const Macroblock& mb) {
     g.add_to_stack(new KlotskiBoard(kb));
     auto gs_ptr = make_shared<GraphScene>(&g, false);
     gs_ptr->state_manager.set(default_graph_state);
+    gs_ptr->state_manager.set({{"physics_multiplier","100"}}); // TODO testing only
     cs.add_scene(gs_ptr, "gs", .5, .5, true);
 
     // Gradually expand the graph to reveal its structure
