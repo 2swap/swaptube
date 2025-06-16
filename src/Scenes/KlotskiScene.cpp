@@ -6,7 +6,7 @@
 #include <vector>
 
 int piece_color(int cell){
-    rainbow(cell*.618034);
+    return rainbow(cell*.618034);
 }
 
 class KlotskiScene : public Scene {

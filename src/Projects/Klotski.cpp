@@ -168,8 +168,8 @@ void showcase_graph(const KlotskiBoard& kb, const Macroblock& mb) {
 }
 
 void part0(){
-    showcase_graph(expert, FileBlock("You're looking at the state-space graph of a slidy puzzle."));
-    showcase_graph(thinkfun1, FileBlock("Aside from just being puzzles, these sliding blocks define graphs"));
+    showcase_graph(thinkfun1, FileBlock("This is the state-space graph of a slidy puzzle."));
+    showcase_graph(expert, FileBlock("Aside from just being puzzles, these sliding blocks define graphs"));
     showcase_graph(thinkfun2, FileBlock("that model convoluted topologies"));
     showcase_graph(thinkfun3, FileBlock("and present local substructure as well as global superstructure."));
 }

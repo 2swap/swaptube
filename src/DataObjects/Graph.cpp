@@ -19,7 +19,10 @@
 #include "../misc/json.hpp"
 using json = nlohmann::json;
 
-extern "C" void compute_repulsion_cuda(const glm::vec4* h_positions, glm::vec4* h_velocity_deltas, int num_nodes);
+//extern "C" void compute_attraction_cuda(const glm::vec4* h_positions, const int* adjacency_matrix, glm::vec4* h_velocity_deltas,
+//                                    int num_nodes, int max_degree, float attract);
+extern "C" void compute_repulsion_cuda(const glm::vec4* h_positions, const int* h_adjacency_matrix, glm::vec4* h_attr_velocity_deltas, glm::vec4* h_velocity_deltas,
+                                    int num_nodes, int max_degree, float attract, float repel);
 
 glm::vec4 random_unit_cube_vector() {
     return glm::vec4(
@@ -405,6 +408,38 @@ public:
         mark_updated();
     }
 
+    // New function to create adjacency matrix for GPU attractive forces
+    vector<int> make_adjacency_matrix(const vector<Node*>& node_vector, int &max_degree) {
+        int n = node_vector.size();
+        max_degree = 0;
+        // We'll find the maximum outgoing degree (neighbors size)
+        for (int i = 0; i < n; ++i) {
+            int degree = node_vector[i]->neighbors.size();
+            if (degree > max_degree) max_degree = degree;
+        }
+
+        // Allocate matrix n * max_degree, initialized to -1 (no neighbor)
+        vector<int> adjacency_matrix(n * max_degree, -1);
+
+        unordered_map<double, int> node_index_map;
+        for (int i = 0; i < n; ++i) {
+            node_index_map[node_vector[i]->hash] = i;
+        }
+
+        for (int i = 0; i < n; ++i) {
+            int col = 0;
+            for (const Edge& edge : node_vector[i]->neighbors) {
+                if (col >= max_degree) break;
+                auto it = node_index_map.find(edge.to);
+                if (it != node_index_map.end()) {
+                    adjacency_matrix[i * max_degree + col] = it->second;
+                    col++;
+                }
+            }
+        }
+        return adjacency_matrix;
+    }
+
     /**
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
@@ -430,23 +465,28 @@ public:
 
         vector<glm::vec4> positions(s);
         vector<glm::vec4> velocity_deltas(s, glm::vec4(0.0f));
+        vector<glm::vec4> attr_velocity_deltas(s, glm::vec4(0.0f));
 
         // Populate positions array
         for (int i = 0; i < s; ++i) {
             positions[i] = node_vector[i]->position;
         }
 
-        // Use CUDA to compute repulsion velocity deltas
-        compute_repulsion_cuda(positions.data(), velocity_deltas.data(), s);
+        // Prepare adjacency matrix for attraction force computation on GPU
+        int max_degree = 0;
+        vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
 
-        // Apply velocity deltas from CUDA and calculate attraction forces on the CPU
+        compute_repulsion_cuda(positions.data(), adjacency_matrix.data(), attr_velocity_deltas.data(), velocity_deltas.data(), s, max_degree, attract, repel);
+        //compute_attraction_cuda(positions.data(), adjacency_matrix.data(), attr_velocity_deltas.data(), s, max_degree, attract);
+
         for (int i = 0; i < s; ++i) {
             Node* node = node_vector[i];
-            if(glm::any(glm::isnan(velocity_deltas[i]))) velocity_deltas[i] = glm::vec4(0, 0, 0, 0);
-            if(glm::any(glm::isnan(node->position))) node->position = glm::vec4(0, 0, 0, 0);
-            node->velocity += repel * velocity_deltas[i]; // Repulsion forces from CUDA
+            if(glm::any(glm::isnan(velocity_deltas[i]))) { velocity_deltas[i] = glm::vec4(0, 0, 0, 0); cout << "BAD" << endl; }
+            if(glm::any(glm::isnan(node->position))) { node->position = glm::vec4(0, 0, 0, 0); cout << "BAD2" << endl; }
+            node->velocity += velocity_deltas[i];
+            node->velocity -= attr_velocity_deltas[i];
 
-            // Add symmetry forces
+            // symmetry forces
             if (mirror_force > 0.001) {
                 {
                     const auto& mirror = nodes.find(node->data->get_reverse_hash());
@@ -470,19 +510,6 @@ public:
                     }
                 }
             }
-
-            // Calculate attraction forces (CPU)
-            const EdgeSet& neighbor_nodes = node->neighbors;
-            for (const Edge& neighbor_edge : neighbor_nodes) {
-                double neighbor_id = neighbor_edge.to;
-                Node* neighbor = &nodes.at(neighbor_id);
-                glm::vec4 diff = node->position - neighbor->position;
-                float dist_sq = glm::dot(diff, diff) + 1;
-                glm::vec4 force = diff * attract * get_attraction_force(dist_sq);
-
-                node->velocity -= force; // Apply attraction forces
-                neighbor->velocity += force; // Apply attraction forces
-            }
         }
 
         // Second loop: scale node positions and apply physics
@@ -504,11 +531,6 @@ public:
             node->position.w *= clamp(0, dimension - 3, 1);
         }
         mark_updated();
-    }
-
-    float get_attraction_force(float dist_sq){
-        float dist_6th = dist_sq*dist_sq*dist_sq*.05f;
-        return (dist_6th-1)/(dist_6th+1)*.2f-.1f;
     }
 
     glm::vec4 center_of_mass() const {
