@@ -230,7 +230,7 @@ void compute_node_bins(const glm::vec4* positions, int* node_bins, int num_nodes
 // Return float attraction scalar
 __device__ float get_attraction_force (float dist_sq) {
     float dist_6th = dist_sq * dist_sq * dist_sq * .05f;
-    return (dist_6th - 1.0f) / (dist_6th + 1.0f) * .06f - .03f;
+    return (dist_6th - 1.0f) / (dist_6th + 1.0f) * .2f - .1f;
 };
 
 // Kernel to compute mirror forces
@@ -280,7 +280,7 @@ __global__ void mirror_kernel(glm::vec4* positions, glm::vec4* velocities, const
         }
 
         delta.w = 0;
-        velocities[i] += mirror_force * delta;
+        positions[i] += mirror_force * delta;
     }
 
     if(glm::any(glm::isnan(velocities[i]))) { velocities[i] = glm::vec4(0, 0, 0, 0); }

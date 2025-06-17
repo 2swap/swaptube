@@ -450,8 +450,9 @@ public:
         vector<glm::vec4> velocities(s);
 
         // Populate positions array
+        glm::vec4 com = center_of_mass();
         for (int i = 0; i < s; ++i) {
-             positions[i] = node_vector[i]->position;
+             positions[i] = node_vector[i]->position - com;
             velocities[i] = node_vector[i]->velocity;
             node_vector[i]->index = i;
         }
@@ -517,7 +518,7 @@ public:
             ct += sig;
         }
 
-        float ans = 2 + 4.8*pow(sum_distance_sq / ct, .5);
+        float ans = 6 + 4.8*pow(sum_distance_sq / ct, .5);
         return ans;
     }
 

@@ -39,6 +39,7 @@ public:
             {"centering_strength", "1"},
             {"dimensions", "3"},
             {"mirror_force", "0"},
+            {"highlight_point_opacity", "1"},
         });
     }
 
@@ -70,14 +71,16 @@ public:
         }
 
         float opa = 0;
-        glm::vec3 pos_to_render = graph->center_of_mass();
+        glm::vec3 pos_to_render(0,0,0);
         if(curr_found || next_found){
             double smooth_interp = smoother2(state["microblock_fraction"]);
             if     (!curr_found) pos_to_render = next_pos;
             else if(!next_found) pos_to_render = curr_pos;
             else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
             opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
-            add_point(Point(pos_to_render, 0xffff0000, opa, 3*opa));
+            double hpo = state["highlight_point_opacity"];
+            if(hpo > 0.001)
+                add_point(Point(pos_to_render, 0xffff0000, hpo*opa, 3*opa));
         }
 
         // automagical camera distancing
@@ -100,6 +103,7 @@ public:
         s.insert("centering_strength");
         s.insert("dimensions");
         s.insert("mirror_force");
+        s.insert("highlight_point_opacity");
         return s;
     }
 

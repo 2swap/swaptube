@@ -244,11 +244,11 @@ KlotskiBoard sun_mine      (4, 5, "abbcabbc.dd.efgheijh"                , false)
 KlotskiBoard sun           (4, 5, "abbcabbceddhefghi..j"                , false);
 KlotskiBoard sun_no_b      (4, 5, "a..ca..ceddhefghi..j"                , false);
 KlotskiBoard klotski_flip  (4, 5, "j..ihgfehddecbbacbba"                , false);
-KlotskiBoard klotski_bonus (4, 5, "egbbefbbhjddhaic.a.c"                , false);
+KlotskiBoard klotski_bonus (4, 5, "..afbbahbbchddcejgie"                , false);
 KlotskiBoard klotski_bonus2(4, 5, "..cibbcabbeaddehfgjh"                , false);
-KlotskiBoard klotski_necklace(4, 5, "afgca..cebbhebbhiddj"                , false);
-KlotskiBoard klotski_whisker(4, 5, "fbbagbba.cehiceh.ddj"                , false);
-KlotskiBoard klotski_earring(4, 5, "fgijbbddbbacehaceh.."                , false);
+KlotskiBoard klotski_necklace(4, 5, "afgcabbc.bb.eddheijh"                , false);
+KlotskiBoard klotski_whisker(4, 5, ".bb.abbfaceghcejhidd"                , false);
+KlotskiBoard klotski_earring(4, 5, "..fgbbijbbddacehaceh"                , false);
 KlotskiBoard sun_pit       (4, 5, "abbfabbcg.ecijeh.ddh"                , false);
 KlotskiBoard klotski_solution_slow(4, 5, "fgacehacehdd.bbi.bbj"                , false);
 KlotskiBoard klotski_solution     (4, 5, "acehacehfgdd.bbi.bbj"                , false);
