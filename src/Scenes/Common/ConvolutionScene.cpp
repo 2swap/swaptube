@@ -10,7 +10,7 @@ class ConvolutionScene : public Scene {
 public:
     ConvolutionScene(const Pixels& p, const double width = 1, const double height = 1)
     : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) {
-        state_manager.add_equation("transparency_profile", "<microblock_fraction>");
+        state_manager.set("transparency_profile", "<microblock_fraction>");
     }
 
     pair<int, int> get_coords_from_pixels(const Pixels& p){

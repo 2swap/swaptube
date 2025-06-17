@@ -87,7 +87,7 @@ public:
         }
         if (!kb.rushhour && kb.w == 4 && kb.h == 5) {
             pix.fill_rect(offset_x+qm+square_size, offset_y+board_height+hm, 2*square_size-hm, hm, TRANSPARENT_BLACK);
-            pix.fill_rect(offset_x+hm+square_size, offset_y+board_height+qm, 2*square_size-hm, hm, piece_color('b'));
+            pix.fill_rect(offset_x+hm+square_size, offset_y+board_height+hm, 2*square_size-margin, hm, piece_color('b'));
         }
         if(dots > 0.01){
             // Loop over every cell in the board.

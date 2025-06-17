@@ -63,6 +63,7 @@ public:
 
     GenericBoard* data;
     double hash = 0;
+    int index = -1;
     unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
     double opacity = 1;
@@ -452,37 +453,37 @@ public:
         for (int i = 0; i < s; ++i) {
              positions[i] = node_vector[i]->position;
             velocities[i] = node_vector[i]->velocity;
+            node_vector[i]->index = i;
         }
         int max_degree = 0;
         vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
-        unordered_map<double, int> node_index_map;
-        for (int i = 0; i < s; ++i) {
-            node_index_map[node_vector[i]->hash] = i;
-        }
         // Construct the mirrors and mirror2s vectors containing indices of reverse hashes
         vector<int> mirrors(s, -1);
         vector<int> mirror2s(s, -1);
 
         for (int i = 0; i < s; ++i) {
             const auto& node = node_vector[i];
-            double rev_hash = node->data->get_reverse_hash();
-            double rev_hash_2 = node->data->get_reverse_hash_2();
 
-            auto it_mirror = node_index_map.find(rev_hash);
-            if (it_mirror != node_index_map.end()) {
-                mirrors[i] = it_mirror->second;
+            {
+                double rev_hash = node->data->get_reverse_hash();
+                auto it_mirror = nodes.find(rev_hash);
+                if (it_mirror != nodes.end()) {
+                    mirrors[i] = it_mirror->second.index;
+                }
             }
-            auto it_mirror2 = node_index_map.find(rev_hash_2);
-            if (it_mirror2 != node_index_map.end()) {
-                mirror2s[i] = it_mirror2->second;
+            {
+                double rev_hash_2 = node->data->get_reverse_hash_2();
+                auto it_mirror_2 = nodes.find(rev_hash_2);
+                if (it_mirror_2 != nodes.end()) {
+                    mirror2s[i] = it_mirror_2->second.index;
+                }
             }
         }
 
         compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension, iterations);
 
-        glm::vec4 com = center_of_mass();
         for (int i = 0; i < s; ++i) {
-            node_vector[i]->position = positions[i] - com*centering_strength;
+            node_vector[i]->position = positions[i];
             node_vector[i]->velocity = velocities[i];
         }
 
@@ -516,7 +517,7 @@ public:
             ct += sig;
         }
 
-        float ans = 6 + 4.8*pow(sum_distance_sq / ct, .5);
+        float ans = 2 + 4.8*pow(sum_distance_sq / ct, .5);
         return ans;
     }
 

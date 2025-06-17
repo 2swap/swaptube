@@ -13,8 +13,8 @@ class Scene {
 public:
     Scene(const double width = 1, const double height = 1)
         : state_manager() {
-        state_manager.add_equation("w", to_string(width));
-        state_manager.add_equation("h", to_string(height));
+        state_manager.set("w", to_string(width));
+        state_manager.set("h", to_string(height));
         state_manager.evaluate_all();
     }
 
@@ -86,7 +86,7 @@ public:
         total_microblocks = remaining_microblocks = expected_microblocks;
         cout << endl << audio.blurb() << " staged to last " << to_string(expected_microblocks) << " microblock(s)." << endl;
         audio.write_shtooka();
-        if(FOR_REAL) {
+        if(!SMOKETEST) {
             double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
             total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * VIDEO_FRAMERATE;
         }
@@ -152,7 +152,7 @@ private:
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
         global_state["t"] = global_state["frame_number"] / VIDEO_FRAMERATE;
 
-        if(FOR_REAL) {
+        if(!SMOKETEST) {
             state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
             SUBTITLE_WRITER.set_substime(global_state["frame_number"] / VIDEO_FRAMERATE);
             Pixels* p = nullptr;

@@ -6,6 +6,7 @@ project(swaptube LANGUAGES CXX)
 add_definitions(-DPROJECT_NAME_MACRO="${PROJECT_NAME_MACRO}")
 add_definitions(-DVIDEO_WIDTH=${VIDEO_WIDTH})
 add_definitions(-DVIDEO_HEIGHT=${VIDEO_HEIGHT})
+add_definitions(-DSMOKETEST=${SMOKETEST})
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
 
 set(ENV{GLIBCXX_FORCE_NEW} 1)

@@ -70,7 +70,7 @@ public:
         }
 
         float opa = 0;
-        glm::vec3 pos_to_render(0.f);
+        glm::vec3 pos_to_render = graph->center_of_mass();
         if(curr_found || next_found){
             double smooth_interp = smoother2(state["microblock_fraction"]);
             if     (!curr_found) pos_to_render = next_pos;
@@ -83,7 +83,6 @@ public:
         // automagical camera distancing
         auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
         auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
-        //auto_camera = pos_to_render * opa;
         cout << ">";
     }
 

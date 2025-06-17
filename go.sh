@@ -20,16 +20,20 @@ if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
 fi
 
 # Check if the number of arguments is less than expected
-if [ $# -ne 3 ]; then
+if [ $# -lt 3 ]; then
     echo "go.sh: Suppose that in the Projects/ directory you have made a project called myproject.cpp."
-    echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight>"
-    echo "go.sh: Example: $0 myproject 640 360"
+    echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight> [-s]"
+    echo "go.sh: Example: $0 myproject 640 360 -s"
     exit 1
 fi
 
 PROJECT_NAME=$1
 VIDEO_WIDTH=$2
 VIDEO_HEIGHT=$3
+SMOKETEST=0
+if [ "$4" == "-s" ]; then
+    SMOKETEST=1
+fi
 
 # Find the project file in any subdirectory under src/Projects
 PROJECT_PATH=$(find src/Projects -type f -name "${PROJECT_NAME}.cpp" 2>/dev/null | head -n 1)
@@ -59,7 +63,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}"
+    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DSMOKETEST="${SMOKETEST}"
 
     echo "go.sh: Running \`make -j12\`"
     # build the project

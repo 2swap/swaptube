@@ -149,7 +149,7 @@ public:
 
 
     /* Modifiers */
-    void add_equation(const string& variable, const string& equation) {
+    void set(const string& variable, const string& equation) {
         // Validate variable name to contain only letters, numbers, dots, and underscores
         regex valid_variable_regex("^[a-zA-Z0-9._]+$");
         if (!regex_match(variable, valid_variable_regex)) {
@@ -194,7 +194,7 @@ public:
     }
     void set(const unordered_map<string, string>& equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
-            add_equation(it->first, it->second);
+            set(it->first, it->second);
         }
     }
     void remove(const unordered_map<string, string>& equations) {
@@ -209,7 +209,7 @@ public:
 
     void evaluate_all() {
         for(const pair<string, double> p : global_state){
-            add_equation(p.first, to_string(p.second));
+            set(p.first, to_string(p.second));
         }
 
         /* Step 1: Iterate through all variables,
@@ -294,9 +294,9 @@ public:
                 in_macroblock_transition.insert(wh);
             string eq = get_equation(wh);
             string pop = "<" + wh + ".post_transition> <" + (micro?"micro":"macro") + "block_fraction> 3.1415 * sin .2 * 1 + *";
-            add_equation(wh + ".post_transition", eq);
-            add_equation(wh + ".pre_transition", eq);
-            add_equation(wh, pop);
+            set(wh + ".post_transition", eq);
+            set(wh + ".pre_transition", eq);
+            set(wh, pop);
 
         }
     }
@@ -319,7 +319,7 @@ public:
     }
 
     const void begin_timer(const string& timer_name) {
-        add_equation(timer_name, "<t> " + to_string(get_value("t")) + " -");
+        set(timer_name, "<t> " + to_string(get_value("t")) + " -");
     }
 
     const State get_state(const StateQuery& query) const {
@@ -351,9 +351,9 @@ public:
         string eq1 = get_equation(variable);
         string eq2 = equation;
         string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (tt==MICRO?"micro":"macro") + "block_fraction> smoothlerp";
-        add_equation(variable+".pre_transition", eq1);
-        add_equation(variable+".post_transition", eq2);
-        add_equation(variable, lerp_both);
+        set(variable+".pre_transition", eq1);
+        set(variable+".post_transition", eq2);
+        set(variable, lerp_both);
     }
 
 private:
@@ -451,7 +451,7 @@ private:
 
     void close_all_transitions(unordered_set<string>& in_transition){
         for(string varname : in_transition){
-            add_equation(varname, get_equation(varname + ".post_transition"));
+            set(varname, get_equation(varname + ".post_transition"));
             VariableContents& vc = variables.at(varname);
             vc.value = get_value(varname + ".post_transition");
             remove_equation(varname + ".post_transition");
@@ -467,9 +467,9 @@ void test_state_manager() {
     StateManager state_manager;
 
     // Add equations
-    state_manager.add_equation("x", "5"); // x = 5
-    state_manager.add_equation("y", "10"); // y = 10
-    state_manager.add_equation("z", "<x> <y> +"); // z = x + y
+    state_manager.set("x", "5"); // x = 5
+    state_manager.set("y", "10"); // y = 10
+    state_manager.set("z", "<x> <y> +"); // z = x + y
     state_manager.evaluate_all();
 
     // Validate initial values
@@ -481,9 +481,9 @@ void test_state_manager() {
     assert(state1["z"] == 15.0);
 
     // Modify equations
-    state_manager.add_equation("x", "7"); // x = 7
-    state_manager.add_equation("y", "20"); // y = 20
-    state_manager.add_equation("z", "<x> <y> +"); // z = x + y
+    state_manager.set("x", "7"); // x = 7
+    state_manager.set("y", "20"); // y = 20
+    state_manager.set("z", "<x> <y> +"); // z = x + y
     state_manager.evaluate_all();
 
     State state2 = state_manager.get_state(query);

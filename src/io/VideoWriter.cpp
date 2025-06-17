@@ -214,8 +214,8 @@ public:
         video_seconds_so_far += 1./VIDEO_FRAMERATE;
     }
     ~VideoWriter() {
-        int pipefd[2];
-        int original_stderr = redirect_stderr(pipefd);
+        //int pipefd[2];
+        //int original_stderr = redirect_stderr(pipefd);
 
         // Writing the delayed video frames
         while(encode_and_write_frame(NULL));
@@ -231,6 +231,6 @@ public:
         av_write_trailer(fc);
         avio_closep(&fc->pb);
         avformat_free_context(fc);
-        restore_stderr(original_stderr);
+        //restore_stderr(original_stderr);
     }
 };
