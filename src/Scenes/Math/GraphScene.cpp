@@ -36,7 +36,7 @@ public:
             {"attract", "1"},
             {"decay", ".95"},
             {"physics_multiplier", "1"},
-            {"centering_strength", "1"},
+            {"centering_strength", ".1"},
             {"dimensions", "3"},
             {"mirror_force", "0"},
             {"highlight_point_opacity", "1"},
@@ -86,6 +86,7 @@ public:
         // automagical camera distancing
         auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
         auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
+        // Looks jarring when puzzle moves if we simply do: //auto_camera = pos_to_render * opa;
         cout << ">";
     }
 

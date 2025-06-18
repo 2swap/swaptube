@@ -23,12 +23,14 @@ const int VIDEO_BACKGROUND_COLOR = 0xff0a0a1e; // Lambda Blue
 #include "../io/VideoWriter.cpp"
 #include "../io/SubtitleWriter.cpp"
 #include "../io/ShtookaWriter.cpp"
+#include "Timer.cpp"
 
 // Initializer struct for FORMAT_CONTEXT and dependent objects
 struct FCInitializer {
     AVFormatContext* format_context;
     AudioWriter* audio_writer;
     VideoWriter* video_writer;
+    Timer timer;
 
     FCInitializer() {
         format_context = nullptr;
@@ -58,7 +60,6 @@ static SubtitleWriter SUBTITLE_WRITER;
 static ShtookaWriter SHTOOKA_WRITER;
 
 #include "../io/SubtitleWriter.cpp"
-#include "Timer.cpp"
 
 // The go.sh script temporarily moves the current project to this location:
 #include "../Projects/.active_project.cpp"
@@ -72,7 +73,6 @@ int main() {
     }
 
     // Main Render Loop
-    Timer timer;
     signal(SIGINT, signal_handler);
     try {
         render_video();

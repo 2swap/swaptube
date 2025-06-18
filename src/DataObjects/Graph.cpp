@@ -450,7 +450,7 @@ public:
         vector<glm::vec4> velocities(s);
 
         // Populate positions array
-        glm::vec4 com = center_of_mass();
+        glm::vec4 com = center_of_mass() * centering_strength;
         for (int i = 0; i < s; ++i) {
              positions[i] = node_vector[i]->position - com;
             velocities[i] = node_vector[i]->velocity;
@@ -511,10 +511,13 @@ public:
         float sum_distance_sq = 0.0;
         float ct = 0.1;
 
+        glm::vec4 com = center_of_mass();
+
         for (const auto& node_pair : nodes) {
             const Node& node = node_pair.second;
             float sig = node.weight();
-            sum_distance_sq += sig * glm::dot(node.position, node.position);
+            glm::vec4 pos_com = node.position - com;
+            sum_distance_sq += sig * glm::dot(pos_com, pos_com);
             ct += sig;
         }
 
