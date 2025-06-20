@@ -1326,7 +1326,7 @@ void part8(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         cout << to_string(g.size()) << endl;
     }
 
-    cs.stage_macroblock(SilenceBlock(15), 1);
+    cs.stage_macroblock(SilenceBlock(15), 2);
     gs->state_manager.transition(MICRO, {{"physics_multiplier", "0"}, {"d", ".5"}});
     cs.render_microblock();
     gs->state_manager.transition(MICRO, {{"d", ".9"}});
