@@ -105,16 +105,16 @@ public:
 
     void generate_tone(){
         double vol = state["volume"];
-        int total_samples = 44100/VIDEO_FRAMERATE;
+        int total_samples = SAMPLERATE/FRAMERATE;
         if(vol < 0.01) {tonegen = 0; return;}
-        if(tonegen == 0) tonegen = state["t"]*44100;
+        if(tonegen == 0) tonegen = state["t"]*SAMPLERATE;
         vector<float> left;
         vector<float> right;
         int tonegen_save = tonegen;
         double note = state["tone"];
         for(int i = 0; i < total_samples; i++){
             double strength = lerp(energy, energy_slew, static_cast<double>(i)/total_samples);
-            float val = .002*vol*strength*sin(tonegen*2200.*note/44100.)/sqrt(note);
+            float val = .002*vol*strength*sin(tonegen*2200.*note/SAMPLERATE)/sqrt(note);
             tonegen++;
             left.push_back(val);
             right.push_back(val);
@@ -125,7 +125,7 @@ public:
 
     void generate_audio(double duration, vector<float>& left, vector<float>& right, double volume_mult = 1){
         PendulumState ps = start_state;
-        for(int i = 0; i < duration*44100; i++){
+        for(int i = 0; i < duration*SAMPLERATE; i++){
             for(int j = 0; j < 10; j++) {
                 ps = rk4Step(rk4Step(rk4Step(ps, 0.001), 0.001), 0.001);
             }

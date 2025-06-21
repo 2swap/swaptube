@@ -78,7 +78,7 @@ public:
 
         // Configure codec context
         audioOutputCodecContext->bit_rate = 128000; // 128 kbps
-        audioOutputCodecContext->sample_rate = 44100; // 44.1 kHz
+        audioOutputCodecContext->sample_rate = SAMPLERATE;
         av_channel_layout_default(&audioOutputCodecContext->ch_layout, 2); // 2 for stereo
         audioOutputCodecContext->sample_fmt = AV_SAMPLE_FMT_FLTP; // Floating-point planar format
         audioOutputCodecContext->time_base = {1, audioOutputCodecContext->sample_rate}; // Time base of 1/sample_rate
@@ -206,8 +206,8 @@ public:
         }
 
         // Check sample rate
-        if (audioStream->codecpar->sample_rate != 44100) {
-            throw runtime_error("Error: Unsupported sample rate: " + to_string(audioStream->codecpar->sample_rate) + ". Expected 44100 Hz.");
+        if (audioStream->codecpar->sample_rate != SAMPLERATE) {
+            throw runtime_error("Error: Unsupported sample rate: " + to_string(audioStream->codecpar->sample_rate) + ". Expected " + to_string(SAMPLERATE) + " Hz.");
         }
 
         // Ensure the audio is stereo

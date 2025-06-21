@@ -12,18 +12,18 @@ void node_pop(double subdiv, bool added_not_deleted) {
     int tone_number = added_not_deleted?tones[tone_incr%tones.size()]:-6;
     double tone = pow(2,tone_number/12.);
     tone_incr++;
-    int num_samples = 44100*.1;
+    int num_samples = SAMPLERATE*.1;
     vector<float> left;
     vector<float> right;
      left.reserve(num_samples);
     right.reserve(num_samples);
     for(int i = 0; i < num_samples; i++){
-        float val = .07 * pow(.5,i*80/44100.) * sin(tone*i*6.283*440/44100.);
+        float val = .07 * pow(.5,i*80./SAMPLERATE) * sin(tone*i*6.283*440/SAMPLERATE);
          left.push_back(val);
         right.push_back(val);
     }
     double time = get_global_state("t");
-    AUDIO_WRITER.add_sfx(left, right, (time+subdiv/VIDEO_FRAMERATE)*44100);
+    AUDIO_WRITER.add_sfx(left, right, (time+subdiv/FRAMERATE)*SAMPLERATE);
 }
 
 class GraphScene : public ThreeDimensionScene {

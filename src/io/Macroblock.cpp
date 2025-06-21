@@ -83,7 +83,7 @@ public:
         SUBTITLE_WRITER.add_subtitle(duration_seconds, "[Computer Generated Sound]");
         return duration_seconds;
     }
-    string blurb() const override { return "GeneratedBlock(" + to_string(leftBuffer.size()/44100) + ")"; }
+    string blurb() const override { return "GeneratedBlock(" + to_string(leftBuffer.size()/SAMPLERATE) + ")"; }
 
 private:
     const vector<float> leftBuffer;

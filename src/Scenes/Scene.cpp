@@ -88,7 +88,7 @@ public:
         audio.write_shtooka();
         if(!SMOKETEST) {
             double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
-            total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * VIDEO_FRAMERATE;
+            total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * FRAMERATE;
         }
     }
 
@@ -150,15 +150,15 @@ private:
 
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_macroblock_frames) / total_macroblock_frames;
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
-        global_state["t"] = global_state["frame_number"] / VIDEO_FRAMERATE;
+        global_state["t"] = global_state["frame_number"] / FRAMERATE;
 
         if(!SMOKETEST) {
             state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
-            SUBTITLE_WRITER.set_substime(global_state["frame_number"] / VIDEO_FRAMERATE);
+            SUBTITLE_WRITER.set_substime(global_state["frame_number"] / FRAMERATE);
             Pixels* p = nullptr;
             query(p);
             if(int(global_state["frame_number"]) % 5 == 0 && PRINT_TO_TERMINAL) p->print_to_terminal();
-            if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % VIDEO_FRAMERATE == 0)) {
+            if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % FRAMERATE == 0)) {
                 int roundedFrameNumber = round(global_state["frame_number"]);
                 ostringstream stream;
                 stream << setw(6) << setfill('0') << roundedFrameNumber;

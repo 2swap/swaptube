@@ -20,12 +20,12 @@ public:
     }
 
     void generate_tone(){
-        if(elapsed == 0) elapsed = state["t"]*44100;
+        if(elapsed == 0) elapsed = state["t"]*SAMPLERATE;
         new_freqs.clear();
         for (int i = 0; i < circles_to_render; i++) {
             new_freqs.push_back(pow(5./4, state["circle" + to_string(i) + "_x"]) * pow(3./2, state["circle" + to_string(i) + "_y"]));
         }
-        int total_samples = 44100/VIDEO_FRAMERATE;
+        int total_samples = SAMPLERATE/FRAMERATE;
         vector<float> left;
         vector<float> right;
         scape.generate_audio(total_samples, left, right, new_freqs);

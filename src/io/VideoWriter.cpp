@@ -87,7 +87,7 @@ private:
 
         // We set the packet PTS and DTS taking in the account our FPS (second argument),
         // and the time base that our selected format uses (third argument).
-        av_packet_rescale_ts(&pkt, { 1, VIDEO_FRAMERATE }, videoStream->time_base);
+        av_packet_rescale_ts(&pkt, { 1, FRAMERATE }, videoStream->time_base);
 
         pkt.stream_index = videoStream->index;
 
@@ -129,7 +129,7 @@ public:
         videoCodecContext->width = VIDEO_WIDTH;
         videoCodecContext->height = VIDEO_HEIGHT;
         videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
-        videoCodecContext->time_base = videoStream->time_base = { 1, VIDEO_FRAMERATE };
+        videoCodecContext->time_base = videoStream->time_base = { 1, FRAMERATE };
         videoCodecContext->color_range = AVCOL_RANGE_JPEG;
         videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
@@ -211,7 +211,7 @@ public:
         outframe++;
 
         encode_and_write_frame(yuvpic);
-        video_seconds_so_far += 1./VIDEO_FRAMERATE;
+        video_seconds_so_far += 1./FRAMERATE;
     }
     ~VideoWriter() {
         //int pipefd[2];

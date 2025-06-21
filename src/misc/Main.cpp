@@ -13,7 +13,6 @@ static bool PRINT_TO_TERMINAL = true;
 #include <iostream>
 #include <signal.h>
 const string project_name = PROJECT_NAME_MACRO;
-const int VIDEO_FRAMERATE = 30;
 
 const int VIDEO_BACKGROUND_COLOR = 0xff0a0a1e; // Lambda Blue
 //const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
@@ -68,7 +67,7 @@ static ShtookaWriter SHTOOKA_WRITER;
 // (2) define a function "render_video" which uses those scenes to define the video timeline.
 
 int main() {
-    if (44100 % VIDEO_FRAMERATE != 0){
+    if (SAMPLERATE % FRAMERATE != 0){
         throw runtime_error("Video framerate must be divisible by audio sample rate.");
     }
 

@@ -30,6 +30,8 @@ fi
 PROJECT_NAME=$1
 VIDEO_WIDTH=$2
 VIDEO_HEIGHT=$3
+FRAMERATE=30
+SAMPLERATE=44100
 SMOKETEST=0
 if [ "$4" == "-s" ]; then
     SMOKETEST=1
@@ -63,7 +65,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DSMOKETEST="${SMOKETEST}"
+    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}" -DSMOKETEST="${SMOKETEST}"
 
     echo "go.sh: Running \`make -j12\`"
     # build the project

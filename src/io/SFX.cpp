@@ -71,8 +71,6 @@ public:
     void generate_audio(int total_samples, vector<float>& left, vector<float>& right, const vector<double>& new_frequencies) {
         if (new_frequencies.size() != frequencies.size()) throw runtime_error("ERROR: frequency counts do not match!");
 
-        const int sample_rate = 44100;
-
         // Reserve space for efficiency
         left.reserve(total_samples);
         right.reserve(total_samples);
@@ -87,7 +85,7 @@ public:
                 for (const SineWave& sw : fs.sine_waves) {
                     sample_value += sw.amplitude * sin(integrators[e] * sw.frequency);
                 }
-                integrators[e] += two_pi * lerp(frequencies[e], new_frequencies[e], w) / sample_rate;
+                integrators[e] += two_pi * lerp(frequencies[e], new_frequencies[e], w) / SAMPLERATE;
             }
 
             // Write the resulting sample value to both the left and right channels
