@@ -14,7 +14,7 @@ static bool PRINT_TO_TERMINAL = true;
 #include <signal.h>
 const string project_name = PROJECT_NAME_MACRO;
 
-const int VIDEO_BACKGROUND_COLOR = 0xff0a0a1e; // Lambda Blue
+const int VIDEO_BACKGROUND_COLOR = 0xff000020; // Lambda Blue
 //const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
 
 #include "../io/PathManager.cpp"

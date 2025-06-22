@@ -7,4 +7,5 @@
 #include "render_3d_points_lines.cu"
 #include "SelfCheck.cu"
 #include "SurfaceRenderer.cu"
+//#include "Conway.cu"
 

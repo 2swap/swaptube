@@ -10,23 +10,21 @@ using namespace std;
 class ColorScheme {
 private:
     list<unsigned int> colors;
+    vector<unsigned int> colors_vec;
+    int sz;
 public:
-    ColorScheme(list<unsigned int> c) : colors(c) {}
+    ColorScheme(list<unsigned int> c) : colors(c) {
+        for(const unsigned int& i : c) colors_vec.push_back(i);
+        sz = c.size();
+    }
+    int get_color(int idx){
+        return colors_vec[idx % sz];
+    }
     int get_color(){
         int color = colors.front();
         colors.pop_front();
         colors.push_back(color);
         return color;
-    }
-    ColorScheme(const string& hex_string) {
-        for (size_t i = 0; i < hex_string.size(); i += 6) {
-            string hex_color = hex_string.substr(i, 6);
-            unsigned int x;   
-            stringstream ss;
-            ss << hex << hex_color;
-            ss >> x;
-            colors.push_back(x | 0xff000000);
-        }
     }
 };
 

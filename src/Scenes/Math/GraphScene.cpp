@@ -30,7 +30,7 @@ class GraphScene : public ThreeDimensionScene {
 public:
     double curr_hash = 0;
     double next_hash = 0;
-    GraphScene(Graph* g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g), color_scheme(get_random_color_scheme()) {
+    GraphScene(Graph* g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g), color_scheme(list<unsigned int>{0x0079ff, 0x00dfa2, 0xf6fa70, 0xff0060}) {
         state_manager.set(unordered_map<string, string>{
             {"repel", "1"},
             {"attract", "1"},
@@ -60,7 +60,7 @@ public:
             if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
             add_point(Point(node_pos, node.color, 1, node.radius()));
             double so = node.splash_opacity();
-            if(so>0) add_point(Point(node_pos, color_scheme.get_color()|0xff000000, so, node.splash_radius()));
+            if(so>0) add_point(Point(node_pos, color_scheme.get_color(static_cast<int>(abs(p.first)*4)%4)|0xff000000, so, node.splash_radius()));
 
             for(const Edge& neighbor_edge : node.neighbors){
                 double neighbor_id = neighbor_edge.to;
