@@ -2,6 +2,7 @@
 #include "../DataObjects/KlotskiBoard.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Common/PauseScene.cpp"
+#include "../Scenes/Connect4/Connect4GraphScene.cpp"
 #include "../Scenes/Math/GraphScene.cpp"
 #include "../Scenes/Media/LoopAnimationScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
@@ -1894,7 +1895,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     gs->next_hash = 0;
     gs->state_manager.transition(MACRO, {{"d", "1"}});
     cs.stage_macroblock(CompositeBlock(FileBlock("In other words, this graph can be thought of not as a single unified topology,"), FileBlock("a single overarching framework of rules which govern the puzzle as a whole,")), 1);
-    double hash = gs->next_hash = whichboard.get_hash();
+    double hash = gs->next_hash = klotski_earring.get_hash();
     cs.render_microblock();
 
     cs.stage_macroblock(CompositeBlock(FileBlock("but rather a collection of local sub-puzzles"), FileBlock("which have their own logic and form,")), 1*4);
@@ -1941,9 +1942,28 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.render_microblock();
 
     // TODO C4 Graph
+    cs.shift_subscene("gs", -.25, 0);
     cs.stage_macroblock(FileBlock("And this seems like a trend among graph-based emergent structures...!"), 1);
     cs.render_microblock();
 
+    {
+        Graph fg;
+        shared_ptr<C4GraphScene> fgs = make_shared<C4GraphScene>(&fg, false, "", TRIM_STEADY_STATES, .5, 1);
+
+        StateSet c4_default_graph_state{
+            {"q1", "1"},
+            {"qi", "<t> .2 * cos"},
+            {"qj", "<t> .314 * sin"},
+            {"qk", "0"}, // Camera orientation quaternion
+            {"decay",".6"},
+            {"dimensions","3.98"},
+            {"surfaces_opacity","0"},
+            {"points_opacity","0"},
+            {"physics_multiplier","1000"}, // How many times to iterate the graph-spreader
+        };
+        fgs->state_manager.set(c4_default_graph_state);
+        cs.add_scene_fade_in(fgs, "fgs", .75, .5);
+    }
     cs.stage_macroblock(FileBlock("Stay tuned to see how strategy board game solutions take that same form."), 1);
     cs.render_microblock();
 

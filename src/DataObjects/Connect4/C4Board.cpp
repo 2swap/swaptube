@@ -9,9 +9,9 @@
 #include <vector>
 #include <algorithm>
 
-Graph<C4Board>* graph_to_check_if_points_are_in = NULL;
+Graph* graph_to_check_if_points_are_in = NULL;
 
-C4Board::C4Board(const C4Board& other) {
+/*C4Board::C4Board(const C4Board& other) {
     // Copy the representation
     representation = other.representation;
 
@@ -20,16 +20,16 @@ C4Board::C4Board(const C4Board& other) {
     yellow_bitboard = other.yellow_bitboard;
 
     steadystate = other.steadystate;
-}
+}*/
 
 C4Board::C4Board() { }
 
-C4Board::C4Board(string representation) {
-    fill_board_from_string(representation);
+C4Board::C4Board(const string& rep) {
+    fill_board_from_string(rep);
 }
 
-C4Board::C4Board(string representation, shared_ptr<SteadyState> ss) : steadystate(ss) {
-    fill_board_from_string(representation);
+C4Board::C4Board(const string& rep, shared_ptr<SteadyState> ss) : steadystate(ss) {
+    fill_board_from_string(rep);
 }
 
 int C4Board::piece_code_at(int x, int y) const {
@@ -105,7 +105,12 @@ bool C4Board::is_solution() {
     return winner == RED || winner == YELLOW;
 }
 
-double C4Board::board_specific_hash() const {
+double C4Board::type_specific_reverse_hash() const {
+    return C4Board(reverse_representation()).get_hash();
+}
+
+
+double C4Board::type_specific_hash() const {
     double a = 1;
     double hash_in_progress = 0;
     for (int y = 0; y < C4_HEIGHT; y++) {
@@ -115,12 +120,6 @@ double C4Board::board_specific_hash() const {
         }
     }
     return hash_in_progress;
-}
-
-double C4Board::reverse_hash(){
-    if(reverse_hash_do_not_use == 0)
-        reverse_hash_do_not_use = C4Board(reverse_representation()).get_hash();
-    return reverse_hash_do_not_use;
 }
 
 void C4Board::fill_board_from_string(const string& rep) {
@@ -135,11 +134,6 @@ void C4Board::play_piece(int piece){
         print();
         throw runtime_error("Attempted playing a piece in an illegal column. Representation: " + representation + ", piece: " + to_string(piece));
     }
-    if(hash != 0) {
-        print();
-        throw runtime_error("Illegal c4 board hash manipulation " + representation + " " + to_string(piece));
-    }
-
     if(piece > 0){
         if(!is_legal(piece)) {
             print();
@@ -151,12 +145,11 @@ void C4Board::play_piece(int piece){
         else yellow_bitboard += p;
     }
     representation+=to_string(piece);
+    reset_hashes();
 }
 
 C4Board C4Board::child(int piece) const{
     C4Board new_board(*this);
-    new_board.hash = 0;
-
     new_board.play_piece(piece);
     return new_board;
 }
@@ -164,7 +157,7 @@ C4Board C4Board::child(int piece) const{
 C4Result C4Board::who_is_winning(int& work, bool verbose) {
 
     string winner;
-    if (fhourstonesCache.GetEntryIfExists(get_hash(), reverse_hash(), winner)) {
+    if (fhourstonesCache.GetEntryIfExists(get_hash(), get_reverse_hash(), winner)) {
         if (verbose) cout << "Using cached result..." << endl;
 
         // Convert winner string to C4Result
@@ -216,13 +209,13 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     }
 
     // Store result in persistent cache
-    fhourstonesCache.AddOrUpdateEntry(get_hash(), reverse_hash(), representation, winner);
+    fhourstonesCache.AddOrUpdateEntry(get_hash(), get_reverse_hash(), representation, winner);
 
     return gameResult;
 }
 
-void C4Board::add_all_winning_fhourstones(unordered_set<C4Board*>& neighbors) {
-    vector<C4Board*> children;
+void C4Board::add_all_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
+    vector<GenericBoard*> children;
 
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
@@ -252,7 +245,7 @@ int C4Board::get_blocking_move() const{
     return child(0).get_instant_win();
 }
 
-int C4Board::get_best_winning_fhourstones() {
+int C4Board::get_best_winning_fhourstones() const {
     int lowest_work = INT_MAX;
     int lowest_work_move = -1;
 
@@ -342,7 +335,7 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
             if (!childi.is_legal(j)) { if (verbose) cout << "." << flush; continue; }
             C4Board grandchild = childi.child(j); // Yellow plays
             int nou_grandchild = 0;
-            bool node_in_graph = graph_to_check_if_points_are_in->node_exists(grandchild.get_hash()) || graph_to_check_if_points_are_in->node_exists(grandchild.reverse_hash());
+            bool node_in_graph = graph_to_check_if_points_are_in->node_exists(grandchild.get_hash()) || graph_to_check_if_points_are_in->node_exists(grandchild.get_reverse_hash());
             bool no_steadystate_yet = true;
             if(depth != 2) no_steadystate_yet = find_steady_state(grandchild.representation) == nullptr;
             if(!node_in_graph && no_steadystate_yet) {
@@ -399,7 +392,7 @@ int C4Board::get_human_winning_fhourstones() {
     if(SKIP_UNFOUND_STEADYSTATES || representation.size() < 5){
         int move = -1;
         string ss = "";
-        bool found = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash(), move, ss);
+        bool found = movecache.GetSuggestedMoveIfExists(get_hash(), get_reverse_hash(), move, ss);
         if(ss != "") throw runtime_error("Cached steady state found in ghwf, but should have been caught before entry");
         if(move > 0) return move;
     }
@@ -448,7 +441,7 @@ int C4Board::get_human_winning_fhourstones() {
     {
         int move = -1;
         string ss = "";
-        int ret = movecache.GetSuggestedMoveIfExists(get_hash(), reverse_hash(), move, ss);
+        int ret = movecache.GetSuggestedMoveIfExists(get_hash(), get_reverse_hash(), move, ss);
         if(move > 0) return move;
     }
 
@@ -484,19 +477,19 @@ int C4Board::get_human_winning_fhourstones() {
     return choice;
 }
 
-void C4Board::insert_sorted_children_by_min_hash(vector<C4Board*>& children, unordered_set<C4Board*>& neighbors) {
+void C4Board::insert_sorted_children_by_min_hash(vector<GenericBoard*>& children, unordered_set<GenericBoard*>& neighbors) const {
     // Temporary vector to store pairs of C4Board* and their minimum hash values
-    vector<pair<C4Board*, size_t>> children_with_hashes;
+    vector<pair<GenericBoard*, size_t>> children_with_hashes;
 
     // Populate the vector with each child board and its minimum hash
-    for (C4Board* child : children) {
-        size_t hash_value = min(child->get_hash(), child->reverse_hash());
+    for (GenericBoard* child : children) {
+        size_t hash_value = min(child->get_hash(), child->get_reverse_hash());
         children_with_hashes.push_back({child, hash_value});
     }
 
     // Sort the vector based on the minimum hash value
     sort(children_with_hashes.begin(), children_with_hashes.end(),
-              [](const pair<C4Board*, size_t>& a, const pair<C4Board*, size_t>& b) {
+              [](const pair<GenericBoard*, size_t>& a, const pair<GenericBoard*, size_t>& b) {
                   return a.second < b.second;
               });
 
@@ -506,8 +499,8 @@ void C4Board::insert_sorted_children_by_min_hash(vector<C4Board*>& children, uno
     }
 }
 
-void C4Board::add_all_legal_children(unordered_set<C4Board*>& neighbors) {
-    vector<C4Board*> children;
+void C4Board::add_all_legal_children(unordered_set<GenericBoard*>& neighbors) const {
+    vector<GenericBoard*> children;
 
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
@@ -520,8 +513,8 @@ void C4Board::add_all_legal_children(unordered_set<C4Board*>& neighbors) {
     insert_sorted_children_by_min_hash(children, neighbors);
 }
 
-void C4Board::add_all_good_children(unordered_set<C4Board*>& neighbors) {
-    vector<C4Board*> children;
+void C4Board::add_all_good_children(unordered_set<GenericBoard*>& neighbors) const {
+    vector<GenericBoard*> children;
 
     for (int i = 1; i <= C4_WIDTH; i++) {
         if (is_legal(i)) {
@@ -557,7 +550,7 @@ json C4Board::get_data() const {
     return data;
 }
 
-void C4Board::add_only_child_steady_state(unordered_set<C4Board*>& neighbors){
+void C4Board::add_only_child_steady_state(unordered_set<GenericBoard*>& neighbors) const {
     if(steadystate == nullptr)
         throw runtime_error("Querying a null steadystate!");
     int x = steadystate->query_steady_state(*this);
@@ -565,8 +558,8 @@ void C4Board::add_only_child_steady_state(unordered_set<C4Board*>& neighbors){
     neighbors.insert(new C4Board(moved));
 }
 
-unordered_set<C4Board*> C4Board::get_children(){
-    unordered_set<C4Board*> neighbors;
+unordered_set<GenericBoard*> C4Board::get_children(){
+    unordered_set<GenericBoard*> neighbors;
 
     if (is_solution()) {
         return neighbors;
@@ -598,7 +591,7 @@ unordered_set<C4Board*> C4Board::get_children(){
                 }
                 int hwf = get_human_winning_fhourstones();
                 if(hwf == -1) break;
-                else movecache.AddOrUpdateEntry(get_hash(), reverse_hash(), representation, hwf);
+                else movecache.AddOrUpdateEntry(get_hash(), get_reverse_hash(), representation, hwf);
                 C4Board moved = child(hwf);
                 neighbors.insert(new C4Board(moved));
             } else { // yellow's move
@@ -609,9 +602,9 @@ unordered_set<C4Board*> C4Board::get_children(){
     return neighbors;
 }
 
-unordered_set<double> C4Board::get_children_hashes(){
+unordered_set<double> C4Board::get_children_hashes() {
     if(!children_hashes_initialized) {
-        unordered_set<C4Board*> children = get_children();
+        unordered_set<GenericBoard*> children = get_children();
         for (const auto& child : children) {
             children_hashes.insert(child->get_hash());
         }

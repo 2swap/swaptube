@@ -597,4 +597,24 @@ public:
 
         return neighborhood;
     }
+
+    // Added function to make graph bidirectional by adding reverse edges
+    void make_bidirectional() {
+        // Collect all edges first to avoid modifying the container while iterating
+        vector<pair<double, double>> edges_to_add;
+        for (const auto& pair : nodes) {
+            double from = pair.first;
+            const EdgeSet& neighbors = pair.second.neighbors;
+            for (const Edge& edge : neighbors) {
+                double to = edge.to;
+                if (!does_edge_exist(to, from)) {
+                    edges_to_add.emplace_back(to, from);
+                }
+            }
+        }
+        // Add reverse edges
+        for (const auto& edge : edges_to_add) {
+            add_directed_edge(edge.first, edge.second);
+        }
+    }
 };

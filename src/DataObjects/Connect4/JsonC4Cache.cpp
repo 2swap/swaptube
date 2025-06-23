@@ -109,10 +109,10 @@ public:
             cout << rev_move << endl;
             cout << rev_ss << endl;
             cout << "======" << endl;
-                 if(ret_ss == "" && rev_ss == "" && ret_move != 8-rev_move) {
-                     delete_entry(reverse_hash);
-                     delete_entry(hash);
-                 }
+            if(ret_ss == "" && rev_ss == "" && ret_move != 8-rev_move) {
+                delete_entry(reverse_hash);
+                delete_entry(hash);
+            }
             else if(ret_ss == "" && rev_ss == "" && ret_move == 8-rev_move) delete_entry(reverse_hash);
             else if(ret_ss != "" && rev_ss != "") delete_entry(reverse_hash);
             else if(ret_ss == "" && rev_ss != "") delete_entry(hash);

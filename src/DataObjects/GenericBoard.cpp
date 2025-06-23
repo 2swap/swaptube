@@ -10,6 +10,7 @@
 class GenericBoard {
 public:
     GenericBoard(const string& s) : representation(s) {}
+    GenericBoard() : representation("") {}
     virtual unordered_set<GenericBoard*> get_children() = 0;
     unordered_set<double> get_children_hashes() {
         unordered_set<GenericBoard*> kids = get_children();
@@ -21,6 +22,7 @@ public:
         return ret;
     }
 
+    void reset_hashes() { hash = 0; reverse_hash = 0; reverse_hash_2 = 0; }
     double get_hash() {
         if(hash == 0)
             hash = type_specific_hash();

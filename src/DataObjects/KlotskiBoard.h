@@ -34,8 +34,8 @@ public:
     shared_ptr<Scene> make_scene() const override;
     bool is_solution() override;
     double type_specific_hash() override;
-    double type_specific_reverse_hash();
-    double type_specific_reverse_hash_2();
+    double type_specific_reverse_hash() override;
+    double type_specific_reverse_hash_2() override;
 
     void print();
     void compute_letters();

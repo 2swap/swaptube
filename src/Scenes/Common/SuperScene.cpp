@@ -77,9 +77,7 @@ protected:
     }
 
     void change_data() override {
-        for(const auto& kv : subscenes){
-            kv.second->update();
-        }
+        for(const auto& kv : subscenes) kv.second->update();
     }
 
     bool check_if_data_changed() const override {

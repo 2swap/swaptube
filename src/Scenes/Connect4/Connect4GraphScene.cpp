@@ -4,10 +4,10 @@
 #include "Connect4Scene.cpp"
 #include "../../DataObjects/Connect4/C4Board.cpp"
 
-class C4GraphScene : public GraphScene<C4Board> {
+class C4GraphScene : public GraphScene {
 public:
-    C4GraphScene(Graph<C4Board>* g, string rep, C4BranchMode mode, const double width = 1, const double height = 1)
-    : GraphScene(g, width, height), root_node_representation(rep) {
+    C4GraphScene(Graph* g, bool surfaces_on, string rep, C4BranchMode mode, const double width = 1, const double height = 1)
+    : GraphScene(g, surfaces_on, width, height), root_node_representation(rep) {
         c4_branch_mode = mode;
 
         if(mode == TRIM_STEADY_STATES){
@@ -26,12 +26,13 @@ public:
         graph->add_to_stack(board);
 
         if(mode != MANUAL){
-            graph->expand_graph_completely();
+            graph->expand();
+            graph->make_bidirectional();
         }
         cout << "GRAPH SIZE: " << graph->size() << endl;
     }
 
-    int get_edge_color(const Node<C4Board>& node, const Node<C4Board>& neighbor){
+    int get_edge_color(const Node& node, const Node& neighbor){
         if(!color_edges) return OPAQUE_WHITE;
         return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
     }

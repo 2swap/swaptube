@@ -329,7 +329,7 @@ bool SteadyState::validate(C4Board b) {
     unordered_set<double> wins_cache;
     bool validated = validate_recursive_call(b, wins_cache);
     if(validated){
-        movecache.AddOrUpdateEntry(b.get_hash(), b.reverse_hash(), b.representation, to_string());
+        movecache.AddOrUpdateEntry(b.get_hash(), b.get_reverse_hash(), b.representation, to_string());
         //cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
     }
     return validated;
@@ -405,7 +405,7 @@ shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
     {
         int move = -1;
         string ss = "";
-        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.reverse_hash(), move, ss);
+        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.get_reverse_hash(), move, ss);
         if(ss.size() == C4_WIDTH*C4_HEIGHT){
             return make_shared<SteadyState>(make_steady_state_from_string(ss));
         }
@@ -416,7 +416,7 @@ shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
     {
         int move = -1;
         string ss = "";
-        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.reverse_hash(), move, ss);
+        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.get_reverse_hash(), move, ss);
         if(ss.size() == C4_WIDTH*C4_HEIGHT){
             return make_shared<SteadyState>(make_steady_state_from_string(ss));
         }

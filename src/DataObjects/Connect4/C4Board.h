@@ -31,7 +31,6 @@ class C4Board : public GenericBoard {
 public:
     int BOARD_WIDTH = C4_WIDTH;
     int BOARD_HEIGHT = C4_HEIGHT;
-    string representation;
     Bitboard red_bitboard = 0ul, yellow_bitboard = 0ul;
     string game_name = "c4";
     unordered_set<double> children_hashes;
@@ -40,9 +39,9 @@ public:
     bool has_steady_state = false;
     shared_ptr<SteadyState> steadystate;
 
-    C4Board(const C4Board& other);
-    C4Board(string representation);
-    C4Board(string representation, shared_ptr<SteadyState> ss);
+    //C4Board(const C4Board& other);
+    C4Board(const string& rep);
+    C4Board(const string& rep, shared_ptr<SteadyState> ss);
     C4Board();
     int piece_code_at(int x, int y) const;
     string reverse_representation() const;
@@ -53,7 +52,7 @@ public:
     int get_instant_win() const;
     vector<int> get_winning_moves() const;
     int get_blocking_move() const;
-    void print() const override;
+    void print() const;
     int random_legal_move() const;
     bool is_legal(int x) const;
     bool search_for_steady_states(bool verbose) const;
@@ -62,24 +61,23 @@ public:
     C4Result who_won() const;
     bool is_reds_turn() const;
     bool is_solution() override;
-    double board_specific_hash() const override;
+    double type_specific_hash() const override;
+    double type_specific_reverse_hash() const override;
     void fill_board_from_string(const string& rep);
     C4Board* remove_piece();
     void play_piece(int piece);
     C4Board child(int piece) const;
     C4Result who_is_winning(int& work, bool verbose = false);
     int get_human_winning_fhourstones();
-    int get_best_winning_fhourstones();
-    void add_best_winning_fhourstones(unordered_set<C4Board*>& neighbors);
-    void add_all_winning_fhourstones(unordered_set<C4Board*>& neighbors);
-    void add_all_legal_children(unordered_set<C4Board*>& neighbors);
-    void add_all_good_children(unordered_set<C4Board*>& neighbors);
-    void add_only_child_steady_state(unordered_set<C4Board*>& neighbors);
-    void insert_sorted_children_by_min_hash(vector<C4Board*>& children, unordered_set<C4Board*>& neighbors);
-    unordered_set<C4Board*> get_children();
+    int get_best_winning_fhourstones() const;
+    void add_best_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const;
+    void add_all_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const;
+    void add_all_legal_children(unordered_set<GenericBoard*>& neighbors) const;
+    void add_all_good_children(unordered_set<GenericBoard*>& neighbors) const;
+    void add_only_child_steady_state(unordered_set<GenericBoard*>& neighbors) const;
+    void insert_sorted_children_by_min_hash(vector<GenericBoard*>& children, unordered_set<GenericBoard*>& neighbors) const;
+    unordered_set<GenericBoard*> get_children();
     unordered_set<double> get_children_hashes();
-private:
-    double reverse_hash_do_not_use = 0;
 };
 
 void fhourstones_tests(){
