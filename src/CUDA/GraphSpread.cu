@@ -275,6 +275,7 @@ __global__ void mirror_kernel(glm::vec4* positions, glm::vec4* velocities, const
             if(index >= 0 && index != i){
                 glm::vec4 mirror = positions[index];
                 mirror.y *= -1;
+                delta.x = 0;
                 delta += mirror - pos_i;
             }
         }
