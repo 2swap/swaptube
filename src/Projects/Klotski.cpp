@@ -1374,8 +1374,8 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     int col_left = 0xff0088ff;
     int col_right = 0xffff0000;
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){ p->second.color = col_left; }
-    unordered_set<double> hashes = g.get_neighborhood(rightboard, 60);
-    unordered_set<double> hashes2 = g.get_neighborhood(rightboard2, 60);
+    unordered_set<double> hashes = g.get_neighborhood(rightboard, 70);
+    unordered_set<double> hashes2 = g.get_neighborhood(rightboard2, 70);
     for(double d : hashes){ g.nodes.find(d)->second.color = col_right; }
     for(double d : hashes2){ g.nodes.find(d)->second.color = col_right; }
     gs->next_hash = sun.get_hash();
@@ -1941,8 +1941,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     gs->next_hash = 0;
     cs.render_microblock();
 
-    // TODO C4 Graph
-    cs.shift_subscene("gs", -.25, 0);
+    cs.slide_subscene(MICRO, "gs", -.25, 0);
     cs.stage_macroblock(FileBlock("And this seems like a trend among graph-based emergent structures...!"), 1);
     cs.render_microblock();
 
@@ -1962,9 +1961,10 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
             {"physics_multiplier","1000"}, // How many times to iterate the graph-spreader
         };
         fgs->state_manager.set(c4_default_graph_state);
-        cs.add_scene_fade_in(fgs, "fgs", .75, .5);
+        cs.add_scene_fade_in(MICRO, fgs, "fgs", .75, .5);
     }
-    cs.stage_macroblock(FileBlock("Stay tuned to see how strategy board game solutions take that same form."), 1);
+    cs.stage_macroblock(FileBlock("Stay tuned to see how strategy board game solutions take that same form."), 2);
+    cs.render_microblock();
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1.5), 2);

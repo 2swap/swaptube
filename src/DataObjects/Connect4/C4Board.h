@@ -61,8 +61,8 @@ public:
     C4Result who_won() const;
     bool is_reds_turn() const;
     bool is_solution() override;
-    double type_specific_hash() const override;
-    double type_specific_reverse_hash() const override;
+    double type_specific_hash() override;
+    double type_specific_reverse_hash() override;
     void fill_board_from_string(const string& rep);
     C4Board* remove_piece();
     void play_piece(int piece);

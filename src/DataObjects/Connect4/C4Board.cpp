@@ -105,12 +105,12 @@ bool C4Board::is_solution() {
     return winner == RED || winner == YELLOW;
 }
 
-double C4Board::type_specific_reverse_hash() const {
+double C4Board::type_specific_reverse_hash() {
     return C4Board(reverse_representation()).get_hash();
 }
 
 
-double C4Board::type_specific_hash() const {
+double C4Board::type_specific_hash() {
     double a = 1;
     double hash_in_progress = 0;
     for (int y = 0; y < C4_HEIGHT; y++) {
