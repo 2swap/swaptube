@@ -91,6 +91,7 @@ def main():
                 'ffmpeg', '-f', 'alsa', '-ar', '44100', '-i', selected_device, 
                 os.path.join(PROJECT_DIR, current_filename)
             ]
+            #print(ffmpeg_cmd)
 
             ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 

@@ -18,7 +18,7 @@ void promo1(){
     }
 
     Mp4Scene ms = Mp4Scene(vector<string>{"Logo Animation_mp4", "Sequence_HowAIworks_250616", "Sequence_Circuits_2506", "Logic_Sequence_250616"});
-    ms.stage_macroblock(CompositeBlock(CompositeBlock(FileBlock("That's why I use Brilliant's lessons to learn more about Math, Programming, Physics, and all the other tools I use when making my videos."), FileBlock("Their games and clear examples make all those hard subjects infinitely more digestible.")), CompositeBlock(FileBlock("Brilliant helps you get smarter every day, with thousands of interactive lessons in math, science, programming, data analysis, and AI."), FileBlock("These topics don't have to be intimidating- uncover their mystery with Brilliant!"))), 1);
+    ms.stage_macroblock(CompositeBlock(CompositeBlock(FileBlock("That's why Brilliant's lessons are so effective."), FileBlock("Their games and clear examples make all those hard subjects infinitely more digestible.")), CompositeBlock(FileBlock("Learn to think like a programmer by breaking down complex problems into manageable chunks of code, or dive right into Python and start building programs on day one."), CompositeBlock(FileBlock("Brilliant helps you get smarter every day, with thousands of interactive lessons in math, science, programming, data analysis, and AI."), FileBlock("These topics don't have to be intimidating- uncover their mystery with Brilliant!")))), 1);
     ms.render_microblock();
 
     {

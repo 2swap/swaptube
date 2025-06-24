@@ -387,6 +387,7 @@ void part2() {
     {
         // Create new GraphScene for manifold_3d on the right side of the screen and fade it in while expanding the graph completely 
         cs.stage_macroblock(FileBlock("Or maybe it's a total mess!"), 100);
+        // TODO the mess is too messy
         Graph g3d;
         g3d.add_to_stack(new KlotskiBoard(sun));
         auto gs3d_ptr = make_shared<GraphScene>(&g3d, false, .5, 1);
@@ -1430,6 +1431,9 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.stage_macroblock(FileBlock("unless we get lucky, we're probably gonna crash into this dense pit."), 1);
     cs.render_microblock();
 
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
     gs->state_manager.transition(MACRO, {{"lines_opacity", ".05"}});
     perform_shortest_path_with_graph(cs, gs, ks, sun, FileBlock("Going back to the start,"));
 
@@ -1599,7 +1603,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
 
     gs->state_manager.set({{"highlight_point_opacity", "0"}});
     gs->next_hash = klotski_solution.get_hash();
-    gs->state_manager.transition(MICRO, {{"d", ".8"}});
+    gs->state_manager.transition(MICRO, {{"d", ".6"}});
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
@@ -1870,6 +1874,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         for(int i = 0; i < strings.size(); i++) {
             cs.slide_subscene(MICRO, "tks" + to_string(i), -1, 0);
         }
+        //TODO this slide is yuck
         cs.render_microblock();
 
         cs.stage_macroblock(SilenceBlock(1), 1);
@@ -1882,6 +1887,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         gs->state_manager.transition(MACRO, {{"highlight_point_opacity", "1"}});
         perform_shortest_path_with_graph(cs, gs, center, KlotskiBoard(4, 5, "afgcabbcebbheddhi..j", false), FileBlock("but if we align the holes just right,"));
         perform_shortest_path_with_graph(cs, gs, center, KlotskiBoard(4, 5, "acfhacgh.bbeibbeddj.", false), FileBlock("we can break out into a different substructure with its own rules and organization!"));
+        // TODO this should show the amalgam
 
         cs.fade_subscene(MACRO, "center", 0);
         cs.stage_macroblock(SilenceBlock(3), 1);
@@ -1945,7 +1951,8 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.stage_macroblock(FileBlock("And this seems like a trend among graph-based emergent structures...!"), 1);
     cs.render_microblock();
 
-    {
+    // TODO uncomment on final
+    if(false){
         Graph fg;
         shared_ptr<C4GraphScene> fgs = make_shared<C4GraphScene>(&fg, false, "", TRIM_STEADY_STATES, .5, 1);
 
