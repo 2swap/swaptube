@@ -5,29 +5,24 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
-enum complex_plot_mode{
-    ROOTS,
-    COEFFICIENTS
-};
-
 using namespace Eigen;
 
 class ComplexPlotScene : public Scene {
 public:
     ComplexPlotScene(const double width = 1, const double height = 1) : Scene(width, height) {}
 
-    std::pair<int, int> coordinate_to_pixel(std::complex<double> coordinate){
-        return std::make_pair(coordinate.real()/pixel_width + w/2., coordinate.imag()/pixel_width + h/2.);
+    pair<int, int> coordinate_to_pixel(complex<double> coordinate){
+        return make_pair(coordinate.real()/pixel_width + w/2., coordinate.imag()/pixel_width + h/2.);
     }
 
-    std::complex<double> pixel_to_coordinate(std::pair<int, int> pixel){
-        return std::complex<double>((pixel.first - w/2.) * pixel_width, (pixel.second - h/2.) * pixel_width);
+    complex<double> pixel_to_coordinate(pair<int, int> pixel){
+        return complex<double>((pixel.first - w/2.) * pixel_width, (pixel.second - h/2.) * pixel_width);
     }
 
-    int complex_to_color(const std::complex<double>& c) {
-        float hue = std::arg(c) * 180 / M_PI + 180;  // Convert [-π, π] to [0, 1]
+    int complex_to_color(const complex<double>& c) {
+        float hue = arg(c) * 180 / M_PI + 180;  // Convert [-π, π] to [0, 1]
         float saturation = 1.0f;
-        float value = (2/M_PI) * atan(std::abs(c));
+        float value = (2/M_PI) * atan(abs(c));
 
         int r, g, b;
         hsv2rgb(hue, saturation, value, r, g, b);
@@ -35,18 +30,18 @@ public:
         return rgb_to_col(r, g, b) | 0xff000000;
     }
 
-    std::complex<double> evaluate_polynomial_given_coefficients(const std::vector<std::complex<double>>& coefficients, const std::complex<double>& point) {
-        std::complex<double> result = 0.0;
-        std::complex<double> power_of_point = 1.0;
+    complex<double> evaluate_polynomial_given_coefficients(const vector<complex<double>>& coefficients, const complex<double>& point) {
+        complex<double> result = 0.0;
+        complex<double> power_of_point = 1.0;
         for (const auto& coefficient : coefficients) {
             result += coefficient * power_of_point;
             power_of_point *= point;
         }
         return result;
     }
-    std::complex<double> polynomial(const complex<double>& c, const vector<complex<double>>& roots){
-        std::complex<double> out(1, 0);
-        for(std::complex<double> point : roots){
+    complex<double> polynomial(const complex<double>& c, const vector<complex<double>>& roots){
+        complex<double> out(1, 0);
+        for(complex<double> point : roots){
             out *= c - point;
         }
         return out;
@@ -89,7 +84,7 @@ public:
             vector<complex<double>> coefficients;
             for(int point_index = 0; true; point_index++) {
                 if(state_manager.contains("coefficient_r" + to_string(point_index))){
-                    std::complex<double> coeff(state["coefficient_r" + to_string(point_index)],
+                    complex<double> coeff(state["coefficient_r" + to_string(point_index)],
                                                state["coefficient_i" + to_string(point_index)]);
                     coefficients.push_back(coeff);
                 }
@@ -99,11 +94,11 @@ public:
         }
         
         // The initial polynomial P(z) = 1
-        std::vector<std::complex<double>> current_poly = {1.0};
+        vector<complex<double>> current_poly = {1.0};
 
         for (const auto& root : get_roots()) {
             // Each new polynomial will have one degree higher than the previous
-            std::vector<std::complex<double>> new_poly(current_poly.size() + 1);
+            vector<complex<double>> new_poly(current_poly.size() + 1);
 
             // Multiply the current polynomial by (z - root)
             for (size_t i = 0; i < current_poly.size(); ++i) {
@@ -117,12 +112,12 @@ public:
     }
 
     // Function to compute the derivative of a polynomial given its coefficients
-    std::vector<std::complex<double>> compute_derivative(const std::vector<std::complex<double>>& coefficients) {
-        std::vector<std::complex<double>> derivative;
+    vector<complex<double>> compute_derivative(const vector<complex<double>>& coefficients) {
+        vector<complex<double>> derivative;
         int n = coefficients.size() - 1; // Degree of the polynomial
 
         for (int i = 1; i <= n; ++i) {
-            derivative.push_back(coefficients[i] * std::complex<double>(i, 0));
+            derivative.push_back(coefficients[i] * complex<double>(i, 0));
         }
 
         return derivative;
@@ -143,7 +138,7 @@ public:
         if(state_manager.contains("root_r0")){
             for(int point_index = 0; true; point_index++) {
                 if(state_manager.contains("root_r" + to_string(point_index))){
-                    std::complex<double> root(state["root_r" + to_string(point_index)],
+                    complex<double> root(state["root_r" + to_string(point_index)],
                                                state["root_i" + to_string(point_index)]);
                     roots.push_back(root);
                 }
@@ -198,17 +193,17 @@ public:
     }
 
     void render_axes(){
-        std::pair<int, int> i_pos = coordinate_to_pixel(std::complex<double>(0,10));
-        std::pair<int, int> i_neg = coordinate_to_pixel(std::complex<double>(0,-10));
-        std::pair<int, int> r_pos = coordinate_to_pixel(std::complex<double>(10,0));
-        std::pair<int, int> r_neg = coordinate_to_pixel(std::complex<double>(-10,0));
+        pair<int, int> i_pos = coordinate_to_pixel(complex<double>(0,10));
+        pair<int, int> i_neg = coordinate_to_pixel(complex<double>(0,-10));
+        pair<int, int> r_pos = coordinate_to_pixel(complex<double>(10,0));
+        pair<int, int> r_neg = coordinate_to_pixel(complex<double>(-10,0));
         pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff222222, 1);
         pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff222222, 1);
         for(int i = -9; i < 10; i++){
-            std::pair<int, int> i_pos = coordinate_to_pixel(std::complex<double>(i,.1));
-            std::pair<int, int> i_neg = coordinate_to_pixel(std::complex<double>(i,-.1));
-            std::pair<int, int> r_pos = coordinate_to_pixel(std::complex<double>(.1,i));
-            std::pair<int, int> r_neg = coordinate_to_pixel(std::complex<double>(-.1,i));
+            pair<int, int> i_pos = coordinate_to_pixel(complex<double>(i,.1));
+            pair<int, int> i_neg = coordinate_to_pixel(complex<double>(i,-.1));
+            pair<int, int> r_pos = coordinate_to_pixel(complex<double>(.1,i));
+            pair<int, int> r_neg = coordinate_to_pixel(complex<double>(-.1,i));
             pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff222222, 1);
             pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff222222, 1);
         }
@@ -222,8 +217,8 @@ public:
             }
         }
         for(int i = 0; i < roots.size(); i++){
-            const std::complex<double> point = roots[i];
-            const std::pair<int, int> pixel = coordinate_to_pixel(point);
+            const complex<double> point = roots[i];
+            const pair<int, int> pixel = coordinate_to_pixel(point);
             // add telemetry to the state_manager only if the roots are the inputs. Ordering is not known.
             if(state_manager.contains("root_r0")){
                 state_manager.set_special("root_r"+to_string(i)+"_pixel", pixel.first);
@@ -236,8 +231,8 @@ public:
     void render_coefficient_mode(const vector<complex<double>>& coefficients){
         pix.fill(OPAQUE_BLACK);
         for(int i = 0; i < coefficients.size(); i++){
-            const std::complex<double> point = coefficients[i];
-            const std::pair<int, int> pixel = coordinate_to_pixel(point);
+            const complex<double> point = coefficients[i];
+            const pair<int, int> pixel = coordinate_to_pixel(point);
             state_manager.set_special("coefficient_r"+to_string(i)+"_pixel", pixel.first);
             state_manager.set_special("coefficient_i"+to_string(i)+"_pixel", pixel.second);
             render_point(pixel);
@@ -259,5 +254,4 @@ public:
 
 private:
     double pixel_width = 0.01;
-    complex_plot_mode mode = ROOTS;
 };

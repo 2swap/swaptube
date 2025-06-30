@@ -3,40 +3,6 @@
 #include "../Scenes/Media/Mp4Scene.cpp"
 #include "../Scenes/Media/PngScene.cpp"
 
-void promo1(){
-    {
-        CompositeScene cs;
-        shared_ptr<Mp4Scene> ms = make_shared<Mp4Scene>(vector<string>{"250423_Thinking in Code_Sequence", "Sequence_Calc_250616"});
-        cs.stage_macroblock(CompositeBlock(FileBlock("I love using Computer Science to shine a fresh light on systems we otherwise wouldn't think twice about."), FileBlock("Complicated topics- slidy puzzles and programming alike, when viewed from the right perspective, can become much more clear.")), 5);
-        cs.add_scene(ms, "ms");
-        cs.render_microblock();
-        cs.render_microblock();
-        cs.render_microblock();
-        cs.render_microblock();
-        cs.fade_all_subscenes(MICRO, 0);
-        cs.render_microblock();
-    }
-
-    Mp4Scene ms = Mp4Scene(vector<string>{"Logo Animation_mp4", "Logic_Sequence_250616", "Sequence_HowAIworks_250616", "Sequence_Circuits_2506"});
-    ms.stage_macroblock(CompositeBlock(CompositeBlock(FileBlock("That's why Brilliant's lessons are so effective."), FileBlock("Their games and clear examples make all those hard subjects infinitely more digestible.")), CompositeBlock(FileBlock("Learn to think like a programmer by breaking down complex problems into manageable chunks of code, or dive right into Python and start building programs on day one."), CompositeBlock(FileBlock("Brilliant helps you get smarter every day, with thousands of interactive lessons in math, science, programming, data analysis, and AI."), FileBlock("These topics don't have to be intimidating- uncover their mystery with Brilliant!")))), 1);
-    ms.render_microblock();
-
-    {
-        CompositeScene cs;
-        shared_ptr<Mp4Scene> csms = make_shared<Mp4Scene>("main");
-        cs.add_scene(csms, "csms");
-        shared_ptr<PngScene> ps = make_shared<PngScene>("QR Code - 2swap", .4, .4);
-        cs.add_scene(ps, "ps", -.25, .7);
-        cs.stage_macroblock(FileBlock("To try everything Brilliant has to offer for free for 30 days and get 20% off an annual subscription, visit brilliant.org/2swap in the description, or scan the QR code onscreen."), 5);
-        cs.render_microblock();
-        cs.slide_subscene(MICRO, "ps", .42, 0);
-        cs.render_microblock();
-        cs.render_microblock();
-        cs.render_microblock();
-        cs.render_microblock();
-    }
-}
-
 void promo0(){
     Mp4Scene ms = Mp4Scene("Sequence_VisualAlgebra_250616");
     ms.stage_macroblock(FileBlock("It's no secret that I prefer a visual approach to understanding mathematical concepts."), 1);

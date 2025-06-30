@@ -86,7 +86,7 @@ public:
         total_microblocks = remaining_microblocks = expected_microblocks;
         cout << endl << audio.blurb() << " staged to last " << to_string(expected_microblocks) << " microblock(s)." << endl;
         audio.write_shtooka();
-        if(!SMOKETEST) {
+        if(FOR_REAL) {
             double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
             total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * FRAMERATE;
         }
@@ -152,7 +152,7 @@ private:
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
         global_state["t"] = global_state["frame_number"] / FRAMERATE;
 
-        if(!SMOKETEST) {
+        if(FOR_REAL) {
             state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
             SUBTITLE_WRITER.set_substime(global_state["frame_number"] / FRAMERATE);
             Pixels* p = nullptr;

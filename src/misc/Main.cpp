@@ -17,6 +17,8 @@ const string project_name = PROJECT_NAME_MACRO;
 const int VIDEO_BACKGROUND_COLOR = 0xff000020; // Lambda Blue
 //const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
 
+bool FOR_REAL = !SMOKETEST;
+
 #include "../io/PathManager.cpp"
 #include "../io/AudioWriter.cpp"
 #include "../io/VideoWriter.cpp"
