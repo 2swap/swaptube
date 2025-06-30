@@ -1366,9 +1366,6 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     gs->state_manager.set({{"points_radius_multiplier", "0"}, {"points_opacity","1"}});
     cs.stage_macroblock(FileBlock("Turning 90 degrees, we see a rough division into two halves."), 2);
     cs.render_microblock();
-    FOR_REAL = true;
-    // TODO delete this
-    gs->state_manager.set({{"physics_multiplier", "200"}});
 
     gs->state_manager.transition(MICRO, {{"points_radius_multiplier", "1"}});
     cs.remove_all_subscenes_except("gs");
@@ -1377,24 +1374,28 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     double leftboard2 = KlotskiBoard(4, 5, "a.ehafehcddgcbbijbb.", false).get_hash();
     double leftboard3 = KlotskiBoard(4, 5, ".a.cfagcibbehbbehddj", false).get_hash();
     double leftboard4 = KlotskiBoard(4, 5, "a.c.agcfhbbihbbejdde", false).get_hash();
+    double leftboard6 = KlotskiBoard(4, 5, "fgbbacbbacijehddeh..", false).get_hash();
+    double leftboard7 = KlotskiBoard(4, 5, "bbgfbbcaijcaddhe..he", false).get_hash();
     int col_left = 0xff0088ff;
     int col_right = 0xffff0000;
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){ p->second.color = col_right; }
-    unordered_set<double> hashes_l = g.get_neighborhood(leftboard, 80);
-    unordered_set<double> hashes_l2 = g.get_neighborhood(leftboard2, 80);
-    unordered_set<double> hashes_l3 = g.get_neighborhood(leftboard3, 40);
-    unordered_set<double> hashes_l4 = g.get_neighborhood(leftboard4, 40);
-    // TODO replace with col_left
-    //
-    for(double d : hashes_l){ g.nodes.find(d)->second.color = 0xffff0000; }
-    for(double d : hashes_l2){ g.nodes.find(d)->second.color = 0xff00ffff; }
-    for(double d : hashes_l3){ g.nodes.find(d)->second.color = 0xff00ff00; }
-    for(double d : hashes_l4){ g.nodes.find(d)->second.color = 0xff0000ff; }
+    unordered_set<double> hashes_l = g.get_neighborhood(leftboard, 85);
+    unordered_set<double> hashes_l2 = g.get_neighborhood(leftboard2, 60);
+    unordered_set<double> hashes_l3 = g.get_neighborhood(leftboard3, 62);
+    unordered_set<double> hashes_l4 = g.get_neighborhood(leftboard4, 62);
+    unordered_set<double> hashes_l5 = g.get_neighborhood(klotski_necklace.get_hash(), 52);
+    unordered_set<double> hashes_l6 = g.get_neighborhood(leftboard6, 62);
+    unordered_set<double> hashes_l7 = g.get_neighborhood(leftboard7, 62);
+    for(double d : hashes_l ){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l2){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l3){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l4){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l5){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l6){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l7){ g.nodes.find(d)->second.color = col_left; }
     gs->next_hash = sun.get_hash();
-    // TODO change back to 1 second
-    cs.stage_macroblock(SilenceBlock(2), 1);
+    cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
-    FOR_REAL = false;
 
     gs->state_manager.transition(MACRO, {{"d", ".01"}, {"points_radius_multiplier","1.5"}});
     gs->state_manager.transition(MACRO, less_spinny);
@@ -1491,7 +1492,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     wr_with_creds.add_scene(ls, "ls", .25, .06);
     wr_with_creds.add_scene(ls2, "ls2", .25, .125);
     wr_with_creds.add_scene(ls3, "ls3", .25, .18);
-    wr_with_creds.stage_macroblock(FileBlock("Interestingly, this is not the path used by the guinness world record speedsolver,"), 1);
+    wr_with_creds.stage_macroblock(CompositeBlock(FileBlock("Interestingly, this is not the path used by the guinness world record speedsolver,"), SilenceBlock(1)), 1);
     wr_with_creds.render_microblock();
 
     //perform_shortest_path_with_graph(cs, gs, ks, sun, SilenceBlock(2));
@@ -1707,7 +1708,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.render_microblock();
     cs.remove_subscene("ks_start");
 
-    cs.stage_macroblock(SilenceBlock(2), 15);
+    cs.stage_macroblock(SilenceBlock(1.5), 15);
     ks_no_b->stage_move({'j', -1, 0});
     cs.render_microblock();
     ks_no_b->stage_move({'i', 1, 0});
@@ -1749,7 +1750,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
-    gs->state_manager.transition(MACRO, {{"points_radius_multiplier",".5"}, {"points_opacity", "1"}});
+    //gs->state_manager.transition(MACRO, {{"points_radius_multiplier",".5"}, {"points_opacity", "1"}});
     cs.fade_all_subscenes_except(MICRO, "gs", 0);
     cs.render_microblock();
     cs.remove_all_subscenes_except("gs");
@@ -1833,8 +1834,13 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.fade_subscene(MICRO, "ks_bd", 0);
     unordered_set<double> hashes2 = g.get_neighborhood(leftboard, 250);
     for(double d : hashes2){ g.nodes.find(d)->second.color = col_right; }
-    for(double d : hashes_l){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l ){ g.nodes.find(d)->second.color = col_left; }
     for(double d : hashes_l2){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l3){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l4){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l5){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l6){ g.nodes.find(d)->second.color = col_left; }
+    for(double d : hashes_l7){ g.nodes.find(d)->second.color = col_left; }
     cs.stage_macroblock(FileBlock("or that it's hard because crossing between the two halves is hard,"), 1);
     cs.render_microblock();
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){ p->second.color = TRANSPARENT_BLACK; }
@@ -1850,7 +1856,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         cs.stage_macroblock(FileBlock("Let's peek at a faraway land,"), 2);
         double hash = gs->next_hash = whichboard.get_hash();
         cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"d", ".05"}});
+        gs->state_manager.transition(MICRO, {{"d", ".02"}});
         cs.render_microblock();
 
         gs->state_manager.set({{"points_opacity", "1"}, {"points_radius_multiplier", "0"}});
@@ -1872,7 +1878,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
             shared_ptr<KlotskiScene> tksn = make_shared<KlotskiScene>(KlotskiBoard(4, 5, s, false));
             tksn->state_manager.set(board_width_height);
             string key = "tks" + to_string(i);
-            cs.add_scene_fade_in(MICRO, tksn, key, -.15, yval, 1./strings.size());
+            cs.add_scene_fade_in(MICRO, tksn, key, -.15, yval, 1.5/strings.size());
             cs.slide_subscene(MICRO, key, .3, 0);
             i++;
         }
@@ -1977,7 +1983,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
             shared_ptr<KlotskiScene> tksn = make_shared<KlotskiScene>(KlotskiBoard(4, 5, s, false));
             tksn->state_manager.set(board_width_height);
             string key = "tks" + to_string(i);
-            cs.add_scene_fade_in(MACRO, tksn, key, -.15, yval, 1./strings.size());
+            cs.add_scene_fade_in(MACRO, tksn, key, -.15, yval, 1.5/strings.size());
             i++;
             cs.slide_subscene(MICRO, key, .3, 0);
         }
@@ -2114,11 +2120,11 @@ void promo1(){
 }
 
 void render_video() {
-    FOR_REAL = false;
     Graph* tri = new Graph;
     shared_ptr<GraphScene> tgs;
     shared_ptr<KlotskiScene> tks;
 
+    FOR_REAL = false;
     part0();
     part1();
     part2();

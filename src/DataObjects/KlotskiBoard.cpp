@@ -250,7 +250,7 @@ KlotskiBoard klotski_necklace(4, 5, "afgcabbc.bb.eddheijh"                , fals
 KlotskiBoard klotski_necklace_2(4, 5, "acfgac.e.bbeibbhddjh"                , false);
 KlotskiBoard klotski_whisker(4, 5, ".bb.abbfaceghcejhidd"                , false);
 KlotskiBoard klotski_earring(4, 5, "..fgbbijbbddacehaceh"                , false);
-KlotskiBoard sun_pit       (4, 5, "abbfabbcg.ecijeh.ddh"                , false);
+KlotskiBoard sun_pit       (4, 5, "fbbagbbace.icejhdd.h"                , false);
 KlotskiBoard klotski_solution_slow(4, 5, "fgacehacehdd.bbi.bbj"                , false);
 KlotskiBoard klotski_solution     (4, 5, "acehacehfgdd.bbi.bbj"                , false);
 
