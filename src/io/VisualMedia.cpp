@@ -116,22 +116,24 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
         throw runtime_error(error_str);
     }
 
-    // Get intrinsic dimensions
-    RsvgDimensionData dimensions;
-    rsvg_handle_get_dimensions(handle, &dimensions);
-    double out_width = dimensions.width;
-    double out_height = dimensions.height;
+    // Deprecated
+    //RsvgDimensionData dimensions;
+    //rsvg_handle_get_dimensions(handle, &dimensions);
+
+    gdouble gwidth, gheight;
+    if (!rsvg_handle_get_intrinsic_size_in_pixels(handle, &gwidth, &gheight))
+        throw runtime_error("Could not get intrinsic size of SVG file " + filename);
 
     // Calculate scale factor
     if (scaling_params.mode == ScalingMode::BoundingBox) {
         scaling_params.scale_factor = min(
-            static_cast<double>(scaling_params.max_width) / out_width,
-            static_cast<double>(scaling_params.max_height) / out_height
+            static_cast<double>(scaling_params.max_width) / gwidth,
+            static_cast<double>(scaling_params.max_height) / gheight
         );
     }
 
-    int width  = round(out_width  * scaling_params.scale_factor);
-    int height = round(out_height * scaling_params.scale_factor);
+    int width  = round(gwidth  * scaling_params.scale_factor);
+    int height = round(gheight * scaling_params.scale_factor);
 
     Pixels ret(width, height);
 
@@ -151,8 +153,8 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     RsvgRectangle viewport = {
         .x = 0,
         .y = 0,
-        .width = out_width,
-        .height = out_height
+        .width = gwidth,
+        .height = gheight
     };
 
     // Render SVG
