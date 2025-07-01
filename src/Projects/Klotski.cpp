@@ -156,7 +156,7 @@ void showcase_graph(const KlotskiBoard& kb, const Macroblock& mb) {
     g.add_to_stack(new KlotskiBoard(kb));
     auto gs_ptr = make_shared<GraphScene>(&g, false, 1.2, 1);
     gs_ptr->state_manager.set(default_graph_state);
-    gs_ptr->state_manager.set({{"decay",".8"}, {"d", "1.3"},  {"physics_multiplier", "100"}});
+    gs_ptr->state_manager.set({{"points_opacity", ".3"}, {"lines_opacity", ".2"}, {"decay",".8"}, {"d", "1.3"},  {"physics_multiplier", "100"}});
     cs.add_scene(gs_ptr, "gs", .6, .5, true);
 
     // Gradually expand the graph to reveal its structure
@@ -1295,7 +1295,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         cs.render_microblock();
     }
 
-    gs->state_manager.transition(MACRO, {{"mirror_force", ".01"}, {"physics_multiplier", "80"}, {"dimensions", "4"}, {"d", ".8"}});
+    gs->state_manager.transition(MACRO, {{"mirror_force", ".01"}, {"points_radius_multiplier", ".3"}, {"physics_multiplier", "80"}, {"dimensions", "4"}, {"d", ".8"}});
     cs.stage_macroblock(FileBlock("The structure defined by this puzzle- what is its _form_?"), 100);
     while(cs.microblocks_remaining()){
         g.expand(1);
@@ -1303,7 +1303,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     }
 
     int x = get_graph_size(sun);
-    float ii = 1;
+    float ii = 3;
     while (g.size() < x) {
         int num_nodes_to_add = ii*ii / 7;
         g.expand(num_nodes_to_add);
@@ -1364,8 +1364,6 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", ".5"}, {"qk", "0"}});
     gs->next_hash = 0;
     gs->state_manager.set({{"points_radius_multiplier", "0"}, {"points_opacity","1"}});
-    cs.stage_macroblock(FileBlock("Turning 90 degrees, we see a rough division into two halves."), 2);
-    cs.render_microblock();
 
     gs->state_manager.transition(MICRO, {{"points_radius_multiplier", "1"}});
     cs.remove_all_subscenes_except("gs");
@@ -1393,6 +1391,8 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     for(double d : hashes_l5){ g.nodes.find(d)->second.color = col_left; }
     for(double d : hashes_l6){ g.nodes.find(d)->second.color = col_left; }
     for(double d : hashes_l7){ g.nodes.find(d)->second.color = col_left; }
+    cs.stage_macroblock(FileBlock("Turning 90 degrees, we see a rough division into two halves."), 2);
+    cs.render_microblock();
     gs->next_hash = sun.get_hash();
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
@@ -1496,10 +1496,9 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     wr_with_creds.add_scene(ls, "ls", .25, .06);
     wr_with_creds.add_scene(ls2, "ls2", .25, .125);
     wr_with_creds.add_scene(ls3, "ls3", .25, .18);
+    gs->next_hash = 0;
     wr_with_creds.stage_macroblock(CompositeBlock(FileBlock("Interestingly, this is not the path used by the guinness world record speedsolver,"), SilenceBlock(.9)), 1);
     wr_with_creds.render_microblock();
-
-    //perform_shortest_path_with_graph(cs, gs, ks, sun, SilenceBlock(2));
 
     gs->state_manager.transition(MACRO, less_spinny);
     cs.remove_subscene("ks");

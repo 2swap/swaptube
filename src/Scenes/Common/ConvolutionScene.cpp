@@ -45,7 +45,6 @@ public:
     }
 
     void draw() override{
-        cout << "A" << endl;
         if(in_transition_state) {
             double tp = transparency_profile(state["transparency_profile"]);
             double tp1 = transparency_profile(1-state["transparency_profile"]);
@@ -78,7 +77,6 @@ public:
         else {
             pix.overwrite(p1, coords.first, coords.second);
         }
-        cout << "B" << endl;
     }
 
     const StateQuery populate_state_query() const override {
