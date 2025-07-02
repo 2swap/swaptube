@@ -52,3 +52,39 @@ __device__ void atomic_overlay_pixel(int x, int y, int col, float opacity, unsig
     int new_pixel = blended;
     atomicCAS(&pixels[idx], old_pixel, new_pixel);
 }
+
+__device__ int argb(int a, int r, int g, int b){return (a<<24)+
+                                                       (r<<16)+
+                                                       (g<<8 )+
+                                                       (b    );}
+
+__device__ int device_HSVtoRGB(double h, double s, double v, int alpha = 255) {
+    double r_f, g_f, b_f;
+
+    if (s == 0.0) {
+        // Achromatic (grey)
+        r_f = g_f = b_f = v;
+    } else {
+        h = fmod(h, 1.0) * 6.0;  // Hue sector [0, 6)
+        int i = static_cast<int>(floor(h));
+        double f = h - i;
+        double p = v * (1.0 - s);
+        double q = v * (1.0 - s * f);
+        double t = v * (1.0 - s * (1.0 - f));
+
+        switch (i) {
+            case 0: r_f = v; g_f = t; b_f = p; break;
+            case 1: r_f = q; g_f = v; b_f = p; break;
+            case 2: r_f = p; g_f = v; b_f = t; break;
+            case 3: r_f = p; g_f = q; b_f = v; break;
+            case 4: r_f = t; g_f = p; b_f = v; break;
+            case 5: default: r_f = v; g_f = p; b_f = q; break;
+        }
+    }
+
+    // Scale to [0, 255] and clamp
+    int r = clamp(static_cast<int>(round(r_f * 255.0)), 0, 255);
+    int g = clamp(static_cast<int>(round(g_f * 255.0)), 0, 255);
+    int b = clamp(static_cast<int>(round(b_f * 255.0)), 0, 255);
+    return argb(alpha, r, g, b);
+}

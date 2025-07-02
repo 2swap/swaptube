@@ -80,8 +80,10 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "==============================================="
     echo "===================== RUN ====================="
     echo "==============================================="
-    # Run the program
-    ./swaptube
+    # Run the program.
+    # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
+    # Swaptube errors are printed to stdout.
+    ./swaptube 2>/dev/null
 
     if [ $? -ne 0 ]; then
         echo "go.sh: Execution failed in runtime."

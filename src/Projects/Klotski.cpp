@@ -941,9 +941,9 @@ void part4() {
     ks_apk->state_manager.set({{"w",".3"}, {"h",".5"}});
     ks2d->state_manager.set({{"w",".3"}, {"h",".5"}});
     ks15->state_manager.transition(MACRO, {{"w",".3"}, {"h",".5"}});
-    gs2d->state_manager.transition(MACRO, {{"w",".3"}, {"h",".5"}});
-    gs_apk->state_manager.transition(MACRO, {{"w",".3"}, {"h",".5"}});
-    gs_15->state_manager.transition(MACRO, {{"w",".3"}, {"h",".5"}});
+    gs2d->state_manager.transition(MACRO, {{"w",".5"}, {"h",".7"}});
+    gs_apk->state_manager.transition(MACRO, {{"w",".5"}, {"h",".7"}});
+    gs_15->state_manager.transition(MACRO, {{"w",".5"}, {"h",".7"}});
     cs.add_scene_fade_in(MICRO, ks_apk, "ks_apk", .5, yval);
     cs.add_scene_fade_in(MICRO, gs_apk, "gs_apk", .5, .75);
     cs.add_scene_fade_in(MICRO, gs2d, "gs2d", .1666, .75);
@@ -1295,7 +1295,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         cs.render_microblock();
     }
 
-    gs->state_manager.transition(MACRO, {{"mirror_force", ".01"}, {"points_radius_multiplier", ".3"}, {"physics_multiplier", "80"}, {"dimensions", "4"}, {"d", ".8"}});
+    gs->state_manager.transition(MACRO, {{"mirror_force", ".01"}, {"points_radius_multiplier", ".6"}, {"physics_multiplier", "80"}, {"dimensions", "4"}, {"d", ".8"}});
     cs.stage_macroblock(FileBlock("The structure defined by this puzzle- what is its _form_?"), 100);
     while(cs.microblocks_remaining()){
         g.expand(1);
@@ -1320,11 +1320,11 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("That's 25,955 nodes."), 3);
-    gs->state_manager.transition(MICRO, {{"lines_opacity", "0"}, {"points_opacity", "1"}});
+    gs->state_manager.transition(MACRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}});
+    gs->state_manager.transition(MICRO, {{"lines_opacity", "0"}, {"points_radius_multiplier", ".4"}, {"points_opacity", "1"}});
     cs.render_microblock();
     cs.render_microblock();
-    gs->state_manager.transition(MICRO, {{"lines_opacity", "1"}, {"points_opacity", "0"}});
-    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}});
+    gs->state_manager.transition(MICRO, {{"lines_opacity", ".2"}, {"points_opacity", "0"}});
     cs.render_microblock();
     gs->state_manager.set({{"points_opacity", "1"}});
     for(auto p = g.nodes.begin(); p != g.nodes.end(); p++){
@@ -1332,7 +1332,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
         n.color = 0x00000000;
     }
 
-    gs->state_manager.transition(MACRO, {{"d", ".5"}, {"lines_opacity", ".3"}, {"points_radius_multiplier","2"}});
+    gs->state_manager.transition(MACRO, {{"d", ".5"}, {"points_radius_multiplier","2"}});
     gs->next_hash = sun.get_hash();
     cs.stage_macroblock(CompositeBlock(SilenceBlock(1), FileBlock("The puzzle is symmetrical, so the graph is too.")), 1);
     cs.render_microblock();
@@ -1355,7 +1355,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     perform_shortest_path_with_graph(cs, gs, ks_clone, side_flip, FileBlock("the board is a mirror reflection of this node on the opposite side."));
 
     gs->state_manager.transition(MACRO, {{"points_opacity", "0"}});
-    cs.stage_macroblock(SilenceBlock(.8), 1);
+    cs.stage_macroblock(SilenceBlock(0.8), 1);
     cs.render_microblock();
 
     g.nodes.find(side.get_hash())->second.color = 0;
@@ -1367,7 +1367,6 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
 
     gs->state_manager.transition(MICRO, {{"points_radius_multiplier", "1"}});
     cs.remove_all_subscenes_except("gs");
-    cs.render_microblock();
     double leftboard = KlotskiBoard(4, 5, "f.giaddcabbcebbhe.jh", false).get_hash();
     double leftboard2 = KlotskiBoard(4, 5, "a.ehafehcddgcbbijbb.", false).get_hash();
     double leftboard3 = KlotskiBoard(4, 5, ".a.cfagcibbehbbehddj", false).get_hash();
@@ -1392,6 +1391,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     for(double d : hashes_l6){ g.nodes.find(d)->second.color = col_left; }
     for(double d : hashes_l7){ g.nodes.find(d)->second.color = col_left; }
     cs.stage_macroblock(FileBlock("Turning 90 degrees, we see a rough division into two halves."), 2);
+    cs.render_microblock();
     cs.render_microblock();
     gs->next_hash = sun.get_hash();
     cs.stage_macroblock(SilenceBlock(1), 1);

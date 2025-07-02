@@ -45,7 +45,7 @@ public:
     void add_datapoint(const vector<double>& values) {
         if (data_file_.is_open()) {
             if (values.size() != num_series_) {
-                cerr << "Error: Number of values does not match the number of series." << endl;
+                cout << "Error: Number of values does not match the number of series." << endl;
                 return;
             }
             for (size_t i = 0; i < values.size(); ++i) {
@@ -56,7 +56,7 @@ public:
             }
             data_file_ << endl;
         } else {
-            cerr << "Data file is not open. Cannot add data point." << endl;
+            cout << "Data file is not open. Cannot add data point." << endl;
             return;
         }
         data_has_been_added = true;
@@ -84,7 +84,7 @@ public:
         gnuplot_command += "\"";
         int result = system(gnuplot_command.c_str());
         if (result != 0) {
-            cerr << "Failed to generate plot with Gnuplot. Command: " << gnuplot_command << endl;
+            cout << "Failed to generate plot with Gnuplot. Command: " << gnuplot_command << endl;
         }
     }
 

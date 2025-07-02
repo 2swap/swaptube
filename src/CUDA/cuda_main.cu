@@ -5,7 +5,7 @@
 #include "overlay_underlay.cu"
 #include "PendulumFractal.cu"
 #include "render_3d_points_lines.cu"
-#include "SelfCheck.cu"
 #include "SurfaceRenderer.cu"
+#include "ComplexPolynomial.cu"
 //#include "Conway.cu"
 

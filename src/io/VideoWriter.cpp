@@ -40,7 +40,7 @@ void parse_debug_output(const string& output) {
             // do nothing, i guess?
         } else {
             // If the string did not match the expected format, dump it to stderr
-            cerr << "Failed to parse cerr output from encoder: " << line << endl;
+            cout << "Failed to parse cerr output from encoder: " << line << endl;
 	    // This is plausible in nominal conditions, do not failout!
         }
     }

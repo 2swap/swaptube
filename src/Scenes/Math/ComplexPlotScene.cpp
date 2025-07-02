@@ -1,54 +1,30 @@
 #pragma once
 
-#include "scene.cpp"
-#include <complex>
+#include "../Common/CoordinateScene.cpp"
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
 using namespace Eigen;
 
-class ComplexPlotScene : public Scene {
+extern "C" void color_complex_polynomial(
+    unsigned int* h_pixels, // to be overwritten with the result
+    int w,
+    int h,
+    const double* h_coefficients_real,
+    const double* h_coefficients_imag,
+    int degree,
+    double lx, double ty,
+    double rx, double by
+);
+
+class ComplexPlotScene : public CoordinateScene {
 public:
-    ComplexPlotScene(const double width = 1, const double height = 1) : Scene(width, height) {}
-
-    pair<int, int> coordinate_to_pixel(complex<double> coordinate){
-        return make_pair(coordinate.real()/pixel_width + w/2., coordinate.imag()/pixel_width + h/2.);
-    }
-
-    complex<double> pixel_to_coordinate(pair<int, int> pixel){
-        return complex<double>((pixel.first - w/2.) * pixel_width, (pixel.second - h/2.) * pixel_width);
-    }
-
-    int complex_to_color(const complex<double>& c) {
-        float hue = arg(c) * 180 / M_PI + 180;  // Convert [-π, π] to [0, 1]
-        float saturation = 1.0f;
-        float value = (2/M_PI) * atan(abs(c));
-
-        int r, g, b;
-        hsv2rgb(hue, saturation, value, r, g, b);
-
-        return rgb_to_col(r, g, b) | 0xff000000;
-    }
-
-    complex<double> evaluate_polynomial_given_coefficients(const vector<complex<double>>& coefficients, const complex<double>& point) {
-        complex<double> result = 0.0;
-        complex<double> power_of_point = 1.0;
-        for (const auto& coefficient : coefficients) {
-            result += coefficient * power_of_point;
-            power_of_point *= point;
-        }
-        return result;
-    }
-    complex<double> polynomial(const complex<double>& c, const vector<complex<double>>& roots){
-        complex<double> out(1, 0);
-        for(complex<double> point : roots){
-            out *= c - point;
-        }
-        return out;
-    }
-
-    void set_mode(complex_plot_mode cpm){
-        mode = cpm;
+    ComplexPlotScene(const double width = 1, const double height = 1) : CoordinateScene(width, height) {
+        for(string type : {"coefficient", "root"})
+            for(int num = 0; num <= 6; num++)
+                for(char ri : {'r', 'i'})
+                    state_manager.set(type + to_string(num) + "_" + ri, "0");
+        state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
     }
 
     void state_manager_roots_to_coefficients(){
@@ -59,8 +35,8 @@ public:
             state_manager.remove_equation("root_i" + to_string(point_index));
         }
         for(int i = 0; i < coefficients.size(); i++){
-            state_manager.add_equation("coefficient_r" + to_string(i), to_string(coefficients[i].real()));
-            state_manager.add_equation("coefficient_i" + to_string(i), to_string(coefficients[i].imag()));
+            state_manager.set("coefficient_r" + to_string(i), to_string(coefficients[i].real()));
+            state_manager.set("coefficient_i" + to_string(i), to_string(coefficients[i].imag()));
         }
         state_manager.evaluate_all();
     }
@@ -73,22 +49,18 @@ public:
             state_manager.remove_equation("coefficient_i" + to_string(point_index));
         }
         for(int i = 0; i < roots.size(); i++){
-            state_manager.add_equation("root_r" + to_string(i), to_string(roots[i].real()));
-            state_manager.add_equation("root_i" + to_string(i), to_string(roots[i].imag()));
+            state_manager.set("root_r" + to_string(i), to_string(roots[i].real()));
+            state_manager.set("root_i" + to_string(i), to_string(roots[i].imag()));
         }
         state_manager.evaluate_all();
     }
 
     vector<complex<double>> get_coefficients(){
-        if(state_manager.contains("coefficient_r0")){
+        if(state["roots_or_coefficients_control"] != 0) {
             vector<complex<double>> coefficients;
-            for(int point_index = 0; true; point_index++) {
-                if(state_manager.contains("coefficient_r" + to_string(point_index))){
-                    complex<double> coeff(state["coefficient_r" + to_string(point_index)],
-                                               state["coefficient_i" + to_string(point_index)]);
-                    coefficients.push_back(coeff);
-                }
-                else break;
+            for(int point_index = 0; point_index <= 6; point_index++) {
+                string key = "coefficient" + to_string(point_index) + "_";
+                coefficients.push_back(complex<double>(state[key + "r"], state[key + "i"]));
             }
             return coefficients;
         }
@@ -135,14 +107,10 @@ public:
 
     vector<complex<double>> get_roots(){
         vector<complex<double>> roots;
-        if(state_manager.contains("root_r0")){
-            for(int point_index = 0; true; point_index++) {
-                if(state_manager.contains("root_r" + to_string(point_index))){
-                    complex<double> root(state["root_r" + to_string(point_index)],
-                                               state["root_i" + to_string(point_index)]);
-                    roots.push_back(root);
-                }
-                else break;
+        if(state["roots_or_coefficients_control"] == 0) {
+            for(int point_index = 0; point_index <= 6; point_index++) {
+                string key = "root" + to_string(point_index) + "_";
+                roots.push_back(complex<double>(state[key + "r"], state[key + "i"]));
             }
         } else {
             vector<complex<double>> coefficients = get_coefficients();
@@ -160,7 +128,7 @@ public:
             // Compute the eigenvalues (roots)
             ComplexEigenSolver<MatrixXcd> solver(companion_matrix);
             if (solver.info() != Success) {
-                cerr << "Eigenvalue computation did not converge." << endl;
+                cout << "Eigenvalue computation did not converge." << endl;
                 return roots;
             }
             VectorXcd eigenvalues = solver.eigenvalues();
@@ -175,83 +143,79 @@ public:
     }
 
     void draw() override{
-        if(mode == ROOTS)render_root_mode(get_coefficients(), get_roots());
-        if(mode == COEFFICIENTS)render_coefficient_mode(get_coefficients());
-        render_axes();
-    }
-
-    void set_pixel_width(double w){
-        pixel_width = w;
-    }
-
-    double get_pixel_width(){
-        return pixel_width;
-    }
-
-    void render_point(const pair<int,int>& pixel){
-        pix.fill_ellipse(pixel.first, pixel.second, 5, 5, OPAQUE_WHITE);
-    }
-
-    void render_axes(){
-        pair<int, int> i_pos = coordinate_to_pixel(complex<double>(0,10));
-        pair<int, int> i_neg = coordinate_to_pixel(complex<double>(0,-10));
-        pair<int, int> r_pos = coordinate_to_pixel(complex<double>(10,0));
-        pair<int, int> r_neg = coordinate_to_pixel(complex<double>(-10,0));
-        pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff222222, 1);
-        pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff222222, 1);
-        for(int i = -9; i < 10; i++){
-            pair<int, int> i_pos = coordinate_to_pixel(complex<double>(i,.1));
-            pair<int, int> i_neg = coordinate_to_pixel(complex<double>(i,-.1));
-            pair<int, int> r_pos = coordinate_to_pixel(complex<double>(.1,i));
-            pair<int, int> r_neg = coordinate_to_pixel(complex<double>(-.1,i));
-            pix.bresenham(i_pos.first, i_pos.second, i_neg.first, i_neg.second, 0xff222222, 1);
-            pix.bresenham(r_pos.first, r_pos.second, r_neg.first, r_neg.second, 0xff222222, 1);
-        }
+        render_root_mode(get_coefficients(), get_roots());
+        render_coefficient_mode(get_coefficients());
+        CoordinateScene::draw();
     }
 
     void render_root_mode(const vector<complex<double>>& coefficients, const vector<complex<double>>& roots){
-        pix.fill(OPAQUE_BLACK);
-        for(int x = 0; x < w; x++){
-            for(int y = 0; y < h; y++){
-                pix.set_pixel(x, y, complex_to_color(evaluate_polynomial_given_coefficients(coefficients,pixel_to_coordinate(make_pair(x, y)))));
+        cout << "1" << endl;
+        int w = get_width();
+        int h = get_height();
+
+        // Decompose coefficients into separate real and imag arrays for CUDA call
+        double h_coefficients_real[7];
+        double h_coefficients_imag[7];
+        for (int i = 0; i <= 6; ++i) {
+            if (i < coefficients.size()) {
+                h_coefficients_real[i] = coefficients[i].real();
+                h_coefficients_imag[i] = coefficients[i].imag();
+            } else {
+                h_coefficients_real[i] = 0.0;
+                h_coefficients_imag[i] = 0.0;
             }
         }
+        cout << "2" << endl;
+
+        /*color_complex_polynomial(
+            pix.pixels.data(),
+            pix.w,
+            pix.h,
+            h_coefficients_real,
+            h_coefficients_imag,
+            6,
+            state["left_x"], state["top_y"],
+            state["right_x"], state["bottom_y"]
+        );*/
+
+        double gm = get_geom_mean_size() / 100;
+        cout << "3" << endl;
         for(int i = 0; i < roots.size(); i++){
-            const complex<double> point = roots[i];
-            const pair<int, int> pixel = coordinate_to_pixel(point);
-            // add telemetry to the state_manager only if the roots are the inputs. Ordering is not known.
-            if(state_manager.contains("root_r0")){
-                state_manager.set_special("root_r"+to_string(i)+"_pixel", pixel.first);
-                state_manager.set_special("root_i"+to_string(i)+"_pixel", pixel.second);
-            }
-            render_point(pixel);
+        cout << "3" << i << endl;
+            const complex<int> pixel(point_to_pixel(roots[i]));
+        cout << "4" << i << endl;
+        cout << pixel.real() << endl;
+        cout << pixel.imag() << endl;
+        cout << gm << endl;
+            pix.fill_ellipse(pixel.real(), pixel.imag(), gm, gm, OPAQUE_WHITE);
+        cout << "5" << i << endl;
         }
+        cout << "6" << endl;
     }
 
     void render_coefficient_mode(const vector<complex<double>>& coefficients){
-        pix.fill(OPAQUE_BLACK);
         for(int i = 0; i < coefficients.size(); i++){
-            const complex<double> point = coefficients[i];
-            const pair<int, int> pixel = coordinate_to_pixel(point);
-            state_manager.set_special("coefficient_r"+to_string(i)+"_pixel", pixel.first);
-            state_manager.set_special("coefficient_i"+to_string(i)+"_pixel", pixel.second);
-            render_point(pixel);
+            cout << "Aiii" << i << endl;
+            double opa = clamp(0,abs(coefficients[i]),1);
+            if(opa < 0.01) continue;
+            const complex<int> pixel(point_to_pixel(coefficients[i]));
+            ScalingParams sp = ScalingParams(get_width() / 6, get_height() / 6);
+            Pixels text_pixels = latex_to_pix("x^" + to_string(i), sp);
+            pix.overlay(text_pixels, pixel.real() - text_pixels.w / 2, pixel.imag() - text_pixels.h / 2, opa);
+            cout << "Biii" << i << endl;
         }
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{
-            //TODO this is a mess.
-        };
-        throw runtime_error("Unimplemented function in ComplexPlotScene. TODO");
+        StateQuery sq = CoordinateScene::populate_state_query();
+        for(string type : {"coefficient", "root"})
+            for(int num = 0; num <= 6; num++)
+                for(char ri : {'r', 'i'})
+                    sq.insert(type + to_string(num) + "_" + ri);
+        sq.insert("roots_or_coefficients_control");
+        return sq;
     }
     void mark_data_unchanged() override { }
     void change_data() override { } // ComplexPlotScene has no DataObjects
     bool check_if_data_changed() const override { return false; } // ComplexPlotScene has no DataObjects
-
-    void determine_coefficients_from_roots() {
-    }
-
-private:
-    double pixel_width = 0.01;
 };

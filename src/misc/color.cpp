@@ -146,60 +146,6 @@ string latex_color(unsigned int color, string text) {
     return ss.str();
 }
 
-void hsv2rgb(float h, float s, float v, int& r, int& g, int& b)
-{
-    float      hh, p, q, t, ff;
-    long        i;
-
-    if(s <= 0.0) {       // < is bogus, just shuts up warnings
-        r = v;
-        g = v;
-        b = v;
-    }
-    hh = h;
-    if(hh >= 360.0) hh = 0.0;
-    hh /= 60.0;
-    i = (long)hh;
-    ff = hh - i;
-    p = v * (1.0 - s);
-    q = v * (1.0 - (s * ff));
-    t = v * (1.0 - (s * (1.0 - ff)));
-
-    switch(i) {
-    case 0:
-        r = v*255;
-        g = t*255;
-        b = p*255;
-        break;
-    case 1:
-        r = q*255;
-        g = v*255;
-        b = p*255;
-        break;
-    case 2:
-        r = p*255;
-        g = v*255;
-        b = t*255;
-        break;
-    case 3:
-        r = p*255;
-        g = q*255;
-        b = v*255;
-        break;
-    case 4:
-        r = t*255;
-        g = p*255;
-        b = v*255;
-        break;
-    case 5:
-    default:
-        r = v*255;
-        g = p*255;
-        b = q*255;
-        break;
-    }
-}
-
 // Unit test for coldist function
 void coldist_ut() {
     int col1 = 0xF0A0B0C0;
