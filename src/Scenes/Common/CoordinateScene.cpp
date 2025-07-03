@@ -2,12 +2,11 @@
 
 #include "../Scene.cpp"
 #include <vector>
-#include <complex>
 
-string truncate_tick(double value) {
+string truncate_tick(float value) {
     if(abs(value) < 0.00000000001) return "0";
 
-    // Convert double to string with a stream
+    // Convert float to string with a stream
     ostringstream oss;
     oss << value;
     string str = oss.str();
@@ -35,7 +34,7 @@ string truncate_tick(double value) {
 class CoordinateScene : public Scene {
 public:
     int circles_to_render = 0;
-    CoordinateScene(const double width = 1, const double height = 1)
+    CoordinateScene(const float width = 1, const float height = 1)
         : Scene(width, height) {
         state_manager.set("left_x"   , "<center_x> .5 <zoom_x> / -");
         state_manager.set("right_x"  , "<center_x> .5 <zoom_x> / +");
@@ -45,43 +44,36 @@ public:
         state_manager.set("circles_opacity", "1");
         state_manager.set("center_x", "0");
         state_manager.set("center_y", "0");
-        state_manager.set("zoom", "8");
+        state_manager.set("zoom", ".2");
         state_manager.set("zoom_x", "<zoom> <w> <VIDEO_WIDTH> * / <h> <VIDEO_HEIGHT> * *");
         state_manager.set("zoom_y", "<zoom>");
     }
 
-    complex<int> point_to_pixel(const complex<double>& p) {
-        const complex<double> wh_complex(get_width(), get_height());
-        const complex<double> rx_by(state["right_x"], state["bottom_y"]);
-        const complex<double> lx_ty(state["left_x"], state["top_y"]);
-        return wh_complex * (p-lx_ty)/(rx_by-lx_ty);
-    }
-
-    complex<double> pixel_to_point(const complex<int>& p) {
-        const complex<double> int_to_double(p.real(), p.imag());
-        const complex<double> wh_complex(get_width(), get_height());
-        const complex<double> rx_by(state["right_x"], state["bottom_y"]);
-        const complex<double> lx_ty(state["left_x"], state["top_y"]);
-        return int_to_double * (rx_by-lx_ty) / wh_complex + lx_ty;
+    glm::vec2 point_to_pixel(const glm::vec2& p) {
+        const glm::vec2 wh(get_width(), get_height());
+        const glm::vec2 rx_by(state["right_x"], state["bottom_y"]);
+        const glm::vec2 lx_ty(state["left_x"], state["top_y"]);
+        const glm::vec2 flip(wh * (p-lx_ty)/(rx_by-lx_ty));
+        return glm::vec2(flip.x, get_height()-1-flip.y);
     }
 
     // This is not used here, but it is used in some classes which inherit from CoordinateScene
-    void draw_trail(const vector<complex<double>>& trail, const int trail_color, const double trail_opacity) {
+    void draw_trail(const vector<glm::vec2>& trail, const int trail_color, const float trail_opacity) {
         if(trail.size() == 0) return;
         if(trail_opacity < 0.01) return;
         int line_width = get_geom_mean_size()/350;
         for(int i = 1; i < trail.size()-1; i++) {
-            const complex<double> last_point = trail[i];
-            const complex<double> next_point = trail[i+1];
-            const complex<int> last_pixel = point_to_pixel(last_point);
-            const complex<int> next_pixel = point_to_pixel(next_point);
-            pix.bresenham(last_pixel.real(), last_pixel.imag(), next_pixel.real(), next_pixel.imag(), trail_color, trail_opacity, line_width);
+            const glm::vec2 last_point = trail[i];
+            const glm::vec2 next_point = trail[i+1];
+            const glm::vec2 last_pixel = point_to_pixel(last_point);
+            const glm::vec2 next_pixel = point_to_pixel(next_point);
+            pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, trail_color, trail_opacity, line_width);
         }
     }
 
-    void draw_point(const complex<double> point, int point_color, double point_opacity) {
-        const complex<int> pixel = point_to_pixel(point);
-        pix.fill_circle(pixel.real(), pixel.imag(), get_geom_mean_size()/100., point_color, point_opacity);
+    void draw_point(const glm::vec2 point, int point_color, float point_opacity) {
+        const glm::vec2 pixel = point_to_pixel(point);
+        pix.fill_circle(pixel.x, pixel.y, get_geom_mean_size()/100., point_color, point_opacity);
     }
 
     void draw() override {
@@ -90,16 +82,16 @@ public:
     }
 
     void draw_circles() {
-        const double z = state["zoom_x"] + 0.0001;
-        const double opa = state["circles_opacity"];
+        const float z = state["zoom_x"] + 0.0001;
+        const float opa = state["circles_opacity"];
         if(opa < 0.01) return;
-        const double w = get_geom_mean_size();
+        const float w = get_geom_mean_size();
         for(int i = 0; i < circles_to_render; i++){
-            const double x = state["circle"+to_string(i)+"_x"];
-            const double y = state["circle"+to_string(i)+"_y"];
-            const double r = state["circle"+to_string(i)+"_r"];
-            const complex<int> pixel = point_to_pixel(complex<double>(x,y));
-            pix.fill_donut(pixel.real(), pixel.imag(), w*r*z*0.9, w*r*z*1.1, 0xffff0000, opa);
+            const float x = state["circle"+to_string(i)+"_x"];
+            const float y = state["circle"+to_string(i)+"_y"];
+            const float r = state["circle"+to_string(i)+"_r"];
+            const glm::vec2 pixel = point_to_pixel(glm::vec2(x,y));
+            pix.fill_donut(pixel.x, pixel.y, w*r*z*0.9, w*r*z*1.1, 0xffff0000, opa);
         }
     }
 
@@ -109,40 +101,38 @@ public:
     }
 
     void draw_one_axis(bool ymode) {
-        const double ticks_opacity = state["ticks_opacity"];
+        const float ticks_opacity = state["ticks_opacity"];
         if(ticks_opacity < 0.01) return;
         const int w = get_width();
         const int h = get_height();
-        const double gmsz = get_geom_mean_size();
+        const float gmsz = get_geom_mean_size();
 
         string x_y_str = ymode?"y":"x";
-        const double z = state["zoom_"+x_y_str] + 0.00000001;
-        const double upper_bound = ymode?state["bottom_y"]:state["right_x"];
-        const double lower_bound = ymode?state[   "top_y"]:state[ "left_x"];
-        const double log10z = log10(z);
+        const float z = state["zoom_"+x_y_str] + 0.00000001;
+        const float upper_bound = ymode?state["bottom_y"]:state["right_x"];
+        const float lower_bound = ymode?state[   "top_y"]:state[ "left_x"];
+        const float log10z = log10(z);
         int order_mag = floor(-log10z);
-        const double log_decimal = log10z-floor(log10z);
+        const float log_decimal = log10z-floor(log10z);
         bool not_fiveish = log_decimal < .5;
-        const double interpolator = (log_decimal >= .5 ? -1 : 0) + log_decimal * 2;
+        const float interpolator = (log_decimal >= .5 ? -1 : 0) + log_decimal * 2;
         unordered_set<string> done_numbers;
         for(int d_om = 0; d_om < 2; d_om++){
-            double increment = pow(10, order_mag) * (not_fiveish ? 1 : 0.5);
-            for(double x_y = floor(lower_bound/increment)*increment; x_y < upper_bound; x_y += increment) {
+            float increment = pow(10, order_mag) * (not_fiveish ? 1 : 0.5);
+            for(float x_y = floor(lower_bound/increment)*increment; x_y < upper_bound; x_y += increment) {
                 string truncated = truncate_tick(x_y);
                 if(done_numbers.find(truncated) != done_numbers.end()) continue;
                 done_numbers.insert(truncated);
-                double tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 192.;
-                double frac = (x_y - lower_bound) / (upper_bound - lower_bound);
-                if(ymode) frac = 1-frac;
-                double number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
-                number_opacity *= 1-square(square(2.5*(.5-frac)));
-                number_opacity *= ticks_opacity;
+                float tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 192.;
+                glm::vec2 point = point_to_pixel(glm::vec2(x_y, x_y));
+                float coordinate = ymode?point.y:point.x;
+                float number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
+                number_opacity *= ticks_opacity * (1-square(square(2.5*(.5-coordinate/(ymode?h:w)))));
                 if(number_opacity < 0) number_opacity = 0;
-                int coordinate = frac * (ymode?h:w);
                 if(ymode) pix.bresenham(0, coordinate, tick_length, coordinate, OPAQUE_WHITE, number_opacity, 1);
                 else      pix.bresenham(coordinate, h-1, coordinate, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
                 if(number_opacity > 0){
-                    ScalingParams sp(gmsz/12., gmsz/24.);
+                    ScalingParams sp(gmsz/9., gmsz/18.);
                     Pixels latex = latex_to_pix(truncated, sp);
                     if(ymode) latex = latex.rotate_90();
                     if(ymode) pix.overlay(latex, tick_length * 1.5, coordinate - latex.h/2, number_opacity);

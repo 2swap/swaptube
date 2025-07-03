@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "../Scenes/Common/ThreeDimensionStructs.cpp"
-#include "../misc/cuda_color.cu" // Contains overlay_pixel and set_pixel
+#include "cuda_color.cu" // Contains overlay_pixel and set_pixel
 
 __device__ void device_coordinate_to_pixel(
     const glm::vec3& coordinate,
@@ -30,10 +30,10 @@ __device__ void device_coordinate_to_pixel(
 
 __device__ void device_fill_circle(float cx, float cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
     for (float dx = -r; dx < r; dx++) {
-        float sdx = square(dx);
+        float sdx = dx*dx;
         for (float dy = -r; dy < r; dy++) {
-            if (sdx + square(dy) < r*r)
-                atomic_overlay_pixel(cx + dx, cy + dy, col, opa, pixels, width, height);
+            if (sdx + dy*dy < r*r)
+                device_atomic_overlay_pixel(cx + dx, cy + dy, col, opa, pixels, width, height);
         }
     }
 }
@@ -46,12 +46,12 @@ __device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int co
     int err = dx - dy;
 
     while (true) {
-        atomic_overlay_pixel(x1, y1, col, opacity, pixels, width, height);
+        device_atomic_overlay_pixel(x1, y1, col, opacity, pixels, width, height);
         for (int i = 1; i < thickness; i++) {
-            atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
-            atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
-            atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
-            atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
+            device_atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
+            device_atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
+            device_atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
+            device_atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
         }
         if (x1 == x2 && y1 == y2) break;
         int e2 = 2 * err;

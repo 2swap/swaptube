@@ -10,67 +10,67 @@ extern "C" void color_complex_polynomial(
     unsigned int* h_pixels, // to be overwritten with the result
     int w,
     int h,
-    const double* h_coefficients_real,
-    const double* h_coefficients_imag,
+    const float* h_coefficients_real,
+    const float* h_coefficients_imag,
     int degree,
-    double lx, double ty,
-    double rx, double by
+    float lx, float ty,
+    float rx, float by,
+    float ab_dilation
 );
 
 class ComplexPlotScene : public CoordinateScene {
 public:
-    ComplexPlotScene(const double width = 1, const double height = 1) : CoordinateScene(width, height) {
+    int degree;
+    ComplexPlotScene(const int d, const float width = 1, const float height = 1) : CoordinateScene(width, height), degree(d){
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num <= 6; num++)
+            for(int num = 0; num < degree; num++)
                 for(char ri : {'r', 'i'})
                     state_manager.set(type + to_string(num) + "_" + ri, "0");
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
+        state_manager.set("ab_dilation", ".33"); // basically saturation
     }
 
     void state_manager_roots_to_coefficients(){
-        vector<complex<double>> coefficients = get_coefficients();
-        
-        for(int point_index = 0; state_manager.contains("root_r" + to_string(point_index)); point_index++) {
-            state_manager.remove_equation("root_r" + to_string(point_index));
-            state_manager.remove_equation("root_i" + to_string(point_index));
-        }
-        for(int i = 0; i < coefficients.size(); i++){
-            state_manager.set("coefficient_r" + to_string(i), to_string(coefficients[i].real()));
-            state_manager.set("coefficient_i" + to_string(i), to_string(coefficients[i].imag()));
+        vector<complex<float>> coefficients = get_coefficients();
+
+        int i = 0;
+        for(complex<float> c : coefficients){
+            state_manager.set("coefficient" + to_string(i) + "_r", to_string(c.real()));
+            state_manager.set("coefficient" + to_string(i) + "_i", to_string(c.imag()));
+            i++;
         }
         state_manager.evaluate_all();
     }
 
     void state_manager_coefficients_to_roots(){
-        vector<complex<double>> roots = get_roots();
+        vector<complex<float>> roots = get_roots();
          
-        for(int point_index = 0; state_manager.contains("coefficient_r" + to_string(point_index)); point_index++) {
-            state_manager.remove_equation("coefficient_r" + to_string(point_index));
-            state_manager.remove_equation("coefficient_i" + to_string(point_index));
-        }
-        for(int i = 0; i < roots.size(); i++){
-            state_manager.set("root_r" + to_string(i), to_string(roots[i].real()));
-            state_manager.set("root_i" + to_string(i), to_string(roots[i].imag()));
+        int i = 0;
+        for(complex<float> r : roots){
+            state_manager.set("root" + to_string(i) + "_r", to_string(r.real()));
+            state_manager.set("root" + to_string(i) + "_i", to_string(r.imag()));
+            i++;
         }
         state_manager.evaluate_all();
     }
 
-    vector<complex<double>> get_coefficients(){
+    vector<complex<float>> get_coefficients(){
         if(state["roots_or_coefficients_control"] != 0) {
-            vector<complex<double>> coefficients;
-            for(int point_index = 0; point_index <= 6; point_index++) {
+            vector<complex<float>> coefficients;
+            for(int point_index = 0; point_index < degree; point_index++) {
                 string key = "coefficient" + to_string(point_index) + "_";
-                coefficients.push_back(complex<double>(state[key + "r"], state[key + "i"]));
+                coefficients.push_back(complex<float>(state[key + "r"], state[key + "i"]));
             }
+            coefficients.push_back(1);
             return coefficients;
         }
         
         // The initial polynomial P(z) = 1
-        vector<complex<double>> current_poly = {1.0};
+        vector<complex<float>> current_poly = {1.0};
 
         for (const auto& root : get_roots()) {
             // Each new polynomial will have one degree higher than the previous
-            vector<complex<double>> new_poly(current_poly.size() + 1);
+            vector<complex<float>> new_poly(current_poly.size() + 1);
 
             // Multiply the current polynomial by (z - root)
             for (size_t i = 0; i < current_poly.size(); ++i) {
@@ -84,20 +84,20 @@ public:
     }
 
     // Function to compute the derivative of a polynomial given its coefficients
-    vector<complex<double>> compute_derivative(const vector<complex<double>>& coefficients) {
-        vector<complex<double>> derivative;
+    vector<complex<float>> compute_derivative(const vector<complex<float>>& coefficients) {
+        vector<complex<float>> derivative;
         int n = coefficients.size() - 1; // Degree of the polynomial
 
-        for (int i = 1; i <= n; ++i) {
-            derivative.push_back(coefficients[i] * complex<double>(i, 0));
+        for (int i = 1; i < n; ++i) {
+            derivative.push_back(coefficients[i] * complex<float>(i, 0));
         }
 
         return derivative;
     }
 
-    vector<complex<double>> deflate_polynomial(const vector<complex<double>>& coefficients, const complex<double>& root) {
+    vector<complex<float>> deflate_polynomial(const vector<complex<float>>& coefficients, const complex<float>& root) {
         int n = coefficients.size() - 1;
-        vector<complex<double>> new_coefficients(n);
+        vector<complex<float>> new_coefficients(n);
         new_coefficients[0] = coefficients[0];
         for (int i = 1; i < n; ++i) {
             new_coefficients[i] = coefficients[i] + root * new_coefficients[i - 1];
@@ -105,15 +105,15 @@ public:
         return new_coefficients;
     }
 
-    vector<complex<double>> get_roots(){
-        vector<complex<double>> roots;
+    vector<complex<float>> get_roots(){
+        vector<complex<float>> roots;
         if(state["roots_or_coefficients_control"] == 0) {
-            for(int point_index = 0; point_index <= 6; point_index++) {
+            for(int point_index = 0; point_index < degree; point_index++) {
                 string key = "root" + to_string(point_index) + "_";
-                roots.push_back(complex<double>(state[key + "r"], state[key + "i"]));
+                roots.push_back(complex<float>(state[key + "r"], state[key + "i"]));
             }
         } else {
-            vector<complex<double>> coefficients = get_coefficients();
+            vector<complex<float>> coefficients = get_coefficients();
             int n = coefficients.size() - 1;
 
             // Create the companion matrix
@@ -121,7 +121,7 @@ public:
             for (int i = 0; i < n; ++i) {
                 companion_matrix(i, n - 1) = -coefficients[i] / coefficients[n];
                 if (i < n - 1) {
-                    companion_matrix(i + 1, i) = complex<double>(1, 0);
+                    companion_matrix(i + 1, i) = complex<float>(1, 0);
                 }
             }
 
@@ -136,83 +136,66 @@ public:
             // Store the roots
             roots.reserve(n);
             for (int i = 0; i < n; ++i) {
-                roots.push_back(eigenvalues[i]);
+                roots.push_back(complex<float>(eigenvalues[i].real(), eigenvalues[i].imag()));
             }
         }
         return roots;
     }
 
-    void draw() override{
-        render_root_mode(get_coefficients(), get_roots());
-        render_coefficient_mode(get_coefficients());
-        CoordinateScene::draw();
-    }
-
-    void render_root_mode(const vector<complex<double>>& coefficients, const vector<complex<double>>& roots){
-        cout << "1" << endl;
+    void draw() override {
+        const vector<complex<float>>& coefficients = get_coefficients();
+        const vector<complex<float>>& roots = get_roots();
         int w = get_width();
         int h = get_height();
 
         // Decompose coefficients into separate real and imag arrays for CUDA call
-        double h_coefficients_real[7];
-        double h_coefficients_imag[7];
-        for (int i = 0; i <= 6; ++i) {
-            if (i < coefficients.size()) {
-                h_coefficients_real[i] = coefficients[i].real();
-                h_coefficients_imag[i] = coefficients[i].imag();
-            } else {
-                h_coefficients_real[i] = 0.0;
-                h_coefficients_imag[i] = 0.0;
-            }
+        float h_coefficients_real[degree + 1];
+        float h_coefficients_imag[degree + 1];
+        for (int i = 0; i < coefficients.size(); ++i) {
+            h_coefficients_real[i] = coefficients[i].real();
+            h_coefficients_imag[i] = coefficients[i].imag();
         }
-        cout << "2" << endl;
 
-        /*color_complex_polynomial(
+        color_complex_polynomial(
             pix.pixels.data(),
             pix.w,
             pix.h,
             h_coefficients_real,
             h_coefficients_imag,
-            6,
+            degree,
             state["left_x"], state["top_y"],
-            state["right_x"], state["bottom_y"]
-        );*/
+            state["right_x"], state["bottom_y"],
+            state["ab_dilation"]
+        );
 
-        double gm = get_geom_mean_size() / 100;
-        cout << "3" << endl;
+        /*
+        float gm = get_geom_mean_size() / 200;
         for(int i = 0; i < roots.size(); i++){
-        cout << "3" << i << endl;
-            const complex<int> pixel(point_to_pixel(roots[i]));
-        cout << "4" << i << endl;
-        cout << pixel.real() << endl;
-        cout << pixel.imag() << endl;
-        cout << gm << endl;
-            pix.fill_ellipse(pixel.real(), pixel.imag(), gm, gm, OPAQUE_WHITE);
-        cout << "5" << i << endl;
+            const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
+            pix.fill_ring(pixel.x, pixel.y, gm*3, gm*2, OPAQUE_WHITE);
         }
-        cout << "6" << endl;
-    }
+        */
 
-    void render_coefficient_mode(const vector<complex<double>>& coefficients){
         for(int i = 0; i < coefficients.size(); i++){
-            cout << "Aiii" << i << endl;
-            double opa = clamp(0,abs(coefficients[i]),1);
+            float opa = clamp(0,abs(coefficients[i])*2,1);
             if(opa < 0.01) continue;
-            const complex<int> pixel(point_to_pixel(coefficients[i]));
-            ScalingParams sp = ScalingParams(get_width() / 6, get_height() / 6);
+            const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
+            ScalingParams sp = ScalingParams(get_width() / 10, get_height() / 10);
             Pixels text_pixels = latex_to_pix("x^" + to_string(i), sp);
-            pix.overlay(text_pixels, pixel.real() - text_pixels.w / 2, pixel.imag() - text_pixels.h / 2, opa);
-            cout << "Biii" << i << endl;
+            pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, opa);
         }
+
+        CoordinateScene::draw();
     }
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num <= 6; num++)
+            for(int num = 0; num < degree; num++)
                 for(char ri : {'r', 'i'})
                     sq.insert(type + to_string(num) + "_" + ri);
         sq.insert("roots_or_coefficients_control");
+        sq.insert("ab_dilation");
         return sq;
     }
     void mark_data_unchanged() override { }

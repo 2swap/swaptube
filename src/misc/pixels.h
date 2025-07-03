@@ -185,7 +185,20 @@ public:
     }
 
     void fill_circle(double x, double y, double r, int col, double opa=1){
-        fill_ellipse(x, y, r, r, col, opa);
+        fill_ring(x, y, r, 0, col, opa);
+    }
+
+    void fill_ring(double x, double y, double r_outer, double r_inner, int col, double opa=1){
+        double r_outer_sq = square(r_outer);
+        double r_inner_sq = square(r_inner);
+        for(double dx = -r_outer+1; dx < r_outer; dx++){
+            double sdx = square(dx);
+            for(double dy = -r_outer+1; dy < r_outer; dy++) {
+                double sdy = square(dy);
+                if(sdx+sdy < r_outer_sq && sdx+sdy >= r_inner_sq)
+                    overlay_pixel(x+dx, y+dy, col, opa);
+            }
+        }
     }
 
     void fill_ellipse(double x, double y, double rw, double rh, int col, double opa=1){
