@@ -3,7 +3,7 @@
 #include "../Scene.cpp"
 #include <vector>
 
-string truncate_tick(float value) {
+string truncate_tick(const float value, const bool append_i) {
     if(abs(value) < 0.00000000001) return "0";
 
     // Convert float to string with a stream
@@ -15,24 +15,34 @@ string truncate_tick(float value) {
     size_t decimalPos = str.find('.');
 
     // If there's no decimal point, just return the string
-    if (decimalPos == string::npos) {
-        return str;
+    if (decimalPos != string::npos) {
+        // Remove trailing zeros
+        size_t endPos = str.find_last_not_of('0');
+
+        // If the last non-zero character is the decimal point, remove it too
+        if (endPos == decimalPos) {
+            endPos--;
+        }
+
+        // Create a substring up to the correct position
+        str = str.substr(0, endPos + 1);
     }
 
-    // Remove trailing zeros
-    size_t endPos = str.find_last_not_of('0');
+    if(str.size() > 2 && str[0] == '0' && str[1] == '.') str = str.substr(1);
+    if(str.size() > 2 && str[0] == '-' && str[1] == '0') str = "-" + str.substr(2);
 
-    // If the last non-zero character is the decimal point, remove it too
-    if (endPos == decimalPos) {
-        endPos--;
+    if(append_i) {
+        if(str == "0") return "0";
+        if(str == "1") return "i";
+        if(str == "-1") return "-i";
+        return str+"i";
     }
-
-    // Create a substring up to the correct position
-    return str.substr(0, endPos + 1);
+    return str;
 }
 
 class CoordinateScene : public Scene {
 public:
+    bool complex_plane = false;
     int circles_to_render = 0;
     CoordinateScene(const float width = 1, const float height = 1)
         : Scene(width, height) {
@@ -120,7 +130,7 @@ public:
         for(int d_om = 0; d_om < 2; d_om++){
             float increment = pow(10, order_mag) * (not_fiveish ? 1 : 0.5);
             for(float x_y = floor(lower_bound/increment)*increment; x_y < upper_bound; x_y += increment) {
-                string truncated = truncate_tick(x_y);
+                string truncated = truncate_tick(x_y, ymode && complex_plane);
                 if(done_numbers.find(truncated) != done_numbers.end()) continue;
                 done_numbers.insert(truncated);
                 float tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 192.;
@@ -134,8 +144,8 @@ public:
                 if(number_opacity > 0){
                     ScalingParams sp(gmsz/9., gmsz/18.);
                     Pixels latex = latex_to_pix(truncated, sp);
-                    if(ymode) latex = latex.rotate_90();
-                    if(ymode) pix.overlay(latex, tick_length * 1.5, coordinate - latex.h/2, number_opacity);
+                    //if(ymode) latex = latex.rotate_90();
+                    if(ymode) pix.overlay(latex, tick_length * .8/*1.5*/, coordinate - latex.h*1.1/*.5*/, number_opacity);
                     if(!ymode)pix.overlay(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
                 }
             }
@@ -158,4 +168,3 @@ public:
     void change_data() override { }
     bool check_if_data_changed() const override { return false; }
 };
-

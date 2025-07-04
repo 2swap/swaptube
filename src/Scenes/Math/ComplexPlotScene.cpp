@@ -22,12 +22,15 @@ class ComplexPlotScene : public CoordinateScene {
 public:
     int degree;
     ComplexPlotScene(const int d, const float width = 1, const float height = 1) : CoordinateScene(width, height), degree(d){
+        complex_plane = true;
         for(string type : {"coefficient", "root"})
             for(int num = 0; num < degree; num++)
                 for(char ri : {'r', 'i'})
                     state_manager.set(type + to_string(num) + "_" + ri, "0");
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".33"); // basically saturation
+        state_manager.set("coefficients_opacity", "1");
+        state_manager.set("roots_opacity", "0");
     }
 
     void state_manager_roots_to_coefficients(){
@@ -215,21 +218,25 @@ public:
             state["ab_dilation"]
         );
 
-        /*
-        float gm = get_geom_mean_size() / 200;
-        for(int i = 0; i < roots.size(); i++){
-            const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
-            pix.fill_ring(pixel.x, pixel.y, gm*3, gm*2, OPAQUE_WHITE);
+        float ro = state["roots_opacity"];
+        if(ro > 0.01) {
+            float gm = get_geom_mean_size() / 200;
+            for(int i = 0; i < roots.size(); i++){
+                const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
+                pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, ro);
+            }
         }
-        */
 
-        for(int i = 0; i < coefficients.size(); i++){
-            float opa = clamp(0,abs(coefficients[i])*2,1);
-            if(opa < 0.01) continue;
-            const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
-            ScalingParams sp = ScalingParams(get_width() / 10, get_height() / 10);
-            Pixels text_pixels = latex_to_pix("x^" + to_string(i), sp);
-            pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, opa);
+        float co = state["coefficients_opacity"];
+        if(co > 0.01) {
+            for(int i = 0; i < coefficients.size()-1; i++){
+                float opa = clamp(0,abs(coefficients[i])*2,1) * co;
+                if(opa < 0.01) continue;
+                const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
+                ScalingParams sp = ScalingParams(get_width() / 10, get_height() / 10);
+                Pixels text_pixels = latex_to_pix(string(1,char('a' + coefficients.size()-2-i)), sp);
+                pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, opa);
+            }
         }
 
         CoordinateScene::draw();
@@ -243,6 +250,8 @@ public:
                     sq.insert(type + to_string(num) + "_" + ri);
         sq.insert("roots_or_coefficients_control");
         sq.insert("ab_dilation");
+        sq.insert("roots_opacity");
+        sq.insert("coefficients_opacity");
         return sq;
     }
     void mark_data_unchanged() override { }
