@@ -105,6 +105,53 @@ public:
         return new_coefficients;
     }
 
+    void stage_swap_roots_when_in_root_mode(TransitionType tt, const string& root1, const string& root2) {
+        const string r0 = state_manager.get_equation("root" + root1 + "_r");
+        const string i0 = state_manager.get_equation("root" + root1 + "_i");
+        const string r1 = state_manager.get_equation("root" + root2 + "_r");
+        const string i1 = state_manager.get_equation("root" + root2 + "_i");
+
+        const string midpoint_r = r0 + " " + r1 + " + 2 /";
+        const string midpoint_i = i0 + " " + i1 + " + 2 /";
+
+        const string theta_unique = "theta"+to_string(rand());
+        // Compute spin1 as (root1 - midpoint), rotate it about the origin by theta, then add midpoint back on
+
+        // Define s1 = root1 - midpoint
+        const string s1r = r0 + " " + midpoint_r + " -";
+        const string s1i = i0 + " " + midpoint_i + " -";
+
+        // Rotation formulas:
+        // spin_r = cos(theta)*sXr - sin(theta)*sXi + midpoint_r
+        // spin_i = sin(theta)*sXr + cos(theta)*sXi + midpoint_i
+
+        const string cos_theta = "<" + theta_unique + "> cos";
+        const string sin_theta = "<" + theta_unique + "> sin";
+
+        const string spin_r1 = s1r + " " + cos_theta + " * " + s1i + " " + sin_theta + " * - " + midpoint_r + " +";
+        const string spin_i1 = s1r + " " + sin_theta + " * " + s1i + " " + cos_theta + " * + " + midpoint_i + " +";
+
+        const string spin_r2 = midpoint_r + " 2 * " + spin_r1 + " -";
+        const string spin_i2 = midpoint_i + " 2 * " + spin_i1 + " -";
+
+        state_manager.set(theta_unique, "0");
+        state_manager.set({
+            {"root" + root1 + "_r", spin_r1},
+            {"root" + root1 + "_i", spin_i1},
+            {"root" + root2 + "_r", spin_r2},
+            {"root" + root2 + "_i", spin_i2},
+        });
+        state_manager.transition(tt, {
+            {theta_unique, "pi"},
+        });
+        state_manager.transition(tt, {
+            {"root" + root1 + "_r", r1},
+            {"root" + root1 + "_i", i1},
+            {"root" + root2 + "_r", r0},
+            {"root" + root2 + "_i", i0},
+        });
+    }
+
     vector<complex<float>> get_roots(){
         vector<complex<float>> roots;
         if(state["roots_or_coefficients_control"] == 0) {

@@ -123,7 +123,7 @@ public:
 	//videoStream->id = fc->nb_streams - 1;
 
         videoCodecContext = avcodec_alloc_context3(codec);
-        if (!videoStream) {
+        if (!videoCodecContext) {
             throw runtime_error("Failed to allocate video codec context.");
         }
         videoCodecContext->width = VIDEO_WIDTH;
