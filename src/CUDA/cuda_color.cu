@@ -63,7 +63,8 @@ __device__ int device_argb(int a, int r, int g, int b){return (int(clamp(0,a,255
                                                               (int(clamp(0,g,255))<<8 )|
                                                               (int(clamp(0,b,255))    );}
 
-__device__ float device_linear_srbg_to_srbg(float x) {
+__device__ float device_linear_srgb_to_srgb(float x) {
+    //return x;
 	if (x >= 0.0031308)
 		return 1.055*pow(x, 1.0/2.4) - 0.055;
 	return 12.92 * x;
@@ -81,9 +82,9 @@ __device__ int device_OKLABtoRGB(int alpha, float L, float a, float b)
 
     return device_argb(
         alpha,
-		256*device_linear_srbg_to_srbg(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s),
-		256*device_linear_srbg_to_srbg(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s),
-		256*device_linear_srbg_to_srbg(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s)
+		256*device_linear_srgb_to_srgb(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s),
+		256*device_linear_srgb_to_srgb(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s),
+		256*device_linear_srgb_to_srgb(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s)
     );
 }
 
