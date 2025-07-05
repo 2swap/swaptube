@@ -230,7 +230,8 @@ public:
         float co = state["coefficients_opacity"];
         if(co > 0.01) {
             for(int i = 0; i < coefficients.size()-1; i++){
-                float opa = clamp(0,abs(coefficients[i])*2,1) * co;
+                float opa = 1;//clamp(0,abs(coefficients[i])*2,1);
+                opa *= co;
                 if(opa < 0.01) continue;
                 const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
                 ScalingParams sp = ScalingParams(get_width() / 10, get_height() / 10);
