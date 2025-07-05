@@ -8,9 +8,10 @@ inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
 
 class ConvolutionScene : public Scene {
 public:
-    ConvolutionScene(const Pixels& p, const double width = 1, const double height = 1)
-    : Scene(width, height), p1(p), coords(get_coords_from_pixels(p)) {
-        state_manager.set("transparency_profile", "<microblock_fraction>");
+    ConvolutionScene(const double width = 1, const double height = 1)
+    : Scene(width, height) {
+        state_manager.set("transparency_profile", "<in_transition_state> <microblock_fraction> *");
+        state_manager.set("in_transition_state", "0");
     }
 
     pair<int, int> get_coords_from_pixels(const Pixels& p){
@@ -18,34 +19,34 @@ public:
     }
 
     void begin_transition(const Pixels& p) {
-        if(in_transition_state) end_transition();
+        if(state["in_transition_state"]) end_transition();
         p2 = p;
 
         transition_coords = get_coords_from_pixels(p);
 
         intersections = find_intersections(p1, p2);
-        in_transition_state = true;
+        state_manager.set("in_transition_state", "1");
     }
 
     void jump(const Pixels& p) {
-        in_transition_state = false;
+        state_manager.set("in_transition_state", "0");
         p1 = p;
         coords = get_coords_from_pixels(p);
     }
 
     void on_end_transition_extra_behavior(bool is_macroblock){
-        if(in_transition_state && !override_transition_end) end_transition();
+        if(state["in_transition_state"] == 1) end_transition();
     }
 
     void end_transition(){
-        assert(in_transition_state);
+        assert(state["in_transition_state"] == 1);
         p1 = p2;
         coords = transition_coords;
-        in_transition_state = false;
+        state_manager.set("in_transition_state", "0");
     }
 
     void draw() override{
-        if(in_transition_state) {
+        if(state["in_transition_state"]==1) {
             double tp = transparency_profile(state["transparency_profile"]);
             double tp1 = transparency_profile(1-state["transparency_profile"]);
             double smooth = smoother2(state["transparency_profile"]);
@@ -73,28 +74,23 @@ public:
             StepResult last_intersection = intersections[intersections.size()-1];
             pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
             pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
-        }
-        else {
+        } else {
+            p1 = get_p1();
+            coords = get_coords_from_pixels(p1);
             pix.overwrite(p1, coords.first, coords.second);
         }
     }
 
     const StateQuery populate_state_query() const override {
-        return in_transition_state ?
-               StateQuery{"transparency_profile"}
-               : StateQuery{};
+        return StateQuery{"transparency_profile", "in_transition_state"};
     }
     void mark_data_unchanged() override { }
     void change_data() override { }
-    bool check_if_data_changed() const override { return in_transition_state; } // No DataObjects, but we treat transitioning as changing data
-    bool override_transition_end = false;
-    Pixels get_copy_p1() const {
-        return p1;
-    }
+    // TODO can this next line get deleted?
+    bool check_if_data_changed() const override { return state["in_transition_state"] == 1; } // No DataObjects, but we treat transitioning as changing data
 
 protected:
-    bool in_transition_state = false;
-
+    virtual Pixels get_p1() {return p1;}
     // Things used for non-transition states
     Pixels p1;
     pair<int, int> coords;

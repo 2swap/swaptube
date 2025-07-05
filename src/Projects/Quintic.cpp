@@ -34,29 +34,76 @@ void render_video(){
     cs.render_microblock();
 
     shared_ptr<LatexScene> ls = make_shared<LatexScene>("x^3+ax^2+bx^1+cx^0", 1);
-    cs.add_scene_fade_in(ls, "ls");
+    cs.add_scene_fade_in(MICRO, ls, "ls");
+    cs.state_manager.transition(MICRO, {{"ls.x", ".25"}, {"ls.y", ".1"}});
+    ls->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
     cs.stage_macroblock(FileBlock("There's a standard form, where each exponent of x has an associated coefficient,"), 1);
     cs.render_microblock();
 
     shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x+r_1)(x+r_2)(x+r_3)", 1);
-    cs.add_scene_fade_in(ls2, "ls2");
+    cs.add_scene_fade_in(MICRO, ls2, "ls2");
+    cs.state_manager.transition(MICRO, {{"ls2.x", ".75"}, {"ls2.y", ".1"}});
+    ls2->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
     cs.stage_macroblock(FileBlock("and also a factored form, with one term corresponding to each root."), 1);
     cs.render_microblock();
-    return;
 
+    cs.stage_macroblock(FileBlock("These points are the roots of the polynomial, plotted in the complex plane,"), 2);
+    cps->state_manager.transition(MICRO, {{"roots_opacity","1"}});
+    cs.render_microblock();
     cps->state_manager.transition(MICRO, {{"roots_opacity","0"}});
-    cs.stage_macroblock(FileBlock("These points are the roots of the polynomial, plotted in the complex plane,"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("and these points are the coefficients of each power of the input."), 1);
-    cs.stage_macroblock(FileBlock("It's really a shame that, most likely, that algebra teacher never showed you this plot..."), 1);
+    cs.stage_macroblock(FileBlock("and these points are the coefficients of each power of the input."), 4);
+    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("It's really a shame that, most likely, that algebra teacher never showed you this plot of the relationship between them..."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("because with relatively little work, it'll let us peer right into the soul of the polynomial, and derive all kinds of important results in algebra, culminating in the Abel-Ruffini theorem, stating that there is no Quintic formula."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("The space we're looking at here is the complex plane, home to numbers like i and 3-2i."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("For each point in this plot, I took that complex number, and put it as an input to the polynomial,"), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("and colored the associated pixel accordingly."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("For example, say I take the point 1+i. plugging that into the polynomial gives (?)"), 1);
-    cs.stage_macroblock(FileBlock("The brightness shows distance to the origin, where pure white is an output value of zero,"), 1);
-    cs.stage_macroblock(FileBlock("and the color is the angle of the output complex number."), 1);
+    cs.render_microblock();
+
+    cps->state_manager.transition(MICRO, {
+        {"ab_dilation", "0"},
+    });
+    cs.stage_macroblock(FileBlock("The brightness shows distance to the origin, where pure white is an output value of zero,"), 5);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    cps->state_manager.transition(MICRO, {
+        {"ab_dilation", "10"},
+    });
+    cs.stage_macroblock(FileBlock("and the color is the angle of the output complex number."), 5);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, {
+        {"ab_dilation", ".3"},
+    });
+    cs.render_microblock();
+    return;
     cs.stage_macroblock(FileBlock("That means our output value gets assigned this (?) color."), 1);
     cs.stage_macroblock(FileBlock("Doing this for every point, we can view what our complex polynomial looks like."), 1);
     cs.stage_macroblock(FileBlock("But before we get all analytical, I hear you asking..."), 1);
