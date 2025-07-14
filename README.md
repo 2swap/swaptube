@@ -35,8 +35,6 @@ When you have created a project file in `projects/yourprojectname.cpp`, you can 
 
 This script will handle the compilation and execution of your project file.
 
-Sure, here's an additional section that documents the repository structure based on the provided information:
-
 ## Repository Structure
 
 ### Top-Level Files and Folders
