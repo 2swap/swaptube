@@ -22,8 +22,7 @@ The following external dependencies are required for specific functionalities wi
 | Cairo | In-Video LaTeX | visual_media.cpp | Renders SVG files onto Cairo surfaces and converts them to pixel data | `sudo apt install libcairo2-dev` |
 | Eigen | Rendering Complex Polynomials | complex_plot_scene.cpp | Finding zeros to render plots of complex-valued functions | `sudo apt install libeigen3-dev` |
 | LibPNG | PNG scenes | visual_media.cpp | Reads PNG files and converts them to pixel data | `sudo apt install libpng-dev` |
-| CUDA or HIP | Accelerating simulations and video rendering | Anything that references the CUDA or ROCm src dirs | Various | Hardware-dependent |
-| ncurses | Drawing the GUI | src/io/GUI.cpp | Makes windows for the terminal GUI. | `sudo apt install libncurses5-dev libncursesw5-dev` |
+| CUDA | Accelerating simulations and video rendering | Anything that references the CUDA src dir | Various | Hardware-dependent |
 
 ## How to Run
 
