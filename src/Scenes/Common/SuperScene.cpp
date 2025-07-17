@@ -65,8 +65,8 @@ protected:
     }
 
     void add_subscene_check_dupe(const string& name, shared_ptr<Scene> scene, bool behind = false) {
-        if(subscenes.find(name) != subscenes.end())
-            throw runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
+        if(!scene) throw runtime_error("Error: Attempted to add a null subscene to superscene: " + name);
+        if(subscenes.find(name) != subscenes.end()) throw runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
         scene->state_manager.set_parent(&state_manager, name);
         subscenes[name] = scene;
         if(behind) render_order.push_front(name);

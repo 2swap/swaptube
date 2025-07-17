@@ -8,8 +8,8 @@
 
 void render_video() {
     CompositeScene cs;
-    MandelbrotScene ms;
-    cs.add_scene(&ms, "ms");
+    shared_ptr<MandelbrotScene> ms = make_shared<MandelbrotScene>();
+    cs.add_scene(ms, "ms");
     unordered_map<string,string> init = {
         {"zoom_r", "2 <zoom_exp> ^"},
         {"zoom_exp", "0"},
@@ -32,7 +32,7 @@ void render_video() {
         {"internal_shade", "0"},
     };
     cs.state_manager.set(init);
-    ms.state_manager.set(unordered_map<string,string>{
+    ms->state_manager.set(unordered_map<string,string>{
         {"zoom_r", "[zoom_r]"},
         {"zoom_i", "[zoom_i]"},
         {"max_iterations", "[max_iterations]"},
@@ -53,7 +53,7 @@ void render_video() {
         {"internal_shade", "[internal_shade]"},
         {"breath", "<t> 3 / sin 2 / "},
     });
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
+    cs.state_manager.transition(MICRO, unordered_map<string,string>{
         {"max_iterations", "200"},
         {"seed_c_r", "<t> 4.1 / sin 2 *"},
         {"seed_c_i", "<t> 5.6 / cos 2 *"},
@@ -63,6 +63,8 @@ void render_video() {
         {"seed_z_i", "<t> 2.9 / cos 2 *"},
         {"zoom_exp", "2"},
     });
-    cs.stage_macroblock_and_render(AudioSegment("Here's a tour of the X-Set, by moving the origin around in 6-space. Enjoy!"));
-    cs.stage_macroblock_and_render(AudioSegment(35));
+    cs.stage_macroblock(FileBlock("Here's a tour of the X-Set, by moving the origin around in 6-space. Enjoy!"), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(SilenceBlock(35), 1);
+    cs.render_microblock();
 }
