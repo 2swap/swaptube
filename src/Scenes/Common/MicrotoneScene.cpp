@@ -29,7 +29,7 @@ public:
         vector<float> left;
         vector<float> right;
         scape.generate_audio(total_samples, left, right, new_freqs);
-        WRITER.add_sfx(left, right, elapsed);
+        AUDIO_WRITER.add_sfx(left, right, elapsed);
         elapsed += left.size();
     }
 

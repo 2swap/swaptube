@@ -50,7 +50,7 @@ Tetromino generateTetromino() {
 Tetromino generateScatteredTetromino(int num_sounds) {
     Tetromino scattered;
     while (scattered.size() < num_sounds) {
-        int x = rand() % 2-1; // Random x in range [-1, 1]
+        int x = rand() % 3-1; // Random x in range [-1, 1]
         int y = rand() % 3-1; // Random y in range [-1, 1]
         Point p = {x, y};
 
@@ -78,7 +78,7 @@ void render_video() {
 
     FourierSound fs("recip.fft");
     StateSet init{ {"zoom", ".2"}, };
-    int num_sounds = 1;
+    int num_sounds = 2;
     for(int j = 0; j < num_sounds; j++){
         ms.add_sound(fs);
         init["circle"+to_string(j)+"_x"] = "0";
@@ -93,8 +93,10 @@ void render_video() {
             ss["circle"+to_string(j)+"_x"] = to_string(rand_tet[j].first);
             ss["circle"+to_string(j)+"_y"] = to_string(rand_tet[j].second);
         }
-        ms.state_manager.macroblock_transition(ss);
-        ms.stage_macroblock_and_render(SilenceSegment(.2));
-        ms.stage_macroblock_and_render(SilenceSegment(.8));
+        ms.state_manager.transition(MACRO, ss);
+        ms.stage_macroblock(SilenceBlock(.2), 1);
+        ms.render_microblock();
+        ms.stage_macroblock(SilenceBlock(.8), 1);
+        ms.render_microblock();
     }
 }
