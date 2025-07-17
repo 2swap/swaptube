@@ -2,8 +2,16 @@
 import os
 import subprocess
 import re
-import tempfile
 import shutil
+import argparse
+
+def delete_temp_recordings(temp_recordings_dir):
+    if os.path.exists(temp_recordings_dir):
+        shutil.rmtree(temp_recordings_dir)
+
+def setup_temp_recordings(temp_recordings_dir):
+    delete_temp_recordings(temp_recordings_dir)
+    os.makedirs(temp_recordings_dir)
 
 # Function to print the next 5 lines for lookahead
 def print_lookahead(entries, start_index, lines=5):
@@ -36,14 +44,15 @@ def prompt_user_to_archive_recordings(project_dir):
         print("No recordings were archived.")
 
 def main():
-    import argparse
-
     parser = argparse.ArgumentParser(description="Record audio files based on record_list.tsv")
     parser.add_argument('project_name', help="Name of the project")
     args = parser.parse_args()
 
     PROJECT_NAME = args.project_name
     PROJECT_DIR = f"media/{PROJECT_NAME}"
+
+    temp_recordings_dir = os.path.join(PROJECT_DIR, "temp_recordings")
+    setup_temp_recordings(temp_recordings_dir)
 
     # Check if the directory exists, and if not, create it
     if not os.path.exists(PROJECT_DIR):
@@ -74,8 +83,6 @@ def main():
         for line in devices_output.splitlines():
             if line.strip().startswith("card"):
                 available_devices.append(line.strip())
-        for idx, device in enumerate(available_devices):
-            print(f"{idx}: {device}")
     except Exception as e:
         print("Error listing audio devices:", e)
         return
@@ -86,6 +93,8 @@ def main():
         selected_line = yeti_devices[0]
         print(f"Automatically selected device with 'yeti': {selected_line}")
     else:
+        for idx, device in enumerate(available_devices):
+            print(f"{idx}: {device}")
         selected_index = int(input("Enter the corresponding number: "))
         selected_line = available_devices[selected_index]
 
@@ -119,8 +128,7 @@ def main():
             # Print the next 5 entries for lookahead
             print_lookahead(entries, index + 1)
 
-            with tempfile.NamedTemporaryFile(suffix=".aac", delete=False) as tmpfile:
-                temp_path = tmpfile.name
+            temp_path = os.path.join(temp_recordings_dir, f"{current_filename}.aac")
 
             # Start recording with ffmpeg in the background
             print("Recording... Press Enter to stop.")
@@ -167,6 +175,8 @@ def main():
                         os.remove(final_path)
                         continue
                 break
+
+    delete_temp_recordings(temp_recordings_dir)
 
 if __name__ == "__main__":
     main()

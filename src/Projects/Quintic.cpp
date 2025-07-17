@@ -25,6 +25,7 @@ void render_video(){
         {"coefficient0_i", "4 <t> cos *"},
     });
     cps->render_microblock();
+    // TODO this seems to be failing only in smoketest due to invalid state accesses
     cps->state_manager_coefficients_to_roots();
     cps->state_manager.set({
         {"roots_or_coefficients_control", "0"},
