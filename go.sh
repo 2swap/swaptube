@@ -30,6 +30,11 @@ fi
 PROJECT_NAME=$1
 VIDEO_WIDTH=$2
 VIDEO_HEIGHT=$3
+# Check that the video dimensions are valid integers
+if ! [[ "$VIDEO_WIDTH" =~ ^[0-9]+$ ]] || ! [[ "$VIDEO_HEIGHT" =~ ^[0-9]+$ ]]; then
+    echo "go.sh: Error - Video width and height must be valid integers."
+    exit 1
+fi
 FRAMERATE=30
 SAMPLERATE=48000
 SMOKETEST=0
