@@ -1,14 +1,10 @@
 #include "../Scenes/Connect4/Connect4GraphScene.cpp"
 
 void render_video() {
-    Graph<C4Board> g;
-    g.decay = 0.1;
-    g.repel_force = 0.5;
-    g.gravity_strength = 0;
-    g.dimensions = 2;
-    C4GraphScene gs(&g, "444", MANUAL);
+    Graph g;
+    C4GraphScene gs(&g, false, "444", MANUAL);
 
-    gs.state_manager.set(StateSet{
+    gs.state_manager.set({
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
@@ -21,18 +17,21 @@ void render_video() {
         {"points_opacity", "1"},
         {"physics_multiplier", "1"},
         {"d", "2"},
+        {"dimensions", "2"},
     });
-    gs.state_manager.microblock_transition(StateSet{
+    gs.state_manager.transition(MICRO, {
         {"q1", "<t> 4 / cos"},
         {"qi", "0"},
         {"qj", "<t> -4 / sin"},
         {"qk", "0"},
         {"d", "8"},
     });
-    gs.stage_macroblock_and_render(AudioSegment(1));
+    gs.stage_macroblock(SilenceBlock(1), 1);
+    gs.render_microblock();
     for(int i = 1; i <= 7; i++){
         g.add_node(new C4Board("444" + to_string(i)));
+        g.add_missing_edges();
     }
-    g.dimensions = 3;
-    gs.stage_macroblock_and_render(AudioSegment(1));
+    gs.stage_macroblock(SilenceBlock(1), 1);
+    gs.render_microblock();
 }
