@@ -4,6 +4,7 @@
 #include "../misc/ColorScheme.cpp"
 
 void render_video() {
+    throw runtime_error("This demo has regressed and I have not fixed it yet...");
     ColorScheme cs = get_color_schemes()[6];
     OrbitSim sim;
     shared_ptr<OrbitScene2D> scene = make_shared<OrbitScene2D>(&sim);
