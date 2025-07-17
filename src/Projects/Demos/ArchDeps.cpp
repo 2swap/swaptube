@@ -23,11 +23,9 @@ unordered_set<string> get_explicit_packages() {
 }
 
 void render_video() {
-    //PRINT_TO_TERMINAL = false;
     SAVE_FRAME_PNGS = false;
 
     Graph g;
-    g.dimensions = 3;
     GraphScene gs(&g);
 
     gs.state_manager.set({
@@ -44,7 +42,8 @@ void render_video() {
     for(const string& s : expl){
         g.add_to_stack(new PacmanPackage(s));
     }
-    g.expand_graph_completely();
+    g.expand();
     cout << g.size() << endl;
-    gs.stage_macroblock_and_render(SilenceSegment(5));
+    gs.stage_macroblock(SilenceBlock(5), 1);
+    gs.render_microblock();
 }
