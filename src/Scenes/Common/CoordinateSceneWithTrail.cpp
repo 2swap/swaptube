@@ -9,9 +9,9 @@ public:
     vector<pair<double, double>> trail;
     CoordinateSceneWithTrail(const double width = 1, const double height = 1)
         : CoordinateScene(width, height) {
-        state_manager.add_equation("trail_opacity", "0");
-        state_manager.add_equation("trail_x", "0");
-        state_manager.add_equation("trail_y", "0");
+        state_manager.set({{"trail_opacity", "0"},
+                           {"trail_x", "0"},
+                           {"trail_y", "0"}});
     }
 
     void draw() override {

@@ -7,17 +7,17 @@
 class MovingPendulumGridScene : public CoordinateScene {
 public:
     MovingPendulumGridScene(const double width = 1, const double height = 1) : CoordinateScene(width, height) {
-        state_manager.add_equation("contrast", ".1");
-        state_manager.add_equation("mode", "0");
-        state_manager.add_equation("center_x", "0");
-        state_manager.add_equation("center_y", "0");
-        state_manager.add_equation("theta_or_momentum", "0");
-        state_manager.add_equation("physics_multiplier", "0");
-        state_manager.add_equation("theta1", "0");
-        state_manager.add_equation("theta2", "0");
-        state_manager.add_equation("p1", "0");
-        state_manager.add_equation("p2", "0");
-        state_manager.add_equation("momentum_value_gradient", "1");
+        state_manager.set({{"contrast", ".1"},
+                {"mode", "0"},
+                {"center_x", "0"},
+                {"center_y", "0"},
+                {"theta_or_momentum", "0"},
+                {"physics_multiplier", "0"},
+                {"theta1", "0"},
+                {"theta2", "0"},
+                {"p1", "0"},
+                {"p2", "0"},
+                {"momentum_value_gradient", "1"}});
     }
 
     const StateQuery populate_state_query() const override {

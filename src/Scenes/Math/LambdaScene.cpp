@@ -7,8 +7,8 @@ class LambdaScene : public Scene {
 public:
     LambdaScene(const shared_ptr<const LambdaExpression> lambda, const double width = 1, const double height = 1) : Scene(width, height), le(lambda->clone()) {
         le->set_positions();
-        state_manager.add_equation("latex_opacity", "0");
-        state_manager.add_equation("title_opacity", "0");
+        state_manager.set({{"latex_opacity", "0"},
+                           {"title_opacity", "0"}});
     }
 
     const StateQuery populate_state_query() const override {

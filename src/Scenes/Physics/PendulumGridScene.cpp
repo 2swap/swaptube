@@ -7,21 +7,20 @@
 class PendulumGridScene : public CoordinateScene {
 public:
     PendulumGridScene(const vector<PendulumGrid>& pgv, const double width = 1, const double height = 1) : CoordinateScene(width, height), grids(pgv) {
-        state_manager.add_equation("contrast", "1");
-        state_manager.add_equation("mode", "0");
-        state_manager.add_equation("physics_multiplier", "0");
-        state_manager.add_equation("rk4_step_size", "1 30 / .1 *");
-        state_manager.add_equation("zoom", "1 6.283 /");
-        state_manager.add_equation("center_x", "0");
-        state_manager.add_equation("center_y", "0");
-        state_manager.add_equation("trail_start_x", "0");
-        state_manager.add_equation("trail_start_y", "0");
-        state_manager.add_equation("trail_opacity", "0");
-        state_manager.add_equation("trail_length", "0");
-        state_manager.add_equation("energy_min", "0");
-        state_manager.add_equation("energy_max", "0");
-        state_manager.add_equation("momentum_value_gradient", "1");
-    }
+        state_manager.set({{"contrast", "1"},
+                           {"mode", "0"},
+                           {"physics_multiplier", "0"},
+                           {"rk4_step_size", "1 30 / .1 *"},
+                           {"zoom", "1 6.283 /"},
+                           {"center_x", "0"},
+                           {"center_y", "0"},
+                           {"trail_start_x", "0"},
+                           {"trail_start_y", "0"},
+                           {"trail_opacity", "0"},
+                           {"trail_length", "0"},
+                           {"energy_min", "0"},
+                           {"energy_max", "0"},
+                           {"momentum_value_gradient", "1"}});
 
     const StateQuery populate_state_query() const override {
         StateQuery s = CoordinateScene::populate_state_query();

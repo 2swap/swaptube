@@ -6,7 +6,7 @@ class PendulumPointsScene : public CoordinateScene {
 public:
     PendulumPointsScene(const PendulumGrid& pg, const double width = 1, const double height = 1)
         : CoordinateScene(width, height), grid(pg) {
-        state_manager.add_equation("points_opacity", "1");
+        state_manager.set("points_opacity", "1");
     }
 
     void draw() override {
