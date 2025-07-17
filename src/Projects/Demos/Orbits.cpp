@@ -1,39 +1,23 @@
-using namespace std;
-#include <string>
-const string project_name = "Orbits";
-#include "../io/PathManager.cpp"
-const int width_base = 640;
-const int height_base = 360;
-const int mult = 1;
-
-// PROJECT GLOBALS
-const int VIDEO_WIDTH = width_base * mult;
-const int VIDEO_HEIGHT = height_base * mult;
-const int VIDEO_FRAMERATE = 30;
-
-#include "../io/writer.cpp"
-
 #include "../Scenes/Physics/OrbitScene2D.cpp"
 #include "../Scenes/Media/StateSliderScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
-#include "../misc/Timer.cpp"
 #include "../misc/ColorScheme.cpp"
 
 void render_video() {
     ColorScheme cs = get_color_schemes()[6];
     OrbitSim sim;
-    OrbitScene2D scene(&sim);
+    shared_ptr<OrbitScene2D> scene = make_shared<OrbitScene2D>(&sim);
     CompositeScene comp;
-    comp.add_scene(&scene, "orbit2d_s", 0, 0, 1, 1, true); 
+    comp.add_scene(scene, "orbit2d_s"); 
     sim.add_fixed_object(cs.get_color(), "planet1");
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state_manager.set({
         {"planet1.opacity", "1"},
         {"planet1.x", "-.2"},
         {"planet1.y", "-.1"},
         {"planet1.z", "0"},
     });
     sim.add_fixed_object(cs.get_color(), "planet2");
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state_manager.set({
         {"planet2.opacity", "1"},
         {"planet2.x", "0.2171"},
         {"planet2.y", "0.1"},
@@ -57,21 +41,21 @@ void render_video() {
         {"tick_duration", "0.002"}
     });
 
-    StateSliderScene drag("eps", "\\epsilon", 0, 1);
-    comp.add_scene(&drag, "eps_s", 0, .9, 1, .1, true); 
+    shared_ptr<StateSliderScene> drag = make_shared<StateSliderScene>("eps", "\\epsilon", .5, .1);
+    comp.add_scene(drag, "eps_s", .25, .95); 
 
-    scene.stage_macroblock_and_render(AudioSegment(3));
-    scene.state_manager.set(unordered_map<string, string>{
+    comp.stage_macroblock(SilenceBlock(3), 1);
+    comp.render_microblock();
+
+    comp.state_manager.set(unordered_map<string, string>{
         {"eps", "0.0001"},
     });
-    scene.stage_macroblock_and_render(AudioSegment(3));
-    scene.state_manager.set(unordered_map<string, string>{
+    comp.stage_macroblock(SilenceBlock(3), 1);
+    comp.render_microblock();
+
+    comp.state_manager.set(unordered_map<string, string>{
         {"eps", "0.00001"},
     });
-    scene.stage_macroblock_and_render(AudioSegment(3));
-}
-int main() {
-    Timer timer;
-    render_video();
-    return 0;
+    comp.stage_macroblock(SilenceBlock(3), 1);
+    comp.render_microblock();
 }

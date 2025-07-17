@@ -5,19 +5,19 @@
 class PendulumScene : public Scene {
 public:
     PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), pend(s), start_state(s), path_background(get_width(), get_height()) {
-        state_manager.add_equation("tone", "1");
-        state_manager.add_equation("volume", "0");
-        state_manager.add_equation("path_opacity", "0");
-        state_manager.add_equation("physics_multiplier", "30");
-        state_manager.add_equation("rk4_step_size", "1 30 / <physics_multiplier> 0.01 + /");
-        state_manager.add_equation("background_opacity", "0");
-        state_manager.add_equation("pendulum_opacity", "1");
-        state_manager.add_equation("top_angle_opacity", "0");
-        state_manager.add_equation("bottom_angle_opacity", "0");
-        state_manager.add_equation("rainbow", "1");
-        state_manager.add_equation("manual_mode", "0");
-        state_manager.add_equation("theta1_manual", "0");
-        state_manager.add_equation("theta2_manual", "0");
+        state_manager.set({{"tone", "1"},
+                           {"volume", "0"},
+                           {"path_opacity", "0"},
+                           {"physics_multiplier", "30"},
+                           {"rk4_step_size", "1 30 / <physics_multiplier> 0.01 + /"},
+                           {"background_opacity", "0"},
+                           {"pendulum_opacity", "1"},
+                           {"top_angle_opacity", "0"},
+                           {"bottom_angle_opacity", "0"},
+                           {"rainbow", "1"},
+                           {"manual_mode", "0"},
+                           {"theta1_manual", "0"},
+                           {"theta2_manual", "0"}});
     }
     int alpha_subtract = 2;
 
