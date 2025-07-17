@@ -2,12 +2,38 @@
 import os
 import subprocess
 import re
+import tempfile
+import shutil
 
 # Function to print the next 5 lines for lookahead
 def print_lookahead(entries, start_index, lines=5):
     end_index = min(start_index + lines, len(entries))
     for i in range(start_index, end_index):
         print(entries[i][1])  # Print only the text part
+
+def prompt_user_to_archive_recordings(project_dir):
+    aac_files = [f for f in os.listdir(project_dir) if f.endswith(".aac")]
+    if not aac_files:
+        return  # No files to archive, no prompt
+
+    print("Do you want to archive the existing recordings? (y/n)")
+    user_input = input().strip().lower()
+    if user_input == 'y':
+        # Find the lowest number not used by an existing archive directory
+        uniq_id = 0
+        while True:
+            uniq_id += 1
+            archive_dir = os.path.join(project_dir, "archive" + str(uniq_id))
+            if not os.path.exists(archive_dir):
+                break
+        os.makedirs(archive_dir)
+        for filename in aac_files:
+            src_path = os.path.join(project_dir, filename)
+            dest_path = os.path.join(archive_dir, filename)
+            os.rename(src_path, dest_path)
+        print(f"All aac recordings have been archived to {archive_dir}")
+    else:
+        print("No recordings were archived.")
 
 def main():
     import argparse
@@ -40,6 +66,8 @@ def main():
         print("Error: record_list.tsv is empty.")
         return
 
+    prompt_user_to_archive_recordings(PROJECT_DIR)
+
     try:
         devices_output = subprocess.check_output(["arecord", "-l"], stderr=subprocess.STDOUT).decode()
         available_devices = []
@@ -52,8 +80,15 @@ def main():
         print("Error listing audio devices:", e)
         return
 
-    selected_index = int(input("Enter the corresponding number: "))
-    selected_line = available_devices[selected_index]
+    # Automatically select device if a single mic contains "yeti" (case-insensitive)
+    yeti_devices = [device for device in available_devices if 'yeti' in device.lower()]
+    if len(yeti_devices) == 1:
+        selected_line = yeti_devices[0]
+        print(f"Automatically selected device with 'yeti': {selected_line}")
+    else:
+        selected_index = int(input("Enter the corresponding number: "))
+        selected_line = available_devices[selected_index]
+
     m = re.search(r"card (\d+).*device (\d+):", selected_line)
     if m:
         card_num = m.group(1)
@@ -84,14 +119,16 @@ def main():
             # Print the next 5 entries for lookahead
             print_lookahead(entries, index + 1)
 
+            with tempfile.NamedTemporaryFile(suffix=".aac", delete=False) as tmpfile:
+                temp_path = tmpfile.name
+
             # Start recording with ffmpeg in the background
             print("Recording... Press Enter to stop.")
             ffmpeg_log = os.path.join(PROJECT_DIR, "ffmpeg.log")
             ffmpeg_cmd = [
-                'ffmpeg', '-f', 'alsa', '-ar', '44100', '-i', selected_device, 
-                os.path.join(PROJECT_DIR, current_filename)
+                'ffmpeg', '-f', 'alsa', '-ar', '48000', '-i', selected_device, 
+                temp_path
             ]
-            #print(ffmpeg_cmd)
 
             ffmpeg_process = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -106,22 +143,28 @@ def main():
             user_input = input()
 
             if user_input.lower() == 'u':
-                print(f"Deleting {PROJECT_DIR}/{current_filename}...")
-                os.remove(os.path.join(PROJECT_DIR, current_filename))
+                print(f"Deleting {temp_path}...")
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
                 # It will loop back to re-record this file
             else:
+                # Move the temp file to the final destination
+                final_path = os.path.join(PROJECT_DIR, current_filename)
+                shutil.copyfile(temp_path, final_path)
+                os.remove(temp_path)
+
                 successes += 1
                 if successes % 10 == 1:
                     input("ARE YOU HYPED")
                 if successes == 1:
                     input("Let's check the first audio output file...")
-                    ffplay_cmd = [ 'ffplay', os.path.join(PROJECT_DIR, current_filename) ]
+                    ffplay_cmd = [ 'ffplay', final_path ]
                     ffplay_process = subprocess.Popen(ffplay_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     ffmpeg_process.wait()
                     user_check = input("Was it good? [y/n]")
                     if user_check != 'y':
-                        print(f"Deleting {PROJECT_DIR}/{current_filename}...")
-                        os.remove(os.path.join(PROJECT_DIR, current_filename))
+                        print(f"Deleting {final_path}...")
+                        os.remove(final_path)
                         continue
                 break
 

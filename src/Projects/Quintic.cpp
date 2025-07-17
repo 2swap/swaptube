@@ -118,6 +118,7 @@ void render_video(){
         {"ab_dilation", ".3"},
     });
     cs.render_microblock();
+    return;
     cs.stage_macroblock(FileBlock("Doing this for every point, we can view our function in the complex plane."), 1);
     cs.stage_macroblock(FileBlock("But before we get all analytical, I hear you asking..."), 1);
     cs.stage_macroblock(FileBlock("What's all this business with complex numbers? Why leave the familiar land of the reals?"), 1);
