@@ -2,6 +2,7 @@
 #include "GraphSpread.cu"
 #include "gravitational_predictions.cu"
 #include "mandelbrot.cu"
+// TODO ci_productions #include "mandelbrot3d.cu"
 #include "overlay_underlay.cu"
 #include "PendulumFractal.cu"
 #include "render_3d_points_lines.cu"
