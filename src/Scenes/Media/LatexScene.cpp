@@ -8,25 +8,32 @@ public:
     LatexScene(const string& l, double scale, const double width = 1, const double height = 1)
     : ConvolutionScene(width, height), latex(l), scale_factor(scale) {}
 
-    void begin_latex_transition(const string& l) {
+    void begin_latex_transition(const TransitionType tt, const string& l) {
         latex = l;
-        ScalingParams sp(scale_factor);
-        begin_transition(latex_to_pix(latex, sp));
+        ScalingParams sp(scale);
+        begin_transition(tt, latex_to_pix(latex, sp));
     }
 
     void jump_latex(string latex) {
-        ScalingParams sp(scale_factor);
+        // If you wanted to re-initialize the scale:
+        //ScalingParams sp(scale_factor*get_width(), scale_factor*get_height());
+
+        //But we usually don't do that
+        ScalingParams sp(scale);
         jump(latex_to_pix(latex, sp));
     }
 
 private:
     string latex;
+    double scale = 0;
     double scale_factor;
 
 protected:
     Pixels get_p1() override {
+        //ScalingParams sp = scale == 0 ? ScalingParams(scale_factor*get_width(), scale_factor*get_height()) : ScalingParams(scale);
         ScalingParams sp(scale_factor*get_width(), scale_factor*get_height());
         Pixels ret = latex_to_pix(latex, sp);
+        scale = sp.scale_factor;
         return ret;
     }
 };

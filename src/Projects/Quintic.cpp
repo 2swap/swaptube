@@ -41,9 +41,9 @@ void render_video(){
     cs.add_scene_fade_in(MICRO, ls, "ls");
     cs.stage_macroblock(FileBlock("There's a standard form, where each exponent of x has an associated coefficient,"), 4);
     cs.render_microblock();
-    ls->begin_latex_transition("x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
+    ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
     cs.render_microblock();
-    ls->begin_latex_transition("x^3+ax^2+bx^1+cx^0");
+    ls->begin_latex_transition(MICRO, "x^3+ax^2+bx^1+cx^0");
     cs.render_microblock();
     cs.state_manager.transition(MICRO, {{"ls.x", ".25"}, {"ls.y", ".1"}});
     ls->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
@@ -53,9 +53,10 @@ void render_video(){
     cs.add_scene_fade_in(MICRO, ls2, "ls2");
     cs.stage_macroblock(FileBlock("and also a factored form, with one term for each root."), 4);
     cs.render_microblock();
-    ls2->begin_latex_transition(latex_color(0xffff0000, "(x+r_1)")+latex_color(0xff00ff00, "(x+r_2)")+latex_color(0xff0000ff, "(x+r_3)"));
+    ls2->begin_latex_transition(MICRO, latex_color(0xffff0000, "(x+r_1)")+latex_color(0xff00ff00, "(x+r_2)")+latex_color(0xff0000ff, "(x+r_3)"));
+    return;
     cs.render_microblock();
-    ls->begin_latex_transition("(x+r_1)(x+r_2)(x+r_3)");
+    ls->begin_latex_transition(MICRO, "(x+r_1)(x+r_2)(x+r_3)");
     cs.render_microblock();
     cs.state_manager.transition(MICRO, {{"ls2.x", ".75"}, {"ls2.y", ".1"}});
     ls2->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});

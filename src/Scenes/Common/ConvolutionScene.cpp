@@ -18,14 +18,16 @@ public:
         return make_pair((get_width()-p.w)/2, (get_height()-p.h)/2);
     }
 
-    void begin_transition(const Pixels& p) {
+    void begin_transition(const TransitionType tt, const Pixels& p) {
         if(state["in_transition_state"]) end_transition();
         p2 = p;
 
         transition_coords = get_coords_from_pixels(p);
 
         intersections = find_intersections(p1, p2);
+        state_manager.set("transparency_profile", "<in_transition_state> <m" + string(tt == MICRO?"i":"a") + "croblock_fraction> *");
         state_manager.set("in_transition_state", "1");
+        current_transition_type = tt;
     }
 
     void jump(const Pixels& p) {
@@ -34,18 +36,24 @@ public:
         coords = get_coords_from_pixels(p);
     }
 
-    void on_end_transition_extra_behavior(bool is_macroblock){
-        if(state["in_transition_state"] == 1) end_transition();
+    void on_end_transition_extra_behavior(const TransitionType tt) override {
+        if(tt == current_transition_type && state["in_transition_state"] == 1) end_transition();
     }
 
     void end_transition(){
-        assert(state["in_transition_state"] == 1);
+        if(state["in_transition_state"] != 1) throw runtime_error("End Transition called on a ConvolutionScene not in transition!");
         p1 = p2;
         coords = transition_coords;
         state_manager.set("in_transition_state", "0");
     }
 
     void draw() override{
+        // TODO This has a rather large bug:
+        // transitions cannot occur at the same time as a LatexScene changes in width and height.
+        // This currently causes visual bugs, and the rescaling doesn't happen and the image is cropped.
+        // This is because we only once compute the convolution parameters relating the two latex statements.
+        // Fixing this would mean running that very slow algorithm every frame.
+        // One solution could be just downscaling on the fly... quality could be lost though
         if(state["in_transition_state"]==1) {
             double tp = transparency_profile(state["transparency_profile"]);
             double tp1 = transparency_profile(1-state["transparency_profile"]);
@@ -92,6 +100,7 @@ public:
 protected:
     virtual Pixels get_p1() {return p1;}
     // Things used for non-transition states
+    TransitionType current_transition_type;
     Pixels p1;
     pair<int, int> coords;
     vector<StepResult> intersections;

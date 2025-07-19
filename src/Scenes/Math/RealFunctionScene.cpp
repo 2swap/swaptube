@@ -90,7 +90,8 @@ public:
     bool check_if_data_changed() const override { return false; }
 
     // On ending a transition, update each function if it was transitioning.
-    void on_end_transition_extra_behavior(bool is_macroblock) override {
+    void on_end_transition_extra_behavior(const TransitionType tt) override {
+        // TODO we don't track transition type...
         for (int i = 0; i < functions.size(); i++) {
             if (!functions[i].transition_function.empty())
                 functions[i].function = functions[i].transition_function;

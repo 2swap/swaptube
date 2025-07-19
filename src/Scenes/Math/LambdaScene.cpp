@@ -41,7 +41,8 @@ public:
         title = t;
     }
 
-    void on_end_transition_extra_behavior(bool is_macroblock) override {last_le = nullptr;}
+    // TODO transitions always assumed to be per-microblock, perhaps add macroblock transitioning?
+    void on_end_transition_extra_behavior(const TransitionType tt) override {last_le = nullptr;}
     void mark_data_unchanged() override { le->mark_unchanged(); }
     void change_data() override { } // This scene is expected to only be manipulated by the customer
     bool check_if_data_changed() const override {
