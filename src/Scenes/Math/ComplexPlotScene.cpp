@@ -34,6 +34,7 @@ public:
     }
 
     void state_manager_roots_to_coefficients(){
+        update_state();
         vector<complex<float>> coefficients = get_coefficients();
 
         int i = 0;
@@ -42,10 +43,11 @@ public:
             state_manager.set("coefficient" + to_string(i) + "_i", to_string(c.imag()));
             i++;
         }
-        state_manager.evaluate_all();
+        state_manager.set({{"roots_or_coefficients_control", "1"}});
     }
 
     void state_manager_coefficients_to_roots(){
+        update_state();
         vector<complex<float>> roots = get_roots();
          
         int i = 0;
@@ -54,7 +56,7 @@ public:
             state_manager.set("root" + to_string(i) + "_i", to_string(r.imag()));
             i++;
         }
-        state_manager.evaluate_all();
+        state_manager.set({{"roots_or_coefficients_control", "0"}});
     }
 
     vector<complex<float>> get_coefficients(){
