@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Scene.cpp"
+#include "../../DataObjects/GeometricConstruction.cpp"
 #include <vector>
 
 string truncate_tick(const float value, const bool append_i) {
@@ -43,7 +44,7 @@ string truncate_tick(const float value, const bool append_i) {
 class CoordinateScene : public Scene {
 public:
     bool complex_plane = false;
-    int circles_to_render = 0;
+    GeometricConstruction construction;
     CoordinateScene(const float width = 1, const float height = 1)
         : Scene(width, height) {
         state_manager.set("left_x"   , "<center_x> .5 <zoom_x> / -");
@@ -51,7 +52,6 @@ public:
         state_manager.set("top_y"    , "<center_y> .5 <zoom_y> / -");
         state_manager.set("bottom_y" , "<center_y> .5 <zoom_y> / +");
         state_manager.set("ticks_opacity", "1");
-        state_manager.set("circles_opacity", "1");
         state_manager.set("center_x", "0");
         state_manager.set("center_y", "0");
         state_manager.set("zoom", ".2");
@@ -87,21 +87,27 @@ public:
     }
 
     void draw() override {
-        draw_circles();
         draw_axes();
+        draw_construction();
     }
 
-    void draw_circles() {
-        const float z = state["zoom_x"] + 0.0001;
-        const float opa = state["circles_opacity"];
-        if(opa < 0.01) return;
-        const float w = get_geom_mean_size();
-        for(int i = 0; i < circles_to_render; i++){
-            const float x = state["circle"+to_string(i)+"_x"];
-            const float y = state["circle"+to_string(i)+"_y"];
-            const float r = state["circle"+to_string(i)+"_r"];
-            const glm::vec2 pixel = point_to_pixel(glm::vec2(x,y));
-            pix.fill_donut(pixel.x, pixel.y, w*r*z*0.9, w*r*z*1.1, 0xffff0000, opa);
+    void draw_construction() {
+        double gm = get_geom_mean_size();
+        double line_thickness = gm/100.;
+        int construction_color = OPAQUE_WHITE;
+
+        for(const GeometricLine& l : construction.lines) {
+            const glm::vec2 start_pixel = point_to_pixel(l.start);
+            const glm::vec2 end_pixel = point_to_pixel(l.end);
+            pix.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, construction_color, 1, line_thickness);
+        }
+        for(const GeometricArc& a : construction.arcs) {
+            const glm::vec2 center_pixel = point_to_pixel(a.center);
+            pix.arc(center_pixel.x, center_pixel.y, a.radius, a.start_angle, a.end_angle, construction_color, 1, line_thickness);
+        }
+        for(const GeometricPoint& p : construction.points) {
+            const glm::vec2 position_pixel = point_to_pixel(p.position);
+            pix.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2, construction_color);
         }
     }
 
@@ -155,16 +161,11 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "circles_opacity"};
-        for(int i = 0; i < circles_to_render; i++) {
-            sq.insert("circle"+to_string(i)+"_x");
-            sq.insert("circle"+to_string(i)+"_y");
-            sq.insert("circle"+to_string(i)+"_r");
-        }
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity"};
         return sq;
     }
 
-    void mark_data_unchanged() override {}
-    void change_data() override { }
-    bool check_if_data_changed() const override { return false; }
+    void mark_data_unchanged() override { construction.mark_unchanged(); }
+    void change_data() override { /*construction.update();*/ }
+    bool check_if_data_changed() const override { return construction.has_been_updated_since_last_scene_query(); }
 };
