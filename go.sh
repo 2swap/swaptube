@@ -15,7 +15,10 @@ check_command "cmake"
 check_command "make"
 check_command "gnuplot"
 if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
-    echo "Error: ../MicroTeX-master/build/LaTeX does not exist. Please ensire that MicroTeX is configured."
+    echo "Error: ../MicroTeX-master/build/LaTeX does not exist."
+    echo "Please ensure that MicroTeX is configured."
+    echo "To install MicroTeX, follow the instructions here: https://github.com/NanoMichael/MicroTeX/README.md"
+    echo "You should install it such that MicroTeX-master and the swaptube repo are in the same folder."
     exit 1
 fi
 
