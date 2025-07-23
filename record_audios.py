@@ -87,11 +87,10 @@ def main():
         print("Error listing audio devices:", e)
         return
 
-    # Automatically select device if a single mic contains "yeti" (case-insensitive)
-    yeti_devices = [device for device in available_devices if 'yeti' in device.lower()]
-    if len(yeti_devices) == 1:
-        selected_line = yeti_devices[0]
-        print(f"Automatically selected device with 'yeti': {selected_line}")
+    blue_devices = [device for device in available_devices if 'blue' in device.lower()]
+    if len(blue_devices) == 1:
+        selected_line = blue_devices[0]
+        print(f"Automatically selected device with 'blue': {selected_line}")
     else:
         for idx, device in enumerate(available_devices):
             print(f"{idx}: {device}")
