@@ -14,17 +14,17 @@
     */
 
 void render_video(){
-    shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(5);
-    cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 3);
+    shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(3);
+    cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 4);
     cps->state_manager.set("zoom", ".2");
     cps->state_manager.set("dot_radius", ".1");
     cps->state_manager.set("ticks_opacity", "0");
 
     for(int micro = 0; cps->microblocks_remaining(); micro++) {
-        for(int i = 0; i < 5; i++) {
+        for(int i = 0; i < cps->degree; i++) {
             // Make a pseudorandom but deterministic pair of numbers as a function of i and micro
-            float real = ((i * 3 + micro * micro * 3) % 11) / 5. - 1; // Range from -2 to 2
-            float imag = ((i * 7 + micro * i * 2) % 11) / 5. - 1; // Range from -2 to 2
+            float real = (((i * 3 + micro * micro * 3) % 11) - 5) / 7.; // Range from -2 to 2
+            float imag = (((i * 7 + micro * i * 2) % 11) - 5) / 7.; // Range from -2 to 2
             cps->state_manager.transition(MICRO, {
                 {"root"+to_string(i)+"_r", to_string(real)},
                 {"root"+to_string(i)+"_i", to_string(imag)},
@@ -36,7 +36,7 @@ void render_video(){
     cps->stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 4);
     for(int i = 0; i < 4; i++) {
         cps->state_manager.transition(MICRO, {
-            {"root0_r", i%2==0?".1":".5"},
+            {"root0_r", i%2==0?"-.8":".5"},
             {"root0_i", i%2==0?".1":".8"},
         });
         cps->render_microblock();
@@ -47,15 +47,15 @@ void render_video(){
     for(int i = 0; i < 4; i++) {
         cps->state_manager.transition(MICRO, {
             {"coefficient0_r", i%2==0?".1":"1.8"},
-            {"coefficient0_i", i%2==0?".6":".8"},
+            {"coefficient0_i", i%2==0?".6":"-.8"},
         });
         cps->render_microblock();
     }
 
-    cps->stage_macroblock(FileBlock("It's really a shame that, most likely, your algebra teacher never showed you this plot of their relationship..."), 1);
+    cps->stage_macroblock(FileBlock("It's a shame your algebra teacher never showed you this plot of their relationship..."), 1);
     cps->render_microblock();
 
-    cps->stage_macroblock(FileBlock("because this relationship _is the core, the essence of algebra_."), 1);
+    cps->stage_macroblock(FileBlock("because that relationship _is the core, the essence of algebra_."), 1);
     cps->render_microblock();
 
     CompositeScene cs;
@@ -101,7 +101,7 @@ void render_video(){
 
     cs.stage_macroblock(FileBlock("and these points are the roots of the polynomial."), 4);
     for(int i = 0; i < 2; i++) {
-        cps->state_manager.transition(MICRO, {{"roots_opacity","1"}});
+        cps->state_manager.transition(MICRO, {{"roots_opacity",".5"}});
         ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
         cs.render_microblock();
 
@@ -141,9 +141,8 @@ void render_video(){
     cs.render_microblock();
     return;
     cs.stage_macroblock(FileBlock("Doing this for every point, we can graph our complex-valued function."), 1);
-    cs.stage_macroblock(FileBlock("Before we get analytical, I hear you asking..."), 1);
-    cs.stage_macroblock(FileBlock("What's all this complex number business? Why leave the familiar land of the reals?"), 1);
-    // TODO add some script introducing a real valued plot in a 3d axis and show that it doesn't necessarily have zeros.
+    // TODO introduce a real valued plot in a 3d axis and show that it doesn't necessarily have zeros.
+    cs.stage_macroblock(FileBlock("You might ask, what's all this complex number business? Why leave the familiar land of the reals?"), 1);
     cs.stage_macroblock(FileBlock("But in turn, I would ask, why do you need decimals or negatives either?"), 1);
     cs.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, and so on, along with the ideas of plus and times."), 1);
     cs.stage_macroblock(FileBlock("In such a world, we quickly run into problems..."), 1);

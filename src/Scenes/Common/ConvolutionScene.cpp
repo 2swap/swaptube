@@ -37,7 +37,7 @@ public:
     }
 
     void on_end_transition_extra_behavior(const TransitionType tt) override {
-        if(tt == current_transition_type && state["in_transition_state"] == 1) end_transition();
+        if((MICRO == current_transition_type || MACRO == tt) && state["in_transition_state"] == 1) end_transition();
     }
 
     void end_transition(){
