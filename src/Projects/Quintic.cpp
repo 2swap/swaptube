@@ -1,6 +1,7 @@
 #include "../Scenes/Math/ComplexPlotScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
+#include "../Scenes/Common/ThreeDimensionScene.cpp"
 
 /*
     cps->stage_swap_roots_when_in_root_mode(MICRO, "0","2");
@@ -138,11 +139,19 @@ void render_video(){
     cps->state_manager.transition(MICRO, {
         {"ab_dilation", ".3"},
     });
+    cs.fade_subscene(MICRO, "ls", 0);
+    cs.fade_subscene(MICRO, "ls2", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes();
+
+    ThreeDimensionScene tds;
+    tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "cps"), cps);
+    tds.stage_macroblock(FileBlock("Doing this for every point, we can graph our complex-valued function."), 1);
+    tds.render_microblock();
+    // TODO introduce a real valued plot in a 3d axis and show that it doesn't necessarily have zeros.
+    tds.stage_macroblock(FileBlock("You might ask, what's all this complex number business? Why leave the familiar land of the reals?"), 1);
     cs.render_microblock();
     return;
-    cs.stage_macroblock(FileBlock("Doing this for every point, we can graph our complex-valued function."), 1);
-    // TODO introduce a real valued plot in a 3d axis and show that it doesn't necessarily have zeros.
-    cs.stage_macroblock(FileBlock("You might ask, what's all this complex number business? Why leave the familiar land of the reals?"), 1);
     cs.stage_macroblock(FileBlock("But in turn, I would ask, why do you need decimals or negatives either?"), 1);
     cs.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, and so on, along with the ideas of plus and times."), 1);
     cs.stage_macroblock(FileBlock("In such a world, we quickly run into problems..."), 1);

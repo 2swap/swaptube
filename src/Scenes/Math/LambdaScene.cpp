@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../DataObjects/LambdaCalculus.cpp"
+#include "../Scene.cpp"
 #include "../../io/VisualMedia.cpp"
 
 class LambdaScene : public Scene {
@@ -39,6 +40,10 @@ public:
 
     void set_title(string t){
         title = t;
+    }
+
+    shared_ptr<LambdaExpression> get_clone(){
+        return le->clone();
     }
 
     // TODO transitions always assumed to be per-microblock, perhaps add macroblock transitioning?

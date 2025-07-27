@@ -14,8 +14,9 @@ static bool PRINT_TO_TERMINAL = true;
 #include <signal.h>
 const string project_name = PROJECT_NAME_MACRO;
 
-const int VIDEO_BACKGROUND_COLOR = 0xff000020; // Lambda Blue
+//const int VIDEO_BACKGROUND_COLOR = 0xff000020; // Lambda Blue
 //const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
+const int VIDEO_BACKGROUND_COLOR = 0xff000000; // Black
 
 bool FOR_REAL = !SMOKETEST;
 
@@ -78,7 +79,7 @@ int main() {
     try {
         render_video();
     } catch(std::exception& e) {
-        cout << "====================" << endl;
+        cout << endl << "====================" << endl;
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
     }
