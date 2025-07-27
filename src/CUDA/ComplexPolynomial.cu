@@ -6,10 +6,10 @@ __device__ float lerp(float a, float b, float w){
     return w*b+(1-w)*a;
 }
 
-__device__ int complex_to_color(const thrust::complex<float>& c, float ab_dilation) {
+__device__ int complex_to_color(const thrust::complex<float>& c, float ab_dilation, float dot_radius) {
     float mag = abs(c);
     thrust::complex<float> norm = (c * ab_dilation / mag + thrust::complex<float>(1,1)) * .5;
-    float am = 2*atan(mag/3)/M_PI;
+    float am = 2*atan(mag/dot_radius)/M_PI;
     return device_OKLABtoRGB(255, (1-.9*am)*1, lerp(-.233888, .276216, norm.real()), lerp(-.311528, .198570, norm.imag()));
 }
 
@@ -35,7 +35,8 @@ __global__ void render_kernel(
     glm::vec2 wh,
     glm::vec2 lx_ty,
     glm::vec2 rx_by,
-    float ab_dilation
+    float ab_dilation,
+    float dot_radius
 ) {
     const int x = blockIdx.x * blockDim.x + threadIdx.x;
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -43,7 +44,7 @@ __global__ void render_kernel(
 
     const glm::vec2 point = pixel_to_point(glm::vec2(x,y), lx_ty, rx_by, wh);
     const thrust::complex<float> val = evaluate_polynomial_given_coefficients(d_coefficients, degree, thrust::complex<float>(point.x, point.y));
-    const int color = complex_to_color(val, ab_dilation);
+    const int color = complex_to_color(val, ab_dilation, dot_radius);
 
     d_pixels[y * int(wh.x) + x] = color;
 }
@@ -57,7 +58,8 @@ extern "C" void color_complex_polynomial(
     int degree,
     float lx, float ty,
     float rx, float by,
-    float ab_dilation
+    float ab_dilation,
+    float dot_radius
 ) {
     // Allocate device memory for pixels
     int* d_pixels;
@@ -87,7 +89,7 @@ extern "C" void color_complex_polynomial(
     dim3 gridSize((w + blockSize.x - 1) / blockSize.x, (h + blockSize.y - 1) / blockSize.y);
 
     // Launch kernel
-    render_kernel<<<gridSize, blockSize>>>(d_pixels, d_coefficients, degree, wh, lx_ty, rx_by, ab_dilation);
+    render_kernel<<<gridSize, blockSize>>>(d_pixels, d_coefficients, degree, wh, lx_ty, rx_by, ab_dilation, dot_radius);
     cudaDeviceSynchronize();
 
     // Copy pixels back to host

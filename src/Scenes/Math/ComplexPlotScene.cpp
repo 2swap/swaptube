@@ -15,7 +15,8 @@ extern "C" void color_complex_polynomial(
     int degree,
     float lx, float ty,
     float rx, float by,
-    float ab_dilation
+    float ab_dilation,
+    float dot_radius
 );
 
 class ComplexPlotScene : public CoordinateScene {
@@ -31,6 +32,7 @@ public:
         state_manager.set("ab_dilation", ".33"); // basically saturation
         state_manager.set("coefficients_opacity", "1");
         state_manager.set("roots_opacity", "0");
+        state_manager.set("dot_radius", "3");
     }
 
     void state_manager_roots_to_coefficients(){
@@ -217,7 +219,8 @@ public:
             degree,
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
-            state["ab_dilation"]
+            state["ab_dilation"],
+            state["dot_radius"]
         );
 
         float ro = state["roots_opacity"];
@@ -232,7 +235,7 @@ public:
         float co = state["coefficients_opacity"];
         if(co > 0.01) {
             for(int i = 0; i < coefficients.size()-1; i++){
-                float opa = 1;//clamp(0,abs(coefficients[i])*2,1);
+                float opa = clamp(0,abs(coefficients[i])*2,1);
                 opa *= co;
                 if(opa < 0.01) continue;
                 const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
@@ -253,6 +256,7 @@ public:
                     sq.insert(type + to_string(num) + "_" + ri);
         sq.insert("roots_or_coefficients_control");
         sq.insert("ab_dilation");
+        sq.insert("dot_radius");
         sq.insert("roots_opacity");
         sq.insert("coefficients_opacity");
         return sq;

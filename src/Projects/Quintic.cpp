@@ -15,35 +15,58 @@
 
 void render_video(){
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(5);
-    cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 2);
-    cps->state_manager.set("zoom", ".1");
+    cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 3);
+    cps->state_manager.set("zoom", ".2");
+    cps->state_manager.set("dot_radius", ".1");
+    cps->state_manager.set("ticks_opacity", "0");
 
-    for(int i = 0; i < 2; i++) {
-        cps->state_manager_roots_to_coefficients();
-        cps->state_manager.transition(MICRO, {
-            {"coefficient"+to_string(i)+"_r", "1.5"},
-            {"coefficient"+to_string(i)+"_i", ".5"},
-        });
+    for(int micro = 0; cps->microblocks_remaining(); micro++) {
+        for(int i = 0; i < 5; i++) {
+            // Make a pseudorandom but deterministic pair of numbers as a function of i and micro
+            float real = ((i * 3 + micro * micro * 3) % 11) / 5. - 1; // Range from -2 to 2
+            float imag = ((i * 7 + micro * i * 2) % 11) / 5. - 1; // Range from -2 to 2
+            cps->state_manager.transition(MICRO, {
+                {"root"+to_string(i)+"_r", to_string(real)},
+                {"root"+to_string(i)+"_i", to_string(imag)},
+            });
+        }
         cps->render_microblock();
-        if(i == 1) return;
+    }
 
-        cps->state_manager_coefficients_to_roots();
+    cps->stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 4);
+    for(int i = 0; i < 4; i++) {
         cps->state_manager.transition(MICRO, {
-            {"root"+to_string(i)+"_r", "-2"},
-            {"root"+to_string(i)+"_i", ".2"},
+            {"root0_r", i%2==0?".1":".5"},
+            {"root0_i", i%2==0?".1":".8"},
         });
         cps->render_microblock();
     }
 
+    cps->state_manager_roots_to_coefficients();
+    cps->stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 4);
+    for(int i = 0; i < 4; i++) {
+        cps->state_manager.transition(MICRO, {
+            {"coefficient0_r", i%2==0?".1":"1.8"},
+            {"coefficient0_i", i%2==0?".6":".8"},
+        });
+        cps->render_microblock();
+    }
+
+    cps->stage_macroblock(FileBlock("It's really a shame that, most likely, your algebra teacher never showed you this plot of their relationship..."), 1);
+    cps->render_microblock();
+
+    cps->stage_macroblock(FileBlock("because this relationship _is the core, the essence of algebra_."), 1);
+    cps->render_microblock();
+
     CompositeScene cs;
     cs.add_scene(cps, "cps");
 
-    cs.stage_macroblock(FileBlock("You might remember from Algebra class that a polynomial can be written in two forms-"), 1);
+    cs.stage_macroblock(FileBlock("A polynomial can be written in two forms-"), 1);
     cs.render_microblock();
 
     shared_ptr<LatexScene> ls = make_shared<LatexScene>("x^3+ax^2+bx^1+cx^0", 1);
     cs.add_scene_fade_in(MICRO, ls, "ls");
-    cs.stage_macroblock(FileBlock("There's a standard form, where each exponent of x has an associated coefficient,"), 4);
+    cs.stage_macroblock(FileBlock("There's a standard form, where each term has an associated coefficient,"), 4);
     cs.render_microblock();
     ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
     cs.render_microblock();
@@ -55,7 +78,7 @@ void render_video(){
 
     shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x-r_1)(x-r_2)(x-r_3)", 1);
     cs.add_scene_fade_in(MICRO, ls2, "ls2");
-    cs.stage_macroblock(FileBlock("and also a factored form, with one term for each root."), 4);
+    cs.stage_macroblock(FileBlock("and a factored form, with one term for each root."), 4);
     cs.render_microblock();
     ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
     cs.render_microblock();
@@ -65,37 +88,29 @@ void render_video(){
     ls2->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("These points are the coefficients of each power of the input,"), 4);
-    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
-    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("These points are the coefficients of the standard form,"), 4);
+    for(int i = 0; i < 2; i++) {
+        cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
+        ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
+        cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("and these points are the roots of the polynomial, plotted in the complex plane,"), 4);
-    cps->state_manager.transition(MICRO, {{"roots_opacity","1"}});
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"roots_opacity","0"}});
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"roots_opacity","1"}});
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"roots_opacity","0"}});
-    cs.render_microblock();
+        cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
+        ls->begin_latex_transition(MICRO, "x^3+ax^2+bx^1+cx^0");
+        cs.render_microblock();
+    }
 
-    cs.stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 1);
-    cs.stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 1);
+    cs.stage_macroblock(FileBlock("and these points are the roots of the polynomial."), 4);
+    for(int i = 0; i < 2; i++) {
+        cps->state_manager.transition(MICRO, {{"roots_opacity","1"}});
+        ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
+        cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("It's really a shame that, most likely, that algebra teacher never showed you this plot of their relationship..."), 1);
-    cs.render_microblock();
+        cps->state_manager.transition(MICRO, {{"roots_opacity","0"}});
+        ls2->begin_latex_transition(MICRO, "(x-r_1)(x-r_2)(x-r_3)");
+        cs.render_microblock();
+    }
 
-    //cs.stage_macroblock(FileBlock("because without much work, it lets us peer right into the soul of the polynomial, and show tons of important results in algebra, culminating in the Abel-Ruffini theorem, stating that there is no Quintic formula."), 1);
-    cs.stage_macroblock(FileBlock("because that relationship _is the core, the essence of algebra_."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("This space we're looking at is the complex plane, home to numbers like i and 3-2i."), 1);
+    cs.stage_macroblock(FileBlock("The space we're looking at is the complex plane, home to numbers like i and 3-2i."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("For each pixel on the screen, I passed that complex number as an input to the polynomial,"), 1);

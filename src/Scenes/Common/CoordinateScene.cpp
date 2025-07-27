@@ -101,10 +101,10 @@ public:
             const glm::vec2 end_pixel = point_to_pixel(l.end);
             pix.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, construction_color, 1, line_thickness);
         }
-        for(const GeometricArc& a : construction.arcs) {
+        /*for(const GeometricArc& a : construction.arcs) {
             const glm::vec2 center_pixel = point_to_pixel(a.center);
             pix.arc(center_pixel.x, center_pixel.y, a.radius, a.start_angle, a.end_angle, construction_color, 1, line_thickness);
-        }
+        }*/
         for(const GeometricPoint& p : construction.points) {
             const glm::vec2 position_pixel = point_to_pixel(p.position);
             pix.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2, construction_color);

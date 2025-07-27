@@ -87,10 +87,10 @@ def main():
         print("Error listing audio devices:", e)
         return
 
-    blue_devices = [device for device in available_devices if 'blue' in device.lower()]
+    blue_devices = [device for device in available_devices if ('blue' in device.lower() or 'yeti' in device.lower())]
     if len(blue_devices) == 1:
         selected_line = blue_devices[0]
-        print(f"Automatically selected device with 'blue': {selected_line}")
+        print(f"Automatically selected microphone: {selected_line}")
     else:
         for idx, device in enumerate(available_devices):
             print(f"{idx}: {device}")
