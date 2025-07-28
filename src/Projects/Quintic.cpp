@@ -44,12 +44,12 @@ void render_video(){
     cps->state_manager.set({
         {"root0_r", "1 <spin_coefficient_r> +"},
         {"root0_i", ".2 <spin_coefficient_i> +"},
-        {"spin_coefficient_r", "<t> sin <spin_multiplier> *"},
-        {"spin_coefficient_i", "<t> cos <spin_multiplier> *"},
+        {"spin_coefficient_r", "<t> 3 * sin <spin_multiplier> *"},
+        {"spin_coefficient_i", "<t> 3 * cos <spin_multiplier> *"},
         {"spin_multiplier", "0"},
     });
     cps->state_manager.transition(MICRO, {
-        {"spin_multiplier", ".5"},
+        {"spin_multiplier", ".7"},
     });
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
@@ -64,7 +64,7 @@ void render_video(){
         {"coefficient0_i", cps->state_manager.get_equation("coefficient0_i") + " <spin_coefficient_i> +"},
     });
     cps->state_manager.transition(MICRO, {
-        {"spin_multiplier", ".5"},
+        {"spin_multiplier", ".7"},
     });
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
@@ -72,10 +72,10 @@ void render_video(){
     });
     cps->render_microblock();
 
-    cps->stage_macroblock(FileBlock("It's a shame your algebra teacher never showed you this plot of their relationship..."), 1);
+    cps->stage_macroblock(FileBlock("It's a shame you've never seen this plot,"), 1);
     cps->render_microblock();
 
-    cps->stage_macroblock(FileBlock("because that relationship _is the core, the essence of algebra_."), 1);
+    cps->stage_macroblock(FileBlock("because their relationship _is the core, the essence of algebra_."), 1);
     cps->render_microblock();
 
     CompositeScene cs;
@@ -160,12 +160,13 @@ void render_video(){
     });
     cs.fade_subscene(MICRO, "ls", 0);
     cs.fade_subscene(MICRO, "ls2", 0);
+    cps->state_manager_coefficients_to_roots();
     cps->state_manager.transition(MICRO, {
-        {"root0_r", "-2"},
+        {"root0_r", "-1.2"},
         {"root0_i", "0"},
-        {"root1_r", "-.5"},
+        {"root1_r", "-.3"},
         {"root1_i", "0"},
-        {"root2_r", "2"},
+        {"root2_r", "1.2"},
         {"root2_i", "0"},
     });
     cs.render_microblock();
@@ -174,21 +175,20 @@ void render_video(){
     ThreeDimensionScene tds;
     tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "cps"), cps);
     tds.stage_macroblock(FileBlock("Doing this for every point, we can graph our complex-valued function."), 2);
-    cps->state_manager_coefficients_to_roots();
     tds.state_manager.transition(MICRO, {
         {"d", "1.5"},
     });
     tds.render_microblock();
 
     shared_ptr<RealFunctionScene> rfs = make_shared<RealFunctionScene>();
-    rfs->add_function("? 2 - ? .5 - ? 2 + * *", 0xffff0000);
+    rfs->add_function("? 1.2 - ? .3 - ? 1.2 + * *", 0xffff0000);
     tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
     tds.state_manager.transition(MICRO, {
-        {"qi", "-.2 <t> sin .1 * +"},
-        {"qj", "<t> cos .04 *"},
+        {"qi", "-.3 <t> sin .07 * +"},
+        {"qj", "<t> cos .025 *"},
     });
     tds.render_microblock();
-    // TODO introduce a real valued plot in a 3d axis and show that it doesn't necessarily have zeros.
+
     tds.stage_macroblock(FileBlock("You might ask, what's all this complex number business? Why leave the familiar land of the reals?"), 1);
     tds.render_microblock();
 
