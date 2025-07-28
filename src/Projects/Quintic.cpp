@@ -34,13 +34,23 @@ void render_video(){
         {"root0_r", "1"},
         {"root0_i", ".2"},
         {"root1_r", ".5"},
-        {"root1_i", ".9"},
+        {"root1_i", "1.2"},
         {"root2_r", "-1"},
-        {"root2_i", "-.4"},
+        {"root2_i", "-.3"},
     });
     cps->render_microblock();
 
-    cps->stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 2);
+    cps->stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 4);
+    cps->state_manager.set({
+        {"root0_opacity", "0"},
+        {"root1_opacity", "0"},
+        {"root2_opacity", "0"},
+        {"roots_opacity", "1"},
+    });
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "1"},
+    });
+    cps->render_microblock();
     cps->state_manager.set({
         {"root0_r", "1 <spin_coefficient_r> +"},
         {"root0_i", ".2 <spin_coefficient_i> +"},
@@ -49,29 +59,45 @@ void render_video(){
         {"spin_multiplier", "0"},
     });
     cps->state_manager.transition(MICRO, {
-        {"spin_multiplier", ".7"},
+        {"spin_multiplier", ".5"},
     });
+    cps->render_microblock();
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
         {"spin_multiplier", "0"},
+        {"roots_opacity", "0"},
     });
     cps->render_microblock();
 
+    cps->state_manager.set({
+        {"root0_opacity", "1"},
+        {"root1_opacity", "1"},
+        {"root2_opacity", "1"},
+    });
     cps->state_manager_roots_to_coefficients();
-    cps->stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 2);
+    cps->stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 4);
+    cps->state_manager.transition(MICRO, {
+        {"coefficient1_opacity", ".1"},
+        {"coefficient2_opacity", ".1"},
+    });
+    cps->render_microblock();
     cps->state_manager.set({
         {"coefficient0_r", cps->state_manager.get_equation("coefficient0_r") + " <spin_coefficient_r> +"},
         {"coefficient0_i", cps->state_manager.get_equation("coefficient0_i") + " <spin_coefficient_i> +"},
     });
     cps->state_manager.transition(MICRO, {
-        {"spin_multiplier", ".7"},
+        {"spin_multiplier", ".5"},
     });
     cps->render_microblock();
+    cps->render_microblock();
     cps->state_manager.transition(MICRO, {
+        {"coefficient1_opacity", "1"},
+        {"coefficient2_opacity", "1"},
         {"spin_multiplier", "0"},
     });
     cps->render_microblock();
 
+    // TODO zoom in and out for pretty colors
     cps->stage_macroblock(FileBlock("It's a shame you've never seen this plot,"), 1);
     cps->render_microblock();
 
@@ -81,21 +107,16 @@ void render_video(){
     CompositeScene cs;
     cs.add_scene(cps, "cps");
 
-    cs.stage_macroblock(FileBlock("A polynomial can be written in two forms-"), 1);
-    cs.render_microblock();
-
-    shared_ptr<LatexScene> ls = make_shared<LatexScene>("x^3+ax^2+bx^1+cx^0", 1);
-    cs.add_scene_fade_in(MICRO, ls, "ls");
-    cs.stage_macroblock(FileBlock("There's a standard form, where each term has an associated coefficient,"), 4);
+    shared_ptr<LatexScene> ls = make_shared<LatexScene>("x^3+ax^2+bx^1+cx^0", 1, 1, .5);
+    cs.add_scene_fade_in(MICRO, ls, "ls", .5, .15);
+    cs.stage_macroblock(FileBlock("Polynomials have a standard form, where each term has an associated coefficient."), 4);
     cs.render_microblock();
     ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
     cs.render_microblock();
     ls->begin_latex_transition(MICRO, "x^3+ax^2+bx^1+cx^0");
     cs.render_microblock();
-    cs.state_manager.transition(MICRO, {{"ls.x", ".25"}, {"ls.y", ".1"}});
-    ls->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
     cs.render_microblock();
-    cs.stage_macroblock(FileBlock("which I'm representing on the graph here..."), 4);
+    cs.stage_macroblock(FileBlock("They're drawn on the graph here."), 4);
     for(int i = 0; i < 2; i++) {
         cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
         ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
@@ -105,19 +126,19 @@ void render_video(){
         ls->begin_latex_transition(MICRO, "x^3+ax^2+bx^1+cx^0");
         cs.render_microblock();
     }
+    cps->state_manager.transition(MICRO, "coefficients_opacity", "0");
+    cs.fade_subscene(MICRO, "ls", 0);
 
-    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x-r_1)(x-r_2)(x-r_3)", 1);
-    cs.add_scene_fade_in(MICRO, ls2, "ls2");
-    cs.stage_macroblock(FileBlock("as well as a factored form, with one term for each root,"), 4);
+    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x-r_1)(x-r_2)(x-r_3)", 1, 1, .5);
+    cs.add_scene_fade_in(MICRO, ls2, "ls2", .5, .15);
+    cs.stage_macroblock(FileBlock("There's also a factored form, with one term for each root,"), 4);
     cs.render_microblock();
     ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
     cs.render_microblock();
     ls2->begin_latex_transition(MICRO, "(x-r_1)(x-r_2)(x-r_3)");
     cs.render_microblock();
-    cs.state_manager.transition(MICRO, {{"ls2.x", ".75"}, {"ls2.y", ".1"}});
-    ls2->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
     cs.render_microblock();
-    cs.stage_macroblock(FileBlock("which are clearly visible on the polynomial's graph."), 4);
+    cs.stage_macroblock(FileBlock("which are clearly visible in the polynomial's graph."), 4);
     for(int i = 0; i < 2; i++) {
         cps->state_manager.transition(MICRO, {{"roots_opacity",".5"}});
         ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
@@ -128,16 +149,24 @@ void render_video(){
         cs.render_microblock();
     }
 
-    cs.stage_macroblock(FileBlock("The space we're looking at is the complex plane, home to numbers like i and 3-2i."), 1);
+    // add points to show the numbers
+    cs.stage_macroblock(FileBlock("The space we're looking at is the complex plane, home to numbers like i and 3-2i."), 3);
     cps->state_manager.transition(MICRO, {{"ticks_opacity", "1"}});
     cs.render_microblock();
+    cps->construction.add_point(GeometricPoint(glm::vec2(0, 1)));
+    cs.render_microblock();
+    cps->construction.add_point(GeometricPoint(glm::vec2(3, -2)));
+    cs.render_microblock();
+    cps->construction.clear();
 
+    // TODO animate that point going into the polynomial, reduce the polynomial in latex
     cs.stage_macroblock(FileBlock("For each pixel on the screen, I passed that complex number as an input to the polynomial,"), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("and colored it according to the output."), 1);
     cs.render_microblock();
 
+    cs.fade_subscene(MICRO, "ls2", 0);
     cps->state_manager.transition(MICRO, {
         {"ab_dilation", "0"},
     });
@@ -153,13 +182,10 @@ void render_video(){
     });
     cs.stage_macroblock(FileBlock("and the color shows the angle of the output."), 3);
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {
         {"ab_dilation", ".3"},
     });
-    cs.fade_subscene(MICRO, "ls", 0);
-    cs.fade_subscene(MICRO, "ls2", 0);
     cps->state_manager_coefficients_to_roots();
     cps->state_manager.transition(MICRO, {
         {"root0_r", "-1.2"},
@@ -181,7 +207,7 @@ void render_video(){
     tds.render_microblock();
 
     shared_ptr<RealFunctionScene> rfs = make_shared<RealFunctionScene>();
-    rfs->add_function("? 1.2 - ? .3 - ? 1.2 + * *", 0xffff0000);
+    rfs->add_function("? 1.2 - ? .3 + ? 1.2 + * *", 0xffff0000);
     tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
     tds.state_manager.transition(MICRO, {
         {"qi", "-.3 <t> sin .07 * +"},
@@ -189,29 +215,105 @@ void render_video(){
     });
     tds.render_microblock();
 
+    shared_ptr<LatexScene> f_complex = make_shared<LatexScene>(latex_text("Complex Function"), 1, .5, .5);
+    shared_ptr<LatexScene> f_real    = make_shared<LatexScene>(latex_text("Real Function"), 1, .5, .5);
+    tds.add_surface(Surface(glm::vec3(0, .25,-.05), glm::vec3(.25, 0, 0), glm::vec3(0, .25, 0), "f_complex"), f_complex);
+    tds.add_surface(Surface(glm::vec3(0, .05,-.25), glm::vec3(.25, 0, 0), glm::vec3(0, 0, .25), "f_real"), f_real);
     tds.stage_macroblock(FileBlock("You might ask, what's all this complex number business? Why leave the familiar land of the reals?"), 1);
     tds.render_microblock();
 
-    tds.stage_macroblock(FileBlock("But in turn, I would ask, why do you need decimals or negatives either?"), 1);
+    tds.state_manager.transition(MICRO, {
+        {"d", "1"},
+        {"qi", "0"},
+        {"qj", "0"},
+    });
+    cps->state_manager.transition(MICRO, "ticks_opacity", "0");
+    tds.stage_macroblock(FileBlock("Surely, complex numbers were invented by big math to sell more calculators!"), 1);
+    tds.fade_subscene(MICRO, "f_complex", 0);
+    tds.fade_subscene(MICRO, "f_real", 0);
+    tds.fade_subscene(MICRO, "rfs", 0);
     tds.render_microblock();
+    tds.remove_all_subscenes();
 
-    tds.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, and so on, along with the ideas of plus and times."), 1);
-    tds.render_microblock();
-    return;
-    tds.stage_macroblock(FileBlock("In such a world, we quickly run into problems..."), 1);
-    tds.stage_macroblock(FileBlock("We can write equations that have no solution, such as 1 + x = 1."), 1);
-    tds.stage_macroblock(FileBlock("Without zero, our number system is somehow incomplete."), 1);
-    tds.stage_macroblock(FileBlock("There's nothing we can write here for x that would solve make this equation true."), 1);
-    tds.stage_macroblock(FileBlock("So, to be able to solve this equation, we need 0 in our set..."), 1);
+    cs = CompositeScene();
+    cs.add_scene(cps, "cps");
+    cs.stage_macroblock(FileBlock("But in turn, I would ask, why do you need decimals or negatives either?"), 1);
+    cs.render_microblock();
+
+    shared_ptr<LatexScene> all_numbers = make_shared<LatexScene>("\\{1, 2, 3, ...\\}", .4, 1, .4);
+    cs.add_scene_fade_in(MICRO, all_numbers, "all_numbers", .5, .2);
+    cs.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, and so on."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("In such a world, there's a big problem..."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can write equations with no solution, such as 1 + x = 1."), 1);
+    shared_ptr<LatexScene> impossible1 = make_shared<LatexScene>("1+x=1", 1, .5, .5);
+    cs.add_scene_fade_in(MICRO, impossible1, "impossible1", .5, .7);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Without zero, it's as though our number system is incomplete."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("There's nothing we can write here for x that would make the thing on the left equal the thing on the right."), 1);
+    impossible1->begin_latex_transition(MICRO, "1+!?=1");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("So, to be able to solve this, we _need_ 0..."), 2);
+    cs.render_microblock();
+    all_numbers->begin_latex_transition(MICRO, "\\{0, 1, 2, 3, ...\\}");
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("What about 2+x=1?"), 1);
-    cs.stage_macroblock(FileBlock("Well, we then need -1 too,"), 1);
-    cs.stage_macroblock(FileBlock("along with -2,"), 1);
+    cs.state_manager.transition(MICRO, "impossible1.y", "1.5");
+    shared_ptr<LatexScene> impossible2 = make_shared<LatexScene>("2+x=1", 1, .5, .5);
+    cs.add_scene_fade_in(MICRO, impossible2, "impossible2", .5, .7);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("x _wants_ to be -1!"), 1);
+    impossible2->begin_latex_transition(MICRO, "2+-1=1");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We need to add negatives..."), 1);
+    all_numbers->begin_latex_transition(MICRO, "\\{-1, 0, 1, 2, 3, ...\\}");
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("and so on..."), 1);
-    cs.stage_macroblock(FileBlock("and what if we write an equation like this one?"), 1);
-    cs.stage_macroblock(FileBlock("It looks like we're gonna need fractions too..."), 1);
-    cs.stage_macroblock(FileBlock("Surely, if we simply add all decimal numbers, our number system will finally be complete?"), 1);
+    all_numbers->begin_latex_transition(MICRO, "\\{..., -3, -2, -1, 0, 1, 2, 3, ...\\}");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Sadly, our number system is still incomplete."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Two times something gives one..."), 1);
+    cs.state_manager.transition(MICRO, "impossible2.y", "1.5");
+    shared_ptr<LatexScene> impossible3 = make_shared<LatexScene>("2*x=1", 1, .5, .5);
+    cs.add_scene_fade_in(MICRO, impossible3, "impossible3", .5, .7);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("It looks like we need fractions too..."), 1);
+    all_numbers->begin_latex_transition(MICRO, "\\{\\frac{a}{b} | a, b \\in \\mathbb{Z}, b \\neq 0\\}");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Heck, let's just add all decimals, surely our number system will finally be complete?"), 6);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("We get a nice continuum of numbers."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("Well, then, what about this equation?"), 1);
+    cs.state_manager.transition(MICRO, "impossible3.y", "1.5");
+    shared_ptr<LatexScene> impossible4 = make_shared<LatexScene>("x*x=-1", 1, .5, .5);
+    cs.add_scene_fade_in(MICRO, impossible4, "impossible4", .5, .7);
+    cs.render_microblock();
+
+    return;
     cs.stage_macroblock(FileBlock("Uh oh, no real number squared gives us negative 1..."), 1);
     cs.stage_macroblock(FileBlock("so we need to add more numbers to make our set whole."), 1);
     cs.stage_macroblock(FileBlock("Let's call the solution to this equation 'i'"), 1);

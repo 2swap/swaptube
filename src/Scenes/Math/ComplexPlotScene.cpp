@@ -25,9 +25,11 @@ public:
     ComplexPlotScene(const int d, const float width = 1, const float height = 1) : CoordinateScene(width, height), degree(d){
         complex_plane = true;
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num < degree; num++)
+            for(int num = 0; num < degree; num++) {
+                state_manager.set(type + to_string(num) + "_opacity", "1");
                 for(char ri : {'r', 'i'})
                     state_manager.set(type + to_string(num) + "_" + ri, "0");
+            }
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".5"); // basically saturation
         state_manager.set("coefficients_opacity", "1");
@@ -236,8 +238,10 @@ public:
         if(ro > 0.01) {
             float gm = get_geom_mean_size() / 200;
             for(int i = 0; i < roots.size(); i++){
+                float opa = ro * state["root"+to_string(i)+"_opacity"];
+                if(opa < 0.01) continue;
                 const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
-                pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, ro);
+                pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, opa);
             }
         }
 
@@ -245,7 +249,7 @@ public:
         if(co > 0.01) {
             for(int i = 0; i < coefficients.size()-1; i++){
                 float opa = lerp(1, clamp(0,abs(coefficients[i])*2,1), state["hide_zero_coefficients"]);
-                opa *= co;
+                opa *= co * state["coefficient"+to_string(i)+"_opacity"];
                 if(opa < 0.01) continue;
                 const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
                 ScalingParams sp = ScalingParams(get_width() / 10, get_height() / 10);
@@ -260,9 +264,11 @@ public:
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num < degree; num++)
+            for(int num = 0; num < degree; num++) {
+                sq.insert(type + to_string(num) + "_opacity");
                 for(char ri : {'r', 'i'})
                     sq.insert(type + to_string(num) + "_" + ri);
+            }
         sq.insert("roots_or_coefficients_control");
         sq.insert("ab_dilation");
         sq.insert("dot_radius");
@@ -271,7 +277,4 @@ public:
         sq.insert("hide_zero_coefficients");
         return sq;
     }
-    void mark_data_unchanged() override { }
-    void change_data() override { } // ComplexPlotScene has no DataObjects
-    bool check_if_data_changed() const override { return false; } // ComplexPlotScene has no DataObjects
 };

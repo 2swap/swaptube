@@ -18,9 +18,8 @@ public:
 
     void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, double opa=1, bool behind = false){
         add_scene(sc, state_manager_name, x, y, behind);
-        const string key = state_manager_name + ".opacity";
-        state_manager.set({{key, "0"}});
-        state_manager.transition(tt, {{key, to_string(opa)}});
+        state_manager.set(state_manager_name + ".opacity", "0");
+        fade_subscene(tt, state_manager_name, opa);
     }
 
     void add_scene(shared_ptr<Scene> sc, const string& state_manager_name, double x = 0.5, double y = 0.5, bool behind = false){

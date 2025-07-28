@@ -30,8 +30,7 @@ private:
 
 protected:
     Pixels get_p1() override {
-        //ScalingParams sp = scale == 0 ? ScalingParams(scale_factor*get_width(), scale_factor*get_height()) : ScalingParams(scale);
-        ScalingParams sp(scale_factor*get_width(), scale_factor*get_height());
+        ScalingParams sp = scale == 0 ? ScalingParams(scale_factor*get_width(), scale_factor*get_height()) : ScalingParams(scale);
         Pixels ret = latex_to_pix(latex, sp);
         scale = sp.scale_factor;
         return ret;

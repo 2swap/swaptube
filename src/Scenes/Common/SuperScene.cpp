@@ -27,14 +27,10 @@ public:
         }
     }
 
-    void fade_subscene(const TransitionType tt, const string& name, const double opacity) {
+    void fade_subscene(const TransitionType tt, const string& name, const double opacity_final) {
         auto it = subscenes.find(name);
-        if(it != subscenes.end()){
-            unordered_map<string, string> map = {
-                {name + ".opacity", to_string(opacity)}
-            };
-            state_manager.transition(tt, map);
-        }
+        if(it != subscenes.end())
+            state_manager.transition(tt, {{name + ".opacity", to_string(opacity_final)}});
     }
 
     void remove_all_subscenes() {

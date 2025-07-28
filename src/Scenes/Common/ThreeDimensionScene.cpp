@@ -54,7 +54,6 @@ extern "C" {
 
 struct Surface {
     glm::vec3 center;
-    float opacity;
     glm::vec3 pos_x_dir;
     glm::vec3 pos_y_dir;
     float ilr2;
@@ -62,8 +61,8 @@ struct Surface {
     string name;
     glm::vec3 normal;
 
-    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, const string& n, float op = 1)
-        : center(c), opacity(op),
+    Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, const string& n)
+        : center(c),
           pos_x_dir(l * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_HEIGHT)),
           pos_y_dir(u * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_WIDTH)),
           name(n) {
@@ -181,7 +180,7 @@ public:
     }
 
     virtual void render_surface(const Surface& surface) {
-        float this_surface_opacity = surface.opacity * state["surfaces_opacity"];
+        float this_surface_opacity = state[surface.name + ".opacity"] * state["surfaces_opacity"];
 
         glm::vec3 surface_center = surface.center;
         if(use_state_for_center) surface_center = glm::vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
@@ -300,17 +299,19 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = SuperScene::populate_state_query();
-        StateQuery extras{
+        for(const string& x : {
             "fov","x", "y", "z", "d", "q1", "qi", "qj",
             "qk", "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
-        };
-        for(const string& x : extras) sq.insert(x);
+        }) sq.insert(x);
         if(use_state_for_center) {
             for(const Surface& surface : surfaces){
                 sq.insert(surface.name + ".x");
                 sq.insert(surface.name + ".y");
                 sq.insert(surface.name + ".z");
             }
+        }
+        for(const Surface& surface : surfaces){
+            sq.insert(surface.name + ".opacity");
         }
         return sq;
     }
@@ -326,6 +327,12 @@ public:
     void add_surface(const Surface& s, shared_ptr<Scene> sc) {
         surfaces.push_back(s);
         add_subscene_check_dupe(s.name, sc);
+        state_manager.set(s.name + ".opacity", "1");
+    }
+    void add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa=1){
+        add_surface(s, sc);
+        state_manager.set(s.name + ".opacity", "0");
+        fade_subscene(tt, s.name, opa);
     }
 
     void remove_surface(const string& name) {
@@ -336,6 +343,7 @@ public:
             }
             else ++it;
         }
+        state_manager.remove(name + ".opacity");
     }
 
     void clear_lines(){ lines.clear(); }

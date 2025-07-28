@@ -2,21 +2,22 @@
 #include <vector>
 #include "DataObject.cpp"
 
-class GeometricPoint {
-public:
+struct GeometricPoint {
     glm::vec2 position;
+    GeometricPoint(glm::vec2 pos) : position(pos) {}
 };
-class GeometricLine {
-public:
+struct GeometricLine {
     glm::vec2 start;
     glm::vec2 end;
+    GeometricLine(glm::vec2 s, glm::vec2 e) : start(s), end(e) {}
 };
-class GeometricArc {
-public:
+struct GeometricArc {
     glm::vec2 center;
     double start_angle;
     double end_angle;
     double radius;
+    GeometricArc(glm::vec2 c, double sa, double ea, double r)
+        : center(c), start_angle(sa), end_angle(ea), radius(r) {}
 };
 
 class GeometricConstruction : public DataObject {
@@ -31,6 +32,12 @@ public:
     }
     void add_arc(const GeometricArc& a){
         arcs.push_back(a);
+        mark_updated();
+    }
+    void clear() {
+        points.clear();
+        lines.clear();
+        arcs.clear();
         mark_updated();
     }
     vector<GeometricPoint> points;

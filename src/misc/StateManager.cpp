@@ -173,38 +173,64 @@ public:
             } else break;
         }
     }
-    void remove_equation(const string& variable) {
+    void set(const unordered_map<string, string>& equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            set(it->first, it->second);
+        }
+    }
+
+    void remove(const string& variable) {
         /* When a new component is removed, we do not know the
          * correct compute order anymore.
          */
         last_compute_order.clear();
         variables.erase(variable);
     }
-    void set_parent(StateManager* p, const string& name) {
-        if((parent == nullptr) == (p == nullptr))
-            throw runtime_error("Parent must change state from set to unset or vice versa. Current: " + to_string(reinterpret_cast<uintptr_t>(parent)) + ", setting to: " + to_string(reinterpret_cast<uintptr_t>(p)) + ". This scene's child identifier was " + name + ".");
-        parent = p;
-    }
-
-    /* Bulk Modifiers. Naive. One per modifier. */
-    void transition(const TransitionType tt, const unordered_map<string, string>& equations) {
-        for(auto it = equations.begin(); it != equations.end(); it++){
-            add_transition(tt, it->first, it->second);
-        }
-    }
-    void set(const unordered_map<string, string>& equations) {
-        for(auto it = equations.begin(); it != equations.end(); it++){
-            set(it->first, it->second);
-        }
-    }
     void remove(const unordered_map<string, string>& equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
-            remove_equation(it->first);
+            remove(it->first);
+        }
+    }
+
+    void transition(const TransitionType tt, const string& variable, const string& equation) {
+        if(!contains(variable)){
+            print_state();
+            throw runtime_error("ERROR: Attempted to transition nonexistent variable " + variable + "!\nState printed above.");
+        }
+
+        // No point in doing a noop transition
+        if(get_equation(variable) == equation) return;
+
+        // Nested transitions not supported
+        if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
+           in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
+            throw runtime_error("Transition added to a variable already in transition: " + variable);
+        }
+
+             if(tt == MICRO) in_microblock_transition.insert(variable);
+        else if(tt == MACRO) in_macroblock_transition.insert(variable);
+        else throw runtime_error("Invalid transition type: " + to_string(tt));
+        string eq1 = get_equation(variable);
+        string eq2 = equation;
+        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (tt==MICRO?"micro":"macro") + "block_fraction> smoothlerp";
+        set(variable+".pre_transition", eq1);
+        set(variable+".post_transition", eq2);
+        set(variable, lerp_both);
+    }
+    void transition(const TransitionType tt, const unordered_map<string, string>& equations) {
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            transition(tt, it->first, it->second);
         }
     }
     void close_transitions(const TransitionType tt){
         if(tt == MICRO) close_all_transitions(in_microblock_transition);
         if(tt == MACRO) close_all_transitions(in_macroblock_transition);
+    }
+
+    void set_parent(StateManager* p, const string& name) {
+        if((parent == nullptr) == (p == nullptr))
+            throw runtime_error("Parent must change state from set to unset or vice versa. Current: " + to_string(reinterpret_cast<uintptr_t>(parent)) + ", setting to: " + to_string(reinterpret_cast<uintptr_t>(p)) + ". This scene's child identifier was " + name + ".");
+        parent = p;
     }
 
     void evaluate_all() {
@@ -297,7 +323,6 @@ public:
             set(wh + ".post_transition", eq);
             set(wh + ".pre_transition", eq);
             set(wh, pop);
-
         }
     }
 
@@ -333,27 +358,6 @@ public:
             result.set(varname, get_value(varname));
         }
         return result;
-    }
-
-    void add_transition(const TransitionType tt, const string& variable, const string& equation) {
-        // No point in doing a noop transition
-        if(get_equation(variable) == equation) return;
-
-        // Nested transitions not supported
-        if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
-           in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
-            throw runtime_error("Transition added to a variable already in transition: " + variable);
-        }
-
-             if(tt == MICRO) in_microblock_transition.insert(variable);
-        else if(tt == MACRO) in_macroblock_transition.insert(variable);
-        else throw runtime_error("Invalid transition type: " + to_string(tt));
-        string eq1 = get_equation(variable);
-        string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (tt==MICRO?"micro":"macro") + "block_fraction> smoothlerp";
-        set(variable+".pre_transition", eq1);
-        set(variable+".post_transition", eq2);
-        set(variable, lerp_both);
     }
 
 private:
@@ -454,8 +458,8 @@ private:
             set(varname, get_equation(varname + ".post_transition"));
             VariableContents& vc = variables.at(varname);
             vc.value = get_value(varname + ".post_transition");
-            remove_equation(varname + ".post_transition");
-            remove_equation(varname + ".pre_transition");
+            remove(varname + ".post_transition");
+            remove(varname + ".pre_transition");
         }
         in_transition.clear();
     }
