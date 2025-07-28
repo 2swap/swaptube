@@ -84,15 +84,15 @@ __global__ void render_surface_kernel(
         glm::dot(centered, surface_pos_y_dir) * surface_iur2 + 0.5f
     );
 
+    int pixels_index = px + py * pixels_w;
+
     // If this pixel does not intersect the surface, return
-    if (surface_coords.x >= 1 || surface_coords.x < 0 || surface_coords.y >= 1 || surface_coords.y < 0) return;
+    if (surface_coords.x >= 1 || surface_coords.x < 0 || surface_coords.y >= 1 || surface_coords.y < 0)  return;
 
     int surface_x = surface_coords.x * surface_w;
     int surface_y = surface_coords.y * surface_h;
 
     unsigned int color = d_surface[surface_x + surface_y * surface_w];
-
-    int pixels_index = px + py * pixels_w;
 
     d_pixels_dev[pixels_index] = color_combine_device(d_pixels_dev[pixels_index], color, opacity);
 }

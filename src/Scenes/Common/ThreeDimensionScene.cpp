@@ -64,11 +64,11 @@ struct Surface {
 
     Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, const string& n, float op = 1)
         : center(c), opacity(op),
-          pos_x_dir(l * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_WIDTH)),
-          pos_y_dir(u * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_HEIGHT)),
+          pos_x_dir(l * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_HEIGHT)),
+          pos_y_dir(u * static_cast<float>(geom_mean(VIDEO_WIDTH, VIDEO_HEIGHT) / VIDEO_WIDTH)),
           name(n) {
-        ilr2 = 0.5f / (l.x*l.x + l.y*l.y + l.z*l.z);
-        iur2 = 0.5f / (u.x*u.x + u.y*u.y + u.z*u.z);
+        ilr2 = 0.5f / (square(pos_x_dir.x) + square(pos_x_dir.y) + square(pos_x_dir.z));
+        iur2 = 0.5f / (square(pos_y_dir.x) + square(pos_y_dir.y) + square(pos_y_dir.z));
         normal = glm::cross(pos_x_dir, pos_y_dir);
     }
 };
@@ -95,39 +95,37 @@ public:
         });
     }
 
-    pair<double, double> coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
+    glm::vec2 coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
         coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
         if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
-        double scale = (get_geom_mean_size()*fov) / coordinate.z;
-        double x = scale * coordinate.x + get_width()/2;
-        double y = scale * coordinate.y + get_height()/2;
-        return {x, y};
+        float scale = (get_geom_mean_size()*fov) / coordinate.z;
+        return scale * glm::vec2(coordinate.x, coordinate.y) + get_width_height()*.5f;
     }
 
-    bool isOutsideScreen(const pair<int, int>& point) {
-        return point.first < 0 || point.first >= get_width() || point.second < 0 || point.second >= get_height();
+    bool isOutsideScreen(const glm::vec2& point) {
+        return point.x < 0 || point.x >= get_width() || point.y < 0 || point.y >= get_height();
     }
 
     // Utility function to find the orientation of the ordered triplet (p, q, r).
     // The function returns:
     // 1 --> Clockwise
     // 2 --> Counterclockwise
-    int orientation(const pair<int, int>& p, const pair<int, int>& q, const pair<int, int>& r) {
-        int val = (q.second - p.second) * (r.first - q.first) - (q.first - p.first) * (r.second - q.second);
+    int orientation(const glm::vec2& p, const glm::vec2& q, const glm::vec2& r) {
+        int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
         return (val > 0) ? 1 : 2; // clockwise or counterclockwise
     }
 
     // Function to check if a point is on the left side of a directed line segment.
-    bool isLeft(const pair<int, int>& a, const pair<int, int>& b, const pair<int, int>& c) {
-        return ((b.first - a.first) * (c.second - a.second) - (b.second - a.second) * (c.first - a.first)) > 0;
+    bool isLeft(const glm::vec2& a, const glm::vec2& b, const glm::vec2& c) {
+        return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
     }
 
-    bool isInsideConvexPolygon(const pair<int, int>& point, const vector<pair<int, int>>& polygon) {
+    bool isInsideConvexPolygon(const glm::vec2& point, const vector<glm::vec2>& polygon) {
         if (polygon.size() < 3) return false; // Not a polygon
 
         // Extend the point to the right infinitely
-        pair<int, int> extreme = {100000, point.second};
+        glm::vec2 extreme = {100000, point.y};
         for (int i = 0; i < polygon.size(); i++) {
             int next = (i + 1) % polygon.size();
             if (lineSegmentsIntersect(polygon[i], polygon[next], point, extreme)) {
@@ -137,7 +135,7 @@ public:
         return false;
     }
 
-    bool lineSegmentsIntersect(const pair<int, int>& p1, const pair<int, int>& q1, const pair<int, int>& p2, const pair<int, int>& q2) {
+    bool lineSegmentsIntersect(const glm::vec2& p1, const glm::vec2& q1, const glm::vec2& p2, const glm::vec2& q2) {
         // Find the four orientations needed for the general and special cases
         int o1 = orientation(p1, q1, p2);
         int o2 = orientation(p1, q1, q2);
@@ -149,14 +147,14 @@ public:
     }
 
     // Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'
-    bool onSegment(const pair<int, int>& p, const pair<int, int>& q, const pair<int, int>& r) {
-        if (q.first <= max(p.first, r.first) && q.first >= min(p.first, r.first) &&
-            q.second <= max(p.second, r.second) && q.second >= min(p.second, r.second))
+    bool onSegment(const glm::vec2& p, const glm::vec2& q, const glm::vec2& r) {
+        if (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) &&
+            q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y))
             return true;
         return false;
     }
 
-    bool should_render_surface(vector<pair<int, int>> corners){
+    bool should_render_surface(vector<glm::vec2> corners){
         // We identify that polygons A and B share some amount of area, if and only if any one of these 3 conditions are met:
         // 1. A corner of A is inside B
         // 2. A corner of B is inside A
@@ -169,7 +167,7 @@ public:
 
         int w = get_width();
         int h = get_height();
-        vector<pair<int, int>> screenCorners = {{0, 0}, {w, 0}, {w, h}, {0, h}};
+        vector<glm::vec2> screenCorners = {glm::vec2(0, 0), glm::vec2(w, 0), glm::vec2(w, h), glm::vec2(0, h)};
         for (const auto& corner : screenCorners)
             if (isInsideConvexPolygon(corner, corners))
                 return true;
@@ -189,7 +187,7 @@ public:
         if(use_state_for_center) surface_center = glm::vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
         if(this_surface_opacity < .001) return;
 
-        vector<pair<int, int>> corners(4);
+        vector<glm::vec2> corners(4);
         bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
         corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
         corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
@@ -204,10 +202,10 @@ public:
         int y2 = numeric_limits<int>::min();
 
         for(const auto& corner : corners){
-            x1 = min(x1, corner.first );
-            y1 = min(y1, corner.second);
-            x2 = max(x2, corner.first );
-            y2 = max(y2, corner.second);
+            x1 = min(x1, int(corner.x));
+            y1 = min(y1, int(corner.y));
+            x2 = max(x2, int(corner.x));
+            y2 = max(y2, int(corner.y));
         }
         x1 = max(x1, 0);
         y1 = max(y1, 0);
@@ -235,8 +233,8 @@ public:
             surface.pos_y_dir,
             surface.ilr2,
             surface.iur2,
-            halfwidth,
-            halfheight,
+            get_width()*0.5f,
+            get_height()*0.5f,
             over_w_fov
         );
     }
@@ -257,8 +255,6 @@ public:
     void draw() override {
         fov = state["fov"];
         over_w_fov = 1/(get_geom_mean_size()*fov);
-        halfwidth = get_width()*0.5f;
-        halfheight = get_height()*0.5f;
 
         set_camera_direction();
 
@@ -354,8 +350,6 @@ public:
     glm::quat conjugate_camera_direction;
     double fov;
     double over_w_fov;
-    double halfwidth;
-    double halfheight;
     Pixels sketchpad;
 protected:
     double auto_distance = -1;

@@ -1,4 +1,5 @@
 #include "../Scenes/Math/ComplexPlotScene.cpp"
+#include "../Scenes/Math/RealFunctionScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
@@ -17,41 +18,59 @@
 void render_video(){
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(3);
     cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 4);
-    cps->state_manager.set("zoom", ".2");
     cps->state_manager.set("dot_radius", ".1");
     cps->state_manager.set("ticks_opacity", "0");
 
-    for(int micro = 0; cps->microblocks_remaining(); micro++) {
-        for(int i = 0; i < cps->degree; i++) {
-            // Make a pseudorandom but deterministic pair of numbers as a function of i and micro
-            float real = (((i * 3 + micro * micro * 3) % 11) - 5) / 7.; // Range from -2 to 2
-            float imag = (((i * 7 + micro * i * 2) % 11) - 5) / 7.; // Range from -2 to 2
-            cps->state_manager.transition(MICRO, {
-                {"root"+to_string(i)+"_r", to_string(real)},
-                {"root"+to_string(i)+"_i", to_string(imag)},
-            });
-        }
-        cps->render_microblock();
-    }
-
-    cps->stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 4);
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < cps->degree; i++) {
         cps->state_manager.transition(MICRO, {
-            {"root0_r", i%2==0?"-.8":".5"},
-            {"root0_i", i%2==0?".1":".8"},
+            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
         });
-        cps->render_microblock();
     }
+    cps->render_microblock();
+    cps->render_microblock();
+    cps->render_microblock();
+    cps->state_manager.transition(MICRO, {
+        {"root0_r", "1"},
+        {"root0_i", ".2"},
+        {"root1_r", ".5"},
+        {"root1_i", ".9"},
+        {"root2_r", "-1"},
+        {"root2_i", "-.4"},
+    });
+    cps->render_microblock();
+
+    cps->stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 2);
+    cps->state_manager.set({
+        {"root0_r", "1 <spin_coefficient_r> +"},
+        {"root0_i", ".2 <spin_coefficient_i> +"},
+        {"spin_coefficient_r", "<t> sin <spin_multiplier> *"},
+        {"spin_coefficient_i", "<t> cos <spin_multiplier> *"},
+        {"spin_multiplier", "0"},
+    });
+    cps->state_manager.transition(MICRO, {
+        {"spin_multiplier", ".5"},
+    });
+    cps->render_microblock();
+    cps->state_manager.transition(MICRO, {
+        {"spin_multiplier", "0"},
+    });
+    cps->render_microblock();
 
     cps->state_manager_roots_to_coefficients();
-    cps->stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 4);
-    for(int i = 0; i < 4; i++) {
-        cps->state_manager.transition(MICRO, {
-            {"coefficient0_r", i%2==0?".1":"1.8"},
-            {"coefficient0_i", i%2==0?".6":"-.8"},
-        });
-        cps->render_microblock();
-    }
+    cps->stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 2);
+    cps->state_manager.set({
+        {"coefficient0_r", cps->state_manager.get_equation("coefficient0_r") + " <spin_coefficient_r> +"},
+        {"coefficient0_i", cps->state_manager.get_equation("coefficient0_i") + " <spin_coefficient_i> +"},
+    });
+    cps->state_manager.transition(MICRO, {
+        {"spin_multiplier", ".5"},
+    });
+    cps->render_microblock();
+    cps->state_manager.transition(MICRO, {
+        {"spin_multiplier", "0"},
+    });
+    cps->render_microblock();
 
     cps->stage_macroblock(FileBlock("It's a shame your algebra teacher never showed you this plot of their relationship..."), 1);
     cps->render_microblock();
@@ -76,20 +95,7 @@ void render_video(){
     cs.state_manager.transition(MICRO, {{"ls.x", ".25"}, {"ls.y", ".1"}});
     ls->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
     cs.render_microblock();
-
-    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x-r_1)(x-r_2)(x-r_3)", 1);
-    cs.add_scene_fade_in(MICRO, ls2, "ls2");
-    cs.stage_macroblock(FileBlock("and a factored form, with one term for each root."), 4);
-    cs.render_microblock();
-    ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
-    cs.render_microblock();
-    ls2->begin_latex_transition(MICRO, "(x-r_1)(x-r_2)(x-r_3)");
-    cs.render_microblock();
-    cs.state_manager.transition(MICRO, {{"ls2.x", ".75"}, {"ls2.y", ".1"}});
-    ls2->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("These points are the coefficients of the standard form,"), 4);
+    cs.stage_macroblock(FileBlock("which I'm representing on the graph here..."), 4);
     for(int i = 0; i < 2; i++) {
         cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
         ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
@@ -100,7 +106,18 @@ void render_video(){
         cs.render_microblock();
     }
 
-    cs.stage_macroblock(FileBlock("and these points are the roots of the polynomial."), 4);
+    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x-r_1)(x-r_2)(x-r_3)", 1);
+    cs.add_scene_fade_in(MICRO, ls2, "ls2");
+    cs.stage_macroblock(FileBlock("as well as a factored form, with one term for each root,"), 4);
+    cs.render_microblock();
+    ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
+    cs.render_microblock();
+    ls2->begin_latex_transition(MICRO, "(x-r_1)(x-r_2)(x-r_3)");
+    cs.render_microblock();
+    cs.state_manager.transition(MICRO, {{"ls2.x", ".75"}, {"ls2.y", ".1"}});
+    ls2->state_manager.transition(MICRO, {{"w", ".4"}, {"h", ".2"}});
+    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("which are clearly visible on the polynomial's graph."), 4);
     for(int i = 0; i < 2; i++) {
         cps->state_manager.transition(MICRO, {{"roots_opacity",".5"}});
         ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
@@ -112,6 +129,7 @@ void render_video(){
     }
 
     cs.stage_macroblock(FileBlock("The space we're looking at is the complex plane, home to numbers like i and 3-2i."), 1);
+    cps->state_manager.transition(MICRO, {{"ticks_opacity", "1"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("For each pixel on the screen, I passed that complex number as an input to the polynomial,"), 1);
@@ -135,30 +153,56 @@ void render_video(){
     });
     cs.stage_macroblock(FileBlock("and the color shows the angle of the output."), 3);
     cs.render_microblock();
+    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {
         {"ab_dilation", ".3"},
     });
     cs.fade_subscene(MICRO, "ls", 0);
     cs.fade_subscene(MICRO, "ls2", 0);
+    cps->state_manager.transition(MICRO, {
+        {"root0_r", "-2"},
+        {"root0_i", "0"},
+        {"root1_r", "-.5"},
+        {"root1_i", "0"},
+        {"root2_r", "2"},
+        {"root2_i", "0"},
+    });
     cs.render_microblock();
     cs.remove_all_subscenes();
 
     ThreeDimensionScene tds;
     tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "cps"), cps);
-    tds.stage_macroblock(FileBlock("Doing this for every point, we can graph our complex-valued function."), 1);
+    tds.stage_macroblock(FileBlock("Doing this for every point, we can graph our complex-valued function."), 2);
+    cps->state_manager_coefficients_to_roots();
+    tds.state_manager.transition(MICRO, {
+        {"d", "1.5"},
+    });
+    tds.render_microblock();
+
+    shared_ptr<RealFunctionScene> rfs = make_shared<RealFunctionScene>();
+    rfs->add_function("? 2 - ? .5 - ? 2 + * *", 0xffff0000);
+    tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
+    tds.state_manager.transition(MICRO, {
+        {"qi", "-.2 <t> sin .1 * +"},
+        {"qj", "<t> cos .04 *"},
+    });
     tds.render_microblock();
     // TODO introduce a real valued plot in a 3d axis and show that it doesn't necessarily have zeros.
     tds.stage_macroblock(FileBlock("You might ask, what's all this complex number business? Why leave the familiar land of the reals?"), 1);
-    cs.render_microblock();
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("But in turn, I would ask, why do you need decimals or negatives either?"), 1);
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, and so on, along with the ideas of plus and times."), 1);
+    tds.render_microblock();
     return;
-    cs.stage_macroblock(FileBlock("But in turn, I would ask, why do you need decimals or negatives either?"), 1);
-    cs.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, and so on, along with the ideas of plus and times."), 1);
-    cs.stage_macroblock(FileBlock("In such a world, we quickly run into problems..."), 1);
-    cs.stage_macroblock(FileBlock("We can write equations that have no solution, such as 1 + x = 1."), 1);
-    cs.stage_macroblock(FileBlock("Without zero, our number system is somehow incomplete."), 1);
-    cs.stage_macroblock(FileBlock("There's nothing we can write here for x that would solve make this equation true."), 1);
-    cs.stage_macroblock(FileBlock("So, to be able to solve this equation, we need 0 in our set..."), 1);
+    tds.stage_macroblock(FileBlock("In such a world, we quickly run into problems..."), 1);
+    tds.stage_macroblock(FileBlock("We can write equations that have no solution, such as 1 + x = 1."), 1);
+    tds.stage_macroblock(FileBlock("Without zero, our number system is somehow incomplete."), 1);
+    tds.stage_macroblock(FileBlock("There's nothing we can write here for x that would solve make this equation true."), 1);
+    tds.stage_macroblock(FileBlock("So, to be able to solve this equation, we need 0 in our set..."), 1);
     cs.stage_macroblock(FileBlock("What about 2+x=1?"), 1);
     cs.stage_macroblock(FileBlock("Well, we then need -1 too,"), 1);
     cs.stage_macroblock(FileBlock("along with -2,"), 1);

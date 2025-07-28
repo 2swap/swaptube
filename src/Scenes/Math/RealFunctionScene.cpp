@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Common/CoordinateSceneWithTrail.cpp"
+#include "../Common/CoordinateScene.cpp"
 #include <vector>
 #include <stdexcept>
 #include <string>
@@ -14,10 +14,10 @@ struct FunctionData {
         : function(f), transition_function(tf), color(c) {}
 };
 
-class RealFunctionScene : public CoordinateSceneWithTrail {
+class RealFunctionScene : public CoordinateScene {
 public:
     RealFunctionScene(const double width = 1, const double height = 1)
-        : CoordinateSceneWithTrail(width, height), pixel_width(0.1) {}
+        : CoordinateScene(width, height), pixel_width(0.1) {}
 
     // Evaluates the function at x by replacing '?' with the x-value,
     // computing the current function and its transitional variant, then smoothing between them.
@@ -38,7 +38,7 @@ public:
     }
 
     void draw() override {
-        CoordinateSceneWithTrail::draw();
+        CoordinateScene::draw();
         render_functions();
     }
 
@@ -65,22 +65,22 @@ public:
             double val = 0;
             for (const auto& func_data : functions) {
                 val = call_the_function(x, func_data);
-                pair<int, int> pixel = point_to_pixel({x, val});
-                render_dot(pixel, func_data.color);
+                glm::vec2 pixel = point_to_pixel({x, val});
+                float sz = get_geom_mean_size() / 200.f;
+                pix.fill_rect(pixel.x - sz / 2, pixel.y - sz / 2, sz, sz, func_data.color);
                 subtr += val * mult;
                 mult = -1;
             }
-            if (last_subtr * subtr < 0 && functions.size() == 2) {
-                pair<int, int> collide = point_to_pixel({x, val});
-                render_point(collide);
-                pix.bresenham(collide.first, collide.second, collide.first, get_height() / 2, 0xffffffff, 1, 2);
-            }
+            /* if (last_subtr * subtr < 0 && functions.size() == 2) {
+                glm::vec2 collide = point_to_pixel({x, val});
+                pix.fill_circle(collide.x, collide.y, 5, func_data.color);
+            } */
             last_subtr = subtr;
         }
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = CoordinateSceneWithTrail::populate_state_query();
+        StateQuery sq = CoordinateScene::populate_state_query();
         sq.insert("microblock_fraction");
         return sq;
     }

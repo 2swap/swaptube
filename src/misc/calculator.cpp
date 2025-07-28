@@ -6,6 +6,7 @@
 #include <sstream>
 #include <unordered_map>
 #include <functional>
+#include <stdexcept>
 #include "inlines.h"
 
 using namespace std;
@@ -86,14 +87,19 @@ double calculator(const string& expression) {
     string token;
     while (iss >> token) {
         if (isdigit(token[0]) || token[0] == '.' || (token[0] == '-' && token.size() > 1)) {
-            stack.push(stod(token));
+            try {
+                stack.push(stod(token));
+            } catch (const invalid_argument&) {
+                throw runtime_error("Calculator says: " + expression + ": Invalid number format: " + token);
+            } catch (const out_of_range&) {
+                throw runtime_error("Calculator says: " + expression + ": Number out of range: " + token);
+            }
         } else {
             auto it = operators.find(token);
             if (it != operators.end()) {
                 OperatorInfo& opInfo = it->second;
                 if (stack.size() < static_cast<size_t>(opInfo.numOperands)) {
-                    throw runtime_error("Insufficient operands for operator: " + token);
-                    return 0.0;
+                    throw runtime_error("Calculator says: " + expression + ": Insufficient operands for operator: " + token);
                 }
 
                 vector<double> operands(opInfo.numOperands);
@@ -105,11 +111,15 @@ double calculator(const string& expression) {
                 double result = opInfo.operator_function(operands);
                 stack.push(result);
             } else {
-                throw runtime_error("Invalid operator: " + token);
-                return 0.0;
+                throw runtime_error("Calculator says: " + expression + ": Invalid operator: " + token);
             }
         }
     }
-
+    if (stack.empty()) {
+        throw runtime_error("Calculator says: " + expression + ": Empty expression or no result on stack");
+    }
+    if (stack.size() > 1) {
+        throw runtime_error("Calculator says: " + expression + ": Invalid expression: multiple values left on stack");
+    }
     return stack.top();
 }

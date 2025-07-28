@@ -38,6 +38,10 @@ public:
 
     void state_manager_roots_to_coefficients(){
         update_state();
+
+        // If we are already in coefficients mode, do nothing
+        if(state["roots_or_coefficients_control"] != 0) return;
+
         vector<complex<float>> coefficients = get_coefficients();
 
         int i = 0;
@@ -51,6 +55,10 @@ public:
 
     void state_manager_coefficients_to_roots(){
         update_state();
+
+        // If we are already in roots mode, do nothing
+        if(state["roots_or_coefficients_control"] != 1) return;
+
         vector<complex<float>> roots = get_roots();
          
         int i = 0;

@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <cassert>
+#include <glm/glm.hpp>
 #include "../misc/StateManager.cpp"
 #include "../io/VisualMedia.cpp"
 #include "../io/DebugPlot.h"
@@ -135,6 +136,10 @@ public:
 
     int get_height() const{
         return VIDEO_HEIGHT * state_manager.get_state({"h"})["h"];
+    }
+
+    glm::vec2 get_width_height() const{
+        return glm::vec2(get_width(), get_height());
     }
 
     double get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }
