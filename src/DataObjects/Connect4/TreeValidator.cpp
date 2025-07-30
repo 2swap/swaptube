@@ -1,11 +1,15 @@
+#include <chrono>
+
 bool ValidateC4Graph(Graph& graph) {
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     int i = 0;
     for (const auto& node_pair : graph.nodes) {
         if(i % 100 == 0)
             cout << i << endl;
         i++;
         const Node& node = node_pair.second;
-        const C4Board& board = node.data;
+        const C4Board& board = *dynamic_cast<C4Board*>(node.data);
 
         C4Board copy = board;
 
@@ -24,8 +28,8 @@ bool ValidateC4Graph(Graph& graph) {
                     return false;
                 }
 
-                const Node<C4Board>& child_node = graph.nodes.at(child_hash);
-                const C4Board& child_board = *child_node.data;
+                const Node& child_node = graph.nodes.at(child_hash);
+                const C4Board& child_board = *dynamic_cast<C4Board*>(child_node.data);
 
                 if (child_board.is_reds_turn()) {
                     cout << "Invalid: Red-to-move node has a red-to-move child." << endl;
@@ -61,6 +65,7 @@ bool ValidateC4Graph(Graph& graph) {
 
             if (actual_children_hashes != expected_children_hashes) {
                 cout << "Invalid: Yellow-to-move node does not have all legal children." << endl;
+                cout << node.data->representation << endl;
                 return false;
             }
 
@@ -74,6 +79,10 @@ bool ValidateC4Graph(Graph& graph) {
     }
 
     // If all checks pass, the graph is valid
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end_time - start_time;
+
     cout << "Graph is a valid Connect 4 weak solution tree." << endl;
+    cout << "Validation took " << elapsed_seconds.count() << " seconds." << endl;
     return true;
 }

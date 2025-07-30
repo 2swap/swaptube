@@ -46,7 +46,6 @@ public:
     int piece_code_at(int x, int y) const;
     string reverse_representation() const;
     double reverse_hash();
-    json get_data() const;
     int burst() const;
     Bitboard legal_moves() const;
     int get_instant_win() const;
@@ -78,6 +77,7 @@ public:
     void insert_sorted_children_by_min_hash(vector<GenericBoard*>& children, unordered_set<GenericBoard*>& neighbors) const;
     unordered_set<GenericBoard*> get_children();
     unordered_set<double> get_children_hashes();
+    json get_data() const override;
 };
 
 void fhourstones_tests(){

@@ -525,7 +525,6 @@ public:
         return ans;
     }
 
-    /*
     void render_json(string json_out_filename) {
         ofstream myfile;
         myfile.open(json_out_filename);
@@ -544,6 +543,8 @@ public:
 
             json neighbors;
             for (const auto& neighbor : node.neighbors) {
+                string neighbor_representation = nodes.at(neighbor.to).data->representation;
+                if(neighbor_representation.size() < node.data->representation.size()) continue;
                 ostringstream oss;
                 oss << setprecision(numeric_limits<double>::digits10 + 2) << neighbor.to;
                 neighbors.push_back(oss.str());
@@ -561,16 +562,15 @@ public:
         ostringstream oss;
         oss << setprecision(numeric_limits<double>::digits10 + 2) << root_node_hash;
         json_data["root_node_hash"] = oss.str();
-        json_data["board_w"] = nodes.find(root_node_hash)->second.data->BOARD_WIDTH;
-        json_data["board_h"] = nodes.find(root_node_hash)->second.data->BOARD_HEIGHT;
-        json_data["game_name"] = nodes.find(root_node_hash)->second.data->game_name;
+        json_data["board_w"  ] = 7;
+        json_data["board_h"  ] = 6;
+        json_data["game_name"] = "c4";
 
         myfile << json_data.dump();
 
         myfile.close();
         cout << "Rendered json!" << endl;
     }
-    */
 
     unordered_set<double> get_neighborhood(double hash, int dist) {
         unordered_set<double> neighborhood;

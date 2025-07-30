@@ -6,6 +6,8 @@
 #include <set>
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Scene.cpp"
+#include "../misc/json.hpp"
+using json = nlohmann::json;
 
 class GenericBoard {
 public:
@@ -44,6 +46,10 @@ public:
         if(highlight_type == -1)
             highlight_type = is_solution() ? 1 : 0;
         return highlight_type;
+    }
+
+    virtual json get_data() const {
+        return json();
     }
 
     virtual shared_ptr<Scene> make_scene() const {

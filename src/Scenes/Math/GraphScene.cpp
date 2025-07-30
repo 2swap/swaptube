@@ -145,7 +145,6 @@ public:
 
             auto it = graph_surface_map.find(rep);
             if(it != graph_surface_map.end()) {
-                it->second.first.opacity = node.opacity;
                 it->second.first.center = glm::vec3(node.position.x, node.position.y, node.position.z);
             } else {
                 graph_surface_map.emplace(rep, make_pair(make_surface(node), node.data->make_scene()));
@@ -172,7 +171,7 @@ public:
         return Surface(glm::vec3(node.position.x, node.position.y, node.position.z),
                        glm::vec3(1,0,0),
                        glm::vec3(0,static_cast<float>(VIDEO_HEIGHT)/VIDEO_WIDTH,0),
-                       node.data->representation, node.opacity);
+                       node.data->representation);
     }
 
     // Override the default surface render routine to make all graph surfaces point at the camera
@@ -193,8 +192,7 @@ public:
             surface.center,
             glm::vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
             glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
-            surface.name,
-            surface.opacity
+            surface.name
         );
 
         ThreeDimensionScene::render_surface(surface_rotated);
