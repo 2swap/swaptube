@@ -429,7 +429,7 @@ int C4Board::get_human_winning_fhourstones() {
     const bool BACKTRACK = !SKIP_UNFOUND_STEADYSTATES;
     if(BACKTRACK){
         vector<int> order_out;
-        int snp = search_nply_id(6, winning_columns, order_out);
+        int snp = search_nply_id(2, winning_columns, order_out);
         if(snp > 0) return snp;
     }
 

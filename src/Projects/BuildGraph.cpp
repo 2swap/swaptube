@@ -20,35 +20,24 @@ void render_video() {
             {"qi", "<t> .2 * cos"},
             {"qj", "<t> .314 * sin"},
             {"qk", "0"},
-            {"decay",".98"},
-            {"dimensions","3.98"},
+            {"decay",".95"},
+            {"dimensions","3"},
             {"surfaces_opacity","0"},
             {"points_opacity","0"},
             {"physics_multiplier","100"},
+            {"mirror_force",".1"},
         });
 
         cs.add_scene(gs, "gs");
         cs.add_scene(ls_size, "ls_size", .1, .12);
         //if(!ValidateC4Graph(g)) return;
 
-        cs.stage_macroblock(SilenceBlock(5), 10);
+        cs.stage_macroblock(SilenceBlock(5), 1);
+        gs->state_manager.transition(MICRO, {{"decay", ".7"}});
         cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"dimensions", "3"}, {"mirror_force", ".5"}});
-        cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"dimensions", "3.98"}, {"mirror_force", "0"}});
-        cs.render_microblock();
-        cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"dimensions", "3"}, {"mirror_force", ".5"}});
-        cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"dimensions", "3.98"}, {"mirror_force", "0"}});
-        cs.render_microblock();
-        cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"dimensions", "3"}, {"mirror_force", ".5"}});
-        cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"decay", ".5"}});
-        cs.render_microblock();
-        cs.render_microblock();
+
         g.render_json("c4_full.js");
+        cout << g.size() << " nodes" << endl;
 
     } catch (exception& e){
         movecache.WriteCache();

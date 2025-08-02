@@ -26,10 +26,16 @@ public:
         graph->add_to_stack(board);
 
         if(mode != MANUAL){
-            graph->expand();
+            graph->expand(20);
             graph->make_bidirectional();
         }
         cout << "GRAPH SIZE: " << graph->size() << endl;
+    }
+
+    void change_data() override {
+        graph->expand(500);
+        graph->make_bidirectional();
+        GraphScene::change_data();
     }
 
     int get_edge_color(const Node& node, const Node& neighbor){
