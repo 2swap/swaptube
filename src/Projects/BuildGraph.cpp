@@ -19,22 +19,32 @@ void render_video() {
             {"qi", "<t> .2 * cos"},
             {"qj", "<t> .314 * sin"},
             {"qk", "0"},
-            {"decay",".9"},
+            {"decay",".95"},
             {"dimensions","3"},
             {"surfaces_opacity","0"},
             {"points_opacity","0"},
             {"physics_multiplier","200"},
             {"mirror_force",".005"},
+            {"flip_by_symmetry","0"},
         });
 
-        cs.add_scene(gs, "gs");
-        //if(!ValidateC4Graph(g)) return;
+        if(false && !ValidateC4Graph(g)) {
+            cout << "Graph validation failed!" << endl;
+            return;
+        }
 
-        cs.stage_macroblock(SilenceBlock(2), 1);
+        cs.add_scene(gs, "gs");
+
+        cs.stage_macroblock(SilenceBlock(.1), 1);
+        cs.render_microblock();
+        cs.stage_macroblock(SilenceBlock(2), 2);
+        gs->state_manager.set("flip_by_symmetry", "0");
+        cs.render_microblock();
         gs->state_manager.transition(MICRO, {{"decay", ".6"}});
         cs.render_microblock();
 
         g.render_json("c4_full.js");
+
         cout << g.size() << " nodes" << endl;
 
     } catch (exception& e){

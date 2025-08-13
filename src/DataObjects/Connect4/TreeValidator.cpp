@@ -4,6 +4,7 @@ bool ValidateC4Graph(Graph& graph) {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     int i = 0;
+    bool valid = true;
     for (const auto& node_pair : graph.nodes) {
         if(i % 100 == 0)
             cout << i << endl;
@@ -16,16 +17,27 @@ bool ValidateC4Graph(Graph& graph) {
         // Get children hashes and check validity
         unordered_set<double> expected_children_hashes = copy.get_children_hashes();
 
-        if (board.is_reds_turn()) {
+        auto children = node.neighbors;
+        // Ignore neighbors which are parents by deleting neighbors whose representation is one character longer than the current node's representation
+        for (auto it = children.begin(); it != children.end();) {
+            const Node& neighbor_node = graph.nodes.at(it->to);
+            if (neighbor_node.data->representation.size() + 1 == node.data->representation.size()) {
+                it = children.erase(it); // Remove this neighbor
+            } else {
+                ++it; // Move to the next neighbor
+            }
+        }
 
+        if (board.is_reds_turn()) {
             // Case 1: Red-to-move node has exactly one child
-            if (node.neighbors.size() == 1) {
-                const Edge& child_edge = *node.neighbors.begin();
+            if (children.size() == 1) {
+                const Edge& child_edge = *children.begin();
                 double child_hash = child_edge.to;
 
                 if (!graph.node_exists(child_hash)) {
                     cout << "Invalid: Red-to-move node has a non-existent child." << endl;
-                    return false;
+                    cout << node.data->representation << endl << endl;
+                    valid = false;
                 }
 
                 const Node& child_node = graph.nodes.at(child_hash);
@@ -33,47 +45,64 @@ bool ValidateC4Graph(Graph& graph) {
 
                 if (child_board.is_reds_turn()) {
                     cout << "Invalid: Red-to-move node has a red-to-move child." << endl;
-                    return false;
+                    cout << node.data->representation << endl << endl;
+                    valid = false;
                 }
             }
 
             // Case 2: Red-to-move node has no children and must have a valid steady state
-            else if (node.neighbors.empty()) {
+            else if (children.empty()) {
                 shared_ptr<SteadyState> ss = find_cached_steady_state(board);
                 if (ss == nullptr){
                     cout << "Invalid: Red-to-move node has no nodes and no steadystate" << endl;
-                    return false;
+                    cout << node.data->representation << endl << endl;
+                    valid = false;
                 }
                 if (!ss->validate(board)){
                     cout << "Invalid: Red-to-move node's steady state failed validation" << endl;
-                    return false;
+                    cout << node.data->representation << endl << endl;
+                    valid = false;
                 }
             }
 
             else {
                 cout << "Invalid: Red-to-move node must have exactly one child or no children with a steady state." << endl;
-                return false;
+                cout << "Number of children: " << children.size() << endl;
+                cout << "Steady state: " << (find_cached_steady_state(board) != nullptr ? "exists" : "does not exist") << endl;
+                cout << node.data->representation << endl << endl;
+                valid = false;
             }
         }
 
         else { // Yellow-to-move
             // Case 3: Yellow-to-move node must have children corresponding to all legal moves
             unordered_set<double> actual_children_hashes;
-            for (const auto& edge : node.neighbors) {
+            for (const auto& edge : children) {
                 actual_children_hashes.insert(edge.to);
             }
 
-            if (actual_children_hashes != expected_children_hashes) {
-                cout << "Invalid: Yellow-to-move node does not have all legal children." << endl;
-                cout << node.data->representation << endl;
-                return false;
+            // Check that all expected children are present
+            for (const auto& hash : expected_children_hashes) {
+                if (actual_children_hashes.find(hash) == actual_children_hashes.end()) {
+                    cout << "Invalid: Yellow-to-move node has missing child: " << hash << endl;
+                    cout << node.data->representation << endl << endl;
+                    valid = false;
+                }
+            }
+            for (const auto& hash : actual_children_hashes) {
+                if (expected_children_hashes.find(hash) == expected_children_hashes.end()) {
+                    cout << "Invalid: Yellow-to-move node has unexpected child: " << hash << endl;
+                    cout << node.data->representation << endl << endl;
+                    valid = false;
+                }
             }
 
             // Validate the board state: Red must win under perfect play
             int work;
             if (copy.who_is_winning(work, false) != RED) {
                 cout << "Invalid: Yellow-to-move node is not Red-to-win under perfect play." << endl;
-                return false;
+                cout << node.data->representation << endl << endl;
+                valid = false;
             }
         }
     }
@@ -82,7 +111,7 @@ bool ValidateC4Graph(Graph& graph) {
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end_time - start_time;
 
-    cout << "Graph is a valid Connect 4 weak solution tree." << endl;
+    cout << "Validation result: " << (valid ? "Valid" : "Invalid") << endl;
     cout << "Validation took " << elapsed_seconds.count() << " seconds." << endl;
-    return true;
+    return valid;
 }

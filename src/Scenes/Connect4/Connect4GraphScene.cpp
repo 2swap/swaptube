@@ -26,16 +26,15 @@ public:
         graph->add_to_stack(board);
 
         if(mode != MANUAL){
-            graph->expand(20);
+            graph->expand(1);
             graph->make_bidirectional();
         }
         cout << "GRAPH SIZE: " << graph->size() << endl;
     }
 
     void change_data() override {
-        graph->expand(1000);
-        cout << "GRAPH SIZE: " << graph->size() << endl;
-        graph->make_bidirectional();
+            graph->expand(2000);
+            graph->make_bidirectional();
         GraphScene::change_data();
     }
 

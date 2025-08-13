@@ -84,8 +84,6 @@ C4Result C4Board::who_won() const {
     const int v = C4_WIDTH;
     const int w = C4_WIDTH + 1; // there is a space of padding on the right of the bitboard
     const int x = C4_WIDTH + 2; // since otherwise horizontal wins would wrap walls
-    if((yellow_bitboard|red_bitboard) == 140185576636287ul) // this wont be resilient to other board sizes...
-        return TIE;
 
     for (int i = 0; i < 2; i++){
         const Bitboard b = i==0?red_bitboard:yellow_bitboard;
@@ -95,6 +93,9 @@ C4Result C4Board::who_won() const {
          || (b & (b>>x) & (b>>(2*x)) & (b>>(3*x))) )
             return i==0?RED:YELLOW;
     }
+
+    if((yellow_bitboard|red_bitboard) == 140185576636287ul) // this wont be resilient to other board sizes...
+        return TIE;
 
     return INCOMPLETE;
 }
@@ -284,7 +285,7 @@ bool C4Board::is_reds_turn() const{
 
 // Is symmetry broken first on the left or right?
 // Return -1 if left, 1 if right, 0 if not broken
-int C4Board::which_side() const override {
+int C4Board::which_side() const {
     for (char ch : representation) {
         int num = ch - '0';
         if (num < 4) return -1;
@@ -399,7 +400,7 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = false;
+    const bool SKIP_UNFOUND_STEADYSTATES = true;
     if(SKIP_UNFOUND_STEADYSTATES || representation.size() < 5){
         int move = -1;
         string ss = "";
@@ -440,7 +441,7 @@ int C4Board::get_human_winning_fhourstones() {
     const bool BACKTRACK = !SKIP_UNFOUND_STEADYSTATES;
     if(BACKTRACK){
         vector<int> order_out;
-        int snp = search_nply_id(4, winning_columns, order_out);
+        int snp = search_nply_id(2, winning_columns, order_out);
         if(snp > 0) return snp;
     }
 

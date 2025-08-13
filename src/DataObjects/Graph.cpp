@@ -439,7 +439,7 @@ public:
      * Iterate the physics engine to spread out graph nodes.
      * @param iterations The number of iterations to perform.
      */
-    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force) {
+    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const bool flip_by_symmetry) {
         vector<Node*> node_vector;
 
         for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
@@ -484,8 +484,10 @@ public:
         compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension, iterations);
 
         for (int i = 0; i < s; ++i) {
-            int flip = signum(node_vector[i].which_side() * node_vector[i]->position.x);
-            node_vector[i]->position = positions[i] * flip;
+            int flip = 1;
+            if(flip_by_symmetry) flip = signum(node_vector[i]->data->which_side() * node_vector[i]->position.x);
+            node_vector[i]->position = positions[i];
+            node_vector[i]->position.x *= flip;
             node_vector[i]->velocity = velocities[i];
         }
 
@@ -567,9 +569,13 @@ public:
         json_data["board_h"  ] = 6;
         json_data["game_name"] = "c4";
 
+        // Prepend "var dataset = " to the file
+        myfile.seekp(0, ios::beg);
+        myfile << "var dataset = ";
         myfile << json_data.dump();
 
         myfile.close();
+
         cout << "Rendered json!" << endl;
     }
 

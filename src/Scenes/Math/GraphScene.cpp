@@ -40,6 +40,7 @@ public:
             {"dimensions", "3"},
             {"mirror_force", "0"},
             {"highlight_point_opacity", "1"},
+            {"flip_by_symmetry", "0"},
         });
     }
 
@@ -105,6 +106,7 @@ public:
         s.insert("dimensions");
         s.insert("mirror_force");
         s.insert("highlight_point_opacity");
+        s.insert("flip_by_symmetry");
         return s;
     }
 
@@ -116,7 +118,7 @@ public:
             for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/abs(diff), diff>0);
         }
         last_node_count = graph->size();
-        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["dimensions"], state["mirror_force"]);
+        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["dimensions"], state["mirror_force"], state["flip_by_symmetry"]>0);
         if(graph->has_been_updated_since_last_scene_query()) {
             graph_to_3d();
             clear_surfaces();
