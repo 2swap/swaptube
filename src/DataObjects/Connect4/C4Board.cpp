@@ -46,8 +46,8 @@ string C4Board::reverse_representation() const {
     return result;
 }
 
-void C4Board::print() const {
-    cout << representation << endl;
+void C4Board::print() {
+    cout << setprecision(17) << representation << " (" << get_hash() << ")" << endl;
     for(int y = 0; y < C4_HEIGHT; y++) {
         for(int x = 0; x < C4_WIDTH; x++) {
             cout << disk_col(piece_code_at(x, y)) << " ";
@@ -177,7 +177,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     FILE* pipe = popen(command, "r");
     if (!pipe) {
         C4Board c4(representation);
-        cout << setprecision(15) << c4.get_hash() << endl;
+        cout << setprecision(17) << c4.get_hash() << endl;
         throw runtime_error("fhourstones error!");
     }
     char buffer[4096];
@@ -280,6 +280,17 @@ vector<int> C4Board::get_winning_moves() const{
 
 bool C4Board::is_reds_turn() const{
     return representation.size() % 2 == 0;
+}
+
+// Is symmetry broken first on the left or right?
+// Return -1 if left, 1 if right, 0 if not broken
+int C4Board::which_side() const override {
+    for (char ch : representation) {
+        int num = ch - '0';
+        if (num < 4) return -1;
+        if (num > 4) return 1;
+    }
+    return 0;
 }
 
 int C4Board::search_nply_id(const int depth, const vector<int>& order_in, vector<int>& order_out) const {
@@ -388,7 +399,7 @@ int C4Board::get_human_winning_fhourstones() {
     }
 
     // Optional speedup which will naively assume that if no steadystate was found on a prior run, none exists.
-    const bool SKIP_UNFOUND_STEADYSTATES = true;
+    const bool SKIP_UNFOUND_STEADYSTATES = false;
     if(SKIP_UNFOUND_STEADYSTATES || representation.size() < 5){
         int move = -1;
         string ss = "";
@@ -429,7 +440,7 @@ int C4Board::get_human_winning_fhourstones() {
     const bool BACKTRACK = !SKIP_UNFOUND_STEADYSTATES;
     if(BACKTRACK){
         vector<int> order_out;
-        int snp = search_nply_id(2, winning_columns, order_out);
+        int snp = search_nply_id(4, winning_columns, order_out);
         if(snp > 0) return snp;
     }
 

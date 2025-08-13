@@ -11,31 +11,46 @@ void render_video() {
         CompositeScene cs;
 
         Graph g;
-        string variation = "";
+        string variation = "436744667334";
+        C4Board board(variation);
+        board.print();
+        SteadyState ss(array<string, 6>{"      |",
+                                        "      |",
+                                        " |@  !|",
+                                        " +    @",
+                                        " +     ",
+                                        " -  =  ",});
+        ss.print();
+        cout << "Validated? " << ss.validate(board, true) << endl;
+
+        /*
         shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(&g, false, variation, TRIM_STEADY_STATES);
+        shared_ptr<LatexScene> ls_size = make_shared<LatexScene>(latex_text("Node count: "+to_string(g.size())), 1, .2, .1);
 
         gs->state_manager.set({
             {"q1", "1"},
             {"qi", "<t> .2 * cos"},
             {"qj", "<t> .314 * sin"},
             {"qk", "0"},
-            {"decay",".9"},
+            {"decay",".95"},
             {"dimensions","3"},
             {"surfaces_opacity","0"},
             {"points_opacity","0"},
-            {"physics_multiplier","200"},
-            {"mirror_force",".005"},
+            {"physics_multiplier","100"},
+            {"mirror_force",".1"},
         });
 
         cs.add_scene(gs, "gs");
+        cs.add_scene(ls_size, "ls_size", .1, .12);
         //if(!ValidateC4Graph(g)) return;
 
-        cs.stage_macroblock(SilenceBlock(2), 1);
-        gs->state_manager.transition(MICRO, {{"decay", ".6"}});
+        cs.stage_macroblock(SilenceBlock(5), 1);
+        gs->state_manager.transition(MICRO, {{"decay", ".7"}});
         cs.render_microblock();
 
         g.render_json("c4_full.js");
         cout << g.size() << " nodes" << endl;
+        */
 
     } catch (exception& e){
         movecache.WriteCache();

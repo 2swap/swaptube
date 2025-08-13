@@ -58,6 +58,10 @@ public:
 
 private:
     virtual bool is_solution() = 0;
+
+    // Which mirror side this node is on, if applicable.
+    virtual int which_side() const { return 0; }
+
     virtual double type_specific_hash() = 0;
     virtual double type_specific_reverse_hash() {return -3.1415;}
     virtual double type_specific_reverse_hash_2() {return -3.1415;}

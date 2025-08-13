@@ -28,6 +28,7 @@ inline bool is_single_letter(const std::string& str) {return str.length() == 1 &
 inline void print_vec3(glm::vec3 v){cout << "VEC3(" << v.x << ", " << v.y << ", " << v.z << ")" << endl;}
 inline void print_vec4(glm::vec4 v){cout << "VEC4(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")" << endl;}
 inline double geom_mean(double x, double y) { return sqrt(x*y); }
+inline int signum(double x) { return (x > 0) - (x < 0); }
 
 double extended_mod(double a, double b) {
     double result = fmod(a, b);

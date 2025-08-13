@@ -484,7 +484,8 @@ public:
         compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension, iterations);
 
         for (int i = 0; i < s; ++i) {
-            node_vector[i]->position = positions[i];
+            int flip = signum(node_vector[i].which_side() * node_vector[i]->position.x);
+            node_vector[i]->position = positions[i] * flip;
             node_vector[i]->velocity = velocities[i];
         }
 
@@ -546,13 +547,13 @@ public:
                 string neighbor_representation = nodes.at(neighbor.to).data->representation;
                 if(neighbor_representation.size() < node.data->representation.size()) continue;
                 ostringstream oss;
-                oss << setprecision(numeric_limits<double>::digits10 + 2) << neighbor.to;
+                oss << setprecision(17) << neighbor.to;
                 neighbors.push_back(oss.str());
             }
             node_info["neighbors"] = neighbors;
 
             ostringstream oss;
-            oss << setprecision(numeric_limits<double>::digits10 + 2) << it->first;
+            oss << setprecision(17) << it->first;
             nodes_to_use[oss.str()] = node_info;
         }
 
@@ -560,7 +561,7 @@ public:
         json_data["nodes_to_use"].dump(4, ' ', false, json::error_handler_t::ignore);
 
         ostringstream oss;
-        oss << setprecision(numeric_limits<double>::digits10 + 2) << root_node_hash;
+        oss << setprecision(17) << root_node_hash;
         json_data["root_node_hash"] = oss.str();
         json_data["board_w"  ] = 7;
         json_data["board_h"  ] = 6;

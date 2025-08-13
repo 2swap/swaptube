@@ -51,7 +51,7 @@ public:
     int get_instant_win() const;
     vector<int> get_winning_moves() const;
     int get_blocking_move() const;
-    void print() const;
+    void print();
     int random_legal_move() const;
     bool is_legal(int x) const;
     bool search_for_steady_states(bool verbose) const;

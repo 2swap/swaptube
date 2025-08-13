@@ -14,7 +14,7 @@ public:
 
     string hash_to_json_str(double hash) {
         ostringstream oss;
-        oss << setprecision(16) << hash;
+        oss << setprecision(17) << hash;
         return oss.str();
     }
 

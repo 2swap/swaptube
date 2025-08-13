@@ -325,9 +325,9 @@ C4Result SteadyState::play_one_game(const C4Board& b) const {
     }
 }
 
-bool SteadyState::validate(C4Board b) {
+bool SteadyState::validate(C4Board b, bool verbose = false) {
     unordered_set<double> wins_cache;
-    bool validated = validate_recursive_call(b, wins_cache);
+    bool validated = validate_recursive_call(b, wins_cache, verbose);
     if(validated){
         movecache.AddOrUpdateEntry(b.get_hash(), b.get_reverse_hash(), b.representation, to_string());
         //cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
@@ -336,7 +336,7 @@ bool SteadyState::validate(C4Board b) {
 }
 
 // Given a steady state and a board position, make sure that steady state solves that position
-bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins_cache) {
+bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins_cache, bool verbose = false) {
     if(wins_cache.find(b.get_hash()) != wins_cache.end()) return true;
 
     if(b.is_reds_turn()){
@@ -344,15 +344,27 @@ bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins
         int columnToPlay = query_steady_state(b.representation);
         C4Board child = b;
         if (columnToPlay >= 1 && columnToPlay <= 7) child.play_piece(columnToPlay);
-        else return false;
+        else {
+            if(verbose) {
+                cout << "Validation failed because Red failed to select a move." << endl;
+                b.print();
+            }
+            return false;
+        }
         if(child.who_won() == RED) return true;
-        else if(!validate_recursive_call(child, wins_cache)) { return false; }
+        else if(!validate_recursive_call(child, wins_cache, verbose)) { return false; }
     } else {
         for (int i = 1; i <= 7; i++){
             if(!b.is_legal(i)) continue;
             C4Board child = b.child(i);
-            if(child.who_won() != INCOMPLETE) { return false; }
-            if(!validate_recursive_call(child, wins_cache)) { return false; }
+            if(child.who_won() != INCOMPLETE) {
+                if(verbose) {
+                    cout << "Validation failed because Yellow won." << endl;
+                    b.print();
+                }
+                return false;
+            }
+            if(!validate_recursive_call(child, wins_cache, verbose)) { return false; }
         }
     }
 
@@ -365,41 +377,6 @@ bool SteadyState::check_ss_matches_board(C4Board b){
     return b.yellow_bitboard == bitboard_yellow && b.red_bitboard == bitboard_red;
 }
 
-void find_cached_steady_state_old(C4Board b) {
-    // Array of the two hash values to iterate over
-    array<C4Board, 2> boards = {b, C4Board(b.reverse_representation())};
-    
-    for (int i = 0; i < 2; ++i) {
-        // Convert the current hash to a string with high precision
-        ostringstream ss_hash_stream;
-        ss_hash_stream << fixed << setprecision(numeric_limits<double>::max_digits10) << boards[i].get_hash();
-        string ss_hash = ss_hash_stream.str();
-
-        // Create the cache filename based on the hash
-        string cache_filename = "steady_states/" + ss_hash + ".ss";
-        
-        // Attempt to open the cache file
-        if (ifstream(cache_filename)) {
-            // Use the current hash index to determine if this is a reverse hash (index 1)
-            shared_ptr<SteadyState> ss = make_shared<SteadyState>(read_from_file(cache_filename, i == 1));
-            if(!ss->check_ss_matches_board(b)) {
-                cout << "ss doesnt match board, attempting flip" << endl;
-                ss = make_shared<SteadyState>(read_from_file(cache_filename, i == 0));
-            }
-            if(!ss->check_ss_matches_board(b)){
-                cout << "ss STILL doesnt match board" << endl;
-                assert(false);
-            }
-            bool pass = ss->validate(b);
-            if(pass) cout << "Verified cached steady state from file " << cache_filename << endl;
-            else {
-                cout << "Saved steadystate failed validation!! " << cache_filename << endl;
-                assert(false);
-            }
-        }
-    }
-}
-
 shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
     // First check the movecache.
     {
@@ -410,8 +387,6 @@ shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
             return make_shared<SteadyState>(make_steady_state_from_string(ss));
         }
     }
-
-    find_cached_steady_state_old(b);
 
     {
         int move = -1;

@@ -33,7 +33,8 @@ public:
     }
 
     void change_data() override {
-        graph->expand(500);
+        graph->expand(1000);
+        cout << "GRAPH SIZE: " << graph->size() << endl;
         graph->make_bidirectional();
         GraphScene::change_data();
     }

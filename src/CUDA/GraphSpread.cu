@@ -257,7 +257,7 @@ __global__ void mirror_kernel(glm::vec4* positions, glm::vec4* velocities, const
         velocities[i] -= attract * delta;
     }
 
-    if (mirror_force > 0.001) {
+    if (mirror_force > 0.0000001) {
         glm::vec4 pos_i = positions[i];
         glm::vec4 delta(0.0f);
 

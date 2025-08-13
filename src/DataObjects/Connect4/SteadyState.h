@@ -47,8 +47,8 @@ public:
     Bitboard bitboard_then = 0ul;
     Bitboard bitboard_if = 0ul;
     void populate_char_array(const array<string, C4_HEIGHT>& source);
-    bool validate(C4Board b);
-    bool validate_recursive_call(C4Board b, unordered_set<double>& wins_cache);
+    bool validate(C4Board b, bool verbose);
+    bool validate_recursive_call(C4Board b, unordered_set<double>& wins_cache, bool verbose);
     char get_char(const int x, const int y) const;
     void set_char(const int x, const int y, const char c);
     void set_char_bitboard(const Bitboard point, const char c);
