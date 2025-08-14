@@ -16,7 +16,7 @@ public:
 
         C4Board* board;
         if(mode == SIMPLE_WEAK){
-            shared_ptr<SteadyState> ss = find_steady_state(root_node_representation, true);
+            shared_ptr<SteadyState> ss = find_steady_state(root_node_representation, nullptr, true);
             if(ss == NULL)
                 throw runtime_error("No steady state found when making a SIMPLE_WEAK C4GraphScene.");
             board = new C4Board(root_node_representation, ss);
@@ -26,15 +26,13 @@ public:
         graph->add_to_stack(board);
 
         if(mode != MANUAL){
-            graph->expand(1);
+            graph->expand(-1);
             graph->make_bidirectional();
         }
         cout << "GRAPH SIZE: " << graph->size() << endl;
     }
 
     void change_data() override {
-            graph->expand(2000);
-            graph->make_bidirectional();
         GraphScene::change_data();
     }
 

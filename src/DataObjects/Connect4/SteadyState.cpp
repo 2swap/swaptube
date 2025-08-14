@@ -276,7 +276,7 @@ void SteadyState::print() const {
     cout << endl;
 }
 
-SteadyState create_random_steady_state(const C4Board& b) {
+SteadyState create_empty_steady_state(const C4Board& b) {
     array<string, C4_HEIGHT> chars; // Should contain C4_HEIGHT strings, each with length C4_WIDTH, full of spaces.
     for (int y = 0; y < C4_HEIGHT; ++y)
         chars[y] = string(C4_WIDTH, ' ');
@@ -290,8 +290,12 @@ SteadyState create_random_steady_state(const C4Board& b) {
             chars[y][x] = c;
         }
     }
-
     SteadyState ss(chars);
+    return ss;
+}
+
+SteadyState create_random_steady_state(const C4Board& b) {
+    SteadyState ss = create_empty_steady_state(b);
     ss.mutate();
     ss.mutate();
     ss.mutate();
@@ -401,16 +405,41 @@ shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
     return nullptr;
 }
 
-shared_ptr<SteadyState> find_steady_state(const string& representation, bool verbose = false, bool read_from_cache = true, int pool = 40, int generations = 50) {
+shared_ptr<SteadyState> modify_child_suggestion(const shared_ptr<SteadyState> parent, const C4Board& b) {
+    SteadyState child = create_empty_steady_state(b);
+    // Remove all 1s and 2s from the parent which are not on the board
+    for(int y = 0; y < C4_HEIGHT; y++) {
+        for(int x = 0; x < C4_WIDTH; x++) {
+            char c = parent->get_char(x, y);
+            if(c == '1' || c == '2') {
+                int pc = b.piece_code_at(x, y);
+                if((c == '1' && pc == 1) || (c == '2' && pc == 2)) {
+                    child.set_char(x, y, c);
+                } else {
+                    child.set_char(x, y, ' ');
+                }
+            } else {
+                child.set_char(x, y, c);
+            }
+        }
+    }
+    return make_shared<SteadyState>(child);
+}
+
+shared_ptr<SteadyState> find_steady_state(const string& representation, const shared_ptr<SteadyState> suggestion, bool verbose = false, bool read_from_cache = true, int pool = 40, int generations = 50) {
     if(pool < 3) throw runtime_error("Pool size too small! Must be at least 3 for propagation strategy.");
-    if(verbose) cout << "Searching for a steady state of " << representation << "..." << endl;
+    if(verbose) cout << "Finding for a steady state of " << representation << "..." << endl;
     if(representation.size() % 2 == 1)
         throw runtime_error("Steady state requested on board which is yellow-to-move!");
     C4Board board(representation);
 
     // Check if a cached steady state file exists and read from it
     shared_ptr<SteadyState> cached = find_cached_steady_state(board);
-    if(read_from_cache && cached != nullptr) return cached;
+    if(read_from_cache && cached != nullptr) {
+        if(verbose) cout << "Found cached steady state, returning it..." << endl;
+        return cached;
+    }
+    if(verbose) cout << "No cached steady state found, proceeding with search..." << endl;
 
     C4Board copy = board;
 
@@ -418,8 +447,14 @@ shared_ptr<SteadyState> find_steady_state(const string& representation, bool ver
     vector<SteadyState> steady_states;
     vector<int> win_counts(pool, 0); // Track max consecutive wins for each agent
     for (int i = 0; i < pool; ++i) {
-        steady_states.push_back(create_random_steady_state(copy));
+        if(suggestion != nullptr) {
+            steady_states.push_back(*modify_child_suggestion(suggestion, copy));
+            steady_states.back().mutate(); // Mutate the suggestion to introduce slight diversity
+        } else {
+            steady_states.push_back(create_random_steady_state(copy));
+        }
     }
+    if(verbose) cout << "Initial pool of " << pool << " agents created." << endl;
 
     for(int generation = 0; generation < generations; generation++) {
         if(verbose) cout << "Generation " << generation << " in progress..." << endl;
@@ -578,7 +613,7 @@ void steady_state_unit_tests_problem_8() {
 }
 
 void steady_state_unit_tests_problem_7() {
-    shared_ptr<SteadyState> ss = find_steady_state("444442222666662477777762", true, false, 100, 1000);
+    shared_ptr<SteadyState> ss = find_steady_state("444442222666662477777762", nullptr, true, false, 100, 1000);
     if(ss == nullptr) cout << "No ss found" << endl;
     else ss->print();
 /*

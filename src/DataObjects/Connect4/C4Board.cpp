@@ -324,7 +324,7 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
 
     // Base case
     if (depth == 0) {
-        bool fncall = find_steady_state(representation) != nullptr;
+        bool fncall = find_steady_state(representation, nullptr) != nullptr;
         ordering_out = ordering_in;
         num_ordered_unfound = fncall ? 0 : 1;
         // Return value is only used by top level caller, doesn't matter
@@ -349,7 +349,7 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
             int nou_grandchild = 0;
             bool node_in_graph = graph_to_check_if_points_are_in->node_exists(grandchild.get_hash()) || graph_to_check_if_points_are_in->node_exists(grandchild.get_reverse_hash());
             bool no_steadystate_yet = true;
-            if(depth != 2) no_steadystate_yet = find_steady_state(grandchild.representation) == nullptr;
+            if(depth != 2) no_steadystate_yet = find_steady_state(grandchild.representation, nullptr) == nullptr;
             if(!node_in_graph && no_steadystate_yet) {
                 vector<int> ignore_out;
                 grandchild.search_nply(depth - 2, nou_grandchild, false, vector<int>(), ignore_out);
@@ -424,11 +424,11 @@ int C4Board::get_human_winning_fhourstones() {
         }
     }
 
-    if(find_steady_state(representation, false, true, 80, 100) != nullptr)
+    if(find_steady_state(representation, nullptr, false, true, 80, 100) != nullptr)
         return -1;
-    if(find_steady_state(representation, false, true, 80, 100) != nullptr)
+    if(find_steady_state(representation, nullptr, false, true, 80, 100) != nullptr)
         return -1;
-    if(find_steady_state(representation, false, true, 80, 100) != nullptr)
+    if(find_steady_state(representation, nullptr, false, true, 80, 100) != nullptr)
         return -1;
 
     if (winning_columns.size() == 1) {
@@ -441,7 +441,7 @@ int C4Board::get_human_winning_fhourstones() {
     const bool BACKTRACK = !SKIP_UNFOUND_STEADYSTATES;
     if(BACKTRACK){
         vector<int> order_out;
-        int snp = search_nply_id(2, winning_columns, order_out);
+        int snp = search_nply_id(6, winning_columns, order_out);
         if(snp > 0) return snp;
     }
 
