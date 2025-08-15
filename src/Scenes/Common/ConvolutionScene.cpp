@@ -37,13 +37,12 @@ public:
     }
 
     void on_end_transition_extra_behavior(const TransitionType tt) override {
-        cout << "E" << endl;
         update_state();
         if((MICRO == current_transition_type || MACRO == tt) && state["in_transition_state"] == 1) end_transition();
-        cout << "F" << endl;
     }
 
     void end_transition(){
+        cout << "p" << endl;
         if(state["in_transition_state"] != 1) throw runtime_error("End Transition called on a ConvolutionScene not in transition!");
         p1 = p2;
         coords = transition_coords;
@@ -99,9 +98,7 @@ public:
     void change_data() override { }
     // TODO can this next line get deleted?
     bool check_if_data_changed() const override {
-        cout << "A" << endl;
         double its = state["in_transition_state"];
-        cout << "B" << endl;
         return its == 1;
     } // No DataObjects, but we treat transitioning as changing data
 

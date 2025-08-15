@@ -9,9 +9,12 @@ public:
     : ConvolutionScene(width, height), latex(l), scale_factor(scale) {}
 
     void begin_latex_transition(const TransitionType tt, const string& l) {
+        cout << "LatexScene: begin_latex_transition called with TransitionType: " << tt << " and latex: " << l << endl;
         latex = l;
         ScalingParams sp(scale);
+        cout << "B" << endl;
         begin_transition(tt, latex_to_pix(latex, sp));
+        cout << "LatexScene: Transition started with scale factor: " << sp.scale_factor << endl;
     }
 
     void jump_latex(string latex) {
