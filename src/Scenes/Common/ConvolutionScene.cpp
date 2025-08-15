@@ -37,7 +37,10 @@ public:
     }
 
     void on_end_transition_extra_behavior(const TransitionType tt) override {
+        cout << "E" << endl;
+        update_state();
         if((MICRO == current_transition_type || MACRO == tt) && state["in_transition_state"] == 1) end_transition();
+        cout << "F" << endl;
     }
 
     void end_transition(){
@@ -95,7 +98,12 @@ public:
     void mark_data_unchanged() override { }
     void change_data() override { }
     // TODO can this next line get deleted?
-    bool check_if_data_changed() const override { return state["in_transition_state"] == 1; } // No DataObjects, but we treat transitioning as changing data
+    bool check_if_data_changed() const override {
+        cout << "A" << endl;
+        double its = state["in_transition_state"];
+        cout << "B" << endl;
+        return its == 1;
+    } // No DataObjects, but we treat transitioning as changing data
 
 protected:
     virtual Pixels get_p1() {return p1;}

@@ -111,9 +111,13 @@ void render_video(){
     cs.add_scene_fade_in(MICRO, ls, "ls", .5, .15);
     cs.stage_macroblock(FileBlock("Polynomials have a standard form, where each term has an associated coefficient."), 4);
     cs.render_microblock();
+    cout << "1" << endl;
     ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
+    cout << "2" << endl;
     cs.render_microblock();
+    cout << "3" << endl;
     ls->begin_latex_transition(MICRO, "x^3+ax^2+bx^1+cx^0");
+    cout << "4" << endl;
     cs.render_microblock();
     cs.render_microblock();
     cs.stage_macroblock(FileBlock("They're drawn on the graph here."), 4);

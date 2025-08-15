@@ -16,7 +16,6 @@ public:
         : state_manager() {
         state_manager.set("w", to_string(width));
         state_manager.set("h", to_string(height));
-        state_manager.evaluate_all();
     }
 
     virtual const StateQuery populate_state_query() const = 0;
@@ -24,50 +23,49 @@ public:
     virtual void draw() = 0;
     virtual void change_data() = 0;
     virtual void mark_data_unchanged() = 0;
+
     virtual void on_end_transition_extra_behavior(const TransitionType tt){};
-    virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
-    void publish_global(const unordered_map<string, double>& s) const {
-        for(const auto& p : s) {
-            global_state[global_identifier + p.first] = p.second;
-        }
+    void on_end_transition(const TransitionType tt) {
+        if(tt == MACRO) state_manager.close_transitions(tt);
+                        state_manager.close_transitions(MICRO);
+        on_end_transition_extra_behavior(tt);
     }
+
     void update() {
         has_updated_since_last_query = true;
+
         // Data and state can be co-dependent, so update state before and after since state changes are idempotent.
         update_state();
         change_data();
         update_state();
     }
+
     virtual bool needs_redraw() const {
         bool state_change = check_if_state_changed();
         bool data_change = check_if_data_changed();
         return !has_ever_rendered || state_change || data_change;
     }
+
     bool check_if_state_changed() const {
         return state != last_state;
     }
+
     void query(Pixels*& p) {
         cout << "(" << flush;
-        State temp_state = state;
+        last_state = state;
         if(!has_updated_since_last_query){
             update();
+            cout << "|" << flush;
+            if(needs_redraw()){
+                pix = Pixels(get_width(), get_height());
+                has_ever_rendered = true;
+                draw();
+            }
+            mark_data_unchanged();
         }
-        cout << "|" << flush;
-        if(needs_redraw()){
-            pix = Pixels(get_width(), get_height());
-            has_ever_rendered = true;
-            draw();
-        }
-        last_state = temp_state;
-        mark_data_unchanged();
         has_updated_since_last_query = false;
         p=&pix;
         cout << ")" << flush;
-    }
-    void on_end_transition(const TransitionType tt) {
-        if(tt == MACRO) state_manager.close_transitions(tt);
-                        state_manager.close_transitions(MICRO);
-        on_end_transition_extra_behavior(tt);
     }
 
     bool microblocks_remaining() {
@@ -138,17 +136,37 @@ public:
         return VIDEO_HEIGHT * state_manager.get_state({"h"})["h"];
     }
 
+    StateManager state_manager;
+    bool global_publisher_key = false; // Scenes can publish to global state only if this is manually set to true in the project
+    string global_identifier = ""; // This is prefixed before the published global state elements to uniquely identify this scene if necessary. Not used (empty) by default.
+
+protected:
+    Pixels pix;
+    State state;
+    bool has_ever_rendered = false;
+
     glm::vec2 get_width_height() const{
         return glm::vec2(get_width(), get_height());
     }
 
     double get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }
 
-    StateManager state_manager;
-    bool global_publisher_key = false; // Scenes can publish to global state only if this is manually set to true in the project
-    string global_identifier = ""; // This is prefixed before the published global state elements to uniquely identify this scene if necessary. Not used (empty) by default.
-
 private:
+    State last_state;
+    bool has_updated_since_last_query = false;
+    int remaining_microblocks = 0;
+    int total_microblocks = 0;
+    int scene_duration_frames = 0;
+    int remaining_macroblock_frames = 0;
+    int total_macroblock_frames = 0;
+
+    virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
+    void publish_global(const unordered_map<string, double>& s) const {
+        for(const auto& p : s) {
+            global_state[global_identifier + p.first] = p.second;
+        }
+    }
+
     void render_one_frame(int microblock_frame_number){
         auto start_time = chrono::high_resolution_clock::now(); // Start timing
         cout << "[" << flush;
@@ -184,18 +202,4 @@ private:
         //GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
         cout << "]" << flush;
     }
-
-protected:
-    Pixels pix;
-    State state;
-    bool has_ever_rendered = false;
-
-private:
-    State last_state;
-    bool has_updated_since_last_query = false;
-    int remaining_microblocks = 0;
-    int total_microblocks = 0;
-    int scene_duration_frames = 0;
-    int remaining_macroblock_frames = 0;
-    int total_macroblock_frames = 0;
 };
