@@ -7,12 +7,31 @@
 void find_steadystates_by_children(const Graph& g, Node& node) {
     for (auto& edge1 : node.neighbors) {
         for(auto& edge : g.nodes.find(edge1.to)->second.neighbors) {
-            shared_ptr<SteadyState> ss = dynamic_cast<C4Board*>(g.nodes.find(edge.to)->second.data)->steadystate;
-            if (ss != nullptr) {
-                if(find_steady_state(node.data->representation, ss, false, true, 100, 100)) {
-                    cout << "  Found steady state!" << endl;
+            Node child_node = g.nodes.find(edge.to)->second;
+            C4Board* child = dynamic_cast<C4Board*>(child_node.data);
+            if (child->representation.size() <= node.data->representation.size()) continue;
+            // If the child has a neighbor whose representation is not longer than its own, return
+            for (auto& edge2 : child_node.neighbors) {
+                Node grandchild_node = g.nodes.find(edge2.to)->second;
+                C4Board* grandchild = dynamic_cast<C4Board*>(grandchild_node.data);
+                if (grandchild->representation.size() > child->representation.size()) {
+                    //return;
                 }
-                return;
+            }
+        }
+    }
+    for (auto& edge1 : node.neighbors) {
+        for(auto& edge : g.nodes.find(edge1.to)->second.neighbors) {
+            Node child_node = g.nodes.find(edge.to)->second;
+            C4Board* child = dynamic_cast<C4Board*>(child_node.data);
+            if (child->representation.size() <= node.data->representation.size()) continue;
+            cout << "Attempting backpropagation of: " << child->representation << endl;
+            shared_ptr<SteadyState> ss = child->steadystate;
+            if (ss != nullptr) {
+                if(find_steady_state(node.data->representation, ss, false, true, 50, 50)) {
+                    cout << "  Found steady state!" << endl;
+                    return;
+                }
             }
         }
     }
@@ -21,13 +40,11 @@ void render_video() {
     try{
         SAVE_FRAME_PNGS = false;
 
-        CompositeScene cs;
-
         Graph g;
         string variation = "";
-        shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(&g, false, variation, TRIM_STEADY_STATES);
+        C4GraphScene gs(&g, false, variation, TRIM_STEADY_STATES);
 
-        gs->state_manager.set({
+        gs.state_manager.set({
             {"q1", "1"},
             {"qi", "0"},
             {"qj", "0"},
@@ -45,28 +62,26 @@ void render_video() {
         int count = 0;
         if(false) for (auto& pair : g.nodes) {
             count++;
-            cout << "Processed " << count << " nodes." << endl;
             auto& node = pair.second;
             string node_rep = node.data->representation;
             shared_ptr<SteadyState> ss = dynamic_cast<C4Board*>(node.data)->steadystate;
             if(ss != nullptr) continue;
+            cout << "Processed " << count << " nodes." << endl;
             find_steadystates_by_children(g, node);
         }
 
-        if(true && !ValidateC4Graph(g)) {
+        if(false && !ValidateC4Graph(g)) {
             cout << "Graph validation failed!" << endl;
             return;
         }
 
-        cs.add_scene(gs, "gs");
-
-        cs.stage_macroblock(SilenceBlock(.3), 1);
-        cs.render_microblock();
-        cs.stage_macroblock(SilenceBlock(2), 2);
-        gs->state_manager.set("flip_by_symmetry", "0");
-        cs.render_microblock();
-        gs->state_manager.transition(MICRO, {{"decay", ".6"}});
-        cs.render_microblock();
+        gs.stage_macroblock(SilenceBlock(.3), 1);
+        gs.render_microblock();
+        gs.stage_macroblock(SilenceBlock(2), 2);
+        gs.state_manager.set("flip_by_symmetry", "0");
+        gs.render_microblock();
+        gs.state_manager.transition(MICRO, {{"decay", ".6"}});
+        gs.render_microblock();
 
         g.render_json("c4_full.js");
 

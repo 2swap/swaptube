@@ -12,6 +12,7 @@
 const bool VISION = true;
 
 vector<char> replacement_chars = {'+', '=', '-'};
+vector<char> all_instructions = {'+', '=', '-', '|', ' ', '@', '!'};
 
 void SteadyState::set_char_bitboard(const Bitboard point, char c){
     Bitboard notpoint = ~point;
@@ -148,6 +149,22 @@ void SteadyState::drop(const int x, const char c){
 void SteadyState::mutate() {
     int r = rand()%11;
 
+    /*if(r < 1) {
+        // Select a random x coordinate
+        int x = rand()%C4_WIDTH;
+        // Find the number of rows that are occupied by 1s and 2s
+        int y = C4_HEIGHT-1;
+        for(y; y >= 0; y--) {
+            char c_here = get_char(x, y);
+            if(c_here != '1' && c_here != '2') break;
+        }
+        // Select an available y coordinate
+        if(y == C4_HEIGHT-1) {
+            return;
+        }
+        y = rand() % (C4_HEIGHT - y) + y;
+        set_char(x, y, all_instructions[rand()%all_instructions.size()]);
+    }*/
     if(r<2){
         // flush all miai
         char c = '@';
@@ -221,29 +238,6 @@ void SteadyState::mutate() {
             if(giveupcount > 10) break;
         }
     }
-    /*
-    else if(r<8){
-        while (true) {
-            int x = rand()%C4_WIDTH;
-            int y = rand()%C4_HEIGHT;
-            char c_here = get_char(x, y);
-            if(c_here == '1' || c_here == '2' || is_miai(c_here)) continue;
-            set_char(x, y, '?');
-            break;
-        }
-    }
-    else if(r<9){
-        while (true) {
-            int x = rand()%C4_WIDTH;
-            int y = rand()%C4_HEIGHT;
-            char c_here = get_char(x, y);
-            if(c_here == '1' || c_here == '2' || is_miai(c_here)) continue;
-            set_char(x, y, ':');
-            break;
-        }
-    }
-    */
-
 
     else {
         int x = rand()%C4_WIDTH;
@@ -361,9 +355,10 @@ bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins
         for (int i = 1; i <= 7; i++){
             if(!b.is_legal(i)) continue;
             C4Board child = b.child(i);
-            if(child.who_won() != INCOMPLETE) {
+            C4Result who_won = child.who_won();
+            if(who_won != INCOMPLETE) {
                 if(verbose) {
-                    cout << "Validation failed because Yellow won." << endl;
+                    cout << "Validation failed because " << (who_won == TIE ? "tie" : "Yellow won") << endl;
                     b.print();
                 }
                 return false;

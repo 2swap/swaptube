@@ -11,15 +11,15 @@ void render_video() {
         CompositeScene cs;
 
         Graph g;
-        string variation = "436744667334";
+        string variation = "44444666622222";
         C4Board board(variation);
         board.print();
-        SteadyState ss(array<string, 6>{"      |",
-                                        "      |",
-                                        " |@  !|",
-                                        " +    @",
-                                        " +     ",
-                                        " -  =  ",});
+        SteadyState ss(array<string, 6>{" @|++@-",
+                                        "  | +!-",
+                                        "  | + -",
+                                        "  = + -",
+                                        "  = + -",
+                                        "  = + -",});
         ss.print();
         cout << "Validated? " << ss.validate(board, true) << endl;
 
