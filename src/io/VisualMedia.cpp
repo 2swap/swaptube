@@ -5,6 +5,9 @@
 #include "PathManager.cpp"
 #include <librsvg-2.0/librsvg/rsvg.h>
 #include "../misc/pixels.h"
+#include <sys/stat.h>
+#include <cmath>
+#include <sstream>
 
 enum class ScalingMode {
     BoundingBox,
@@ -116,10 +119,6 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
         throw runtime_error(error_str);
     }
 
-    // Deprecated
-    //RsvgDimensionData dimensions;
-    //rsvg_handle_get_dimensions(handle, &dimensions);
-
     gdouble gwidth, gheight;
     if (!rsvg_handle_get_intrinsic_size_in_pixels(handle, &gwidth, &gheight))
         throw runtime_error("Could not get intrinsic size of SVG file " + filename);
@@ -130,10 +129,17 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
             static_cast<double>(scaling_params.max_width) / gwidth,
             static_cast<double>(scaling_params.max_height) / gheight
         );
+    } else if (scaling_params.scale_factor <= 0) {
+        throw runtime_error("Invalid scale factor: " + to_string(scaling_params.scale_factor));
     }
 
     int width  = round(gwidth  * scaling_params.scale_factor);
     int height = round(gheight * scaling_params.scale_factor);
+
+    if (width <= 0 || height <= 0) {
+        g_object_unref(handle);
+        throw runtime_error("Computed output size for SVG file " + filename + " is invalid: width=" + to_string(width) + ", height=" + to_string(height) + ", scaling factor=" + to_string(scaling_params.scale_factor));
+    }
 
     Pixels ret(width, height);
 
@@ -157,14 +163,20 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
         .height = gheight
     };
 
+    if (viewport.width <= 0 || viewport.height <= 0) {
+        cairo_destroy(cr);
+        cairo_surface_destroy(surface);
+        g_object_unref(handle);
+        throw runtime_error("Invalid viewport size for SVG file " + filename);
+    }
+
     // Render SVG
     if (!rsvg_handle_render_document(handle, cr, &viewport, &error)) {
-        fprintf(stderr, "SVG rendering error: %s\n", error->message);
         g_error_free(error);
         cairo_destroy(cr);
         cairo_surface_destroy(surface);
         g_object_unref(handle);
-        exit(-1);
+        throw runtime_error("Failed to render SVG file " + filename + ": " + error->message);
     }
 
     // Copy pixels into Pixels object
@@ -179,11 +191,13 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
             ));
         }
     }
+    cout << "8" << endl;
 
     // Cleanup
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
     g_object_unref(handle);
+    cout << "9" << endl;
 
     //ret.grayscale_to_alpha();
     return crop(ret);
@@ -319,7 +333,6 @@ string generate_cache_key(const string& text, const ScalingParams& scaling_param
  * We use MicroTEX to convert LaTeX equations into svg files.
  */
 Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
-    cout << "A" << endl;
     // Generate a cache key based on the equation and scaling parameters
     string cache_key = generate_cache_key(latex, scaling_params);
 
@@ -329,13 +342,11 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
         scaling_params.scale_factor = it->second.second;
         return it->second.first; // Return the cached Pixels object
     }
-    cout << "1" << endl;
 
     hash<string> hasher;
     char full_directory_path[PATH_MAX];
     realpath(PATH_MANAGER.latex_dir.c_str(), full_directory_path);
     string name = string(full_directory_path) + "/" + to_string(hasher(latex)) + ".svg";
-    cout << "2" << endl;
 
     if (access(name.c_str(), F_OK) == -1) {
         string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -output=" + name + " >/dev/null 2>&1";
@@ -345,7 +356,6 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
             throw runtime_error("Failed to generate LaTeX. Command printed above.");
         }
     }
-    cout << "3" << endl;
 
     // System call successful, return the generated SVG
     Pixels pixels = svg_to_pix(name, scaling_params);

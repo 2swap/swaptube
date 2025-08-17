@@ -103,14 +103,21 @@ int SteadyState::query_steady_state(const C4Board& board) const {
     // Given a board, use the steady state to determine where to play.
     // Return the x position of the 1-indexed row to play in.
 
+    Bitboard moveset = board.legal_moves();
+
+    // If there is only one legal move, play it.
+    /*if(is_power_of_two(moveset)) {
+        for(int x = 1; x < C4_WIDTH + 1; x++) {
+            if(board.is_legal(x)) return x;
+        }
+    }*/
+    
     if(VISION) {
         int wm = board.get_instant_win();
         if(wm != -1) return wm;
         int bm = board.get_blocking_move();
         if(bm != -1) return bm;
     }
-
-    Bitboard moveset = board.legal_moves();
 
     // Construct priority list
     Bitboard miai_moveset = moveset & bitboard_miai;

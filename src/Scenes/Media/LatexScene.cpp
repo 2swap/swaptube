@@ -5,14 +5,16 @@
 
 class LatexScene : public ConvolutionScene {
 public:
-    LatexScene(const string& l, double scale, const double width = 1, const double height = 1)
-    : ConvolutionScene(width, height), latex(l), scale_factor(scale) {}
+    LatexScene(const string& l, double box_scale, const double width = 1, const double height = 1)
+    : ConvolutionScene(width, height), latex(l), box_scale(box_scale) {}
 
     void begin_latex_transition(const TransitionType tt, const string& l) {
         cout << "LatexScene: begin_latex_transition called with TransitionType: " << tt << " and latex: " << l << endl;
         latex = l;
-        ScalingParams sp(scale);
-        cout << "B" << endl;
+        if(scale_factor == 0) {
+            throw runtime_error("LatexScene: scale_factor is not set before begin_latex_transition.");
+        }
+        ScalingParams sp(scale_factor);
         begin_transition(tt, latex_to_pix(latex, sp));
         cout << "LatexScene: Transition started with scale factor: " << sp.scale_factor << endl;
     }
@@ -22,20 +24,20 @@ public:
         //ScalingParams sp(scale_factor*get_width(), scale_factor*get_height());
 
         //But we usually don't do that
-        ScalingParams sp(scale);
+        ScalingParams sp(scale_factor);
         jump(latex_to_pix(latex, sp));
     }
 
 private:
     string latex;
-    double scale = 0;
-    double scale_factor;
+    double scale_factor = 0;
+    double box_scale;
 
 protected:
     Pixels get_p1() override {
-        ScalingParams sp = scale == 0 ? ScalingParams(scale_factor*get_width(), scale_factor*get_height()) : ScalingParams(scale);
+        ScalingParams sp = scale_factor == 0 ? ScalingParams(box_scale*get_width(), box_scale*get_height()) : ScalingParams(scale_factor);
         Pixels ret = latex_to_pix(latex, sp);
-        scale = sp.scale_factor;
+        scale_factor = sp.scale_factor;
         return ret;
     }
 };

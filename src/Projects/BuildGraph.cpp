@@ -28,7 +28,7 @@ void find_steadystates_by_children(const Graph& g, Node& node) {
             cout << "Attempting backpropagation of: " << child->representation << endl;
             shared_ptr<SteadyState> ss = child->steadystate;
             if (ss != nullptr) {
-                if(find_steady_state(node.data->representation, ss, false, true, 50, 50)) {
+                if(find_steady_state(node.data->representation, ss, false, true, 100, 100)) {
                     cout << "  Found steady state!" << endl;
                     return;
                 }
@@ -49,7 +49,7 @@ void render_video() {
             {"qi", "0"},
             {"qj", "0"},
             {"qk", "0"},
-            {"decay",".99"},
+            {"decay",".98"},
             {"dimensions","3"},
             {"surfaces_opacity","0"},
             {"points_opacity","0"},

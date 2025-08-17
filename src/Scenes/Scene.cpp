@@ -53,16 +53,14 @@ public:
     void query(Pixels*& p) {
         cout << "(" << flush;
         last_state = state;
-        if(!has_updated_since_last_query){
-            update();
+        if(!has_updated_since_last_query) update();
+        if(needs_redraw()){
+            pix = Pixels(get_width(), get_height());
             cout << "|" << flush;
-            if(needs_redraw()){
-                pix = Pixels(get_width(), get_height());
-                has_ever_rendered = true;
-                draw();
-            }
-            mark_data_unchanged();
+            has_ever_rendered = true;
+            draw();
         }
+        mark_data_unchanged();
         has_updated_since_last_query = false;
         p=&pix;
         cout << ")" << flush;
