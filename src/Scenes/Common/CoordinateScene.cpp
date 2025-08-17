@@ -93,7 +93,7 @@ public:
 
     void draw_construction() {
         double gm = get_geom_mean_size();
-        double line_thickness = gm/100.;
+        double line_thickness = gm/200.;
         int construction_color = OPAQUE_WHITE;
 
         for(const GeometricLine& l : construction.lines) {
@@ -101,13 +101,19 @@ public:
             const glm::vec2 end_pixel = point_to_pixel(l.end);
             pix.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, construction_color, 1, line_thickness);
         }
+        // TODO implement
         /*for(const GeometricArc& a : construction.arcs) {
             const glm::vec2 center_pixel = point_to_pixel(a.center);
             pix.arc(center_pixel.x, center_pixel.y, a.radius, a.start_angle, a.end_angle, construction_color, 1, line_thickness);
         }*/
         for(const GeometricPoint& p : construction.points) {
             const glm::vec2 position_pixel = point_to_pixel(p.position);
-            pix.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2, construction_color);
+            pix.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2 * p.width_multiplier, construction_color);
+            if(p.label != "") {
+                ScalingParams sp(line_thickness * 2, line_thickness * 2);
+                Pixels latex = latex_to_pix(p.label, sp);
+                pix.overlay(latex, position_pixel.x - latex.h/2, position_pixel.y - latex.h/2, 1);
+            }
         }
     }
 

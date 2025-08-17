@@ -77,8 +77,7 @@ void render_video(){
     cps->state_manager_roots_to_coefficients();
     cps->stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 4);
     cps->state_manager.transition(MICRO, {
-        {"coefficient1_opacity", ".1"},
-        {"coefficient2_opacity", ".1"},
+        {"coefficient0_opacity", "2"},
     });
     cps->render_microblock();
     cps->state_manager.set({
@@ -91,17 +90,30 @@ void render_video(){
     cps->render_microblock();
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"coefficient1_opacity", "1"},
-        {"coefficient2_opacity", "1"},
+        {"coefficient0_opacity", "1"},
         {"spin_multiplier", "0"},
     });
     cps->render_microblock();
 
-    // TODO zoom in and out for pretty colors
     cps->stage_macroblock(FileBlock("It's a shame you've never seen this plot,"), 1);
+    cps->state_manager_coefficients_to_roots();
+    for(int i = 0; i < cps->degree; i++) {
+        cps->state_manager.transition(MICRO, {
+            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
+        });
+    }
     cps->render_microblock();
 
     cps->stage_macroblock(FileBlock("because their relationship _is the core, the essence of algebra_."), 1);
+    cps->state_manager.transition(MICRO, {
+        {"root0_r", ".4"},
+        {"root0_i", "0"},
+        {"root1_r", ".5"},
+        {"root1_i", "1.2"},
+        {"root2_r", "-1"},
+        {"root2_i", "-.3"},
+    });
     cps->render_microblock();
 
     CompositeScene cs;
@@ -111,18 +123,16 @@ void render_video(){
     cs.add_scene_fade_in(MICRO, ls, "ls", .5, .15);
     cs.stage_macroblock(FileBlock("Polynomials have a standard form, where each term has an associated coefficient."), 4);
     cs.render_microblock();
-    cout << "1" << endl;
     ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
-    cout << "2" << endl;
     cs.render_microblock();
-    cout << "3" << endl;
     ls->begin_latex_transition(MICRO, "x^3+ax^2+bx^1+cx^0");
-    cout << "4" << endl;
     cs.render_microblock();
     cs.render_microblock();
-    cs.stage_macroblock(FileBlock("They're drawn on the graph here."), 4);
+    cs.stage_macroblock(FileBlock("They're drawn on the graph here."), 5);
+    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
+    cs.render_microblock();
     for(int i = 0; i < 2; i++) {
-        cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
+        cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
         ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
         cs.render_microblock();
 
@@ -134,7 +144,7 @@ void render_video(){
     cs.fade_subscene(MICRO, "ls", 0);
 
     shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x-r_1)(x-r_2)(x-r_3)", 1, 1, .5);
-    cs.add_scene_fade_in(MICRO, ls2, "ls2", .5, .15);
+    cs.add_scene_fade_in(MICRO, ls2, "ls2", .5, .85);
     cs.stage_macroblock(FileBlock("There's also a factored form, with one term for each root,"), 4);
     cs.render_microblock();
     ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
@@ -153,17 +163,22 @@ void render_video(){
         cs.render_microblock();
     }
 
+    cs.fade_subscene(MICRO, "ls2", 0);
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+    cs.remove_subscene("ls2");
+
     // add points to show the numbers
     cs.stage_macroblock(FileBlock("The space we're looking at is the complex plane, home to numbers like i and 3-2i."), 3);
     cps->state_manager.transition(MICRO, {{"ticks_opacity", "1"}});
     cs.render_microblock();
-    cps->construction.add_point(GeometricPoint(glm::vec2(0, 1)));
+    cps->construction.add_point(GeometricPoint(glm::vec2(0, 1), "i"));
     cs.render_microblock();
-    cps->construction.add_point(GeometricPoint(glm::vec2(3, -2)));
+    cps->construction.add_point(GeometricPoint(glm::vec2(3, -2), "3-2i"));
     cs.render_microblock();
     cps->construction.clear();
 
-    // TODO animate that point going into the polynomial, reduce the polynomial in latex
+    // TODO animate that point going into the polynomial, reduce the polynomial in latex?
     cs.stage_macroblock(FileBlock("For each pixel on the screen, I passed that complex number as an input to the polynomial,"), 1);
     cs.render_microblock();
 
@@ -188,7 +203,7 @@ void render_video(){
     cs.render_microblock();
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"ab_dilation", ".3"},
+        {"ab_dilation", ".6"},
     });
     cps->state_manager_coefficients_to_roots();
     cps->state_manager.transition(MICRO, {
@@ -232,7 +247,7 @@ void render_video(){
         {"qj", "0"},
     });
     cps->state_manager.transition(MICRO, "ticks_opacity", "0");
-    tds.stage_macroblock(FileBlock("Surely, complex numbers were invented by big math to sell more calculators!"), 1);
+    tds.stage_macroblock(FileBlock("After all, complex numbers were invented by big math to sell more calculators, right?"), 1);
     tds.fade_subscene(MICRO, "f_complex", 0);
     tds.fade_subscene(MICRO, "f_real", 0);
     tds.fade_subscene(MICRO, "rfs", 0);
@@ -241,13 +256,21 @@ void render_video(){
 
     cs = CompositeScene();
     cs.add_scene(cps, "cps");
-    cs.stage_macroblock(FileBlock("But in turn, I would ask, why do you need decimals or negatives either?"), 1);
+    cps->state_manager_coefficients_to_roots();
+    for(int i = 0; i < cps->degree; i++) {
+        cps->state_manager.transition(MICRO, {
+            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos 5 +"},
+        });
+    }
+    cs.stage_macroblock(FileBlock("But in turn, I would ask _you_, who needs decimals or negatives either?"), 1);
     cs.render_microblock();
 
-    shared_ptr<LatexScene> all_numbers = make_shared<LatexScene>("\\{1, 2, 3, ...\\}", .4, 1, .4);
-    cs.add_scene_fade_in(MICRO, all_numbers, "all_numbers", .5, .2);
-    cs.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, and so on."), 1);
-    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 1, 2, 3, sitting happily on the right side of the number line."), 4);
+    for(int x = 1; x <= 4; x++) {
+        cps->construction.add_point(GeometricPoint(glm::vec2(x, 0), to_string(x)));
+        cs.render_microblock();
+    }
 
     cs.stage_macroblock(FileBlock("In such a world, there's a big problem..."), 1);
     cs.render_microblock();
@@ -265,8 +288,9 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("So, to be able to solve this, we _need_ 0..."), 2);
+    impossible1->begin_latex_transition(MICRO, "1+0=1");
     cs.render_microblock();
-    all_numbers->begin_latex_transition(MICRO, "\\{0, 1, 2, 3, ...\\}");
+    cps->construction.add_point(GeometricPoint(glm::vec2(0, 0), "0"));
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("What about 2+x=1?"), 1);
@@ -277,15 +301,14 @@ void render_video(){
 
     cs.stage_macroblock(FileBlock("x _wants_ to be -1!"), 1);
     impossible2->begin_latex_transition(MICRO, "2+-1=1");
+    cps->construction.add_point(GeometricPoint(glm::vec2(-1, 0), "-1"));
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("We need to add negatives..."), 1);
-    all_numbers->begin_latex_transition(MICRO, "\\{-1, 0, 1, 2, 3, ...\\}");
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("and so on..."), 1);
-    all_numbers->begin_latex_transition(MICRO, "\\{..., -3, -2, -1, 0, 1, 2, 3, ...\\}");
-    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("We need to add negatives..."), 3);
+    for(int x = -2; x >= -4; x--) {
+        cps->construction.add_point(GeometricPoint(glm::vec2(x, 0), to_string(x)));
+        cs.render_microblock();
+    }
 
     cs.stage_macroblock(FileBlock("Sadly, our number system is still incomplete."), 1);
     cs.render_microblock();
@@ -296,16 +319,24 @@ void render_video(){
     cs.add_scene_fade_in(MICRO, impossible3, "impossible3", .5, .7);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("It looks like we need fractions too..."), 1);
-    all_numbers->begin_latex_transition(MICRO, "\\{\\frac{a}{b} | a, b \\in \\mathbb{Z}, b \\neq 0\\}");
-    cs.render_microblock();
+    int microblock_count = 0;
+    for(int counting = 0; counting < 2; counting++) {
+        for(int power_of_two = -1; power_of_two > -4; power_of_two--) {
+            float dx = 1.0 / (1 << -power_of_two);
+            for(float x = -5 + dx; x <= 5 - dx; x+=2*dx) {
+                if(counting == 1) {
+                    cps->construction.add_point(GeometricPoint(glm::vec2(x, 0), "", dx));
+                    cs.render_microblock();
+                }
+                else microblock_count++;
+            }
+        }
+        if(counting == 0) cs.stage_macroblock(FileBlock("It looks like we need fractions too..."), microblock_count);
+    }
 
-    cs.stage_macroblock(FileBlock("Heck, let's just add all decimals, surely our number system will finally be complete?"), 6);
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("Heck, let's just add all decimals, surely our number system will finally be complete?"), 1);
+    cps->construction.clear();
+    cps->construction.add_line(GeometricLine(glm::vec2(-5, 0), glm::vec2(5, 0)));
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("We get a nice continuum of numbers."), 1);
@@ -317,19 +348,67 @@ void render_video(){
     cs.add_scene_fade_in(MICRO, impossible4, "impossible4", .5, .7);
     cs.render_microblock();
 
-    return;
     cs.stage_macroblock(FileBlock("Uh oh, no real number squared gives us negative 1..."), 1);
-    cs.stage_macroblock(FileBlock("so we need to add more numbers to make our set whole."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Just like before, our number line must be missing something..."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("Let's call the solution to this equation 'i'"), 1);
-    cs.stage_macroblock(FileBlock("All the multiples of 'i' then yield another line of numbers, and adding them to real numbers gives us a whole two dimensional plane of numbers."), 1);
-    // TODO add some script introducing a real valued plot in a 3d axis and show that it doesn't necessarily have zeros.
-    cs.stage_macroblock(FileBlock("Now, believe it or not, our number system is finally whole."), 1);
-    cs.stage_macroblock(FileBlock("In other words, wherever I put the coefficients of the polynomial we are drawing,"), 1);
-    cs.stage_macroblock(FileBlock("the roots- the little white holes where the output equals zero- you can never get rid of them."), 1);
-    cs.stage_macroblock(FileBlock("There is no equation with the complex numbers, pluses, and timeses, which can't be solved with complex number solutions."), 1);
-    cs.stage_macroblock(FileBlock("The fancy way to say this is that the complex field is algebraically closed"), 1);
-    cs.stage_macroblock(FileBlock("And this is so important that it is called:"), 1);
+    impossible4->begin_latex_transition(MICRO, "i*i=-1");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("If it's not on the number line, we'll have to put it on its own axis,"), 1);
+    cps->construction.add_point(GeometricPoint(glm::vec2(0, 1), "i"));
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("along with 2i, 3i, negative i, and so on,"), 6);
+    for(int y = -3; y <= 3; y++) {
+        if(y == 0) continue;
+        cps->construction.add_point(GeometricPoint(glm::vec2(0, y), to_string(y) + "i"));
+        cs.render_microblock();
+    }
+
+    // Add gaussian integer grid
+    cs.stage_macroblock(FileBlock("which, combined with the real numbers, gives us the complex plane."), 6*8);
+    for(int x = -4; x <= 4; x++) {
+        for(int y = -3; y <= 3; y++) {
+            if(x == 0 || y == 0) continue;
+            cps->construction.add_point(GeometricPoint(glm::vec2(x, y), to_string(x) + (y > 0 ? "+" : "") + to_string(y) + "i", .1));
+            cs.render_microblock();
+        }
+    }
+
+    cps->construction.clear();
+    for(int i = 0; i < cps->degree; i++) {
+        cps->state_manager.transition(MICRO, {
+            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
+        });
+    }
+    cs.stage_macroblock(FileBlock("Up until now, we've been playing whack-a-mole..."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("_You_ invent more numbers, and _I_ devise an equation that can't be solved without _even more numbers_."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("But that game ends here!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("There is no equation using the complex numbers, pluses, and timeses, whose solutions aren't also complex numbers."), 1);
+    cs.render_microblock();
+
+    return;
+    cs.stage_macroblock(FileBlock("You can see this for yourself."), 1);
+    cs.stage_macroblock(FileBlock("Wherever I put the coefficients of the polynomial,"), 1);
+    cs.stage_macroblock(FileBlock("the solutions- the little white dots where the output equals zero- they move around, but they never disappear."), 1);
+    cs.stage_macroblock(FileBlock("The fancy way to say this is that the complex field is algebraically closed."), 1);
+    cs.stage_macroblock(FileBlock("This is so important, that it is called:"), 1);
     cs.stage_macroblock(FileBlock("THE FUNDAMENTAL THEOREM OF ALGEBRA"), 1);
+    cs.stage_macroblock(FileBlock("If Algebra was a play,"), 1);
+    cs.stage_macroblock(FileBlock("the Complex Numbers are the stage it was written to be performed on."), 1);
+    cs.stage_macroblock(FileBlock("We can keep adding different types of numbers, but we are no longer forced to do so."), 1);
+    cs.stage_macroblock(FileBlock("The complex numbers are _just enough_."), 1);
     cs.stage_macroblock(FileBlock("Beyond just knowing that the equation has a root, our plot shows us that the number of roots stays fixed."), 1);
     cs.stage_macroblock(FileBlock("Well, unless you intentionally put them on top of each other... but that's cheating."), 1);
     cs.stage_macroblock(FileBlock("Now, notice- it's always the same number as the equation's highest exponent."), 1);

@@ -4,7 +4,10 @@
 
 struct GeometricPoint {
     glm::vec2 position;
-    GeometricPoint(glm::vec2 pos) : position(pos) {}
+    string label;
+    float width_multiplier; // For rendering size
+    GeometricPoint(glm::vec2 pos, string l) : position(pos), label(l), width_multiplier(1.0f) {}
+    GeometricPoint(glm::vec2 pos, string l, float wm) : position(pos), label(l), width_multiplier(wm) {}
 };
 struct GeometricLine {
     glm::vec2 start;

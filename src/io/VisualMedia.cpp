@@ -191,13 +191,11 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
             ));
         }
     }
-    cout << "8" << endl;
 
     // Cleanup
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
     g_object_unref(handle);
-    cout << "9" << endl;
 
     //ret.grayscale_to_alpha();
     return crop(ret);

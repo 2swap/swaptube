@@ -81,6 +81,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 
     # Check if the build was successful
     if [ $? -ne 0 ]; then
+        rm "$TEMPFILE"
         echo "go.sh: Build failed. Please check the build errors."
         exit 1
     fi
@@ -94,6 +95,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     ./swaptube 2>/dev/null
 
     if [ $? -ne 0 ]; then
+        rm "$TEMPFILE"
         echo "go.sh: Execution failed in runtime."
     fi
     exit 0
