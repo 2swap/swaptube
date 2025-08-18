@@ -81,7 +81,6 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 
     # Check if the build was successful
     if [ $? -ne 0 ]; then
-        rm "$TEMPFILE"
         echo "go.sh: Build failed. Please check the build errors."
         exit 1
     fi
@@ -95,24 +94,24 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     ./swaptube 2>/dev/null
 
     if [ $? -ne 0 ]; then
-        rm "$TEMPFILE"
         echo "go.sh: Execution failed in runtime."
+        exit 1
     fi
     exit 0
 )
 
 SUCCESS=$?
 if [ $SUCCESS -ne 0 ]; then
-    rm "$TEMPFILE"
     exit $SUCCESS
 fi
+
+cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"
+rm "$TEMPFILE"
 
 ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
 # Check if the compile and run were successful
 if [ -n "$ultimate_subdir" ]; then
-    cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"
-    rm "$TEMPFILE"
     ./play.sh ${PROJECT_NAME}
 else
     echo "go.sh: No output directory found for project ${PROJECT_NAME}."

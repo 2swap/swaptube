@@ -16,6 +16,7 @@
     */
 
 void render_video(){
+    cout << "Rendering Quintic video..." << endl;
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(3);
     cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 4);
     cps->state_manager.set("dot_radius", ".1");
@@ -370,7 +371,7 @@ void render_video(){
     }
 
     // Add gaussian integer grid
-    cs.stage_macroblock(FileBlock("which, combined with the real numbers, gives us the complex plane."), 6*8);
+    cs.stage_macroblock(FileBlock("which, combined with the real numbers, forms the complex plane."), 6*8);
     for(int x = -4; x <= 4; x++) {
         for(int y = -3; y <= 3; y++) {
             if(x == 0 || y == 0) continue;
@@ -389,13 +390,13 @@ void render_video(){
     cs.stage_macroblock(FileBlock("Up until now, we've been playing whack-a-mole..."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("_You_ invent more numbers, and _I_ devise an equation that can't be solved without _even more numbers_."), 1);
+    cs.stage_macroblock(FileBlock("_You_ invent numbers, and _I_ make an equation that can't be solved without _even more numbers_."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("But that game ends here!"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("There is no equation using the complex numbers, pluses, and timeses, whose solutions aren't also complex numbers."), 1);
+    cs.stage_macroblock(FileBlock("There's no equation using the complex numbers, pluses, and timeses, whose solutions aren't also complex numbers."), 1);
     cs.render_microblock();
 
     return;

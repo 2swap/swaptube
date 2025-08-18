@@ -14,7 +14,7 @@ string sanitize_filename(const string& text) {
     sanitized.erase(remove_if(sanitized.begin(), sanitized.end(),
         [](char c) { return !isalnum(c) && c != '_'; }),
         sanitized.end());
-    return sanitized + ".aac";
+    return sanitized + ".wav";
 }
 
 class Macroblock {
@@ -71,7 +71,7 @@ private:
 
 class GeneratedBlock : public Macroblock {
 public:
-    GeneratedBlock(const vector<float>& leftBuffer, const vector<float>& rightBuffer)
+    GeneratedBlock(const vector<int32_t>& leftBuffer, const vector<int32_t>& rightBuffer)
         : leftBuffer(leftBuffer), rightBuffer(rightBuffer) {
         if (leftBuffer.size() != rightBuffer.size()) {
             throw invalid_argument("Left and right buffers must have the same size");
@@ -86,8 +86,8 @@ public:
     string blurb() const override { return "GeneratedBlock(" + to_string(leftBuffer.size()/SAMPLERATE) + ")"; }
 
 private:
-    const vector<float> leftBuffer;
-    const vector<float> rightBuffer;
+    const vector<int32_t> leftBuffer;
+    const vector<int32_t> rightBuffer;
 };
 
 class CompositeBlock : public Macroblock {

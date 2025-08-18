@@ -7,6 +7,8 @@
 #include <vector>
 #include <filesystem>
 #include <sys/stat.h>
+#include <cmath>
+#include <cstdint>
 #include "DebugPlot.h"
 #include "IoHelpers.cpp"
 
@@ -33,8 +35,9 @@ private:
 
     AVFormatContext *fc = nullptr;
 
-    vector<vector<float>> sample_buffer;
-    vector<vector<float>> sfx_buffer;
+    // Interleaved 32-bit signed integer buffers: layout [L0, R0, L1, R1, ...]
+    vector<int32_t> sample_buffer;
+    vector<int32_t> sfx_buffer;
 
     int sample_buffer_offset = 0; // The index in the sample_buffer at which the latest macroblock starts, since some samples from the last one may not have flushed entirely.
     int total_samples_processed = 0;
@@ -81,23 +84,33 @@ private:
 public:
     double audio_seconds_so_far = 0;
 
-    AudioWriter(AVFormatContext *fc_) : fc(fc_), sample_buffer(2), sfx_buffer(2) {
+    AudioWriter(AVFormatContext *fc_) : fc(fc_), sample_buffer(), sfx_buffer() {
         // Helper lambda to setup codec context and stream for encoder
         auto setup_stream = [this](AVFormatContext* fc, AVCodecContext*& codecCtx, AVStream*& stream, const char* codec_name) {
-            const AVCodec* audioOutputCodec = avcodec_find_encoder(AV_CODEC_ID_AAC);
+            const AVCodec* audioOutputCodec = avcodec_find_encoder(AV_CODEC_ID_PCM_S32LE); // Use 32-bit signed integer, non-planar (interleaved)
+
+            /*
+            cout << "Supported sample formats for encoder " << codec_name << ":" << endl;
+            for (int i = 0; audioOutputCodec->sample_fmts; i++){
+                const char* sample_fmt_name = av_get_sample_fmt_name(audioOutputCodec->sample_fmts[i]);
+                printf("  %s\n", sample_fmt_name ? sample_fmt_name : "unknown");
+                if(audioOutputCodec->sample_fmts[i] == AV_SAMPLE_FMT_NONE) break;
+            }
+            */
+
             if (!audioOutputCodec) throw runtime_error(string("Error: Could not find audio encoder for ") + codec_name + ".");
 
             codecCtx = avcodec_alloc_context3(audioOutputCodec);
             if (!codecCtx) throw runtime_error(string("Error: Could not allocate codec context for encoder ") + codec_name + ".");
 
-            codecCtx->bit_rate = 128000; // 128 kbps
             codecCtx->sample_rate = SAMPLERATE;
             av_channel_layout_default(&codecCtx->ch_layout, 2); // stereo
-            codecCtx->sample_fmt = AV_SAMPLE_FMT_FLTP; // Floating-point planar format
+            codecCtx->sample_fmt = AV_SAMPLE_FMT_S32; // Use 32-bit signed integer, packed (non-planar)
             codecCtx->time_base = {1, codecCtx->sample_rate}; // 1/sample_rate
-            codecCtx->profile = FF_PROFILE_AAC_LOW; // Low complexity AAC (LC-AAC)
 
-            if (avcodec_open2(codecCtx, audioOutputCodec, nullptr) < 0) {
+            int ret = avcodec_open2(codecCtx, audioOutputCodec, nullptr);
+            if (ret < 0) {
+                cout << "avcodec_open2 error: " << av_err2str(ret) << endl;
                 avcodec_free_context(&codecCtx);
                 throw runtime_error(string("Error: Could not open encoder ") + codec_name + ".");
             }
@@ -116,39 +129,41 @@ public:
             }
         };
 
+        cout << "Setting up audio streams..." << endl;
         setup_stream(fc, audioOutputCodecContextMerged, audioStreamMerged, "Merged");
         setup_stream(fc, audioOutputCodecContextSFX   , audioStreamSFX   , "SFX"   );
         setup_stream(fc, audioOutputCodecContextVoice , audioStreamVoice , "Voice" );
+        cout << "Audio streams setup complete." << endl;
     }
 
-    void add_sfx(const vector<float>& left_buffer, const vector<float>& right_buffer, int t) {
+    void add_sfx(const vector<int32_t>& left_buffer, const vector<int32_t>& right_buffer, int t) {
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
 
-        int numSamples = left_buffer.size();
-        int sample_copy_start = t - total_samples_processed + sample_buffer_offset;
-        int sample_copy_end = sample_copy_start + numSamples;
+        int numSamples = left_buffer.size(); // number of frames
+        int channels = 2;
+        int sample_copy_start_frames = t - total_samples_processed + sample_buffer_offset;
+        int sample_copy_end_frames = sample_copy_start_frames + numSamples;
 
-        if(sample_copy_start < 0)
-            throw runtime_error("Sample copy start was negative: " + to_string(sample_copy_start) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset));
+        if(sample_copy_start_frames < 0)
+            throw runtime_error("Sample copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset));
 
-        // Pointers to the input buffers for each channel
-        const vector<float>* input_buffers[2] = {&left_buffer, &right_buffer};
+        int start_idx = sample_copy_start_frames * channels;
+        int end_idx = sample_copy_end_frames * channels;
 
-        // Ensure sfx_buffer has enough capacity and add samples
-        for (int ch = 0; ch < 2; ++ch) {
-            if (sfx_buffer[ch].size() < sample_copy_end) {
-                sfx_buffer[ch].resize(sample_copy_end, 0.0f); // Extend channel with silence
-            }
+        // Ensure sfx_buffer has enough capacity and add samples (convert floats to int32)
+        if (sfx_buffer.size() < static_cast<size_t>(end_idx)) {
+            sfx_buffer.resize(end_idx, 0); // Extend with silence
+        }
 
-            for (int i = 0; i < numSamples; ++i) {
-                sfx_buffer[ch][i + sample_copy_start] += (*input_buffers[ch])[i];
-            }
+        for (int i = 0; i < numSamples; ++i) {
+            sfx_buffer[start_idx + 2 * i    ] +=  left_buffer[i];
+            sfx_buffer[start_idx + 2 * i + 1] += right_buffer[i];
         }
     }
 
-    double add_generated_audio(const vector<float>& left_buffer, const vector<float>& right_buffer) {
+    double add_generated_audio(const vector<int32_t>& left_buffer, const vector<int32_t>& right_buffer) {
         process_frame_from_buffer();
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
@@ -157,8 +172,8 @@ public:
         int num_samples = left_buffer.size();
 
         for(int i = 0; i < num_samples; i++){
-            sample_buffer[0].push_back( left_buffer[i]);
-            sample_buffer[1].push_back(right_buffer[i]);
+            sample_buffer.push_back( left_buffer[i]);
+            sample_buffer.push_back(right_buffer[i]);
         }
 
         return static_cast<double>(num_samples) / audioOutputCodecContextMerged->sample_rate; // sample_rate same for all
@@ -169,8 +184,8 @@ public:
         int num_samples = static_cast<int>(duration * audioOutputCodecContextMerged->sample_rate);
 
         for (int i = 0; i < num_samples; ++i) {
-            sample_buffer[0].push_back(0);
-            sample_buffer[1].push_back(0);
+            sample_buffer.push_back(0); // L
+            sample_buffer.push_back(0); // R
         }
     }
 
@@ -201,7 +216,7 @@ public:
             throw runtime_error("Error: Could not retrieve stream info from file: " + fullInputAudioFilename);
         }
 
-        // Find the audio stream and ensure it is AAC
+        // Find the audio stream
         AVStream* audioStreamInput = nullptr;
         for (unsigned int i = 0; i < inputAudioFormatContext->nb_streams; ++i) {
             if (inputAudioFormatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -213,8 +228,12 @@ public:
             throw runtime_error("Error: No audio stream found in file: " + fullInputAudioFilename);
         }
 
-        if (audioStreamInput->codecpar->codec_id != AV_CODEC_ID_AAC) {
+        if (audioStreamInput->codecpar->codec_id != AV_CODEC_ID_PCM_S32LE) {
             throw runtime_error("Error: Input file is not in expected format: " + fullInputAudioFilename);
+        }
+
+        if (audioStreamInput->codecpar->format != AV_SAMPLE_FMT_S32) {
+            throw runtime_error("Error: Input file is not in expected sample format: " + fullInputAudioFilename);
         }
 
         // Check sample rate
@@ -234,7 +253,7 @@ public:
         }
 
         // Set up the audio decoder
-        const AVCodec* audioDecoder = avcodec_find_decoder(AV_CODEC_ID_AAC);
+        const AVCodec* audioDecoder = avcodec_find_decoder(AV_CODEC_ID_PCM_S32LE);
         if (!audioDecoder) {
             throw runtime_error("Error: appropriate audio decoder not found.");
         }
@@ -274,8 +293,8 @@ public:
                     int num_samples = frame->nb_samples;
 
                     for (int i = 0; i < num_samples; ++i) {
-                        sample_buffer[0].push_back(reinterpret_cast<float*>(frame->data[0])[i]); // Left channel
-                        sample_buffer[1].push_back(reinterpret_cast<float*>(frame->data[1])[i]); // Right channel
+                        sample_buffer.push_back(reinterpret_cast<int32_t*>(frame->data[0])[i*2]); // Left
+                        sample_buffer.push_back(reinterpret_cast<int32_t*>(frame->data[0])[i*2+1]); // Right
                     }
 
                     length_in_seconds += static_cast<double>(num_samples) / codecContext->sample_rate;
@@ -298,14 +317,18 @@ public:
         while(true){
             int channels = audioOutputCodecContextMerged->ch_layout.nb_channels;
             int frameSize = audioOutputCodecContextMerged->frame_size;
+            if(frameSize <= 0) {
+                frameSize = 1024; // Default frame size if not set
+            }
 
-            if(sample_buffer[0].size() != sample_buffer[1].size()) throw runtime_error("Voice buffer planar size mismatch!");
-            if(sfx_buffer[0].size() != sfx_buffer[1].size()) throw runtime_error("SFX buffer planar size mismatch!");
-            if(sample_buffer[0].size() < frameSize*(last?1:2)) break;
+            if (channels != 2) throw runtime_error("Expected stereo channels (2).");
+            if(sample_buffer.size() % channels != 0) throw runtime_error("Voice buffer interleaved size mismatch!");
+            if(sfx_buffer.size() % channels != 0) throw runtime_error("SFX buffer interleaved size mismatch!");
+            if(sample_buffer.size() < frameSize * channels * (last?1:2)) break;
 
             for (int ch = 0; ch < channels; ++ch) {
-                if (sfx_buffer[ch].size() < sample_buffer[ch].size()) {
-                    sfx_buffer[ch].resize(sample_buffer[ch].size(), 0.0f); // Extend channel with silence
+                if (sfx_buffer.size() < sample_buffer.size()) {
+                    sfx_buffer.resize(sample_buffer.size(), 0); // Extend channel with silence (interleaved)
                 }
             }
 
@@ -333,7 +356,7 @@ public:
                     av_frame_free(&frameMerged);
                     av_frame_free(&frameSFX);
                     av_frame_free(&frameVoice);
-                    throw runtime_error("Error allocating audio frame buffer.");
+                    throw runtime_error("Error allocating audio frame buffer: " + string(av_err2str(ret)));
                 }
             };
 
@@ -341,29 +364,34 @@ public:
             setupFrame(frameSFX, audioOutputCodecContextSFX);
             setupFrame(frameVoice, audioOutputCodecContextVoice);
 
-            // Fill buffers
-            for (int ch = 0; ch < channels; ++ch) {
-                float* dstMerged = reinterpret_cast<float*>(frameMerged->data[ch]);
-                float* dstSFX = reinterpret_cast<float*>(frameSFX->data[ch]);
-                float* dstVoice = reinterpret_cast<float*>(frameVoice->data[ch]);
-                // Ensure bounds for `sample_buffer`, `sfx_buffer`, and `frame->data[ch]`
-                if (sample_buffer[ch].size() < frameSize || sfx_buffer[ch].size() < frameSize) {
-                    throw runtime_error("Audio buffer size is smaller than the required frame size.");
-                }
+            // Fill buffers (interleaved)
+            int required_samples = frameSize * channels;
+            // Ensure bounds for `sample_buffer`, `sfx_buffer`, and `frame->data[ch]`
+            if (sample_buffer.size() < required_samples || sfx_buffer.size() < required_samples) {
+                throw runtime_error("Audio buffer size is smaller than the required frame size.");
+            }
 
-                for (int i = 0; i < frameSize; ++i) {
-                    float voice_sample = sample_buffer[ch][i];
-                    float sfx_sample = sfx_buffer[ch][i];
-                    float merged_sample = voice_sample + sfx_sample; // Perform element-wise addition
+            int32_t* dstMerged = reinterpret_cast<int32_t*>(frameMerged->data[0]);
+            int32_t* dstSFX = reinterpret_cast<int32_t*>(frameSFX->data[0]);
+            int32_t* dstVoice = reinterpret_cast<int32_t*>(frameVoice->data[0]);
 
-                    if(isnan(merged_sample) || isinf(merged_sample)) {
-                        throw runtime_error("Merged audio was either inf or nan. Voice: " + to_string(voice_sample) + ", SFX: " + to_string(sfx_sample));
-                    }
+            for (int i = 0; i < frameSize; ++i) {
+                int idxL = 2 * i;
+                int idxR = 2 * i + 1;
 
-                    dstMerged[i] = merged_sample;
-                    dstSFX[i] = sfx_sample;
-                    dstVoice[i] = voice_sample;
-                }
+                int32_t voice_left = sample_buffer[idxL];
+                int32_t voice_right = sample_buffer[idxR];
+                int32_t sfx_left = sfx_buffer[idxL];
+                int32_t sfx_right = sfx_buffer[idxR];
+
+                dstMerged[idxL] = voice_left + sfx_left;
+                dstMerged[idxR] = voice_right+ sfx_right;
+
+                dstSFX[idxL] = sfx_left;
+                dstSFX[idxR] = sfx_right;
+
+                dstVoice[idxL] = voice_left;
+                dstVoice[idxR] = voice_right;
             }
 
             frameMerged->pts = total_samples_processed;
@@ -375,7 +403,6 @@ public:
             int retSFX = avcodec_send_frame(audioOutputCodecContextSFX, frameSFX);
             int retVoice = avcodec_send_frame(audioOutputCodecContextVoice, frameVoice);
 
-            //av_frame_unref(frame);
             av_frame_free(&frameMerged);
             av_frame_free(&frameSFX);
             av_frame_free(&frameVoice);
@@ -386,15 +413,13 @@ public:
 
             encode_and_write_all();
 
-            // Erase the samples used in this frame
-            for (int ch = 0; ch < channels; ++ch) {
-                sample_buffer[ch].erase(sample_buffer[ch].begin(), sample_buffer[ch].begin() + frameSize);
-                   sfx_buffer[ch].erase(   sfx_buffer[ch].begin(),    sfx_buffer[ch].begin() + frameSize);
-            }
+            // Erase the samples used in this frame (interleaved count)
+            sample_buffer.erase(sample_buffer.begin(), sample_buffer.begin() + required_samples);
+               sfx_buffer.erase(   sfx_buffer.begin(),    sfx_buffer.begin() + required_samples);
             total_samples_processed += frameSize;
         }
 
-        sample_buffer_offset = static_cast<int>(sample_buffer[0].size());
+        sample_buffer_offset = static_cast<int>(sample_buffer.size() / 2); // number of remaining frames
     }
 
     ~AudioWriter() {

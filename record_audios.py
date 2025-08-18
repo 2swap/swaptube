@@ -20,8 +20,8 @@ def print_lookahead(entries, start_index, lines=5):
         print(entries[i][1])  # Print only the text part
 
 def prompt_user_to_archive_recordings(project_dir):
-    aac_files = [f for f in os.listdir(project_dir) if f.endswith(".aac")]
-    if not aac_files:
+    wav_files = [f for f in os.listdir(project_dir) if f.endswith(".wav")]
+    if not wav_files:
         return  # No files to archive, no prompt
 
     print("Do you want to archive the existing recordings? (y/n)")
@@ -35,11 +35,11 @@ def prompt_user_to_archive_recordings(project_dir):
             if not os.path.exists(archive_dir):
                 break
         os.makedirs(archive_dir)
-        for filename in aac_files:
+        for filename in wav_files:
             src_path = os.path.join(project_dir, filename)
             dest_path = os.path.join(archive_dir, filename)
             os.rename(src_path, dest_path)
-        print(f"All aac recordings have been archived to {archive_dir}")
+        print(f"All wav recordings have been archived to {archive_dir}")
     else:
         print("No recordings were archived.")
 
@@ -127,13 +127,19 @@ def main():
             # Print the next 5 entries for lookahead
             print_lookahead(entries, index + 1)
 
-            temp_path = os.path.join(temp_recordings_dir, f"{current_filename}.aac")
+            temp_path = os.path.join(temp_recordings_dir, f"{current_filename}.wav")
 
             # Start recording with ffmpeg in the background
             print("Recording... Press Enter to stop.")
             ffmpeg_log = os.path.join(PROJECT_DIR, "ffmpeg.log")
             ffmpeg_cmd = [
-                'ffmpeg', '-f', 'alsa', '-ar', '48000', '-i', selected_device, 
+                'ffmpeg',
+                '-f', 'alsa',
+                '-ar', '48000',
+                '-ac', '2',
+                '-i', selected_device, 
+                '-c:a', 'pcm_s32le',
+                '-sample_fmt', 's32',
                 temp_path
             ]
 

@@ -110,9 +110,9 @@ public:
             const glm::vec2 position_pixel = point_to_pixel(p.position);
             pix.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2 * p.width_multiplier, construction_color);
             if(p.label != "") {
-                ScalingParams sp(line_thickness * 2, line_thickness * 2);
+                ScalingParams sp(line_thickness * 4, line_thickness * 4);
                 Pixels latex = latex_to_pix(p.label, sp);
-                pix.overlay(latex, position_pixel.x - latex.h/2, position_pixel.y - latex.h/2, 1);
+                pix.overlay(latex, position_pixel.x + line_thickness * 2 + latex.w/2, position_pixel.y - latex.h/2, 1);
             }
         }
     }

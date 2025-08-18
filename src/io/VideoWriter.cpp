@@ -74,16 +74,11 @@ private:
 
     bool encode_and_write_frame(AVFrame* frame){
         int ret = send_frame(videoCodecContext, frame);
-        if (ret<0 && frame != NULL){
-	    throw runtime_error("Failed to encode video!");
-        }
+        if (ret<0 && frame != NULL) throw runtime_error("Failed to encode video!");
 
         int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
-        if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) {
-            return false;
-        } else if (ret2!=0) {
-            throw runtime_error("Failed to receive video packet!");
-        }
+        if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) return false;
+        else if (ret2!=0) throw runtime_error("Failed to receive video packet!");
 
         // We set the packet PTS and DTS taking in the account our FPS (second argument),
         // and the time base that our selected format uses (third argument).
@@ -151,7 +146,7 @@ public:
 
         ret = avformat_write_header(fc, &opt);
         if (ret < 0) {
-            cout << ret << endl;
+            cout << "Failed to write header: " << av_err2str(ret) << endl;
             throw runtime_error("Failed to write header!");
         }
 

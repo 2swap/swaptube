@@ -40,7 +40,9 @@ struct FCInitializer {
         if (ret < 0) throw runtime_error("Failed to allocate output format context");
         if (format_context == nullptr) throw runtime_error("Failed to allocate output format context");
         audio_writer = new AudioWriter(format_context);
+        cout << "Initialized AudioWriter" << endl;
         video_writer = new VideoWriter(format_context);
+        cout << "Initialized VideoWriter" << endl;
     }
 
     ~FCInitializer() {
