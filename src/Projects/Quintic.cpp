@@ -137,7 +137,7 @@ void render_video(){
         ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
         cs.render_microblock();
 
-        cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
+        cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
         ls->begin_latex_transition(MICRO, "x^3+ax^2+bx^1+cx^0");
         cs.render_microblock();
     }
@@ -364,11 +364,13 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("along with 2i, 3i, negative i, and so on,"), 6);
-    for(int y = -3; y <= 3; y++) {
+    cs.fade_subscene(MACRO, "impossible4", 0);
+    for(int y = 2; y >= -2; y--) {
         if(y == 0) continue;
         cps->construction.add_point(GeometricPoint(glm::vec2(0, y), to_string(y) + "i"));
         cs.render_microblock();
     }
+    cs.remove_subscene("impossible4");
 
     // Add gaussian integer grid
     cs.stage_macroblock(FileBlock("which, combined with the real numbers, forms the complex plane."), 6*8);
