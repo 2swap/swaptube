@@ -5,32 +5,7 @@
 #include <vector>
 
 string truncate_tick(const float value, const bool append_i) {
-    if(abs(value) < 0.00000000001) return "0";
-
-    // Convert float to string with a stream
-    ostringstream oss;
-    oss << value;
-    string str = oss.str();
-
-    // Find the position of the decimal point
-    size_t decimalPos = str.find('.');
-
-    // If there's no decimal point, just return the string
-    if (decimalPos != string::npos) {
-        // Remove trailing zeros
-        size_t endPos = str.find_last_not_of('0');
-
-        // If the last non-zero character is the decimal point, remove it too
-        if (endPos == decimalPos) {
-            endPos--;
-        }
-
-        // Create a substring up to the correct position
-        str = str.substr(0, endPos + 1);
-    }
-
-    if(str.size() > 2 && str[0] == '0' && str[1] == '.') str = str.substr(1);
-    if(str.size() > 2 && str[0] == '-' && str[1] == '0') str = "-" + str.substr(2);
+    string str = float_to_pretty_string(value);
 
     if(append_i) {
         if(str == "0") return "0";
@@ -51,6 +26,7 @@ public:
         state_manager.set("right_x"  , "<center_x> .5 <zoom_x> / +");
         state_manager.set("top_y"    , "<center_y> .5 <zoom_y> / -");
         state_manager.set("bottom_y" , "<center_y> .5 <zoom_y> / +");
+        state_manager.set("geometry_opacity", "1");
         state_manager.set("ticks_opacity", "1");
         state_manager.set("center_x", "0");
         state_manager.set("center_y", "0");
@@ -92,30 +68,49 @@ public:
     }
 
     void draw_construction() {
+        if(construction.size() == 0) return;
+        const float geometry_opacity = state["geometry_opacity"];
+        if(geometry_opacity < 0.01) return;
+
         double gm = get_geom_mean_size();
         double line_thickness = gm/200.;
         int construction_color = OPAQUE_WHITE;
+        float microblock_fraction = state["microblock_fraction"];
+        float bounce = 1 - square(microblock_fraction - 1);
+        float interp = smoother2(microblock_fraction);
+
+        Pixels geometry(pix.w, pix.h);
 
         for(const GeometricLine& l : construction.lines) {
-            const glm::vec2 start_pixel = point_to_pixel(l.start);
-            const glm::vec2 end_pixel = point_to_pixel(l.end);
-            pix.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, construction_color, 1, line_thickness);
+            glm::vec2 start_pixel = point_to_pixel(l.start);
+            glm::vec2 end_pixel = point_to_pixel(l.end);
+            const glm::vec2 mid_pixel = (start_pixel + end_pixel) / 2.f;
+            if(!l.old) {
+                // Multiply line length by bounce
+                start_pixel = mid_pixel + (start_pixel - mid_pixel) * bounce;
+                end_pixel = mid_pixel + (end_pixel - mid_pixel) * bounce;
+            }
+            geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, construction_color, 1, line_thickness);
         }
         // TODO implement
         /*for(const GeometricArc& a : construction.arcs) {
             const glm::vec2 center_pixel = point_to_pixel(a.center);
-            pix.arc(center_pixel.x, center_pixel.y, a.radius, a.start_angle, a.end_angle, construction_color, 1, line_thickness);
+            geometry.arc(center_pixel.x, center_pixel.y, a.radius, a.start_angle, a.end_angle, construction_color, 1, line_thickness);
         }*/
         for(const GeometricPoint& p : construction.points) {
             const glm::vec2 position_pixel = point_to_pixel(p.position);
-            pix.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2 * p.width_multiplier, construction_color);
-            if(p.label != "" && p.width_multiplier > .4) {
-                ScalingParams sp(line_thickness * 16, line_thickness * 16);
-                Pixels latex = latex_to_pix(p.label, sp);
-                pix.overlay(latex, position_pixel.x + line_thickness * 2 + latex.w/2, position_pixel.y + line_thickness * 2 + latex.h/2, 1);
+            if(!p.old) {
+                geometry.fill_circle(position_pixel.x, position_pixel.y, line_thickness * p.width_multiplier * (2+8*interp), construction_color, 1-interp);
             }
-            //else throw runtime_error("GeometricPoint without label found in CoordinateScene::draw_construction()");
+            geometry.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2 * p.width_multiplier*(p.old?1:bounce), construction_color, 1);
+            if(p.label != "" && p.width_multiplier > .4) {
+                ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
+                Pixels latex = latex_to_pix(p.label, sp);
+                geometry.overlay(latex, position_pixel.x - latex.w/2, position_pixel.y - line_thickness * 6 - latex.h/2, p.old ? 1 : interp);
+            }
         }
+
+        pix.overlay(geometry, 0, 0, geometry_opacity);
     }
 
     void draw_axes() {
@@ -168,11 +163,15 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity"};
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "microblock_fraction", "geometry_opacity"};
         return sq;
     }
 
     void mark_data_unchanged() override { construction.mark_unchanged(); }
     void change_data() override { /*construction.update();*/ }
     bool check_if_data_changed() const override { return construction.has_been_updated_since_last_scene_query(); }
+    void on_end_transition_extra_behavior(const TransitionType tt) override {
+        // TODO make this micro or macroblock based
+        construction.set_all_old();
+    }
 };

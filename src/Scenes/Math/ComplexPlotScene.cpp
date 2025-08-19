@@ -30,12 +30,53 @@ public:
                 for(char ri : {'r', 'i'})
                     state_manager.set(type + to_string(num) + "_" + ri, "0");
             }
+        state_manager.set("leading_coefficient_r", "1");
+        state_manager.set("leading_coefficient_i", "0");
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
-        state_manager.set("ab_dilation", ".6"); // basically saturation
+        state_manager.set("ab_dilation", ".8"); // basically saturation
         state_manager.set("coefficients_opacity", "1");
         state_manager.set("roots_opacity", "0");
         state_manager.set("hide_zero_coefficients", "0");
         state_manager.set("dot_radius", "3");
+    }
+
+    void decrement_degree() {
+        update_state();
+        if(state["roots_or_coefficients_control"] != 1) {
+            state_manager_roots_to_coefficients();
+        }
+
+        if(degree <= 1) throw runtime_error("Cannot decrement degree below 1.");
+
+        degree--;
+        for(string ri : {"r", "i"}) {
+            if(abs(state["leading_coefficient_" + ri]) > 0.0001)
+                throw runtime_error("Cannot decrement degree while leading coefficient is non-zero.");
+
+            // Remove existing coefficients and roots
+            state_manager.remove("root" + to_string(degree) + "_" + ri);
+            state_manager.set("leading_coefficient_" + ri, state_manager.get_equation("coefficient" + to_string(degree) + "_" + ri));
+            state_manager.remove("coefficient" + to_string(degree) + "_" + ri);
+        }
+        update_state();
+    }
+
+    void increment_degree() {
+        update_state();
+        if(state["roots_or_coefficients_control"] != 1) {
+            state_manager_roots_to_coefficients();
+        }
+
+        degree++;
+
+        for(string ri : {"r", "i"}) {
+            // Add new coefficients and roots
+            state_manager.set("root" + to_string(degree - 1) + "_" + ri, "0");
+            state_manager.set("coefficient0_" + ri, state_manager.get_equation("leading_coefficient_" + ri));
+        }
+        state_manager.set("leading_coefficient_r", "0.000001");
+        state_manager.set("leading_coefficient_i", "0");
+        update_state();
     }
 
     void state_manager_roots_to_coefficients(){
@@ -79,7 +120,7 @@ public:
                 string key = "coefficient" + to_string(point_index) + "_";
                 coefficients.push_back(complex<float>(state[key + "r"], state[key + "i"]));
             }
-            coefficients.push_back(1);
+            coefficients.push_back(complex<float>(state["leading_coefficient_r"], state["leading_coefficient_i"]));
             return coefficients;
         }
         
@@ -256,7 +297,7 @@ public:
                     pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, individual_opacity_control - 1);
                 }
                 if(opa < 0.01) continue;
-                ScalingParams sp = ScalingParams(get_width() / 10, get_height() / 10);
+                ScalingParams sp = ScalingParams(gm * 16, gm * 40);
                 Pixels text_pixels = latex_to_pix(string(1,char('a' + coefficients.size()-2-i)), sp);
                 pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, opa);
             }
@@ -273,6 +314,8 @@ public:
                 for(char ri : {'r', 'i'})
                     sq.insert(type + to_string(num) + "_" + ri);
             }
+        sq.insert("leading_coefficient_r");
+        sq.insert("leading_coefficient_i");
         sq.insert("roots_or_coefficients_control");
         sq.insert("ab_dilation");
         sq.insert("dot_radius");

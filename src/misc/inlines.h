@@ -23,12 +23,41 @@ inline float float_lerp(float a, float b, float w){return a*(1-w)+b*w;}
 inline glm::dvec3 veclerp(glm::dvec3 a, glm::dvec3 b, double w){return a*(1-w)+b*w;}
 inline glm::dvec4 veclerp(glm::dvec4 a, glm::dvec4 b, double w){return a*(1-w)+b*w;}
 inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
-inline string latex_text(string in){return "\\text{" + in + "}";}
 inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
 inline void print_vec3(glm::vec3 v){cout << "VEC3(" << v.x << ", " << v.y << ", " << v.z << ")" << endl;}
 inline void print_vec4(glm::vec4 v){cout << "VEC4(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")" << endl;}
 inline double geom_mean(double x, double y) { return sqrt(x*y); }
 inline int signum(double x) { return (x > 0) - (x < 0); }
+
+string float_to_pretty_string(const float value) {
+    if(abs(value) < 0.00000000001) return "0";
+
+    // Convert float to string with a stream
+    ostringstream oss;
+    oss << value;
+    string str = oss.str();
+
+    // Find the position of the decimal point
+    size_t decimalPos = str.find('.');
+
+    // If there's no decimal point, just return the string
+    if (decimalPos != string::npos) {
+        // Remove trailing zeros
+        size_t endPos = str.find_last_not_of('0');
+
+        // If the last non-zero character is the decimal point, remove it too
+        if (endPos == decimalPos) {
+            endPos--;
+        }
+
+        // Create a substring up to the correct position
+        str = str.substr(0, endPos + 1);
+    }
+
+    if(str.size() > 2 && str[0] == '0' && str[1] == '.') str = str.substr(1);
+    if(str.size() > 2 && str[0] == '-' && str[1] == '0') str = "-" + str.substr(2);
+    return str;
+}
 
 double extended_mod(double a, double b) {
     double result = fmod(a, b);
@@ -159,20 +188,6 @@ void lerp_ut() {
     }
 }
 
-// Unit test for latex_text function
-void latex_text_ut() {
-    string input = "Hello";
-    string result = latex_text(input);
-    string expected = "\\text{Hello}";
-
-    if (result == expected) {
-        if(inline_unit_tests_verbose) cout << "latex_text_ut passed." << endl;
-    } else {
-        cout << "latex_text_ut failed." << endl;
-        exit(1);
-    }
-}
-
 void run_inlines_unit_tests(){
     sigmoid_ut();
     square_ut();
@@ -180,5 +195,4 @@ void run_inlines_unit_tests(){
     smoother1_ut();
     smoother2_ut();
     lerp_ut();
-    latex_text_ut();
 }
