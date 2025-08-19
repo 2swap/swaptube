@@ -72,7 +72,7 @@ public:
         for(string ri : {"r", "i"}) {
             // Add new coefficients and roots
             state_manager.set("root" + to_string(degree - 1) + "_" + ri, "0");
-            state_manager.set("coefficient0_" + ri, state_manager.get_equation("leading_coefficient_" + ri));
+            state_manager.set("coefficient" + to_string(degree - 1) + "_" + ri, state_manager.get_equation("leading_coefficient_" + ri));
         }
         state_manager.set("leading_coefficient_r", "0.000001");
         state_manager.set("leading_coefficient_i", "0");
