@@ -330,7 +330,42 @@ C4Result SteadyState::play_one_game(const C4Board& b) const {
     }
 }
 
+bool SteadyState::check_matches_board(const C4Board& b) const {
+    // Check if the representation matches
+    for(int y = 0; y < C4_HEIGHT; y++) {
+        for(int x = 0; x < C4_WIDTH; x++) {
+            char c = get_char(x, y);
+            int piece_code = b.piece_code_at(x, y);
+            if(piece_code == 1 && c != '1') return false;
+            if(piece_code == 2 && c != '2') return false;
+            if(piece_code == 0 && (c == '1' || c == '2')) return false;
+        }
+    }
+    return true;
+}
+
+bool SteadyState::check_no_illegal_characters() const {
+    // Check if the representation contains any illegal characters
+    for(int y = 0; y < C4_HEIGHT; y++) {
+        for(int x = 0; x < C4_WIDTH; x++) {
+            char c = get_char(x, y);
+            if(c != '1' && c != '2' && c != ' ' && c != '|' && c != '+' && c != '=' && c != '-' && c != '@' && c != '!') {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 bool SteadyState::validate(C4Board b, bool verbose = false) {
+    if(!check_matches_board(b)) {
+        if(verbose) cout << "Steady state does not match board representation." << endl;
+        return false;
+    }
+    if(!check_no_illegal_characters()) {
+        if(verbose) cout << "Steady state contains illegal characters." << endl;
+        return false;
+    }
     unordered_set<double> wins_cache;
     bool validated = validate_recursive_call(b, wins_cache, verbose);
     if(validated){
@@ -409,17 +444,17 @@ shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
 
 shared_ptr<SteadyState> modify_child_suggestion(const shared_ptr<SteadyState> parent, const C4Board& b) {
     SteadyState child = create_empty_steady_state(b);
-    // Remove all 1s and 2s from the parent which are not on the board
+    bool miai_mode = rand() % 10 == 0;
     for(int y = 0; y < C4_HEIGHT; y++) {
         for(int x = 0; x < C4_WIDTH; x++) {
             char c = parent->get_char(x, y);
-            if(c == '1' || c == '2') {
-                int pc = b.piece_code_at(x, y);
-                if((c == '1' && pc == 1) || (c == '2' && pc == 2)) {
-                    child.set_char(x, y, c);
-                } else {
-                    child.set_char(x, y, ' ');
-                }
+            int piece_code = b.piece_code_at(x, y);
+            if(piece_code == 1 && c != '1') {
+                child.set_char(x, y, '1');
+            } else if(piece_code == 2 && c != '2') {
+                child.set_char(x, y, '2');
+            } else if(piece_code == 0 && (c == '1' || c == '2')) {
+                child.set_char(x, y, miai_mode ? '@' : vector<char>{' ', '|', '+', '=', '-', '@', '!'}[rand() % 7]);
             } else {
                 child.set_char(x, y, c);
             }
@@ -451,7 +486,7 @@ shared_ptr<SteadyState> find_steady_state(const string& representation, const sh
     for (int i = 0; i < pool; ++i) {
         if(suggestion != nullptr) {
             steady_states.push_back(*modify_child_suggestion(suggestion, copy));
-            steady_states.back().mutate(); // Mutate the suggestion to introduce slight diversity
+            if(rand()%2==0) steady_states.back().mutate(); // Mutate the suggestion to introduce slight diversity
         } else {
             steady_states.push_back(create_random_steady_state(copy));
         }

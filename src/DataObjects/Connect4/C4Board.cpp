@@ -32,6 +32,7 @@ C4Board::C4Board(const string& rep, shared_ptr<SteadyState> ss) : steadystate(ss
     fill_board_from_string(rep);
 }
 
+// Returns 0 if the spot is empty, 1 if red, 2 if yellow
 int C4Board::piece_code_at(int x, int y) const {
     return bitboard_at(red_bitboard, x, y) + (2*bitboard_at(yellow_bitboard, x, y));
 }
@@ -441,7 +442,7 @@ int C4Board::get_human_winning_fhourstones() {
     const bool BACKTRACK = !SKIP_UNFOUND_STEADYSTATES;
     if(BACKTRACK){
         vector<int> order_out;
-        int snp = search_nply_id(4, winning_columns, order_out);
+        int snp = search_nply_id(8, winning_columns, order_out);
         if(snp > 0) return snp;
     }
 

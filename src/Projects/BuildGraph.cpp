@@ -5,6 +5,7 @@
 #include "../DataObjects/Connect4/TreeValidator.cpp"
 
 void find_steadystates_by_children(const Graph& g, Node& node) {
+    /*
     for (auto& edge1 : node.neighbors) {
         for(auto& edge : g.nodes.find(edge1.to)->second.neighbors) {
             Node child_node = g.nodes.find(edge.to)->second;
@@ -20,17 +21,26 @@ void find_steadystates_by_children(const Graph& g, Node& node) {
             }
         }
     }
+    */
     for (auto& edge1 : node.neighbors) {
-        for(auto& edge : g.nodes.find(edge1.to)->second.neighbors) {
-            Node child_node = g.nodes.find(edge.to)->second;
-            C4Board* child = dynamic_cast<C4Board*>(child_node.data);
-            if (child->representation.size() <= node.data->representation.size()) continue;
-            cout << "Attempting backpropagation of: " << child->representation << endl;
-            shared_ptr<SteadyState> ss = child->steadystate;
-            if (ss != nullptr) {
-                if(find_steady_state(node.data->representation, ss, false, true, 100, 100)) {
-                    cout << "  Found steady state!" << endl;
-                    return;
+        for(auto& edge2 : g.nodes.find(edge1.to)->second.neighbors) {
+            for (auto& edge3 : g.nodes.find(edge2.to)->second.neighbors) {
+                for(auto& edge4 : g.nodes.find(edge3.to)->second.neighbors) {
+                    Node child_node = g.nodes.find(edge4.to)->second;
+                    C4Board* child = dynamic_cast<C4Board*>(child_node.data);
+                    //if (child->representation.size() <= node.data->representation.size()) continue;
+                    cout << "Attempting backpropagation of: " << child->representation << endl;
+                    shared_ptr<SteadyState> ss = child->steadystate;
+                    if (ss != nullptr) {
+                        if(find_steady_state(node.data->representation, nullptr, false, true, 50, 50)) {
+                            cout << "  Found steady state!" << endl;
+                            return;
+                        }
+                        if(find_steady_state(node.data->representation, ss, false, true, 50, 50)) {
+                            cout << "  Found steady state!" << endl;
+                            return;
+                        }
+                    }
                 }
             }
         }
@@ -60,6 +70,8 @@ void render_video() {
 
         // Iterate over all graph nodes and search for steadystates
         int count = 0;
+        movecache.WriteCache();
+
         if(false) for (auto& pair : g.nodes) {
             count++;
             auto& node = pair.second;
@@ -69,8 +81,9 @@ void render_video() {
             cout << "Processed " << count << " nodes." << endl;
             find_steadystates_by_children(g, node);
         }
+        movecache.WriteCache();
 
-        if(false && !ValidateC4Graph(g)) {
+        if(true && !ValidateC4Graph(g)) {
             cout << "Graph validation failed!" << endl;
             return;
         }

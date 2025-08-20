@@ -1,10 +1,10 @@
 #include <chrono>
 
-bool ValidateC4Graph(Graph& graph) {
+bool ValidateC4Graph(Graph& graph, bool try_to_fix = true) {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     int i = 0;
-    bool valid = true;
+    int num_invalid = 0;
     for (const auto& node_pair : graph.nodes) {
         if(i % 100 == 0)
             cout << i << endl;
@@ -37,7 +37,7 @@ bool ValidateC4Graph(Graph& graph) {
                 if (!graph.node_exists(child_hash)) {
                     cout << "Invalid: Red-to-move node has a non-existent child." << endl;
                     cout << node.data->representation << endl << endl;
-                    valid = false;
+                    num_invalid++;
                 }
 
                 const Node& child_node = graph.nodes.at(child_hash);
@@ -46,7 +46,7 @@ bool ValidateC4Graph(Graph& graph) {
                 if (child_board.is_reds_turn()) {
                     cout << "Invalid: Red-to-move node has a red-to-move child." << endl;
                     cout << node.data->representation << endl << endl;
-                    valid = false;
+                    num_invalid++;
                 }
             }
 
@@ -56,12 +56,24 @@ bool ValidateC4Graph(Graph& graph) {
                 if (ss == nullptr){
                     cout << "Invalid: Red-to-move node has no nodes and no steadystate" << endl;
                     cout << node.data->representation << endl << endl;
-                    valid = false;
+                    num_invalid++;
                 }
-                if (!ss->validate(board)){
+                if (!ss->validate(board, true)){
                     cout << "Invalid: Red-to-move node's steady state failed validation" << endl;
                     cout << node.data->representation << endl << endl;
-                    valid = false;
+                    num_invalid++;
+                    if (try_to_fix) {
+                        cout << "Attempting to fix..." << endl;
+                        int retry_count = 0;
+                        while(!find_steady_state(board.representation, retry_count%2==0?nullptr:ss, false, false, 50, 50)){
+                            retry_count++;
+                            cout << "Retrying..." << endl;
+                            if (retry_count > 4) {
+                                cout << "Failed to fix after 10 retries." << endl;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
@@ -70,7 +82,7 @@ bool ValidateC4Graph(Graph& graph) {
                 cout << "Number of children: " << children.size() << endl;
                 cout << "Steady state: " << (find_cached_steady_state(board) != nullptr ? "exists" : "does not exist") << endl;
                 cout << node.data->representation << endl << endl;
-                valid = false;
+                num_invalid++;
             }
         }
 
@@ -86,14 +98,14 @@ bool ValidateC4Graph(Graph& graph) {
                 if (actual_children_hashes.find(hash) == actual_children_hashes.end()) {
                     cout << "Invalid: Yellow-to-move node has missing child: " << hash << endl;
                     cout << node.data->representation << endl << endl;
-                    valid = false;
+                    num_invalid++;
                 }
             }
             for (const auto& hash : actual_children_hashes) {
                 if (expected_children_hashes.find(hash) == expected_children_hashes.end()) {
                     cout << "Invalid: Yellow-to-move node has unexpected child: " << hash << endl;
                     cout << node.data->representation << endl << endl;
-                    valid = false;
+                    num_invalid++;
                 }
             }
 
@@ -102,7 +114,7 @@ bool ValidateC4Graph(Graph& graph) {
             if (copy.who_is_winning(work, false) != RED) {
                 cout << "Invalid: Yellow-to-move node is not Red-to-win under perfect play." << endl;
                 cout << node.data->representation << endl << endl;
-                valid = false;
+                num_invalid++;
             }
         }
     }
@@ -111,7 +123,7 @@ bool ValidateC4Graph(Graph& graph) {
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end_time - start_time;
 
-    cout << "Validation result: " << (valid ? "Valid" : "Invalid") << endl;
+    cout << "Validation result: " << to_string(num_invalid) << " invalid nodes found." << endl;
     cout << "Validation took " << elapsed_seconds.count() << " seconds." << endl;
-    return valid;
+    return num_invalid == 0;
 }

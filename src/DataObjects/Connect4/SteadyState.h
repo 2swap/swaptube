@@ -55,6 +55,8 @@ public:
     char get_char_from_char_array(const int x, const int y) const;
     char get_char_from_bitboards(const int x, const int y) const;
     bool check_ss_matches_board(C4Board b);
+    bool check_matches_board(const C4Board& b) const;
+    bool check_no_illegal_characters() const;
 
     string to_string() const {
         string s(C4_WIDTH*C4_HEIGHT, ' ');
