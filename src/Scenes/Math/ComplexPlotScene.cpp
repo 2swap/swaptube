@@ -25,13 +25,9 @@ public:
     ComplexPlotScene(const int d, const float width = 1, const float height = 1) : CoordinateScene(width, height), degree(d){
         complex_plane = true;
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num < degree; num++) {
-                state_manager.set(type + to_string(num) + "_opacity", "1");
-                for(char ri : {'r', 'i'})
-                    state_manager.set(type + to_string(num) + "_" + ri, "0");
-            }
-        state_manager.set("leading_coefficient_r", "1");
-        state_manager.set("leading_coefficient_i", "0");
+            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++)
+                for(string ri : {"r", "i", "opacity"})
+                    state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity" && num < degree) ? "1" : "0");
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".8"); // basically saturation
         state_manager.set("coefficients_opacity", "1");
@@ -48,16 +44,14 @@ public:
 
         if(degree <= 1) throw runtime_error("Cannot decrement degree below 1.");
 
-        degree--;
-        for(string ri : {"r", "i"}) {
-            if(abs(state["leading_coefficient_" + ri]) > 0.0001)
-                throw runtime_error("Cannot decrement degree while leading coefficient is non-zero.");
-
-            // Remove existing coefficients and roots
+        for(string ri : {"r", "i", "opacity"}) {
+            string key = "coefficient" + to_string(degree) + "_" + ri;
+            if(abs(state[key]) > 0.001)
+                throw runtime_error("Cannot decrement degree while leading coefficient is non-zero or non-opaque. Offending key: " + key);
             state_manager.remove("root" + to_string(degree) + "_" + ri);
-            state_manager.set("leading_coefficient_" + ri, state_manager.get_equation("coefficient" + to_string(degree) + "_" + ri));
             state_manager.remove("coefficient" + to_string(degree) + "_" + ri);
         }
+        degree--;
         update_state();
     }
 
@@ -69,13 +63,13 @@ public:
 
         degree++;
 
-        for(string ri : {"r", "i"}) {
-            // Add new coefficients and roots
-            state_manager.set("root" + to_string(degree - 1) + "_" + ri, "0");
-            state_manager.set("coefficient" + to_string(degree - 1) + "_" + ri, state_manager.get_equation("leading_coefficient_" + ri));
+        for(string type : {"coefficient", "root"}) {
+            state_manager.set(type + to_string(degree) + "_r", "0.000001");
+            state_manager.set(type + to_string(degree) + "_i", "0");
+            state_manager.set(type + to_string(degree) + "_opacity", "0");
         }
-        state_manager.set("leading_coefficient_r", "0.000001");
-        state_manager.set("leading_coefficient_i", "0");
+
+
         update_state();
     }
 
@@ -116,11 +110,10 @@ public:
     vector<complex<float>> get_coefficients(){
         if(state["roots_or_coefficients_control"] != 0) {
             vector<complex<float>> coefficients;
-            for(int point_index = 0; point_index < degree; point_index++) {
+            for(int point_index = 0; point_index < degree+1; point_index++) {
                 string key = "coefficient" + to_string(point_index) + "_";
                 coefficients.push_back(complex<float>(state[key + "r"], state[key + "i"]));
             }
-            coefficients.push_back(complex<float>(state["leading_coefficient_r"], state["leading_coefficient_i"]));
             return coefficients;
         }
         
@@ -234,8 +227,12 @@ public:
             // Compute the eigenvalues (roots)
             ComplexEigenSolver<MatrixXcd> solver(companion_matrix);
             if (solver.info() != Success) {
-                cout << "Eigenvalue computation did not converge." << endl;
-                return roots;
+                int i = 0;
+                for(complex<float> c : coefficients) {
+                    cout << "Coefficient " << i << ": " << c << endl;
+                    i++;
+                }
+                throw runtime_error("Eigenvalue computation did not converge.");
             }
             VectorXcd eigenvalues = solver.eigenvalues();
 
@@ -288,7 +285,7 @@ public:
 
         float co = state["coefficients_opacity"];
         if(co > 0.01) {
-            for(int i = 0; i < coefficients.size()-1; i++){
+            for(int i = 0; i < coefficients.size(); i++){
                 float opa = lerp(1, clamp(0,abs(coefficients[i])*2,1), state["hide_zero_coefficients"]);
                 float individual_opacity_control = state["coefficient"+to_string(i)+"_opacity"];
                 opa *= co * min(1.0f, individual_opacity_control);
@@ -298,7 +295,7 @@ public:
                 }
                 if(opa < 0.01) continue;
                 ScalingParams sp = ScalingParams(gm * 16, gm * 40);
-                Pixels text_pixels = latex_to_pix(string(1,char('a' + coefficients.size()-2-i)), sp);
+                Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
                 pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, opa);
             }
         }
@@ -309,13 +306,9 @@ public:
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num < degree; num++) {
-                sq.insert(type + to_string(num) + "_opacity");
-                for(char ri : {'r', 'i'})
+            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++)
+                for(string ri : {"r", "i", "opacity"})
                     sq.insert(type + to_string(num) + "_" + ri);
-            }
-        sq.insert("leading_coefficient_r");
-        sq.insert("leading_coefficient_i");
         sq.insert("roots_or_coefficients_control");
         sq.insert("ab_dilation");
         sq.insert("dot_radius");
