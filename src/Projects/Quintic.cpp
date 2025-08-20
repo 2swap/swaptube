@@ -114,6 +114,7 @@ void render_video(){
         {"root1_i", "1.2"},
         {"root2_r", "-1"},
         {"root2_i", "-.3"},
+        {"center_y", ".6"},
     });
     cps->render_microblock();
 
@@ -122,6 +123,9 @@ void render_video(){
 
     shared_ptr<LatexScene> ls = make_shared<LatexScene>("x^3+ax^2+bx^1+cx^0", 1, 1, .5);
     cs.add_scene_fade_in(MICRO, ls, "ls", .5, .15);
+    cps->state_manager.transition(MICRO, {
+        {"center_y", "0"},
+    });
     cs.stage_macroblock(FileBlock("Polynomials have a standard form, where each term has an associated coefficient."), 4);
     cs.render_microblock();
     ls->begin_latex_transition(MICRO, "x^3+"+latex_color(0xffff0000, "a")+"x^2+"+latex_color(0xff00ff00, "b")+"x^1+"+latex_color(0xff0000ff, "c")+"x^0");
@@ -409,7 +413,7 @@ void render_video(){
         {"coefficient1_r", "0"},
         {"coefficient1_i", "0"},
     });
-    cs.slide_subscene(MICRO, "impossible", 0, .25, 0);
+    cs.slide_subscene(MICRO, "impossible", 0, .25);
     cs.stage_macroblock(FileBlock("Just like before, our number line must be missing something..."), 1);
     cs.render_microblock();
 
@@ -484,7 +488,7 @@ void render_video(){
     cs.stage_macroblock(FileBlock("Wherever I put the coefficients of the polynomial inside the complex plane,"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("the solutions _stay on the complex plane_."), 0);
+    cs.stage_macroblock(FileBlock("the solutions _stay on the complex plane_."), 2);
     cps->state_manager.transition(MICRO, {
         {"coefficient0_opacity", "1"},
         {"coefficient1_opacity", "1"},
