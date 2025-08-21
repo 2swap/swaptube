@@ -8,10 +8,11 @@
 struct FunctionData {
     std::string function;
     std::string transition_function;
+    TransitionType transition_type;
     uint32_t color;
 
-    FunctionData(const std::string& f, const std::string& tf, uint32_t c)
-        : function(f), transition_function(tf), color(c) {}
+    FunctionData(const std::string& f, uint32_t c)
+        : function(f), transition_function(""), transition_type(MICRO/*ignored until a transition is made*/), color(c) {}
 };
 
 class RealFunctionScene : public CoordinateScene {
@@ -31,10 +32,11 @@ public:
         return smoothlerp(y1, y2, stf);
     }
 
-    void begin_transition(int index, const string& s) {
+    void begin_transition(const TransitionType tt, const int index, const string& s) {
         if (index < 0 || index >= functions.size())
             throw runtime_error("Bad function index!");
         functions[index].transition_function = s;
+        functions[index].transition_type = tt;
     }
 
     void draw() override {
@@ -43,7 +45,7 @@ public:
     }
 
     void add_function(const string& func, uint32_t color) {
-        functions.emplace_back(func, "", color);
+        functions.emplace_back(func, color);
     }
 
     void set_pixel_width(double w) {
@@ -91,8 +93,9 @@ public:
 
     // On ending a transition, update each function if it was transitioning.
     void on_end_transition_extra_behavior(const TransitionType tt) override {
-        // TODO we don't track transition type...
         for (int i = 0; i < functions.size(); i++) {
+            if (functions[i].transition_type == MACRO && tt == MICRO)
+                continue;
             if (!functions[i].transition_function.empty())
                 functions[i].function = functions[i].transition_function;
             functions[i].transition_function = "";
