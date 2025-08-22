@@ -7,7 +7,7 @@ class ExposedPixelsScene : public Scene {
 public:
     Pixels exposed_pixels;
     ExposedPixelsScene(const double width = 1, const double height = 1) : Scene(width, height) {
-        exposed_pixels = pix;
+        exposed_pixels = Pixels(width * VIDEO_WIDTH, height * VIDEO_HEIGHT);
     }
 
     const StateQuery populate_state_query() const override {
