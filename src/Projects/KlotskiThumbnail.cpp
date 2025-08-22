@@ -7,4 +7,5 @@ void render_video() {
 
     ks.stage_macroblock(SilenceBlock(1), 1);
     ks.render_microblock();
+    ks.export_png("thumb");
 }

@@ -135,6 +135,11 @@ public:
         return VIDEO_HEIGHT * state_manager.get_state({"h"})["h"];
     }
 
+    void export_png(const string& filename, int scaledown = 1) const {
+        ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
+        pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
+    }
+
     StateManager state_manager;
     bool global_publisher_key = false; // Scenes can publish to global state only if this is manually set to true in the project
     string global_identifier = ""; // This is prefixed before the published global state elements to uniquely identify this scene if necessary. Not used (empty) by default.
@@ -184,8 +189,7 @@ private:
                 int roundedFrameNumber = round(global_state["frame_number"]);
                 ostringstream stream;
                 stream << setw(6) << setfill('0') << roundedFrameNumber;
-                ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
-                pix_to_png(p->naive_scale_down(4), "frames/frame_"+stream.str());
+                export_png(stream.str(), 4);
             }
             VIDEO_WRITER.add_frame(*p);
 
