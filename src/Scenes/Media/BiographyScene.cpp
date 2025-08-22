@@ -40,12 +40,12 @@ public:
         float line_height = y_offset; // Approximate height for each line of text
 
         ScalingParams sp = ScalingParams(get_width(), get_height()/6);
-        Pixels text_pixels = latex_to_pix(latex_text(name), sp);
+        Pixels text_pixels = latex_to_pix("\\text{" + name + "}", sp);
         pix.overwrite(text_pixels, (get_width() - text_pixels.w) / 2, (y_offset-text_pixels.h)/2);
 
         for (const string& line : bio_text) {
             sp = ScalingParams(get_width(), line_height);
-            text_pixels = latex_to_pix(latex_text(line), sp);
+            text_pixels = latex_to_pix("\\text{" + line + "}", sp);
             pix.overwrite(text_pixels, (get_width() - text_pixels.w) / 2, text_y);
 
             text_y += line_height*1.1/2;

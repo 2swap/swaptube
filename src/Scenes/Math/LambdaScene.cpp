@@ -80,7 +80,7 @@ public:
         }
         if(state["title_opacity"] > 0.01){
             ScalingParams sp(pix.w, pix.h / 4);
-            Pixels latex = latex_to_pix(latex_text(title), sp);
+            Pixels latex = latex_to_pix("\\text{" + title + "}", sp);
             pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["title_opacity"]);
         }
     }

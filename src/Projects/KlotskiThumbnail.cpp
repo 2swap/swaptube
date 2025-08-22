@@ -1,19 +1,10 @@
 #include "../Scenes/KlotskiScene.cpp"
 #include "../DataObjects/KlotskiBoard.cpp"
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../Scenes/Common/PauseScene.cpp"
-#include "../Scenes/Connect4/Connect4GraphScene.cpp"
-#include "../Scenes/Math/GraphScene.cpp"
-#include "../Scenes/Media/LoopAnimationScene.cpp"
-#include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Media/Mp4Scene.cpp"
-#include "../Scenes/Media/PngScene.cpp"
-#include "../Scenes/Common/TwoswapScene.cpp"
-#include "../Scenes/Common/ExposedPixelsScene.cpp"
 
 void render_video() {
-    KlotskiBoard kb(6, 6, "............bb......................", true);
+    KlotskiBoard kb(6, 6, "a.cddda.ce....gebb..gffi...hhi..jjji", true);
+    KlotskiScene ks(kb);
 
-    kb.stage_macroblock(SilenceBlock(1), 1);
-    kb.render_microblock();
+    ks.stage_macroblock(SilenceBlock(1), 1);
+    ks.render_microblock();
 }
