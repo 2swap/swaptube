@@ -351,15 +351,16 @@ void render_video(){
     cps->state_manager.transition(MICRO, {
         {"coefficients_opacity", "1"},
         {"coefficient0_opacity", "1"},
+        {"coefficient1_opacity", "1"},
     });
     cs.stage_macroblock(FileBlock("If I plot the left side, all of the coefficients land on numbers which exists in our number system,"), 4);
-    cps->state_manager.transition(MICRO, "coefficient0_opacity", "2");
+    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "2"}, {"coefficient1_opacity", "2"}});
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, "coefficient0_opacity", "1");
+    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "1"}, {"coefficient1_opacity", "1"}});
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, "coefficient0_opacity", "2");
+    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "2"}, {"coefficient1_opacity", "2"}});
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, "coefficient0_opacity", "1");
+    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "1"}, {"coefficient1_opacity", "1"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("but the solution to the equation is -2... it lands outside of our number system."), 4);
@@ -399,7 +400,7 @@ void render_video(){
     impossible->begin_latex_transition(MICRO, "2x+1=0");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Once again, with our coefficients on existing numbers, the solution lands on a number which is not yet in our number system."), 1);
+    cs.stage_macroblock(FileBlock("Once again, with our coefficients on existing numbers, the solution lands on -1/2, which is not yet in our number system."), 1);
     cs.render_microblock();
 
     int microblock_count = 0;
@@ -426,6 +427,11 @@ void render_video(){
     cs.stage_macroblock(FileBlock("Surely our number system is finally complete!"), 1);
     cs.render_microblock();
 
+    cs.stage_macroblock(FileBlock("Well then, what about this equation?"), 1);
+    impossible->begin_latex_transition(MICRO, "x^2+1=0");
+    cs.render_microblock();
+    cps->increment_degree();
+
     cs.remove_all_subscenes();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
@@ -438,16 +444,11 @@ void render_video(){
     rfs->add_function("? 2 * 1 +", 0xffff0000);
     tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
     tds2->state_manager.transition(MICRO, {
-        {"qi", "-.3 <t> sin .07 * +"},
-        {"qj", "<t> cos .025 *"},
+        {"qi", "-.2 <t> 2 / sin .04 * +"},
+        {"qj", "<t> 2 / cos .025 *"},
         {"d", "1.5"},
     });
     cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("Well then, what about this equation?"), 1);
-    impossible->begin_latex_transition(MICRO, "x^2+1=0");
-    cs.render_microblock();
-    cps->increment_degree();
 
     cs.stage_macroblock(FileBlock("No real number squared gives us negative 1..."), 1);
     impossible->begin_latex_transition(MICRO, latex_color(0xff00ff00, "x^2")+"+1=0");
@@ -468,7 +469,6 @@ void render_video(){
         {"coefficient2_i", "0"},
     });
     rfs->begin_transition(MICRO, 0, "? ? * 1 +");
-    cs.slide_subscene(MICRO, "impossible", .25, 0);
     cs.stage_macroblock(FileBlock("Just like before, our number line must be missing something..."), 1);
     cs.render_microblock();
 
@@ -478,16 +478,19 @@ void render_video(){
         {"qj", "0"},
     });
     tds2->fade_subscene(MICRO, "rfs", 0);
-    cs.stage_macroblock(FileBlock("Let's call the solutions to this equation 'i' and '-i'."), 1);
+    cs.stage_macroblock(FileBlock("Let's call the solutions to this equation 'i' and '-i'."), 4);
     impossible->begin_latex_transition(MICRO, "i^2+1=0");
+    cs.render_microblock();
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, -1), "-i"));
     cs.render_microblock();
     tds2->remove_subscene("cps");
     cs.remove_subscene("tds2");
     cs.add_scene(cps, "cps");
 
-    cs.stage_macroblock(FileBlock("If it's not on the number line, we'll have to put it on its own axis,"), 1);
-    cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
-    cps->construction.add(GeometricPoint(glm::vec2(0, -1), "-i"));
+    cs.stage_macroblock(FileBlock("If they're not on the number line, we'll have to put them on another axis,"), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("along with 2i, negative 2i, and so on,"), 3);
@@ -546,20 +549,19 @@ void render_video(){
         });
     }
 
+    cs.stage_macroblock(FileBlock("Wherever I put the coefficients of the polynomial inside the complex plane,"), 2);
     cps->state_manager.transition(MICRO, {
         {"coefficient0_opacity", "2"},
         {"coefficient1_opacity", "2"},
     });
-    cs.stage_macroblock(FileBlock("Wherever I put the coefficients of the polynomial inside the complex plane,"), 1);
     cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("the solutions may move around, but they don't jump out of the existing number system like they did before."), 1);
     cps->state_manager.transition(MICRO, {
         {"coefficient0_opacity", "1"},
         {"coefficient1_opacity", "1"},
     });
     cs.render_microblock();
-    cs.stage_macroblock(FileBlock("What happens on the complex plane stays on the complex plane."), 1);
+
+    cs.stage_macroblock(FileBlock("the solutions may move around, but they don't jump out of the existing number system like they did before."), 1);
     cps->state_manager.set({
         {"root0_opacity", "1"},
         {"root1_opacity", "1"},
@@ -570,9 +572,12 @@ void render_video(){
     });
     cs.render_microblock();
 
+    cs.stage_macroblock(FileBlock("What happens on the complex plane stays on the complex plane."), 1);
     cps->state_manager.transition(MICRO, {
         {"roots_opacity", "0"},
     });
+    cs.render_microblock();
+
     shared_ptr<LatexScene> fta = make_shared<LatexScene>("\\mathbb{C} \\text{ is algebraically closed.}", 1, .6, .5);
     cs.add_scene_fade_in(MICRO, fta, "fta", .5, .6);
     cs.stage_macroblock(FileBlock("The fancy way to say this is that the complex field is algebraically closed."), 1);
@@ -581,21 +586,27 @@ void render_video(){
     cs.stage_macroblock(FileBlock("This is so important, that it's called:"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("THE FUNDAMENTAL THEOREM OF ALGEBRA"), 5);
+    cs.stage_macroblock(FileBlock("THE FUNDAMENTAL THEOREM OF ALGEBRA"), 11);
     shared_ptr<LatexScene> fta_title_1 = make_shared<LatexScene>("\\text{The}", 1, .12, .12);
-    cs.add_scene_fade_in(MICRO, fta_title_1, "fta_title_1", .07, .1);
+    cs.add_scene(fta_title_1, "fta_title_1", .07, .1);
     cs.render_microblock();
     shared_ptr<LatexScene> fta_title_2 = make_shared<LatexScene>("\\text{Fundamental}", 1, .6, .3);
-    cs.add_scene_fade_in(MICRO, fta_title_2, "fta_title_2", .37, .1);
+    cs.add_scene(fta_title_2, "fta_title_2", .37, .1);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.render_microblock();
     shared_ptr<LatexScene> fta_title_3 = make_shared<LatexScene>("\\text{Theorem}", 1, .45, .25);
-    cs.add_scene_fade_in(MICRO, fta_title_3, "fta_title_3", .82, .1);
+    cs.add_scene(fta_title_3, "fta_title_3", .82, .1);
+    cs.render_microblock();
     cs.render_microblock();
     shared_ptr<LatexScene> fta_title_4 = make_shared<LatexScene>("\\text{of}", 1, .12, .12);
-    cs.add_scene_fade_in(MICRO, fta_title_4, "fta_title_4", .35, .3);
+    cs.add_scene(fta_title_4, "fta_title_4", .35, .3);
     cs.render_microblock();
     shared_ptr<LatexScene> fta_title_5 = make_shared<LatexScene>("\\text{Algebra}", 1, .7, .35);
-    cs.add_scene_fade_in(MICRO, fta_title_5, "fta_title_5", .55, .3);
+    cs.add_scene(fta_title_5, "fta_title_5", .55, .3);
+    cs.render_microblock();
+    cs.render_microblock();
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 2);
@@ -606,17 +617,36 @@ void render_video(){
 
     cs.stage_macroblock(FileBlock("Our graph shows us something else too:"), 1);
     cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("The number of roots never changes either."), 1);
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "1"},
+        {"root1_opacity", "1"},
+        {"roots_opacity", "1"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We're looking at a quadratic polynomial- the highest exponent is x^2, so there are 2 roots."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Well, unless we intentionally scrunch them on top of each other... but that's cheating."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We call this a root of multiplicity 2. It counts as 2 normal roots."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can actually identify the root's multiplicity from the graph. Can you see it?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Tracing around the root, we see the colors blue-green-red-blue-green-red..."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Plotting the function but evaluated at this point,"), 1);
+    cs.render_microblock();
 
     return;
     cs.stage_macroblock(FileBlock("If Algebra was a play,"), 1);
     cs.render_microblock();
     cs.stage_macroblock(FileBlock("the Complex Numbers are the stage it was written to be performed on."), 1);
-    cs.render_microblock();
-    cs.stage_macroblock(FileBlock("Beyond just knowing that the equation has a root, our plot shows us that the number of roots stays fixed."), 1);
-    cs.render_microblock();
-    cs.stage_macroblock(FileBlock("Well, unless you intentionally put them on top of each other... but that's cheating."), 1);
-    cs.render_microblock();
-    cs.stage_macroblock(FileBlock("Now, notice- it's always the same number as the equation's highest exponent."), 1);
     cs.render_microblock();
 }
