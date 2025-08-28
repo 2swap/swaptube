@@ -18,8 +18,7 @@
 void render_video(){
     cout << "Rendering Quintic video..." << endl;
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(3);
-    cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 6);
-    cps->state_manager.set("dot_radius", ".1");
+    cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its roots."), 10);
     cps->state_manager.set("ticks_opacity", "0");
 
     for(int i = 0; i < cps->degree; i++) {
@@ -29,32 +28,32 @@ void render_video(){
         });
     }
     cps->render_microblock();
+    cps->render_microblock();
+    cps->render_microblock();
+    cps->render_microblock();
+    cps->render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_opacity", "2"},
-        {"coefficient1_opacity", "2"},
-        {"coefficient2_opacity", "2"},
-        {"coefficients_opacity", "1"},
+        {"coefficient0_ring", "1"},
+        {"coefficient1_ring", "1"},
+        {"coefficient2_ring", "1"},
     });
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_opacity", "1"},
-        {"coefficient1_opacity", "1"},
-        {"coefficient2_opacity", "1"},
-        {"coefficients_opacity", "1"},
+        {"coefficient0_ring", "0"},
+        {"coefficient1_ring", "0"},
+        {"coefficient2_ring", "0"},
     });
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
         {"root0_opacity", "1"},
         {"root1_opacity", "1"},
         {"root2_opacity", "1"},
-        {"roots_opacity", "1"},
     });
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
         {"root0_opacity", "0"},
         {"root1_opacity", "0"},
         {"root2_opacity", "0"},
-        {"roots_opacity", "1"},
     });
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
@@ -70,9 +69,6 @@ void render_video(){
     cps->stage_macroblock(FileBlock("Notice how moving a single root has a hard-to-predict effect on the coefficients,"), 4);
     cps->state_manager.set({
         {"root0_opacity", "0"},
-        {"root1_opacity", "0"},
-        {"root2_opacity", "0"},
-        {"roots_opacity", "1"},
     });
     cps->state_manager.transition(MICRO, {
         {"root0_opacity", "1"},
@@ -92,19 +88,14 @@ void render_video(){
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
         {"spin_multiplier", "0"},
-        {"roots_opacity", "0"},
+        {"root0_opacity", "0"},
     });
     cps->render_microblock();
 
-    cps->state_manager.set({
-        {"root0_opacity", "1"},
-        {"root1_opacity", "1"},
-        {"root2_opacity", "1"},
-    });
     cps->state_manager_roots_to_coefficients();
     cps->stage_macroblock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the roots."), 4);
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_opacity", "2"},
+        {"coefficient0_ring", "1"},
     });
     cps->render_microblock();
     cps->state_manager.set({
@@ -117,7 +108,7 @@ void render_video(){
     cps->render_microblock();
     cps->render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_opacity", "1"},
+        {"coefficient0_ring", "0"},
         {"spin_multiplier", "0"},
     });
     cps->render_microblock();
@@ -158,18 +149,19 @@ void render_video(){
     cs.render_microblock();
     cs.render_microblock();
     cs.stage_macroblock(FileBlock("They're drawn on the graph here."), 5);
-    cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
+    cps->state_manager.transition(MICRO, {{"coefficient0_opacity","0"}, {"coefficient1_opacity","0"}, {"coefficient2_opacity","0"}});
     cs.render_microblock();
     for(int i = 0; i < 2; i++) {
-        cps->state_manager.transition(MICRO, {{"coefficients_opacity","1"}});
+        cps->state_manager.transition(MICRO, {{"coefficient0_ring","1"}, {"coefficient1_ring","1"}, {"coefficient2_ring","1"}});
         ls->begin_latex_transition(MICRO, colory);
         cs.render_microblock();
 
-        cps->state_manager.transition(MICRO, {{"coefficients_opacity","0"}});
+        cps->state_manager.transition(MICRO, {{"coefficient0_ring","0"}, {"coefficient1_ring","0"}, {"coefficient2_ring","0"}});
         ls->begin_latex_transition(MICRO, "ax^0+bx^1+cx^2+x^3");
         cs.render_microblock();
     }
-    cps->state_manager.transition(MICRO, {{"coefficients_opacity", "0"}, {"center_y", "0"}});
+    cps->state_manager.transition(MICRO, {{"coefficient0_opacity","0"}, {"coefficient1_opacity","0"}, {"coefficient2_opacity","0"}});
+    cps->state_manager.transition(MICRO, {{"center_y", "0"}});
     cs.fade_subscene(MICRO, "ls", 0);
 
     shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("(x-r_1)(x-r_2)(x-r_3)", .7, 1, .5);
@@ -185,11 +177,11 @@ void render_video(){
 
     cs.stage_macroblock(FileBlock("which are clearly visible in the polynomial's graph."), 4);
     for(int i = 0; i < 2; i++) {
-        cps->state_manager.transition(MICRO, {{"roots_opacity",".5"}});
+        cps->state_manager.transition(MICRO, {{"root0_opacity", ".5"}, {"root1_opacity", ".5"}, {"root2_opacity", ".5"}});
         ls2->begin_latex_transition(MICRO, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")");
         cs.render_microblock();
 
-        cps->state_manager.transition(MICRO, {{"roots_opacity","0"}});
+        cps->state_manager.transition(MICRO, {{"root0_opacity", "0"}, {"root1_opacity", "0"}, {"root2_opacity", "0"}});
         ls2->begin_latex_transition(MICRO, "(x-r_1)(x-r_2)(x-r_3)");
         cs.render_microblock();
     }
@@ -204,13 +196,15 @@ void render_video(){
     cps->state_manager.transition(MACRO, {
         {"zoom", "0.1"},
     });
-    cs.stage_macroblock(FileBlock("The space we're looking at is the complex plane, home to numbers like i and 2-i."), 4);
+    cs.stage_macroblock(FileBlock("The space we're looking at is the complex plane, home to numbers like i and 2-i."), 6);
+    cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(2, -1), "2-i"));
+    cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->state_manager.transition(MICRO, {{"ticks_opacity", "0"}, {"zoom", ".2"}});
@@ -220,6 +214,7 @@ void render_video(){
     cps->state_manager.transition(MICRO, "geometry_opacity", "0");
     ls2->begin_latex_transition(MICRO, "(" + latex_color(0xffff0000, "x")+"-r_1)(" + latex_color(0xffff0000, "x")+"-r_2)(" + latex_color(0xffff0000, "x")+"-r_3)");
     cs.stage_macroblock(FileBlock("For each pixel on the screen, I passed that complex number as an input to the polynomial,"), 4);
+    // TODO animate the input and output
     cs.render_microblock();
     cps->construction.clear();
     cps->state_manager.set("geometry_opacity", "1");
@@ -306,7 +301,7 @@ void render_video(){
     for(int i = 0; i < cps->degree; i++) {
         cps->state_manager.transition(MICRO, {
             {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
-            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos 5 +"},
+            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos 5 -"},
         });
     }
     cs.stage_macroblock(FileBlock("But in turn, I would ask _you_, who needs decimals or negatives either?"), 1);
@@ -342,42 +337,37 @@ void render_video(){
         {"coefficient0_r", "2"},
         {"coefficient0_i", "0"},
         {"coefficient0_opacity", "1"},
-        {"geometry_opacity", ".3"},
+        {"geometry_opacity", ".15"},
     });
     cs.render_microblock();
     cps->decrement_degree();
     cps->decrement_degree();
 
-    cps->state_manager.transition(MICRO, {
-        {"coefficients_opacity", "1"},
-        {"coefficient0_opacity", "1"},
-        {"coefficient1_opacity", "1"},
-    });
-    cs.stage_macroblock(FileBlock("If I plot the left side, all of the coefficients land on numbers which exists in our number system,"), 4);
-    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "2"}, {"coefficient1_opacity", "2"}});
+    cs.stage_macroblock(FileBlock("If I plot x+2, the coefficients land on numbers which exist in our number system,"), 4);
+    cps->state_manager.transition(MICRO, {{"coefficient0_ring", "1"}, {"coefficient1_ring", "1"}});
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "1"}, {"coefficient1_opacity", "1"}});
+    cps->state_manager.transition(MICRO, {{"coefficient0_ring", "0"}, {"coefficient1_ring", "0"}});
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "2"}, {"coefficient1_opacity", "2"}});
+    cps->state_manager.transition(MICRO, {{"coefficient0_ring", "1"}, {"coefficient1_ring", "1"}});
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, {{"coefficient0_opacity", "1"}, {"coefficient1_opacity", "1"}});
+    cps->state_manager.transition(MICRO, {{"coefficient0_ring", "0"}, {"coefficient1_ring", "0"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("but the solution to the equation is -2... it lands outside of our number system."), 4);
-    cps->state_manager.set({{"roots_opacity", "1"}, {"root0_opacity", "0"}});
     cps->state_manager.transition(MICRO, "root0_opacity", "1");
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, "roots_opacity", "0");
+    impossible->begin_latex_transition(MICRO, latex_color(0xff00ff00, "-2")+"+2=0");
+    cps->state_manager.transition(MICRO, "root0_opacity", "0");
     cs.render_microblock();
     cps->state_manager.transition(MICRO, "root0_opacity", "1");
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, "roots_opacity", "0");
+    cps->state_manager.transition(MICRO, "root0_opacity", "0");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("So, to be able to solve this, we _need_ to invent -2..."), 2);
-    impossible->begin_latex_transition(MICRO, latex_color(0xff00ff00, "-2")+"+2=0");
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(-2, 0), "-2"));
+    cs.fade_subscene(MICRO, "impossible", 0);
     cs.render_microblock();
 
     cs.stage_macroblock(CompositeBlock(FileBlock("as well as the other negatives."), SilenceBlock(2)), 6);
@@ -393,24 +383,46 @@ void render_video(){
     }
 
     cs.stage_macroblock(FileBlock("Sadly, our number system is still lacking."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
     cps->state_manager.transition(MICRO, {
         {"coefficient1_r", "2"},
         {"coefficient0_r", "1"},
     });
-    impossible->begin_latex_transition(MICRO, "2x+1=0");
+    impossible->jump_latex("2x+1=0");
+    cs.fade_subscene(MICRO, "impossible", 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Once again, with our coefficients on existing numbers, the solution lands on -1/2, which is not yet in our number system."), 1);
+    cs.stage_macroblock(FileBlock("Once again, with our coefficients on existing numbers, the solution lands on -1/2, which is not yet in our number system."), 3);
+    cps->state_manager.transition(MICRO, {
+        {"coefficient1_ring", "1"},
+        {"coefficient0_ring", "1"},
+    });
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(-.5, 0), "-.5", .45));
+    cps->state_manager.transition(MICRO, {
+        {"coefficient1_ring", "0"},
+        {"coefficient0_ring", "0"},
+        {"coefficient1_opacity", "0"},
+        {"coefficient0_opacity", "0"},
+        {"root0_opacity", "1"},
+    });
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "0"},
+        {"root1_opacity", "0"},
+    });
     cs.render_microblock();
 
     int microblock_count = 0;
-    impossible->begin_latex_transition(MACRO, "2*"+latex_color(0xff00ff00, "-\\frac{1}{2}")+"+1=0");
+    impossible->begin_latex_transition(MACRO, "2\\cdot"+latex_color(0xff00ff00, "-\\frac{1}{2}")+"+1=0");
     for(int counting = 0; counting < 2; counting++) {
         for(int power_of_two = -1; power_of_two > -3; power_of_two--) {
             float dx = 1.0 / (1 << -power_of_two);
             for(float x = -5 + dx; x <= 5 - dx; x+=2*dx) {
                 if(counting == 1) {
-                    cps->construction.add(GeometricPoint(glm::vec2(x, 0), float_to_pretty_string(x), dx));
+                    if(x != -0.5) cps->construction.add(GeometricPoint(glm::vec2(x, 0), float_to_pretty_string(x), dx*.9));
                     cs.render_microblock();
                 }
                 else microblock_count++;
@@ -419,16 +431,16 @@ void render_video(){
         if(counting == 0) cs.stage_macroblock(FileBlock("It looks like we need fractions too..."), microblock_count);
     }
 
-    cs.stage_macroblock(FileBlock("Heck, let's just add all decimals. We get a nice continuum of numbers."), 2);
+    cs.stage_macroblock(CompositeBlock(FileBlock("Heck, let's just add all decimals. We get a nice continuum of numbers."), FileBlock("Surely our number system is finally complete!")), 2);
+    cs.fade_subscene(MICRO, "impossible", 0);
     cps->construction.add(GeometricLine(glm::vec2(-5, 0), glm::vec2(5, 0)));
     cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Surely our number system is finally complete!"), 1);
-    cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Well then, what about this equation?"), 1);
-    impossible->begin_latex_transition(MICRO, "x^2+1=0");
+    impossible->jump_latex("x^2+1=0");
+    cs.fade_subscene(MACRO, "impossible", 1);
     cs.render_microblock();
     cps->increment_degree();
 
@@ -437,15 +449,15 @@ void render_video(){
     cs.stage_macroblock(SilenceBlock(1), 1);
     shared_ptr<ThreeDimensionScene> tds2 = make_shared<ThreeDimensionScene>();
     cs.add_scene(tds2, "tds2");
-    cs.add_scene(impossible, "impossible", .5, .75);
+    cs.add_scene(impossible, "impossible", .5, .7);
     tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "cps"), cps);
 
     rfs = make_shared<RealFunctionScene>();
     rfs->add_function("? 2 * 1 +", 0xffff0000);
     tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
     tds2->state_manager.transition(MICRO, {
-        {"qi", "-.2 <t> 2 / sin .04 * +"},
-        {"qj", "<t> 2 / cos .025 *"},
+        {"qi", "-.1 <t> 2 / sin .02 * +"},
+        {"qj", "<t> 2 / cos .01 *"},
         {"d", "1.5"},
     });
     cs.render_microblock();
@@ -479,7 +491,8 @@ void render_video(){
     });
     tds2->fade_subscene(MICRO, "rfs", 0);
     cs.stage_macroblock(FileBlock("Let's call the solutions to this equation 'i' and '-i'."), 4);
-    impossible->begin_latex_transition(MICRO, "i^2+1=0");
+    cs.fade_subscene(MICRO, "impossible", 0);
+    //impossible->begin_latex_transition(MICRO, "i^2+1=0");
     cs.render_microblock();
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
@@ -523,13 +536,14 @@ void render_video(){
     }
     while(cs.microblocks_remaining()) cs.render_microblock();
 
-    cps->state_manager.transition(MACRO, "geometry_opacity", "0");
+    cps->state_manager_coefficients_to_roots();
     for(int i = 0; i < cps->degree; i++) {
         cps->state_manager.transition(MICRO, {
             {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
             {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
         });
     }
+
     cs.stage_macroblock(FileBlock("Up until now, we've been playing whack-a-mole..."), 1);
     cs.render_microblock();
     cps->construction.clear();
@@ -541,18 +555,12 @@ void render_video(){
     cs.stage_macroblock(FileBlock("But that game ends here!"), 1);
     cs.render_microblock();
 
-    cps->state_manager_coefficients_to_roots();
-    for(int i = 0; i < cps->degree; i++) {
-        cps->state_manager.transition(MICRO, {
-            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
-            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
-        });
-    }
-
     cs.stage_macroblock(FileBlock("Wherever I put the coefficients of the polynomial inside the complex plane,"), 2);
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_opacity", "2"},
-        {"coefficient1_opacity", "2"},
+        {"coefficient0_ring", "1"},
+        {"coefficient1_ring", "1"},
+        {"coefficient0_opacity", "1"},
+        {"coefficient1_opacity", "1"},
     });
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {
@@ -561,21 +569,19 @@ void render_video(){
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("the solutions may move around, but they don't jump out of the existing number system like they did before."), 1);
-    cps->state_manager.set({
+    cs.stage_macroblock(FileBlock("the solutions may move around, but they don't jump out of the existing number system like they did before."), 2);
+    cps->state_manager.transition(MICRO, {
         {"root0_opacity", "1"},
         {"root1_opacity", "1"},
-        {"roots_opacity", "0"},
     });
+    cs.render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"roots_opacity", "1"},
+        {"root0_opacity", "0"},
+        {"root1_opacity", "0"},
     });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("What happens on the complex plane stays on the complex plane."), 1);
-    cps->state_manager.transition(MICRO, {
-        {"roots_opacity", "0"},
-    });
     cs.render_microblock();
 
     shared_ptr<LatexScene> fta = make_shared<LatexScene>("\\mathbb{C} \\text{ is algebraically closed.}", 1, .6, .5);
@@ -586,7 +592,9 @@ void render_video(){
     cs.stage_macroblock(FileBlock("This is so important, that it's called:"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("THE FUNDAMENTAL THEOREM OF ALGEBRA"), 11);
+    cs.stage_macroblock(FileBlock("THE FUNDAMENTAL THEOREM OF ALGEBRA"), 15);
+    cs.render_microblock();
+    cs.render_microblock();
     shared_ptr<LatexScene> fta_title_1 = make_shared<LatexScene>("\\text{The}", 1, .12, .12);
     cs.add_scene(fta_title_1, "fta_title_1", .07, .1);
     cs.render_microblock();
@@ -608,6 +616,8 @@ void render_video(){
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 2);
     cs.render_microblock();
@@ -618,21 +628,61 @@ void render_video(){
     cs.stage_macroblock(FileBlock("Our graph shows us something else too:"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The number of roots never changes either."), 1);
+    cs.stage_macroblock(FileBlock("The number of roots never changes either."), 2);
+    cps->state_manager_coefficients_to_roots();
     cps->state_manager.transition(MICRO, {
         {"root0_opacity", "1"},
         {"root1_opacity", "1"},
-        {"roots_opacity", "1"},
+        {"root0_r", "-1"},
+        {"root0_i", "0"},
+        {"root1_r", "2"},
+        {"root1_i", "0"},
+    });
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "0"},
+        {"root1_opacity", "0"},
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("We're looking at a quadratic polynomial- the highest exponent is x^2, so there are 2 roots."), 1);
+    shared_ptr<LatexScene> quadratic = make_shared<LatexScene>("x^2-x-2", .7, 1, .5);
+    cs.add_scene_fade_in(MICRO, quadratic, "quadratic", .5, .2);
+    cs.stage_macroblock(FileBlock("We're looking at a quadratic polynomial."), 1);
+    cs.render_microblock();
+
+    quadratic->begin_latex_transition(MICRO, "x^"+latex_color(0xffff0000, "2")+"-x-2");
+    cs.stage_macroblock(FileBlock("The highest exponent is 2, so there's 2 roots."), 3);
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "quadratic", 0);
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "1"},
+        {"root1_opacity", "1"},
+    });
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "0"},
+        {"root1_opacity", "0"},
+    });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Well, unless we intentionally scrunch them on top of each other... but that's cheating."), 1);
+    cps->state_manager.transition(MICRO, {
+        {"root0_r", "0"},
+        {"root0_i", "0"},
+        {"root1_r", "0"},
+        {"root1_i", "0"},
+    });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("We call this a root of multiplicity 2. It counts as 2 normal roots."), 1);
+    cs.stage_macroblock(FileBlock("We call this a root of multiplicity 2. It counts as 2 normal roots."), 2);
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "1"},
+    });
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, {
+        {"root0_opacity", "0"},
+    });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("We can actually identify the root's multiplicity from the graph. Can you see it?"), 1);

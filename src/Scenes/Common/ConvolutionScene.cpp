@@ -34,6 +34,7 @@ public:
         state_manager.set("in_transition_state", "0");
         p1 = p;
         coords = get_coords_from_pixels(p);
+        jumped = true;
     }
 
     void on_end_transition_extra_behavior(const TransitionType tt) override {
@@ -42,7 +43,6 @@ public:
     }
 
     void end_transition(){
-        cout << "p" << endl;
         if(state["in_transition_state"] != 1) throw runtime_error("End Transition called on a ConvolutionScene not in transition!");
         p1 = p2;
         coords = transition_coords;
@@ -94,15 +94,14 @@ public:
     const StateQuery populate_state_query() const override {
         return StateQuery{"transparency_profile", "in_transition_state"};
     }
-    void mark_data_unchanged() override { }
+    void mark_data_unchanged() override { jumped = false; }
     void change_data() override { }
-    // TODO can this next line get deleted?
     bool check_if_data_changed() const override {
         double its = state["in_transition_state"];
-        return its == 1;
+        return (its == 1) || jumped;
     } // No DataObjects, but we treat transitioning as changing data
 
-protected:
+private:
     virtual Pixels get_p1() {return p1;}
     // Things used for non-transition states
     TransitionType current_transition_type;
@@ -111,4 +110,5 @@ protected:
     vector<StepResult> intersections;
     Pixels p2;
     pair<int, int> transition_coords;
+    bool jumped = false;
 };

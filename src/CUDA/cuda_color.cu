@@ -64,7 +64,7 @@ __device__ int device_argb(int a, int r, int g, int b){return (int(clamp(0,a,255
                                                               (int(clamp(0,b,255))    );}
 
 __device__ float device_linear_srgb_to_srgb(float x) {
-    //return x;
+    return x;
 	if (x >= 0.0031308)
 		return 1.055*pow(x, 1.0/2.4) - 0.055;
 	return 12.92 * x;

@@ -10,7 +10,7 @@ __device__ int complex_to_color(const thrust::complex<float>& c, float ab_dilati
     float mag = abs(c);
     thrust::complex<float> norm = (c * ab_dilation / mag + thrust::complex<float>(1,1)) * .5;
     float am = 2*atan(mag/dot_radius)/M_PI;
-    return device_OKLABtoRGB(255, (1-.9*am)*1, lerp(-.233888, .276216, norm.real()), lerp(-.311528, .198570, norm.imag()));
+    return device_OKLABtoRGB(255, (1-.8*am)*1, lerp(-.233888, .276216, norm.real()), lerp(-.311528, .198570, norm.imag()));
 }
 
 __device__ thrust::complex<float> evaluate_polynomial_given_coefficients(const thrust::complex<float>* coefficients, int degree, const thrust::complex<float>& point) {

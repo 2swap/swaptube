@@ -25,15 +25,16 @@ public:
     ComplexPlotScene(const int d, const float width = 1, const float height = 1) : CoordinateScene(width, height), degree(d){
         complex_plane = true;
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++)
+            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
                 for(string ri : {"r", "i", "opacity"})
                     state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity" && num < degree) ? "1" : "0");
+                if(type == "coefficient")
+                    state_manager.set(type + to_string(num) + "_ring", "0");
+            }
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".8"); // basically saturation
-        state_manager.set("coefficients_opacity", "1");
-        state_manager.set("roots_opacity", "0");
         state_manager.set("hide_zero_coefficients", "0");
-        state_manager.set("dot_radius", "3");
+        state_manager.set("dot_radius", ".3");
     }
 
     void decrement_degree() {
@@ -272,31 +273,29 @@ public:
             state["dot_radius"]
         );
 
-        float ro = state["roots_opacity"];
         float gm = get_geom_mean_size() / 200;
-        if(ro > 0.01) {
-            for(int i = 0; i < roots.size(); i++){
-                float opa = ro * state["root"+to_string(i)+"_opacity"];
-                if(opa < 0.01) continue;
-                const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
-                pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, opa);
-            }
+
+        // Draw roots
+        for(int i = 0; i < roots.size(); i++){
+            float opa = state["root"+to_string(i)+"_opacity"];
+            if(opa < 0.01) continue;
+            const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
+            pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, opa);
         }
 
-        float co = state["coefficients_opacity"];
-        if(co > 0.01) {
-            for(int i = 0; i < coefficients.size(); i++){
-                float opa = lerp(1, clamp(0,abs(coefficients[i])*2,1), state["hide_zero_coefficients"]);
-                float individual_opacity_control = state["coefficient"+to_string(i)+"_opacity"];
-                opa *= co * min(1.0f, individual_opacity_control);
-                const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
-                if(individual_opacity_control > 1) {
-                    pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, individual_opacity_control - 1);
-                }
-                if(opa < 0.01) continue;
+        // Draw coefficients
+        for(int i = 0; i < coefficients.size(); i++){
+            float letter_opa = lerp(1, clamp(0,abs(coefficients[i])*2,1), state["hide_zero_coefficients"]);
+            float ring_opa = letter_opa * state["coefficient"+to_string(i)+"_ring"];
+            letter_opa *= state["coefficient"+to_string(i)+"_opacity"];
+            const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
+            if(ring_opa > 0.01) {
+                pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, ring_opa);
+            }
+            if(letter_opa > 0.01) {
                 ScalingParams sp = ScalingParams(gm * 16, gm * 40);
                 Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
-                pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, opa);
+                pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
             }
         }
 
@@ -306,14 +305,15 @@ public:
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++)
+            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
                 for(string ri : {"r", "i", "opacity"})
                     sq.insert(type + to_string(num) + "_" + ri);
+                if(type == "coefficient")
+                    sq.insert(type + to_string(num) + "_ring");
+            }
         sq.insert("roots_or_coefficients_control");
         sq.insert("ab_dilation");
         sq.insert("dot_radius");
-        sq.insert("roots_opacity");
-        sq.insert("coefficients_opacity");
         sq.insert("hide_zero_coefficients");
         return sq;
     }

@@ -19,13 +19,14 @@ public:
         cout << "LatexScene: Transition started with scale factor: " << sp.scale_factor << endl;
     }
 
-    void jump_latex(string latex) {
+    void jump_latex(string l) {
         // If you wanted to re-initialize the scale:
         //ScalingParams sp(scale_factor*get_width(), scale_factor*get_height());
 
         //But we usually don't do that
+        latex = l;
         ScalingParams sp(scale_factor);
-        jump(latex_to_pix(latex, sp));
+        jump(latex_to_pix(l, sp));
     }
 
 private:

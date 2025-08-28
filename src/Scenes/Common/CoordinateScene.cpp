@@ -76,7 +76,7 @@ public:
         double line_thickness = gm/200.;
         int construction_color = OPAQUE_WHITE;
         float microblock_fraction = state["microblock_fraction"];
-        float bounce = 1 - square(microblock_fraction - 1);
+        float bounce = 1 - square(square(microblock_fraction - 1));
         float interp = smoother2(microblock_fraction);
 
         Pixels geometry(pix.w, pix.h);
@@ -99,10 +99,12 @@ public:
         }*/
         for(const GeometricPoint& p : construction.points) {
             const glm::vec2 position_pixel = point_to_pixel(p.position);
+            double radius_pop = line_thickness * p.width_multiplier * 10 * bounce;
+            double radius = min(line_thickness * p.width_multiplier * 2, radius_pop);
             if(!p.old) {
-                geometry.fill_circle(position_pixel.x, position_pixel.y, line_thickness * p.width_multiplier * (2+8*interp), construction_color, 1-interp);
+                geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, construction_color, 1-interp);
             }
-            geometry.fill_circle(position_pixel.x, position_pixel.y, line_thickness * 2 * p.width_multiplier*(p.old?1:bounce), construction_color, 1);
+            geometry.fill_circle(position_pixel.x, position_pixel.y, radius, construction_color, 1);
             if(p.label != "" && p.width_multiplier > .4) {
                 ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
                 Pixels latex = latex_to_pix(p.label, sp);
