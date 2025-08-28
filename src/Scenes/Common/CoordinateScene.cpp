@@ -100,8 +100,9 @@ public:
         for(const GeometricPoint& p : construction.points) {
             const glm::vec2 position_pixel = point_to_pixel(p.position);
             double radius_pop = line_thickness * p.width_multiplier * 10 * bounce;
-            double radius = min(line_thickness * p.width_multiplier * 2, radius_pop);
+            double radius = line_thickness * p.width_multiplier * 2;
             if(!p.old) {
+                radius = min(radius, radius_pop);
                 geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, construction_color, 1-interp);
             }
             geometry.fill_circle(position_pixel.x, position_pixel.y, radius, construction_color, 1);

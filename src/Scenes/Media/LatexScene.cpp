@@ -35,10 +35,10 @@ private:
     double box_scale;
 
 protected:
-    Pixels get_p1() override {
+    /*Pixels get_p1() override {
         ScalingParams sp = scale_factor == 0 ? ScalingParams(box_scale*get_width(), box_scale*get_height()) : ScalingParams(scale_factor);
         Pixels ret = latex_to_pix(latex, sp);
         scale_factor = sp.scale_factor;
         return ret;
-    }
+    }*/
 };

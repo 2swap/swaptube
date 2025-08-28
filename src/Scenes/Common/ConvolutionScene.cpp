@@ -85,7 +85,7 @@ public:
             pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
             pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
         } else {
-            p1 = get_p1();
+            // p1 = get_p1();
             coords = get_coords_from_pixels(p1);
             pix.overwrite(p1, coords.first, coords.second);
         }
@@ -102,7 +102,7 @@ public:
     } // No DataObjects, but we treat transitioning as changing data
 
 private:
-    virtual Pixels get_p1() {return p1;}
+    //virtual Pixels get_p1() {return p1;}
     // Things used for non-transition states
     TransitionType current_transition_type;
     Pixels p1;

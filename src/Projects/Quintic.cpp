@@ -78,7 +78,7 @@ void render_video(){
         {"root0_r", "1 <spin_coefficient_r> +"},
         {"root0_i", ".2 <spin_coefficient_i> +"},
         {"spin_coefficient_r", "<t> 3 * sin <spin_multiplier> *"},
-        {"spin_coefficient_i", "<t> 3 * cos <spin_multiplier> *"},
+        {"spin_coefficient_i", "<t> 5 * cos <spin_multiplier> *"},
         {"spin_multiplier", "0"},
     });
     cps->state_manager.transition(MICRO, {
@@ -149,7 +149,6 @@ void render_video(){
     cs.render_microblock();
     cs.render_microblock();
     cs.stage_macroblock(FileBlock("They're drawn on the graph here."), 5);
-    cps->state_manager.transition(MICRO, {{"coefficient0_opacity","0"}, {"coefficient1_opacity","0"}, {"coefficient2_opacity","0"}});
     cs.render_microblock();
     for(int i = 0; i < 2; i++) {
         cps->state_manager.transition(MICRO, {{"coefficient0_ring","1"}, {"coefficient1_ring","1"}, {"coefficient2_ring","1"}});
@@ -462,7 +461,7 @@ void render_video(){
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("No real number squared gives us negative 1..."), 1);
+    cs.stage_macroblock(SilenceBlock(1), 1);
     impossible->begin_latex_transition(MICRO, latex_color(0xff00ff00, "x^2")+"+1=0");
     cps->state_manager.transition(MICRO, {
         {"coefficient2_r", "1"},
@@ -479,9 +478,11 @@ void render_video(){
         {"coefficient1_i", "0"},
         {"coefficient2_r", "1"},
         {"coefficient2_i", "0"},
+        {"construction_opacity", ".7"},
     });
     rfs->begin_transition(MICRO, 0, "? ? * 1 +");
-    cs.stage_macroblock(FileBlock("Just like before, our number line must be missing something..."), 1);
+    cs.stage_macroblock(CompositeBlock(FileBlock("No real number squared gives us negative 1..."), FileBlock("Just like before, our number line must be missing something...")), 2);
+    cs.render_microblock();
     cs.render_microblock();
 
     tds2->state_manager.transition(MICRO, {
@@ -503,7 +504,6 @@ void render_video(){
     cs.remove_subscene("tds2");
     cs.add_scene(cps, "cps");
 
-    cs.stage_macroblock(FileBlock("If they're not on the number line, we'll have to put them on another axis,"), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("along with 2i, negative 2i, and so on,"), 3);
@@ -545,6 +545,7 @@ void render_video(){
     }
 
     cs.stage_macroblock(FileBlock("Up until now, we've been playing whack-a-mole..."), 1);
+    cps->state_manager.transition(MICRO, "geometry_opacity", "0");
     cs.render_microblock();
     cps->construction.clear();
     cps->state_manager.set("geometry_opacity", "1");
@@ -553,24 +554,21 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("But that game ends here!"), 1);
+    cps->state_manager.set({{"coefficient0_ring", "0"}, {"coefficient1_ring", "0"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Wherever I put the coefficients of the polynomial inside the complex plane,"), 2);
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_ring", "1"},
-        {"coefficient1_ring", "1"},
         {"coefficient0_opacity", "1"},
         {"coefficient1_opacity", "1"},
     });
     cs.render_microblock();
-    cps->state_manager.transition(MICRO, {
-        {"coefficient0_opacity", "1"},
-        {"coefficient1_opacity", "1"},
-    });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("the solutions may move around, but they don't jump out of the existing number system like they did before."), 2);
     cps->state_manager.transition(MICRO, {
+        {"coefficient0_opacity", "0"},
+        {"coefficient1_opacity", "0"},
         {"root0_opacity", "1"},
         {"root1_opacity", "1"},
     });
@@ -606,7 +604,6 @@ void render_video(){
     cs.render_microblock();
     shared_ptr<LatexScene> fta_title_3 = make_shared<LatexScene>("\\text{Theorem}", 1, .45, .25);
     cs.add_scene(fta_title_3, "fta_title_3", .82, .1);
-    cs.render_microblock();
     cs.render_microblock();
     shared_ptr<LatexScene> fta_title_4 = make_shared<LatexScene>("\\text{of}", 1, .12, .12);
     cs.add_scene(fta_title_4, "fta_title_4", .35, .3);
@@ -653,25 +650,45 @@ void render_video(){
     quadratic->begin_latex_transition(MICRO, "x^"+latex_color(0xffff0000, "2")+"-x-2");
     cs.stage_macroblock(FileBlock("The highest exponent is 2, so there's 2 roots."), 3);
     cs.render_microblock();
-    cs.fade_subscene(MICRO, "quadratic", 0);
     cps->state_manager.transition(MICRO, {
         {"root0_opacity", "1"},
         {"root1_opacity", "1"},
     });
     cs.render_microblock();
-    cs.remove_all_subscenes_except("cps");
     cps->state_manager.transition(MICRO, {
         {"root0_opacity", "0"},
         {"root1_opacity", "0"},
     });
     cs.render_microblock();
 
+    quadratic->begin_latex_transition(MICRO, "x^3+x^2-x-2");
+    cps->increment_degree();
+    cps->state_manager_roots_to_coefficients();
+    cps->state_manager.transition(MICRO, {
+        {"coefficient3_r", "1"},
+        {"coefficient3_i", "0"},
+        {"coefficient2_r", "1"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "-1"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "-2"},
+        {"coefficient0_i", "0"},
+    });
+    cs.stage_macroblock(FileBlock("With a cubic polynomial, there are 3 roots."), 2);
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "quadratic", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+
     cs.stage_macroblock(FileBlock("Well, unless we intentionally scrunch them on top of each other... but that's cheating."), 1);
+    cps->state_manager_coefficients_to_roots();
     cps->state_manager.transition(MICRO, {
         {"root0_r", "0"},
         {"root0_i", "0"},
         {"root1_r", "0"},
         {"root1_i", "0"},
+        {"root2_r", "-2"},
+        {"root2_i", "2"},
     });
     cs.render_microblock();
 
@@ -685,10 +702,32 @@ void render_video(){
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("We can actually identify the root's multiplicity from the graph. Can you see it?"), 1);
+    cs.stage_macroblock(FileBlock("You can actually identify the roots' multiplicities from the graph. Can you see it?"), 1);
+    cps->state_manager.transition(MICRO, {
+        {"ticks_opacity", "1"},
+    });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Tracing around the root, we see the colors blue-green-red-blue-green-red..."), 1);
+    cs.stage_macroblock(FileBlock("Tracing around this normal root, we see the colors blue-green-red."), 1);
+    cps->state_manager.transition(MACRO, {
+        {"center_x", "-2"},
+        {"center_y", "2"},
+        {"zoom", "1"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Tracing around the multiplicity 2 root, we see the colors blue-green-red-blue-green-red."), 1);
+    cps->state_manager.transition(MACRO, {
+        {"center_x", "0"},
+        {"center_y", "0"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("The color wheel is duplicated!"), 1);
+    cps->state_manager.transition(MICRO, {
+        {"zoom", "0.2"},
+        {"ticks_opacity", "0"},
+    });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Plotting the function but evaluated at this point,"), 1);

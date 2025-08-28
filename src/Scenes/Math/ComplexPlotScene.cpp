@@ -27,7 +27,7 @@ public:
         for(string type : {"coefficient", "root"})
             for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
                 for(string ri : {"r", "i", "opacity"})
-                    state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity" && num < degree) ? "1" : "0");
+                    state_manager.set(type + to_string(num) + "_" + ri, (type == "coefficient" && ri == "opacity" && num < degree) ? "1" : "0");
                 if(type == "coefficient")
                     state_manager.set(type + to_string(num) + "_ring", "0");
             }
