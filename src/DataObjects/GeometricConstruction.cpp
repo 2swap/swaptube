@@ -15,7 +15,7 @@ class GeometricPoint : public GeometricItem {
 public:
     glm::vec2 position;
     float width_multiplier; // For rendering size
-    GeometricPoint(glm::vec2 pos, string l = "", float wm = 1.0f, bool u_s = false) : GeometricItem(l, u_s), position(pos), width_multiplier(1.0f) {}
+    GeometricPoint(glm::vec2 pos, string l = "", float wm = 1.0f, bool u_s = false) : GeometricItem(l, u_s), position(pos), width_multiplier(wm) {}
 };
 
 class GeometricLine : public GeometricItem {

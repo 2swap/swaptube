@@ -206,7 +206,7 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
-    cps->state_manager.transition(MICRO, {{"ticks_opacity", "0"}, {"zoom", ".2"}});
+    cps->state_manager.transition(MICRO, {{"ticks_opacity", "0"}});
     cs.render_microblock();
 
     cs.fade_subscene(MICRO, "ls2", 1);
@@ -215,14 +215,14 @@ void render_video(){
 
     cps->coefficients_to_roots(); // Just to be safe
     cs.stage_macroblock(FileBlock("For each pixel on the screen, we can pass it into the polynomial, and see what comes out..."), 4);
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "in", .7, true));
     cps->state_manager.set({
         {"point_in_x", "0"},
-        {"point_in_y", "-1"},
+        {"point_in_y", "1"},
     });
     cs.render_microblock();
     cps->construction.clear();
     cps->state_manager.set("geometry_opacity", "1");
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "in", .7, true));
     cs.render_microblock();
     ls2->begin_latex_transition(MICRO, "(" + latex_color(0xffff0000, "-i")+"-r_1)(" + latex_color(0xffff0000, "-i")+"-r_2)(" + latex_color(0xffff0000, "-i")+"-r_3)");
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "out", .7, true));
@@ -243,8 +243,8 @@ void render_video(){
 
     cs.stage_macroblock(SilenceBlock(3), 1);
     cps->state_manager.transition(MICRO, {
-        {"point_in_x", "3 <t> * sin 2 *"},
-        {"point_in_y", "3 <t> * sin 2 *"},
+        {"point_in_x", "<t> * sin 2 *"},
+        {"point_in_y", "<t> * sin 2 *"},
     });
     cs.render_microblock();
 
@@ -358,13 +358,16 @@ void render_video(){
     cs.stage_macroblock(FileBlock("In such a world, there's a big problem..."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("There are equations with no solution, like x+2=0."), 1);
-    shared_ptr<LatexScene> impossible = make_shared<LatexScene>("x+2=0", .5, 1, .4);
+    cs.stage_macroblock(FileBlock("There are equations with no solution, like 2x+4=0."), 1);
+    shared_ptr<LatexScene> impossible = make_shared<LatexScene>("2x+4=0", .5, 1, .4);
     cs.add_scene_fade_in(MICRO, impossible, "impossible", .5, .7);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("There's nothing we can write here for x that would make the left equal zero."), 1);
-    impossible->begin_latex_transition(MACRO, latex_color(0xffff0000, "x")+"+2=0");
+    cs.stage_macroblock(FileBlock("We can write this equation, since 2, 4, and 0 are in our number system."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("However, there's nothing we can write here for x that would make the left equal zero."), 1);
+    impossible->begin_latex_transition(MACRO, "2"+latex_color(0xffff0000, "x")+"+4=0");
     cps->roots_to_coefficients();
     cps->state_manager.transition(MICRO, {
         {"coefficient3_r", "0.000001"},
@@ -373,10 +376,10 @@ void render_video(){
         {"coefficient2_r", "0.000001"},
         {"coefficient2_i", "0"},
         {"coefficient2_opacity", "0"},
-        {"coefficient1_r", "1"},
+        {"coefficient1_r", "2"},
         {"coefficient1_i", "0"},
         {"coefficient1_opacity", "1"},
-        {"coefficient0_r", "2"},
+        {"coefficient0_r", "4"},
         {"coefficient0_i", "0"},
         {"coefficient0_opacity", "1"},
         {"geometry_opacity", ".15"},
@@ -385,7 +388,7 @@ void render_video(){
     cps->decrement_degree();
     cps->decrement_degree();
 
-    cs.stage_macroblock(FileBlock("If I plot x+2, the coefficients land on numbers which exist in our number system,"), 4);
+    cs.stage_macroblock(FileBlock("The coefficients land on numbers which exist in our number system,"), 4);
     cps->state_manager.transition(MICRO, {{"coefficient0_ring", "1"}, {"coefficient1_ring", "1"}});
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {{"coefficient0_ring", "0"}, {"coefficient1_ring", "0"}});
@@ -395,10 +398,11 @@ void render_video(){
     cps->state_manager.transition(MICRO, {{"coefficient0_ring", "0"}, {"coefficient1_ring", "0"}});
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("but the solution to the equation is -2... it lands outside of our number system."), 4);
+    cs.stage_macroblock(FileBlock("but the solution to the equation is -2... which we said doesn't exist!"), 4);
+    cps->state_manager.transition(MACRO, "geometry_opacity", ".4");
     cps->state_manager.transition(MICRO, "root0_opacity", "1");
     cs.render_microblock();
-    impossible->begin_latex_transition(MICRO, latex_color(0xff00ff00, "-2")+"+2=0");
+    impossible->begin_latex_transition(MICRO, latex_color(0xff00ff00, "2(-2)")+"+4=0");
     cps->state_manager.transition(MICRO, "root0_opacity", "0");
     cs.render_microblock();
     cps->state_manager.transition(MICRO, "root0_opacity", "1");
@@ -412,6 +416,10 @@ void render_video(){
     cs.fade_subscene(MICRO, "impossible", 0);
     cs.render_microblock();
 
+    cps->state_manager.transition(MICRO, {
+        {"coefficient1_r", "1"},
+        {"coefficient1_i", "0"},
+    });
     cs.stage_macroblock(CompositeBlock(FileBlock("as well as the other negatives."), SilenceBlock(2)), 6);
     for(int x = -1; x >= -4; x--) {
         if(x == -2) continue; // already added
