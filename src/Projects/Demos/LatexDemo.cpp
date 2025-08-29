@@ -1,59 +1,65 @@
-using namespace std;
-#include <string>
-const string project_name = "LatexDemo";
-#include "../io/PathManager.cpp"
-
-const int width_base = 640;
-const int height_base = 360;
-const int mult = 2;
-
-// PROJECT GLOBALS
-const int VIDEO_WIDTH = width_base * mult;
-const int VIDEO_HEIGHT = height_base * mult;
-const int VIDEO_FRAMERATE = 30;
-#include "../io/writer.cpp"
-
 #include "../Scenes/Media/LatexScene.cpp"
-#include "../misc/Timer.cpp"
+#include "../Scenes/Common/CompositeScene.cpp"
+
 void render_video(){
-    PRINT_TO_TERMINAL = false;
+    /*
     LatexScene latex(      "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline \\end{tabular}", 0.5);
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline \\end{tabular}");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline \\end{tabular}");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline\\end{tabular}");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline \\end{tabular}");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline \\end{tabular}");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline ... & ... \\\\\\\\ \\hline \\text{Total} & 4,531,985,219,092 \\\\\\\\ \\hline \\end{tabular}");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.stage_macroblock_and_render(AudioSegment(1));
-}
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    latex.begin_latex_transition(MICRO, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline \\end{tabular}");
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    latex.begin_latex_transition(MICRO, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline \\end{tabular}");
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    latex.begin_latex_transition(MICRO, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline\\end{tabular}");
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    latex.begin_latex_transition(MICRO, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline \\end{tabular}");
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    latex.begin_latex_transition(MICRO, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline \\end{tabular}");
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    latex.begin_latex_transition(MICRO, "\\begin{tabular}{|c|c|} \\hline \\textbf{Depth} & \\textbf{Nodes} \\\\\\\\ \\hline 0 & 1 \\\\\\\\ \\hline 1 & 7 \\\\\\\\ \\hline 2 & 49 \\\\\\\\ \\hline 3 & 238 \\\\\\\\ \\hline 4 & 1120 \\\\\\\\ \\hline ... & ... \\\\\\\\ \\hline \\text{Total} & 4,531,985,219,092 \\\\\\\\ \\hline \\end{tabular}");
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    latex.stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
+    */
 
-void render_latex_demo(){
-    PRINT_TO_TERMINAL = false;
-    
-    // Initial LaTeX content: Introduction to LaTeX
-    LatexScene latex("abc", 0.5);
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("a=bc");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("a=\\frac{b}{c}");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.begin_latex_transition("abcdef");
-    latex.stage_macroblock_and_render(AudioSegment(1));
-    latex.stage_macroblock_and_render(AudioSegment(1));
-}
+    shared_ptr<LatexScene> latex = make_shared<LatexScene>("abc", 0.5);
+    latex->stage_macroblock(SilenceBlock(2), 2);
+    latex->render_microblock();
+    latex->render_microblock();
 
-int main() {
-    Timer timer;
-    //render_latex_demo();
-    render_video();
-    return 0;
+    latex->begin_latex_transition(MICRO, "a=bc");
+    latex->stage_macroblock(SilenceBlock(2), 2);
+    latex->render_microblock();
+    latex->render_microblock();
+
+    latex->begin_latex_transition(MICRO, "a=\\frac{b}{c}");
+    latex->stage_macroblock(SilenceBlock(2), 2);
+    latex->render_microblock();
+    latex->render_microblock();
+
+    latex->begin_latex_transition(MICRO, "abcdef");
+    latex->stage_macroblock(SilenceBlock(2), 2);
+    latex->render_microblock();
+    latex->render_microblock();
+
+    latex->jump_latex("jumped");
+    latex->stage_macroblock(SilenceBlock(2), 2);
+    latex->render_microblock();
+    latex->render_microblock();
+
+    CompositeScene cs;
+    cs.add_scene(latex, "latex");
+
+    latex->jump_latex("jumped2");
+    cs.stage_macroblock(SilenceBlock(2), 1);
+    cs.render_microblock();
+    latex->jump_latex("jumped3");
+    cs.stage_macroblock(SilenceBlock(2), 1);
+    cs.render_microblock();
 }

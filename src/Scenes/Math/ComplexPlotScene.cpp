@@ -40,7 +40,7 @@ public:
     void decrement_degree() {
         update_state();
         if(state["roots_or_coefficients_control"] != 1) {
-            state_manager_roots_to_coefficients();
+            roots_to_coefficients();
         }
 
         if(degree <= 1) throw runtime_error("Cannot decrement degree below 1.");
@@ -59,7 +59,7 @@ public:
     void increment_degree() {
         update_state();
         if(state["roots_or_coefficients_control"] != 1) {
-            state_manager_roots_to_coefficients();
+            roots_to_coefficients();
         }
 
         degree++;
@@ -74,7 +74,7 @@ public:
         update_state();
     }
 
-    void state_manager_roots_to_coefficients(){
+    void roots_to_coefficients(){
         update_state();
 
         // If we are already in coefficients mode, do nothing
@@ -91,7 +91,7 @@ public:
         state_manager.set({{"roots_or_coefficients_control", "1"}});
     }
 
-    void state_manager_coefficients_to_roots(){
+    void coefficients_to_roots(){
         update_state();
 
         // If we are already in roots mode, do nothing

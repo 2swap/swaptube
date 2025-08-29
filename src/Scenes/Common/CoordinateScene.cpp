@@ -98,7 +98,9 @@ public:
             geometry.arc(center_pixel.x, center_pixel.y, a.radius, a.start_angle, a.end_angle, construction_color, 1, line_thickness);
         }*/
         for(const GeometricPoint& p : construction.points) {
-            const glm::vec2 position_pixel = point_to_pixel(p.position);
+            glm::vec2 position = p.position;
+            if(p.use_state) position = glm::vec2(state["point_"+p.label+"_x"], state["point_"+p.label+"_y"]);
+            const glm::vec2 position_pixel = point_to_pixel(position);
             double radius_pop = line_thickness * p.width_multiplier * 10 * bounce;
             double radius = line_thickness * p.width_multiplier * 2;
             if(!p.old) {
@@ -167,6 +169,12 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "microblock_fraction", "geometry_opacity"};
+        for(const GeometricPoint& p : construction.points) {
+            if(p.use_state) {
+                sq.insert("point_"+p.label+"_x");
+                sq.insert("point_"+p.label+"_y");
+            }
+        }
         return sq;
     }
 

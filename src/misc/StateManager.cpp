@@ -186,9 +186,9 @@ public:
         last_compute_order.clear();
         variables.erase(variable);
     }
-    void remove(const unordered_map<string, string>& equations) {
-        for(auto it = equations.begin(); it != equations.end(); it++){
-            remove(it->first);
+    void remove(const unordered_set<string>& equations) {
+        for(const string& varname : equations){
+            remove(varname);
         }
     }
 

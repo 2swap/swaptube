@@ -6,23 +6,23 @@
 class GeometricItem {
 public:
     string label;
+    bool use_state;
     bool old;
-    GeometricItem(string l = "") : label(l), old(false) {}
+    GeometricItem(string l = "", bool u_s = false) : label(l), use_state(u_s), old(false) {}
 };
 
 class GeometricPoint : public GeometricItem {
 public:
     glm::vec2 position;
     float width_multiplier; // For rendering size
-    GeometricPoint(glm::vec2 pos, string l) : GeometricItem(l), position(pos), width_multiplier(1.0f) {}
-    GeometricPoint(glm::vec2 pos, string l, float wm) : GeometricItem(l), position(pos), width_multiplier(wm) {}
+    GeometricPoint(glm::vec2 pos, string l = "", float wm = 1.0f, bool u_s = false) : GeometricItem(l, u_s), position(pos), width_multiplier(1.0f) {}
 };
 
 class GeometricLine : public GeometricItem {
 public:
     glm::vec2 start;
     glm::vec2 end;
-    GeometricLine(glm::vec2 s, glm::vec2 e) : GeometricItem(""), start(s), end(e) {}
+    GeometricLine(glm::vec2 s, glm::vec2 e, string l = "", bool u_s = false) : GeometricItem(l, u_s), start(s), end(e) {}
 };
 
 class GeometricArc : public GeometricItem {
@@ -31,7 +31,7 @@ public:
     double start_angle;
     double end_angle;
     double radius;
-    GeometricArc(glm::vec2 c, double sa, double ea, double r) : GeometricItem(""), center(c), start_angle(sa), end_angle(ea), radius(r) {}
+    GeometricArc(glm::vec2 c, double sa, double ea, double r, string l = "", bool u_s = false) : GeometricItem(l, u_s), center(c), start_angle(sa), end_angle(ea), radius(r) {}
 };
 
 class GeometricConstruction : public DataObject {
