@@ -124,6 +124,9 @@ bool ValidateC4Graph(Graph& graph, bool try_to_fix = true) {
     std::chrono::duration<double> elapsed_seconds = end_time - start_time;
 
     cout << "Validation result: " << to_string(num_invalid) << " invalid nodes found." << endl;
-    cout << "Validation took " << elapsed_seconds.count() << " seconds." << endl;
+    double elapsed = elapsed_seconds.count();
+    int minutes = floor(elapsed / 60);
+    double seconds = elapsed - minutes * 60;
+    cout << "Validation completed in " << minutes << "m" << seconds << "s" << endl;
     return num_invalid == 0;
 }

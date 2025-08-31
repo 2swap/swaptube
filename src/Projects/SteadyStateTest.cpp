@@ -11,17 +11,20 @@ void render_video() {
         CompositeScene cs;
 
         Graph g;
-        string variation = "44444666622222";
+        string variation = "4363756566533242122344";
+        if(variation.size()%2 != 0) throw runtime_error("Variation must be even length");
         C4Board board(variation);
         board.print();
-        SteadyState ss(array<string, 6>{" @|++@-",
-                                        "  | +!-",
-                                        "  | + -",
-                                        "  = + -",
-                                        "  = + -",
-                                        "  = + -",});
-        ss.print();
-        cout << "Validated? " << ss.validate(board, true) << endl;
+        shared_ptr<SteadyState> ss = modify_child_suggestion(
+           make_shared<SteadyState>(array<string, 6>{"  @@= |",
+                                                     "   !- |",
+                                                     "    | |",
+                                                     "      |",
+                                                     "+     -",
+                                                     "       ",}), board);
+
+        ss->print();
+        cout << "Validated? " << ss->validate(board, true) << endl;
 
         /*
         shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(&g, false, variation, TRIM_STEADY_STATES);
