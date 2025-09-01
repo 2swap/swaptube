@@ -233,6 +233,25 @@ void C4Board::add_all_winning_fhourstones(unordered_set<GenericBoard*>& neighbor
     insert_sorted_children_by_min_hash(children, neighbors);
 }
 
+void C4Board::add_random_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
+    cout << "Adding random winning fhourstones for " << representation << endl;
+    vector<GenericBoard*> children;
+
+    int iter_count = 0;
+    for(int i = 1; i < 8; i++) {
+        if(!is_legal(i)) continue;
+        C4Board moved = child(i);
+        int work = -1;
+        if (moved.who_is_winning(work) == RED) {
+            children.push_back(new C4Board(moved));
+            break;
+        }
+        if(iter_count > 1000) throw runtime_error("No winning moves found after 1000 tries! " + representation);
+    }
+
+    insert_sorted_children_by_min_hash(children, neighbors);
+}
+
 int C4Board::get_instant_win() const{
     for (int x = 1; x <= C4_WIDTH; ++x){
         if(!is_legal(x)) continue;
@@ -583,6 +602,12 @@ unordered_set<GenericBoard*> C4Board::get_children(){
             break;
         case FULL:
             add_all_legal_children(neighbors);
+            break;
+        case NAIVE_WEAK:
+            if(is_reds_turn())
+                add_random_winning_fhourstones(neighbors);
+            else
+                add_all_legal_children(neighbors);
             break;
         case UNION_WEAK:
             add_all_winning_fhourstones(neighbors);
