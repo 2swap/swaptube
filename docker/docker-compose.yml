@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  swaptube:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: swaptube-dev
+    volumes:
+      # Mount source code for development
+      - ..:/workspace/swaptube
+      # Mount output directory to host for easy access to generated videos
+      - ../out:/workspace/swaptube/out
+      # Mount media directory for input files
+      - ../media:/workspace/swaptube/media
+      # Mount build directory to persist build artifacts
+      - swaptube-build:/workspace/swaptube/build
+    environment:
+      # Set display for GUI applications if needed
+      - DISPLAY=${DISPLAY:-:0}
+      # CUDA support
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    # Enable GPU support if available
+    runtime: nvidia
+    # Keep container running for development
+    tty: true
+    stdin_open: true
+    working_dir: /workspace/swaptube
+
+  # Optional: Separate service for production builds
+  swaptube-build:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: swaptube-build
+    volumes:
+      - ..:/workspace/swaptube:ro  # Read-only source
+      - ../out:/workspace/swaptube/out
+      - ../media:/workspace/swaptube/media:ro  # Read-only media
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    runtime: nvidia
+    working_dir: /workspace/swaptube
+    # Override command for one-off builds
+    command: ["tail", "-f", "/dev/null"]
+
+volumes:
+  swaptube-build:
+    driver: local
