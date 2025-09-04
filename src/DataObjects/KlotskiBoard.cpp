@@ -258,6 +258,7 @@ KlotskiBoard klotski_solution     (4, 5, "acehacehfgdd.bbi.bbj"                ,
 //KlotskiBoard apk           (4, 4, "abccefii.gii.ghh"                    , false);
 KlotskiBoard apk           (4, 4, "cc.agiibgiiefhh."                    , false);
 KlotskiBoard mathgames_12_13_04(4, 4, "..a.bbaa.cd..cdd"                    , false);
+KlotskiBoard mathgames_12_13_04_nook(6, 6, "eeeeeee..a.eebbaaee.cd.ee.cddeeee.ee", false);
 KlotskiBoard euler766_easy (4, 3, "aab.acd.efgh"                        , false);
 
 //gpt
