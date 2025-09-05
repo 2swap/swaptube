@@ -168,7 +168,14 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "microblock_fraction", "geometry_opacity"};
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "geometry_opacity"};
+        // If any construction is not old, we need microblock_fraction
+        for(const GeometricLine& l : construction.lines) {
+            if(!l.old) {
+                sq.insert("microblock_fraction");
+                break;
+            }
+        }
         for(const GeometricPoint& p : construction.points) {
             if(p.use_state) {
                 sq.insert("point_"+p.label+"_x");

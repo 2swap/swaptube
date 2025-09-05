@@ -19,6 +19,38 @@ extern "C" void color_complex_polynomial(
     float dot_radius
 );
 
+void populate_roots(const vector<complex<float>>& coefficients, vector<complex<float>>& roots) {
+    if(roots.size() > 0) throw runtime_error("Roots vector must be empty in populate_roots. It contained " + to_string(roots.size()) + " elements.");
+    int n = coefficients.size() - 1;
+
+    // Create the companion matrix
+    MatrixXcd companion_matrix = MatrixXcd::Zero(n, n);
+    for (int i = 0; i < n; ++i) {
+        companion_matrix(i, n - 1) = -coefficients[i] / coefficients[n];
+        if (i < n - 1) {
+            companion_matrix(i + 1, i) = complex<float>(1, 0);
+        }
+    }
+
+    // Compute the eigenvalues (roots)
+    ComplexEigenSolver<MatrixXcd> solver(companion_matrix);
+    if (solver.info() != Success) {
+        int i = 0;
+        for(complex<float> c : coefficients) {
+            cout << "Coefficient " << i << ": " << c << endl;
+            i++;
+        }
+        throw runtime_error("Eigenvalue computation did not converge.");
+    }
+    VectorXcd eigenvalues = solver.eigenvalues();
+
+    // Store the roots
+    roots.reserve(n);
+    for (int i = 0; i < n; ++i) {
+        roots.push_back(complex<float>(eigenvalues[i].real(), eigenvalues[i].imag()));
+    }
+}
+
 class ComplexPlotScene : public CoordinateScene {
 public:
     int degree;
@@ -214,34 +246,7 @@ public:
             }
         } else {
             vector<complex<float>> coefficients = get_coefficients();
-            int n = coefficients.size() - 1;
-
-            // Create the companion matrix
-            MatrixXcd companion_matrix = MatrixXcd::Zero(n, n);
-            for (int i = 0; i < n; ++i) {
-                companion_matrix(i, n - 1) = -coefficients[i] / coefficients[n];
-                if (i < n - 1) {
-                    companion_matrix(i + 1, i) = complex<float>(1, 0);
-                }
-            }
-
-            // Compute the eigenvalues (roots)
-            ComplexEigenSolver<MatrixXcd> solver(companion_matrix);
-            if (solver.info() != Success) {
-                int i = 0;
-                for(complex<float> c : coefficients) {
-                    cout << "Coefficient " << i << ": " << c << endl;
-                    i++;
-                }
-                throw runtime_error("Eigenvalue computation did not converge.");
-            }
-            VectorXcd eigenvalues = solver.eigenvalues();
-
-            // Store the roots
-            roots.reserve(n);
-            for (int i = 0; i < n; ++i) {
-                roots.push_back(complex<float>(eigenvalues[i].real(), eigenvalues[i].imag()));
-            }
+            populate_roots(coefficients, roots);
         }
         return roots;
     }

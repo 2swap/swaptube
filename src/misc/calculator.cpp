@@ -75,6 +75,7 @@ double calculator(const string& expression) {
         {"^"         , {[](vector<double>& operands) { return pow(operands[0], operands[1]); }, 2}},
         {"sin"       , {[](vector<double>& operands) { return sin(operands[0]); }, 1}},
         {"cos"       , {[](vector<double>& operands) { return cos(operands[0]); }, 1}},
+        {"floor"     , {[](vector<double>& operands) { return floor(operands[0]); }, 1}},
         {"log"       , {[](vector<double>& operands) { return log(operands[0]); }, 1}},
         {"floor"     , {[](vector<double>& operands) { return floor(operands[0]); }, 1}},
         {"pi"        , {[](vector<double>& operands) { return M_PI; }, 0}},

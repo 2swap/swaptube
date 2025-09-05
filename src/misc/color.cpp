@@ -67,6 +67,31 @@ int RGBtoOKLAB(int rgb)
     );
 }
 
+float linear_srgb_to_srgb(float x) {
+    //return x;
+	if (x >= 0.0031308)
+		return 1.055*pow(x, 1.0/2.4) - 0.055;
+	return 12.92 * x;
+}
+
+int OKLABtoRGB(int alpha, float L, float a, float b)
+{
+    float l_ = L + 0.3963377774f * a + 0.2158037573f * b;
+    float m_ = L - 0.1055613458f * a - 0.0638541728f * b;
+    float s_ = L - 0.0894841775f * a - 1.2914855480f * b;
+
+    float l = l_*l_*l_;
+    float m = m_*m_*m_;
+    float s = s_*s_*s_;
+
+    return argb(
+        alpha,
+		256*linear_srgb_to_srgb(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s),
+		256*linear_srgb_to_srgb(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s),
+		256*linear_srgb_to_srgb(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s)
+    );
+}
+/*
 int OKLABtoRGB(int oklab)
 {
     int L = getr(oklab);
@@ -87,6 +112,7 @@ int OKLABtoRGB(int oklab)
 		-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s
     );
 }
+*/
 
 // Convert RGB to YUV
 int RGBtoYUV(const int rgb) {
@@ -125,6 +151,7 @@ int YUVtoRGB(const int yuv) {
 }
 
 // Convert HSV to RGB
+// h, s, v are in the range [0, 1]
 int HSVtoRGB(double h, double s, double v, int alpha = 255) {
     double r_f, g_f, b_f;
 

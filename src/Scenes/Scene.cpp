@@ -43,6 +43,7 @@ public:
     virtual bool needs_redraw() const {
         bool state_change = check_if_state_changed();
         bool data_change = check_if_data_changed();
+        cout << (state_change ? "S" : ".") << (data_change ? "D" : ".") << flush;
         return !has_ever_rendered || state_change || data_change;
     }
 
@@ -52,15 +53,16 @@ public:
 
     void query(Pixels*& p) {
         cout << "(" << flush;
-        State temp_state = state;
-        if(!has_updated_since_last_query) update();
+        if(!has_updated_since_last_query){
+            last_state = state;
+            update();
+        }
         if(needs_redraw()){
             pix = Pixels(get_width(), get_height());
             cout << "|" << flush;
             has_ever_rendered = true;
             draw();
         }
-        last_state = temp_state;
         mark_data_unchanged();
         has_updated_since_last_query = false;
         p=&pix;
@@ -203,6 +205,6 @@ private:
         remaining_macroblock_frames--;
         global_state["frame_number"]++;
         //GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
-        cout << "]" << flush;
+        cout << "]" << endl;
     }
 };

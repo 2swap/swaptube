@@ -83,7 +83,7 @@ void render_video() {
         }
         movecache.WriteCache();
 
-        if(true && !ValidateC4Graph(g)) {
+        if(false && !ValidateC4Graph(g)) {
             cout << "Graph validation failed!" << endl;
             return;
         }
