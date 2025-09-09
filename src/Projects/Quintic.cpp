@@ -1,5 +1,6 @@
 #include "../Scenes/Math/ComplexPlotScene.cpp"
 #include "../Scenes/Math/RealFunctionScene.cpp"
+#include "../Scenes/Math/RootFractalScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
@@ -999,7 +1000,115 @@ void render_video(){
     abc->begin_latex_transition(MICRO, "\\begin{tabular}{cc} a=2+i & r_1=? \\\\\\\\ b=-i & r_2=? \\\\\\\\ c=1.5 & r_3=? \\end{tabular}");
     cs.render_microblock();
 
+    cs.stage_macroblock(FileBlock("Before I explain this problem further,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("allow me to illustrate its complexities."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Let's take the simplest case imaginable- a polynomial with coefficients that are only zero or one."), 2);
+    abc->begin_latex_transition(MICRO, "\\begin{tabular}{cc} a=1 & r_1=? \\\\\\\\ b=0 & r_2=? \\\\\\\\ c=1 & r_3=? \\end{tabular}");
+    cs.render_microblock();
+    cps->roots_to_coefficients();
+    cps->state_manager.transition(MICRO, {
+        {"coefficient2_r", "1"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "0"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "1"},
+        {"coefficient0_i", "0"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Of course, there are other ways we could pick the 0s and 1s."), 1);
+    abc->begin_latex_transition(MICRO, "\\begin{tabular}{cc} a=1 & r_1=? \\\\\\\\ b=1 & r_2=? \\\\\\\\ c=0 & r_3=? \\end{tabular}");
+    cps->state_manager.transition(MICRO, {
+        {"coefficient2_r", "1"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "1"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "0"},
+        {"coefficient0_i", "0"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
     cs.fade_subscene(MICRO, "abc", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+
+    cs.stage_macroblock(FileBlock("With a quadratic polynomial, there are exactly 4 ways."), 4);
+    for(int bit = 0; bit < 4; bit++) {
+        string b = (bit&2) ? "1" : "0";
+        string c = (bit&1) ? "1" : "0";
+        abc->begin_latex_transition(MICRO, "\\begin{tabular}{cc} a=1 & r_1=? \\\\\\\\ b="+b+" & r_2=? \\\\\\\\ c="+c+" & r_3=? \\end{tabular}");
+        cps->state_manager.transition(MICRO, {
+            {"coefficient2_r", "1"},
+            {"coefficient2_i", "0"},
+            {"coefficient1_r", b},
+            {"coefficient1_i", "0"},
+            {"coefficient0_r", c},
+            {"coefficient0_i", "0"},
+        });
+        cs.render_microblock();
+    }
+
+    shared_ptr<RootFractalScene> fracs = make_shared<RootFractalScene>();
+    fracs->state_manager.set({
+        {"terms", "3"},
+    });
+    cs.add_scene(fracs, "fracs", .5, .5, true);
+    cs.fade_subscene(MICRO, "cps", 0);
+    cs.stage_macroblock(FileBlock("Plotting all of their solutions at the same time..."), 1);
+    cs.render_microblock();
+    cs.remove_subscene("cps");
+
+    fracs->stage_macroblock(FileBlock("we get this shape."), 1);
+    fracs->render_microblock();
+
+    fracs->stage_macroblock(FileBlock("Cranking it up to degree 3,"), 1);
+    fracs->state_manager.transition(MICRO, {
+        {"terms", "4"}, // degree 3 means 4 terms
+    });
+    fracs->render_microblock();
+
+    fracs->stage_macroblock(FileBlock("degree 4,"), 1);
+    fracs->state_manager.transition(MICRO, {
+        {"terms", "5"},
+    });
+    fracs->render_microblock();
+
+    fracs->stage_macroblock(CompositeBlock(FileBlock("and even higher,"), SilenceBlock(6)), 5);
+    fracs->state_manager.transition(MACRO, {
+        {"dot_radius", ".5"},
+    });
+    int i = 6;
+    while(cs.microblocks_remaining()) {
+        fracs->state_manager.transition(MICRO, {
+            {"terms", to_string(i)},
+        });
+        i++;
+        fracs->render_microblock();
+    }
+
+    fracs->stage_macroblock(FileBlock("We let the coefficients be either 0 or 1,"), 1);
+    fracs->state_manager.transition(MICRO, {
+        {"coefficients_opacity", "1"},
+    });
+    fracs->render_microblock();
+
+    fracs->stage_macroblock(FileBlock("but what happens if we change those options?"), 1);
+    fracs->state_manager.transition(MICRO, {
+        {"", "1"},
+    });
+    fracs->render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.add_scene_fade_in(cps, "cps", .5, .5, true);
+    cs.fade_subscene(MICRO, "fracs", 0);
+    cs.render_microblock();
+    cs.remove_subscene("fracs");
+
     cs.stage_macroblock(FileBlock("Let's start off easy, with polynomials whose highest exponent is one."), 2);
     quadratic = make_shared<LatexScene>("x^"+latex_color(0xffff0000, "1")+"+1 = 0", .6, 1, .5);
     cs.add_scene_fade_in(MICRO, quadratic, "quadratic", .5, .2);
@@ -1020,7 +1129,6 @@ void render_video(){
     quadratic->begin_latex_transition(MICRO, "x+1=0");
     cs.render_microblock();
     cps->decrement_degree();
-    cs.remove_subscene("abc");
     cps->decrement_degree();
 
     cs.stage_macroblock(FileBlock("Now, just as a note- I have been fixing the leading coefficient as 1 for the whole video."), 1);

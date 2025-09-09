@@ -30,7 +30,7 @@ inline double geom_mean(double x, double y) { return sqrt(x*y); }
 inline int signum(double x) { return (x > 0) - (x < 0); }
 
 string float_to_pretty_string(const float value) {
-    if(abs(value) < 0.00000000001) return "0";
+    if(abs(value) < 0.0000001) return "0";
 
     // Convert float to string with a stream
     ostringstream oss;

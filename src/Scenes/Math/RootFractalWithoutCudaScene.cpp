@@ -23,8 +23,7 @@ public:
         int iter_count = 1 << terms; // 2^terms
         complex<float> coeff0(state["coefficient0_r"], state["coefficient0_i"]);
         complex<float> coeff1(state["coefficient1_r"], state["coefficient1_i"]);
-        float zoom = state["zoom"];
-        float radius = zoom * get_geom_mean_size() * state["dot_radius"] / 20;
+        float radius = state["zoom"] * get_geom_mean_size() * state["dot_radius"] / 20;
 
         for(int i = iter_count-1; i >= 0; i--){ // Reverse order to draw smaller polynomials on top
             if(state["degree_fixed"] > 0 && i < iter_count / 2) continue; // Skip polynomials with degree less than max

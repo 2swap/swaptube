@@ -102,16 +102,22 @@ __device__ void find_roots(const cuFloatComplex* coeffs_in, int degree, cuFloatC
     }
 }
 
-__global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatComplex c1, cuFloatComplex c2, int terms, float lx, float ty, float rx, float by) {
+__global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatComplex c1, cuFloatComplex c2, float terms, float lx, float ty, float rx, float by, float radius) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int total = 1 << terms; // total number of polynomials
-    int degree = terms - 1;
+    unsigned int ceil_terms = ceil(terms);
+    unsigned int floor_terms = floor(terms);
+    unsigned int total = 1 << ceil_terms; // total number of polynomials
 
     if (idx >= total) return;
+    if (idx >= total/2 && floor_terms != ceil_terms) {
+        float one_minus_frac = 1 - (terms - floor_terms);
+        float radius_multiplier = 1-one_minus_frac*one_minus_frac*one_minus_frac;
+        radius *= radius_multiplier;
+    }
 
     cuFloatComplex coeffs[20];
-    unsigned int color = 0xFF000000;
-    for (int i = 0; i < terms; i++) {
+    unsigned int color = 0xFF3f3f3f;
+    for (int i = 0; i < ceil_terms; i++) {
         bool bit = (idx >> i) & 1;
         coeffs[i] = bit ? c2 : c1;
         if(!bit) continue;
@@ -120,6 +126,16 @@ __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatC
         color_or >>= i%3 * 8;
         color |= color_or;
     }
+
+    // Find the degree, since the leading coefficients might be zero
+    int degree = -1;
+    for (int i = ceil_terms - 1; i >= 0; i--) {
+        if (cuCabsf(coeffs[i]) > 1e-9f) {
+            degree = i;
+            break;
+        }
+    }
+    if(degree < 1) return;
 
     cuFloatComplex roots[20];
     find_roots(coeffs, degree, roots);
@@ -131,7 +147,7 @@ __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatC
         int px = static_cast<int>(roundf(pixel.x));
         int py = static_cast<int>(roundf(pixel.y));
         if (px >= 0 && px < w && py >= 0 && py < h) {
-            device_fill_circle(px, py, 1, color, pixels, w, h);
+            device_gradient_circle(px, py, radius*2, color, pixels, w, h);
         }
     }
 }
@@ -142,11 +158,12 @@ extern "C" void draw_root_fractal(
     int h,
     complex<float> c1,
     complex<float> c2,
-    int terms,
+    float terms,
     float lx, float ty,
-    float rx, float by
+    float rx, float by,
+    float radius
 ) {
-    int total = 1 << terms;
+    int total = 1 << int(ceil(terms));
     unsigned int* d_pixels;
     cudaMalloc(&d_pixels, w * h * sizeof(unsigned int));
     cudaMemcpy(d_pixels, pixels, w * h * sizeof(unsigned int), cudaMemcpyHostToDevice);
@@ -157,7 +174,7 @@ extern "C" void draw_root_fractal(
     int threadsPerBlock = 256;
     int blocks = (total + threadsPerBlock - 1) / threadsPerBlock;
 
-    root_fractal_kernel<<<blocks, threadsPerBlock>>>(d_pixels, w, h, dc1, dc2, terms, lx, ty, rx, by);
+    root_fractal_kernel<<<blocks, threadsPerBlock>>>(d_pixels, w, h, dc1, dc2, terms, lx, ty, rx, by, radius);
     cudaDeviceSynchronize();
 
     cudaMemcpy(pixels, d_pixels, w * h * sizeof(unsigned int), cudaMemcpyDeviceToHost);

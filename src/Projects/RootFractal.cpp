@@ -5,7 +5,7 @@
 void render_video() {
     RootFractalScene rfs;
     CompositeScene cs;
-    rfs.state_manager.set({{"terms", "17"}});
+    rfs.state_manager.set({{"terms", "18"}, {"dot_radius", "0.2"}});
 
     rfs.stage_macroblock(SilenceBlock(30), 7);
     rfs.state_manager.transition(MICRO, {
