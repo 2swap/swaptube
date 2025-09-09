@@ -7,6 +7,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include "../Scenes/Common/ThreeDimensionStructs.cpp"
 #include "cuda_color.cu" // Contains overlay_pixel and set_pixel
+#include "cuda_graphics.cu" // Contains fill_circle
 
 __device__ void device_coordinate_to_pixel(
     const glm::vec3& coordinate,
@@ -26,16 +27,6 @@ __device__ void device_coordinate_to_pixel(
     float scale = (geom_mean_size * fov) / rotated.z;
     outx = scale * rotated.x + width * 0.5f;
     outy = scale * rotated.y + height * 0.5f;
-}
-
-__device__ void device_fill_circle(float cx, float cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
-    for (float dx = -r; dx < r; dx++) {
-        float sdx = dx*dx;
-        for (float dy = -r; dy < r; dy++) {
-            if (sdx + dy*dy < r*r)
-                device_atomic_overlay_pixel(cx + dx, cy + dy, col, opa, pixels, width, height);
-        }
-    }
 }
 
 __device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height) {

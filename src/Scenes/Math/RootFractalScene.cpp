@@ -5,6 +5,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
+extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, int n, float lx, float ty, float rx, float by);
+
 class RootFractalScene : public CoordinateScene {
 public:
     RootFractalScene(const float width = 1, const float height = 1) : CoordinateScene(width, height) {
@@ -15,38 +17,35 @@ public:
         state_manager.set("terms", "8");
         state_manager.set("floor_terms", "<terms> floor");
         state_manager.set("dot_radius", "1");
+        state_manager.set("degree_fixed", "1");
     }
 
     void draw() override {
-        cout << "Drawing RootFractalScene" << flush;
-        int terms = int(state["floor_terms"]);
-        int iter_count = 1 << terms; // 2^terms
-        complex<float> coeff0(state["coefficient0_r"], state["coefficient0_i"]);
-        complex<float> coeff1(state["coefficient1_r"], state["coefficient1_i"]);
-        float zoom = state["zoom"];
-        float radius = zoom * get_geom_mean_size() * state["dot_radius"] / 20;
+        int w = get_width();
+        int h = get_height();
+        complex<float> c0(state["coefficient0_r"], state["coefficient0_i"]);
+        complex<float> c1(state["coefficient1_r"], state["coefficient1_i"]);
+        int n = state["floor_terms"];
+        draw_root_fractal(pix.pixels.data(), w, h, c0, c1, n,
+            state["left_x"], state["top_y"],
+            state["right_x"], state["bottom_y"]
+        );
 
-        for(int i = iter_count-1; i >= 0; i--){ // Reverse order to draw smaller polynomials on top
-            vector<complex<float>> coefficients(terms);
-            vector<complex<float>> roots;
-            for(int bit = 0; bit < terms; bit++){
-                coefficients[bit] = (i & (1 << bit)) ? coeff1 : coeff0;
+        float gm = get_geom_mean_size() / 200;
+
+        // Draw coefficients
+        int i = 0;
+        for(complex<float> coeff : {c0, c1}) {
+            float letter_opa = 1; //lerp(1, clamp(0,abs(coeff)*2,1), state["hide_zero_coefficients"]);
+            //letter_opa *= state["coefficient"+to_string(i)+"_opacity"];
+            const glm::vec2 pixel(point_to_pixel(glm::vec2(coeff.real(), coeff.imag())));
+            if(letter_opa > 0.01) {
+                ScalingParams sp = ScalingParams(gm * 16, gm * 40);
+                Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
+                pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
             }
-            while(coefficients.size() > 0){
-                if(coefficients.back() == complex<float>(0,0)) coefficients.pop_back();
-                else break;
-            }
-            if(coefficients.size() < 2) continue; // Constant polynomials don't have roots
-            populate_roots(coefficients, roots);
-            int size = floor(log2(i)) + 2;
-            double rainbow = size/3.;
-            int color = OKLABtoRGB(255, .8, lerp(-.233888, .276216, cos(rainbow)/2.), lerp(-.311528, .198570, sin(rainbow)/2.));
-            for(const auto& root : roots){
-                const glm::vec2 pixel(point_to_pixel(glm::vec2(root.real(), root.imag())));
-                pix.fill_circle(pixel.x, pixel.y, 1 + radius / size, color);
-            }
+            i++;
         }
-
         CoordinateScene::draw();
     }
 
@@ -58,7 +57,11 @@ public:
         sq.insert("coefficient1_i");
         sq.insert("floor_terms");
         sq.insert("dot_radius");
-        sq.insert("zoom");
+        sq.insert("degree_fixed");
+        sq.insert("left_x");
+        sq.insert("top_y");
+        sq.insert("right_x");
+        sq.insert("bottom_y");
         return sq;
     }
 };

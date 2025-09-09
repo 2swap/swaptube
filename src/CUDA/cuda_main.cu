@@ -8,5 +8,7 @@
 #include "render_3d_points_lines.cu"
 #include "SurfaceRenderer.cu"
 #include "ComplexPolynomial.cu"
+#include "root_fractal.cu"
+#include "cuda_graphics.cu"
 //#include "Conway.cu"
 
