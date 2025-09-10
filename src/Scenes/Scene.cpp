@@ -89,6 +89,14 @@ public:
         if(FOR_REAL) {
             double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
             total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * FRAMERATE;
+
+            // Add blips for audio synchronization
+            double time = get_global_state("t");
+            AUDIO_WRITER.add_blip(time * SAMPLERATE, false);
+            double microblock_length_seconds = macroblock_length_seconds / expected_microblocks;
+            for(int i = 0; i < expected_microblocks; i++) {
+                AUDIO_WRITER.add_blip((time + i * microblock_length_seconds) * SAMPLERATE, true);
+            }
         }
     }
 
@@ -205,6 +213,6 @@ private:
         remaining_macroblock_frames--;
         global_state["frame_number"]++;
         //GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
-        cout << "]" << endl;
+        cout << "]" << flush;
     }
 };

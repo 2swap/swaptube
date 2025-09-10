@@ -71,9 +71,12 @@ public:
         map[key] = value;
     }
 
+    bool contains(const string& key) const {
+        return map.find(key) != map.end();
+    }
+
     const double& operator[](const string& key) const {
-        auto it = map.find(key);
-        if (it == map.end()) {
+        if (!contains(key)) {
             print();
             throw runtime_error("Invalid State Access: " + key);
         }
@@ -372,7 +375,7 @@ private:
     unordered_set<string> in_macroblock_transition;
 
     StateManager* parent = nullptr;
-    // When a state manager is "sujugated" to a parent, that means it
+    // When a state manager is "subjugated" to a parent, that means it
     // strictly defers to the parent's state without considering its
     // own variables first.
     bool subjugated = false;

@@ -1083,7 +1083,7 @@ void render_video(){
         {"dot_radius", ".5"},
     });
     int i = 6;
-    while(cs.microblocks_remaining()) {
+    while(fracs->microblocks_remaining()) {
         fracs->state_manager.transition(MICRO, {
             {"terms", to_string(i)},
         });
@@ -1099,12 +1099,44 @@ void render_video(){
 
     fracs->stage_macroblock(FileBlock("but what happens if we change those options?"), 1);
     fracs->state_manager.transition(MICRO, {
-        {"", "1"},
+        {"coefficient0_r", ".1"},
+        {"coefficient0_i", ".1"},
+    });
+    fracs->render_microblock();
+    fracs->stage_macroblock(SilenceBlock(30), 6);
+    fracs->state_manager.transition(MICRO, {
+        {"center_x", "-.5"},
+        {"center_y", ".5"},
+    });
+    fracs->render_microblock();
+    fracs->state_manager.transition(MICRO, {
+        {"zoom", "2"},
+    });
+    fracs->render_microblock();
+    fracs->state_manager.transition(MICRO, {
+        {"coefficient0_r", "<t> 8 / sin"},
+        {"coefficient0_i", "<t> 9 / sin"},
+    });
+    fracs->render_microblock();
+    fracs->state_manager.transition(MICRO, {
+        {"center_x", "0"},
+        {"center_y", "1"},
+    });
+    fracs->render_microblock();
+    fracs->state_manager.transition(MICRO, {
+        {"zoom", "4"},
+    });
+    fracs->render_microblock();
+    fracs->state_manager.begin_timer("spin");
+    fracs->state_manager.transition(MICRO, {
+        {"zoom", "1.5"},
+        {"center_x", "<spin> 20 / sin -1 *"},
+        {"center_y", "<spin> 20 / cos"},
     });
     fracs->render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
-    cs.add_scene_fade_in(cps, "cps", .5, .5, true);
+    cs.add_scene_fade_in(MICRO, cps, "cps", .5, .5, true);
     cs.fade_subscene(MICRO, "fracs", 0);
     cs.render_microblock();
     cs.remove_subscene("fracs");

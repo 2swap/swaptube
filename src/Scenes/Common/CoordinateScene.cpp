@@ -75,7 +75,9 @@ public:
         double gm = get_geom_mean_size();
         double line_thickness = gm/200.;
         int construction_color = OPAQUE_WHITE;
-        float microblock_fraction = state["microblock_fraction"];
+        float microblock_fraction = 0.5;
+        if(state.contains("microblock_fraction")) microblock_fraction = state["microblock_fraction"];
+
         float bounce = 1 - square(square(microblock_fraction - 1));
         float interp = smoother2(microblock_fraction);
 
@@ -101,9 +103,9 @@ public:
             glm::vec2 position = p.position;
             if(p.use_state) position = glm::vec2(state["point_"+p.label+"_x"], state["point_"+p.label+"_y"]);
             const glm::vec2 position_pixel = point_to_pixel(position);
-            double radius_pop = line_thickness * p.width_multiplier * 10 * bounce;
             double radius = line_thickness * p.width_multiplier * 2;
             if(!p.old) {
+                double radius_pop = line_thickness * p.width_multiplier * 10 * bounce;
                 radius = min(radius, radius_pop);
                 geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, construction_color, 1-interp);
             }
@@ -169,7 +171,12 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "geometry_opacity"};
-        // If any construction is not old, we need microblock_fraction
+        for(const GeometricPoint& p : construction.points) {
+            if(!p.old) {
+                sq.insert("microblock_fraction");
+                break;
+            }
+        }
         for(const GeometricLine& l : construction.lines) {
             if(!l.old) {
                 sq.insert("microblock_fraction");

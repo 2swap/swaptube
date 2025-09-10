@@ -37,16 +37,19 @@ private:
     AVCodecContext *audioOutputCodecContextMerged = nullptr;
     AVCodecContext *audioOutputCodecContextSFX = nullptr;
     AVCodecContext *audioOutputCodecContextVoice = nullptr;
+    AVCodecContext *audioOutputCodecContextBlips = nullptr;
 
     AVStream *audioStreamMerged = nullptr;
     AVStream *audioStreamSFX = nullptr;
     AVStream *audioStreamVoice = nullptr;
+    AVStream *audioStreamBlips = nullptr;
 
     AVFormatContext *fc = nullptr;
 
     // Interleaved buffers: layout [L0, R0, L1, R1, ...]
-    vector<sample_t> sample_buffer;
-    vector<sample_t> sfx_buffer;
+    vector<sample_t> sample_buffer; // Audio defined in macroblocks (usually voice)
+    vector<sample_t> sfx_buffer; // Per-scene sound effects
+    vector<sample_t> blips_buffer; // Single-sample blips for audio cues
 
     int sample_buffer_offset = 0; // The index in the sample_buffer at which the latest macroblock starts, since some samples from the last one may not have flushed entirely.
     int total_samples_processed = 0;
@@ -83,11 +86,11 @@ private:
         return length_in_seconds;
     }
 
-    // Encodes and writes audio for all three streams, returns the maximum length among them
     void encode_and_write_all() {
-        double lengthMerged = encode_and_write_audio(audioOutputCodecContextMerged, audioStreamMerged);
-        double lengthSFX = encode_and_write_audio(audioOutputCodecContextSFX, audioStreamSFX);
-        double lengthVoice = encode_and_write_audio(audioOutputCodecContextVoice, audioStreamVoice);
+        encode_and_write_audio(audioOutputCodecContextMerged, audioStreamMerged);
+        encode_and_write_audio(audioOutputCodecContextSFX, audioStreamSFX);
+        encode_and_write_audio(audioOutputCodecContextVoice, audioStreamVoice);
+        encode_and_write_audio(audioOutputCodecContextBlips, audioStreamBlips);
     }
 
 public:
@@ -142,6 +145,7 @@ public:
         setup_stream(fc, audioOutputCodecContextMerged, audioStreamMerged, "Merged");
         setup_stream(fc, audioOutputCodecContextSFX   , audioStreamSFX   , "SFX"   );
         setup_stream(fc, audioOutputCodecContextVoice , audioStreamVoice , "Voice" );
+        setup_stream(fc, audioOutputCodecContextBlips , audioStreamBlips , "Blips" );
         cout << "Audio streams setup complete." << endl;
     }
 
@@ -155,7 +159,7 @@ public:
         int sample_copy_end_frames = sample_copy_start_frames + numSamples;
 
         if(sample_copy_start_frames < 0)
-            throw runtime_error("Sample copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset));
+            throw runtime_error("Sfx copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset));
 
         int start_idx = sample_copy_start_frames * audio_channels;
         int end_idx = sample_copy_end_frames * audio_channels;
@@ -169,6 +173,25 @@ public:
             sfx_buffer[start_idx + 2 * i    ] +=  left_buffer[i];
             sfx_buffer[start_idx + 2 * i + 1] += right_buffer[i];
         }
+    }
+
+    void add_blip(int t, bool left_not_right) {
+        int sample_copy_start_frames = t - total_samples_processed + sample_buffer_offset;
+        int sample_copy_end_frames = sample_copy_start_frames + 1;
+
+        if(sample_copy_start_frames < 0)
+            throw runtime_error("Blip copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset));
+
+        int start_idx = sample_copy_start_frames * audio_channels;
+        int end_idx = sample_copy_end_frames * audio_channels;
+
+        // Ensure blips_buffer has enough capacity and add samples (convert floats to int32)
+        if (blips_buffer.size() < static_cast<size_t>(end_idx)) {
+            blips_buffer.resize(end_idx, 0); // Extend with silence
+        }
+
+        if(left_not_right) blips_buffer[start_idx    ] += 10000000; // Left
+        else               blips_buffer[start_idx + 1] += 10000000; // Right
     }
 
     double add_generated_audio(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer) {
@@ -327,23 +350,26 @@ public:
             }
 
             if(sample_buffer.size() % audio_channels != 0) throw runtime_error("Voice buffer interleaved size mismatch!");
-            if(sfx_buffer.size() % audio_channels != 0) throw runtime_error("SFX buffer interleaved size mismatch!");
-            if(sample_buffer.size() < frameSize * audio_channels * (last?1:2)) break;
+            if(   sfx_buffer.size() % audio_channels != 0) throw runtime_error(  "SFX buffer interleaved size mismatch!");
+            if( blips_buffer.size() % audio_channels != 0) throw runtime_error( "Blip buffer interleaved size mismatch!");
+            if(sample_buffer.size() < frameSize * audio_channels * (last?1:3)) break;
 
             for (int ch = 0; ch < audio_channels; ++ch) {
-                if (sfx_buffer.size() < sample_buffer.size()) {
-                    sfx_buffer.resize(sample_buffer.size(), 0); // Extend channel with silence (interleaved)
-                }
+                // Extend channel with silence (interleaved)
+                if (  sfx_buffer.size() < sample_buffer.size())   sfx_buffer.resize(sample_buffer.size(), 0);
+                if (blips_buffer.size() < sample_buffer.size()) blips_buffer.resize(sample_buffer.size(), 0);
             }
 
             AVFrame* frameMerged = av_frame_alloc();
             AVFrame* frameSFX = av_frame_alloc();
             AVFrame* frameVoice = av_frame_alloc();
+            AVFrame* frameBlips = av_frame_alloc();
 
-            if (!frameMerged || !frameSFX || !frameVoice) {
+            if (!frameMerged || !frameSFX || !frameVoice || !frameBlips) {
                 if(frameMerged) av_frame_free(&frameMerged);
                 if(frameSFX) av_frame_free(&frameSFX);
                 if(frameVoice) av_frame_free(&frameVoice);
+                if(frameBlips) av_frame_free(&frameBlips);
                 throw runtime_error("Frame allocation failed.");
             }
 
@@ -360,6 +386,7 @@ public:
                     av_frame_free(&frameMerged);
                     av_frame_free(&frameSFX);
                     av_frame_free(&frameVoice);
+                    av_frame_free(&frameBlips);
                     throw runtime_error("Error allocating audio frame buffer: " + string(av_err2str(ret)));
                 }
             };
@@ -367,17 +394,21 @@ public:
             setupFrame(frameMerged, audioOutputCodecContextMerged);
             setupFrame(frameSFX, audioOutputCodecContextSFX);
             setupFrame(frameVoice, audioOutputCodecContextVoice);
+            setupFrame(frameBlips, audioOutputCodecContextBlips);
 
             // Fill buffers (interleaved)
             int required_samples = frameSize * audio_channels;
             // Ensure bounds for `sample_buffer`, `sfx_buffer`, and `frame->data[ch]`
-            if (sample_buffer.size() < required_samples || sfx_buffer.size() < required_samples) {
+            if (sample_buffer.size() < required_samples ||
+                   sfx_buffer.size() < required_samples ||
+                 blips_buffer.size() < required_samples) {
                 throw runtime_error("Audio buffer size is smaller than the required frame size.");
             }
 
             sample_t* dstMerged = reinterpret_cast<sample_t*>(frameMerged->data[0]);
             sample_t* dstSFX = reinterpret_cast<sample_t*>(frameSFX->data[0]);
             sample_t* dstVoice = reinterpret_cast<sample_t*>(frameVoice->data[0]);
+            sample_t* dstBlips = reinterpret_cast<sample_t*>(frameBlips->data[0]);
 
             for (int i = 0; i < frameSize; ++i) {
                 int idxL = 2 * i;
@@ -387,6 +418,8 @@ public:
                 sample_t voice_right = sample_buffer[idxR];
                 sample_t sfx_left = sfx_buffer[idxL];
                 sample_t sfx_right = sfx_buffer[idxR];
+                sample_t blips_left = blips_buffer[idxL];
+                sample_t blips_right = blips_buffer[idxR];
 
                 dstMerged[idxL] = voice_left + sfx_left;
                 dstMerged[idxR] = voice_right+ sfx_right;
@@ -396,30 +429,38 @@ public:
 
                 dstVoice[idxL] = voice_left;
                 dstVoice[idxR] = voice_right;
+
+                dstBlips[idxL] = blips_left;
+                dstBlips[idxR] = blips_right;
             }
 
             frameMerged->pts = total_samples_processed;
             frameSFX  ->pts = total_samples_processed;
             frameVoice->pts = total_samples_processed;
+            frameBlips->pts = total_samples_processed;
 
             // Send frames to corresponding encoders
             int retMerged = avcodec_send_frame(audioOutputCodecContextMerged, frameMerged);
             int retSFX = avcodec_send_frame(audioOutputCodecContextSFX, frameSFX);
             int retVoice = avcodec_send_frame(audioOutputCodecContextVoice, frameVoice);
+            int retBlips = avcodec_send_frame(audioOutputCodecContextBlips, frameBlips);
 
             av_frame_free(&frameMerged);
             av_frame_free(&frameSFX);
             av_frame_free(&frameVoice);
+            av_frame_free(&frameBlips);
 
             if (retMerged < 0) throw runtime_error("Error sending merged frame to encoder.");
-            if (retSFX < 0) throw runtime_error("Error sending sfx frame to encoder.");
-            if (retVoice < 0) throw runtime_error("Error sending voice frame to encoder.");
+            if (retSFX    < 0) throw runtime_error("Error sending sfx frame to encoder.");
+            if (retVoice  < 0) throw runtime_error("Error sending voice frame to encoder.");
+            if (retBlips  < 0) throw runtime_error("Error sending blips frame to encoder.");
 
             encode_and_write_all();
 
             // Erase the samples used in this frame (interleaved count)
             sample_buffer.erase(sample_buffer.begin(), sample_buffer.begin() + required_samples);
                sfx_buffer.erase(   sfx_buffer.begin(),    sfx_buffer.begin() + required_samples);
+             blips_buffer.erase( blips_buffer.begin(),  blips_buffer.begin() + required_samples);
             total_samples_processed += frameSize;
         }
 
@@ -433,11 +474,13 @@ public:
         avcodec_send_frame(audioOutputCodecContextMerged, NULL);
         avcodec_send_frame(audioOutputCodecContextSFX, NULL);
         avcodec_send_frame(audioOutputCodecContextVoice, NULL);
+        avcodec_send_frame(audioOutputCodecContextBlips, NULL);
 
         encode_and_write_all();
 
         avcodec_free_context(&audioOutputCodecContextMerged);
         avcodec_free_context(&audioOutputCodecContextSFX);
         avcodec_free_context(&audioOutputCodecContextVoice);
+        avcodec_free_context(&audioOutputCodecContextBlips);
     }
 };
