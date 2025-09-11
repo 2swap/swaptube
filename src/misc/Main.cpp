@@ -15,8 +15,8 @@ static bool PRINT_TO_TERMINAL = true;
 const string project_name = PROJECT_NAME_MACRO;
 
 //const int VIDEO_BACKGROUND_COLOR = 0xff000020; // Lambda Blue
-//const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
-const int VIDEO_BACKGROUND_COLOR = 0xff000000; // Black
+const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
+//const int VIDEO_BACKGROUND_COLOR = 0xff000000; // Black
 
 bool FOR_REAL = !SMOKETEST;
 

@@ -5,7 +5,7 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
-extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius);
+extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity);
 
 class RootFractalScene : public CoordinateScene {
 public:
@@ -15,7 +15,6 @@ public:
         state_manager.set("coefficient1_r", "1");
         state_manager.set("coefficient1_i", "0");
         state_manager.set("terms", "8");
-        state_manager.set("dot_radius", "1");
         state_manager.set("degree_fixed", "1");
         state_manager.set("coefficients_opacity", "1");
     }
@@ -27,11 +26,13 @@ public:
         complex<float> c1(state["coefficient1_r"], state["coefficient1_i"]);
         // Take the ceiling of the degree to ensure it's an integer
         float n = state["terms"];
-        float radius = state["zoom"] * get_geom_mean_size() * state["dot_radius"] / 60;
+        float radius = get_geom_mean_size() * pow(state["zoom"]*5, .25) / 150;
+        float opacity = 1-1/(2*state["zoom"]+1);
         draw_root_fractal(pix.pixels.data(), w, h,
             c0, c1, n,
             state["left_x"], state["top_y"],
-            state["right_x"], state["bottom_y"], radius
+            state["right_x"], state["bottom_y"],
+            radius, opacity
         );
 
         float gm = get_geom_mean_size() / 200;
@@ -59,7 +60,6 @@ public:
         sq.insert("coefficient1_r");
         sq.insert("coefficient1_i");
         sq.insert("terms");
-        sq.insert("dot_radius");
         sq.insert("zoom");
         sq.insert("degree_fixed");
         sq.insert("left_x");
