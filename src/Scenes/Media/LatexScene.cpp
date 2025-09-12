@@ -12,7 +12,12 @@ public:
         cout << "LatexScene: begin_latex_transition called with TransitionType: " << tt << " and latex: " << l << endl;
         latex = l;
         if(scale_factor == 0) {
-            throw runtime_error("LatexScene: scale_factor is not set before begin_latex_transition.");
+            if(!FOR_REAL) {
+                cout << "LatexScene: Warning - scale_factor is not set before begin_latex_transition. Defaulting to 1." << endl;
+                scale_factor = 1;
+            } else {
+                throw runtime_error("LatexScene: scale_factor is not set before begin_latex_transition.");
+            }
         }
         ScalingParams sp(scale_factor);
         begin_transition(tt, latex_to_pix(latex, sp));

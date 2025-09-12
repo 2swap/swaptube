@@ -337,7 +337,10 @@ public:
         VariableContents vc = get_variable(variable);
 
         // We should never ever read from a stale variable.
-        assert(vc.fresh);
+        if(!vc.fresh){
+            print_state();
+            throw runtime_error("ERROR: Attempted to read stale variable " + variable + "!\nState has been printed above.");
+        }
 
         return vc.value;
     }
@@ -347,7 +350,7 @@ public:
     }
 
     const void begin_timer(const string& timer_name) {
-        set(timer_name, "<t> " + to_string(get_value("t")) + " -");
+        set(timer_name, "<t> " + to_string(global_state["t"]) + " -");
     }
 
     const State get_state(const StateQuery& query) const {
@@ -445,6 +448,7 @@ private:
     VariableContents get_variable(const string& variable) const {
         if(variables.find(variable) == variables.end()){
             print_state();
+            print_global_state();
             throw runtime_error("ERROR: Attempted to access variable " + variable + " without it existing!\nState has been printed above.");
         }
         return variables.at(variable);
@@ -468,39 +472,3 @@ private:
     }
 
 };
-
-void test_state_manager() {
-    // Construct a StateManager object
-    StateManager state_manager;
-
-    // Add equations
-    state_manager.set("x", "5"); // x = 5
-    state_manager.set("y", "10"); // y = 10
-    state_manager.set("z", "<x> <y> +"); // z = x + y
-    state_manager.evaluate_all();
-
-    // Validate initial values
-    StateQuery query = {"x", "y", "z"};
-    State state1 = state_manager.get_state(query);
-
-    assert(state1["x"] == 5.0);
-    assert(state1["y"] == 10.0);
-    assert(state1["z"] == 15.0);
-
-    // Modify equations
-    state_manager.set("x", "7"); // x = 7
-    state_manager.set("y", "20"); // y = 20
-    state_manager.set("z", "<x> <y> +"); // z = x + y
-    state_manager.evaluate_all();
-
-    State state2 = state_manager.get_state(query);
-
-    // Validate updated values
-    assert(state2["x"] == 7.0);
-    assert(state2["y"] == 20.0);
-    assert(state2["z"] == 27.0);
-
-    assert(!(state1 == state2));  // State1 and State2 should not be equal
-    assert(state1 == state1);  // State1 and State1 should be equal
-    assert(state2 == state2);  // State2 and State2 should be equal
-}

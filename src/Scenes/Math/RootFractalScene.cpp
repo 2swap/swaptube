@@ -17,6 +17,7 @@ public:
         state_manager.set("terms", "8");
         state_manager.set("degree_fixed", "1");
         state_manager.set("coefficients_opacity", "1");
+        state_manager.set("opacity_multiplier", "1");
     }
 
     void draw() override {
@@ -28,6 +29,7 @@ public:
         float n = state["terms"];
         float radius = get_geom_mean_size() * pow(state["zoom"]*5, .25) / 150;
         float opacity = 1-1/(2*state["zoom"]+1);
+        opacity *= state["opacity_multiplier"];
         draw_root_fractal(pix.pixels.data(), w, h,
             c0, c1, n,
             state["left_x"], state["top_y"],
@@ -67,6 +69,7 @@ public:
         sq.insert("right_x");
         sq.insert("bottom_y");
         sq.insert("coefficients_opacity");
+        sq.insert("opacity_multiplier");
         return sq;
     }
 };

@@ -92,10 +92,10 @@ public:
 
             // Add blips for audio synchronization
             double time = get_global_state("t");
-            AUDIO_WRITER.add_blip(time * SAMPLERATE, false);
+            //AUDIO_WRITER.add_blip(time * SAMPLERATE, false);
             double microblock_length_seconds = macroblock_length_seconds / expected_microblocks;
             for(int i = 0; i < expected_microblocks; i++) {
-                AUDIO_WRITER.add_blip((time + i * microblock_length_seconds) * SAMPLERATE, true);
+                //AUDIO_WRITER.add_blip((time + i * microblock_length_seconds) * SAMPLERATE, true);
             }
         }
     }

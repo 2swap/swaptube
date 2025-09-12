@@ -41,6 +41,7 @@ __device__ void device_set_pixel(int x, int y, int col, unsigned int* pixels, in
 
 __device__ void device_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
+    opacity = clamp(opacity, 0.0f, 1.0f);
     int idx = y * width + x;
     int base = pixels[idx];
     int blended = device_color_combine(base, col, opacity);
@@ -49,6 +50,7 @@ __device__ void device_overlay_pixel(int x, int y, int col, float opacity, unsig
 
 __device__ void device_atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
+    opacity = clamp(opacity, 0.0f, 1.0f);
     int idx = y * width + x;
 
     unsigned int old_pixel = pixels[idx];
