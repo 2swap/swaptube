@@ -21,7 +21,6 @@ The following external dependencies are required for specific functionalities wi
 | MicroTeX | In-Video LaTeX, LatexScene | visual_media.cpp | Converts LaTeX equations into SVG files for rendering | Instructions are here: https://github.com/NanoMichael/MicroTeX/ You should install MicroTeX in MicroTeX-master alongside the swaptube checkout. Instructions will be printed if not found. |
 | RSVG and GLib | In-Video LaTeX | visual_media.cpp | Loads and renders SVG files into pixel data | `sudo apt install librsvg2-dev libglib2.0-dev` |
 | Cairo | In-Video LaTeX | visual_media.cpp | Renders SVG files onto Cairo surfaces and converts them to pixel data | `sudo apt install libcairo2-dev` |
-| Eigen | Rendering Complex Polynomials | complex_plot_scene.cpp | Finding zeros to render plots of complex-valued functions | `sudo apt install libeigen3-dev` |
 | LibPNG | PNG scenes | visual_media.cpp | Reads PNG files and converts them to pixel data | `sudo apt install libpng-dev` |
 
 ## How to Run

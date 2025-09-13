@@ -1,9 +1,6 @@
 #pragma once
 
 #include "../Common/CoordinateScene.cpp"
-#include "ComplexPlotScene.cpp" // Contains definition of populate_roots
-#include <Eigen/Dense>
-#include <Eigen/Eigenvalues>
 
 extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity);
 
@@ -17,7 +14,7 @@ public:
         state_manager.set("terms", "8");
         state_manager.set("degree_fixed", "1");
         state_manager.set("coefficients_opacity", "1");
-        state_manager.set("opacity_multiplier", "1");
+        state_manager.set("visibility_multiplier", "1");
     }
 
     void draw() override {
@@ -27,9 +24,9 @@ public:
         complex<float> c1(state["coefficient1_r"], state["coefficient1_i"]);
         // Take the ceiling of the degree to ensure it's an integer
         float n = state["terms"];
-        float radius = get_geom_mean_size() * pow(state["zoom"]*5, .25) / 150;
+        float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(state["zoom"]*5, .25) / 150;
         float opacity = 1-1/(2*state["zoom"]+1);
-        opacity *= state["opacity_multiplier"];
+        opacity *= state["visibility_multiplier"];
         draw_root_fractal(pix.pixels.data(), w, h,
             c0, c1, n,
             state["left_x"], state["top_y"],
@@ -69,7 +66,7 @@ public:
         sq.insert("right_x");
         sq.insert("bottom_y");
         sq.insert("coefficients_opacity");
-        sq.insert("opacity_multiplier");
+        sq.insert("visibility_multiplier");
         return sq;
     }
 };

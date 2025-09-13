@@ -1,13 +1,7 @@
-#ifndef SHARED_PENDULUM_H
-#define SHARED_PENDULUM_H
+#pragma once
 
 #include <cmath>
-
-#ifdef __CUDACC__
-#define HOST_DEVICE __host__ __device__
-#else
-#define HOST_DEVICE
-#endif
+#include "shared_precompiler_directives.c"
 
 typedef double pendulum_type;
 
@@ -91,6 +85,3 @@ inline PendulumState rk4Step(const PendulumState &state, pendulum_type dt) {
 
     return newState;
 }
-
-#endif // SHARED_PENDULUM_H
-

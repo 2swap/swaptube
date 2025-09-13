@@ -1,10 +1,7 @@
 #pragma once
 
 #include "../Common/CoordinateScene.cpp"
-#include <Eigen/Dense>
-#include <Eigen/Eigenvalues>
-
-using namespace Eigen;
+#include "../../Host_Device_Shared/find_roots.c"
 
 extern "C" void color_complex_polynomial(
     unsigned int* h_pixels, // to be overwritten with the result
@@ -19,38 +16,6 @@ extern "C" void color_complex_polynomial(
     float dot_radius
 );
 
-void populate_roots(const vector<complex<float>>& coefficients, vector<complex<float>>& roots) {
-    if(roots.size() > 0) throw runtime_error("Roots vector must be empty in populate_roots. It contained " + to_string(roots.size()) + " elements.");
-    int n = coefficients.size() - 1;
-
-    // Create the companion matrix
-    MatrixXcd companion_matrix = MatrixXcd::Zero(n, n);
-    for (int i = 0; i < n; ++i) {
-        companion_matrix(i, n - 1) = -coefficients[i] / coefficients[n];
-        if (i < n - 1) {
-            companion_matrix(i + 1, i) = complex<float>(1, 0);
-        }
-    }
-
-    // Compute the eigenvalues (roots)
-    ComplexEigenSolver<MatrixXcd> solver(companion_matrix);
-    if (solver.info() != Success) {
-        int i = 0;
-        for(complex<float> c : coefficients) {
-            cout << "Coefficient " << i << ": " << c << endl;
-            i++;
-        }
-        throw runtime_error("Eigenvalue computation did not converge.");
-    }
-    VectorXcd eigenvalues = solver.eigenvalues();
-
-    // Store the roots
-    roots.reserve(n);
-    for (int i = 0; i < n; ++i) {
-        roots.push_back(complex<float>(eigenvalues[i].real(), eigenvalues[i].imag()));
-    }
-}
-
 class ComplexPlotScene : public CoordinateScene {
 public:
     int degree;
@@ -58,10 +23,9 @@ public:
         complex_plane = true;
         for(string type : {"coefficient", "root"})
             for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
-                for(string ri : {"r", "i", "opacity"})
-                    state_manager.set(type + to_string(num) + "_" + ri, (type == "coefficient" && ri == "opacity" && num < degree) ? "1" : "0");
-                if(type == "coefficient")
-                    state_manager.set(type + to_string(num) + "_ring", "0");
+                for(string ri : {"r", "i", "opacity", "ring"})
+                    if(!(type == "root" && ri == "opacity"))
+                        state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity" && num < degree) ? "1" : "0");
             }
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".8"); // basically saturation
@@ -246,7 +210,9 @@ public:
             }
         } else {
             vector<complex<float>> coefficients = get_coefficients();
-            populate_roots(coefficients, roots);
+            int n = coefficients.size() - 1;
+            roots.reserve(n);
+            find_roots(get_coefficients().data(), n, roots.data());
         }
         return roots;
     }
@@ -282,7 +248,7 @@ public:
 
         // Draw roots
         for(int i = 0; i < roots.size(); i++){
-            float opa = state["root"+to_string(i)+"_opacity"];
+            float opa = state["root"+to_string(i)+"_ring"];
             if(opa < 0.01) continue;
             const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
             pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, opa);
@@ -310,12 +276,10 @@ public:
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         for(string type : {"coefficient", "root"})
-            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
-                for(string ri : {"r", "i", "opacity"})
-                    sq.insert(type + to_string(num) + "_" + ri);
-                if(type == "coefficient")
-                    sq.insert(type + to_string(num) + "_ring");
-            }
+            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++)
+                for(string ri : {"r", "i", "opacity", "ring"})
+                    if(!(type == "root" && ri == "opacity"))
+                        sq.insert(type + to_string(num) + "_" + ri);
         sq.insert("roots_or_coefficients_control");
         sq.insert("ab_dilation");
         sq.insert("dot_radius");

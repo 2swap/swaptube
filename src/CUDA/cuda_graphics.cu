@@ -26,9 +26,9 @@ __device__ void device_gradient_circle(float cx, float cy, float r, int col, uns
         for (float dy = -r; dy < r; dy++) {
             float dist2 = (sdx + dy*dy) / r2;
             if (dist2 < 1.0f) {
-                float final_opa = opa / (1 + 2400 /** dist2*/ * dist2);
-                      final_opa +=opa / (1 + 2400 * dist2 * dist2);
-                final_opa /= 2;
+                //float final_opa = opa / (1 + 2400 /** dist2*/ * dist2);
+                float final_opa = opa / (1 + 2400 * dist2 * dist2);
+                //final_opa /= 2;
                 device_atomic_overlay_pixel(cx + dx, cy + dy, col, final_opa, pixels, width, height);
             }
         }
