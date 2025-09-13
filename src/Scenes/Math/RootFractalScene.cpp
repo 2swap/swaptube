@@ -2,7 +2,7 @@
 
 #include "../Common/CoordinateScene.cpp"
 
-extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity);
+extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float rainbow);
 
 class RootFractalScene : public CoordinateScene {
 public:
@@ -15,6 +15,7 @@ public:
         state_manager.set("degree_fixed", "1");
         state_manager.set("coefficients_opacity", "1");
         state_manager.set("visibility_multiplier", "1");
+        state_manager.set("rainbow", "1");
     }
 
     void draw() override {
@@ -31,7 +32,7 @@ public:
             c0, c1, n,
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
-            radius, opacity
+            radius, opacity, state["rainbow"]
         );
 
         float gm = get_geom_mean_size() / 200;
@@ -67,6 +68,7 @@ public:
         sq.insert("bottom_y");
         sq.insert("coefficients_opacity");
         sq.insert("visibility_multiplier");
+        sq.insert("rainbow");
         return sq;
     }
 };

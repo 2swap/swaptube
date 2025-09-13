@@ -19,7 +19,7 @@ __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
     return result;
 }
 
-__global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatComplex c1, cuFloatComplex c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity) {
+__global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatComplex c1, cuFloatComplex c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float rainbow) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int ceil_terms = ceil(terms);
     unsigned int floor_terms = floor(terms);
@@ -31,9 +31,10 @@ __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatC
 
     if (idx >= total) return;
     if (idx >= total/2 && floor_terms != ceil_terms) {
+        // For transitional term count, fade in/out newly introduced polynomials
         float one_minus_frac = 1 - (terms - floor_terms);
-        float radius_multiplier = 1-one_minus_frac*one_minus_frac*one_minus_frac;
-        radius *= radius_multiplier;
+        float opacity_multiplier = 1-one_minus_frac*one_minus_frac*one_minus_frac;
+        opacity *= opacity_multiplier;
     }
 
     cuFloatComplex coeffs[20];
@@ -47,6 +48,8 @@ __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatC
         color_or >>= i%3 * 8;
         color |= color_or;
     }
+
+    color = device_colorlerp(0xFFFFFFFF, color, rainbow);
 
     // Find the degree, since the leading coefficients might be zero
     int degree = -1;
@@ -78,7 +81,7 @@ extern "C" void draw_root_fractal(
     float terms,
     float lx, float ty,
     float rx, float by,
-    float radius, float opacity
+    float radius, float opacity, float rainbow
 ) {
     int total = 1 << int(ceil(terms));
     unsigned int* d_pixels;
@@ -91,7 +94,7 @@ extern "C" void draw_root_fractal(
     int threadsPerBlock = 256;
     int blocks = (total + threadsPerBlock - 1) / threadsPerBlock;
 
-    root_fractal_kernel<<<blocks, threadsPerBlock>>>(d_pixels, w, h, dc1, dc2, terms, lx, ty, rx, by, radius, opacity);
+    root_fractal_kernel<<<blocks, threadsPerBlock>>>(d_pixels, w, h, dc1, dc2, terms, lx, ty, rx, by, radius, opacity, rainbow);
     cudaDeviceSynchronize();
 
     cudaMemcpy(pixels, d_pixels, w * h * sizeof(unsigned int), cudaMemcpyDeviceToHost);

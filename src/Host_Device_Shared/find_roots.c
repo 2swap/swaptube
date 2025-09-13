@@ -90,6 +90,38 @@ __device__ void find_roots(const cuFloatComplex* coeffs_in, int degree, cuFloatC
 #else
 
 #include <complex>
+
+void check_answer(const std::complex<float>* coeffs, int degree, const std::complex<float>* roots) {
+    // Multiply out (x - r1)(x - r2)...(x - rn) and compare to coeffs
+    const int maxn = 20;
+    std::complex<float> prod[maxn + 1] = { std::complex<float>(0.0f, 0.0f) };
+    prod[0] = std::complex<float>(1.0f, 0.0f); // Start with 1
+
+    for (int i = 0; i < degree; ++i) {
+        std::complex<float> r = roots[i];
+        // Multiply current polynomial by (x - r)
+        std::complex<float> new_prod[maxn + 1] = { std::complex<float>(0.0f, 0.0f) };
+        for (int j = 0; j <= i; ++j) {
+            new_prod[j + 1] += prod[j];          // x * prod[j]
+            new_prod[j] += prod[j] * (-r);      // -r * prod[j]
+        }
+        for (int j = 0; j <= i + 1; ++j) {
+            prod[j] = new_prod[j];
+        }
+    }
+
+    // Now prod should be the coefficients of the polynomial with roots 'roots'
+    // Compare to input coeffs
+    float max_err = 0.0f;
+    for (int i = 0; i <= degree; ++i) {
+        float err = std::abs(prod[i] - coeffs[i]);
+        if (err > max_err) max_err = err;
+    }
+    if (max_err > 1e-3f) {
+        throw std::runtime_error("Root finding failed: max error " + std::to_string(max_err) + " exceeds tolerance");
+    }
+}
+
 void find_roots(const std::complex<float>* coeffs_in, int degree, std::complex<float>* roots) {
     // Use Durand-Kerner (Weierstrass) method to find all roots of polynomial
     // coeffs_in: coeffs[0..degree] where coeffs[i] corresponds to x^i
@@ -172,5 +204,9 @@ void find_roots(const std::complex<float>* coeffs_in, int degree, std::complex<f
 
         if (max_change < tol) break;
     }
+
+    // Check answer by multiplying out (x - r1)(x - r2)...(x - rn) and comparing to monic coeffs
+    check_answer(coeffs, degree, roots);
 }
+
 #endif

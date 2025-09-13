@@ -16,22 +16,11 @@ extern "C" void color_complex_polynomial(
     float dot_radius
 );
 
+string new_coefficient_val = "0.001";
+
 class ComplexPlotScene : public CoordinateScene {
-public:
+private:
     int degree;
-    ComplexPlotScene(const int d, const float width = 1, const float height = 1) : CoordinateScene(width, height), degree(d){
-        complex_plane = true;
-        for(string type : {"coefficient", "root"})
-            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
-                for(string ri : {"r", "i", "opacity", "ring"})
-                    if(!(type == "root" && ri == "opacity"))
-                        state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity" && num < degree) ? "1" : "0");
-            }
-        state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
-        state_manager.set("ab_dilation", ".8"); // basically saturation
-        state_manager.set("hide_zero_coefficients", "0");
-        state_manager.set("dot_radius", ".3");
-    }
 
     void decrement_degree() {
         update_state();
@@ -61,13 +50,37 @@ public:
         degree++;
 
         for(string type : {"coefficient", "root"}) {
-            state_manager.set(type + to_string(degree) + "_r", "0.000001");
+            state_manager.set(type + to_string(degree) + "_r", new_coefficient_val);
             state_manager.set(type + to_string(degree) + "_i", "0");
             state_manager.set(type + to_string(degree) + "_opacity", "0");
         }
 
-
         update_state();
+    }
+
+public:
+    ComplexPlotScene(const int d, const float width = 1, const float height = 1) : CoordinateScene(width, height), degree(d){
+        complex_plane = true;
+        for(string type : {"coefficient", "root"})
+            for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
+                for(string ri : {"r", "i", "opacity", "ring"})
+                    if(!(type == "root" && ri == "opacity"))
+                        state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity" && num < degree) ? "1" : "0");
+            }
+        state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
+        state_manager.set("ab_dilation", ".8"); // basically saturation
+        state_manager.set("hide_zero_coefficients", "0");
+        state_manager.set("dot_radius", ".3");
+    }
+
+    int get_degree() const {
+        return degree;
+    }
+
+    void set_degree(int d) {
+        if(d < 1) throw runtime_error("Degree must be at least 1. Requested degree: " + to_string(d));
+        while(degree < d) increment_degree();
+        while(degree > d) decrement_degree();
     }
 
     void roots_to_coefficients(){
@@ -95,6 +108,15 @@ public:
 
         vector<complex<float>> roots = get_roots();
          
+        cout << "Polynomial Coefficients:" << endl;
+        for (complex<float> c : get_coefficients()) {
+            cout << "Coefficient: " << c.real() << " + " << c.imag() << "i" << endl;
+        }
+        cout << "Computed Roots:" << endl;
+        for (complex<float> r : roots) {
+            cout << "Root: " << r.real() << " + " << r.imag() << "i" << endl;
+        }
+
         int i = 0;
         for(complex<float> r : roots){
             state_manager.set("root" + to_string(i) + "_r", to_string(r.real()));
@@ -189,7 +211,7 @@ public:
         } else {
             vector<complex<float>> coefficients = get_coefficients();
             int n = coefficients.size() - 1;
-            roots.reserve(n);
+            roots.resize(n);
             find_roots(get_coefficients().data(), n, roots.data());
         }
         return roots;
