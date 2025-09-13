@@ -156,13 +156,13 @@ void render_video(){
     cs.fade_subscene(MICRO, "ls", 0);
     cs.render_microblock();
 
-    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>(latex_color(0xff444444, "(x-r_1)(x-r_2)(x-r_3)"), .7, 1, .5);
-    cs.add_scene_fade_in(MICRO, ls2, "ls2", .5, .8);
+    shared_ptr<LatexScene> factored = make_shared<LatexScene>(latex_color(0xff444444, "(x-r_1)(x-r_2)(x-r_3)"), .7, 1, .5);
+    cs.add_scene_fade_in(MICRO, factored, "factored", .5, .8);
     cs.stage_macroblock(FileBlock("There's also a factored form, with one term for each solution,"), 4);
     cs.render_microblock();
-    ls2->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")"));
+    factored->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")"));
     cs.render_microblock();
-    ls2->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-r_1)(x-r_2)(x-r_3)"));
+    factored->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-r_1)(x-r_2)(x-r_3)"));
     cs.render_microblock();
     cs.render_microblock();
     cs.remove_subscene("ls");
@@ -170,15 +170,15 @@ void render_video(){
     cs.stage_macroblock(FileBlock("which are clearly visible in the polynomial's graph."), 4);
     for(int i = 0; i < 2; i++) {
         cps->state_manager.transition(MICRO, {{"root0_ring", "1"}, {"root1_ring", "1"}, {"root2_ring", "1"}});
-        ls2->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")"));
+        factored->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-" + latex_color(0xffff0000, "r_1")+")(x-"+latex_color(0xff00ff00, "r_2")+")(x-"+latex_color(0xff0000ff, "r_3")+")"));
         cs.render_microblock();
 
         cps->state_manager.transition(MICRO, {{"root0_ring", "0"}, {"root1_ring", "0"}, {"root2_ring", "0"}});
-        ls2->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-r_1)(x-r_2)(x-r_3)"));
+        factored->begin_latex_transition(MICRO, latex_color(0xff444444, "(x-r_1)(x-r_2)(x-r_3)"));
         cs.render_microblock();
     }
 
-    cs.fade_subscene(MICRO, "ls2", 0);
+    cs.fade_subscene(MICRO, "factored", 0);
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
@@ -202,9 +202,9 @@ void render_video(){
     cps->state_manager.transition(MICRO, {{"ticks_opacity", "0"}});
     cs.render_microblock();
 
-    cs.fade_subscene(MICRO, "ls2", 1);
+    cs.fade_subscene(MICRO, "factored", 1);
     cps->state_manager.transition(MICRO, "geometry_opacity", "0");
-    ls2->begin_latex_transition(MICRO, "(" + latex_color(0xffff0000, "x")+"-r_1)(" + latex_color(0xffff0000, "x")+"-r_2)(" + latex_color(0xffff0000, "x")+"-r_3)");
+    factored->begin_latex_transition(MICRO, "(" + latex_color(0xffff0000, "x")+"-r_1)(" + latex_color(0xffff0000, "x")+"-r_2)(" + latex_color(0xffff0000, "x")+"-r_3)");
 
     cps->coefficients_to_roots(); // Just to be safe
     cs.stage_macroblock(FileBlock("For each pixel on the screen, we can pass it into the polynomial, and see what comes out..."), 4);
@@ -217,7 +217,7 @@ void render_video(){
     cps->state_manager.set("geometry_opacity", "1");
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "in", .7, true));
     cs.render_microblock();
-    ls2->begin_latex_transition(MICRO, "(" + latex_color(0xffff0000, "-i")+"-r_1)(" + latex_color(0xffff0000, "-i")+"-r_2)(" + latex_color(0xffff0000, "-i")+"-r_3)");
+    factored->begin_latex_transition(MICRO, "(" + latex_color(0xffff0000, "-i")+"-r_1)(" + latex_color(0xffff0000, "-i")+"-r_2)(" + latex_color(0xffff0000, "-i")+"-r_3)");
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "out", .7, true));
     cps->state_manager.set({
         {"d0r", "<root0_r> <point_in_x> -"},
@@ -232,7 +232,7 @@ void render_video(){
         {"point_out_y", "<m01r> <d2i> * <m01i> <d2r> * +"},
     });
     cs.render_microblock();
-    cs.fade_subscene(MICRO, "ls2", 0);
+    cs.fade_subscene(MICRO, "factored", 0);
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(5), 1);
@@ -277,7 +277,7 @@ void render_video(){
     cs.render_microblock();
     cs.render_microblock();
 
-    cs.remove_subscene("ls2");
+    cs.remove_subscene("factored");
     cps->state_manager.transition(MICRO, {
         {"ab_dilation", "20"},
     });
@@ -807,14 +807,12 @@ void render_video(){
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(1), 2);
-    cps->coefficients_to_roots();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "", .7, true));
-    cps->state_manager.set({
-        {"point__x", "<root0_r>"},
-        {"point__y", "<root0_i>"},
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cps->state_manager.transition(MACRO, {
+        {"center_x", "<root0_r>"},
+        {"center_y", "<root0_i>"},
+        {"zoom", ".6"},
     });
-    cs.render_microblock();
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Tracing around this normal solution,"), 1);
@@ -825,25 +823,27 @@ void render_video(){
     cps->state_manager.transition(MACRO, {
         {"point__x", "<root0_r> <theta> 2 * cos .1 * +"},
         {"point__y", "<root0_i> <theta> 2 * sin .1 * +"},
-        {"center_x", "<root0_r>"},
-        {"center_y", "<root0_i>"},
-        {"zoom", ".6"},
     });
     cs.render_microblock();
 
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "", .7, true));
+    cps->state_manager.set({
+        {"point__x", "<root0_r>"},
+        {"point__y", "<root0_i>"},
+    });
     cs.stage_macroblock(FileBlock("we see red, then green, then blue."), 6);
     cps->state_manager.transition(MICRO, {
-        {"theta", "3.5"},
+        {"theta", "3.4"},
     });
     cs.render_microblock();
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"theta", "4.5"},
+        {"theta", "4.4"},
     });
     cs.render_microblock();
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {
-        {"theta", "5.5"},
+        {"theta", "5.4"},
     });
     cs.render_microblock();
     cs.render_microblock();
@@ -854,7 +854,7 @@ void render_video(){
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->state_manager.begin_timer("theta2");
     cps->state_manager.transition(MACRO, {
-        {"theta", "<theta2> -1 *"},
+        {"theta", "<theta2>"},
         {"point__x", "<root2_r> <theta> 2 * cos .1 * +"},
         {"point__y", "<root2_i> <theta> 2 * sin .1 * +"},
         {"center_x", "<root2_r>"},
@@ -871,13 +871,18 @@ void render_video(){
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("we see red, green, blue, then red, green, blue again."), 12);
+    cs.stage_macroblock(FileBlock("we see red, green, blue, then red, green, blue again."), 15);
+    cs.render_microblock();
     for(int i = 0; i < 6; i++) {
         double angle = 3.14 * (i/6. + 1);
         cps->state_manager.transition(MICRO, "theta2", to_string(angle));
         cs.render_microblock();
         cs.render_microblock();
+        if(i == 2) {
+            cs.render_microblock();
+        }
     }
+    cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The color wheel is duplicated!"), 1);
     cps->state_manager.transition(MICRO, {
@@ -894,7 +899,7 @@ void render_video(){
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Let's plot the function evaluated at this point like before."), 2);
+    cs.stage_macroblock(FileBlock("Let's plot the output like before."), 2);
     cps->state_manager.transition(MICRO, {
         {"point__x", "<root0_r> <t> 2 * sin .1 * +"},
         {"point__y", "<root0_i> <t> 2 * cos .1 * +"},
@@ -1329,8 +1334,8 @@ void render_video(){
 
     cs.stage_macroblock(FileBlock("The root and the coefficient are inverses, so they do a mirror dance about the origin."), 3);
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_r", "<t> 4 / sin"},
-        {"coefficient0_i", "<t> 4 / cos"},
+        {"coefficient0_r", "<t> sin"},
+        {"coefficient0_i", "<t> cos"},
     });
     cs.render_microblock();
     cs.render_microblock();
@@ -1352,7 +1357,7 @@ void render_video(){
         {"coefficient2_r", "1"},
         {"coefficient2_i", "0"},
         {"coefficient1_r", "1"},
-        {"coefficient1_i", "0"},
+        {"coefficient1_i", "1"},
         {"coefficient0_r", "2"},
         {"coefficient0_i", "0"},
     });
@@ -1398,24 +1403,49 @@ void render_video(){
     cs.stage_macroblock(FileBlock("However, these sets are structurally very different."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The coefficients are an ordered list."), 1);
+    cs.stage_macroblock(FileBlock("Looking at the polynomial,"), 1);
+    quadratic = make_shared<LatexScene>("x^2 + "+latex_color(0xffff0000, "b")+"x + "+latex_color(0xffff0000, "c"), .7, 1, .5);
+    cs.add_scene_fade_in(MICRO, quadratic, "quadratic", .5, .2);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("If we switch a and b here, we don't have the same function anymore."), 1);
+    cs.stage_macroblock(FileBlock("If we switch b and c here, we don't have the same function anymore."), 1);
+    quadratic->begin_latex_transition(MICRO, "x^2 + "+latex_color(0xffff0000, "c")+"x + "+latex_color(0xffff0000, "b"));
+    cps->state_manager.transition(MICRO, {
+        {"coefficient2_r", "1"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "2"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "1"},
+        {"coefficient0_i", "1"},
+    });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("These coefficients are not interchangeable."), 1);
+    cs.stage_macroblock(FileBlock("The coefficients are an ordered list- they're not interchangeable."), 1);
+    cs.fade_subscene(MICRO, "quadratic", 0);
     cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
 
     cs.stage_macroblock(FileBlock("The solutions, on the other hand, don't have a particular order to them."), 1);
+    factored = make_shared<LatexScene>("(x - "+latex_color(0xffff0000, "r_1")+") (x - "+latex_color(0xffff0000, "r_2")+") (x - "+latex_color(0xffff0000, "r_3")+")", .7, 1, .5);
+    cs.add_scene_fade_in(MICRO, factored, "factored", .5, .2);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("In the factored form of the polynomial, we can rearrange as we please,"), 1);
+    cps->coefficients_to_roots();
+    cps->state_manager.transition(MICRO, {
+        {"root0_r", to_string(cps->state_manager.get_value("root1_r"))},
+        {"root0_i", to_string(cps->state_manager.get_value("root1_i"))},
+        {"root1_r", to_string(cps->state_manager.get_value("root0_r"))},
+        {"root1_i", to_string(cps->state_manager.get_value("root0_i"))},
+    });
+    factored->begin_latex_transition(MICRO, "(x - "+latex_color(0xffff0000, "r_2")+") \\medspace (x - "+latex_color(0xffff0000, "r_1")+") \\medspace (x - "+latex_color(0xffff0000, "r_3")+")");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("since it doesn't matter what order we multiply the terms."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("This has some bizarre implications."), 1);
+    cs.fade_subscene(MICRO, "factored", 0);
     cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
 }

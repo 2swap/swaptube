@@ -90,7 +90,7 @@ __device__ void find_roots(const cuFloatComplex* coeffs_in, int degree, cuFloatC
 #else
 
 #include <complex>
-void find_roots(const complex<float>* coeffs_in, int degree, complex<float>* roots) {
+void find_roots(const std::complex<float>* coeffs_in, int degree, std::complex<float>* roots) {
     // Use Durand-Kerner (Weierstrass) method to find all roots of polynomial
     // coeffs_in: coeffs[0..degree] where coeffs[i] corresponds to x^i
     // degree: n (degree of polynomial)
@@ -99,17 +99,17 @@ void find_roots(const complex<float>* coeffs_in, int degree, complex<float>* roo
     }
 
     const int maxn = 20;
-    complex<float> coeffs[maxn + 1];
+    std::complex<float> coeffs[maxn + 1];
     for (int i = 0; i <= degree; ++i) {
         coeffs[i] = coeffs_in[i];
     }
 
     // Make monic: divide all coefficients by leading coefficient coeffs[degree]
-    complex<float> leading = coeffs[degree];
-    float leading_abs = abs(leading);
+    std::complex<float> leading = coeffs[degree];
+    float leading_abs = std::abs(leading);
     if (leading_abs == 0.0f) {
         // Degenerate polynomial; just return zeros
-        for (int i = 0; i < degree; ++i) roots[i] = complex<float>(0.0f, 0.0f);
+        for (int i = 0; i < degree; ++i) roots[i] = std::complex<float>(0.0f, 0.0f);
         return;
     }
     for (int i = 0; i <= degree; ++i) {
@@ -119,7 +119,7 @@ void find_roots(const complex<float>* coeffs_in, int degree, complex<float>* roo
     // Compute radius for initial guesses: 1 + max |a_i| for i=0..degree-1
     float max_coeff_abs = 0.0f;
     for (int i = 0; i < degree; ++i) {
-        float aabs = abs(coeffs[i]);
+        float aabs = std::abs(coeffs[i]);
         if (aabs > max_coeff_abs) max_coeff_abs = aabs;
     }
     float radius = 1.0f + max_coeff_abs;
@@ -128,7 +128,7 @@ void find_roots(const complex<float>* coeffs_in, int degree, complex<float>* roo
     const float PI2 = 6.28318530717958647692f;
     for (int i = 0; i < degree; ++i) {
         float angle = PI2 * i / degree;
-        roots[i] = complex<float>(cos(angle)*radius, sin(angle)*radius);
+        roots[i] = std::complex<float>(cos(angle)*radius, sin(angle)*radius);
     }
 
     const int max_iters = 100;
@@ -139,33 +139,33 @@ void find_roots(const complex<float>* coeffs_in, int degree, complex<float>* roo
 
         // For each root
         for (int i = 0; i < degree; ++i) {
-            complex<float> xi = roots[i];
+            std::complex<float> xi = roots[i];
 
             // Evaluate polynomial p(xi) using Horner's method: coeffs[degree]*x^degree + ... + coeffs[0]
-            complex<float> p = coeffs[degree];
+            std::complex<float> p = coeffs[degree];
             for (int k = degree - 1; k >= 0; --k) {
                 p = p * xi + coeffs[k];
             }
 
             // Compute denominator: product_{j != i} (xi - xj)
-            complex<float> denom = complex<float>(1.0f, 0.0f);
+            std::complex<float> denom = std::complex<float>(1.0f, 0.0f);
             for (int j = 0; j < degree; ++j) {
                 if (j == i) continue;
-                complex<float> diff = xi - roots[j];
-                float diff_abs = abs(diff);
+                std::complex<float> diff = xi - roots[j];
+                float diff_abs = std::abs(diff);
                 if (diff_abs == 0.0f) {
                     // Perturb slightly to avoid zero division
-                    diff = diff + complex<float>(1e-6f, 1e-6f);
+                    diff = diff + std::complex<float>(1e-6f, 1e-6f);
                 }
                 denom *= diff;
             }
 
-            float denom_abs = abs(denom);
+            float denom_abs = std::abs(denom);
             if (denom_abs == 0.0f) continue;
 
-            complex<float> correction = p / denom;
-            complex<float> new_xi = xi - correction;
-            float change = abs(new_xi - xi);
+            std::complex<float> correction = p / denom;
+            std::complex<float> new_xi = xi - correction;
+            float change = std::abs(new_xi - xi);
             if (change > max_change) max_change = change;
             roots[i] = new_xi;
         }

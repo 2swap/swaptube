@@ -132,28 +132,6 @@ public:
         return current_poly;
     }
 
-    // Function to compute the derivative of a polynomial given its coefficients
-    vector<complex<float>> compute_derivative(const vector<complex<float>>& coefficients) {
-        vector<complex<float>> derivative;
-        int n = coefficients.size() - 1; // Degree of the polynomial
-
-        for (int i = 1; i < n; ++i) {
-            derivative.push_back(coefficients[i] * complex<float>(i, 0));
-        }
-
-        return derivative;
-    }
-
-    vector<complex<float>> deflate_polynomial(const vector<complex<float>>& coefficients, const complex<float>& root) {
-        int n = coefficients.size() - 1;
-        vector<complex<float>> new_coefficients(n);
-        new_coefficients[0] = coefficients[0];
-        for (int i = 1; i < n; ++i) {
-            new_coefficients[i] = coefficients[i] + root * new_coefficients[i - 1];
-        }
-        return new_coefficients;
-    }
-
     void stage_swap_roots_when_in_root_mode(TransitionType tt, const string& root1, const string& root2) {
         const string r0 = state_manager.get_equation("root" + root1 + "_r");
         const string i0 = state_manager.get_equation("root" + root1 + "_i");
