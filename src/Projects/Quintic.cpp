@@ -1221,8 +1221,8 @@ void render_video(){
 
     fracs->stage_macroblock(FileBlock("but what happens if we change those options?"), 1);
     fracs->state_manager.transition(MICRO, {
-        {"coefficient0_r", ".1 <t> 4 / cos"},
-        {"coefficient0_i", ".1 <t> 4 / sin"},
+        {"coefficient0_r", ".1 <t> 4 / cos *"},
+        {"coefficient0_i", ".1 <t> 4 / sin *"},
         {"zoom", ".3"},
     });
     fracs->render_microblock();
@@ -1607,7 +1607,7 @@ void render_video(){
 
     cps->state_manager.set("positive_quadratic_formula_opacity", "0");
     cs.fade_subscene(MICRO, "cafs", 0);
-    cs.fade_all_subscenes_except("cafs", 1);
+    cs.fade_all_subscenes_except(MICRO, "cafs", 1);
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
     cs.remove_subscene("cafs");
@@ -1648,7 +1648,7 @@ void render_video(){
     cs.stage_macroblock(FileBlock("But our 'continuous function' gives us a different root now!"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Given any a, b, and c,"), 4);
+    cs.stage_macroblock(FileBlock("Given any a, b, and c,"), 3);
     cs.render_microblock();
     cps->state_manager.transition(MICRO, {
         {"coefficient0_ring", "1"},
@@ -1681,7 +1681,7 @@ void render_video(){
     cs.stage_macroblock(FileBlock("This also means that a quadratic formula will need to incorporate some kind of discontinuity."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("There's no way to do it with just basic arithmetic."), 1
+    cs.stage_macroblock(FileBlock("There's no way to do it with just basic arithmetic."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Even if we incorporate other functions,"), 1);

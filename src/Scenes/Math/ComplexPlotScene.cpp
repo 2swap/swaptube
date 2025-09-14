@@ -279,8 +279,9 @@ public:
                 const complex<float> c = coefficients[0];
                 const complex<float> discriminant = b*b - complex<float>(4,0)*a*c;
                 const complex<float> sqrt_disc = std::sqrt(discriminant);
-                const complex<float> root1 = (-b + sqrt_disc) / complex<float>(2*a,0);
-                pix.fill_ring(point_to_pixel(glm::vec2(root1.real(), root1.imag())), gm*7, gm*5, 0xffff8080, opa);
+                const complex<float> root1 = (-b + sqrt_disc) / (2.0f*a);
+                const glm::vec2 pixel1(point_to_pixel(glm::vec2(root1.real(), root1.imag())));
+                pix.fill_ring(pixel1.x, pixel1.y, gm*7, gm*5, 0xffff8080, opa);
             }
         }
 

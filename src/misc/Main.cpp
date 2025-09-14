@@ -82,11 +82,20 @@ int main() {
     try {
         render_video();
     } catch(std::exception& e) {
+        // Change to red text
+        cout << "\033[1;31m";
+
         cout << endl << "====================" << endl;
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
-        cout << e.what() << endl;
+        cout << e.what();
+
+        // Change back to normal text
+        cout << "\033[0m" << endl;
     }
-    cout << "Done" << endl;
+
+    cout << "\033[1;32m" << endl << "====================" << endl;
+    cout << "Completed successfully!" << endl;
+    cout << "====================" << "\033[0m" << endl;
 
     return 0;
 }
