@@ -1,3 +1,5 @@
+#pragma once
+
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
 #include <cmath>

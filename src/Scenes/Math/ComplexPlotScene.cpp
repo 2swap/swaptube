@@ -71,6 +71,7 @@ public:
         state_manager.set("ab_dilation", ".8"); // basically saturation
         state_manager.set("hide_zero_coefficients", "0");
         state_manager.set("dot_radius", ".3");
+        state_manager.set("positive_quadratic_formula_opacity", "0");
     }
 
     int get_degree() const {
@@ -270,6 +271,19 @@ public:
             }
         }
 
+        {
+            float opa = state["positive_quadratic_formula_opacity"];
+            if(opa > 0.01 && degree == 2) {
+                const complex<float> a = coefficients[2];
+                const complex<float> b = coefficients[1];
+                const complex<float> c = coefficients[0];
+                const complex<float> discriminant = b*b - complex<float>(4,0)*a*c;
+                const complex<float> sqrt_disc = std::sqrt(discriminant);
+                const complex<float> root1 = (-b + sqrt_disc) / complex<float>(2*a,0);
+                pix.fill_ring(point_to_pixel(glm::vec2(root1.real(), root1.imag())), gm*7, gm*5, 0xffff8080, opa);
+            }
+        }
+
         CoordinateScene::draw();
     }
 
@@ -284,6 +298,7 @@ public:
         sq.insert("ab_dilation");
         sq.insert("dot_radius");
         sq.insert("hide_zero_coefficients");
+        sq.insert("positive_quadratic_formula_opacity");
         return sq;
     }
 };

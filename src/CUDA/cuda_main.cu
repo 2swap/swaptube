@@ -10,5 +10,6 @@
 #include "ComplexPolynomial.cu"
 #include "root_fractal.cu"
 #include "cuda_graphics.cu"
+#include "ComplexArbitraryFunction.cu"
 //#include "Conway.cu"
 
