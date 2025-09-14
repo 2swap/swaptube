@@ -266,7 +266,7 @@ public:
             }
             if(letter_opa > 0.01) {
                 ScalingParams sp = ScalingParams(gm * 16, gm * 40);
-                Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
+                Pixels text_pixels = latex_to_pix(string(1,char('a' + coefficients.size() - 1 - i)), sp);
                 pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
             }
         }
@@ -281,7 +281,7 @@ public:
                 const complex<float> sqrt_disc = std::sqrt(discriminant);
                 const complex<float> root1 = (-b + sqrt_disc) / (2.0f*a);
                 const glm::vec2 pixel1(point_to_pixel(glm::vec2(root1.real(), root1.imag())));
-                pix.fill_ring(pixel1.x, pixel1.y, gm*7, gm*5, 0xffff8080, opa);
+                pix.fill_ring(pixel1.x, pixel1.y, gm*5, gm*4, 0xffff8080, opa);
             }
         }
 

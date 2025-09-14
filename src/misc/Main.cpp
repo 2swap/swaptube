@@ -87,15 +87,17 @@ int main() {
 
         cout << endl << "====================" << endl;
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
-        cout << e.what();
+        cout << e.what() << endl;
+        cout << "====================" << endl;
 
         // Change back to normal text
         cout << "\033[0m" << endl;
+        return 1;
     }
 
     cout << "\033[1;32m" << endl << "====================" << endl;
     cout << "Completed successfully!" << endl;
-    cout << "====================" << "\033[0m" << endl;
+    cout << "====================" << "\033[0m" << endl << endl;
 
     return 0;
 }

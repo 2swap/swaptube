@@ -69,7 +69,7 @@ public:
         cout << ")" << flush;
     }
 
-    bool microblocks_remaining() {
+    int microblocks_remaining() {
         return remaining_microblocks;
     }
 
@@ -83,7 +83,8 @@ public:
                     "but render_microblock() was only called " + to_string(total_microblocks - remaining_microblocks) + " times.");
         }
 
-        total_microblocks = remaining_microblocks = expected_microblocks;
+        total_microblocks = expected_microblocks;
+        remaining_microblocks = expected_microblocks;
         cout << endl << audio.blurb() << " staged to last " << to_string(expected_microblocks) << " microblock(s)." << endl;
         audio.write_shtooka();
         if(FOR_REAL) {
@@ -121,7 +122,15 @@ public:
         remaining_microblocks--;
         bool done_macroblock = remaining_microblocks == 0;
                             global_state["microblock_number"]++;
-        if(done_macroblock) global_state["macroblock_number"]++;
+        if (done_macroblock) {
+            global_state["macroblock_number"]++;
+            if (SAVE_FRAME_PNGS) {
+                int roundedFrameNumber = round(global_state["frame_number"]);
+                ostringstream stream;
+                stream << setw(6) << setfill('0') << roundedFrameNumber;
+                export_frame(stream.str(), 4);
+            }
+        }
         on_end_transition(done_macroblock ? MACRO : MICRO);
 
         // return the total number of frames rendered here
@@ -145,7 +154,7 @@ public:
         return VIDEO_HEIGHT * state_manager.get_state({"h"})["h"];
     }
 
-    void export_png(const string& filename, int scaledown = 1) const {
+    void export_frame(const string& filename, int scaledown = 1) const {
         ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
         pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
     }
@@ -195,12 +204,6 @@ private:
             Pixels* p = nullptr;
             query(p);
             if(int(global_state["frame_number"]) % 5 == 0 && PRINT_TO_TERMINAL) p->print_to_terminal();
-            if(SAVE_FRAME_PNGS && (int(global_state["frame_number"]) % FRAMERATE == 0)) {
-                int roundedFrameNumber = round(global_state["frame_number"]);
-                ostringstream stream;
-                stream << setw(6) << setfill('0') << roundedFrameNumber;
-                export_png(stream.str(), 4);
-            }
             VIDEO_WRITER.add_frame(*p);
 
             auto end_time = chrono::high_resolution_clock::now(); // End timing
