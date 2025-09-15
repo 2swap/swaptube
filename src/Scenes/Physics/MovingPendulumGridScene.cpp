@@ -22,18 +22,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery s = CoordinateScene::populate_state_query();
-        s.insert("physics_multiplier");
-        s.insert("rk4_step_size");
-        s.insert("mode");
-        s.insert("center_x");
-        s.insert("center_y");
-        s.insert("contrast");
-        s.insert("theta_or_momentum");
-        s.insert("theta1");
-        s.insert("theta2");
-        s.insert("p1");
-        s.insert("p2");
-        s.insert("momentum_value_gradient");
+        state_query_insert_multiple(s, {"physics_multiplier", "rk4_step_size", "mode", "center_x", "center_y", "contrast", "theta_or_momentum", "theta1", "theta2", "p1", "p2", "momentum_value_gradient"});
         return s;
     }
 

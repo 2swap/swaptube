@@ -31,9 +31,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery s = CoordinateScene::populate_state_query();
-        s.insert("points_opacity");
-        s.insert("physics_multiplier");
-        s.insert("rk4_step_size");
+        state_query_insert_multiple(s, {"points_opacity", "physics_multiplier", "rk4_step_size"});
         return s;
     }
     void mark_data_unchanged() override { grid.mark_unchanged(); }

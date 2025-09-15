@@ -24,19 +24,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery s = CoordinateScene::populate_state_query();
-        s.insert("physics_multiplier");
-        s.insert("rk4_step_size");
-        s.insert("mode");
-        s.insert("center_x");
-        s.insert("center_y");
-        s.insert("contrast");
-        s.insert("trail_opacity");
-        s.insert("trail_length");
-        s.insert("trail_start_y");
-        s.insert("trail_start_x");
-        s.insert("energy_min");
-        s.insert("energy_max");
-        s.insert("momentum_value_gradient");
+        state_query_insert_multiple(s, {"physics_multiplier", "rk4_step_size", "mode", "center_x", "center_y", "contrast", "trail_opacity", "trail_length", "trail_start_x", "trail_start_y", "energy_min", "energy_max", "momentum_value_gradient"});
         return s;
     }
 

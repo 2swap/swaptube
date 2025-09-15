@@ -33,7 +33,7 @@ __device__ cuDoubleComplex cuCpow(cuDoubleComplex base, cuDoubleComplex exponent
 }
 
 // Color interpolation function (shared)
-__device__ unsigned int get_mandelbrot_color(double iterations, int max_iterations, bool bailed_out, double gradation, double sq_radius, double log_real_part_exp, double breath, unsigned int internal_color) {
+__device__ unsigned int get_mandelbrot_color(double iterations, int max_iterations, bool bailed_out, double gradation, double sq_radius, double log_real_part_exp, double phase_shift, unsigned int internal_color) {
     if(!bailed_out) return internal_color;
 
     if(bailed_out && gradation > 0.01){
@@ -63,7 +63,7 @@ __device__ unsigned int get_mandelbrot_color(double iterations, int max_iteratio
     };
     const int palette_size = sizeof(color_palette) / sizeof(color_palette[0]);
 
-    iterations = (iterations + 100 - breath) / 15.;
+    iterations = (iterations + 100 - phase_shift) / 15.;
     int idx = floor(iterations);
     double w = iterations - idx;
     idx %= palette_size;
@@ -162,7 +162,7 @@ __global__ void go(
     const cuDoubleComplex zoom,
     int max_iterations,
     float gradation,
-    float breath,
+    float phase_shift,
     unsigned int internal_color,
     unsigned int* colors
 ) {
@@ -187,7 +187,7 @@ __global__ void go(
     
     bool bailed_out = iterations < max_iterations;
 
-    colors[pixel_y * width + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, gradation, sq_radius, log_real_part_exp, breath, internal_color);
+    colors[pixel_y * width + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, gradation, sq_radius, log_real_part_exp, phase_shift, internal_color);
 }
 
 // Host function to launch the kernel
@@ -198,7 +198,7 @@ extern "C" void mandelbrot_render(
     const std::complex<double> zoom,
     int max_iterations,  // Pass max_iterations as a parameter
     float gradation,
-    float breath,
+    float phase_shift,
     unsigned int internal_color,
     unsigned int* colors
 ) {
@@ -218,7 +218,7 @@ extern "C" void mandelbrot_render(
         make_cuDoubleComplex(seed_z.real(), seed_z.imag()), make_cuDoubleComplex(seed_x.real(), seed_x.imag()), make_cuDoubleComplex(seed_c.real(), seed_c.imag()),
         pixel_parameter_multipliers,
         make_cuDoubleComplex(zoom.real(), zoom.imag()),
-        max_iterations, gradation, breath, internal_color, d_colors
+        max_iterations, gradation, phase_shift, internal_color, d_colors
     );
 
     // Copy results back from device to host

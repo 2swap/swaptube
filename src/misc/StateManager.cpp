@@ -49,6 +49,12 @@ struct VariableContents {
 };
 
 using StateQuery = unordered_set<string>;
+void state_query_insert_multiple(StateQuery& sq, const StateQuery& additions){
+    for(const string& s : additions){
+        sq.insert(s);
+    }
+}
+
 using StateSet = unordered_map<string, string>;
 class State {
 public:

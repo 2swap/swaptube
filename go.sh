@@ -40,9 +40,9 @@ if ! [[ "$VIDEO_WIDTH" =~ ^[0-9]+$ ]] || ! [[ "$VIDEO_HEIGHT" =~ ^[0-9]+$ ]]; th
 fi
 FRAMERATE=30
 SAMPLERATE=48000
-SMOKETEST=0
+SMOKETEST_ONLY=0
 if [ "$4" == "-s" ]; then
-    SMOKETEST=1
+    SMOKETEST_ONLY=1
 fi
 
 # Find the project file in any subdirectory under src/Projects
@@ -73,7 +73,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}" -DSMOKETEST="${SMOKETEST}"
+    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}" -DSMOKETEST_ONLY="${SMOKETEST_ONLY}"
 
     echo "go.sh: Running \`make -j12\`"
     # build the project
@@ -91,7 +91,11 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     # Run the program.
     # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
     # Swaptube errors are printed to stdout.
-    ./swaptube 2>/dev/null
+    ./swaptube smoketest 2>/dev/null
+    # If smoketest only is not set, run again.
+    if [ $SMOKETEST_ONLY -eq 0 ]; then
+        ./swaptube no_smoketest 2>/dev/null
+    fi
 
     if [ $? -ne 0 ]; then
         echo "go.sh: Execution failed in runtime."

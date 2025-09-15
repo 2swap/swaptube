@@ -58,10 +58,12 @@ public:
             update();
         }
         if(needs_redraw()){
-            pix = Pixels(get_width(), get_height());
-            cout << "|" << flush;
             has_ever_rendered = true;
-            draw();
+            if (rendering_on()) {
+                pix = Pixels(get_width(), get_height());
+                cout << "|" << flush;
+                draw();
+            }
         }
         mark_data_unchanged();
         has_updated_since_last_query = false;
@@ -83,20 +85,26 @@ public:
                     "but render_microblock() was only called " + to_string(total_microblocks - remaining_microblocks) + " times.");
         }
 
-        total_microblocks = expected_microblocks;
-        remaining_microblocks = expected_microblocks;
+        total_microblocks = remaining_microblocks = expected_microblocks;
         cout << endl << audio.blurb() << " staged to last " << to_string(expected_microblocks) << " microblock(s)." << endl;
         audio.write_shtooka();
-        if(FOR_REAL) {
-            double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
-            total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * FRAMERATE;
 
+        double macroblock_length_seconds = audio.invoke_get_macroblock_length_seconds();
+        total_macroblock_frames = remaining_macroblock_frames = macroblock_length_seconds * FRAMERATE;
+
+        if (!rendering_on()) {
+            remaining_macroblock_frames = total_macroblock_frames = min(total_macroblock_frames, total_microblocks);
+            macroblock_length_seconds = static_cast<double>(total_macroblock_frames) / FRAMERATE;
+        }
+
+        // TODO awaiting debug- sometimes this fails out because the audio is scheduled in the past
+        if (false) {
             // Add blips for audio synchronization
             double time = get_global_state("t");
-            //AUDIO_WRITER.add_blip(time * SAMPLERATE, false);
+            AUDIO_WRITER.add_blip(time * SAMPLERATE, false);
             double microblock_length_seconds = macroblock_length_seconds / expected_microblocks;
             for(int i = 0; i < expected_microblocks; i++) {
-                //AUDIO_WRITER.add_blip((time + i * microblock_length_seconds) * SAMPLERATE, true);
+                AUDIO_WRITER.add_blip((time + i * microblock_length_seconds) * SAMPLERATE, true);
             }
         }
     }
@@ -198,24 +206,24 @@ private:
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
         global_state["t"] = global_state["frame_number"] / FRAMERATE;
 
-        if(FOR_REAL) {
-            state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
-            SUBTITLE_WRITER.set_substime(global_state["frame_number"] / FRAMERATE);
-            Pixels* p = nullptr;
-            query(p);
+        state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
+        SUBTITLE_WRITER.set_substime(global_state["frame_number"] / FRAMERATE);
+        Pixels* p = nullptr;
+        query(p);
+
+        if (rendering_on()) { // Do not encode during smoketest
             if(int(global_state["frame_number"]) % 5 == 0 && PRINT_TO_TERMINAL) p->print_to_terminal();
             VIDEO_WRITER.add_frame(*p);
-
-            auto end_time = chrono::high_resolution_clock::now(); // End timing
-            chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
-            time_per_frame_plot.add_datapoint(frame_duration.count());
-            cumulative_time_plot.add_datapoint(std::chrono::duration_cast<std::chrono::nanoseconds>(start_time.time_since_epoch()).count() / 1000000000.0);
-            memutil_plot.add_datapoint(get_free_memory());
         }
+
+        auto end_time = chrono::high_resolution_clock::now(); // End timing
+        chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
+        time_per_frame_plot.add_datapoint(frame_duration.count());
+        cumulative_time_plot.add_datapoint(std::chrono::duration_cast<std::chrono::nanoseconds>(start_time.time_since_epoch()).count() / 1000000000.0);
+        memutil_plot.add_datapoint(get_free_memory());
 
         remaining_macroblock_frames--;
         global_state["frame_number"]++;
-        //GUI.timeline_window.update(global_state["frame_number"], global_state["t"], total_microblocks - remaining_microblocks, total_microblocks, microblock_frame_number, scene_duration_frames);
         cout << "]" << flush;
     }
 };

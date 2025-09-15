@@ -69,7 +69,21 @@ A macroblock can be created using `yourscene.stage_macroblock(FileBlock("youraud
 After a Macroblock has been staged with `n` microblocks, the project file will render each microblock by calling `yourscene.render_microblock();`. Be sure to call this function `n` times, or else SwapTube will failout.
 
 #### Smoketesting
-In order to ensure that BOTH your time control is defined correctly (the appropriate number of microblocks are rendered) and that the project file does not crash due to a runtime error in the project file definition WITHOUT potentially kicking off a multi-hour render, you can run `./go.sh MyProjectName 640 360 -s`. Nothing will be rendered and no DataObjects will be manipulated, and the width and height of the video will be ignored. Smoketesting also updates the record_list.tsv file, so you can record your audio script after smoketesting without performing a full render.
+In order to ensure that BOTH your time control is defined correctly (the appropriate number of microblocks are rendered) and that the project file does not crash due to a runtime error in the project file definition WITHOUT potentially kicking off a multi-hour render, you can run `./go.sh MyProjectName 640 360 -s`.
+
+Things that happen during smoketesting:
+- One frame per microblock is staged to be rendered, but not actually rendered
+- DataObjects are modified as normal
+- State transitions are performed as normal to test validity of state equation definitions
+- The record_list.tsv file is re-populated, so you can record your audio script after smoketesting without performing a full render.
+- Subtitles will be generated with incorrect timestamps reflecting one-frame-per-microblock timing.
+
+Things that do NOT happen during smoketesting:
+- No video or audio is encoded or rendered
+- Since nothing is rendered, occasional frames are not drawn to stdout
+- Video width, height, and framerate are ignored entirely
+
+In addition to smoketesting, there is an additional exposed boolean variable `FOR_REAL` which can be toggled to true or false in the project file, effectively enabling smoketest mode for sections of a true render. This allows you to, say, work on the last section of a video without having to re-render the beginning each time.
 
 ### Scenes, State, and Data
 The data structure that a single frame is rendered as a function of has three parts, roughly split up to differences in their nature:

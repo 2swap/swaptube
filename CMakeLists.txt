@@ -8,7 +8,6 @@ add_definitions(-DVIDEO_WIDTH=${VIDEO_WIDTH})
 add_definitions(-DVIDEO_HEIGHT=${VIDEO_HEIGHT})
 add_definitions(-DFRAMERATE=${FRAMERATE})
 add_definitions(-DSAMPLERATE=${SAMPLERATE})
-add_definitions(-DSMOKETEST=${SMOKETEST})
 add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
 
 set(ENV{GLIBCXX_FORCE_NEW} 1)

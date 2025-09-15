@@ -55,20 +55,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
-        sq.insert("coefficient0_r");
-        sq.insert("coefficient0_i");
-        sq.insert("coefficient1_r");
-        sq.insert("coefficient1_i");
-        sq.insert("terms");
-        sq.insert("zoom");
-        sq.insert("degree_fixed");
-        sq.insert("left_x");
-        sq.insert("top_y");
-        sq.insert("right_x");
-        sq.insert("bottom_y");
-        sq.insert("coefficients_opacity");
-        sq.insert("visibility_multiplier");
-        sq.insert("rainbow");
+        state_query_insert_multiple(sq, {"coefficient0_r", "coefficient0_i", "coefficient1_r", "coefficient1_i", "terms", "zoom", "degree_fixed", "left_x", "top_y", "right_x", "bottom_y", "coefficients_opacity", "visibility_multiplier", "rainbow"});
         return sq;
     }
 };

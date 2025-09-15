@@ -12,7 +12,7 @@ public:
         cout << "LatexScene: begin_latex_transition called with TransitionType: " << tt << " and latex: " << l << endl;
         latex = l;
         if(scale_factor == 0) {
-            if(!FOR_REAL) {
+            if(!rendering_on()) {
                 cout << "LatexScene: Warning - scale_factor is not set before begin_latex_transition. Defaulting to 1." << endl;
                 scale_factor = 1;
             } else {

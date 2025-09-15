@@ -343,6 +343,7 @@ public:
     }
 
     void process_frame_from_buffer(const bool last = false) {
+        if (!rendering_on()) return; // Don't write in smoketest
         while(true){
             int frameSize = audioOutputCodecContextMerged->frame_size;
             if(frameSize <= 0) {

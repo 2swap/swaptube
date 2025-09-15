@@ -8,6 +8,10 @@ using namespace std;
 static bool SAVE_FRAME_PNGS = true;   // Whether to save every 30th frame to disk as PNG
 static bool PRINT_TO_TERMINAL = true;
 
+static bool FOR_REAL = true; // Flag exposed to the project definition to disable sections of video
+static bool SMOKETEST= false;// Overall smoketest flag
+bool rendering_on() { return FOR_REAL && !SMOKETEST; }
+
 #include <string>
 #include <stdexcept>
 #include <iostream>
@@ -18,8 +22,6 @@ const string project_name = PROJECT_NAME_MACRO;
 //const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
 //const int VIDEO_BACKGROUND_COLOR = 0xff101010; // Charcoal Grey...er
 const int VIDEO_BACKGROUND_COLOR = 0xff000000; // Black
-
-bool FOR_REAL = !SMOKETEST;
 
 #include "../io/PathManager.cpp"
 #include "../io/AudioWriter.cpp"
@@ -72,7 +74,22 @@ static ShtookaWriter SHTOOKA_WRITER;
 // (1) include all relevant scenes for the video
 // (2) define a function "render_video" which uses those scenes to define the video timeline.
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        string arg1 = argv[1];
+        if (arg1 == "smoketest") {
+            cout << "Running in smoketest mode" << endl;
+            SMOKETEST = true;
+        } else if (arg1 == "no_smoketest") {
+            cout << "Running in no_smoketest mode" << endl;
+            SMOKETEST = false;
+        } else {
+            throw runtime_error("Invalid argument. Use 'smoketest' or 'no_smoketest'.");
+        }
+    } else {
+        cout << "No argument provided, defaulting to for_real mode" << endl;
+    }
+
     if (SAMPLERATE % FRAMERATE != 0){
         throw runtime_error("Video framerate must be divisible by audio sample rate.");
     }

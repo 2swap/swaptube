@@ -101,16 +101,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery s = ThreeDimensionScene::populate_state_query();
-        s.insert("physics_multiplier");
-        s.insert("repel");
-        s.insert("attract");
-        s.insert("decay");
-        s.insert("microblock_fraction");
-        s.insert("centering_strength");
-        s.insert("dimensions");
-        s.insert("mirror_force");
-        s.insert("highlight_point_opacity");
-        s.insert("flip_by_symmetry");
+        state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
         return s;
     }
 

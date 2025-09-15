@@ -48,12 +48,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
-        sq.insert("sqrt_coef");
-        sq.insert("sin_coef");
-        sq.insert("cos_coef");
-        sq.insert("exp_coef");
-        sq.insert("ab_dilation");
-        sq.insert("dot_radius");
+        state_query_insert_multiple(sq, {"sqrt_coef", "sin_coef", "cos_coef", "exp_coef", "ab_dilation", "dot_radius"});
         return sq;
     }
 };

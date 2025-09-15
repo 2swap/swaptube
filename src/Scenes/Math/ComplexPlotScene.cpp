@@ -295,11 +295,7 @@ public:
                 for(string ri : {"r", "i", "opacity", "ring"})
                     if(!(type == "root" && ri == "opacity"))
                         sq.insert(type + to_string(num) + "_" + ri);
-        sq.insert("roots_or_coefficients_control");
-        sq.insert("ab_dilation");
-        sq.insert("dot_radius");
-        sq.insert("hide_zero_coefficients");
-        sq.insert("positive_quadratic_formula_opacity");
+        state_query_insert_multiple(sq, {"roots_or_coefficients_control", "ab_dilation", "dot_radius", "hide_zero_coefficients", "positive_quadratic_formula_opacity"});
         return sq;
     }
 };
