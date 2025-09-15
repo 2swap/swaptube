@@ -21,12 +21,22 @@ The following external dependencies are required for specific functionalities wi
 | Cairo | In-Video LaTeX | visual_media.cpp | Renders SVG files onto Cairo surfaces and converts them to pixel data | `sudo apt install libcairo2-dev` |
 | LibPNG | PNG scenes | visual_media.cpp | Reads PNG files and converts them to pixel data | `sudo apt install libpng-dev` |
 
+## Docker Setup
+
+For easy deployment with all dependencies included (except nvidia/cuda), see the [docker/README.md](docker/README.md) for containerized setup instructions.
+
 # How to Run It
 
 When you have created a project file in `projects/yourprojectname.cpp`, you can compile and run the whole project by executing:
 
 ```bash
 ./go.sh yourprojectname 640 360
+```
+
+Some example code and demos can be found in `src/Projects/Demos/`. How to run a demo (code run from project root):
+
+```bash
+./go.sh LoopingLambdaDemo 640 360
 ```
 
 Swaptube defaults to a framerate of 30 FPS and a sample rate of 48000 Hz. If you need to change these for whatever reason, they are specified in `go.sh` and `record_audios.py`.
