@@ -2,6 +2,10 @@
 
 This directory contains Docker configuration files and scripts to run SwapTube in a containerized environment, making it easy to deploy and use without installing all dependencies manually.
 
+## Note from 2swap:
+
+I personally don't use this as I have gotten accustomed to building and running SwapTube natively on my system, and I intend to keep it that way to maintain a level of familiarity with external dependencies. This setup is contributed by the community, and I do not intend to maintain it. YMMV.
+
 ## 🐳 Quick Start
 
 1. **Build the container:**

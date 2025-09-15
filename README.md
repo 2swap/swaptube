@@ -2,8 +2,6 @@
 
 This is the repository I use to render [my YouTube videos](https://www.youtube.com/@twoswap).
 
-## Overview
-
 SwapTube is built on FFMPEG, but most of the functionalities above the layer of video and audio encoding are custom-written. The project does not use any fancy graphics libraries, with a few exceptions for particular functionalities.
 
 ## Setup
@@ -23,7 +21,7 @@ The following external dependencies are required for specific functionalities wi
 | Cairo | In-Video LaTeX | visual_media.cpp | Renders SVG files onto Cairo surfaces and converts them to pixel data | `sudo apt install libcairo2-dev` |
 | LibPNG | PNG scenes | visual_media.cpp | Reads PNG files and converts them to pixel data | `sudo apt install libpng-dev` |
 
-## How to Run
+# How to Run It
 
 When you have created a project file in `projects/yourprojectname.cpp`, you can compile and run the whole project by executing:
 
@@ -33,7 +31,7 @@ When you have created a project file in `projects/yourprojectname.cpp`, you can 
 
 Swaptube defaults to a framerate of 30 FPS and a sample rate of 48000 Hz. If you need to change these for whatever reason, they are specified in `go.sh` and `record_audios.py`.
 
-## Repository Structure
+# Repository Structure
 
 ### Top-Level Files and Folders
 
@@ -53,23 +51,23 @@ Swaptube defaults to a framerate of 30 FPS and a sample rate of 48000 Hz. If you
 
 - **go.sh**: The program entry point!
 
-## Design Philosophy
+# Design Philosophy
 
 ### Time Control
 Swaptube uses a 2-layer time organization system. At the highest level, the video is divided into Macroblocks, which can be thought of as atomic units of audio. Macroblocks are divided into Microblocks, which are represent atomic time units controlling visual transformations.
 Such division permits the user to define a video with an in-line script, such that SwapTube will do all time management and the user does not need to manually time each segment of video.
 Furthermore, this permits native transitions: since a transition occurs over either a Macroblock or Microblock, Swaptube knows the duration of time over which the transition occurs, and can manage that transition automatically through State.
 
-#### Macroblocks
+##### Macroblocks
 There are a few types of macroblocks: FileBlocks, SilenceBlocks, GeneratedBlocks, etc. FileBlocks are defined by a filepath to an audio file inside the media folder.
 SilenceBlocks are defined by a duration in seconds, and GeneratedBlocks are defined by a buffered array of audio samples generated in the project file.
 A macroblock can be created using `yourscene.stage_macroblock(FileBlock("youraudio_no_file_extension"), 2);` which stages the macroblock to contain 2 microblocks.
 
-#### Microblocks
+##### Microblocks
 After a Macroblock has been staged with `n` microblocks, the project file will render each microblock by calling `yourscene.render_microblock();`. Be sure to call this function `n` times, or else SwapTube will failout.
 
-#### Smoketesting
-In order to ensure that BOTH your time control is defined correctly (the appropriate number of microblocks are rendered) and that the project file does not crash due to a runtime error in the project file definition WITHOUT potentially kicking off a multi-hour render, you can run `./go.sh MyProjectName 640 360 -s`.
+### Smoketesting
+In order to ensure that BOTH your time control is defined correctly (the appropriate number of microblocks are rendered) and that the project file does not crash due to a runtime error in the project file definition WITHOUT potentially kicking off a multi-hour render, Swaptube has a `smoketest` feature. By default, smoketest is always run on any Swaptube run.
 
 Things that happen during smoketesting:
 - One frame per microblock is staged to be rendered, but not actually rendered
@@ -81,7 +79,9 @@ Things that happen during smoketesting:
 Things that do NOT happen during smoketesting:
 - No video or audio is encoded or rendered
 - Since nothing is rendered, occasional frames are not drawn to stdout
-- Video width, height, and framerate are ignored entirely
+- Video width, height, and framerate are ignored entirely except insofar as they affect State equations and DataObject modifications.
+
+You can run `./go.sh MyProjectName 640 360 -s`, using the -s flag to indicate "smoketest only". Using this flag merely skips the full render after the smoketest.
 
 In addition to smoketesting, there is an additional exposed boolean variable `FOR_REAL` which can be toggled to true or false in the project file, effectively enabling smoketest mode for sections of a true render. This allows you to, say, work on the last section of a video without having to re-render the beginning each time.
 
@@ -89,5 +89,7 @@ In addition to smoketesting, there is an additional exposed boolean variable `FO
 The data structure that a single frame is rendered as a function of has three parts, roughly split up to differences in their nature:
 - **Scene**: The Scene is the object which is constructed by the user in the project file. It fundamentally defines **what** is rendered. For example, a MandelbrotScene is responsible for rendering Mandelbrot Sets.
 - **State**: State can be thought of as any numerical information used by the Scene to render a particular frame. This controls things such as the opacity of certain objects, or, following the Mandelbrot example, the zoom level of the Mandelbrot set. All scenes have a StateManager, and when the user whishes to modify the scene's state, they can do so by calling functions on the StateManager. Usually these will be `set` and `transition` function calls. Since State uniquely contains numerical information, swaptube will handle all the clean transitions of state.
-- **Data**: Data is the non-numerical stateful information which is remembered by the Scene. A good example is the LambdaScene, which draws a Tromp Lambda Diagram, and stores as data that particular lambda expression. This type of information is non-numerical, and cannot be naively interpolated for a transition, so it must be kept in a DataObject with an interface defined in the Scene and DataObject.
+- **Data**: Data is the non-numerical stateful information which is remembered by the Scene. A good example is the LambdaScene, which draws a Tromp Lambda Diagram, and stores as data that particular lambda expression. Similarly, a GraphScene needs to statefully track a Graph (of nodes and edges). This type of information is non-numerical, and cannot be naively interpolated as a transition, so it must be kept in a DataObject with an interface defined between the Scene and DataObject.
 
+### Guts of a Scene
+If there is one thing you should read first to get how Swaptube works, it is src/Scenes/Scene.cpp. This is the abstract base class for all scenes, and TODO I will explain more about how Scenes work here.
