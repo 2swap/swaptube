@@ -92,15 +92,20 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
     # Swaptube errors are printed to stdout.
     ./swaptube smoketest 2>/dev/null
-    # If smoketest only is not set, run again.
-    if [ $SMOKETEST_ONLY -eq 0 ]; then
-        ./swaptube no_smoketest 2>/dev/null
-    fi
-
     if [ $? -ne 0 ]; then
         echo "go.sh: Execution failed in runtime."
         exit 1
     fi
+
+    # If smoketest only is not set, run again.
+    if [ $SMOKETEST_ONLY -eq 0 ]; then
+        ./swaptube no_smoketest 2>/dev/null
+        if [ $? -ne 0 ]; then
+            echo "go.sh: Execution failed in runtime."
+            exit 1
+        fi
+    fi
+
     exit 0
 )
 

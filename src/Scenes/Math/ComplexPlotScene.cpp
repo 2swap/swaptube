@@ -69,7 +69,6 @@ public:
             }
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".8"); // basically saturation
-        state_manager.set("hide_zero_coefficients", "0");
         state_manager.set("dot_radius", ".3");
         state_manager.set("positive_quadratic_formula_opacity", "0");
     }
@@ -257,9 +256,8 @@ public:
 
         // Draw coefficients
         for(int i = 0; i < coefficients.size(); i++){
-            float letter_opa = lerp(1, clamp(0,abs(coefficients[i])*2,1), state["hide_zero_coefficients"]);
-            float ring_opa = letter_opa * state["coefficient"+to_string(i)+"_ring"];
-            letter_opa *= state["coefficient"+to_string(i)+"_opacity"];
+            float ring_opa = state["coefficient"+to_string(i)+"_ring"];
+            float letter_opa = state["coefficient"+to_string(i)+"_opacity"];
             const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
             if(ring_opa > 0.01) {
                 pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, ring_opa);
@@ -295,7 +293,7 @@ public:
                 for(string ri : {"r", "i", "opacity", "ring"})
                     if(!(type == "root" && ri == "opacity"))
                         sq.insert(type + to_string(num) + "_" + ri);
-        state_query_insert_multiple(sq, {"roots_or_coefficients_control", "ab_dilation", "dot_radius", "hide_zero_coefficients", "positive_quadratic_formula_opacity"});
+        state_query_insert_multiple(sq, {"roots_or_coefficients_control", "ab_dilation", "dot_radius", "positive_quadratic_formula_opacity"});
         return sq;
     }
 };

@@ -150,6 +150,7 @@ public:
     }
 
     void add_sfx(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer, int t) {
+        if (!rendering_on()) return; // Don't write in smoketest
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
@@ -176,6 +177,7 @@ public:
     }
 
     void add_blip(int t, bool left_not_right) {
+        if (!rendering_on()) throw runtime_error("Tried to add blip in smoketest!");
         int sample_copy_start_frames = t - total_samples_processed + sample_buffer_offset;
         int sample_copy_end_frames = sample_copy_start_frames + 1;
 
@@ -195,6 +197,7 @@ public:
     }
 
     double add_generated_audio(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer) {
+        if (!rendering_on()) return 0; // Don't write in smoketest
         process_frame_from_buffer();
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
@@ -211,6 +214,7 @@ public:
     }
 
     void add_silence(double duration) {
+        if (!rendering_on()) return; // Don't write in smoketest
         process_frame_from_buffer();
         int num_samples = static_cast<int>(duration * audioOutputCodecContextMerged->sample_rate);
 
@@ -221,6 +225,7 @@ public:
     }
 
     double add_audio_from_file(const string& filename) {
+        if (!rendering_on()) return 0; // Don't write in smoketest
         process_frame_from_buffer();
         double length_in_seconds = 0;
 
@@ -343,7 +348,6 @@ public:
     }
 
     void process_frame_from_buffer(const bool last = false) {
-        if (!rendering_on()) return; // Don't write in smoketest
         while(true){
             int frameSize = audioOutputCodecContextMerged->frame_size;
             if(frameSize <= 0) {
