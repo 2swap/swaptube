@@ -1,4 +1,5 @@
 #pragma once
+#include "../misc/ffmpeg_error.hpp"
 #include <iostream>
 #include <string>
 #include <regex>
@@ -6,6 +7,7 @@
 #include "DebugPlot.h"
 #include "../misc/pixels.h"
 #include "IoHelpers.cpp"
+
 extern "C"
 {
     #include <libavcodec/avcodec.h>
@@ -146,7 +148,7 @@ public:
 
         ret = avformat_write_header(fc, &opt);
         if (ret < 0) {
-            cout << "Failed to write header: " << av_err2str(ret) << endl;
+            cout << "Failed to write header: " << ff_errstr(ret) << endl;
             throw runtime_error("Failed to write header!");
         }
 
