@@ -32,8 +32,8 @@ private:
 
         for(string ri : {"r", "i", "opacity"}) {
             string key = "coefficient" + to_string(degree) + "_" + ri;
-            if(abs(state[key]) > 0.001)
-                throw runtime_error("Cannot decrement degree while leading coefficient is non-zero or non-opaque. Offending key: " + key);
+            if(abs(state[key]) > stod(new_coefficient_val))
+                throw runtime_error("Cannot decrement degree while leading coefficient is non-zero or non-opaque. Offending key: " + key + " with value " + to_string(state[key]));
             state_manager.remove("root" + to_string(degree) + "_" + ri);
             state_manager.remove("coefficient" + to_string(degree) + "_" + ri);
         }
@@ -154,11 +154,14 @@ public:
         return current_poly;
     }
 
-    void stage_swap_roots_when_in_root_mode(TransitionType tt, const string& root1, const string& root2) {
-        const string r0 = state_manager.get_equation("root" + root1 + "_r");
-        const string i0 = state_manager.get_equation("root" + root1 + "_i");
-        const string r1 = state_manager.get_equation("root" + root2 + "_r");
-        const string i1 = state_manager.get_equation("root" + root2 + "_i");
+    void stage_swap(TransitionType tt, const string& root1, const string& root2, bool root_or_coefficient) {
+        if(root_or_coefficient) roots_to_coefficients();
+        else coefficients_to_roots();
+        string type = root_or_coefficient ? "coefficient" : "root";
+        const string r0 = state_manager.get_equation(type + root1 + "_r");
+        const string i0 = state_manager.get_equation(type + root1 + "_i");
+        const string r1 = state_manager.get_equation(type + root2 + "_r");
+        const string i1 = state_manager.get_equation(type + root2 + "_i");
 
         const string midpoint_r = r0 + " " + r1 + " + 2 /";
         const string midpoint_i = i0 + " " + i1 + " + 2 /";
@@ -185,19 +188,19 @@ public:
 
         state_manager.set(theta_unique, "0");
         state_manager.set({
-            {"root" + root1 + "_r", spin_r1},
-            {"root" + root1 + "_i", spin_i1},
-            {"root" + root2 + "_r", spin_r2},
-            {"root" + root2 + "_i", spin_i2},
+            {type + root1 + "_r", spin_r1},
+            {type + root1 + "_i", spin_i1},
+            {type + root2 + "_r", spin_r2},
+            {type + root2 + "_i", spin_i2},
         });
         state_manager.transition(tt, {
             {theta_unique, "pi"},
         });
         state_manager.transition(tt, {
-            {"root" + root1 + "_r", r1},
-            {"root" + root1 + "_i", i1},
-            {"root" + root2 + "_r", r0},
-            {"root" + root2 + "_i", i0},
+            {type + root1 + "_r", r1},
+            {type + root1 + "_i", i1},
+            {type + root2 + "_r", r0},
+            {type + root2 + "_i", i0},
         });
     }
 

@@ -21,15 +21,17 @@ __device__ void device_gradient_circle(float cx, float cy, float r, int col, uns
     if (cx + r < 0 || cx - r >= width || cy + r < 0 || cy - r >= height)
         return;
     float r2 = r*r;
-    for (float dx = -r; dx < r; dx++) {
-        float sdx = dx*dx;
-        for (float dy = -r; dy < r; dy++) {
-            float dist2 = (sdx + dy*dy) / r2;
+    for (int x = cx-r; x < cx+r; x++) {
+        float sdx = (x - cx)*(x - cx);
+        for (int y = cy-r; y < cy+r; y++) {
+            float sdy = (y - cy)*(y - cy);
+            float dist2 = (sdx + sdy) / r2;
             if (dist2 < 1.0f) {
                 //float final_opa = opa / (1 + 2400 /** dist2*/ * dist2);
                 float final_opa = opa / (1 + 2400 * dist2 * dist2);
+                final_opa = fminf(final_opa, 1.0f);
                 //final_opa /= 2;
-                device_atomic_overlay_pixel(cx + dx, cy + dy, col, final_opa, pixels, width, height);
+                device_atomic_overlay_pixel(x, y, col, final_opa, pixels, width, height);
             }
         }
     }

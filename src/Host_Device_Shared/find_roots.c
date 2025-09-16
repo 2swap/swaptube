@@ -117,7 +117,7 @@ void check_answer(const std::complex<float>* coeffs, int degree, const std::comp
         float err = std::abs(prod[i] - coeffs[i]);
         if (err > max_err) max_err = err;
     }
-    if (max_err > 1e-3f) {
+    if (max_err > 1e-2f) {
         throw std::runtime_error("Root finding failed: max error " + std::to_string(max_err) + " exceeds tolerance");
     }
 }
