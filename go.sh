@@ -73,7 +73,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}" -DSMOKETEST_ONLY="${SMOKETEST_ONLY}"
+    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}"
 
     echo "go.sh: Running \`make -j12\`"
     # build the project
@@ -114,10 +114,10 @@ if [ $SUCCESS -ne 0 ]; then
     exit $SUCCESS
 fi
 
+ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
+
 cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"
 rm "$TEMPFILE"
-
-ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
 # Check if the compile and run were successful
 if [ -n "$ultimate_subdir" ]; then
