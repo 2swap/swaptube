@@ -30,8 +30,8 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-dev \
     libcairo2-dev \
     libpng-dev \
-    # Math libraries
-    libeigen3-dev \
+    # Json library
+    nlohmann-json3-dev \
     # Python for recording scripts
     python3 \
     python3-pip \

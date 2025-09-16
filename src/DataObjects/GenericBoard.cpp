@@ -6,7 +6,7 @@
 #include <set>
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Scene.cpp"
-#include "../misc/json.hpp"
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 class GenericBoard {

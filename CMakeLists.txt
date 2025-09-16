@@ -22,6 +22,7 @@ find_package(RSVG REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(PNG REQUIRED)
 find_package(glm REQUIRED)
+find_package(nlohmann_json REQUIRED)
 
 # Initialize the sources list with the main project file. We will append to it soon.
 set(SOURCES "src/misc/Main.cpp")
@@ -53,6 +54,6 @@ include_directories("/usr/include/cairo")
 include_directories(${PNG_INCLUDE_DIR})
 include_directories(${GLM_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${RSVG_LIBRARIES} ${FDKAAC_LIBRARIES} cairo gobject-2.0 lzma ${PNG_LIBRARIES} ${GPU_LIBRARIES} ${X11_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${RSVG_LIBRARIES} ${FDKAAC_LIBRARIES} cairo gobject-2.0 lzma ${PNG_LIBRARIES} ${GPU_LIBRARIES} ${X11_LIBRARIES} nlohmann_json::nlohmann_json)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wreorder)
 

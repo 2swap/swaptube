@@ -9,7 +9,7 @@
 #include "../GenericBoard.cpp"
 #include "Bitboard.cpp"
 #include "SteadyState.h"
-#include "../../misc/json.hpp"
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 enum C4BranchMode {

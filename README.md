@@ -20,10 +20,11 @@ The following external dependencies are required for specific functionalities wi
 | RSVG and GLib | In-Video LaTeX | visual_media.cpp | Loads and renders SVG files into pixel data | `sudo apt install librsvg2-dev libglib2.0-dev` |
 | Cairo | In-Video LaTeX | visual_media.cpp | Renders SVG files onto Cairo surfaces and converts them to pixel data | `sudo apt install libcairo2-dev` |
 | LibPNG | PNG scenes | visual_media.cpp | Reads PNG files and converts them to pixel data | `sudo apt install libpng-dev` |
+| nlohmann/json | Reading and writing json files in I/O | Connect 4 data structures, GraphScene | GraphScene can write graphs to disk in json, Connect 4 steady states and compute caches are read from json | `sudo apt install nlohmann-json3-dev` |
 
 ## Docker Setup
 
-For easy deployment with all dependencies included (except nvidia/cuda), see the [docker/README.md](docker/README.md) for containerized setup instructions.
+For easy deployment with all dependencies included (except nvidia/cuda), see the [docker/README.md](docker/README.md) for containerized setup instructions. This is optional and community-made for Docker users. I (2swap) personally don't use or maintain it.
 
 # How to Run It
 

@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include "DataObject.cpp"
 #include "GenericBoard.cpp"
-#include "../misc/json.hpp"
+#include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
 extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
