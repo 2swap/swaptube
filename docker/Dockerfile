@@ -19,10 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnuplot \
     libglm-dev \
     librsvg2-dev libglib2.0-dev libcairo2-dev \
-    libeigen3-dev \
     libpng-dev \
     python3 python3-pip \
-    # Json library
     nlohmann-json3-dev \
     libtinyxml2-dev \
     libgtkmm-3.0-dev \
