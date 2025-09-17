@@ -1,5 +1,5 @@
 #pragma once
-#include "../misc/ffmpeg_error.hpp"
+#include "ffmpeg_error.hpp"
 #include <sys/stat.h>
 #include <vector>
 #include <iostream>

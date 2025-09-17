@@ -1,5 +1,5 @@
 #pragma once
-#include "../misc/ffmpeg_error.hpp"
+#include "ffmpeg_error.hpp"
 #include <iostream>
 #include <string>
 #include <regex>
