@@ -97,15 +97,13 @@ public:
             macroblock_length_seconds = static_cast<double>(total_macroblock_frames) / FRAMERATE;
         }
 
-        // TODO awaiting debug- sometimes this fails out because the audio is scheduled in the past
-        if (false) {
-            // Add blips for audio synchronization
-            double time = get_global_state("t");
-            AUDIO_WRITER.add_blip(time * SAMPLERATE, false);
-            double microblock_length_seconds = macroblock_length_seconds / expected_microblocks;
-            for(int i = 0; i < expected_microblocks; i++) {
-                AUDIO_WRITER.add_blip((time + i * microblock_length_seconds) * SAMPLERATE, true);
-            }
+        // Add blips for audio synchronization
+        double time = get_global_state("t") + 1./FRAMERATE; // Time is updated at the start of the next frame
+        cout << "Adding blips at t=" << time << "s." << endl;
+        AUDIO_WRITER.add_blip(round(time * SAMPLERATE), false);
+        double microblock_length_seconds = macroblock_length_seconds / expected_microblocks;
+        for(int i = 0; i < expected_microblocks; i++) {
+            AUDIO_WRITER.add_blip(round((time + i * microblock_length_seconds) * SAMPLERATE), true);
         }
     }
 

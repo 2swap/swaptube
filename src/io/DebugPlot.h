@@ -68,10 +68,7 @@ public:
 
     // Function to generate the plot using Gnuplot
     void generate_plot() {
-        if(!data_has_been_added){
-            cout << "DebugPlot says: Not running GNUPlot since there was no data." << endl;
-            return;
-        }
+        if(!data_has_been_added) return;
         string gnuplot_command = "gnuplot -e \"set terminal png size 1920,1080; set output '" + plot_file_path_ + "'; ";
         gnuplot_command += "set ylabel 'Values'; ";
         gnuplot_command += "plot ";
