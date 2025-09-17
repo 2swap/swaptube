@@ -1,4 +1,5 @@
 #pragma once
+#include "../misc/ffmpeg_error.hpp"
 #include <sys/stat.h>
 #include <vector>
 #include <iostream>
@@ -122,7 +123,7 @@ public:
 
             int ret = avcodec_open2(codecCtx, audioOutputCodec, nullptr);
             if (ret < 0) {
-                cout << "avcodec_open2 error: " << av_err2str(ret) << endl;
+                cout << "avcodec_open2 error: " << ff_errstr(ret) << endl;
                 avcodec_free_context(&codecCtx);
                 throw runtime_error(string("Error: Could not open encoder ") + codec_name + ".");
             }
@@ -392,7 +393,7 @@ public:
                     av_frame_free(&frameSFX);
                     av_frame_free(&frameVoice);
                     av_frame_free(&frameBlips);
-                    throw runtime_error("Error allocating audio frame buffer: " + string(av_err2str(ret)));
+                    throw runtime_error("Error allocating audio frame buffer: " + string(ff_errstr(ret)));
                 }
             };
 
