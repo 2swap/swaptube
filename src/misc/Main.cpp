@@ -16,6 +16,12 @@ bool rendering_on() { return FOR_REAL && !SMOKETEST; }
 #include <stdexcept>
 #include <iostream>
 #include <signal.h>
+
+enum TransitionType {
+    MICRO,
+    MACRO
+};
+
 const string project_name = PROJECT_NAME_MACRO;
 
 //const int VIDEO_BACKGROUND_COLOR = 0xff000020; // Lambda Blue

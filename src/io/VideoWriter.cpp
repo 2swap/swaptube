@@ -99,7 +99,6 @@ private:
     }
 
 public:
-    double video_seconds_so_far = 0;
     VideoWriter(AVFormatContext *fc_) : fc(fc_) {
         av_log_set_level(AV_LOG_DEBUG);
 
@@ -208,7 +207,6 @@ public:
         outframe++;
 
         encode_and_write_frame(yuvpic);
-        video_seconds_so_far += 1./FRAMERATE;
     }
     ~VideoWriter() {
         //int pipefd[2];

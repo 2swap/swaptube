@@ -20,11 +20,6 @@
  * StateManager will intentionally run the second equation first.
  */
 
-enum TransitionType {
-    MICRO,
-    MACRO
-};
-
 struct VariableContents {
     // The numerical value currently stored by this variable
     double value;

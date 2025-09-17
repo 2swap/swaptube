@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Scene.cpp"
-#include "../DataObjects/KlotskiBoard.h"
+#include "../Scene.cpp"
+#include "../../DataObjects/KlotskiBoard.h"
 #include <string>
 #include <vector>
 

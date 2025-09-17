@@ -151,6 +151,7 @@ void render_video(){
         ls->begin_latex_transition(MICRO, latex_color(0xff444444, "ax^3+bx^2+cx+d"));
         cs.render_microblock();
     }
+    return;
 
     cs.stage_macroblock(FileBlock("a doesn't really do much, so we're just going to keep it at 1."), 4);
     for (int i = 0; i < 2; i++) {

@@ -1,4 +1,4 @@
-#include "../Scenes/KlotskiScene.cpp"
+#include "../Scenes/Math/KlotskiScene.cpp"
 #include "../DataObjects/KlotskiBoard.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Common/PauseScene.cpp"

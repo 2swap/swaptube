@@ -27,15 +27,16 @@ using namespace std;
 // ffmpeg -encoders | grep pcm # List all relevant wav encoders
 
 // signed integer, non-planar (interleaved)
+const int SAMPLES_PER_VIDEO_FRAME = SAMPLERATE / FRAMERATE;
 const AVCodecID output_codec = AV_CODEC_ID_PCM_S32LE;
 const AVSampleFormat output_sample_format = AV_SAMPLE_FMT_S32;
 typedef int32_t sample_t;
+sample_t line_max = (static_cast<sample_t>(1) << (sizeof(sample_t) * 8 - 3)) - 1;
 int audio_channels = 2; // Stereo
-int num_audio_streams = 4;
+int num_audio_streams = 1 + (AUDIO_SFX?2:0) + (AUDIO_HINTS?2:0);
 
 class AudioWriter {
 private:
-    // 0: merged, 1: sfx, 2: voice, 3: blips
     vector<AVCodecContext*> outputCodecContexts = vector<AVCodecContext*>(num_audio_streams, nullptr);
     vector<AVStream*      > audioStreams        = vector<AVStream*      >(num_audio_streams, nullptr);
 
@@ -54,10 +55,8 @@ private:
     }
 
     // Encodes and writes packets from a given codec context and stream, returns encoded length in seconds
-    double encode_and_write_audio(AVCodecContext* codecCtx, AVStream* stream) {
+    void encode_and_write_audio(AVCodecContext* codecCtx, AVStream* stream) {
         AVPacket outputPacket = {0};
-
-        double length_in_seconds = 0;
 
         int ret = 1;
         while (ret >= 0) {
@@ -69,7 +68,6 @@ private:
             outputPacket.stream_index = stream->index;
 
             pts_dts_plot.add_datapoint(vector<double>{static_cast<double>(outputPacket.pts)});
-            length_in_seconds += static_cast<double>(outputPacket.duration) / codecCtx->sample_rate;
 
             av_packet_rescale_ts(&outputPacket, codecCtx->time_base, stream->time_base);
 
@@ -78,12 +76,9 @@ private:
 
             av_packet_unref(&outputPacket);
         }
-        return length_in_seconds;
     }
 
 public:
-    double audio_seconds_so_far = 0;
-
     AudioWriter(AVFormatContext *fc_) : fc(fc_), sample_buffer(), sfx_buffer() {
         for(int i = 0; i < num_audio_streams; i++) {
             const AVCodec* audioOutputCodec = avcodec_find_encoder(output_codec);
@@ -119,8 +114,9 @@ public:
         }
     }
 
-    void add_sfx(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer, int t) {
-        if (!rendering_on()) return; // Don't write in smoketest
+    void add_sfx(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer, const int t) {
+        if (!rendering_on() || !AUDIO_SFX) return; // Don't write in smoketest
+
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
@@ -146,8 +142,18 @@ public:
         }
     }
 
-    void add_blip(int t, bool left_not_right) {
-        if (!rendering_on()) return; // Don't write in smoketest
+    // These are used for 6884's transition curve hints
+    int current_macroblock_length_samples = 0;
+    int current_microblock_length_samples = 0;
+    int macroblock_linear_step = 0;
+    int microblock_linear_step = 0;
+
+    void add_blip(const int t, const TransitionType tt, const int upcoming_macroblock_length_samples, const int upcoming_microblock_length_samples) {
+        if (!rendering_on() || !AUDIO_HINTS) return; // Don't write in smoketest
+
+        current_macroblock_length_samples = upcoming_macroblock_length_samples;
+        current_microblock_length_samples = upcoming_microblock_length_samples;
+
         int sample_idx = t - total_samples_processed;
 
         if(sample_idx < 0)
@@ -159,15 +165,17 @@ public:
             blips_buffer.resize(new_size); // Extend with silence
         }
 
-        if(left_not_right) blips_buffer[sample_idx * 2    ] += 10000000; // Left
-        else               blips_buffer[sample_idx * 2 + 1] += 10000000; // Right
+        if(tt == MACRO) blips_buffer[sample_idx * 2    ] += 10000000; // Left
+        else            blips_buffer[sample_idx * 2 + 1] += 10000000; // Right
     }
 
-    double add_generated_audio(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer) {
+    int add_generated_audio(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer) {
         if (!rendering_on()) return 0; // Don't write in smoketest
-        process_frame_from_buffer();
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
+        }
+        if(left_buffer.size() % SAMPLES_PER_VIDEO_FRAME != 0){
+            throw runtime_error("Generated sound buffer length is not a multiple of video frame size. Size: " + to_string(left_buffer.size()) + " samples.");
         }
 
         int num_samples = left_buffer.size();
@@ -177,19 +185,18 @@ public:
             sample_buffer.push_back(right_buffer[i]);
         }
 
-        return static_cast<double>(num_samples) / outputCodecContexts[0]->sample_rate;
+        return num_samples / SAMPLES_PER_VIDEO_FRAME;
     }
 
-    void add_silence(double duration) {
-        if (!rendering_on()) return; // Don't write in smoketest
-        process_frame_from_buffer();
-        int num_samples = static_cast<int>(duration * outputCodecContexts[0]->sample_rate) * audio_channels;
-        sample_buffer.insert(sample_buffer.end(), num_samples, 0);
-    }
-
-    double add_audio_from_file(const string& filename) {
+    int add_silence(int duration_frames) {
         if (!rendering_on()) return 0; // Don't write in smoketest
-        process_frame_from_buffer();
+        int num_samples = duration_frames * SAMPLES_PER_VIDEO_FRAME;
+        sample_buffer.resize(sample_buffer.size() + num_samples * audio_channels, 0);
+        return duration_frames;
+    }
+
+    int add_audio_from_file(const string& filename) {
+        if (!rendering_on()) return 0; // Don't write in smoketest
 
         // Build full path to the input audio file
         string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + filename;
@@ -198,8 +205,7 @@ public:
         if (!file_exists(fullInputAudioFilename)) {
             int seconds = 2;
             cout << "Audio file not found: " << fullInputAudioFilename << ". Adding " << seconds << " seconds of silence instead." << endl;
-            add_silence(seconds);
-            return seconds;
+            return add_silence(seconds * FRAMERATE);
         }
 
         int ret = 0;
@@ -307,20 +313,31 @@ public:
             av_packet_unref(packet);
         }
 
+        // Add silence to align to a frame boundary
+        while (length_in_samples % SAMPLES_PER_VIDEO_FRAME != 0) {
+            sample_buffer.push_back(0);
+            sample_buffer.push_back(0);
+            length_in_samples++;
+        }
+
         avcodec_free_context(&codecContext);
         avformat_close_input(&inputAudioFormatContext);
 
-        return static_cast<double>(length_in_samples) / codecContext->sample_rate;
+        return length_in_samples / SAMPLES_PER_VIDEO_FRAME;
     }
 
-    void process_frame_from_buffer(const bool last = false) {
+    int macroblock_line = 0;
+    int microblock_line = 0;
+    void encode_buffers() {
+        if(!rendering_on()) return; // Don't write in smoketest
+
         while(true){
             int frameSize = outputCodecContexts[0]->frame_size;
             if(frameSize <= 0) frameSize = 1024; // Default frame size if not set
 
             // If we don't have enough samples for a full frame, exit
-            // However, if this is the last call, we want to process whatever is left (even if it's less than a full frame)
-            if(sample_buffer.size() < frameSize * audio_channels * (last?1:2)) break;
+            if(sample_buffer.size() < frameSize * audio_channels) break;
+            // TODO pad last frame?
 
             for (int ch = 0; ch < audio_channels; ++ch) {
                 // Extend channel with silence (interleaved)
@@ -366,20 +383,48 @@ public:
                 sample_t blips_left = blips_buffer[idxL];
                 sample_t blips_right = blips_buffer[idxR];
 
-                dst[0][idxL] = voice_left + sfx_left;
-                dst[0][idxR] = voice_right+ sfx_right;
-                if(num_audio_streams == 1) continue;
+                int track_number = 0;
 
-                dst[1][idxL] = sfx_left;
-                dst[1][idxR] = sfx_right;
-                if(num_audio_streams == 2) continue;
+                if(AUDIO_SFX){
+                    // Merged audio track
+                    dst[track_number][idxL] = voice_left + sfx_left;
+                    dst[track_number][idxR] = voice_right+ sfx_right;
+                    track_number++;
 
-                dst[2][idxL] = voice_left;
-                dst[2][idxR] = voice_right;
-                if(num_audio_streams == 3) continue;
+                    // Sfx-only track
+                    dst[track_number][idxL] = sfx_left;
+                    dst[track_number][idxR] = sfx_right;
+                    track_number++;
+                }
 
-                dst[3][idxL] = blips_left;
-                dst[3][idxR] = blips_right;
+                // Always include voice.
+                dst[track_number][idxL] = voice_left;
+                dst[track_number][idxR] = voice_right;
+                track_number++;
+
+                if(AUDIO_HINTS){
+                    // Blips-only track
+                    dst[track_number][idxL] = blips_left;
+                    dst[track_number][idxR] = blips_right;
+                    track_number++;
+
+                    if(blips_left != 0){ // All microblocks are same length, so only reset on macroblock
+                        macroblock_linear_step = line_max / current_macroblock_length_samples;
+                        microblock_linear_step = line_max / current_microblock_length_samples;
+                        macroblock_line = 0;
+                    }
+                    if(blips_right != 0){ // Right is microblock
+                        microblock_line = 0;
+                    }
+
+                    // Transition Lines
+                    dst[track_number][idxL] = macroblock_line;
+                    dst[track_number][idxR] = microblock_line;
+                    track_number++;
+
+                    macroblock_line += macroblock_linear_step;
+                    microblock_line += microblock_linear_step;
+                }
             }
 
             for(int i = 0; i < num_audio_streams; i++) {
@@ -400,7 +445,7 @@ public:
     }
 
     ~AudioWriter() {
-        process_frame_from_buffer(true);
+        encode_buffers();
 
         // Flush encoders by sending null frames
         for(int i = 0; i < num_audio_streams; i++) {

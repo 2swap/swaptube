@@ -1,5 +1,5 @@
 #include "KlotskiBoard.h"
-#include "../Scenes/KlotskiScene.cpp"
+#include "../Scenes/Math/KlotskiScene.cpp"
 #include <cmath>
 #include <cstdlib>
 

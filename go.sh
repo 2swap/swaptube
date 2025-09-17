@@ -22,8 +22,8 @@ if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     exit 1
 fi
 
-# Check if the number of arguments is less than expected
-if [ $# -lt 3 ]; then
+# Check if the number of arguments is less or more than expected
+if [ $# -lt 3 ] || [ $# -gt 4 ]; then
     echo "go.sh: Suppose that in the Projects/ directory you have made a project called myproject.cpp."
     echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight> [-s]"
     echo "go.sh: Example: $0 myproject 640 360 -s"
@@ -40,9 +40,34 @@ if ! [[ "$VIDEO_WIDTH" =~ ^[0-9]+$ ]] || ! [[ "$VIDEO_HEIGHT" =~ ^[0-9]+$ ]]; th
 fi
 FRAMERATE=30
 SAMPLERATE=48000
+
 SMOKETEST_ONLY=0
-if [ "$4" == "-s" ]; then
-    SMOKETEST_ONLY=1
+AUDIO_HINTS=0
+AUDIO_SFX=0
+INVALID_FLAG=0
+# If the 4th argument is provided, check if it is valid
+if [ $# -eq 4 ]; then
+    if [ "$4" == "-s" ]; then
+        SMOKETEST_ONLY=1
+    elif [ "$4" == "-h" ]; then
+        AUDIO_HINTS=1
+    elif [ "$4" == "-x" ]; then
+        AUDIO_SFX=1
+    elif [ "$4" == "-hx" ] || [ "$4" == "-xh" ]; then
+        AUDIO_HINTS=1
+        AUDIO_SFX=1
+    else
+        INVALID_FLAG=1
+    fi
+fi
+# If the final flag is illegal, print an error message and exit
+if [ $INVALID_FLAG -eq 1 ]; then
+    echo "go.sh: Error - The 4th argument has 4 options:"
+    echo "-s means to only run the smoketest."
+    echo "-h means to include audio hints."
+    echo "-x means to include sound effects."
+    echo "-hx or -xh means to include both audio hints and sound effects."
+    exit 1
 fi
 
 # Find the project file in any subdirectory under src/Projects
@@ -73,7 +98,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}"
+    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
 
     echo "go.sh: Running \`make -j12\`"
     # build the project

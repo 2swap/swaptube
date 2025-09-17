@@ -20,32 +20,31 @@ string sanitize_filename(const string& text) {
 class Macroblock {
 public:
     virtual ~Macroblock() = default;
-    double invoke_get_macroblock_length_seconds() const {
-        AUDIO_WRITER.audio_seconds_so_far += write_and_get_duration_seconds();
-        return AUDIO_WRITER.audio_seconds_so_far - VIDEO_WRITER.video_seconds_so_far;
+    int invoke_get_macroblock_length_frames() const {
+        return write_and_get_duration_frames();
     }
     virtual void write_shtooka() const {}
     virtual string blurb() const = 0; // This is how the macroblock identifies itself in log outputs
-    virtual double write_and_get_duration_seconds() const = 0;
+    virtual int write_and_get_duration_frames() const = 0;
 };
 
 class SilenceBlock : public Macroblock {
 public:
     SilenceBlock(const double duration_seconds)
-        : duration_seconds(duration_seconds) {
-        if (duration_seconds <= 0) {
+        : duration_frames(duration_seconds * FRAMERATE) {
+        if (duration_frames <= 0) {
             throw invalid_argument("Duration must be greater than 0");
         }
     }
 
-    double write_and_get_duration_seconds() const override {
-        AUDIO_WRITER.add_silence(duration_seconds);
-        return duration_seconds;
+    int write_and_get_duration_frames() const override {
+        AUDIO_WRITER.add_silence(duration_frames);
+        return duration_frames;
     }
-    string blurb() const override { return "SilenceBlock(" + to_string(duration_seconds) + ")"; }
+    string blurb() const override { return "SilenceBlock(" + to_string(static_cast<double>(duration_frames) / FRAMERATE) + ")"; }
 
 private:
-    const double duration_seconds;
+    const int duration_frames;
 };
 
 class FileBlock : public Macroblock {
@@ -57,10 +56,10 @@ public:
         SHTOOKA_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
     }
 
-    double write_and_get_duration_seconds() const override {
-        double duration_seconds = AUDIO_WRITER.add_audio_from_file(audio_filename);
-        SUBTITLE_WRITER.add_subtitle(duration_seconds, subtitle_text);
-        return duration_seconds;
+    int write_and_get_duration_frames() const override {
+        int duration_frames = AUDIO_WRITER.add_audio_from_file(audio_filename);
+        SUBTITLE_WRITER.add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, subtitle_text);
+        return duration_frames;
     }
     string blurb() const override { return "FileBlock(" + subtitle_text + ")"; }
 
@@ -78,10 +77,10 @@ public:
         }
     }
 
-    double write_and_get_duration_seconds() const override {
-        double duration_seconds = AUDIO_WRITER.add_generated_audio(leftBuffer, rightBuffer);
-        SUBTITLE_WRITER.add_subtitle(duration_seconds, "[Computer Generated Sound]");
-        return duration_seconds;
+    int write_and_get_duration_frames() const override {
+        int duration_frames = AUDIO_WRITER.add_generated_audio(leftBuffer, rightBuffer);
+        SUBTITLE_WRITER.add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, "[Computer Generated Sound]");
+        return duration_frames;
     }
     string blurb() const override { return "GeneratedBlock(" + to_string(leftBuffer.size()/SAMPLERATE) + ")"; }
 
@@ -100,8 +99,10 @@ public:
         b.write_shtooka();
     }
 
-    double write_and_get_duration_seconds() const override {
-        return a.write_and_get_duration_seconds() + b.write_and_get_duration_seconds();
+    int write_and_get_duration_frames() const override {
+        int a_duration = a.write_and_get_duration_frames();
+        int b_duration = b.write_and_get_duration_frames();
+        return a_duration + b_duration;
     }
     string blurb() const override { return "CompositeBlock(" + a.blurb() + ", " + b.blurb() + ")"; }
 
