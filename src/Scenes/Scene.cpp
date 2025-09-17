@@ -97,8 +97,8 @@ public:
             macroblock_length_seconds = static_cast<double>(total_macroblock_frames) / FRAMERATE;
         }
 
-        // TODO awaiting debug- sometimes this fails out because the audio is scheduled in the past
-        if (false) {
+        // Add blips for audio synchronization
+        if (true) {
             // Add blips for audio synchronization
             double time = get_global_state("t");
             AUDIO_WRITER.add_blip(time * SAMPLERATE, false);

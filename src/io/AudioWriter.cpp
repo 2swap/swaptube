@@ -179,16 +179,28 @@ public:
 
     void add_blip(int t, bool left_not_right) {
         if (!rendering_on()) throw runtime_error("Tried to add blip in smoketest!");
-        int sample_copy_start_frames = t - total_samples_processed + sample_buffer_offset;
-        int sample_copy_end_frames = sample_copy_start_frames + 1;
 
-        if(sample_copy_start_frames < 0)
-            throw runtime_error("Blip copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed) + " " + to_string(sample_buffer_offset));
+        // UNIT ANALYSIS:
+        // t: absolute sample position (time * SAMPLERATE) - in MONO samples
+        // total_samples_processed: frames processed so far - in FRAMES (stereo pairs)
+        // sample_buffer_offset: frames remaining in buffer - in FRAMES (stereo pairs)
+        // Need to convert t from mono samples to frames for consistent units
+
+        int t_frames = t / audio_channels;  // Convert mono samples to frames
+        int sample_copy_start_frames = t_frames - total_samples_processed + sample_buffer_offset;
+
+        if(sample_copy_start_frames < 0) {
+            throw runtime_error("Blip scheduled in the past: t=" + to_string(t) +
+                              " (t_frames=" + to_string(t_frames) + ")" +
+                              ", total_samples_processed=" + to_string(total_samples_processed) +
+                              ", sample_buffer_offset=" + to_string(sample_buffer_offset) +
+                              ", calculated_position_frames=" + to_string(sample_copy_start_frames));
+        }
 
         int start_idx = sample_copy_start_frames * audio_channels;
-        int end_idx = sample_copy_end_frames * audio_channels;
+        int end_idx = start_idx + audio_channels;
 
-        // Ensure blips_buffer has enough capacity and add samples (convert floats to int32)
+        // Ensure blips_buffer has enough capacity
         if (blips_buffer.size() < static_cast<size_t>(end_idx)) {
             blips_buffer.resize(end_idx, 0); // Extend with silence
         }
