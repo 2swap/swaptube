@@ -68,9 +68,7 @@ double extended_mod(double a, double b) {
 }
 
 void signal_handler(int signal) {
-    if (signal == SIGINT) {
-        throw runtime_error("Control-C interrupt detected. Exiting gracefully.");
-    }
+    throw runtime_error("Interrupt detected. Exiting gracefully.");
 }
 
 string replace_substring(string str, const string& from, const string& to) {

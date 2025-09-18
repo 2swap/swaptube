@@ -151,7 +151,6 @@ void render_video(){
         ls->begin_latex_transition(MICRO, latex_color(0xff444444, "ax^3+bx^2+cx+d"));
         cs.render_microblock();
     }
-    return;
 
     cs.stage_macroblock(FileBlock("a doesn't really do much, so we're just going to keep it at 1."), 4);
     for (int i = 0; i < 2; i++) {
@@ -570,9 +569,6 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
-    impossible_sq->begin_latex_transition(MICRO, latex_color(0xff00ff00, "x^2")+"+1=0");
-    cs.render_microblock();
-
     cps->state_manager.transition(MICRO, {
         {"coefficient0_r", "1"},
         {"coefficient0_i", "0"},
@@ -583,7 +579,10 @@ void render_video(){
         {"geometry_opacity", ".7"},
     });
     rfs->begin_transition(MICRO, 0, "? ? * 1 +");
+    cs.render_microblock();
+
     cs.stage_macroblock(CompositeBlock(FileBlock("No real number squared gives us negative 1..."), SilenceBlock(1)), 1);
+    impossible_sq->begin_latex_transition(MICRO, latex_color(0xff00ff00, "x^2")+"+1=0");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("and you can see that here- none of the solutions are on our number line."), 4);
@@ -636,7 +635,7 @@ void render_video(){
         cps->construction.add(GeometricPoint(glm::vec2(0, y), label));
         cs.render_microblock();
     }
-    cps->construction.add(GeometricLine(glm::vec2(0, -3), glm::vec2(0, 3)));
+    cps->construction.add(GeometricLine(glm::vec2(0, -2.7), glm::vec2(0, 2.7)));
     cs.render_microblock();
     cs.remove_subscene("impossible_sq");
 
@@ -675,7 +674,7 @@ void render_video(){
     cs.stage_macroblock(FileBlock("Up until now, we've been playing whack-a-mole..."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("_You_ invent numbers, and _I_ make an equation that can't be solved without _even more numbers_."), 1);
+    cs.stage_macroblock(FileBlock("_You_ invent numbers, and _I_ make an equation that can't be solved without _more numbers_."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("But that game ends here!"), 1);
@@ -927,7 +926,7 @@ void render_video(){
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("we see red, green, blue, then red, green, blue again."), 18);
+    cs.stage_macroblock(FileBlock("we see red, green, blue, then red, green, blue again."), 17);
     cs.render_microblock();
     cs.render_microblock();
     for(int i = 0; i < 6; i++) {
@@ -940,7 +939,6 @@ void render_video(){
             cs.render_microblock();
         }
     }
-    cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
 
@@ -1116,7 +1114,7 @@ void render_video(){
     }
     cs.stage_macroblock(FileBlock("Given the coefficients,"), 1);
     cps->state_manager.transition(MICRO, {
-        {"coefficient3_opacity", "1"},
+        {"coefficient3_opacity", "0"},
         {"coefficient2_opacity", "1"},
         {"coefficient1_opacity", "1"},
         {"coefficient0_opacity", "1"},
@@ -1169,7 +1167,7 @@ void render_video(){
     abc->begin_latex_transition(MICRO, "\\begin{tabular}{cc} a=2+i & r_1=? \\\\\\\\ b=-i & r_2=? \\\\\\\\ c=1.5 & r_3=? \\end{tabular}");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Before I spoil this problem, allow me to illustrate its complexities."), 1);
+    cs.stage_macroblock(FileBlock("Before I spoil this problem, let me illustrate its complexities."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Let's take the simplest case imaginable- a polynomial with coefficients that are only zero or one."), 2);
@@ -1189,6 +1187,9 @@ void render_video(){
     cps->roots_to_coefficients();
     cs.render_microblock();
     cps->set_degree(2);
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("There are a few different options of which are ones and which are zeros."), 1);
     abc->begin_latex_transition(MICRO, "\\begin{tabular}{cc} a=1 & r_1=? \\\\\\\\ b=1 & r_2=? \\\\\\\\ c=0 & r_3=? \\end{tabular}");
@@ -1294,6 +1295,7 @@ void render_video(){
 
     fracs->stage_macroblock(SilenceBlock(2), 1);
     fracs->state_manager.transition(MICRO, {
+        {"rainbow", "1"},
         {"zoom", "2"},
     });
     fracs->render_microblock();
@@ -1521,7 +1523,7 @@ void render_video(){
     cs.stage_macroblock(FileBlock("Jumping up to a polynomial with highest exponent 2,"), 1);
     current_degree->begin_latex_transition(MICRO, "2 \\\\\\\\ \\tiny{\\text{Quadratic}}");
     cps->state_manager.transition(MICRO, {
-        {"coefficient2_opacity", "1"},
+        {"coefficient2_opacity", "0"},
         {"coefficient1_opacity", "1"},
         {"coefficient0_opacity", "1"},
     });
@@ -1695,6 +1697,7 @@ void render_video(){
     });
     cs.render_microblock();
     shared_ptr<LatexScene> function = make_shared<LatexScene>("f(a, b, c) \\rightarrow r_1", 1, .75, .4);
+    // TODO misaligned
     shared_ptr<LatexScene> details = make_shared<LatexScene>("f \\text{ continuous} \\qquad \\qquad \\qquad", 1, .5, .4);
     cs.add_scene_fade_in(MICRO, function, "function", .5, .4);
     cs.add_scene_fade_in(MICRO, details, "details", .5, .6);
@@ -1792,7 +1795,6 @@ void render_video(){
     cs.fade_subscene(MICRO, "cps", 0);
     cs.render_microblock();
     cs.fade_subscene(MICRO, "quadratic_formula", 0);
-    quadratic_formula->begin_latex_transition(MICRO, "\\frac{-b + \\sqrt{b^2 - 4ac}}{2a}");
     cs.render_microblock();
     cs.remove_subscene("quadratic_formula");
 
