@@ -25,8 +25,9 @@ public:
         complex<float> c1(state["coefficient1_r"], state["coefficient1_i"]);
         // Take the ceiling of the degree to ensure it's an integer
         float n = state["terms"];
-        float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(state["zoom"]*5, .25) / 150;
-        float opacity = 1-1/(2*state["zoom"]+1);
+        float wh = state["window_height"];
+        float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(wh*10, .25) / 150;
+        float opacity = 1-1/(2*wh+1);
         opacity *= state["visibility_multiplier"];
         draw_root_fractal(pix.pixels.data(), w, h,
             c0, c1, n,
@@ -55,7 +56,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
-        state_query_insert_multiple(sq, {"coefficient0_r", "coefficient0_i", "coefficient1_r", "coefficient1_i", "terms", "zoom", "degree_fixed", "left_x", "top_y", "right_x", "bottom_y", "coefficients_opacity", "visibility_multiplier", "rainbow"});
+        state_query_insert_multiple(sq, {"coefficient0_r", "coefficient0_i", "coefficient1_r", "coefficient1_i", "terms", "window_height", "degree_fixed", "left_x", "top_y", "right_x", "bottom_y", "coefficients_opacity", "visibility_multiplier", "rainbow"});
         return sq;
     }
 };

@@ -30,8 +30,8 @@ public:
         state_manager.set("ticks_opacity", "1");
         state_manager.set("center_x", "0");
         state_manager.set("center_y", "0");
-        state_manager.set("zoom", "1");
-        state_manager.set("window_height", "<zoom> -1 * exp .2 *");
+        state_manager.set("zoom", "0");
+        state_manager.set("window_height", "<zoom> exp .2 *");
         state_manager.set("window_width", "<window_height> <w> <VIDEO_WIDTH> * / <h> <VIDEO_HEIGHT> * *");
     }
 
@@ -74,9 +74,9 @@ public:
 
         double gm = get_geom_mean_size();
         double line_thickness = gm/200.;
-        int point_color = 0xffccccff;
+        int point_color = 0xffffffff;
         int line_color = 0xff6666ff;
-        int text_color = 0xff6666ff;
+        int text_color = 0xffffffff;
         float microblock_fraction = 0.5;
         if(state.contains("microblock_fraction")) microblock_fraction = state["microblock_fraction"];
 
@@ -134,8 +134,7 @@ public:
         const int h = get_height();
         const float gmsz = get_geom_mean_size();
 
-        string x_y_str = ymode?"y":"x";
-        const float z = state["zoom_"+x_y_str] + 0.00000001;
+        const float z = state[ymode?"window_height":"window_width"] + 0.00000001;
         const float upper_bound = ymode?state["bottom_y"]:state["right_x"];
         const float lower_bound = ymode?state[   "top_y"]:state[ "left_x"];
         const float log10z = log10(z);
@@ -172,7 +171,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "ticks_opacity", "geometry_opacity"};
+        StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "geometry_opacity"};
         for(const GeometricPoint& p : construction.points) {
             if(!p.old) {
                 sq.insert("microblock_fraction");

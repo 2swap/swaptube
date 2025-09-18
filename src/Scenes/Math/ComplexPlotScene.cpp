@@ -65,7 +65,7 @@ public:
             for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
                 for(string ri : {"r", "i", "opacity", "ring"})
                     if(!(type == "root" && ri == "opacity"))
-                        state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity" && num < degree) ? "1" : "0");
+                        state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity") ? "1" : "0");
             }
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".8"); // basically saturation

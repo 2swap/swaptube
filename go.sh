@@ -134,11 +134,6 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     exit 0
 )
 
-SUCCESS=$?
-if [ $SUCCESS -ne 0 ]; then
-    exit $SUCCESS
-fi
-
 ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
 cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"

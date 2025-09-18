@@ -23,7 +23,8 @@ public:
     // Evaluates the function at x by replacing '?' with the x-value,
     // computing the current function and its transitional variant, then smoothing between them.
     double call_the_function(double x, const FunctionData& func_data) {
-        double stf = state["microblock_fraction"];
+        TransitionType tt = func_data.transition_type;
+        double stf = state[tt == MICRO ? "microblock_fraction" : "macroblock_fraction"];
         string xstring = to_string(x);
         string f1 = replace_substring(func_data.function, "?", xstring);
         string f2 = replace_substring(func_data.transition_function, "?", xstring);
@@ -84,6 +85,7 @@ public:
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         sq.insert("microblock_fraction");
+        sq.insert("macroblock_fraction");
         return sq;
     }
 
