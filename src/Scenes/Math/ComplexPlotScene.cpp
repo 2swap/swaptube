@@ -73,6 +73,24 @@ public:
         state_manager.set("positive_quadratic_formula_opacity", "0");
     }
 
+    void transition_root_rings(const TransitionType tt, const float opacity) {
+        for(int i = 0; i < degree; i++) {
+            state_manager.transition(tt, "root" + to_string(i) + "_ring", to_string(opacity));
+        }
+    }
+
+    void transition_coefficient_rings(const TransitionType tt, const float opacity) {
+        for(int i = 0; i < degree+1; i++) {
+            state_manager.transition(tt, "coefficient" + to_string(i) + "_ring", to_string(opacity));
+        }
+    }
+
+    void transition_coefficient_opacities(const TransitionType tt, const float opacity) {
+        for(int i = 0; i < degree+1; i++) {
+            state_manager.transition(tt, "coefficient" + to_string(i) + "_opacity", to_string(opacity));
+        }
+    }
+
     int get_degree() const {
         return degree;
     }
@@ -254,7 +272,7 @@ public:
             float opa = state["root"+to_string(i)+"_ring"];
             if(opa < 0.01) continue;
             const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
-            pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, opa);
+            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa);
         }
 
         // Draw coefficients
@@ -263,7 +281,7 @@ public:
             float letter_opa = state["coefficient"+to_string(i)+"_opacity"];
             const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
             if(ring_opa > 0.01) {
-                pix.fill_ring(pixel.x, pixel.y, gm*5, gm*4, OPAQUE_WHITE, ring_opa);
+                pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, ring_opa);
             }
             if(letter_opa > 0.01) {
                 ScalingParams sp = ScalingParams(gm * 16, gm * 40);
@@ -282,7 +300,7 @@ public:
                 const complex<float> sqrt_disc = std::sqrt(discriminant);
                 const complex<float> root1 = (-b + sqrt_disc) / (2.0f*a);
                 const glm::vec2 pixel1(point_to_pixel(glm::vec2(root1.real(), root1.imag())));
-                pix.fill_ring(pixel1.x, pixel1.y, gm*5, gm*4, 0xffff8080, opa);
+                pix.fill_ring(pixel1.x, pixel1.y, gm*6, gm*5, 0xffff8080, opa);
             }
         }
 

@@ -25,10 +25,6 @@ __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatC
     unsigned int floor_terms = floor(terms);
     unsigned int total = 1 << ceil_terms; // total number of polynomials
 
-    // Multiply coefficients by 100 to avoid numerical issues
-    c1 = cuCmulf(c1, make_cuFloatComplex(100.0f, 0.0f));
-    c2 = cuCmulf(c2, make_cuFloatComplex(100.0f, 0.0f));
-
     if (idx >= total) return;
     if (idx >= total/2 && floor_terms != ceil_terms) {
         // For transitional term count, fade in/out newly introduced polynomials

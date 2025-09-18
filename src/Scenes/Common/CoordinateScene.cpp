@@ -22,17 +22,17 @@ public:
     GeometricConstruction construction;
     CoordinateScene(const float width = 1, const float height = 1)
         : Scene(width, height) {
-        state_manager.set("left_x"   , "<center_x> .5 <zoom_x> / -");
-        state_manager.set("right_x"  , "<center_x> .5 <zoom_x> / +");
-        state_manager.set("top_y"    , "<center_y> .5 <zoom_y> / -");
-        state_manager.set("bottom_y" , "<center_y> .5 <zoom_y> / +");
+        state_manager.set("left_x"   , "<center_x> .5 <window_width> / -");
+        state_manager.set("right_x"  , "<center_x> .5 <window_width> / +");
+        state_manager.set("top_y"    , "<center_y> .5 <window_height> / -");
+        state_manager.set("bottom_y" , "<center_y> .5 <window_height> / +");
         state_manager.set("geometry_opacity", "1");
         state_manager.set("ticks_opacity", "1");
         state_manager.set("center_x", "0");
         state_manager.set("center_y", "0");
-        state_manager.set("zoom", ".2");
-        state_manager.set("zoom_x", "<zoom> <w> <VIDEO_WIDTH> * / <h> <VIDEO_HEIGHT> * *");
-        state_manager.set("zoom_y", "<zoom>");
+        state_manager.set("zoom", "1");
+        state_manager.set("window_height", "<zoom> -1 * exp .2 *");
+        state_manager.set("window_width", "<window_height> <w> <VIDEO_WIDTH> * / <h> <VIDEO_HEIGHT> * *");
     }
 
     glm::vec2 point_to_pixel(const glm::vec2& p) {
@@ -74,7 +74,9 @@ public:
 
         double gm = get_geom_mean_size();
         double line_thickness = gm/200.;
-        int construction_color = OPAQUE_WHITE;
+        int point_color = 0xffccccff;
+        int line_color = 0xff6666ff;
+        int text_color = 0xff6666ff;
         float microblock_fraction = 0.5;
         if(state.contains("microblock_fraction")) microblock_fraction = state["microblock_fraction"];
 
@@ -92,7 +94,7 @@ public:
                 start_pixel = mid_pixel + (start_pixel - mid_pixel) * bounce;
                 end_pixel = mid_pixel + (end_pixel - mid_pixel) * bounce;
             }
-            geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, construction_color, 1, line_thickness);
+            geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, line_color, 1, line_thickness);
         }
         // TODO implement
         /*for(const GeometricArc& a : construction.arcs) {
@@ -107,12 +109,12 @@ public:
             if(!p.old) {
                 double radius_pop = line_thickness * p.width_multiplier * 10 * bounce;
                 radius = min(radius, radius_pop);
-                geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, construction_color, 1-interp);
+                geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, point_color, 1-interp);
             }
-            geometry.fill_circle(position_pixel.x, position_pixel.y, radius, construction_color, 1);
+            geometry.fill_circle(position_pixel.x, position_pixel.y, radius, point_color, 1);
             if(p.label != "" && p.width_multiplier > .4) {
                 ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
-                Pixels latex = latex_to_pix(p.label, sp);
+                Pixels latex = latex_to_pix(latex_color(text_color, p.label), sp);
                 geometry.overlay(latex, position_pixel.x - latex.w/2, position_pixel.y - line_thickness * 6 - latex.h/2, p.old ? 1 : interp);
             }
         }
@@ -170,7 +172,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "zoom_x", "zoom_y", "ticks_opacity", "geometry_opacity"};
+        StateQuery sq = {"left_x", "right_x", "top_y", "bottom_y", "ticks_opacity", "geometry_opacity"};
         for(const GeometricPoint& p : construction.points) {
             if(!p.old) {
                 sq.insert("microblock_fraction");
