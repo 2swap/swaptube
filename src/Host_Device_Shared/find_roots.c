@@ -163,7 +163,7 @@ void find_roots(const std::complex<float>* coeffs_in, int degree, std::complex<f
         roots[i] = std::complex<float>(cos(angle)*radius, sin(angle)*radius);
     }
 
-    const int max_iters = 100;
+    const int max_iters = 1000;
     const float tol = 1e-6f;
 
     for (int iter = 0; iter < max_iters; ++iter) {

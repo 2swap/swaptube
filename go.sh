@@ -119,7 +119,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     ./swaptube smoketest 2>/dev/null
     if [ $? -ne 0 ]; then
         echo "go.sh: Execution failed in runtime."
-        exit 1
+        exit 2
     fi
 
     # If smoketest only is not set, run again.
@@ -127,12 +127,18 @@ cp "$PROJECT_PATH" "$TEMPFILE"
         ./swaptube no_smoketest 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in runtime."
-            exit 1
+            exit 2
         fi
     fi
 
     exit 0
 )
+
+# If compilation failed, exit with error. If runtime failed, do not exit
+if [ $? -eq 1 ]; then
+    rm "$TEMPFILE"
+    exit 1
+fi
 
 ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
