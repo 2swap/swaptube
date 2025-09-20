@@ -392,7 +392,7 @@ void render_video(){
         {"coefficient2_i", cps->state_manager.get_equation("coefficient2_i") + " <exponential_transitioner> *"},
     });
     cps->state_manager.transition(MICRO, {
-        {"linear_transitioner", "20"},
+        {"linear_transitioner", "10"},
         {"coefficient3_opacity", "0"},
         {"coefficient2_opacity", "0"},
         {"coefficient1_r", "2"},
