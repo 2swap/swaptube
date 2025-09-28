@@ -71,6 +71,7 @@ public:
         state_manager.set("ab_dilation", ".8"); // basically saturation
         state_manager.set("dot_radius", ".3");
         state_manager.set("positive_quadratic_formula_opacity", "0");
+        state_manager.set("negative_quadratic_formula_opacity", "0");
     }
 
     void transition_root_rings(const TransitionType tt, const float opacity) {
@@ -290,17 +291,18 @@ public:
             }
         }
 
-        {
-            float opa = state["positive_quadratic_formula_opacity"];
+        for (int sign : {-1, 1}) {
+            float opa = state[(sign == 1 ? "posi" : "nega") + "tive_quadratic_formula_opacity"];
             if(opa > 0.01 && degree == 2) {
                 const complex<float> a = coefficients[2];
                 const complex<float> b = coefficients[1];
                 const complex<float> c = coefficients[0];
                 const complex<float> discriminant = b*b - complex<float>(4,0)*a*c;
                 const complex<float> sqrt_disc = std::sqrt(discriminant);
-                const complex<float> root1 = (-b + sqrt_disc) / (2.0f*a);
-                const glm::vec2 pixel1(point_to_pixel(glm::vec2(root1.real(), root1.imag())));
-                pix.fill_ring(pixel1.x, pixel1.y, gm*6, gm*5, 0xffff8080, opa);
+                const complex<float> root = (-b + sqrt_disc * sign) / (2.0f*a);
+                const glm::vec2 pixel(point_to_pixel(glm::vec2(root.real(), root.imag())));
+                const int color = (sign == 1) ? 0xffff8080 : 0xff80ff80;
+                pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, color, opa);
             }
         }
 
@@ -314,7 +316,7 @@ public:
                 for(string ri : {"r", "i", "opacity", "ring"})
                     if(!(type == "root" && ri == "opacity"))
                         sq.insert(type + to_string(num) + "_" + ri);
-        state_query_insert_multiple(sq, {"roots_or_coefficients_control", "ab_dilation", "dot_radius", "positive_quadratic_formula_opacity"});
+        state_query_insert_multiple(sq, {"roots_or_coefficients_control", "ab_dilation", "dot_radius", "positive_quadratic_formula_opacity", "negative_quadratic_formula_opacity"});
         return sq;
     }
 };
