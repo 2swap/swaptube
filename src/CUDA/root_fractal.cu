@@ -22,16 +22,9 @@ __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
 __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatComplex c1, cuFloatComplex c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float rainbow) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int ceil_terms = ceil(terms);
-    unsigned int floor_terms = floor(terms);
     unsigned int total = 1 << ceil_terms; // total number of polynomials
 
     if (idx >= total) return;
-    if (idx >= total/2 && floor_terms != ceil_terms) {
-        // For transitional term count, fade in/out newly introduced polynomials
-        float one_minus_frac = 1 - (terms - floor_terms);
-        float opacity_multiplier = 1-one_minus_frac*one_minus_frac*one_minus_frac;
-        opacity *= opacity_multiplier;
-    }
 
     cuFloatComplex coeffs[20];
     unsigned int color = 0xFF3f3f3f;

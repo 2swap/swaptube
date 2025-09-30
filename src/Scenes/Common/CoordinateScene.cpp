@@ -28,6 +28,7 @@ public:
         state_manager.set("bottom_y" , "<center_y> .5 <window_height> / +");
         state_manager.set("geometry_opacity", "1");
         state_manager.set("ticks_opacity", "1");
+        state_manager.set("zero_crosshair_opacity", "0");
         state_manager.set("center_x", "0");
         state_manager.set("center_y", "0");
         state_manager.set("zoom", "0");
@@ -64,6 +65,7 @@ public:
 
     void draw() override {
         draw_axes();
+        draw_zero_crosshair();
         draw_construction();
     }
 
@@ -86,8 +88,14 @@ public:
         Pixels geometry(pix.w, pix.h);
 
         for(const GeometricLine& l : construction.lines) {
-            glm::vec2 start_pixel = point_to_pixel(l.start);
-            glm::vec2 end_pixel = point_to_pixel(l.end);
+            glm::vec2 start_point = l.start;
+            glm::vec2 end_point = l.end;
+            if(l.use_state) {
+                start_point = glm::vec2(state["line_"+l.label+"_start_x"], state["line_"+l.label+"_start_y"]);
+                end_point = glm::vec2(state["line_"+l.label+"_end_x"], state["line_"+l.label+"_end_y"]);
+            }
+            glm::vec2 start_pixel = point_to_pixel(start_point);
+            glm::vec2 end_pixel = point_to_pixel(end_point);
             const glm::vec2 mid_pixel = (start_pixel + end_pixel) / 2.f;
             if(!l.old) {
                 // Multiply line length by bounce
@@ -120,6 +128,17 @@ public:
         }
 
         pix.overlay(geometry, 0, 0, geometry_opacity);
+    }
+
+    void draw_zero_crosshair() {
+        const float zc_opacity = state["zero_crosshair_opacity"];
+        if(zc_opacity < 0.01) return;
+        const int w = get_width();
+        const int h = get_height();
+        const float gmsz = get_geom_mean_size();
+        const glm::vec2 origin_pixel = point_to_pixel(glm::vec2(0,0));
+        pix.bresenham(origin_pixel.x, 0, origin_pixel.x, h-1, OPAQUE_WHITE, zc_opacity, gmsz/300.);
+        pix.bresenham(0, origin_pixel.y, w-1, origin_pixel.y, OPAQUE_WHITE, zc_opacity, gmsz/300.);
     }
 
     void draw_axes() {
@@ -171,7 +190,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "geometry_opacity"};
+        StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "geometry_opacity", "zero_crosshair_opacity"};
         for(const GeometricPoint& p : construction.points) {
             if(!p.old) {
                 sq.insert("microblock_fraction");
@@ -184,10 +203,18 @@ public:
                 break;
             }
         }
-        for(const GeometricPoint& p : construction.points) {
+        for (const GeometricPoint& p : construction.points) {
             if(p.use_state) {
                 sq.insert("point_"+p.label+"_x");
                 sq.insert("point_"+p.label+"_y");
+            }
+        }
+        for (const GeometricLine& l : construction.lines) {
+            if(l.use_state) {
+                sq.insert("line_"+l.label+"_start_x");
+                sq.insert("line_"+l.label+"_start_y");
+                sq.insert("line_"+l.label+"_end_x");
+                sq.insert("line_"+l.label+"_end_y");
             }
         }
         return sq;

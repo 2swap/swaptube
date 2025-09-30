@@ -292,16 +292,17 @@ public:
         }
 
         for (int sign : {-1, 1}) {
-            float opa = state[(sign == 1 ? "posi" : "nega") + "tive_quadratic_formula_opacity"];
+            float opa = state[string(sign == 1 ? "posi" : "nega") + "tive_quadratic_formula_opacity"];
+            complex<float> sign_c(sign, 0);
             if(opa > 0.01 && degree == 2) {
                 const complex<float> a = coefficients[2];
                 const complex<float> b = coefficients[1];
                 const complex<float> c = coefficients[0];
                 const complex<float> discriminant = b*b - complex<float>(4,0)*a*c;
                 const complex<float> sqrt_disc = std::sqrt(discriminant);
-                const complex<float> root = (-b + sqrt_disc * sign) / (2.0f*a);
+                const complex<float> root = (-b + sqrt_disc * sign_c) / (2.0f*a);
                 const glm::vec2 pixel(point_to_pixel(glm::vec2(root.real(), root.imag())));
-                const int color = (sign == 1) ? 0xffff8080 : 0xff80ff80;
+                const int color = (sign == 1) ? 0xffff0000 : 0xff00ff00;
                 pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, color, opa);
             }
         }
