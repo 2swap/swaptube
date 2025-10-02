@@ -52,7 +52,7 @@ public:
     const string subtitle_output;
     const string record_list_path;
 
-    PathManager(const string& proj)
+    PathManager(const string& proj, const string& extension="mp4")
         :
         project_name(proj),
         unique_timestamp(get_timestamp()),
@@ -66,7 +66,7 @@ public:
         data_dir(this_run_output_dir + "data/"),
         latex_dir(this_project_media_dir + "latex/"),
         sfx_dir(repo_root + "src/sfx/"),
-        video_output(this_run_output_dir + project_name + ".mp4"),
+        video_output(this_run_output_dir + project_name + "." + extension),
         subtitle_output(this_run_output_dir + project_name + ".srt"),
         record_list_path(this_project_media_dir + "record_list.tsv")
     {

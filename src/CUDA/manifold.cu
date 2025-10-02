@@ -2,6 +2,7 @@
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "color.cuh" // For complex_to_srgb
 
 // Kernel
@@ -23,9 +24,9 @@ __global__ void render_manifold_kernel(
     float v = v_min + (v_max - v_min) * v_idx / (v_steps - 1);
 
     // Evaluate manifold equations to get 3D point
-    float x = /* Evaluate manifold_x_eq with u, v */;
-    float y = /* Evaluate manifold_y_eq with u, v */;
-    float z = /* Evaluate manifold_z_eq with u, v */;
+    float x = 0/* Evaluate manifold_x_eq with u, v */;
+    float y = 0/* Evaluate manifold_y_eq with u, v */;
+    float z = 0/* Evaluate manifold_z_eq with u, v */;
 
     // Project 3D point to 2D screen space
     glm::vec3 point_in_world = glm::vec3(x, y, z);
@@ -37,15 +38,15 @@ __global__ void render_manifold_kernel(
     int pixel_y = (int)((1.0f - (screen_y + 1.0f) * 0.5f) * h);
 
     // Evaluate color equations to get color
-    float r = /* Evaluate color_r_eq with u, v */;
-    float i = /* Evaluate color_i_eq with u, v */;
-    uint32_t color = complex_to_srgb(thrust::complex<float>(r, i), opacity);
+    float r = 0/* Evaluate color_r_eq with u, v */;
+    float i = 0/* Evaluate color_i_eq with u, v */;
+    uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), 1, 1 /*TODO add ab_dilation etc*/);
 
     // Depth test and write pixel
     if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
         int pixel_index = pixel_y * w + pixel_x;
         float depth = point_in_camera.z;
-        atomicMin(&depth_buffer[pixel_index], depth);
+        atomicMin((int*)&depth_buffer[pixel_index], __float_as_int(depth));
         if (depth_buffer[pixel_index] == depth) {
             pixels[pixel_index] = color;
         }
@@ -54,7 +55,7 @@ __global__ void render_manifold_kernel(
 }
 
 // Externed entry point
-extern "C" cuda_render_manifold(
+extern "C" void cuda_render_manifold(
     uint32_t* pixels, int w, int h,
     const char* manifold_x_eq, const char* manifold_y_eq, const char* manifold_z_eq,
     const char* color_r_eq, const char* color_i_eq,
@@ -65,19 +66,19 @@ extern "C" cuda_render_manifold(
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
-    cudaMalloc(&d_pixels, width * height * sizeof(uint32_t));
-    cudaMemcpy(d_pixels, pixels, width * height * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
+    cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
     // Allocate zeroized depth buffer on device
     float* d_depth_buffer;
-    cudaMalloc(&d_depth_buffer, width * height * sizeof(float));
-    cudaMemset(d_depth_buffer, 0x7F, width * height * sizeof(float)); // Set to infinity
+    cudaMalloc(&d_depth_buffer, w * h * sizeof(float));
+    cudaMemset(d_depth_buffer, 0x7F, w * h * sizeof(float)); // Set to infinity
 
     // Launch kernel, with one thread per u-v step, NOT one per pixel.
     dim3 blockSize(16, 16);
     dim3 gridSize((u_steps + blockSize.x - 1) / blockSize.x, (v_steps + blockSize.y - 1) / blockSize.y);
     render_manifold_kernel<<<gridSize, blockSize>>>(
-        d_pixels, width, height,
+        d_pixels, w, h,
         manifold_x_eq, manifold_y_eq, manifold_z_eq,
         color_r_eq, color_i_eq,
         u_min, u_max, u_steps,
@@ -88,7 +89,7 @@ extern "C" cuda_render_manifold(
     );
 
     // Copy pixels back to host
-    cudaMemcpy(pixels, d_pixels, width * height * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_pixels);
