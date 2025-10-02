@@ -35,6 +35,12 @@ sample_t line_max = (static_cast<sample_t>(1) << (sizeof(sample_t) * 8 - 3)) - 1
 int audio_channels = 2; // Stereo
 int num_audio_streams = 1 + (AUDIO_SFX?2:0) + (AUDIO_HINTS?2:0);
 
+inline sample_t float_to_sample(float f) {
+    if (f > 1.0f) f = 1.0f;
+    if (f < -1.0f) f = -1.0f;
+    return static_cast<sample_t>(f * line_max);
+}
+
 class AudioWriter {
 private:
     vector<AVCodecContext*> outputCodecContexts = vector<AVCodecContext*>(num_audio_streams, nullptr);

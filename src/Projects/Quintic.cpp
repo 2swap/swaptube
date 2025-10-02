@@ -1541,24 +1541,6 @@ void render_video(){
     cs.stage_macroblock(FileBlock("cause something starts to get weird in the quadratic case."), 1);
     cs.render_microblock();
 
-    /*
-    cs.stage_macroblock(FileBlock("As we saw earlier, 3 coefficients means 2 solutions and vice versa."), 9);
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    // Highlight coefficients then roots
-    cps->transition_coefficient_rings(MICRO, 1);
-    cs.render_microblock();
-    cps->transition_coefficient_rings(MICRO, 0);
-    cs.render_microblock();
-    cps->transition_root_rings(MICRO, 1);
-    cs.render_microblock();
-    cps->transition_root_rings(MICRO, 0);
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    */
-
     cs.stage_macroblock(FileBlock("You see, coefficients and solutions are structurally very different."), 10);
     cs.render_microblock();
     cs.render_microblock();
@@ -1669,7 +1651,7 @@ void render_video(){
     cs.stage_macroblock(FileBlock("This has some bizarre implications."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("First and foremost, there's no function which takes in the coefficients and gives out _some_ solution, and is continuous."), 3);
+    cs.stage_macroblock(FileBlock("First and foremost, there's no function which takes in the coefficients and gives out _some individual solution_, and is continuous."), 3);
     cps->transition_coefficient_opacities(MICRO, 0);
     cs.render_microblock();
     shared_ptr<LatexScene> function = make_shared<LatexScene>("f(a, b, c) \\rightarrow x_1", 1, .75, .4);
@@ -1704,7 +1686,7 @@ void render_video(){
     cs.remove_subscene("function");
     cs.remove_subscene("details");
 
-    cs.stage_macroblock(FileBlock("Thanks to the plus-or-minus sign, the quadratic formula is really two functions."), 2);
+    cs.stage_macroblock(FileBlock("Thanks to the plus-or-minus sign, the quadratic formula really spits out two values."), 2);
     string pm_colored = latex_color(0xff222222, "\\frac{-b "+latex_color(OPAQUE_WHITE, "\\pm")+" \\sqrt{b^2 - 4ac}}{2a}");
     negative_quadratic_formula->begin_latex_transition(MICRO, pm_colored);
     quadratic_formula->begin_latex_transition(MICRO, pm_colored);
@@ -1725,7 +1707,10 @@ void render_video(){
     negative_quadratic_formula->begin_latex_transition(MICRO, latex_color(0xff222222, "\\frac{-b - \\sqrt{b^2 - 4ac}}{2a}"));
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Naively discarding the minus version seems like it should do the trick?"), 1);
+    cs.stage_macroblock(FileBlock("Now, if we want a continuous function that only spits out one value,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("only keeping one of the two functions seems like it should do the trick?"), 1);
     cs.slide_subscene(MICRO, "negative_quadratic_formula", 0, -1);
     cs.slide_subscene(MICRO, "quadratic_formula", 0, -.1);
     quadratic_formula->begin_latex_transition(MICRO, "\\frac{-b + \\sqrt{b^2 - 4ac}}{2a}");
@@ -1803,7 +1788,7 @@ void render_video(){
     shared_ptr<ComplexArbitraryFunctionScene> cafs = make_shared<ComplexArbitraryFunctionScene>();
     cafs->state_manager.set("ticks_opacity", "0");
     cs.add_scene_fade_in(MICRO, cafs, "cafs", .5, .5, 1, true);
-    cs.stage_macroblock(FileBlock("and on the complex plane, the square root function has a yucky discontinuity!"), 2);
+    cs.stage_macroblock(FileBlock("and on the complex plane, the square root function actually isn't a continuous function!"), 2);
     cs.fade_subscene(MICRO, "quadratic_formula", 0);
     cs.render_microblock();
     cs.remove_subscene("quadratic_formula");

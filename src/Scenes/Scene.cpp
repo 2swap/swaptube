@@ -2,7 +2,6 @@
 
 #include <unordered_map>
 #include <chrono>
-#include <cassert>
 #include <glm/glm.hpp>
 #include "../misc/StateManager.cpp"
 #include "../io/VisualMedia.cpp"
@@ -59,11 +58,11 @@ public:
         }
         if(needs_redraw()){
             has_ever_rendered = true;
-            if (rendering_on()) {
+            //if (rendering_on()) {
                 pix = Pixels(get_width(), get_height());
                 cout << "|" << flush;
                 draw();
-            }
+            //}
         }
         mark_data_unchanged();
         has_updated_since_last_query = false;
@@ -208,8 +207,10 @@ private:
         Pixels* p = nullptr;
         query(p);
 
+        bool fifth_frame = int(global_state["frame_number"]) % 5 == 0;
+        if((!rendering_on() || fifth_frame) && PRINT_TO_TERMINAL) p->print_to_terminal();
+
         if (rendering_on()) { // Do not encode during smoketest
-            if(int(global_state["frame_number"]) % 5 == 0 && PRINT_TO_TERMINAL) p->print_to_terminal();
             VIDEO_WRITER.add_frame(*p);
         }
 

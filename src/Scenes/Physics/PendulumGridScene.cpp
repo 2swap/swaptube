@@ -1,7 +1,6 @@
 #pragma once
 #include "../../DataObjects/Pendulum.cpp"
 #include "../Common/CoordinateScene.cpp"
-#include "../Scene.cpp"
 #include <math.h>
 
 class PendulumGridScene : public CoordinateScene {
@@ -21,6 +20,7 @@ public:
                            {"energy_min", "0"},
                            {"energy_max", "0"},
                            {"momentum_value_gradient", "1"}});
+    }
 
     const StateQuery populate_state_query() const override {
         StateQuery s = CoordinateScene::populate_state_query();
@@ -47,8 +47,6 @@ public:
         int w = get_width();
         int h = get_height();
 
-        const double zoomy = state["zoom_y"];
-        const double zoomx = state["zoom_x"];
         const double cx = state["center_x"];
         const double cy = state["center_y"];
         const double contrast = state["contrast"];
@@ -64,11 +62,10 @@ public:
         const double inv_y_range = 1./(g0.max2-g0.min2);
         const double inv_x_range = 1./(g0.max1-g0.min1);
         for (int y = 0; y < h; ++y) {
-            double pos_y = (h/2.0 - y) / (h * zoomy) + cy;
-            pos_y = extended_mod(pos_y-g0.min2, g0.max2-g0.min2)+g0.min2;
             for (int x = 0; x < w; ++x) {
-                double pos_x = (x - w/2.0) / (w * zoomx) + cx;
-                pos_x = extended_mod(pos_x-g0.min1, g0.max1-g0.min1)+g0.min1;
+                glm::vec2 pos = pixel_to_point(glm::vec2(x,y));
+                double pos_x = extended_mod(pos.x-g0.min1, g0.max1-g0.min1)+g0.min1;
+                double pos_y = extended_mod(pos.y-g0.min2, g0.max2-g0.min2)+g0.min2;
 
                 int last_grid = 0;
                 for(int i = grids.size() - 1; i >= 0; i--){
@@ -135,13 +132,13 @@ public:
         const float trail_start_y = state["trail_start_y"];
         const float trail_length = state["trail_length"];
         Pendulum p({trail_start_x, trail_start_y, 0, 0});
-        vector<pair<double, double>> trail;
+        vector<glm::vec2> trail;
         for(int i = 0; i < trail_length; i++){
             p.iterate_physics(1, 0.01);
-            trail.push_back(make_pair(p.state.theta1, p.state.theta2));
+            trail.push_back(glm::vec2(p.state.theta1, p.state.theta2));
         }
         draw_trail(trail, 0xffff0000, trail_opacity);
-        draw_point(make_pair(trail_start_x, trail_start_y), 0xffff0000, trail_opacity);
+        draw_point(glm::vec2(trail_start_x, trail_start_y), 0xffff0000, trail_opacity);
     }
 
     bool momentum_mode = false;

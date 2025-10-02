@@ -113,15 +113,28 @@ static unordered_map<string, double> global_state{
     {"VIDEO_HEIGHT", VIDEO_HEIGHT},
 };
 void print_global_state(){
+    cout << endl << endl << "=====GLOBAL STATE=====" << endl;
     for(const auto& pair : global_state){
         cout << pair.first << ": " << pair.second << endl;
     }
+    cout << "======================" << endl << endl;
 }
 double get_global_state(string key){
     const auto& pair = global_state.find(key);
     if(pair == global_state.end()){
-        print_global_state();
-        throw runtime_error("global state access failed on element " + key);
+        // I used to error on this. However, there is a general pattern in which
+        // we give some scene "A" the ability to write to global state and give
+        // scene "B"'s state manager a dependency on that variable. Depending on
+        // the order in which the scenes are rendered, we get indeterminate behavior.
+        // We could fix this by enforcing a render order, but I don't think
+        // the complexity is, or ever will be worth it.
+        // This zero-default behavior fixes the problem for the first frame,
+        // after which scene "A" will have published to global state.
+        if (global_state["microblock_fraction"] != 0) {
+            print_global_state();
+            throw runtime_error("global state access failed on element " + key);
+        }
+        return 0;
     }
     return pair->second;
 }
@@ -388,8 +401,13 @@ private:
     string insert_equation_dependencies(string variable, string equation) const {
         for (const string& dependency : variables.at(variable).dependencies) {
             const VariableContents& vc = variables.at(dependency);
+
             // Make sure that the dependency is already computed.
-            assert(vc.fresh);
+            if(!vc.fresh){
+                print_state();
+                throw runtime_error("ERROR: variable " + dependency + " was not fresh when expected during insertion into " + variable + "'s equation!\nState has been printed above.");
+            }
+
             string replaced_substring = "<" + dependency + ">";
             size_t pos = equation.find(replaced_substring);
             while (pos != string::npos) {
@@ -411,8 +429,7 @@ private:
                     // Update start_pos to search for the next occurrence
                     start_pos = equation.find('[', start_pos + value_from_parent.length());
                 } else {
-                    // If no matching closing bracket is found, exit the loop
-                    break;
+                    throw runtime_error("Mismatched square brackets in equation: " + equation);
                 }
             }
         }
@@ -429,8 +446,7 @@ private:
                     // Update start_pos to search for the next occurrence
                     start_pos = equation.find('{', start_pos + value.length());
                 } else {
-                    // If no matching closing brace is found, exit the loop
-                    break;
+                    throw runtime_error("Mismatched curly braces in equation: " + equation);
                 }
             }
         }

@@ -16,43 +16,45 @@ struct IslandShowcase {
 
 vector<IslandShowcase> isv{
                            // Class 1: S-shapes
-                           {{2.49  ,  .25   , .0, .0}, 0.6 , .02, "The Pretzel", "This big island of stability contains the Pretzel we saw earlier."},
-                           {{2.658 , -2.19  , .0, .0}, 0.2 , .02, "The Shoelace", "This one, which I call the shoelace, traces a more complex pattern."},
-                           {{1.782 ,  0.137 , .0, .0}, 0.2 , .02, "The Necktie", "This pendulum traces a path very similar to the Pretzel,\\\\\\\\and its island is close to the Pretzel island of stability."},
+                           {{2.49  ,  .25   , .0, .0}, 0.6 , -2, "The Pretzel", "This big island of stability contains the Pretzel we saw earlier."},
+                           {{2.658 , -2.19  , .0, .0}, 0.2 , -2.5, "The Shoelace", "This one, which I call the shoelace, traces a more complex pattern."},
+                           {{1.782 ,  0.137 , .0, .0}, 0.2 , -2, "The Necktie", "This pendulum traces a path very similar to the Pretzel,\\\\\\\\and its island is close to the Pretzel island of stability."},
 
                            // Class 2: 
-                           {{1.351 ,  2.979 , .0, .0}, 0.2 , .06, "The Bird", "Although on a separate island from the lissajous pendulums,\\\\\\\\neither of its two arms does a flip."},
-                           {{0.567 ,  2.995 , .0, .0}, 0.2 , .08, "Big-Ears", "Similar to The Bird,\\\\\\\\this pendulum makes no flips."},
-                           {{1.484 ,  2.472 , .0, .0}, 0.2 , .06, "The Fishbowl", "Also makes no flips."},
+                           {{1.351 ,  2.979 , .0, .0}, 0.2 , -1, "The Bird", "Although on a separate island from the lissajous pendulums,\\\\\\\\neither of its two arms does a flip."},
+                           {{0.567 ,  2.995 , .0, .0}, 0.2 , -1, "Big-Ears", "Similar to The Bird,\\\\\\\\this pendulum makes no flips."},
+                           {{1.484 ,  2.472 , .0, .0}, 0.2 , -1, "The Fishbowl", "Also makes no flips."},
 
                            // Class 3: 
-                           {{1.244 , -0.258 , .0, .0}, 0.2 , .05, "The Pistachio", "This island is in a region dotted with small islands of stability."},
-                           {{1.311 , -0.804 , .0, .0}, 0.2 , .06, "Jake the Dog", "This pendulum lives right next to the ???"},
+                           {{1.244 , -0.258 , .0, .0}, 0.2 , -2, "The Pistachio", "This island is in a region dotted with small islands of stability."},
+                           {{1.311 , -0.804 , .0, .0}, 0.2 , -2, "Jake the Dog", "This pendulum lives right next to the ???"},
 
                            // Class 4: Asymmetrics
-                           {{0.028 ,  2.971 , .0, .0}, 0.2 , .06, "Asymmetric A", "The majority of the pendulums I found exhibit left-right symmetry.\\\\\\\\This is the first of 3 exceptions."},
-                           {{-.478 ,  2.633 , .0, .0}, 0.2 , .06, "Asymmetric B", "The second asymmetric island."},
-                           {{1.348 , -0.299 , .0, .0}, 0.2 , .06, "Asymmetric C", "This island is very close to the Pistachio."},
+                           {{0.028 ,  2.971 , .0, .0}, 0.2 , -1, "Asymmetric A", "The majority of the pendulums I found exhibit left-right symmetry.\\\\\\\\This is the first of 3 exceptions."},
+                           {{-.478 ,  2.633 , .0, .0}, 0.2 , -1, "Asymmetric B", "The second asymmetric island."},
+                           {{1.348 , -0.299 , .0, .0}, 0.2 , -1, "Asymmetric C", "This island is very close to the Pistachio."},
 
                            // Class 5: Jumpers
-                           {{2.808 ,  0.046 , .0, .0}, 0.2 , .06, "The Jumper", "Nothing too complicated."},
-                           {{3.0224,  0.0295, .0, .0}, 0.2 , .06, "The High-Jumper", "This island is particularly close\\\\\\\\to the top angle being pi and the bottom angle being 0."},
+                           {{2.808 ,  0.046 , .0, .0}, 0.2 , -1.5, "The Jumper", "Nothing too complicated."},
+                           {{3.0224,  0.0295, .0, .0}, 0.2 , -1.5, "The High-Jumper", "This island is particularly close\\\\\\\\to the top angle being pi and the bottom angle being 0."},
 
                            // Others
-                           {{2.453 , -2.7727, .0, .0}, 0.05, .02, "The Heart", "This one draws a picture of a heart. This island is particularly small."},
-                           {{2.2486 , 0.4565, .0, .0}, 0.05, .02, "The Micro", "aaaa"},
-                           {{2.07302 , 0.32, .0, .0}, 0.02, .02, "The Micro", "aaaa"},
+                           {{2.453 , -2.7727, .0, .0}, 0.05, -2.5, "The Heart", "This one draws a picture of a heart. This island is particularly small."},
+                           {{2.2486 , 0.4565, .0, .0}, 0.05, -2.5, "The ???", "aaaa"},
+                           {{2.07302 , 0.32, .0, .0}, 0.02, -2.5, "The ???", "aaaa"},
 
 
-                           {{1.238 , -0.854 , .0, .0}, 0.2 , .06, "The ???", "This pendulum's period is very long,\\\\\\\\hence its sound being so deep."},
-                           {{0.572 ,  2.539 , .0, .0}, 0.2 , .06, "Seneca Lake", "This island is the largest of a region rich with\\\\\\\\long but thin islands of stability, named after\\\\\\\\the largest of the Fingerlakes of Upstate New York."},
+                           {{1.238 , -0.854 , .0, .0}, 0.2 , -3, "The ???", "This pendulum's period is very long,\\\\\\\\hence its sound being so deep."},
+                           {{0.572 ,  2.539 , .0, .0}, 0.2 , -3, "Seneca Lake", "This island is the largest of a region rich with\\\\\\\\long but thin islands of stability, named after\\\\\\\\the largest of the Fingerlakes of Upstate New York."},
 };
 
-void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is) {
+void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase& is) {
     cout << "Showcasing " << is.name << endl;
     const double range = is.range;
     const double cx = is.ps.theta1;
     const double cy = is.ps.theta2;
+
+    /*
     pgs.state_manager.set({
         {"physics_multiplier", "0"},
         {"ticks_opacity", "0"},
@@ -61,21 +63,24 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is) {
         {"zoomexp", "1 6.283 / log"},
         // Leave mode as-is
     });
-    pgs.state_manager.microblock_transition({
+    pgs.state_manager.transition(MICRO, {
         {"center_x", to_string(cx)},
         {"center_y", to_string(cy)},
         {"ticks_opacity", "0"},
     });
-    pgs.stage_macroblock_and_render(SilenceSegment(2));
-    pgs.state_manager.microblock_transition({
+    pgs.stage_macroblock(SilenceBlock(2), 1);
+    pgs.render_microblock();
+    pgs.state_manager.transition(MICRO, {
         {"zoomexp", to_string(log(1/is.range))},
-        {"circles_opacity", "0"},
+        //{"circles_opacity", "0"},
     });
+    */
 
     CompositeScene cs;
-    PendulumScene ps(is.ps, 0.5, 1);
-    ps.global_publisher_key = true;
-    LatexScene ls(latex_text(is.name), 1, 1, 0.2);
+    shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(is.ps, 0.5, 1);
+    ps->alpha_subtract = 0;
+    ps->global_publisher_key = true;
+    shared_ptr<LatexScene> ls = make_shared<LatexScene>("\\text{" + is.name + "}", 1, 1, 0.2);
 
     // delete trailing zeros
     string str_cx = to_string(cx);
@@ -90,37 +95,33 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is) {
     bool moveup = false;
     if(is.ps.p1 != 0) { latex_str += ", p_1 = " + str_p1; moveup = true; }
     if(is.ps.p2 != 0)   latex_str += ", p_2 = " + str_p2;
-    LatexScene ls2(latex_str, 1, 1, 0.12);
+    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>(latex_str, 1, 1, 0.12);
 
-    CoordinateSceneWithTrail ts(0.5, 1);
-    cs.add_scene        (make_shared<PendulumGridScene>(pgs), "pgs", 0.5 , 0.5 );
-    cs.add_scene_fade_in(make_shared<PendulumScene>(ps) , "ps" , 0.75, 0.5 );
-    cs.add_scene_fade_in(make_shared<LatexScene>(ls) , "ls" , 0.5 , 0.15);
-    cs.add_scene_fade_in(make_shared<LatexScene>(ls2), "ls2", 0.5 , moveup?0.15:0.25);
-    cs.add_scene_fade_in(make_shared<CoordinateSceneWithTrail>(ts) , "ts" , 0.25, 0.5 );
-    LatexScene blurb(latex_text(is.blurb), .5, .2, 0.12);
-        //cs.add_scene_fade_in(&blurb , "blurb" , 0.75, 0.9 );
+    shared_ptr<CoordinateSceneWithTrail> ts = make_shared<CoordinateSceneWithTrail>(0.5, 1);
+    //cs.add_scene        (make_shared<PendulumGridScene>(pgs), "pgs", 0.5 , 0.5 );
+    cs.add_scene_fade_in(MICRO, ps , "ps" , 0.75, 0.5 );
+    cs.add_scene_fade_in(MICRO, ls , "ls" , 0.5 , 0.15);
+    cs.add_scene_fade_in(MICRO, ls2, "ls2", 0.5 , moveup?0.15:0.25);
+    cs.add_scene_fade_in(MICRO, ts , "ts" , 0.25, 0.5 );
 
-    //cs.stage_macroblock(FileSegment(is.blurb), 3);
-    vector<float> audio_left;
-    vector<float> audio_right;
-    ps.generate_audio(10, audio_left, audio_right);
-    cs.stage_macroblock(GeneratedSegment(audio_left, audio_right), 3);
+    //cs.stage_macroblock(FileBlock(is.blurb), 3);
+    vector<sample_t> audio_left;
+    vector<sample_t> audio_right;
+    ps->generate_audio(10, audio_left, audio_right);
+    cs.stage_macroblock(GeneratedBlock(audio_left, audio_right), 3);
 
-    cs.state_manager.microblock_transition({
-        {"pgs.opacity", ".4"},
+    cs.state_manager.transition(MICRO, {
+        //{"pgs.opacity", ".4"},
     });
-    ts.state_manager.set({
-        {"center_x", to_string(cx)},
-        {"center_y", to_string(cy)},
+    ts->state_manager.set({
         {"zoom", to_string(is.fingerprint_zoom)},
         {"trail_opacity", "1"},
         {"trail_x", "{pendulum_theta1}"},
         {"trail_y", "{pendulum_theta2}"},
-        {"center_x", "{pendulum_theta1}"},
-        {"center_y", "{pendulum_theta2}"},
+        {"center_x", to_string(is.ps.theta1)},
+        {"center_y", to_string(is.ps.theta2)},
     });
-    ps.state_manager.set({
+    ps->state_manager.set({
         {"background_opacity", "0"},
         {"top_angle_opacity", "0"},
         {"bottom_angle_opacity", "0"},
@@ -131,19 +132,20 @@ void showcase_an_island(PendulumGridScene& pgs, const IslandShowcase& is) {
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cs.state_manager.microblock_transition({
-        {"pgs.opacity", "1"},
+    cs.state_manager.transition(MICRO, {
+        //{"pgs.opacity", "1"},
         {"ps.opacity", "0"},
         {"ls.opacity", "0"},
         {"ls2.opacity", "0"},
         {"ts.opacity", "0"},
     });
-    pgs.state_manager.microblock_transition({
-        {"zoomexp", "1 6.283 / log"},
-        {"circles_opacity", "1"},
+    pgs->state_manager.transition(MICRO, {
+        //{"zoomexp", "1 6.283 / log"},
+        //{"circles_opacity", "1"},
     });
-    cs.stage_macroblock_and_render(SilenceSegment(1));
-    cs.remove_scene(make_shared<PendulumGridScene>(pgs));
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+    //cs.remove_subscene("pgs");
 }
 
 void identify_vibrations(float t1, float t2) {
@@ -207,7 +209,8 @@ void identify_vibrations(float t1, float t2) {
     string latex_str = "\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy + ", \\pi = " + to_string(period);
     LatexScene ls(latex_str, 1, 1, 0.12);
     cs.add_scene(make_shared<LatexScene>(ls), "ls", 0.5, 0.1);
-    cs.stage_macroblock_and_render(SilenceSegment(14));
+    cs.stage_macroblock(SilenceBlock(14), 1);
+    cs.render_microblock();
 }
 
 void sample_vibrations(){
@@ -238,7 +241,8 @@ void stack_diagrams(){
         });
         cs.add_scene(make_shared<CoordinateSceneWithTrail>(cswt), "coord"+key, (i+.5)/bb, 0.5);
     }
-    cs.stage_macroblock_and_render(SilenceSegment(10));
+    cs.stage_macroblock(SilenceBlock(10), 1);
+    cs.render_microblock();
 }
 
 void render_video() {
@@ -246,15 +250,13 @@ void render_video() {
     //PRINT_TO_TERMINAL = false;
     //FOR_REAL = false;
 
-    const int frequency = 300;
-    const int physmult = frequency/30;
+    const int frequency = 10;
+    const int physmult = frequency/FRAMERATE;
     const double stepsize = 1./frequency;
     //stack_diagrams();
     //return;
 
-
-
-    double delta = 0.00001;
+    double delta = 0.001;
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT*2, VIDEO_HEIGHT*2, delta, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
@@ -262,21 +264,22 @@ void render_video() {
         const double t2 = is.ps.theta2;
         grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, delta, t1-ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t1+ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t2-ro2, t2+ro2, 0, 0, 0, 0));
     }
-    PendulumGridScene pgs(grids);
+    shared_ptr<PendulumGridScene> pgs = make_shared<PendulumGridScene>(grids);
+    /*
     stack_diagrams(); return;
     pgs.state_manager.set({
         {"rk4_step_size", to_string(stepsize)},
         {"physics_multiplier", to_string(physmult)},
     });
-    pgs.stage_macroblock_and_render(SilenceSegment(4));
-    pgs.state_manager.microblock_transition({
+    pgs.stage_macroblock(SilenceBlock(4), 1);
+    pgs.render_microblock();
+    pgs.state_manager.transition(MICRO, {
         {"mode", "2"},
     });
-    pgs.stage_macroblock_and_render(SilenceSegment(2));
-    pgs.state_manager.microblock_transition({
-        {"physics_multiplier", "500"},
-    });
-    pgs.stage_macroblock_and_render(SilenceSegment(2));
+    pgs.stage_macroblock(SilenceBlock(2), 1);
+    pgs.render_microblock();
+    pgs.state_manager.set("physics_multiplier", "0");
+    */
     for(IslandShowcase is : isv) {
         showcase_an_island(pgs, is);
     }

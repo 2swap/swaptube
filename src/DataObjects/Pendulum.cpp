@@ -4,7 +4,7 @@ using namespace std;
 
 #include <vector>
 #include "DataObject.cpp"
-#include "PendulumHelpers.cpp"
+#include "../Host_Device_Shared/PendulumHelpers.cpp"
 
 extern "C" void simulatePendulum(PendulumState* states, int n, int multiplier, pendulum_type dt);
 extern "C" void simulate_pendulum_pair(PendulumState* states, PendulumState* pairs, pendulum_type* diffs, int n, int multiplier, pendulum_type dt);

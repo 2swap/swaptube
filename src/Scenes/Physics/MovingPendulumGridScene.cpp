@@ -1,7 +1,6 @@
 #pragma once
 #include "../../DataObjects/Pendulum.cpp"
 #include "../Common/CoordinateScene.cpp"
-#include "../Scene.cpp"
 #include <math.h>
 
 class MovingPendulumGridScene : public CoordinateScene {

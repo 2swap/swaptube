@@ -3,6 +3,8 @@
 #include <cmath>
 #include "shared_precompiler_directives.c"
 
+SHARED_FILE_PREFIX
+
 typedef double pendulum_type;
 
 const pendulum_type pend_g = 9.8f; // gravitational acceleration (m/s^2)
@@ -19,7 +21,7 @@ struct Derivatives {
 };
 
 HOST_DEVICE
-inline Derivatives computeDerivatives(const PendulumState &state) {
+Derivatives computeDerivatives(const PendulumState &state) {
     pendulum_type theta1 = state.theta1;
     pendulum_type theta2 = state.theta2;
     pendulum_type p1 = state.p1;
@@ -40,19 +42,19 @@ inline Derivatives computeDerivatives(const PendulumState &state) {
 }
 
 HOST_DEVICE
-inline pendulum_type compute_kinetic_energy(const PendulumState &state) {
+pendulum_type compute_kinetic_energy(const PendulumState &state) {
     Derivatives d = computeDerivatives(state);
     pendulum_type cos_delta = cos(state.theta1-state.theta2);
     return mll * (d.dtheta1 * d.dtheta1 + 0.5f * d.dtheta2 * d.dtheta2 + d.dtheta1 * d.dtheta2 * cos_delta);
 }
 
 HOST_DEVICE
-inline pendulum_type compute_potential_energy(const PendulumState &state) {
+pendulum_type compute_potential_energy(const PendulumState &state) {
     return pend_m * pend_g * pend_l * (4 - 3 * cos(state.theta1) - cos(state.theta2));
 }
 
 HOST_DEVICE
-inline PendulumState rk4Step(const PendulumState &state, pendulum_type dt) {
+PendulumState rk4Step(const PendulumState &state, pendulum_type dt) {
     Derivatives k1 = computeDerivatives(state);
 
     PendulumState s2 = {state.theta1 + 0.5f * dt * k1.dtheta1,
@@ -85,3 +87,5 @@ inline PendulumState rk4Step(const PendulumState &state, pendulum_type dt) {
 
     return newState;
 }
+
+SHARED_FILE_SUFFIX

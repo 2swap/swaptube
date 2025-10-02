@@ -44,11 +44,19 @@ public:
         return glm::vec2(flip.x, get_height()-1-flip.y);
     }
 
+    glm::vec2 pixel_to_point(const glm::vec2& pix) {
+        const glm::vec2 wh(get_width(), get_height());
+        const glm::vec2 rx_by(state["right_x"], state["bottom_y"]);
+        const glm::vec2 lx_ty(state["left_x"], state["top_y"]);
+        const glm::vec2 flip(pix.x, get_height()-1-pix.y);
+        return lx_ty + (rx_by-lx_ty) * flip / wh;
+    }
+
     // This is not used here, but it is used in some classes which inherit from CoordinateScene
     void draw_trail(const vector<glm::vec2>& trail, const int trail_color, const float trail_opacity) {
         if(trail.size() == 0) return;
         if(trail_opacity < 0.01) return;
-        int line_width = get_geom_mean_size()/350;
+        int line_width = get_geom_mean_size()/250.;
         for(int i = 1; i < trail.size()-1; i++) {
             const glm::vec2 last_point = trail[i];
             const glm::vec2 next_point = trail[i+1];

@@ -4,7 +4,7 @@
 
 class PendulumScene : public Scene {
 public:
-    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), pend(s), start_state(s), path_background(get_width(), get_height()) {
+    PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), pend(s), start_state(s), path_background(width*VIDEO_WIDTH, height*VIDEO_HEIGHT) {
         state_manager.set({{"tone", "1"},
                            {"volume", "0"},
                            {"path_opacity", "0"},
@@ -70,6 +70,9 @@ public:
         int color = pendulum_color(thetas[0], thetas[1], pend.state.p1, pend.state.p2);
         if(state["background_opacity"] > 0.01)
             pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
+        if(state["path_opacity"] > 0.01) {
+            pix.overlay(path_background, 0, 0);
+        }
 
         double pend_opa = state["pendulum_opacity"];
         if(pend_opa > 0.01) {
@@ -98,9 +101,6 @@ public:
             }
             pix.fill_circle(posx, posy, line_thickness*2, pendulum_color, pend_opa);
         }
-        if(state["path_opacity"] > 0.01) {
-            pix.underlay(path_background, 0, 0);
-        }
     }
 
     void generate_tone(){
@@ -108,13 +108,14 @@ public:
         int total_samples = SAMPLERATE/FRAMERATE;
         if(vol < 0.01) {tonegen = 0; return;}
         if(tonegen == 0) tonegen = state["t"]*SAMPLERATE;
-        vector<float> left;
-        vector<float> right;
+        vector<sample_t> left;
+        vector<sample_t> right;
         int tonegen_save = tonegen;
         double note = state["tone"];
         for(int i = 0; i < total_samples; i++){
             double strength = lerp(energy, energy_slew, static_cast<double>(i)/total_samples);
-            float val = .002*vol*strength*sin(tonegen*2200.*note/SAMPLERATE)/sqrt(note);
+            float val_f = .002*vol*strength*sin(tonegen*2200.*note/SAMPLERATE)/sqrt(note);
+            sample_t val = float_to_sample(val_f);
             tonegen++;
             left.push_back(val);
             right.push_back(val);
@@ -123,14 +124,14 @@ public:
         energy = energy_slew;
     }
 
-    void generate_audio(double duration, vector<float>& left, vector<float>& right, double volume_mult = 1){
+    void generate_audio(double duration, vector<sample_t>& left, vector<sample_t>& right, double volume_mult = 1){
         PendulumState ps = start_state;
         for(int i = 0; i < duration*SAMPLERATE; i++){
             for(int j = 0; j < 10; j++) {
                 ps = rk4Step(rk4Step(rk4Step(ps, 0.001), 0.001), 0.001);
             }
-            left.push_back(.05*volume_mult*sin(ps.theta1));
-            right.push_back(.05*volume_mult*sin(ps.theta2));
+            left.push_back(float_to_sample(.05*volume_mult*sin(ps.theta1)));
+            right.push_back(float_to_sample(.05*volume_mult*sin(ps.theta2)));
         }
     }
     Pendulum pend;
