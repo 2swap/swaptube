@@ -6,10 +6,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "../Scenes/Common/ThreeDimensionStructs.cpp"
-#include "cuda_color.cu" // Contains overlay_pixel and set_pixel
-#include "cuda_graphics.cu" // Contains fill_circle
+#include "color.cuh" // Contains overlay_pixel and set_pixel
+#include "common_graphics.cuh" // Contains fill_circle
 
-__device__ void device_coordinate_to_pixel(
+__device__ void d_coordinate_to_pixel(
     const glm::vec3& coordinate,
     bool &behind_camera,
     const glm::quat& camera_direction,
@@ -29,28 +29,6 @@ __device__ void device_coordinate_to_pixel(
     outy = scale * rotated.y + height * 0.5f;
 }
 
-__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height) {
-    int dx = abs(x2 - x1), dy = abs(y2 - y1);
-    if (dx > 10000 || dy > 10000) return;
-    int sx = (x1 < x2) ? 1 : -1;
-    int sy = (y1 < y2) ? 1 : -1;
-    int err = dx - dy;
-
-    while (true) {
-        device_atomic_overlay_pixel(x1, y1, col, opacity, pixels, width, height);
-        for (int i = 1; i < thickness; i++) {
-            device_atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
-            device_atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
-            device_atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
-            device_atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
-        }
-        if (x1 == x2 && y1 == y2) break;
-        int e2 = 2 * err;
-        if (e2 > -dy) { err -= dy; x1 += sx; }
-        if (e2 <  dx) { err += dx; y1 += sy; }
-    }
-}
-
 __global__ void render_points_kernel(
     unsigned int* pixels, int width, int height,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
@@ -63,13 +41,13 @@ __global__ void render_points_kernel(
     if (p.opacity == 0) return;
     bool behind_camera = false;
     float px, py;
-    device_coordinate_to_pixel(
+    d_coordinate_to_pixel(
         p.center, behind_camera,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
         geom_mean_size, width, height, px, py);
     if (behind_camera) return;
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 400.0f;
-    device_fill_circle(px, py, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
+    d_fill_circle(px, py, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
 }
 
 __global__ void render_lines_kernel(
@@ -84,11 +62,11 @@ __global__ void render_lines_kernel(
     if (ln.opacity == 0) return;
     bool behind_camera1 = false, behind_camera2 = false;
     float p1x, p1y, p2x, p2y;
-    device_coordinate_to_pixel(
+    d_coordinate_to_pixel(
         ln.start, behind_camera1,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
         geom_mean_size, width, height, p1x, p1y);
-    device_coordinate_to_pixel(
+    d_coordinate_to_pixel(
         ln.end,   behind_camera2,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
         geom_mean_size, width, height, p2x, p2y);

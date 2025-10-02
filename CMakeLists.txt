@@ -35,7 +35,7 @@ if(CUDA_FOUND)
     set(GPU_LANGUAGE CUDA)
     enable_language(CUDA)
     set(GPU_COMPILER ${CMAKE_CUDA_COMPILER})
-    file(GLOB_RECURSE CUDA_SOURCES "src/CUDA/cuda_main.cu")
+    file(GLOB_RECURSE CUDA_SOURCES "src/CUDA/*.cu")
     include(CheckLanguage)
     check_language(CUDA)
     if(CMAKE_CUDA_COMPILER)
@@ -58,4 +58,3 @@ include_directories(${GLM_INCLUDE_DIRS})
 
 target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${RSVG_LIBRARIES} ${FDKAAC_LIBRARIES} cairo gobject-2.0 lzma ${PNG_LIBRARIES} ${GPU_LIBRARIES} ${X11_LIBRARIES} nlohmann_json::nlohmann_json)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wreorder)
-

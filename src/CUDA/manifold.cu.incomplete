@@ -1,0 +1,96 @@
+// This file renders a specified 3d manifold in CUDA.
+#include <thrust/complex.h>
+#include <cuda_runtime.h>
+#include <glm/glm.hpp>
+#include "color.cuh" // For complex_to_srgb
+
+// Kernel
+__global__ void render_manifold_kernel(
+    uint32_t* pixels, int w, int h,
+    const char* manifold_x_eq, const char* manifold_y_eq, const char* manifold_z_eq,
+    const char* color_r_eq, const char* color_i_eq,
+    float u_min, float u_max, int u_steps,
+    float v_min, float v_max, int v_steps,
+    glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction, float over_w_fov,
+    float opacity,
+    float* depth_buffer
+) {
+    // Determine u, v from thread indices
+    int u_idx = blockIdx.x * blockDim.x + threadIdx.x;
+    int v_idx = blockIdx.y * blockDim.y + threadIdx.y;
+    if (u_idx >= u_steps || v_idx >= v_steps) return;
+    float u = u_min + (u_max - u_min) * u_idx / (u_steps - 1);
+    float v = v_min + (v_max - v_min) * v_idx / (v_steps - 1);
+
+    // Evaluate manifold equations to get 3D point
+    float x = /* Evaluate manifold_x_eq with u, v */;
+    float y = /* Evaluate manifold_y_eq with u, v */;
+    float z = /* Evaluate manifold_z_eq with u, v */;
+
+    // Project 3D point to 2D screen space
+    glm::vec3 point_in_world = glm::vec3(x, y, z);
+    glm::vec3 point_in_camera = camera_direction * (point_in_world - camera_pos);
+    if (point_in_camera.z <= 0) return; // Behind camera
+    float screen_x = (point_in_camera.x / point_in_camera.z) * over_w_fov;
+    float screen_y = (point_in_camera.y / point_in_camera.z) * over_w_fov;
+    int pixel_x = (int)((screen_x + 1.0f) * 0.5f * w);
+    int pixel_y = (int)((1.0f - (screen_y + 1.0f) * 0.5f) * h);
+
+    // Evaluate color equations to get color
+    float r = /* Evaluate color_r_eq with u, v */;
+    float i = /* Evaluate color_i_eq with u, v */;
+    uint32_t color = complex_to_srgb(thrust::complex<float>(r, i), opacity);
+
+    // Depth test and write pixel
+    if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
+        int pixel_index = pixel_y * w + pixel_x;
+        float depth = point_in_camera.z;
+        atomicMin(&depth_buffer[pixel_index], depth);
+        if (depth_buffer[pixel_index] == depth) {
+            pixels[pixel_index] = color;
+        }
+        // TODO is this truly thread-safe / atomic?
+    }
+}
+
+// Externed entry point
+extern "C" cuda_render_manifold(
+    uint32_t* pixels, int w, int h,
+    const char* manifold_x_eq, const char* manifold_y_eq, const char* manifold_z_eq,
+    const char* color_r_eq, const char* color_i_eq,
+    float u_min, float u_max, int u_steps,
+    float v_min, float v_max, int v_steps,
+    glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction, float over_w_fov,
+    float opacity
+) {
+    // Allocate and copy pixels to device
+    uint32_t* d_pixels;
+    cudaMalloc(&d_pixels, width * height * sizeof(uint32_t));
+    cudaMemcpy(d_pixels, pixels, width * height * sizeof(uint32_t), cudaMemcpyHostToDevice);
+
+    // Allocate zeroized depth buffer on device
+    float* d_depth_buffer;
+    cudaMalloc(&d_depth_buffer, width * height * sizeof(float));
+    cudaMemset(d_depth_buffer, 0x7F, width * height * sizeof(float)); // Set to infinity
+
+    // Launch kernel, with one thread per u-v step, NOT one per pixel.
+    dim3 blockSize(16, 16);
+    dim3 gridSize((u_steps + blockSize.x - 1) / blockSize.x, (v_steps + blockSize.y - 1) / blockSize.y);
+    render_manifold_kernel<<<gridSize, blockSize>>>(
+        d_pixels, width, height,
+        manifold_x_eq, manifold_y_eq, manifold_z_eq,
+        color_r_eq, color_i_eq,
+        u_min, u_max, u_steps,
+        v_min, v_max, v_steps,
+        camera_pos, camera_direction, conjugate_camera_direction, over_w_fov,
+        opacity,
+        d_depth_buffer
+    );
+
+    // Copy pixels back to host
+    cudaMemcpy(pixels, d_pixels, width * height * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+
+    // Free device memory
+    cudaFree(d_pixels);
+    cudaFree(d_depth_buffer);
+}

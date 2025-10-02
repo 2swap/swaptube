@@ -11,40 +11,37 @@ public:
             {"manifold_z", "(u) (v) + sin"},
             {"color_r", "(u)"},
             {"color_i", "(v)"},
+            {"u_min", "-3.14"},
+            {"u_max", "3.14"},
+            {"u_segs", "100"},
+            {"v_min", "-3.14"},
+            {"v_max", "3.14"},
+            {"v_segs", "100"},
         });
     }
 
     void draw() override {
         ThreeDimensionScene::draw();
-        draw_manifold_cuda(
+        cuda_render_manifold(
+            pix.pixels.data(),
+            pix.w,
+            pix.h,
             state_manager.get_equation("manifold_x"),
             state_manager.get_equation("manifold_y"),
             state_manager.get_equation("manifold_z"),
             state_manager.get_equation("color_r"),
             state_manager.get_equation("color_i"),
+            state_manager.get_value("u_min"),
+            state_manager.get_value("u_max"),
+            (int)state_manager.get_value("u_segs"),
+            state_manager.get_value("v_min"),
+            state_manager.get_value("v_max"),
+            (int)state_manager.get_value("v_segs"),
+            camera_pos,
+            camera_direction,
+            conjugate_camera_direction,
+            over_w_fov,
+            1, // opacity
         );
-    void cuda_render_surface(
-        vector<unsigned int>& pix,
-        int x1,
-        int y1,
-        int plot_w,
-        int plot_h,
-        int pixels_w,
-        unsigned int* d_surface,
-        int surface_w,
-        int surface_h,
-        float opacity,
-        glm::vec3 camera_pos,
-        glm::quat camera_direction,
-        glm::quat conjugate_camera_direction,
-        const glm::vec3& surface_normal,
-        const glm::vec3& surface_center,
-        const glm::vec3& surface_pos_x_dir,
-        const glm::vec3& surface_pos_y_dir,
-        const float surface_ilr2,
-        const float surface_iur2,
-        float halfwidth,
-        float halfheight,
-        float over_w_fov);
     }
 };

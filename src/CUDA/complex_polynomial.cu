@@ -1,19 +1,9 @@
-#pragma once
-
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
+#include "helpers.cuh"
+#include "color.cuh"
 #include <cmath>
-
-__device__ float lerp(float a, float b, float w){
-    return w*b+(1-w)*a;
-}
-
-__device__ int complex_to_color(const thrust::complex<float>& c, float ab_dilation, float dot_radius) {
-    float mag = abs(c);
-    thrust::complex<float> norm = (c * ab_dilation / mag + thrust::complex<float>(1,1)) * .5;
-    float am = 2*atan(mag/dot_radius)/M_PI;
-    return device_OKLABtoRGB(255, (1-.8*am)*1, lerp(-.233888, .276216, norm.real()), lerp(-.311528, .198570, norm.imag()));
-}
+#include <glm/glm.hpp>
 
 __device__ thrust::complex<float> evaluate_polynomial_given_coefficients(const thrust::complex<float>* coefficients, int degree, const thrust::complex<float>& point) {
     thrust::complex<float> result(0.0, 0.0);
@@ -23,11 +13,6 @@ __device__ thrust::complex<float> evaluate_polynomial_given_coefficients(const t
         power_of_point *= point;
     }
     return result;
-}
-
-__device__ glm::vec2 pixel_to_point(const glm::vec2& pixel, const glm::vec2& lx_ty, const glm::vec2& rx_by, const glm::vec2& wh) {
-    const glm::vec2 flip(pixel.x, wh.y-1-pixel.y);
-    return flip * (rx_by - lx_ty) / wh + lx_ty;
 }
 
 __global__ void render_kernel(
@@ -46,7 +31,7 @@ __global__ void render_kernel(
 
     const glm::vec2 point = pixel_to_point(glm::vec2(x,y), lx_ty, rx_by, wh);
     const thrust::complex<float> val = evaluate_polynomial_given_coefficients(d_coefficients, degree, thrust::complex<float>(point.x, point.y));
-    const int color = complex_to_color(val, ab_dilation, dot_radius);
+    const int color = d_complex_to_srgb(val, ab_dilation, dot_radius);
 
     d_pixels[y * int(wh.x) + x] = color;
 }

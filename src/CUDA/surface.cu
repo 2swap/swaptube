@@ -3,36 +3,9 @@
 #include <vector>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>
+#include "color.cuh"
 
 using namespace std;
-
-__device__ inline float d_lerp(float a, float b, float w) { return a * (1 - w) + b * w; }
-__device__ inline int d_argb(int a, int r, int g, int b) {
-    return (a << 24) +
-           (r << 16) +
-           (g << 8) +
-           (b);
-}
-__device__ inline int d_geta(int col) { return (col & 0xff000000) >> 24; }
-__device__ inline int d_getr(int col) { return (col & 0x00ff0000) >> 16; }
-__device__ inline int d_getg(int col) { return (col & 0x0000ff00) >> 8; }
-__device__ inline int d_getb(int col) { return (col & 0x000000ff); }
-__device__ inline int d_colorlerp(int col1, int col2, float w) {
-    return d_argb(round(d_lerp(d_geta(col1), d_geta(col2), w)),
-                         round(d_lerp(d_getr(col1), d_getr(col2), w)),
-                         round(d_lerp(d_getg(col1), d_getg(col2), w)),
-                         round(d_lerp(d_getb(col1), d_getb(col2), w)));
-}
-__device__ int color_combine_device(int base_color, int over_color, float overlay_opacity_multiplier = 1) {
-    float base_opacity = d_geta(base_color) / 255.0f;
-    float over_opacity = d_geta(over_color) / 255.0f * overlay_opacity_multiplier;
-    float final_opacity = 1 - (1 - base_opacity) * (1 - over_opacity);
-    if (final_opacity == 0) return 0x00000000;
-    int final_alpha = round(final_opacity * 255.0f);
-    float chroma_weight = over_opacity / final_opacity;
-    int final_rgb = d_colorlerp(base_color, over_color, chroma_weight) & 0x00ffffff;
-    return (final_alpha << 24) | (final_rgb);
-}
 
 __global__ void render_surface_kernel(
     // d_pixels is the array which we will plop a surface on. The surface is bounded by (x1,y1) on the top left and (x2,y2) on the top right.
@@ -94,7 +67,7 @@ __global__ void render_surface_kernel(
 
     unsigned int color = d_surface[surface_x + surface_y * surface_w];
 
-    d_pixels_dev[pixels_index] = color_combine_device(d_pixels_dev[pixels_index], color, opacity);
+    d_pixels_dev[pixels_index] = d_color_combine(d_pixels_dev[pixels_index], color, opacity);
 }
 
 extern "C" void cuda_render_surface(

@@ -1,7 +1,8 @@
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
 #include <cmath>
-#include "ComplexPolynomial.cu"
+#include "helpers.cuh"
+#include "color.cuh"
 
 __global__ void render_kernel(
     int* d_pixels,
@@ -22,7 +23,7 @@ __global__ void render_kernel(
     const thrust::complex<float> cos_val = thrust::cos(thrust::complex<float>(point.x, point.y));
     const thrust::complex<float> exp_val = thrust::exp(thrust::complex<float>(point.x, point.y));
     const thrust::complex<float> val = sqrt_coef * sqrt_val + sin_coef * sin_val + cos_coef * cos_val + exp_coef * exp_val;
-    const int color = complex_to_color(val, ab_dilation, dot_radius);
+    const int color = d_complex_to_srgb(val, ab_dilation, dot_radius);
 
     d_pixels[y * int(wh.x) + x] = color;
 }

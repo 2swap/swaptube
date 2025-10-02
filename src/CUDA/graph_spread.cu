@@ -1,6 +1,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <glm/glm.hpp>
+#include "helpers.cuh"
 
 #define GRID_SIZE 10 // 10x10x10 bins
 #define BIN_INDEX(a) ((a.z) * GRID_SIZE * GRID_SIZE + (a.y) * GRID_SIZE + (a.x))
@@ -9,10 +10,6 @@ struct Bin {
     int count;
     glm::vec4 center_of_mass;
 };
-
-__device__ float clamp(float min, float val, float max) {
-    return val < min? min : (val > max? max : val);
-}
 
 __device__ glm::vec4 compute_force(glm::vec4 pos_i, glm::vec4 pos_j) {
     glm::vec4 diff = pos_i - pos_j;

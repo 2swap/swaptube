@@ -1,5 +1,5 @@
 #include <cuda_runtime.h>
-#include "cuda_color.cu" // Contains implementation of overlay_pixel
+#include "color.cuh" // Contains implementation of overlay_pixel
 
 __global__ void overlay_kernel(
     unsigned int* background, const int bw, const int bh,
@@ -12,7 +12,7 @@ __global__ void overlay_kernel(
     int x = idx % fw;
     int y = idx / fw;
 
-    device_overlay_pixel(x+dx, y+dy, foreground[y * fw + x], opacity, background, bw, bh);
+    d_overlay_pixel(x+dx, y+dy, foreground[y * fw + x], opacity, background, bw, bh);
 }
 
 extern "C" void cuda_overlay(

@@ -3,13 +3,10 @@
 #include <complex>
 #include <cmath>
 #include <cstdio>
-#include "cuda_graphics.cu"
+#include <glm/glm.hpp>
+#include "common_graphics.cuh"
 #include "../Host_Device_Shared/find_roots.c"
-
-__device__ glm::vec2 point_to_pixel(const glm::vec2& point, const glm::vec2& lx_ty, const glm::vec2& rx_by, const glm::vec2& wh) {
-    const glm::vec2 flip = (point - lx_ty) * wh / (rx_by - lx_ty);
-    return glm::vec2(flip.x, wh.y-1-flip.y);
-}
+#include "helpers.cuh"
 
 __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
     cuFloatComplex result = make_cuFloatComplex(1.0f, 0.0f);
@@ -38,7 +35,7 @@ __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatC
         color |= color_or;
     }
 
-    color = device_colorlerp(0xFFFFFFFF, color, rainbow);
+    color = d_colorlerp(0xFFFFFFFF, color, rainbow);
 
     // Find the degree, since the leading coefficients might be zero
     int degree = -1;
@@ -57,7 +54,7 @@ __global__ void root_fractal_kernel(unsigned int* pixels, int w, int h, cuFloatC
     for (int i = 0; i < degree; i++) {
         glm::vec2 point(cuCrealf(roots[i]), cuCimagf(roots[i]));
         glm::vec2 pixel = point_to_pixel(point, glm::vec2(lx, ty), glm::vec2(rx, by), glm::vec2(w, h));
-        device_gradient_circle(pixel.x, pixel.y, radius, color, pixels, w, h, opacity);
+        d_gradient_circle(pixel.x, pixel.y, radius, color, pixels, w, h, opacity);
     }
 }
 
@@ -65,8 +62,8 @@ extern "C" void draw_root_fractal(
     unsigned int* pixels,
     int w,
     int h,
-    complex<float> c1,
-    complex<float> c2,
+    std::complex<float> c1,
+    std::complex<float> c2,
     float terms,
     float lx, float ty,
     float rx, float by,
