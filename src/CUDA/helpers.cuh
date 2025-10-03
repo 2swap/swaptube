@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-__device__ __forceinline__ float clamp(float lower, float upper, float value) {
+__device__ __forceinline__ float clamp(float value, float lower, float upper){
     return fminf(fmaxf(value, lower), upper);
 }
 __device__ __forceinline__ float lerp(float a, float b, float w){

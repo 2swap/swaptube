@@ -62,10 +62,10 @@ __device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, fl
     atomicCAS(&pixels[idx], old_pixel, new_pixel);
 }
 
-__device__ __forceinline__ int d_argb(int a, int r, int g, int b){return (int(clamp(0,a,255))<<24)|
-                                                         (int(clamp(0,r,255))<<16)|
-                                                         (int(clamp(0,g,255))<<8 )|
-                                                         (int(clamp(0,b,255))    );}
+__device__ __forceinline__ int d_argb(int a, int r, int g, int b){return (int(clamp(a,0,255))<<24)|
+                                                                         (int(clamp(r,0,255))<<16)|
+                                                                         (int(clamp(g,0,255))<<8 )|
+                                                                         (int(clamp(b,0,255))    );}
 
 __device__ __forceinline__ float d_linear_srgb_to_srgb(float x) {
     return x;
