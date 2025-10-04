@@ -1889,7 +1889,7 @@ void render_video(){
     cps->state_manager.transition(MICRO, "geometry_opacity", "0");
     cs.render_microblock();
     cps->construction.clear();
-    cps->state_manager.set(MICRO, "geometry_opacity", "1");
+    cps->state_manager.set("geometry_opacity", "1");
 
     cs.stage_macroblock(FileBlock("Watch as I move the coefficients of the polynomial along the real number line."), 1);
     cps->roots_to_coefficients();
@@ -1906,45 +1906,70 @@ void render_video(){
     cs.stage_macroblock(SilenceBlock(2), 1);
     cs.render_microblock();
 
-    cs.remove_scene("cps");
+    cs.remove_subscene("cps");
     shared_ptr<ThreeDimensionScene> flip_tds = make_shared<ThreeDimensionScene>();
-    flip_tds.stage_macroblock(FileBlock("The solutions are always totally vertically symmetrical."), 3);
+    flip_tds->stage_macroblock(FileBlock("The solutions are always totally vertically symmetrical."), 3);
     flip_tds->add_surface(Surface("cps"), cps);
     flip_tds->state_manager.transition(MICRO, {
         {"qi", "1"},
     });
-    flip_tds.render_microblock();
-    flip_tds.render_microblock();
+    flip_tds->render_microblock();
+    flip_tds->render_microblock();
     flip_tds->state_manager.transition(MICRO, {
         {"qi", "0"},
     });
-    flip_tds.render_microblock();
+    flip_tds->render_microblock();
+    flip_tds->remove_all_subscenes();
     cs.add_scene(cps, "cps");
 
-    cs.stage_macroblock(FileBlock("This means that starting from the real numbers, we can't define i without defining -i."), 1);
+    cs.stage_macroblock(FileBlock("So any definition for i will simultaneously include -i!"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Now remember how we select positive 2 as the square root of 4 by convention?"), 1);
+    cs.stage_macroblock(FileBlock("Remember how we select positive 2 as the square root of 4 by convention?"), 1);
+    cps->roots_to_coefficients();
+    cps->state_manager.transition(MICRO, {
+        {"coefficient2_r", "1"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "0"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "4"},
+        {"coefficient0_i", "0"},
+    });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("i and -i are algebraically indistinguishable, so which we define as the square root of -1 is a matter of arbitrary choice."), 1);
     cs.render_microblock();
 
+    cs.stage_macroblock(FileBlock("If we _do_ make an arbitrary choice, we get a plot like this..."), 2);
+    cafs->state_manager.set("ticks_opacity", "0");
+    cs.add_scene_fade_in(MICRO, cafs, "cafs", .5, .5, 1, true);
+    cs.fade_subscene(MICRO, "quadratic_formula", 0);
+    cs.render_microblock();
+    cs.remove_subscene("quadratic_formula");
+    cafs->construction.add(GeometricLine(glm::vec2(-5, 0), glm::vec2(0, 0)));
+    cafs->state_manager.transition(MICRO, "geometry_opacity", "0");
+    cs.render_microblock();
+
+    cps->state_manager.set("positive_quadratic_formula_opacity", "0");
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can change that arbitrary choice, and that yucky discontinuity start to move around."), 1);
+    cafs->state_manager.transition(MICRO, "sqrt_branch_cut", "3.14");
+    cs.render_microblock();
+
+    cs.fade_subscene(MICRO, "cafs", 0);
+    cs.fade_subscene(MICRO, "cps", 1);
+    cs.remove_subscene("cafs");
+
     cs.stage_macroblock(FileBlock("The square root function, in general, is therefore _not a function that gives one value_!"), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("If we succumb to arbitrary choice, then we get a plot that looks something like this:"), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("here I'm always returning the positive-i solution of the pair."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("We can change that arbitrary choice, which makes that yucky discontinuity start to move around."), 1);
     cs.render_microblock();
 
     return;
 
     cs.stage_macroblock(FileBlock("Thanks to the plus-or-minus sign, the quadratic formula really spits out two values."), 2);
+    string pm_colored = latex_color(0xff222222, "\\frac{-b " + latex_color(0xffffffff, "\\pm") + " \\sqrt{b^2 - 4ac}}{2a}");
+    shared_ptr<LatexScene> negative_quadratic_formula = make_shared<LatexScene>("\\frac{-b - \\sqrt{b^2 - 4ac}}{2a}", 1, .6, .4);
     negative_quadratic_formula->begin_latex_transition(MICRO, pm_colored);
     quadratic_formula->begin_latex_transition(MICRO, pm_colored);
     cs.render_microblock();
@@ -2042,22 +2067,6 @@ void render_video(){
     cs.render_microblock();
 
     // TODO move between plots in 3-space tds
-    cafs->state_manager.set("ticks_opacity", "0");
-    cs.add_scene_fade_in(MICRO, cafs, "cafs", .5, .5, 1, true);
-    cs.stage_macroblock(FileBlock("and on the complex plane, the square root function actually isn't a continuous function!"), 2);
-    cs.fade_subscene(MICRO, "quadratic_formula", 0);
-    cs.render_microblock();
-    cs.remove_subscene("quadratic_formula");
-    cafs->construction.add(GeometricLine(glm::vec2(-5, 0), glm::vec2(0, 0)));
-    cafs->state_manager.transition(MICRO, "geometry_opacity", "0");
-    cs.render_microblock();
-
-    cps->state_manager.set("positive_quadratic_formula_opacity", "0");
-    cs.fade_subscene(MICRO, "cafs", 0);
-    cs.fade_subscene(MICRO, "cps", 1);
-    cs.stage_macroblock(SilenceBlock(1), 1);
-    cs.render_microblock();
-    cs.remove_subscene("cafs");
 
     cs.stage_macroblock(FileBlock("So, that fails the continuity requirement..."), 1);
     cs.add_scene_fade_in(MICRO, function, "function", .5, .3);
