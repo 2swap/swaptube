@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <string>
 #include <cctype>
+#include "../misc/StateManager.cpp"
 
 using namespace std;
 
@@ -42,8 +43,8 @@ public:
         if (srt_file.is_open()) srt_file.close();
     }
 
-    void set_substime(double t_seconds) {
-        substime = t_seconds;
+    void get_substime(double t_seconds) {
+        get_substime(global_state["frame_number"] / FRAMERATE);
     }
 
     void add_subtitle(double duration, const string& text) {
@@ -90,8 +91,8 @@ public:
         srt_file << subtitle_count << endl;
         add_srt_time(substime);
         srt_file << " --> ";
-        substime += duration - 0.05;
-        add_srt_time(substime);
+        substime += duration;
+        add_srt_time(substime - 0.05); // Slightly reduce end time to avoid overlap
         srt_file << endl << text << endl << endl;
     }
 };

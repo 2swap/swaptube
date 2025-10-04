@@ -56,13 +56,12 @@ public:
             last_state = state;
             update();
         }
-        if(needs_redraw()){
+        // The only time we don't actually render is when the project flags to skip a section, and not smoketesting.
+        if(needs_redraw() && (FOR_REAL || SMOKETEST)) {
             has_ever_rendered = true;
-            //if (rendering_on()) {
-                pix = Pixels(get_width(), get_height());
-                cout << "|" << flush;
-                draw();
-            //}
+            pix = Pixels(get_width(), get_height());
+            cout << "|" << flush;
+            draw();
         }
         mark_data_unchanged();
         has_updated_since_last_query = false;
@@ -203,7 +202,6 @@ private:
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
 
         state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
-        SUBTITLE_WRITER.set_substime(global_state["frame_number"] / FRAMERATE);
         Pixels* p = nullptr;
         query(p);
 

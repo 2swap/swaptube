@@ -4,6 +4,10 @@
  */
 
 using namespace std;
+#include <string>
+#include <stdexcept>
+#include <iostream>
+#include <signal.h>
 
 static bool SAVE_FRAME_PNGS = true;   // Whether to save every 30th frame to disk as PNG
 static bool PRINT_TO_TERMINAL = true;
@@ -11,11 +15,6 @@ static bool PRINT_TO_TERMINAL = true;
 static bool FOR_REAL = true; // Flag exposed to the project definition to disable sections of video
 static bool SMOKETEST= false;// Overall smoketest flag
 bool rendering_on() { return FOR_REAL && !SMOKETEST; }
-
-#include <string>
-#include <stdexcept>
-#include <iostream>
-#include <signal.h>
 
 enum TransitionType {
     MICRO,
@@ -29,7 +28,6 @@ const string project_name = PROJECT_NAME_MACRO;
 //const int VIDEO_BACKGROUND_COLOR = 0xff101010; // Charcoal Grey...er
 const int VIDEO_BACKGROUND_COLOR = 0xff000000; // Black
 
-#include "../io/PathManager.cpp"
 #include "../io/AudioWriter.cpp"
 #include "../io/VideoWriter.cpp"
 #include "../io/SubtitleWriter.cpp"

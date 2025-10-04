@@ -81,7 +81,7 @@ After a Macroblock has been staged with `n` microblocks, the project file will r
 In order to ensure that BOTH your time control is defined correctly (the appropriate number of microblocks are rendered) and that the project file does not crash due to a runtime error in the project file definition WITHOUT potentially kicking off a multi-hour render, Swaptube has a `smoketest` feature. By default, smoketest is always run on any Swaptube run.
 
 Things that happen during smoketesting:
-- One frame per microblock is staged to be rendered, but not actually rendered
+- One frame per microblock is staged and rendered
 - DataObjects are modified as normal
 - State transitions are performed as normal to test validity of state equation definitions
 - The record_list.tsv file is re-populated, so you can record your audio script after smoketesting without performing a full render.

@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
+#include "PathManager.cpp"
 
 class DebugPlot {
 public:

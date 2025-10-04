@@ -70,6 +70,9 @@ struct Surface {
         iur2 = 0.5f / (square(pos_y_dir.x) + square(pos_y_dir.y) + square(pos_y_dir.z));
         normal = glm::cross(pos_x_dir, pos_y_dir);
     }
+
+    // constructor to make the surface fill the screen.
+    Surface(const string& n) : Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), n) {}
 };
 
 class ThreeDimensionScene : public SuperScene {
@@ -329,6 +332,7 @@ public:
         add_subscene_check_dupe(s.name, sc);
         state_manager.set(s.name + ".opacity", "1");
     }
+
     void add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa=1){
         add_surface(s, sc);
         state_manager.set(s.name + ".opacity", "0");

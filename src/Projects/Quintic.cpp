@@ -8,6 +8,7 @@
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
 
 void render_video(){
+    FOR_REAL = false;
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(3);
     cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its solutions."), 10);
     cps->state_manager.set("ticks_opacity", "0");
@@ -377,7 +378,7 @@ void render_video(){
     cs.remove_all_subscenes();
 
     ThreeDimensionScene tds;
-    tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "cps"), cps);
+    tds.add_surface(Surface("cps"), cps);
     tds.stage_macroblock(SilenceBlock(2), /*2*/1);
     tds.state_manager.transition(MICRO, {
         {"d", "1.5"},
@@ -386,7 +387,7 @@ void render_video(){
 
     shared_ptr<RealFunctionScene> rfs = make_shared<RealFunctionScene>();
     rfs->add_function("? 1.2 - ? .3 + ? 1.2 + * *", 0xffff0000);
-    tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
+    tds.add_surface(Surface("rfs"), rfs);
     tds.state_manager.transition(MICRO, {
         {"qi", "-.3 <t> sin .07 * +"},
         {"qj", "<t> cos .025 *"},
@@ -606,7 +607,7 @@ void render_video(){
     rfs = make_shared<RealFunctionScene>();
     rfs->add_function("? 2 * 1 +", 0xffff0000);
     rfs->state_manager.set("ticks_opacity", "0");
-    tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "cps"), cps);
+    tds2->add_surface(Surface("cps"), cps);
     shared_ptr<RealFunctionScene> rfs2 = make_shared<RealFunctionScene>();
     rfs2->state_manager.set("ticks_opacity", "0");
     rfs2->add_function("1 ? ? * -", 0xffcc00ff);
@@ -1490,15 +1491,6 @@ void render_video(){
     cs.render_microblock();
     cs.remove_subscene("quadratic");
 
-    /*cs.stage_macroblock(FileBlock("Since we're holding A at 1, the root x and the coefficient b are opposites, so they do a mirror dance about the origin."), 3);
-    quadratic->begin_latex_transition(MICRO, "x=-b");
-    cps->state_manager.transition(MICRO, {
-        {"coefficient1_opacity", "0"},
-    });
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();*/
-
     cs.stage_macroblock(SilenceBlock(1.5), 1);
     cps->roots_to_coefficients();
     cps->state_manager.transition(MICRO, {
@@ -1538,7 +1530,7 @@ void render_video(){
     cs.remove_subscene("quadratic_formula");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("cause something starts to get weird in the quadratic case."), 1);
+    cs.stage_macroblock(FileBlock("cause something starts getting weird in the quadratic case."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("You see, coefficients and solutions are structurally very different."), 10);
@@ -1648,46 +1640,311 @@ void render_video(){
     cps->transition_root_rings(MICRO, 0);
     cs.render_microblock();
 
+    FOR_REAL = true;
     cs.stage_macroblock(FileBlock("This has some bizarre implications."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("First and foremost, there's no function which takes in the coefficients and gives out _some individual solution_, and is continuous."), 3);
+    cs.stage_macroblock(CompositeBlock(FileBlock("First and foremost, there's no function which takes in the coefficients and gives out _some individual solution_, and is continuous."), FileBlock("Here's why.")), 7);
     cps->transition_coefficient_opacities(MICRO, 0);
     cs.render_microblock();
     shared_ptr<LatexScene> function = make_shared<LatexScene>("f(a, b, c) \\rightarrow x_1", 1, .75, .4);
     shared_ptr<LatexScene> details = make_shared<LatexScene>("f \\text{ continuous}", 1, .5, .4);
     cs.add_scene_fade_in(MICRO, function, "function", .5, .4);
     cs.render_microblock();
+    function->begin_latex_transition(MICRO, "f("+latex_color(0xff8080ff, "a, b, c")+") \\rightarrow x_1");
+    cs.render_microblock();
+    function->begin_latex_transition(MICRO, "f(a, b, c) \\rightarrow "+latex_color(0xff80ff80, "x_1"));
+    cs.render_microblock();
+    function->begin_latex_transition(MICRO, "f(a, b, c) \\rightarrow x_1");
+    cs.render_microblock();
     cs.add_scene_fade_in(MICRO, details, "details", .5, .65);
     cs.render_microblock();
+    details->begin_latex_transition(MICRO, latex_color(0xffff0000, "f \\text{ continuous}"));
+    cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("This may seem nonsensical, especially in the light of the quadratic formula I hinted at earlier."), 2);
+    cs.stage_macroblock(FileBlock("Assume we do have a continuous function that takes in a, b, and c,"), 4);
+    cs.fade_subscene(MICRO, "function", 0);
+    cs.fade_subscene(MICRO, "details", 0);
+    cps->transition_coefficient_opacities(MICRO, 1);
+    cs.render_microblock();
+    cs.remove_subscene("function");
+    cs.remove_subscene("details");
+    cs.render_microblock();
+    cps->transition_coefficient_rings(MICRO, 1);
+    cs.render_microblock();
+    cps->transition_coefficient_rings(MICRO, 0);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("and gives us this solution."), 3);
+    cps->state_manager.transition(MICRO, "root0_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "0");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "1");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("As we saw before, we can swap the solutions and the coefficients will return to their starting position."), 3);
+    cps->coefficients_to_roots();
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "1", false);
+    cs.render_microblock();
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("But our 'continuous function' gives us a different solution now!"), 4);
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "0");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Given this same a, b, and c,"), 3);
+    cs.render_microblock();
+    cps->transition_coefficient_rings(MICRO, 1);
+    cs.render_microblock();
+    cps->transition_coefficient_rings(MICRO, 0);
+    cps->transition_coefficient_opacities(MICRO, 0);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("First it gave us this solution, but then it gave us that solution."), 8);
+    cps->state_manager.transition(MICRO, "root1_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root1_ring", "0");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root1_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root1_ring", "0");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "0");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("A function has to be deterministic- this is against the rules."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("By nature of being continuous, it can't distinguish between the two solutions."), 12);
+    while(cs.microblocks_remaining()) {
+        cps->state_manager.transition(MICRO, "root1_ring", "1");
+        cs.render_microblock();
+        cps->state_manager.transition(MICRO, "root1_ring", "0");
+        cs.render_microblock();
+        cps->state_manager.transition(MICRO, "root0_ring", "1");
+        cs.render_microblock();
+        cps->state_manager.transition(MICRO, "root0_ring", "0");
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(FileBlock("So, creating a continuous function to track a particular solution is an impossible task to begin with."), 2);
+    cs.add_scene(function, "function", .5, -.5);
+    cs.add_scene(details, "details", .5, -.3);
+    cs.slide_subscene(MICRO, "function", 0, .8);
+    cs.slide_subscene(MICRO, "details", 0, .8);
+    cs.render_microblock();
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Any such 'quadratic formula' would need to have a discontinuity."), 1);
+    cs.fade_subscene(MICRO, "function", 0);
+    cs.fade_subscene(MICRO, "details", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+
+    shared_ptr<LatexScene> continuous_operations = make_shared<LatexScene>("+, -, \\times, \\div", .5, 1, .3);
+    cs.add_scene_fade_in(MICRO, continuous_operations, "continuous_operations", .5, .15);
+    cs.stage_macroblock(FileBlock("There's no way to do it with just basic arithmetic."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Even if we incorporate other functions,"), 1);
+    cs.fade_subscene(MICRO, "cps", 0);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    continuous_operations->begin_latex_transition(MICRO, "+, -, \\times, \\div, \\sin");
+    shared_ptr<ComplexArbitraryFunctionScene> cafs = make_shared<ComplexArbitraryFunctionScene>();
+    cafs->state_manager.set({{"sqrt_coef", "0"}, {"sin_coef", "1"}});
+    cs.add_scene_fade_in(MACRO, cafs, "cafs", 0.5, 0.5, 1, true);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("such as sines, (long pause), cosines, (long pause), and exponentials,"), 6);
+    cs.render_microblock();
+    cs.render_microblock();
+    cafs->state_manager.transition(MICRO, {{"sin_coef", "0"}, {"cos_coef", "1"}});
+    continuous_operations->begin_latex_transition(MICRO, "+, -, \\times, \\div, \\sin, \\cos");
+    cs.render_microblock();
+    cs.render_microblock();
+    cafs->state_manager.transition(MICRO, {{"cos_coef", "0"}, {"exp_coef", "1"}});
+    continuous_operations->begin_latex_transition(MICRO, "+, -, \\times, \\div, \\sin, \\cos, \\exp");
+    cs.render_microblock();
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("they feature no discontinuities, so they have no way of selecting a unique solution of the two."), 2);
+    cs.render_microblock();
+    cs.fade_all_subscenes(MICRO, 0);
+    cs.fade_subscene(MICRO, "cps", 1);
+    cs.render_microblock();
+    cs.remove_subscene("cafs");
+    cs.remove_subscene("continuous_operations");
+
+    cs.stage_macroblock(FileBlock("But wait, hold up, what about the quadratic formula!?"), 2);
     cs.slide_subscene(MICRO, "function", 0, -.25);
     cs.slide_subscene(MICRO, "details", 0, -.25);
     cs.render_microblock();
     quadratic_formula = make_shared<LatexScene>("\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}", 1, .6, .4);
-    cs.add_scene(quadratic_formula, "quadratic_formula", -.3, .75);
+    cs.add_scene(quadratic_formula, "quadratic_formula", -.3, .5);
     cs.slide_subscene(MICRO, "quadratic_formula", .8, 0);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("But let's take a closer look at this quadratic formula."), 1);
-    cs.render_microblock();
-
-    shared_ptr<LatexScene> negative_quadratic_formula = make_shared<LatexScene>("\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}", 1, .6, .4);
-    cs.add_scene(negative_quadratic_formula, "negative_quadratic_formula", .5, .75);
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.fade_subscene(MICRO, "function", 0);
     cs.fade_subscene(MICRO, "details", 0);
-    cs.slide_subscene(MICRO, "quadratic_formula", 0, -.25);
-    cs.slide_subscene(MICRO, "negative_quadratic_formula", 0, -.25);
     cs.slide_subscene(MICRO, "function", 0, -.45);
     cs.slide_subscene(MICRO, "details", 0, -.45);
     cs.render_microblock();
     cs.remove_subscene("function");
     cs.remove_subscene("details");
 
+    cs.stage_macroblock(FileBlock("it has this plus-or-minus square rooty stuff going on."), 1);
+    quadratic_formula->begin_latex_transition(MICRO, latex_color(0xff222222, "\\frac{-b " + latex_color(0xffffffff, "\\pm \\sqrt{b^2 - 4ac}") + "}{2a}"));
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.fade_subscene(MICRO, "quadratic_formula", 0);
+    cs.render_microblock();
+    cs.remove_subscene("quadratic_formula");
+
+    cs.stage_macroblock(FileBlock("We're gonna need to pause to learn what a square root _actually is_..."), 1);
+    shared_ptr<LatexScene> sqrt4 = make_shared<LatexScene>("\\sqrt{\\phantom{4}}", 1, .5, .3);
+    cs.add_scene_fade_in(MICRO, sqrt4, "sqrt4");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We usually say things like 'the square root of 4 is 2,'"), 1);
+    sqrt4->begin_latex_transition(MICRO, "\\sqrt{4} = 2");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("but what we are asking to begin with is,"), 1);
+    cs.fade_subscene(MICRO, "sqrt4", 0);
+    cs.render_microblock();
+    cs.remove_subscene("sqrt4");
+
+    cs.stage_macroblock(FileBlock("what are the solutions of x^2=4?"), 1);
+    cps->set_degree(2);
+    cps->roots_to_coefficients();
+    cps->state_manager.transition(MICRO, {
+        {"coefficient2_r", "1"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "0"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "-4"},
+        {"coefficient0_i", "0"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Plotting that equation, we of course see the result 2,"), 2);
+    cps->coefficients_to_roots();
+    cps->state_manager.set({
+        {"root0_r", "2"},
+        {"root0_i", "0"},
+        {"root1_r", "-2"},
+        {"root1_i", "0"},
+    });
+    cps->state_manager.transition(MICRO, "root0_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root0_ring", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("as well as the negative square root, -2."), 2);
+    cps->state_manager.transition(MICRO, "root1_ring", "1");
+    cs.render_microblock();
+    cps->state_manager.transition(MICRO, "root1_ring", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("By convention, we define the 'square root' to be positive."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("What then of the square root of -1?"), 1);
+    cps->roots_to_coefficients();
+    cps->state_manager.transition(MICRO, {
+        {"coefficient0_r", "-1"},
+        {"coefficient0_i", "0"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We _define_ i as being precisely that,"), 1);
+    cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("but just like before, -i works too."), 1);
+    cps->construction.add(GeometricPoint(glm::vec2(0, -1), "-i"));
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("This is more than just a curiosity."), 1);
+    cps->state_manager.transition(MICRO, "geometry_opacity", "0");
+    cs.render_microblock();
+    cps->construction.clear();
+    cps->state_manager.set(MICRO, "geometry_opacity", "1");
+
+    cs.stage_macroblock(FileBlock("Watch as I move the coefficients of the polynomial along the real number line."), 1);
+    cps->roots_to_coefficients();
+    cps->state_manager.transition(MICRO, {
+        {"coefficient0_r", "<t> 0.0 + 2 / sin"},
+        {"coefficient0_i", "<t> 0.0 + 2 / sin"},
+        {"coefficient1_r", "<t> 0.5 + 2 / sin"},
+        {"coefficient1_i", "<t> 0.5 + 2 / sin"},
+        {"coefficient2_r", "<t> 1.0 + 2 / sin"},
+        {"coefficient2_i", "<t> 1.0 + 2 / sin"},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(2), 1);
+    cs.render_microblock();
+
+    cs.remove_scene("cps");
+    shared_ptr<ThreeDimensionScene> flip_tds = make_shared<ThreeDimensionScene>();
+    flip_tds.stage_macroblock(FileBlock("The solutions are always totally vertically symmetrical."), 3);
+    flip_tds->add_surface(Surface("cps"), cps);
+    flip_tds->state_manager.transition(MICRO, {
+        {"qi", "1"},
+    });
+    flip_tds.render_microblock();
+    flip_tds.render_microblock();
+    flip_tds->state_manager.transition(MICRO, {
+        {"qi", "0"},
+    });
+    flip_tds.render_microblock();
+    cs.add_scene(cps, "cps");
+
+    cs.stage_macroblock(FileBlock("This means that starting from the real numbers, we can't define i without defining -i."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Now remember how we select positive 2 as the square root of 4 by convention?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("i and -i are algebraically indistinguishable, so which we define as the square root of -1 is a matter of arbitrary choice."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("The square root function, in general, is therefore _not a function that gives one value_!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("If we succumb to arbitrary choice, then we get a plot that looks something like this:"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("here I'm always returning the positive-i solution of the pair."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can change that arbitrary choice, which makes that yucky discontinuity start to move around."), 1);
+    cs.render_microblock();
+
+    return;
+
     cs.stage_macroblock(FileBlock("Thanks to the plus-or-minus sign, the quadratic formula really spits out two values."), 2);
-    string pm_colored = latex_color(0xff222222, "\\frac{-b "+latex_color(OPAQUE_WHITE, "\\pm")+" \\sqrt{b^2 - 4ac}}{2a}");
     negative_quadratic_formula->begin_latex_transition(MICRO, pm_colored);
     quadratic_formula->begin_latex_transition(MICRO, pm_colored);
     cs.render_microblock();
@@ -1785,7 +2042,6 @@ void render_video(){
     cs.render_microblock();
 
     // TODO move between plots in 3-space tds
-    shared_ptr<ComplexArbitraryFunctionScene> cafs = make_shared<ComplexArbitraryFunctionScene>();
     cafs->state_manager.set("ticks_opacity", "0");
     cs.add_scene_fade_in(MICRO, cafs, "cafs", .5, .5, 1, true);
     cs.stage_macroblock(FileBlock("and on the complex plane, the square root function actually isn't a continuous function!"), 2);
@@ -1807,152 +2063,6 @@ void render_video(){
     cs.add_scene_fade_in(MICRO, function, "function", .5, .3);
     details = make_shared<LatexScene>(latex_color(0xffff8080, "f \\text{ continuous}"), 1, .5, .3);
     cs.add_scene_fade_in(MICRO, details, "details", .5, .5);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("and that's not a problem with the formula you learned in school... there _is no way_ to make a continuous quadratic formula. Here's why."), 2);
-    cs.render_microblock();
-    details->begin_latex_transition(MICRO, latex_color(0xffff8080, "\\sout{f \\text{ continuous}}"));
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("Assume we do have a continuous function, and it takes in a, b, and c,"), 4);
-    cs.fade_subscene(MICRO, "function", 0);
-    cs.fade_subscene(MICRO, "details", 0);
-    cs.render_microblock();
-    cs.remove_subscene("function");
-    cs.remove_subscene("details");
-    cs.render_microblock();
-    cps->transition_coefficient_rings(MICRO, 1);
-    cs.render_microblock();
-    cps->transition_coefficient_rings(MICRO, 0);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("and gives us this solution."), 3);
-    cps->state_manager.transition(MICRO, "root0_ring", "1");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "0");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "1");
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("As we saw before, we can swap the solutions and the coefficients will return to their starting position."), 3);
-    cps->coefficients_to_roots();
-    cs.render_microblock();
-    cps->stage_swap(MICRO, "0", "1", false);
-    cs.render_microblock();
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("But our 'continuous function' gives us a different solution now!"), 4);
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "0");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "1");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "0");
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("Given this same a, b, and c,"), 3);
-    cs.render_microblock();
-    cps->transition_coefficient_rings(MICRO, 1);
-    cs.render_microblock();
-    cps->transition_coefficient_rings(MICRO, 0);
-    cps->transition_coefficient_opacities(MICRO, 0);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("First it gave us this solution, but then it gave us that solution."), 8);
-    cps->state_manager.transition(MICRO, "root1_ring", "1");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root1_ring", "0");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root1_ring", "1");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root1_ring", "0");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "1");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "0");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "1");
-    cs.render_microblock();
-    cps->state_manager.transition(MICRO, "root0_ring", "0");
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("A function has to be deterministic- this is against the rules."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("By nature of being continuous, it can't distinguish between the two solutions."), 12);
-    while(cs.microblocks_remaining()) {
-        cps->state_manager.transition(MICRO, "root1_ring", "1");
-        cs.render_microblock();
-        cps->state_manager.transition(MICRO, "root1_ring", "0");
-        cs.render_microblock();
-        cps->state_manager.transition(MICRO, "root0_ring", "1");
-        cs.render_microblock();
-        cps->state_manager.transition(MICRO, "root0_ring", "0");
-        cs.render_microblock();
-    }
-
-    cs.stage_macroblock(FileBlock("So, creating a continuous function to track a particular solution is an impossible task to begin with."), 2);
-    cs.add_scene(function, "function", .5, -.5);
-    cs.add_scene(details, "details", .5, -.3);
-    cs.slide_subscene(MICRO, "function", 0, .8);
-    cs.slide_subscene(MICRO, "details", 0, .8);
-    cs.render_microblock();
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("Any such 'quadratic formula' would need to have a discontinuity."), 1);
-    cs.fade_subscene(MICRO, "function", 0);
-    cs.fade_subscene(MICRO, "details", 0);
-    cs.render_microblock();
-    cs.remove_all_subscenes_except("cps");
-
-    // TODO plot the determinant
-
-    shared_ptr<LatexScene> continuous_operations = make_shared<LatexScene>("+, -, \\times, \\div", .5, 1, .3);
-    cs.add_scene_fade_in(MICRO, continuous_operations, "continuous_operations", .5, .15);
-    cs.stage_macroblock(FileBlock("There's no way to do it with just basic arithmetic."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("Even if we incorporate other functions,"), 1);
-    cs.fade_subscene(MICRO, "cps", 0);
-    cs.render_microblock();
-
-    cs.stage_macroblock(SilenceBlock(1), 1);
-    continuous_operations->begin_latex_transition(MICRO, "+, -, \\times, \\div, \\sin");
-    cafs->state_manager.set({{"sqrt_coef", "0"}, {"sin_coef", "1"}});
-    cs.add_scene_fade_in(MACRO, cafs, "cafs", 0.5, 0.5, 1, true);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("such as sines, (long pause), cosines, (long pause), and exponentials,"), 6);
-    cs.render_microblock();
-    cs.render_microblock();
-    cafs->state_manager.transition(MICRO, {{"sin_coef", "0"}, {"cos_coef", "1"}});
-    continuous_operations->begin_latex_transition(MICRO, "+, -, \\times, \\div, \\sin, \\cos");
-    cs.render_microblock();
-    cs.render_microblock();
-    cafs->state_manager.transition(MICRO, {{"cos_coef", "0"}, {"exp_coef", "1"}});
-    continuous_operations->begin_latex_transition(MICRO, "+, -, \\times, \\div, \\sin, \\cos, \\exp");
-    cs.render_microblock();
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("they feature no discontinuities, so they have no way of selecting a unique solution of the two."), 2);
-    cs.render_microblock();
-    cs.fade_all_subscenes(MICRO, 0);
-    cs.fade_subscene(MICRO, "cps", 1);
-    cs.render_microblock();
-    cs.remove_subscene("cafs");
-    cs.remove_subscene("continuous_operations");
-
-    cs.stage_macroblock(FileBlock("Some kind of discontinuous operation is necessary- and a square root does the trick."), 4);
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.add_scene_fade_in(MICRO, quadratic_formula, "quadratic_formula", .5, .5);
-    quadratic_formula->begin_latex_transition(MICRO, latex_color(0xff333333, "\\frac{-b + " + latex_color(OPAQUE_WHITE, "\\sqrt{b^2 - 4ac}") + "}{2a}"));
-    cs.render_microblock();
-    cs.fade_subscene(MICRO, "quadratic_formula", 0);
-    cs.render_microblock();
-    cs.remove_subscene("quadratic_formula");
-
-    cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
     shared_ptr<LatexScene> recap = make_shared<LatexScene>("\\begin{tabular}{ccc} \\text{\\huge{Degree}} & \\qquad \\qquad \\text{\\huge{Form}} \\qquad \\qquad & \\text{\\huge{Solutions}}", 1, 1, 1);
