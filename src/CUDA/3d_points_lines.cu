@@ -9,26 +9,6 @@
 #include "color.cuh" // Contains overlay_pixel and set_pixel
 #include "common_graphics.cuh" // Contains fill_circle
 
-__device__ void d_coordinate_to_pixel(
-    const glm::vec3& coordinate,
-    bool &behind_camera,
-    const glm::quat& camera_direction,
-    const glm::vec3& camera_pos,
-    const glm::quat& conjugate_camera_direction,
-    float fov,
-    float geom_mean_size,
-    int width,
-    int height,
-    float& outx,
-    float& outy)
-{
-    glm::vec3 rotated = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
-    if (rotated.z <= 0) { behind_camera = true; return; }
-    float scale = (geom_mean_size * fov) / rotated.z;
-    outx = scale * rotated.x + width * 0.5f;
-    outy = scale * rotated.y + height * 0.5f;
-}
-
 __global__ void render_points_kernel(
     unsigned int* pixels, int width, int height,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
@@ -40,11 +20,11 @@ __global__ void render_points_kernel(
     Point p = points[idx];
     if (p.opacity == 0) return;
     bool behind_camera = false;
-    float px, py;
+    float px, py, pz;
     d_coordinate_to_pixel(
         p.center, behind_camera,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
-        geom_mean_size, width, height, px, py);
+        geom_mean_size, width, height, px, py, pz);
     if (behind_camera) return;
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 400.0f;
     d_fill_circle(px, py, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
@@ -61,15 +41,15 @@ __global__ void render_lines_kernel(
     Line ln = lines[idx];
     if (ln.opacity == 0) return;
     bool behind_camera1 = false, behind_camera2 = false;
-    float p1x, p1y, p2x, p2y;
+    float p1x, p1y, p1z, p2x, p2y, p2z;
     d_coordinate_to_pixel(
         ln.start, behind_camera1,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
-        geom_mean_size, width, height, p1x, p1y);
+        geom_mean_size, width, height, p1x, p1y, p1z);
     d_coordinate_to_pixel(
         ln.end,   behind_camera2,
         camera_direction, camera_pos, conjugate_camera_direction, fov,
-        geom_mean_size, width, height, p2x, p2y);
+        geom_mean_size, width, height, p2x, p2y, p2z);
     if (behind_camera1 || behind_camera2) return;
     bresenham(
         p1x, p1y, p2x, p2y,

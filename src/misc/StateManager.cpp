@@ -122,7 +122,7 @@ void print_global_state(){
 double get_global_state(string key){
     const auto& pair = global_state.find(key);
     if(pair == global_state.end()){
-        // I used to error on this. However, there is a general pattern in which
+        // I used to error on this always. However, there is a general pattern in which
         // we give some scene "A" the ability to write to global state and give
         // scene "B"'s state manager a dependency on that variable. Depending on
         // the order in which the scenes are rendered, we get indeterminate behavior.
@@ -229,7 +229,7 @@ public:
         else throw runtime_error("Invalid transition type: " + to_string(tt));
         string eq1 = get_equation(variable);
         string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> <" + (tt==MICRO?"micro":"macro") + "block_fraction> smoothlerp";
+        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> {" + (tt==MICRO?"micro":"macro") + "block_fraction} smoothlerp";
         set(variable+".pre_transition", eq1);
         set(variable+".post_transition", eq2);
         set(variable, lerp_both);
@@ -251,10 +251,6 @@ public:
     }
 
     void evaluate_all() {
-        for(const pair<string, double> p : global_state){
-            set(p.first, to_string(p.second));
-        }
-
         /* Step 1: Iterate through all variables,
          * check that they are fresh from last cycle,
          * and reset it to false. */
@@ -295,7 +291,8 @@ public:
                             print_state();
                             throw runtime_error("error: attempted to access variable " + dependency
                                     + " during evaluation of " + variable_name + " := "
-                                    + vc.equation + "!\nstate has been printed above.");
+                                    + vc.equation + ", but it does not exist in this StateManager!"
+                                    + "\nstate has been printed above.");
                         }
                         const VariableContents& dep_vc = variables.at(dependency);
                         if (!dep_vc.fresh) {
@@ -399,6 +396,17 @@ private:
 
     // Take a string like "<variable_that_equals_7> 5 +" and return "7 5 +"
     string insert_equation_dependencies(string variable, string equation) const {
+        // Replace all instances of "(...)" with "0"
+        size_t pos = 0;
+        while ((pos = equation.find('(')) != string::npos) {
+            size_t end_pos = equation.find(')', pos);
+            if (end_pos != string::npos) {
+                equation.replace(pos, end_pos - pos + 1, "0");
+            } else {
+                throw runtime_error("Mismatched parentheses in equation: " + equation);
+            }
+        }
+
         for (const string& dependency : variables.at(variable).dependencies) {
             const VariableContents& vc = variables.at(dependency);
 

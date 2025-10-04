@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include "color.cuh"
 
 // Fill a circle on a pixel buffer
@@ -61,3 +63,25 @@ __device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int co
     }
 }
 
+__device__ __forceinline__ void d_coordinate_to_pixel(
+    const glm::vec3& coordinate,
+    bool &behind_camera,
+    const glm::quat& camera_direction,
+    const glm::vec3& camera_pos,
+    const glm::quat& conjugate_camera_direction,
+    float fov,
+    float geom_mean_size,
+    int width,
+    int height,
+    float& outx,
+    float& outy,
+    float& outz)
+{
+    behind_camera = false;
+    glm::vec3 rotated = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
+    if (rotated.z <= 0) { behind_camera = true; return; }
+    float scale = (geom_mean_size * fov) / rotated.z;
+    outx = scale * rotated.x + width * 0.5f;
+    outy = scale * rotated.y + height * 0.5f;
+    outz = rotated.z;
+}

@@ -65,9 +65,6 @@ double calculator(const string& expression) {
     unordered_map<string, OperatorInfo> operators = {
         {"smoothlerp", {[](vector<double>& operands) { return smoothlerp(operands[0], operands[1], operands[2]); }, 3}},
         {"lerp"      , {[](vector<double>& operands) { return lerp(operands[0], operands[1], operands[2]); }, 3}},
-        {"argb"      , {[](vector<double>& operands) { return         (argb(operands[0], operands[1], operands[2], operands[3])); }, 4}},
-        {"ahsv"      , {[](vector<double>& operands) { return HSVtoRGB(     operands[0], operands[1], operands[2], operands[3] ); }, 4}},
-        {"ayuv"      , {[](vector<double>& operands) { return YUVtoRGB(argb(operands[0], operands[1], operands[2], operands[3])); }, 4}},
         {"+"         , {[](vector<double>& operands) { return operands[0] + operands[1]; }, 2}},
         {"-"         , {[](vector<double>& operands) { return operands[0] - operands[1]; }, 2}},
         {"*"         , {[](vector<double>& operands) { return operands[0] * operands[1]; }, 2}},
@@ -83,7 +80,6 @@ double calculator(const string& expression) {
         {"ceil"      , {[](vector<double>& operands) { return ceil(operands[0]); }, 1}},
         {"pi"        , {[](vector<double>& operands) { return M_PI; }, 0}},
         {"e"         , {[](vector<double>& operands) { return M_E; }, 0}},
-        {"intmax"    , {[](vector<double>& operands) { return OPAQUE_WHITE; }, 0}},
         {"phi"       , {[](vector<double>& operands) { return M_PHI; }, 0}}
     };
 

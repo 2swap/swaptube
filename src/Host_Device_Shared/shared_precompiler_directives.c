@@ -2,7 +2,7 @@
 
 #ifdef __CUDACC__
 
-#define HOST_DEVICE __host__ __device__
+#define HOST_DEVICE __device__
 #define SHARED_FILE_PREFIX namespace Cuda {
 #define SHARED_FILE_SUFFIX }
 

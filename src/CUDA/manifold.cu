@@ -3,7 +3,10 @@
 #include <cuda_runtime.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <cstring>
+#include "../Host_Device_Shared/calculator.cuh"
 #include "color.cuh" // For complex_to_srgb
+#include "common_graphics.cuh"
 
 // Kernel
 __global__ void render_manifold_kernel(
@@ -12,7 +15,8 @@ __global__ void render_manifold_kernel(
     const char* color_r_eq, const char* color_i_eq,
     float u_min, float u_max, int u_steps,
     float v_min, float v_max, int v_steps,
-    glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction, float over_w_fov,
+    glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction,
+    float geom_mean_size, float fov,
     float opacity,
     float* depth_buffer
 ) {
@@ -24,30 +28,55 @@ __global__ void render_manifold_kernel(
     float v = v_min + (v_max - v_min) * v_idx / (v_steps - 1);
 
     // Evaluate manifold equations to get 3D point
-    float x = 0/* Evaluate manifold_x_eq with u, v */;
-    float y = 0/* Evaluate manifold_y_eq with u, v */;
-    float z = 0/* Evaluate manifold_z_eq with u, v */;
+    double x = 0;
+    double y = 0;
+    double z = 0;
+    char x_inserted[256];
+    char y_inserted[256];
+    char z_inserted[256];
+    insert_tags(manifold_x_eq, u, v, x_inserted, 256);
+    insert_tags(manifold_y_eq, u, v, y_inserted, 256);
+    insert_tags(manifold_z_eq, u, v, z_inserted, 256);
+    if(!calculator(x_inserted, &x)) printf("Error calculating manifold x at u=%f v=%f\n", u, v);
+    if(!calculator(y_inserted, &y)) printf("Error calculating manifold y at u=%f v=%f\n", u, v);
+    if(!calculator(z_inserted, &z)) printf("Error calculating manifold z at u=%f v=%f\n", u, v);
 
     // Project 3D point to 2D screen space
-    glm::vec3 point_in_world = glm::vec3(x, y, z);
-    glm::vec3 point_in_camera = camera_direction * (point_in_world - camera_pos);
-    if (point_in_camera.z <= 0) return; // Behind camera
-    float screen_x = (point_in_camera.x / point_in_camera.z) * over_w_fov;
-    float screen_y = (point_in_camera.y / point_in_camera.z) * over_w_fov;
-    int pixel_x = (int)((screen_x + 1.0f) * 0.5f * w);
-    int pixel_y = (int)((1.0f - (screen_y + 1.0f) * 0.5f) * h);
+    bool behind_camera = false;
+    float out_x, out_y, out_z;
+    d_coordinate_to_pixel(
+        glm::vec3(x, y, z),
+        behind_camera,
+        camera_direction,
+        camera_pos,
+        conjugate_camera_direction,
+        fov,
+        geom_mean_size,
+        w,
+        h,
+        out_x, out_y, out_z
+    );
+    int pixel_x = static_cast<int>(out_x);
+    int pixel_y = static_cast<int>(out_y);
 
     // Evaluate color equations to get color
-    float r = 0/* Evaluate color_r_eq with u, v */;
-    float i = 0/* Evaluate color_i_eq with u, v */;
+    double r = 0;
+    double i = 0;
+    char r_inserted[256];
+    char i_inserted[256];
+    insert_tags(color_r_eq, u, v, r_inserted, 256);
+    insert_tags(color_i_eq, u, v, i_inserted, 256);
+    if(!calculator(r_inserted, &r)) printf("Error calculating color r at u=%f v=%f\n", u, v);
+    if(!calculator(i_inserted, &i)) printf("Error calculating color i at u=%f v=%f\n", u, v);
+
     uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), 1, 1 /*TODO add ab_dilation etc*/);
 
     // Depth test and write pixel
     if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
         int pixel_index = pixel_y * w + pixel_x;
-        float depth = point_in_camera.z;
-        atomicMin((int*)&depth_buffer[pixel_index], __float_as_int(depth));
-        if (depth_buffer[pixel_index] == depth) {
+        int old_int = atomicMin((int*)&depth_buffer[pixel_index], __float_as_int(out_z));
+        float old_depth = __int_as_float(old_int);
+        if (out_z < old_depth) {
             pixels[pixel_index] = color;
         }
         // TODO is this truly thread-safe / atomic?
@@ -61,7 +90,8 @@ extern "C" void cuda_render_manifold(
     const char* color_r_eq, const char* color_i_eq,
     float u_min, float u_max, int u_steps,
     float v_min, float v_max, int v_steps,
-    glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction, float over_w_fov,
+    glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction,
+    float geom_mean_size, float fov,
     float opacity
 ) {
     // Allocate and copy pixels to device
@@ -69,24 +99,56 @@ extern "C" void cuda_render_manifold(
     cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
     cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
-    // Allocate zeroized depth buffer on device
+    // Allocate zeroized depth buffer on device (initialize to large values from host)
     float* d_depth_buffer;
     cudaMalloc(&d_depth_buffer, w * h * sizeof(float));
-    cudaMemset(d_depth_buffer, 0x7F, w * h * sizeof(float)); // Set to infinity
+    float* h_depth = (float*)malloc(w * h * sizeof(float));
+    for (int i = 0; i < w * h; ++i) h_depth[i] = 1e30f;
+    cudaMemcpy(d_depth_buffer, h_depth, w * h * sizeof(float), cudaMemcpyHostToDevice);
+    free(h_depth);
 
-    // Launch kernel, with one thread per u-v step, NOT one per pixel.
+    // Copy string expressions to device
+    char* d_manifold_x_eq = nullptr;
+    char* d_manifold_y_eq = nullptr;
+    char* d_manifold_z_eq = nullptr;
+    char* d_color_r_eq = nullptr;
+    char* d_color_i_eq = nullptr;
+    size_t len;
+
+    len = strlen(manifold_x_eq) + 1;
+    cudaMalloc(&d_manifold_x_eq, len);
+    cudaMemcpy(d_manifold_x_eq, manifold_x_eq, len, cudaMemcpyHostToDevice);
+
+    len = strlen(manifold_y_eq) + 1;
+    cudaMalloc(&d_manifold_y_eq, len);
+    cudaMemcpy(d_manifold_y_eq, manifold_y_eq, len, cudaMemcpyHostToDevice);
+
+    len = strlen(manifold_z_eq) + 1;
+    cudaMalloc(&d_manifold_z_eq, len);
+    cudaMemcpy(d_manifold_z_eq, manifold_z_eq, len, cudaMemcpyHostToDevice);
+
+    len = strlen(color_r_eq) + 1;
+    cudaMalloc(&d_color_r_eq, len);
+    cudaMemcpy(d_color_r_eq, color_r_eq, len, cudaMemcpyHostToDevice);
+
+    len = strlen(color_i_eq) + 1;
+    cudaMalloc(&d_color_i_eq, len);
+    cudaMemcpy(d_color_i_eq, color_i_eq, len, cudaMemcpyHostToDevice);
+
     dim3 blockSize(16, 16);
     dim3 gridSize((u_steps + blockSize.x - 1) / blockSize.x, (v_steps + blockSize.y - 1) / blockSize.y);
     render_manifold_kernel<<<gridSize, blockSize>>>(
         d_pixels, w, h,
-        manifold_x_eq, manifold_y_eq, manifold_z_eq,
-        color_r_eq, color_i_eq,
+        d_manifold_x_eq, d_manifold_y_eq, d_manifold_z_eq,
+        d_color_r_eq, d_color_i_eq,
         u_min, u_max, u_steps,
         v_min, v_max, v_steps,
-        camera_pos, camera_direction, conjugate_camera_direction, over_w_fov,
+        camera_pos, camera_direction, conjugate_camera_direction,
+        geom_mean_size, fov,
         opacity,
         d_depth_buffer
     );
+    cudaDeviceSynchronize();
 
     // Copy pixels back to host
     cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
@@ -94,4 +156,9 @@ extern "C" void cuda_render_manifold(
     // Free device memory
     cudaFree(d_pixels);
     cudaFree(d_depth_buffer);
+    cudaFree(d_manifold_x_eq);
+    cudaFree(d_manifold_y_eq);
+    cudaFree(d_manifold_z_eq);
+    cudaFree(d_color_r_eq);
+    cudaFree(d_color_i_eq);
 }
