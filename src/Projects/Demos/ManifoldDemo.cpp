@@ -18,4 +18,10 @@ void render_video() {
         {"qj", ".4"},
     });
     ms.render_microblock();
+
+    ms.stage_macroblock(SilenceBlock(4), 1);
+    ms.state_manager.transition(MICRO, {
+        {"manifold_x", "(u) sin"},
+    });
+    ms.render_microblock();
 }

@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <cstring>
-#include "../Host_Device_Shared/calculator.cuh"
+#include "calculator.cuh"
 #include "color.cuh" // For complex_to_srgb
 #include "common_graphics.cuh"
 

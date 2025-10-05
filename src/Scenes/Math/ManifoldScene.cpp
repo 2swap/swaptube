@@ -33,15 +33,20 @@ public:
 
     void draw() override {
         ThreeDimensionScene::draw();
+        string manifold_x_eq = state_manager.get_equation_with_tags("manifold_x");
+        string manifold_y_eq = state_manager.get_equation_with_tags("manifold_y");
+        string manifold_z_eq = state_manager.get_equation_with_tags("manifold_z");
+        string color_r_eq = state_manager.get_equation_with_tags("color_r");
+        string color_i_eq = state_manager.get_equation_with_tags("color_i");
         cuda_render_manifold(
             pix.pixels.data(),
             pix.w,
             pix.h,
-            state_manager.get_equation("manifold_x").c_str(),
-            state_manager.get_equation("manifold_y").c_str(),
-            state_manager.get_equation("manifold_z").c_str(),
-            state_manager.get_equation("color_r").c_str(),
-            state_manager.get_equation("color_i").c_str(),
+            manifold_x_eq.c_str(),
+            manifold_y_eq.c_str(),
+            manifold_z_eq.c_str(),
+            color_r_eq.c_str(),
+            color_i_eq.c_str(),
             state_manager.get_value("u_min"),
             state_manager.get_value("u_max"),
             (int)state_manager.get_value("u_segs"),
@@ -55,7 +60,6 @@ public:
             state["fov"],
             1 // opacity
         );
-        printf(state_manager.get_equation("manifold_x").c_str());
     }
 
     const StateQuery populate_state_query() const override {

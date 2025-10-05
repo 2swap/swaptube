@@ -6,7 +6,10 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
-#include "shared_precompiler_directives.c"
+
+// TODO this include kinda doesn't make sense because we are not actually using
+// this calculator on host yet.
+#include "../Host_Device_Shared/shared_precompiler_directives.c"
 
 typedef double (*OperatorFunc)(double *a, int n);
 

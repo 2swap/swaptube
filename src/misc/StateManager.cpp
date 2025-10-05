@@ -344,6 +344,17 @@ public:
         return get_variable(variable).equation;
     }
 
+    string get_equation_with_tags(const string& variable) const {
+        // This is called by Scenes which read directly from state and hand the equation
+        // to the CUDA device. The tags are then inserted on-device with thread-specific values
+        // which are passed into the tags.
+        string equation = get_equation(variable);
+        equation = insert_local_state_dependencies(equation);
+        equation = insert_parent_state_dependencies(equation);
+        equation = insert_global_state_dependencies(equation);
+        return equation;
+    }
+
     double get_value(const string& variable) const {
         VariableContents vc = get_variable(variable);
 
@@ -394,8 +405,15 @@ private:
     // own variables first.
     bool subjugated = false;
 
-    // Take a string like "<variable_that_equals_7> 5 +" and return "7 5 +"
-    string insert_equation_dependencies(string variable, string equation) const {
+    string insert_equation_dependencies(string equation) const {
+        equation = insert_tag_dependencies(equation);
+        equation = insert_local_state_dependencies(equation);
+        equation = insert_parent_state_dependencies(equation);
+        equation = insert_global_state_dependencies(equation);
+        return equation;
+    }
+
+    string insert_tag_dependencies(string equation) const {
         // Replace all instances of "(...)" with "0"
         size_t pos = 0;
         while ((pos = equation.find('(')) != string::npos) {
@@ -407,55 +425,63 @@ private:
             }
         }
 
-        for (const string& dependency : variables.at(variable).dependencies) {
-            const VariableContents& vc = variables.at(dependency);
+        return equation;
+    }
 
-            // Make sure that the dependency is already computed.
-            if(!vc.fresh){
-                print_state();
-                throw runtime_error("ERROR: variable " + dependency + " was not fresh when expected during insertion into " + variable + "'s equation!\nState has been printed above.");
-            }
-
-            string replaced_substring = "<" + dependency + ">";
-            size_t pos = equation.find(replaced_substring);
-            while (pos != string::npos) {
-                equation.replace(pos, replaced_substring.length(), to_string(vc.value));
-                // Update pos to search for the next occurrence
-                pos = equation.find(replaced_substring, pos + to_string(vc.value).length());
+    // Logic to replace substrings in angle brackets <> with the local variable's value
+    // Take a string like "<variable_that_equals_7> 5 +" and return "7 5 +"
+    string insert_local_state_dependencies(string equation) const {
+        size_t start_pos = equation.find('<');
+        while (start_pos != string::npos) {
+            size_t end_pos = equation.find('>', start_pos);
+            if (end_pos != string::npos) {
+                string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
+                if(!contains(content)){
+                    print_state();
+                    throw runtime_error("ERROR: Attempted to access variable " + content + " during local state dependency insertion, but it does not exist!\nState has been printed above.");
+                }
+                string value = to_string(get_value(content));
+                equation.replace(start_pos, end_pos - start_pos + 1, value);
+                // Update start_pos to search for the next occurrence
+                start_pos = equation.find('<', start_pos + value.length());
+            } else {
+                throw runtime_error("Mismatched angle brackets in equation: " + equation);
             }
         }
+        return equation;
+    }
 
-        {
-            // Logic to replace substrings in square brackets [] with the parent's value
-            size_t start_pos = equation.find('[');
-            while (start_pos != string::npos) {
-                size_t end_pos = equation.find(']', start_pos);
-                if (end_pos != string::npos) {
-                    string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
-                    string value_from_parent = to_string(get_value_from_parent(content));
-                    equation.replace(start_pos, end_pos - start_pos + 1, value_from_parent);
-                    // Update start_pos to search for the next occurrence
-                    start_pos = equation.find('[', start_pos + value_from_parent.length());
-                } else {
-                    throw runtime_error("Mismatched square brackets in equation: " + equation);
-                }
+    // Logic to replace substrings in square brackets [] with the parent's value
+    string insert_parent_state_dependencies(string equation) const {
+        size_t start_pos = equation.find('[');
+        while (start_pos != string::npos) {
+            size_t end_pos = equation.find(']', start_pos);
+            if (end_pos != string::npos) {
+                string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
+                string value_from_parent = to_string(get_value_from_parent(content));
+                equation.replace(start_pos, end_pos - start_pos + 1, value_from_parent);
+                // Update start_pos to search for the next occurrence
+                start_pos = equation.find('[', start_pos + value_from_parent.length());
+            } else {
+                throw runtime_error("Mismatched square brackets in equation: " + equation);
             }
         }
+        return equation;
+    }
 
-        {
-            // Logic to replace substrings in curly braces {} with the global data-published value
-            size_t start_pos = equation.find('{');
-            while (start_pos != string::npos) {
-                size_t end_pos = equation.find('}', start_pos);
-                if (end_pos != string::npos) {
-                    string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
-                    string value = to_string(get_global_state(content));
-                    equation.replace(start_pos, end_pos - start_pos + 1, value);
-                    // Update start_pos to search for the next occurrence
-                    start_pos = equation.find('{', start_pos + value.length());
-                } else {
-                    throw runtime_error("Mismatched curly braces in equation: " + equation);
-                }
+    // Logic to replace substrings in curly braces {} with the global data-published value
+    string insert_global_state_dependencies(string equation) const {
+        size_t start_pos = equation.find('{');
+        while (start_pos != string::npos) {
+            size_t end_pos = equation.find('}', start_pos);
+            if (end_pos != string::npos) {
+                string content = equation.substr(start_pos + 1, end_pos - start_pos - 1);
+                string value = to_string(get_global_state(content));
+                equation.replace(start_pos, end_pos - start_pos + 1, value);
+                // Update start_pos to search for the next occurrence
+                start_pos = equation.find('{', start_pos + value.length());
+            } else {
+                throw runtime_error("Mismatched curly braces in equation: " + equation);
             }
         }
 
@@ -466,7 +492,7 @@ private:
         VariableContents& vc = variables.at(variable);
         assert(!vc.fresh);
         vc.fresh = true;
-        string scrubbed_equation = insert_equation_dependencies(variable, vc.equation);
+        string scrubbed_equation = insert_equation_dependencies(vc.equation);
         vc.value = calculator(scrubbed_equation);
     }
 
