@@ -4,6 +4,36 @@
 #include "../../DataObjects/GeometricConstruction.cpp"
 #include <vector>
 
+string float_to_pretty_string(const float value) {
+    if(abs(value) < 0.0000001) return "0";
+
+    // Convert float to string with a stream
+    ostringstream oss;
+    oss << value;
+    string str = oss.str();
+
+    // Find the position of the decimal point
+    size_t decimalPos = str.find('.');
+
+    // If there's no decimal point, just return the string
+    if (decimalPos != string::npos) {
+        // Remove trailing zeros
+        size_t endPos = str.find_last_not_of('0');
+
+        // If the last non-zero character is the decimal point, remove it too
+        if (endPos == decimalPos) {
+            endPos--;
+        }
+
+        // Create a substring up to the correct position
+        str = str.substr(0, endPos + 1);
+    }
+
+    if(str.size() > 2 && str[0] == '0' && str[1] == '.') str = str.substr(1);
+    if(str.size() > 2 && str[0] == '-' && str[1] == '0') str = "-" + str.substr(2);
+    return str;
+}
+
 string truncate_tick(const float value, const bool append_i) {
     string str = float_to_pretty_string(value);
 

@@ -70,6 +70,10 @@ static VideoWriter& VIDEO_WRITER = *FCINIT.video_writer;
 static SubtitleWriter SUBTITLE_WRITER;
 static ShtookaWriter SHTOOKA_WRITER;
 
+inline void signal_handler(int signal) {
+    throw runtime_error("Interrupt detected. Exiting gracefully.");
+}
+
 #include "../io/SubtitleWriter.cpp"
 
 // The go.sh script temporarily moves the current project to this location:

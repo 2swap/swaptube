@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include "common_graphics.cuh"
 #include "../Host_Device_Shared/find_roots.c"
-#include "helpers.cuh"
+#include "../Host_Device_Shared/helpers.h"
 
 __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
     cuFloatComplex result = make_cuFloatComplex(1.0f, 0.0f);

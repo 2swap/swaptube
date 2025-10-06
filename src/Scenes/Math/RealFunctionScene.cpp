@@ -15,6 +15,15 @@ struct FunctionData {
         : function(f), transition_function(""), transition_type(MICRO/*ignored until a transition is made*/), color(c) {}
 };
 
+inline string replace_substring(string str, const string& from, const string& to) {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Move past the replacement to avoid infinite loop
+    }
+    return str;
+}
+
 class RealFunctionScene : public CoordinateScene {
 public:
     RealFunctionScene(const double width = 1, const double height = 1)
@@ -22,6 +31,7 @@ public:
 
     // Evaluates the function at x by replacing '?' with the x-value,
     // computing the current function and its transitional variant, then smoothing between them.
+    // TODO this should be adapted to use the new (t) tag system
     double call_the_function(double x, const FunctionData& func_data) {
         TransitionType tt = func_data.transition_type;
         double stf = state[tt == MICRO ? "microblock_fraction" : "macroblock_fraction"];

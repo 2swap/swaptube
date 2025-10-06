@@ -1,6 +1,6 @@
 #pragma once
 #include <thrust/complex.h>
-#include "helpers.cuh"
+#include "../Host_Device_Shared/helpers.h"
 
 __device__ __forceinline__ int d_geta(int color) { 
     return (color >> 24) & 0xFF; 

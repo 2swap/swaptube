@@ -5,6 +5,9 @@ using namespace std;
 #include <sstream>
 #include <iomanip>
 #include <ctime>
+#include <filesystem>
+#include "../Host_Device_Shared/helpers.h"
+
 string get_timestamp(){
     // Get current time
     auto now = chrono::system_clock::now();
@@ -16,8 +19,6 @@ string get_timestamp(){
     return ss.str();
 }
 
-#include <filesystem>
-#include "../misc/inlines.h"
 void ensure_dir_exists(const string& path) {
     if (filesystem::exists(path)) {
         //cout << "Directory " << path << " already exists, not creating." << endl;

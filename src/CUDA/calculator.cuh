@@ -6,10 +6,11 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
+#include "../Host_Device_Shared/helpers.h"
 
 // TODO this include kinda doesn't make sense because we are not actually using
 // this calculator on host yet.
-#include "../Host_Device_Shared/shared_precompiler_directives.c"
+#include "../Host_Device_Shared/shared_precompiler_directives.h"
 
 typedef double (*OperatorFunc)(double *a, int n);
 
@@ -65,7 +66,7 @@ typedef struct {
  */
 
 /* ---- Operator Implementations ---- */
-//smoothlerp
+HOST_DEVICE static double op_smoothlerp(double *a, int n) { return smoothlerp(a[0], a[1], a[2]); }
 HOST_DEVICE static double op_lerp(double *a, int n)  { return a[1] + a[0] * (a[2] - a[1]); }
 HOST_DEVICE static double op_add(double *a, int n)   { return a[0] + a[1]; }
 HOST_DEVICE static double op_sub(double *a, int n)   { return a[0] - a[1]; }
@@ -186,24 +187,25 @@ HOST_DEVICE int shared_sscanf_token(const char *p, char *out, int maxlen) {
 
 /* ---- Operator Table ---- */
 HOST_DEVICE static const OperatorInfo operators[] = {
-    {"lerp",  op_lerp,  3},
-    {"+",     op_add,   2},
-    {"-",     op_sub,   2},
-    {"*",     op_mul,   2},
-    {"/",     op_div,   2},
-    {"^",     op_pow,   2},
-    {"sin",   op_sin,   1},
-    {"cos",   op_cos,   1},
-    {"exp",   op_exp,   1},
-    {"sqrt",  op_sqrt,  1},
-    {"abs",   op_abs,   1},
-    {"log",   op_log,   1},
-    {"floor", op_floor, 1},
-    {"ceil",  op_ceil,  1},
-    {"pi",    op_pi,    0},
-    {"e",     op_e,     0},
-    {"phi",   op_phi,   0},
-    {NULL,    NULL,     0} // sentinel
+    {"smoothlerp", op_smoothlerp, 3},
+    {"lerp",       op_lerp,       3},
+    {"+",          op_add,        2},
+    {"-",          op_sub,        2},
+    {"*",          op_mul,        2},
+    {"/",          op_div,        2},
+    {"^",          op_pow,        2},
+    {"sin",        op_sin,        1},
+    {"cos",        op_cos,        1},
+    {"exp",        op_exp,        1},
+    {"sqrt",       op_sqrt,       1},
+    {"abs",        op_abs,        1},
+    {"log",        op_log,        1},
+    {"floor",      op_floor,      1},
+    {"ceil",       op_ceil,       1},
+    {"pi",         op_pi,         0},
+    {"e",          op_e,          0},
+    {"phi",        op_phi,        0},
+    {NULL,         NULL,          0} // sentinel
 };
 
 HOST_DEVICE int shared_strcmp(const char *s1, const char *s2) {

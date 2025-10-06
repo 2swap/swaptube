@@ -8,6 +8,7 @@
 #include "../io/DebugPlot.h"
 #include "../misc/pixels.h"
 #include "../io/Macroblock.cpp"
+#include "../misc/GetFreeMemory.h"
 
 class Scene {
 public:

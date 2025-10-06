@@ -8,8 +8,8 @@
 #include <regex>
 #include <cassert>
 #include <iostream>
-#include "calculator.cpp"
-#include "inlines.h"
+#include "calculator.h"
+#include "../Host_Device_Shared/helpers.h"
 
 /* StateManager is a DAG (Directed Acyclic Graph) of state assignments
  * used to facilitate frame-by-frame manipulation of state.
@@ -229,8 +229,7 @@ public:
         else throw runtime_error("Invalid transition type: " + to_string(tt));
         string eq1 = get_equation(variable);
         string eq2 = equation;
-        string lerp_both = "<" + variable + ".pre_transition> <" + variable + ".post_transition> {" + (tt==MICRO?"micro":"macro") + "block_fraction} smoothlerp";
-        set(variable+".pre_transition", eq1);
+        string lerp_both = eq1 + " " + eq2 + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} smoothlerp";
         set(variable+".post_transition", eq2);
         set(variable, lerp_both);
     }
@@ -319,27 +318,6 @@ public:
         }
     }
 
-    void pop_it(bool micro) {
-        for (const string& wh : {"w", "h"}) {
-
-            // Nested transitions not supported
-            if(in_microblock_transition.find(wh) != in_microblock_transition.end() ||
-               in_macroblock_transition.find(wh) != in_macroblock_transition.end()){
-                throw runtime_error("Pop added to a width or height already in transition.");
-            }
-
-            if (micro)
-                in_microblock_transition.insert(wh);
-            else
-                in_macroblock_transition.insert(wh);
-            string eq = get_equation(wh);
-            string pop = "<" + wh + ".post_transition> <" + (micro?"micro":"macro") + "block_fraction> 3.1415 * sin .2 * 1 + *";
-            set(wh + ".post_transition", eq);
-            set(wh + ".pre_transition", eq);
-            set(wh, pop);
-        }
-    }
-
     string get_equation(const string& variable) const {
         return get_variable(variable).equation;
     }
@@ -414,12 +392,12 @@ private:
     }
 
     string insert_tag_dependencies(string equation) const {
-        // Replace all instances of "(...)" with "0"
+        // Replace all instances of "(...)" with unicode value of first character in parentheses
         size_t pos = 0;
         while ((pos = equation.find('(')) != string::npos) {
             size_t end_pos = equation.find(')', pos);
             if (end_pos != string::npos) {
-                equation.replace(pos, end_pos - pos + 1, "0");
+                equation.replace(pos, end_pos - pos + 1, to_string(static_cast<int>(equation[pos + 1])));
             } else {
                 throw runtime_error("Mismatched parentheses in equation: " + equation);
             }
@@ -517,7 +495,6 @@ private:
             VariableContents& vc = variables.at(varname);
             vc.value = get_value(varname + ".post_transition");
             remove(varname + ".post_transition");
-            remove(varname + ".pre_transition");
         }
         in_transition.clear();
     }

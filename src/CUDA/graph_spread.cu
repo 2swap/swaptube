@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <glm/glm.hpp>
-#include "helpers.cuh"
+#include "../Host_Device_Shared/helpers.h"
 
 #define GRID_SIZE 10 // 10x10x10 bins
 #define BIN_INDEX(a) ((a.z) * GRID_SIZE * GRID_SIZE + (a.y) * GRID_SIZE + (a.x))
@@ -293,8 +293,8 @@ __global__ void mirror_kernel(glm::vec4* positions, glm::vec4* velocities, const
 
     velocities[i] *= decay;
     positions[i] += velocities[i];
-    positions[i].z *= clamp(0, dimension - 2, 1);
-    positions[i].w *= clamp(0, dimension - 3, 1);
+    positions[i].z *= clamp(dimension - 2, 0, 1);
+    positions[i].w *= clamp(dimension - 3, 0, 1);
 }
 
 extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations) {

@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <unordered_map>
 #include <algorithm>
-#include "inlines.h"
+#include "../Host_Device_Shared/helpers.h"
 #include "color.cpp"
 
 using namespace std;

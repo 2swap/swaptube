@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <functional>
 #include <stdexcept>
-#include "inlines.h"
+#include "../Host_Device_Shared/helpers.h"
 
 using namespace std;
 

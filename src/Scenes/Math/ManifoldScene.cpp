@@ -18,16 +18,16 @@ public:
     ManifoldScene(const double width = 1, const double height = 1) : ThreeDimensionScene(width, height) {
         state_manager.set({
             {"manifold_x", "(u)"},
-            {"manifold_y", "(v)"},
-            {"manifold_z", "(u) (v) + sin"},
+            {"manifold_y", "(u) 5 * sin (v) 5 * sin + 5 /"},
+            {"manifold_z", "(v)"},
             {"color_r", "(u)"},
             {"color_i", "(v)"},
             {"u_min", "-3.14"},
             {"u_max", "3.14"},
-            {"u_segs", "2000"},
+            {"u_segs", "3000"},
             {"v_min", "-3.14"},
             {"v_max", "3.14"},
-            {"v_segs", "2000"},
+            {"v_segs", "3000"},
         });
     }
 

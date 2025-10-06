@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cmath>
-#include "shared_precompiler_directives.c"
+#include "shared_precompiler_directives.h"
 
 SHARED_FILE_PREFIX
 
