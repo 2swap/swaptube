@@ -3,29 +3,40 @@
 void render_video() {
     ManifoldScene ms;
 
-    ms.stage_macroblock(SilenceBlock(13), 6);
+    ms.stage_macroblock(SilenceBlock(13), 8);
     ms.state_manager.set({
-        {"d", "10"},
+        {"d", "20"},
+        {"u_min", "0"},
+        {"u_max", "6"},
         {"v_min", "-3.14"},
         {"v_max", "3.14"},
-        {"u_min", "0"},
-        {"u_max", "3"},
+        // u is radius, v is angle
+        {"manifold_x", "(u) (v) sin *"},
+        {"manifold_y", "0"},
+        {"manifold_z", "(u) (v) cos *"},
+        {"color_r"   , "(v) 2 / cos (u) .5 ^ *"}, // real component is cos(angle/2) * sqrt(radius)
+        {"color_i"   , "(v) 2 / sin (u) .5 ^ *"}, // imaginary component is sin(angle/2) * sqrt(radius)
     });
     ms.state_manager.transition(MICRO, {
-        {"qi", ".2"},
-        {"qj", "{t} 2 / sin"},
-        {"qk", ".1"},
-        {"manifold_x", "(u)"},
-        {"manifold_y", "0"},
-        {"manifold_z", "(v)"},
+        {"q1", "1"},
+        {"qi", ".866 2 /"},
+        {"qj", "0"},
+        {"qk", ".25"},
     });
     ms.render_microblock();
     ms.render_microblock();
 
     ms.state_manager.transition(MICRO, {
-        {"manifold_x", "(u) (v) sin *"},
+        {"q1", "1"},
+        {"qi", ".1 {t} sin 4 / *"},
+        {"qj", "0"},
+        {"qk", ".1 {t} cos 4 / *"},
+    });
+    ms.render_microblock();
+    ms.render_microblock();
+
+    ms.state_manager.transition(MICRO, {
         {"manifold_y", "(v) 2 / sin (u) .5 ^ *"},
-        {"manifold_z", "(u) (v) cos *"},
     });
     ms.render_microblock();
     ms.render_microblock();
@@ -33,6 +44,7 @@ void render_video() {
     ms.state_manager.transition(MICRO, {
         {"v_min", "-6.28"},
         {"v_max", "6.28"},
+        {"v_segs", "6000"},
     });
     ms.render_microblock();
     ms.render_microblock();

@@ -65,26 +65,6 @@ typedef struct {
  * - The function assumes that the given expression is space-delimited.
  */
 
-/* ---- Operator Implementations ---- */
-HOST_DEVICE static double op_smoothlerp(double *a, int n) { return smoothlerp(a[0], a[1], a[2]); }
-HOST_DEVICE static double op_lerp(double *a, int n)  { return a[1] + a[0] * (a[2] - a[1]); }
-HOST_DEVICE static double op_add(double *a, int n)   { return a[0] + a[1]; }
-HOST_DEVICE static double op_sub(double *a, int n)   { return a[0] - a[1]; }
-HOST_DEVICE static double op_mul(double *a, int n)   { return a[0] * a[1]; }
-HOST_DEVICE static double op_div(double *a, int n)   { return a[0] / a[1]; }
-HOST_DEVICE static double op_pow(double *a, int n)   { return pow(a[0], a[1]); }
-HOST_DEVICE static double op_sin(double *a, int n)   { return sin(a[0]); }
-HOST_DEVICE static double op_cos(double *a, int n)   { return cos(a[0]); }
-HOST_DEVICE static double op_exp(double *a, int n)   { return exp(a[0]); }
-HOST_DEVICE static double op_sqrt(double *a, int n)  { return sqrt(a[0]); }
-HOST_DEVICE static double op_abs(double *a, int n)   { return fabs(a[0]); }
-HOST_DEVICE static double op_log(double *a, int n)   { return log(a[0]); }
-HOST_DEVICE static double op_floor(double *a, int n) { return floor(a[0]); }
-HOST_DEVICE static double op_ceil(double *a, int n)  { return ceil(a[0]); }
-HOST_DEVICE static double op_pi(double *a, int n)    { return M_PI; }
-HOST_DEVICE static double op_e(double *a, int n)     { return M_E; }
-HOST_DEVICE static double op_phi(double *a, int n)   { return 1.618033988749895; }
-
 HOST_DEVICE static inline int shared_isdigit(char c) {
     return (c >= '0' && c <= '9');
 }
@@ -185,6 +165,32 @@ HOST_DEVICE int shared_sscanf_token(const char *p, char *out, int maxlen) {
     return (n > 0) ? 1 : 0;
 }
 
+/* ---- Operator Implementations ---- */
+HOST_DEVICE static double op_smoothlerp(double *a, int n) { return smoothlerp(a[0], a[1], a[2]); }
+HOST_DEVICE static double op_lerp(double *a, int n)  { return a[1] + a[0] * (a[2] - a[1]); }
+HOST_DEVICE static double op_add(double *a, int n)   { return a[0] + a[1]; }
+HOST_DEVICE static double op_sub(double *a, int n)   { return a[0] - a[1]; }
+HOST_DEVICE static double op_mul(double *a, int n)   { return a[0] * a[1]; }
+HOST_DEVICE static double op_div(double *a, int n)   { return a[0] / a[1]; }
+HOST_DEVICE static double op_pow(double *a, int n)   { return pow(a[0], a[1]); }
+HOST_DEVICE static double op_sin(double *a, int n)   { return sin(a[0]); }
+HOST_DEVICE static double op_cos(double *a, int n)   { return cos(a[0]); }
+HOST_DEVICE static double op_exp(double *a, int n)   { return exp(a[0]); }
+HOST_DEVICE static double op_sqrt(double *a, int n)  { return sqrt(a[0]); }
+HOST_DEVICE static double op_abs(double *a, int n)   { return fabs(a[0]); }
+HOST_DEVICE static double op_log(double *a, int n)   { return log(a[0]); }
+HOST_DEVICE static double op_floor(double *a, int n) { return floor(a[0]); }
+HOST_DEVICE static double op_ceil(double *a, int n)  { return ceil(a[0]); }
+HOST_DEVICE static double op_pi(double *a, int n)    { return M_PI; }
+HOST_DEVICE static double op_e(double *a, int n)     { return M_E; }
+HOST_DEVICE static double op_phi(double *a, int n)   { return 1.618033988749895; }
+HOST_DEVICE static double op_gt(double *a, int n)    { return a[0] > a[1] ? 1.0 : 0.0; }
+HOST_DEVICE static double op_lt(double *a, int n)    { return a[0] < a[1] ? 1.0 : 0.0; }
+HOST_DEVICE static double op_ge(double *a, int n)    { return a[0] >= a[1] ? 1.0 : 0.0; }
+HOST_DEVICE static double op_le(double *a, int n)    { return a[0] <= a[1] ? 1.0 : 0.0; }
+HOST_DEVICE static double op_eq(double *a, int n)    { return fabs(a[0] - a[1]) < 1e-9 ? 1.0 : 0.0; }
+HOST_DEVICE static double op_neq(double *a, int n)   { return fabs(a[0] - a[1]) >= 1e-9 ? 1.0 : 0.0; }
+
 /* ---- Operator Table ---- */
 HOST_DEVICE static const OperatorInfo operators[] = {
     {"smoothlerp", op_smoothlerp, 3},
@@ -205,6 +211,12 @@ HOST_DEVICE static const OperatorInfo operators[] = {
     {"pi",         op_pi,         0},
     {"e",          op_e,          0},
     {"phi",        op_phi,        0},
+    {">",          op_gt,         2},
+    {"<",          op_lt,         2},
+    {">=",         op_ge,         2},
+    {"<=",         op_le,         2},
+    {"==",         op_eq,         2},
+    {"!=",         op_neq,        2},
     {NULL,         NULL,          0} // sentinel
 };
 

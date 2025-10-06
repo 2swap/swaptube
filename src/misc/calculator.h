@@ -80,7 +80,13 @@ double calculator(const string& expression) {
         {"ceil"      , {[](vector<double>& operands) { return ceil(operands[0]); }, 1}},
         {"pi"        , {[](vector<double>& operands) { return M_PI; }, 0}},
         {"e"         , {[](vector<double>& operands) { return M_E; }, 0}},
-        {"phi"       , {[](vector<double>& operands) { return M_PHI; }, 0}}
+        {"phi"       , {[](vector<double>& operands) { return 1.618033988749895; }, 0}},
+        {">"         , {[](vector<double>& operands) { return operands[0] > operands[1] ? 1.0 : 0.0; }, 2}},
+        {"<"         , {[](vector<double>& operands) { return operands[0] < operands[1] ? 1.0 : 0.0; }, 2}},
+        {">="        , {[](vector<double>& operands) { return operands[0] >= operands[1] ? 1.0 : 0.0; }, 2}},
+        {"<="        , {[](vector<double>& operands) { return operands[0] <= operands[1] ? 1.0 : 0.0; }, 2}},
+        {"=="        , {[](vector<double>& operands) { return fabs(operands[0] - operands[1]) < 1e-9 ? 1.0 : 0.0; }, 2}},
+        {"!=="       , {[](vector<double>& operands) { return fabs(operands[0] - operands[1]) >= 1e-9 ? 1.0 : 0.0; }, 2}},
     };
 
     istringstream iss(expression);

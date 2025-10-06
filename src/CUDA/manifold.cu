@@ -7,6 +7,7 @@
 #include "calculator.cuh"
 #include "color.cuh" // For complex_to_srgb
 #include "common_graphics.cuh"
+#include "edge_detect.cuh"
 
 // Kernel
 __global__ void render_manifold_kernel(
@@ -74,9 +75,9 @@ __global__ void render_manifold_kernel(
     // Depth test and write pixel
     if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
         int pixel_index = pixel_y * w + pixel_x;
-        int old_int = atomicMin((int*)&depth_buffer[pixel_index], __float_as_int(out_z));
+        float old_int = atomicMin((int*)&depth_buffer[pixel_index], __float_as_int(out_z));
         float old_depth = __int_as_float(old_int);
-        if (out_z < old_depth) {
+        if (out_z < old_depth - 1e-2) { // New pixel is closer with some epsilon to avoid z-fighting
             pixels[pixel_index] = color;
         }
         // TODO is this truly thread-safe / atomic?
@@ -150,6 +151,47 @@ extern "C" void cuda_render_manifold(
     );
     cudaDeviceSynchronize();
 
+    // Now render 3-dimensional axes (for reference). 15,000 steps is plenty.
+    blockSize = dim3(16, 16);
+    gridSize = dim3((5000 + blockSize.x - 1) / blockSize.x, (3 + blockSize.y - 1) / blockSize.y);
+    // Copy axis equations to device
+    const char* axis_x_eq = "(v) 0 == (u) *";
+    const char* axis_y_eq = "(v) 1 == (u) *";
+    const char* axis_z_eq = "(v) 2 == (u) *";
+    const char* axis_color_r_eq = ".001";
+    const char* axis_color_i_eq = ".001";
+    char* d_axis_x_eq;
+    char* d_axis_y_eq;
+    char* d_axis_z_eq;
+    char* d_axis_color_r_eq;
+    char* d_axis_color_i_eq;
+    len = strlen(axis_x_eq) + 1;
+    cudaMalloc(&d_axis_x_eq, len);
+    cudaMalloc(&d_axis_y_eq, len);
+    cudaMalloc(&d_axis_z_eq, len);
+    cudaMemcpy(d_axis_x_eq, axis_x_eq, len, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_axis_y_eq, axis_y_eq, len, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_axis_z_eq, axis_z_eq, len, cudaMemcpyHostToDevice);
+    len = strlen(axis_color_r_eq) + 1;
+    cudaMalloc(&d_axis_color_r_eq, len);
+    cudaMalloc(&d_axis_color_i_eq, len);
+    cudaMemcpy(d_axis_color_r_eq, axis_color_r_eq, len, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_axis_color_i_eq, axis_color_i_eq, len, cudaMemcpyHostToDevice);
+    render_manifold_kernel<<<gridSize, blockSize>>>(
+        d_pixels, w, h,
+        d_axis_x_eq, d_axis_y_eq, d_axis_z_eq,
+        d_axis_color_r_eq, d_axis_color_i_eq,
+        -5, 5, 5000,
+        0, 2, 3,
+        camera_pos, camera_direction, conjugate_camera_direction,
+        geom_mean_size, fov,
+        opacity,
+        d_depth_buffer
+    );
+    cudaDeviceSynchronize();
+
+    cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xffffffff);
+
     // Copy pixels back to host
     cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
 
@@ -161,4 +203,9 @@ extern "C" void cuda_render_manifold(
     cudaFree(d_manifold_z_eq);
     cudaFree(d_color_r_eq);
     cudaFree(d_color_i_eq);
+    cudaFree(d_axis_x_eq);
+    cudaFree(d_axis_y_eq);
+    cudaFree(d_axis_z_eq);
+    cudaFree(d_axis_color_r_eq);
+    cudaFree(d_axis_color_i_eq);
 }
