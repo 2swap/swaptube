@@ -23,7 +23,7 @@ public:
         state_manager.set("cos_coef", "0");
         state_manager.set("exp_coef", "0");
         state_manager.set("ab_dilation", ".8");
-        state_manager.set("dot_radius", ".3");
+        state_manager.set("dot_radius", "1");
     }
 
     void draw() override {
@@ -41,7 +41,7 @@ public:
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
             state["ab_dilation"],
-            state["dot_radius"]
+            state["dot_radius"] * .3
         );
 
         CoordinateScene::draw();

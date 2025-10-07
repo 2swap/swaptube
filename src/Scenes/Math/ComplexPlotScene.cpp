@@ -37,6 +37,9 @@ private:
             state_manager.remove("root" + to_string(degree) + "_" + ri);
             state_manager.remove("coefficient" + to_string(degree) + "_" + ri);
         }
+        state_manager.remove("coefficient" + to_string(degree) + "_ring");
+        state_manager.remove("root" + to_string(degree) + "_ring");
+        state_manager.remove("coefficient" + to_string(degree) + "_opacity");
         degree--;
         update_state();
     }
@@ -52,7 +55,9 @@ private:
         for(string type : {"coefficient", "root"}) {
             state_manager.set(type + to_string(degree) + "_r", new_coefficient_val);
             state_manager.set(type + to_string(degree) + "_i", "0");
-            state_manager.set(type + to_string(degree) + "_opacity", "0");
+            state_manager.set(type + to_string(degree) + "_ring", "0");
+            if(type == "coefficient")
+                state_manager.set(type + to_string(degree) + "_opacity", "0");
         }
 
         update_state();
@@ -69,7 +74,7 @@ public:
             }
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
         state_manager.set("ab_dilation", ".8"); // basically saturation
-        state_manager.set("dot_radius", ".3");
+        state_manager.set("dot_radius", "1");
         state_manager.set("positive_quadratic_formula_opacity", "0");
         state_manager.set("negative_quadratic_formula_opacity", "0");
     }
@@ -263,7 +268,7 @@ public:
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
             state["ab_dilation"],
-            state["dot_radius"]
+            state["dot_radius"] * .3
         );
 
         float gm = get_geom_mean_size() / 200;

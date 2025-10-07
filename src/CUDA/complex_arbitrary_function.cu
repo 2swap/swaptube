@@ -27,7 +27,7 @@ __global__ void render_kernel(
     if (x >= wh.x || y >= wh.y) return;
 
     const glm::vec2 point = pixel_to_point(glm::vec2(x,y), lx_ty, rx_by, wh);
-    thrust::complex<float> val;
+    thrust::complex<float> val(point.x, point.y);
     const thrust::complex<float> sqrt_val = complex_sqrt(val, sqrt_branch_cut);
     const thrust::complex<float> sin_val = thrust::sin(val);
     const thrust::complex<float> cos_val = thrust::cos(val);

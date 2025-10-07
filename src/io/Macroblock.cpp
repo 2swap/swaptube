@@ -39,6 +39,7 @@ public:
 
     int write_and_get_duration_frames() const override {
         AUDIO_WRITER.add_silence(duration_frames);
+        SUBTITLE_WRITER.add_silence(static_cast<double>(duration_frames) / FRAMERATE);
         return duration_frames;
     }
     string blurb() const override { return "SilenceBlock(" + to_string(static_cast<double>(duration_frames) / FRAMERATE) + ")"; }

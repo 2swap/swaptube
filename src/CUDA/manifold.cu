@@ -19,7 +19,8 @@ __global__ void render_manifold_kernel(
     glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction,
     float geom_mean_size, float fov,
     float opacity,
-    float* depth_buffer
+    float* depth_buffer,
+    float ab_dilation, float dot_radius
 ) {
     // Determine u, v from thread indices
     int u_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -70,7 +71,7 @@ __global__ void render_manifold_kernel(
     if(!calculator(r_inserted, &r)) printf("Error calculating color r at u=%f v=%f\n", u, v);
     if(!calculator(i_inserted, &i)) printf("Error calculating color i at u=%f v=%f\n", u, v);
 
-    uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), 1, 1 /*TODO add ab_dilation etc*/);
+    uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
 
     // Depth test and write pixel
     if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
@@ -93,7 +94,8 @@ extern "C" void cuda_render_manifold(
     float v_min, float v_max, int v_steps,
     glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction,
     float geom_mean_size, float fov,
-    float opacity
+    float opacity,
+    float ab_dilation, float dot_radius
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
@@ -147,7 +149,8 @@ extern "C" void cuda_render_manifold(
         camera_pos, camera_direction, conjugate_camera_direction,
         geom_mean_size, fov,
         opacity,
-        d_depth_buffer
+        d_depth_buffer,
+        ab_dilation, dot_radius
     );
     cudaDeviceSynchronize();
 
@@ -186,7 +189,8 @@ extern "C" void cuda_render_manifold(
         camera_pos, camera_direction, conjugate_camera_direction,
         geom_mean_size, fov,
         opacity,
-        d_depth_buffer
+        d_depth_buffer,
+        ab_dilation, dot_radius
     );
     cudaDeviceSynchronize();
 

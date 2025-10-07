@@ -56,7 +56,7 @@ public:
         state_manager.set("right_x"  , "<center_x> .5 <window_width> / +");
         state_manager.set("top_y"    , "<center_y> .5 <window_height> / -");
         state_manager.set("bottom_y" , "<center_y> .5 <window_height> / +");
-        state_manager.set("geometry_opacity", "1");
+        state_manager.set("construction_opacity", "1");
         state_manager.set("ticks_opacity", "1");
         state_manager.set("zero_crosshair_opacity", "0");
         state_manager.set("center_x", "0");
@@ -109,8 +109,8 @@ public:
 
     void draw_construction() {
         if(construction.size() == 0) return;
-        const float geometry_opacity = state["geometry_opacity"];
-        if(geometry_opacity < 0.01) return;
+        const float construction_opacity = state["construction_opacity"];
+        if(construction_opacity < 0.01) return;
 
         double gm = get_geom_mean_size();
         double line_thickness = gm/200.;
@@ -165,7 +165,7 @@ public:
             }
         }
 
-        pix.overlay(geometry, 0, 0, geometry_opacity);
+        pix.overlay(geometry, 0, 0, construction_opacity);
     }
 
     void draw_zero_crosshair() {
@@ -228,7 +228,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "geometry_opacity", "zero_crosshair_opacity"};
+        StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "construction_opacity", "zero_crosshair_opacity"};
         for(const GeometricPoint& p : construction.points) {
             if(!p.old) {
                 sq.insert("microblock_fraction");

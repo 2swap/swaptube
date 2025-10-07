@@ -47,7 +47,14 @@ public:
         get_substime(global_state["frame_number"] / FRAMERATE);
     }
 
+    void add_silence(double duration) {
+        if (!rendering_on()) return;
+        substime += duration;
+    }
+
     void add_subtitle(double duration, const string& text) {
+        if (!rendering_on()) return;
+
         if (text.size() > 120) {
             cout << "Subtitle too long!" << endl;
             size_t center = text.size() / 2;

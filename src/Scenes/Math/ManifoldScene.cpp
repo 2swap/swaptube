@@ -10,7 +10,8 @@ extern "C" void cuda_render_manifold(
     float v_min, float v_max, int v_steps,
     glm::vec3 camera_pos, glm::quat camera_direction, glm::quat conjugate_camera_direction,
     float geom_mean_size, float fov,
-    float opacity
+    float opacity,
+    float ab_dilation, float dot_opacity
 );
 
 class ManifoldScene : public ThreeDimensionScene {
@@ -28,6 +29,8 @@ public:
             {"v_min", "-3.14"},
             {"v_max", "3.14"},
             {"v_segs", "3000"},
+            {"ab_dilation", ".8"},
+            {"dot_opacity", "1"}
         });
     }
 
@@ -58,13 +61,15 @@ public:
             conjugate_camera_direction,
             get_geom_mean_size(),
             state["fov"],
-            1 // opacity
+            1, // opacity
+            state["ab_dilation"],
+            state["dot_opacity"]
         );
     }
 
     const StateQuery populate_state_query() const override {
         StateQuery s = ThreeDimensionScene::populate_state_query();
-        state_query_insert_multiple(s, {"manifold_x", "manifold_y", "manifold_z", "color_r", "color_i", "u_min", "u_max", "u_segs", "v_min", "v_max", "v_segs", "fov"});
+        state_query_insert_multiple(s, {"manifold_x", "manifold_y", "manifold_z", "color_r", "color_i", "u_min", "u_max", "u_segs", "v_min", "v_max", "v_segs", "fov", "ab_dilation", "dot_opacity"});
         return s;
     }
 };
