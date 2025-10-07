@@ -10,7 +10,7 @@ class ConvolutionScene : public Scene {
 public:
     ConvolutionScene(const double width = 1, const double height = 1)
     : Scene(width, height) {
-        state_manager.set("transparency_profile", "<in_transition_state> <microblock_fraction> *");
+        state_manager.set("transparency_profile", "<in_transition_state> {microblock_fraction} *");
         state_manager.set("in_transition_state", "0");
     }
 
@@ -25,7 +25,7 @@ public:
         transition_coords = get_coords_from_pixels(p);
 
         intersections = find_intersections(p1, p2);
-        state_manager.set("transparency_profile", "<in_transition_state> <m" + string(tt == MICRO?"i":"a") + "croblock_fraction> *");
+        state_manager.set("transparency_profile", "<in_transition_state> {m" + string(tt == MICRO?"i":"a") + "croblock_fraction} *");
         state_manager.set("in_transition_state", "1");
         current_transition_type = tt;
     }

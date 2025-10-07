@@ -6,6 +6,7 @@
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Common/ThreeDimensionScene.cpp"
+#include "../Scenes/Math/ManifoldScene.cpp"
 
 void render_video(){
     FOR_REAL = false;
@@ -15,8 +16,8 @@ void render_video(){
 
     for(int i = 0; i < cps->get_degree(); i++) {
         cps->state_manager.transition(MICRO, {
-            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
-            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos .2 +"},
+            {"root"+to_string(i)+"_r", "{t} 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "{t} .8 * 6.28 .3333 " + to_string(i) + " * * + cos .2 +"},
         });
     }
     cps->render_microblock();
@@ -53,8 +54,8 @@ void render_video(){
     cps->state_manager.set({
         {"root0_r", "1 <spin_coefficient_r> +"},
         {"root0_i", ".2 <spin_coefficient_i> +"},
-        {"spin_coefficient_r", "<t> 2 * sin <spin_multiplier> *"},
-        {"spin_coefficient_i", "<t> 3 * cos <spin_multiplier> *"},
+        {"spin_coefficient_r", "{t} 2 * sin <spin_multiplier> *"},
+        {"spin_coefficient_i", "{t} 3 * cos <spin_multiplier> *"},
         {"spin_multiplier", "0"},
     });
     cps->state_manager.transition(MICRO, {
@@ -112,8 +113,8 @@ void render_video(){
     cps->coefficients_to_roots();
     for(int i = 0; i < cps->get_degree(); i++) {
         cps->state_manager.set({
-            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
-            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
+            {"root"+to_string(i)+"_r", "{t} 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "{t} .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
         });
     }
     cs_intro.fade_subscene(MICRO, "rfs_intro", 0);
@@ -270,8 +271,8 @@ void render_video(){
 
     cs.stage_macroblock(SilenceBlock(5), 1);
     cps->state_manager.transition(MICRO, {
-        {"point_in_x", "<t> sin .9 * 1.2 *"},
-        {"point_in_y", "<t> cos .8 * 1.2 *"},
+        {"point_in_x", "{t} sin .9 * 1.2 *"},
+        {"point_in_y", "{t} cos .8 * 1.2 *"},
     });
     cs.render_microblock();
 
@@ -389,8 +390,8 @@ void render_video(){
     rfs->add_function("? 1.2 - ? .3 + ? 1.2 + * *", 0xffff0000);
     tds.add_surface(Surface("rfs"), rfs);
     tds.state_manager.transition(MICRO, {
-        {"qi", "-.3 <t> sin .07 * +"},
-        {"qj", "<t> cos .025 *"},
+        {"qi", "-.3 {t} sin .07 * +"},
+        {"qj", "{t} cos .025 *"},
     });
     tds.render_microblock();
 
@@ -418,8 +419,8 @@ void render_video(){
     cps->coefficients_to_roots();
     for(int i = 0; i < cps->get_degree(); i++) {
         cps->state_manager.transition(MICRO, {
-            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
-            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos 5 -"},
+            {"root"+to_string(i)+"_r", "{t} 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "{t} .8 * 6.28 .3333 " + to_string(i) + " * * + cos 5 -"},
         });
     }
     cs.stage_macroblock(FileBlock("In turn, I would ask _you_, who needs decimals or negatives either?"), 1);
@@ -614,7 +615,7 @@ void render_video(){
     tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(0, .5, 0), glm::vec3(0, 0, .5), "rfs2"), rfs2);
     tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
     tds2->state_manager.transition(MICRO, {
-        {"qi", "-.1 <t> 2 / sin .02 * +"},
+        {"qi", "-.1 {t} 2 / sin .02 * +"},
         {"d", "1.5"},
     });
     cs.render_microblock();
@@ -657,8 +658,8 @@ void render_video(){
 
     cs.stage_macroblock(FileBlock("Just like before, our number line must be missing something..."), 1);
     tds2->state_manager.transition(MICRO, {
-        {"qi", "-.1 <t> 2 / sin .02 * +"},
-        {"qj", "-.2 <t> 2 / cos .01 * +"},
+        {"qi", "-.1 {t} 2 / sin .02 * +"},
+        {"qj", "-.2 {t} 2 / cos .01 * +"},
         {"d", "1.5"},
     });
     cs.render_microblock();
@@ -717,8 +718,8 @@ void render_video(){
     cps->coefficients_to_roots();
     for(int i = 0; i < cps->get_degree(); i++) {
         cps->state_manager.transition(MICRO, {
-            {"root"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
-            {"root"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
+            {"root"+to_string(i)+"_r", "{t} 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"root"+to_string(i)+"_i", "{t} .8 * 6.28 .3333 " + to_string(i) + " * * + cos"},
         });
     }
 
@@ -996,8 +997,8 @@ void render_video(){
 
     cs.stage_macroblock(FileBlock("Let's plot the output like before."), 2);
     cps->state_manager.transition(MICRO, {
-        {"point__x", "<root0_r> <t> 3 * sin .1 * +"},
-        {"point__y", "<root0_i> <t> 3 * cos .1 * +"},
+        {"point__x", "<root0_r> {t} 3 * sin .1 * +"},
+        {"point__y", "<root0_i> {t} 3 * cos .1 * +"},
     });
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "out", .7, true));
@@ -1026,8 +1027,8 @@ void render_video(){
     });
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->state_manager.transition(MICRO, {
-        {"point__x", "<root2_r> <t> 3 * sin .3 * +"},
-        {"point__y", "<root2_i> <t> 3 * cos .3 * +"},
+        {"point__x", "<root2_r> {t} 3 * sin .3 * +"},
+        {"point__y", "<root2_i> {t} 3 * cos .3 * +"},
     });
     cs.render_microblock();
 
@@ -1139,8 +1140,8 @@ void render_video(){
     cps->roots_to_coefficients();
     for(int i = 0; i < cps->get_degree()+1; i++) {
         cps->state_manager.transition(MICRO, {
-            {"coefficient"+to_string(i)+"_r", "<t> 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
-            {"coefficient"+to_string(i)+"_i", "<t> .8 * 6.28 .3333 " + to_string(i) + " * * + cos .2 +"},
+            {"coefficient"+to_string(i)+"_r", "{t} 1.2 * 6.28 .3333 " + to_string(i) + " * * + sin"},
+            {"coefficient"+to_string(i)+"_i", "{t} .8 * 6.28 .3333 " + to_string(i) + " * * + cos .2 +"},
         });
     }
     cs.stage_macroblock(FileBlock("Given the coefficients,"), 2);
@@ -1484,8 +1485,8 @@ void render_video(){
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_r", "<t> sin"},
-        {"coefficient0_i", "<t> cos"},
+        {"coefficient0_r", "{t} sin"},
+        {"coefficient0_i", "{t} cos"},
     });
     cs.fade_subscene(MICRO, "quadratic", 0);
     cs.render_microblock();
@@ -1640,7 +1641,6 @@ void render_video(){
     cps->transition_root_rings(MICRO, 0);
     cs.render_microblock();
 
-    FOR_REAL = true;
     cs.stage_macroblock(FileBlock("This has some bizarre implications."), 1);
     cs.render_microblock();
 
@@ -1748,6 +1748,7 @@ void render_video(){
     cs.render_microblock();
     cs.render_microblock();
 
+    FOR_REAL = true;
     cs.stage_macroblock(FileBlock("Any such 'quadratic formula' would need to have a discontinuity."), 1);
     cs.fade_subscene(MICRO, "function", 0);
     cs.fade_subscene(MICRO, "details", 0);
@@ -1767,7 +1768,7 @@ void render_video(){
     continuous_operations->begin_latex_transition(MICRO, "+, -, \\times, \\div, \\sin");
     shared_ptr<ComplexArbitraryFunctionScene> cafs = make_shared<ComplexArbitraryFunctionScene>();
     cafs->state_manager.set({{"sqrt_coef", "0"}, {"sin_coef", "1"}});
-    cs.add_scene_fade_in(MACRO, cafs, "cafs", 0.5, 0.5, 1, true);
+    cs.add_scene(cafs, "cafs", 0.5, 0.5, true);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("such as sines, (long pause), cosines, (long pause), and exponentials,"), 6);
@@ -1809,7 +1810,7 @@ void render_video(){
     cs.remove_subscene("details");
 
     cs.stage_macroblock(FileBlock("it has this plus-or-minus square rooty stuff going on."), 1);
-    quadratic_formula->begin_latex_transition(MICRO, latex_color(0xff222222, "\\frac{-b " + latex_color(0xffffffff, "\\pm \\sqrt{b^2 - 4ac}") + "}{2a}"));
+    quadratic_formula->begin_latex_transition(MICRO, latex_color(0xff222222, "\\frac{-b" + latex_color(0xffffffff, " \\pm \\sqrt{b^2 - 4ac}") + "}{2a}"));
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
@@ -1823,6 +1824,8 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("We usually say things like 'the square root of 4 is 2,'"), 1);
+    sqrt4->begin_latex_transition(MICRO, "\\sqrt{4}");
+    cs.render_microblock();
     sqrt4->begin_latex_transition(MICRO, "\\sqrt{4} = 2");
     cs.render_microblock();
 
@@ -1872,7 +1875,7 @@ void render_video(){
     cs.stage_macroblock(FileBlock("What then of the square root of -1?"), 1);
     cps->roots_to_coefficients();
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_r", "-1"},
+        {"coefficient0_r", "1"},
         {"coefficient0_i", "0"},
     });
     cs.render_microblock();
@@ -1891,15 +1894,17 @@ void render_video(){
     cps->construction.clear();
     cps->state_manager.set("geometry_opacity", "1");
 
-    cs.stage_macroblock(FileBlock("Watch as I move the coefficients of the polynomial along the real number line."), 1);
+    cs.stage_macroblock(FileBlock("Watch as I move the coefficients of the polynomial along the real number line."), 2);
+    cps->transition_coefficient_opacities(MICRO, 1);
+    cs.render_microblock();
     cps->roots_to_coefficients();
     cps->state_manager.transition(MICRO, {
-        {"coefficient0_r", "<t> 0.0 + 2 / sin"},
-        {"coefficient0_i", "<t> 0.0 + 2 / sin"},
-        {"coefficient1_r", "<t> 0.5 + 2 / sin"},
-        {"coefficient1_i", "<t> 0.5 + 2 / sin"},
-        {"coefficient2_r", "<t> 1.0 + 2 / sin"},
-        {"coefficient2_i", "<t> 1.0 + 2 / sin"},
+        {"coefficient0_r", "{t} 0.0 + 2 / sin"},
+        {"coefficient0_i", "0"},
+        {"coefficient1_r", "{t} 0.5 + 2 / sin"},
+        {"coefficient1_i", "0"},
+        {"coefficient2_r", "{t} 1.0 + 2 / sin"},
+        {"coefficient2_i", "0"},
     });
     cs.render_microblock();
 
@@ -1954,16 +1959,35 @@ void render_video(){
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("We can change that arbitrary choice, and that yucky discontinuity start to move around."), 1);
+    cs.stage_macroblock(FileBlock("We can change that arbitrary choice, and that yucky discontinuity starts to move around."), 1);
     cafs->state_manager.transition(MICRO, "sqrt_branch_cut", "3.14");
     cs.render_microblock();
 
     cs.fade_subscene(MICRO, "cafs", 0);
-    cs.fade_subscene(MICRO, "cps", 1);
-    cs.remove_subscene("cafs");
-
-    cs.stage_macroblock(FileBlock("The square root function, in general, is therefore _not a function that gives one value_!"), 1);
+    shared_ptr<ManifoldScene> ms = make_shared<ManifoldScene>();
+    ms->state_manager.set({
+        {"d", "1"},
+        {"u_min", "0"},
+        {"u_max", "6"},
+        {"v_min", "-3.14"},
+        {"v_max", "3.14"},
+        // u is radius, v is angle
+        {"manifold_x", "(u) (v) cos *"},
+        {"manifold_y", "0"},
+        {"manifold_z", "(u) (v) sin * -1 *"},
+        {"color_r"   , "(v) 2 / cos (u) .5 ^ *"}, // real component is cos(angle/2) * sqrt(radius)
+        {"color_i"   , "(v) 2 / sin (u) .5 ^ *"}, // imaginary component is sin(angle/2) * sqrt(radius)
+    });
+    ms->state_manager.transition(MICRO, {
+        {"q1", "1"},
+        {"qi", "1"},
+        {"qj", "0"},
+        {"qk", "0"},
+    });
+    cs.stage_macroblock(FileBlock("The square root function, in general, is therefore _not a function that gives one value_!"), 2);
     cs.render_microblock();
+    cs.render_microblock();
+    cs.remove_subscene("cafs");
 
     return;
 

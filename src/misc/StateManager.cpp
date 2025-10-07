@@ -350,7 +350,7 @@ public:
     }
 
     const void begin_timer(const string& timer_name) {
-        set(timer_name, "<t> " + to_string(global_state["t"]) + " -");
+        set(timer_name, "{t} " + to_string(global_state["t"]) + " -");
     }
 
     const State get_state(const StateQuery& query) const {
@@ -475,12 +475,15 @@ private:
     }
 
     VariableContents get_variable(const string& variable) const {
-        if(variables.find(variable) == variables.end()){
-            print_state();
-            print_global_state();
-            throw runtime_error("ERROR: Attempted to access variable " + variable + " without it existing!\nState has been printed above.");
+        if(variables.find(variable) != variables.end()){
+            return variables.at(variable);
         }
-        return variables.at(variable);
+        if(global_state.find(variable) != global_state.end()){
+            return VariableContents("", get_global_state(variable), true);
+        }
+        print_state();
+        print_global_state();
+        throw runtime_error("ERROR: Attempted to access variable " + variable + " without it existing!\nState has been printed above.");
     }
 
     double get_value_from_parent(const string& variable) const {

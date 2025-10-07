@@ -11,7 +11,7 @@ public:
     PauseScene(const double width = 1, const double height = 1)
     : Scene(width, height) {
         state_manager.set(unordered_map<string, string>{
-            {"timer", "<microblock_fraction>"},
+            {"timer", "{microblock_fraction}"},
         });
     }
 

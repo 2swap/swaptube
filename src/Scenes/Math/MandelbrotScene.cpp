@@ -33,7 +33,7 @@ public:
         state_manager.set("point_path_start_r", "0");
         state_manager.set("point_path_start_i", "0");
         state_manager.set("gradation", "1");
-        state_manager.set("phase_shift", "<t>");
+        state_manager.set("phase_shift", "{t}");
     }
 
     const StateQuery populate_state_query() const override {

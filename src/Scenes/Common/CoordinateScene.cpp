@@ -63,7 +63,7 @@ public:
         state_manager.set("center_y", "0");
         state_manager.set("zoom", "0");
         state_manager.set("window_height", "<zoom> exp .2 *");
-        state_manager.set("window_width", "<window_height> <w> <VIDEO_WIDTH> * / <h> <VIDEO_HEIGHT> * *");
+        state_manager.set("window_width", "<window_height> <w> {VIDEO_WIDTH} * / <h> {VIDEO_HEIGHT} * *");
     }
 
     glm::vec2 point_to_pixel(const glm::vec2& p) {

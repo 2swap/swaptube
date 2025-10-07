@@ -11,24 +11,24 @@ void render_video() {
         {"v_min", "-3.14"},
         {"v_max", "3.14"},
         // u is radius, v is angle
-        {"manifold_x", "(u) (v) sin *"},
+        {"manifold_x", "(u) (v) cos *"},
         {"manifold_y", "0"},
-        {"manifold_z", "(u) (v) cos *"},
+        {"manifold_z", "(u) (v) sin * -1 *"},
         {"color_r"   , "(v) 2 / cos (u) .5 ^ *"}, // real component is cos(angle/2) * sqrt(radius)
         {"color_i"   , "(v) 2 / sin (u) .5 ^ *"}, // imaginary component is sin(angle/2) * sqrt(radius)
     });
     ms.state_manager.transition(MICRO, {
         {"q1", "1"},
-        {"qi", ".866 2 /"},
+        {"qi", ".5"},
         {"qj", "0"},
-        {"qk", ".25"},
+        {"qk", "0"},
     });
     ms.render_microblock();
     ms.render_microblock();
 
     ms.state_manager.transition(MICRO, {
         {"q1", "1"},
-        {"qi", ".1 {t} sin 4 / *"},
+        {"qi", ".5 .1 {t} sin 4 / * +"},
         {"qj", "0"},
         {"qk", ".1 {t} cos 4 / *"},
     });
