@@ -7,8 +7,11 @@
 __device__ thrust::complex<float> complex_sqrt(const thrust::complex<float>& z, float branch_cut) {
     float r = thrust::abs(z);
     float theta = atan2(z.imag(), z.real());
-    if (theta < branch_cut) {
+    while (theta < branch_cut) {
         theta += 2 * M_PI; // Adjust angle based on branch cut
+    }
+    while (theta >= branch_cut + 2 * M_PI) {
+        theta -= 2 * M_PI; // Adjust angle based on branch cut
     }
     return thrust::polar(sqrt(r), theta / 2);
 }

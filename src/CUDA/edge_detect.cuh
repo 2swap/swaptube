@@ -18,39 +18,27 @@ __global__ void cuda_edge_detect_kernel(
     float depth = d_depth_buffer[idx];
     if (depth == 0) return; // Ignore background
 
-    float tolerance = 1;
-    float opacity = 0.3f;
-
     // Check 4-connected neighbors
+    float max_depth_diff = 0.0f;
+
     if (x > 0) {
         float neighbor_depth = d_depth_buffer[y * w + (x - 1)];
-        if (fabs(depth - neighbor_depth) > tolerance) {
-            d_pixels[idx] = d_color_combine(d_pixels[idx], edge_color, opacity);
-            return;
-        }
+        max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
     if (x < w - 1) {
         float neighbor_depth = d_depth_buffer[y * w + (x + 1)];
-        if (fabs(depth - neighbor_depth) > tolerance) {
-            d_pixels[idx] = d_color_combine(d_pixels[idx], edge_color, opacity);
-            return;
-        }
+        max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
     if (y > 0) {
         float neighbor_depth = d_depth_buffer[(y - 1) * w + x];
-        if (fabs(depth - neighbor_depth) > tolerance) {
-            d_pixels[idx] = d_color_combine(d_pixels[idx], edge_color, opacity);
-            return;
-        }
+        max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
     if (y < h - 1) {
         float neighbor_depth = d_depth_buffer[(y + 1) * w + x];
-        if (fabs(depth - neighbor_depth) > tolerance) {
-            d_pixels[idx] = d_color_combine(d_pixels[idx], edge_color, opacity);
-            return;
-        }
+        max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
 
+    d_pixels[idx] = d_color_combine(d_pixels[idx], edge_color, fmin(max_depth_diff * 2.0f, .3f));
 }
 
 void cuda_edge_detect(

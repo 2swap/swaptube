@@ -184,7 +184,7 @@ extern "C" void cuda_render_manifold(
         d_pixels, w, h,
         d_axis_x_eq, d_axis_y_eq, d_axis_z_eq,
         d_axis_color_r_eq, d_axis_color_i_eq,
-        -5, 5, 5000,
+        -2, 2, 5000,
         0, 2, 3,
         camera_pos, camera_direction, conjugate_camera_direction,
         geom_mean_size, fov,
