@@ -153,9 +153,9 @@ public:
             const glm::vec2 position_pixel = point_to_pixel(position);
             double radius = line_thickness * p.width_multiplier * 2;
             if(!p.old) {
-                double radius_pop = line_thickness * p.width_multiplier * 10 * bounce;
+                double radius_pop = line_thickness * p.width_multiplier * 8 * bounce;
                 radius = min(radius, radius_pop);
-                geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, point_color, 1-interp);
+                geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, point_color, (1-interp)*.8);
             }
             geometry.fill_circle(position_pixel.x, position_pixel.y, radius, point_color, 1);
             if(p.label != "" && p.width_multiplier > .4) {
