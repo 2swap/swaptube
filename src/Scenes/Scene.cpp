@@ -57,8 +57,8 @@ public:
             last_state = state;
             update();
         }
-        // The only time we don't actually render is when the project flags to skip a section, and not smoketesting.
-        if(needs_redraw() && (FOR_REAL || SMOKETEST)) {
+        // The only time we skip render entirely is when the project flags to skip a section.
+        if(needs_redraw() && FOR_REAL) {
             has_ever_rendered = true;
             pix = Pixels(get_width(), get_height());
             cout << "|" << flush;

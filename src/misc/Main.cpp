@@ -14,6 +14,7 @@ static bool PRINT_TO_TERMINAL = true;
 
 static bool FOR_REAL = true; // Flag exposed to the project definition to disable sections of video
 static bool SMOKETEST= false;// Overall smoketest flag
+
 bool rendering_on() { return FOR_REAL && !SMOKETEST; }
 
 enum TransitionType {

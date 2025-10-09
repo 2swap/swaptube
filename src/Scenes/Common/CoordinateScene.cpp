@@ -140,7 +140,7 @@ public:
                 start_pixel = mid_pixel + (start_pixel - mid_pixel) * bounce;
                 end_pixel = mid_pixel + (end_pixel - mid_pixel) * bounce;
             }
-            geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, line_color, 1, line_thickness);
+            geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, line_color, 1, line_thickness*.75);
         }
         // TODO implement
         /*for(const GeometricArc& a : construction.arcs) {
