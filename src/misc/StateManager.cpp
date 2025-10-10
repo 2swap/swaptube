@@ -20,6 +20,13 @@
  * StateManager will intentionally run the second equation first.
  */
 
+/* Parenthetical notation hints:
+ * <w> : local state variable, such as scene width as fraction of screen
+ * [defer_to_parent] : parent state variable, when sharing state between child scenes
+ * {t} : global variable, such as time in seconds
+ * (u) : A passthrough tag to be interpreted in CUDA, such as manifold colors
+ */
+
 struct VariableContents {
     // The numerical value currently stored by this variable
     double value;

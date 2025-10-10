@@ -73,7 +73,7 @@ public:
                         state_manager.set(type + to_string(num) + "_" + ri, (ri == "opacity") ? "1" : "0");
             }
         state_manager.set("roots_or_coefficients_control", "0"); // Default to root control
-        state_manager.set("ab_dilation", ".8"); // basically saturation
+        state_manager.set("ab_dilation", "1"); // basically saturation
         state_manager.set("dot_radius", "1");
         state_manager.set("positive_quadratic_formula_opacity", "0");
         state_manager.set("negative_quadratic_formula_opacity", "0");
@@ -267,7 +267,7 @@ public:
             degree,
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
-            state["ab_dilation"],
+            state["ab_dilation"] * .8,
             state["dot_radius"] * .3
         );
 

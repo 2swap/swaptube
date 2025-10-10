@@ -16,31 +16,21 @@ extern "C" void cuda_render_manifold(
 
 class ManifoldScene : public ThreeDimensionScene {
 private:
-    int num_manifolds = 1;
+    unordered_set<string> manifold_names;
 
 public:
     ManifoldScene(const double width = 1, const double height = 1) : ThreeDimensionScene(width, height) {
         state_manager.set({
-            {"manifold0_x", "(u)"},
-            {"manifold0_y", "(u) 5 * sin (v) 5 * sin + 5 /"},
-            {"manifold0_z", "(v)"},
-            {"manifold0_r", "(u)"},
-            {"manifold0_i", "(v)"},
-            {"manifold0_u_min", "-3.14"},
-            {"manifold0_u_max", "3.14"},
-            {"manifold0_u_steps", "3000"},
-            {"manifold0_v_min", "-3.14"},
-            {"manifold0_v_max", "3.14"},
-            {"manifold0_v_steps", "3000"},
             {"ab_dilation", ".8"},
             {"dot_opacity", "1"}
         });
     }
 
-    void add_manifold(const string& x_eq, const string& y_eq, const string& z_eq, const string& r_eq, const string& i_eq,
+    void add_manifold(const string& name,
+                      const string& x_eq, const string& y_eq, const string& z_eq, const string& r_eq, const string& i_eq,
                       const string& u_min, const string& u_max, const string& u_steps,
                       const string& v_min, const string& v_max, const string& v_steps) {
-        const string tag = "manifold" + to_string(num_manifolds) + "_";
+        const string tag = "manifold" + name + "_";
         state_manager.set({
             {tag + "x", x_eq},
             {tag + "y", y_eq},
@@ -54,16 +44,37 @@ public:
             {tag + "v_max", v_max},
             {tag + "v_steps", v_steps},
         });
-        num_manifolds++;
+        manifold_names.insert(name);
+    }
+
+    void remove_manifold(const string& name) {
+        const string tag = "manifold" + name + "_";
+        state_manager.remove({
+            tag + "x",
+            tag + "y",
+            tag + "z",
+            tag + "r",
+            tag + "i",
+            tag + "u_min",
+            tag + "u_max",
+            tag + "u_steps",
+            tag + "v_min",
+            tag + "v_max",
+            tag + "v_steps"
+        });
+        manifold_names.erase(name);
     }
 
     void draw() override {
         ThreeDimensionScene::draw();
-        ManifoldData* manifolds = new ManifoldData[num_manifolds];
+        ManifoldData* manifolds = new ManifoldData[manifold_names.size()];
         std::vector<std::string> eqs;
-        eqs.reserve(num_manifolds * 5);
-        for(int i = 0; i < num_manifolds; i++) {
-            const string tag = "manifold" + to_string(i) + "_";
+        eqs.reserve(manifold_names.size() * 5);
+        int i = 0;
+        float geom_mean_size = get_geom_mean_size();
+        float steps_mult = geom_mean_size / 1500.0f;
+        for(const string& name : manifold_names) {
+            const string tag = "manifold" + name + "_";
             string x_eq = state_manager.get_equation_with_tags(tag + "x");
             string y_eq = state_manager.get_equation_with_tags(tag + "y");
             string z_eq = state_manager.get_equation_with_tags(tag + "z");
@@ -84,12 +95,13 @@ public:
                 x_char, y_char, z_char, r_char, i_char,
                 (float)state[tag + "u_min"],
                 (float)state[tag + "u_max"],
-                (int)state[tag + "u_steps"],
+                (int)(state[tag + "u_steps"] * steps_mult),
                 (float)state[tag + "v_min"],
                 (float)state[tag + "v_max"],
-                (int)state[tag + "v_steps"]
+                (int)(state[tag + "v_steps"] * steps_mult)
             };
             manifolds[i] = manifold;
+            i++;
         }
 
         cuda_render_manifold(
@@ -97,11 +109,11 @@ public:
             pix.w,
             pix.h,
             manifolds,
-            num_manifolds,
+            manifold_names.size(),
             camera_pos,
             camera_direction,
             conjugate_camera_direction,
-            get_geom_mean_size(),
+            geom_mean_size,
             state["fov"],
             1, // opacity
             state["ab_dilation"],
@@ -111,8 +123,8 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery s = ThreeDimensionScene::populate_state_query();
-        for(int i = 0; i < num_manifolds; i++) {
-            const string tag = "manifold" + to_string(i) + "_";
+        for(const string& name : manifold_names) {
+            const string tag = "manifold" + name + "_";
             state_query_insert_multiple(s, {
                 tag + "x",
                 tag + "y",
