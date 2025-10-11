@@ -178,7 +178,7 @@ public:
         return current_poly;
     }
 
-    void stage_swap(TransitionType tt, const string& root1, const string& root2, bool root_or_coefficient) {
+    void stage_swap(TransitionType tt, const string& root1, const string& root2, bool root_or_coefficient, bool clockwise = false) {
         if(root_or_coefficient) roots_to_coefficients();
         else coefficients_to_roots();
         string type = root_or_coefficient ? "coefficient" : "root";
@@ -218,7 +218,7 @@ public:
             {type + root2 + "_i", spin_i2},
         });
         state_manager.transition(tt, {
-            {theta_unique, "pi"},
+            {theta_unique, clockwise ? "pi -1 *" : "pi"},
         });
         state_manager.transition(tt, {
             {type + root1 + "_r", r1},

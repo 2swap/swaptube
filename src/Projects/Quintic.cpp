@@ -2475,11 +2475,11 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("First, we move them in a way that swaps the left two solutions in a clockwise rotation,"), 1);
-    cps->stage_swap(MICRO, "0", "1", false);
+    cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("then we swap the right two clockwise,"), 1);
-    cps->stage_swap(MICRO, "2", "0", false);
+    cps->stage_swap(MICRO, "2", "0", false, true);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("now the left two counterclockwise,"), 1);
@@ -2492,9 +2492,9 @@ void render_video(){
 
     cps->state_manager.set(reset);
     cs.stage_macroblock(FileBlock("We did two things,"), 2);
-    cps->stage_swap(MICRO, "0", "1", false);
+    cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "2", "0", false);
+    cps->stage_swap(MICRO, "2", "0", false, true);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("then undid them both."), 2);
@@ -2521,9 +2521,9 @@ void render_video(){
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(4), 4);
-    cps->stage_swap(MICRO, "0", "1", false);
+    cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "2", "0", false);
+    cps->stage_swap(MICRO, "2", "0", false, true);
     cs.render_microblock();
     cps->stage_swap(MICRO, "2", "1", false);
     cs.render_microblock();
@@ -2540,11 +2540,11 @@ void render_video(){
     commutator = make_shared<LatexScene>("x \\phantom{y x^-1 y^-1}", 1, .5, .35);
 
     cs.stage_macroblock(FileBlock("This special way of cycling objects is called a commutator."), 8);
-    cps->stage_swap(MICRO, "0", "1", false);
+    cps->stage_swap(MICRO, "0", "1", false, true);
     cs.add_scene_fade_in(MICRO, commutator, "commutator", .5, .2);
     cs.render_microblock();
     cs.render_microblock();
-    cps->stage_swap(MICRO, "2", "0", false);
+    cps->stage_swap(MICRO, "2", "0", false, true);
     commutator->begin_latex_transition(MICRO, "x y \\phantom{x^{-1} y^{-1}}");
     cs.render_microblock();
     cs.render_microblock();
@@ -2565,11 +2565,79 @@ void render_video(){
     cs.remove_subscene("commutator");
 
     cs.stage_macroblock(FileBlock("Loop, loop, back, back..."), 4);
-    ms->state_manager.transition(MICRO, {
-        {"ztheta", to_string(3.14159 * 2 + 3.14159 * 2)},
+    ms->state_manager.set({
+        {"ztheta", "<loop1> 6.283 * <loop2> 6.283 * sin .1 * +"},
+        {"zradius", "<loop2> 6.283 * sin .25 * .75 +"},
+        {"loop1", "0"},
+        {"loop2", "0"},
     });
+    ms->state_manager.transition(MICRO, "loop1", "1");
     cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop2", "1");
     cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop1", "0");
     cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop2", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("the solutions returned to where they started..."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Let's try a different commutator on the input..."), 4);
+    ms->state_manager.set({
+        {"ztheta", "<loop1> 6.283 * sin .1 * <loop2> 6.283 +"},
+        {"zradius", "<loop2> 6.283 * sin <loop1> 6.283 * cos + .1 * .75 +"},
+    });
+    ms->state_manager.transition(MICRO, "loop1", "1");
+    cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop2", "1");
+    cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop1", "0");
+    cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop2", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("No matter what commutator the input follows, the outputs always finish where they started."), 4);
+    ms->state_manager.set({
+        {"ztheta", "<loop1> 6.283 * <loop2> 6.283 * +"},
+        {"zradius", "<loop2> 6.283 * sin .25 * .75 +"},
+    });
+    ms->state_manager.transition(MICRO, "loop1", "1");
+    cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop2", "1");
+    cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop1", "0");
+    cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop2", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("In general, the three points do a cycle whenever our loop circles the origin,"), 1);
+    ms->state_manager.set({
+        {"ztheta", "<loop1> 6.283 * <loop2> 6.283 * sin .1 * +"},
+        {"zradius", "<loop2> 6.283 * sin .25 * .75 +"},
+    });
+    ms->state_manager.transition(MICRO, "loop1", "1");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("and don't do anything at all when the loop doesn't wrap the origin."), 1);
+    ms->state_manager.transition(MICRO, "loop2", "1");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("but the commutator unwinds any accumulated phase around the origin in the second half."), 0);
+    ms->state_manager.transition(MICRO, "loop1", "0");
+    cs.render_microblock();
+    ms->state_manager.transition(MICRO, "loop2", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("If there is some function which maps the coefficients of the cubic to the input of this cube root,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("the former can express behaviors that the cube root function is unable to emulate."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("What kind of operator could be more expressive?"), 1);
     cs.render_microblock();
 }
