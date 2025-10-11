@@ -29,8 +29,8 @@ void beginning() {
         {"points_opacity", "0"},
     };
     auto closequat_moving = closequat;
-    closequat_moving["q1"] = "<t> 4 / cos";
-    closequat_moving["qj"] = "<t> -4 / sin";
+    closequat_moving["q1"] = "{t} 4 / cos";
+    closequat_moving["qj"] = "{t} -4 / sin";
     state_manager.set(closequat_moving);
     c4.stage_macroblock_and_render(AudioSegment("So far we've been interested in strategies of connect 4,"));
     state_manager.add_transition("d", "15");
@@ -167,8 +167,8 @@ void beginning() {
         {"d", "5"},
         {"points_opacity", "1"},
         {"surfaces_opacity", "0"},
-        {"q1", "<t> 4 / cos"},
-        {"qj", "<t> -4 / sin"},
+        {"q1", "{t} 4 / cos"},
+        {"qj", "{t} -4 / sin"},
     });
 
     C4GraphScene c4gs(VIDEO_WIDTH/2, VIDEO_HEIGHT, &g, "", MANUAL);
@@ -289,8 +289,8 @@ void endgame_examination(){
         {"points_opacity", "0"},
     };
     auto closequat_moving = closequat;
-    closequat_moving["q1"] = "<t> 13 / cos";
-    closequat_moving["qj"] = "<t> -13 / sin";
+    closequat_moving["q1"] = "{t} 13 / cos";
+    closequat_moving["qj"] = "{t} -13 / sin";
     state_manager.set(closequat_moving);
 
     state_manager.set(std::unordered_map<std::string, std::string>{
@@ -723,8 +723,8 @@ void minimax_the_opening(){
         {"points_opacity", "0"},
     };
     auto closequat_moving = closequat;
-    closequat_moving["q1"] = "<t> 10 / cos";
-    closequat_moving["qj"] = "<t> -10 / sin";
+    closequat_moving["q1"] = "{t} 10 / cos";
+    closequat_moving["qj"] = "{t} -10 / sin";
     state_manager.set(closequat_moving);
     state_manager.transition(std::unordered_map<std::string, std::string>{
         {"y", "0"},
@@ -964,9 +964,9 @@ void prisoner() {
     });
     composite.stage_macroblock_and_render(AudioSegment("Just because we know these disparate facts about who wins in what scenario, we can't say we truly understand this system any better than before."));
     state_manager.transition(std::unordered_map<std::string, std::string>{
-        {"q1", "<t> 4 / cos"},
+        {"q1", "{t} 4 / cos"},
         {"qi", "0"},
-        {"qj", "<t> -4 / sin"},
+        {"qj", "{t} -4 / sin"},
         {"qk", "0"},
     });
     c4.stage_macroblock_and_render(AudioSegment("What's more, this information is effectively incommunicable. Any solution tree is so big that you simply can't be bestowed that information."));
@@ -975,9 +975,9 @@ void prisoner() {
 
 void render_tree_comparison(){
     state_manager.set(std::unordered_map<std::string, std::string>{
-        {"q1", "<t> 4 / cos"},
+        {"q1", "{t} 4 / cos"},
         {"qi", "0"},
-        {"qj", "<t> -4 / sin"},
+        {"qj", "{t} -4 / sin"},
         {"qk", "0"},
         {"d", "10"},
         {"x", "0"},
@@ -1055,9 +1055,9 @@ void render_tree_comparison(){
 
 void render_weak_trees(){
     state_manager.set(std::unordered_map<std::string, std::string>{
-        {"q1", "<t> 4 / cos"},
+        {"q1", "{t} 4 / cos"},
         {"qi", "0"},
-        {"qj", "<t> -4 / sin"},
+        {"qj", "{t} -4 / sin"},
         {"qk", "0"},
         {"d", "15"},
         {"x", "0"},
@@ -1090,8 +1090,8 @@ void render_weak_trees(){
     if(FOR_REAL){
         state_manager.set(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
-            {"qi", "<t> -4 / cos"},
-            {"qj", "<t> -4 / sin"},
+            {"qi", "{t} -4 / cos"},
+            {"qj", "{t} -4 / sin"},
             {"qk", "0"},
         });
         state_manager.set(std::unordered_map<std::string, std::string>{
@@ -1112,8 +1112,8 @@ void render_weak_trees(){
         composite.stage_macroblock_and_render(AudioSegment("Can we immensely reduce the amount of information required to 'know' a weak solution, such that it doesn't require rote memorization?"));
         state_manager.transition(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
-            {"qi", "<t> sin 400 /"},
-            {"qj", "<t> sin 400 /"},
+            {"qi", "{t} sin 400 /"},
+            {"qj", "{t} sin 400 /"},
             {"qk", "1"},
         });
         composite.stage_macroblock_and_render(AudioSegment("In other words, are there any particularly clever ways of representing such weak solutions? We can represent them graph-theoretically, but perhaps they can be expressed by other means?"));
@@ -1125,8 +1125,8 @@ void render_weak_trees(){
             {"lines_opacity", "0.2"},
             {"points_opacity", "0.2"},
             {"q1", "1"},
-            {"qi", "<t> sin 400 /"},
-            {"qj", "<t> sin 400 /"},
+            {"qi", "{t} sin 400 /"},
+            {"qj", "{t} sin 400 /"},
             {"qk", "0"},
         });
 
@@ -1148,8 +1148,8 @@ void render_weak_trees(){
         shill_compositely.stage_macroblock_and_render(AudioSegment("We can use a positional language built on top of the idea of claimeven to concisely express solutions to positions which have a high degree of self-symmetry,"));
         state_manager.transition(std::unordered_map<std::string, std::string>{
             {"q1", "1"},
-            {"qi", "<t> 4 / cos 2 /"},
-            {"qj", "<t> -4 / sin 2 /"},
+            {"qi", "{t} 4 / cos 2 /"},
+            {"qj", "{t} -4 / sin 2 /"},
             {"qk", "0"},
             {"d", "140"},
             {"surfaces_opacity", "0"},

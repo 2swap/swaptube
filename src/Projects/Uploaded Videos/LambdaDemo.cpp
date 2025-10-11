@@ -2231,7 +2231,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     std::unordered_map<std::string, std::string> closequat{
         {"q1", "1"},
         {"qi", "0"},
-        {"qj", "<t> -20 / sin 10 /"},
+        {"qj", "{t} -20 / sin 10 /"},
         {"qk", "0"},
         {"d", "3"},
         {"x", "0"},
@@ -2436,8 +2436,8 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.state_manager.set(unordered_map<string, string>{
         {"d", "7"},
         {"y", "3"},
-        {"qj", "<t> 6 / sin"},
-        {"q1", "<t> 6 / cos"},
+        {"qj", "{t} 6 / sin"},
+        {"q1", "{t} 6 / cos"},
     });
     cs.stage_macroblock_and_render(AudioSegment("The answer to the problem shouldn't depend on the order that you do the steps. Right?"));
     cs.state_manager.superscene_transition(unordered_map<string, string>{

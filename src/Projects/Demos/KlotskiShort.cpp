@@ -26,8 +26,8 @@ void render_video(){
         shared_ptr<GraphScene> gs = make_shared<GraphScene>(&g, false);
         gs->state_manager.set({
             {"q1", "0"},
-            {"qi", "<t> .1 * cos"},
-            {"qj", "<t> .1 * sin"},
+            {"qi", "{t} .1 * cos"},
+            {"qj", "{t} .1 * sin"},
             {"qk", "0"}, // Camera orientation quaternion.
             {"d", "1"},
             {"physics_multiplier","5"}, // How many times to iterate the graph-spreader

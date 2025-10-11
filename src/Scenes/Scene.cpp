@@ -136,7 +136,7 @@ public:
                 int roundedFrameNumber = round(global_state["frame_number"]);
                 ostringstream stream;
                 stream << setw(6) << setfill('0') << roundedFrameNumber;
-                export_frame(stream.str(), 4);
+                export_frame(stream.str(), 3);
             }
         }
         on_end_transition(done_macroblock ? MACRO : MICRO);

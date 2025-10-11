@@ -180,8 +180,8 @@ void render_video(){
     pgs->stage_macroblock(FileSegment("But as soon as you leave and step into the chaotic region..."), 1);
     pgs->render_microblock();
     pgs->state_manager.microblock_transition({
-        {"trail_start_x", "1.7 <t> 2 * sin 4 / +"},
-        {"trail_start_y", "1.9 <t> 2 * cos 4 / +"},
+        {"trail_start_x", "1.7 {t} 2 * sin 4 / +"},
+        {"trail_start_y", "1.9 {t} 2 * cos 4 / +"},
     });
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
@@ -706,23 +706,23 @@ void intro() {
     cs.render_microblock();
     shared_ptr<CoordinateSceneWithTrail> left = make_shared<CoordinateSceneWithTrail>(1, 1);
     left->state_manager.set({
-        {"center_x", "<t> 2 /"},
+        {"center_x", "{t} 2 /"},
         {"center_y", "0"},
         {"trail_opacity", "1"},
         {"ticks_opacity", "0"},
         {"zoom", ".2"},
-        {"trail_x", "<t> 2 / 1 -"},
+        {"trail_x", "{t} 2 / 1 -"},
         {"trail_y", "{pendulum_theta2}"},
     });
     shared_ptr<CoordinateSceneWithTrail> right = make_shared<CoordinateSceneWithTrail>(1, 1);
     right->state_manager.set({
         {"center_x", "0"},
-        {"center_y", "<t> 2 /"},
+        {"center_y", "{t} 2 /"},
         {"trail_opacity", "1"},
         {"ticks_opacity", "0"},
         {"zoom", ".2"},
         {"trail_x", "{pendulum_theta1}"},
-        {"trail_y", "<t> 2 / 1.5 -"},
+        {"trail_y", "{t} 2 / 1.5 -"},
     });
     left->trail_color = 0xffff00ff;
     right->trail_color = 0xff00ffff;
@@ -744,12 +744,12 @@ void intro() {
     cs.add_scene_fade_in(ear_left , "ear_left" , 0.25, 0.15);
     cs.add_scene_fade_in(ear_right, "ear_right", 0.75, 0.15);
     left->state_manager.macroblock_transition({
-        {"center_x", "<t> 2 / 5 -"},
+        {"center_x", "{t} 2 / 5 -"},
         {"w", ".5"},
         {"h", "1"},
     });
     right->state_manager.macroblock_transition({
-        {"center_y", "<t> 2 / 5 -"},
+        {"center_y", "{t} 2 / 5 -"},
         {"w", ".5"},
         {"h", "1"},
     });

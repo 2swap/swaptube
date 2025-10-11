@@ -145,14 +145,13 @@ void render_video(){
     commutator->begin_latex_transition(MICRO, "x y x^{-1} y^{-1}");
     cps->stage_swap(MICRO, "0", "1", false);
     cs_intro.render_microblock();
-    cs_intro.remove_all_subscenes();
 
-    cps->stage_macroblock(FileBlock("and solve the mystery of the missing quintic formula."), 1);
+    cs_intro.stage_macroblock(FileBlock("and solve the mystery of the missing quintic formula."), 1);
     cs_intro.fade_subscene(MICRO, "commutator", 0);
     cps->state_manager.transition(MICRO, {
         {"center_y", ".6"},
     });
-    cps->render_microblock();
+    cs_intro.render_microblock();
     cs_intro.remove_all_subscenes();
 
     CompositeScene cs;
@@ -413,11 +412,7 @@ void render_video(){
         {"qi", "0"},
         {"qj", "0"},
     });
-    tds.fade_subscene(MICRO, "f_complex", 0);
-    tds.fade_subscene(MICRO, "f_real", 0);
-    tds.fade_subscene(MICRO, "rfs", 0);
     tds.render_microblock();
-    tds.remove_all_subscenes();
     cps->coefficients_to_roots();
     for(int i = 0; i < cps->get_degree(); i++) {
         cps->state_manager.transition(MICRO, {
@@ -425,7 +420,11 @@ void render_video(){
             {"root"+to_string(i)+"_i", "{t} .8 * 6.28 .3333 " + to_string(i) + " * * + cos 5 -"},
         });
     }
+    tds.fade_subscene(MICRO, "f_complex", 0);
+    tds.fade_subscene(MICRO, "f_real", 0);
+    tds.fade_subscene(MICRO, "rfs", 0);
     tds.render_microblock();
+    tds.remove_all_subscenes();
 
     cs = CompositeScene();
     cs.add_scene(cps, "cps");

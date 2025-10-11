@@ -43,7 +43,7 @@ void intro() {
         {"pixel_param_c", "0"},
         {"zoom_exp", "1"},
         {"internal_shade", "1"},
-        {"breath", "<t> .73 + 3 / sin 2 / "},
+        {"breath", "{t} .73 + 3 / sin 2 / "},
     });
     TwoswapScene tss;
     tss.state_manager.set(unordered_map<string,string>{
@@ -54,8 +54,8 @@ void intro() {
         {"tss.opacity", "0"},
     });
     ms.state_manager.microblock_transition(unordered_map<string,string>{
-        {"seed_c_r", "<t> sin .75 *"},
-        {"seed_c_i", "<t> cos .75 *"},
+        {"seed_c_r", "{t} sin .75 *"},
+        {"seed_c_i", "{t} cos .75 *"},
     });
     cs.state_manager.microblock_transition(unordered_map<string,string>{
         {"tss.opacity", "1"},

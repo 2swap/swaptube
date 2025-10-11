@@ -18,8 +18,8 @@ void render_video() {
 
     gs.state_manager.set({
         {"q1", "1"},
-        {"qi", "<t> 3 / sin"},
-        {"qj", "<t> 2 / cos"},
+        {"qi", "{t} 3 / sin"},
+        {"qj", "{t} 2 / cos"},
         {"qk", "0"},
         {"decay",".6"},
         {"dimensions","3"},

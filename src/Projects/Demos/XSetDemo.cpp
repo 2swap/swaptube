@@ -51,16 +51,16 @@ void render_video() {
         {"point_path_r", "[point_path_r]"},
         {"point_path_i", "[point_path_i]"},
         {"internal_shade", "[internal_shade]"},
-        {"breath", "<t> 3 / sin 2 / "},
+        {"breath", "{t} 3 / sin 2 / "},
     });
     cs.state_manager.transition(MICRO, unordered_map<string,string>{
         {"max_iterations", "200"},
-        {"seed_c_r", "<t> 4.1 / sin 2 *"},
-        {"seed_c_i", "<t> 5.6 / cos 2 *"},
+        {"seed_c_r", "{t} 4.1 / sin 2 *"},
+        {"seed_c_i", "{t} 5.6 / cos 2 *"},
         {"seed_x_r", "2"},
         {"seed_x_i", "0"},
-        {"seed_z_r", "<t> 5.2 / cos 2 *"},
-        {"seed_z_i", "<t> 2.9 / cos 2 *"},
+        {"seed_z_r", "{t} 5.2 / cos 2 *"},
+        {"seed_z_i", "{t} 2.9 / cos 2 *"},
         {"zoom_exp", "2"},
     });
     cs.stage_macroblock(FileBlock("Here's a tour of the X-Set, by moving the origin around in 6-space. Enjoy!"), 1);

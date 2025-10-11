@@ -20,8 +20,8 @@ int get_graph_size(const KlotskiBoard& kb){
 
 StateSet default_graph_state{
     {"q1", "1"},
-    {"qi", "<t> .2 * cos"},
-    {"qj", "<t> .314 * sin"},
+    {"qi", "{t} .2 * cos"},
+    {"qj", "{t} .314 * sin"},
     {"qk", "0"}, // Camera orientation quaternion
     {"decay",".92"},
     {"dimensions","2.98"},
@@ -30,8 +30,8 @@ StateSet default_graph_state{
 };
 StateSet default_graph_state_chill{
     {"q1", "1"},
-    {"qi", "<t> .9 * cos .08 *"},
-    {"qj", "<t> .71 * sin .08 *"},
+    {"qi", "{t} .9 * cos .08 *"},
+    {"qj", "{t} .71 * sin .08 *"},
     {"qk", "0"}, // Camera orientation quaternion
     {"decay",".92"},
     {"dimensions","2.98"},
@@ -39,14 +39,14 @@ StateSet default_graph_state_chill{
     {"physics_multiplier","5"}, // How many times to iterate the graph-spreader
 };
 StateSet less_spinny{
-    {"qi", "<t> .27 * cos .2 *"},
-    {"qj", "<t> .13 * sin .2 *"},
-    {"qk", "<t> .31 * sin .5 *"},
+    {"qi", "{t} .27 * cos .2 *"},
+    {"qj", "{t} .13 * sin .2 *"},
+    {"qk", "{t} .31 * sin .5 *"},
 };
 StateSet spinny{
-    {"qi", "<t> .8 * cos"},
-    {"qj", "<t> .6 * sin"},
-    {"qk", "<t> .9 * sin"},
+    {"qi", "{t} .8 * cos"},
+    {"qj", "{t} .6 * sin"},
+    {"qk", "{t} .9 * sin"},
 };
 StateSet board_width_height{{"w",".3"},{"h",to_string(.3*VIDEO_WIDTH/VIDEO_HEIGHT)}};
 StateSet board_position    {{"ks.x",".15"},{"ks.y",to_string(.15*VIDEO_WIDTH/VIDEO_HEIGHT)}};
@@ -1009,8 +1009,8 @@ void part5() {
         bool top = (i&1)==1;
         bool left = (i&2)==2;
         gs->state_manager.set({
-            {"qi",string(top ?"":"-") + "<t> .2 * cos"},
-            {"qj",string(left?"":"-") + "<t> .314 * sin"}
+            {"qi",string(top ?"":"-") + "{t} .2 * cos"},
+            {"qj",string(left?"":"-") + "{t} .314 * sin"}
         });
         cs.add_scene_fade_in(MICRO, gs, names[i], top?.25:.75, left?.25:.75, .5, true);
     }
@@ -1510,7 +1510,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
     gs->state_manager.transition(MICRO, {{"d", ".4"}});
     cs.render_microblock();
 
-    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", ".5"}, {"qj", ".1 <t> .2 * cos *"}, {"qk", ".1"}, });
+    gs->state_manager.transition(MICRO, {{"q1", "1"}, {"qi", ".5"}, {"qj", ".1 {t} .2 * cos *"}, {"qk", ".1"}, });
     cs.stage_macroblock(FileBlock("This line is the shortest path to a solution- let's follow it."), 1);
     cs.render_microblock();
 

@@ -41,7 +41,7 @@ void render_video(){
         {"transparency_profile", "[interp]"},
     });
     cs.state_manager.set({
-        {"interp", "<t> sin 1 + 2 /"},
+        {"interp", "{t} sin 1 + 2 /"},
     });
     vid.begin_latex_transition(end_latex);
     cs.stage_macroblock_and_render(SilenceSegment(2));

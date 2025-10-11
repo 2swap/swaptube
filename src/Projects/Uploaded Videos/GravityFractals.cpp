@@ -105,8 +105,8 @@ void render_2d() {
     });
     comp.stage_macroblock_and_render(AudioSegment("But, it's hard to foresee this trajectory."));
     scene.state_manager.transition(unordered_map<string, string>{
-        {"point_path.x", "0.6 <t> 2 / sin 10 / +"},
-        {"point_path.y", "-.4 <t> 2 / cos 10 / +"},
+        {"point_path.x", "0.6 {t} 2 / sin 10 / +"},
+        {"point_path.y", "-.4 {t} 2 / cos 10 / +"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Moving the starting point only a little bit causes a huge change in behavior."));
     scene.state_manager.transition(unordered_map<string, string>{
@@ -174,8 +174,8 @@ void render_2d() {
 
     // Pan around by setting screen_center_x/y to some moving formula, and slightly increase zoom.
     scene.state_manager.transition(unordered_map<string, string>{
-        {"screen_center_x", "<t> 5 / cos"},
-        {"screen_center_y", "<t> 5 / sin"},
+        {"screen_center_x", "{t} 5 / cos"},
+        {"screen_center_y", "{t} 5 / sin"},
         {"zoom", "1.5"}
     });
     comp.stage_macroblock_and_render(AudioSegment("There's a lot of emergent complexity going on here."));
@@ -461,8 +461,8 @@ void render_2d() {
 
 
     scene.state_manager.set(unordered_map<string, string>{
-        {"point_path.x", "-.27 <t> cos 4 / +"},
-        {"point_path.y", "-.24 <t> sin 5 / +"},
+        {"point_path.x", "-.27 {t} cos 4 / +"},
+        {"point_path.y", "-.24 {t} sin 5 / +"},
     });
     scene.state_manager.transition(unordered_map<string, string>{
         {"point_path.opacity", "1"},
@@ -470,14 +470,14 @@ void render_2d() {
     comp.stage_macroblock_and_render(AudioSegment("Well, let's look around and see!"));
     comp.stage_macroblock_and_render(AudioSegment(3));
     scene.state_manager.transition(unordered_map<string, string>{
-        {"point_path.x", "-.285 <t> cos 40 / +"},
-        {"point_path.y", "-.8 <t> sin 10 / +"},
+        {"point_path.x", "-.285 {t} cos 40 / +"},
+        {"point_path.y", "-.8 {t} sin 10 / +"},
     });
     comp.stage_macroblock_and_render(AudioSegment("The answer seems to be that a different region is associated with a different path of winding around the planets to get to the same spot."));
     comp.stage_macroblock_and_render(AudioSegment(3));
     scene.state_manager.transition(unordered_map<string, string>{
-        {"point_path.x", "-.49 <t> cos 40 / +"},
-        {"point_path.y", "-.88 <t> cos 10 / +"},
+        {"point_path.x", "-.49 {t} cos 40 / +"},
+        {"point_path.y", "-.88 {t} cos 10 / +"},
     });
     comp.stage_macroblock_and_render(AudioSegment("But I wasn't really able to formalize that idea- leave a comment if you know of a way."));
     comp.stage_macroblock_and_render(AudioSegment(3));
@@ -566,12 +566,12 @@ void render_2d() {
     StateSliderScene tick_duration_scene("tick_duration", "\\Delta_t", OPAQUE_WHITE, 0, 1.5, VIDEO_WIDTH*.4, VIDEO_HEIGHT*.1);
     comp.add_scene(&tick_duration_scene, "tick_s", .55, .85, .4, .1, true); 
     scene.state_manager.transition(unordered_map<string, string>{
-        {"planet1.x", "<t> 20 / sin .6 *"},
-        {"planet1.y", "<t> 20 / cos .6 *"},
-        {"planet2.x", "<t> 16 / sin .4 *"},
-        {"planet2.y", "<t> 16 / cos .4 *"},
-        {"planet3.x", "<t> 24 / sin .5 *"},
-        {"planet3.y", "<t> 24 / cos .5 *"},
+        {"planet1.x", "{t} 20 / sin .6 *"},
+        {"planet1.y", "{t} 20 / cos .6 *"},
+        {"planet2.x", "{t} 16 / sin .4 *"},
+        {"planet2.y", "{t} 16 / cos .4 *"},
+        {"planet3.x", "{t} 24 / sin .5 *"},
+        {"planet3.y", "{t} 24 / cos .5 *"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Let me show you one other parameter which affects the output of the plot."));
     scene.state_manager.transition(unordered_map<string, string>{
@@ -685,9 +685,9 @@ void render_3d() {
     });
 
     comp.state_manager.set(unordered_map<string, string>{
-        {"q1", "<t> 20 / cos"},
+        {"q1", "{t} 20 / cos"},
         {"qi", ".5"},
-        {"qj", "<t> 20 / sin"},
+        {"qj", "{t} 20 / sin"},
         {"qk", "0"},
         {"d", "6"},
     });

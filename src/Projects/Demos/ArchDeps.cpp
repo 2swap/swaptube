@@ -29,9 +29,9 @@ void render_video() {
     GraphScene gs(&g);
 
     gs.state_manager.set({
-        {"q1", "<t> .1 * cos"},
+        {"q1", "{t} .1 * cos"},
         {"qi", "0"},
-        {"qj", "<t> .1 * sin"},
+        {"qj", "{t} .1 * sin"},
         {"qk", "0"},
         {"surfaces_opacity", "1"},
         {"physics_multiplier", "3"},

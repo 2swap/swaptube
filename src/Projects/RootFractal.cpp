@@ -22,8 +22,8 @@ void render_video() {
     });
     fracs->render_microblock();
     fracs->state_manager.transition(MICRO, {
-        {"coefficient0_r", "<t> 8 / sin"},
-        {"coefficient0_i", "<t> 9 / sin"},
+        {"coefficient0_r", "{t} 8 / sin"},
+        {"coefficient0_i", "{t} 9 / sin"},
     });
     fracs->render_microblock();
     fracs->state_manager.transition(MICRO, {
