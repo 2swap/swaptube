@@ -19,7 +19,6 @@ __global__ void render_manifold_kernel(
     const float v_min, const float v_max, const int v_steps,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float opacity,
     const float* depth_buffer,
     const float ab_dilation, const float dot_radius
 ) {
@@ -79,7 +78,7 @@ __global__ void render_manifold_kernel(
         int pixel_index = pixel_y * w + pixel_x;
         float old_int = atomicMin((int*)&depth_buffer[pixel_index], __float_as_int(out_z));
         float old_depth = __int_as_float(old_int);
-        if (out_z < old_depth - 1e-2) { // New pixel is closer with some epsilon to avoid z-fighting
+        if (out_z < old_depth - 3e-3) { // New pixel is closer with some epsilon to avoid z-fighting
             pixels[pixel_index] = color;
         }
         // TODO is this truly thread-safe / atomic?
@@ -92,8 +91,8 @@ extern "C" void cuda_render_manifold(
     const ManifoldData* manifold, const int num_manifolds,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float opacity,
-    const float ab_dilation, const float dot_radius
+    const float ab_dilation, const float dot_radius,
+    const float axes_length
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
@@ -114,12 +113,13 @@ extern "C" void cuda_render_manifold(
         "(v) 2 == (u) *",
         ".001",
         ".001",
-        -2, 2, 5000,
+        -axes_length, axes_length, (int)(2500.0f*axes_length),
         0, 2, 3
     };
 
     for(int m = 0; m < num_manifolds + 1; ++m) {
         const ManifoldData& manifold_data = (m < num_manifolds) ? manifold[m] : axis_data;
+        if(axes_length <= 0 && m == num_manifolds) continue; // Skip axis if not needed
 
         // Copy string expressions to device
         char* d_x_eq = nullptr;
@@ -127,6 +127,7 @@ extern "C" void cuda_render_manifold(
         char* d_z_eq = nullptr;
         char* d_r_eq = nullptr;
         char* d_i_eq = nullptr;
+
         size_t len;
 
         len = strlen(manifold_data.x_eq) + 1;
@@ -159,7 +160,6 @@ extern "C" void cuda_render_manifold(
             manifold_data.v_min, manifold_data.v_max, manifold_data.v_steps,
             camera_pos, camera_direction, conjugate_camera_direction,
             geom_mean_size, fov,
-            opacity,
             d_depth_buffer,
             ab_dilation, dot_radius
         );

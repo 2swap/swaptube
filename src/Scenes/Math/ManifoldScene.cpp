@@ -10,8 +10,8 @@ extern "C" void cuda_render_manifold(
     const ManifoldData* manifolds, const int num_manifolds,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float opacity,
-    const float ab_dilation, const float dot_opacity
+    const float ab_dilation, const float dot_radius,
+    const float axes_length
 );
 
 class ManifoldScene : public ThreeDimensionScene {
@@ -22,7 +22,8 @@ public:
     ManifoldScene(const double width = 1, const double height = 1) : ThreeDimensionScene(width, height) {
         state_manager.set({
             {"ab_dilation", ".8"},
-            {"dot_opacity", "1"}
+            {"dot_radius", "1"},
+            {"axes_length", "1"},
         });
     }
 
@@ -115,9 +116,9 @@ public:
             conjugate_camera_direction,
             geom_mean_size,
             state["fov"],
-            1, // opacity
             state["ab_dilation"],
-            state["dot_opacity"]
+            state["dot_radius"],
+            state["axes_length"]
         );
     }
 
@@ -139,7 +140,7 @@ public:
                 tag + "v_steps"
             });
         }
-        state_query_insert_multiple(s, {"ab_dilation", "dot_opacity"});
+        state_query_insert_multiple(s, {"ab_dilation", "dot_radius", "axes_length"});
         return s;
     }
 };
