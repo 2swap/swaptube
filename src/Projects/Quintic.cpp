@@ -9,8 +9,60 @@
 #include "../Scenes/Math/ManifoldScene.cpp"
 
 void part_0(){
+    shared_ptr<RootFractalScene> rfs_intro = make_shared<RootFractalScene>();
+    CompositeScene cs_intro;
+    cs_intro.add_scene_fade_in(MICRO, rfs_intro, "rfs_intro");
+    rfs_intro->state.set({{"terms", "13"}, {"coefficients_opacity", "0"}, {"ticks_opacity", "0"}});
+    rfs_intro->state.begin_timer("circle");
+    rfs_intro->stage_macroblock(CompositeBlock(FileBlock("These dots are the solutions of polynomials."), SilenceBlock(3)), 4);
+    rfs_intro->state.set({
+        {"coefficient0_r", "<circle> 1 - 2 / cos"},
+        {"coefficient0_i", "<circle> 1 - 2 / sin"},
+        {"coefficient1_r", "1"},
+        {"coefficient1_i", "0"},
+    });
+    rfs_intro->render_microblock();
+
+    rfs_intro->stage_macroblock(FileBlock("Aside from looking pretty, they illustrate the complexity intrinsic to polynomial solutions."), 4);
+
+    rfs_intro->stage_macroblock(FileBlock("Complexity suggesting that there is no simple formula to express solutions of arbitrary polynomials."), 4);
+
+    rfs_intro->stage_macroblock(FileBlock("And that is the case!"), 1);
+    rfs_intro->stage_macroblock(FileBlock("For linear... quadratic... cubic... and quartic polynomials,"), 1);
+    rfs_intro->stage_macroblock(FileBlock("there are increasingly complex formulas which yield their solutions."), 4);
+    rfs_intro->stage_macroblock(FileBlock("But the complexity of behavior that polynomials exhibit..."), 4);
+    rfs_intro->stage_macroblock(FileBlock("grows faster than algebraic operators are able to express."), 4);
+
+    cs_intro.stage_macroblock(FileBlock("Today, we'll discover how permutational symmetries of solutions tell us about their polynomials,"), 4);
+    cps->coefficients_to_roots();
+    cps->stage_swap(MICRO, "0", "1", false);
+    shared_ptr<LatexScene> commutator = make_shared<LatexScene>("x \\phantom{y x^-1 y^-1}", 1, .5, .35);
+    cs_intro.add_scene_fade_in(MICRO, commutator, "commutator", .5, .2);
+    cs_intro.render_microblock();
+    commutator->begin_latex_transition(MICRO, "x y \\phantom{x^{-1} y^{-1}}");
+    cps->stage_swap(MICRO, "1", "2", false);
+    cs_intro.render_microblock();
+    commutator->begin_latex_transition(MICRO, "x y x^{-1} \\phantom{y^{-1}}");
+    cps->stage_swap(MICRO, "2", "0", false);
+    cs_intro.render_microblock();
+    commutator->begin_latex_transition(MICRO, "x y x^{-1} y^{-1}");
+    cps->stage_swap(MICRO, "0", "1", false);
+    cs_intro.render_microblock();
+
+    cs_intro.stage_macroblock(FileBlock("and solve the mystery... of the missing quintic formula."), 1);
+    cs_intro.fade_subscene(MICRO, "commutator", 0);
+    cps->state.transition(MICRO, {
+        {"center_y", ".6"},
+    });
+    cs_intro.render_microblock();
+    cs_intro.remove_all_subscenes();
+
+
+
+
+
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(3);
-    cps->stage_macroblock(FileBlock("This is the relationship between a polynomial's coefficients and its solutions."), 10);
+    cps->stage_macroblock(FileBlock("This is the relationship between a cubic polynomial's coefficients and its solutions."), 10);
     cps->state.set("ticks_opacity", "0");
 
     for(int i = 0; i < cps->get_degree(); i++) {
@@ -42,7 +94,7 @@ void part_0(){
     });
     cps->render_microblock();
 
-    cps->stage_macroblock(CompositeBlock(FileBlock("Notice how moving a single solution has a hard-to-predict effect on the coefficients,"), SilenceBlock(1)), 4);
+    cps->stage_macroblock(CompositeBlock(FileBlock("We can move a solution and see its effect on the coefficients,"), SilenceBlock(1)), 4);
     cps->state.set({
         {"root0_ring", "0"},
     });
@@ -69,7 +121,7 @@ void part_0(){
     cps->render_microblock();
 
     cps->roots_to_coefficients();
-    cps->stage_macroblock(CompositeBlock(FileBlock("and moving a single coefficient has a hard-to-predict effect on the solutions."), SilenceBlock(1.5)), 4);
+    cps->stage_macroblock(CompositeBlock(FileBlock("and we can move a coefficient yielding some effect on the roots."), SilenceBlock(1.5)), 4);
     cps->state.transition(MICRO, {
         {"coefficient0_ring", "1"},
     });
@@ -89,26 +141,12 @@ void part_0(){
     });
     cps->render_microblock();
 
-    CompositeScene cs_intro;
     cs_intro.add_scene(cps, "cps");
-    shared_ptr<RootFractalScene> rfs_intro = make_shared<RootFractalScene>();
-    rfs_intro->state.set({{"terms", "13"}, {"coefficients_opacity", "0"}, {"ticks_opacity", "0"}});
-    rfs_intro->state.begin_timer("circle");
-    cs_intro.stage_macroblock(CompositeBlock(FileBlock("Their relationship yields a lot of beautiful math, like these polynomial solution fractals."), SilenceBlock(3)), 4);
-    rfs_intro->state.set({
-        {"coefficient0_r", "<circle> 1 - 2 / cos"},
-        {"coefficient0_i", "<circle> 1 - 2 / sin"},
-        {"coefficient1_r", "1"},
-        {"coefficient1_i", "0"},
-    });
-    cs_intro.add_scene_fade_in(MICRO, rfs_intro, "rfs_intro");
-    cs_intro.fade_subscene(MICRO, "cps", 0);
-    cs_intro.render_microblock();
     cs_intro.render_microblock();
     cs_intro.render_microblock();
     cs_intro.render_microblock();
 
-    cs_intro.stage_macroblock(FileBlock("We're gonna figure out what that relationship is, lying at the heart of algebra."), 1);
+    cs.stage_macroblock(SilenceBlock(1), 1);
     cps->coefficients_to_roots();
     for(int i = 0; i < cps->get_degree(); i++) {
         cps->state.set({
@@ -129,30 +167,6 @@ void part_0(){
     });
     cs_intro.render_microblock();
     cs_intro.remove_subscene("rfs_intro");
-
-    cs_intro.stage_macroblock(FileBlock("We'll discover how symmetries between solutions tell us about a polynomial,"), 4);
-    cps->coefficients_to_roots();
-    cps->stage_swap(MICRO, "0", "1", false);
-    shared_ptr<LatexScene> commutator = make_shared<LatexScene>("x \\phantom{y x^-1 y^-1}", 1, .5, .35);
-    cs_intro.add_scene_fade_in(MICRO, commutator, "commutator", .5, .2);
-    cs_intro.render_microblock();
-    commutator->begin_latex_transition(MICRO, "x y \\phantom{x^{-1} y^{-1}}");
-    cps->stage_swap(MICRO, "1", "2", false);
-    cs_intro.render_microblock();
-    commutator->begin_latex_transition(MICRO, "x y x^{-1} \\phantom{y^{-1}}");
-    cps->stage_swap(MICRO, "2", "0", false);
-    cs_intro.render_microblock();
-    commutator->begin_latex_transition(MICRO, "x y x^{-1} y^{-1}");
-    cps->stage_swap(MICRO, "0", "1", false);
-    cs_intro.render_microblock();
-
-    cs_intro.stage_macroblock(FileBlock("and solve the mystery of the missing quintic formula."), 1);
-    cs_intro.fade_subscene(MICRO, "commutator", 0);
-    cps->state.transition(MICRO, {
-        {"center_y", ".6"},
-    });
-    cs_intro.render_microblock();
-    cs_intro.remove_all_subscenes();
 
     CompositeScene cs;
     cs.add_scene(cps, "cps");
@@ -188,9 +202,10 @@ void part_0(){
     cs.fade_subscene(MICRO, "ls", 0);
     cs.render_microblock();
 
+    // TODO delete factored- just suggest that solutions are when it equals zero
     shared_ptr<LatexScene> factored = make_shared<LatexScene>(latex_color(0xff333333, "(x-x_1)(x-x_2)(x-x_3)"), .7, 1, .5);
     cs.add_scene_fade_in(MICRO, factored, "factored", .5, .7);
-    cs.stage_macroblock(FileBlock("There's also a factored form, with one term for each solution,"), 4);
+    cs.stage_macroblock(FileBlock("There's also a factored form, with one term per solution,"), 4);
     cs.render_microblock();
     string colory_factored = latex_color(0xff333333, "(x-" + latex_color(OPAQUE_WHITE, "x_1")+")(x-"+latex_color(OPAQUE_WHITE, "x_2")+")(x-"+latex_color(OPAQUE_WHITE, "x_3")+")");
     factored->begin_latex_transition(MICRO, colory_factored);
