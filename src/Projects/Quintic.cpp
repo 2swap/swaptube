@@ -1415,7 +1415,7 @@ void part_1() {
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(1);
     CompositeScene cs;
     cs.stage_macroblock(FileBlock("Let's start off easy, with polynomials whose highest exponent is one."), 2);
-    cs.add_scene_fade_in(cps, "cps");
+    cs.add_scene_fade_in(MICRO, cps, "cps");
     shared_ptr<LatexScene> quadratic = make_shared<LatexScene>(latex_color(0xff333333, "ax^"+latex_color(OPAQUE_WHITE, "1")+"+b = 0"), .6, 1, .5);
     cs.add_scene_fade_in(MICRO, quadratic, "quadratic", .5, .2);
     cps->roots_to_coefficients();
@@ -2709,46 +2709,56 @@ void part_2() {
 }
 
 void part_3(){
-    shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(3);
+    shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(2);
     cps->coefficients_to_roots();
     cps->state.set({
         {"ticks_opacity", "0"},
-        {"root0_r", "<twist> pi 1 * + 3 / cos"},
-        {"root0_i", "<twist> pi 1 * + 3 / sin"},
-        {"root1_r", "<twist> pi 3 * + 3 / cos"},
-        {"root1_i", "<twist> pi 3 * + 3 / sin"},
-        {"root2_r", "<twist> pi 5 * + 3 / cos"},
-        {"root2_i", "<twist> pi 5 * + 3 / sin"},
-        {"twist", "0"},
-        {"coefficient3_opacity", "0"},
+        {"root0_r", "<twist> 2 / cos"},
+        {"root0_i", "<twist> 2 / sin"},
+        {"root1_r", "<root0_r> -1 *"},
+        {"root1_i", "<root0_i> -1 *"},
+        {"twist", "1"},
         {"coefficient2_opacity", "0"},
         {"coefficient1_opacity", "0"},
-        {"coefficient0_opacity", "0"},
+        {"coefficient0_opacity", "1"},
         {"coefficient0_ring", "1"},
     });
-    cps->stage_macroblock(FileBlock("Ok, so we have this cube root function for which one loop around the origin cycles the three solutions."), 1);
+    cps->stage_macroblock(FileBlock("Ok, so we have this square root function for which one loop around the origin cycles the three solutions."), 1);
     cps->render_microblock();
 
     cps->stage_macroblock(SilenceBlock(2), 1);
-    cps->state.transition(MICRO, "twist", "6.28318");
+    cps->state.transition(MICRO, "twist", "7");
     cps->render_microblock();
 
     ThreeDimensionScene tds = ThreeDimensionScene();
+    tds.use_state_for_center = true;
+    tds.state.set({
+        {"skew", "0"},
+        {"cps.x", "<skew>"},
+        {"cps.y", "0"},
+        {"cps.z", "0"},
+        {"cps2.x", "<skew> -1 *"},
+        {"cps2.y", "0"},
+        {"cps2.z", "-.2"},
+    });
     tds.add_surface(Surface("cps"), cps);
-    tds.stage_macroblock(FileBlock("Think of there as being a pole here which you need to circle around to cause the outputs to swap."), 1);
+    tds.stage_macroblock(FileBlock("Think of there as being a pole here which you need to circle around to cause the outputs to swap."), 3);
     tds.state.transition(MACRO, {
         {"q1", "1"},
-        {"qi", ".1"}
+        {"qi", ".1"},
         {"qj", "0"},
         {"qk", "0"},
     });
     tds.render_microblock();
-    tds.add_line(glm::vec3(0, 0, -.05), glm::vec3(0, 0, .05), OPAQUE_WHITE);
+    tds.add_line(LineInState("pole1", OPAQUE_WHITE),
+        "<skew>", "0", "0",
+        "<skew>", "0", "-.05"
+    );
     tds.render_microblock();
     tds.render_microblock();
 
     tds.stage_macroblock(SilenceBlock(2), 1);
-    tds.state.transition(MICRO, "twist", "6.28318");
+    cps->state.transition(MICRO, "twist", "4");
     tds.render_microblock();
 
     tds.stage_macroblock(FileBlock("We're gonna use it to construct a machine that has the same behavior as our cubic polynomial."), 1);
@@ -2765,39 +2775,86 @@ void part_3(){
     cps->global_identifier = "cps";
     shared_ptr<ComplexPlotScene> cps2 = make_shared<ComplexPlotScene>(3);
     cps2->roots_to_coefficients();
+    cps2->construction.add(GeometricPoint(glm::vec2(0, 0), "in", 1, true));
     cps2->state.set({
         {"ticks_opacity", "0"},
+        {"point_in_x", "{cps.root0_r} [skew] 2 * .15 / +"},
+        {"point_in_y", "{cps.root0_i}"},
         {"coefficient3_r", "1"},
         {"coefficient3_i", "0"},
         {"coefficient2_r", "0"},
         {"coefficient2_i", "0"},
         {"coefficient1_r", "0"},
         {"coefficient1_i", "0"},
-        {"coefficient0_r", "{cps.root0_r}"},
-        {"coefficient0_i", "{cps.root0_i}"},
+        {"coefficient0_r", "<point_in_x>"},
+        {"coefficient0_i", "<point_in_y>"},
         {"coefficient3_opacity", "0"},
         {"coefficient2_opacity", "0"},
         {"coefficient1_opacity", "0"},
         {"coefficient0_opacity", "0"},
-        {"coefficient0_ring", "1"},
     });
-    tds.add_surface_fade_in(MICRO, Surface(glm::vec3(0, 0, -.2), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "cps2"), cps2);
-    tds.add_line(glm::vec3(0, 0, -.25), glm::vec3(0, 0, -.15), OPAQUE_WHITE);
+    tds.add_surface_fade_in(MICRO, Surface("cps2"), cps2); // Surface is controlled in state, center doesnt matter
+    tds.add_line(LineInState("pole2", OPAQUE_WHITE),
+        "<skew> -1 *", "0", "-.2",
+        "<skew> -1 *", "0", "-.15"
+    );
     tds.remove_surface("cps");// Hack to get this scene in front
     tds.add_surface(Surface("cps"), cps);
     tds.stage_macroblock(FileBlock("Let's take another cube root function like this,"), 1);
     tds.render_microblock();
 
+    tds.add_line(LineInState("tie", OPAQUE_WHITE),
+        "{cps.root0_r} .15 * <skew> +", "{cps.root0_i} -.15 *", "0",
+        "{cps.root0_r} .15 * <skew> +", "{cps.root0_i} -.15 *", "-0.2"
+    );
+    tds.stage_macroblock(FileBlock("and take one of the outputs of the first and use it as the input of this cube root."), 1);
     cps->state.transition(MICRO, "twist", "0");
-    tds.stage_macroblock(SilenceBlock(2), 1);
     tds.render_microblock();
 
-    tds.stage_macroblock(FileBlock("and take one of the outputs of the first and use it as the input of this cube root."), 1);
+    tds.stage_macroblock(FileBlock("This still isn't enough to implement a functional commutator,"), 1);
+    cps->state.transition(MICRO, "twist", "12");
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("because we are just accumulating and dissipating phase between the two halves of the commutator."), 1);
+    cps->state.transition(MICRO, "twist", "-5");
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("But here's the trick:"), 1);
+    cps->state.transition(MICRO, "twist", "-2");
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("we skew the two cube root functions away from each other like this."), 1);
+    tds.state.transition(MICRO, "skew", ".2");
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("Now the two poles don't line up anymore."), 1);
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("Ready for the commutator?"), 1);
+    cps->state.transition(MICRO, {
+        {"root0_r", "<twist> 6.283 * cos <twist2> 6.283 * cos - 1 -"},
+        {"root0_i", "<twist> 6.283 * sin <twist2> 6.283 * sin +"},
+        {"twist", "0"},
+    });
+    cps->state.set({
+        {"twist2", "0"},
+    });
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("Loop, loop, undo, undo..."), 4);
+    cps->state.transition(MICRO, "twist", "1");
+    tds.render_microblock();
+    cps->state.transition(MICRO, "twist2", "1");
+    tds.render_microblock();
+    cps->state.transition(MICRO, "twist", "0");
+    tds.render_microblock();
+    cps->state.transition(MICRO, "twist2", "0");
+    tds.render_microblock();
 }
 
 void render_video(){
-    part_0();
-    part_1();
-    part_2();
+    //part_0();
+    //part_1();
+    //part_2();
     part_3();
 }

@@ -303,8 +303,8 @@ public:
 
         for (int sign : {-1, 1}) {
             float opa = state[string(sign == 1 ? "posi" : "nega") + "tive_quadratic_formula_opacity"];
-            complex<float> sign_c(sign, 0);
             if(opa > 0.01 && degree == 2) {
+                complex<float> sign_c(sign, 0);
                 const complex<float> a = coefficients[2];
                 const complex<float> b = coefficients[1];
                 const complex<float> c = coefficients[0];

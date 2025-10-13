@@ -5,7 +5,7 @@ struct Point {
     float opacity;
     float size;
     Point(const glm::vec3& pos, int clr, float op = 1, float sz = 1)
-        : size(sz) { center = pos; color = clr; opacity = op; }
+        : center(pos), color(clr), opacity(op), size(sz) { }
 };
 
 struct Line {
@@ -14,6 +14,5 @@ struct Line {
     glm::vec3 start;
     glm::vec3 end;
     Line(const glm::vec3& s, const glm::vec3& e, int clr, float op = 1)
-        : color(clr), opacity(op), start(s), end(e) {}
+        : color(clr), opacity(op), start(s), end(e) { }
 };
-

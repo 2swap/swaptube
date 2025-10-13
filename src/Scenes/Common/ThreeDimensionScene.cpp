@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <limits>
 #include <glm/gtx/string_cast.hpp>
-#include "ThreeDimensionStructs.cpp"
+#include "../../Host_Device_Shared/ThreeDimensionStructs.h"
 
 extern "C" {
     void render_points_on_gpu(
@@ -51,6 +51,14 @@ extern "C" {
         float halfheight,
         float over_w_fov);
 }
+
+struct LineInState {
+    string name;
+    int color;
+    float opacity;
+    LineInState(const string& n, int clr, float op = 1)
+        : name(n), color(clr), opacity(op) { }
+};
 
 struct Surface {
     glm::vec3 center;
@@ -230,7 +238,7 @@ public:
             camera_direction,
             conjugate_camera_direction,
             surface.normal,
-            surface.center,
+            surface_center,
             surface.pos_x_dir,
             surface.pos_y_dir,
             surface.ilr2,
@@ -298,6 +306,32 @@ public:
                 fov
             );
         }
+        if (!lines_in_state.empty() && state["lines_opacity"] > .001) {
+            int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
+            // Translate into normal lines and allocate once.
+            vector<Line> populated_lines;
+            populated_lines.reserve(lines_in_state.size());
+            for(LineInState& lis : lines_in_state){
+                const string& prefix = lis.name + ".";
+                glm::vec3 p1 = glm::vec3(state[prefix + "start_x"], state[prefix + "start_y"], state[prefix + "start_z"]);
+                glm::vec3 p2 = glm::vec3(state[prefix +   "end_x"], state[prefix +   "end_y"], state[prefix +   "end_z"]);
+                populated_lines.push_back(Line(p1, p2, lis.color, lis.opacity));
+            }
+            render_lines_on_gpu(
+                pix.pixels.data(),
+                get_width(),
+                get_height(),
+                get_geom_mean_size(),
+                thickness,
+                state["lines_opacity"],
+                populated_lines.data(),
+                static_cast<int>(populated_lines.size()),
+                camera_direction,
+                camera_pos,
+                conjugate_camera_direction,
+                fov
+            );
+        }
     }
 
     const StateQuery populate_state_query() const override {
@@ -313,6 +347,15 @@ public:
                 sq.insert(surface.name + ".z");
             }
         }
+        for(const LineInState& lis : lines_in_state){
+            const string& prefix = lis.name + ".";
+            sq.insert(prefix + "start_x");
+            sq.insert(prefix + "start_y");
+            sq.insert(prefix + "start_z");
+            sq.insert(prefix + "end_x");
+            sq.insert(prefix + "end_y");
+            sq.insert(prefix + "end_z");
+        }
         for(const Surface& surface : surfaces){
             sq.insert(surface.name + ".opacity");
         }
@@ -325,6 +368,20 @@ public:
 
     void add_line(const Line& l) {
         lines.push_back(l);
+    }
+
+    void add_line(const LineInState& lis,
+                  const string& start_x, const string& start_y, const string& start_z,
+                  const string& end_x, const string& end_y, const string& end_z) {
+        lines_in_state.push_back(lis);
+        state.set({
+            {lis.name + ".start_x", start_x},
+            {lis.name + ".start_y", start_y},
+            {lis.name + ".start_z", start_z},
+            {lis.name +   ".end_x",   end_x},
+            {lis.name +   ".end_y",   end_y},
+            {lis.name +   ".end_z",   end_z}
+        });
     }
 
     void add_surface(const Surface& s, shared_ptr<Scene> sc) {
@@ -350,7 +407,7 @@ public:
         state.remove(name + ".opacity");
     }
 
-    void clear_lines(){ lines.clear(); }
+    void clear_lines(){ lines.clear(); lines_in_state.clear(); }
     void clear_points(){ points.clear(); }
     void clear_surfaces(){
         remove_all_subscenes();
@@ -369,4 +426,5 @@ protected:
     vector<Point> points;
     vector<Line> lines;
     vector<Surface> surfaces;
+    vector<LineInState> lines_in_state;
 };

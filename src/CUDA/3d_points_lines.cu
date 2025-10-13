@@ -5,7 +5,7 @@
 #include <utility>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include "../Scenes/Common/ThreeDimensionStructs.cpp"
+#include "../Host_Device_Shared/ThreeDimensionStructs.h"
 #include "color.cuh" // Contains overlay_pixel and set_pixel
 #include "common_graphics.cuh" // Contains fill_circle
 
