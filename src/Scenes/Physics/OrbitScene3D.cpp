@@ -50,7 +50,7 @@ public:
         float drag = pow(state["drag"], tick_duration);
 
         vector<glm::dvec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
-        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, state_manager);
+        simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, state);
 
         // Early bailout if we wont render anything
         float max_opacity = 0;
@@ -120,12 +120,12 @@ public:
         clear_points();
 
         for (const auto& obj : simulation->mobile_objects) add_point(Point(obj.position, obj.color, NORMAL, 1));
-        for (const auto& obj : simulation->fixed_objects) add_point(Point(obj.get_position(state_manager), obj.color, RING, 1));
+        for (const auto& obj : simulation->fixed_objects) add_point(Point(obj.get_position(state), obj.color, RING, 1));
     }
 
     void mark_data_unchanged() override { simulation->mark_unchanged(); }
     void change_data() override {
-        simulation->iterate_physics(round(state["physics_multiplier"]), state_manager);
+        simulation->iterate_physics(round(state["physics_multiplier"]), state);
     }
     bool check_if_data_changed() const override {
         return simulation->has_been_updated_since_last_scene_query();

@@ -52,18 +52,19 @@ public:
     GeometricConstruction construction;
     CoordinateScene(const float width = 1, const float height = 1)
         : Scene(width, height) {
-        state_manager.set("left_x"   , "<center_x> .5 <window_width> / -");
-        state_manager.set("right_x"  , "<center_x> .5 <window_width> / +");
-        state_manager.set("top_y"    , "<center_y> .5 <window_height> / -");
-        state_manager.set("bottom_y" , "<center_y> .5 <window_height> / +");
-        state_manager.set("construction_opacity", "1");
-        state_manager.set("ticks_opacity", "1");
-        state_manager.set("zero_crosshair_opacity", "0");
-        state_manager.set("center_x", "0");
-        state_manager.set("center_y", "0");
-        state_manager.set("zoom", "0");
-        state_manager.set("window_height", "<zoom> exp .2 *");
-        state_manager.set("window_width", "<window_height> <w> {VIDEO_WIDTH} * / <h> {VIDEO_HEIGHT} * *");
+        state.set("left_x"   , "<center_x> .5 <window_width> / -");
+        state.set("right_x"  , "<center_x> .5 <window_width> / +");
+        state.set("top_y"    , "<center_y> .5 <window_height> / -");
+        state.set("bottom_y" , "<center_y> .5 <window_height> / +");
+        state.set("construction_opacity", "1");
+        state.set("ticks_opacity", "0");
+        state.set("zero_crosshair_opacity", "0");
+        state.set("center_x", "0");
+        state.set("center_y", "0");
+        state.set("zoom", "0");
+        state.set("microblock_fraction_passthrough", "{microblock_fraction}");
+        state.set("window_height", "<zoom> exp .2 *");
+        state.set("window_width", "<window_height> <w> {VIDEO_WIDTH} * / <h> {VIDEO_HEIGHT} * *");
     }
 
     glm::vec2 point_to_pixel(const glm::vec2& p) {
@@ -118,7 +119,7 @@ public:
         int line_color = 0xff6666ff;
         int text_color = 0xffffffff;
         float microblock_fraction = 0.5;
-        if(state.contains("microblock_fraction")) microblock_fraction = state["microblock_fraction"];
+        if(state.contains("microblock_fraction_passthrough")) microblock_fraction = state["microblock_fraction_passthrough"];
 
         float bounce = 1 - square(square(microblock_fraction - 1));
         float interp = smoother2(microblock_fraction);
@@ -231,13 +232,13 @@ public:
         StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "construction_opacity", "zero_crosshair_opacity"};
         for(const GeometricPoint& p : construction.points) {
             if(!p.old) {
-                sq.insert("microblock_fraction");
+                sq.insert("microblock_fraction_passthrough");
                 break;
             }
         }
         for(const GeometricLine& l : construction.lines) {
             if(!l.old) {
-                sq.insert("microblock_fraction");
+                sq.insert("microblock_fraction_passthrough");
                 break;
             }
         }

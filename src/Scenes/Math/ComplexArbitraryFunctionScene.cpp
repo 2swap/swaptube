@@ -17,13 +17,13 @@ extern "C" void color_complex_arbitrary_function(
 class ComplexArbitraryFunctionScene : public CoordinateScene {
 public:
     ComplexArbitraryFunctionScene(const float width = 1, const float height = 1) : CoordinateScene(width, height) {
-        state_manager.set("sqrt_coef", "1");
-        state_manager.set("sqrt_branch_cut", "1");
-        state_manager.set("sin_coef", "0");
-        state_manager.set("cos_coef", "0");
-        state_manager.set("exp_coef", "0");
-        state_manager.set("ab_dilation", ".8");
-        state_manager.set("dot_radius", "1");
+        state.set("sqrt_coef", "1");
+        state.set("sqrt_branch_cut", "1");
+        state.set("sin_coef", "0");
+        state.set("cos_coef", "0");
+        state.set("exp_coef", "0");
+        state.set("ab_dilation", ".8");
+        state.set("dot_radius", "1");
     }
 
     void draw() override {

@@ -8,10 +8,10 @@ void render_video() {
     CompositeScene cs;
     cs.add_scene(&ts, "ts");
     cs.add_scene(&ms, "ms");
-    ts.state_manager.set(unordered_map<string,string>{
+    ts.state.set(unordered_map<string,string>{
         {"swaptube_opacity", "0"},
     });
-    ms.state_manager.set(unordered_map<string,string>{
+    ms.state.set(unordered_map<string,string>{
         {"zoom_r", ".0000021"},
         {"zoom_i", "0"},
         {"max_iterations", "180"},

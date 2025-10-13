@@ -16,7 +16,7 @@ void render_video() {
     Graph g;
     C4GraphScene gs(&g, false, "436675535335733556", NAIVE_WEAK);
 
-    gs.state_manager.set({
+    gs.state.set({
         {"q1", "1"},
         {"qi", "{t} 3 / sin"},
         {"qj", "{t} 2 / cos"},

@@ -4,10 +4,10 @@ void render_video() {
     ManifoldScene ms;
 
     ms.stage_macroblock(SilenceBlock(13), 12);
-    ms.state_manager.set({
+    ms.state.set({
         {"d", "10"},
     });
-    ms.state_manager.transition(MICRO, {
+    ms.state.transition(MICRO, {
         {"qi", ".2"},
         {"qj", "{t} 2 / sin"},
         {"qk", ".1"},
@@ -15,7 +15,7 @@ void render_video() {
     ms.render_microblock();
     ms.render_microblock();
 
-    ms.state_manager.set({
+    ms.state.set({
         {"u_wave", "5"},
         {"v_wave", "5"},
         {"mult", "5"},
@@ -23,7 +23,7 @@ void render_video() {
         {"manifold_y", "(u) <u_wave> * sin (v) <v_wave> * sin + <mult> /"},
         {"manifold_z", "(v)"},
     });
-    ms.state_manager.transition(MICRO, {
+    ms.state.transition(MICRO, {
         {"u_wave", "3"},
         {"v_wave", "9"},
         {"mult", "2"},
@@ -32,7 +32,7 @@ void render_video() {
     ms.render_microblock();
 
     // Plane in 3D space
-    ms.state_manager.transition(MICRO, {
+    ms.state.transition(MICRO, {
         {"manifold_x", "(u)"},
         {"manifold_y", "0"},
         {"manifold_z", "(v)"},
@@ -41,7 +41,7 @@ void render_video() {
     ms.render_microblock();
 
     //Parameterize a sphere with spherical coordinates
-    ms.state_manager.transition(MICRO, {
+    ms.state.transition(MICRO, {
         {"manifold_x", "(u) cos (v) sin *"},
         {"manifold_y", "(u) sin (v) sin *"},
         {"manifold_z", "(v) cos"},
@@ -54,7 +54,7 @@ void render_video() {
     ms.render_microblock();
 
     // Back to a plane
-    ms.state_manager.transition(MICRO, {
+    ms.state.transition(MICRO, {
         {"manifold_x", "(u)"},
         {"manifold_y", "0"},
         {"manifold_z", "(v)"},
@@ -67,7 +67,7 @@ void render_video() {
     ms.render_microblock();
 
     // Torus
-    ms.state_manager.transition(MICRO, {
+    ms.state.transition(MICRO, {
         {"manifold_x", ".5 (u) cos * 2 + (v) cos *"},
         {"manifold_y", ".5 (u) cos * 2 + (v) sin *"},
         {"manifold_z", ".5 (u) sin *"},

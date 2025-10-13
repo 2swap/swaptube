@@ -16,24 +16,24 @@ public:
     CompositeScene(const double width = 1, const double height = 1)
         : SuperScene(width, height) {}
 
-    void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_manager_name, double x = 0.5, double y = 0.5, double opa=1, bool behind = false){
-        add_scene(sc, state_manager_name, x, y, behind);
-        state_manager.set(state_manager_name + ".opacity", "0");
-        fade_subscene(tt, state_manager_name, opa);
+    void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_name, double x = 0.5, double y = 0.5, double opa=1, bool behind = false){
+        add_scene(sc, state_name, x, y, behind);
+        state.set(state_name + ".opacity", "0");
+        fade_subscene(tt, state_name, opa);
     }
 
-    void add_scene(shared_ptr<Scene> sc, const string& state_manager_name, double x = 0.5, double y = 0.5, bool behind = false){
-        state_manager.set({
-            {state_manager_name + ".x", to_string(x)},
-            {state_manager_name + ".y", to_string(y)},
+    void add_scene(shared_ptr<Scene> sc, const string& state_name, double x = 0.5, double y = 0.5, bool behind = false){
+        state.set({
+            {state_name + ".x", to_string(x)},
+            {state_name + ".y", to_string(y)},
         });
-        add_subscene_check_dupe(state_manager_name, sc, behind);
+        add_subscene_check_dupe(state_name, sc, behind);
     }
 
     void slide_subscene(const TransitionType tt, const string& name, const double dx, const double dy){
-        state_manager.transition(tt, {
-            {name + ".x", state_manager.get_equation(name + ".x") + " " + to_string(dx) + " +"},
-            {name + ".y", state_manager.get_equation(name + ".y") + " " + to_string(dy) + " +"},
+        state.transition(tt, {
+            {name + ".x", state.get_equation(name + ".x") + " " + to_string(dx) + " +"},
+            {name + ".y", state.get_equation(name + ".y") + " " + to_string(dy) + " +"},
         });
     }
 

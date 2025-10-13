@@ -6,7 +6,7 @@
 class MovingPendulumGridScene : public CoordinateScene {
 public:
     MovingPendulumGridScene(const double width = 1, const double height = 1) : CoordinateScene(width, height) {
-        state_manager.set({{"contrast", ".1"},
+        state.set({{"contrast", ".1"},
                 {"mode", "0"},
                 {"center_x", "0"},
                 {"center_y", "0"},

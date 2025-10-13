@@ -7,15 +7,15 @@ extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<fl
 class RootFractalScene : public CoordinateScene {
 public:
     RootFractalScene(const float width = 1, const float height = 1) : CoordinateScene(width, height) {
-        state_manager.set("coefficient0_r", "-1");
-        state_manager.set("coefficient0_i", "0");
-        state_manager.set("coefficient1_r", "1");
-        state_manager.set("coefficient1_i", "0");
-        state_manager.set("terms", "8");
-        state_manager.set("degree_fixed", "1");
-        state_manager.set("coefficients_opacity", "1");
-        state_manager.set("visibility_multiplier", "1");
-        state_manager.set("rainbow", "1");
+        state.set("coefficient0_r", "-1");
+        state.set("coefficient0_i", "0");
+        state.set("coefficient1_r", "1");
+        state.set("coefficient1_i", "0");
+        state.set("terms", "8");
+        state.set("degree_fixed", "1");
+        state.set("coefficients_opacity", "1");
+        state.set("visibility_multiplier", "1");
+        state.set("rainbow", "1");
     }
 
     void draw() override {

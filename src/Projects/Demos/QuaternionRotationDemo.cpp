@@ -16,24 +16,24 @@ void render_3d(){
         tds.add_point(Point(glm::vec3(i, j, k), OPAQUE_WHITE));
 
     glm::quat q(1,0,0,0);
-    tds.state_manager.set("x", "0");
-    tds.state_manager.set("y", "0");
-    tds.state_manager.set("z", "0");
-    tds.state_manager.set("d", "0");
-    tds.state_manager.set("surfaces_opacity", "1");
-    tds.state_manager.set("points_opacity", "1");
-    tds.state_manager.set("lines_opacity", "1");
-    tds.state_manager.set("q1", std::to_string(q.w));
-    tds.state_manager.set("qi", std::to_string(q.x));
-    tds.state_manager.set("qj", std::to_string(q.y));
-    tds.state_manager.set("qk", std::to_string(q.z));
+    tds.state.set("x", "0");
+    tds.state.set("y", "0");
+    tds.state.set("z", "0");
+    tds.state.set("d", "0");
+    tds.state.set("surfaces_opacity", "1");
+    tds.state.set("points_opacity", "1");
+    tds.state.set("lines_opacity", "1");
+    tds.state.set("q1", std::to_string(q.w));
+    tds.state.set("qi", std::to_string(q.x));
+    tds.state.set("qj", std::to_string(q.y));
+    tds.state.set("qk", std::to_string(q.z));
     tds.stage_macroblock(SilenceBlock(2), 1);
     tds.render_microblock();
 
     glm::quat quats[6] = {PITCH_DOWN,PITCH_UP,YAW_RIGHT,YAW_LEFT,ROLL_CW,ROLL_CCW};
     for(glm::quat mult : quats){
         q *= mult;
-        tds.state_manager.transition(MICRO, {{"q1", std::to_string(q.w)},
+        tds.state.transition(MICRO, {{"q1", std::to_string(q.w)},
                                              {"qi", std::to_string(q.x)},
                                              {"qj", std::to_string(q.y)},
                                              {"qk", std::to_string(q.z)}

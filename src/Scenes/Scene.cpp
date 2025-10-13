@@ -13,9 +13,9 @@
 class Scene {
 public:
     Scene(const double width = 1, const double height = 1)
-        : state_manager() {
-        state_manager.set("w", to_string(width));
-        state_manager.set("h", to_string(height));
+        : state() {
+        state.set("w", to_string(width));
+        state.set("h", to_string(height));
     }
 
     virtual const StateQuery populate_state_query() const = 0;
@@ -26,8 +26,8 @@ public:
 
     virtual void on_end_transition_extra_behavior(const TransitionType tt){};
     void on_end_transition(const TransitionType tt) {
-        if(tt == MACRO) state_manager.close_transitions(tt);
-                        state_manager.close_transitions(MICRO);
+        if(tt == MACRO) state.close_transitions(tt);
+                        state.close_transitions(MICRO);
         on_end_transition_extra_behavior(tt);
     }
 
@@ -48,13 +48,13 @@ public:
     }
 
     bool check_if_state_changed() const {
-        return state != last_state;
+        return current_state != last_state;
     }
 
     void query(Pixels*& p) {
         cout << "(" << flush;
         if(!has_updated_since_last_query){
-            last_state = state;
+            last_state = current_state;
             update();
         }
         // The only time we skip render entirely is when the project flags to skip a section.
@@ -143,20 +143,20 @@ public:
     }
 
     void update_state() {
-        state_manager.evaluate_all();
+        state.evaluate_all();
         StateQuery sq = populate_state_query();
         sq.insert("w");
         sq.insert("h");
-        state = state_manager.get_state(sq);
-        if(global_publisher_key) publish_global(stage_publish_to_global());
+        current_state = state.get_state(sq);
+        if(global_identifier.size() > 0) publish_global(stage_publish_to_global());
     }
 
     int get_width() const{
-        return VIDEO_WIDTH * state_manager.get_state({"w"})["w"];
+        return VIDEO_WIDTH * state.get_state({"w"})["w"];
     }
 
     int get_height() const{
-        return VIDEO_HEIGHT * state_manager.get_state({"h"})["h"];
+        return VIDEO_HEIGHT * state.get_state({"h"})["h"];
     }
 
     void export_frame(const string& filename, int scaledown = 1) const {
@@ -164,13 +164,14 @@ public:
         pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
     }
 
-    StateManager state_manager;
-    bool global_publisher_key = false; // Scenes can publish to global state only if this is manually set to true in the project
-    string global_identifier = ""; // This is prefixed before the published global state elements to uniquely identify this scene if necessary. Not used (empty) by default.
+    StateManager state;
+    string global_identifier = ""; // This is prefixed before the published global state elements
+                                   // to uniquely identify this scene if necessary.
+                                   // Empty by default, meaning no state is published.
 
 protected:
     Pixels pix;
-    State state;
+    State current_state;
     bool has_ever_rendered = false;
 
     glm::vec2 get_width_height() const{
@@ -191,7 +192,7 @@ private:
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
     void publish_global(const unordered_map<string, double>& s) const {
         for(const auto& p : s) {
-            global_state[global_identifier + p.first] = p.second;
+            global_state[global_identifier + "." + p.first] = p.second;
         }
     }
 
@@ -202,7 +203,7 @@ private:
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_macroblock_frames) / total_macroblock_frames;
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
 
-        state_manager_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
+        state_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
         Pixels* p = nullptr;
         query(p);
 

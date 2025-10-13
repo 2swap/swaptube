@@ -4,7 +4,7 @@ void render_video() {
     Graph g;
     C4GraphScene gs(&g, false, "444", MANUAL);
 
-    gs.state_manager.set({
+    gs.state.set({
         {"q1", "{t} 4 / cos"},
         {"qi", "0"},
         {"qj", "{t} -4 / sin"},
@@ -19,7 +19,7 @@ void render_video() {
         {"d", "2"},
         {"dimensions", "2"},
     });
-    gs.state_manager.transition(MICRO, {
+    gs.state.transition(MICRO, {
         {"q1", "{t} 4 / cos"},
         {"qi", "0"},
         {"qj", "{t} -4 / sin"},

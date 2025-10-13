@@ -85,7 +85,7 @@ void render_video() {
         init["circle"+to_string(j)+"_y"] = "0";
         init["circle"+to_string(j)+"_r"] = ".1";
     }
-    ms.state_manager.set(init);
+    ms.state.set(init);
     for(int i = 0; i < 10; i++) {
         Tetromino rand_tet = generateScatteredTetromino(num_sounds);
         StateSet ss;
@@ -93,7 +93,7 @@ void render_video() {
             ss["circle"+to_string(j)+"_x"] = to_string(rand_tet[j].first);
             ss["circle"+to_string(j)+"_y"] = to_string(rand_tet[j].second);
         }
-        ms.state_manager.transition(MACRO, ss);
+        ms.state.transition(MACRO, ss);
         ms.stage_macroblock(SilenceBlock(.2), 1);
         ms.render_microblock();
         ms.stage_macroblock(SilenceBlock(.8), 1);

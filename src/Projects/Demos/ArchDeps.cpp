@@ -28,7 +28,7 @@ void render_video() {
     Graph g;
     GraphScene gs(&g);
 
-    gs.state_manager.set({
+    gs.state.set({
         {"q1", "{t} .1 * cos"},
         {"qi", "0"},
         {"qj", "{t} .1 * sin"},

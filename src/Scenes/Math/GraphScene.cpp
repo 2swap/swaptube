@@ -35,7 +35,7 @@ public:
     double curr_hash = 0;
     double next_hash = 0;
     GraphScene(Graph* g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g), color_scheme(list<unsigned int>{0x0079ff, 0x00dfa2, 0xf6fa70, 0xff0060}) {
-        state_manager.set(unordered_map<string, string>{
+        state.set(unordered_map<string, string>{
             {"repel", "1"},
             {"attract", "1"},
             {"decay", ".95"},

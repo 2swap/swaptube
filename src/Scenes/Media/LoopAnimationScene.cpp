@@ -7,7 +7,7 @@
 class LoopAnimationScene : public Scene {
 public:
     LoopAnimationScene(const vector<string>& pn, const double width = 1, const double height = 1) : Scene(width, height), picture_names(pn) {
-        state_manager.set({
+        state.set({
             {"animated_frame", "<frame_number> 2 / floor"},
             {"loop_start", "0"},
             {"loop_length", to_string(pn.size())},

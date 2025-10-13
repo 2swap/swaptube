@@ -6,8 +6,8 @@
 class TwoswapScene : public Scene {
 public:
     TwoswapScene(const double width = 1, const double height = 1) : Scene(width, height) {
-        state_manager.set("circle_opacity", "1");
-        state_manager.set("swaptube_opacity", ".4");
+        state.set("circle_opacity", "1");
+        state.set("swaptube_opacity", ".4");
     }
 
     const StateQuery populate_state_query() const override {

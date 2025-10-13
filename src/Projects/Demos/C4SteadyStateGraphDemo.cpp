@@ -10,7 +10,7 @@ void render_video() {
     cs.add_scene(gs, "gs");
     cs.add_scene(c4s, "c4s", .25, .25);
 
-    gs->state_manager.set(unordered_map<string, string>{
+    gs->state.set(unordered_map<string, string>{
         {"q1", "{t} .1 * cos"},
         {"qi", "0"},
         {"qj", "{t} .1 * sin"},

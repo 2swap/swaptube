@@ -47,7 +47,7 @@ void intro() {
 
     shared_ptr<LambdaScene> ls = make_shared<LambdaScene>(term, 800, 800);
     tds.add_surface(Surface(glm::dvec3(0,0,0), glm::dvec3(1,0,0), glm::dvec3(0,1,0), ls));
-    tds.state_manager.set(unordered_map<string, string>{
+    tds.state.set(unordered_map<string, string>{
         {"surfaces_opacity", "1"},
         {"lines_opacity", "0"},
         {"points_opacity", "1"},
@@ -72,18 +72,18 @@ void intro() {
     cs.add_scene(&tds, "tds", 0, 0);
     cs.add_scene(&algebra, "alg", 0, 0);
     cs.add_scene(&boolean, "boo", 0.5, 0.05); // Boolean on the right, algebra on the left
-    cs.state_manager.add_equation("alg.opacity", "0");
-    cs.state_manager.add_equation("boo.opacity", "0");
-    cs.state_manager.add_equation("qj", "0");
+    cs.state.add_equation("alg.opacity", "0");
+    cs.state.add_equation("boo.opacity", "0");
+    cs.state.add_equation("qj", "0");
     for(int i = 0; i < 5; i++){
         float alg_o = i==1;
         float boo_o = i==2;
-        cs.state_manager.add_subscene_transition("alg.opacity", to_string(alg_o));
-        cs.state_manager.add_subscene_transition("boo.opacity", to_string(boo_o));
+        cs.state.add_subscene_transition("alg.opacity", to_string(alg_o));
+        cs.state.add_subscene_transition("boo.opacity", to_string(boo_o));
         float qj = 0;
         if(i==1) qj=.19;
         if(i==2) qj=-.19;
-        cs.state_manager.add_subscene_transition("qj", to_string(qj));
+        cs.state.add_subscene_transition("qj", to_string(qj));
         cs.stage_macroblock(AudioSegment(blurbs[i]), num_reductions / 5);
         for(int j = 0; j < num_reductions/5; j++) {
             ls->reduce();
@@ -118,14 +118,14 @@ void intro() {
 
     tds.stage_macroblock_and_render(AudioSegment("We can make all sorts of other values."));
 
-    tds.state_manager.subscene_transition(unordered_map<string, string>{
+    tds.state.subscene_transition(unordered_map<string, string>{
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"}
     });
 
-    tds.state_manager.subscene_transition(unordered_map<string, string>{
+    tds.state.subscene_transition(unordered_map<string, string>{
         {"z", "-10"},
     });
 
@@ -148,7 +148,7 @@ void intro() {
     tds.add_surface(Surface(glm::dvec3(2,-2,-5), glm::dvec3(1,0,0), glm::dvec3(0,1,0), church3scene));
     tds.stage_macroblock_and_render(AudioSegment("We've got one, two, three..."));
     
-    tds.state_manager.subscene_transition(unordered_map<string, string>{
+    tds.state.subscene_transition(unordered_map<string, string>{
         {"q1", "1"},
         {"qi", "0"},
         {"qj", ".4"},
@@ -188,7 +188,7 @@ void intro() {
 
     tds.stage_macroblock(AudioSegment("We can express any computational procedure, such as the factorial function."), 2);
     tds.render_microblock();
-    tds.state_manager.subscene_transition(unordered_map<string, string>{
+    tds.state.subscene_transition(unordered_map<string, string>{
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
@@ -296,7 +296,7 @@ void intro() {
     }
 
     // Transition back to be able to see it
-    tds.state_manager.superscene_transition(unordered_map<string, string>{
+    tds.state.superscene_transition(unordered_map<string, string>{
         {"z", "-16"},
     });
 
@@ -312,7 +312,7 @@ void intro() {
         tds.render_microblock();  // Render the scene after each reduction
     }
 
-    tds.state_manager.superscene_transition(unordered_map<string, string>{
+    tds.state.superscene_transition(unordered_map<string, string>{
         {"z", "20"},
         {"qk", "12"},
     });
@@ -344,13 +344,13 @@ void history() {
     cs.render_microblock();
 
     // Move Hilbert to the top half to make room for other mathematicians
-    hilbert.state_manager.set(unordered_map<string, string>{
+    hilbert.state.set(unordered_map<string, string>{
         {"h", "[hilbert.h]"},
     });
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"hilbert.h", to_string(VIDEO_HEIGHT)},
     });
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"hilbert.h", to_string(.5 * VIDEO_HEIGHT)},
     });
 
@@ -362,7 +362,7 @@ void history() {
     cs.add_scene(&church, "church", 0, 1);
     cs.add_scene(&turing, "turing", 0.33333, 1);
     cs.add_scene(&godel, "godel", 0.66666, 1);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"turing.y", "0.5"},
         {"godel.y", "0.5"},
         {"church.y", "0.5"},
@@ -383,7 +383,7 @@ void history() {
     turing.append_bio_text("Named Father of Computer Science");
     cs.stage_macroblock_and_render(AudioSegment("and spawned the entire field of computer science."));
     hilbert_quote.begin_latex_transition(latex_text("Is there a " + latex_color(0xffff7777, "program") + " which can tell\\\\\\\\if a theorem is true or false?"));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"turing.opacity", "0.15"},
         {"godel.opacity", "0.15"},
         {"church.opacity", "0.15"},
@@ -396,7 +396,7 @@ void history() {
     cs.render_microblock();
     cs.render_microblock();
     hilbert_quote.begin_latex_transition(latex_text("Is there a program which can tell\\\\\\\\if a theorem is true or false?"));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"hilbert_quote.x", "0.5"},
         {"hilbert_quote.y", "0"},
         {"turing.opacity", "1"},
@@ -408,7 +408,7 @@ void history() {
     cs.stage_macroblock_and_render(AudioSegment("My goal, instead, is to give you a more visceral understanding of how computation itself can be formalized."));
 
     // Slide Turing and Gödel out the right side, and introduce a LatexScene title "The \\lambda-Calculus" on the right side
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"turing.y", "1.5"},
         {"godel.y", "1.5"},
         {"hilbert.y", "-1"},
@@ -418,7 +418,7 @@ void history() {
 
     LatexScene lambda_title(latex_text("The \\lambda-Calculus"), 1, VIDEO_WIDTH, VIDEO_HEIGHT*0.25);
     cs.add_scene(&lambda_title, "lambda_title", 0, -0.25);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lambda_title.y", "0"},
     });
     cs.stage_macroblock_and_render(AudioSegment("This video is the story of Alonzo Church's answer."));
@@ -431,7 +431,7 @@ void history() {
     cs.render_microblock();
     calc.begin_latex_transition("\\int_a^b");
     cs.render_microblock();
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"calc.opacity", "0"},
     });
     cs.stage_macroblock_and_render(AudioSegment("The term calculus, up until recently, was used to describe all sorts of logical systems."));
@@ -448,7 +448,7 @@ void history() {
     cs.stage_macroblock_and_render(AudioSegment("It might as well be called 'The Way of the Lambda'."));
     LatexScene algebra("x+4=2x+1", .7, VIDEO_WIDTH*.666, VIDEO_HEIGHT*.666);
     cs.add_scene_fade_in(&algebra, "algebra", 0.333, 0.266, true);
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"lambda_examples1.opacity", "0.1"},
         {"lambda_examples2.opacity", "0.1"},
         {"lambda_examples3.opacity", "0.1"},
@@ -468,7 +468,7 @@ void history() {
     lambda_examples2.begin_latex_transition(latex_color(0xff00ff00, "y"                                ));
     lambda_examples3.begin_latex_transition(latex_color(0xff00ff00, "(\\lambda z. (z (\\lambda w. w)))"));
     lambda_examples4.begin_latex_transition(latex_color(0xff00ff00, "(a (b c))"                        ));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"lambda_examples1.opacity", "1"},
         {"lambda_examples2.opacity", "1"},
         {"lambda_examples3.opacity", "1"},
@@ -516,7 +516,7 @@ void history() {
     cs.add_scene(&lambda_rule_app, "lambda_rule_app", -0.5, 0.65);
 
     // Slide Church out to the left
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"church.x", "-1"},
         {"lambda_examples1.x", "1.5"},
         {"lambda_examples2.x", "1.5"},
@@ -556,7 +556,7 @@ void history() {
     LatexScene lambda_construct(latex_color(0xff00ffff, "(\\_ \\_)"), 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
     cs.add_scene(&lambda_construct, "lambda_construct", 0, 0.65);
 
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lambda_construct.x", ".5"},
         {"lambda_construct.y", ".25"},
     });
@@ -606,14 +606,14 @@ void history() {
     LatexScene lc3("(\\lambda a. (\\lambda b. (a b)))", 0.8, VIDEO_WIDTH*.5, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&lc3, "lc3", 0.5, 0.55, true);
     cs.stage_macroblock_and_render(AudioSegment("Using them, we can create all sorts of different lambda terms."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.x", ".5"},
         {"lambda_rule_var.y", ".7"},
     });
     lambda_rule_var.begin_latex_transition("a");
     cs.stage_macroblock_and_render(AudioSegment("Even a variable itself is a valid expression."));
     cs.stage_macroblock_and_render(AudioSegment(0.5));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.opacity", "0"},
         {"lambda_construct.opacity", "0"},
         {"lc2.opacity", "0"},
@@ -640,14 +640,14 @@ void history() {
     cs.render_microblock();
 
     // Fade out the first rule by transitioning its opacity to 0.
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.x", "0"},
         {"lambda_rule_var.y", ".25"},
     });
     cs.render_microblock();
 
     // Move out the second rule.
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_abs.x", ".5"},
         {"lambda_rule_abs.y", ".5"},
     });
@@ -681,7 +681,7 @@ void history() {
     cs.render_microblock();
     */
 
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_app.opacity", "0.1"},
     });
     // Transition back to the identity function.
@@ -690,7 +690,7 @@ void history() {
     PngScene python_identity("python_identity_color", VIDEO_WIDTH/2, VIDEO_HEIGHT/4);
     cs.add_scene(&python_identity, "python_identity", -.5, 0.25);
     cs.stage_macroblock_and_render(AudioSegment("The template with a lambda and a dot represents a function definition."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"python_identity.x", "0"},
     });
 
@@ -698,7 +698,7 @@ void history() {
     cs.stage_macroblock_and_render(AudioSegment("The letter that we put in is the name of the input,"));
     lambda_rule_abs.begin_latex_transition("(\\lambda " + latex_color(0xff0088ff, "a") + "." + latex_color(0xffff0000, "a") + ")");
     cs.stage_macroblock_and_render(AudioSegment("and the blank represents the return-statement of the function."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"python_identity.x", "-.5"},
         {"lambda_rule_app.opacity", "1"},
         {"lambda_rule_abs.opacity", "0.1"},
@@ -716,7 +716,7 @@ void history() {
     cs.render_microblock();
 
     // Show an example where a function is applied to a variable.
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_app.y", "1.5"},
         {"lambda_rule_abs.y", "1.5"},
         {"lambda_title.y"   , "-1"},
@@ -745,7 +745,7 @@ void visualize(){
     cs.add_scene(&rep_vex    , "rep_vex"    , 0    , -3);
     cs.add_scene(&rep_tromp  , "rep_tromp"  , 0.333, -3.5);
     cs.add_scene(&rep_viktor , "rep_viktor" , 0.666, -4);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"rep_classic.y", "0"},
         {"rep_graph.y", "0"},
         {"rep_dbi.y", "0"},
@@ -757,7 +757,7 @@ void visualize(){
     cs.stage_macroblock_and_render(AudioSegment("We'll try evaluating these expressions in a sec, but first let's visualize them."));
     cs.stage_macroblock(AudioSegment("There's a ton of styles, but the one I chose is John Tromp's Lambda Diagrams."), 2);
     cs.render_microblock();
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"rep_classic.y", "-1.5"},
         {"rep_keenan.y", "-1.5"},
         {"rep_graph.y", "-1.5"},
@@ -767,14 +767,14 @@ void visualize(){
         {"rep_tromp.x", "0"},
         {"rep_viktor.y", "-1"},
     });
-    rep_tromp.state_manager.subscene_transition(unordered_map<string, string>{
+    rep_tromp.state.subscene_transition(unordered_map<string, string>{
         {"w", to_string(VIDEO_WIDTH)},
         {"h", to_string(VIDEO_HEIGHT)},
     });
     cs.render_microblock();
     C4Scene c4s("43334444343", VIDEO_WIDTH*1.2, VIDEO_HEIGHT*1.2);
     cs.add_scene(&c4s, "c4s", -.1, -.1);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"ntf", "<subscene_transition_fraction> .5 -"},
         {"c4s.opacity", "1 <ntf> 2 * 2 ^ -"},
     });
@@ -790,13 +790,13 @@ void visualize(){
     cs.add_scene(&lambda_rule_var, "lambda_rule_var", -0.5, 0.125);
     cs.add_scene(&lambda_rule_abs, "lambda_rule_abs", -0.5, 0.375);
     cs.add_scene(&lambda_rule_app, "lambda_rule_app", -0.5, 0.625);
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.x"    , "0"},
         {"lambda_rule_abs.x"    , "0"},
         {"lambda_rule_app.x"    , "0"},
         {"rep_tromp.x", ".25"},
     });
-    rep_tromp.state_manager.subscene_transition(unordered_map<string, string>{
+    rep_tromp.state.subscene_transition(unordered_map<string, string>{
         {"w", to_string(VIDEO_WIDTH*3/4)},
         {"latex_opacity", "1"},
     });
@@ -951,7 +951,7 @@ void visualize(){
         current->set_color(current->get_type() == "Application" ? OPAQUE_WHITE : 0xff222222);
     }
     rep_tromp.set_expression(term);
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"lamabs0.opacity", "0"},
         {"lamabs1.opacity", "0"},
         {"lamabs2.opacity", "0"},
@@ -1004,7 +1004,7 @@ void visualize(){
     rep_tromp.set_expression(term);
     cs.stage_macroblock_and_render(AudioSegment(1));
     cs.stage_macroblock_and_render(AudioSegment("Don't worry too much about trying to read these, it's the kind of skill you have to practice for a while."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lambda_rule_var.opacity", "0"},
         {"lambda_rule_abs.opacity", "0"},
         {"lambda_rule_app.opacity", "0"},
@@ -1029,13 +1029,13 @@ void beta_reduction(){
     CompositeScene cs;
     LatexScene beta_title(latex_text("\\beta-Reduction"), 1, VIDEO_WIDTH*0.5, VIDEO_HEIGHT*0.25);
     cs.add_scene(&beta_title, "beta_title", 0.25, -.25);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"beta_title.y", "0"},
     });
     cs.stage_macroblock_and_render(AudioSegment("I've mentioned that these expressions can be 'evaluated', but what does that even mean?"));
     LatexScene latexbeta("(\\lambda x. \\_)", 0.6, VIDEO_WIDTH*.75, VIDEO_HEIGHT*.5);
     cs.add_scene(&latexbeta, "latex_beta", -.5, .25);
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"latex_beta.x", ".125"},
     });
     cs.stage_macroblock(AudioSegment("Remember that template 2 can be interpreted as a function."), 2);
@@ -1177,7 +1177,7 @@ void beta_reduction(){
     */
 
     quadratic_equation.begin_latex_transition("((\\lambda x. (\\lambda w. (x w))) (\\lambda a. (\\lambda f. f)))");
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"quadratic_equation.y", "0.58"},
     });
     shared_ptr<LambdaExpression> term = parse_lambda_from_string("((\\x. (\\w. (x w))) (\\a. (\\f. f)))");
@@ -1210,7 +1210,7 @@ void beta_reduction(){
     quadratic_equation.begin_latex_transition("(\\lambda w. (" + latex_color(0xff7f00ff, "(\\lambda a. (\\lambda f. f))") + "w))");
     betadiagram.reduce();
     cs.stage_macroblock_and_render(AudioSegment(1));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"quadratic_equation.opacity", "0"},
     });
 
@@ -1225,7 +1225,7 @@ void beta_reduction(){
     cs.render_microblock();
     cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment(0.5));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"betadiagram.opacity", "0"},
         {"beta_title.opacity", "0"},
     });
@@ -1236,7 +1236,7 @@ void currying() {
     CompositeScene cs;
     LatexScene currying_title(latex_text("Currying"), 1, VIDEO_WIDTH * 0.5, VIDEO_HEIGHT * 0.25);
     cs.add_scene(&currying_title, "currying_title", 0.25, -0.25);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"currying_title.y", "0"},
     });
     LatexScene multi_argument("\\big(\\lambda x y .\\ 5 * y + x\\big)", 0.5, VIDEO_WIDTH, VIDEO_HEIGHT * 0.4);
@@ -1321,17 +1321,17 @@ void booleans() {
     cs.add_scene(&false_latex, "false_latex", 0.5, 1);
     cs.add_scene(&true_scene, "true_scene", 0.125, 1);
     cs.add_scene(&false_scene, "false_scene", 0.625, 1);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"true_scene.title_opacity", "1"},
         {"false_scene.title_opacity", "1"},
     });
-    true_scene.state_manager.set(unordered_map<string, string>{
+    true_scene.state.set(unordered_map<string, string>{
         {"title_opacity", "[true_scene.title_opacity]"},
     });
-    false_scene.state_manager.set(unordered_map<string, string>{
+    false_scene.state.set(unordered_map<string, string>{
         {"title_opacity", "[false_scene.title_opacity]"},
     });
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"true_latex.y", "0.5"},
         {"false_latex.y", "0.5"},
         {"true_scene.y", "0.2"},
@@ -1410,7 +1410,7 @@ void booleans() {
     cs.stage_macroblock_and_render(AudioSegment("If X is false, the output'll be f."));
 
     // Move conditional out and prepare for logic gates
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"true_scene.opacity", "0"},
         {"false_scene.opacity", "0"},
         {"true_latex.opacity", "0"},
@@ -1445,7 +1445,7 @@ void booleans() {
     cs.stage_macroblock_and_render(AudioSegment("Since NOT TRUE is FALSE, FALSE should be the thing in this blank."));
     not_gate.begin_latex_transition(latex_text("NOT = ") + "\\Big(\\lambda x. \\big(x\\ "+latex_text("FALSE")+"\\ "+latex_text("TRUE")+"\\big)\\Big)");
     cs.stage_macroblock_and_render(AudioSegment("If the input is FALSE, we want the selected value to be TRUE."));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"not_help.opacity", "0"},
     });
     cs.stage_macroblock_and_render(AudioSegment("So, this is NOT!"));
@@ -1475,10 +1475,10 @@ void booleans() {
     lambda_not->flush_uid_recursive();
     LambdaScene not_scene(lambda_not, VIDEO_WIDTH*.4, VIDEO_HEIGHT*.4);
     cs.add_scene(&not_scene, "not_scene", 0.3, 0.3);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"not_scene.opacity", "0"},
     });
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"not_gate.opacity", "0"},
         {"not_scene.opacity", "1"},
     });
@@ -1504,10 +1504,10 @@ void booleans() {
     cs.stage_macroblock_and_render(AudioSegment("It's FALSE, as desired!"));
     LatexScene and_gate(latex_text("AND = "), 0.6, VIDEO_WIDTH, VIDEO_HEIGHT / 4);
     cs.add_scene(&and_gate, "and_gate", 0, 0.375);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"and_gate.opacity", "0"},
     });
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"and_gate.opacity", "1"},
         {"not_scene.opacity", "0"},
     });
@@ -1530,7 +1530,7 @@ void booleans() {
     cs.stage_macroblock_and_render(AudioSegment("So, this is AND!"));
     cs.stage_macroblock_and_render(AudioSegment(.2));
     //TODO plug in and true false
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"and_gate.opacity", "0"},
     });
     cs.stage_macroblock_and_render(AudioSegment("I'll leave it as a challenge to you to find OR!"));
@@ -1660,11 +1660,11 @@ void numerals() {
     LambdaScene succ_5_scene(succ_5, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
 
     cs.add_scene(&succ_5_scene, "succ_5_scene", 0.25, 0.15);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"succ_5_scene.opacity", "0"},
     });
 
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"succ_5_scene.opacity", "1"},
         {"succ_gate.y", ".65"},
     });
@@ -1678,7 +1678,7 @@ void numerals() {
     succ_5_scene.reduce();
     cs.stage_macroblock_and_render(AudioSegment(1));
     cs.stage_macroblock_and_render(AudioSegment("Check it out- that's 6!"));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"succ_gate.opacity", "0"},
         {"succ_5_scene.opacity", "0"},
     });
@@ -1689,10 +1689,10 @@ void numerals() {
     // Create the ADD function
     LatexScene add_gate(latex_text("+"), 0.6, VIDEO_WIDTH, VIDEO_HEIGHT / 4);
     cs.add_scene(&add_gate, "add_gate", 0, 0.375);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"add_gate.opacity", "0"},
     });
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"add_gate.opacity", "1"},
     });
     cs.stage_macroblock_and_render(AudioSegment("How 'bout addition then?"));
@@ -1710,7 +1710,7 @@ void numerals() {
     cs.stage_macroblock_and_render(AudioSegment("which when applied to the successor function, will iterate that function m times!"));
     cs.stage_macroblock_and_render(AudioSegment("So, m SUCC n is the same as adding one to n, m times over."));
     add_gate.begin_latex_transition(latex_text("+ = ") + "\\big(\\lambda mn. (m\\ SUCC\\ n)\\big)");
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"addition_help.opacity", "0"},
     });
     cs.stage_macroblock_and_render(AudioSegment("Plugging this into our function body, we get this."));
@@ -1728,11 +1728,11 @@ void numerals() {
     LambdaScene add_5_3_scene(add_function, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
 
     cs.add_scene(&add_5_3_scene, "add_5_3_scene", 0.25, 0.2);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"add_5_3_scene.opacity", "0"},
     });
 
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"add_5_3_scene.opacity", "1"},
         {"add_gate.y", ".65"},
     });
@@ -1756,16 +1756,16 @@ void numerals() {
     add_fast->set_color_recursive(0xffff0000);
     LambdaScene add_fast_scene(add_fast, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
     cs.add_scene(&add_fast_scene, "add_fast_scene", 0.25, 0.35);
-    add_fast_scene.state_manager.set(unordered_map<string, string>{
+    add_fast_scene.state.set(unordered_map<string, string>{
         {"w", "[add_fast_scene.w]"},
         {"h", "[add_fast_scene.h]"},
     });
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"add_fast_scene.opacity", "0"},
         {"add_fast_scene.w", to_string(VIDEO_WIDTH*.5)},
         {"add_fast_scene.h", to_string(VIDEO_HEIGHT*.5)},
     });
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"add_5_3_scene.opacity", "0"},
         {"add_fast_scene.opacity", "1"},
         {"add_fast_scene.y", ".25"},
@@ -1774,7 +1774,7 @@ void numerals() {
     });
     cs.stage_macroblock_and_render(AudioSegment("I'll spoil a faster one here."));
     cs.remove_scene(&add_gate);
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"add_fast_scene.x", ".05"},
         {"add_fast_scene.y", ".05"},
         {"add_fast_scene.w", to_string(VIDEO_WIDTH*.3)},
@@ -1786,21 +1786,21 @@ void numerals() {
     mult_function->set_color_recursive(0xff00ff00);
     LambdaScene mult_scene(mult_function, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
     cs.add_scene(&mult_scene, "mult_scene", 0.25, 0.35);
-    mult_scene.state_manager.set(unordered_map<string, string>{
+    mult_scene.state.set(unordered_map<string, string>{
         {"w", "[mult_scene.w]"},
         {"h", "[mult_scene.h]"},
     });
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"mult_scene.opacity", "0"},
         {"mult_scene.w", to_string(VIDEO_WIDTH*.5)},
         {"mult_scene.h", to_string(VIDEO_HEIGHT*.5)},
     });
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"mult_scene.opacity", "1"},
         {"mult_scene.y", ".25"},
     });
     cs.stage_macroblock_and_render(AudioSegment("but there's also a quicker way."));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"mult_scene.x", ".35"},
         {"mult_scene.y", ".05"},
         {"mult_scene.w", to_string(VIDEO_WIDTH*.3)},
@@ -1811,21 +1811,21 @@ void numerals() {
     exp_function->set_color_recursive(0xff0000ff);
     LambdaScene exp_scene(exp_function, VIDEO_WIDTH/2, VIDEO_HEIGHT/2);
     cs.add_scene(&exp_scene, "exp_scene", 0.25, 0.35);
-    exp_scene.state_manager.set(unordered_map<string, string>{
+    exp_scene.state.set(unordered_map<string, string>{
         {"w", "[exp_scene.w]"},
         {"h", "[exp_scene.h]"},
     });
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"exp_scene.opacity", "0"},
         {"exp_scene.w", to_string(VIDEO_WIDTH*.5)},
         {"exp_scene.h", to_string(VIDEO_HEIGHT*.5)},
     });
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"exp_scene.opacity", "1"},
         {"exp_scene.y", ".25"},
     });
     cs.stage_macroblock_and_render(AudioSegment("Here's exponentiation too."));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"exp_scene.x", ".65"},
         {"exp_scene.y", ".05"},
         {"exp_scene.w", to_string(VIDEO_WIDTH*.3)},
@@ -1834,16 +1834,16 @@ void numerals() {
     cs.stage_macroblock_and_render(AudioSegment(1));
     LatexScene ptp("+ \\times +", 0.8, VIDEO_WIDTH, VIDEO_HEIGHT/4);
     cs.add_scene(&ptp, "ptp", 0, 0.375);
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"add_fast_scene.opacity", "0.2"},
         {"mult_scene.opacity", "0.2"},
         {"exp_scene.opacity", "0.2"},
     });
     cs.stage_macroblock(AudioSegment("Now I promised you in the thumbnail that we'd find the answer to 'plus times plus',"), 2);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"ptp.opacity", "0"},
     });
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"ptp.opacity", "1"},
     });
     cs.render_microblock();
@@ -1898,7 +1898,7 @@ void numerals() {
     cs.render_microblock();
     cs.stage_macroblock_and_render(AudioSegment("Obviously this is completely ridiculous."));
     cs.stage_macroblock_and_render(AudioSegment("But it serves to prove a point..."));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"add_fast_scene.x", "0.133"},
         {"add_fast_scene.y", "0.133"},
         {"add_fast_scene.opacity", "0.15"},
@@ -1914,7 +1914,7 @@ void numerals() {
     cs.stage_macroblock_and_render(AudioSegment("you can do things that normal math just doesn't permit,"));
     ptp.begin_latex_transition(latex_color(0xffff0000, "+\\times+") + latex_color(0xff0088ff, "(a,b,c,d) = (d^{(c^b)})^{a+c}"));
     cs.stage_macroblock_and_render(AudioSegment("and strange emergent behavior is the norm."));
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"ptp.opacity", "0"},
         {"add_fast_scene.opacity", "0"},
         {"mult_scene.opacity", "0"},
@@ -1928,7 +1928,7 @@ shared_ptr<LambdaExpression> factorial(){
     /*
     LatexScene title(latex_text("Recursion"), 1, VIDEO_WIDTH*0.5, VIDEO_HEIGHT*0.25);
     cs.add_scene(&title, "title", 0.25, -.25);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"title.y", "0"},
     });
     */
@@ -1940,7 +1940,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.stage_macroblock_and_render(AudioSegment("The core idea is to return n times the factorial of the previous number."));
     py_fac.begin_transition(png_to_pix_bounding_box("factorial", VIDEO_WIDTH*.6, VIDEO_HEIGHT*.6));
     cs.stage_macroblock_and_render(AudioSegment("However, we don't wanna go into the negatives, so we add a base case."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"py_fac.y", "0"},
     });
     LatexScene fac(latex_text("fac = "), 0.6, VIDEO_WIDTH, VIDEO_HEIGHT/6);
@@ -2044,7 +2044,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.stage_macroblock_and_render(AudioSegment("If we apply it to itself, we get this term,"));
     ls2.begin_latex_transition("\\Theta = (UU)");
     cs.stage_macroblock_and_render(AudioSegment("called the Turing Fixed Point Combinator!"));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"ls.x", "-.1"},
         {"ls2.x", "0.55"},
         {"ls.y",  "0.02"},
@@ -2084,7 +2084,7 @@ shared_ptr<LambdaExpression> factorial(){
     rfs.begin_transition(0, "? 6 * sin ? 1.1 * cos ? 2.5 sin * 1.6 ? cos * + + + ? 4 * sin *");
     cs.stage_macroblock_and_render(AudioSegment("There's always a fixed point out there, but it's not among the real numbers."));
     cs.add_scene_fade_in(&ls3, "ls3", 0, 0.375, true);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"rfs.opacity", ".2"},
     });
     cs.stage_macroblock_and_render(AudioSegment("In our case, Theta F isn't necessarily a real number."));
@@ -2146,7 +2146,7 @@ shared_ptr<LambdaExpression> factorial(){
     cs.add_scene_fade_in(&oldfac, "oldfac", 0.023, 0.55, true);
     cs.stage_macroblock_and_render(AudioSegment("we _derived_ the recursive equivalence relation that we wanted to begin with!"));
     cs.stage_macroblock_and_render(AudioSegment("This term, Theta F, satisfies the recursive equivalence characteristic of the factorial function."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"fac.y", "-.5"},
         {"fac_solution.y", "0.0"},
         {"oldfac.y", "0.1"},
@@ -2258,12 +2258,12 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
         {"lines_opacity", "[lines_opacity]"},
         {"points_opacity", "[points_opacity]"},
     };
-    lgs.state_manager.superscene_transition(use_parent);
+    lgs.state.superscene_transition(use_parent);
     cs.add_scene_fade_in(&lgs, "lgs", .25, 0, true);
-    cs.state_manager.set(closequat);
+    cs.state.set(closequat);
     cs.stage_macroblock_and_render(AudioSegment("Now, I knowingly hid some complexity about beta reduction from you, but now I think you're ready."));
     cs.stage_macroblock_and_render(AudioSegment("Consider this term for 'one plus one'."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"d", "9"},
         {"y", "8"},
     });
@@ -2323,7 +2323,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.add_scene_fade_in(&bnf, "bnf", 0, 0.69, true);
     cs.render_microblock();
     cs.render_microblock();
-    cs.state_manager.subscene_transition(unordered_map<string, string>{
+    cs.state.subscene_transition(unordered_map<string, string>{
         {"bnf.opacity", "0"},
     });
     cs.render_microblock();
@@ -2354,7 +2354,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     g.iterate_physics(100);
     cs.render_microblock();
 
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lgs.x", "0"},
     });
     shared_ptr<LambdaExpression> lam_iter2 = parse_lambda_from_string(iter2);
@@ -2389,7 +2389,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     lam.set_expression(lam_iter2);
     cs.stage_macroblock_and_render(AudioSegment("And here it is actually taking place."));
 
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lgs.x", ".25"},
         {"lam.opacity", "0"},
     });
@@ -2432,15 +2432,15 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     LambdaGraphScene lg2(&h, onetimesone, VIDEO_WIDTH, VIDEO_HEIGHT);
     cs.add_scene_fade_in(&lg2, "lg2", 0, 0, true);
     h.dimensions = 3;
-    lg2.state_manager.superscene_transition(use_parent);
-    cs.state_manager.set(unordered_map<string, string>{
+    lg2.state.superscene_transition(use_parent);
+    cs.state.set(unordered_map<string, string>{
         {"d", "7"},
         {"y", "3"},
         {"qj", "{t} 6 / sin"},
         {"q1", "{t} 6 / cos"},
     });
     cs.stage_macroblock_and_render(AudioSegment("The answer to the problem shouldn't depend on the order that you do the steps. Right?"));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"d", "20"},
         {"y", "9"},
     });
@@ -2472,7 +2472,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.remove_all_scenes();
     g.clear();
     cs.add_scene(&lgs, "lgs", 0, 0);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"y", "14"},
     });
     string o3_str = "((\\x. ((x x) x)) (\\x. ((x x) x)))";
@@ -2528,9 +2528,9 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     g.clear();
     g.dimensions = 3;
     LambdaGraphScene lg3(&g, TF3->get_string(), VIDEO_WIDTH, VIDEO_HEIGHT);
-    lg3.state_manager.set(use_parent);
+    lg3.state.set(use_parent);
     cs.add_scene_fade_in(&lg3, "lg3", 0, 0, true);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"d", "80"},
         {"y", "16"},
         {"points_opacity", "1"},
@@ -2542,7 +2542,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
 
     auto TF3_infinite_depth = TF3->clone();
     int num_bfs = 1000;
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"d", "200"},
         {"y", "36"},
     });
@@ -2553,7 +2553,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     }
 
     cs.stage_macroblock_and_render(AudioSegment("That's the first thousand nodes."));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"d", "1200"},
         {"y", "160"},
     });
@@ -2574,7 +2574,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
         }
         cs.render_microblock();
     }
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"d", "1800"},
         {"y", "200"},
     });
@@ -2600,7 +2600,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.stage_macroblock_and_render(AudioSegment("In fact, this alternate reduction path goes on indefinitely, sort of like Omega."));
     LatexScene unroll("(\\lambda n. (("+latex_text("IS\\_0")+"\\ n)\\ 1\\ (\\times\\ n\\ ((\\Theta F)(-\\ n\\ 1)))))", 0.5, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
     cs.add_scene_fade_in(&unroll, "unroll", 0, .375, true);
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"lg3.opacity", "0.3"},
     });
     cs.stage_macroblock_and_render(AudioSegment("Up to the order that you perform your reductions, you may or may not ever reach the answer."));
@@ -2609,7 +2609,7 @@ void reduction_graph(shared_ptr<LambdaExpression> TF3){
     cs.stage_macroblock_and_render(AudioSegment("It turns out, in this path, it's 'unrolling' the recursive definition of factorial, so-to-speak,"));
     cs.stage_macroblock_and_render(AudioSegment("before the base case is ever taken advantage of."));
     cs.stage_macroblock_and_render(AudioSegment(0.5));
-    cs.state_manager.superscene_transition(unordered_map<string, string>{
+    cs.state.superscene_transition(unordered_map<string, string>{
         {"unroll.opacity", "0"},
     });
     LatexScene church_rosser(latex_text("Church-Rosser Theorem"), 1, VIDEO_WIDTH, VIDEO_HEIGHT*.25);
@@ -2779,7 +2779,7 @@ void chapter_number(int number, string subtitle){
     tds2.add_surface(Surface(glm::dvec3(0, .1,0),glm::dvec3(1,0,0),glm::dvec3(0, 500/1800., 0),make_shared<LatexScene>(ls)));
     tds2.add_surface(Surface(glm::dvec3(0,-.25,0),glm::dvec3(1,0,0),glm::dvec3(0, 500/1800., 0),make_shared<LatexScene>(ls2)));
 
-    tds1.state_manager.set(std::unordered_map<std::string, std::string>{
+    tds1.state.set(std::unordered_map<std::string, std::string>{
         {"surfaces_opacity", "1 <subscene_transition_fraction> 4 ^ -"},
         {"lines_opacity", "1"},
         {"points_opacity", "0"},
@@ -2793,7 +2793,7 @@ void chapter_number(int number, string subtitle){
         {"qj", "0"},
         {"qk", "1 sin 9 / .0 +"},
     });
-    tds2.state_manager.set(std::unordered_map<std::string, std::string>{
+    tds2.state.set(std::unordered_map<std::string, std::string>{
         {"ntf", "<subscene_transition_fraction> .5 -"},
         {"surfaces_opacity", "1 <ntf> 2 * 4 ^ -"},
         {"lines_opacity", "1"},

@@ -80,7 +80,7 @@ public:
     bool use_state_for_center;
     ThreeDimensionScene(const double width = 1, const double height = 1)
         : SuperScene(width, height), use_state_for_center(false), sketchpad(width, height) {
-        state_manager.set(unordered_map<string, string>{
+        state.set(unordered_map<string, string>{
             {"fov", "1"},
             {"x", "0"},
             {"y", "0"},
@@ -330,12 +330,12 @@ public:
     void add_surface(const Surface& s, shared_ptr<Scene> sc) {
         surfaces.push_back(s);
         add_subscene_check_dupe(s.name, sc);
-        state_manager.set(s.name + ".opacity", "1");
+        state.set(s.name + ".opacity", "1");
     }
 
     void add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa=1){
         add_surface(s, sc);
-        state_manager.set(s.name + ".opacity", "0");
+        state.set(s.name + ".opacity", "0");
         fade_subscene(tt, s.name, opa);
     }
 
@@ -347,7 +347,7 @@ public:
             }
             else ++it;
         }
-        state_manager.remove(name + ".opacity");
+        state.remove(name + ".opacity");
     }
 
     void clear_lines(){ lines.clear(); }

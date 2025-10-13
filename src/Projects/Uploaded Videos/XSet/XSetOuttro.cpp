@@ -23,7 +23,7 @@ void intro() {
     CompositeScene cs;
     MandelbrotScene ms;
     cs.add_scene(&ms, "ms");
-    ms.state_manager.set(unordered_map<string,string>{
+    ms.state.set(unordered_map<string,string>{
         {"max_iterations", "150 2 <zoom_exp> -3 / ^ *"},
         {"gradation", "1"},
         {"side_panel", "0"},
@@ -46,24 +46,24 @@ void intro() {
         {"breath", "{t} .73 + 3 / sin 2 / "},
     });
     TwoswapScene tss;
-    tss.state_manager.set(unordered_map<string,string>{
+    tss.state.set(unordered_map<string,string>{
         {"circle_opacity", "0"},
     });
     cs.add_scene(&tss, "tss");
-    cs.state_manager.set(unordered_map<string,string>{
+    cs.state.set(unordered_map<string,string>{
         {"tss.opacity", "0"},
     });
-    ms.state_manager.microblock_transition(unordered_map<string,string>{
+    ms.state.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "{t} sin .75 *"},
         {"seed_c_i", "{t} cos .75 *"},
     });
-    cs.state_manager.microblock_transition(unordered_map<string,string>{
+    cs.state.microblock_transition(unordered_map<string,string>{
         {"tss.opacity", "1"},
     });
     cs.stage_macroblock(AudioSegment("This has been 2swap."), 3);
     cs.render_microblock();
     cs.render_microblock();
-    ms.state_manager.microblock_transition(unordered_map<string,string>{
+    ms.state.microblock_transition(unordered_map<string,string>{
         {"seed_c_r", "0"},
         {"seed_c_i", "0"},
     });

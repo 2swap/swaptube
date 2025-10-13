@@ -37,10 +37,10 @@ void render_video(){
     vid.override_transition_end = true;
     cs.add_scene_fade_in(&vid, "vid", 0.75, 0.55);
     cs.stage_macroblock_and_render(SilenceSegment(1));
-    vid.state_manager.set({
+    vid.state.set({
         {"transparency_profile", "[interp]"},
     });
-    cs.state_manager.set({
+    cs.state.set({
         {"interp", "{t} sin 1 + 2 /"},
     });
     vid.begin_latex_transition(end_latex);
@@ -51,17 +51,17 @@ void render_video(){
     LatexScene label3(latex_text("Visual Interpolation"), 1, 0.4, 0.1);
     cs.add_scene_fade_in(&label3, "label3", 0.75, 0.8);
     cs.stage_macroblock_and_render(SilenceSegment(2));
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"interp", "1"},
     });
     cs.stage_macroblock_and_render(SilenceSegment(1));
 
 
-    cs.state_manager.set({
+    cs.state.set({
         {"img1.opacity", "1"},
         {"img2.opacity", "1"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"vid.opacity", "0"},
         {"what_want.opacity", "0"},
         {"label1.opacity", "0"},
@@ -88,11 +88,11 @@ void render_video(){
     FOR_REAL = true;
     Pixels p1 = img1.get_copy_p1();
     Pixels p2 = img2.get_copy_p1();
-    cs.state_manager.set({
+    cs.state.set({
         {"x_frac", ".5"},
         {"y_frac", ".5"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"img1.x", ".5 .5 <x_frac> - " + to_string(iw) + " * .5 * +"},
         {"img1.y", ".5 .5 <y_frac> - " + to_string(ih) + " * .5 * +"},
         {"img2.x", ".5"},
@@ -104,7 +104,7 @@ void render_video(){
     eps.exposed_pixels = cmap;
     cs.add_scene_fade_in(&eps, "eps", 0.5, 0.9);
     cs.stage_macroblock_and_render(SilenceSegment(2));
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"x_frac", to_string((static_cast<double>(xmax) + p2.w - 1)/cmap.w)},
         {"y_frac", to_string((static_cast<double>(ymax) + p2.h - 1)/cmap.h)},
     });

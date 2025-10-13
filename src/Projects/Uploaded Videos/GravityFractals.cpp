@@ -34,7 +34,7 @@ void render_2d() {
     unsigned int planet3_color = cs.get_color();
     unsigned int planet4_color = cs.get_color();
     unsigned int planet5_color = cs.get_color();
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"planet1.opacity", "1"},
         {"planet2.opacity", "1"},
         {"planet3.opacity", "1"},
@@ -42,25 +42,25 @@ void render_2d() {
         {"planet5.opacity", "1"},
     });
     sim.add_fixed_object(planet1_color, "planet1");
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"planet1.x", "-.3"},
         {"planet1.y", "-.3"},
         {"planet1.z", "0"},
     });
     sim.add_fixed_object(planet2_color, "planet2");
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"planet2.x", "0.3171"},
         {"planet2.y", "0.35"},
         {"planet2.z", "0"},
     });
     sim.add_fixed_object(planet3_color, "planet3");
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"planet3.x", "-.4"},
         {"planet3.y", "0.3"},
         {"planet3.z", "0"},
     });
 
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"tick_duration", ".05"},
         {"collision_threshold", "0.005"},
         {"drag", "0.98"},
@@ -81,7 +81,7 @@ void render_2d() {
     // Drop an object
     if(FOR_REAL) sim.add_mobile_object(glm::dvec3(.6, -.4, 0), OPAQUE_WHITE);
     comp.stage_macroblock_and_render(AudioSegment("Which planet is this falling particle going to crash into?"));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"physics_multiplier", "6"},
         {"screen_center_x", "0"},
         {"screen_center_y", "0"},
@@ -92,31 +92,31 @@ void render_2d() {
 
     // Do nothing, let the object keep falling
     comp.stage_macroblock_and_render(AudioSegment("It's not an easy question."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
     comp.stage_macroblock_and_render(AudioSegment("If you said the green one, you're right!"));
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"point_path.x", ".6"},
         {"point_path.y", "-.4"},
     });
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"point_path.opacity", "1"},
     });
     comp.stage_macroblock_and_render(AudioSegment("But, it's hard to foresee this trajectory."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"point_path.x", "0.6 {t} 2 / sin 10 / +"},
         {"point_path.y", "-.4 {t} 2 / cos 10 / +"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Moving the starting point only a little bit causes a huge change in behavior."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"point_path.opacity", "0"},
     });
     comp.stage_macroblock_and_render(AudioSegment(3));
 
 
 
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "0"},
         {"physics_multiplier", "1"},
     });
@@ -126,19 +126,19 @@ void render_2d() {
         float radius = (rand() / double(RAND_MAX)) * 0.12;
         float dx = radius * cos(theta);
         float dy = radius * sin(theta);
-        sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet1.x"] + dx, (*scene.state_manager["planet1.y"] + dy, 0), planet1_color);
-        sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet2.x"] + dx, (*scene.state_manager["planet2.y"] + dy, 0), planet2_color);
-        sim.add_mobile_object(glm::dvec3((*scene.state_manager["planet3.x"] + dx, (*scene.state_manager["planet3.y"] + dy, 0), planet3_color);
+        sim.add_mobile_object(glm::dvec3((*scene.state["planet1.x"] + dx, (*scene.state["planet1.y"] + dy, 0), planet1_color);
+        sim.add_mobile_object(glm::dvec3((*scene.state["planet2.x"] + dx, (*scene.state["planet2.y"] + dy, 0), planet2_color);
+        sim.add_mobile_object(glm::dvec3((*scene.state["planet3.x"] + dx, (*scene.state["planet3.y"] + dy, 0), planet3_color);
     }
     comp.stage_macroblock_and_render(AudioSegment("We know for sure that the ones which start sufficiently close to each planet will indeed crash into it,"));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
     comp.stage_macroblock_and_render(AudioSegment("due to a lack of energy to escape that planet's gravity well."));
 
 
 
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "20"},
     });
     comp.stage_macroblock_and_render(AudioSegment("But that reasoning only goes so far."));
@@ -148,13 +148,13 @@ void render_2d() {
         float dx = 0.6 + radius * cos(theta);
         float dy = -.4 + radius * sin(theta);
         glm::dvec3 pos(dx, dy, 0);
-        int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
+        int color = sim.predict_fate_of_object(pos, *(scene.state);
         sim.add_mobile_object(pos, color);
     }
     comp.stage_macroblock_and_render(AudioSegment("It's a mess when we look at points far away from the planets."));
     comp.stage_macroblock_and_render(AudioSegment(3));
     comp.stage_macroblock_and_render(AudioSegment("Now, I won't lead you on- this is not a problem with a clean solution. There's no simple equation here to tell you."));
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
 
@@ -164,7 +164,7 @@ void render_2d() {
 
 
     // Turn on the predictions
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"predictions_opacity", "1"},
     });
     comp.stage_macroblock_and_render(AudioSegment("I'll just go ahead and spoil the pattern."));
@@ -173,13 +173,13 @@ void render_2d() {
 
 
     // Pan around by setting screen_center_x/y to some moving formula, and slightly increase zoom.
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"screen_center_x", "{t} 5 / cos"},
         {"screen_center_y", "{t} 5 / sin"},
         {"zoom", "1.5"}
     });
     comp.stage_macroblock_and_render(AudioSegment("There's a lot of emergent complexity going on here."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"zoom", "2"}
     });
     comp.stage_macroblock_and_render(AudioSegment(6));
@@ -191,22 +191,22 @@ void render_2d() {
     // Drop a field of points
     float delta = 0.03;
     int bounds = 1;
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "0"},
     });
     if(FOR_REAL) for(float x = -bounds; x < bounds; x+=delta) for(float y = -bounds; y < bounds; y+=delta){
         glm::dvec3 pos(x,y,0);
-        int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
+        int color = sim.predict_fate_of_object(pos, *(scene.state);
         sim.add_mobile_object(pos, color);
     }
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"screen_center_x", "0"},
         {"screen_center_y", "0"},
         {"predictions_opacity", "0"},
         {"zoom", "0.5"}
     });
     comp.stage_macroblock_and_render(AudioSegment("Let's watch an object at every point fall."));
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
 
@@ -214,18 +214,18 @@ void render_2d() {
 
     comp.stage_macroblock_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
     comp.stage_macroblock_and_render(AudioSegment("Wow."));
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "20"},
     });
     comp.stage_macroblock_and_render(AudioSegment(3)); // Leave some time (3s) to appreciate the simulation
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
 
 
 
     // Move one of the planets
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"predictions_opacity", "1"},
         {"planet2.x", "0.3"},
         {"planet2.y", "-.3"},
@@ -236,7 +236,7 @@ void render_2d() {
 
 
     // Transition the planets to an equilateral triangle
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "0"},
         {"planet1.y", "-0.57735 .75 *"},
         {"planet2.x", "0.5 .75 *"},
@@ -249,7 +249,7 @@ void render_2d() {
 
 
     // Transition the planets to an isosceles triangle, with a vertical axis of symmetry.
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "0"},
         {"planet1.y", "-0.3"},
         {"planet2.x", "0.3"},
@@ -262,7 +262,7 @@ void render_2d() {
 
 
     // Transition the planets to a collinear configuration, with one planet at (0,0)
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "-0.5"},
         {"planet1.y", "0"},
         {"planet2.x", "0.5"},
@@ -275,7 +275,7 @@ void render_2d() {
 
 
     // Move one planet far away from the other two (to about (0.8, 0))
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "-0.6"},
         {"planet1.y", "0.5"},
         {"planet2.x", "0.3"},
@@ -288,7 +288,7 @@ void render_2d() {
 
 
     // Move the planets back to where they were
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "-.43"},
         {"planet1.y", "-.4"},
         {"planet2.x", "0.4171"},
@@ -302,12 +302,12 @@ void render_2d() {
     comp.stage_macroblock_and_render(AudioSegment("Let's drop a fourth one in there too and see what happens."));
     // Add fourth planet far in the distance, and using the transition mechanics, slide it in from far away.
     sim.add_fixed_object(planet4_color, "planet4");
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"planet4.x", "9.0"},
         {"planet4.y", "5.0"},
         {"planet4.z", "0"},
     });
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet4.x", "0.5"},
         {"planet4.y", "-.5"}
     });
@@ -318,12 +318,12 @@ void render_2d() {
     comp.stage_macroblock_and_render(AudioSegment("And here's a fifth."));
     // Add fifth planet far in the distance, but using the transition mechanics, slide it in from far away.
     sim.add_fixed_object(planet5_color, "planet5");
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"planet5.x", "-5.0"},
         {"planet5.y", "-8.0"},
         {"planet5.z", "0"},
     });
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet5.x", "0"},
         {"planet5.y", "0"}
     });
@@ -332,7 +332,7 @@ void render_2d() {
 
 
     // Move the planets around a little bit
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "-.5"},
         {"planet1.y", "-.5"},
         {"planet2.x", "0.5"},
@@ -344,7 +344,7 @@ void render_2d() {
     });
     comp.stage_macroblock_and_render(AudioSegment(5)); // Leave some time (3s) to appreciate the simulation
     comp.stage_macroblock_and_render(AudioSegment(1)); // Leave some time (3s) to appreciate the simulation
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "-.3"},
         {"planet1.y", "-.5"},
         {"planet2.x", "0.8"},
@@ -374,7 +374,7 @@ void render_2d() {
             pentagon_transitions["planet" + to_string(i + 1) + ".x"] = to_string(x);
             pentagon_transitions["planet" + to_string(i + 1) + ".y"] = to_string(y);
         }
-        scene.state_manager.transition(pentagon_transitions);
+        scene.state.transition(pentagon_transitions);
     }
     comp.stage_macroblock_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
     comp.stage_macroblock_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
@@ -386,7 +386,7 @@ void render_2d() {
 
 
     // Get planets 3 4 5 far away before deleting
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet3.x", "9"},
         {"planet3.y", "9"},
         {"planet4.x", "-9"},
@@ -402,7 +402,7 @@ void render_2d() {
     sim.remove_fixed_object("planet3");
     sim.remove_fixed_object("planet4");
     sim.remove_fixed_object("planet5");
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "0.1"},
         {"planet1.y", "0.1"},
         {"planet2.x", "-.1"},
@@ -410,7 +410,7 @@ void render_2d() {
     });
     comp.stage_macroblock_and_render(AudioSegment(4)); // Leave some time (3s) to appreciate the simulation
     comp.stage_macroblock_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "0.3"},
         {"planet1.y", "0.3"},
         {"planet2.x", "-.3"},
@@ -422,19 +422,19 @@ void render_2d() {
 
 
     // Let's drop a field of points again just for fun.
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "0"},
     });
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"predictions_opacity", "0"},
     });
     if(FOR_REAL) for(float x = -bounds; x < bounds; x+=delta) for(float y = -bounds; y < bounds; y+=delta){
         glm::dvec3 pos(x,y,0);
-        int color = sim.predict_fate_of_object(pos, *(scene.state_manager);
+        int color = sim.predict_fate_of_object(pos, *(scene.state);
         sim.add_mobile_object(pos, color);
     }
     comp.stage_macroblock_and_render(AudioSegment(2)); // Leave some time (3s) to appreciate the simulation
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"physics_multiplier", "10"},
     });
     comp.stage_macroblock_and_render(AudioSegment(6)); // Leave some time (3s) to appreciate the simulation
@@ -443,12 +443,12 @@ void render_2d() {
 
     // Add a third planet back
     sim.add_fixed_object(planet3_color, "planet3");
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"planet3.x", "-9.0"},
         {"planet3.y", "6.0"},
         {"planet3.z", "0"}
     });
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet3.x", "-0.4"},
         {"planet3.y", "0.3"},
         {"predictions_opacity", "1"},
@@ -460,29 +460,29 @@ void render_2d() {
 
 
 
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"point_path.x", "-.27 {t} cos 4 / +"},
         {"point_path.y", "-.24 {t} sin 5 / +"},
     });
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"point_path.opacity", "1"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Well, let's look around and see!"));
     comp.stage_macroblock_and_render(AudioSegment(3));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"point_path.x", "-.285 {t} cos 40 / +"},
         {"point_path.y", "-.8 {t} sin 10 / +"},
     });
     comp.stage_macroblock_and_render(AudioSegment("The answer seems to be that a different region is associated with a different path of winding around the planets to get to the same spot."));
     comp.stage_macroblock_and_render(AudioSegment(3));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"point_path.x", "-.49 {t} cos 40 / +"},
         {"point_path.y", "-.88 {t} cos 10 / +"},
     });
     comp.stage_macroblock_and_render(AudioSegment("But I wasn't really able to formalize that idea- leave a comment if you know of a way."));
     comp.stage_macroblock_and_render(AudioSegment(3));
     //Disable predictions cause we are about to set drag to 0, so there is no convergence
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"predictions_opacity", "0"},
         {"point_path.opacity", "0"},
     });
@@ -491,7 +491,7 @@ void render_2d() {
 
 
     // Set drag to zero
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"drag", "1"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Now, those who know a thing or two about physics could probably tell you that, if these gravitational attractors are actually points, then in reality, you shouldn't ever actually crash."));
@@ -511,11 +511,11 @@ void render_2d() {
 
 
 
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"drag", "0.94"},
     });
     comp.stage_macroblock_and_render(AudioSegment(3));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"drag", "0.98"},
     });
     comp.stage_macroblock_and_render(AudioSegment(1));
@@ -523,7 +523,7 @@ void render_2d() {
 
 
     // Display the parameters at play
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"predictions_opacity", "1"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Let's mess around with this parameter and see what happens...!"));
@@ -531,7 +531,7 @@ void render_2d() {
 
 
     // Increase drag
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"drag", "0.94"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Check that out. Perhaps unsurprisingly, the greater the drag, the less complicated the orbital patterns are, because each particle will just slowly march to the nearest attractor."));
@@ -539,7 +539,7 @@ void render_2d() {
 
 
     // Increase drag
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"drag", "0.91"},
     });
     comp.stage_macroblock_and_render(AudioSegment(3));
@@ -547,7 +547,7 @@ void render_2d() {
 
 
     // Decrease drag
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"drag", "0.9925"},
     });
     comp.stage_macroblock_and_render(AudioSegment("As drag decreases, the more time the object spends winding in complicated orbits before its fate is decided, and thus, the more scrambled the colors get."));
@@ -555,7 +555,7 @@ void render_2d() {
 
 
     // Restore drag
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"drag", "0.98"},
     });
     comp.stage_macroblock_and_render(AudioSegment(3));
@@ -565,7 +565,7 @@ void render_2d() {
     // Display the parameters at play
     StateSliderScene tick_duration_scene("tick_duration", "\\Delta_t", OPAQUE_WHITE, 0, 1.5, VIDEO_WIDTH*.4, VIDEO_HEIGHT*.1);
     comp.add_scene(&tick_duration_scene, "tick_s", .55, .85, .4, .1, true); 
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"planet1.x", "{t} 20 / sin .6 *"},
         {"planet1.y", "{t} 20 / cos .6 *"},
         {"planet2.x", "{t} 16 / sin .4 *"},
@@ -574,27 +574,27 @@ void render_2d() {
         {"planet3.y", "{t} 24 / cos .5 *"},
     });
     comp.stage_macroblock_and_render(AudioSegment("Let me show you one other parameter which affects the output of the plot."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"tick_duration", "1.3"},
     });
     comp.stage_macroblock_and_render(AudioSegment("This represents the resolution of time between which we recompute the forces and velocities on the falling objects."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"tick_duration", ".1"},
     });
     comp.stage_macroblock_and_render(AudioSegment("As it decreases, the lines between areas become perfectly flat."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"tick_duration", ".6"},
     });
     comp.stage_macroblock_and_render(AudioSegment("As it increases- that is, as our simulation loses precision, these ripple-like artifacts are produced."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"tick_duration", "1.5"},
     });
     comp.stage_macroblock_and_render(AudioSegment("This isn't representative of any physical property, but it was a hurdle for me to overcome while rendering these animations."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"tick_duration", ".05"},
     });
     comp.stage_macroblock_and_render(AudioSegment("At first I wasn't certain whether they were an artifact of imprecise computations, or actually part of the diagram."));
-    scene.state_manager.transition(unordered_map<string, string>{
+    scene.state.transition(unordered_map<string, string>{
         {"predictions_opacity", "0"},
     });
     comp.stage_macroblock_and_render(AudioSegment("But it seems like they're indeed a mirage!"));
@@ -604,7 +604,7 @@ void render_2d() {
     // Remove all of the fixed objects, add 3 mobile objects, and turn the mobile object interactions on for the simulator
     comp.remove_scene(&tick_duration_scene); 
     comp.remove_scene(&drag); 
-    scene.state_manager.set(unordered_map<string, string>{
+    scene.state.set(unordered_map<string, string>{
         {"drag", "1"},
         {"physics_multiplier", "6"},
     });
@@ -636,7 +636,7 @@ void render_3d() {
     unsigned int planet8_color = cs.get_color();
     unsigned int planet9_color = cs.get_color();
 
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"planet1.opacity", "0"},
         {"planet2.opacity", "0"},
         {"planet3.opacity", "0"},
@@ -655,14 +655,14 @@ void render_3d() {
     sim.add_fixed_object(planet3_color, "planet3");
     sim.add_fixed_object(planet4_color, "planet4");
 
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"planet1.x", "-.3"}, {"planet1.y", "-.3"}, {"planet1.z", "-.3"},
         {"planet2.x", "0.3"}, {"planet2.y", "0.3"}, {"planet2.z", "-.3"},
         {"planet3.x", "-.3"}, {"planet3.y", "0.3"}, {"planet3.z", "0.3"},
         {"planet4.x", "0.3"}, {"planet4.y", "-.3"}, {"planet4.z", "0.3"}
     });
 
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"fov", ".5"},
         {"x", "0"},
         {"y", "0"},
@@ -672,7 +672,7 @@ void render_3d() {
         {"points_opacity", "1"}
     });
 
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"tick_duration", ".1"},
         {"collision_threshold", "0.005"},
         {"drag", "0.95"},
@@ -684,7 +684,7 @@ void render_3d() {
         {"zoom", "0.2 <wireframe_width> *"},
     });
 
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"q1", "{t} 20 / cos"},
         {"qi", ".5"},
         {"qj", "{t} 20 / sin"},
@@ -693,13 +693,13 @@ void render_3d() {
     });
 
     comp.stage_macroblock_and_render(AudioSegment("We can try the same thing in 3D too! I've picked 4 tetrahedrally arranged points."));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet1.opacity", "0.5"},
         {"boundingbox.opacity", "1"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment("This shape in blue is the boundary of the area which converges towards the blue planet."));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet1.opacity", "0.5"},
         {"planet2.opacity", ".03"},
         {"planet3.opacity", ".03"},
@@ -712,7 +712,7 @@ void render_3d() {
     });
 
     comp.stage_macroblock_and_render(AudioSegment("Let's move the planets around a little and see what happens."));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet1.x", "-.6"},
         {"planet1.y", "-.3"},
         {"planet1.z", "-.4"},
@@ -732,22 +732,22 @@ void render_3d() {
     comp.add_scene(&drag, "drag_s", .05, .85, .4, .1, true);
 
     comp.stage_macroblock_and_render(AudioSegment("Let's try playing with drag too!"));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"drag", "0.99"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment(3));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"drag", "0.93"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment(3));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"drag", "0.97"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment(3));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet3.x", "11"},
         {"planet4.x", "-11"},
     });
@@ -757,19 +757,19 @@ void render_3d() {
     sim.remove_fixed_object("planet3");
     sim.remove_fixed_object("planet4");
     comp.stage_macroblock_and_render(AudioSegment(3));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet1.x", "0"}, {"planet1.y", "0"}, {"planet1.z", "0.45"},
         {"planet2.x", "0"}, {"planet2.y", "0"}, {"planet2.z", "-.45"},
     });
 
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet2.opacity", "0.5"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment("Check out the radial symmetry!"));
 
     // Subscene 3: Increase drag
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"drag", "0.96"},
     });
 
@@ -777,21 +777,21 @@ void render_3d() {
 
     // Demonstrate a 3-planet configuration, and comment on its mirror-plane symmetry
     sim.add_fixed_object(planet3_color, "planet3");
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"planet3.x", "9"},
         {"planet3.y", "0"},
         {"planet3.z", "0"}
     });
     comp.stage_macroblock_and_render(AudioSegment("With 3 planets you get this nice mirror-plane symmetry about the plane all 3 points lie on."));
 
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet3.opacity", "0.5"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 1: Initial positions
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet3.x", "0.3"},
         {"planet3.y", "0"},
         {"planet3.z", "0"},
@@ -800,7 +800,7 @@ void render_3d() {
     comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 3: Increase drag
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"drag", "0.98"},
     });
 
@@ -810,7 +810,7 @@ void render_3d() {
     comp.stage_macroblock_and_render(AudioSegment("Here's 5 planets."));
     sim.add_fixed_object(planet4_color, "planet4");
     sim.add_fixed_object(planet5_color, "planet5");
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"planet4.x", "-0.2"},
         {"planet4.y", "13"},
         {"planet4.z", "-0.2"},
@@ -819,13 +819,13 @@ void render_3d() {
         {"planet5.z", "-0.2"}
     });
 
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet2.opacity", "0.03"},
         {"planet3.opacity", "0.03"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment(5));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet1.x", "-.4"}, {"planet1.y", "-.4"}, {"planet1.z", "-.4"},
         {"planet2.x", "0.4"}, {"planet2.y", "0.4"}, {"planet2.z", "0.4"},
         {"planet3.x", "0"  }, {"planet3.y", "0.4"}, {"planet3.z", "0"  },
@@ -836,7 +836,7 @@ void render_3d() {
     comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 3: Increase drag
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"drag", "0.96"},
     });
 
@@ -846,14 +846,14 @@ void render_3d() {
     sim.add_fixed_object(planet6_color, "planet6");
     sim.add_fixed_object(planet7_color, "planet7");
     sim.add_fixed_object(planet8_color, "planet8");
-    comp.state_manager.set(unordered_map<string, string>{
+    comp.state.set(unordered_map<string, string>{
         {"planet6.x", "-0.2"}, {"planet6.y", "13"}, {"planet6.z", "-0.2"},
         {"planet7.x", "-0.2"}, {"planet7.y", "-13"}, {"planet7.z", "-0.2"},
         {"planet8.x", "-22"}, {"planet8.y", "3"}, {"planet8.z", "-0.2"},
     });
 
     // Subscene 1: Initial positions
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet1.x", "-.4"}, {"planet1.y", "-.4"}, {"planet1.z", "-.4"},
         {"planet2.x", "-.4"}, {"planet2.y", "-.4"}, {"planet2.z", "0.4"},
         {"planet3.x", "-.4"}, {"planet3.y", "0.4"}, {"planet3.z", "-.4"},
@@ -869,7 +869,7 @@ void render_3d() {
     comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 2: Rotate positions
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"planet2.x", "-.4"}, {"planet2.y", "-.4"}, {"planet2.z", "-.4"},
         {"planet4.x", "-.4"}, {"planet4.y", "-.4"}, {"planet4.z", "0.4"},
         {"planet1.x", "-.4"}, {"planet1.y", "0.4"}, {"planet1.z", "-.4"},
@@ -879,12 +879,12 @@ void render_3d() {
     comp.stage_macroblock_and_render(AudioSegment(3));
 
     // Subscene 3: Increase drag
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"drag", "0.94"},
     });
 
     comp.stage_macroblock_and_render(AudioSegment(3));
-    comp.state_manager.transition(unordered_map<string, string>{
+    comp.state.transition(unordered_map<string, string>{
         {"lines_opacity", "0"},
         {"points_opacity", "0"},
     });
@@ -897,14 +897,14 @@ void render_credits() {
     CompositeScene cs;
     cs.add_scene(&ts, "t_s", -10, -10, .5, .5, true);
     cs.add_scene(&ls, "l_s",  10,  10, .5, .5, true);
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"t_s.x", "0.125 8 0.2 <transition_fraction> - 6 * ^ -"},
         {"t_s.y", "0.125"},
         {"l_s.x", "0.375 8 0.6 <transition_fraction> - 6 * ^ +"},
         {"l_s.y", "0.375"},
     });
     cs.stage_macroblock_and_render(AudioSegment("This has been 2swap, with music from 6884!"));
-    cs.state_manager.set(unordered_map<string, string>{
+    cs.state.set(unordered_map<string, string>{
         {"t_s.x", "0.125"},
         {"t_s.y", "0.125"},
         {"l_s.x", "0.375"},

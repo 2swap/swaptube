@@ -10,7 +10,7 @@ public:
     : GraphScene(g, width, height), root_node_representation(rep) {
         HashableString* reppy = new HashableString(rep);
         graph->add_to_stack(reppy);
-        state_manager.set(unordered_map<string, string>{
+        state.set(unordered_map<string, string>{
             {"physics_multiplier", "1"},
         });
     }

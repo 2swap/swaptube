@@ -15,7 +15,7 @@
 void render_video(){
     perp->stage_macroblock(FileSegment("But these ultra-high-energy pendulums don't nicely fit into one box or another."), 1);
     perp->render_microblock();
-    perp->state_manager.microblock_transition({
+    perp->state.microblock_transition({
         {"energy_min", to_string(40000*vert_energy)},
         {"energy_max", "0"},
     });
@@ -33,7 +33,7 @@ void render_video(){
         for(int y = 0; y < gridsize; y++){
             PendulumState pendulum_state = {.0, .0, ((x+.5)/gridsize - .5) * 40*VIDEO_WIDTH/VIDEO_HEIGHT, -((y+.5)/gridsize - .5) * 40};
             shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state, gridstep, gridstep);
-            ps->state_manager.set({
+            ps->state.set({
                 {"pendulum_opacity", "0"},
                 {"path_opacity", "1"},
             });
@@ -44,46 +44,46 @@ void render_video(){
         for(int y = 0; y < gridsize; y++){
             string key = "ps" + to_string(x+y*gridsize);
             cs_spiro.add_scene((vps[x+y*gridsize]), key, gridstep*(x+.5), gridstep*(y+.5));
-            cs_spiro.state_manager.set({
+            cs_spiro.state.set({
                 {key+".opacity", "<spiro_opacity>"},
             });
         }
     }
-    cs_spiro.state_manager.set({
+    cs_spiro.state.set({
         {"spiro_opacity", "0"},
     });
-    cs_spiro.state_manager.microblock_transition({
+    cs_spiro.state.microblock_transition({
         {"perp.opacity", "0.3"},
         {"spiro_opacity", "1"},
     });
-    perp->state_manager.microblock_transition({
+    perp->state.microblock_transition({
         {"ticks_opacity", "0"},
     });
     cs_spiro.stage_macroblock(FileSegment("Here's some spirographs from all over momentum-space."), 1);
     cs_spiro.render_microblock();
     cs_spiro.stage_macroblock(SilenceSegment(11), 1);
     cs_spiro.render_microblock();
-    cs_spiro.state_manager.microblock_transition({
+    cs_spiro.state.microblock_transition({
         {"spiro_opacity", "0"},
     });
     cs_spiro.stage_macroblock(SilenceSegment(1), 1);
     cs_spiro.render_microblock();
     cs_spiro.remove_subscene("perp");
     cs.add_scene(perp, "perp");
-    cs.state_manager.set({
+    cs.state.set({
         {"perp.opacity", "0.4"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"mpgs.opacity", "1"},
         {"perp.opacity", "0"},
     });
-    mpgs->state_manager.set({
+    mpgs->state.set({
         {"mode", "3"},
     });
     cs.stage_macroblock(SilenceSegment(1), 1);
     cs.render_microblock();
     cs.remove_subscene("perp");
-    mpgs->state_manager.microblock_transition({
+    mpgs->state.microblock_transition({
         {"zoomexp", "1 6.283 / log"},
         {"theta_or_momentum", "0"},
     });
@@ -91,21 +91,21 @@ void render_video(){
     cs.render_microblock();
     cs.add_scene_fade_in(pgs, "pgs");
     pgs->circles_to_render = 0;
-    pgs->state_manager.set({
+    pgs->state.set({
         {"energy_max", "0"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"mpgs.opacity", "0"},
     });
     cs.remove_subscene("pgs");
 }
 
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"physics_multiplier", "30"},
     });
     pgs->stage_macroblock(SilenceSegment(7), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"mode", "2"},
         {"zoom", "1 6.283 /"},
         {"center_x", "0"},
@@ -113,73 +113,73 @@ void render_video(){
     });
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"physics_multiplier", "80"},
         {"trail_opacity", "1"},
     });
     pgs->stage_macroblock(FileSegment("Now, I'm gonna pick a certain point, corresponding to a pendulum in the black region, meaning its behavior is non-chaotic."), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_length", "1200"},
         {"zoom", "1 4 /"},
     });
     pgs->stage_macroblock(FileSegment("We can plot its path in angle-space just like we did before!"), 1);
     pgs->render_microblock();
-    pgs->state_manager.set({
+    pgs->state.set({
         {"physics_multiplier", "0"},
     });
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", "0.25"},
         {"trail_start_y", "0.5"},
         {"mode", "1.5"},
     });
     pgs->stage_macroblock(FileSegment("Moving the point around in the black region, this curve moves smoothly and cleanly."), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", "1"},
         {"trail_start_y", "1"},
     });
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", ".5"},
         {"trail_start_y", "0"},
     });
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", ".5"},
         {"trail_start_y", "-.5"},
     });
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", ".5"},
         {"trail_start_y", "1.1"},
     });
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", "1.5"},
         {"trail_start_y", "1.1"},
         {"mode", "2"},
     });
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", "1"},
         {"trail_start_y", "1.1"},
     });
     pgs->stage_macroblock(FileSegment("This main black region is home to all the lissajous style pendulums."), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", "1.6"},
         {"trail_start_y", "1.9"},
         {"zoom", "0.05"},
     });
     pgs->stage_macroblock(FileSegment("But as soon as you leave and step into the chaotic region..."), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"trail_start_x", "1.7 {t} 2 * sin 4 / +"},
         {"trail_start_y", "1.9 {t} 2 * cos 4 / +"},
     });
@@ -189,7 +189,7 @@ void render_video(){
     pgs->render_microblock();
     pgs->stage_macroblock(SilenceSegment(2), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"center_x", "3.1415"},
         {"center_y", "-1.8"},
         {"trail_opacity", "0"},
@@ -204,12 +204,12 @@ void render_video(){
         circles.insert(make_pair("circle" + to_string(i) + "_y", to_string(is.ps.theta2)));
         circles.insert(make_pair("circle" + to_string(i) + "_r", to_string(max(is.range/2, .1))));
     }
-    pgs->state_manager.set(circles);
-    pgs->state_manager.microblock_transition({
+    pgs->state.set(circles);
+    pgs->state.microblock_transition({
         {"circles_opacity", "1"},
     });
     pgs->circles_to_render = isv.size();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"ticks_opacity", "0"},
     });
     pgs->stage_macroblock(FileSegment("There are a few spots of black in here."), 1);
@@ -220,11 +220,11 @@ void outtro(){
     vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT, VIDEO_HEIGHT, 0.0001, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
     for(PendulumGrid& p : grids) p.iterate_physics(300*8, .05/30);
     shared_ptr<PendulumGridScene> pgs = make_shared<PendulumGridScene>(grids);
-    pgs->state_manager.set({
+    pgs->state.set({
         {"rk4_step_size", ".05 30 /"},
         {"mode", "3"},
     });
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"physics_multiplier", "10"},
         {"mode", "0"},
     });
@@ -234,7 +234,7 @@ void outtro(){
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cs.state_manager.microblock_transition({{"pgs.opacity", "0.3"}});
+    cs.state.microblock_transition({{"pgs.opacity", "0.3"}});
     cs.stage_macroblock(FileSegment("You may have even noticed that I subtly changed definitions throughout the video: aperiodicity, unpredictibility, divergence..."), 1);
     cs.render_microblock();
 
@@ -264,7 +264,7 @@ void outtro(){
     cs.add_scene_fade_in(ls7, "ls7", .5, .8);
     cs.render_microblock();
     cs.render_microblock();
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"ls1.opacity", "0"},
         {"ls2.opacity", "0"},
         {"ls3.opacity", "0"},
@@ -282,9 +282,9 @@ void outtro(){
         {"rainbow", "0"},
         {"path_opacity", "1"},
     };
-    ps1->state_manager.set(ss);
-    ps2->state_manager.set(ss);
-    ps3->state_manager.set(ss);
+    ps1->state.set(ss);
+    ps2->state.set(ss);
+    ps3->state.set(ss);
     cs.stage_macroblock(FileSegment("this system is sufficiently fertile to support little gems of order in the rough."), 9);
     cs.add_scene_fade_in(ps1, "ps1", .5, .5);
     cs.render_microblock();
@@ -293,26 +293,26 @@ void outtro(){
     cs.add_scene_fade_in(ps2, "ps2", .75, .5);
     cs.render_microblock();
     cs.render_microblock();
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"ps1.opacity", "0"},
     });
     cs.render_microblock();
     cs.add_scene_fade_in(ps3, "ps3", .25, .5);
     cs.render_microblock();
     cs.render_microblock();
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"ps2.opacity", "0"},
     });
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(1), 1);
     cs.render_microblock();
     shared_ptr<TwoswapScene> ts = make_shared<TwoswapScene>();
-    ts->state_manager.set({{"circle_opacity", "1"}});
-    cs.state_manager.microblock_transition({{"pgs.opacity", "0.0"}});
+    ts->state.set({{"circle_opacity", "1"}});
+    cs.state.microblock_transition({{"pgs.opacity", "0.0"}});
     cs.add_scene_fade_in(ts, "ts");
     cs.stage_macroblock(FileSegment("This has been 2swap."), 1);
     cs.render_microblock();
-    cs.state_manager.set({
+    cs.state.set({
         {"ps3.opacity", "0"},
     });
     shared_ptr<PngScene> note = make_shared<PngScene>("note", 0.18, 0.18);
@@ -338,7 +338,7 @@ void intro() {
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {5+.0000001*i, 8, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
-        ps->state_manager.set({
+        ps->state.set({
             {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
             {"tone", to_string(notes[i])},
@@ -355,7 +355,7 @@ void intro() {
     ls.push_back(make_shared<LatexScene>(latex_text("are"), 1));
     ls.push_back(make_shared<LatexScene>(latex_text("NOT"), 1));
     ls.push_back(make_shared<LatexScene>(latex_text("Chaotic"), 1));
-    tds->state_manager.set({
+    tds->state.set({
         {"parent_path_opacity", "0"},
         {"surfaces_opacity", "1"},
         {"lines_opacity", "0"},
@@ -393,12 +393,12 @@ void intro() {
     cs_mp4.render_microblock();
     cs_mp4.render_microblock();
     ls[3]->begin_latex_transition(latex_text("NOT")+"^*");
-    cs_mp4.state_manager.microblock_transition({
+    cs_mp4.state.microblock_transition({
         //{"mp4s.opacity", "0"},
     });
     cs_mp4.stage_macroblock(FileSegment("Or, at least, not all of them."), 1);
     cs_mp4.render_microblock();
-    tds->state_manager.macroblock_transition({
+    tds->state.macroblock_transition({
         {"d", to_string(after_move)},
     });
     cs_mp4.remove_subscene("tds");
@@ -409,7 +409,7 @@ void intro() {
     tds->remove_surface("are");
     tds->remove_surface("NOT");
     tds->remove_surface("Chaotic");
-    tds->state_manager.macroblock_transition({
+    tds->state.macroblock_transition({
         {"qj", ".1"},
     });
     tds->stage_macroblock(FileSegment("where a tiny deviation in similar double pendulums amplifies over time,"), 1);
@@ -428,7 +428,7 @@ void intro() {
     for(int i = 0; i < 5; i++){
         PendulumState pendulum_state = {2.49+.0001*i, .25, .0, .0};
         shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(pendulum_state);
-        ps->state_manager.set({
+        ps->state.set({
             {"path_opacity", "[parent_path_opacity]"},
             {"background_opacity", "0"},
             {"volume", "[volume_set2]"},
@@ -437,27 +437,27 @@ void intro() {
             {"physics_multiplier", "[stable_physics_multiplier]"},
             {"rk4_step_size", "1 30 / <physics_multiplier> /"},
         });
-        ps->state_manager.macroblock_transition({
+        ps->state.macroblock_transition({
             {"pendulum_opacity", "1"},
         });
         tds->add_surface(Surface(glm::dvec3(x_separation, -fov*.1, (i-2)*fov*.5), glm::dvec3(fov/2,0,0), glm::dvec3(0,fov/2,0), "ps" + to_string(i)), ps);
     }
-    tds->state_manager.macroblock_transition({
+    tds->state.macroblock_transition({
         {"x", to_string(x_separation)},
         {"volume_set1", "0"},
         {"volume_set2", "1"},
     });
-    tds->state_manager.set({
+    tds->state.set({
         {"stable_physics_multiplier", "0"},
     });
     tds->stage_macroblock(FileSegment("But you probably haven't seen this:"), 1);
     tds->render_microblock();
-    tds->state_manager.set({
+    tds->state.set({
         {"stable_physics_multiplier", "30"},
     });
     tds->stage_macroblock(FileSegment("These pendulums also have slightly different starting positions, but they will _not_ diverge."), 1);
     tds->render_microblock();
-    tds->state_manager.macroblock_transition({
+    tds->state.macroblock_transition({
         {"parent_path_opacity", "1"},
         {"qj", "0"},
     });
@@ -472,7 +472,7 @@ void intro() {
     for(int i = 0; i < 5; i++) tds->remove_surface("chaotic" + to_string(i));
     tds->stage_macroblock(SilenceSegment(1), 1);
     tds->render_microblock();
-    tds->state_manager.macroblock_transition({
+    tds->state.macroblock_transition({
         {"volume_set1", "1"},
         {"volume_set2", "0"},
         {"x", "0"},
@@ -484,10 +484,10 @@ void intro() {
     shared_ptr<MovingPendulumGridScene> mpgs = make_shared<MovingPendulumGridScene>();
     tds_cs.add_scene(mpgs, "mpgs");
     tds_cs.add_scene(tds, "tds");
-    tds_cs.state_manager.set({
+    tds_cs.state.set({
         {"mpgs.opacity", "0.2"},
     });
-    mpgs->state_manager.set({
+    mpgs->state.set({
         {"physics_multiplier", "0"},
         {"mode", "3"},
         {"rk4_step_size", "1 30 / .4 *"},
@@ -497,14 +497,14 @@ void intro() {
         {"ticks_opacity", "0"},
     });
     int iterations = 400;
-    mpgs->state_manager.microblock_transition({
+    mpgs->state.microblock_transition({
         {"physics_multiplier", to_string(iterations)},
     });
     tds_cs.stage_macroblock(FileSegment("So... what's the deal?"), 1);
     tds_cs.render_microblock();
     tds_cs.stage_macroblock(SilenceSegment(0.5), 1);
     tds_cs.render_microblock();
-    tds->state_manager.macroblock_transition({
+    tds->state.macroblock_transition({
         {"volume_set1", "0.5"},
         {"volume_set2", "0.5"},
         {"x", to_string(x_separation/2)},
@@ -512,10 +512,10 @@ void intro() {
     });
     tds_cs.stage_macroblock(FileSegment("These pendulums follow the same laws of physics."), 1);
     tds_cs.render_microblock();
-    tds_cs.state_manager.macroblock_transition({
+    tds_cs.state.macroblock_transition({
         {"mpgs.opacity", "1"},
     });
-    tds->state_manager.macroblock_transition({
+    tds->state.macroblock_transition({
         {"volume_set1", "0"},
         {"volume_set2", "0"},
         {"z", to_string(start_dist*x_separation/10)},
@@ -528,7 +528,7 @@ void intro() {
     tds_cs.remove_subscene("tds");
     mpgs->stage_macroblock(SilenceSegment(0.5), 1);
     mpgs->render_microblock();
-    mpgs->state_manager.macroblock_transition({
+    mpgs->state.macroblock_transition({
         {"ticks_opacity", "1"},
         {"theta_or_momentum", "1"},
         {"center_x", "1.14159"},
@@ -537,12 +537,12 @@ void intro() {
     });
     mpgs->stage_macroblock(FileSegment("And behavior as a function of starting position can be graphed,"), 1);
     mpgs->render_microblock();
-    mpgs->state_manager.macroblock_transition({
+    mpgs->state.macroblock_transition({
         {"theta_or_momentum", "0.5"},
     });
     mpgs->stage_macroblock(FileSegment("revealing fractals like these,"), 1);
     mpgs->render_microblock();
-    mpgs->state_manager.macroblock_transition({
+    mpgs->state.macroblock_transition({
         {"theta_or_momentum", "0"},
         {"zoom", "1 6.283 /"},
     });
@@ -553,7 +553,7 @@ void intro() {
     for(PendulumGrid& p : grids) p.iterate_physics(iterations*8, .05/30);
     shared_ptr<PendulumGridScene> pgs = make_shared<PendulumGridScene>(grids);
     cs.add_scene(pgs, "pgs");
-    pgs->state_manager.set({
+    pgs->state.set({
         {"mode", "3"},
         {"center_x", "1.14159"},
         {"center_y", "1.14159"},
@@ -572,10 +572,10 @@ void intro() {
         {"physics_multiplier", "10"},
         {"rk4_step_size", "1 30 / <physics_multiplier> /"},
     };
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"circles_opacity", "1"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"pgs.opacity", "1"},
     });
     cs.stage_macroblock(FileSegment("But before diving into the fractals, let's get to know a few individual specimen."), 3);
@@ -584,34 +584,34 @@ void intro() {
         specimens.push_back(make_shared<PendulumScene>(start_states[i], 1./3, 1./3));
     }
     for(int i = 0; i < start_states.size(); i++) {
-        pgs->state_manager.set({
+        pgs->state.set({
             {"circle"+to_string(i)+"_x", to_string(start_states[i].theta1)},
             {"circle"+to_string(i)+"_y", to_string(start_states[i].theta2)},
             {"circle"+to_string(i)+"_r", to_string(0.1)},
         });
         pgs->circles_to_render = i+1;
         shared_ptr<PendulumScene> ps = specimens[i];
-        ps->state_manager.set(state);
-        ps->state_manager.set({{"tone", to_string(i/4.+1)}});
+        ps->state.set(state);
+        ps->state.set({{"tone", to_string(i/4.+1)}});
         string name = "p" + to_string(i);
         cs.add_scene_fade_in(ps, name, VIDEO_HEIGHT*((start_states[i].theta1 + 2)/6.283-.5)/VIDEO_WIDTH+.5, 1-(start_states[i].theta2 + 2)/6.283);
         cs.render_microblock();
     }
     cs.stage_macroblock(SilenceSegment(0.5), 1);
     cs.render_microblock();
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"pgs.opacity", "0"},
         {"p0.pointer_opacity", "0"},
         {"p1.pointer_opacity", "0"},
         {"p2.pointer_opacity", "0"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"p0.x", ".5"},
         {"p0.y", ".5"},
         {"p1.y", "1.5"},
         {"p2.y", "1.5"},
     });
-    specimens[0]->state_manager.microblock_transition({
+    specimens[0]->state.microblock_transition({
         {"w", ".5"},
         {"h", "1"},
         {"volume", "1"},
@@ -619,7 +619,7 @@ void intro() {
     cs.stage_macroblock(FileSegment("This pendulum is one of the chaotic ones."), 1);
     cs.render_microblock();
     cs.remove_subscene("pgs");
-    specimens[0]->state_manager.microblock_transition({
+    specimens[0]->state.microblock_transition({
         {"top_angle_opacity", "1"},
         {"bottom_angle_opacity", "1"},
     });
@@ -627,23 +627,23 @@ void intro() {
     cs.stage_macroblock(FileSegment("We are particularly interested in the angles that separate each bar from the vertical."), 1);
     cs.render_microblock();
     shared_ptr<CoordinateSceneWithTrail> coord = make_shared<CoordinateSceneWithTrail>(1, 1);
-    coord->state_manager.set({
+    coord->state.set({
         {"center_y", "-5"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"p0.x", ".75"},
     });
-    specimens[1]->state_manager.microblock_transition({
+    specimens[1]->state.microblock_transition({
         {"w", ".5"},
         {"h", "1"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"p1.x", ".75"},
         {"p2.x", ".75"},
         {"p1.y", "1.5"},
         {"p2.y", "1.5"},
     });
-    coord->state_manager.set({
+    coord->state.set({
         {"center_x", to_string(start_states[0].theta1)},
         {"center_y", to_string(start_states[0].theta2)},
         {"zoom", ".04"},
@@ -654,7 +654,7 @@ void intro() {
     cs.add_scene_fade_in(coord, "coord", 0.5, 0.5);
     cs.stage_macroblock(FileSegment("Plotting the top angle as X and the bottom angle as Y, we can make a graph like this."), 1);
     cs.render_microblock();
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"center_x", "<trail_x>"},
         {"center_y", "<trail_y>"},
     });
@@ -664,22 +664,22 @@ void intro() {
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(3), 1);
     cs.render_microblock();
-    specimens[0]->state_manager.microblock_transition({
+    specimens[0]->state.microblock_transition({
         {"volume", "0"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"p0.y", "-.5"},
         {"p2.y", ".5"},
     });
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"trail_opacity", "0"},
         {"center_x", "0"},
         {"center_y", "0"},
     });
-    specimens[2]->state_manager.microblock_transition({
+    specimens[2]->state.microblock_transition({
         {"volume", "25"},
     });
-    specimens[2]->state_manager.set({
+    specimens[2]->state.set({
         {"w", ".5"},
         {"h", "1"},
         {"top_angle_opacity", "1"},
@@ -689,13 +689,13 @@ void intro() {
     cs.render_microblock();
     specimens[0]->global_publisher_key = false;
     specimens[2]->global_publisher_key = true;
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"trail_opacity", "1"},
         {"zoom", ".1"},
     });
     cs.stage_macroblock(SilenceSegment(1), 1);
     cs.render_microblock();
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"zoom", ".2"},
     });
     cs.stage_macroblock(SilenceSegment(5), 1);
@@ -705,7 +705,7 @@ void intro() {
     cs.stage_macroblock(FileSegment("It's drawing a shape known as a Lissajous curve."), 1);
     cs.render_microblock();
     shared_ptr<CoordinateSceneWithTrail> left = make_shared<CoordinateSceneWithTrail>(1, 1);
-    left->state_manager.set({
+    left->state.set({
         {"center_x", "{t} 2 /"},
         {"center_y", "0"},
         {"trail_opacity", "1"},
@@ -715,7 +715,7 @@ void intro() {
         {"trail_y", "{pendulum_theta2}"},
     });
     shared_ptr<CoordinateSceneWithTrail> right = make_shared<CoordinateSceneWithTrail>(1, 1);
-    right->state_manager.set({
+    right->state.set({
         {"center_x", "0"},
         {"center_y", "{t} 2 /"},
         {"trail_opacity", "1"},
@@ -728,7 +728,7 @@ void intro() {
     right->trail_color = 0xff00ffff;
     cs.add_scene_fade_in(left , "left" , 0.5, 0.5);
     cs.add_scene_fade_in(right, "right", 0.5, 0.5);
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"lissa.opacity", "0"},
     });
     cs.stage_macroblock(FileSegment("Here's the signal from the top and bottom angles, separated out."), 1);
@@ -736,24 +736,24 @@ void intro() {
     cs.remove_subscene("lissa");
     cs.stage_macroblock(SilenceSegment(2), 1);
     cs.render_microblock();
-    specimens[2]->state_manager.macroblock_transition({
+    specimens[2]->state.macroblock_transition({
         {"volume", "0"},
     });
     shared_ptr<PngScene> ear_left  = make_shared<PngScene>("ear_left", .2, .2);
     shared_ptr<PngScene> ear_right = make_shared<PngScene>("ear_right", .2, .2);
     cs.add_scene_fade_in(ear_left , "ear_left" , 0.25, 0.15);
     cs.add_scene_fade_in(ear_right, "ear_right", 0.75, 0.15);
-    left->state_manager.macroblock_transition({
+    left->state.macroblock_transition({
         {"center_x", "{t} 2 / 5 -"},
         {"w", ".5"},
         {"h", "1"},
     });
-    right->state_manager.macroblock_transition({
+    right->state.macroblock_transition({
         {"center_y", "{t} 2 / 5 -"},
         {"w", ".5"},
         {"h", "1"},
     });
-    cs.state_manager.macroblock_transition({
+    cs.state.macroblock_transition({
         {"left.x", "0.25"},
         {"right.x", "0.75"},
         {"left.y", "0.5"},
@@ -765,7 +765,7 @@ void intro() {
     cs.render_microblock();
     vector<float> audio_left;
     vector<float> audio_right;
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"trail_opacity", "0"},
     });
     specimens[2]->generate_audio(4, audio_left, audio_right);
@@ -773,7 +773,7 @@ void intro() {
     cs.render_microblock();
     specimens[0]->global_publisher_key = true;
     specimens[2]->global_publisher_key = false;
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"left.opacity", "0"},
         {"right.opacity", "0"},
         {"ear_left.opacity", "0"},
@@ -783,12 +783,12 @@ void intro() {
         {"coord.opacity", "1"},
         {"p0.opacity", "1"},
     });
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"zoom", ".05"},
         {"center_x", "<trail_x>"},
         {"center_y", "<trail_y>"},
     });
-    coord->state_manager.set({
+    coord->state.set({
         {"trail_opacity", "1"},
     });
     cs.stage_macroblock(FileSegment("It doesn't precisely sound beautiful, but compare that with the chaotic pendulum!"), 1);
@@ -798,27 +798,27 @@ void intro() {
     specimens[0]->generate_audio(2.5, audio_left_c, audio_right_c);
     cs.stage_macroblock(GeneratedSegment(audio_left_c, audio_right_c), 1);
     cs.render_microblock();
-    left->state_manager.microblock_transition({
+    left->state.microblock_transition({
         {"trail_opacity", "0"},
     });
-    right->state_manager.microblock_transition({
+    right->state.microblock_transition({
         {"trail_opacity", "0"},
     });
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"trail_opacity", "0"},
         {"zoom", ".02"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"p0.y", "-.5"},
         {"p1.y", ".5"},
     });
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"center_x", "0"},
         {"center_y", "-5"},
     });
     cs.stage_macroblock(FileSegment("And here's the pretzel pendulum."), 1);
     cs.render_microblock();
-    coord->state_manager.set({
+    coord->state.set({
         {"trail_opacity", "1"},
     });
     specimens[1]->global_publisher_key = true;
@@ -830,7 +830,7 @@ void intro() {
     specimens[1]->generate_audio(2.5, audio_left_p, audio_right_p);
     cs.stage_macroblock(GeneratedSegment(audio_left_p, audio_right_p), 1);
     cs.render_microblock();
-    coord->state_manager.microblock_transition({
+    coord->state.microblock_transition({
         {"zoom", ".04"},
         {"center_x", "<trail_x>"},
         {"center_y", "<trail_y>"},
@@ -864,7 +864,7 @@ void intro() {
                 {"start_t1",           to_string(pendulum_state.theta1)},
                 {"start_t2",           to_string(pendulum_state.theta2)},
             };
-            ps->state_manager.set(state);
+            ps->state.set(state);
             vps.push_back(ps);
         }
     }
@@ -877,12 +877,12 @@ void intro() {
             double x_mod = x + ((y%2==0) ? 0.75 : 0.25);
             string key = "ps" + to_string(x+y*gridsize);
             cs.add_scene_fade_in(vps[x+y*gridsize], key, 0, gridstep*(y+.5));
-            cs.state_manager.set({
+            cs.state.set({
                 {key + ".x", to_string(gridstep*(x_mod)) + " 1 <scrunch> 2 / lerp"},
             });
         }
     }
-    cs.state_manager.set({
+    cs.state.set({
         {"scrunch", "0"},
         {"pendulum_opacity", "1"},
         {"background_opacity", "0"},
@@ -907,52 +907,52 @@ void intro() {
     cs.render_microblock();
     cs.remove_subscene("coord");
     cs.remove_subscene("p1");
-    vps[selected_pendulum]->state_manager.set({
+    vps[selected_pendulum]->state.set({
         {"pendulum_opacity", "1"},
     });
-    vps[selected_pendulum]->state_manager.microblock_transition({
+    vps[selected_pendulum]->state.microblock_transition({
         {"w", "1"},
         {"h", "1"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {key_str + ".x", ".5"},
         {key_str + ".y", ".5"},
         {"pendulum_opacity", "0.6"},
     });
     cs.stage_macroblock(SilenceSegment(1), 1);
     cs.render_microblock();
-    vps[selected_pendulum]->state_manager.microblock_transition({
+    vps[selected_pendulum]->state.microblock_transition({
         {"top_angle_opacity", "1"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"manual_transition_1", "1"},
     });
     cs.stage_macroblock(FileSegment("The pendulum's x position in the grid corresponds to the top angle,"), 2);
     cs.render_microblock();
     cs.render_microblock();
-    vps[selected_pendulum]->state_manager.microblock_transition({
+    vps[selected_pendulum]->state.microblock_transition({
         {"top_angle_opacity", "0"},
         {"bottom_angle_opacity", "1"},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"manual_transition_2", "1"},
     });
     cs.stage_macroblock(FileSegment("and its y position corresponds to the bottom angle."), 1);
     cs.render_microblock();
-    vps[selected_pendulum]->state_manager.microblock_transition({
+    vps[selected_pendulum]->state.microblock_transition({
         {"bottom_angle_opacity", "0"},
     });
     cs.stage_macroblock(SilenceSegment(0.5), 1);
     cs.render_microblock();
     string size_str = to_string(gridstep*2.5);
     double selected_x_mod = selected_pendulum_x + ((selected_pendulum_y%2==0) ? 0.75 : 0.25);
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"rainbow", "1"},
         {key_str + ".x", to_string(gridstep*(selected_x_mod)) + " 1 <scrunch> 2 / lerp"},
         {key_str + ".y", to_string(gridstep*(selected_pendulum_y+.5))},
         {"pendulum_opacity", "1"},
     });
-    vps[selected_pendulum]->state_manager.microblock_transition({
+    vps[selected_pendulum]->state.microblock_transition({
         {"w", size_str},
         {"h", size_str},
     });
@@ -960,10 +960,10 @@ void intro() {
     cs.render_microblock();
     PendulumGrid pointgrid(80, 80, 0.0001, -M_PI*.6, M_PI*.6, -M_PI*.6, M_PI*.6, 0, 0, 0, 0);
     shared_ptr<PendulumPointsScene> pps = make_shared<PendulumPointsScene>(pointgrid, 0.5, 1);
-    vps[selected_pendulum]->state_manager.set({
+    vps[selected_pendulum]->state.set({
         {"pendulum_opacity", "[pendulum_opacity]"},
     });
-    pps->state_manager.set({
+    pps->state.set({
         {"physics_multiplier", "0"},
         {"rk4_step_size", "1 30 / 5 /"},
         {"center_x", "0"},
@@ -971,44 +971,44 @@ void intro() {
         {"zoom", "1 6.283 /"},
     });
     cs.add_scene(pps, "pps", -0.25, 0.5);
-    pgs->state_manager.set({
+    pgs->state.set({
         {"physics_multiplier", "0"},
         {"rk4_step_size", "1 30 / 5 /"},
     });
     string zoomval = "10 " + to_string(gridsize) + " /";
-    pgs13->state_manager.set({
+    pgs13->state.set({
         {"physics_multiplier", "0"},
         {"zoom", zoomval},
         {"rk4_step_size", "1 30 / 5 /"},
     });
     cs.add_scene(pgs, "pgs");
     cs.add_scene(pgs13, "pgs13");
-    cs.state_manager.set({
+    cs.state.set({
         {"pgs13.opacity", "0"},
         {"pgs.opacity", "0"},
     });
-    cs.state_manager.macroblock_transition({
+    cs.state.macroblock_transition({
         {"scrunch", "1"},
         {"pps.x", ".25"},
         {"manual_mode", "0"},
     });
     cs.stage_macroblock(FileSegment("As a bonus, we can add points in angle space for these pendulums and see how they move."), 1);
     cs.render_microblock();
-    cs.state_manager.set({
+    cs.state.set({
         {"physics_multiplier", "5"},
     });
-    pps->state_manager.set({
+    pps->state.set({
         {"physics_multiplier", "5"},
     });
-    pgs->state_manager.set({
+    pgs->state.set({
         {"physics_multiplier", "5"},
     });
-    pgs13->state_manager.set({
+    pgs13->state.set({
         {"physics_multiplier", "5"},
     });
     cs.stage_macroblock(SilenceSegment(10), 1);
     cs.render_microblock();
-    cs.state_manager.macroblock_transition({
+    cs.state.macroblock_transition({
         {"scrunch", "0"},
         {"pps.x", "-.25"},
     });
@@ -1016,7 +1016,7 @@ void intro() {
     cs.render_microblock();
     cs.stage_macroblock(SilenceSegment(2), 1);
     cs.render_microblock();
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"pgs13.opacity", "0.5"},
     });
     cs.stage_macroblock(SilenceSegment(2), 1);
@@ -1026,10 +1026,10 @@ void intro() {
 
 
 
-    pgs->state_manager.set({
+    pgs->state.set({
         {"zoom", zoomval},
     });
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"pgs.opacity", "1"},
         {"pgs13.opacity", "0"},
         {"pendulum_opacity", "0"},
@@ -1047,14 +1047,14 @@ void intro() {
 
 
 
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"zoom", "1 8 /"},
     });
     cs.stage_macroblock(SilenceSegment(4), 1);
     cs.render_microblock();
     PendulumState pendulum_state = {5, 7, .0, .0};
     shared_ptr<PendulumScene> pend = make_shared<PendulumScene>(pendulum_state);
-    pend->state_manager.set({
+    pend->state.set({
         {"manual_mode", "1"},
         {"rk4_step_size", "1"},
         {"physics_multiplier", "0"},
@@ -1062,56 +1062,56 @@ void intro() {
         {"theta2_manual", "7"},
     });
     cs.add_scene_fade_in(pend, "pend");
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"pgs.opacity", "0.4"},
     });
     
     cs.stage_macroblock(FileSegment("A nice feature of this fractal is that it tiles the plane."), 1);
     cs.render_microblock();
     cs.stage_macroblock(FileSegment("Rotating either pendulum arm by 2pi yields the exact same position, so the fractal is periodic."), 2);
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"center_x", "6.283"},
     });
-    pend->state_manager.microblock_transition({
+    pend->state.microblock_transition({
         {"theta1_manual", "5 6.283 +"},
     });
     cs.render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"center_y", "6.283"},
     });
-    pend->state_manager.microblock_transition({
+    pend->state.microblock_transition({
         {"theta2_manual", "7 6.283 +"},
     });
     cs.render_microblock();
-    cs.state_manager.microblock_transition({
+    cs.state.microblock_transition({
         {"pgs.opacity", "1"},
         {"pend.opacity", "0"},
     });
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"center_x", "0"},
         {"center_y", "0"},
         {"zoom", "1 15 /"},
     });
-    pgs->state_manager.set({
+    pgs->state.set({
         {"physics_multiplier", "5"},
     });
     cs.stage_macroblock(SilenceSegment(1), 1);
     cs.render_microblock();
     cs.remove_subscene("pgs");
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"zoom", "1 3.1415 /"},
     });
     pgs->stage_macroblock(FileSegment("Pay attention to how there are two distinct modes of behavior here."), 1);
     pgs->render_microblock();
     pgs->stage_macroblock(FileSegment("There's a region of chaotic pendulums sensitive to their initial conditions,"), 2);
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"center_x", "3.1415"},
         {"center_y", "3.1415"},
     });
     pgs->render_microblock();
     pgs->render_microblock();
     pgs->stage_macroblock(FileSegment("as well as a region of coherent ones which are not."), 2);
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"center_x", "0"},
         {"center_y", "0"},
     });
@@ -1119,21 +1119,21 @@ void intro() {
     pgs->render_microblock();
     pgs->stage_macroblock(SilenceSegment(0.5), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"mode", "2.5"},
     });
     pgs->stage_macroblock(FileSegment("Now, for each pixel, we track two pendulums, separated by a slight starting difference, and plot their difference over time."), 1);
     pgs->render_microblock();
     pgs->stage_macroblock(SilenceSegment(0.5), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"center_x", "3.1415"},
         {"center_y", "3.1415"},
         {"zoom", "1 8 /"},
     });
     pgs->stage_macroblock(FileSegment("So, this plot shows how quickly the pendulums in our grid diverge."), 1);
     pgs->render_microblock();
-    pgs->state_manager.microblock_transition({
+    pgs->state.microblock_transition({
         {"mode", "2"},
         {"contrast", ".000005"},
     });
@@ -1175,7 +1175,7 @@ void identify_vibrations(double t1, double t2) {
     double anim_step = 1800;
     for(int i = 0; i < start_states.size(); i++) {
         shared_ptr<PendulumScene> ps = specimens[i];
-        ps->state_manager.set({
+        ps->state.set({
             {"rk4_step_size", "1 "+to_string(anim_step)+" /"},
             {"physics_multiplier", to_string(anim_step/30)},
             //one frame per cycle{"physics_multiplier", to_string(anim_step*period)},
@@ -1188,7 +1188,7 @@ void identify_vibrations(double t1, double t2) {
     specimens[1]->global_publisher_key = true;
     specimens[1]->global_identifier = "p1.";
     shared_ptr<CoordinateSceneWithTrail> coord = make_shared<CoordinateSceneWithTrail>(.5, 1);
-    coord->state_manager.set({
+    coord->state.set({
         {"zoom", "0.05"},
         //{"zoom", "6000"},
         {"trail_opacity", "1"},

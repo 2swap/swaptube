@@ -54,7 +54,7 @@ void render_video() {
         string variation = "";
         C4GraphScene gs(&g, false, variation, TRIM_STEADY_STATES);
 
-        gs.state_manager.set({
+        gs.state.set({
             {"q1", "1"},
             {"qi", "0"},
             {"qj", "0"},
@@ -91,9 +91,9 @@ void render_video() {
         gs.stage_macroblock(SilenceBlock(.3), 1);
         gs.render_microblock();
         gs.stage_macroblock(SilenceBlock(2), 2);
-        gs.state_manager.set("flip_by_symmetry", "0");
+        gs.state.set("flip_by_symmetry", "0");
         gs.render_microblock();
-        gs.state_manager.transition(MICRO, {{"decay", ".6"}});
+        gs.state.transition(MICRO, {{"decay", ".6"}});
         gs.render_microblock();
 
         g.render_json("c4_full.js");

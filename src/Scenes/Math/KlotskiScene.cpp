@@ -18,7 +18,7 @@ public:
     char highlight_char = '.';
     KlotskiScene(const KlotskiBoard& _kb, const double width = 1, const double height = 1)
         : Scene(width, height), kb(_kb) {
-            state_manager.set({
+            state.set({
                 {"margin", "0.2"},
                 {"dots", kb.rushhour?"1":"0"},
                 {"rainbow", "1"},

@@ -39,7 +39,7 @@ void render_video() {
         {"points_opacity", "0"},
         {"physics_multiplier", "30"},
     };
-    gs.state_manager.set(state);
+    gs.state.set(state);
     cs.stage_macroblock_and_render(AudioSegment("This is the solution to connect 4,"));
     cs.stage_macroblock_and_render(AudioSegment("and you're among the first people to ever see it."));
     cs.stage_macroblock_and_render(AudioSegment("Don't get me wrong, I'm not the first person to have solved connect 4,"));

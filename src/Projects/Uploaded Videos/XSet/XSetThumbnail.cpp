@@ -23,7 +23,7 @@ const int VIDEO_FRAMERATE = 30;
 
 void intro() {
     MandelbrotScene ms;
-    ms.state_manager.set(unordered_map<string,string>{
+    ms.state.set(unordered_map<string,string>{
         {"zoom_r", "2 <zoom_exp> ^"},
         {"zoom_i", "0"},
         {"max_iterations", "{t} 2 + sin 5 * 15 +"},
@@ -45,7 +45,7 @@ void intro() {
         {"seed_x_r", "0"},
         {"seed_x_i", "{t} 2 + cos .5 * 3 +"},
     });
-    ms.state_manager.set(unordered_map<string,string>{
+    ms.state.set(unordered_map<string,string>{
         {"zoom_r", "2 <zoom_exp> ^"},
         {"zoom_i", "0"},
         {"max_iterations", "12"},

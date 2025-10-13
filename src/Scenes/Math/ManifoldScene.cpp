@@ -20,7 +20,7 @@ private:
 
 public:
     ManifoldScene(const double width = 1, const double height = 1) : ThreeDimensionScene(width, height) {
-        state_manager.set({
+        state.set({
             {"ab_dilation", ".8"},
             {"dot_radius", "1"},
             {"axes_length", "1"},
@@ -32,7 +32,7 @@ public:
                       const string& u_min, const string& u_max, const string& u_steps,
                       const string& v_min, const string& v_max, const string& v_steps) {
         const string tag = "manifold" + name + "_";
-        state_manager.set({
+        state.set({
             {tag + "x", x_eq},
             {tag + "y", y_eq},
             {tag + "z", z_eq},
@@ -50,7 +50,7 @@ public:
 
     void remove_manifold(const string& name) {
         const string tag = "manifold" + name + "_";
-        state_manager.remove({
+        state.remove({
             tag + "x",
             tag + "y",
             tag + "z",
@@ -76,11 +76,11 @@ public:
         float steps_mult = geom_mean_size / 1500.0f;
         for(const string& name : manifold_names) {
             const string tag = "manifold" + name + "_";
-            string x_eq = state_manager.get_equation_with_tags(tag + "x");
-            string y_eq = state_manager.get_equation_with_tags(tag + "y");
-            string z_eq = state_manager.get_equation_with_tags(tag + "z");
-            string r_eq = state_manager.get_equation_with_tags(tag + "r");
-            string i_eq = state_manager.get_equation_with_tags(tag + "i");
+            string x_eq = state.get_equation_with_tags(tag + "x");
+            string y_eq = state.get_equation_with_tags(tag + "y");
+            string z_eq = state.get_equation_with_tags(tag + "z");
+            string r_eq = state.get_equation_with_tags(tag + "r");
+            string i_eq = state.get_equation_with_tags(tag + "i");
             int base = i * 5;
             eqs.push_back(x_eq);
             eqs.push_back(y_eq);

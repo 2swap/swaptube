@@ -18,18 +18,18 @@ public:
 
 class FixedObject : public Object {
 public:
-    const string state_manager_name;
+    const string state_name;
     FixedObject(int col, const string& dn)
-        : Object(col, true), state_manager_name(dn) {}
+        : Object(col, true), state_name(dn) {}
 
-    float get_opacity(const StateManager& state_manager) const {
-        return state_manager[state_manager_name + ".opacity"];
+    float get_opacity(const StateManager& state) const {
+        return state[state_name + ".opacity"];
     }
 
-    glm::dvec3 get_position(const StateManager& state_manager) const {
-        return glm::dvec3(state_manager[state_manager_name + ".x"],
-                         state_manager[state_manager_name + ".y"],
-                         state_manager[state_manager_name + ".z"]);
+    glm::dvec3 get_position(const StateManager& state) const {
+        return glm::dvec3(state[state_name + ".x"],
+                         state[state_name + ".y"],
+                         state[state_name + ".z"]);
     }
 };
 
@@ -49,13 +49,13 @@ public:
     list<MobileObject> mobile_objects;
     bool mobile_interactions = false;
 
-    void remove_fixed_object(const string& state_manager_name) {
-        fixed_objects.remove_if([&state_manager_name](const FixedObject& obj) { return obj.state_manager_name == state_manager_name; });
+    void remove_fixed_object(const string& state_name) {
+        fixed_objects.remove_if([&state_name](const FixedObject& obj) { return obj.state_name == state_name; });
         mark_updated();
     }
 
-    void add_fixed_object(int color, const string& state_manager_name) {
-        fixed_objects.push_back(FixedObject(color, state_manager_name));
+    void add_fixed_object(int color, const string& state_name) {
+        fixed_objects.push_back(FixedObject(color, state_name));
         mark_updated();
     }
 
@@ -64,24 +64,24 @@ public:
         mark_updated();
     }
 
-    void iterate_physics(int multiplier, const StateManager& state_manager) {
-        for (int step = 0; step < multiplier; ++step) iterate_physics_once(state_manager);
+    void iterate_physics(int multiplier, const StateManager& state) {
+        for (int step = 0; step < multiplier; ++step) iterate_physics_once(state);
     }
 
-    void get_parameters_from_state_manager(float& tick_duration, float& collision_threshold_squared, float& drag, const StateManager& state_manager) {
-        tick_duration = state_manager["tick_duration"];
-        collision_threshold_squared = square(state_manager["collision_threshold"]);
-        drag = pow(state_manager["drag"], tick_duration);
+    void get_parameters_from_state(float& tick_duration, float& collision_threshold_squared, float& drag, const StateManager& state) {
+        tick_duration = state["tick_duration"];
+        collision_threshold_squared = square(state["collision_threshold"]);
+        drag = pow(state["drag"], tick_duration);
     }
 
-    bool get_next_step(glm::dvec3& pos, glm::dvec3& vel, int& color, const StateManager& state_manager) {
+    bool get_next_step(glm::dvec3& pos, glm::dvec3& vel, int& color, const StateManager& state) {
         float tick_duration, collision_threshold_squared, drag;
-        get_parameters_from_state_manager(tick_duration, collision_threshold_squared, drag, state_manager);
-        float eps = state_manager["eps"];
+        get_parameters_from_state(tick_duration, collision_threshold_squared, drag, state);
+        float eps = state["eps"];
 
         float v2 = glm::dot(vel, vel);
         for (const FixedObject& fo : fixed_objects) {
-            glm::dvec3 direction = fo.get_position(state_manager) - pos;
+            glm::dvec3 direction = fo.get_position(state) - pos;
             float distance2 = glm::dot(direction, direction);
             if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
                 color = fo.color;
@@ -96,35 +96,35 @@ public:
         return false;
     }
 
-    int predict_fate_of_object(glm::dvec3 pos, const StateManager& state_manager) {
+    int predict_fate_of_object(glm::dvec3 pos, const StateManager& state) {
         glm::dvec3 vel(0.f, 0, 0);
 
         int color = 0;
         for (int i = 0; i < 10000; ++i) 
-            if(get_next_step(pos, vel, color, state_manager))
+            if(get_next_step(pos, vel, color, state))
                 return color;
         return 0;
     }
 
-    void get_fixed_object_data_for_cuda(vector<glm::dvec3>& positions, vector<int>& colors, vector<float>& opacities, const StateManager& state_manager) {
+    void get_fixed_object_data_for_cuda(vector<glm::dvec3>& positions, vector<int>& colors, vector<float>& opacities, const StateManager& state) {
         int num_positions = fixed_objects.size();
         positions.resize(num_positions);
            colors.resize(num_positions);
         opacities.resize(num_positions);
         int i = 0;
         for (const FixedObject& fo : fixed_objects) {
-            positions[i] = fo.get_position(state_manager);
+            positions[i] = fo.get_position(state);
                colors[i] = fo.color;
-            opacities[i] = fo.get_opacity(state_manager);
+            opacities[i] = fo.get_opacity(state);
             i++;
         }
     }
 
 private:
-    void iterate_physics_once(const StateManager& state_manager) {
+    void iterate_physics_once(const StateManager& state) {
         float tick_duration, collision_threshold_squared, drag;
-        get_parameters_from_state_manager(tick_duration, collision_threshold_squared, drag, state_manager);
-        float eps = state_manager["eps"];
+        get_parameters_from_state(tick_duration, collision_threshold_squared, drag, state);
+        float eps = state["eps"];
         // Interactions between fixed objects and mobile objects
         for (auto it = mobile_objects.begin(); it != mobile_objects.end(); /*it is incremented elsewhere*/) {
             auto& obj1 = *it;
@@ -132,7 +132,7 @@ private:
             float v2 = glm::dot(obj1.velocity, obj1.velocity);
 
             for (const auto& fixed_obj : fixed_objects) {
-                glm::dvec3 direction = fixed_obj.get_position(state_manager) - obj1.position;
+                glm::dvec3 direction = fixed_obj.get_position(state) - obj1.position;
                 float distance2 = glm::dot(direction, direction);
                 if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
                     it = mobile_objects.erase(it);
