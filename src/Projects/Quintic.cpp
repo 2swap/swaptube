@@ -253,10 +253,9 @@ void part_0(){
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->transition_coefficient_opacities(MICRO, 0);
-    cps->state.transition(MICRO, {{"center_y", "0"}});
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("But we want to find its solutions- that is, the values of x for which the whole thing equals zero."), 4);
+    cs.stage_macroblock(FileBlock("But we want to find its solutions- the values of x for which the whole thing equals zero."), 4);
     //Highlight x's in the polynomial
     ls->begin_latex_transition(MICRO, latex_color(0xff333333, "a"+latex_color(OPAQUE_WHITE, "x")+"^3+b"+latex_color(OPAQUE_WHITE, "x")+"^2+c"+latex_color(OPAQUE_WHITE, "x")+"+d"));
     for(int i = 0; i < 2; i++) {
@@ -268,10 +267,12 @@ void part_0(){
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.fade_subscene(MICRO, "ls", 0);
+    cps->state.transition(MICRO, {{"center_y", "0"}});
     cs.render_microblock();
     cs.remove_subscene("ls");
 
     cs.stage_macroblock(CompositeBlock(FileBlock("We can move a solution and see its effect on the coefficients,"), SilenceBlock(1)), 4);
+    cps->transition_coefficient_opacities(MICRO, 1);
     cps->state.set({
         {"root1_ring", "0"},
     });
@@ -324,6 +325,7 @@ void part_0(){
         {"zoom", "-.5"},
     });
     cs.stage_macroblock(FileBlock("The polynomial lives in the complex plane, home to numbers like i and 2-i."), 6);
+    cps->transition_coefficient_opacities(MICRO, 0);
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
@@ -379,7 +381,6 @@ void part_0(){
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->state.transition(MICRO, "zero_crosshair_opacity", "1");
     cps->construction.add(GeometricLine(glm::vec2(0, 0), glm::vec2(0, 0), "vec", true));
-    cps->state.set("construction_opacity", "0");
     cps->state.set({
         {"line_vec_start_x", "0"},
         {"line_vec_start_y", "0"},
@@ -511,11 +512,10 @@ void part_0(){
     tds.render_microblock();
     tds.remove_all_subscenes();
 
-    cps->stage_macroblock(FileBlock("In turn, I would ask _you_, who needs decimals or negatives either?"), 2);
-    cps->render_microblock();
+    cps->stage_macroblock(FileBlock("In turn, I would ask _you_, who needs decimals or negatives either?"), 1);
     cps->roots_to_coefficients();
     cps->state.transition(MICRO, {
-        {"coefficient0_r", "0"},
+        {"coefficient0_r", "{t} .2 * cos"},
         {"coefficient0_i", "-5"},
         {"coefficient1_r", "1"},
         {"coefficient1_i", "0"},
@@ -523,8 +523,9 @@ void part_0(){
         {"coefficient2_i", "0"},
         {"coefficient3_r", "0.001"},
         {"coefficient3_i", "0"},
-        {"ab_dilation", "3"},
+        {"ab_dilation", "2"},
     });
+    cps->transition_coefficient_opacities(MICRO, 0);
     cps->render_microblock();
 
     cs = CompositeScene();
@@ -569,7 +570,7 @@ void part_0(){
     cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("However, there's nothing we can write here for x that would make this come true."), 1);
+    cs.stage_macroblock(FileBlock("However, there's nothing we can write here for x that would make this equation come true."), 1);
     impossible->begin_latex_transition(MACRO, latex_color(0xff222222, "2"+latex_color(OPAQUE_WHITE, "x")+"+4=0"));
     cs.render_microblock();
 
@@ -1438,8 +1439,8 @@ void part_0(){
     fracs->state.transition(MACRO, {
         {"center_x", "-.48165"},
         {"center_y", "-.45802"},
-        {"coefficient0_r", "-1.1"},
-        {"coefficient0_i", ".1"},
+        {"coefficient0_r", "-1.2"},
+        {"coefficient0_i", ".2"},
     });
     fracs->render_microblock();
     fracs->state.transition(MICRO, {
@@ -2955,7 +2956,7 @@ void part_3(){
     cps->state.transition(MICRO, "twist2", "0");
     tds.render_microblock();
 
-    tds.stage_macroblock(FileBlock("The three outputs did a cycle!"), 1);
+    tds.stage_macroblock(FileBlock("The three outputs did a cycle!"), 3);
     cps2->transition_root_rings(MICRO, 0);
     tds.render_microblock();
     cps2->transition_root_rings(MICRO, 1);
@@ -2963,7 +2964,7 @@ void part_3(){
     cps2->transition_root_rings(MICRO, 0);
     tds.render_microblock();
 
-    tds.stage_macroblock(FileBlock("Let's try that again. This time, watch the bar tying them together."), 3);
+    tds.stage_macroblock(FileBlock("Let's try that again. This time, watch the bar tying them together."), 1);
     tds.state.transition(MICRO, "cps.opacity", ".2");
     tds.state.transition(MICRO, "cps2.opacity", ".2");
     tds.render_microblock();
@@ -2978,10 +2979,10 @@ void part_3(){
     cps->state.transition(MICRO, "twist2", "0");
     tds.render_microblock();
 
-    tds.stage_macroblock(FileBlock("Notice how it only went around the bottom pole once?"), 1);
+    tds.stage_macroblock(FileBlock("See how it only went around the bottom pole once?"), 1);
     tds.render_microblock();
 
-    tds.stage_macroblock(SilenceBlock(4), 1);
+    tds.stage_macroblock(SilenceBlock(4), 4);
     cps->state.transition(MICRO, "twist", "1");
     tds.render_microblock();
     cps->state.transition(MICRO, "twist2", "1");
@@ -2992,25 +2993,56 @@ void part_3(){
     tds.render_microblock();
 
     tds.stage_macroblock(FileBlock("In order to support commutator cycles, we need to use a cube root as input to another cube root,"), 3);
+    shared_ptr<LatexScene> cubic_formula = make_shared<LatexScene>("\\sqrt{?}", .3);
+    tds.add_surface_fade_in(MICRO, Surface("cubic_formula"), cubic_formula);
+    // TODO
+    /*
+    tds.state.set({
+        {"cubic_formula.x", "0"},
+        {"cubic_formula.y", "0"},
+        {"cubic_formula.z", "-.4"},
+    });*/
     tds.state.transition(MICRO, {
         {"cps.opacity", "1"},
         {"cps2.opacity", "1"},
         {"d", "1.5"},
     });
     tds.render_microblock();
-    shared_ptr<LatexScene> cubic_formula = make_shared<LatexScene>("\\sqrt{?}", .3);
     tds.render_microblock();
     cubic_formula->begin_latex_transition(MICRO, "\\sqrt{\\sqrt{?}}");
     tds.render_microblock();
 
-    tds.stage_macroblock(FileBlock("along with something else added to them to 'skew' their two poles apart."), 3);
+    tds.stage_macroblock(FileBlock("along with a term added to 'skew' their two poles apart."), 3);
+    tds.render_microblock();
     cubic_formula->begin_latex_transition(MICRO, "\\sqrt{? + \\sqrt{?}}");
     tds.render_microblock();
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("And sure enough, this is exactly the tool used in the cubic formula."), 8);
+    cubic_formula->begin_latex_transition(MICRO, "\\sqrt[3]{? + \\sqrt{?}}");
+    tds.render_microblock();
+    tds.render_microblock();
+    cubic_formula->begin_latex_transition(MICRO, "\\sqrt[3]{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right) + \\sqrt{?}}");
+    tds.render_microblock();
+    tds.render_microblock();
+    cubic_formula->begin_latex_transition(MICRO, "\\sqrt[3]{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right) + \\sqrt{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right)^2 + \\left(\\frac{c}{3a} - \\frac{b^2}{9a^2}\\right)^3}}");
+    tds.render_microblock();
+    tds.render_microblock();
+    cubic_formula->begin_latex_transition(MICRO, "\\sqrt[3]{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right) + \\sqrt{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right)^2 + \\left(\\frac{c}{3a} - \\frac{b^2}{9a^2}\\right)^3}} \\\\\\\\ + \\sqrt[3]{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right) - \\sqrt{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right)^2 + \\left(\\frac{c}{3a} - \\frac{b^2}{9a^2}\\right)^3}} \\\\\\\\ - \\frac{b}{3a}");
+    tds.render_microblock();
+    tds.render_microblock();
+
+    tds.stage_macroblock(FileBlock("And that's the cubic!"), 1);
+    tds.render_microblock();
+}
+
+void part_4(){
 }
 
 void render_video(){
     part_0();
-    //part_1();
-    //part_2();
-    //part_3();
+    part_1();
+    part_2();
+    part_3();
+    part_4();
 }
