@@ -9,6 +9,23 @@
 #include "../Scenes/Math/ManifoldScene.cpp"
 #include "../Scenes/Common/CoordinateSceneWithTrail.cpp"
 
+shared_ptr<LatexScene> get_part_1_title(){
+    return make_shared<LatexScene>("\\text{Linear Equations are Easy}", 1);
+}
+shared_ptr<LatexScene> get_part_2_title(){
+    return make_shared<LatexScene>("\\text{Quadratic Formulas are Multi-Valued}", 1);
+}
+shared_ptr<LatexScene> get_part_3_title(){
+    return make_shared<LatexScene>("\\text{Cubics Have Commutators}", 1);
+}
+shared_ptr<LatexScene> get_part_4_title(){
+    return make_shared<LatexScene>("\\text{Quartics, and Recursion}", 1);
+}
+shared_ptr<LatexScene> get_part_5_title(){
+    return make_shared<LatexScene>("\\text{The Missing Quintic Formula}", 1);
+}
+
+
 void part_0(){
     shared_ptr<RootFractalScene> rfs_intro = make_shared<RootFractalScene>();
     rfs_intro->state.set({{"terms", "17"}, {"coefficients_opacity", "0"}, {"ticks_opacity", "0"}});
@@ -37,7 +54,7 @@ void part_0(){
     rfs_intro->render_microblock();
     rfs_intro->render_microblock();
 
-    rfs_intro->stage_macroblock(FileBlock("Complexity suggesting that there is no simple formula to express solutions of arbitrary polynomials."), 2);
+    rfs_intro->stage_macroblock(FileBlock("Complexity suggesting that there is no simple formula to express their solutions."), 2);
     rfs_intro->state.transition(MICRO, {
         {"coefficient0_r", "{t} 4 / cos"},
         {"coefficient0_i", "{t} 4 / sin"},
@@ -1549,6 +1566,7 @@ void part_1() {
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("To solve ax+b=0, we can just use algebra."), 2);
+    //TODO slidey
     quadratic->begin_latex_transition(MICRO, "ax=-b");
     cs.render_microblock();
     quadratic->begin_latex_transition(MICRO, "x=\\frac{-b}{a}");
@@ -1576,6 +1594,10 @@ void part_1() {
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("But what happens when we go up a degree?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
 }
 
 void part_2() {
@@ -2595,7 +2617,30 @@ void part_2() {
     cps->state.transition(MICRO, "center_x", "0");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("I'm gonna pick up those same coefficients again,"), 1);
+    cs.stage_macroblock(FileBlock("We can also swap two solutions on the polynomial..."), 2);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "1", false);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("but the cube root is only capable of cycling all three."), 2);
+    cs.render_microblock();
+    ms->state.transition(MICRO, "ztheta", to_string(3.14159 * 2));
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Maybe we need a square root too, just to permit these swaps?"), 2);
+    ms->state.set("xshift", "0");
+    ms->add_manifold("sqrt",
+        "(u) .5 * 1 + (v) 3 / cos * <xshift>", ".1", "(u) .5 * 1 + (v) 3 / sin *",
+        "<zradius> <ztheta> cos * (u) (v) cos * -", "<zradius> <ztheta> sin * (u) (v) sin * -",
+        "0", "1.5", "3000",
+        "-3.14159", "3.14159", "9500"
+    );
+    cs.render_microblock();
+    ms->state.transition(MICRO, "xshift", "-2");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("To make matters worse, I'm gonna pick up those same coefficients again,"), 2);
+    cs.render_microblock();
     cps->state.transition(MICRO, {
         {"coefficient0_ring", "1"},
         {"coefficient1_ring", "1"},
@@ -2756,14 +2801,14 @@ void part_2() {
     ms->state.transition(MICRO, "loop2", "1");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("but the commutator unwinds any accumulated phase around the origin in the second half."), 2);
+    cs.stage_macroblock(FileBlock("but the commutator unwinds any accumulated rotation around the origin in the second half."), 2);
     ms->state.transition(MICRO, "loop1", "0");
     cs.render_microblock();
     ms->state.transition(MICRO, "loop2", "0");
     cs.render_microblock();
 
     cps->state.set(reset);
-    cs.stage_macroblock(FileBlock("the cubic polynomial can express behaviors..."), 4);
+    cs.stage_macroblock(FileBlock("The cubic polynomial can express behaviors..."), 4);
     cs.slide_subscene(MICRO, "ms", .5, 0);
     cps->coefficients_to_roots();
     cps->stage_swap(MICRO, "0", "1", false, true);
@@ -2912,7 +2957,7 @@ void part_3(){
     cps->state.transition(MICRO, "twist", "12");
     tds.render_microblock();
 
-    tds.stage_macroblock(FileBlock("because we're just accumulating and dissipating phase between the two halves of the commutator."), 1);
+    tds.stage_macroblock(FileBlock("because we're just accumulating and dissipating rotation between the two halves of the commutator."), 1);
     cps->state.transition(MICRO, "twist", "-5");
     tds.render_microblock();
 
