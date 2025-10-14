@@ -84,16 +84,19 @@ public:
     }
 
     // This is not used here, but it is used in some classes which inherit from CoordinateScene
-    void draw_trail(const vector<glm::vec2>& trail, const int trail_color, const float trail_opacity) {
+    void draw_trail(const list<pair<glm::vec2, int>>& trail, const float trail_opacity) {
         if(trail.size() == 0) return;
         if(trail_opacity < 0.01) return;
         int line_width = get_geom_mean_size()/250.;
-        for(int i = 1; i < trail.size()-1; i++) {
-            const glm::vec2 last_point = trail[i];
-            const glm::vec2 next_point = trail[i+1];
-            const glm::vec2 last_pixel = point_to_pixel(last_point);
-            const glm::vec2 next_pixel = point_to_pixel(next_point);
-            pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, trail_color, trail_opacity, line_width);
+        glm::vec2 last_pixel = glm::vec2(0,0);
+        int i = 0;
+        for(const pair<glm::vec2, int>& p : trail) {
+            if(i != 0) {
+                const glm::vec2 next_pixel = point_to_pixel(p.first);
+                pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, p.second, trail_opacity, line_width);
+            }
+            last_pixel = point_to_pixel(p.first);
+            i++;
         }
     }
 
@@ -175,9 +178,13 @@ public:
         const int w = get_width();
         const int h = get_height();
         const float gmsz = get_geom_mean_size();
-        const glm::vec2 origin_pixel = point_to_pixel(glm::vec2(0,0));
-        pix.bresenham(origin_pixel.x, 0, origin_pixel.x, h-1, OPAQUE_WHITE, zc_opacity, gmsz/300.);
-        pix.bresenham(0, origin_pixel.y, w-1, origin_pixel.y, OPAQUE_WHITE, zc_opacity, gmsz/300.);
+        const float width = .3;
+        const glm::vec2 left = point_to_pixel(glm::vec2(-width,0));
+        const glm::vec2 right = point_to_pixel(glm::vec2(width,0));
+        const glm::vec2 top = point_to_pixel(glm::vec2(0,width));
+        const glm::vec2 bottom = point_to_pixel(glm::vec2(0,-width));
+        pix.bresenham(left.x, left.y, right.x, right.y, OPAQUE_WHITE, zc_opacity, gmsz/300.);
+        pix.bresenham(top.x, top.y, bottom.x, bottom.y, OPAQUE_WHITE, zc_opacity, gmsz/300.);
     }
 
     void draw_axes() {

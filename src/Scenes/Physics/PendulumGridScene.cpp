@@ -132,12 +132,12 @@ public:
         const float trail_start_y = state["trail_start_y"];
         const float trail_length = state["trail_length"];
         Pendulum p({trail_start_x, trail_start_y, 0, 0});
-        vector<glm::vec2> trail;
+        list<pair<glm::vec2, int>> trail;
         for(int i = 0; i < trail_length; i++){
             p.iterate_physics(1, 0.01);
-            trail.push_back(glm::vec2(p.state.theta1, p.state.theta2));
+            trail.push_back(make_pair(glm::vec2(p.state.theta1, p.state.theta2), 0xffff0000));
         }
-        draw_trail(trail, 0xffff0000, trail_opacity);
+        draw_trail(trail, trail_opacity);
         draw_point(glm::vec2(trail_start_x, trail_start_y), 0xffff0000, trail_opacity);
     }
 

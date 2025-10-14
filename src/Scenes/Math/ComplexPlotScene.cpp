@@ -222,9 +222,7 @@ public:
             {type + root2 + "_r", spin_r2},
             {type + root2 + "_i", spin_i2},
         });
-        state.transition(tt, {
-            {theta_unique, clockwise ? "pi -1 *" : "pi"},
-        });
+        state.transition(tt, theta_unique, clockwise ? "pi -1 *" : "pi");
         state.transition(tt, {
             {type + root1 + "_r", r1},
             {type + root1 + "_i", i1},

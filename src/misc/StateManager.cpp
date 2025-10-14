@@ -180,6 +180,12 @@ public:
             throw runtime_error("Error adding equation to state manager: Variable name '" + variable + "' contains invalid characters.");
         }
 
+        // Check that the variable is not undergoing a transition
+        if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
+           in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
+            throw runtime_error("Attempted to set variable " + variable + " while it is undergoing a transition!");
+        }
+
         /* When a new component is added, we do not know the
          * correct compute order anymore since there are new equations.
          */
@@ -231,14 +237,15 @@ public:
             throw runtime_error("Transition added to a variable already in transition: " + variable);
         }
 
-             if(tt == MICRO) in_microblock_transition.insert(variable);
-        else if(tt == MACRO) in_macroblock_transition.insert(variable);
-        else throw runtime_error("Invalid transition type: " + to_string(tt));
+        if(tt != MICRO && tt != MACRO) throw runtime_error("Invalid transition type: " + to_string(tt));
+
         string eq1 = get_equation(variable);
         string eq2 = equation;
         string lerp_both = eq1 + " " + eq2 + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} smoothlerp";
         set(variable+".post_transition", eq2);
         set(variable, lerp_both);
+             if(tt == MICRO) in_microblock_transition.insert(variable);
+        else if(tt == MACRO) in_macroblock_transition.insert(variable);
     }
     void transition(const TransitionType tt, const unordered_map<string, string>& equations) {
         for(auto it = equations.begin(); it != equations.end(); it++){
@@ -500,13 +507,14 @@ private:
     }
 
     void close_all_transitions(unordered_set<string>& in_transition){
-        for(string varname : in_transition){
+        unordered_set<string> in_transition_copy = in_transition;
+        in_transition.clear();
+        for(string varname : in_transition_copy){
             set(varname, get_equation(varname + ".post_transition"));
             VariableContents& vc = variables.at(varname);
             vc.value = get_value(varname + ".post_transition");
             remove(varname + ".post_transition");
         }
-        in_transition.clear();
     }
 
 };

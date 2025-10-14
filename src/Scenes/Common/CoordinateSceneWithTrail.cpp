@@ -6,17 +6,17 @@
 class CoordinateSceneWithTrail : public CoordinateScene {
 public:
     int trail_color = OPAQUE_WHITE;
-    vector<glm::vec2> trail;
+    list<pair<glm::vec2, int>> trail;
     CoordinateSceneWithTrail(const double width = 1, const double height = 1)
         : CoordinateScene(width, height) {
         state.set({{"trail_opacity", "1"},
-                           {"trail_x", "0"},
-                           {"trail_y", "0"}});
+                   {"trail_x", "0"},
+                   {"trail_y", "0"}});
     }
 
     void draw() override {
         CoordinateScene::draw();
-        draw_trail(trail, trail_color, state["trail_opacity"]);
+        draw_trail(trail, state["trail_opacity"]);
         glm::vec2 vec = point_to_pixel(glm::vec2(state["trail_x"], state["trail_y"]));
         draw_point(vec, trail_color, state["trail_opacity"]);
     }
@@ -31,7 +31,7 @@ public:
 
     void change_data() override {
         if(state["trail_opacity"] > 0.01)
-            trail.push_back(glm::vec2(state["trail_x"], state["trail_y"]));
+            trail.push_back(make_pair(glm::vec2(state["trail_x"], state["trail_y"]), trail_color));
         else trail.clear();
     }
     bool check_if_data_changed() const override { return true; }
