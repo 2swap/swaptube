@@ -2,6 +2,11 @@
 #include <thrust/complex.h>
 #include "../Host_Device_Shared/helpers.h"
 
+__device__ __forceinline__ int d_argb(int a, int r, int g, int b){return (int(clamp(a,0,255))<<24)|
+                                                                         (int(clamp(r,0,255))<<16)|
+                                                                         (int(clamp(g,0,255))<<8 )|
+                                                                         (int(clamp(b,0,255))    );}
+
 __device__ __forceinline__ int d_geta(int color) { 
     return (color >> 24) & 0xFF; 
 }
@@ -50,6 +55,20 @@ __device__ __forceinline__ void d_overlay_pixel(int x, int y, int col, float opa
     pixels[idx] = blended;
 }
 
+__device__ __forceinline__ void d_naive_add_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
+    if (x < 0 || x >= width || y < 0 || y >= height) return;
+    opacity = clamp(opacity, 0.0f, 1.0f);
+    int idx = y * width + x;
+    int base = pixels[idx];
+    // Naively add each channel multiplied by opacity, clamping to 255
+    int a = d_geta(base) + int(d_geta(col) * opacity);
+    int r = d_getr(base) + int(d_getr(col) * opacity);
+    int g = d_getg(base) + int(d_getg(col) * opacity);
+    int b = d_getb(base) + int(d_getb(col) * opacity);
+    int blended = d_argb(a, r, g, b);
+    pixels[idx] = blended;
+}
+
 __device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
     opacity = clamp(opacity, 0.0f, 1.0f);
@@ -61,11 +80,6 @@ __device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, fl
     int new_pixel = blended;
     atomicCAS(&pixels[idx], old_pixel, new_pixel);
 }
-
-__device__ __forceinline__ int d_argb(int a, int r, int g, int b){return (int(clamp(a,0,255))<<24)|
-                                                                         (int(clamp(r,0,255))<<16)|
-                                                                         (int(clamp(g,0,255))<<8 )|
-                                                                         (int(clamp(b,0,255))    );}
 
 __device__ __forceinline__ float d_linear_srgb_to_srgb(float x) {
     return x;

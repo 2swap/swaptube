@@ -20,6 +20,7 @@ string new_coefficient_val = "0.001";
 
 class ComplexPlotScene : public CoordinateScene {
 private:
+    vector<complex<float>> last_computed_roots;
     int degree;
 
     void decrement_degree() {
@@ -231,6 +232,31 @@ public:
         });
     }
 
+    void reorder_roots(vector<complex<float>>& roots) const {
+        if(last_computed_roots.size() != roots.size()) return; // Can't reorder if sizes don't match
+
+        vector<complex<float>> new_order(roots.size());
+
+        for(int i = 0; i < last_computed_roots.size(); i++) {
+            float min_dist = numeric_limits<float>::max();
+            int min_index = -1;
+            // Find the closest root to last_computed_roots[i]
+            for(int j = 0; j < roots.size(); j++) {
+                float dist = std::norm(roots[j] - last_computed_roots[i]);
+                if(dist < min_dist) {
+                    min_dist = dist;
+                    min_index = j;
+                }
+            }
+            if(min_index != -1) {
+                new_order[i] = roots[min_index];
+                // Remove this root from roots
+                roots.erase(roots.begin() + min_index);
+            }
+        }
+        roots = new_order;
+    }
+
     vector<complex<float>> get_roots() const {
         vector<complex<float>> roots;
         if(state["roots_or_coefficients_control"] == 0) {
@@ -243,6 +269,7 @@ public:
             int n = coefficients.size() - 1;
             roots.resize(n);
             find_roots(get_coefficients().data(), n, roots.data());
+            reorder_roots(roots); // Reorder roots to match last computed roots
         }
         return roots;
     }
@@ -250,6 +277,7 @@ public:
     void draw() override {
         const vector<complex<float>>& coefficients = get_coefficients();
         const vector<complex<float>>& roots = get_roots();
+        last_computed_roots = roots; // TODO This is awkward placement
         int w = get_width();
         int h = get_height();
 
