@@ -15,6 +15,7 @@ private:
     double substime = 0;
     int subtitle_count = 0;
     const string srt_filename;
+    string last_written_subtitle = "";
 
     void add_srt_time(double s) {
         // Format the elapsed time and duration in HH:MM:SS,mmm format
@@ -43,6 +44,10 @@ public:
         if (srt_file.is_open()) srt_file.close();
     }
 
+    string get_last_written_subtitle() const {
+        return last_written_subtitle;
+    }
+
     void get_substime(double t_seconds) {
         get_substime(global_state["frame_number"] / FRAMERATE);
     }
@@ -53,6 +58,7 @@ public:
     }
 
     void add_subtitle(double duration, const string& text) {
+        last_written_subtitle = text;
         if (!rendering_on()) return;
 
         if (text.size() > 120) {

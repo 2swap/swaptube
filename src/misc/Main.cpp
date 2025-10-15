@@ -114,6 +114,7 @@ int main(int argc, char* argv[]) {
         cout << endl << "====================" << endl;
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
+        cout << "Last written subtitle: " << SUBTITLE_WRITER.get_last_written_subtitle() << endl;
         cout << "====================" << endl;
 
         // Change back to normal text
