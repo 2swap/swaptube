@@ -72,6 +72,7 @@ double calculator(const string& expression) {
         {"^"         , {[](vector<double>& operands) { return pow(operands[0], operands[1]); }, 2}},
         {"sin"       , {[](vector<double>& operands) { return sin(operands[0]); }, 1}},
         {"cos"       , {[](vector<double>& operands) { return cos(operands[0]); }, 1}},
+        {"atan2"     , {[](vector<double>& operands) { return atan2(operands[0], operands[1]); }, 2}},
         {"exp"       , {[](vector<double>& operands) { return exp(operands[0]); }, 1}},
         {"sqrt"      , {[](vector<double>& operands) { return sqrt(operands[0]); }, 1}},
         {"abs"       , {[](vector<double>& operands) { return fabs(operands[0]); }, 1}},
