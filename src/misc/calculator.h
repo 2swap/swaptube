@@ -116,6 +116,9 @@ double calculator(const string& expression) {
                 }
 
                 double result = opInfo.operator_function(operands);
+                if (isnan(result) || isinf(result)) {
+                    throw runtime_error("Calculator says: " + expression + ": Invalid result (NaN or Inf) for operator: " + token);
+                }
                 stack.push(result);
             } else {
                 throw runtime_error("Calculator says: " + expression + ": Invalid operator: " + token);

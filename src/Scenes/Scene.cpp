@@ -15,6 +15,8 @@ static int remaining_frames_in_macroblock = 0;
 static int total_microblocks_in_macroblock = 0;
 static int total_frames_in_macroblock = 0;
 
+static vector<string> keys_to_record;
+
 class Scene {
 public:
     Scene(const double width = 1, const double height = 1)
@@ -192,14 +194,28 @@ private:
         }
     }
 
+    void write_one_frame_to_data_plots(const chrono::high_resolution_clock::duration& frame_duration) {
+        state_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
+        time_per_frame_plot.add_datapoint(frame_duration.count());
+        memutil_plot.add_datapoint(get_free_memory());
+
+        vector<double> global_values;
+        if (globals_plot == nullptr) globals_plot = make_shared<DebugPlot>("Global Recorder", keys_to_record);
+        for(const auto& key : keys_to_record) {
+            if (global_state.find(key) == global_state.end())
+                global_values.push_back(0);
+            else global_values.push_back(global_state[key]);
+        }
+        globals_plot->add_datapoint(global_values);
+    }
+
     void render_one_frame(int microblock_frame_number, int scene_duration_frames) {
-        auto start_time = chrono::high_resolution_clock::now(); // Start timing
+        auto start_time = chrono::high_resolution_clock::now();
         cout << "[" << flush;
 
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_frames_in_macroblock) / total_frames_in_macroblock;
         global_state["microblock_fraction"] = static_cast<double>(microblock_frame_number) / scene_duration_frames;
 
-        state_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
         Pixels* p = nullptr;
         query(p);
 
@@ -210,11 +226,8 @@ private:
             VIDEO_WRITER.add_frame(*p);
         }
 
-        auto end_time = chrono::high_resolution_clock::now(); // End timing
-        chrono::duration<double, milli> frame_duration = end_time - start_time; // Calculate duration in milliseconds
-        time_per_frame_plot.add_datapoint(frame_duration.count());
-        cumulative_time_plot.add_datapoint(std::chrono::duration_cast<std::chrono::milliseconds>(start_time.time_since_epoch()).count() / 100000.0);
-        memutil_plot.add_datapoint(get_free_memory());
+        auto end_time = chrono::high_resolution_clock::now();
+        write_one_frame_to_data_plots(end_time - start_time);
 
         remaining_frames_in_macroblock--;
         global_state["frame_number"]++;

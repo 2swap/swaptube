@@ -64,10 +64,17 @@ public:
     State(const unordered_map<string, double>& m) : map(m) {}
 
     void print() const {
+        // Print alphabetically
         cout << endl << "STATE vvv" << endl;
+        vector<string> keys;
         for (const auto& pair : map) {
-            cout << pair.first << ": " << pair.second << endl;
+            keys.push_back(pair.first);
         }
+        sort(keys.begin(), keys.end());
+        for (const string& key : keys) {
+            cout << key << ": " << map.at(key) << endl;
+        }
+
         cout << "STATE ^^^" << endl << endl;
     }
 
@@ -156,7 +163,8 @@ public:
     }
     double operator [](const string v) const {return get_value(v);}
     void print_state() const {
-        /* Print out all variable names along with their current value and their computation status. */
+        /* Print out all variable names alphabetically along with their current value and their computation status. */
+        // TODO alphabeticalize
         cout << "Variables:" << endl;
         cout << "-----------------------" << endl;
         for (const auto& variable : variables) {

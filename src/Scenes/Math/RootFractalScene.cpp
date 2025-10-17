@@ -54,6 +54,15 @@ public:
         CoordinateScene::draw();
     }
 
+    unordered_map<string, double> stage_publish_to_global() const override {
+        return unordered_map<string, double> {
+            {"coefficient0_r", state["coefficient0_r"]},
+            {"coefficient0_i", state["coefficient0_i"]},
+            {"coefficient1_r", state["coefficient1_r"]},
+            {"coefficient1_i", state["coefficient1_i"]},
+        };
+    }
+
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         state_query_insert_multiple(sq, {"coefficient0_r", "coefficient0_i", "coefficient1_r", "coefficient1_i", "terms", "window_height", "degree_fixed", "left_x", "top_y", "right_x", "bottom_y", "coefficients_opacity", "visibility_multiplier", "rainbow"});

@@ -262,6 +262,16 @@ public:
         return glm::dot(diff, diff);
     }
 
+    unordered_map<string, double> stage_publish_to_global() const override {
+        return unordered_map<string, double> {
+            {"d", state["d"]},
+            {"q1", state["q1"]},
+            {"qi", state["qi"]},
+            {"qj", state["qj"]},
+            {"qk", state["qk"]},
+        };
+    }
+
     void draw() override {
         fov = state["fov"];
         over_w_fov = 1/(get_geom_mean_size()*fov);

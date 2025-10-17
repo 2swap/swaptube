@@ -99,6 +99,6 @@ private:
 static DebugPlot time_per_frame_plot("render_time_per_frame");
 static DebugPlot memutil_plot("memutil");
 static DebugPlot state_time_plot("Time-based metrics", vector<string>{"macroblock_fraction", "microblock_fraction", "macroblock_sigmoid", "microblock_sigmoid"});
-static DebugPlot cumulative_time_plot("Time at each frame", vector<string>{"Seconds since epoch"});
 static DebugPlot pts_dts_plot("audio PTS and DTS", vector<string>{"pts/dts"});
+static shared_ptr<DebugPlot> globals_plot = nullptr;
 

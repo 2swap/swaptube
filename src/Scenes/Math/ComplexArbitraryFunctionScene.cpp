@@ -47,6 +47,12 @@ public:
         CoordinateScene::draw();
     }
 
+    unordered_map<string, double> stage_publish_to_global() const override {
+        return unordered_map<string, double> {
+            {"sqrt_branch_cut", state["sqrt_branch_cut"]},
+        };
+    }
+
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         state_query_insert_multiple(sq, {"sqrt_coef", "sqrt_branch_cut", "sin_coef", "cos_coef", "exp_coef", "ab_dilation", "dot_radius"});

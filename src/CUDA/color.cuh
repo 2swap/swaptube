@@ -108,6 +108,7 @@ __device__ __forceinline__ int d_OKLABtoRGB(int alpha, float L, float a, float b
 
 __device__ __forceinline__ int d_complex_to_srgb(const thrust::complex<float>& c, float ab_dilation, float dot_radius) {
     float mag = abs(c);
+    if(mag < 1e-7) return d_argb(255, 255, 255, 255); // white to dodge division by zero 
     thrust::complex<float> norm = (c * ab_dilation / mag + thrust::complex<float>(1,1)) * .5;
     float am = 2*atan(mag/dot_radius)/M_PI;
     return d_OKLABtoRGB(255, (1-.8*am)*1, lerp(-.233888, .276216, norm.real()), lerp(-.311528, .198570, norm.imag()));

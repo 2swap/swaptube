@@ -39,9 +39,9 @@ __global__ void render_manifold_kernel(
     insert_tags(x_eq, u, v, x_inserted, 256);
     insert_tags(y_eq, u, v, y_inserted, 256);
     insert_tags(z_eq, u, v, z_inserted, 256);
-    if(!calculator(x_inserted, &x)) printf("Error calculating manifold x at u=%f v=%f\n", u, v);
-    if(!calculator(y_inserted, &y)) printf("Error calculating manifold y at u=%f v=%f\n", u, v);
-    if(!calculator(z_inserted, &z)) printf("Error calculating manifold z at u=%f v=%f\n", u, v);
+    if(!calculator(x_inserted, &x)) printf("Error calculating manifold x at u=%f v=%f: %s\n", u, v, x_inserted);
+    if(!calculator(y_inserted, &y)) printf("Error calculating manifold y at u=%f v=%f: %s\n", u, v, y_inserted);
+    if(!calculator(z_inserted, &z)) printf("Error calculating manifold z at u=%f v=%f: %s\n", u, v, z_inserted);
 
     // Project 3D point to 2D screen space
     bool behind_camera = false;
@@ -68,8 +68,8 @@ __global__ void render_manifold_kernel(
     char i_inserted[256];
     insert_tags(r_eq, u, v, r_inserted, 256);
     insert_tags(i_eq, u, v, i_inserted, 256);
-    if(!calculator(r_inserted, &r)) printf("Error calculating color r at u=%f v=%f\n", u, v);
-    if(!calculator(i_inserted, &i)) printf("Error calculating color i at u=%f v=%f\n", u, v);
+    if(!calculator(r_inserted, &r)) printf("Error calculating color r at u=%f v=%f: %s\n", u, v, r_inserted);
+    if(!calculator(i_inserted, &i)) printf("Error calculating color i at u=%f v=%f: %s\n", u, v, i_inserted);
 
     uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
 

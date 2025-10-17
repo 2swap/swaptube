@@ -43,7 +43,7 @@ private:
         state.remove("root" + to_string(degree) + "_ring");
         state.remove("coefficient" + to_string(degree) + "_opacity");
         degree--;
-        update_state();
+
         cout << "Decremented degree to " << degree << endl;
     }
 
@@ -53,6 +53,7 @@ private:
         if(state["roots_or_coefficients_control"] != 1) {
             roots_to_coefficients();
         }
+        cout << "Current leading coefficient: " << state["coefficient" + to_string(degree) + "_r"] << " + " << state["coefficient" + to_string(degree) + "_i"] << "i" << endl;
 
         degree++;
 
@@ -65,7 +66,6 @@ private:
                 state.set(type + degree_str + "_opacity", "0");
         }
 
-        update_state();
         cout << "Incremented degree to " << degree << endl;
     }
 
@@ -364,12 +364,15 @@ public:
         for(int i = 0; i < degree; i++) {
             map["root" + to_string(i) + "_r"] = roots[i].real();
             map["root" + to_string(i) + "_i"] = roots[i].imag();
+            map["root" + to_string(i) + "_ring"] = state["root" + to_string(i) + "_ring"];
         }
 
         vector<complex<float>> coefficients = get_coefficients();
         for(int i = 0; i < degree+1; i++) {
             map["coefficient" + to_string(i) + "_r"] = coefficients[i].real();
             map["coefficient" + to_string(i) + "_i"] = coefficients[i].imag();
+            map["coefficient" + to_string(i) + "_opacity"] = state["coefficient" + to_string(i) + "_opacity"];
+            map["coefficient" + to_string(i) + "_ring"] = state["coefficient" + to_string(i) + "_ring"];
         }
 
         return map;
