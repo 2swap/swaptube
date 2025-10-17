@@ -2594,10 +2594,11 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("First of all, a square root yields 2 values, but we need a function that gives 3."), 2);
+    ms->state.begin_timer("cbrt_rotation");
     ms->state.transition(MICRO, {
         {"q1", "1"},
         {"qi", ".05"},
-        {"qj", "{t} .05 * sin"},
+        {"qj", "<cbrt_rotation> .05 * sin"},
         {"qk", "0"},
         {"ztheta", "2"},
         {"manifold0_x", "(u) (v) cos *"},
@@ -2698,7 +2699,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"manifoldcbrt_in_y", point_y_start + " <yshift> +"},
     });
     ms->add_manifold("sqrt",
-        "(u) (v) 2 / cos * <xshift> -", "<yshift> -1 *", "(u) (v) 2 / sin * .01 +",
+        "(u) (v) 2 / cos * <xshift> -", "-.1", "(u) (v) 2 / sin * .01 +",
         "<sqrt_in_radius> .5 ^ <sqrt_in_theta> cos * (u) (v) cos * -", "<sqrt_in_radius> .5 ^ <sqrt_in_theta> sin * (u) (v) sin * -",
         "0", "1.5", "3000",
         "-6.28318", "6.28318", "9500"
@@ -2720,6 +2721,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"xshift", "2"},
         {"d", "7"},
         {"w", "1"},
+        {"manifoldsqrt_y", "<yshift> -1 *"},
     });
     cs.render_microblock();
 
@@ -2739,27 +2741,62 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->state.transition(MICRO, {
         {"coefficient0_ring", "1"},
         {"coefficient1_ring", "1"},
+        {"coefficient2_opacity", "0"},
+        {"coefficient3_opacity", "0"},
     });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("and this time make a very special sequence of 4 loops."), 1);
+    cps->transition_coefficient_rings(MICRO, 0);
     cs.render_microblock();
 
+    shared_ptr<CoordinateSceneWithTrail> trail1 = make_shared<CoordinateSceneWithTrail>();
+    shared_ptr<CoordinateSceneWithTrail> trail2 = make_shared<CoordinateSceneWithTrail>();
+    trail1->state.set({
+        {"trail_x", "{cps.coefficient0_r}"},
+        {"trail_y", "{cps.coefficient0_i}"},
+    });
+    trail2->state.set({
+        {"trail_x", "{cps.coefficient1_r}"},
+        {"trail_y", "{cps.coefficient1_i}"},
+    });
+    cs.add_scene(trail1, "trail1");
+    cs.add_scene(trail2, "trail2");
+    cs.state.set({
+        {"trail1.opacity", ".3"},
+        {"trail2.opacity", ".3"},
+    });
+
     cs.stage_macroblock(FileBlock("First, we move them in a way that swaps the left two solutions in a clockwise rotation,"), 1);
+    trail1->trail_color = 0xffff0000;
+    trail2->trail_color = 0xffffff00;
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("then we swap the right two clockwise,"), 1);
+    trail1->trail_color = 0xff00ff00;
+    trail2->trail_color = 0xff0000ff;
     cps->stage_swap(MICRO, "2", "0", false, true);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("now swap the first two backwards,"), 1);
+    trail1->trail_color = 0xffff0000;
+    trail2->trail_color = 0xffffff00;
     cps->stage_swap(MICRO, "1", "2", false);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("and un-swap the right two backwards."), 1);
+    trail1->trail_color = 0xff00ff00;
+    trail2->trail_color = 0xff0000ff;
     cps->stage_swap(MICRO, "0", "1", false);
     cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(.5), 1);
+    cs.fade_subscene(MICRO, "trail1", 0);
+    cs.fade_subscene(MICRO, "trail2", 0);
+    cs.render_microblock();
+    cs.remove_subscene("trail1");
+    cs.remove_subscene("trail2");
 
     cps->state.set(reset);
     cs.stage_macroblock(FileBlock("We did two things,"), 2);
@@ -2808,22 +2845,22 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     }
 
     cps->state.set(reset);
-    shared_ptr<LatexScene> commutator = make_shared<LatexScene>("x^{-1} \\phantom{y^{-1} x y}", 1, .5, .35);
+    //shared_ptr<LatexScene> commutator = make_shared<LatexScene>("x^{-1} \\phantom{y^{-1} x y}", 1, .5, .35);
     cs.stage_macroblock(FileBlock("This special way of cycling objects is called a commutator."), 8);
     cps->stage_swap(MICRO, "0", "1", false, true);
-    cs.add_scene_fade_in(MICRO, commutator, "commutator", .5, .2);
+    //cs.add_scene_fade_in(MICRO, commutator, "commutator", .5, .2);
     cs.render_microblock();
     cs.render_microblock();
     cps->stage_swap(MICRO, "2", "0", false, true);
-    commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} \\phantom{x y}");
+    //commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} \\phantom{x y}");
     cs.render_microblock();
     cs.render_microblock();
     cps->stage_swap(MICRO, "1", "2", false);
-    commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} x \\phantom{y}");
+    //commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} x \\phantom{y}");
     cs.render_microblock();
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false);
-    commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} x y");
+    //commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} x y");
     cs.render_microblock();
     cs.render_microblock();
 
@@ -2836,7 +2873,9 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"loop1", "0"},
         {"loop2", "0"},
     });
-    ms->state.transition(MICRO, {
+    ms->state.set(MICRO, {
+        {"sqrt_in_theta", "0"},
+        {"sqrt_in_radius", ".7"},
         {"ztheta", "<loop1> 6.283 * <loop2> 6.283 * sin .3 * +"},
         {"zradius", "<loop2> 6.283 * cos .2 * .5 +"},
     });
@@ -3041,7 +3080,7 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
         {"zradius", "<cbrt_in_real> 2 ^ <cbrt_in_imag> 2 ^ + .5 ^"},
     });
     ms->add_manifold("tie",
-        "<sqrt_out_radius> <sqrt_out_theta> cos * <xshift> -", "<yshift>", "<sqrt_out_radius> <sqrt_out_theta> sin *",
+        "<sqrt_out_radius> <sqrt_out_theta> cos * <xshift> -", "<yshift> -1 *", "<sqrt_out_radius> <sqrt_out_theta> sin *",
         "0.00001", "0.00001",
         "0", "6.28318", "100",
         "-1", "1", "600"
@@ -3062,7 +3101,7 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("we skew the square root and cube root functions away from each other like this."), 1);
-    ms->state.transition(MICRO, "xshift", ".4");
+    ms->state.transition(MICRO, "xshift", ".2");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Now the two poles don't line up anymore."), 1);
@@ -3075,7 +3114,7 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     });
     ms->state.transition(MICRO,  {
         {"sqrt_in_theta", "<twist1> 6.283 * <twist2> 6.283 * sin .2 * +"},
-        {"sqrt_in_radius", "<twist2> 6.283 * cos -.2 * .3 +"},
+        {"sqrt_in_radius", "<twist2> 6.283 * cos -.25 * .25 +"},
     });
     cs.render_microblock();
 
@@ -3411,7 +3450,7 @@ void render_video(){
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(1);
     cps->global_identifier = "cps";
 
-    FOR_REAL = false;
+    //FOR_REAL = false;
     part_0(cs, cps);
     cs.remove_all_subscenes();
     part_1(cs, cps);
@@ -3426,7 +3465,6 @@ void render_video(){
     cs.remove_all_subscenes();
     part_3p5(cs, cps, ms);
     cs.remove_all_subscenes();
-    return;
     part_4(cs, cps, ms);
     cs.remove_all_subscenes();
 }
