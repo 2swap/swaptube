@@ -307,7 +307,7 @@ HOST_DEVICE bool calculator(const char *expression, double *out_result) {
 
         // Is this a number?
         if (shared_isdigit(token[0]) || token[0] == '.' || 
-            (token[0] == '-' && shared_isdigit(token[1]))) {
+            (token[0] == '-' && (shared_isdigit(token[1]) || token[1] == '.'))) {
             if (top >= 256) {
                 printf("Calculator error: stack overflow.\n");
                 return false;

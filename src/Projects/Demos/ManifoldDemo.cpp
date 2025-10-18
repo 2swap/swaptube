@@ -3,6 +3,13 @@
 void render_video() {
     ManifoldScene ms;
 
+    ms.add_manifold("",
+        "(u)", "0", "(v)",
+        "(u)", "(v)",
+        "-1", "1", "3000",
+        "-1", "1", "3000"
+    );
+
     ms.stage_macroblock(SilenceBlock(13), 12);
     ms.state.set({
         {"d", "10"},
@@ -16,17 +23,14 @@ void render_video() {
     ms.render_microblock();
 
     ms.state.set({
-        {"u_wave", "5"},
-        {"v_wave", "5"},
-        {"mult", "5"},
-        {"manifold_x", "(u)"},
-        {"manifold_y", "(u) <u_wave> * sin (v) <v_wave> * sin + <mult> /"},
-        {"manifold_z", "(v)"},
-    });
-    ms.state.transition(MICRO, {
         {"u_wave", "3"},
         {"v_wave", "9"},
         {"mult", "2"},
+    });
+    ms.state.transition(MICRO, {
+        {"manifold_x", "(u) -.1 +"},
+        {"manifold_y", "(u) <u_wave> * sin (v) <v_wave> * sin + <mult> /"},
+        {"manifold_z", "(v)"},
     });
     ms.render_microblock();
     ms.render_microblock();
@@ -45,10 +49,10 @@ void render_video() {
         {"manifold_x", "(u) cos (v) sin *"},
         {"manifold_y", "(u) sin (v) sin *"},
         {"manifold_z", "(v) cos"},
-        {"u_min", "-1.57"},
-        {"u_max", "1.57"},
-        {"v_min", "-3.14"},
-        {"v_max", "3.14"},
+        {"manifold_u_min", "-1.57"},
+        {"manifold_u_max", "1.57"},
+        {"manifold_v_min", "-3.14"},
+        {"manifold_v_max", "3.14"},
     });
     ms.render_microblock();
     ms.render_microblock();
@@ -58,10 +62,10 @@ void render_video() {
         {"manifold_x", "(u)"},
         {"manifold_y", "0"},
         {"manifold_z", "(v)"},
-        {"u_min", "-3.14"},
-        {"u_max", "3.14"},
-        {"v_min", "-3.14"},
-        {"v_max", "3.14"},
+        {"manifold_u_min", "-3.14"},
+        {"manifold_u_max", "3.14"},
+        {"manifold_v_min", "-3.14"},
+        {"manifold_v_max", "3.14"},
     });
     ms.render_microblock();
     ms.render_microblock();
@@ -71,10 +75,10 @@ void render_video() {
         {"manifold_x", ".5 (u) cos * 2 + (v) cos *"},
         {"manifold_y", ".5 (u) cos * 2 + (v) sin *"},
         {"manifold_z", ".5 (u) sin *"},
-        {"u_min", "-3.14"},
-        {"u_max", "3.14"},
-        {"v_min", "-3.14"},
-        {"v_max", "3.14"},
+        {"manifold_u_min", "-3.14"},
+        {"manifold_u_max", "3.14"},
+        {"manifold_v_min", "-3.14"},
+        {"manifold_v_max", "3.14"},
     });
     ms.render_microblock();
     ms.render_microblock();
