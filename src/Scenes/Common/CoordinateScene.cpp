@@ -87,7 +87,7 @@ public:
     void draw_trail(const list<pair<glm::vec2, int>>& trail, const float trail_opacity) {
         if(trail.size() == 0) return;
         if(trail_opacity < 0.01) return;
-        int line_width = get_geom_mean_size()/250.;
+        float line_width = get_geom_mean_size()/400.;
         glm::vec2 last_pixel = glm::vec2(0,0);
         int i = 0;
         for(const pair<glm::vec2, int>& p : trail) {
