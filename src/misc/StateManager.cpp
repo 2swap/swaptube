@@ -493,7 +493,12 @@ private:
         assert(!vc.fresh);
         vc.fresh = true;
         string scrubbed_equation = insert_equation_dependencies(vc.equation);
-        vc.value = calculator(scrubbed_equation);
+        try {
+            vc.value = calculator(scrubbed_equation);
+        } catch (const runtime_error& e) {
+            print_state();
+            throw runtime_error("Error evaluating equation for variable " + variable + "\n" + e.what() + "\nScrubbed equation: " + scrubbed_equation + "\nState has been printed above.");
+        }
     }
 
     VariableContents get_variable(const string& variable) const {

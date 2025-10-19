@@ -135,7 +135,7 @@ public:
                             global_state["microblock_number"]++;
         if (done_macroblock) {
             global_state["macroblock_number"]++;
-            if (SAVE_FRAME_PNGS) {
+            if (SAVE_FRAME_PNGS && rendering_on()) {
                 int roundedFrameNumber = round(global_state["frame_number"]);
                 ostringstream stream;
                 stream << setw(6) << setfill('0') << roundedFrameNumber;

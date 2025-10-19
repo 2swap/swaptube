@@ -2443,8 +2443,8 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"ztheta", "3.14159"},
         {"ab_dilation", ".1"},
         {"dot_radius", ".1"},
-        {"manifold0_r", "<zradius> <ztheta> cos * (u) 2 ^ (v) 2 * cos * -"},
-        {"manifold0_i", "<zradius> <ztheta> sin * (u) 2 ^ (v) 2 * sin * -"},
+        {"manifold0_r", "<zradius> <ztheta> cos * (u) 2 ^ (v) cos * -"},
+        {"manifold0_i", "<zradius> <ztheta> sin * (u) 2 ^ (v) sin * -"},
         {"q1", "1"},
         {"qi", ".02"},
         {"qj", "<solution_exchange> .1 * sin"},
@@ -2676,8 +2676,8 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"manifold0_x", "(u) (v) cos *"},
         {"manifold0_y", "(u) .333333 ^ (v) 3 / sin *"},
         {"manifold0_z", "(u) (v) sin *"},
-        {"manifold0_r", "<zradius> <ztheta> cos * (u) 3 ^ (v) 3 * cos * -"},
-        {"manifold0_i", "<zradius> <ztheta> sin * (u) 3 ^ (v) 3 * sin * -"},
+        {"manifold0_r", "<zradius> <ztheta> cos * (u) 3 ^ (v) cos * -"},
+        {"manifold0_i", "<zradius> <ztheta> sin * (u) 3 ^ (v) sin * -"},
         {"manifold0_v_min", to_string(-3 * M_PI)},
         {"manifold0_v_max", to_string(3 * M_PI)},
         {"manifold0_v_steps", "13500"},
@@ -2775,7 +2775,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     });
     ms->add_manifold("sqrt",
         "(u) (v) 2 / cos * <xshift> -", "0.1", "(u) (v) 2 / sin * .01 +",
-        "<sqrt_in_radius> <sqrt_in_theta> cos * (u) 2 ^ (v) 2 * cos * -", "<sqrt_in_radius> <sqrt_in_theta> sin * (u) 2 ^ (v) 2 * sin * -",
+        "<sqrt_in_radius> <sqrt_in_theta> cos * (u) 2 ^ (v) cos * -", "<sqrt_in_radius> <sqrt_in_theta> sin * (u) 2 ^ (v) sin * -",
         "0", "1.5", "3000",
         "-6.28318", "6.28318", "11000"
     );
@@ -3192,7 +3192,7 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
         {"twist2", "0"},
     });
     ms->state.transition(MICRO,  {
-        {"sqrt_in_theta", "<twist1> 6.283 * <twist2> 6.283 * sin * +"},
+        {"sqrt_in_theta", "<twist1> 6.283 * <twist2> 6.283 * sin +"},
         {"sqrt_in_radius", "<twist2> 6.283 * cos -.25 * .4 +"},
     });
     cs.render_microblock();
@@ -3396,6 +3396,17 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"dot_radius", "2"},
     });
     cs.render_microblock();
+    cps->state.remove({
+        "point_1_x",
+        "point_1_y",
+        "point_2_x",
+        "point_2_y",
+        "point_3_x",
+        "point_3_y",
+        "point_4_x",
+        "point_4_y",
+    });
+    cps->construction.clear();
     ms->state.transition(MICRO, {
         {"d", "2"},
     });
@@ -3461,12 +3472,13 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->state.set({
         {"qrt_in_theta", "0"},
         {"qrt_in_radius", ".5"},
+        {"scale_qrtpole", "1"},
         {"manifoldqrt_in_x", point_x_start + " <xshift> 3 * +"},
         {"manifoldqrt_in_y", point_y_start + " <yshift> 3 * +"},
     });
     ms->add_manifold("qrt",
         "(u) (v) 4 / cos * <xshift> 3 * +", "30", "(u) (v) 4 / sin * .01 +",
-        "<qrt_in_radius> <qrt_in_theta> cos * (u) 4 ^ (v) 4 * cos * -", "<qrt_in_radius> <qrt_in_theta> sin * (u) 4 ^ (v) 4 * sin * -",
+        "<qrt_in_radius> <qrt_in_theta> cos * (u) 4 ^ (v) cos * -", "<qrt_in_radius> <qrt_in_theta> sin * (u) 4 ^ (v) sin * -",
         "0", "1.5", "3000",
         "-12.56637", "12.56637", "11000"
     );
@@ -3510,10 +3522,12 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"manifoldtie_x", "<sqrt_out_radius> <sqrt_out_theta> cos * <sqrt_center_x> +"},
         {"manifoldtie_y", "<sqrt_center_y>"},
         {"manifoldcbrtpole_x", "(u) cos .02 * <scale_cbrtpole> * <sqrt_center_x> +"},
-        {"manifoldcbrtpole_y", "(v) <scale_cbrtpole> * <sqrt_center_y>"},
+        {"manifoldcbrtpole_y", "(v) <scale_cbrtpole> * <sqrt_center_y> +"},
         {"manifoldsqrtpole_x", "(u) cos .02 * <scale_sqrtpole> * <sqrt_center_x> +"},
         {"manifoldsqrtpole_y", "(v) <scale_sqrtpole> * <sqrt_center_y> +"},
     });
+    cs.render_microblock();
+
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
@@ -3576,7 +3590,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("A commutator doesn't really make sense here because there's only one swap to choose from."), 1);
+    cs.stage_macroblock(FileBlock("A commutator doesn't really make sense here because there's only one swap to choose from."), 4);
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false, true);
@@ -3602,6 +3616,9 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"point_3_x", "<root2_r>"},
         {"point_3_y", "<root2_i>"},
     });
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
     cs.stage_macroblock(FileBlock("With three objects, there are commutators which leave them scrambled,"), 5);
     cps->stage_swap(MICRO, "0", "1", false, true);
@@ -3633,6 +3650,17 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->stage_swap(MICRO, "1", "2", false);
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
     //TODO
