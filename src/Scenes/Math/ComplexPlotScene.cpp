@@ -309,7 +309,7 @@ public:
             float opa = state["root"+to_string(i)+"_ring"];
             if(opa < 0.01) continue;
             const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
-            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa * .5);
+            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa * .35);
         }
 
         // Draw coefficients
