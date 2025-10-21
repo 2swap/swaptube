@@ -8,7 +8,7 @@ void render_video(){
     if(VIDEO_WIDTH * 16 != VIDEO_HEIGHT * 9){
         throw std::runtime_error("VIDEO_WIDTH and VIDEO_HEIGHT must be in 9:16 ratio");
     }
-    for(KlotskiBoard kb : {apk, beginner, intermediate}){
+    for(KlotskiBoard kb : {simple_4x4}){
         shared_ptr<KlotskiScene> ks = make_shared<KlotskiScene>(kb, .5, .5*VIDEO_WIDTH/VIDEO_HEIGHT);
         CompositeScene cs;
         cs.add_scene(ks, "ks", 0.25, 0.25*VIDEO_WIDTH/VIDEO_HEIGHT);
@@ -40,7 +40,7 @@ void render_video(){
 
         // Let a random agent make move around on the board and build the graph as it does, for 50 moves
         cs.stage_macroblock(SilenceBlock(5), 50); // Stage a macroblock with 50 microblocks
-        while(cs.microblocks_remaining()) {
+        while(remaining_microblocks_in_macroblock) {
             ks->stage_random_move();
             // Add the new node
             g.add_to_stack(new KlotskiBoard(ks->copy_board()));
@@ -52,7 +52,7 @@ void render_video(){
 
         // Expand the graph until all nodes are present
         cs.stage_macroblock(SilenceBlock(2), (g_size-g.size())*1.2); // Stage a macroblock with more microblocks than graph nodes
-        while(cs.microblocks_remaining()) {
+        while(remaining_microblocks_in_macroblock) {
             g.expand(1);
             cs.render_microblock(); // Render a microblock
         }
