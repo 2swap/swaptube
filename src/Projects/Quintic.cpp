@@ -77,7 +77,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     rfs_intro->state.set("spindist", ".03");
     rfs_intro->state.begin_timer("spindist_timer");
     rfs_intro->state.transition(MICRO, {
-        {"coefficient0_r", "<spindist_timer> 3 * sin <spindist> -1 * *"},
+        {"coefficient0_r", "<spindist_timer> 3 * sin <spindist> *"},
         {"coefficient0_i", "<spindist_timer> 3 * cos <spindist> *"},
         {"coefficient1_r", "1"},
         {"coefficient1_i", "0"},
@@ -3376,24 +3376,24 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("here's the first one getting undone,"), 5);
-    cps->stage_swap(MICRO, "1", "3", false);
+    cps->stage_swap(MICRO, "1", "3", false, true);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "3", "2", false);
+    cps->stage_swap(MICRO, "3", "2", false, true);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "1", "2", false, true);
+    cps->stage_swap(MICRO, "1", "2", false);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "3", "1", false, true);
+    cps->stage_swap(MICRO, "3", "1", false);
     cs.render_microblock();
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("and the second one getting undone."), 5);
-    cps->stage_swap(MICRO, "3", "2", false);
+    cps->stage_swap(MICRO, "3", "2", false, true);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "3", "0", false);
+    cps->stage_swap(MICRO, "3", "0", false, true);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "2", "0", false, true);
+    cps->stage_swap(MICRO, "2", "0", false);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "2", "3", false, true);
+    cps->stage_swap(MICRO, "2", "3", false);
     cs.render_microblock();
     cs.render_microblock();
 
@@ -3587,16 +3587,25 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.fade_subscene(MICRO, "ms", 0);
     cs.stage_macroblock(FileBlock("Here's the key to the proof, the source of the impossibility:"), 1);
     cs.render_microblock();
+    cs.remove_subscene("ms");
+}
 
+void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<ManifoldScene> ms) {
+    cs.add_scene(cps, "cps");
     cps->set_degree(2);
-    cps->coefficients_to_roots();
-    cs.stage_macroblock(FileBlock("With two objects, we can make 0th-order commutators- that is, just a single swap, to leave them scrambled."), 3);
+    cps->roots_to_coefficients();
+    cps->transition_coefficient_opacities(MACRO, 0);
+    cs.stage_macroblock(FileBlock("With two objects, we can make 0th-order commutators- that is, just a single swap, to leave them scrambled."), 4);
     cps->state.transition(MICRO, {
-        {"root0_r", "-1"},
-        {"root0_i", "0"},
-        {"root1_r", "1"},
-        {"root1_i", "0"},
+        {"coefficient2_r", "1"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "0"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "-1"},
+        {"coefficient0_i", "0"},
     });
+    cs.render_microblock();
+    cps->coefficients_to_roots();
     cps->state.set({
         {"point_1_x", "<root0_r>"},
         {"point_1_y", "<root0_i>"},
@@ -3621,10 +3630,16 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->stage_swap(MICRO, "0", "1", false);
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.stage_macroblock(SilenceBlock(1), 3);
     cs.render_microblock();
-
     cps->set_degree(3);
+    cps->roots_to_coefficients();
+    cps->state.transition(MACRO, {
+        {"coefficient3_r", "1"},
+        {"coefficient3_i", "0"},
+    });
+    cs.render_microblock();
+    cps->coefficients_to_roots();
     cps->state.transition(MICRO, {
         {"root0_r", "-2"},
         {"root0_i", "0"},
@@ -3637,7 +3652,6 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"point_3_x", "<root2_r>"},
         {"point_3_y", "<root2_i>"},
     });
-    cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
@@ -3663,7 +3677,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("But any commutator of commutators will put them back in order."), 16);
+    cs.stage_macroblock(FileBlock("But any commutator of commutators does nothing."), 16);
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
     cps->stage_swap(MICRO, "2", "0", false, true);
@@ -3672,27 +3686,190 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false);
     cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    //TODO
 
-    cs.stage_macroblock(FileBlock("With four objects, there are commutators of commutators which leave them scrambled,"), 1);
+    cps->stage_swap(MICRO, "2", "1", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "2", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "0", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "2", "1", false);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("But triply-nested commutators will put them back in order."), 1);
+    cps->stage_swap(MICRO, "0", "1", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "2", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "2", "0", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "1", false);
+    cs.render_microblock();
+
+    cps->stage_swap(MICRO, "2", "1", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "0", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "2", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "2", "1", false);
+    cs.render_microblock();
+
+
+    cs.stage_macroblock(SilenceBlock(1), 3);
+    cs.render_microblock();
+    cps->set_degree(4);
+    cps->roots_to_coefficients();
+    cps->state.transition(MACRO, {
+        {"coefficient4_r", "1"},
+        {"coefficient4_i", "0"},
+    });
+    cs.render_microblock();
+    cps->coefficients_to_roots();
+    cps->state.transition(MICRO, {
+        {"root0_r", "-3"},
+        {"root0_i", "0"},
+        {"root1_r", "-1"},
+        {"root1_i", "0"},
+        {"root2_r", "1"},
+        {"root2_i", "0"},
+        {"root3_r", "3"},
+        {"root3_i", "0"},
+    });
+    cps->state.set({
+        {"point_4_x", "<root3_r>"},
+        {"point_4_y", "<root3_i>"},
+    });
+    cs.render_microblock();
+
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cs.stage_macroblock(FileBlock("With four objects, there are commutators of commutators which leave them scrambled,"), 16);
+    cps->stage_swap(MICRO, "0", "1", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "2", "0", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "2", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "1", false);
+    cs.render_microblock();
+
+    cps->stage_swap(MICRO, "3", "1", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "3", "0", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "0", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "3", false);
+    cs.render_microblock();
+
+    cps->stage_swap(MICRO, "1", "3", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "3", "2", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "2", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "3", "1", false);
+    cs.render_microblock();
+
+    cps->stage_swap(MICRO, "3", "2", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "3", "0", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "2", "0", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "2", "3", false);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("But triply-nested commutators do not."), 64);
+    for(int i = 0; i < 4; i++) {
+        cps->stage_swap(MICRO, "0", "1", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "2", "0", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "1", "2", false);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "0", "1", false);
+        cs.render_microblock();
+
+        cps->stage_swap(MICRO, "3", "1", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "3", "0", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "1", "0", false);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "1", "3", false);
+        cs.render_microblock();
+
+        cps->stage_swap(MICRO, "1", "3", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "3", "2", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "1", "2", false);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "3", "1", false);
+        cs.render_microblock();
+
+        cps->stage_swap(MICRO, "3", "2", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "3", "0", false, true);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "2", "0", false);
+        cs.render_microblock();
+        cps->stage_swap(MICRO, "2", "3", false);
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(SilenceBlock(1), 3);
+    cs.render_microblock();
+    cps->set_degree(5);
+    cps->roots_to_coefficients();
+    cps->state.transition(MACRO, {
+        {"coefficient5_r", "1"},
+        {"coefficient5_i", "0"},
+    });
+    cs.render_microblock();
+    cps->coefficients_to_roots();
+    cps->state.transition(MICRO, {
+        {"root0_r", "0"},
+        {"root0_i", "0"},
+        {"root1_r", "0"},
+        {"root1_i", "2"},
+        {"root2_r", "2"},
+        {"root2_i", "0"},
+        {"root3_r", "0"},
+        {"root3_i", "-2"},
+        {"root4_r", "-2"},
+        {"root4_i", "0"},
+    });
+    cps->state.set({
+        {"point_5_x", "<root4_r>"},
+        {"point_5_y", "<root4_i>"},
+    });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("With five objects..."), 1);
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "5", .7, true));
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can take a cycle of 3 like this..."), 1);
+    cps->state.transition(MICRO, {
+        {"root0_r", cps->state.get_equation("root2_r")},
+        {"root0_i", cps->state.get_equation("root2_i")},
+        {"root1_r", cps->state.get_equation("root0_r")},
+        {"root1_i", cps->state.get_equation("root0_i")},
+        {"root2_r", cps->state.get_equation("root1_r")},
+        {"root2_i", cps->state.get_equation("root1_i")},
+    });
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("and another cycle of 3 like this..."), 1);
+    cps->state.transition(MICRO, {
+        {"root1_r", cps->state.get_equation("root2_r")},
+        {"root1_i", cps->state.get_equation("root2_i")},
+        {"root3_r", cps->state.get_equation("root0_r")},
+        {"root3_i", cps->state.get_equation("root0_i")},
+        {"root4_r", cps->state.get_equation("root1_r")},
+        {"root4_i", cps->state.get_equation("root1_i")},
+    });
     cs.render_microblock();
 }
 
@@ -3752,22 +3929,24 @@ void render_video(){
     CompositeScene cs;
     shared_ptr<ComplexPlotScene> cps = make_shared<ComplexPlotScene>(1);
     cps->global_identifier = "cps";
+    shared_ptr<ManifoldScene> ms = make_shared<ManifoldScene>();
+    ms->global_identifier = "3d";
 
     //FOR_REAL = false;
+    /*
     part_0(cs, cps);
     cs.remove_all_subscenes();
     part_1(cs, cps);
     cs.remove_all_subscenes();
-
-    shared_ptr<ManifoldScene> ms = make_shared<ManifoldScene>();
-    ms->global_identifier = "3d";
     part_2(cs, cps, ms);
     cs.remove_all_subscenes();
     part_3(cs, cps, ms);
     cs.remove_all_subscenes();
     part_3p5(cs, cps, ms);
     cs.remove_all_subscenes();
-    FOR_REAL = true;
     part_4(cs, cps, ms);
     cs.remove_all_subscenes();
+    FOR_REAL = true;
+    */
+    part_5(cs, cps, ms);
 }

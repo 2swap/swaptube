@@ -322,8 +322,14 @@ public:
             }
             if(letter_opa > 0.01) {
                 ScalingParams sp = ScalingParams(gm * 16, gm * 40);
-                Pixels text_pixels = latex_to_pix(string(1,char('a' + coefficients.size() - 1 - i)), sp);
-                pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
+                char letter = char('a' + coefficients.size() - 1 - i);
+                Pixels text_pixels = latex_to_pix(string(1, letter), sp);
+
+                // Align lowercase letters
+                float align_factor = 0.5f;
+                if(letter == 'b' || letter == 'd' || letter == 'f' || letter == 'h' || letter == 'k' || letter == 'l' || letter == 't') align_factor = 0.75f;
+                else if(letter == 'g' || letter == 'j' || letter == 'p' || letter == 'q' || letter == 'y') align_factor = 0.25f;
+                pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h * align_factor, letter_opa);
             }
         }
 
