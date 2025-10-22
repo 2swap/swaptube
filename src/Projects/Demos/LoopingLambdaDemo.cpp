@@ -21,7 +21,7 @@ void render_video() {
 
     LambdaScene ls(term);
     ls.stage_macroblock(SilenceBlock(1.33), 2);
-    while(ls.microblocks_remaining()) {
+    while(remaining_microblocks_in_macroblock) {
         ls.reduce();
         ls.render_microblock();
     }

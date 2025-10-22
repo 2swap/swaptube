@@ -3602,6 +3602,8 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"coefficient1_i", "0"},
         {"coefficient0_r", "-1"},
         {"coefficient0_i", "0"},
+        {"center_x", "0"},
+        {"center_y", "0"},
     });
     cs.render_microblock();
     cps->transition_coefficient_opacities(MICRO, 0);
@@ -4155,7 +4157,6 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         cps->state.transition(MICRO, which_oval, i>1?"0":"-1");
         cs.render_microblock();
     }
-    cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("We can infinitely nest commutators like this, guaranteeing swaps on the 5 objects."), 1);
     cs.render_microblock();
@@ -4227,7 +4228,6 @@ void render_video(){
     ms->global_identifier = "3d";
 
     //FOR_REAL = false;
-    /*
     part_0(cs, cps);
     cs.remove_all_subscenes();
     part_1(cs, cps);
@@ -4240,7 +4240,6 @@ void render_video(){
     cs.remove_all_subscenes();
     part_4(cs, cps, ms);
     cs.remove_all_subscenes();
-    FOR_REAL = true;
-    */
+    //FOR_REAL = true;
     part_5(cs, cps, ms);
 }

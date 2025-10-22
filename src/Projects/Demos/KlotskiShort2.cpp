@@ -40,7 +40,7 @@ void render_video(){
 
         // Expand the graph until all nodes are present
         cs.stage_macroblock(SilenceBlock(4), (g_size-g.size())*2); // Stage a macroblock with more microblocks than graph nodes
-        while(cs.microblocks_remaining()) {
+        while(remaining_microblocks_in_macroblock) {
             g.expand(1);
             cs.render_microblock(); // Render a microblock
         }
