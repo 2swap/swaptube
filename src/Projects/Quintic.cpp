@@ -3591,11 +3591,10 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
 }
 
 void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<ManifoldScene> ms) {
+    cs.stage_macroblock(FileBlock("With two objects, we can make 0th-order commutators- that is, just a single swap, to leave them scrambled."), 2);
     cs.add_scene(cps, "cps");
     cps->set_degree(2);
     cps->roots_to_coefficients();
-    cps->transition_coefficient_opacities(MACRO, 0);
-    cs.stage_macroblock(FileBlock("With two objects, we can make 0th-order commutators- that is, just a single swap, to leave them scrambled."), 4);
     cps->state.transition(MICRO, {
         {"coefficient2_r", "1"},
         {"coefficient2_i", "0"},
@@ -3605,19 +3604,25 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"coefficient0_i", "0"},
     });
     cs.render_microblock();
+    cps->transition_coefficient_opacities(MICRO, 0);
+    cps->stage_swap(MICRO, "0", "1", false, true);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 2);
     cps->coefficients_to_roots();
     cps->state.set({
-        {"point_1_x", "<root0_r>"},
-        {"point_1_y", "<root0_i>"},
-        {"point_2_x", "<root1_r>"},
-        {"point_2_y", "<root1_i>"},
+        {"root0_r", "-1"},
+        {"root0_i", "0"},
+        {"root1_r", "1"},
+        {"root1_i", "0"},
+        {"point_1_x", "{cps.root0_r}"},
+        {"point_1_y", "{cps.root0_i}"},
+        {"point_2_x", "{cps.root1_r}"},
+        {"point_2_y", "{cps.root1_i}"},
     });
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
-    cs.render_microblock();
-    cps->stage_swap(MICRO, "0", "1", false, true);
-    cs.render_microblock();
-    cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("A commutator doesn't really make sense here because there's only one swap to choose from."), 4);
@@ -3630,17 +3635,28 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->stage_swap(MICRO, "0", "1", false);
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(1), 3);
+    cs.stage_macroblock(SilenceBlock(3), 2);
+    cps->state.transition(MICRO, "construction_opacity", "0");
     cs.render_microblock();
+    cps->construction.clear();
+    cps->state.set("construction_opacity", "1");
     cps->set_degree(3);
     cps->roots_to_coefficients();
-    cps->state.transition(MACRO, {
+    cps->state.transition(MICRO, {
+        {"ab_dilation", "1.5"},
+        {"dot_radius", "3"},
         {"coefficient3_r", "1"},
         {"coefficient3_i", "0"},
+        {"coefficient2_r", "0"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "-4"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "0"},
+        {"coefficient0_i", "0"},
     });
     cs.render_microblock();
     cps->coefficients_to_roots();
-    cps->state.transition(MICRO, {
+    cps->state.set({
         {"root0_r", "-2"},
         {"root0_i", "0"},
         {"root1_r", "0"},
@@ -3648,14 +3664,18 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"root2_r", "2"},
         {"root2_i", "0"},
     });
-    cps->state.set({
-        {"point_3_x", "<root2_r>"},
-        {"point_3_y", "<root2_i>"},
-    });
-    cs.render_microblock();
 
+    cps->state.set({
+        {"point_3_x", "{cps.root2_r}"},
+        {"point_3_y", "{cps.root2_i}"},
+    });
+    cs.stage_macroblock(CompositeBlock(FileBlock("With three objects, there are commutators which leave them scrambled,"), SilenceBlock(2)), 8);
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
-    cs.stage_macroblock(FileBlock("With three objects, there are commutators which leave them scrambled,"), 5);
+    cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
     cps->stage_swap(MICRO, "2", "0", false, true);
@@ -3666,7 +3686,7 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.stage_macroblock(SilenceBlock(2), 1);
     cps->state.transition(MICRO, {
         {"root0_r", "-2"},
         {"root0_i", "0"},
@@ -3696,36 +3716,56 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->stage_swap(MICRO, "2", "1", false);
     cs.render_microblock();
 
-    cps->stage_swap(MICRO, "0", "1", false, true);
-    cs.render_microblock();
     cps->stage_swap(MICRO, "1", "2", false, true);
     cs.render_microblock();
-    cps->stage_swap(MICRO, "2", "0", false);
+    cps->stage_swap(MICRO, "2", "0", false, true);
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false);
     cs.render_microblock();
-
-    cps->stage_swap(MICRO, "2", "1", false, true);
-    cs.render_microblock();
-    cps->stage_swap(MICRO, "1", "0", false, true);
-    cs.render_microblock();
-    cps->stage_swap(MICRO, "0", "2", false);
-    cs.render_microblock();
-    cps->stage_swap(MICRO, "2", "1", false);
+    cps->stage_swap(MICRO, "1", "2", false);
     cs.render_microblock();
 
-
-    cs.stage_macroblock(SilenceBlock(1), 3);
+    cps->stage_swap(MICRO, "2", "0", false, true);
     cs.render_microblock();
+    cps->stage_swap(MICRO, "1", "2", false, true);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "1", false);
+    cs.render_microblock();
+    cps->stage_swap(MICRO, "2", "0", false);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(2), 3);
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(3), 3);
+    cps->state.transition(MICRO, "construction_opacity", "0");
+    cs.render_microblock();
+    cps->construction.clear();
+    cps->state.set("construction_opacity", "1");
     cps->set_degree(4);
     cps->roots_to_coefficients();
-    cps->state.transition(MACRO, {
+    cps->state.transition(MICRO, {
+        {"ab_dilation", "2"},
+        {"dot_radius", "4"},
         {"coefficient4_r", "1"},
         {"coefficient4_i", "0"},
+        {"coefficient3_r", "0"},
+        {"coefficient3_i", "0"},
+        {"coefficient2_r", "-10"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "0"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "9"},
+        {"coefficient0_i", "0"},
     });
     cs.render_microblock();
     cps->coefficients_to_roots();
-    cps->state.transition(MICRO, {
+    cps->state.set({
         {"root0_r", "-3"},
         {"root0_i", "0"},
         {"root1_r", "-1"},
@@ -3735,13 +3775,22 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"root3_r", "3"},
         {"root3_i", "0"},
     });
+    cs.render_microblock();
     cps->state.set({
-        {"point_4_x", "<root3_r>"},
-        {"point_4_y", "<root3_i>"},
+        {"point_4_x", "{cps.root3_r}"},
+        {"point_4_y", "{cps.root3_i}"},
     });
+
+    cs.stage_macroblock(SilenceBlock(1), 4);
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
     cs.render_microblock();
 
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
     cs.stage_macroblock(FileBlock("With four objects, there are commutators of commutators which leave them scrambled,"), 16);
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
@@ -3779,7 +3828,25 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->stage_swap(MICRO, "2", "3", false);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("But triply-nested commutators do not."), 64);
+    cs.stage_macroblock(SilenceBlock(1.5), 4);
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1.5), 1);
+    cps->stage_swap(MICRO, "0", "1", false, true);
+    cps->stage_swap(MICRO, "2", "3", false, true);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(.5), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(CompositeBlock(FileBlock("But triply-nested commutators do not."), SilenceBlock(3)), 64);
     for(int i = 0; i < 4; i++) {
         cps->stage_swap(MICRO, "0", "1", false, true);
         cs.render_microblock();
@@ -3818,58 +3885,285 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         cs.render_microblock();
     }
 
-    cs.stage_macroblock(SilenceBlock(1), 3);
+    cs.stage_macroblock(SilenceBlock(2), 6);
     cs.render_microblock();
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(3), 3);
+    cps->state.transition(MICRO, "construction_opacity", "0");
+    cs.render_microblock();
+    cps->construction.clear();
+    cps->state.set("construction_opacity", "1");
     cps->set_degree(5);
     cps->roots_to_coefficients();
-    cps->state.transition(MACRO, {
+    cps->state.transition(MICRO, {
+        {"ab_dilation", "1"},
+        {"dot_radius", "1"},
         {"coefficient5_r", "1"},
         {"coefficient5_i", "0"},
+        {"coefficient4_r", "0"},
+        {"coefficient4_i", "0"},
+        {"coefficient3_r", "0"},
+        {"coefficient3_i", "0"},
+        {"coefficient2_r", "0"},
+        {"coefficient2_i", "0"},
+        {"coefficient1_r", "-1"},
+        {"coefficient1_i", "0"},
+        {"coefficient0_r", "0"},
+        {"coefficient0_i", "0"},
     });
     cs.render_microblock();
     cps->coefficients_to_roots();
-    cps->state.transition(MICRO, {
+    StateSet plussign = {
         {"root0_r", "0"},
-        {"root0_i", "0"},
-        {"root1_r", "0"},
-        {"root1_i", "2"},
-        {"root2_r", "2"},
+        {"root0_i", "1"},
+        {"root1_r", "-1"},
+        {"root1_i", "0"},
+        {"root2_r", "0"},
         {"root2_i", "0"},
-        {"root3_r", "0"},
-        {"root3_i", "-2"},
-        {"root4_r", "-2"},
-        {"root4_i", "0"},
-    });
-    cps->state.set({
-        {"point_5_x", "<root4_r>"},
-        {"point_5_y", "<root4_i>"},
-    });
+        {"root3_r", "1"},
+        {"root3_i", "0"},
+        {"root4_r", "0"},
+        {"root4_i", "-1"},
+    };
+    cps->state.set(plussign);
     cs.render_microblock();
+    cps->state.set({
+        {"point_5_x", "{cps.root4_r}"},
+        {"point_5_y", "{cps.root4_i}"},
+    });
 
-    cs.stage_macroblock(FileBlock("With five objects..."), 1);
+    cs.stage_macroblock(FileBlock("With five objects..."), 5);
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cs.render_microblock();
+    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "5", .7, true));
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("We can take a cycle of 3 like this..."), 1);
+    shared_ptr<CoordinateSceneWithTrail> trail1 = make_shared<CoordinateSceneWithTrail>();
+    shared_ptr<CoordinateSceneWithTrail> trail2 = make_shared<CoordinateSceneWithTrail>();
+    shared_ptr<CoordinateSceneWithTrail> trail3 = make_shared<CoordinateSceneWithTrail>();
+    cs.add_scene(trail1, "trail1");
+    cs.add_scene(trail2, "trail2");
+    cs.add_scene(trail3, "trail3");
+    cs.state.set({{"trail1.opacity", ".3"}, {"trail2.opacity", ".3"}, {"trail3.opacity", ".3"}});
+    trail1->trail_color = trail2->trail_color = trail3->trail_color = 0xffff0000;
+    trail1->state.set({{"trail_x", "{cps.root1_r}"}, {"trail_y", "{cps.root1_i}"}});
+    trail2->state.set({{"trail_x", "{cps.root2_r}"}, {"trail_y", "{cps.root2_i}"}});
+    trail3->state.set({{"trail_x", "{cps.root3_r}"}, {"trail_y", "{cps.root3_i}"}});
+
+    cs.stage_macroblock(CompositeBlock(FileBlock("We can take a cycle of 3 like this..."), SilenceBlock(1)), 1);
+    cps->roots_to_coefficients();
+    StateSet ovals = {
+        {"c1", "0"},
+        {"c2", "0"},
+        {"oval_hor", "0"},
+        {"oval_ver", "0"},
+        {"coefficient0_r", "<oval_hor> pi 2 * * sin 1 * <oval_ver> pi 4 * * sin .33 * +"},
+        {"coefficient0_i", "<oval_ver> pi 2 * * sin 1 * <oval_hor> pi 4 * * sin .33 * +"},
+    };
+    cps->state.set(ovals);
+    cps->state.transition(MICRO, "oval_hor", "1");
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.state.transition(MICRO, {{"trail1.opacity", "0"}, {"trail2.opacity", "0"}, {"trail3.opacity", "0"}});
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+
+    shared_ptr<CoordinateSceneWithTrail> trail4 = make_shared<CoordinateSceneWithTrail>();
+    shared_ptr<CoordinateSceneWithTrail> trail5 = make_shared<CoordinateSceneWithTrail>();
+    shared_ptr<CoordinateSceneWithTrail> trail6 = make_shared<CoordinateSceneWithTrail>();
+    cs.add_scene(trail4, "trail4");
+    cs.add_scene(trail5, "trail5");
+    cs.add_scene(trail6, "trail6");
+    cs.state.set({{"trail4.opacity", ".3"}, {"trail5.opacity", ".3"}, {"trail6.opacity", ".3"}});
+    trail4->trail_color = trail5->trail_color = trail6->trail_color = 0xff00ff00;
+    trail4->state.set({{"trail_x", "{cps.root0_r}"}, {"trail_y", "{cps.root0_i}"}});
+    trail5->state.set({{"trail_x", "{cps.root1_r}"}, {"trail_y", "{cps.root1_i}"}});
+    trail6->state.set({{"trail_x", "{cps.root4_r}"}, {"trail_y", "{cps.root4_i}"}});
+
+    cs.stage_macroblock(CompositeBlock(FileBlock("and another cycle of 3 like this..."), SilenceBlock(1)), 1);
+    cps->state.transition(MICRO, "oval_ver", "1");
+    cs.render_microblock();
+
+    cs.add_scene_fade_in(MICRO, trail1, "trail1", .5, .5, .3);
+    cs.add_scene_fade_in(MICRO, trail2, "trail2", .5, .5, .3);
+    cs.add_scene_fade_in(MICRO, trail3, "trail3", .5, .5, .3);
+    trail1->state.set({{"trail_x", "0"}, {"trail_y", "0"}});
+    trail2->state.set({{"trail_x", "1"}, {"trail_y", "0"}});
+    trail3->state.set({{"trail_x", "-1"}, {"trail_y", "0"}});
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("That's two 3-cycles, and they only intersect in the center."), 8);
+    for(int i = 0; i < 8; i++) {
+        cps->state.transition(MICRO, "coefficient2_ring", i%2==0?"1":(i == 7 ? "0" : ".3"));
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.fade_all_subscenes_except(MICRO, "cps", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+
+    cs.stage_macroblock(CompositeBlock(FileBlock("Undoing to make a commutator,"), SilenceBlock(3)), 2);
+    cps->state.transition(MICRO, "oval_hor", "0");
+    cs.render_microblock();
+    cps->state.transition(MICRO, "oval_ver", "0");
+    cs.render_microblock();
+
+    trail1->clear_trail();
+    trail2->clear_trail();
+    trail3->clear_trail();
+    trail4->clear_trail();
+    trail5->clear_trail();
+    trail6->clear_trail();
+
+    cs.add_scene(trail1, "trail1");
+    cs.add_scene(trail2, "trail2");
+    cs.add_scene(trail3, "trail3");
+    cs.state.set({{"trail1.opacity", ".3"}, {"trail2.opacity", ".3"}, {"trail3.opacity", ".3"}});
+    trail1->trail_color = trail2->trail_color = trail3->trail_color = 0xffff0000;
+    trail1->state.set({{"trail_x", "{cps.root1_r}"}, {"trail_y", "{cps.root1_i}"}});
+    trail2->state.set({{"trail_x", "{cps.root2_r}"}, {"trail_y", "{cps.root2_i}"}});
+    trail3->state.set({{"trail_x", "{cps.root4_r}"}, {"trail_y", "{cps.root4_i}"}});
+
+    cs.stage_macroblock(FileBlock("We see a 3-cycle on these 3 items."), 1);
+    cps->coefficients_to_roots();
+    cps->state.transition(MICRO, plussign);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("If we instead make the commutator using those two cycles in reverse..."), 1);
+    cs.fade_all_subscenes_except(MICRO, "cps", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+
+    cs.stage_macroblock(SilenceBlock(5), 4);
+    cps->roots_to_coefficients();
+    cps->state.set(ovals);
+    for(int i = 0; i < 4; i++) {
+        string which_oval = (i % 2 == 0) ? "oval_hor" : "oval_ver";
+        cps->state.transition(MICRO, which_oval, i>1?"0":"-1");
+        cs.render_microblock();
+    }
+
+    cps->coefficients_to_roots();
+    cps->state.transition(MICRO, plussign);
+    cs.add_scene(trail4, "trail4");
+    cs.add_scene(trail5, "trail5");
+    cs.add_scene(trail6, "trail6");
+    cs.state.set({{"trail4.opacity", ".3"}, {"trail5.opacity", ".3"}, {"trail6.opacity", ".3"}});
+    trail4->trail_color = trail5->trail_color = trail6->trail_color = 0xff00ff00;
+    trail4->state.set({{"trail_x", "{cps.root0_r}"}, {"trail_y", "{cps.root0_i}"}});
+    trail5->state.set({{"trail_x", "{cps.root2_r}"}, {"trail_y", "{cps.root2_i}"}});
+    trail6->state.set({{"trail_x", "{cps.root3_r}"}, {"trail_y", "{cps.root3_i}"}});
+    cs.stage_macroblock(FileBlock("we see a cycle on another set of 3 items."), 1);
+    cs.render_microblock();
+
+    cs.add_scene_fade_in(MICRO, trail1, "trail1", .5, .5, .3);
+    cs.add_scene_fade_in(MICRO, trail2, "trail2", .5, .5, .3);
+    cs.add_scene_fade_in(MICRO, trail3, "trail3", .5, .5, .3);
+    trail1->state.set({{"trail_x", "-1"}, {"trail_y", "0"}});
+    trail2->state.set({{"trail_x", "0"}, {"trail_y", "0"}});
+    trail3->state.set({{"trail_x", "0"}, {"trail_y", "-1"}});
+    cs.stage_macroblock(FileBlock("These two cycles also share one item of intersection."), 8);
+    for(int i = 0; i < 8; i++) {
+        cps->state.transition(MICRO, "coefficient2_ring", i%2==0?"1":(i == 7 ? "0" : ".3"));
+        cs.render_microblock();
+    }
+
+    cs.stage_macroblock(FileBlock("So, we can just make a commutator with those."), 1);
+    cs.render_microblock();
+
+    cps->coefficients_to_roots();
+    cs.stage_macroblock(SilenceBlock(4), 4);
     cps->state.transition(MICRO, {
-        {"root0_r", cps->state.get_equation("root2_r")},
-        {"root0_i", cps->state.get_equation("root2_i")},
-        {"root1_r", cps->state.get_equation("root0_r")},
-        {"root1_i", cps->state.get_equation("root0_i")},
-        {"root2_r", cps->state.get_equation("root1_r")},
-        {"root2_i", cps->state.get_equation("root1_i")},
+        {"root1_r", "0"},
+        {"root1_i", "0"},
+        {"root2_r", "0"},
+        {"root2_i", "-1"},
+        {"root4_r", "-1"},
+        {"root4_i", "0"},
+    });
+    cs.render_microblock();
+    cps->state.transition(MICRO, {
+        {"root0_r", "1"},
+        {"root0_i", "0"},
+        {"root1_r", "0"},
+        {"root1_i", "1"},
+        {"root3_r", "0"},
+        {"root3_i", "0"},
+    });
+    cs.render_microblock();
+    cps->state.transition(MICRO, {
+        {"root2_r", "0"},
+        {"root2_i", "0"},
+        {"root3_r", "-1"},
+        {"root3_i", "0"},
+        {"root4_r", "0"},
+        {"root4_i", "-1"},
+    });
+    cs.render_microblock();
+    cps->state.transition(MICRO, {
+        {"root0_r", "0"},
+        {"root0_i", "1"},
+        {"root1_r", "0"},
+        {"root1_i", "0"},
+        {"root2_r", "1"},
+        {"root2_i", "0"},
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("and another cycle of 3 like this..."), 1);
-    cps->state.transition(MICRO, {
-        {"root1_r", cps->state.get_equation("root2_r")},
-        {"root1_i", cps->state.get_equation("root2_i")},
-        {"root3_r", cps->state.get_equation("root0_r")},
-        {"root3_i", cps->state.get_equation("root0_i")},
-        {"root4_r", cps->state.get_equation("root1_r")},
-        {"root4_i", cps->state.get_equation("root1_i")},
-    });
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.fade_all_subscenes_except(MICRO, "cps", 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("cps");
+
+    cs.stage_macroblock(FileBlock("See what we get? The same commutator we started with!"), 4);
+    trail1->clear_trail();
+    trail2->clear_trail();
+    trail3->clear_trail();
+    trail4->clear_trail();
+    trail5->clear_trail();
+    trail6->clear_trail();
+    cs.add_scene(trail1, "trail1");
+    cs.add_scene(trail2, "trail2");
+    cs.add_scene(trail3, "trail3");
+    cs.state.set({{"trail1.opacity", ".3"}, {"trail2.opacity", ".3"}, {"trail3.opacity", ".3"}});
+    trail1->trail_color = trail2->trail_color = trail3->trail_color = 0xffff0000;
+    trail1->state.set({{"trail_x", "{cps.root1_r}"}, {"trail_y", "{cps.root1_i}"}});
+    trail2->state.set({{"trail_x", "{cps.root2_r}"}, {"trail_y", "{cps.root2_i}"}});
+    trail3->state.set({{"trail_x", "{cps.root3_r}"}, {"trail_y", "{cps.root3_i}"}});
+    cps->roots_to_coefficients();
+    cps->state.transition(MICRO, ovals);
+    for(int i = 0; i < 4; i++) {
+        string which_oval = (i % 2 == 0) ? "oval_hor" : "oval_ver";
+        cps->state.transition(MICRO, which_oval, i>1?"0":"-1");
+        cs.render_microblock();
+    }
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can infinitely nest commutators like this, guaranteeing swaps on the 5 objects."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("So, with any finite number of nested square roots, cube roots, you name it,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("there are permutations of the 5 roots we simply cannot express."), 1);
     cs.render_microblock();
 }
 

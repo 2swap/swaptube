@@ -34,6 +34,11 @@ public:
             trail.push_back(make_pair(glm::vec2(state["trail_x"], state["trail_y"]), trail_color));
         else trail.clear();
     }
+
+    void clear_trail() {
+        trail.clear();
+    }
+
     bool check_if_data_changed() const override { return true; }
 };
 

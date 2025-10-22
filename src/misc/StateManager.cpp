@@ -181,7 +181,7 @@ public:
 
 
     /* Modifiers */
-    void set(const string& variable, const string& equation) {
+    StateSet set(const string& variable, const string& equation) {
         // Validate variable name to contain only letters, numbers, dots, and underscores
         regex valid_variable_regex("^[a-zA-Z0-9._]+$");
         if (!regex_match(variable, valid_variable_regex)) {
@@ -193,6 +193,9 @@ public:
            in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
             throw runtime_error("Attempted to set variable " + variable + " while it is undergoing a transition!");
         }
+
+        StateSet ret = {};
+        if(contains(variable)) ret = { {variable, get_equation(variable)} };
 
         /* When a new component is added, we do not know the
          * correct compute order anymore since there are new equations.
@@ -210,11 +213,16 @@ public:
                 pos = end_pos + 1;
             } else break;
         }
+
+        return ret;
     }
-    void set(const unordered_map<string, string>& equations) {
+    StateSet set(const StateSet& equations) {
+        StateSet ret = {};
         for(auto it = equations.begin(); it != equations.end(); it++){
-            set(it->first, it->second);
+            StateSet prev = set(it->first, it->second);
+            ret.insert(prev.begin(), prev.end());
         }
+        return ret;
     }
 
     void remove(const string& variable) {
@@ -230,14 +238,11 @@ public:
         }
     }
 
-    void transition(const TransitionType tt, const string& variable, const string& equation) {
+    StateSet transition(const TransitionType tt, const string& variable, const string& equation) {
         if(!contains(variable)){
             print_state();
             throw runtime_error("ERROR: Attempted to transition nonexistent variable " + variable + "!\nState printed above.");
         }
-
-        // No point in doing a noop transition
-        if(get_equation(variable) == equation) return;
 
         // Nested transitions not supported
         if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
@@ -248,17 +253,25 @@ public:
         if(tt != MICRO && tt != MACRO) throw runtime_error("Invalid transition type: " + to_string(tt));
 
         string eq1 = get_equation(variable);
-        string eq2 = equation;
-        string lerp_both = eq1 + " " + eq2 + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} smoothlerp";
-        set(variable+".post_transition", eq2);
-        set(variable, lerp_both);
-             if(tt == MICRO) in_microblock_transition.insert(variable);
-        else if(tt == MACRO) in_macroblock_transition.insert(variable);
-    }
-    void transition(const TransitionType tt, const unordered_map<string, string>& equations) {
-        for(auto it = equations.begin(); it != equations.end(); it++){
-            transition(tt, it->first, it->second);
+
+        // No point in doing a noop transition
+        if(eq1 != equation) {
+            string lerp_both = eq1 + " " + equation + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} smoothlerp";
+            set(variable+".post_transition", equation);
+            set(variable, lerp_both);
+                 if(tt == MICRO) in_microblock_transition.insert(variable);
+            else if(tt == MACRO) in_macroblock_transition.insert(variable);
         }
+
+        return { {variable, eq1} };
+    }
+    StateSet transition(const TransitionType tt, const StateSet& equations) {
+        StateSet ret = {};
+        for(auto it = equations.begin(); it != equations.end(); it++){
+            StateSet prev = transition(tt, it->first, it->second);
+            ret.insert(prev.begin(), prev.end());
+        }
+        return ret;
     }
     void close_transitions(const TransitionType tt){
         if(tt == MICRO) close_all_transitions(in_microblock_transition);
