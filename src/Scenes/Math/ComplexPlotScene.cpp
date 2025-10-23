@@ -298,8 +298,8 @@ public:
             degree,
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
-            state["ab_dilation"] * .8,
-            state["dot_radius"] * .3
+            state["ab_dilation"] * 1.1,
+            state["dot_radius"] * .45
         );
 
         float gm = get_geom_mean_size() / 200;
@@ -309,7 +309,7 @@ public:
             float opa = state["root"+to_string(i)+"_ring"];
             if(opa < 0.01) continue;
             const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
-            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa * .35);
+            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa * .45);
         }
 
         // Draw coefficients
@@ -318,7 +318,7 @@ public:
             float letter_opa = state["coefficient"+to_string(i)+"_opacity"];
             const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
             if(ring_opa > 0.01) {
-                pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, ring_opa * .5);
+                pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, ring_opa * .45);
             }
             if(letter_opa > 0.01) {
                 ScalingParams sp = ScalingParams(gm * 16, gm * 40);
@@ -327,8 +327,8 @@ public:
 
                 // Align lowercase letters
                 float align_factor = 0.5f;
-                if(letter == 'b' || letter == 'd' || letter == 'f' || letter == 'h' || letter == 'k' || letter == 'l' || letter == 't') align_factor = 0.75f;
-                else if(letter == 'g' || letter == 'j' || letter == 'p' || letter == 'q' || letter == 'y') align_factor = 0.25f;
+                if(letter == 'b' || letter == 'd' || letter == 'f' || letter == 'h' || letter == 'k' || letter == 'l' || letter == 't') align_factor = 0.68f;
+                else if(letter == 'g' || letter == 'j' || letter == 'p' || letter == 'q' || letter == 'y') align_factor = 0.32f;
                 pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h * align_factor, letter_opa);
             }
         }

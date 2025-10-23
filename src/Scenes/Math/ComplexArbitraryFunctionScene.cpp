@@ -22,7 +22,7 @@ public:
         state.set("sin_coef", "0");
         state.set("cos_coef", "0");
         state.set("exp_coef", "0");
-        state.set("ab_dilation", ".8");
+        state.set("ab_dilation", "1");
         state.set("dot_radius", "1");
     }
 
@@ -40,8 +40,8 @@ public:
             state["exp_coef"],
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
-            state["ab_dilation"],
-            state["dot_radius"] * .3
+            state["ab_dilation"] * 1.1,
+            state["dot_radius"] * .45
         );
 
         CoordinateScene::draw();
