@@ -40,8 +40,8 @@ public:
             state["exp_coef"],
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
-            state["ab_dilation"] * 1.1,
-            state["dot_radius"] * .45
+            state["ab_dilation"],
+            state["dot_radius"] * .4
         );
 
         CoordinateScene::draw();

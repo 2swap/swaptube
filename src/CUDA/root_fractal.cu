@@ -57,9 +57,9 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
         // Set Color
         if(!bit) continue;
         int mod = i % 3;
-             if(mod == 0) red   += 1 << (i/3);
-        else if(mod == 1) green += 1 << (i/3);
-        else              blue  += 1 << (i/3);
+             if(mod == 0) red   += 1 << (7-i/3);
+        else if(mod == 1) green += 1 << (7-i/3);
+        else              blue  += 1 << (7-i/3);
     }
 
     // Colors are currently in [0, 255], scale to [0, 1]
