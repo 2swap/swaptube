@@ -9,9 +9,10 @@
 #include "../Scenes/Math/ManifoldScene.cpp"
 #include "../Scenes/Math/AngularFractalScene.cpp"
 #include "../Scenes/Common/CoordinateSceneWithTrail.cpp"
+#include "../Scenes/Media/PngScene.cpp"
+#include "../Scenes/Media/Mp4Scene.cpp"
 #include <regex>
 
-// TODO I think I should talk during all of these title slides, since it's sort of awkward silence otherwise
 shared_ptr<ThreeDimensionScene> get_part_1_title(){
     shared_ptr<LatexScene> ls = make_shared<LatexScene>("\\text{Linear Polynomials are Easy}", 1);
     shared_ptr<ThreeDimensionScene> title = make_shared<ThreeDimensionScene>();
@@ -114,8 +115,8 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     rfs_intro->state.set("spindist", ".03");
     rfs_intro->state.begin_timer("spindist_timer");
     rfs_intro->state.transition(MICRO, {
-        {"coefficient0_r", "<spindist_timer> 3 * sin <spindist> * -1 *"},
-        {"coefficient0_i", "<spindist_timer> 3 * cos <spindist> * -1 *"},
+        {"coefficient0_r", "<spindist_timer> 3 * sin <spindist> *"},
+        {"coefficient0_i", "<spindist_timer> 3 * cos <spindist> *"},
         {"coefficient1_r", "1"},
         {"coefficient1_i", "0"},
         {"center_x", "0"},
@@ -265,7 +266,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
         {"ab_dilation", "0"},
         {"dot_radius", "4"},
     });
-    cps->begin_timer("ringspin");
+    cps->state.begin_timer("ringspin");
     for(int i = 0; i < cps->get_degree(); i++) {
         cps->state.transition(MACRO, {
             {"root"+to_string(i)+"_r", "<ringspin> <ringspin> * .3333 " + to_string(i) + " * + 6.283 * sin"},
@@ -1658,7 +1659,7 @@ void part_1(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.add_scene_fade_in(MICRO, cps, "cps", .5, .5, .3, true);
     shared_ptr<ThreeDimensionScene> title1 = get_part_1_title();
     cs.add_scene_fade_in(MICRO, title1, "title1", .5, .4);
-    cs.stage_macroblock(SilenceBlock(4), 3);
+    cs.stage_macroblock(FileBlock("Let's start off easy, with polynomials whose highest exponent is one."), 3);
     cs.render_microblock();
     cs.render_microblock();
     cs.fade_subscene(MICRO, "title1", 0);
@@ -1666,7 +1667,7 @@ void part_1(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
     cs.remove_subscene("title1");
 
-    cs.stage_macroblock(FileBlock("Let's start off easy, with polynomials whose highest exponent is one."), 2);
+    cs.stage_macroblock(SilenceBlock(3), 2);
     shared_ptr<LatexScene> linear = make_shared<LatexScene>(latex_color(0xff333333, "ax^"+latex_color(OPAQUE_WHITE, "1")+"+b = 0"), .6, 1, .5);
     cs.add_scene_fade_in(MICRO, linear, "linear", .5, .2);
     cps->roots_to_coefficients();
@@ -2702,7 +2703,7 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
 void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<ManifoldScene> ms) {
     cs.add_scene(cps, "cps");
     shared_ptr<ThreeDimensionScene> title3 = get_part_3_title();
-    cs.stage_macroblock(CompositeBlock(SilenceBlock(2), FileBlock("Cubic polynomials are next.")), 3);
+    cs.stage_macroblock(CompositeBlock(FileBlock("Cubic polynomials are next."), SilenceBlock(1)), 3);
     cps->set_degree(3);
     cps->roots_to_coefficients();
     cps->state.transition(MACRO, {
@@ -2901,18 +2902,19 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"manifoldcbrt_in_y", point_y_start + " <yshift> +"},
     });
     ms->add_manifold("sqrt",
-        "(u) (v) 2 / cos * <xshift> -", "0.1", "(u) (v) 2 / sin * .01 +",
+        "(u) (v) 2 / cos * <xshift> -", "0.1", "(u) (v) 2 / sin * .01 + <sqrt_disappear> +",
         "<sqrt_in_radius> <sqrt_in_theta> cos * (u) 2 ^ (v) cos * -", "<sqrt_in_radius> <sqrt_in_theta> sin * (u) 2 ^ (v) sin * -",
         "0", "1.5", "3000",
         "-6.28318", "6.28318", "11000"
     );
     ms->add_manifold("sqrt_in",
-        point_x_start_sqrt + " <xshift> -", point_y_start + " <yshift> -", point_z_start_sqrt,
+        point_x_start_sqrt + " <xshift> -", point_y_start + " <yshift> -", point_z_start_sqrt + " <sqrt_disappear> +",
         "0.00001", "0.00001",
         "0", "3.14159", "200",
         "-3.14159", "3.14159", "200"
     );
     ms->state.set({
+        {"sqrt_disappear", "0"},
         {"sqrt_in_radius", "<zradius>"},
         {"sqrt_in_theta", "<ztheta>"},
     });
@@ -2999,8 +3001,8 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     trail2->trail_color = 0xffffff00;
     cs.render_microblock();
     cps->stage_swap(MICRO, "2", "0", false, true);
-    trail1->trail_color = 0xff00ff00;
-    trail2->trail_color = 0xff0000ff;
+    trail1->trail_color = 0xff0000ff;
+    trail2->trail_color = 0xff00ff00;
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("then undid them both."), 2);
@@ -3009,8 +3011,8 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     trail2->trail_color = 0xffffff00;
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false);
-    trail1->trail_color = 0xff00ff00;
-    trail2->trail_color = 0xff0000ff;
+    trail1->trail_color = 0xff0000ff;
+    trail2->trail_color = 0xff00ff00;
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(.5), 1);
@@ -3030,6 +3032,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"point_3_y", "<root2_i>"},
     });
     cs.stage_macroblock(FileBlock("But watch what happens if I label the solutions this time!"), 3);
+    cps->transition_coefficient_opacities(MACRO, 0);
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
@@ -3058,33 +3061,49 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->construction.clear();
 
     cps->state.set(reset);
-    //shared_ptr<LatexScene> commutator = make_shared<LatexScene>("x^{-1} \\phantom{y^{-1} x y}", 1, .5, .35);
-    cs.stage_macroblock(FileBlock("This special way of cycling objects is called a commutator."), 8);
-    cps->stage_swap(MICRO, "0", "1", false, true);
-    //cs.add_scene_fade_in(MICRO, commutator, "commutator", .5, .2);
+    cs.stage_macroblock(FileBlock("This special way of cycling objects is called a commutator."), 5);
+    cps->state.transition(MICRO, {
+        {"coefficient0_opacity", "1"},
+        {"coefficient1_opacity", "1"},
+        {"coefficient2_opacity", "0"},
+        {"coefficient3_opacity", "0"},
+    });
     cs.render_microblock();
+    cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
     cps->stage_swap(MICRO, "2", "0", false, true);
-    //commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} \\phantom{x y}");
-    cs.render_microblock();
     cs.render_microblock();
     cps->stage_swap(MICRO, "1", "2", false);
-    //commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} x \\phantom{y}");
-    cs.render_microblock();
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false);
-    //commutator->begin_latex_transition(MICRO, "x^{-1} y^{-1} x y");
-    cs.render_microblock();
     cs.render_microblock();
 
     cps->state.transition(MICRO, "construction_opacity", "0");
     cs.stage_macroblock(FileBlock("But watch what happens if we make commutator loops on the input of the cube root function..."), 1);
     cps->transition_coefficient_opacities(MICRO, 0);
     cps->transition_coefficient_rings(MICRO, 0);
-    cs.fade_subscene(MICRO, "commutator", 0);
-    // TODO slide the two manifolds in one by one
-    // TODO label solutions
+    shared_ptr<LatexScene> label1 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
+    shared_ptr<LatexScene> label2 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
+    shared_ptr<LatexScene> label3 = make_shared<LatexScene>("3", 1, 0.2, 0.2);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label1"), label1);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label2"), label2);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label3"), label3);
+    ms->use_state_for_center = true;
     ms->state.set({
+        {"label1_x", "<ztheta> 3 / cos <zradius> * .1 + <xshift> +"},
+        {"label1_y", "<ztheta> 3 / sin <zradius> * .1 +"},
+        {"label1_z", "0"},
+        {"label2_x", "<ztheta> pi 2 * + 3 / cos <zradius> * .1 + <xshift> +"},
+        {"label2_y", "<ztheta> pi 2 * + 3 / sin <zradius> * .1 +"},
+        {"label2_z", "0"},
+        {"label3_x", "<ztheta> pi 4 * + 3 / cos <zradius> * .1 + <xshift> +"},
+        {"label3_y", "<ztheta> pi 4 * + 3 / sin <zradius> * .1 +"},
+        {"label3_z", "0"},
+        {"surfaces_opacity", "0"},
+    });
+    ms->state.transition(MICRO, "surfaces_opacity", "1");
+    ms->state.set({
+        {"sqrt_disappear", "8"},
         {"loop1", "0"},
         {"loop2", "0"},
     });
@@ -3096,7 +3115,6 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     });
     cs.slide_subscene(MICRO, "ms", 0, -1);
     cs.render_microblock();
-    cs.remove_subscene("commutator");
     cps->construction.clear();
     cps->state.set("construction_opacity", "1");
 
@@ -3125,7 +3143,26 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     cs.render_microblock();
 
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    ms->state.transition(MICRO, "surfaces_opacity", "0");
+    cs.render_microblock();
+    ms->clear_surfaces();
+
     cs.stage_macroblock(CompositeBlock(FileBlock("Let's try a different commutator on the square root..."), SilenceBlock(3)), 4);
+    ms->state.set({
+        {"label4_x", "<ztheta> 2 / cos <zradius> * .1 + <xshift> -"},
+        {"label4_y", "<ztheta> 2 / sin <zradius> * .1 +"},
+        {"label4_z", "0"},
+        {"label5_x", "<ztheta> pi 2 * + 2 / cos <zradius> * .1 + <xshift> -"},
+        {"label5_y", "<ztheta> pi 2 * + 2 / sin <zradius> * .1 +"},
+        {"label5_z", "0"},
+    });
+    ms->state.transition(MICRO, "sqrt_disappear", "0");
+    ms->state.transition(MICRO, "surfaces_opacity", "1");
+    shared_ptr<LatexScene> label4 = make_shared<LatexScene>("4", 1, 0.2, 0.2);
+    shared_ptr<LatexScene> label5 = make_shared<LatexScene>("5", 1, 0.2, 0.2);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label4"), label4);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label5"), label5);
     cs.render_microblock();
     ms->state.set({
         {"sqrt_in_theta", "<loop3> 6.283 * sin .2 * <loop4> 6.283 * +"},
@@ -3146,6 +3183,9 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("No matter what commutator the input follows, or which root we try it on, each output always spins back to where it was before the commutator."), 7);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label1"), label1);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label2"), label2);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label3"), label3);
     cs.render_microblock();
     ms->state.transition(MICRO, "loop1", "1");
     ms->state.transition(MICRO, "loop3", "1");
@@ -3188,7 +3228,9 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.fade_subscene(MICRO, "ms", .1);
+    ms->state.transition(MICRO, "surfaces_opacity", "0");
     cs.render_microblock();
+    ms->clear_surfaces();
 
     cps->state.set(reset);
     cs.stage_macroblock(FileBlock("The cubic polynomial can express permutations..."), 4);
@@ -3347,10 +3389,16 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     });
     cs.render_microblock();
 
-    // TODO highlight outputs somehow
+    shared_ptr<LatexScene> label1 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
+    shared_ptr<LatexScene> label2 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
+    shared_ptr<LatexScene> label3 = make_shared<LatexScene>("3", 1, 0.2, 0.2);
+    ms->state.set("surfaces_opacity", "1");
     cs.stage_macroblock(FileBlock("Pay attention to the 3 outputs here."), 3);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label1"), label1);
     cs.render_microblock();
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label2"), label2);
     cs.render_microblock();
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label3"), label3);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Loop, loop, undo, undo..."), 5);
@@ -3364,13 +3412,18 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The three outputs did a cycle!"), 3);
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("The three outputs did a cycle!"), 7);
+    for(int i = 0; i < 7; i++) {
+        string opacity = (i % 2 == 0) ? "0" : "1";
+        ms->state.transition(MICRO, "surfaces_opacity", opacity);
+        cs.render_microblock();
+    }
 
     cs.stage_macroblock(FileBlock("Let's try that again. This time, watch the bar tying them together."), 1);
-    // TODO highlight the bar
+    ms->state.transition(MICRO, {
+        {"manifoldtie_x", "<sqrt_out_radius> <sqrt_out_theta> cos * <xshift> - (u) cos .03 * +"},
+        {"manifoldtie_z", "<sqrt_out_radius> <sqrt_out_theta> sin * <xshift> - (u) sin .03 * +"},
+    });
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("One, two, undo, undo..."), 4);
@@ -3384,6 +3437,11 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("See how it only went around the bottom pole once?"), 1);
+    ms->state.transition(MICRO, {
+        {"manifoldtie_x", "<sqrt_out_radius> <sqrt_out_theta> cos * <xshift> -"},
+        {"manifoldtie_z", "<sqrt_out_radius> <sqrt_out_theta> sin * <xshift> -"},
+    });
+    ms->state.transition(MICRO, "scale_cbrtpole", "1.3");
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(4), 4);
@@ -3394,6 +3452,10 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     ms->state.transition(MICRO, "twist1", "0");
     cs.render_microblock();
     ms->state.transition(MICRO, "twist2", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(.5), 1);
+    ms->state.transition(MICRO, "scale_cbrtpole", "1");
     cs.render_microblock();
 
     shared_ptr<LatexScene> cubic_formula = make_shared<LatexScene>("\\sqrt[3]{\\phantom{\\phantom{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right) +} \\sqrt{\\phantom{\\left(\\frac{-b^3}{27a^3} + \\frac{bc}{6a^2} - \\frac{d}{2a}\\right)^2 + \\left(\\frac{c}{3a} - \\frac{b^2}{9a^2}\\right)^3}}}}", 1);
@@ -3431,7 +3493,7 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
 }
 
 void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<ManifoldScene> ms) {
-    cs.stage_macroblock(CompositeBlock(SilenceBlock(2), FileBlock("Quartics have only a slightly harder trick up their sleeve.")), 3);
+    cs.stage_macroblock(CompositeBlock(FileBlock("Quartics have only a slightly harder trick up their sleeve."), SilenceBlock(1.5)), 3);
     cs.add_scene(cps, "cps");
     cps->coefficients_to_roots();
     cps->state.transition(MACRO, {
@@ -3568,6 +3630,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->state.transition(MICRO, {
         {"d", "2.2"},
     });
+    ms->state.transition(MICRO, "surfaces_opacity", "0");
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(10), 20);
@@ -3609,7 +3672,6 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("everything goes back to where it started!"), 1);
-    // TODO track roots
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The way to work around this is actually comically simple. Any guesses?"), 1);
@@ -4389,31 +4451,97 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
     shared_ptr<RootFractalScene> fracs = make_shared<RootFractalScene>();
     fracs->global_identifier = "fractal";
     cs.add_scene_fade_in(MICRO, fracs, "fracs");
+    fracs->state.begin_timer("endingtimer");
     fracs->state.set({
         {"terms", "17"},
         {"coefficients_opacity", "0"},
         {"ticks_opacity", "0"},
+        {"coefficient0_r", "<endingtimer> 3 * sin .01 *"},
+        {"coefficient0_i", "<endingtimer> 3 * cos .01 *"},
+        {"coefficient1_r", "1"},
+        {"coefficient1_i", "0"},
+        {"center_x", "<endingtimer> .1 * cos"},
+        {"center_y", "<endingtimer> .1 * sin"},
+        {"zoom", "2"},
     });
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("fracs");
 
-    cs.stage_macroblock(FileBlock("So there you have it! There is no general approach to solving polynomials. Hopefully now it makes sense why we get these beautiful fractals as a result."), 1);
+    cs.stage_macroblock(FileBlock("So there you have it! There's no general approach to solving polynomials. Hopefully now it makes sense why we get these beautiful fractals as a result."), 1);
+    cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("I wanted to make an interactive demo that you could use to explore these fractals yourself... but frontend web development isn't my forte, so I used Lovable to make one."), 1);
+    double lovable_logo_width = .5;
+    double image_aspect_ratio = 3643.0/620.0;
+    double lovable_logo_height = lovable_logo_width * VIDEO_WIDTH / image_aspect_ratio / VIDEO_HEIGHT;
+    shared_ptr<PngScene> lovable_logo = make_shared<PngScene>("LovableLogo", lovable_logo_width, lovable_logo_height);
+    cs.stage_macroblock(FileBlock("I wanted to make an interactive demo that you could use to explore these fractals yourself... but HTML and CSS aren't my forte, so I used Lovable to make one."), 6);
+    shared_ptr<Mp4Scene> demo = make_shared<Mp4Scene>(vector<string>{"InteractiveDemo"}, 60 / FRAMERATE);
+    cs.add_scene_fade_in(MICRO, demo, "demo");
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("demo");
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.add_scene(lovable_logo, "lovable_logo", lovable_logo_width/2, 1 + lovable_logo_height/2);
+    cs.slide_subscene(MICRO, "lovable_logo", 0, -lovable_logo_height);
+    cs.render_microblock();
+    cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("To make the page, I just described what I wanted it to look like, and it spit out a working interactive demo on the spot!"), 1);
+    Mp4Scene prompt_typing({"TypingLittlewoodPrompt"}, 60 / FRAMERATE * 2);
+    prompt_typing.stage_macroblock(FileBlock("To make the page, I just described that I wanted a visualizer for fractals made of roots of polynomials with certain legal coefficients,"), 1);
+    prompt_typing.render_microblock();
 
-    cs.stage_macroblock(FileBlock("You can visit this page in the description to play with the parameters yourself!"), 1);
-    cs.stage_macroblock(FileBlock("It was extremely quick and easy to make... or at least it would have been, but I stayed up all night playing with different options."), 1);
+    Mp4Scene first_try({"FirstTry"}, 60 / FRAMERATE * 2);
+    first_try.stage_macroblock(FileBlock("and it spit out a working interactive demo on the spot!"), 1);
+    first_try.render_microblock();
+
+    cs.stage_macroblock(FileBlock("You can visit the link in the description to play with the parameters yourself!"), 1);
+    cs.render_microblock();
+
+    Mp4Scene customizing({"Customizing"}, 60 / FRAMERATE * 2);
+    customizing.stage_macroblock(FileBlock("It was extremely quick and easy to make... or at least it would have been, but Lovable made it so easy to play with different options that I stayed up all night customizing the visualizer!"), 1);
+    customizing.render_microblock();
+
     cs.stage_macroblock(FileBlock("For example, I was curious what would happen if we allowed for 3 legal coefficients instead of just 2."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("All I had to do was ask!"), 1);
+    cs.render_microblock();
+    return;
+
+    cs.stage_macroblock(FileBlock("Quickly prototyping alternative designs is easy as cake!"), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("I also got Lovable to add a second mode for rendering coefficients of polynomials with only positive coefficients which add up to less than some value."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("I challenge you to use the demo to drag around the coefficients and try to find ways to swap different roots among themselves!"), 1);
-    cs.stage_macroblock(FileBlock("I've also been thinking about making a store to sell 2swap t-shirts, mugs, posters, and stickers."), 1);
-    cs.stage_macroblock(FileBlock("Just to get a feel for what that might look like, I used Lovable to quickly generate a prototype store."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("I've thought about making a store to sell 2swap t-shirts, mugs, posters, and stickers."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Just to get a feel for what it might look like, I used Lovable to quickly generate a prototype store."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("It immediately made a working, beautiful online storefront using the channel art which I provided."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("Lovable helps you easily create interactive web pages and online stores without needing to know any code."), 1);
-    cs.stage_macroblock(FileBlock("Go to lovable.dev to start building today and use my code XXXXXXX for 20 percent off!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("And best of all, it's free to try!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Go to lovable.dev to start building today, and use my code 2SWAPYT20 for 20 percent off!"), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("Thanks to Lovable for sponsoring this video!"), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("This has been 2swap, with music by 6884."), 1);
+    cs.render_microblock();
 }
 
 void render_video(){
@@ -4476,7 +4604,7 @@ void render_video(){
     ms->global_identifier = "3d";
 
     //FOR_REAL = false;
-    part_0(cs, cps);
+    /*part_0(cs, cps);
     cs.remove_all_subscenes();
     part_1(cs, cps);
     cs.remove_all_subscenes();
@@ -4491,5 +4619,6 @@ void render_video(){
     //FOR_REAL = true;
     part_5(cs, cps, ms);
     cs.remove_all_subscenes();
-    //ending(cs, cps);
+    */
+    ending(cs, cps);
 }
