@@ -279,8 +279,8 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.add_scene(title_scenes[4], "title_scene4", 1.5, .1);
     cs.add_scene(formula_scenes[4], "ls_formula4", 1.5);
     cs.state.transition(MACRO, {
-        {"title_scene4.x", ".5 {t} 1000 * sin <ringspin> * .001 * +"},
-        {"ls_formula4.x", ".5 {t} 1000 * sin <ringspin> * .002 * +"},
+        {"title_scene4.x", ".5 {t} 1000 * sin .001 * +"},
+        {"ls_formula4.x", ".5 {t} 1000 * sin .002 * +"},
     });
     cps->state.transition(MICRO, "construction_opacity", "0");
     cs.render_microblock();
@@ -1531,7 +1531,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     });
     fracs->render_microblock();
     fracs->state.transition(MICRO, {
-        {"zoom", "3"},
+        {"zoom", "4"},
     });
     fracs->render_microblock();
     fracs->render_microblock();
@@ -3090,15 +3090,15 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.05, 0, 0), glm::vec3(0, .05, 0), "label3"), label3);
     ms->use_state_for_center = true;
     ms->state.set({
-        {"label1_x", "<ztheta> 3 / cos <zradius> * .1 + <xshift> +"},
-        {"label1_y", "<ztheta> 3 / sin <zradius> * .1 +"},
-        {"label1_z", "0"},
-        {"label2_x", "<ztheta> pi 2 * + 3 / cos <zradius> * .1 + <xshift> +"},
-        {"label2_y", "<ztheta> pi 2 * + 3 / sin <zradius> * .1 +"},
-        {"label2_z", "0"},
-        {"label3_x", "<ztheta> pi 4 * + 3 / cos <zradius> * .1 + <xshift> +"},
-        {"label3_y", "<ztheta> pi 4 * + 3 / sin <zradius> * .1 +"},
-        {"label3_z", "0"},
+        {"label1.x", "<ztheta> 3 / cos <zradius> * .1 + <xshift> +"},
+        {"label1.y", "<ztheta> 3 / sin <zradius> * .1 +"},
+        {"label1.z", "0"},
+        {"label2.x", "<ztheta> pi 2 * + 3 / cos <zradius> * .1 + <xshift> +"},
+        {"label2.y", "<ztheta> pi 2 * + 3 / sin <zradius> * .1 +"},
+        {"label2.z", "0"},
+        {"label3.x", "<ztheta> pi 4 * + 3 / cos <zradius> * .1 + <xshift> +"},
+        {"label3.y", "<ztheta> pi 4 * + 3 / sin <zradius> * .1 +"},
+        {"label3.z", "0"},
         {"surfaces_opacity", "0"},
     });
     ms->state.transition(MICRO, "surfaces_opacity", "1");
@@ -3148,14 +3148,14 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     ms->clear_surfaces();
 
-    cs.stage_macroblock(CompositeBlock(FileBlock("Let's try a different commutator on the square root..."), SilenceBlock(3)), 4);
+    cs.stage_macroblock(CompositeBlock(FileBlock("Let's try a different commutator on the square root..."), SilenceBlock(3)), 5);
     ms->state.set({
-        {"label4_x", "<ztheta> 2 / cos <zradius> * .1 + <xshift> -"},
-        {"label4_y", "<ztheta> 2 / sin <zradius> * .1 +"},
-        {"label4_z", "0"},
-        {"label5_x", "<ztheta> pi 2 * + 2 / cos <zradius> * .1 + <xshift> -"},
-        {"label5_y", "<ztheta> pi 2 * + 2 / sin <zradius> * .1 +"},
-        {"label5_z", "0"},
+        {"label4.x", "<ztheta> 2 / cos <zradius> * .1 + <xshift> -"},
+        {"label4.y", "<ztheta> 2 / sin <zradius> * .1 +"},
+        {"label4.z", "0"},
+        {"label5.x", "<ztheta> pi 2 * + 2 / cos <zradius> * .1 + <xshift> -"},
+        {"label5.y", "<ztheta> pi 2 * + 2 / sin <zradius> * .1 +"},
+        {"label5.z", "0"},
     });
     ms->state.transition(MICRO, "sqrt_disappear", "0");
     ms->state.transition(MICRO, "surfaces_opacity", "1");
@@ -4471,7 +4471,7 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
     cs.stage_macroblock(FileBlock("So there you have it! There's no general approach to solving polynomials. Hopefully now it makes sense why we get these beautiful fractals as a result."), 1);
     cs.render_microblock();
 
-    double lovable_logo_width = .5;
+    double lovable_logo_width = .3;
     double image_aspect_ratio = 3643.0/620.0;
     double lovable_logo_height = lovable_logo_width * VIDEO_WIDTH / image_aspect_ratio / VIDEO_HEIGHT;
     shared_ptr<PngScene> lovable_logo = make_shared<PngScene>("LovableLogo", lovable_logo_width, lovable_logo_height);
@@ -4487,9 +4487,10 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
     cs.slide_subscene(MICRO, "lovable_logo", 0, -lovable_logo_height);
     cs.render_microblock();
     cs.render_microblock();
+    cs.remove_subscene("lovable_logo");
 
     Mp4Scene prompt_typing({"TypingLittlewoodPrompt"}, 60 / FRAMERATE * 2);
-    prompt_typing.stage_macroblock(FileBlock("To make the page, I just described that I wanted a visualizer for fractals made of roots of polynomials with certain legal coefficients,"), 1);
+    prompt_typing.stage_macroblock(FileBlock("To make the page, I just described that I wanted a visualizer for fractals made of solutions of polynomials with certain legal coefficients,"), 1);
     prompt_typing.render_microblock();
 
     Mp4Scene first_try({"FirstTry"}, 60 / FRAMERATE * 2);
@@ -4499,40 +4500,40 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
     cs.stage_macroblock(FileBlock("You can visit the link in the description to play with the parameters yourself!"), 1);
     cs.render_microblock();
 
-    Mp4Scene customizing({"Customizing"}, 60 / FRAMERATE * 2);
+    Mp4Scene customizing({"Customizing"}, 60.0 / FRAMERATE);
     customizing.stage_macroblock(FileBlock("It was extremely quick and easy to make... or at least it would have been, but Lovable made it so easy to play with different options that I stayed up all night customizing the visualizer!"), 1);
     customizing.render_microblock();
 
-    cs.stage_macroblock(FileBlock("For example, I was curious what would happen if we allowed for 3 legal coefficients instead of just 2."), 1);
-    cs.render_microblock();
+    demo->stage_macroblock(FileBlock("For example, I was curious what would happen if we allowed for 3 legal coefficients instead of just 2."), 1);
+    demo->render_microblock();
 
-    cs.stage_macroblock(FileBlock("All I had to do was ask!"), 1);
-    cs.render_microblock();
-    return;
+    demo->stage_macroblock(FileBlock("All I had to do was ask!"), 1);
+    demo->render_microblock();
 
-    cs.stage_macroblock(FileBlock("Quickly prototyping alternative designs is easy as cake!"), 1);
-    cs.render_microblock();
+    demo->stage_macroblock(FileBlock("Quickly prototyping alternative designs is easy as cake!"), 1);
+    demo->render_microblock();
 
-    cs.stage_macroblock(FileBlock("I also got Lovable to add a second mode for rendering coefficients of polynomials with only positive coefficients which add up to less than some value."), 1);
-    cs.render_microblock();
+    demo->stage_macroblock(FileBlock("I also got Lovable to add a second mode for rendering solutions of polynomials with only positive coefficients which add up to less than some value."), 1);
+    demo->render_microblock();
 
-    cs.stage_macroblock(FileBlock("I challenge you to use the demo to drag around the coefficients and try to find ways to swap different roots among themselves!"), 1);
-    cs.render_microblock();
+    demo->stage_macroblock(FileBlock("I challenge you to use the demo to drag around the coefficients and try to find ways to swap different roots among themselves!"), 1);
+    demo->render_microblock();
 
-    cs.stage_macroblock(FileBlock("I've thought about making a store to sell 2swap t-shirts, mugs, posters, and stickers."), 1);
-    cs.render_microblock();
+    Mp4Scene store_demo({"StoreDemo"}, 60 / FRAMERATE);
+    store_demo.stage_macroblock(FileBlock("I've wondered about making a store to sell 2swap t-shirts, mugs, posters, and stickers."), 1);
+    store_demo.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Just to get a feel for what it might look like, I used Lovable to quickly generate a prototype store."), 1);
-    cs.render_microblock();
+    store_demo.stage_macroblock(FileBlock("Just to get a feel for what it might look like, I used Lovable to quickly generate a prototype store."), 1);
+    store_demo.render_microblock();
 
-    cs.stage_macroblock(FileBlock("It immediately made a working, beautiful online storefront using the channel art which I provided."), 1);
-    cs.render_microblock();
+    store_demo.stage_macroblock(FileBlock("It immediately made a working, beautiful online storefront using the channel art which I provided."), 1);
+    store_demo.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Lovable helps you easily create interactive web pages and online stores without needing to know any code."), 1);
-    cs.render_microblock();
+    store_demo.stage_macroblock(FileBlock("Lovable helps you easily create interactive web pages and online stores without needing to know any code."), 1);
+    store_demo.render_microblock();
 
-    cs.stage_macroblock(FileBlock("And best of all, it's free to try!"), 1);
-    cs.render_microblock();
+    store_demo.stage_macroblock(FileBlock("And best of all, it's free to try!"), 1);
+    store_demo.render_microblock();
 
     cs.stage_macroblock(FileBlock("Go to lovable.dev to start building today, and use my code 2SWAPYT20 for 20 percent off!"), 1);
     cs.render_microblock();
@@ -4603,22 +4604,22 @@ void render_video(){
     shared_ptr<ManifoldScene> ms = make_shared<ManifoldScene>();
     ms->global_identifier = "3d";
 
-    //FOR_REAL = false;
-    /*part_0(cs, cps);
-    cs.remove_all_subscenes();
-    part_1(cs, cps);
-    cs.remove_all_subscenes();
-    part_2(cs, cps, ms);
-    cs.remove_all_subscenes();
-    part_3(cs, cps, ms);
-    cs.remove_all_subscenes();
-    part_3p5(cs, cps, ms);
-    cs.remove_all_subscenes();
-    part_4(cs, cps, ms);
-    cs.remove_all_subscenes();
-    //FOR_REAL = true;
-    part_5(cs, cps, ms);
-    cs.remove_all_subscenes();
-    */
+    if(true){
+        part_0(cs, cps);
+        cs.remove_all_subscenes();
+        part_1(cs, cps);
+        cs.remove_all_subscenes();
+        part_2(cs, cps, ms);
+        cs.remove_all_subscenes();
+        part_3(cs, cps, ms);
+        cs.remove_all_subscenes();
+        part_3p5(cs, cps, ms);
+        cs.remove_all_subscenes();
+        part_4(cs, cps, ms);
+        cs.remove_all_subscenes();
+        part_5(cs, cps, ms);
+        cs.remove_all_subscenes();
+    }
+    
     ending(cs, cps);
 }

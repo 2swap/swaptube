@@ -14,63 +14,6 @@ extern "C" {
 
 #include "../misc/pixels.h"
 
-// mp4_num_frames:
-// Returns the number of frames in the given MP4 video file.
-/*int mp4_num_frames(const std::string &filename) {
-    std::string fname = filename;
-    if (fname.length() < 4 || fname.substr(fname.length() - 4) != ".mp4") {
-        fname += ".mp4";
-    }
-    fname = PATH_MANAGER.this_project_media_dir + fname;
-
-    AVFormatContext* fmtCtx = nullptr;
-    if (avformat_open_input(&fmtCtx, fname.c_str(), nullptr, nullptr) != 0) {
-        throw std::runtime_error("Could not open video file: " + fname);
-    }
-    if (avformat_find_stream_info(fmtCtx, nullptr) < 0) {
-        avformat_close_input(&fmtCtx);
-        throw std::runtime_error("Could not retrieve stream info from file: " + fname);
-    }
-
-    // Find the first video stream
-    int videoStreamIdx = -1;
-    for (unsigned int i = 0; i < fmtCtx->nb_streams; i++) {
-        if (fmtCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-            videoStreamIdx = i;
-            break;
-        }
-    }
-    if (videoStreamIdx == -1) {
-        avformat_close_input(&fmtCtx);
-        throw std::runtime_error("No video stream found in file: " + fname);
-    }
-
-    AVStream* videoStream = fmtCtx->streams[videoStreamIdx];
-
-    int64_t nb_frames = videoStream->nb_frames;
-    if (nb_frames == 0) {
-        // nb_frames may be zero for some containers, fallback to duration / frame time base estimate
-        AVRational frame_rate = av_guess_frame_rate(fmtCtx, videoStream, nullptr);
-        if (frame_rate.num == 0 || frame_rate.den == 0) {
-            avformat_close_input(&fmtCtx);
-            throw std::runtime_error("Could not determine frame rate for file: " + fname);
-        }
-        int64_t duration = videoStream->duration;
-        if (duration == AV_NOPTS_VALUE) {
-            duration = fmtCtx->duration / AV_TIME_BASE;
-            if (duration <= 0) {
-                avformat_close_input(&fmtCtx);
-                throw std::runtime_error("Could not determine duration for file: " + fname);
-            }
-        }
-        // Calculate approximate frame count
-        nb_frames = (int64_t)((double)duration * frame_rate.num / frame_rate.den);
-    }
-
-    avformat_close_input(&fmtCtx);
-    return static_cast<int>(nb_frames);
-}*/
-
 // mp4_to_pix_bounding_box:
 // Loads the specified frame (by index) from the given MP4 file,
 // scales it to (target_width x target_height) using a bounding box approach,
@@ -90,10 +33,15 @@ public:
         cleanup();
     }
 
+    void change_video(const std::string &video_name) {
+        reset();
+        open_file(video_name);
+    }
+
     Pixels get_frame(int frame_index, int target_width, int target_height, bool &no_more_frames) {
         no_more_frames = false;
 
-        if (frame_index < currentFrame) {
+        if (frame_index <= currentFrame) {
             // Requested an earlier frame -> reset decoding.
             reset();
             open_file(filename);

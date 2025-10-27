@@ -22,17 +22,21 @@ public:
     void draw() override {
         int current_frame_index = state["current_frame_index"];
         int current_frame_index_adjusted = current_frame_index - first_frame_this_video;
-        cout << "rendering concatenated mp4 videos, frame " << to_string(current_frame_index) << endl;
+        cout << "rendering concatenated mp4 videos, frame " << to_string(current_frame_index_adjusted) << endl;
 
         // Load the current video frame into a Pixels object.
         bool no_more_frames = false;
-        Pixels frame = current_video_reader.get_frame(current_frame_index, get_width(), get_height(), no_more_frames);
+        Pixels frame = current_video_reader.get_frame(current_frame_index_adjusted, get_width(), get_height(), no_more_frames);
         if (no_more_frames) {
             cout << "No more frames!" << endl;
             first_frame_this_video = current_frame_index;
+            cout << "A" << endl;
             current_video_index = (current_video_index + 1) % video_filenames.size();
-            current_video_reader = MP4FrameReader(video_filenames[current_video_index]);
+            cout << "B" << endl;
+            current_video_reader.change_video(video_filenames[current_video_index]);
+            cout << "C" << endl;
             frame = current_video_reader.get_frame(0, get_width(), get_height(), no_more_frames);
+            cout << "D" << endl;
         }
 
         // Calculate the offsets to center the frame in the output
@@ -40,7 +44,6 @@ public:
         int y_offset = (get_height() - frame.h) / 2;
 
         pix.overwrite(frame, x_offset, y_offset);
-        current_frame_index++;
     }
 
     const StateQuery populate_state_query() const override {
