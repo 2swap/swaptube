@@ -2,6 +2,7 @@
 
 void render_video() {
 
+    VIDEO_BACKGROUND_COLOR = 0xff101010;
     // Option 1: period length 3
     //string loop_part = "(\\x. (\\y. (((\\i. (i i)) x) y)))";
     //string term_string = "(" + loop_part + " " + loop_part + ")";

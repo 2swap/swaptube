@@ -88,16 +88,25 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
     }
 }
 
+__device__ float sigmoid(float x) {
+    return 3*x*x-2*x*x*x;
+}
+
 __global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, float* d_red, float* d_green, float* d_blue, int w, int h) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int total = w * h;
 
     if (idx >= total) return;
 
-    unsigned int a = clamp(d_alpha[idx]                                      , 0.0f, 255.9f);
-    unsigned int r = clamp(d_red  [idx] * 256 / (d_alpha[idx] + .000001) + 64, 0.0f, 255.9f);
-    unsigned int g = clamp(d_green[idx] * 256 / (d_alpha[idx] + .000001) + 64, 0.0f, 255.9f);
-    unsigned int b = clamp(d_blue [idx] * 256 / (d_alpha[idx] + .000001) + 64, 0.0f, 255.9f);
+    float inv = 1.0f / (d_alpha[idx] + .000001);
+    float r_mod = sigmoid(sigmoid(d_red  [idx] * inv));
+    float g_mod = sigmoid(sigmoid(d_green[idx] * inv));
+    float b_mod = sigmoid(sigmoid(d_blue [idx] * inv));
+
+    unsigned int a = clamp(d_alpha[idx] * 2, 0.0f, 255.9f);
+    unsigned int r = clamp(r_mod * 206 + 50, 0.0f, 255.9f);
+    unsigned int g = clamp(g_mod * 206 + 50, 0.0f, 255.9f);
+    unsigned int b = clamp(b_mod * 206 + 50, 0.0f, 255.9f);
 
     d_pixels[idx] = d_argb(a, r, g, b);
 }

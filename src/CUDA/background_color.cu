@@ -20,7 +20,7 @@ void alpha_overlay_kernel(unsigned int* pixels,
 
     unsigned int pix = pixels[idx];
 
-    pixels[idx] = d_colorlerp(bg, d_argb(255, d_getr(pix), d_getg(pix), d_getb(pix)), d_geta(pix) / 255.0f);
+    pixels[idx] = d_color_combine(bg, pix);
 }
 
 extern "C"

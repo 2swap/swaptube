@@ -81,7 +81,6 @@ string point_z_start_sqrt = "<sqrt_in_radius> <sqrt_in_theta> sin * (u) sin (v) 
 string point_z_start_qrt = "<qrt_in_radius> <qrt_in_theta> sin * (u) sin (v) sin * .02 * +";
 
 void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
-    FOR_REAL = false;
     shared_ptr<RootFractalScene> rfs_intro = make_shared<RootFractalScene>();
     rfs_intro->global_identifier = "fractal";
     rfs_intro->state.set({{"terms", "18"}, {"coefficients_opacity", "0"}, {"ticks_opacity", "0"}});
@@ -277,7 +276,6 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
     cs.remove_all_subscenes_except("cps");
 
-    FOR_REAL = true;
     cs.stage_macroblock(FileBlock("and solve the mystery... of the missing quintic formula."), 2);
     cps->coefficients_to_roots();
     cps->state.transition(MICRO, {
@@ -330,7 +328,6 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
         {"coefficient3_opacity", "1"},
     });
     cs.render_microblock();
-    return;
 
     cs.stage_macroblock(FileBlock("This graph shows the relationship between a cubic polynomial's coefficients and its solutions."), 10);
     cs.render_microblock();
@@ -3421,11 +3418,11 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
         {"label1.x", "<label_twist> cos <xshift> +"},
         {"label1.y", "<label_twist> sin"},
         {"label1.z", "0"},
-        {"label2.x", "<label_twist> pi 2 * 3 / cos <xshift> +"},
-        {"label2.y", "<label_twist> pi 2 * 3 / sin"},
+        {"label2.x", "<label_twist> pi 2 * 3 / + cos <xshift> +"},
+        {"label2.y", "<label_twist> pi 2 * 3 / + sin"},
         {"label2.z", "0"},
-        {"label3.x", "<label_twist> pi 4 * 3 / cos <xshift> +"},
-        {"label3.y", "<label_twist> pi 4 * 3 / sin"},
+        {"label3.x", "<label_twist> pi 4 * 3 / + cos <xshift> +"},
+        {"label3.y", "<label_twist> pi 4 * 3 / + sin"},
         {"label3.z", "0"},
     });
     cs.stage_macroblock(FileBlock("Pay attention to the 3 outputs here."), 3);
@@ -3455,7 +3452,7 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
         cs.render_microblock();
     }
 
-    cs.stage_macroblock(FileBlock("Let's try that again. This time, watch the bar tying them together."), 1);
+    cs.stage_macroblock(FileBlock("Let's try that again. This time, watch the bar tying them together."), 2);
     ms->state.transition(MACRO, {
         {"qi", "{t} sin .01 *"},
     });
@@ -3653,16 +3650,6 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->state.set({
         {"d", "4"},
     });
-    cps->state.remove({
-        "point_1_x",
-        "point_1_y",
-        "point_2_x",
-        "point_2_y",
-        "point_3_x",
-        "point_3_y",
-        "point_4_x",
-        "point_4_y",
-    });
     cs.add_scene_fade_in(MICRO, ms, "ms");
     cps->state.transition(MICRO, "center_y", "4");
     cps->state.transition(MICRO, {
@@ -3684,6 +3671,16 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->state.transition(MICRO, "surfaces_opacity", "0");
     cs.render_microblock();
     cps->construction.clear();
+    cps->state.remove({
+        "point_1_x",
+        "point_1_y",
+        "point_2_x",
+        "point_2_y",
+        "point_3_x",
+        "point_3_y",
+        "point_4_x",
+        "point_4_y",
+    });
 
     cs.stage_macroblock(SilenceBlock(10), 20);
     ms->state.transition(MICRO, "twist1", "1");
@@ -3762,12 +3759,6 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         "0", "6.28318", "400",
         "-.4", ".4", "400"
     );
-    ms->add_manifold("tie2",
-        "<cbrt_out_radius> <cbrt_out_theta> cos * <cbrt_center_x> +", "(v) <cbrt_center_y> <qrt_center> - * <qrt_center_y> +", "<cbrt_out_radius> <cbrt_out_theta> sin *",
-        "0.00001", "0.00001",
-        "0", "6.28318", "100",
-        "-1", "1", "600"
-    );
     ms->state.set({
         {"hide_sqrt", "0"},
         {"hide_cbrt", "0"},
@@ -3783,6 +3774,12 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"cbrt_out_radius", "<cbrt_in_x> 2 ^ <cbrt_in_y> 2 ^ + .5 ^"},
         {"cbrt_out_theta", "<cbrt_in_y> <cbrt_in_x> atan2"},
     });
+    ms->add_manifold("tie2",
+        "<cbrt_out_radius> <cbrt_out_theta> cos * <cbrt_center_x> +", "(v) <cbrt_center_y> <qrt_center> - * <qrt_center_y> +", "<cbrt_out_radius> <cbrt_out_theta> sin *",
+        "0.00001", "0.00001",
+        "0", "6.28318", "100",
+        "-1", "1", "600"
+    );
     ms->state.transition(MICRO, {
         {"d", "4"},
 
@@ -4524,7 +4521,7 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
     cs.add_scene_fade_in(MICRO, fracs, "fracs");
     fracs->state.begin_timer("endingtimer");
     fracs->state.set({
-        {"terms", "17"},
+        {"terms", "18"},
         {"coefficients_opacity", "0"},
         {"ticks_opacity", "0"},
         {"coefficient0_r", "<endingtimer> 3 * sin .01 *"},
@@ -4533,7 +4530,7 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
         {"coefficient1_i", "0"},
         {"center_x", "<endingtimer> .1 * cos"},
         {"center_y", "<endingtimer> .1 * sin"},
-        {"zoom", "2"},
+        {"zoom", "3"},
     });
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
@@ -4677,7 +4674,6 @@ void render_video(){
     if(true){
         part_0(cs, cps);
         cs.remove_all_subscenes();
-        return;
         part_1(cs, cps);
         cs.remove_all_subscenes();
         part_2(cs, cps, ms);

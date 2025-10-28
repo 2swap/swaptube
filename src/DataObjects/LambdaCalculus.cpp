@@ -7,7 +7,6 @@
 #include <memory>
 #include <unordered_set>
 
-#include "../misc/inlines.h"
 #include "../misc/color.cpp"
 #include "../misc/pixels.h"
 #include "DataObject.cpp"
