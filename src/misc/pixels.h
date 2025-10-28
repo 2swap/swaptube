@@ -557,6 +557,18 @@ public:
                 get_average_color(x0, top_y0, x1, top_y1, a_top, r_top, g_top, b_top);
                 get_average_color(x0, bot_y0, x1, bot_y1, a_bot, r_bot, g_bot, b_bot);
 
+                double alpha_top = a_top / 255.;
+                double one_minus_alpha_top = 1-alpha_top;
+                r_top = r_top * alpha_top + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
+                g_top = g_top * alpha_top + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
+                b_top = b_top * alpha_top + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_top;
+
+                double alpha_bot = a_bot / 255.;
+                double one_minus_alpha_bot = 1-alpha_bot;
+                r_bot = r_bot * alpha_bot + getr(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
+                g_bot = g_bot * alpha_bot + getg(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
+                b_bot = b_bot * alpha_bot + getb(VIDEO_BACKGROUND_COLOR) * one_minus_alpha_bot;
+
                 // Use ANSI true-color escape sequences:
                 //  - Set foreground to the average top color.
                 //  - Set background to the average bottom color.

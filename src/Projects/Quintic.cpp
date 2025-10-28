@@ -3775,7 +3775,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"cbrt_out_theta", "<cbrt_in_y> <cbrt_in_x> atan2"},
     });
     ms->add_manifold("tie2",
-        "<cbrt_out_radius> <cbrt_out_theta> cos * <cbrt_center_x> +", "(v) <cbrt_center_y> <qrt_center> - * <qrt_center_y> +", "<cbrt_out_radius> <cbrt_out_theta> sin *",
+        "<cbrt_out_radius> <cbrt_out_theta> cos * <cbrt_center_x> +", "(v) <cbrt_center_y> <qrt_center_y> - * <qrt_center_y> +", "<cbrt_out_radius> <cbrt_out_theta> sin *",
         "0.00001", "0.00001",
         "0", "6.28318", "100",
         "-1", "1", "600"
