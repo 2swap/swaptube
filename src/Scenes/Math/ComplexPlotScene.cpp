@@ -299,7 +299,7 @@ public:
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
             state["ab_dilation"],
-            state["dot_radius"] * .4
+            state["dot_radius"] * .3
         );
 
         float gm = get_geom_mean_size() / 200;

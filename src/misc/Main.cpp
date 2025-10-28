@@ -24,10 +24,7 @@ enum TransitionType {
 
 const string project_name = PROJECT_NAME_MACRO;
 
-//const int VIDEO_BACKGROUND_COLOR = 0xff000020; // Lambda Blue
-//const int VIDEO_BACKGROUND_COLOR = 0xff202020; // Charcoal Grey
-const int VIDEO_BACKGROUND_COLOR = 0xff101010; // Charcoal Grey...er
-//const int VIDEO_BACKGROUND_COLOR = 0xff000000; // Black
+int VIDEO_BACKGROUND_COLOR = 0xff000000;
 
 #include "../io/AudioWriter.cpp"
 #include "../io/VideoWriter.cpp"

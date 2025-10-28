@@ -219,12 +219,12 @@ private:
         Pixels* p = nullptr;
         query(p);
 
-        bool fifth_frame = int(global_state["frame_number"]) % 5 == 0;
-        if((!rendering_on() || fifth_frame) && PRINT_TO_TERMINAL) p->print_to_terminal();
-
         if (rendering_on()) { // Do not encode during smoketest
             VIDEO_WRITER.add_frame(*p);
         }
+
+        bool fifth_frame = int(global_state["frame_number"]) % 5 == 0;
+        if((!rendering_on() || fifth_frame) && PRINT_TO_TERMINAL) p->print_to_terminal();
 
         auto end_time = chrono::high_resolution_clock::now();
         write_one_frame_to_data_plots(end_time - start_time);

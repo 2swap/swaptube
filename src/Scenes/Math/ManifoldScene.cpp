@@ -67,7 +67,6 @@ public:
     }
 
     void draw() override {
-        ThreeDimensionScene::draw();
         ManifoldData* manifolds = new ManifoldData[manifold_names.size()];
         std::vector<std::string> eqs;
         eqs.reserve(manifold_names.size() * 5);
@@ -120,6 +119,7 @@ public:
             state["dot_radius"],
             state["axes_length"]
         );
+        ThreeDimensionScene::draw();
     }
 
     const StateQuery populate_state_query() const override {

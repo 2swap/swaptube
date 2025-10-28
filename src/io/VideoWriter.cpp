@@ -12,7 +12,14 @@ extern "C"
 {
     #include <libavcodec/avcodec.h>
     #include <libavformat/avformat.h>
+    #include <libswscale/swscale.h>
+    #include <libavutil/opt.h>
 }
+
+extern "C"
+void alpha_overlay_cuda(unsigned int* src_host,
+                        int width, int height,
+                        unsigned int bg_color);
 
 using namespace std;
 
@@ -73,6 +80,7 @@ private:
     AVFrame *yuvpic = nullptr;
     AVPacket pkt = {0};
     unsigned outframe = 0;
+    SwsContext* sws_ctx = nullptr;
 
     bool encode_and_write_frame(AVFrame* frame){
         int ret = send_frame(videoCodecContext, frame);
@@ -109,7 +117,8 @@ public:
         }
 
         AVDictionary* opt = NULL;
-        av_dict_set(&opt, "preset", "ultrafast", 0);
+        av_dict_set(&opt, "preset", "medium", 0);
+        av_dict_set(&opt, "tune", "film", 0);
         av_dict_set(&opt, "crf", "18", 0);
 
         videoStream = avformat_new_stream(fc, codec);
@@ -151,63 +160,58 @@ public:
             throw runtime_error("Failed to write header!");
         }
 
-        // Allocating memory for each RGB and YUV frame.
+        // Allocating memory for each YUV frame.
         yuvpic = av_frame_alloc();
         yuvpic->format = AV_PIX_FMT_YUV420P;
         yuvpic->width = VIDEO_WIDTH;
         yuvpic->height = VIDEO_HEIGHT;
         av_frame_get_buffer(yuvpic, 1);
+
+        sws_ctx = sws_getContext(
+            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_BGRA,    // Input format from Pixels
+            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P, // Output for encoder
+            SWS_BICUBIC,
+            nullptr, nullptr, nullptr);
+
+        if (!sws_ctx) {
+            throw std::runtime_error("Failed to create SwsContext for RGB->YUV conversion!");
+        }
     }
 
-    void add_frame(const Pixels& p) {
+    void add_frame(Pixels& p) {
         if (p.w != VIDEO_WIDTH || p.h != VIDEO_HEIGHT)
             throw runtime_error("Frame dimensions were expected to be (" + to_string(VIDEO_WIDTH) + ", " + to_string(VIDEO_HEIGHT) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
 
-        uint8_t* y_plane = yuvpic->data[0];
-        uint8_t* u_plane = yuvpic->data[1];
-        uint8_t* v_plane = yuvpic->data[2];
+        // Allocate a temporary RGB frame wrapper (no copy of pixel data)
+        AVFrame* rgb_frame = av_frame_alloc();
+        rgb_frame->format = AV_PIX_FMT_BGRA;
+        rgb_frame->width  = VIDEO_WIDTH;
+        rgb_frame->height = VIDEO_HEIGHT;
 
-        int y_stride = yuvpic->linesize[0];
-        int u_stride = yuvpic->linesize[1];
-        int v_stride = yuvpic->linesize[2];
+        if(VIDEO_BACKGROUND_COLOR & 0xFF000000 != 0xFF000000)
+            alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()),
+                               VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_BACKGROUND_COLOR);
 
-        for (unsigned int y = 0; y < VIDEO_HEIGHT; y++) {
-            for (unsigned int x = 0; x < VIDEO_WIDTH; x++) {
-                int a, r, g, b;
-                p.get_pixel_by_channels(x, y, a, r, g, b);
+        // Point FFmpeg directly to your source data
+        rgb_frame->data[0] = reinterpret_cast<uint8_t*>(p.pixels.data());
+        rgb_frame->linesize[0] = VIDEO_WIDTH * 4;
 
-                double alpha = a / 255.0;
+        // Convert RGB → YUV using swscale
+        sws_scale(sws_ctx,
+                  rgb_frame->data,
+                  rgb_frame->linesize,
+                  0, VIDEO_HEIGHT,
+                  yuvpic->data,
+                  yuvpic->linesize);
 
-                r = lerp(getr(VIDEO_BACKGROUND_COLOR), r, alpha);
-                g = lerp(getg(VIDEO_BACKGROUND_COLOR), g, alpha);
-                b = lerp(getb(VIDEO_BACKGROUND_COLOR), b, alpha);
+        rgb_frame->data[0] = nullptr;
+        av_frame_free(&rgb_frame);
 
-                // Convert RGB to YUV
-                double y_value = 0.257 * r + 0.504 * g + 0.098 * b + 16;
-
-                // Assign to Y plane
-                y_plane[y * y_stride + x] = static_cast<uint8_t>(std::clamp(y_value, 0.0, 255.0));
-
-                // Assign to U and V planes (downsample 2x2)
-                if (x % 2 == 0 && y % 2 == 0) {
-                    double u_value = -0.148 * r - 0.291 * g + 0.439 * b + 128;
-                    double v_value = 0.439 * r - 0.368 * g - 0.071 * b + 128;
-                    int u_idx = (y / 2) * u_stride + (x / 2);
-                    int v_idx = (y / 2) * v_stride + (x / 2);
-                    u_plane[u_idx] = static_cast<uint8_t>(std::clamp(u_value, 0.0, 255.0));
-                    v_plane[v_idx] = static_cast<uint8_t>(std::clamp(v_value, 0.0, 255.0));
-                }
-            }
-        }
-
-        // The PTS of the frame are just in a reference unit,
-        // unrelated to the format we are using. We set them,
-        // for instance, as the corresponding frame number.
-        yuvpic->pts = outframe;
-        outframe++;
-
+        // Assign PTS and encode
+        yuvpic->pts = outframe++;
         encode_and_write_frame(yuvpic);
     }
+
     ~VideoWriter() {
         //int pipefd[2];
         //int original_stderr = redirect_stderr(pipefd);
@@ -227,5 +231,7 @@ public:
         avio_closep(&fc->pb);
         avformat_free_context(fc);
         //restore_stderr(original_stderr);
+
+        if (sws_ctx) sws_freeContext(sws_ctx);
     }
 };
