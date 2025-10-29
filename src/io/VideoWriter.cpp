@@ -133,7 +133,7 @@ public:
         }
         videoCodecContext->width = VIDEO_WIDTH;
         videoCodecContext->height = VIDEO_HEIGHT;
-        videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;
+        videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P10LE;
         videoCodecContext->time_base = videoStream->time_base = { 1, FRAMERATE };
         videoCodecContext->color_range = AVCOL_RANGE_JPEG;
         videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -162,14 +162,14 @@ public:
 
         // Allocating memory for each YUV frame.
         yuvpic = av_frame_alloc();
-        yuvpic->format = AV_PIX_FMT_YUV420P;
+        yuvpic->format = AV_PIX_FMT_YUV420P10LE;
         yuvpic->width = VIDEO_WIDTH;
         yuvpic->height = VIDEO_HEIGHT;
         av_frame_get_buffer(yuvpic, 1);
 
         sws_ctx = sws_getContext(
-            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_BGRA,    // Input format from Pixels
-            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P, // Output for encoder
+            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_BGRA,        // Input format from Pixels
+            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P10LE, // Output for encoder
             SWS_BICUBIC,
             nullptr, nullptr, nullptr);
 

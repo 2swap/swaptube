@@ -183,8 +183,8 @@ public:
         const glm::vec2 right = point_to_pixel(glm::vec2(width,0));
         const glm::vec2 top = point_to_pixel(glm::vec2(0,width));
         const glm::vec2 bottom = point_to_pixel(glm::vec2(0,-width));
-        pix.bresenham(left.x, left.y, right.x, right.y, OPAQUE_WHITE, zc_opacity, gmsz/300.);
-        pix.bresenham(top.x, top.y, bottom.x, bottom.y, OPAQUE_WHITE, zc_opacity, gmsz/300.);
+        pix.bresenham(left.x, left.y, right.x, right.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
+        pix.bresenham(top.x, top.y, bottom.x, bottom.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
     }
 
     void draw_axes() {

@@ -173,7 +173,7 @@ extern "C" void cuda_render_manifold(
         cudaFree(d_i_eq);
     }
 
-    cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xff8888ff);
+    cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xffffbbbb);
 
     // Copy pixels back to host
     cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
