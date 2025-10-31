@@ -133,8 +133,8 @@ public:
             glm::vec2 start_point = l.start;
             glm::vec2 end_point = l.end;
             if(l.use_state) {
-                start_point = glm::vec2(state["line_"+l.label+"_start_x"], state["line_"+l.label+"_start_y"]);
-                end_point = glm::vec2(state["line_"+l.label+"_end_x"], state["line_"+l.label+"_end_y"]);
+                start_point = glm::vec2(state["line_"+l.identifier+"_start_x"], state["line_"+l.identifier+"_start_y"]);
+                end_point = glm::vec2(state["line_"+l.identifier+"_end_x"], state["line_"+l.identifier+"_end_y"]);
             }
             glm::vec2 start_pixel = point_to_pixel(start_point);
             glm::vec2 end_pixel = point_to_pixel(end_point);
@@ -146,14 +146,9 @@ public:
             }
             geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, line_color, 1, line_thickness*.75);
         }
-        // TODO implement
-        /*for(const GeometricArc& a : construction.arcs) {
-            const glm::vec2 center_pixel = point_to_pixel(a.center);
-            geometry.arc(center_pixel.x, center_pixel.y, a.radius, a.start_angle, a.end_angle, construction_color, 1, line_thickness);
-        }*/
         for(const GeometricPoint& p : construction.points) {
             glm::vec2 position = p.position;
-            if(p.use_state) position = glm::vec2(state["point_"+p.label+"_x"], state["point_"+p.label+"_y"]);
+            if(p.use_state) position = glm::vec2(state["point_"+p.identifier+"_x"], state["point_"+p.identifier+"_y"]);
             const glm::vec2 position_pixel = point_to_pixel(position);
             double radius = line_thickness * p.width_multiplier * 2;
             if(!p.old) {
@@ -251,16 +246,16 @@ public:
         }
         for (const GeometricPoint& p : construction.points) {
             if(p.use_state) {
-                sq.insert("point_"+p.label+"_x");
-                sq.insert("point_"+p.label+"_y");
+                sq.insert("point_"+p.identifier+"_x");
+                sq.insert("point_"+p.identifier+"_y");
             }
         }
         for (const GeometricLine& l : construction.lines) {
             if(l.use_state) {
-                sq.insert("line_"+l.label+"_start_x");
-                sq.insert("line_"+l.label+"_start_y");
-                sq.insert("line_"+l.label+"_end_x");
-                sq.insert("line_"+l.label+"_end_y");
+                sq.insert("line_"+l.identifier+"_start_x");
+                sq.insert("line_"+l.identifier+"_start_y");
+                sq.insert("line_"+l.identifier+"_end_x");
+                sq.insert("line_"+l.identifier+"_end_y");
             }
         }
         return sq;

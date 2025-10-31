@@ -77,6 +77,7 @@ public:
         cout << ")" << flush;
     }
 
+    // TODO can this be made a global static function instead of a member function?
     void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_macroblock){
         if (expected_microblocks_in_macroblock <= 0) {
             throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count. (" + to_string(expected_microblocks_in_macroblock) + " microblocks)");
