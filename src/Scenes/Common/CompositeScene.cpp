@@ -16,6 +16,7 @@ public:
     CompositeScene(const double width = 1, const double height = 1)
         : SuperScene(width, height) {}
 
+    // TODO glm vec2s for the positions for easier type checking in the arg list
     void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_name, double x = 0.5, double y = 0.5, double opa=1, bool behind = false){
         add_scene(sc, state_name, x, y, behind);
         state.set(state_name + ".opacity", "0");

@@ -24,7 +24,7 @@ enum TransitionType {
 
 const string project_name = PROJECT_NAME_MACRO;
 
-int VIDEO_BACKGROUND_COLOR = 0xff000000;
+int VIDEO_BACKGROUND_COLOR = 0xff010101;
 
 #include "../io/AudioWriter.cpp"
 #include "../io/VideoWriter.cpp"

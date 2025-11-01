@@ -95,6 +95,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
         {"zoom", "2"},
     });
     rfs_intro->render_microblock();
+    return;
 
     rfs_intro->stage_macroblock(FileBlock("Aside from looking pretty, they illustrate polynomials' intrinsic complexity."), 2);
     rfs_intro->state.transition(MICRO, {
@@ -660,6 +661,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     });
     cps->transition_coefficient_opacities(MICRO, 0);
     tds.render_microblock();
+    tds.remove_all_subscenes();
 
     cs.add_scene(cps, "cps");
     cs.stage_macroblock(FileBlock("Imagine there's nothing but natural numbers- 0, 1, 2, 3, sitting happily on the right side of the number line."), 12);
@@ -1589,8 +1591,8 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     fracs->state.transition(MACRO, {
         {"center_x", "-.48165"},
         {"center_y", "-.45802"},
-        {"coefficient0_r", "-1.4 {t} .1 * cos .05 * +"},
-        {"coefficient0_i", ".4 {t} .1 * sin .05 * +"},
+        {"coefficient0_r", "-1.4 {t} .1 * cos .1 * +"},
+        {"coefficient0_i", ".4 {t} .1 * sin .1 * +"},
     });
     fracs->render_microblock();
 
@@ -2363,7 +2365,7 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         "(u) (v) cos *", "0", "(u) (v) sin *",
         "(u) .5 ^ (v) 2 / cos * -1 * 10 *", "(u) .5 ^ (v) 2 / sin * -1 * 10 *",
         "0", "1.5", "3000",
-        "-3.14159", "3.14159", "11000"
+        "-3.14159", "3.14159", "12000"
     );
     cs.add_scene_fade_in(MICRO, ms, "ms");
     cs.render_microblock();
@@ -2440,6 +2442,9 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
 
     cs.stage_macroblock(FileBlock("Here's the complex plane."), 1);
     ms->state.transition(MICRO, "axes_length", "0");
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(.5), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Picking some complex number, we can evaluate the square root by seeing where it intersects with the two sheets,"), 3);
@@ -2840,7 +2845,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"manifold0_x", "(u) (v) 3 / cos *"},
         {"manifold0_y", "0"},
         {"manifold0_z", "(u) (v) 3 / sin *"},
-        {"manifold0_v_steps", "11000"},
+        {"manifold0_v_steps", "12000"},
     });
     cs.render_microblock();
 
@@ -2917,7 +2922,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         "(u) (v) 2 / cos * <xshift> -", "0.1", "(u) (v) 2 / sin * .01 + <sqrt_disappear> +",
         "<sqrt_in_radius> <sqrt_in_theta> cos * (u) 2 ^ (v) cos * -", "<sqrt_in_radius> <sqrt_in_theta> sin * (u) 2 ^ (v) sin * -",
         "0", "1.5", "3000",
-        "-6.28318", "6.28318", "11000"
+        "-6.28318", "6.28318", "12000"
     );
     ms->add_manifold("sqrt_in",
         point_x_start_sqrt + " <xshift> -", point_y_start + " <yshift> -", point_z_start_sqrt + " <sqrt_disappear> +",
@@ -3097,9 +3102,9 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     shared_ptr<LatexScene> label1 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label2 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label3 = make_shared<LatexScene>("3", 1, 0.2, 0.2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label1"), label1);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label2"), label2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label3"), label3);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label1"), label1);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label2"), label2);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label3"), label3);
     ms->use_state_for_center = true;
     ms->state.set({
         {"label1.x", "<ztheta> 3 / cos <zradius> * .1 + <xshift> +"},
@@ -3160,7 +3165,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     ms->clear_surfaces();
 
-    cs.stage_macroblock(CompositeBlock(FileBlock("Let's try a different commutator on the square root..."), SilenceBlock(3)), 5);
+    cs.stage_macroblock(CompositeBlock(FileBlock("Let's try a different commutator on the square root..."), SilenceBlock(3)), 6);
     ms->state.set({
         {"sqrt_in_theta", "<loop3> 6.283 * sin .2 * <loop4> 6.283 * +"},
         {"sqrt_in_radius", "<loop4> 6.283 * sin <loop3> 6.283 * cos + -.2 * .9 +"},
@@ -3168,19 +3173,20 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"loop4", "0"},
     });
     ms->state.set({
-        {"label4.x", "<sqrt_in_theta> 2 / cos <sqrt_in_radius> * .1 + <xshift> -"},
-        {"label4.y", "0"},
-        {"label4.z", "<sqrt_in_theta> 2 / sin <sqrt_in_radius> * .1 +"},
-        {"label5.x", "<sqrt_in_theta> pi 2 * + 2 / cos <sqrt_in_radius> * .1 + <xshift> -"},
+        {"label5.x", "<sqrt_in_theta> 2 / cos <sqrt_in_radius> * .1 + <xshift> -"},
         {"label5.y", "0"},
-        {"label5.z", "<sqrt_in_theta> pi 2 * + 2 / sin <sqrt_in_radius> * .1 +"},
+        {"label5.z", "<sqrt_in_theta> 2 / sin <sqrt_in_radius> * .1 +"},
+        {"label4.x", "<sqrt_in_theta> pi 2 * + 2 / cos <sqrt_in_radius> * .1 + <xshift> -"},
+        {"label4.y", "0"},
+        {"label4.z", "<sqrt_in_theta> pi 2 * + 2 / sin <sqrt_in_radius> * .1 +"},
     });
     ms->state.transition(MICRO, "sqrt_disappear", "0");
+    cs.render_microblock();
     ms->state.transition(MICRO, "surfaces_opacity", "1");
-    shared_ptr<LatexScene> label4 = make_shared<LatexScene>("4", 1, 0.2, 0.2);
-    shared_ptr<LatexScene> label5 = make_shared<LatexScene>("5", 1, 0.2, 0.2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label4"), label4);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label5"), label5);
+    shared_ptr<LatexScene> label4 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
+    shared_ptr<LatexScene> label5 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label4"), label4);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label5"), label5);
     cs.render_microblock();
     ms->state.transition(MICRO, "loop3", "1");
     cs.render_microblock();
@@ -3195,9 +3201,9 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("No matter what commutator the input follows, or which root we try it on, each output always spins back to where it was before the commutator."), 7);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label1"), label1);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label2"), label2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label3"), label3);
+    ms->add_surface_fade_in(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label1"), label1);
+    ms->add_surface_fade_in(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label2"), label2);
+    ms->add_surface_fade_in(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label3"), label3);
     cs.render_microblock();
     ms->state.transition(MICRO, "loop1", "1");
     ms->state.transition(MICRO, "loop3", "1");
@@ -3405,25 +3411,26 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     shared_ptr<LatexScene> label1 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label2 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label3 = make_shared<LatexScene>("3", 1, 0.2, 0.2);
+    //TODO these trackers don't really move right
     ms->state.set({
         {"surfaces_opacity", "1"},
         {"label_twist", "0"},
         {"label1.x", "<label_twist> 3 / cos <xshift> +"},
-        {"label1.y", "0"},
+        {"label1.y", ".5"},
         {"label1.z", "<label_twist> 3 / sin"},
         {"label2.x", "<label_twist> 3 / pi 2 * 3 / + cos <xshift> +"},
-        {"label2.y", "0"},
+        {"label2.y", ".5"},
         {"label2.z", "<label_twist> 3 / pi 2 * 3 / + sin"},
         {"label3.x", "<label_twist> 3 / pi 4 * 3 / + cos <xshift> +"},
-        {"label3.y", "0"},
+        {"label3.y", ".5"},
         {"label3.z", "<label_twist> 3 / pi 4 * 3 / + sin"},
     });
     cs.stage_macroblock(FileBlock("Pay attention to the 3 outputs here."), 3);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label1"), label1);
+    ms->add_surface(Surface(glm::vec3(0, .5, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label1"), label1);
     cs.render_microblock();
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label2"), label2);
+    ms->add_surface(Surface(glm::vec3(0, .5, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label2"), label2);
     cs.render_microblock();
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label3"), label3);
+    ms->add_surface(Surface(glm::vec3(0, .5, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label3"), label3);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Loop, loop, undo, undo..."), 5);
@@ -3461,7 +3468,7 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
     });
     cs.render_microblock();
 
-    cs.stage_macroblock(CompositeBlock(FileBlock("One, two, undo, undo..."), SilenceBlock(.5)), 4);
+    cs.stage_macroblock(CompositeBlock(FileBlock("One, two, undo, undo..."), SilenceBlock(.5)), 5);
     ms->state.transition(MICRO, "twist1", "1");
     cs.render_microblock();
     ms->state.transition(MICRO, "twist2", "1");
@@ -3580,7 +3587,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"point_4_x", "<root3_r>"},
         {"point_4_y", "<root3_i>"},
     });
-    cs.stage_macroblock(FileBlock("Watch me do a nested commutator on the roots."), 4);
+    cs.stage_macroblock(FileBlock("Watch me do a nested commutator on the solutions."), 4);
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
@@ -3648,15 +3655,17 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     ms->state.set("label_twist", "0");
 
+    ms->clear_surfaces();
     cs.stage_macroblock(FileBlock("If we do any nested commutator on the machine we built earlier..."), 2);
     shared_ptr<LatexScene> label1 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label2 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label3 = make_shared<LatexScene>("3", 1, 0.2, 0.2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label1"), label1);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label2"), label2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, .2), "label3"), label3);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label1"), label1);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label2"), label2);
+    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label3"), label3);
     ms->state.set({
         {"d", "4"},
+        {"surfaces_opacity", "1"},
     });
     cs.add_scene_fade_in(MICRO, ms, "ms");
     cps->state.transition(MICRO, "center_y", "4");
@@ -3753,7 +3762,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         "(u) (v) 4 / cos * <xshift> 3 * +", "30", "(u) (v) 4 / sin * .01 +",
         "<qrt_in_radius> <qrt_in_theta> cos * (u) 4 ^ (v) cos * -", "<qrt_in_radius> <qrt_in_theta> sin * (u) 4 ^ (v) sin * -",
         "0", "1.5", "3000",
-        "-12.56637", "12.56637", "11000"
+        "-12.56637", "12.56637", "12000"
     );
     ms->add_manifold("qrt_in",
         point_x_start_qrt + " <xshift> 3 * +", "30", point_z_start_qrt,
@@ -3835,7 +3844,9 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->remove_manifold("tie");
     ms->remove_manifold("tie2");
 
+    //TODO the roots are out of frame
     cs.stage_macroblock(FileBlock("With one square root operator, we can represent a single swap on 2 solutions."), 2);
+    cps->coefficients_to_roots();
     ms->state.transition(MICRO, "hide_sqrt", "0");
     cs.render_microblock();
     cps->state.transition(MICRO, {
@@ -3882,9 +3893,11 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         "(u) (v) 5 / cos * <qnt_center_x> +", "30", "(u) (v) 5 / sin * .01 +",
         "<qnt_in_radius> <qnt_in_theta> cos * (u) 5 ^ (v) cos * -", "<qnt_in_radius> <qnt_in_theta> sin * (u) 5 ^ (v) sin * -",
         "0", "1.5", "3000",
-        "-12.56637", "12.56637", "11000"
+        "-15.7079633", "15.7079633", "12000"
     );
     ms->state.set({
+        {"qnt_in_theta", "0"},
+        {"qnt_in_radius", ".5"},
         {"hide_qnt", "0"},
         {"qnt_center_x", "<xshift> 3 *"},
         {"qnt_center_y", "<yshift> 3 * <hide_qnt> 6 * +"},
@@ -4152,7 +4165,6 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(CompositeBlock(FileBlock("But any commutator of commutators does nothing."), SilenceBlock(1)), 20);
-    // TODO re-record?
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
@@ -4204,7 +4216,7 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(2), 3);
+    cs.stage_macroblock(SilenceBlock(2), 2);
     cps->state.transition(MICRO, "construction_opacity", "0");
     cps->state.transition(MACRO, {
         {"ab_dilation", "2"},
@@ -4239,7 +4251,6 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"root3_r", "3"},
         {"root3_i", "0"},
     });
-    cs.render_microblock();
     cps->state.set({
         {"point_4_x", "{cps.root3_r}"},
         {"point_4_y", "{cps.root3_i}"},
@@ -4306,9 +4317,6 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->stage_swap(MICRO, "0", "1", false, true);
     cps->stage_swap(MICRO, "2", "3", false, true);
-    cs.render_microblock();
-
-    cs.stage_macroblock(SilenceBlock(.5), 1);
     // Photosensitivity Safety- decreasing ab_dilation and dot_radius
     cps->state.transition(MICRO, {
         {"ab_dilation", "1.2"},
@@ -4378,8 +4386,8 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->set_degree(5);
     cps->roots_to_coefficients();
     cps->state.transition(MICRO, {
-        {"ab_dilation", ".75"},
-        {"dot_radius", "1"},
+        {"ab_dilation", ".55"},
+        {"dot_radius", ".75"},
         {"coefficient5_r", "1"},
         {"coefficient5_i", "0"},
         {"coefficient4_r", "0"},
@@ -4392,6 +4400,7 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"coefficient1_i", "0"},
         {"coefficient0_r", "0"},
         {"coefficient0_i", "0"},
+        {"zoom", ".5"},
     });
     cs.render_microblock();
     cps->coefficients_to_roots();
@@ -4415,7 +4424,6 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     });
 
     cs.stage_macroblock(FileBlock("But once you have 5 objects, there's a trick."), 5);
-    // TODO re-record
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true, "\\uparrow"));
     cs.render_microblock();
     cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true, "\\leftarrow"));
@@ -4439,6 +4447,7 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     trail2->state.set({{"trail_x", "{cps.root2_r}"}, {"trail_y", "{cps.root2_i}"}});
     trail3->state.set({{"trail_x", "{cps.root4_r}"}, {"trail_y", "{cps.root4_i}"}});
 
+    //TODO the zoomout messed it up
     cs.stage_macroblock(CompositeBlock(FileBlock("We can take a cycle of 3 like this, and call it A..."), SilenceBlock(1)), 2);
     stage_loop_1(cps, false);
     cs.render_microblock();
@@ -4519,21 +4528,27 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     trail2->state.set({{"trail_x", "{cps.root2_r}"}, {"trail_y", "{cps.root2_i}"}});
     trail3->state.set({{"trail_x", "{cps.root4_r}"}, {"trail_y", "{cps.root4_i}"}});
 
-    cs.stage_macroblock(CompositeBlock(FileBlock("See what the final result is? Our double commutator simply did A!"), SilenceBlock(2)), 1);
+    cs.stage_macroblock(CompositeBlock(CompositeBlock(SilenceBlock(1), FileBlock("See what the final result is? Our double commutator simply did A!")), SilenceBlock(2)), 2);
+    //TODO spawning the trails too early
+    cs.render_microblock();
     cps->coefficients_to_roots();
     cps->state.transition(MICRO, plussign);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("If we instead order our supercommutator in reverse..."), 1);
+    cs.stage_macroblock(FileBlock("If we instead order our supercommutator in reverse..."), 2);
     cs.fade_all_subscenes_except(MICRO, "cps", 0);
     cs.render_microblock();
     cs.remove_all_subscenes_except("cps");
+    cs.render_microblock();
 
     cps->stage_macroblock(SilenceBlock(4), 16);
     stage_loop_commutator(cps, false, false);
     stage_loop_commutator(cps, true, false);
     stage_loop_commutator(cps, false, true);
     stage_loop_commutator(cps, true, true);
+
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.render_microblock();
 
     cps->coefficients_to_roots();
     cps->state.transition(MICRO, plussign);
@@ -4563,7 +4578,8 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     stage_loop_commutator(cps, true, false);
     stage_loop_commutator(cps, false, false);
 
-    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.stage_macroblock(SilenceBlock(1.5), 2);
+    cs.render_microblock();
     stage_loop_1(cps, false);
     cs.render_microblock();
 
@@ -4592,7 +4608,7 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("So, tying it all together- as we've seen, for every extra level of commutator, we need one more radical to express the solution."), 7);
-    shared_ptr<LatexScene> chart = make_shared<LatexScene>("\\begin{tabular}{cc} \\textbf{Nested Commutators} & \\textbf{Radical Nesting} \\end{tabular}", .3);
+    shared_ptr<LatexScene> chart = make_shared<LatexScene>("\\begin{tabular}{cc} \\textbf{Nested Commutators} & \\textbf{Radical Nesting} \\end{tabular}", .25);
     cs.add_scene_fade_in(MICRO, chart, "chart", .5, .5, .8);
     cs.render_microblock();
     chart->begin_latex_transition(MICRO, "\\begin{tabular}{cc} \\textbf{Nested Commutators} & \\textbf{Radical Nesting} \\\\\\\\ \\\\\\\\ \\text{Single Swap} & \\sqrt{\\cdot} \\end{tabular}");
@@ -4621,7 +4637,7 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("But the quintic... The quintic can be scrambled by not just a 3rd-order commutator, but also a 4th-order commutator, a 6th-order commutator, and so on. No finite amount of nested roots will ever be enough."), 4);
-    shared_ptr<LatexScene> quintic_blurb = make_shared<LatexScene>("\\text{Quintic} \\quad \\bullet \\bullet \\bullet \\bullet \\bullet", .2);
+    shared_ptr<LatexScene> quintic_blurb = make_shared<LatexScene>("\\text{Quintic} \\quad \\bullet \\bullet \\bullet \\bullet \\bullet", .3);
     cs.add_scene_fade_in(MICRO, quintic_blurb, "quintic_blurb", .25, .65, .8);
     cs.render_microblock();
     cs.slide_subscene(MICRO, "quintic_blurb", 0, .1);
@@ -4667,7 +4683,7 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
     cs.fade_subscene(MICRO, "cps", 0);
     shared_ptr<RootFractalScene> fracs = make_shared<RootFractalScene>();
     fracs->global_identifier = "fractal";
-    cs.add_scene_fade_in(MICRO, fracs, "fracs");
+    cs.add_scene(fracs, "fracs", .5, .5, true);
     fracs->state.begin_timer("endingtimer");
     fracs->state.set({
         {"terms", "18"},
@@ -4677,8 +4693,8 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
         {"coefficient0_i", "<endingtimer> 3 * cos .01 *"},
         {"coefficient1_r", "1"},
         {"coefficient1_i", "0"},
-        {"center_x", "<endingtimer> .02 * 1 + cos"},
-        {"center_y", "<endingtimer> .02 * 1 + sin"},
+        {"center_x", "<endingtimer> .02 * 1 + cos 1.2 *"},
+        {"center_y", "<endingtimer> .02 * 1 + sin 1.2 *"},
         {"zoom", "3"},
     });
     cs.stage_macroblock(SilenceBlock(1), 1);
@@ -4762,7 +4778,7 @@ void ending(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps){
 }
 
 void render_video(){
-    VIDEO_BACKGROUND_COLOR = 0x00000000;
+    VIDEO_BACKGROUND_COLOR = 0xffb0b022;
     keys_to_record = {
         "cps.coefficient0_r",
         "cps.coefficient0_i",
@@ -4821,21 +4837,19 @@ void render_video(){
     shared_ptr<ManifoldScene> ms = make_shared<ManifoldScene>();
     ms->global_identifier = "3d";
 
-        /*part_0(cs, cps);
-        cs.remove_all_subscenes();
-        part_1(cs, cps);
-        cs.remove_all_subscenes();
-        part_2(cs, cps, ms);
-        cs.remove_all_subscenes();
-        part_3(cs, cps, ms);
-        cs.remove_all_subscenes();
-        part_3p5(cs, cps, ms);
-        cs.remove_all_subscenes();
-        part_4(cs, cps, ms);
-        cs.remove_all_subscenes();
-        */
-        part_5(cs, cps, ms);
-        cs.remove_all_subscenes();
-    
+    part_0(cs, cps);
+    cs.remove_all_subscenes();
+    part_1(cs, cps);
+    cs.remove_all_subscenes();
+    part_2(cs, cps, ms);
+    cs.remove_all_subscenes();
+    part_3(cs, cps, ms);
+    cs.remove_all_subscenes();
+    part_3p5(cs, cps, ms);
+    cs.remove_all_subscenes();
+    part_4(cs, cps, ms);
+    cs.remove_all_subscenes();
+    part_5(cs, cps, ms);
+    cs.remove_all_subscenes();
     ending(cs, cps);
 }
