@@ -27,7 +27,7 @@ public:
         float wh = state["window_height"];
         float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(wh*10, .25) / 250;
         float opacity = 1-1/(2*wh+1);
-        opacity *= state["visibility_multiplier"];
+        opacity *= square(state["visibility_multiplier"]);
         draw_root_fractal(pix.pixels.data(), w, h,
             c0, c1, n,
             state["left_x"], state["top_y"],

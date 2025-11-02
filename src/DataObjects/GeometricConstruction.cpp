@@ -9,7 +9,8 @@ public:
     string label;
     bool use_state;
     bool old;
-    GeometricItem(string id = "", string l = "", bool u_s = false) : identifier(id), label(l), use_state(u_s), old(false) {}
+    bool draw_shape;
+    GeometricItem(string id = "", string l = "", bool u_s = false, bool d_s = true) : identifier(id), label(l), use_state(u_s), old(false), draw_shape(d_s) {}
 };
 
 class GeometricPoint : public GeometricItem {

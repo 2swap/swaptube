@@ -103,10 +103,10 @@ __global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, fl
     float g_mod = sigmoid(sigmoid(d_green[idx] * inv));
     float b_mod = sigmoid(sigmoid(d_blue [idx] * inv));
 
-    unsigned int a = clamp(d_alpha[idx] * 2, 0.0f, 255.9f);
-    unsigned int r = clamp(r_mod * 206 + 50, 0.0f, 255.9f);
-    unsigned int g = clamp(g_mod * 206 + 50, 0.0f, 255.9f);
-    unsigned int b = clamp(b_mod * 206 + 50, 0.0f, 255.9f);
+    unsigned int a = clamp(d_alpha[idx] * 2.5, 0.0f, 255.9f);
+    unsigned int r = clamp(r_mod * 192 + 64, 0.0f, 255.9f);
+    unsigned int g = clamp(g_mod * 192 + 64, 0.0f, 255.9f);
+    unsigned int b = clamp(b_mod * 192 + 64, 0.0f, 255.9f);
 
     d_pixels[idx] = d_argb(a, r, g, b);
 }
