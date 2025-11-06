@@ -1324,21 +1324,21 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     quadratic->begin_latex_transition(MICRO, latex_color(0xff333333, "ax^3+bx^2+cx+d"));
     cs.render_microblock();
 
-    quadratic->begin_latex_transition(MICRO, latex_color(0xff333333, latex_color(OPAQUE_WHITE, "a")+"x^3+"+latex_color(OPAQUE_WHITE, "b")+"x^2+"+latex_color(OPAQUE_WHITE, "c")+"x+"+latex_color(OPAQUE_WHITE, "d")));
     cs.stage_macroblock(FileBlock("Another way of saying this is that there's always exactly one more coefficient than the number of solutions."), 3);
+    cs.fade_subscene(MICRO, "quadratic", 0);
     cps->transition_coefficient_opacities(MICRO, 1);
     cs.render_microblock();
+    cs.remove_subscene("quadratic");
+    cps->transition_coefficient_rings(MICRO, 1);
     cs.render_microblock();
-    quadratic->begin_latex_transition(MICRO, latex_color(0xff333333, "ax^3+bx^2+cx+d"));
     cps->transition_coefficient_opacities(MICRO, 0);
+    cps->transition_coefficient_rings(MICRO, 0);
     cps->transition_root_rings(MICRO, 1);
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->transition_root_rings(MICRO, 0);
-    cs.fade_subscene(MACRO, "quadratic", 0);
     cs.render_microblock();
-    cs.remove_subscene("quadratic");
 
     cs.stage_macroblock(FileBlock("But, how do they relate to each other?"), 1);
     cps->transition_coefficient_opacities(MICRO, 1);
@@ -2334,11 +2334,15 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.add_scene_fade_in(MICRO, cafs, "cafs", .5, .5, 1, true);
     cs.fade_all_subscenes_except(MICRO, "cafs", 0);
     cs.render_microblock();
+    shared_ptr<LatexScene> sqrt_function = make_shared<LatexScene>("\\sqrt{z}", 1, .5, .3);
+    cs.add_scene_fade_in(MICRO, sqrt_function, "sqrt_function", .75, .25, .3);
     cs.remove_all_subscenes_except("cafs");
     cs.render_microblock();
     cafs->construction.add(GeometricLine(glm::vec2(-5, 0), glm::vec2(0, 0)));
     cafs->state.transition(MICRO, "construction_opacity", "0");
+    cs.fade_subscene(MICRO, "sqrt_function", 0);
     cs.render_microblock();
+    cs.remove_subscene("sqrt_function");
     cps->state.set("positive_quadratic_formula_opacity", "0");
 
     cs.stage_macroblock(CompositeBlock(SilenceBlock(1), FileBlock("We can change our arbitrary choice, and that yucky discontinuity starts to move around.")), 1);
@@ -2461,6 +2465,8 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"manifold1_v_max", "3.14159"},
         {"manifold1_u_steps", "200"},
         {"manifold1_v_steps", "1600"},
+    });
+    ms->state.transition(MACRO, {
         {"qi", ".1"},
     });
     cs.render_microblock();
@@ -2485,8 +2491,8 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
 
     cs.stage_macroblock(CompositeBlock(FileBlock("and we can even track it continuously as we move around."), SilenceBlock(2)), 2);
     ms->state.transition(MICRO, {
-        {"ztheta", "3"},
-        {"zradius", "1.1"},
+        {"ztheta", "4"},
+        {"zradius", "1.4"},
     });
     cs.render_microblock();
     ms->state.transition(MICRO, {
@@ -3250,7 +3256,7 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->clear_surfaces();
 
     cps->state.set(reset);
-    cs.stage_macroblock(FileBlock("The cubic polynomial can express permutations..."), 4);
+    cs.stage_macroblock(FileBlock("The cubic polynomial can therefore express permutations..."), 4);
     cps->coefficients_to_roots();
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
@@ -3662,6 +3668,9 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label2"), label2);
     ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label3"), label3);
     ms->state.set({
+        {"label_twist", "pi"},
+    });
+    ms->state.set({
         {"d", "4"},
         {"surfaces_opacity", "1"},
     });
@@ -3683,7 +3692,6 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->state.transition(MICRO, {
         {"d", "2.2"},
     });
-    ms->state.transition(MICRO, "surfaces_opacity", "0");
     cs.render_microblock();
     cps->construction.clear();
     cps->state.remove({
@@ -3704,7 +3712,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     ms->state.transition(MICRO, "twist1", "0");
     cs.render_microblock();
-    ms->state.transition(MICRO, "label_twist", "pi 2 *");
+    ms->state.transition(MICRO, "label_twist", "pi 3 *");
     ms->state.transition(MICRO, "twist2", "0");
     cs.render_microblock();
     cs.render_microblock();
@@ -3714,11 +3722,11 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     ms->state.transition(MICRO, "twist3", "0");
     cs.render_microblock();
-    ms->state.transition(MICRO, "label_twist", "0");
+    ms->state.transition(MICRO, "label_twist", "pi");
     ms->state.transition(MICRO, "twist4", "0");
     cs.render_microblock();
     cs.render_microblock();
-    ms->state.transition(MICRO, "label_twist", "pi -2 *");
+    ms->state.transition(MICRO, "label_twist", "pi -1 *");
     ms->state.transition(MICRO, "twist2", "1");
     cs.render_microblock();
     ms->state.transition(MICRO, "twist1", "1");
@@ -3728,7 +3736,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->state.transition(MICRO, "twist1", "0");
     cs.render_microblock();
     cs.render_microblock();
-    ms->state.transition(MICRO, "label_twist", "0");
+    ms->state.transition(MICRO, "label_twist", "pi");
     ms->state.transition(MICRO, "twist4", "1");
     cs.render_microblock();
     ms->state.transition(MICRO, "twist3", "1");
@@ -3742,7 +3750,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.stage_macroblock(FileBlock("everything goes back to where it started!"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The way to work around this is actually comically simple. Any guesses?"), 1);
+    cs.stage_macroblock(FileBlock("The workaround is comically simple. Any guesses?"), 1);
     ms->state.transition(MICRO, {
         {"d", "3.5"},
     });
@@ -3849,9 +3857,9 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cps->state.transition(MICRO, {
         {"center_y", "0"},
         {"root0_r", "-1"},
-        {"root0_i", "-2"},
+        {"root0_i", "2"},
         {"root1_r", "1"},
-        {"root1_i", "-2"},
+        {"root1_i", "2"},
         {"root2_r", "0"},
         {"root2_i", "-4"},
         {"root3_r", "0"},
@@ -3864,11 +3872,11 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     cps->state.transition(MICRO, {
         {"root0_r", "-2"},
-        {"root0_i", "-2"},
+        {"root0_i", "2"},
         {"root1_r", "0"},
-        {"root1_i", "-2"},
+        {"root1_i", "2"},
         {"root2_r", "2"},
-        {"root2_i", "-2"},
+        {"root2_i", "2"},
     });
     cs.render_microblock();
 
@@ -3877,13 +3885,13 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
     cps->state.transition(MICRO, {
         {"root0_r", "-3"},
-        {"root0_i", "-2"},
+        {"root0_i", "2"},
         {"root1_r", "-1"},
-        {"root1_i", "-2"},
+        {"root1_i", "2"},
         {"root2_r", "1"},
-        {"root2_i", "-2"},
+        {"root2_i", "2"},
         {"root3_r", "3"},
-        {"root3_i", "-2"},
+        {"root3_i", "2"},
     });
     cs.render_microblock();
 
@@ -3938,7 +3946,7 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.stage_macroblock(FileBlock("Here's the key to the proof, the source of the impossibility:"), 3);
     cps->roots_to_coefficients();
     cps->construction.clear();
-    cps->state.transition(MICRO, {
+    cps->state.transition(MACRO, {
         {"dot_radius", "1"},
         {"ab_dilation", "1"},
         {"construction_opacity", "1"},
@@ -4609,41 +4617,145 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     });
 
     cs.stage_macroblock(FileBlock("So, tying it all together- for every extra level of commutator, we need one more radical to express the solution."), 6);
-    shared_ptr<LatexScene> chart = make_shared<LatexScene>("\\begin{tabular}{cc} \\text{Single Swap} & \\sqrt{\\cdot} \\end{tabular}", .2);
+    shared_ptr<LatexScene> chart = make_shared<LatexScene>(
+        "\\begin{tabular}{cc}"
+        "\\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\cdot}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Double Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Triple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quadruple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quintuple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$}"
+        "\\end{tabular}"
+    , .8);
     cs.add_scene_fade_in(MICRO, chart, "chart", .5, .5, .8);
     cs.render_microblock();
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cc} \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\end{tabular}");
+    chart->begin_latex_transition(MICRO,
+        "\\begin{tabular}{cc}"
+        "\\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Double Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Triple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quadruple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quintuple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$}"
+        "\\end{tabular}"
+    );
     cs.render_microblock();
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cc} \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\\\\\\\ \\\\\\\\ \\text{Double Commutator} & \\sqrt{\\sqrt{\\sqrt{\\cdot}}} \\ \\end{tabular}");
+    chart->begin_latex_transition(MICRO,
+        "\\begin{tabular}{cc}"
+        "\\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Double Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Triple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quadruple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quintuple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$}"
+        "\\end{tabular}");
     cs.render_microblock();
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cc} \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\\\\\\\ \\\\\\\\ \\text{Double Commutator} & \\sqrt{\\sqrt{\\sqrt{\\cdot}}} \\\\\\\\ \\\\\\\\ \\text{Triple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}} \\end{tabular}");
+    chart->begin_latex_transition(MICRO,
+        "\\begin{tabular}{cc}"
+        "\\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Double Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Triple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quadruple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$} \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quintuple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$}"
+        "\\end{tabular}");
     cs.render_microblock();
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cc} \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\\\\\\\ \\\\\\\\ \\text{Double Commutator} & \\sqrt{\\sqrt{\\sqrt{\\cdot}}} \\\\\\\\ \\\\\\\\ \\text{Triple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}} \\\\\\\\ \\\\\\\\ \\text{Quadruple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}} \\end{tabular}");
+    chart->begin_latex_transition(MICRO, 
+        "\\begin{tabular}{cc}"
+        "\\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Double Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Triple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Quadruple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\phantom{\\text{Quintuple Commutator}} & \\phantom{$\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$}"
+        "\\end{tabular}");
     cs.render_microblock();
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cc} \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\\\\\\\ \\\\\\\\ \\text{Double Commutator} & \\sqrt{\\sqrt{\\sqrt{\\cdot}}} \\\\\\\\ \\\\\\\\ \\text{Triple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}} \\\\\\\\ \\\\\\\\ \\text{Quadruple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}} \\\\\\\\ \\\\\\\\ \\text{Quintuple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}} \\end{tabular}");
+    chart->begin_latex_transition(MICRO,
+        "\\begin{tabular}{cc}"
+        "\\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Double Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Triple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Quadruple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$ \\\\\\\\"
+        "\\\\\\\\"
+        "\\text{Quintuple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$"
+        "\\end{tabular}");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The quadratic polynomial permits a single swap as the deepest nested operation which scrambles its two solutions."), 1);
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cccc} \\text{Quadratic} & ● ● & \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ & & \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\\\\\\\ \\\\\\\\ & & \\text{Double Commutator} & \\sqrt{\\sqrt{\\sqrt{\\cdot}}} \\\\\\\\ \\\\\\\\ & & \\text{Triple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}} \\\\\\\\ \\\\\\\\ & & \\text{Quadruple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}} \\\\\\\\ \\\\\\\\ & & \\text{Quintuple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}} \\end{tabular}");
+    chart->begin_latex_transition(MICRO,
+        "\\begin{tabular}{cccc}"
+        "\\text{Quadratic} & ● ● & \\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\ \\\\\\\\"
+        "\\phantom{\\text{Cubic}} & \\phantom{● ● ●} & \\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\ \\\\\\\\"
+        "\\phantom{\\text{Quartic}} & \\phantom{● ● ● ●} & \\text{Double Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Triple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Quadruple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Quintuple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$"
+        "\\end{tabular}");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The cubic permits a single commutator as the deepest nested operation which scrambles its three solutions."), 1);
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cccc} \\text{Quadratic} & ● ● & \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ \\text{Cubic} & ● ● ● & \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\\\\\\\ \\\\\\\\ & & \\text{Double Commutator} & \\sqrt{\\sqrt{\\sqrt{\\cdot}}} \\\\\\\\ \\\\\\\\ & & \\text{Triple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}} \\\\\\\\ \\\\\\\\ & & \\text{Quadruple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}} \\\\\\\\ \\\\\\\\ & & \\text{Quintuple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}} \\end{tabular}");
+    chart->begin_latex_transition(MICRO,
+        "\\begin{tabular}{cccc}"
+        "\\text{Quadratic} & ● ● & \\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\ \\\\\\\\"
+        "\\text{Cubic} & ● ● ● & \\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\ \\\\\\\\"
+        "\\phantom{\\text{Quartic}} & \\phantom{● ● ● ●} & \\text{Double Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Triple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Quadruple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Quintuple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$"
+        "\\end{tabular}");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The quartic is scrambled by the doubly-nested commutator."), 1);
-    chart->begin_latex_transition(MICRO, "\\begin{tabular}{cccc} \\text{Quadratic} & ● ● & \\text{Single Swap} & \\sqrt{\\cdot} \\\\\\\\ \\\\\\\\ \\text{Cubic} & ● ● ● & \\text{Commutator} & \\sqrt{\\sqrt{\\cdot}} \\\\\\\\ \\\\\\\\ \\text{Quartic} & ● ● ● ● & \\text{Double Commutator} & \\sqrt{\\sqrt{\\sqrt{\\cdot}}} \\\\\\\\ \\\\\\\\ & & \\text{Triple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}} \\\\\\\\ \\\\\\\\ & & \\text{Quadruple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}} \\\\\\\\ \\\\\\\\ & & \\text{Quintuple Commutator} & \\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}} \\end{tabular}");
+    chart->begin_latex_transition(MICRO,
+        "\\begin{tabular}{cccc}"
+        "\\text{Quadratic} & ● ● & \\text{Single Swap} & $\\sqrt{\\cdot}$ \\\\\\\\ \\\\\\\\"
+        "\\text{Cubic} & ● ● ● & \\text{Commutator} & $\\sqrt{\\sqrt{\\cdot}}$ \\\\\\\\ \\\\\\\\"
+        "\\text{Quartic} & ● ● ● ● & \\text{Double Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\cdot}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Triple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Quadruple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}$ \\\\\\\\ \\\\\\\\"
+        "& & \\text{Quintuple Commutator} & $\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\sqrt{\\cdot}}}}}}$"
+        "\\end{tabular}");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("But the quintic... The quintic can be scrambled by not just a 3rd-order commutator, but also a 4th-order commutator, a 6th-order commutator, and so on. No finite amount of nested roots will ever be enough."), 4);
+    cs.stage_macroblock(FileBlock("But as we just saw... The quintic can be scrambled by not just a 3rd-order commutator, but also a 4th-order commutator, a 5th-order commutator, and so on. No finite amount of nested roots will ever be enough."), 4);
     shared_ptr<LatexScene> quintic_blurb = make_shared<LatexScene>("\\text{Quintic} \\quad ● ● ● ● ●", .2);
-    cs.add_scene_fade_in(MICRO, quintic_blurb, "quintic_blurb", .25, .65, .8);
+    cs.add_scene_fade_in(MICRO, quintic_blurb, "quintic_blurb", .28, .49, .8);
     cs.render_microblock();
-    cs.slide_subscene(MICRO, "quintic_blurb", 0, .1);
+    cs.slide_subscene(MICRO, "quintic_blurb", 0, .16);
     cs.render_microblock();
-    cs.slide_subscene(MICRO, "quintic_blurb", 0, .1);
+    cs.slide_subscene(MICRO, "quintic_blurb", 0, .18);
     cs.render_microblock();
-    cs.slide_subscene(MICRO, "quintic_blurb", 0, .1);
+    cs.slide_subscene(MICRO, "quintic_blurb", 0, .3);
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(2), 1);
@@ -4673,7 +4785,7 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.fade_all_subscenes_except(MICRO, "cps", 0);
-    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.stage_macroblock(SilenceBlock(8), 1);
     cs.render_microblock();
 }
 
@@ -4850,7 +4962,6 @@ void render_video(){
     shared_ptr<ManifoldScene> ms = make_shared<ManifoldScene>();
     ms->global_identifier = "3d";
 
-    /*
     part_0(cs, cps);
     cs.remove_all_subscenes();
     part_1(cs, cps);
@@ -4863,7 +4974,6 @@ void render_video(){
     cs.remove_all_subscenes();
     part_4(cs, cps, ms);
     cs.remove_all_subscenes();
-    */
     part_5(cs, cps, ms);
     cs.remove_all_subscenes();
     ending(cs, cps);
