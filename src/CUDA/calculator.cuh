@@ -110,7 +110,7 @@ HOST_DEVICE static inline int cuda_ftoa(double val, char *buf, int precision) {
 // Helper function that takes a string like "(u) (v)" as well as u and v values, and performs string substitution.
 // For example, insert_tags("(u) * (v)", 1.0f, 2.0f) -> "1.0 * 2.0"
 // We do not use functions like snprintf since they are not supported on device.
-HOST_DEVICE void insert_tags(const char *src, double u_val, double v_val, char *dest, int maxlen) {
+HOST_DEVICE inline void insert_tags(const char *src, double u_val, double v_val, char *dest, int maxlen) {
     int si = 0, di = 0;
 
     while (src[si] && di < maxlen - 1) {
@@ -142,7 +142,41 @@ HOST_DEVICE void insert_tags(const char *src, double u_val, double v_val, char *
     dest[di] = '\0';
 }
 
-HOST_DEVICE size_t shared_strcspn(const char *s, const char *reject) {
+HOST_DEVICE inline void insert_tags_xyz(const char *src, double x_val, double y_val, double z_val, char *dest, int maxlen) {
+    int si = 0, di = 0;
+
+    while (src[si] && di < maxlen - 1) {
+        if (src[si] == '(' && src[si+2] == ')' && di < maxlen - 1) {
+            char tag = src[si+1];
+            char numbuf[64];
+            int n = 0;
+
+            if (tag == 'x') {
+                n = cuda_ftoa(x_val, numbuf, 6);
+            } else if (tag == 'y') {
+                n = cuda_ftoa(y_val, numbuf, 6);
+            } else if (tag == 'z') {
+                n = cuda_ftoa(z_val, numbuf, 6);
+            } else {
+                // unrecognized tag, copy as-is
+                dest[di++] = src[si++];
+                continue;
+            }
+
+            // Copy the numeric string
+            for (int j = 0; j < n && di < maxlen - 1; ++j)
+                dest[di++] = numbuf[j];
+
+            si += 3; // skip "(x)"
+        } else {
+            dest[di++] = src[si++];
+        }
+    }
+
+    dest[di] = '\0';
+}
+
+HOST_DEVICE inline size_t shared_strcspn(const char *s, const char *reject) {
     const char *p, *r;
     size_t count = 0;
 
@@ -156,7 +190,7 @@ HOST_DEVICE size_t shared_strcspn(const char *s, const char *reject) {
     return count;
 }
 
-HOST_DEVICE int shared_sscanf_token(const char *p, char *out, int maxlen) {
+HOST_DEVICE inline int shared_sscanf_token(const char *p, char *out, int maxlen) {
     int n = 0;
     while (*p && *p != ' ' && *p != '\t' && n < maxlen - 1) {
         out[n++] = *p++;
@@ -220,7 +254,7 @@ HOST_DEVICE static const OperatorInfo operators[] = {
     {NULL,         NULL,          0} // sentinel
 };
 
-HOST_DEVICE int shared_strcmp(const char *s1, const char *s2) {
+HOST_DEVICE inline int shared_strcmp(const char *s1, const char *s2) {
     while (*s1 && (*s1 == *s2)) {
         s1++;
         s2++;
@@ -230,7 +264,7 @@ HOST_DEVICE int shared_strcmp(const char *s1, const char *s2) {
 }
 
 /* ---- Helper: find operator by token ---- */
-HOST_DEVICE static const OperatorInfo* find_operator(const char *token) {
+HOST_DEVICE inline static const OperatorInfo* find_operator(const char *token) {
     for (int i = 0; operators[i].name != NULL; ++i) {
         if (shared_strcmp(token, operators[i].name) == 0)
             return &operators[i];
@@ -238,7 +272,7 @@ HOST_DEVICE static const OperatorInfo* find_operator(const char *token) {
     return NULL;
 }
 
-HOST_DEVICE double shared_atof(const char *s) {
+HOST_DEVICE inline double shared_atof(const char *s) {
     double sign = 1.0, value = 0.0, fraction = 0.0;
     double divisor = 1.0;
     int exponent = 0, exp_sign = 1;
@@ -288,7 +322,7 @@ HOST_DEVICE double shared_atof(const char *s) {
 }
 
 /* ---- Main Calculator Function ---- */
-HOST_DEVICE bool calculator(const char *expression, double *out_result) {
+HOST_DEVICE inline bool calculator(const char *expression, double *out_result) {
     if (!expression || !out_result) {
         printf("Calculator error: invalid input arguments.\n");
         return false;
