@@ -8,7 +8,7 @@
 
 extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
                                              glm::quat camera_orientation, glm::vec3 camera_position,
-                                             float fov_rad, const char* w_eq);
+                                             float fov_rad, float intensity);
 
 class GeodesicScene : public Scene {
 public:
@@ -23,7 +23,7 @@ public:
             {"qi", "0"},
             {"qj", "0"},
             {"qk", "0"},
-            {"w_eq", "0"},
+            {"intensity", "1.0"}
         });
     }
 
@@ -31,14 +31,14 @@ public:
         glm::vec3 camera_pos = glm::vec3(state["x"], state["y"], state["z"]);
         glm::quat camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
 
-        string w_eq = state.get_equation_with_tags("w_eq");
+        //string w_eq = state.get_equation_with_tags("w_eq");
         launch_cuda_surface_raymarch(pix.pixels.data(), get_width(), get_height(),
                                      camera_direction, camera_pos,
-                                     state["fov"], w_eq.c_str());
+                                     state["fov"], state["intensity"]);
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = { "fov", "x", "y", "z", "q1", "qi", "qj", "qk", "w_eq" };
+        StateQuery sq = { "fov", "x", "y", "z", "q1", "qi", "qj", "qk", "intensity" };
         return sq;
     }
 
