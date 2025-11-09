@@ -5,6 +5,10 @@
 #include "../../misc/ColorScheme.cpp"
 #include "../Media/LatexScene.cpp"
 #include "../../DataObjects/Graph.cpp"
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <unordered_set>
 
 vector<int> tones = {0,4,7};
 int tone_incr = 0;
@@ -29,6 +33,91 @@ void node_pop(double subdiv, bool added_not_deleted) {
     double time = get_global_state("t");
     AUDIO_WRITER.add_sfx(left, right, (time+subdiv/FRAMERATE)*SAMPLERATE);
 }
+
+
+// --------- GEXF export helper ---------
+static inline std::string id_of_double(double v) {
+    std::ostringstream oss;
+    oss << std::setprecision(17) << v;  // stable string id for doubles
+    return oss.str();
+}
+
+// Write the current graph to a GEXF file that Gephi can open.
+// - Node id = stable stringified node hash
+// - Node label = same as id (you can change to something else if you prefer)
+// - Node position = uses current 3D physics position (viz:position)
+// - Edges = directed (deduped), with sequential edge ids
+inline void export_gexf(const Graph& g, const std::string& path) {
+    std::ofstream out(path);
+    if(!out.is_open()) {
+        std::cerr << "Failed to open GEXF output file: " << path << std::endl;
+        return;
+    }
+
+    out << R"(<?xml version="1.0" encoding="UTF-8"?>)"
+        << "\n"
+        << R"(<gexf xmlns="http://www.gexf.net/1.3draft" version="1.3"
+                 xmlns:viz="http://www.gexf.net/1.2draft/viz"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.gexf.net/1.3draft
+                 http://www.gexf.net/1.3draft/gexf.xsd">)"
+        << "\n"
+        << R"(<graph defaultedgetype="directed" mode="static">)"
+        << "\n";
+
+    // Nodes
+    out << "<nodes>\n";
+    for (const auto& kv : g.nodes) {
+        double key = kv.first;
+        const Node& node = kv.second;
+
+        std::string id = id_of_double(key);
+        std::string label = id;  // change if you want prettier labels
+
+        out << "  <node id=\"" << id << "\" label=\"" << label << "\">\n";
+        // Gephi's viz extension for node position (float is fine)
+        out << "    <viz:position x=\"" << node.position.x
+            << "\" y=\"" << node.position.y
+            << "\" z=\"" << node.position.z << "\"/>\n";
+        out << "  </node>\n";
+    }
+    out << "</nodes>\n";
+
+    // Edges (dedupe by (from,to) pair)
+    out << "<edges>\n";
+    std::unordered_set<std::string> seen;
+    std::size_t eid = 0;
+
+    auto make_key = [](const std::string& a, const std::string& b){
+        return a + "->" + b;
+    };
+
+    for (const auto& kv : g.nodes) {
+        const double from_d = kv.first;
+        const Node& node = kv.second;
+        const std::string from = id_of_double(from_d);
+
+        for (const Edge& e : node.neighbors) {
+            const std::string to = id_of_double(e.to);
+            std::string k = make_key(from, to);
+            if (seen.insert(k).second) {
+                out << "  <edge id=\"" << eid++
+                    << "\" source=\"" << from
+                    << "\" target=\"" << to << "\"";
+                // If you want weights, uncomment (and ensure Edge has a usable value):
+                // out << " weight=\"" << e.opacity << "\"";
+                out << "/>\n";
+            }
+        }
+    }
+    out << "</edges>\n";
+
+    out << "</graph>\n</gexf>\n";
+    out.close();
+    std::cout << "Wrote GEXF: " << path << std::endl;
+}
+// --------- end helper ---------
+
 
 class GraphScene : public ThreeDimensionScene {
 public:

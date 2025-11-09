@@ -2,12 +2,14 @@
 #include "../DataObjects/KlotskiBoard.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Math/GraphScene.cpp"
+#include "../DataObjects/Graph.cpp"
 
 void render_video(){
     // Check that the video width and height are mobile 9:16 ration
     if(VIDEO_WIDTH * 16 != VIDEO_HEIGHT * 9){
         throw std::runtime_error("VIDEO_WIDTH and VIDEO_HEIGHT must be in 9:16 ratio");
     }
+    int puzzle_index = 0;
     for(KlotskiBoard kb : {simple_4x4}){
         shared_ptr<KlotskiScene> ks = make_shared<KlotskiScene>(kb, .5, .5*VIDEO_WIDTH/VIDEO_HEIGHT);
         CompositeScene cs;
@@ -25,14 +27,14 @@ void render_video(){
         }
         shared_ptr<GraphScene> gs = make_shared<GraphScene>(&g, false);
         gs->state.set({
-            {"q1", "0"},
-            {"qi", "{t} .1 * cos"},
-            {"qj", "{t} .1 * sin"},
+            {"q1", "1"},
+            {"qi", "{t} 1 * cos"},
+            {"qj", "{t} 5 * sin"},
             {"qk", "0"}, // Camera orientation quaternion.
             {"d", "1"},
             {"physics_multiplier","5"}, // How many times to iterate the graph-spreader
             {"decay",".8"},
-            {"surfaces_opacity","0"}, // 0 meaning do not render the corresponding board on top of each node.
+            {"surfaces_opacity",".3"}, // 0 meaning do not render the corresponding board on top of each node.
             {"points_opacity","1"}, // Whether to draw nodes.
             {"lines_opacity","1"}, // Whether to draw edges.
         });
@@ -49,12 +51,12 @@ void render_video(){
             gs->next_hash = ks->copy_board().get_hash();
             cs.render_microblock(); // Render a microblock
         }
-
         // Expand the graph until all nodes are present
         cs.stage_macroblock(SilenceBlock(2), (g_size-g.size())*1.2); // Stage a macroblock with more microblocks than graph nodes
         while(remaining_microblocks_in_macroblock) {
             g.expand(1);
             cs.render_microblock(); // Render a microblock
         }
+        g.render_json("graph_output.json");
     }
 }

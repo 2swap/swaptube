@@ -239,6 +239,9 @@ KlotskiBoard thinkfun1     (6, 6, "a.cddda.c....bbe...i.e...ifffg.....g", true )
 KlotskiBoard thinkfun2     (6, 6, ".a.ffe.a...e.a.bbe...c.....cdd......", true );
 KlotskiBoard thinkfun3     (6, 6, "..a.....a...bba....dd....ff..chhh..c", true );
 
+KlotskiBoard simple_4x4    (4, 4, "caa.caa..bb.....", false);
+KlotskiBoard notsimple_4x4    (4, 4, "caadcaad.bb.....", false);
+
 //big
 KlotskiBoard sun_mine      (4, 5, "abbcabbc.dd.efgheijh"                , false);
 KlotskiBoard sun           (4, 5, "abbcabbceddhefghi..j"                , false);
