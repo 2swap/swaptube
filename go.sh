@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Function to check command availability
-check_command() {
+check_command_available() {
     command -v "$1" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         echo "go.sh: Error - Required command '$1' is not found. Please install it and try again."
@@ -11,9 +10,9 @@ check_command() {
 }
 
 # Check for required commands
-check_command "cmake"
-check_command "make"
-check_command "gnuplot"
+check_command_available "cmake"
+check_command_available "make"
+check_command_available "gnuplot"
 # Check if MicroTeX build exists
 if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     echo "Error: ../MicroTeX-master/build/LaTeX does not exist. MicroTeX is required for this project."

@@ -40,6 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
  && rm -rf /var/lib/apt/lists/*
 
 # Build MicroTeX using the Qt backend (avoid GTK/gtksourceviewmm)
+# TODO: Use the script in go.sh to auto-install MicroTeX.
 RUN git clone --depth=1 https://github.com/NanoMichael/MicroTeX.git /opt/MicroTeX-master \
  && cmake -S /opt/MicroTeX-master -B /opt/MicroTeX-master/build \
       -DCMAKE_BUILD_TYPE=Release \
