@@ -212,6 +212,7 @@ public:
     }
 
     ~VideoWriter() {
+        cout << "Cleaning up VideoWriter..." << endl;
         //int pipefd[2];
         //int original_stderr = redirect_stderr(pipefd);
 

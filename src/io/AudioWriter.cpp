@@ -27,13 +27,12 @@ using namespace std;
 // ffmpeg -encoders | grep pcm # List all relevant wav encoders
 
 // signed integer, non-planar (interleaved)
-const int SAMPLES_PER_VIDEO_FRAME = SAMPLERATE / FRAMERATE;
 const AVCodecID output_codec = AV_CODEC_ID_PCM_S32LE;
 const AVSampleFormat output_sample_format = AV_SAMPLE_FMT_S32;
 typedef int32_t sample_t;
 sample_t line_max = (static_cast<sample_t>(1) << (sizeof(sample_t) * 8 - 3)) - 1;
-int audio_channels = 2; // Stereo
-int num_audio_streams = 1 + (AUDIO_SFX?2:0) + (AUDIO_HINTS?2:0);
+const static int audio_channels = 2; // Stereo
+const static int num_audio_streams = 1 + (AUDIO_SFX?2:0) + (AUDIO_HINTS?2:0);
 
 inline sample_t float_to_sample(float f) {
     if (f > 1.0f) f = 1.0f;
@@ -178,7 +177,7 @@ public:
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
-        if(left_buffer.size() % SAMPLES_PER_VIDEO_FRAME != 0){
+        if(left_buffer.size() % (SAMPLERATE / FRAMERATE) != 0){
             throw runtime_error("Generated sound buffer length is not a multiple of video frame size. Size: " + to_string(left_buffer.size()) + " samples.");
         }
 
@@ -190,12 +189,12 @@ public:
             sample_buffer.push_back(right_buffer[i]);
         }
 
-        return num_samples / SAMPLES_PER_VIDEO_FRAME;
+        return num_samples * FRAMERATE / SAMPLERATE;
     }
 
     int add_silence(int duration_frames) {
         if (!rendering_on()) return 0; // Don't write in smoketest
-        int num_samples = duration_frames * SAMPLES_PER_VIDEO_FRAME;
+        int num_samples = duration_frames * SAMPLERATE / FRAMERATE;
         sample_buffer.resize(sample_buffer.size() + num_samples * audio_channels, 0);
         return duration_frames;
     }
@@ -323,6 +322,7 @@ public:
         }
 
         // Add silence to align to a frame boundary
+        int SAMPLES_PER_VIDEO_FRAME = SAMPLERATE / FRAMERATE;
         while (length_in_samples % SAMPLES_PER_VIDEO_FRAME != 0) {
             sample_buffer.push_back(0);
             sample_buffer.push_back(0);
@@ -454,6 +454,7 @@ public:
     }
 
     ~AudioWriter() {
+        cout << "Cleaning up AudioWriter..." << endl;
         encode_buffers();
 
         // Flush encoders by sending null frames

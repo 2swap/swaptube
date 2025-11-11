@@ -126,7 +126,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DVIDEO_WIDTH="${VIDEO_WIDTH}" -DVIDEO_HEIGHT="${VIDEO_HEIGHT}" -DFRAMERATE="${FRAMERATE}" -DSAMPLERATE="${SAMPLERATE}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
+    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
 
     echo "go.sh: Running \`make -j12\`"
     # build the project
@@ -147,7 +147,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 
     # Smoketest
     if [ $SKIP_SMOKETEST -eq 0 ]; then
-        ./swaptube smoketest 2>/dev/null
+        ./swaptube 160 90 $FRAMERATE $SAMPLERATE smoketest 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in smoketest."
             exit 2
@@ -156,7 +156,7 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 
     # True render
     if [ $SKIP_RENDER -eq 0 ]; then
-        ./swaptube no_smoketest 2>/dev/null
+        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
             exit 2

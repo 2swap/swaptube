@@ -20,9 +20,6 @@ string sanitize_filename(const string& text) {
 class Macroblock {
 public:
     virtual ~Macroblock() = default;
-    int invoke_get_macroblock_length_frames() const {
-        return write_and_get_duration_frames();
-    }
     virtual void write_shtooka() const {}
     virtual string blurb() const = 0; // This is how the macroblock identifies itself in log outputs
     virtual int write_and_get_duration_frames() const = 0;
@@ -38,8 +35,8 @@ public:
     }
 
     int write_and_get_duration_frames() const override {
-        AUDIO_WRITER.add_silence(duration_frames);
-        SUBTITLE_WRITER.add_silence(static_cast<double>(duration_frames) / FRAMERATE);
+        AUDIO_WRITER->add_silence(duration_frames);
+        SUBTITLE_WRITER->add_silence(static_cast<double>(duration_frames) / FRAMERATE);
         return duration_frames;
     }
     string blurb() const override { return "SilenceBlock(" + to_string(static_cast<double>(duration_frames) / FRAMERATE) + ")"; }
@@ -54,12 +51,12 @@ public:
         : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
 
     void write_shtooka() const override {
-        SHTOOKA_WRITER.add_shtooka_entry(audio_filename, subtitle_text);
+        SHTOOKA_WRITER->add_shtooka_entry(audio_filename, subtitle_text);
     }
 
     int write_and_get_duration_frames() const override {
-        int duration_frames = AUDIO_WRITER.add_audio_from_file(audio_filename);
-        SUBTITLE_WRITER.add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, subtitle_text);
+        int duration_frames = AUDIO_WRITER->add_audio_from_file(audio_filename);
+        SUBTITLE_WRITER->add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, subtitle_text);
         return duration_frames;
     }
     string blurb() const override { return "FileBlock(" + subtitle_text + ")"; }
@@ -79,8 +76,8 @@ public:
     }
 
     int write_and_get_duration_frames() const override {
-        int duration_frames = AUDIO_WRITER.add_generated_audio(leftBuffer, rightBuffer);
-        SUBTITLE_WRITER.add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, "[Computer Generated Sound]");
+        int duration_frames = AUDIO_WRITER->add_generated_audio(leftBuffer, rightBuffer);
+        SUBTITLE_WRITER->add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, "[Computer Generated Sound]");
         return duration_frames;
     }
     string blurb() const override { return "GeneratedBlock(" + to_string(leftBuffer.size()/SAMPLERATE) + ")"; }

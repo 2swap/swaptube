@@ -90,12 +90,12 @@ public:
                     "but render_microblock() was only called " + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
         }
 
-        AUDIO_WRITER.encode_buffers();
+        AUDIO_WRITER->encode_buffers();
 
         total_microblocks_in_macroblock = remaining_microblocks_in_macroblock = expected_microblocks_in_macroblock;
         macroblock.write_shtooka();
 
-        total_frames_in_macroblock = macroblock.invoke_get_macroblock_length_frames();
+        total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
         if (!rendering_on()) total_frames_in_macroblock = min(500, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
         remaining_frames_in_macroblock = total_frames_in_macroblock;
 
@@ -108,9 +108,9 @@ public:
             double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
             int macroblock_length_samples = round(macroblock_length_seconds * SAMPLERATE);
             int microblock_length_samples = round(microblock_length_seconds * SAMPLERATE);
-            AUDIO_WRITER.add_blip(round(time * SAMPLERATE), MACRO, macroblock_length_samples, microblock_length_samples);
+            AUDIO_WRITER->add_blip(round(time * SAMPLERATE), MACRO, macroblock_length_samples, microblock_length_samples);
             for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
-                AUDIO_WRITER.add_blip(round((time + i * microblock_length_seconds) * SAMPLERATE), MICRO, macroblock_length_samples, microblock_length_samples);
+                AUDIO_WRITER->add_blip(round((time + i * microblock_length_seconds) * SAMPLERATE), MICRO, macroblock_length_samples, microblock_length_samples);
             }
         } // Audio hints
     }
@@ -226,7 +226,7 @@ private:
         if((!rendering_on() || fifth_frame) && PRINT_TO_TERMINAL) p->print_to_terminal();
 
         if (rendering_on()) { // Do not encode during smoketest
-            VIDEO_WRITER.add_frame(*p);
+            VIDEO_WRITER->add_frame(*p);
         }
 
         auto end_time = chrono::high_resolution_clock::now();
