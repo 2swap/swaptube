@@ -14,13 +14,38 @@ check_command() {
 check_command "cmake"
 check_command "make"
 check_command "gnuplot"
+# Check if MicroTeX build exists
 if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
-    echo "Error: ../MicroTeX-master/build/LaTeX does not exist."
-    echo "Please ensure that MicroTeX is configured."
-    echo "To install MicroTeX, follow the instructions here: https://github.com/NanoMichael/MicroTeX/README.md"
-    echo "You should install it such that MicroTeX-master and the swaptube repo are in the same folder."
-    exit 1
-    # TODO: Automate MicroTeX installation
+    echo "Error: ../MicroTeX-master/build/LaTeX does not exist. MicroTeX is required for this project."
+    echo "Install instructions are available at https://github.com/NanoMichael/MicroTeX"
+
+    # Ask the user for confirmation
+    read -p "Would you like to automatically re-install MicroTeX now? Installation process can be viewed in go.sh. [y/N]: " choice
+    case "$choice" in
+        y|Y )
+            (
+                set -e # Exit on error
+                echo ">>> Cloning and building MicroTeX..."
+                cd .. || exit 1
+                rm MicroTeX-master -rf
+                git clone https://github.com/NanoMichael/MicroTeX.git MicroTeX-master
+                cd MicroTeX-master || exit 1
+                mkdir -p build
+                cd build || exit 1
+                cmake ..
+                make -j"$(nproc)"
+            )
+            ;;
+        * )
+    esac
+
+    # Verify installation
+    if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
+        echo "Installation aborted or failed. Please follow the instructions manually: https://github.com/NanoMichael/MicroTeX"
+        exit 1
+    fi
+
+    echo "MicroTeX installation verified."
 fi
 
 # Check if the number of arguments is less or more than expected
