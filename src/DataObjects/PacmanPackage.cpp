@@ -37,7 +37,7 @@ public:
         return explicitlyInstalled;
     }
 
-    unordered_set<GenericBoard*> get_children() const override {
+    unordered_set<GenericBoard*> get_children() override {
         unordered_set<GenericBoard*> children;
         // Build the pacman command
         string command = "pacman -Qi " + representation;

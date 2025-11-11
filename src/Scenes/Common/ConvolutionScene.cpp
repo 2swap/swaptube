@@ -10,8 +10,10 @@ class ConvolutionScene : public Scene {
 public:
     ConvolutionScene(const double width = 1, const double height = 1)
     : Scene(width, height) {
-        state.set("transparency_profile", "<in_transition_state> {microblock_fraction} *");
-        state.set("in_transition_state", "0");
+        manager.set({
+            {"transparency_profile", "<in_transition_state> {microblock_fraction} *"},
+            {"in_transition_state", "0"},
+        });
     }
 
     pair<int, int> get_coords_from_pixels(const Pixels& p){
@@ -25,13 +27,15 @@ public:
         transition_coords = get_coords_from_pixels(p);
 
         intersections = find_intersections(p1, p2);
-        state.set("transparency_profile", "<in_transition_state> {m" + string(tt == MICRO?"i":"a") + "croblock_fraction} *");
-        state.set("in_transition_state", "1");
+        manager.set({
+            {"transparency_profile", "<in_transition_state> {m" + string(tt == MICRO?"i":"a") + "croblock_fraction} *"},
+            {"in_transition_state", "1"},
+        });
         current_transition_type = tt;
     }
 
     void jump(const Pixels& p) {
-        state.set("in_transition_state", "0");
+        manager.set("in_transition_state", "0");
         p1 = p;
         coords = get_coords_from_pixels(p);
         jumped = true;
@@ -46,7 +50,7 @@ public:
         if(state["in_transition_state"] != 1) throw runtime_error("End Transition called on a ConvolutionScene not in transition!");
         p1 = p2;
         coords = transition_coords;
-        state.set("in_transition_state", "0");
+        manager.set("in_transition_state", "0");
     }
 
     void draw() override{

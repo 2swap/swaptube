@@ -31,8 +31,8 @@ void render_video() {
         {"point_path_length", "0"},
         {"internal_shade", "0"},
     };
-    cs.state.set(init);
-    ms->state.set(unordered_map<string,string>{
+    cs.manager.set(init);
+    ms->manager.set(unordered_map<string,string>{
         {"zoom_r", "[zoom_r]"},
         {"zoom_i", "[zoom_i]"},
         {"max_iterations", "[max_iterations]"},
@@ -53,7 +53,7 @@ void render_video() {
         {"internal_shade", "[internal_shade]"},
         {"breath", "{t} 3 / sin 2 / "},
     });
-    cs.state.transition(MICRO, unordered_map<string,string>{
+    cs.manager.transition(MICRO, unordered_map<string,string>{
         {"max_iterations", "200"},
         {"seed_c_r", "{t} 4.1 / sin 2 *"},
         {"seed_c_i", "{t} 5.6 / cos 2 *"},

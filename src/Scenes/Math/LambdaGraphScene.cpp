@@ -10,9 +10,7 @@ public:
     : GraphScene(g, width, height), root_node_representation(rep) {
         HashableString* reppy = new HashableString(rep);
         graph->add_to_stack(reppy);
-        state.set(unordered_map<string, string>{
-            {"physics_multiplier", "1"},
-        });
+        manager.set("physics_multiplier", "1");
     }
 
     Surface make_surface(Node<T> node) const override {

@@ -19,21 +19,23 @@ extern "C" void mandelbrot_render(
 class MandelbrotScene : public CoordinateScene {
 public:
     MandelbrotScene(const double width = 1, const double height = 1) : CoordinateScene(width, height) {
-        state.set("max_iterations", "32");
-        state.set("seed_z_r", "0");
-        state.set("seed_z_i", "0");
-        state.set("seed_x_r", "2");
-        state.set("seed_x_i", "0");
-        state.set("seed_c_r", "0");
-        state.set("seed_c_i", "0");
-        state.set("pixel_param_z", "0"); // Julia set
-        state.set("pixel_param_x", "0"); // X set
-        state.set("pixel_param_c", "1"); // Mandelbrot set
-        state.set("point_path_length", "0");
-        state.set("point_path_start_r", "0");
-        state.set("point_path_start_i", "0");
-        state.set("gradation", "1");
-        state.set("phase_shift", "{t}");
+        manager.set({
+            {"max_iterations", "32"},
+            {"seed_z_r", "0"},
+            {"seed_z_i", "0"},
+            {"seed_x_r", "2"},
+            {"seed_x_i", "0"},
+            {"seed_c_r", "0"},
+            {"seed_c_i", "0"},
+            {"pixel_param_z", "0"}, // Julia set
+            {"pixel_param_x", "0"}, // X set
+            {"pixel_param_c", "1"}, // Mandelbrot set
+            {"point_path_length", "0"},
+            {"point_path_start_r", "0"},
+            {"point_path_start_i", "0"},
+            {"gradation", "1"},
+            {"phase_shift", "{t}"},
+        });
     }
 
     const StateQuery populate_state_query() const override {

@@ -9,7 +9,7 @@ public:
     void remove_subscene(const string& name) {
         auto it = subscenes.find(name);
         if(it != subscenes.end()){
-            it->second->state.set_parent(nullptr, name);
+            it->second->manager.set_parent(nullptr, name);
             render_order.remove(name); // Note this is inefficient but we rarely have more than 100 subscenes
             subscenes.erase(it);
         }
@@ -30,12 +30,12 @@ public:
     void fade_subscene(const TransitionType tt, const string& name, const double opacity_final) {
         auto it = subscenes.find(name);
         if(it != subscenes.end())
-            state.transition(tt, {{name + ".opacity", to_string(opacity_final)}});
+            manager.transition(tt, {{name + ".opacity", to_string(opacity_final)}});
     }
 
     void remove_all_subscenes() {
         for (auto& name : render_order){
-            subscenes[name]->state.set_parent(nullptr, name);
+            subscenes[name]->manager.set_parent(nullptr, name);
         }
         subscenes.clear();
         render_order.clear();
@@ -63,13 +63,11 @@ protected:
     void add_subscene_check_dupe(const string& name, shared_ptr<Scene> scene, bool behind = false) {
         if(!scene) throw runtime_error("Error: Attempted to add a null subscene to superscene: " + name);
         if(subscenes.find(name) != subscenes.end()) throw runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
-        scene->state.set_parent(&state, name);
+        scene->manager.set_parent(&manager, name);
         subscenes[name] = scene;
         if(behind) render_order.push_front(name);
         else       render_order.push_back(name);
-        state.set({
-            {name + ".opacity", "1"},
-        });
+        manager.set(name + ".opacity", "1");
     }
 
     void change_data() override {

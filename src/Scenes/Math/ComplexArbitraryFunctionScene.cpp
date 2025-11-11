@@ -17,13 +17,15 @@ extern "C" void color_complex_arbitrary_function(
 class ComplexArbitraryFunctionScene : public CoordinateScene {
 public:
     ComplexArbitraryFunctionScene(const float width = 1, const float height = 1) : CoordinateScene(width, height) {
-        state.set("sqrt_coef", "1");
-        state.set("sqrt_branch_cut", "1");
-        state.set("sin_coef", "0");
-        state.set("cos_coef", "0");
-        state.set("exp_coef", "0");
-        state.set("ab_dilation", "1");
-        state.set("dot_radius", "1");
+        manager.set({
+            {"sqrt_coef", "1"},
+            {"sqrt_branch_cut", "1"},
+            {"sin_coef", "0"},
+            {"cos_coef", "0"},
+            {"exp_coef", "0"},
+            {"ab_dilation", "1"},
+            {"dot_radius", "1"},
+        });
     }
 
     void draw() override {
@@ -45,12 +47,6 @@ public:
         );
 
         CoordinateScene::draw();
-    }
-
-    unordered_map<string, double> stage_publish_to_global() const override {
-        return unordered_map<string, double> {
-            {"sqrt_branch_cut", state["sqrt_branch_cut"]},
-        };
     }
 
     const StateQuery populate_state_query() const override {

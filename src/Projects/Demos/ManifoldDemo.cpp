@@ -11,10 +11,10 @@ void render_video() {
     );
 
     ms.stage_macroblock(SilenceBlock(13), 12);
-    ms.state.set({
+    ms.manager.set({
         {"d", "10"},
     });
-    ms.state.transition(MICRO, {
+    ms.manager.transition(MICRO, {
         {"qi", ".2"},
         {"qj", "{t} 2 / sin"},
         {"qk", ".1"},
@@ -22,12 +22,12 @@ void render_video() {
     ms.render_microblock();
     ms.render_microblock();
 
-    ms.state.set({
+    ms.manager.set({
         {"u_wave", "3"},
         {"v_wave", "9"},
         {"mult", "2"},
     });
-    ms.state.transition(MICRO, {
+    ms.manager.transition(MICRO, {
         {"manifold_x", "(u) -.1 +"},
         {"manifold_y", "(u) <u_wave> * sin (v) <v_wave> * sin + <mult> /"},
         {"manifold_z", "(v)"},
@@ -36,7 +36,7 @@ void render_video() {
     ms.render_microblock();
 
     // Plane in 3D space
-    ms.state.transition(MICRO, {
+    ms.manager.transition(MICRO, {
         {"manifold_x", "(u)"},
         {"manifold_y", "0"},
         {"manifold_z", "(v)"},
@@ -45,7 +45,7 @@ void render_video() {
     ms.render_microblock();
 
     //Parameterize a sphere with spherical coordinates
-    ms.state.transition(MICRO, {
+    ms.manager.transition(MICRO, {
         {"manifold_x", "(u) cos (v) sin *"},
         {"manifold_y", "(u) sin (v) sin *"},
         {"manifold_z", "(v) cos"},
@@ -58,7 +58,7 @@ void render_video() {
     ms.render_microblock();
 
     // Back to a plane
-    ms.state.transition(MICRO, {
+    ms.manager.transition(MICRO, {
         {"manifold_x", "(u)"},
         {"manifold_y", "0"},
         {"manifold_z", "(v)"},
@@ -71,7 +71,7 @@ void render_video() {
     ms.render_microblock();
 
     // Torus
-    ms.state.transition(MICRO, {
+    ms.manager.transition(MICRO, {
         {"manifold_x", ".5 (u) cos * 2 + (v) cos *"},
         {"manifold_y", ".5 (u) cos * 2 + (v) sin *"},
         {"manifold_z", ".5 (u) sin *"},

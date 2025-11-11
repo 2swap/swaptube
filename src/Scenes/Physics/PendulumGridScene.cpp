@@ -6,7 +6,7 @@
 class PendulumGridScene : public CoordinateScene {
 public:
     PendulumGridScene(const vector<PendulumGrid>& pgv, const double width = 1, const double height = 1) : CoordinateScene(width, height), grids(pgv) {
-        state.set({{"contrast", "1"},
+        manager.set({{"contrast", "1"},
                            {"mode", "0"},
                            {"physics_multiplier", "0"},
                            {"rk4_step_size", "1 30 / .1 *"},

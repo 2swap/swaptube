@@ -11,21 +11,21 @@ void render_video() {
     CompositeScene comp;
     comp.add_scene(scene, "orbit2d_s"); 
     sim.add_fixed_object(cs.get_color(), "planet1");
-    comp.state.set({
+    comp.manager.set({
         {"planet1.opacity", "1"},
         {"planet1.x", "-.2"},
         {"planet1.y", "-.1"},
         {"planet1.z", "0"},
     });
     sim.add_fixed_object(cs.get_color(), "planet2");
-    comp.state.set({
+    comp.manager.set({
         {"planet2.opacity", "1"},
         {"planet2.x", "0.2171"},
         {"planet2.y", "0.1"},
         {"planet2.z", "0"}
     });
 
-    comp.state.set(unordered_map<string, string>{
+    comp.manager.set(unordered_map<string, string>{
         {"collision_threshold", "0.05"},
         {"drag", "0.97"},
         {"drag_display", "1 <drag> -"},
@@ -48,13 +48,13 @@ void render_video() {
     comp.stage_macroblock(SilenceBlock(3), 1);
     comp.render_microblock();
 
-    comp.state.set(unordered_map<string, string>{
+    comp.manager.set(unordered_map<string, string>{
         {"eps", "0.0001"},
     });
     comp.stage_macroblock(SilenceBlock(3), 1);
     comp.render_microblock();
 
-    comp.state.set(unordered_map<string, string>{
+    comp.manager.set(unordered_map<string, string>{
         {"eps", "0.00001"},
     });
     comp.stage_macroblock(SilenceBlock(3), 1);

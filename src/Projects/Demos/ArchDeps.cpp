@@ -26,9 +26,9 @@ void render_video() {
     SAVE_FRAME_PNGS = false;
 
     Graph g;
-    GraphScene gs(&g);
+    GraphScene gs(&g, false);
 
-    gs.state.set({
+    gs.manager.set({
         {"q1", "{t} .1 * cos"},
         {"qi", "0"},
         {"qj", "{t} .1 * sin"},

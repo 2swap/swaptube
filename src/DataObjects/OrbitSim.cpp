@@ -26,8 +26,8 @@ public:
         return state[state_name + ".opacity"];
     }
 
-    glm::dvec3 get_position(const StateManager& state) const {
-        return glm::dvec3(state[state_name + ".x"],
+    glm::vec3 get_position(const StateManager& state) const {
+        return glm::vec3(state[state_name + ".x"],
                          state[state_name + ".y"],
                          state[state_name + ".z"]);
     }
@@ -35,9 +35,9 @@ public:
 
 class MobileObject : public Object {
 public:
-    glm::dvec3 position;
-    glm::dvec3 velocity;
-    MobileObject(const glm::dvec3& pos, int col)
+    glm::vec3 position;
+    glm::vec3 velocity;
+    MobileObject(const glm::vec3& pos, int col)
         : Object(col, false), position(pos), velocity(0) {}
 };
 
@@ -59,7 +59,7 @@ public:
         mark_updated();
     }
 
-    void add_mobile_object(const glm::dvec3& position, int color) {
+    void add_mobile_object(const glm::vec3& position, int color) {
         mobile_objects.push_back(MobileObject(position, color));
         mark_updated();
     }
@@ -74,14 +74,14 @@ public:
         drag = pow(state["drag"], tick_duration);
     }
 
-    bool get_next_step(glm::dvec3& pos, glm::dvec3& vel, int& color, const StateManager& state) {
+    bool get_next_step(glm::vec3& pos, glm::vec3& vel, int& color, const StateManager& state) {
         float tick_duration, collision_threshold_squared, drag;
         get_parameters_from_state(tick_duration, collision_threshold_squared, drag, state);
         float eps = state["eps"];
 
         float v2 = glm::dot(vel, vel);
         for (const FixedObject& fo : fixed_objects) {
-            glm::dvec3 direction = fo.get_position(state) - pos;
+            glm::vec3 direction = fo.get_position(state) - pos;
             float distance2 = glm::dot(direction, direction);
             if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
                 color = fo.color;
@@ -96,8 +96,8 @@ public:
         return false;
     }
 
-    int predict_fate_of_object(glm::dvec3 pos, const StateManager& state) {
-        glm::dvec3 vel(0.f, 0, 0);
+    int predict_fate_of_object(glm::vec3 pos, const StateManager& state) {
+        glm::vec3 vel(0.f, 0, 0);
 
         int color = 0;
         for (int i = 0; i < 10000; ++i) 
@@ -106,7 +106,7 @@ public:
         return 0;
     }
 
-    void get_fixed_object_data_for_cuda(vector<glm::dvec3>& positions, vector<int>& colors, vector<float>& opacities, const StateManager& state) {
+    void get_fixed_object_data_for_cuda(vector<glm::vec3>& positions, vector<int>& colors, vector<float>& opacities, const StateManager& state) {
         int num_positions = fixed_objects.size();
         positions.resize(num_positions);
            colors.resize(num_positions);
@@ -132,14 +132,14 @@ private:
             float v2 = glm::dot(obj1.velocity, obj1.velocity);
 
             for (const auto& fixed_obj : fixed_objects) {
-                glm::dvec3 direction = fixed_obj.get_position(state) - obj1.position;
+                glm::vec3 direction = fixed_obj.get_position(state) - obj1.position;
                 float distance2 = glm::dot(direction, direction);
                 if (distance2 < collision_threshold_squared && v2 < global_force_constant) {
                     it = mobile_objects.erase(it);
                     deleted = true;
                     break;
                 } else {
-                    glm::dvec3 acceleration = tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(eps, distance2);
+                    glm::vec3 acceleration = tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(eps, distance2);
                     obj1.velocity += acceleration;
                 }
             }
@@ -149,10 +149,10 @@ private:
                     // Interactions between two mobile objects
                     for (auto it2 = std::next(it); it2 != mobile_objects.end(); it2++) {
                         auto& obj2 = *it2;
-                        glm::dvec3 direction = obj2.position - obj1.position;
+                        glm::vec3 direction = obj2.position - obj1.position;
                         float distance2 = glm::dot(direction, direction);
                         if (distance2 > 0) {
-                            glm::dvec3 acceleration = tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(eps, distance2);
+                            glm::vec3 acceleration = tick_duration * glm::normalize(direction) * magnitude_force_given_distance_squared(eps, distance2);
                             obj1.velocity += acceleration;
                             obj2.velocity -= acceleration;
                         }

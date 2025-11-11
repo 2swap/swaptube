@@ -9,7 +9,7 @@ public:
     list<pair<glm::vec2, int>> trail;
     CoordinateSceneWithTrail(const double width = 1, const double height = 1)
         : CoordinateScene(width, height) {
-        state.set({{"trail_opacity", "1"},
+        manager.set({{"trail_opacity", "1"},
                    {"trail_x", "0"},
                    {"trail_y", "0"}});
     }

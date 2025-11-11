@@ -6,6 +6,7 @@
 
 class MicrotoneScene : public CoordinateScene {
 public:
+    int circles_to_render = 0;
     MicrotoneScene(const double width = 1, const double height = 1)
         : CoordinateScene(width, height) { }
 
@@ -26,8 +27,8 @@ public:
             new_freqs.push_back(pow(5./4, state["circle" + to_string(i) + "_x"]) * pow(3./2, state["circle" + to_string(i) + "_y"]));
         }
         int total_samples = SAMPLERATE/FRAMERATE;
-        vector<float> left;
-        vector<float> right;
+        vector<sample_t> left;
+        vector<sample_t> right;
         scape.generate_audio(total_samples, left, right, new_freqs);
         AUDIO_WRITER.add_sfx(left, right, elapsed);
         elapsed += left.size();
@@ -36,6 +37,10 @@ public:
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
         sq.insert("t");
+        for (int i = 0; i < circles_to_render; i++) {
+            sq.insert("circle" + to_string(i) + "_x");
+            sq.insert("circle" + to_string(i) + "_y");
+        }
         return sq;
     }
 

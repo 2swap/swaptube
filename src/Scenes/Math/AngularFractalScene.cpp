@@ -9,7 +9,7 @@ private:
 
 public:
     AngularFractalScene(int sz, const float width = 1, const float height = 1) : CoordinateScene(width, height), size(sz) {
-        for(int i = 0; i < sz; i++) state.set("angle_"+to_string(i), "0");
+        for(int i = 0; i < sz; i++) manager.set("angle_"+to_string(i), "0");
     }
 
     void draw() override {
@@ -40,8 +40,4 @@ public:
         for (int i = 0; i < size; i++) sq.insert("angle_" + to_string(i));
         return sq;
     }
-
-    //void mark_data_unchanged() override { }
-    //void change_data() override { }
-    //bool check_if_data_changed() const override { }
 };

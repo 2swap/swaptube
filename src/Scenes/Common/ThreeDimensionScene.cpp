@@ -88,7 +88,7 @@ public:
     bool use_state_for_center;
     ThreeDimensionScene(const double width = 1, const double height = 1)
         : SuperScene(width, height), use_state_for_center(false), sketchpad(width, height) {
-        state.set(unordered_map<string, string>{
+        manager.set({
             {"fov", "1"},
             {"x", "0"},
             {"y", "0"},
@@ -262,16 +262,6 @@ public:
         return glm::dot(diff, diff);
     }
 
-    unordered_map<string, double> stage_publish_to_global() const override {
-        return unordered_map<string, double> {
-            {"d", state["d"]},
-            {"q1", state["q1"]},
-            {"qi", state["qi"]},
-            {"qj", state["qj"]},
-            {"qk", state["qk"]},
-        };
-    }
-
     void draw() override {
         fov = state["fov"];
         over_w_fov = 1/(get_geom_mean_size()*fov);
@@ -384,7 +374,7 @@ public:
                   const string& start_x, const string& start_y, const string& start_z,
                   const string& end_x, const string& end_y, const string& end_z) {
         lines_in_state.push_back(lis);
-        state.set({
+        manager.set({
             {lis.name + ".start_x", start_x},
             {lis.name + ".start_y", start_y},
             {lis.name + ".start_z", start_z},
@@ -397,12 +387,12 @@ public:
     void add_surface(const Surface& s, shared_ptr<Scene> sc) {
         surfaces.push_back(s);
         add_subscene_check_dupe(s.name, sc);
-        state.set(s.name + ".opacity", "1");
+        manager.set(s.name + ".opacity", "1");
     }
 
     void add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa=1){
         add_surface(s, sc);
-        state.set(s.name + ".opacity", "0");
+        manager.set(s.name + ".opacity", "0");
         fade_subscene(tt, s.name, opa);
     }
 
@@ -414,7 +404,7 @@ public:
             }
             else ++it;
         }
-        state.remove(name + ".opacity");
+        manager.remove(name + ".opacity");
     }
 
     void clear_lines(){ lines.clear(); lines_in_state.clear(); }

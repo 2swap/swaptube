@@ -52,19 +52,21 @@ public:
     GeometricConstruction construction;
     CoordinateScene(const float width = 1, const float height = 1)
         : Scene(width, height) {
-        state.set("left_x"   , "<center_x> .5 <window_width> / -");
-        state.set("right_x"  , "<center_x> .5 <window_width> / +");
-        state.set("top_y"    , "<center_y> .5 <window_height> / -");
-        state.set("bottom_y" , "<center_y> .5 <window_height> / +");
-        state.set("construction_opacity", "1");
-        state.set("ticks_opacity", "0");
-        state.set("zero_crosshair_opacity", "0");
-        state.set("center_x", "0");
-        state.set("center_y", "0");
-        state.set("zoom", "0");
-        state.set("microblock_fraction_passthrough", "{microblock_fraction}");
-        state.set("window_height", "<zoom> exp .2 *");
-        state.set("window_width", "<window_height> <w> {VIDEO_WIDTH} * / <h> {VIDEO_HEIGHT} * *");
+        manager.set({
+            {"left_x"   , "<center_x> .5 <window_width> / -"},
+            {"right_x"  , "<center_x> .5 <window_width> / +"},
+            {"top_y"    , "<center_y> .5 <window_height> / -"},
+            {"bottom_y" , "<center_y> .5 <window_height> / +"},
+            {"construction_opacity", "1"},
+            {"ticks_opacity", "0"},
+            {"zero_crosshair_opacity", "0"},
+            {"center_x", "0"},
+            {"center_y", "0"},
+            {"zoom", "0"},
+            {"microblock_fraction_passthrough", "{microblock_fraction}"},
+            {"window_height", "<zoom> exp .2 *"},
+            {"window_width", "<window_height> <w> {VIDEO_WIDTH} * / <h> {VIDEO_HEIGHT} * *"},
+        });
     }
 
     glm::vec2 point_to_pixel(const glm::vec2& p) {

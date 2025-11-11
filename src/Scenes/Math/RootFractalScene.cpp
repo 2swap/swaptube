@@ -7,15 +7,17 @@ extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<fl
 class RootFractalScene : public CoordinateScene {
 public:
     RootFractalScene(const float width = 1, const float height = 1) : CoordinateScene(width, height) {
-        state.set("coefficient0_r", "-1");
-        state.set("coefficient0_i", "0");
-        state.set("coefficient1_r", "1");
-        state.set("coefficient1_i", "0");
-        state.set("terms", "8");
-        state.set("degree_fixed", "1");
-        state.set("coefficients_opacity", "1");
-        state.set("visibility_multiplier", "1");
-        state.set("brightness", ".25");
+        manager.set({
+            {"coefficient0_r", "-1"},
+            {"coefficient0_i", "0"},
+            {"coefficient1_r", "1"},
+            {"coefficient1_i", "0"},
+            {"terms", "8"},
+            {"degree_fixed", "1"},
+            {"coefficients_opacity", "1"},
+            {"visibility_multiplier", "1"},
+            {"brightness", ".25"},
+        });
     }
 
     void draw() override {
@@ -52,15 +54,6 @@ public:
             i++;
         }
         CoordinateScene::draw();
-    }
-
-    unordered_map<string, double> stage_publish_to_global() const override {
-        return unordered_map<string, double> {
-            {"coefficient0_r", state["coefficient0_r"]},
-            {"coefficient0_i", state["coefficient0_i"]},
-            {"coefficient1_r", state["coefficient1_r"]},
-            {"coefficient1_i", state["coefficient1_i"]},
-        };
     }
 
     const StateQuery populate_state_query() const override {

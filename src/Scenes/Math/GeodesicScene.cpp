@@ -24,12 +24,11 @@ extern "C" void cuda_overlay(
     unsigned int* h_foreground, const int fw, const int fh,
     const int dx, const int dy,
     const float opacity);
-
 class GeodesicScene : public Scene {
 public:
     GeodesicScene(const double width = 1, const double height = 1)
         : Scene(width, height) {
-        state.set(unordered_map<string, string>{
+        manager.set(unordered_map<string, string>{
 // Raymarching Stuff
             {"fov", "1"},
             {"x", "0"},
@@ -85,7 +84,7 @@ public:
             manifold_rotation,
             conjugate_manifold_rotation,
             geom_mean(manifold_pix.w, manifold_pix.h),
-            current_state["manifold_fov"],
+            state["manifold_fov"],
             1,
             1,
             0
@@ -112,7 +111,11 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = { "fov", "x", "y", "z", "q1", "qi", "qj", "qk", "intensity", "u_min", "u_max", "u_steps", "v_min", "v_max", "v_steps" };
+        StateQuery sq = {
+            "fov", "x", "y", "z", "q1", "qi", "qj", "qk", "intensity",
+
+            "manifold_d", "manifold_q1", "manifold_qi", "manifold_qj", "manifold_qk", "manifold_fov",
+            "u_min", "u_max", "u_steps", "v_min", "v_max", "v_steps" };
         return sq;
     }
 

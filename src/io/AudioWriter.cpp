@@ -121,8 +121,6 @@ public:
     }
 
     void add_sfx(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer, const int t) {
-        if (!rendering_on() || !AUDIO_SFX) return; // Don't write in smoketest
-
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
@@ -134,9 +132,10 @@ public:
         if(sample_copy_start_frames < 0)
             throw runtime_error("Sfx copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed));
 
+        if (!rendering_on() || !AUDIO_SFX) return; // Don't write in smoketest
+
         int start_idx = sample_copy_start_frames * audio_channels;
         int end_idx = sample_copy_end_frames * audio_channels;
-
         // Ensure sfx_buffer has enough capacity and add samples (convert floats to int32)
         if (sfx_buffer.size() < static_cast<size_t>(end_idx)) {
             sfx_buffer.resize(end_idx, 0); // Extend with silence
@@ -155,8 +154,6 @@ public:
     int microblock_linear_step = 0;
 
     void add_blip(const int t, const TransitionType tt, const int upcoming_macroblock_length_samples, const int upcoming_microblock_length_samples) {
-        if (!rendering_on() || !AUDIO_HINTS) return; // Don't write in smoketest
-
         current_macroblock_length_samples = upcoming_macroblock_length_samples;
         current_microblock_length_samples = upcoming_microblock_length_samples;
 
@@ -164,6 +161,8 @@ public:
 
         if(sample_idx < 0)
             throw runtime_error("Blip copy start was negative: " + to_string(sample_idx) + ". " + to_string(t) + " " + to_string(total_samples_processed));
+
+        if (!rendering_on() || !AUDIO_HINTS) return; // Don't write in smoketest
 
         // Ensure blips_buffer has enough capacity and add samples (convert floats to int32)
         int new_size = (sample_idx + 1) * audio_channels;
@@ -176,7 +175,6 @@ public:
     }
 
     int add_generated_audio(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer) {
-        if (!rendering_on()) return 0; // Don't write in smoketest
         if (left_buffer.size() != right_buffer.size()) {
             throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
@@ -184,8 +182,9 @@ public:
             throw runtime_error("Generated sound buffer length is not a multiple of video frame size. Size: " + to_string(left_buffer.size()) + " samples.");
         }
 
-        int num_samples = left_buffer.size();
+        if (!rendering_on()) return 0; // Don't write in smoketest
 
+        int num_samples = left_buffer.size();
         for(int i = 0; i < num_samples; i++){
             sample_buffer.push_back( left_buffer[i]);
             sample_buffer.push_back(right_buffer[i]);
@@ -202,8 +201,6 @@ public:
     }
 
     int add_audio_from_file(const string& filename) {
-        if (!rendering_on()) return 0; // Don't write in smoketest
-
         // Build full path to the input audio file
         string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + filename;
 
@@ -279,6 +276,12 @@ public:
 
         if (ret = avcodec_open2(codecContext, audioDecoder, nullptr) < 0) {
             throw runtime_error("Error: Could not open audio decoder. " + ff_errstr(ret));
+        }
+
+        if (!rendering_on()) {
+            avcodec_free_context(&codecContext);
+            avformat_close_input(&inputAudioFormatContext);
+            return 0; // Don't write in smoketest
         }
 
         // Decode and process the audio samples

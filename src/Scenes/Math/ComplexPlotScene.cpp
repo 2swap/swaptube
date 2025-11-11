@@ -36,12 +36,12 @@ private:
             string key = "coefficient" + to_string(degree) + "_" + ri;
             if(abs(state[key]) > stod(new_coefficient_val))
                 throw runtime_error("Cannot decrement degree while leading coefficient is non-zero or non-opaque. Offending key: " + key + " with value " + to_string(state[key]));
-            state.remove("root" + to_string(degree) + "_" + ri);
-            state.remove("coefficient" + to_string(degree) + "_" + ri);
+            manager.remove("root" + to_string(degree) + "_" + ri);
+            manager.remove("coefficient" + to_string(degree) + "_" + ri);
         }
-        state.remove("coefficient" + to_string(degree) + "_ring");
-        state.remove("root" + to_string(degree) + "_ring");
-        state.remove("coefficient" + to_string(degree) + "_opacity");
+        manager.remove("coefficient" + to_string(degree) + "_ring");
+        manager.remove("root" + to_string(degree) + "_ring");
+        manager.remove("coefficient" + to_string(degree) + "_opacity");
         degree--;
 
         cout << "Decremented degree to " << degree << endl;
@@ -59,11 +59,13 @@ private:
 
         for(string type : {"coefficient", "root"}) {
             string degree_str = to_string(degree - (type == "coefficient" ? 0 : 1));
-            state.set(type + degree_str + "_r", new_coefficient_val);
-            state.set(type + degree_str + "_i", "0");
-            state.set(type + degree_str + "_ring", "0");
+            manager.set({
+                {type + degree_str + "_r", new_coefficient_val},
+                {type + degree_str + "_i", "0"},
+                {type + degree_str + "_ring", "0"},
+            });
             if(type == "coefficient")
-                state.set(type + degree_str + "_opacity", "0");
+                manager.set(type + degree_str + "_opacity", "0");
         }
 
         cout << "Incremented degree to " << degree << endl;
@@ -76,30 +78,32 @@ public:
             for(int num = 0; num < (type == "coefficient"?degree+1:degree); num++){
                 for(string ri : {"r", "i", "opacity", "ring"})
                     if(!(type == "root" && ri == "opacity"))
-                        state.set(type + to_string(num) + "_" + ri, (ri == "opacity") ? "1" : "0");
+                        manager.set(type + to_string(num) + "_" + ri, (ri == "opacity") ? "1" : "0");
             }
-        state.set("roots_or_coefficients_control", "0"); // Default to root control
-        state.set("ab_dilation", "1"); // basically saturation
-        state.set("dot_radius", "1");
-        state.set("positive_quadratic_formula_opacity", "0");
-        state.set("negative_quadratic_formula_opacity", "0");
+        manager.set({
+            {"roots_or_coefficients_control", "0"},
+            {"ab_dilation", "1"},
+            {"dot_radius", "1"},
+            {"positive_quadratic_formula_opacity", "0"},
+            {"negative_quadratic_formula_opacity", "0"},
+        });
     }
 
     void transition_root_rings(const TransitionType tt, const float opacity) {
         for(int i = 0; i < degree; i++) {
-            state.transition(tt, "root" + to_string(i) + "_ring", to_string(opacity));
+            manager.transition(tt, "root" + to_string(i) + "_ring", to_string(opacity));
         }
     }
 
     void transition_coefficient_rings(const TransitionType tt, const float opacity) {
         for(int i = 0; i < degree+1; i++) {
-            state.transition(tt, "coefficient" + to_string(i) + "_ring", to_string(opacity));
+            manager.transition(tt, "coefficient" + to_string(i) + "_ring", to_string(opacity));
         }
     }
 
     void transition_coefficient_opacities(const TransitionType tt, const float opacity) {
         for(int i = 0; i < degree+1; i++) {
-            state.transition(tt, "coefficient" + to_string(i) + "_opacity", to_string(opacity));
+            manager.transition(tt, "coefficient" + to_string(i) + "_opacity", to_string(opacity));
         }
     }
 
@@ -123,11 +127,13 @@ public:
 
         int i = 0;
         for(complex<float> c : coefficients){
-            state.set("coefficient" + to_string(i) + "_r", to_string(c.real()));
-            state.set("coefficient" + to_string(i) + "_i", to_string(c.imag()));
+            manager.set({
+                {"coefficient" + to_string(i) + "_r", to_string(c.real())},
+                {"coefficient" + to_string(i) + "_i", to_string(c.imag())},
+            });
             i++;
         }
-        state.set({{"roots_or_coefficients_control", "1"}});
+        manager.set({{"roots_or_coefficients_control", "1"}});
     }
 
     void coefficients_to_roots(){
@@ -149,11 +155,13 @@ public:
 
         int i = 0;
         for(complex<float> r : roots){
-            state.set("root" + to_string(i) + "_r", to_string(r.real()));
-            state.set("root" + to_string(i) + "_i", to_string(r.imag()));
+            manager.set({
+                {"root" + to_string(i) + "_r", to_string(r.real())},
+                {"root" + to_string(i) + "_i", to_string(r.imag())},
+            });
             i++;
         }
-        state.set({{"roots_or_coefficients_control", "0"}});
+        manager.set({{"roots_or_coefficients_control", "0"}});
     }
 
     vector<complex<float>> get_coefficients() const {
@@ -216,15 +224,15 @@ public:
         const string spin_r2 = midpoint_r + " 2 * " + spin_r1 + " -";
         const string spin_i2 = midpoint_i + " 2 * " + spin_i1 + " -";
 
-        state.set(theta_unique, "0");
-        state.set({
+        manager.set(theta_unique, "0");
+        manager.set({
             {type + root1 + "_r", spin_r1},
             {type + root1 + "_i", spin_i1},
             {type + root2 + "_r", spin_r2},
             {type + root2 + "_i", spin_i2},
         });
-        state.transition(tt, theta_unique, clockwise ? "pi -1 *" : "pi");
-        state.transition(tt, {
+        manager.transition(tt, theta_unique, clockwise ? "pi -1 *" : "pi");
+        manager.transition(tt, {
             {type + root1 + "_r", r1},
             {type + root1 + "_i", i1},
             {type + root2 + "_r", r0},
@@ -362,26 +370,5 @@ public:
                         sq.insert(type + to_string(num) + "_" + ri);
         state_query_insert_multiple(sq, {"roots_or_coefficients_control", "ab_dilation", "dot_radius", "positive_quadratic_formula_opacity", "negative_quadratic_formula_opacity"});
         return sq;
-    }
-
-    unordered_map<string, double> stage_publish_to_global() const override {
-        unordered_map<string, double> map;
-
-        vector<complex<float>> roots = get_roots();
-        for(int i = 0; i < degree; i++) {
-            map["root" + to_string(i) + "_r"] = roots[i].real();
-            map["root" + to_string(i) + "_i"] = roots[i].imag();
-            map["root" + to_string(i) + "_ring"] = state["root" + to_string(i) + "_ring"];
-        }
-
-        vector<complex<float>> coefficients = get_coefficients();
-        for(int i = 0; i < degree+1; i++) {
-            map["coefficient" + to_string(i) + "_r"] = coefficients[i].real();
-            map["coefficient" + to_string(i) + "_i"] = coefficients[i].imag();
-            map["coefficient" + to_string(i) + "_opacity"] = state["coefficient" + to_string(i) + "_opacity"];
-            map["coefficient" + to_string(i) + "_ring"] = state["coefficient" + to_string(i) + "_ring"];
-        }
-
-        return map;
     }
 };

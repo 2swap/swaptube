@@ -68,7 +68,7 @@ public:
         frequencies.push_back(1);
     }
 
-    void generate_audio(int total_samples, vector<float>& left, vector<float>& right, const vector<double>& new_frequencies) {
+    void generate_audio(int total_samples, vector<sample_t>& left, vector<sample_t>& right, const vector<double>& new_frequencies) {
         if (new_frequencies.size() != frequencies.size()) throw runtime_error("ERROR: frequency counts do not match!");
 
         // Reserve space for efficiency
@@ -89,8 +89,9 @@ public:
             }
 
             // Write the resulting sample value to both the left and right channels
-            left.push_back(sample_value);
-            right.push_back(sample_value);
+            sample_t sample = float_to_sample(sample_value);
+            left.push_back(sample);
+            right.push_back(sample);
         }
         frequencies = new_frequencies;
     }

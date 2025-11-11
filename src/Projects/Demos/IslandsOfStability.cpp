@@ -45,7 +45,7 @@ vector<IslandShowcase> isv{
 
 
                            {{1.238 , -0.854 , .0, .0}, 0.2 , -3, "The ???", "This pendulum's period is very long,\\\\\\\\hence its sound being so deep."},
-                           {{0.572 ,  2.539 , .0, .0}, 0.2 , -3, "Seneca Lake", "This island is the largest of a region rich with\\\\\\\\long but thin islands of stability, named after\\\\\\\\the largest of the Fingerlakes of Upstate New York."},
+                           {{0.572 ,  2.539 , .0, .0}, 0.2 , -3, "Seneca Lake", "This island is the largest of a region rich with\\\\\\\\long but thin islands of stability, named after\\\\\\\\the largest of the Fingerlakes of Upmanager New York."},
 };
 
 void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase& is) {
@@ -55,7 +55,7 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
     const double cy = is.ps.theta2;
 
     /*
-    pgs.state.set({
+    pgs.manager.set({
         {"physics_multiplier", "0"},
         {"ticks_opacity", "0"},
         {"rk4_step_size", "0"},
@@ -63,14 +63,14 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
         {"zoomexp", "1 6.283 / log"},
         // Leave mode as-is
     });
-    pgs.state.transition(MICRO, {
+    pgs.manager.transition(MICRO, {
         {"center_x", to_string(cx)},
         {"center_y", to_string(cy)},
         {"ticks_opacity", "0"},
     });
     pgs.stage_macroblock(SilenceBlock(2), 1);
     pgs.render_microblock();
-    pgs.state.transition(MICRO, {
+    pgs.manager.transition(MICRO, {
         {"zoomexp", to_string(log(1/is.range))},
         //{"circles_opacity", "0"},
     });
@@ -79,7 +79,6 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
     CompositeScene cs;
     shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(is.ps, 0.5, 1);
     ps->alpha_subtract = 0;
-    ps->global_publisher_key = true;
     shared_ptr<LatexScene> ls = make_shared<LatexScene>("\\text{" + is.name + "}", 1, 1, 0.2);
 
     // delete trailing zeros
@@ -110,10 +109,10 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
     ps->generate_audio(10, audio_left, audio_right);
     cs.stage_macroblock(GeneratedBlock(audio_left, audio_right), 3);
 
-    cs.state.transition(MICRO, {
+    cs.manager.transition(MICRO, {
         //{"pgs.opacity", ".4"},
     });
-    ts->state.set({
+    ts->manager.set({
         {"zoom", to_string(is.fingerprint_zoom)},
         {"trail_opacity", "1"},
         {"trail_x", "{pendulum_theta1}"},
@@ -121,7 +120,7 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
         {"center_x", to_string(is.ps.theta1)},
         {"center_y", to_string(is.ps.theta2)},
     });
-    ps->state.set({
+    ps->manager.set({
         {"background_opacity", "0"},
         {"top_angle_opacity", "0"},
         {"bottom_angle_opacity", "0"},
@@ -132,14 +131,14 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cs.state.transition(MICRO, {
+    cs.manager.transition(MICRO, {
         //{"pgs.opacity", "1"},
         {"ps.opacity", "0"},
         {"ls.opacity", "0"},
         {"ls2.opacity", "0"},
         {"ts.opacity", "0"},
     });
-    pgs->state.transition(MICRO, {
+    pgs->manager.transition(MICRO, {
         //{"zoomexp", "1 6.283 / log"},
         //{"circles_opacity", "1"},
     });
@@ -150,13 +149,13 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
 
 void identify_vibrations(float t1, float t2) {
     CompositeScene cs;
-    vector<PendulumState> start_states = {
+    vector<PendulumState> start_managers = {
                                           {t1, t2, 0, 0},
                                           {t1, t2, 0, 0},
                                          };
     double step_sz = 1./30/300;
     double period = 0;
-    PendulumState periodfinder = start_states[1];
+    PendulumState periodfinder = start_managers[1];
     double minsquare = 100;
     for(int i = 0; i < 7/step_sz; i++) {
         double p1 = periodfinder.p1;
@@ -169,20 +168,20 @@ void identify_vibrations(float t1, float t2) {
         periodfinder = rk4Step(periodfinder, step_sz);
     }
     for(int i = 0; i < period/step_sz; i++) {
-        start_states[1] = rk4Step(start_states[1], step_sz);
+        start_managers[1] = rk4Step(start_managers[1], step_sz);
     }
     for(int i = 0; i < period/step_sz/4.; i++) {
-        start_states[0] = rk4Step(start_states[0], step_sz);
-        start_states[1] = rk4Step(start_states[1], step_sz);
+        start_managers[0] = rk4Step(start_managers[0], step_sz);
+        start_managers[1] = rk4Step(start_managers[1], step_sz);
     }
     vector<PendulumScene> specimens;
-    for(int i = 0; i < start_states.size(); i++) {
-        specimens.push_back(PendulumScene(start_states[i], .5, .5));
+    for(int i = 0; i < start_managers.size(); i++) {
+        specimens.push_back(PendulumScene(start_managers[i], .5, .5));
     }
     double anim_step = 1800;
-    for(int i = 0; i < start_states.size(); i++) {
+    for(int i = 0; i < start_managers.size(); i++) {
         PendulumScene& ps = specimens[i];
-        ps.state.set({
+        ps.manager.set({
             {"rk4_step_size", "1 "+to_string(anim_step)+" /"},
             {"physics_multiplier", to_string(anim_step/30)},
             //one frame per cycle{"physics_multiplier", to_string(anim_step*period)},
@@ -190,12 +189,10 @@ void identify_vibrations(float t1, float t2) {
         string name = "p" + to_string(i);
         cs.add_scene(make_shared<PendulumScene>(ps), name, .75, .25+.5*i);
     }
-    specimens[0].global_publisher_key = true;
     specimens[0].global_identifier = "p0.";
-    specimens[1].global_publisher_key = true;
     specimens[1].global_identifier = "p1.";
     CoordinateSceneWithTrail coord(.5, 1);
-    coord.state.set({
+    coord.manager.set({
         {"zoom", "0.05"},
         {"trail_opacity", "1"},
         {"trail_x", "{p1.pendulum_p1}"},
@@ -224,15 +221,14 @@ void stack_diagrams(){
     for(int i = 0; i < bb; i++){
         PendulumScene ps(PendulumScene(isv[i].ps, .5, 1));
         string key = to_string(i);
-        ps.global_publisher_key = true;
         ps.global_identifier = "p"+key+".";
         cs.add_scene(make_shared<PendulumScene>(ps), "ps"+key, .75, .5);
-        cs.state.set({{"ps"+key+".opacity", "0"}});
+        cs.manager.set({{"ps"+key+".opacity", "0"}});
     }
     for(int i = 0; i < bb; i++){
         string key = to_string(i);
         CoordinateSceneWithTrail cswt(1, 1);
-        cswt.state.set({
+        cswt.manager.set({
             {"zoom", "0.02"},
             {"ticks_opacity", "0"},
             {"trail_opacity", "1"},
@@ -267,18 +263,18 @@ void render_video() {
     shared_ptr<PendulumGridScene> pgs = make_shared<PendulumGridScene>(grids);
     /*
     stack_diagrams(); return;
-    pgs.state.set({
+    pgs.manager.set({
         {"rk4_step_size", to_string(stepsize)},
         {"physics_multiplier", to_string(physmult)},
     });
     pgs.stage_macroblock(SilenceBlock(4), 1);
     pgs.render_microblock();
-    pgs.state.transition(MICRO, {
+    pgs.manager.transition(MICRO, {
         {"mode", "2"},
     });
     pgs.stage_macroblock(SilenceBlock(2), 1);
     pgs.render_microblock();
-    pgs.state.set("physics_multiplier", "0");
+    pgs.manager.set("physics_multiplier", "0");
     */
     for(IslandShowcase is : isv) {
         showcase_an_island(pgs, is);

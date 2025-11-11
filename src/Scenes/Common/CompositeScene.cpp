@@ -19,12 +19,12 @@ public:
     // TODO glm vec2s for the positions for easier type checking in the arg list
     void add_scene_fade_in(const TransitionType tt, shared_ptr<Scene> sc, string state_name, double x = 0.5, double y = 0.5, double opa=1, bool behind = false){
         add_scene(sc, state_name, x, y, behind);
-        state.set(state_name + ".opacity", "0");
+        manager.set(state_name + ".opacity", "0");
         fade_subscene(tt, state_name, opa);
     }
 
     void add_scene(shared_ptr<Scene> sc, const string& state_name, double x = 0.5, double y = 0.5, bool behind = false){
-        state.set({
+        manager.set({
             {state_name + ".x", to_string(x)},
             {state_name + ".y", to_string(y)},
         });
@@ -32,9 +32,9 @@ public:
     }
 
     void slide_subscene(const TransitionType tt, const string& name, const double dx, const double dy){
-        state.transition(tt, {
-            {name + ".x", state.get_equation(name + ".x") + " " + to_string(dx) + " +"},
-            {name + ".y", state.get_equation(name + ".y") + " " + to_string(dy) + " +"},
+        manager.transition(tt, {
+            {name + ".x", manager.get_equation(name + ".x") + " " + to_string(dx) + " +"},
+            {name + ".y", manager.get_equation(name + ".y") + " " + to_string(dy) + " +"},
         });
     }
 

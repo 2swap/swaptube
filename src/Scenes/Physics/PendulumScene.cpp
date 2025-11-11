@@ -5,7 +5,7 @@
 class PendulumScene : public Scene {
 public:
     PendulumScene(PendulumState s, const double width = 1, const double height = 1) : Scene(width, height), pend(s), start_state(s), path_background(width*VIDEO_WIDTH, height*VIDEO_HEIGHT) {
-        state.set({{"tone", "1"},
+        manager.set({{"tone", "1"},
                            {"volume", "0"},
                            {"path_opacity", "0"},
                            {"physics_multiplier", "30"},

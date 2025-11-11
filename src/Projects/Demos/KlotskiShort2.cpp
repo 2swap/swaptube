@@ -24,7 +24,7 @@ void render_video(){
             g_size = g2.size();
         }
         shared_ptr<GraphScene> gs = make_shared<GraphScene>(&g, false);
-        gs->state.set({
+        gs->manager.set({
             {"q1", "0"},
             {"qi", "{t} .1 * cos"},
             {"qj", "{t} .1 * sin"},
