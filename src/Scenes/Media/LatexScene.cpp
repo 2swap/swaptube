@@ -9,8 +9,13 @@ class LatexScene : public ConvolutionScene {
 private:
     // Helper function to resolve LaTeX input - either from file or as literal string
     static string resolve_latex_input(const string& input) {
-        // Check if the input looks like a filename (no LaTeX special characters and has .tex extension)
-        // or if a file with this name exists in the latex_dir
+        // Security: Reject inputs containing path traversal sequences
+        if (input.find("..") != string::npos || input.find("/") != string::npos || input.find("\\") != string::npos) {
+            // Input contains suspicious path characters, treat as literal LaTeX
+            return input;
+        }
+        
+        // Check if a file with this name exists in the latex_dir
         string potential_filepath = PATH_MANAGER.latex_dir + input;
         
         // Try to open the file
