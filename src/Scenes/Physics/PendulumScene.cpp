@@ -10,7 +10,6 @@ public:
                            {"path_opacity", "0"},
                            {"physics_multiplier", "30"},
                            {"rk4_step_size", "1 30 / <physics_multiplier> 0.01 + /"},
-                           {"background_opacity", "0"},
                            {"pendulum_opacity", "1"},
                            {"top_angle_opacity", "0"},
                            {"bottom_angle_opacity", "0"},
@@ -22,7 +21,7 @@ public:
     int alpha_subtract = 2;
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity", "background_opacity"};
+        return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity"};
     }
 
     void mark_data_unchanged() override { pend.mark_unchanged(); }
@@ -68,11 +67,8 @@ public:
         vector<double> thetas = {lerp(pend.state.theta1, state["theta1_manual"], in_manual_mode),
                                  lerp(pend.state.theta2, state["theta2_manual"], in_manual_mode)};
         int color = pendulum_color(thetas[0], thetas[1], pend.state.p1, pend.state.p2);
-        if(state["background_opacity"] > 0.01)
-            pix.fill(colorlerp(TRANSPARENT_BLACK, color, state["background_opacity"]));
-        if(state["path_opacity"] > 0.01) {
+        if(state["path_opacity"] > 0.01)
             pix.overlay(path_background, 0, 0);
-        }
 
         double pend_opa = state["pendulum_opacity"];
         if(pend_opa > 0.01) {

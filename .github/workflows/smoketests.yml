@@ -1,0 +1,34 @@
+name: Swaptube Smoketests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoketest:
+    name: Smoketest ${{ matrix.demo }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [Demo1, Demo2, Demo3]  # replace with your actual demo names (no .cpp)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake make g++ gnuplot pkg-config \
+                                 libavcodec-dev libavformat-dev libavdevice-dev \
+                                 libavutil-dev libavfilter-dev libswscale-dev \
+                                 libcairo2-dev librsvg2-dev libglib2.0-dev \
+                                 libpng-dev libfdk-aac-dev nlohmann-json3-dev
+
+      - name: Build and run smoketest for ${{ matrix.demo }}
+        run: |
+          chmod +x go.sh
+          ./go.sh "${{ matrix.demo }}" 160 90 30 -s
+

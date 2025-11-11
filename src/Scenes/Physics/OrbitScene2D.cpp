@@ -12,35 +12,25 @@ int* colors, int* times // outputs
 
 // TODO this whole scene is so old, nothing works. Complete refactor
 
-class OrbitScene2D : public Scene {
+class OrbitScene2D : public CoordinateScene {
 public:
     OrbitScene2D(OrbitSim* sim, const double width = 1, const double height = 1)
-        : Scene(width, height), simulation(sim) {}
+        : CoordinateScene(width, height), simulation(sim) {}
 
     void render_point_path(){
         glm::vec3 pos(state["point_path.x"], state["point_path.y"], 0);
         glm::vec3 vel(0.f,0.f,0.f);
         float opacity = state["point_path.opacity"];
         for(int i = 0; i < 10000; i++){
-            glm::vec3 last_pos = pos;
             int dont_care_which_planet;
             bool doneyet = simulation->get_next_step(pos, vel, dont_care_which_planet, manager);
-
-            glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], 0);
-            glm::vec3 halfsize(get_width_height()/2.f);
-            float zoom = state["zoom"] * get_height();
-            glm::vec3 last_pixel = (last_pos - screen_center) * zoom + halfsize;
-            glm::vec3 this_pixel = (pos      - screen_center) * zoom + halfsize;
-
-            pix.bresenham(last_pixel.x, last_pixel.y, this_pixel.x, this_pixel.y, OPAQUE_WHITE, opacity, 3);
+            trail.push_back(pos);
             if(doneyet) return;
         }
+        draw_trail();
     }
 
     void render_predictions() {
-        int width_times_height = get_width() * get_height();
-        vector<int> colors(width_times_height);
-        vector<int> times(width_times_height);
         glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
 
         vector<glm::vec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
@@ -51,7 +41,10 @@ public:
         float drag = pow(state["drag"], tick_duration);
         float zoom = state["zoom"] * get_height();
         float eps = state["eps"];
-        render_predictions_cuda(planet_positions, w, h, 1 /*2d, depth is 1*/, screen_center, zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, eps, colors.data(), times.data());
+        render_predictions_cuda(
+            planet_positions,
+            w, h, 1 /*2d, depth is 1*/,
+            screen_center, zoom, global_force_constant, collision_threshold_squared, drag, tick_duration, eps, colors.data(), times.data());
 
         unsigned int opacity = state["predictions_opacity"]*255;
         int h = get_height();
@@ -108,10 +101,10 @@ public:
     void draw() override {
         simulation->iterate_physics(state["physics_multiplier"], manager);
         if(state["predictions_opacity"] > 0.001) {
-            /*if(state != last_state)*/ render_predictions();
+            render_predictions();
         }
         if(state["point_path.opacity"] > 0.001) {
-            /*if(state != last_state)*/ render_point_path();
+            render_point_path();
         }
         sim_to_2d();
     }

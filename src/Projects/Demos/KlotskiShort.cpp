@@ -45,12 +45,5 @@ void render_video(){
             gs->next_hash = ks->copy_board().get_hash();
             cs.render_microblock(); // Render a microblock
         }
-
-        // Expand the graph until all nodes are present
-        cs.stage_macroblock(SilenceBlock(2), (g_size-g.size())*1.2); // Stage a macroblock with more microblocks than graph nodes
-        while(remaining_microblocks_in_macroblock) {
-            g.expand(1);
-            cs.render_microblock(); // Render a microblock
-        }
     }
 }

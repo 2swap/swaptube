@@ -6,6 +6,9 @@ __device__ float magnitude_force_given_distance_squared_device(float eps, float 
     return force_constant / (eps + d2);
 }
 
+// TODO Change to RK4
+// TODO Modify to take pixels buffer directly
+// TODO modify to match pattern of other inheritors of CoordinateScene
 __global__ void predict_fate_of_object_kernel(
 glm::vec3* positions, const int num_positions, // Planet data
 const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query

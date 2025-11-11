@@ -87,7 +87,7 @@ class ThreeDimensionScene : public SuperScene {
 public:
     bool use_state_for_center;
     ThreeDimensionScene(const double width = 1, const double height = 1)
-        : SuperScene(width, height), use_state_for_center(false), sketchpad(width, height) {
+        : SuperScene(width, height), use_state_for_center(false) {
         manager.set({
             {"fov", "1"},
             {"x", "0"},
@@ -268,8 +268,6 @@ public:
 
         set_camera_direction();
 
-        sketchpad.fill(OPAQUE_BLACK);
-
         // Render surfaces via their CUDA integration.
         if (state["surfaces_opacity"] > 0.001) for (const Surface& surface : surfaces) render_surface(surface);
 
@@ -419,7 +417,6 @@ public:
     glm::quat conjugate_camera_direction;
     double fov;
     double over_w_fov;
-    Pixels sketchpad;
 protected:
     double auto_distance = -1;
     glm::vec3 auto_camera = glm::vec3(0,0,0); // This needs to be constructed explicitly since it carries state.

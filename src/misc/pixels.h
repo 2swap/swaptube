@@ -131,16 +131,6 @@ public:
         }
     }
 
-    void underlay(Pixels p, int dx, int dy){
-        for(int x = 0; x < p.w; x++){
-            int xpdx = x+dx;
-            for(int y = 0; y < p.h; y++){
-                int col = color_combine(p.get_pixel(x, y), get_pixel(xpdx, y+dy));
-                set_pixel(xpdx, y+dy, col);
-            }
-        }
-    }
-
     void overwrite(Pixels p, int dx, int dy){
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;
@@ -150,37 +140,10 @@ public:
         }
     }
 
-    void invert(){
-        for(int i = 0; i < pixels.size(); i++)
-            if(i%4!=3)
-                pixels[i] = 255-pixels[i];
-    }
-
-    void grayscale_to_alpha(){
-        for (int y = 0; y < h; ++y) {
-            for (int x = 0; x < w; ++x) {
-                int a, r, g, b;
-                get_pixel_by_channels(x, y, a, r, g, b);
-                if(r != b || g != r) continue; // if this pixel is not true grayscale
-                pixels[x+y*w] = argb(r, 255, 255, 255);
-            }
-        }
-    }
-
     void fill_rect(int x, int y, int rw, int rh, int col){
         for(int dx = 0; dx < rw; dx++)
             for(int dy = 0; dy < rh; dy++)
                 set_pixel(x+dx, y+dy, col);
-    }
-
-    void fill_donut(double x, double y, double inner_r, double outer_r, int col, const double opacity){
-        for(double dx = -outer_r+1; dx < outer_r; dx++)
-            for(double dy = -outer_r+1; dy < outer_r; dy++){
-                double inner_dist = square(dx/inner_r)+square(dy/inner_r);
-                double outer_dist = square(dx/outer_r)+square(dy/outer_r);
-                if(inner_dist > 1 && outer_dist < 1)
-                    overlay_pixel(x+dx, y+dy, col, opacity);
-            }
     }
 
     void fill_circle(double x, double y, double r, int col, double opa=1){
@@ -207,16 +170,6 @@ public:
                 if(sdx+square(dy/rh) < 1)
                     overlay_pixel(x+dx, y+dy, col, opa);
         }
-    }
-
-    void fill(int col){
-        fill_rect(0, 0, w, h, col);
-    }
-
-    void bitwise_and(int bitstrip){
-        for(int x = 0; x < w; x++)
-            for(int y = 0; y < h; y++)
-                pixels[x+y*w] &= bitstrip;
     }
 
     void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness) {
@@ -291,6 +244,7 @@ public:
         }
     }
 
+    // TODO this doesn't work yet
     inline float fractional_part(float x) {return x - floor(x);}
     void xiaolin_wu(int x0, int y0, int x1, int y1, int col) {
         bool steep = abs(y1 - y0) > abs(x1 - x0);
@@ -592,7 +546,6 @@ Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensi
     int width = (height > 0) ? intensities[0].size() : 0;
 
     Pixels result(width, height);
-    result.fill(OPAQUE_WHITE);
 
     // Find the minimum and maximum intensity values
     unsigned int minIntensity = numeric_limits<unsigned int>::max();
@@ -619,7 +572,7 @@ Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensi
             unsigned int intensity = intensities[y][x];
             // Square it to make it more peaky
             int normalized_squared_intensity = square(intensity - minIntensity) * 255. / square(intensityRange);
-            result.set_alpha(x, y, normalized_squared_intensity);
+            result.set_pixel(x, y, (normalized_squared_intensity << 24) | 0x00FFFFFF); // White color with alpha
         }
     }
 

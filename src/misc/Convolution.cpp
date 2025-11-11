@@ -144,7 +144,6 @@ Pixels remove_unconnected_components(const Pixels& p) {
 
     // Create a Pixels object to track if each pixel is connected to an opaque pixel
     Pixels output(width, height);
-    output.fill(0);
 
     // Iterate over each pixel in the input image
     for (int y = 0; y < height; y++) {
