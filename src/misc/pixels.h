@@ -121,6 +121,7 @@ public:
         }
     }
 
+    // TODO this function is already written in CUDA. use that instead.
     void overlay(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1){
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;

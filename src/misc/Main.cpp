@@ -14,6 +14,7 @@ static bool PRINT_TO_TERMINAL = true;
 
 static bool FOR_REAL = true; // Flag exposed to the project definition to disable sections of video
 static bool SMOKETEST= false;// Overall smoketest flag
+static bool AVOID_CUDA=false;// Indicates not to use CUDA to add video background
 
 bool rendering_on() { return FOR_REAL && !SMOKETEST; }
 
@@ -24,7 +25,7 @@ enum TransitionType {
 
 const string project_name = PROJECT_NAME_MACRO;
 
-int VIDEO_BACKGROUND_COLOR = 0xff010101;
+int VIDEO_BACKGROUND_COLOR = 0xff000000;
 
 #include "../io/AudioWriter.cpp"
 #include "../io/VideoWriter.cpp"

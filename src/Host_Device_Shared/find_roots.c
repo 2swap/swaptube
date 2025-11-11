@@ -2,6 +2,7 @@
 
 // There's probably a better way to make this work both on CPU and GPU...
 
+#define maxn 30
 #ifdef __CUDACC__
 __device__ void find_roots(const cuFloatComplex* coeffs_in, int degree, cuFloatComplex* roots) {
     // Use Durand-Kerner (Weierstrass) method to find all roots of polynomial
@@ -11,7 +12,6 @@ __device__ void find_roots(const cuFloatComplex* coeffs_in, int degree, cuFloatC
         return;
     }
 
-    const int maxn = 20;
     cuFloatComplex coeffs[maxn + 1];
     for (int i = 0; i <= degree; ++i) {
         coeffs[i] = coeffs_in[i];
@@ -93,7 +93,6 @@ __device__ void find_roots(const cuFloatComplex* coeffs_in, int degree, cuFloatC
 
 void check_answer(const std::complex<float>* coeffs, int degree, const std::complex<float>* roots) {
     // Multiply out (x - r1)(x - r2)...(x - rn) and compare to coeffs
-    const int maxn = 20;
     std::complex<float> prod[maxn + 1] = { std::complex<float>(0.0f, 0.0f) };
     prod[0] = std::complex<float>(1.0f, 0.0f); // Start with 1
 
@@ -130,7 +129,6 @@ void find_roots(const std::complex<float>* coeffs_in, int degree, std::complex<f
         return;
     }
 
-    const int maxn = 20;
     std::complex<float> coeffs[maxn + 1];
     for (int i = 0; i <= degree; ++i) {
         coeffs[i] = coeffs_in[i];

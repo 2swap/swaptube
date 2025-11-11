@@ -161,7 +161,6 @@ public:
     bool contains(const string& varname) const {
         return variables.find(varname) != variables.end();
     }
-    double operator [](const string v) const {return get_value(v);}
     void print_state() const {
         /* Print out all variable names alphabetically along with their current value and their computation status. */
         // TODO alphabeticalize

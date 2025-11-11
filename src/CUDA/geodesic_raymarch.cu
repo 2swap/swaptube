@@ -4,7 +4,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include "calculator.cuh"
 #include <stdint.h>
-#include "raymarch_topologies/blackhole.cuh"
+#include "raymarch_topologies/inverse.cuh"
 
 static __device__ void metric_tensor(glm::vec3 v, float g[3][3]) {
     glm::vec4 dx, dy, dz;
@@ -169,22 +169,44 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     uint32_t out = 0xFF000000u;
     for (step = 0; step < max_steps; ++step) {
         // escape check
-        int check_u = int(floorf(Y[0] * 5 / escape_bound));
-        int check_v = int(floorf(Y[1] * 5 / escape_bound));
-        int check_w = int(floorf(Y[2] * 5 / escape_bound));
-        if (fabsf(Y[0]) > escape_bound || fabsf(Y[1]) > escape_bound || Y[1] < -escape_bound/10 || fabsf(Y[2]) > escape_bound) {
+        bool ceiling = Y[1] > escape_bound;
+        bool floor = Y[1] < -escape_bound/10;
+        bool wall = fabsf(Y[0]) > escape_bound || fabsf(Y[2]) > escape_bound;
+        if (floor) {
+            int check_u = int(floorf(Y[0] * 5 / escape_bound));
+            int check_v = int(floorf(Y[1] * 5 / escape_bound));
+            int check_w = int(floorf(Y[2] * 5 / escape_bound));
             out = (( (check_u + check_v + check_w) % 2) == 0) ?
-                  0xff00ff00 : // green
-                  0xff0000ff;  // blue
-            out = d_colorlerp(out, 0xff000000, float(step) / float(max_steps) ); // fade to black based on steps
+                  0xff00bb00 : // green
+                  0xff009900;  // dark green
+            break;
+        }
+        if(ceiling) { // Sky Pattern
+            int check_u = int(floorf(Y[0] * 5 / escape_bound));
+            int check_v = int(floorf(Y[1] * 5 / escape_bound));
+            int check_w = int(floorf(Y[2] * 5 / escape_bound));
+            out = (( (check_u + check_v + check_w) % 2) == 0) ?
+                0xff87ceeb : // light blue
+                0xff4682b4;  // steel blue
+            break;
+        }
+        if(wall) { // Brick Pattern
+            int red = 0xffbc573b;
+            int white = 0xffd5d6da;
+            out = red;
+            int upshift = int((Y[1] + escape_bound)) % 10;
+            if(int((Y[1] + escape_bound) * 10) % 10 == 0) out = white;
+            else if(int((Y[2] + upshift * 5 + escape_bound) * 10) % 20 == 2 || int((Y[0] + upshift * 5 + escape_bound) * 10) % 20 == 2) {
+                out = white;
+            }
             break;
         }
 
         // In Black Hole
-        if (glm::length(glm::vec3(Y[0], Y[1], Y[2])) < 1.33f) {
+        /*if (glm::length(glm::vec3(Y[0], Y[1], Y[2])) < 1.33f) {
             out = 0xff000000; // black
             break;
-        }
+        }*/
 
         /*
         // Red Cubes
@@ -205,6 +227,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
         }
     }
 
+    out = d_colorlerp(out, 0xff000000, float(step) / float(max_steps) ); // fade to black based on steps
     d_pixels[py * w + px] = out;
 }
 

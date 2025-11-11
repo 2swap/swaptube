@@ -47,7 +47,7 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
 
     if (idx >= total) return;
 
-    cuFloatComplex coeffs[20];
+    cuFloatComplex coeffs[30];
     float red = 0.0f, green = 0.0f, blue = 0.0f;
     for (int i = 0; i < ceil_terms; i++) {
         // Set Coefficient
@@ -77,7 +77,7 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
     }
     if(degree < 1) return;
 
-    cuFloatComplex roots[20];
+    cuFloatComplex roots[30];
     find_roots(coeffs, degree, roots);
 
     // Plot the roots
@@ -92,7 +92,7 @@ __device__ float sigmoid(float x) {
     return 3*x*x-2*x*x*x;
 }
 
-__global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, float* d_red, float* d_green, float* d_blue, int w, int h) {
+__global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, float* d_red, float* d_green, float* d_blue, int w, int h, float brightness) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int total = w * h;
 
@@ -103,10 +103,15 @@ __global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, fl
     float g_mod = sigmoid(sigmoid(d_green[idx] * inv));
     float b_mod = sigmoid(sigmoid(d_blue [idx] * inv));
 
+    brightness *= 256.0f;
+    r_mod *= 256.0f-brightness;
+    g_mod *= 256.0f-brightness;
+    b_mod *= 256.0f-brightness;
+
     unsigned int a = clamp(d_alpha[idx] * 2.5, 0.0f, 255.9f);
-    unsigned int r = clamp(r_mod * 192 + 64, 0.0f, 255.9f);
-    unsigned int g = clamp(g_mod * 192 + 64, 0.0f, 255.9f);
-    unsigned int b = clamp(b_mod * 192 + 64, 0.0f, 255.9f);
+    unsigned int r = clamp(r_mod + brightness, 0.0f, 255.9f);
+    unsigned int g = clamp(g_mod + brightness, 0.0f, 255.9f);
+    unsigned int b = clamp(b_mod + brightness, 0.0f, 255.9f);
 
     d_pixels[idx] = d_argb(a, r, g, b);
 }
@@ -120,7 +125,7 @@ extern "C" void draw_root_fractal(
     float terms,
     float lx, float ty,
     float rx, float by,
-    float radius, float opacity 
+    float radius, float opacity, float brightness
 ) {
     int total = 1 << int(ceil(terms));
 
@@ -144,7 +149,7 @@ extern "C" void draw_root_fractal(
 
     int finalize_threadsPerBlock = 256;
     int finalize_blocks = (w * h + finalize_threadsPerBlock - 1) / finalize_threadsPerBlock;
-    finalize_color_kernel<<<finalize_blocks, finalize_threadsPerBlock>>>(d_pixels, d_alpha, d_red, d_green, d_blue, w, h);
+    finalize_color_kernel<<<finalize_blocks, finalize_threadsPerBlock>>>(d_pixels, d_alpha, d_red, d_green, d_blue, w, h, brightness);
     cudaDeviceSynchronize();
 
     cudaFree(d_alpha);

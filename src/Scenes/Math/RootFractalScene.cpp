@@ -2,7 +2,7 @@
 
 #include "../Common/CoordinateScene.cpp"
 
-extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity);
+extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float brightness);
 
 class RootFractalScene : public CoordinateScene {
 public:
@@ -15,6 +15,7 @@ public:
         state.set("degree_fixed", "1");
         state.set("coefficients_opacity", "1");
         state.set("visibility_multiplier", "1");
+        state.set("brightness", ".25");
     }
 
     void draw() override {
@@ -32,7 +33,7 @@ public:
             c0, c1, n,
             state["left_x"], state["top_y"],
             state["right_x"], state["bottom_y"],
-            radius, opacity
+            radius, opacity, state["brightness"]
         );
 
         float gm = get_geom_mean_size() / 200;
@@ -64,7 +65,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
-        state_query_insert_multiple(sq, {"coefficient0_r", "coefficient0_i", "coefficient1_r", "coefficient1_i", "terms", "window_height", "degree_fixed", "left_x", "top_y", "right_x", "bottom_y", "coefficients_opacity", "visibility_multiplier"});
+        state_query_insert_multiple(sq, {"coefficient0_r", "coefficient0_i", "coefficient1_r", "coefficient1_i", "terms", "window_height", "degree_fixed", "left_x", "top_y", "right_x", "bottom_y", "coefficients_opacity", "visibility_multiplier", "brightness"});
         return sq;
     }
 };

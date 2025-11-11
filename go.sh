@@ -20,40 +20,44 @@ if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     echo "To install MicroTeX, follow the instructions here: https://github.com/NanoMichael/MicroTeX/README.md"
     echo "You should install it such that MicroTeX-master and the swaptube repo are in the same folder."
     exit 1
+    # TODO: Automate MicroTeX installation
 fi
 
 # Check if the number of arguments is less or more than expected
-if [ $# -lt 3 ] || [ $# -gt 4 ]; then
+if [ $# -lt 4 ] || [ $# -gt 5 ]; then
     echo "go.sh: Suppose that in the Projects/ directory you have made a project called myproject.cpp."
-    echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight> [-s]"
-    echo "go.sh: Example: $0 myproject 640 360 -s"
+    echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight> <Framerate> [-s|-h|-x|-hx]"
+    echo "go.sh: Example: $0 myproject 640 360 30 -hx"
     exit 1
 fi
 
 PROJECT_NAME=$1
 VIDEO_WIDTH=$2
 VIDEO_HEIGHT=$3
+FRAMERATE=$4
 # Check that the video dimensions are valid integers
-if ! [[ "$VIDEO_WIDTH" =~ ^[0-9]+$ ]] || ! [[ "$VIDEO_HEIGHT" =~ ^[0-9]+$ ]]; then
-    echo "go.sh: Error - Video width and height must be valid integers."
+if ! [[ "$VIDEO_WIDTH" =~ ^[0-9]+$ ]] || ! [[ "$VIDEO_HEIGHT" =~ ^[0-9]+$ ]] || ! [[ "$FRAMERATE" =~ ^[0-9]+$ ]]; then
+    echo "go.sh: Error - Video width, height, and framerate must be valid integers."
     exit 1
 fi
-FRAMERATE=30
 SAMPLERATE=48000
 
-SMOKETEST_ONLY=0
+SKIP_RENDER=0
+SKIP_SMOKETEST=0
 AUDIO_HINTS=0
 AUDIO_SFX=0
 INVALID_FLAG=0
-# If the 4th argument is provided, check if it is valid
-if [ $# -eq 4 ]; then
-    if [ "$4" == "-s" ]; then
-        SMOKETEST_ONLY=1
-    elif [ "$4" == "-h" ]; then
+# If the 5th argument is provided, check if it is valid
+if [ $# -eq 5 ]; then
+    if [ "$5" == "-s" ]; then
+        SKIP_RENDER=1
+    elif [ "$5" == "-n" ]; then
+        SKIP_SMOKETEST=1
+    elif [ "$5" == "-h" ]; then
         AUDIO_HINTS=1
-    elif [ "$4" == "-x" ]; then
+    elif [ "$5" == "-x" ]; then
         AUDIO_SFX=1
-    elif [ "$4" == "-hx" ] || [ "$4" == "-xh" ]; then
+    elif [ "$5" == "-hx" ] || [ "$5" == "-xh" ]; then
         AUDIO_HINTS=1
         AUDIO_SFX=1
     else
@@ -116,17 +120,21 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     # Run the program.
     # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
     # Swaptube errors are printed to stdout.
-    ./swaptube smoketest 2>/dev/null
-    if [ $? -ne 0 ]; then
-        echo "go.sh: Execution failed in runtime."
-        exit 2
+
+    # Smoketest
+    if [ $SKIP_SMOKETEST -eq 0 ]; then
+        ./swaptube smoketest 2>/dev/null
+        if [ $? -ne 0 ]; then
+            echo "go.sh: Execution failed in smoketest."
+            exit 2
+        fi
     fi
 
-    # If smoketest only is not set, run again.
-    if [ $SMOKETEST_ONLY -eq 0 ]; then
+    # True render
+    if [ $SKIP_RENDER -eq 0 ]; then
         ./swaptube no_smoketest 2>/dev/null
         if [ $? -ne 0 ]; then
-            echo "go.sh: Execution failed in runtime."
+            echo "go.sh: Execution failed in render."
             exit 2
         fi
     fi
