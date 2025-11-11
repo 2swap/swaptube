@@ -68,36 +68,33 @@ void render_video() {
     gs.stage_macroblock(SilenceBlock(1), 1);
     gs.render_microblock();
 
-    gs.stage_macroblock(SilenceBlock(2), 2);
+    gs.stage_macroblock(SilenceBlock(2), 1);
     gs.manager.transition(MICRO, {
-        {"q1", ".5"},
+        {"q1", ".2"},
         {"qj", "1"},
     });
     gs.render_microblock();
-    gs.render_microblock();
 
-    gs.stage_macroblock(SilenceBlock(2), 2);
+    gs.stage_macroblock(SilenceBlock(1), 1);
     gs.manager.transition(MICRO, {
         {"q1", "1"},
         {"qi", "{t} .5 * sin .1 *"},
         {"qj", "{t} .3 * cos .1 *"},
     });
     gs.render_microblock();
-    gs.render_microblock();
 
-    gs.stage_macroblock(SilenceBlock(2), 2);
+    gs.stage_macroblock(SilenceBlock(1), 1);
     gs.manager.transition(MICRO, {
         {"z", "3"},
     });
     gs.render_microblock();
-    gs.render_microblock();
 
-    gs.stage_macroblock(SilenceBlock(2), 2);
+    gs.stage_macroblock(SilenceBlock(1), 1);
     gs.manager.transition(MICRO, {
         {"z", "7"},
     });
     gs.render_microblock();
-    gs.render_microblock();
+    return;
 
     gs.stage_macroblock(SilenceBlock(2), 2);
     gs.manager.transition(MICRO, {

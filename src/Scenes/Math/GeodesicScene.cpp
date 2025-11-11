@@ -41,26 +41,26 @@ public:
             {"intensity", "1.0"},
 
 //Manifold Stuff
-            {"manifold_d", "40.0"},
+            {"manifold_d", "30.0"},
             {"manifold_q1", "1.0"},
-            {"manifold_qi", "0"},
+            {"manifold_qi", "-.30"},
             {"manifold_qj", "0"},
-            {"manifold_qk", "0"},
+            {"manifold_qk", "{t} .4 * sin"},
             {"manifold_fov", "1"},
-            {"u_min", "-10.0"},
-            {"u_max", "10.0"},
+            {"u_min", "-5.0"},
+            {"u_max", "5.0"},
             {"u_steps", "3000"},
-            {"v_min", "-10.0"},
-            {"v_max", "10.0"},
+            {"v_min", "-5.0"},
+            {"v_max", "5.0"},
             {"v_steps", "3000"}
         });
     }
 
     void draw_manifold() {
-        Pixels manifold_pix(pix.w / 2, pix.h / 2);
+        Pixels manifold_pix(pix.w, pix.h);
         float steps_mult = geom_mean(manifold_pix.w, manifold_pix.h) / 1500.0f;
         ManifoldData manifold1{
-            "(u)", "(v)", "1 (u) (u) * (v) (v) * + 1 + /", "(u) 10 /", "(v) 10 /",
+            "(u)", "(v)", "1 (u) (u) * (v) (v) * + .5 + /", "(u) 10 * sin 1 + (v) 10 * sin 1 + * 20 *", "0",
             (float)state["u_min"],
             (float)state["u_max"],
             (int)(state["u_steps"] * steps_mult),
@@ -72,7 +72,7 @@ public:
 
         glm::quat manifold_rotation = glm::normalize(glm::quat(state["manifold_q1"], state["manifold_qi"], state["manifold_qj"], state["manifold_qk"]));
         glm::quat conjugate_manifold_rotation = glm::conjugate(manifold_rotation);
-        glm::vec3 manifold_position = conjugate_manifold_rotation * glm::vec3(0,0,-state["manifold_d"]) * manifold_rotation;
+        glm::vec3 manifold_position = conjugate_manifold_rotation * glm::vec3(0.0f, 0.0f, (float)-state["manifold_d"]) * manifold_rotation;
         cuda_render_manifold(
             manifold_pix.pixels.data(),
             manifold_pix.w,
@@ -92,7 +92,7 @@ public:
         cuda_overlay(
             pix.pixels.data(), pix.w, pix.h,
             manifold_pix.pixels.data(), manifold_pix.w, manifold_pix.h,
-            pix.w - manifold_pix.w, pix.h - manifold_pix.h,
+            pix.w * .75 - manifold_pix.w * .5, pix.h * .75 - manifold_pix.h * .5,
             1
         );
     }
