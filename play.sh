@@ -33,10 +33,10 @@ ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
 if [ -n "$ultimate_subdir" ]; then
     file_path=""
-    if [ -f "$ultimate_subdir${PROJECT_NAME}.mkv" ]; then
-        file_path="$ultimate_subdir${PROJECT_NAME}.mkv"
-    elif [ -f "$ultimate_subdir${PROJECT_NAME}.mp4" ]; then
-        file_path="$ultimate_subdir${PROJECT_NAME}.mp4"
+    if [ -f "${ultimate_subdir}Video.mkv" ]; then
+        file_path="${ultimate_subdir}Video.mkv"
+    elif [ -f "${ultimate_subdir}Video.mp4" ]; then
+        file_path="${ultimate_subdir}Video.mp4"
     fi
 
     if [ -n "$file_path" ] && [ -s "$file_path" ] && [ "$(stat -c%s "$file_path")" -ge 1024 ]; then

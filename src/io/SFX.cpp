@@ -27,7 +27,7 @@ public:
     //   <frequency> <amplitude>
     //   ...
     bool save(const string& filename) const {
-        ofstream ofs(PATH_MANAGER.sfx_dir + filename);
+        ofstream ofs("io_in/sfx/" + filename);
         if (!ofs) {
             throw runtime_error("Error opening file for writing: " + filename);
         }
@@ -39,7 +39,7 @@ public:
     }
 
     FourierSound(const string& filename) {
-        ifstream ifs(PATH_MANAGER.sfx_dir + filename);
+        ifstream ifs("io_in/sfx/" + filename);
         if (!ifs) {
             throw runtime_error("Error opening file for reading: " + filename);
         }

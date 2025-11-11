@@ -2,7 +2,6 @@
 #include <png.h>
 #include <vector>
 #include <stdexcept>
-#include "PathManager.cpp"
 #include <librsvg-2.0/librsvg/rsvg.h>
 #include "../misc/pixels.h"
 #include <sys/stat.h>
@@ -32,9 +31,9 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     if(pix.w * pix.h == 0) return; // cowardly exit.
 
     // Open the file for writing (binary mode)
-    FILE* fp = fopen((PATH_MANAGER.this_run_output_dir + filename + ".png").c_str(), "wb");
+    FILE* fp = fopen(("io_out/" + filename + ".png").c_str(), "wb");
     if (!fp) {
-        throw runtime_error("Failed to open file for writing.");
+        throw runtime_error("Failed to open png file for writing: " + filename);
     }
 
     // Initialize write structure
@@ -209,7 +208,7 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
     }
 
     // Open the PNG file
-    FILE* fp = fopen((PATH_MANAGER.this_project_media_dir + filename).c_str(), "rb");
+    FILE* fp = fopen(("io_in/" + filename).c_str(), "rb");
     if (!fp) {
         throw runtime_error("Failed to open PNG file " + filename);
     }
@@ -343,7 +342,8 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
 
     hash<string> hasher;
     char full_directory_path[PATH_MAX];
-    realpath(PATH_MANAGER.latex_dir.c_str(), full_directory_path);
+    string latex_dir = "io_in/latex/";
+    realpath(latex_dir.c_str(), full_directory_path);
     string name = string(full_directory_path) + "/" + to_string(hasher(latex)) + ".svg";
 
     if (access(name.c_str(), F_OK) == -1) {

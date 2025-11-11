@@ -109,6 +109,12 @@ if [ -z "$PROJECT_PATH" ]; then
 fi
 cp "$PROJECT_PATH" "$TEMPFILE"
 
+# Generate a timestamp for this build
+OUTPUT_FOLDER_NAME=$(date +"%Y%m%d_%H%M%S")
+OUTPUT_DIR="out/${PROJECT_NAME}/${OUTPUT_FOLDER_NAME}"
+mkdir -p "$OUTPUT_DIR"
+
+echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_FOLDER_NAME}"
 (
     mkdir -p build
     cd build
@@ -141,7 +147,16 @@ cp "$PROJECT_PATH" "$TEMPFILE"
     echo "==============================================="
     echo "===================== RUN ====================="
     echo "==============================================="
-    # Run the program.
+
+    # Symlink "io_out" to the output directory for this project
+    unlink io_out 2>/dev/null
+    ln -s "../${OUTPUT_DIR}" io_out
+
+    # Symlink "io_in" to the media assets directory
+    unlink io_in 2>/dev/null
+    ln -s "../media/${PROJECT_NAME}" io_in
+    mkdir -p io_in/${PROJECT_NAME}/latex
+
     # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
     # Swaptube errors are printed to stdout.
 
@@ -156,6 +171,8 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 
     # True render
     if [ $SKIP_RENDER -eq 0 ]; then
+        # Clear all files from the smoketest
+        rm io_out/* -rf
         ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
@@ -165,21 +182,15 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 
     exit 0
 )
+RESULT=$?
 
-# If compilation failed, exit with error. If runtime failed, do not exit
-if [ $? -eq 1 ]; then
-    rm "$TEMPFILE"
-    exit 1
-fi
+unlink "build/io_in"
+unlink "build/io_out"
+mv "$TEMPFILE" "$OUTPUT_DIR"
 
-ultimate_subdir=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
-
-cp "$TEMPFILE" "$ultimate_subdir/Project.cpp"
-rm "$TEMPFILE"
-
-# Check if the compile and run were successful
-if [ -n "$ultimate_subdir" ]; then
+# Play video if compilation succeeded, and not in smoketest-only mode
+if [ $RESULT -ne 1 ] && [ $SKIP_RENDER -eq 0 ]; then
     ./play.sh ${PROJECT_NAME}
-else
-    echo "go.sh: No output directory found for project ${PROJECT_NAME}."
 fi
+
+exit $RESULT

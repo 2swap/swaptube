@@ -116,7 +116,7 @@ public:
             left.push_back(val);
             right.push_back(val);
         }
-        AUDIO_WRITER.add_sfx(left, right, tonegen_save);
+        WRITER->audio->add_sfx(left, right, tonegen_save);
         energy = energy_slew;
     }
 

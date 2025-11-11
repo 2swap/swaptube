@@ -41,11 +41,11 @@ public:
             {"intensity", "1.0"},
 
 //Manifold Stuff
-            {"manifold_d", "50.0"},
+            {"manifold_d", "40.0"},
             {"manifold_q1", "1.0"},
-            {"manifold_qi", "{t} sin"},
-            {"manifold_qj", "{t} cos"},
-            {"manifold_qk", "0.0"},
+            {"manifold_qi", "0"},
+            {"manifold_qj", "0"},
+            {"manifold_qk", "0"},
             {"manifold_fov", "1"},
             {"u_min", "-10.0"},
             {"u_max", "10.0"},
@@ -57,10 +57,10 @@ public:
     }
 
     void draw_manifold() {
-        float geom_mean_size = get_geom_mean_size();
-        float steps_mult = geom_mean_size / 3.0f / 1500.0f;
+        Pixels manifold_pix(pix.w / 2, pix.h / 2);
+        float steps_mult = geom_mean(manifold_pix.w, manifold_pix.h) / 1500.0f;
         ManifoldData manifold1{
-            "(u)", "(v)", "1 (u) (u) * (v) (v) * + /", "(u) 10 /", "(v) 10 /",
+            "(u)", "(v)", "1 (u) (u) * (v) (v) * + 1 + /", "(u) 10 /", "(v) 10 /",
             (float)state["u_min"],
             (float)state["u_max"],
             (int)(state["u_steps"] * steps_mult),
@@ -70,7 +70,6 @@ public:
         };
         ManifoldData manifolds[] = { manifold1 };
 
-        Pixels manifold_pix(pix.w / 3, pix.h / 3);
         glm::quat manifold_rotation = glm::normalize(glm::quat(state["manifold_q1"], state["manifold_qi"], state["manifold_qj"], state["manifold_qk"]));
         glm::quat conjugate_manifold_rotation = glm::conjugate(manifold_rotation);
         glm::vec3 manifold_position = conjugate_manifold_rotation * glm::vec3(0,0,-state["manifold_d"]) * manifold_rotation;

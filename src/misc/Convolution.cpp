@@ -464,21 +464,6 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         // Store the result of this step
         StepResult step_result(max_x, max_y, cm, induced1.pixels, induced2.pixels, current_p1, current_p2, erasure.pixels);
         results.push_back(step_result);
-
-        // DEBUG
-        if(false){
-            ensure_dir_exists(PATH_MANAGER.this_run_output_dir + convolution_name);
-            pix_to_png(translated_p1.pixels, convolution_name + "/convolution_" + to_string(i) + "_a_translated1");
-            pix_to_png(translated_p2.pixels, convolution_name + "/convolution_" + to_string(i) + "_b_translated2");
-            pix_to_png(cm                  , convolution_name + "/convolution_" + to_string(i) + "_c_map");
-            pix_to_png(intersection.pixels , convolution_name + "/convolution_" + to_string(i) + "_d_intersection");
-            pix_to_png(unified.pixels      , convolution_name + "/convolution_" + to_string(i) + "_e_unified");
-            pix_to_png(erasure.pixels      , convolution_name + "/convolution_" + to_string(i) + "_f_erasure");
-            pix_to_png(induced1.pixels     , convolution_name + "/convolution_" + to_string(i) + "_g_induced1");
-            pix_to_png(induced2.pixels     , convolution_name + "/convolution_" + to_string(i) + "_h_induced2");
-            pix_to_png(current_p1          , convolution_name + "/convolution_" + to_string(i) + "_i_p1");
-            pix_to_png(current_p2          , convolution_name + "/convolution_" + to_string(i) + "_j_p2");
-        }
     }
 
     return results;

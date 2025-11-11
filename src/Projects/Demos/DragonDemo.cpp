@@ -1,7 +1,7 @@
 #include "../Scenes/Math/AngularFractalScene.cpp"
 
 void render_video() {
-    int depth = 12;
+    int depth = 10;
     int dragon_size = 1 << depth;
     AngularFractalScene dragon(dragon_size);
     dragon.manager.set("zoom", "1");

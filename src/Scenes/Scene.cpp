@@ -8,14 +8,11 @@
 #include "../io/DebugPlot.h"
 #include "../misc/pixels.h"
 #include "../io/Macroblock.cpp"
-#include "../misc/GetFreeMemory.h"
 
 static int remaining_microblocks_in_macroblock = 0;
 static int remaining_frames_in_macroblock = 0;
 static int total_microblocks_in_macroblock = 0;
 static int total_frames_in_macroblock = 0;
-
-static vector<string> keys_to_record;
 
 class Scene {
 public:
@@ -90,7 +87,7 @@ public:
                     "but render_microblock() was only called " + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
         }
 
-        AUDIO_WRITER->encode_buffers();
+        WRITER->audio->encode_buffers();
 
         total_microblocks_in_macroblock = remaining_microblocks_in_macroblock = expected_microblocks_in_macroblock;
         macroblock.write_shtooka();
@@ -103,14 +100,14 @@ public:
 
         double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / FRAMERATE;
 
-        { // Add hints for audio synchronization
+        if (AUDIO_HINTS) { // Add hints for audio synchronization
             double time = get_global_state("t");
             double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
             int macroblock_length_samples = round(macroblock_length_seconds * SAMPLERATE);
             int microblock_length_samples = round(microblock_length_seconds * SAMPLERATE);
-            AUDIO_WRITER->add_blip(round(time * SAMPLERATE), MACRO, macroblock_length_samples, microblock_length_samples);
+            WRITER->audio->add_blip(round(time * SAMPLERATE), MACRO, macroblock_length_samples, microblock_length_samples);
             for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
-                AUDIO_WRITER->add_blip(round((time + i * microblock_length_seconds) * SAMPLERATE), MICRO, macroblock_length_samples, microblock_length_samples);
+                WRITER->audio->add_blip(round((time + i * microblock_length_seconds) * SAMPLERATE), MICRO, macroblock_length_samples, microblock_length_samples);
             }
         } // Audio hints
     }
@@ -166,8 +163,7 @@ public:
     }
 
     void export_frame(const string& filename, int scaledown = 1) const {
-        ensure_dir_exists(PATH_MANAGER.this_run_output_dir + "frames");
-        pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
+        pix_to_png(pix.naive_scale_down(scaledown), "frame_"+filename);
     }
 
     StateManager manager;
@@ -197,23 +193,7 @@ private:
         }
     }
 
-    void write_one_frame_to_data_plots(const chrono::high_resolution_clock::duration& frame_duration) {
-        state_time_plot.add_datapoint(vector<double>{global_state["macroblock_fraction"], global_state["microblock_fraction"], smoother2(global_state["macroblock_fraction"]), smoother2(global_state["microblock_fraction"])});
-        time_per_frame_plot.add_datapoint(frame_duration.count());
-        memutil_plot.add_datapoint(get_free_memory());
-
-        vector<double> global_values;
-        if (globals_plot == nullptr) globals_plot = make_shared<DebugPlot>("Global Recorder", keys_to_record);
-        for(const auto& key : keys_to_record) {
-            if (global_state.find(key) == global_state.end())
-                global_values.push_back(0);
-            else global_values.push_back(global_state[key]);
-        }
-        globals_plot->add_datapoint(global_values);
-    }
-
     void render_one_frame(int microblock_frame_number, int scene_duration_frames) {
-        auto start_time = chrono::high_resolution_clock::now();
         cout << "[" << flush;
 
         global_state["macroblock_fraction"] = 1 - static_cast<double>(remaining_frames_in_macroblock) / total_frames_in_macroblock;
@@ -226,11 +206,8 @@ private:
         if((!rendering_on() || fifth_frame) && PRINT_TO_TERMINAL) p->print_to_terminal();
 
         if (rendering_on()) { // Do not encode during smoketest
-            VIDEO_WRITER->add_frame(*p);
+            WRITER->video->add_frame(*p);
         }
-
-        auto end_time = chrono::high_resolution_clock::now();
-        write_one_frame_to_data_plots(end_time - start_time);
 
         remaining_frames_in_macroblock--;
         global_state["frame_number"]++;

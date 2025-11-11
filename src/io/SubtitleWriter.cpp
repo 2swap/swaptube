@@ -14,7 +14,6 @@ private:
     ofstream srt_file;
     double substime = 0;
     int subtitle_count = 0;
-    const string srt_filename;
     string last_written_subtitle = "";
 
     void add_srt_time(double s) {
@@ -36,8 +35,9 @@ private:
 
 public:
     SubtitleWriter() {
-        srt_file.open(PATH_MANAGER.subtitle_output);
-        if (!srt_file.is_open()) throw runtime_error("Failed to open file: " + PATH_MANAGER.subtitle_output);
+        const string srt_path = "io_out/Video.srt";
+        srt_file.open(srt_path);
+        if (!srt_file.is_open()) throw runtime_error("Failed to open file: " + srt_path);
     }
 
     ~SubtitleWriter() {

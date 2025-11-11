@@ -7,27 +7,20 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cassert>
-#include "PathManager.cpp"
 
 class DebugPlot {
 public:
     // Constructor that initializes the plot name, data series names, and file paths
-    DebugPlot(const string& plot_name) 
+    DebugPlot(const string& plot_name, const string& data_dir, const string& plots_dir, const vector<string>& series_names) 
         : plot_name_(plot_name),
-          data_file_path_(PATH_MANAGER.data_dir + plot_name + ".dat"),
-          plot_file_path_(PATH_MANAGER.plots_dir + plot_name + ".png"),
-          series_names_(vector<string>{plot_name}),
-          num_series_(1)
-    { init(); }
-    DebugPlot(const string& plot_name, const vector<string>& series_names) 
-        : plot_name_(plot_name),
-          data_file_path_(PATH_MANAGER.data_dir + plot_name + ".dat"),
-          plot_file_path_(PATH_MANAGER.plots_dir + plot_name + ".png"),
+          data_file_path_("io_out/data/" + plot_name + ".dat"),
+          plot_file_path_("io_out/plots/" + plot_name + ".png"),
           series_names_(series_names),
           num_series_(series_names.size())
     { init(); }
 
     void init(){
+        cout << "Initializing DebugPlot: " << plot_name_ << endl;
         data_file_.open(data_file_path_, ios::out | ios::trunc);
         if (!data_file_.is_open()) {
             throw runtime_error("Failed to open data file: " + data_file_path_);
@@ -95,10 +88,3 @@ private:
     const size_t num_series_;
     ofstream data_file_;
 };
-
-static DebugPlot time_per_frame_plot("render_time_per_frame");
-static DebugPlot memutil_plot("memutil");
-static DebugPlot state_time_plot("Time-based metrics", vector<string>{"macroblock_fraction", "microblock_fraction", "macroblock_sigmoid", "microblock_sigmoid"});
-static DebugPlot pts_dts_plot("audio PTS and DTS", vector<string>{"pts/dts"});
-static shared_ptr<DebugPlot> globals_plot = nullptr;
-

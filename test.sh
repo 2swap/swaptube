@@ -15,11 +15,13 @@ for demo in "${DEMOS[@]}"; do
     echo ""
     echo "---- Running smoketest for project: ${demo} ----"
     ./go.sh "$demo" 160 90 30 -s > /dev/null
-    if [ $? -eq 0 ]; then
+    RESULT=$?
+    if [ $RESULT -eq 0 ]; then
         echo "✅ ${demo}: PASS"
         PASS_COUNT=$((PASS_COUNT+1))
     else
         echo "❌ ${demo}: FAIL"
+        echo "Result code: $RESULT"
         FAIL_COUNT=$((FAIL_COUNT+1))
         FAILED_PROJECTS+=("$demo")
     fi

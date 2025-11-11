@@ -30,7 +30,7 @@ public:
         vector<sample_t> left;
         vector<sample_t> right;
         scape.generate_audio(total_samples, left, right, new_freqs);
-        AUDIO_WRITER.add_sfx(left, right, elapsed);
+        WRITER->audio->add_sfx(left, right, elapsed);
         elapsed += left.size();
     }
 

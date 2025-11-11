@@ -23,8 +23,6 @@ void alpha_overlay_cuda(unsigned int* src_host,
 
 using namespace std;
 
-static DebugPlot ffmpeg_output_plot("ffmpeg output", vector<string>{"frame", "qp", "nal", "poc", "i", "p", "skip", "size"});
-
 // Function to parse the debug output
 void parse_debug_output(const string& output) {
     istringstream iss(output);
@@ -44,13 +42,13 @@ void parse_debug_output(const string& output) {
             double p     = stoi(match[7].str());
             double skip  = stoi(match[8].str());
             double size  = stoi(match[9].str());
-            ffmpeg_output_plot.add_datapoint(vector<double>{frame, qp, nal, poc, i, p, skip, size});
+            //ffmpeg_output_plot.add_datapoint(vector<double>{frame, qp, nal, poc, i, p, skip, size});
         } else if(regex_search(line, match, regex_pattern_empty_line)) {
             // do nothing, i guess?
         } else {
             // If the string did not match the expected format, dump it to stderr
             cout << "Failed to parse cerr output from encoder: " << line << endl;
-	    // This is plausible in nominal conditions, do not failout!
+            // This happens in nominal conditions, do not failout!
         }
     }
 }
@@ -71,7 +69,6 @@ int send_frame(AVCodecContext* vcc, AVFrame* frame){
 
 class VideoWriter {
 private:
-
     //note that the FormatContext has shared ownership with audioWriter and MovieWriter
     AVFormatContext *fc = nullptr;
 
@@ -107,7 +104,7 @@ private:
     }
 
 public:
-    VideoWriter(AVFormatContext *fc_) : fc(fc_) {
+    VideoWriter(AVFormatContext *fc_, const string& video_path) : fc(fc_) {
         av_log_set_level(AV_LOG_DEBUG);
 
         // Setting up the codec.
@@ -125,7 +122,6 @@ public:
         if (!videoStream) {
             throw runtime_error("Failed to create new videostream!");
         }
-	//videoStream->id = fc->nb_streams - 1;
 
         videoCodecContext = avcodec_alloc_context3(codec);
         if (!videoCodecContext) {
@@ -149,7 +145,7 @@ public:
             throw runtime_error("Failed avcodec_parameters_from_context!");
         }
 
-        ret = avio_open(&fc->pb, PATH_MANAGER.video_output.c_str(), AVIO_FLAG_WRITE);
+        ret = avio_open(&fc->pb, video_path.c_str(), AVIO_FLAG_WRITE);
         if (ret < 0) {
             throw runtime_error("Failed avio_open!");
         }

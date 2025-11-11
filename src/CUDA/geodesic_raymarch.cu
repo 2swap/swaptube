@@ -4,7 +4,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include "calculator.cuh"
 #include <stdint.h>
-#include "raymarch_topologies/inverse.cuh"
+#include "raymarch_topologies/witch.cuh"
 
 static __device__ void metric_tensor(glm::vec3 v, float g[3][3]) {
     glm::vec4 dx, dy, dz;

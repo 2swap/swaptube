@@ -1,5 +1,7 @@
 #pragma once
 
+#include <unistd.h>
+
 // Function to redirect stderr to a pipe
 int redirect_stderr(int pipefd[2]) {
     fflush(stderr);

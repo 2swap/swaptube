@@ -123,8 +123,6 @@ static unordered_map<string, double> global_state{
     {"microblock_number", 0},
     {"macroblock_fraction", 0},
     {"microblock_fraction", 0},
-    {"VIDEO_WIDTH", VIDEO_WIDTH},
-    {"VIDEO_HEIGHT", VIDEO_HEIGHT},
 };
 void print_global_state(){
     cout << endl << endl << "=====GLOBAL STATE=====" << endl;
@@ -509,7 +507,7 @@ private:
             vc.value = calculator(scrubbed_equation);
         } catch (const runtime_error& e) {
             print_state();
-            throw runtime_error("Error evaluating equation for variable " + variable + "\n" + e.what() + "\nScrubbed equation: " + scrubbed_equation + "\nState has been printed above.");
+            throw runtime_error("Error evaluating equation for variable " + variable + "\n" + e.what() + "\nEquation: " + vc.equation + "\nScrubbed Equation: " + scrubbed_equation + "\nState has been printed above.");
         }
     }
 

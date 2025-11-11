@@ -8,8 +8,9 @@ private:
     ofstream shtooka_file;
 public:
     ShtookaWriter() {
-        shtooka_file.open(PATH_MANAGER.record_list_path);
-        if (!shtooka_file.is_open()) throw runtime_error("Error opening recorder list: " + PATH_MANAGER.record_list_path);
+        const string record_list_path = "io_in/record_list.tsv";
+        shtooka_file.open(record_list_path);
+        if (!shtooka_file.is_open()) throw runtime_error("Error opening recorder list: " + record_list_path);
     }
 
     void add_shtooka_entry(const string& filename, const string& text) {

@@ -72,8 +72,6 @@ private:
 
             outputPacket.stream_index = stream->index;
 
-            pts_dts_plot.add_datapoint(vector<double>{static_cast<double>(outputPacket.pts)});
-
             av_packet_rescale_ts(&outputPacket, codecCtx->time_base, stream->time_base);
 
             ret = av_interleaved_write_frame(fc, &outputPacket);
@@ -201,7 +199,7 @@ public:
 
     int add_audio_from_file(const string& filename) {
         // Build full path to the input audio file
-        string fullInputAudioFilename = PATH_MANAGER.this_project_media_dir + filename;
+        string fullInputAudioFilename = "io_in/" + filename;
 
         // Check if the file exists
         if (!file_exists(fullInputAudioFilename)) {

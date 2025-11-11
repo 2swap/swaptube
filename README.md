@@ -65,6 +65,8 @@ You can validate your local installation with ./test.sh, which will compile and 
 
 - **go.sh**: The program entry point! It compiles, smoketests, and runs your project file at a specified resolution and framerate.
 
+- **play.sh**: Plays back the most recently rendered video with the provided project name.
+
 - **test.sh**: Compiles and smoketests all demo projects.
 
 # Design Philosophy

@@ -4,10 +4,6 @@
  */
 
 using namespace std;
-#include <string>
-#include <stdexcept>
-#include <iostream>
-#include <signal.h>
 
 static int VIDEO_WIDTH;
 static int VIDEO_HEIGHT;
@@ -28,22 +24,13 @@ enum TransitionType {
     MACRO
 };
 
-const string project_name = PROJECT_NAME_MACRO;
-
 int VIDEO_BACKGROUND_COLOR = 0xff000000;
 
-#include "../io/AudioWriter.cpp"
-#include "../io/VideoWriter.cpp"
-#include "../io/SubtitleWriter.cpp"
-#include "../io/ShtookaWriter.cpp"
 #include "Timer.cpp"
+#include "../io/Writer.cpp"
 
 // Initialize globals
-static AVFormatContext* FORMAT_CONTEXT = nullptr;
-static AudioWriter* AUDIO_WRITER = nullptr;
-static VideoWriter* VIDEO_WRITER = nullptr;
-static SubtitleWriter* SUBTITLE_WRITER = nullptr;
-static ShtookaWriter* SHTOOKA_WRITER = nullptr;
+static Writer* WRITER = nullptr;
 
 // The go.sh script temporarily moves the current project to this location:
 #include "../Projects/.active_project.cpp"
@@ -52,25 +39,33 @@ static ShtookaWriter* SHTOOKA_WRITER = nullptr;
 // (2) define a function "render_video" which uses those scenes to define the video timeline.
 
 void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& smoketest) {
+    cout << "Parsing command line arguments... " << flush;
+
     if (argc != 6) {
-        throw runtime_error("Expected 5 arguments: width height framerate samplerate smoketest_flag");
+        throw runtime_error("Expected 5 arguments: width height framerate samplerate output_dir smoketest/render");
     }
 
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
         throw runtime_error("Invalid width argument: " + string(argv[1]) );
     }
+    global_state["VIDEO_WIDTH"] = w;
+    cout << "Width: " << w << ", " << flush;
 
     if (sscanf(argv[2], "%d", &h) != 1 || h < 1 || h > 10000) {
         throw runtime_error("Invalid height argument: " + string(argv[2]) );
     }
+    global_state["VIDEO_HEIGHT"] = h;
+    cout << "Height: " << h << ", " << flush;
 
     if (sscanf(argv[3], "%d", &framerate) != 1 || framerate < 1 || framerate > 240) {
         throw runtime_error("Invalid framerate argument: " + string(argv[3]) );
     }
+    cout << "Framerate: " << framerate << ", " << flush;
 
     if (sscanf(argv[4], "%d", &samplerate) != 1 || samplerate < 8000 || samplerate > 192000) {
         throw runtime_error("Invalid samplerate argument: " + string(argv[4]) );
     }
+    cout << "Samplerate: " << samplerate << ", " << flush;
 
     string smoketest_arg = argv[5];
     if (smoketest_arg == "smoketest") {
@@ -80,45 +75,32 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
     } else {
         throw runtime_error("Invalid smoketest flag argument: " + smoketest_arg);
     }
+    cout << "Smoketest: " << (smoketest ? "true" : "false") << endl;
 
     if(SAMPLERATE % FRAMERATE != 0){
         throw runtime_error("Video framerate must be divisible by audio sample rate.");
     }
 }
 
-void initialize_rendering_environment() {
-    cout << "Initializing rendering environment... " << flush;
-    int ret = avformat_alloc_output_context2(&FORMAT_CONTEXT, NULL, NULL, PATH_MANAGER.video_output.c_str());
-    if (ret < 0) throw runtime_error("Failed to allocate output format context");
-    if (FORMAT_CONTEXT == nullptr) throw runtime_error("Failed to allocate output format context");
-    AUDIO_WRITER = new AudioWriter(FORMAT_CONTEXT);
-    VIDEO_WRITER = new VideoWriter(FORMAT_CONTEXT);
-    SUBTITLE_WRITER = new SubtitleWriter();
-    SHTOOKA_WRITER = new ShtookaWriter();
-    cout << "Done!" << endl;
-}
-void finalize_rendering_environment() {
-    delete AUDIO_WRITER;
-    delete VIDEO_WRITER; // This also finalizes FORMAT_CONTEXT
-    delete SUBTITLE_WRITER;
-    delete SHTOOKA_WRITER;
-}
-
 inline void signal_handler(int signal) {
     throw runtime_error("Interrupt detected. Exiting gracefully.");
 }
 
+void setup_output_subfolders() {
+    string cmd = "mkdir -p io_out/frames io_out/data io_out/plots";
+    system(cmd.c_str());
+}
+
 int main(int argc, char* argv[]) {
     parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, SMOKETEST);
-    cout << "Rendering video with resolution " << VIDEO_WIDTH << "x" << VIDEO_HEIGHT 
-         << " at " << FRAMERATE << " FPS and " << SAMPLERATE << " Hz audio." << endl;
 
     Timer timer;
 
     // Main Render Loop
     signal(SIGINT, signal_handler);
     try {
-        initialize_rendering_environment();
+        setup_output_subfolders();
+        WRITER = new Writer();
         render_video();
     } catch(std::exception& e) {
         // Change to red text
@@ -127,18 +109,18 @@ int main(int argc, char* argv[]) {
         cout << endl << "====================" << endl;
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
-        cout << "Last written subtitle: " << SUBTITLE_WRITER->get_last_written_subtitle() << endl;
+        cout << "Last written subtitle: " << WRITER->subtitle->get_last_written_subtitle() << endl;
         cout << "====================" << endl;
 
         // Change back to normal text
         cout << "\033[0m" << endl;
-        finalize_rendering_environment();
+        delete WRITER;
         return 1;
     }
 
     cout << "\033[1;32m" << endl << "====================" << endl;
     cout << "Completed successfully!" << endl;
     cout << "====================" << "\033[0m" << endl << endl;
-    finalize_rendering_environment();
+    delete WRITER;
     return 0;
 }
