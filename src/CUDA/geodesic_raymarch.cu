@@ -4,11 +4,19 @@
 #include <glm/gtc/quaternion.hpp>
 #include "calculator.cuh"
 #include <stdint.h>
+#include "raymarch_topologies/flat.cuh"
+#include "raymarch_topologies/sin.cuh"
+#include "raymarch_topologies/parabola.cuh"
+#include "raymarch_topologies/blackhole.cuh"
 #include "raymarch_topologies/witch.cuh"
 
-static __device__ void metric_tensor(glm::vec3 v, float g[3][3]) {
+static __device__ void metric_tensor(glm::vec3 v, float g[3][3], float* d_intensities) {
     glm::vec4 dx, dy, dz;
-    dsurface_dv(v, dx, dy, dz);
+    if (d_intensities[0]>0.01) dsurface_dv_flat(v, dx, dy, dz, d_intensities[0]);
+    if (d_intensities[1]>0.01) dsurface_dv_sin(v, dx, dy, dz, d_intensities[1]);
+    if (d_intensities[2]>0.01) dsurface_dv_parabola(v, dx, dy, dz, d_intensities[2]);
+    if (d_intensities[3]>0.01) dsurface_dv_blackhole(v, dx, dy, dz, d_intensities[3]);
+    if (d_intensities[4]>0.01) dsurface_dv_witch(v, dx, dy, dz, d_intensities[4]);
 
     g[0][0] = glm::dot(dx, dx);
     g[0][1] = glm::dot(dx, dy);
@@ -51,17 +59,28 @@ static __device__ bool invert3x3(const float m[3][3], float invOut[3][3]) {
 
 // Christoffel symbols Γ^i_jk at parameter-space point v using central differences.
 // Gamma is output as Gamma[i][j][k]
-static __device__ bool christoffel_symbols(glm::vec3 v, float Gamma[3][3][3]) {
+static __device__ bool christoffel_symbols(glm::vec3 v, float Gamma[3][3][3], float* d_intensities) {
     // compute metric at center
     float g[3][3];
-    metric_tensor(v, g);
+    metric_tensor(v, g, d_intensities);
 
     // invert metric
     float g_inv[3][3];
     if (!invert3x3(g, g_inv)) return false;
 
     float dg[3][3][3];
-    dmetric_dv(v, dg[0], dg[1], dg[2]);
+    for( int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            for (int k = 0; k < 3; ++k) {
+                dg[i][j][k] = 0.0f;
+            }
+        }
+    }
+    // Flat metric is zero anyways. dmetric_dv_flat(v, dg[0], dg[1], dg[2], d_intensities[0]);
+    if (d_intensities[1]>0.01) dmetric_dv_sin(v, dg[0], dg[1], dg[2], d_intensities[1]);
+    if (d_intensities[2]>0.01) dmetric_dv_parabola(v, dg[0], dg[1], dg[2], d_intensities[2]);
+    if (d_intensities[3]>0.01) dmetric_dv_blackhole(v, dg[0], dg[1], dg[2], d_intensities[3]);
+    if (d_intensities[4]>0.01) dmetric_dv_witch(v, dg[0], dg[1], dg[2], d_intensities[4]);
 
     // Γ^i_jk = 1/2 g^{i l} ( ∂_j g_{l k} + ∂_k g_{l j} - ∂_l g_{j k} )
     for (int i = 0; i < 3; ++i) {
@@ -80,12 +99,12 @@ static __device__ bool christoffel_symbols(glm::vec3 v, float Gamma[3][3][3]) {
 }
 
 // Geodesic RHS: input Y[6] = [u, v, w, up, vp, wp] -> outputs dY[6]
-static __device__ bool geodesic_rhs(const float Y[6], float dY[6]) {
+static __device__ bool geodesic_rhs(const float Y[6], float dY[6], float* d_intensities) {
     glm::vec3 pos = glm::vec3(Y[0], Y[1], Y[2]);
     float vel[3] = { Y[3], Y[4], Y[5] };
 
     float Gamma[3][3][3];
-    if (!christoffel_symbols(pos, Gamma)) return false;
+    if (!christoffel_symbols(pos, Gamma, d_intensities)) return false;
 
     // d position = velocity
     dY[0] = vel[0];
@@ -104,19 +123,19 @@ static __device__ bool geodesic_rhs(const float Y[6], float dY[6]) {
 }
 
 // Single RK4 step for 6-D state Y with step dt
-static __device__ bool rk4_step_geodesic(float Y[6], float dt) {
+static __device__ bool rk4_step_geodesic(float Y[6], float dt, float* d_intensities) {
     float k1[6], k2[6], k3[6], k4[6], temp[6];
 
-    if (!geodesic_rhs(Y, k1)) return false;
+    if (!geodesic_rhs(Y, k1, d_intensities)) return false;
     for (int i = 0; i < 6; ++i) temp[i] = Y[i] + 0.5f * dt * k1[i];
 
-    if (!geodesic_rhs(temp, k2)) return false;
+    if (!geodesic_rhs(temp, k2, d_intensities)) return false;
     for (int i = 0; i < 6; ++i) temp[i] = Y[i] + 0.5f * dt * k2[i];
 
-    if (!geodesic_rhs(temp, k3)) return false;
+    if (!geodesic_rhs(temp, k3, d_intensities)) return false;
     for (int i = 0; i < 6; ++i) temp[i] = Y[i] + dt * k3[i];
 
-    if (!geodesic_rhs(temp, k4)) return false;
+    if (!geodesic_rhs(temp, k4, d_intensities)) return false;
     for (int i = 0; i < 6; ++i)
         Y[i] = Y[i] + (dt / 6.0f) * (k1[i] + 2.0f * k2[i] + 2.0f * k3[i] + k4[i]);
 
@@ -133,9 +152,11 @@ static __device__ glm::vec3 quat_rotate(const glm::quat& q, const glm::vec3& v) 
 
 // Kernel: trace one ray per pixel, integrate geodesic in parameter-space
 __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
-                                                        glm::quat camera_orientation,
-                                                        glm::vec3 camera_position,
-                                                        float fov) {
+                                             glm::quat camera_orientation,
+                                             glm::vec3 camera_position,
+                                             float fov, float* d_intensities, float floor_distort,
+                                             float step_size, int step_count,
+                                             float floor_y, float ceiling_y) {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
     if (px >= w || py >= h) return;
@@ -160,37 +181,27 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     Y[4] = dir_world.y;
     Y[5] = dir_world.z;
 
-    // integration parameters (tune these)
-    const float dt = 0.01f;       // step in affine parameter
-    const int max_steps = 4000;    // as requested
-    const float escape_bound = 10.0f;
-
     int step = 0;
     uint32_t out = 0xFF000000u;
-    for (step = 0; step < max_steps; ++step) {
-        // escape check
-        bool ceiling = Y[1] > escape_bound;
-        bool floor = Y[1] < -escape_bound/10;
-        bool wall = fabsf(Y[0]) > escape_bound || fabsf(Y[2]) > escape_bound;
-        if (floor) {
-            int check_u = int(floorf(Y[0] * 5 / escape_bound));
-            int check_v = int(floorf(Y[1] * 5 / escape_bound));
-            int check_w = int(floorf(Y[2] * 5 / escape_bound));
-            out = (( (check_u + check_v + check_w) % 2) == 0) ?
-                  0xff00bb00 : // green
-                  0xff009900;  // dark green
+    for (step = 0; step < step_count; ++step) {
+        float floor_y_here = floor_y;
+        if (fabsf(floor_distort) > 0.01f) floor_y_here += floor_distort * (sin(Y[0]) + sin(Y[2]));
+        if (Y[1] < floor_y_here) { // Floor Pattern
+            int square_num = floorf(floorf(Y[0]+.5) + floorf(Y[2]+.5));
+            out = square_num % 2 ?
+                0xff00bb00 : // green
+                0xff009900;  // dark green
             break;
         }
-        if(ceiling) { // Sky Pattern
-            int check_u = int(floorf(Y[0] * 5 / escape_bound));
-            int check_v = int(floorf(Y[1] * 5 / escape_bound));
-            int check_w = int(floorf(Y[2] * 5 / escape_bound));
-            out = (( (check_u + check_v + check_w) % 2) == 0) ?
+        if (Y[1] > ceiling_y) { // Ceiling Pattern
+            int square_num = floorf(floorf(Y[0]+.5) + floorf(Y[2]+.5));
+            out = square_num % 2 ?
                 0xff87ceeb : // light blue
                 0xff4682b4;  // steel blue
             break;
         }
-        if(wall) { // Brick Pattern
+        /*
+        if(fabsf(Y[0]) > 1.0f || fabsf(Y[2]) > 1.0f) { // Side Walls
             int red = 0xffbc573b;
             int white = 0xffd5d6da;
             out = red;
@@ -200,6 +211,20 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
                 out = white;
             }
             break;
+        }
+        */
+
+        // White lines
+        if (true) {
+            int spacing = 5;
+            bool on_x_line = Y[0] / spacing + 1000.5 - floorf(Y[0] / spacing + 1000.5f) < 0.02f;
+            bool on_y_line = Y[1] / spacing + 1000.5 - floorf(Y[1] / spacing + 1000.5f) < 0.02f;
+            bool on_z_line = Y[2] / spacing + 1000.5 - floorf(Y[2] / spacing + 1000.5f) < 0.02f;
+            int num_axes = int(on_x_line) + int(on_y_line) + int(on_z_line);
+            if (num_axes >= 2) {
+                out = 0xffffffff; // white
+                break;
+            }
         }
 
         // In Black Hole
@@ -219,7 +244,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
             out = 0xffffa500; // orange
             break;
         }*/
-        bool ok = rk4_step_geodesic(Y, dt);
+        bool ok = rk4_step_geodesic(Y, step_size, d_intensities);
         if (!ok) {
             // numerical trouble (singular metric inversion), break - treat as non-escaped
             out = 0xffff0000; // red for failure
@@ -227,23 +252,33 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
         }
     }
 
-    out = d_colorlerp(out, 0xff000000, float(step) / float(max_steps) ); // fade to black based on steps
+    out = d_colorlerp(out, 0xff000000, float(step) / float(step_count) ); // fade to black based on steps
     d_pixels[py * w + px] = out;
 }
 
 // Host-facing launcher
 extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
                                              glm::quat camera_orientation, glm::vec3 camera_position,
-                                             float fov_rad, float intensity) {
+                                             float fov_rad, float* intensities, float floor_distort,
+                                             float step_size, int step_count,
+                                             float floor_y, float ceiling_y) {
     uint32_t* d_pixels;
     size_t pixel_buffer_size = w * h * sizeof(uint32_t);
     cudaMalloc(&d_pixels, pixel_buffer_size);
 
+    float* d_intensities;
+    cudaMalloc(&d_intensities, 5 * sizeof(float));
+    cudaMemcpy(d_intensities, intensities, 5 * sizeof(float), cudaMemcpyHostToDevice);
+
     dim3 block(16, 16);
     dim3 grid( (w + block.x - 1) / block.x, (h + block.y - 1) / block.y );
-    cuda_surface_raymarch_kernel<<<grid, block>>>(d_pixels, w, h, camera_orientation, camera_position, fov_rad);
+    cuda_surface_raymarch_kernel<<<grid, block>>>(d_pixels, w, h, camera_orientation, camera_position,
+            fov_rad, d_intensities, floor_distort,
+            step_size, step_count,
+            floor_y, ceiling_y);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_pixels, pixel_buffer_size, cudaMemcpyDeviceToHost);
     cudaFree(d_pixels);
+    cudaFree(d_intensities);
 }
