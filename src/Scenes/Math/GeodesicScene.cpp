@@ -11,7 +11,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
     glm::quat camera_orientation, glm::vec3 camera_position,
     float fov_rad, float* intensities, float floor_distort,
     float step_size, int step_count,
-    float floor_y, float ceiling_y);
+    float floor_y, float ceiling_y, float grid_opacity, float zaxis);
 
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
@@ -49,6 +49,8 @@ public:
             {"intensity_parabola", "0.0"},
             {"intensity_blackhole", "0.0"},
             {"intensity_witch", "0.0"},
+            {"grid_opacity", "1.0"},
+            {"zaxis", "0.0"},
 
             {"floor_y", "-1"},
             {"ceiling_y", "3"},
@@ -58,7 +60,7 @@ public:
             {"manifold_q1", "1.0"},
             {"manifold_qi", "-.30"},
             {"manifold_qj", "0"},
-            {"manifold_qk", "{t} .4 * sin"},
+            {"manifold_qk", "{t} .4 * sin .1 *"},
             {"manifold_fov", "1"},
             {"manifold_x", "(u)"},
             {"manifold_y", "(v)"},
@@ -84,7 +86,7 @@ public:
             x_eq.c_str(),
             y_eq.c_str(),
             z_eq.c_str(),
-            "(u) 10 * sin (v) 10 * sin * abs .1 < 20 *", "0",
+            "(u) 10 * sin (v) 10 * sin * abs .2 > 20 *", "0",
             (float)state["u_min"],
             (float)state["u_max"],
             (int)(state["u_steps"] * steps_mult),
@@ -137,7 +139,7 @@ public:
                                      camera_direction, camera_pos,
                                      state["fov"], intensities.data(), state["floor_distort"],
                                      state["step_size"], (int)state["step_count"],
-                                     state["floor_y"], state["ceiling_y"]);
+                                     state["floor_y"], state["ceiling_y"], state["grid_opacity"], state["zaxis"]);
 
         draw_manifold();
     }
@@ -147,6 +149,7 @@ public:
             "x", "y", "z", "q1", "qi", "qj", "qk",
             "fov", "floor_distort",
             "step_size", "step_count",
+            "grid_opacity", "zaxis",
             "floor_y", "ceiling_y",
             "intensity_flat", "intensity_sin", "intensity_parabola", "intensity_blackhole", "intensity_witch",
 

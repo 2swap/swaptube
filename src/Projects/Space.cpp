@@ -8,11 +8,16 @@ void render_video() {
             {"ceiling_y", "<step_size> <step_count> *"},
     });
 
-    gs.stage_macroblock(FileBlock("Space is a place where there are things."), 1);
+    gs.stage_macroblock(FileBlock("Space is a place where there are things."), 2);
     gs.manager.transition(MICRO, {
         {"step_count", "5000"},
         {"q1", ".2"},
         {"qj", "1"},
+    });
+    gs.render_microblock();
+    gs.manager.transition(MICRO, {
+        {"q1", "1"},
+        {"qj", "0"},
     });
     gs.render_microblock();
 
@@ -22,6 +27,7 @@ void render_video() {
     gs.render_microblock();
     gs.manager.transition(MICRO, "ceiling_y", "3");
     gs.render_microblock();
+    gs.manager.transition(MICRO, "grid_opacity", "0");
     gs.render_microblock();
 
     gs.stage_macroblock(FileBlock("Floors and ceilings are usually flat..."), 1);
@@ -43,11 +49,16 @@ void render_video() {
     gs.render_microblock();
 
     gs.stage_macroblock(FileBlock("meaning, they don't follow the straight lines of some underlying coordinate system."), 1);
-    gs.manager.transition(MICRO, "floor_distort", "0");
+    gs.manager.transition(MICRO, {
+        {"floor_distort", "0"},
+        {"grid_opacity", "1"},
+    });
     gs.render_microblock();
 
     gs.stage_macroblock(FileBlock("Straight lines are great! They follow beside you when you walk straight."), 2);
     gs.manager.transition(MICRO, {
+        {"grid_opacity", "0"},
+        {"zaxis", "1"},
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
@@ -61,7 +72,10 @@ void render_video() {
     gs.render_microblock();
 
     gs.stage_macroblock(FileBlock("For an ant on a sheet who wants to go from A to B, there's just one straight path, and it's always the shortest."), 3);
-    gs.manager.transition(MICRO, "manifold_opacity", "1");
+    gs.manager.transition(MICRO, {
+        {"zaxis", "0"},
+        {"manifold_opacity", "1"},
+    });
     gs.render_microblock();
     gs.render_microblock();
     gs.render_microblock();

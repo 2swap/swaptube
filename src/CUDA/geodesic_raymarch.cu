@@ -12,11 +12,11 @@
 
 static __device__ void metric_tensor(glm::vec3 v, float g[3][3], float* d_intensities) {
     glm::vec4 dx, dy, dz;
-    if (d_intensities[0]>0.01) dsurface_dv_flat(v, dx, dy, dz, d_intensities[0]);
-    if (d_intensities[1]>0.01) dsurface_dv_sin(v, dx, dy, dz, d_intensities[1]);
-    if (d_intensities[2]>0.01) dsurface_dv_parabola(v, dx, dy, dz, d_intensities[2]);
-    if (d_intensities[3]>0.01) dsurface_dv_blackhole(v, dx, dy, dz, d_intensities[3]);
-    if (d_intensities[4]>0.01) dsurface_dv_witch(v, dx, dy, dz, d_intensities[4]);
+    if (d_intensities[0]>0.001) dsurface_dv_flat(v, dx, dy, dz, d_intensities[0]);
+    if (d_intensities[1]>0.001) dsurface_dv_sin(v, dx, dy, dz, d_intensities[1]);
+    if (d_intensities[2]>0.001) dsurface_dv_parabola(v, dx, dy, dz, d_intensities[2]);
+    if (d_intensities[3]>0.001) dsurface_dv_blackhole(v, dx, dy, dz, d_intensities[3]);
+    if (d_intensities[4]>0.001) dsurface_dv_witch(v, dx, dy, dz, d_intensities[4]);
 
     g[0][0] = glm::dot(dx, dx);
     g[0][1] = glm::dot(dx, dy);
@@ -77,10 +77,10 @@ static __device__ bool christoffel_symbols(glm::vec3 v, float Gamma[3][3][3], fl
         }
     }
     // Flat metric is zero anyways. dmetric_dv_flat(v, dg[0], dg[1], dg[2], d_intensities[0]);
-    if (d_intensities[1]>0.01) dmetric_dv_sin(v, dg[0], dg[1], dg[2], d_intensities[1]);
-    if (d_intensities[2]>0.01) dmetric_dv_parabola(v, dg[0], dg[1], dg[2], d_intensities[2]);
-    if (d_intensities[3]>0.01) dmetric_dv_blackhole(v, dg[0], dg[1], dg[2], d_intensities[3]);
-    if (d_intensities[4]>0.01) dmetric_dv_witch(v, dg[0], dg[1], dg[2], d_intensities[4]);
+    if (d_intensities[1]>0.001) dmetric_dv_sin(v, dg[0], dg[1], dg[2], d_intensities[1]);
+    if (d_intensities[2]>0.001) dmetric_dv_parabola(v, dg[0], dg[1], dg[2], d_intensities[2]);
+    if (d_intensities[3]>0.001) dmetric_dv_blackhole(v, dg[0], dg[1], dg[2], d_intensities[3]);
+    if (d_intensities[4]>0.001) dmetric_dv_witch(v, dg[0], dg[1], dg[2], d_intensities[4]);
 
     // Γ^i_jk = 1/2 g^{i l} ( ∂_j g_{l k} + ∂_k g_{l j} - ∂_l g_{j k} )
     for (int i = 0; i < 3; ++i) {
@@ -156,7 +156,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
                                              glm::vec3 camera_position,
                                              float fov, float* d_intensities, float floor_distort,
                                              float step_size, int step_count,
-                                             float floor_y, float ceiling_y) {
+                                             float floor_y, float ceiling_y, float grid_opacity, float zaxis) {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
     if (px >= w || py >= h) return;
@@ -182,10 +182,11 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     Y[5] = dir_world.z;
 
     int step = 0;
+    float grid_accumulator = 1.0f;
     uint32_t out = 0xFF000000u;
     for (step = 0; step < step_count; ++step) {
         float floor_y_here = floor_y;
-        if (fabsf(floor_distort) > 0.01f) floor_y_here += floor_distort * (sin(Y[0]) + sin(Y[2]));
+        if (fabsf(floor_distort) > 0.001f) floor_y_here += floor_distort * (sin(Y[0] * 5) + sin(Y[2] * 5)) * 0.2f;
         if (Y[1] < floor_y_here) { // Floor Pattern
             int square_num = floorf(floorf(Y[0]+.5) + floorf(Y[2]+.5));
             out = square_num % 2 ?
@@ -214,16 +215,22 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
         }
         */
 
-        // White lines
-        if (true) {
+        if (zaxis > 0.001f) {
+            bool on_z_axis = ( (fabsf(Y[0] - .5) < 0.02f) && (fabsf(Y[1] - .5) < 0.02f) );
+            if (on_z_axis) {
+                grid_accumulator *= (1.0f - zaxis);
+                if (grid_accumulator < 0.01f) break;
+            }
+        }
+        if (grid_opacity > 0.001f) {
             int spacing = 5;
             bool on_x_line = Y[0] / spacing + 1000.5 - floorf(Y[0] / spacing + 1000.5f) < 0.02f;
             bool on_y_line = Y[1] / spacing + 1000.5 - floorf(Y[1] / spacing + 1000.5f) < 0.02f;
             bool on_z_line = Y[2] / spacing + 1000.5 - floorf(Y[2] / spacing + 1000.5f) < 0.02f;
             int num_axes = int(on_x_line) + int(on_y_line) + int(on_z_line);
             if (num_axes >= 2) {
-                out = 0xffffffff; // white
-                break;
+                grid_accumulator *= (1.0f - grid_opacity);
+                if (grid_accumulator < 0.01f) break;
             }
         }
 
@@ -252,6 +259,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
         }
     }
 
+    out = d_colorlerp(0xffffffff, out, grid_accumulator);
     out = d_colorlerp(out, 0xff000000, float(step) / float(step_count) ); // fade to black based on steps
     d_pixels[py * w + px] = out;
 }
@@ -261,7 +269,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
                                              glm::quat camera_orientation, glm::vec3 camera_position,
                                              float fov_rad, float* intensities, float floor_distort,
                                              float step_size, int step_count,
-                                             float floor_y, float ceiling_y) {
+                                             float floor_y, float ceiling_y, float grid_opacity, float zaxis) {
     uint32_t* d_pixels;
     size_t pixel_buffer_size = w * h * sizeof(uint32_t);
     cudaMalloc(&d_pixels, pixel_buffer_size);
@@ -275,7 +283,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
     cuda_surface_raymarch_kernel<<<grid, block>>>(d_pixels, w, h, camera_orientation, camera_position,
             fov_rad, d_intensities, floor_distort,
             step_size, step_count,
-            floor_y, ceiling_y);
+            floor_y, ceiling_y, grid_opacity, zaxis);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_pixels, pixel_buffer_size, cudaMemcpyDeviceToHost);
