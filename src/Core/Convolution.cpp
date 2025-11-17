@@ -1,7 +1,7 @@
 #include <stack>
 #include <cassert>
 #include <unordered_set>
-#include "../io/VisualMedia.cpp"
+#include "../IO/VisualMedia.cpp"
 
 extern "C" void convolve_map_cuda(const unsigned int* a, const int aw, const int ah, const unsigned int* b, const int bw, const int bh, unsigned int* map, const int mapw, const int maph);
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../io/VisualMedia.cpp"
+#include "../../IO/VisualMedia.cpp"
 #include "../../DataObjects/Connect4/C4Board.cpp"
 #include <algorithm>
 

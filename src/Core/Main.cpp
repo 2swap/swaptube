@@ -27,7 +27,7 @@ enum TransitionType {
 int VIDEO_BACKGROUND_COLOR = 0xff000000;
 
 #include "Timer.cpp"
-#include "../io/Writer.cpp"
+#include "../IO/Writer.cpp"
 
 // Initialize globals
 static Writer* WRITER = nullptr;

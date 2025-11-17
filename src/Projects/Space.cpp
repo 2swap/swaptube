@@ -55,7 +55,7 @@ void render_video() {
     });
     gs.render_microblock();
 
-    gs.stage_macroblock(FileBlock("Straight lines are great! They follow beside you when you walk straight."), 2);
+    gs.stage_macroblock(FileBlock("Lines are great! They follow beside you when you walk straight."), 2);
     gs.manager.transition(MICRO, {
         {"grid_opacity", "0"},
         {"zaxis", "1"},

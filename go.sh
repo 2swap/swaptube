@@ -114,6 +114,9 @@ OUTPUT_FOLDER_NAME=$(date +"%Y%m%d_%H%M%S")
 OUTPUT_DIR="out/${PROJECT_NAME}/${OUTPUT_FOLDER_NAME}"
 mkdir -p "$OUTPUT_DIR"
 
+INPUT_DIR="media/${PROJECT_NAME}"
+mkdir -p "$INPUT_DIR/latex"
+
 echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_FOLDER_NAME}"
 (
     mkdir -p build
@@ -154,8 +157,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
 
     # Symlink "io_in" to the media assets directory
     unlink io_in 2>/dev/null
-    ln -s "../media/${PROJECT_NAME}" io_in
-    mkdir -p io_in/${PROJECT_NAME}/latex
+    ln -s "../${INPUT_DIR}" io_in
 
     # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
     # Swaptube errors are printed to stdout.

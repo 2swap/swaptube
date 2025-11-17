@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoordinateScene.cpp"
-#include "../../io/SFX.cpp"
+#include "../../IO/SFX.cpp"
 #include <vector>
 
 class MicrotoneScene : public CoordinateScene {

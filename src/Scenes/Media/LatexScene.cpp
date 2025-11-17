@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../io/VisualMedia.cpp"
+#include "../../IO/VisualMedia.cpp"
 #include "../Common/ConvolutionScene.cpp"
 
 class LatexScene : public ConvolutionScene {

@@ -3,11 +3,11 @@
 #include <unordered_map>
 #include <chrono>
 #include <glm/glm.hpp>
-#include "../misc/StateManager.cpp"
-#include "../io/VisualMedia.cpp"
-#include "../io/DebugPlot.h"
-#include "../misc/pixels.h"
-#include "../io/Macroblock.cpp"
+#include "../Core/StateManager.cpp"
+#include "../Core/pixels.h"
+#include "../Core/Macroblock.cpp"
+#include "../IO/VisualMedia.cpp"
+#include "../IO/DebugPlot.h"
 
 static int remaining_microblocks_in_macroblock = 0;
 static int remaining_frames_in_macroblock = 0;

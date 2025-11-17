@@ -5,7 +5,7 @@
 #include <iomanip>
 #include <string>
 #include <cctype>
-#include "../misc/StateManager.cpp"
+#include "../Core/StateManager.cpp"
 
 using namespace std;
 

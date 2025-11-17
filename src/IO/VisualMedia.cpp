@@ -3,10 +3,10 @@
 #include <vector>
 #include <stdexcept>
 #include <librsvg-2.0/librsvg/rsvg.h>
-#include "../misc/pixels.h"
 #include <sys/stat.h>
 #include <cmath>
 #include <sstream>
+#include "../Core/pixels.h"
 
 enum class ScalingMode {
     BoundingBox,

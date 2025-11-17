@@ -23,7 +23,7 @@ find_package(glm REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 # Initialize the sources list with the main project file. We will append to it soon.
-set(SOURCES "src/misc/Main.cpp")
+set(SOURCES "src/Core/Main.cpp")
 
 include(CheckLanguage)
 check_language(CUDA)

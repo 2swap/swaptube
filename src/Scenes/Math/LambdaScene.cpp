@@ -2,7 +2,7 @@
 
 #include "../../DataObjects/LambdaCalculus.cpp"
 #include "../Scene.cpp"
-#include "../../io/VisualMedia.cpp"
+#include "../../IO/VisualMedia.cpp"
 
 class LambdaScene : public Scene {
 public:

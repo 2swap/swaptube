@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Scene.cpp"
-#include "../../misc/Convolution.cpp"
+#include "../../Core/Convolution.cpp"
 
 // Special function which ensures no temporary transparency while performing transitions
 inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}

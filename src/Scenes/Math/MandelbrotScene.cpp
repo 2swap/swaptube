@@ -6,9 +6,10 @@
 
 extern "C" void mandelbrot_render(
     const int width, const int height,
+    const glm::vec2 lx_ty,
+    const glm::vec2 rx_by,
     const complex<float> seed_z, const complex<float> seed_x, const complex<float> seed_c,
     const glm::vec3 pixel_parameter_multipliers,
-    const complex<float> zoom,
     int max_iterations,
     float gradation,
     float phase_shift,
@@ -27,6 +28,8 @@ public:
             {"seed_x_i", "0"},
             {"seed_c_r", "0"},
             {"seed_c_i", "0"},
+            {"center_x", "<seed_z_r> <pixel_param_z> * <seed_x_r> <pixel_param_x> * <seed_c_r> <pixel_param_c> * + +"},
+            {"center_y", "<seed_z_i> <pixel_param_z> * <seed_x_i> <pixel_param_x> * <seed_c_i> <pixel_param_c> * + +"},
             {"pixel_param_z", "0"}, // Julia set
             {"pixel_param_x", "0"}, // X set
             {"pixel_param_c", "1"}, // Mandelbrot set
@@ -40,7 +43,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
-        state_query_insert_multiple(sq, {"max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "point_path_length", "point_path_start_r", "point_path_start_i", "gradation", "phase_shift", "zoom"});
+        state_query_insert_multiple(sq, {"max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "point_path_length", "point_path_start_r", "point_path_start_i", "gradation", "phase_shift"});
         return sq;
     }
 
@@ -53,9 +56,10 @@ public:
         complex<float> seed_x(state["seed_x_r"], state["seed_x_i"]);
         complex<float> seed_c(state["seed_c_r"], state["seed_c_i"]);
         mandelbrot_render(pix.w, pix.h,
+                          glm::vec2(state["left_x"], state["top_y"]),
+                          glm::vec2(state["right_x"], state["bottom_y"]),
                           seed_z, seed_x, seed_c,
                           pixel_params,
-                          state["zoom"], // TODO use native functions and integrate better with CoordinateScene, or is it futile?
                           state["max_iterations"],
                           state["gradation"],
                           state["phase_shift"],

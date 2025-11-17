@@ -184,6 +184,8 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     int step = 0;
     float grid_accumulator = 1.0f;
     uint32_t out = 0xFF000000u;
+    bool last_zaxis = false;
+    bool last_grid = false;
     for (step = 0; step < step_count; ++step) {
         float floor_y_here = floor_y;
         if (fabsf(floor_distort) > 0.001f) floor_y_here += floor_distort * (sin(Y[0] * 5) + sin(Y[2] * 5)) * 0.2f;
@@ -218,19 +220,29 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
         if (zaxis > 0.001f) {
             bool on_z_axis = ( (fabsf(Y[0] - .5) < 0.02f) && (fabsf(Y[1] - .5) < 0.02f) );
             if (on_z_axis) {
-                grid_accumulator *= (1.0f - zaxis);
-                if (grid_accumulator < 0.01f) break;
+                if (!last_zaxis) {
+                    grid_accumulator *= (1.0f - zaxis);
+                    if (grid_accumulator < 0.01f) break;
+                }
+                last_zaxis = true;
+            } else {
+                last_zaxis = false;
             }
         }
-        if (grid_opacity > 0.001f) {
+        if (grid_opacity > 0.001f && !last_grid) {
             int spacing = 5;
             bool on_x_line = Y[0] / spacing + 1000.5 - floorf(Y[0] / spacing + 1000.5f) < 0.02f;
             bool on_y_line = Y[1] / spacing + 1000.5 - floorf(Y[1] / spacing + 1000.5f) < 0.02f;
             bool on_z_line = Y[2] / spacing + 1000.5 - floorf(Y[2] / spacing + 1000.5f) < 0.02f;
             int num_axes = int(on_x_line) + int(on_y_line) + int(on_z_line);
             if (num_axes >= 2) {
-                grid_accumulator *= (1.0f - grid_opacity);
-                if (grid_accumulator < 0.01f) break;
+                if (!last_grid) {
+                    grid_accumulator *= (1.0f - grid_opacity);
+                    if (grid_accumulator < 0.01f) break;
+                }
+                last_grid = true;
+            } else {
+                last_grid = false;
             }
         }
 

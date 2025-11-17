@@ -1,11 +1,10 @@
 #pragma once
-#include "ffmpeg_error.hpp"
 #include <iostream>
 #include <string>
 #include <regex>
 #include <cassert>
 #include "DebugPlot.h"
-#include "../misc/pixels.h"
+#include "../Core/pixels.h"
 #include "IoHelpers.cpp"
 
 extern "C"
