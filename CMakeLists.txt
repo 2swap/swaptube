@@ -27,7 +27,7 @@ set(SOURCES "src/Core/Main.cpp")
 
 include(CheckLanguage)
 check_language(CUDA)
-if(CMAKE_CUDA_COMPILER AND FALSE)
+if(CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
     add_definitions(-DUSE_CUDA)
     message(STATUS "CUDA compiler found: ${CMAKE_CUDA_COMPILER}")
