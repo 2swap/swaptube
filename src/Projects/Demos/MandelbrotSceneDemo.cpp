@@ -2,7 +2,7 @@
 
 void render_video() {
     MandelbrotScene ms;
-    ms.manager.set("zoom", "{t}");
+    ms.manager.transition(MICRO, {{"pixel_param_z", "1"}, {"pixel_param_c", "0"}});
     ms.stage_macroblock(SilenceBlock(2), 1);
     ms.render_microblock();
 }

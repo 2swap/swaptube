@@ -50,6 +50,7 @@ public:
     void mark_data_unchanged() override {}
     void change_data() override {}
     bool check_if_data_changed() const override {return false;}
+
     void draw() override {
         glm::vec3 pixel_params = glm::normalize(glm::vec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
         complex<float> seed_z(state["seed_z_r"], state["seed_z_i"]);
