@@ -4,6 +4,9 @@ This is the repository I use to render [my YouTube videos](https://www.youtube.c
 
 SwapTube is built on FFMPEG, but most of the functionalities above the layer of video and audio encoding are custom-written. The project does not use any fancy graphics libraries, with a few exceptions for particular functionalities.
 
+# Tutorial Video
+[![Swaptube Tutorial Video](http://img.youtube.com/vi/paqBduieRks/0.jpg)](https://www.youtube.com/watch?v=paqBduieRks "SwapTube Tutorial Video")
+
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
 
