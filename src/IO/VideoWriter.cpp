@@ -183,8 +183,9 @@ public:
         rgb_frame->width  = VIDEO_WIDTH;
         rgb_frame->height = VIDEO_HEIGHT;
 
-        if (!AVOID_CUDA)
-            alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_BACKGROUND_COLOR);
+        #ifdef USE_CUDA
+        alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_BACKGROUND_COLOR);
+        #endif
 
         // Point FFmpeg directly to your source data
         rgb_frame->data[0] = reinterpret_cast<uint8_t*>(p.pixels.data());

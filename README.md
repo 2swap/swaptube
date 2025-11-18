@@ -7,7 +7,7 @@ SwapTube is built on FFMPEG, but most of the functionalities above the layer of 
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
 
-The main compatibility constraint is availability of CUDA and an appropriate NVIDIA GPU for hardware-accelerated rendering. Most visually complex scenes require CUDA, and will look entirely black or grey if run on a machine without CUDA support. If you wish to run SwapTube on CPU alone, some scenes will work- for example, you should be able to use the CUDAFreePendulumDemo project and get working video output, yielding a video of a swinging double pendulum. Notice that the project file in Projects/Demos/CUDAFreePendulumDemo.cpp invokes `AVOID_CUDA = true;` which is necessary when running without CUDA support. Even with this flag, many (but not all) scenes will fail to render on systems without CUDA.
+The main compatibility constraint is availability of CUDA and an appropriate NVIDIA GPU for hardware-accelerated rendering. Most visually complex scenes require CUDA, and will look entirely black or grey if run on a machine without CUDA support. If you wish to run SwapTube on CPU alone, some scenes will work- for example, you should be able to use the CUDAFreePendulumDemo project and get working video output, yielding a video of a swinging double pendulum. Many (but not all) scenes will fail to render on systems without CUDA.
 
 ## Setup
 ### External Dependencies
