@@ -1,8 +1,8 @@
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
 #include <cmath>
-#include "../Host_Device_Shared/helpers.h"
-#include "color.cuh"
+#include "../../Host_Device_Shared/helpers.h"
+#include "../color.cuh"
 
 __device__ thrust::complex<float> complex_sqrt(const thrust::complex<float>& z, float branch_cut) {
     float r = thrust::abs(z);

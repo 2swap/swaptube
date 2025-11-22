@@ -27,6 +27,14 @@ extern "C" void cuda_overlay(
     const int dx, const int dy,
     const float opacity);
 
+extern "C" void cuda_render_geodesics_2d(
+    uint32_t* pixels, const int w, const int h,
+    const ManifoldData& manifold,
+    const glm::vec2 start_position, const glm::vec2 start_velocity,
+    const int num_geodesics, const int num_steps, const float spread_angle,
+    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const float geom_mean_size, const float fov);
+
 class GeodesicScene : public Scene {
 public:
     GeodesicScene(const double width = 1, const double height = 1)
@@ -67,18 +75,24 @@ public:
             {"manifold_z", "0"},
             {"u_min", "-5.0"},
             {"u_max", "5.0"},
-            {"u_steps", "3000"},
+            {"u_steps", "1000"},
             {"v_min", "-5.0"},
             {"v_max", "5.0"},
-            {"v_steps", "3000"},
+            {"v_steps", "1000"},
             {"manifold_opacity", "1"},
+
+            {"num_geodesics", "1"},
+            {"geodesic_steps", "0"},
+            {"spread_angle", "pi 2 /"},
+            {"geodesics_start_u", "0.0"},
+            {"geodesics_start_v", "0.0"},
+            {"geodesics_start_du", "1.0"},
+            {"geodesics_start_dv", "0.0"},
         });
     }
 
     void draw_manifold() {
-        if(state["manifold_opacity"] <= 0.01f) return;
-        Pixels manifold_pix(pix.w, pix.h);
-        float steps_mult = geom_mean(manifold_pix.w, manifold_pix.h) / 1500.0f;
+        float steps_mult = geom_mean(pix.w, pix.h) / 1500.0f;
         string x_eq = manager.get_equation_with_tags("manifold_x");
         string y_eq = manager.get_equation_with_tags("manifold_y");
         string z_eq = manager.get_equation_with_tags("manifold_z");
@@ -94,33 +108,62 @@ public:
             (float)state["v_max"],
             (int)(state["v_steps"] * steps_mult)
         };
-        ManifoldData manifolds[] = { manifold1 };
-
         glm::quat manifold_rotation = glm::normalize(glm::quat(state["manifold_q1"], state["manifold_qi"], state["manifold_qj"], state["manifold_qk"]));
         glm::quat conjugate_manifold_rotation = glm::conjugate(manifold_rotation);
         glm::vec3 manifold_position = conjugate_manifold_rotation * glm::vec3(0.0f, 0.0f, (float)-state["manifold_d"]) * manifold_rotation;
-        cuda_render_manifold(
-            manifold_pix.pixels.data(),
-            manifold_pix.w,
-            manifold_pix.h,
-            manifolds,
-            1,
-            manifold_position,
-            manifold_rotation,
-            conjugate_manifold_rotation,
-            geom_mean(manifold_pix.w, manifold_pix.h),
-            state["manifold_fov"],
-            1,
-            1,
-            0
-        );
 
-        cuda_overlay(
-            pix.pixels.data(), pix.w, pix.h,
-            manifold_pix.pixels.data(), manifold_pix.w, manifold_pix.h,
-            0, 0,
-            state["manifold_opacity"]
-        );
+        if(state["manifold_opacity"] >= 0.01f) {
+            Pixels manifold_pix(pix.w, pix.h);
+            ManifoldData manifolds[] = { manifold1 };
+            cuda_render_manifold(
+                manifold_pix.pixels.data(),
+                manifold_pix.w,
+                manifold_pix.h,
+                manifolds,
+                1,
+                manifold_position,
+                manifold_rotation,
+                conjugate_manifold_rotation,
+                geom_mean(manifold_pix.w, manifold_pix.h),
+                state["manifold_fov"],
+                1,
+                1,
+                0
+            );
+            cuda_overlay(
+                pix.pixels.data(), pix.w, pix.h,
+                manifold_pix.pixels.data(), manifold_pix.w, manifold_pix.h,
+                0, 0,
+                state["manifold_opacity"]
+            );
+        }
+
+        int num_geodesics = (int)state["num_geodesics"];
+        int geodesic_steps = (int)state["geodesic_steps"];
+        if(num_geodesics > 0 && geodesic_steps > 0) {
+            Pixels geodesic_pix(pix.w, pix.h);
+            glm::vec2 start_position = glm::vec2(state["geodesics_start_u"], state["geodesics_start_v"]);
+            glm::vec2 start_velocity = glm::vec2(state["geodesics_start_du"], state["geodesics_start_dv"]);
+            cuda_render_geodesics_2d(
+                geodesic_pix.pixels.data(),
+                geodesic_pix.w, geodesic_pix.h,
+                manifold1,
+                start_position, start_velocity,
+                num_geodesics, geodesic_steps,
+                state["spread_angle"],
+                manifold_position,
+                manifold_rotation,
+                conjugate_manifold_rotation,
+                geom_mean(geodesic_pix.w, geodesic_pix.h),
+                state["manifold_fov"]
+            );
+            cuda_overlay(
+                pix.pixels.data(), pix.w, pix.h,
+                geodesic_pix.pixels.data(), geodesic_pix.w, geodesic_pix.h,
+                0, 0,
+                1.0f
+            );
+        }
     }
 
     void draw() override {
@@ -156,6 +199,9 @@ public:
             "manifold_d", "manifold_q1", "manifold_qi", "manifold_qj", "manifold_qk", "manifold_fov",
             "u_min", "u_max", "u_steps", "v_min", "v_max", "v_steps",
             "manifold_opacity",
+
+            "num_geodesics", "geodesic_steps", "spread_angle",
+            "geodesics_start_u", "geodesics_start_v", "geodesics_start_du", "geodesics_start_dv",
         };
         return sq;
     }

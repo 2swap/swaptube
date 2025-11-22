@@ -1,8 +1,8 @@
 #include <cuda_runtime.h>
-#include "color.cuh"
+#include "../color.cuh"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include "calculator.cuh"
+#include "../calculator.cuh"
 #include <stdint.h>
 #include "raymarch_topologies/flat.cuh"
 #include "raymarch_topologies/sin.cuh"

@@ -142,40 +142,6 @@ HOST_DEVICE inline void insert_tags(const char *src, double u_val, double v_val,
     dest[di] = '\0';
 }
 
-HOST_DEVICE inline void insert_tags_xyz(const char *src, double x_val, double y_val, double z_val, char *dest, int maxlen) {
-    int si = 0, di = 0;
-
-    while (src[si] && di < maxlen - 1) {
-        if (src[si] == '(' && src[si+2] == ')' && di < maxlen - 1) {
-            char tag = src[si+1];
-            char numbuf[64];
-            int n = 0;
-
-            if (tag == 'x') {
-                n = cuda_ftoa(x_val, numbuf, 6);
-            } else if (tag == 'y') {
-                n = cuda_ftoa(y_val, numbuf, 6);
-            } else if (tag == 'z') {
-                n = cuda_ftoa(z_val, numbuf, 6);
-            } else {
-                // unrecognized tag, copy as-is
-                dest[di++] = src[si++];
-                continue;
-            }
-
-            // Copy the numeric string
-            for (int j = 0; j < n && di < maxlen - 1; ++j)
-                dest[di++] = numbuf[j];
-
-            si += 3; // skip "(x)"
-        } else {
-            dest[di++] = src[si++];
-        }
-    }
-
-    dest[di] = '\0';
-}
-
 HOST_DEVICE inline size_t shared_strcspn(const char *s, const char *reject) {
     const char *p, *r;
     size_t count = 0;

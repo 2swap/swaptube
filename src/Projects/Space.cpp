@@ -3,6 +3,7 @@
 void render_video() {
     GeodesicScene gs;
 
+    FOR_REAL = false;
     gs.manager.set({{"fov", "2"}, {"z", "5"}, {"manifold_opacity", "0"}, {"step_size", "0.01"}, {"step_count", "0"},
             {"floor_y", "<step_size> <step_count> * -1 *"},
             {"ceiling_y", "<step_size> <step_count> *"},
@@ -100,4 +101,54 @@ void render_video() {
     gs.stage_macroblock(FileBlock("the path it takes is anything but!"), 2);
     gs.render_microblock();
     gs.render_microblock();
+
+    FOR_REAL = true;
+    gs.manager.set({
+        {"manifold_z", "(u) sin (v) sin +"},
+        {"step_count", "0"},
+        {"manifold_opacity", ".3"},
+        {"num_geodesics", "800"},
+        {"spread_angle", ".1"},
+        {"geodesics_start_du", ".1"},
+        {"manifold_d", "6"},
+    });
+    gs.manager.transition(MICRO, {
+        {"geodesic_steps", "100"},
+    });
+    gs.stage_macroblock(SilenceBlock(2), 1);
+    gs.render_microblock();
+
+    return;
+    gs.stage_macroblock(FileBlock("The ant is walking straight because, in its perspective, over the course of its journey, it never turns left or turns right."), 1);
+    gs.stage_macroblock(FileBlock("You might say that the ant's line isn't straight,"), 1);
+    gs.stage_macroblock(FileBlock("but what would you know? You don't live in its space!"), 1);
+
+    gs.stage_macroblock(FileBlock("What's more, there are now several straight lines from A to B!"), 2);
+    gs.stage_macroblock(FileBlock("If the ant starts walking in any given direction,"), 2);
+    gs.stage_macroblock(FileBlock("it's no longer easy to tell where it will end up."), 1);
+    gs.stage_macroblock(FileBlock("Let's follow every path that the ant could take."), 1);
+    gs.stage_macroblock(FileBlock("Since light follows a straight line to get to the ant,"), 1);
+    gs.stage_macroblock(FileBlock("a straight walk of the ant follows the same paht as its line of sight."), 1);
+    gs.stage_macroblock(FileBlock("If the ant were in a room,"), 1);
+    gs.stage_macroblock(FileBlock("by looking in this direction,"), 1);
+    gs.stage_macroblock(FileBlock("it would see the wall behind it!"), 1);
+    gs.stage_macroblock(FileBlock("Its entire field of view would be warped out of shape."), 1);
+    gs.stage_macroblock(FileBlock("Something like this."), 1);
+    gs.stage_macroblock(FileBlock("By changing how its space is bent, we change the nature of geometry in that space."), 1);
+    gs.stage_macroblock(FileBlock("Straight lines are no longer straight, parallel lines intersect, three right turns get you back to where you began..."), 1);
+
+    gs.stage_macroblock(FileBlock("But, you say, we haven't changed space itself at all!"), 1);
+    gs.stage_macroblock(FileBlock("We've just warped the ant's ground into a higher dimension."), 1);
+    gs.stage_macroblock(FileBlock("It still implicitly exists within our usual three-dimensional world."), 1);
+
+    gs.stage_macroblock(FileBlock("Hold that thought."), 1);
+    gs.stage_macroblock(FileBlock("Imagine a set of points, and only when two are connected, they have a distance of 1."), 1);
+    gs.stage_macroblock(FileBlock("If we make a fabric of these points, it's just like a flat plane."), 1);
+    gs.stage_macroblock(FileBlock("But if we start adding more connections..."), 1);
+    gs.stage_macroblock(FileBlock(""), 1);
+    gs.stage_macroblock(FileBlock(""), 1);
+    gs.stage_macroblock(FileBlock(""), 1);
+    gs.stage_macroblock(FileBlock(""), 1);
+    gs.stage_macroblock(FileBlock(""), 1);
+    gs.stage_macroblock(FileBlock(""), 1);
 }

@@ -58,6 +58,7 @@ __global__ void render_manifold_kernel(
         h,
         out_x, out_y, out_z
     );
+    if(behind_camera) return; // Don't render points behind camera
     int pixel_x = static_cast<int>(out_x);
     int pixel_y = static_cast<int>(out_y);
 

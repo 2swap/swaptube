@@ -1,7 +1,7 @@
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
-#include "../Host_Device_Shared/helpers.h"
-#include "color.cuh"
+#include "../../Host_Device_Shared/helpers.h"
+#include "../color.cuh"
 #include <cmath>
 #include <glm/glm.hpp>
 
