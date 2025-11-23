@@ -6,7 +6,7 @@
 #include "../calculator.cuh"
 #include "../common_graphics.cuh"
 
-#define numeric_delta 1e-4f
+#define numeric_delta 1e-2f
 
 __constant__ char d_x_equation[256];
 __constant__ char d_y_equation[256];
@@ -194,7 +194,7 @@ __global__ void geodesics_2d_kernel(
 
     // Iterate geodesic curve
     for(int i = 0; i < num_steps; ++i) {
-        if (!rk4_step_geodesic(state, 1)) return;
+        if (!rk4_step_geodesic(state, .01)) return;
         if (state[0] < u_min || state[0] > u_max || state[1] < v_min || state[1] > v_max) return;
 
         bool behind_camera = false;
