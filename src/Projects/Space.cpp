@@ -83,7 +83,7 @@ void render_video() {
 
     gs.stage_macroblock(FileBlock("...except when there's not!"), 2);
     gs.manager.transition(MICRO, {
-        {"manifold_z", "(u) sin (v) sin +"},
+        {"manifold_z", "(a) sin (b) sin +"},
         {"intensity_sin", "1"},
     });
     gs.render_microblock();
@@ -91,7 +91,7 @@ void render_video() {
 
     gs.stage_macroblock(FileBlock("If we bend the space that the ant lives on, if it walks straight..."), 2);
     gs.manager.transition(MICRO, {
-        {"manifold_z", "1 (u) (u) * (v) (v) * + .5 + /"},
+        {"manifold_z", "1 (a) (a) * (b) (b) * + .5 + /"},
         {"intensity_sin", "0"},
         {"intensity_witch", "1"},
     });
@@ -104,7 +104,7 @@ void render_video() {
 
     FOR_REAL = true;
     gs.manager.set({
-        {"manifold_z", "(u) sin (v) sin +"},
+        {"manifold_z", "(a) sin (b) sin +"},
         {"step_count", "0"},
         {"manifold_opacity", ".3"},
         {"num_geodesics", "800"},

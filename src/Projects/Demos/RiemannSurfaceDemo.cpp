@@ -3,12 +3,12 @@
 void render_video() {
     ManifoldScene ms;
     ms.add_manifold("surface",
-        "(u)", "(v)", "0", "(u)", "(v)",
+        "(a)", "(b)", "0", "(a)", "(b)",
         "-3.14", "3.14", "3000",
         "-3.14", "3.14", "3000"
     );
 
-    ms.stage_macroblock(SilenceBlock(13), 8);
+    ms.stage_macroblock(SilenceBlock(1), 1);
     ms.manager.set({
         {"d", "20"},
         {"manifoldsurface_u_min", "0"},
@@ -16,11 +16,11 @@ void render_video() {
         {"manifoldsurface_v_min", "-3.14"},
         {"manifoldsurface_v_max", "3.14"},
         // u is radius, v is angle
-        {"manifoldsurface_x", "(u) (v) cos *"},
+        {"manifoldsurface_x", "(a) (b) cos *"},
         {"manifoldsurface_y", "0"},
-        {"manifoldsurface_z", "(u) (v) sin * -1 *"},
-        {"manifoldsurface_r", "(v) 2 / cos (u) .5 ^ *"}, // real component is cos(angle/2) * sqrt(radius)
-        {"manifoldsurface_i", "(v) 2 / sin (u) .5 ^ *"}, // imaginary component is sin(angle/2) * sqrt(radius)
+        {"manifoldsurface_z", "(a) (b) sin * -1 *"},
+        {"manifoldsurface_r", "(b) 2 / cos (a) .5 ^ *"}, // real component is cos(angle/2) * sqrt(radius)
+        {"manifoldsurface_i", "(b) 2 / sin (a) .5 ^ *"}, // imaginary component is sin(angle/2) * sqrt(radius)
     });
     ms.manager.transition(MICRO, {
         {"q1", "1"},
@@ -29,6 +29,7 @@ void render_video() {
         {"qk", "0"},
     });
     ms.render_microblock();
+    return;
     ms.render_microblock();
 
     ms.manager.transition(MICRO, {
@@ -41,7 +42,7 @@ void render_video() {
     ms.render_microblock();
 
     ms.manager.transition(MICRO, {
-        {"manifoldsurface_y", "(v) 2 / sin (u) .5 ^ *"},
+        {"manifoldsurface_y", "(b) 2 / sin (a) .5 ^ *"},
     });
     ms.render_microblock();
     ms.render_microblock();

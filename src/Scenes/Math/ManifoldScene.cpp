@@ -3,15 +3,14 @@
 #include <vector>
 
 #include "../Common/ThreeDimensionScene.cpp"
-#include "../../Host_Device_Shared/ManifoldData.h"
+#include "../../Host_Device_Shared/ManifoldData.c"
 
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData* manifolds, const int num_manifolds,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float ab_dilation, const float dot_radius,
-    const float axes_length
+    const float ab_dilation, const float dot_radius
 );
 
 class ManifoldScene : public ThreeDimensionScene {
@@ -23,7 +22,6 @@ public:
         manager.set({
             {"ab_dilation", ".8"},
             {"dot_radius", "1"},
-            {"axes_length", "1"},
         });
     }
 
@@ -73,26 +71,25 @@ public:
         int i = 0;
         float geom_mean_size = get_geom_mean_size();
         float steps_mult = geom_mean_size / 1500.0f;
+        vector<ResolvedStateEquation> resolved_equations;
         for(const string& name : manifold_names) {
             const string tag = "manifold" + name + "_";
-            string x_eq = manager.get_equation_with_tags(tag + "x");
-            string y_eq = manager.get_equation_with_tags(tag + "y");
-            string z_eq = manager.get_equation_with_tags(tag + "z");
-            string r_eq = manager.get_equation_with_tags(tag + "r");
-            string i_eq = manager.get_equation_with_tags(tag + "i");
-            int base = i * 5;
-            eqs.push_back(x_eq);
-            eqs.push_back(y_eq);
-            eqs.push_back(z_eq);
-            eqs.push_back(r_eq);
-            eqs.push_back(i_eq);
-            const char* x_char = eqs[base + 0].c_str();
-            const char* y_char = eqs[base + 1].c_str();
-            const char* z_char = eqs[base + 2].c_str();
-            const char* r_char = eqs[base + 3].c_str();
-            const char* i_char = eqs[base + 4].c_str();
+            resolved_equations.push_back(manager.get_resolved_equation(tag + "x"));
+            resolved_equations.push_back(manager.get_resolved_equation(tag + "y"));
+            resolved_equations.push_back(manager.get_resolved_equation(tag + "z"));
+            resolved_equations.push_back(manager.get_resolved_equation(tag + "r"));
+            resolved_equations.push_back(manager.get_resolved_equation(tag + "i"));
+            ResolvedStateEquation& x_eq = resolved_equations[resolved_equations.size() - 5];
+            ResolvedStateEquation& y_eq = resolved_equations[resolved_equations.size() - 4];
+            ResolvedStateEquation& z_eq = resolved_equations[resolved_equations.size() - 3];
+            ResolvedStateEquation& r_eq = resolved_equations[resolved_equations.size() - 2];
+            ResolvedStateEquation& i_eq = resolved_equations[resolved_equations.size() - 1];
             ManifoldData manifold{
-                x_char, y_char, z_char, r_char, i_char,
+                x_eq.size(), x_eq.data(),
+                y_eq.size(), y_eq.data(),
+                z_eq.size(), z_eq.data(),
+                r_eq.size(), r_eq.data(),
+                i_eq.size(), i_eq.data(),
                 (float)state[tag + "u_min"],
                 (float)state[tag + "u_max"],
                 (int)(state[tag + "u_steps"] * steps_mult),
@@ -116,8 +113,7 @@ public:
             geom_mean_size,
             state["fov"],
             state["ab_dilation"],
-            state["dot_radius"],
-            state["axes_length"]
+            state["dot_radius"]
         );
         ThreeDimensionScene::draw();
     }
@@ -140,7 +136,7 @@ public:
                 tag + "v_steps"
             });
         }
-        state_query_insert_multiple(s, {"ab_dilation", "dot_radius", "axes_length"});
+        state_query_insert_multiple(s, {"ab_dilation", "dot_radius"});
         return s;
     }
 };

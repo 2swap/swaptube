@@ -33,8 +33,8 @@ public:
 
     void slide_subscene(const TransitionType tt, const string& name, const double dx, const double dy){
         manager.transition(tt, {
-            {name + ".x", manager.get_equation(name + ".x") + " " + to_string(dx) + " +"},
-            {name + ".y", manager.get_equation(name + ".y") + " " + to_string(dy) + " +"},
+            {name + ".x", manager.get_equation_string(name + ".x") + " " + to_string(dx) + " +"},
+            {name + ".y", manager.get_equation_string(name + ".y") + " " + to_string(dy) + " +"},
         });
     }
 

@@ -2,27 +2,36 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include "../../Host_Device_Shared/ManifoldData.h"
-#include "../calculator.cuh"
+#include "../../Host_Device_Shared/ManifoldData.c"
+#include "../deepcopy_manifold.cuh"
 #include "../common_graphics.cuh"
 
 #define numeric_delta 1e-2f
 
-__constant__ char d_x_equation[256];
-__constant__ char d_y_equation[256];
-__constant__ char d_z_equation[256];
+__constant__ ManifoldData d_manifold;
 
 __device__ glm::vec3 surface(glm::vec2 v) {
-    char x_inserted[256];
-    char y_inserted[256];
-    char z_inserted[256];
-    insert_tags(d_x_equation, v.x, v.y, x_inserted, 256);
-    insert_tags(d_y_equation, v.x, v.y, y_inserted, 256);
-    insert_tags(d_z_equation, v.x, v.y, z_inserted, 256);
-    double x, y, z;
-    if(!calculator(x_inserted, &x)) printf("Error calculating manifold x at (%f,%f): %s\n", v.x, v.y, x_inserted);
-    if(!calculator(y_inserted, &y)) printf("Error calculating manifold y at (%f,%f): %s\n", v.x, v.y, y_inserted);
-    if(!calculator(z_inserted, &z)) printf("Error calculating manifold z at (%f,%f): %s\n", v.x, v.y, z_inserted);
+    float cuda_tags[2] = { v.x, v.y };
+
+    int error = 0;
+    double x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 2, error);
+    if(error) {
+        printf("Error calculating manifold x at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
+        print_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq);
+        return glm::vec3(0.0f);
+    }
+    double y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 2, error);
+    if(error) {
+        printf("Error calculating manifold y at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
+        print_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq);
+        return glm::vec3(0.0f);
+    }
+    double z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 2, error);
+    if(error) {
+        printf("Error calculating manifold z at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
+        print_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq);
+        return glm::vec3(0.0f);
+    }
     return glm::vec3(x, y, z);
 }
 
@@ -194,7 +203,7 @@ __global__ void geodesics_2d_kernel(
 
     // Iterate geodesic curve
     for(int i = 0; i < num_steps; ++i) {
-        if (!rk4_step_geodesic(state, .01)) return;
+        if (!rk4_step_geodesic(state, .1)) return;
         if (state[0] < u_min || state[0] > u_max || state[1] < v_min || state[1] > v_max) return;
 
         bool behind_camera = false;
@@ -234,10 +243,8 @@ extern "C" void cuda_render_geodesics_2d(
     cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
     cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
-    // Copy string expressions to device constants
-    cudaMemcpyToSymbol(d_x_equation, manifold.x_eq, 256);
-    cudaMemcpyToSymbol(d_y_equation, manifold.y_eq, 256);
-    cudaMemcpyToSymbol(d_z_equation, manifold.z_eq, 256);
+    ManifoldData cp_manifold = deepcopy_manifold(manifold);
+    cudaMemcpyToSymbol(d_manifold, &cp_manifold, sizeof(ManifoldData));
 
     // Launch kernel: one thread per geodesic
     int blockSize = 256;
@@ -257,4 +264,6 @@ extern "C" void cuda_render_geodesics_2d(
 
     // Free device memory
     cudaFree(d_pixels);
+
+    free_manifold(cp_manifold);
 }

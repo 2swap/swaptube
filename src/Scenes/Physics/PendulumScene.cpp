@@ -21,7 +21,7 @@ public:
     int alpha_subtract = 2;
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "t", "physics_multiplier", "rk4_step_size", "pendulum_opacity"};
+        return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "physics_multiplier", "rk4_step_size", "pendulum_opacity"};
     }
 
     void mark_data_unchanged() override { pend.mark_unchanged(); }

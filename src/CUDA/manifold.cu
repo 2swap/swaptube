@@ -4,44 +4,36 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <cstring>
-#include "calculator.cuh"
 #include "color.cuh" // For complex_to_srgb
 #include "common_graphics.cuh"
 #include "edge_detect.cuh"
-#include "../Host_Device_Shared/ManifoldData.h"
+#include "../Host_Device_Shared/ManifoldData.c"
+#include "deepcopy_manifold.cuh"
 
 // Kernel
 __global__ void render_manifold_kernel(
     uint32_t* pixels, const int w, const int h,
-    const char* x_eq, const char* y_eq, const char* z_eq,
-    const char* r_eq, const char* i_eq,
-    const float u_min, const float u_max, const int u_steps,
-    const float v_min, const float v_max, const int v_steps,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const ManifoldData d_manifold,
+    const glm::vec3& camera_pos, const glm::quat& camera_direction, const glm::quat& conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float* depth_buffer,
+    float* depth_buffer,
     const float ab_dilation, const float dot_radius
 ) {
     // Determine u, v from thread indices
     int u_idx = blockIdx.x * blockDim.x + threadIdx.x;
     int v_idx = blockIdx.y * blockDim.y + threadIdx.y;
-    if (u_idx >= u_steps || v_idx >= v_steps) return;
-    float u = u_min + (u_max - u_min) * u_idx / (u_steps - 1);
-    float v = v_min + (v_max - v_min) * v_idx / (v_steps - 1);
+
+    if (u_idx >= d_manifold.u_steps || v_idx >= d_manifold.v_steps) return;
+    float u = d_manifold.u_min + (d_manifold.u_max - d_manifold.u_min) * u_idx / (d_manifold.u_steps - 1);
+    float v = d_manifold.v_min + (d_manifold.v_max - d_manifold.v_min) * v_idx / (d_manifold.v_steps - 1);
+
+    float cuda_tags[2] = { u, v };
 
     // Evaluate manifold equations to get 3D point
-    double x = 0;
-    double y = 0;
-    double z = 0;
-    char x_inserted[256];
-    char y_inserted[256];
-    char z_inserted[256];
-    insert_tags(x_eq, u, v, x_inserted, 256);
-    insert_tags(y_eq, u, v, y_inserted, 256);
-    insert_tags(z_eq, u, v, z_inserted, 256);
-    if(!calculator(x_inserted, &x)) printf("Error calculating manifold x at u=%f v=%f: %s\n", u, v, x_inserted);
-    if(!calculator(y_inserted, &y)) printf("Error calculating manifold y at u=%f v=%f: %s\n", u, v, y_inserted);
-    if(!calculator(z_inserted, &z)) printf("Error calculating manifold z at u=%f v=%f: %s\n", u, v, z_inserted);
+    int error = 0;
+    float x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 2, error);
+    float y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 2, error);
+    float z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 2, error);
 
     // Project 3D point to 2D screen space
     bool behind_camera = false;
@@ -58,29 +50,26 @@ __global__ void render_manifold_kernel(
         h,
         out_x, out_y, out_z
     );
-    if(behind_camera) return; // Don't render points behind camera
+    //if(behind_camera) return; // Don't render points behind camera
     int pixel_x = static_cast<int>(out_x);
     int pixel_y = static_cast<int>(out_y);
 
     // Evaluate color equations to get color
-    double r = 0;
-    double i = 0;
-    char r_inserted[256];
-    char i_inserted[256];
-    insert_tags(r_eq, u, v, r_inserted, 256);
-    insert_tags(i_eq, u, v, i_inserted, 256);
-    if(!calculator(r_inserted, &r)) printf("Error calculating color r at u=%f v=%f: %s\n", u, v, r_inserted);
-    if(!calculator(i_inserted, &i)) printf("Error calculating color i at u=%f v=%f: %s\n", u, v, i_inserted);
+    float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 2, error);
+    float i = evaluate_resolved_state_equation(d_manifold.i_size, d_manifold.i_eq, cuda_tags, 2, error);
 
     uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
+    pixels[u_idx / 10 + v_idx / 10 * w] = 0xffff0000;
 
+    int pixel_index = pixel_y * w + pixel_x;
+    return;
+    printf("Debug coordinates: %d, %d, %d\n", pixel_x, pixel_y, w);
+    pixels[pixel_index] = 0xff00ffff;
     // Depth test and write pixel
     if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
-        int pixel_index = pixel_y * w + pixel_x;
-        float old_int = atomicMin((int*)&depth_buffer[pixel_index], __float_as_int(out_z));
-        float old_depth = __int_as_float(old_int);
-        if (out_z < old_depth - 3e-3) { // New pixel is closer with some epsilon to avoid z-fighting
-            pixels[pixel_index] = color;
+        float old_depth = depth_buffer[pixel_index];
+        if (out_z < old_depth - 3e-3) { // epsilon to avoid z-fighting
+            depth_buffer[pixel_index] = out_z;
         }
         // TODO is this truly thread-safe / atomic?
     }
@@ -92,8 +81,7 @@ extern "C" void cuda_render_manifold(
     const ManifoldData* manifold, const int num_manifolds,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float ab_dilation, const float dot_radius,
-    const float axes_length
+    const float ab_dilation, const float dot_radius
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
@@ -108,57 +96,14 @@ extern "C" void cuda_render_manifold(
     cudaMemcpy(d_depth_buffer, h_depth, w * h * sizeof(float), cudaMemcpyHostToDevice);
     free(h_depth);
 
-    ManifoldData axis_data = {
-        "(v) 0 == (u) *",
-        "(v) 1 == (u) *",
-        "(v) 2 == (u) *",
-        ".001",
-        ".001",
-        -axes_length, axes_length, (int)(2500.0f*axes_length),
-        0, 2, 3
-    };
-
-    for(int m = 0; m < num_manifolds + 1; ++m) {
-        const ManifoldData& manifold_data = (m < num_manifolds) ? manifold[m] : axis_data;
-        if(axes_length <= 0 && m == num_manifolds) continue; // Skip axis if not needed
-
-        // Copy string expressions to device
-        char* d_x_eq = nullptr;
-        char* d_y_eq = nullptr;
-        char* d_z_eq = nullptr;
-        char* d_r_eq = nullptr;
-        char* d_i_eq = nullptr;
-
-        size_t len;
-
-        len = strlen(manifold_data.x_eq) + 1;
-        cudaMalloc(&d_x_eq, len);
-        cudaMemcpy(d_x_eq, manifold_data.x_eq, len, cudaMemcpyHostToDevice);
-
-        len = strlen(manifold_data.y_eq) + 1;
-        cudaMalloc(&d_y_eq, len);
-        cudaMemcpy(d_y_eq, manifold_data.y_eq, len, cudaMemcpyHostToDevice);
-
-        len = strlen(manifold_data.z_eq) + 1;
-        cudaMalloc(&d_z_eq, len);
-        cudaMemcpy(d_z_eq, manifold_data.z_eq, len, cudaMemcpyHostToDevice);
-
-        len = strlen(manifold_data.r_eq) + 1;
-        cudaMalloc(&d_r_eq, len);
-        cudaMemcpy(d_r_eq, manifold_data.r_eq, len, cudaMemcpyHostToDevice);
-
-        len = strlen(manifold_data.i_eq) + 1;
-        cudaMalloc(&d_i_eq, len);
-        cudaMemcpy(d_i_eq, manifold_data.i_eq, len, cudaMemcpyHostToDevice);
+    for(int m = 0; m < num_manifolds; ++m) {
+        ManifoldData d_manifold = deepcopy_manifold(manifold[m]);
 
         dim3 blockSize(16, 16);
-        dim3 gridSize((manifold_data.u_steps + blockSize.x - 1) / blockSize.x, (manifold_data.v_steps + blockSize.y - 1) / blockSize.y);
+        dim3 gridSize((manifold[m].u_steps + blockSize.x - 1) / blockSize.x, (manifold[m].v_steps + blockSize.y - 1) / blockSize.y);
         render_manifold_kernel<<<gridSize, blockSize>>>(
             d_pixels, w, h,
-            d_x_eq, d_y_eq, d_z_eq,
-            d_r_eq, d_i_eq,
-            manifold_data.u_min, manifold_data.u_max, manifold_data.u_steps,
-            manifold_data.v_min, manifold_data.v_max, manifold_data.v_steps,
+            d_manifold,
             camera_pos, camera_direction, conjugate_camera_direction,
             geom_mean_size, fov,
             d_depth_buffer,
@@ -166,15 +111,10 @@ extern "C" void cuda_render_manifold(
         );
         cudaDeviceSynchronize();
 
-        // Free device memory for this manifold
-        cudaFree(d_x_eq);
-        cudaFree(d_y_eq);
-        cudaFree(d_z_eq);
-        cudaFree(d_r_eq);
-        cudaFree(d_i_eq);
+        free_manifold(d_manifold);
     }
 
-    cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xffffbbbb);
+    //cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xffffbbbb);
 
     // Copy pixels back to host
     cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);

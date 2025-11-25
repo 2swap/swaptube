@@ -54,10 +54,8 @@ protected:
         : Scene(width, height) {}
 
     bool needs_redraw() const override {
-        bool state_change = check_if_state_changed();
-        bool data_change = check_if_data_changed();
         bool subscene_change = subscene_needs_redraw();
-        return !has_ever_rendered || state_change || data_change || subscene_change;
+        return subscene_change || Scene::needs_redraw();
     }
 
     void add_subscene_check_dupe(const string& name, shared_ptr<Scene> scene, bool behind = false) {

@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <glm/glm.hpp>
-#include "../Core/StateManager.cpp"
+#include "../Core/State/StateManager.cpp"
 #include "../Core/pixels.h"
 #include "../Core/Macroblock.cpp"
 #include "../IO/VisualMedia.cpp"
@@ -150,16 +150,16 @@ public:
         StateQuery sq = populate_state_query();
         sq.insert("w");
         sq.insert("h");
-        state = manager.get_state(sq);
+        state = manager.respond_to_query(sq);
         if(global_identifier.size() > 0) publish_global(stage_publish_to_global());
     }
 
     int get_width() const{
-        return VIDEO_WIDTH * manager.get_state({"w"})["w"];
+        return VIDEO_WIDTH * manager.respond_to_query({"w"})["w"];
     }
 
     int get_height() const{
-        return VIDEO_HEIGHT * manager.get_state({"h"})["h"];
+        return VIDEO_HEIGHT * manager.respond_to_query({"h"})["h"];
     }
 
     void export_frame(const string& filename, int scaledown = 1) const {
@@ -173,7 +173,7 @@ public:
 
 protected:
     Pixels pix;
-    State state;
+    StateReturn state;
     bool has_ever_rendered = false;
 
     glm::vec2 get_width_height() const{
@@ -183,7 +183,7 @@ protected:
     double get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }
 
 private:
-    State last_state;
+    StateReturn last_state;
     bool has_updated_since_last_query = false;
 
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }

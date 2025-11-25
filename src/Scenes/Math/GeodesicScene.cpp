@@ -5,8 +5,27 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/string_cast.hpp>
-#include "../../Host_Device_Shared/ManifoldData.h"
+#include "../../Host_Device_Shared/ManifoldData.c"
 
+ResolvedStateEquation r_eq = {
+    ResolvedStateEquationComponent('a'),
+    ResolvedStateEquationComponent(10.0),
+    ResolvedStateEquationComponent(OP_MUL),
+    ResolvedStateEquationComponent(OP_SIN),
+    ResolvedStateEquationComponent('b'),
+    ResolvedStateEquationComponent(10.0),
+    ResolvedStateEquationComponent(OP_MUL),
+    ResolvedStateEquationComponent(OP_SIN),
+    ResolvedStateEquationComponent(OP_MUL),
+    ResolvedStateEquationComponent(OP_ABS),
+    ResolvedStateEquationComponent(0.2),
+    ResolvedStateEquationComponent(OP_GT),
+    ResolvedStateEquationComponent(20.0),
+    ResolvedStateEquationComponent(OP_MUL),
+};
+ResolvedStateEquation i_eq = {
+    ResolvedStateEquationComponent(0.0),
+};
 extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
     glm::quat camera_orientation, glm::vec3 camera_position,
     float fov_rad, float* intensities, float floor_distort,
@@ -18,8 +37,7 @@ extern "C" void cuda_render_manifold(
     const ManifoldData* manifolds, const int num_manifolds,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float ab_dilation, const float dot_radius,
-    const float axes_length);
+    const float ab_dilation, const float dot_radius);
 
 extern "C" void cuda_overlay(
     unsigned int* h_background, const int bw, const int bh,
@@ -70,8 +88,8 @@ public:
             {"manifold_qj", "0"},
             {"manifold_qk", "{t} .4 * sin .1 *"},
             {"manifold_fov", "1"},
-            {"manifold_x", "(u)"},
-            {"manifold_y", "(v)"},
+            {"manifold_x", "(a)"},
+            {"manifold_y", "(b)"},
             {"manifold_z", "0"},
             {"u_min", "-5.0"},
             {"u_max", "5.0"},
@@ -93,14 +111,20 @@ public:
 
     void draw_manifold() {
         float steps_mult = geom_mean(pix.w, pix.h) / 1500.0f;
-        string x_eq = manager.get_equation_with_tags("manifold_x");
-        string y_eq = manager.get_equation_with_tags("manifold_y");
-        string z_eq = manager.get_equation_with_tags("manifold_z");
+        ResolvedStateEquation x_eq = manager.get_resolved_equation("manifold_x");
+        ResolvedStateEquation y_eq = manager.get_resolved_equation("manifold_y");
+        ResolvedStateEquation z_eq = manager.get_resolved_equation("manifold_z");
         ManifoldData manifold1{
-            x_eq.c_str(),
-            y_eq.c_str(),
-            z_eq.c_str(),
-            "(u) 10 * sin (v) 10 * sin * abs .2 > 20 *", "0",
+            x_eq.size(),
+            x_eq.data(),
+            y_eq.size(),
+            y_eq.data(),
+            z_eq.size(),
+            z_eq.data(),
+            r_eq.size(),
+            r_eq.data(),
+            i_eq.size(),
+            i_eq.data(),
             (float)state["u_min"],
             (float)state["u_max"],
             (int)(state["u_steps"] * steps_mult),
@@ -127,8 +151,7 @@ public:
                 geom_mean(manifold_pix.w, manifold_pix.h),
                 state["manifold_fov"],
                 1,
-                1,
-                0
+                1
             );
             cuda_overlay(
                 pix.pixels.data(), pix.w, pix.h,
@@ -172,11 +195,11 @@ public:
         glm::quat conjugate_camera_direction = glm::conjugate(camera_direction);
 
         vector<float> intensities{
-            (float)state["intensity_flat"],
-            (float)state["intensity_sin"],
-            (float)state["intensity_parabola"],
-            (float)state["intensity_blackhole"],
-            (float)state["intensity_witch"]
+            static_cast<float>(state["intensity_flat"]),
+            static_cast<float>(state["intensity_sin"]),
+            static_cast<float>(state["intensity_parabola"]),
+            static_cast<float>(state["intensity_blackhole"]),
+            static_cast<float>(state["intensity_witch"]),
         };
         launch_cuda_surface_raymarch(pix.pixels.data(), get_width(), get_height(),
                                      camera_direction, camera_pos,
