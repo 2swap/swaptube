@@ -8,7 +8,7 @@ void render_video() {
         "-3.14", "3.14", "3000"
     );
 
-    ms.stage_macroblock(SilenceBlock(1), 1);
+    ms.stage_macroblock(SilenceBlock(13), 8);
     ms.manager.set({
         {"d", "20"},
         {"manifoldsurface_u_min", "0"},
@@ -29,7 +29,6 @@ void render_video() {
         {"qk", "0"},
     });
     ms.render_microblock();
-    return;
     ms.render_microblock();
 
     ms.manager.transition(MICRO, {

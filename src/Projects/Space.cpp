@@ -110,7 +110,7 @@ void render_video() {
         {"num_geodesics", "800"},
         {"spread_angle", ".1"},
         {"geodesics_start_du", ".1"},
-        {"manifold_d", "6"},
+        {"manifold_d", "20"},
     });
     gs.manager.transition(MICRO, {
         {"geodesic_steps", "100"},

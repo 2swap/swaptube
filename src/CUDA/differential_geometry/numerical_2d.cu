@@ -202,8 +202,10 @@ __global__ void geodesics_2d_kernel(
     state[3] = rotated_start_velocity.y;
 
     // Iterate geodesic curve
+    int last_pixel_x = -1;
+    int last_pixel_y = -1;
     for(int i = 0; i < num_steps; ++i) {
-        if (!rk4_step_geodesic(state, .1)) return;
+        if (!rk4_step_geodesic(state, 1)) return;
         if (state[0] < u_min || state[0] > u_max || state[1] < v_min || state[1] > v_max) return;
 
         bool behind_camera = false;

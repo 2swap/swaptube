@@ -65,9 +65,9 @@ public:
     }
 
     void draw() override {
+        set_camera_direction();
+
         ManifoldData* manifolds = new ManifoldData[manifold_names.size()];
-        std::vector<std::string> eqs;
-        eqs.reserve(manifold_names.size() * 5);
         int i = 0;
         float geom_mean_size = get_geom_mean_size();
         float steps_mult = geom_mean_size / 1500.0f;

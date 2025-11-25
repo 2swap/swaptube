@@ -57,9 +57,9 @@ __device__ __forceinline__ void d_coordinate_to_pixel(
 {
     behind_camera = false;
     glm::vec3 rotated = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
-    if (rotated.z >= 0) { behind_camera = true; return; }
+    if (rotated.z <= 0) { behind_camera = true; return; }
     float scale = (geom_mean_size * fov) / rotated.z;
     outx = scale * rotated.x + width * 0.5f;
     outy = scale * rotated.y + height * 0.5f;
-    outz = -rotated.z;
+    outz = rotated.z;
 }

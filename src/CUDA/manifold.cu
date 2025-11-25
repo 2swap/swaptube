@@ -14,7 +14,7 @@
 __global__ void render_manifold_kernel(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData d_manifold,
-    const glm::vec3& camera_pos, const glm::quat& camera_direction, const glm::quat& conjugate_camera_direction,
+    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
     float* depth_buffer,
     const float ab_dilation, const float dot_radius
@@ -51,27 +51,34 @@ __global__ void render_manifold_kernel(
         out_x, out_y, out_z
     );
     //if(behind_camera) return; // Don't render points behind camera
-    int pixel_x = static_cast<int>(out_x);
-    int pixel_y = static_cast<int>(out_y);
+    int pixel_x = out_x;
+    int pixel_y = out_y;
 
     // Evaluate color equations to get color
     float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 2, error);
     float i = evaluate_resolved_state_equation(d_manifold.i_size, d_manifold.i_eq, cuda_tags, 2, error);
 
     uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
-    pixels[u_idx / 10 + v_idx / 10 * w] = 0xffff0000;
 
-    int pixel_index = pixel_y * w + pixel_x;
-    return;
-    printf("Debug coordinates: %d, %d, %d\n", pixel_x, pixel_y, w);
-    pixels[pixel_index] = 0xff00ffff;
     // Depth test and write pixel
     if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
-        float old_depth = depth_buffer[pixel_index];
-        if (out_z < old_depth - 3e-3) { // epsilon to avoid z-fighting
-            depth_buffer[pixel_index] = out_z;
+        int pixel_index = pixel_y * w + pixel_x;
+        // Atomically test and update depth using atomicCAS on float bit patterns
+        const float eps = 3e-3f; // epsilon to avoid z-fighting
+        unsigned int* depth_ui = (unsigned int*)(depth_buffer + pixel_index);
+        unsigned int old_ui = *depth_ui;
+        for (;;) {
+            float old_f = __int_as_float(old_ui);
+            if (!(out_z < old_f - eps)) break; // no update needed
+            unsigned int new_ui = __float_as_int(out_z);
+            unsigned int prev_ui = atomicCAS(depth_ui, old_ui, new_ui);
+            if (prev_ui == old_ui) {
+                // successfully updated depth, write pixel color
+                pixels[pixel_index] = color;
+                break;
+            }
+            old_ui = prev_ui; // try again with new observed value
         }
-        // TODO is this truly thread-safe / atomic?
     }
 }
 
