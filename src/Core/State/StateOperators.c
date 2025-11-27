@@ -29,6 +29,7 @@ enum StateOperator {
     OP_NEQ,
     OP_SMOOTHLERP,
     OP_LERP,
+    OP_LOGISTIC,
 };
 
 HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
@@ -58,6 +59,7 @@ HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
         case OP_NEQ:        return 2;
         case OP_SMOOTHLERP: return 3;
         case OP_LERP:       return 3;
+        case OP_LOGISTIC:   return 1;
         default:            return -1;
     }
 }
@@ -89,6 +91,7 @@ HOST_DEVICE inline static double evaluate_operator(StateOperator op, double *a) 
         case OP_NEQ:        return fabs(a[0] - a[1]) >= 1e-9 ? 1.0 : 0.0;
         case OP_SMOOTHLERP: return smoothlerp(a[0], a[1], a[2]);
         case OP_LERP:       return a[1] + a[0] * (a[2] - a[1]);
+        case OP_LOGISTIC:   return 1.0 / (1.0 + exp(-a[0]));
                             // Should not reach here, return NaN
         default:            return nan("");
     }
@@ -121,6 +124,7 @@ HOST_DEVICE const inline char* state_operator_to_string(StateOperator op){
         case OP_NEQ: return "!==";
         case OP_SMOOTHLERP: return "smoothlerp";
         case OP_LERP: return "lerp";
+        case OP_LOGISTIC: return "logistic";
         default: return "UNKNOWN_OPERATOR";
     }
 }
@@ -151,6 +155,7 @@ StateOperator inline parse_state_operator(const char* in){
     if(strcmp(in, "!==") == 0) return OP_NEQ;
     if(strcmp(in, "smoothlerp") == 0) return OP_SMOOTHLERP;
     if(strcmp(in, "lerp") == 0) return OP_LERP;
+    if(strcmp(in, "logistic") == 0) return OP_LOGISTIC;
     throw runtime_error("Unknown state operator");
     return OP_ADD;
 }

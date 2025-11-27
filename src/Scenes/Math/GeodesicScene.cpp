@@ -82,7 +82,7 @@ public:
             {"ceiling_y", "3"},
 
 //Manifold Stuff
-            {"manifold_d", "20.0"},
+            {"manifold_d", "15.0"},
             {"manifold_q1", "1.0"},
             {"manifold_qi", "-.30"},
             {"manifold_qj", "0"},
@@ -93,10 +93,10 @@ public:
             {"manifold_z", "0"},
             {"u_min", "-5.0"},
             {"u_max", "5.0"},
-            {"u_steps", "1000"},
+            {"u_steps", "1500"},
             {"v_min", "-5.0"},
             {"v_max", "5.0"},
-            {"v_steps", "1000"},
+            {"v_steps", "1500"},
             {"manifold_opacity", "1"},
 
             {"num_geodesics", "1"},

@@ -202,8 +202,21 @@ __global__ void geodesics_2d_kernel(
     state[3] = rotated_start_velocity.y;
 
     // Iterate geodesic curve
-    int last_pixel_x = -1;
-    int last_pixel_y = -1;
+    float start_x, start_y, start_z;
+    d_coordinate_to_pixel(
+        surface(glm::vec2(state[0], state[1])),
+        false,
+        camera_direction,
+        camera_pos,
+        conjugate_camera_direction,
+        fov,
+        geom_mean_size,
+        w,
+        h,
+        start_x, start_y, start_z
+    );
+    int last_pixel_x = start_x;
+    int last_pixel_y = start_y;
     for(int i = 0; i < num_steps; ++i) {
         if (!rk4_step_geodesic(state, 1)) return;
         if (state[0] < u_min || state[0] > u_max || state[1] < v_min || state[1] > v_max) return;
@@ -223,12 +236,19 @@ __global__ void geodesics_2d_kernel(
             out_x, out_y, out_z
         );
         if (behind_camera) continue;
-        int pixel_x = static_cast<int>(out_x);
-        int pixel_y = static_cast<int>(out_y);
+        int pixel_x = out_x;
+        int pixel_y = out_y;
 
         if (pixel_x < 0 || pixel_x >= w || pixel_y < 0 || pixel_y >= h) continue;
 
-        pixels[pixel_y * w + pixel_x] = 0xffff0000;
+        bresenham(
+            last_pixel_x, last_pixel_y,
+            pixel_x, pixel_y,
+            0xffff0000, 1.0f, 2,
+            pixels, w, h
+        );
+        last_pixel_x = pixel_x;
+        last_pixel_y = pixel_y;
     }
 }
 
