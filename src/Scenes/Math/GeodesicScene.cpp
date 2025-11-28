@@ -51,7 +51,7 @@ extern "C" void cuda_render_geodesics_2d(
     const glm::vec2 start_position, const glm::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
-    const float geom_mean_size, const float fov);
+    const float geom_mean_size, const float fov, const float opacity);
 
 class GeodesicScene : public Scene {
 public:
@@ -59,53 +59,54 @@ public:
         : Scene(width, height) {
         manager.set(unordered_map<string, string>{
 // Raymarching Stuff
-            {"x", "0"},
-            {"y", "0"},
-            {"z", "0"},
-            {"q1", "1"},
-            {"qi", "0"},
-            {"qj", "0"},
-            {"qk", "0"},
-            {"fov", "1"},
-            {"floor_distort", "0.0"},
-            {"step_size", "0.005"},
-            {"step_count", "1000"},
-            {"intensity_flat", "1.0 <intensity_sin> - <intensity_parabola> - <intensity_blackhole> - <intensity_witch> -"},
-            {"intensity_sin", "0.0"},
-            {"intensity_parabola", "0.0"},
-            {"intensity_blackhole", "0.0"},
-            {"intensity_witch", "0.0"},
-            {"grid_opacity", "1.0"},
-            {"zaxis", "0.0"},
+            {"pov_x", "0"},
+            {"pov_y", "0"},
+            {"pov_z", "0"},
+            {"pov_q1", "1"},
+            {"pov_qi", "0"},
+            {"pov_qj", "0"},
+            {"pov_qk", "0"},
+            {"pov_fov", "1"},
+            {"pov_floor_distort", "0.0"},
+            {"pov_step_size", "0.005"},
+            {"pov_step_count", "1000"},
+            {"pov_intensity_flat", "1.0 <pov_intensity_sin> - <pov_intensity_parabola> - <pov_intensity_blackhole> - <pov_intensity_witch> -"},
+            {"pov_intensity_sin", "0.0"},
+            {"pov_intensity_parabola", "0.0"},
+            {"pov_intensity_blackhole", "0.0"},
+            {"pov_intensity_witch", "0.0"},
+            {"pov_grid_opacity", "1.0"},
+            {"pov_zaxis", "0.0"},
 
-            {"floor_y", "-1"},
-            {"ceiling_y", "3"},
+            {"pov_floor_y", "-1"},
+            {"pov_ceiling_y", "3"},
 
 //Manifold Stuff
             {"manifold_d", "15.0"},
             {"manifold_q1", "1.0"},
-            {"manifold_qi", "-.30"},
+            {"manifold_qi", "-.2"},
             {"manifold_qj", "0"},
             {"manifold_qk", "{t} .4 * sin .1 *"},
             {"manifold_fov", "1"},
             {"manifold_x", "(a)"},
             {"manifold_y", "(b)"},
             {"manifold_z", "0"},
-            {"u_min", "-5.0"},
-            {"u_max", "5.0"},
-            {"u_steps", "1500"},
-            {"v_min", "-5.0"},
-            {"v_max", "5.0"},
-            {"v_steps", "1500"},
+            {"manifold_u_min", "-5.0"},
+            {"manifold_u_max", "5.0"},
+            {"manifold_u_steps", "1500"},
+            {"manifold_v_min", "-5.0"},
+            {"manifold_v_max", "5.0"},
+            {"manifold_v_steps", "1500"},
             {"manifold_opacity", "1"},
 
-            {"num_geodesics", "1"},
-            {"geodesic_steps", "0"},
-            {"spread_angle", "pi 2 /"},
+            {"geodesics_count", "1"},
+            {"geodesics_steps", "0"},
+            {"geodesics_spread_angle", "pi 2 /"},
             {"geodesics_start_u", "0.0"},
             {"geodesics_start_v", "0.0"},
             {"geodesics_start_du", "1.0"},
             {"geodesics_start_dv", "0.0"},
+            {"geodesics_opacity", "1.0"},
         });
     }
 
@@ -125,12 +126,12 @@ public:
             r_eq.data(),
             i_eq.size(),
             i_eq.data(),
-            (float)state["u_min"],
-            (float)state["u_max"],
-            (int)(state["u_steps"] * steps_mult),
-            (float)state["v_min"],
-            (float)state["v_max"],
-            (int)(state["v_steps"] * steps_mult)
+            (float)state["manifold_u_min"],
+            (float)state["manifold_u_max"],
+            (int)(state["manifold_u_steps"] * steps_mult),
+            (float)state["manifold_v_min"],
+            (float)state["manifold_v_max"],
+            (int)(state["manifold_v_steps"] * steps_mult),
         };
         glm::quat manifold_rotation = glm::normalize(glm::quat(state["manifold_q1"], state["manifold_qi"], state["manifold_qj"], state["manifold_qk"]));
         glm::quat conjugate_manifold_rotation = glm::conjugate(manifold_rotation);
@@ -161,9 +162,10 @@ public:
             );
         }
 
-        int num_geodesics = (int)state["num_geodesics"];
-        int geodesic_steps = (int)state["geodesic_steps"];
-        if(num_geodesics > 0 && geodesic_steps > 0) {
+        int num_geodesics = (int)state["geodesics_count"];
+        int geodesic_steps = (int)state["geodesics_steps"];
+        double geodesics_opacity = state["geodesics_opacity"];
+        if(num_geodesics > 0 && geodesic_steps > 0 && geodesics_opacity >= 0.01f) {
             Pixels geodesic_pix(pix.w, pix.h);
             glm::vec2 start_position = glm::vec2(state["geodesics_start_u"], state["geodesics_start_v"]);
             glm::vec2 start_velocity = glm::vec2(state["geodesics_start_du"], state["geodesics_start_dv"]);
@@ -173,12 +175,13 @@ public:
                 manifold1,
                 start_position, start_velocity,
                 num_geodesics, geodesic_steps,
-                state["spread_angle"],
+                state["geodesics_spread_angle"],
                 manifold_position,
                 manifold_rotation,
                 conjugate_manifold_rotation,
                 geom_mean(geodesic_pix.w, geodesic_pix.h),
-                state["manifold_fov"]
+                state["manifold_fov"],
+                state["geodesics_opacity"]
             );
             cuda_overlay(
                 pix.pixels.data(), pix.w, pix.h,
@@ -190,40 +193,42 @@ public:
     }
 
     void draw() override {
-        glm::vec3 camera_pos = glm::vec3(state["x"], state["y"], state["z"]);
-        glm::quat camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
+        glm::vec3 camera_pos = glm::vec3(state["pov_x"], state["pov_y"], state["pov_z"]);
+        glm::quat camera_direction = glm::normalize(glm::quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
         glm::quat conjugate_camera_direction = glm::conjugate(camera_direction);
 
         vector<float> intensities{
-            static_cast<float>(state["intensity_flat"]),
-            static_cast<float>(state["intensity_sin"]),
-            static_cast<float>(state["intensity_parabola"]),
-            static_cast<float>(state["intensity_blackhole"]),
-            static_cast<float>(state["intensity_witch"]),
+            static_cast<float>(state["pov_intensity_flat"]),
+            static_cast<float>(state["pov_intensity_sin"]),
+            static_cast<float>(state["pov_intensity_parabola"]),
+            static_cast<float>(state["pov_intensity_blackhole"]),
+            static_cast<float>(state["pov_intensity_witch"]),
         };
         launch_cuda_surface_raymarch(pix.pixels.data(), get_width(), get_height(),
                                      camera_direction, camera_pos,
-                                     state["fov"], intensities.data(), state["floor_distort"],
-                                     state["step_size"], (int)state["step_count"],
-                                     state["floor_y"], state["ceiling_y"], state["grid_opacity"], state["zaxis"]);
+                                     state["pov_fov"], intensities.data(), state["pov_floor_distort"],
+                                     state["pov_step_size"], (int)state["pov_step_count"],
+                                     state["pov_floor_y"], state["pov_ceiling_y"], state["pov_grid_opacity"], state["pov_zaxis"]);
 
         draw_manifold();
     }
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = {
-            "x", "y", "z", "q1", "qi", "qj", "qk",
-            "fov", "floor_distort",
-            "step_size", "step_count",
-            "grid_opacity", "zaxis",
-            "floor_y", "ceiling_y",
-            "intensity_flat", "intensity_sin", "intensity_parabola", "intensity_blackhole", "intensity_witch",
+            "pov_x", "pov_y", "pov_z",
+            "pov_q1", "pov_qi", "pov_qj", "pov_qk",
+            "pov_fov",
+            "pov_step_size", "pov_step_count",
+            "pov_grid_opacity",
+            "pov_zaxis",
+            "pov_floor_y", "pov_ceiling_y", "pov_floor_distort",
+            "pov_intensity_flat", "pov_intensity_sin", "pov_intensity_parabola", "pov_intensity_blackhole", "pov_intensity_witch",
 
             "manifold_d", "manifold_q1", "manifold_qi", "manifold_qj", "manifold_qk", "manifold_fov",
-            "u_min", "u_max", "u_steps", "v_min", "v_max", "v_steps",
+            "manifold_u_min", "manifold_u_max", "manifold_u_steps", "manifold_v_min", "manifold_v_max", "manifold_v_steps",
             "manifold_opacity",
 
-            "num_geodesics", "geodesic_steps", "spread_angle",
+            "geodesics_count", "geodesics_steps", "geodesics_spread_angle", "geodesics_opacity",
             "geodesics_start_u", "geodesics_start_v", "geodesics_start_du", "geodesics_start_dv",
         };
         return sq;

@@ -347,18 +347,17 @@ public:
             return parent->respond_to_query(query);
         }
         StateReturn result;
-        try {
-            for (const auto& varname : query) {
-                if(contains(varname)){
-                    result.set(varname, get_local_value(varname));
-                } else {
-                    result.set(varname, global_state.at(varname));
-                }
+        for (const auto& varname : query) {
+            if(contains(varname)){
+                result.set(varname, get_local_value(varname));
+            } else if (global_state.find(varname) != global_state.end()){
+                result.set(varname, global_state.at(varname));
+            } else {
+                print_state();
+                throw runtime_error("ERROR: Attempted to get state for queried variable " + varname + " but it does not exist locally or globally!\nState has been printed above.");
             }
-            return result;
-        } catch (const runtime_error& e) {
-            throw runtime_error(std::string("ERROR: Attempted to get state for queried variables but failed. ") + e.what());
         }
+        return result;
     }
 
     const ResolvedStateEquation get_resolved_equation(const string& variable) const {

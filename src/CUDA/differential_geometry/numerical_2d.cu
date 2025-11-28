@@ -182,7 +182,8 @@ __global__ void geodesics_2d_kernel(
     const int num_geodesics, const int num_steps, const float spread_angle,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
     const float geom_mean_size, const float fov,
-    const float u_min, const float u_max, const float v_min, const float v_max
+    const float u_min, const float u_max, const float v_min, const float v_max,
+    const float opacity
 ) {
     // Determine which geodesic this thread is responsible for
     int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -203,9 +204,10 @@ __global__ void geodesics_2d_kernel(
 
     // Iterate geodesic curve
     float start_x, start_y, start_z;
+    bool last_behind_camera = false;
     d_coordinate_to_pixel(
         surface(glm::vec2(state[0], state[1])),
-        false,
+        last_behind_camera,
         camera_direction,
         camera_pos,
         conjugate_camera_direction,
@@ -235,20 +237,21 @@ __global__ void geodesics_2d_kernel(
             h,
             out_x, out_y, out_z
         );
-        if (behind_camera) continue;
         int pixel_x = out_x;
         int pixel_y = out_y;
 
-        if (pixel_x < 0 || pixel_x >= w || pixel_y < 0 || pixel_y >= h) continue;
+        if (!behind_camera && !last_behind_camera && pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
+            bresenham(
+                last_pixel_x, last_pixel_y,
+                pixel_x, pixel_y,
+                0xffff0000, opacity, 2,
+                pixels, w, h
+            );
+        }
 
-        bresenham(
-            last_pixel_x, last_pixel_y,
-            pixel_x, pixel_y,
-            0xffff0000, 1.0f, 2,
-            pixels, w, h
-        );
         last_pixel_x = pixel_x;
         last_pixel_y = pixel_y;
+        last_behind_camera = behind_camera;
     }
 }
 
@@ -258,7 +261,7 @@ extern "C" void cuda_render_geodesics_2d(
     const glm::vec2 start_position, const glm::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
     const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
-    const float geom_mean_size, const float fov
+    const float geom_mean_size, const float fov, const float opacity
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
@@ -277,7 +280,7 @@ extern "C" void cuda_render_geodesics_2d(
         num_geodesics, num_steps, spread_angle,
         camera_pos, camera_direction, conjugate_camera_direction,
         geom_mean_size, fov,
-        manifold.u_min, manifold.u_max, manifold.v_min, manifold.v_max
+        manifold.u_min, manifold.u_max, manifold.v_min, manifold.v_max, opacity
     );
     cudaDeviceSynchronize();
 
