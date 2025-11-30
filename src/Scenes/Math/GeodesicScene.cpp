@@ -68,7 +68,7 @@ public:
             {"pov_qk", "0"},
             {"pov_fov", "1"},
             {"pov_floor_distort", "0.0"},
-            {"pov_step_size", "0.005"},
+            {"pov_step_size", "0.05"},
             {"pov_step_count", "1000"},
             {"pov_intensity_flat", "1.0 <pov_intensity_sin> - <pov_intensity_parabola> - <pov_intensity_blackhole> - <pov_intensity_witch> -"},
             {"pov_intensity_sin", "0.0"},

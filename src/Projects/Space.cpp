@@ -1,14 +1,13 @@
 #include "../Scenes/Math/GeodesicScene.cpp"
 
 void render_video() {
-    FOR_REAL = false;
     GeodesicScene gs;
 
     gs.manager.set({
         {"pov_fov", "2"},
         {"pov_z", "5"},
-        {"pov_manifold_opacity", "0"},
-        {"pov_step_size", "0.01"},
+        {"manifold_opacity", "0"},
+        {"pov_step_size", "0.1"},
         {"pov_step_count", "0"},
         {"pov_floor_y", "<pov_step_size> <pov_step_count> * -1 *"},
         {"pov_ceiling_y", "<pov_step_size> <pov_step_count> *"},
@@ -16,7 +15,7 @@ void render_video() {
 
     gs.stage_macroblock(FileBlock("Space is a place where there are things."), 2);
     gs.manager.transition(MICRO, {
-        {"pov_step_count", "2000"},
+        {"pov_step_count", "200"},
         {"pov_q1", ".2"},
         {"pov_qj", "1"},
     });
@@ -172,7 +171,6 @@ void render_video() {
     gs.manager.transition(MICRO, "manifold_z", "1 (a) (a) * (b) (b) * + .5 + /");
     gs.render_microblock();
 
-    FOR_REAL = true;
     gs.stage_macroblock(SilenceBlock(5), 3);
     gs.manager.transition(MICRO, "manifold_z", "0");
     gs.render_microblock();
