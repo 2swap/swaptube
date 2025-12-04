@@ -14,6 +14,7 @@ public:
     ShtookaWriter* shtooka = nullptr;
 
     Writer() {
+        if (SMOKETEST) return;
         const string video_path = "io_out/Video.mp4";
         int ret = avformat_alloc_output_context2(&format_context, NULL, NULL, video_path.c_str());
         if (ret < 0) throw runtime_error("Failed to allocate output format context");
@@ -26,6 +27,7 @@ public:
     }
 
     ~Writer() {
+        if (SMOKETEST) return;
         delete audio;
         delete video; // This also finalizes FORMAT_CONTEXT
         delete subtitle;

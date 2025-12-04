@@ -27,7 +27,7 @@ if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
                 echo ">>> Cloning and building MicroTeX..."
                 cd .. || exit 1
                 rm MicroTeX-master -rf
-                git clone https://github.com/NanoMichael/MicroTeX.git MicroTeX-master
+                git clone --depth 1 https://github.com/NanoMichael/MicroTeX.git MicroTeX-master
                 cd MicroTeX-master || exit 1
                 mkdir -p build
                 cd build || exit 1
