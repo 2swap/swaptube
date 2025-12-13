@@ -39,8 +39,7 @@ const Bitboard DW7 = 0x00ffffffffffffff;
 const Bitboard UW7 = 0xffffffffffffff00;
 const Bitboard LW7 = 0xfefefefefefefefe;
 
-__global__ void conway_kernel(Bitboard* board, int w_bitboards, int h_bitboards, Bitboard* next_board)
-{
+__global__ void conway_kernel(Bitboard* board, Bitboard* board_2, int w_bitboards, int h_bitboards) {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= w_bitboards * h_bitboards) return;
 
@@ -112,35 +111,15 @@ __global__ void conway_kernel(Bitboard* board, int w_bitboards, int h_bitboards,
     Bitboard is_three_neighbors = final_ones & final_twos & ~final_fours & ~final_eights;
     Bitboard is_two_neighbors = ~final_ones & final_twos & ~final_fours & ~final_eights;
     Bitboard next_state = (cc & is_two_neighbors) | is_three_neighbors;
-    next_board[idx] = next_state;
+    board_2[idx] = next_state;
 }
 
-extern "C" void iterate_conway(Bitboard* h_board, int w_bitboards, int h_bitboards)
+extern "C" void iterate_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards)
 {
-    size_t board_sz = w_bitboards * h_bitboards * sizeof(Bitboard);
-    Bitboard* d_board;
-
-    cudaMalloc((void**)&d_board, board_sz);
-    cudaMemcpy(d_board, h_board, board_sz, cudaMemcpyHostToDevice);
-
-    Bitboard* d_next_board;
-    cudaMalloc((void**)&d_next_board, board_sz);
-
     dim3 blockSize(256);
     dim3 numBlocks((w_bitboards * h_bitboards + blockSize.x - 1) / blockSize.x);
-    for(int i = 0; i < 1; i++) {
-        conway_kernel<<<numBlocks, blockSize>>>(d_board, w_bitboards, h_bitboards, d_next_board);
-        // Swap boards
-        Bitboard* temp = d_board;
-        d_board = d_next_board;
-        d_next_board = temp;
-    }
+    conway_kernel<<<numBlocks, blockSize>>>(d_board, d_board_2, w_bitboards, h_bitboards);
     cudaDeviceSynchronize();
-
-    cudaMemcpy(h_board, d_board, board_sz, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_board);
-    cudaFree(d_next_board);
 }
 
 __global__ void conway_draw_kernel(Bitboard* board, int w_bitboards, int h_bitboards, unsigned int* pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by)
@@ -190,16 +169,12 @@ __global__ void conway_draw_kernel(Bitboard* board, int w_bitboards, int h_bitbo
     }
 }
 
-extern "C" void draw_conway(Bitboard* h_board, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by)
+extern "C" void draw_conway(Bitboard* d_board, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by)
 {
     size_t board_sz = w_bitboards * h_bitboards * sizeof(Bitboard);
     size_t pix_sz = pixels_w * pixels_h * sizeof(unsigned int);
 
-    Bitboard* d_board;
     unsigned int* d_pixels;
-
-    cudaMalloc((void**)&d_board, board_sz);
-    cudaMemcpy(d_board, h_board, board_sz, cudaMemcpyHostToDevice);
 
     cudaMalloc((void**)&d_pixels, pix_sz);
 
@@ -210,6 +185,22 @@ extern "C" void draw_conway(Bitboard* h_board, int w_bitboards, int h_bitboards,
 
     cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
 
-    cudaFree(d_board);
     cudaFree(d_pixels);
+}
+
+extern "C" void allocate_conway_grid(Bitboard** d_board, Bitboard** d_board_2, int w_bitboards, int h_bitboards) {
+    size_t board_sz = w_bitboards * h_bitboards * sizeof(Bitboard);
+    cudaMalloc((void**)d_board, board_sz);
+    cudaMalloc((void**)d_board_2, board_sz);
+    // Initialize with random data
+    Bitboard* h_board = (Bitboard*)malloc(board_sz);
+    for (int i = 0; i < w_bitboards * h_bitboards; i+=3) {
+        h_board[i] = rand();
+    }
+    cudaMemcpy(*d_board, h_board, board_sz, cudaMemcpyHostToDevice);
+}
+
+extern "C" void free_conway_grid(Bitboard* d_board, Bitboard* d_board_2) {
+    cudaFree(d_board);
+    cudaFree(d_board_2);
 }
