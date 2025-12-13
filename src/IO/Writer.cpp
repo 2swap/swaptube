@@ -14,6 +14,9 @@ public:
     ShtookaWriter* shtooka = nullptr;
 
     Writer() {
+        shtooka = new ShtookaWriter();
+        subtitle = new SubtitleWriter();
+
         if (SMOKETEST) return;
         const string video_path = "io_out/Video.mp4";
         int ret = avformat_alloc_output_context2(&format_context, NULL, NULL, video_path.c_str());
@@ -22,15 +25,14 @@ public:
 
         audio = new AudioWriter(format_context);
         video = new VideoWriter(format_context, video_path);
-        subtitle = new SubtitleWriter();
-        shtooka = new ShtookaWriter();
     }
 
     ~Writer() {
+        delete shtooka;
+        delete subtitle;
+
         if (SMOKETEST) return;
         delete audio;
         delete video; // This also finalizes FORMAT_CONTEXT
-        delete subtitle;
-        delete shtooka;
     }
 };

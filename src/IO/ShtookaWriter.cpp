@@ -14,7 +14,8 @@ public:
     }
 
     void add_shtooka_entry(const string& filename, const string& text) {
-        if (!shtooka_file.is_open()) throw runtime_error("Shtooka file is not open. Cannot add entry.");
+        if (!shtooka_file.is_open())
+            throw runtime_error("Shtooka file is not open. Cannot add entry.");
         shtooka_file << filename << "\t" << text << "\n";
     }
 
