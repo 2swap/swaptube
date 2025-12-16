@@ -45,11 +45,27 @@ public:
     int size() const {
         return points.size() + lines.size();
     }
+
     void set_all_old() {
         for (auto& p : points) p.old = true;
         for (auto& l : lines) l.old = true;
         mark_updated();
     }
+
+    void remove_point(const string& id) {
+        points.erase(std::remove_if(points.begin(), points.end(), [&](const GeometricPoint& p){
+            return p.identifier == id;
+        }), points.end());
+        mark_updated();
+    }
+    
+    void remove_line(const string& id) {
+        lines.erase(std::remove_if(lines.begin(), lines.end(), [&](const GeometricLine& l){
+            return l.identifier == id;
+        }), lines.end());
+        mark_updated();
+    }
+
     vector<GeometricPoint> points;
     vector<GeometricLine> lines;
 };
