@@ -1,7 +1,7 @@
 #pragma once
 
 #include <unordered_map>
-#include "../../io/VisualMedia.cpp"
+#include "../../IO/VisualMedia.cpp"
 #include "../Scene.cpp"
 
 class LoopAnimationScene : public Scene {

@@ -11,17 +11,6 @@
 
 Graph* graph_to_check_if_points_are_in = NULL;
 
-/*C4Board::C4Board(const C4Board& other) {
-    // Copy the representation
-    representation = other.representation;
-
-    // Copy the bitboards
-    red_bitboard = other.red_bitboard;
-    yellow_bitboard = other.yellow_bitboard;
-
-    steadystate = other.steadystate;
-}*/
-
 C4Board::C4Board() { }
 
 C4Board::C4Board(const string& rep) {
@@ -649,69 +638,4 @@ unordered_set<double> C4Board::get_children_hashes() {
         children_hashes_initialized = true;
     }
     return children_hashes;
-}
-
-string replerp(const string& b1, const string& b2, double w) {
-    if (b1.find(b2) == 0 || b2.find(b1) == 0) {
-        // One string begins with the other
-        int range = b2.size() - b1.size();
-        return (b1.size() > b2.size() ? b1 : b2).substr(0, round(b1.size() + w * range));
-    } else {
-        // Neither string begins with the other
-        int common_prefix_len = 0;
-        while (b1[common_prefix_len] == b2[common_prefix_len]) {
-            common_prefix_len++;
-        }
-
-        string common_prefix = b1.substr(0, common_prefix_len);
-        if(w<0.5) return replerp(b1, common_prefix, w*2);
-        else return replerp(common_prefix, b2, (w-.5)*2);
-    }
-}
-
-C4Board c4lerp(C4Board b1, C4Board b2, double w){
-    string representation = replerp(b1.representation, b2.representation, smoother2(w));
-    C4Board transition(representation);
-    return transition;
-}
-
-// Unit test for replerp function
-void replerp_ut() {
-    string b1 = "12345";
-    string b2 = "1";
-    bool pass = true;
-    pass &= replerp(b1, b2, 0.) == "12345";
-    pass &= replerp(b1, b2, 0.25) == "1234";
-    pass &= replerp(b1, b2, 0.5) == "123";
-    pass &= replerp(b1, b2, 0.75) == "12";
-    pass &= replerp(b1, b2, 1.) == "1";
-
-    pass &= replerp(b2, b1, 0.) == "1";
-    pass &= replerp(b2, b1, 0.25) == "12";
-    pass &= replerp(b2, b1, 0.5) == "123";
-    pass &= replerp(b2, b1, 0.75) == "1234";
-    pass &= replerp(b2, b1, 1.) == "12345";
-    if (!pass) {
-        throw runtime_error("replerp_ut - Case 1: Failed.");
-    }
-
-    string b3 = "abc";
-    string b4 = "de";
-    pass = true;
-    pass &= replerp(b3, b4, 0.) == "abc";
-    pass &= replerp(b3, b4, 0.2) == "ab";
-    pass &= replerp(b3, b4, 0.4) == "a";
-    pass &= replerp(b3, b4, 0.6) == "";
-    pass &= replerp(b3, b4, 0.8) == "d";
-    pass &= replerp(b3, b4, 1.) == "de";
-
-    pass &= replerp(b4, b3, 0.) == "de";
-    pass &= replerp(b4, b3, 0.2) == "d";
-    pass &= replerp(b4, b3, 0.4) == "";
-    pass &= replerp(b4, b3, 0.6) == "a";
-    pass &= replerp(b4, b3, 0.8) == "ab";
-    pass &= replerp(b4, b3, 1.) == "abc";
-    if (!pass) {
-        throw runtime_error("replerp_ut - Case 2: Failed.");
-    }
 }

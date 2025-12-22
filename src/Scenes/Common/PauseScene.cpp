@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include "../../io/VisualMedia.cpp"
+#include "../../IO/VisualMedia.cpp"
 #include "../Scene.cpp"
 
 class PauseScene : public Scene {

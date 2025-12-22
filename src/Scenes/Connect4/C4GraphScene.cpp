@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Math/GraphScene.cpp"
-#include "Connect4Scene.cpp"
+#include "C4Scene.cpp"
 #include "../../DataObjects/Connect4/C4Board.cpp"
 
 class C4GraphScene : public GraphScene {

@@ -1,25 +1,60 @@
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Connect4/Connect4Scene.cpp"
-#include "../Scenes/Connect4/Connect4GraphScene.cpp"
+#include "../Scenes/Media/PngScene.cpp"
+#include "../Scenes/Connect4/C4Scene.cpp"
+#include "../Scenes/Connect4/C4GraphScene.cpp"
 #include "../DataObjects/Connect4/TreeValidator.cpp"
 
 void render_video() {
-    C4Scene c4("444");
-    c4.stage_macroblock(FileBlock("I found a profoundly better way of playing perfectly optimal connect 4."), 1);
-    c4.render_microblock();
-    return;
-    c4.stage_macroblock(FileBlock("You see, connect 4 has been solved since 1988."), 1);
-    c4.stage_macroblock(FileBlock("We learned then that with perfect play, the first player, Red, can always guarantee a win by playing optimally."), 1);
-    c4.stage_macroblock(FileBlock("But how do we actually achieve such optimal play?"), 1);
-    c4.stage_macroblock(FileBlock("What's the trick? What's the rule to follow to play perfectly?"), 1);
-    c4.stage_macroblock(FileBlock("Clever methods were concocted to optimize traditional brute force search for the computers of the era,"), 1);
-    c4.stage_macroblock(FileBlock("meaning we didn't discover any quick trick to play right- we just searched through all possible variations of all possible variations until we found that it is always possible for Red to force a win."), 1);
-    c4.stage_macroblock(FileBlock("But it's not the 1980s anymore."), 1);
-    c4.stage_macroblock(FileBlock("If you know my channel, you know that I love to illustrate the structure beneath complex systems."), 1);
-    c4.stage_macroblock(FileBlock("In this video, I will present to you a complete solution of connect 4 so simple that it can be visualized entirely, and maybe, just maybe, even be memorized and used by a human."), 1);
 
     CompositeScene cs;
+    shared_ptr<C4Scene> c4 = make_shared<C4Scene>("");
+    //shared_ptr<PngScene> god1 = make_shared<PngScene>("God1", .3, .5);
+    //shared_ptr<PngScene> god2 = make_shared<PngScene>("God2", .3, .5);
+
+    cs.stage_macroblock(FileBlock("Suppose two omniscient gods play a game of Connect 4."), 2);
+    cs.render_microblock();
+    cs.add_scene_fade_in(MICRO, c4, "c4");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("The rules are simple:"), 1);
+    c4->play("43333552624");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Players take turns dropping discs in the columns,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("and the first to make a line of 4 wins."), 1);
+    c4->play("6");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Diagonals count too."), 2);
+    c4->undo(1);
+    cs.render_microblock();
+    c4->play("4");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("What would happen?"), 1);
+    cs.render_microblock();
+
+    return;
+    cs.stage_macroblock(FileBlock("God 1, playing red, plays the first piece in the center column."), 1);
+    cs.stage_macroblock(FileBlock("God 2, playing yellow, promptly resigns."), 1);
+    cs.stage_macroblock(FileBlock("You see, after having analyzed every possible variation of every single opening, God 2 realized there was no way of stopping God 1 from making a red line of 4."), 1);
+    cs.stage_macroblock(FileBlock("This was first discovered by computer scientists in 1988."), 1);
+    cs.stage_macroblock(FileBlock("They used strategies similar to the one that God 2 used:"), 1);
+    cs.stage_macroblock(FileBlock("they wrote computer programs to search all possible variations,"), 1);
+    cs.stage_macroblock(FileBlock("showing that player 1 is guaranteed to win, if they play perfectly."), 1);
+    cs.stage_macroblock(FileBlock("This was wonderful work by the computer scientists of the day,"), 1);
+    cs.stage_macroblock(FileBlock("But it kind of leaves you wanting."), 1);
+    cs.stage_macroblock(FileBlock("Ok, so player 1 wins, but _why_?"), 1);
+    cs.stage_macroblock(FileBlock("Is there some change of perspective that shows how it can be done?"), 1);
+    cs.stage_macroblock(FileBlock("A computer might be able to iterate over millions or billions of nodes to check this result,"), 1);
+    cs.stage_macroblock(FileBlock("But what's left for us humans?"), 1);
+    return;
+    cs.stage_macroblock(FileBlock(""), 1);
+    cs.stage_macroblock(FileBlock(""), 1);
+
     Graph g;
     string variation = "444";
     shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(&g, false, variation, TRIM_STEADY_STATES);
@@ -43,20 +78,14 @@ void render_video() {
     };
     gs->manager.set(state);
 
-    I found a profoundly simple strategy to play perfectly optimal chess.
-    It turns out, if you label each piece, write the state of the board out in binary, plug it into this formula, take the sha256 hash of the result, the first few letters of the result are the optimal move in standard algebraic notation.
-    There's just one problem... it's completely made up.
-    There's no simple trick like that for games like chess.
-    but how do we know?
-
-    This video isn't about chess. It's not really about connect 4, either. 
-    It's about systems' ability to yield complexity that cannot be expressed in simpler terms.
-    It's about our language, and its insufficiency to perfectly describe the world around us.
-    It's about emergent behavior- behavior not baked into the 'rules of the game', but arising from them.
-
-    Just like connect 4, our world is a myriad of emergent objects built on a bedrock of simple rules.
-    It may contain systems like double pendulums, which are fundamentally unpredictable despite being deterministic. But that doesn't stop us from navigating and discussing the world around us with our mere finite words and models.
-    Connect 4 shows us a glimpse of that emergent substance, distilled in a system which we can play with and study.
+    cs.stage_macroblock(FileBlock("This video isn't about connect four. It's not entirely about computer science, either."), 1);
+    cs.stage_macroblock(FileBlock("It's about systems' ability to yield complexity that cannot be expressed in simpler terms."), 1);
+    cs.stage_macroblock(FileBlock("It's about our language, and its insufficiency to perfectly describe the world around us."), 1);
+    cs.stage_macroblock(FileBlock("It's about emergent behavior- behavior not baked into the 'rules of the game', but arising from them."), 1);
+    cs.stage_macroblock(FileBlock("Connect 4 isn't special- the world as we know it contains a myriad of emergent objects built on a bedrock of simple rules."), 1);
+    cs.stage_macroblock(FileBlock("It may contain systems like double pendulums, which are fundamentally unpredictable despite being deterministic."), 1);
+    cs.stage_macroblock(FileBlock("But that doesn't stop us from navigating and discussing most aspects of the world around us with our finite vocabulary, finite mathematical symbols, or you name it."), 1);
+    cs.stage_macroblock(FileBlock("Connect 4 shows us a glimpse of that same emergent substance, distilled down to a system which we can play with and study."), 1);
 
 
 // Talk about the tree, and how steadystates are sparsely placed on that tree.
