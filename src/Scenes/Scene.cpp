@@ -41,6 +41,7 @@ public:
         has_updated_since_last_query = true;
 
         // Data and state can be co-dependent, so update state before and after since state changes are idempotent.
+        last_state = state;
         update_state();
         change_data();
         update_state();
@@ -59,10 +60,8 @@ public:
 
     void query(Pixels*& p) {
         cout << "(" << flush;
-        if(!has_updated_since_last_query){
-            last_state = state;
-            update();
-        }
+        if(!has_updated_since_last_query) update();
+
         // The only time we skip render entirely is when the project flags to skip a section.
         if(needs_redraw() && FOR_REAL) {
             has_ever_rendered = true;
