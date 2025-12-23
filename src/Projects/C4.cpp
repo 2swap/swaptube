@@ -8,53 +8,74 @@
 void render_video() {
 
     CompositeScene cs;
-    shared_ptr<C4Scene> c4 = make_shared<C4Scene>("");
+    shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
     //shared_ptr<PngScene> god1 = make_shared<PngScene>("God1", .3, .5);
     //shared_ptr<PngScene> god2 = make_shared<PngScene>("God2", .3, .5);
 
+    FOR_REAL = true;
     cs.stage_macroblock(FileBlock("Suppose two omniscient gods play a game of Connect 4."), 2);
     cs.render_microblock();
-    cs.add_scene_fade_in(MICRO, c4, "c4");
+    cs.add_scene_fade_in(MICRO, c4s, "c4");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The rules are simple:"), 1);
-    c4->play("43333552624");
+    c4s->play("433335526245");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Players take turns dropping discs in the columns,"), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("and the first to make a line of 4 wins."), 1);
-    c4->play("6");
+    c4s->play("6");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Diagonals count too."), 2);
-    c4->undo(1);
+    c4s->undo(1);
     cs.render_microblock();
-    c4->play("4");
+    c4s->play("4");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("What would happen?"), 1);
+    c4s->undo(100);
     cs.render_microblock();
 
-    return;
     cs.stage_macroblock(FileBlock("God 1, playing red, plays the first piece in the center column."), 1);
+    c4s->play("4");
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("God 2, playing yellow, promptly resigns."), 1);
-    cs.stage_macroblock(FileBlock("You see, after having analyzed every possible variation of every single opening, God 2 realized there was no way of stopping God 1 from making a red line of 4."), 1);
+    cs.render_microblock();
+
+    Graph g;
+    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", FULL);
+    c4gs->manager.set("dimensions", "2");
+    cs.add_scene_fade_in(MICRO, c4gs, "c4gs");
+    cs.fade_subscene(MICRO, "c4", 0.4);
+    cs.stage_macroblock(FileBlock("You see, after analyzing every possible variation of every opening, God 2 realized there was no way of stopping God 1 from making a red line of 4."), 1);
+    cs.render_microblock();
+
+
+    return;
     cs.stage_macroblock(FileBlock("This was first discovered by computer scientists in 1988."), 1);
+    cs.render_microblock();
     cs.stage_macroblock(FileBlock("They used strategies similar to the one that God 2 used:"), 1);
     cs.stage_macroblock(FileBlock("they wrote computer programs to search all possible variations,"), 1);
     cs.stage_macroblock(FileBlock("showing that player 1 is guaranteed to win, if they play perfectly."), 1);
     cs.stage_macroblock(FileBlock("This was wonderful work by the computer scientists of the day,"), 1);
     cs.stage_macroblock(FileBlock("But it kind of leaves you wanting."), 1);
     cs.stage_macroblock(FileBlock("Ok, so player 1 wins, but _why_?"), 1);
-    cs.stage_macroblock(FileBlock("Is there some change of perspective that shows how it can be done?"), 1);
     cs.stage_macroblock(FileBlock("A computer might be able to iterate over millions or billions of nodes to check this result,"), 1);
     cs.stage_macroblock(FileBlock("But what's left for us humans?"), 1);
-    return;
+    cs.stage_macroblock(FileBlock("What are the best openings?"), 1);
+    cs.stage_macroblock(FileBlock("Is there some change of perspective that shows how us mere mortals could beat god 2?"), 1);
     cs.stage_macroblock(FileBlock(""), 1);
     cs.stage_macroblock(FileBlock(""), 1);
+    cs.stage_macroblock(FileBlock(""), 1);
+    cs.stage_macroblock(FileBlock(""), 1);
+}
 
+void ideas() {
+    CompositeScene cs;
     Graph g;
     string variation = "444";
     shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(&g, false, variation, TRIM_STEADY_STATES);

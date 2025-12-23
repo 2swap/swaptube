@@ -27,7 +27,7 @@ public:
         int column = queue[0] - '1';
 
         Disc new_disc;
-        new_disc.index = moves_yet % 2 == 0;
+        new_disc.index = moves_yet;
         new_disc.py = h;
         new_disc.x = column;
         discs.push_back(new_disc);
@@ -39,13 +39,13 @@ public:
 
     void undo(int steps) {
         inverse_gravity_up_to_index(moves_yet - steps);
-        moves_yet -= steps;
+        moves_yet = max(0, moves_yet - steps);
     }
 
     void inverse_gravity_up_to_index(int index) {
         for (Disc& disc : discs) {
             if (disc.index >= index) {
-                disc.ay = (disc.py + disc.x * .3 + 1) / 30;
+                disc.ay = (disc.py + disc.x % 3 + 1) / 60;
             }
         }
         mark_updated();
@@ -77,7 +77,7 @@ public:
     }
 
     void check_queue() {
-        if (!all_discs_below_top()) {
+        if (queue.empty() || !all_discs_below_top()) {
             return;
         }
         add_disc_from_queue();
@@ -86,7 +86,6 @@ public:
     ~C4Physics() { }
 
     void iterate_physics() {
-        cout << "Iterating physics with " << discs.size() << " discs." << endl;
         check_queue();
 
         const double elasticity = 0.35;

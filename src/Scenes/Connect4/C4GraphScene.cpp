@@ -25,7 +25,7 @@ public:
         }
         graph->add_to_stack(board);
 
-        if(mode != MANUAL){
+        if(false && mode != MANUAL){
             graph->expand(-1);
             graph->make_bidirectional();
         }
@@ -33,6 +33,8 @@ public:
     }
 
     void change_data() override {
+        graph->expand(1);
+        graph->make_bidirectional();
         GraphScene::change_data();
     }
 
