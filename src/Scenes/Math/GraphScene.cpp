@@ -108,10 +108,11 @@ public:
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
-        cout << "\\" << flush;
         if(last_node_count > -1){
             int diff = graph->size() - last_node_count;
-            for(int i = 0; i < abs(diff); i++) node_pop(static_cast<double>(i)/abs(diff), diff>0);
+            for(int i = 0; i < abs(diff); i++) {
+                node_pop(static_cast<double>(i)/abs(diff), diff>0);
+            }
         }
         last_node_count = graph->size();
         graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["dimensions"], state["mirror_force"], state["flip_by_symmetry"]>0);
@@ -120,7 +121,6 @@ public:
             clear_surfaces();
             update_surfaces();
         }
-        cout << "/" << flush;
     }
     bool check_if_data_changed() const override {
         return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();
@@ -194,10 +194,6 @@ public:
         );
 
         ThreeDimensionScene::render_surface(surface_rotated);
-    }
-
-    void draw() override{
-        ThreeDimensionScene::draw();
     }
 
     bool surfaces_override_unsafe = false; // For really big graphs, you can permanently turn off node stuff. This happens in the constructor, but careful when handling manually.

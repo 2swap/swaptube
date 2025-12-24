@@ -9,11 +9,13 @@ void render_video() {
 
     CompositeScene cs;
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
+    shared_ptr<PngScene> sky = make_shared<PngScene>("Sky");
     shared_ptr<PngScene> god1 = make_shared<PngScene>("God1", .3, .6);
     shared_ptr<PngScene> god2 = make_shared<PngScene>("God2", .4, .8);
 
     FOR_REAL = true;
     cs.stage_macroblock(FileBlock("Suppose two omniscient gods play a game of Connect 4."), 2);
+    cs.add_scene_fade_in(MICRO, sky, "sky");
     cs.add_scene_fade_in(MICRO, god1, "god1");
     cs.add_scene_fade_in(MICRO, god2, "god2");
     StateSet floating_gods{
@@ -24,8 +26,10 @@ void render_video() {
     };
     cs.manager.set(floating_gods);
     cs.render_microblock();
-    cs.fade_all_subscenes(MICRO, 0.4);
+    cs.fade_all_subscenes(MICRO, 0.2);
     cs.add_scene_fade_in(MICRO, c4s, "c4");
+    cs.move_to_front("god1");
+    cs.move_to_front("god2");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The rules are simple:"), 1);
@@ -49,11 +53,16 @@ void render_video() {
     c4s->undo(100);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("God 1, playing red, plays the first piece in the center column."), 1);
+    cs.stage_macroblock(FileBlock("God 1, playing red, plays the first piece in the center column."), 2);
+    StateSet god1_opacity = cs.manager.transition(MICRO, "god1.opacity", "1");
+    cs.render_microblock();
     c4s->play("4");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("God 2, playing yellow, promptly resigns."), 2);
+    cs.stage_macroblock(FileBlock("God 2, playing yellow, promptly resigns."), 3);
+    cs.manager.transition(MICRO, god1_opacity);
+    cs.manager.transition(MICRO, "god2.opacity", "1");
+    cs.render_microblock();
     cs.render_microblock();
     cs.remove_subscene("god2");
     god2 = make_shared<PngScene>("God2_resign", .4, .8);
@@ -62,35 +71,52 @@ void render_video() {
     cs.render_microblock();
 
     Graph g;
-    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", FULL);
+    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", RANDOM);
     c4gs->manager.set({{"dimensions", "2"}, {"physics_multiplier", "2"}});
-    cs.fade_all_subscenes(MICRO, 0.4);
+    cs.fade_all_subscenes(MICRO, 0.2);
     cs.add_scene_fade_in(MICRO, c4gs, "c4gs");
     cs.stage_macroblock(FileBlock("You see, after analyzing every possible variation of every opening, God 2 realized there was no way of stopping God 1 from making a red line of 4."), 1);
     cs.render_microblock();
-    return;
 
-    cs.stage_macroblock(FileBlock("This was first discovered by computer scientists in 1988."), 1);
+    cs.stage_macroblock(FileBlock("This was first discovered by computer scientists in 1988."), 2);
+    shared_ptr<PngScene> JamesDowAllen = make_shared<PngScene>("JamesDowAllen", .4, .8);
+    cs.add_scene(JamesDowAllen, "JDA", .25, 1.45);
+    cs.slide_subscene(MICRO, "JDA", 0, -1);
+    shared_ptr<LatexScene> ls_jda = make_shared<LatexScene>("\\text{James Dow Allen}", 1, .45, .3);
+    cs.add_scene_fade_in(MICRO, ls_jda, "ls_jda", .25, .9);
+    cs.render_microblock();
+    shared_ptr<PngScene> VictorAllis = make_shared<PngScene>("VictorAllis", .4, .8);
+    cs.add_scene(VictorAllis, "VA", .75, -.55);
+    cs.slide_subscene(MICRO, "VA", 0, 1);
+    shared_ptr<LatexScene> ls_va = make_shared<LatexScene>("\\text{Victor Allis}", 1, .45, .3);
+    cs.add_scene_fade_in(MICRO, ls_va, "ls_va", .75, .9);
     cs.render_microblock();
 
+    cs.fade_all_subscenes_except(MICRO, "c4gs", 0);
     cs.stage_macroblock(FileBlock("They used strategies similar to the one God 2 used:"), 1);
     cs.render_microblock();
+    cs.remove_all_subscenes_except("c4gs");
 
     cs.stage_macroblock(FileBlock("they wrote computer programs to search all possible variations,"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("showing that player 1 is guaranteed to win, if they play perfectly."), 1);
+    cs.stage_macroblock(FileBlock("showing that player 1 will win, if they play perfectly."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("This was wonderful work by the computer scientists of the day,"), 1);
+    cs.render_microblock();
     cs.stage_macroblock(FileBlock("But it kind of leaves you wanting."), 1);
+    cs.render_microblock();
     cs.stage_macroblock(FileBlock("Ok, so player 1 wins, but _why_?"), 1);
-    cs.stage_macroblock(FileBlock("A computer might be able to iterate over millions or billions of nodes to check this result,"), 1);
+    cs.render_microblock();
+    return;
+
+    cs.stage_macroblock(FileBlock("A computer might be able to iterate over billions of positions to check this result,"), 1);
     cs.stage_macroblock(FileBlock("But what's left for us humans?"), 1);
     cs.stage_macroblock(FileBlock("What are the best openings as player 2, to make it as hard as possible for player 1?"), 1);
     cs.stage_macroblock(FileBlock("Is there some change of perspective that shows how mere mortals could win against god 2?"), 1);
     cs.stage_macroblock(FileBlock("More specifically, is there a general algorithm, or strategy, that can plausibly be memorized and run by a human brain?"), 1);
-    cs.stage_macroblock(FileBlock("These questions weren't convincingly answered..."), 1);
+    cs.stage_macroblock(FileBlock("These questions have gone unanswered..."), 1);
     cs.stage_macroblock(FileBlock("until now."), 1);
     //Intro
     cs.stage_macroblock(FileBlock(""), 1);

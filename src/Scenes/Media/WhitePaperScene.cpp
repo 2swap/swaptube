@@ -3,29 +3,19 @@
 #include "../../IO/VisualMedia.cpp"
 #include "../Scene.cpp"
 
-class BiographyScene : public Scene {
+class WhitePaperScene : public Scene {
 public:
-    BiographyScene(string picture, const string& n, const vector<string>& biography_text, const double width = 1, const double height = 1)
-        : Scene(width, height), picture_name(picture), name(n), bio_text(biography_text) {
-        draw();
+    WhitePaperScene(const string& prefix, const double width = 1, const double height = 1)
+        : Scene(width, height), prefix(prefix) {
+        manager.set("completion", "0");
     }
 
-    bool check_if_data_changed() const override { return text_added; }
-    void mark_data_unchanged() override { text_added = false; }
+    bool check_if_data_changed() const override { return false; }
+    void mark_data_unchanged() override { }
     void change_data() override { }
 
-    void set_bio_text(const vector<string>& new_text) {
-        bio_text = new_text;
-        text_added = true;
-    }
-
-    void append_bio_text(const string& new_text) {
-        bio_text.push_back(new_text);
-        text_added = true;
-    }
-
     void draw() override {
-        // Render the person's picture as a PNG
+        // Expect a number of files of the form {prefix}_01.png, {prefix}_02.png, ...
         Pixels picture = png_to_pix_bounding_box(picture_name, get_width()*.66, get_height()*.66);
 
         // Center the scaled image within the scene
@@ -56,8 +46,5 @@ public:
     }
 
 private:
-    bool text_added = true;
-    string picture_name;
-    string name;
-    vector<string> bio_text;
+    string prefix;
 };

@@ -49,6 +49,16 @@ public:
         for(const string& s : to_remove) remove_subscene(s);
     }
 
+    void move_to_front(const string& name) {
+        render_order.remove(name);
+        render_order.push_back(name);
+    }
+
+    void move_to_back(const string& name) {
+        render_order.remove(name);
+        render_order.push_front(name);
+    }
+
 protected:
     SuperScene(const double width = 1, const double height = 1)
         : Scene(width, height) {}
@@ -69,7 +79,9 @@ protected:
     }
 
     void change_data() override {
-        for(const auto& kv : subscenes) kv.second->update();
+        for(const auto& kv : subscenes) {
+            kv.second->update();
+        }
     }
 
     bool check_if_data_changed() const override {

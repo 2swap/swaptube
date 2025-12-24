@@ -7,7 +7,7 @@
 
 inline int C4_RED           = 0xffff0000;
 inline int C4_YELLOW        = 0xffffff00;
-inline int C4_EMPTY         = 0xff222222;
+inline int C4_EMPTY         = 0xff666699;
 
 inline string empty_annotations = "       "
                                   "       "
@@ -48,7 +48,7 @@ public:
             for(int y=0; y<board.h; y++){
                 double px, py;
                 get_disc_screen_coordinates(x, y, px, py);
-                pix.fill_ellipse(px, py, get_stone_width()*.2, get_stone_width()*.2, C4_EMPTY);
+                pix.fill_ellipse(px, py, get_stone_width()*.3, get_stone_width()*.3, C4_EMPTY);
             }
         }
     }

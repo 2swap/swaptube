@@ -121,14 +121,14 @@ public:
             throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
         }
 
+        if (!rendering_on() || !AUDIO_SFX) return; // Don't write in smoketest
+
         int numSamples = left_buffer.size(); // number of frames
         int sample_copy_start_frames = t - total_samples_processed;
         int sample_copy_end_frames = sample_copy_start_frames + numSamples;
 
         if(sample_copy_start_frames < 0)
             throw runtime_error("Sfx copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed));
-
-        if (!rendering_on() || !AUDIO_SFX) return; // Don't write in smoketest
 
         int start_idx = sample_copy_start_frames * audio_channels;
         int end_idx = sample_copy_end_frames * audio_channels;

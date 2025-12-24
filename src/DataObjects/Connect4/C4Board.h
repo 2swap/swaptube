@@ -16,7 +16,8 @@ enum C4BranchMode {
     UNION_WEAK,
     TRIM_STEADY_STATES,
     SIMPLE_WEAK,
-    NAIVE_WEAK,
+    RANDOM_WEAK,
+    RANDOM,
     FULL,
     MANUAL
 };

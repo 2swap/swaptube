@@ -592,7 +592,23 @@ unordered_set<GenericBoard*> C4Board::get_children(){
         case FULL:
             add_all_legal_children(neighbors);
             break;
-        case NAIVE_WEAK:
+        case RANDOM: {
+            // Add either 2 or 3 random legal children
+            int num_children_to_add = rand() % 2 + 2; // Randomly choose between 2 and 3
+            vector<int> legal_moves;
+            for (int i = 1; i <= C4_WIDTH; i++) {
+                if (is_legal(i)) {
+                    legal_moves.push_back(i);
+                }
+            }
+            random_shuffle(legal_moves.begin(), legal_moves.end());
+            for (int i = 0; i < min(num_children_to_add, (int)legal_moves.size()); i++) {
+                C4Board moved = child(legal_moves[i]);
+                neighbors.insert(new C4Board(moved));
+            }
+            break;
+        }
+        case RANDOM_WEAK:
             if(is_reds_turn())
                 add_random_winning_fhourstones(neighbors);
             else

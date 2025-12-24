@@ -24,7 +24,7 @@ def prompt_user_to_archive_recordings(project_dir):
     if not wav_files:
         return  # No files to archive, no prompt
 
-    print("Do you want to archive the existing recordings? (y/n)")
+    print("Do you want to archive the existing recordings? [y/N]")
     user_input = input().strip().lower()
     if user_input == 'y':
         # Find the lowest number not used by an existing archive directory
@@ -174,10 +174,21 @@ def main():
                     ffplay_cmd = [ 'ffplay', final_path ]
                     ffplay_process = subprocess.Popen(ffplay_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     ffmpeg_process.wait()
-                    user_check = input("Was it good? [y/n]")
-                    if user_check != 'y':
-                        print(f"Deleting {final_path}...")
-                        os.remove(final_path)
+                    cont = False
+                    while True:
+                        user_check = input("Was it good? [y/n]")
+                        if user_check == 'n':
+                            print(f"Deleting {final_path}...")
+                            os.remove(final_path)
+                            cont = True
+                            break
+                        elif user_check == 'y':
+                            print("Great! Let's continue.")
+                            break
+                        else:
+                            print("Please answer with 'y' or 'n'.")
+                            continue
+                    if cont:
                         continue
                 break
 
