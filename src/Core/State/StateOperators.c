@@ -90,7 +90,7 @@ HOST_DEVICE inline static double evaluate_operator(StateOperator op, double *a) 
         case OP_EQ:         return fabs(a[0] - a[1]) < 1e-9 ? 1.0 : 0.0;
         case OP_NEQ:        return fabs(a[0] - a[1]) >= 1e-9 ? 1.0 : 0.0;
         case OP_SMOOTHLERP: return smoothlerp(a[0], a[1], a[2]);
-        case OP_LERP:       return a[1] + a[0] * (a[2] - a[1]);
+        case OP_LERP:       return a[0] + a[2] * (a[1] - a[0]);
         case OP_LOGISTIC:   return 1.0 / (1.0 + exp(-a[0]));
                             // Should not reach here, return NaN
         default:            return nan("");

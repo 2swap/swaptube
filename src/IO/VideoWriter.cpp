@@ -4,7 +4,7 @@
 #include <regex>
 #include <cassert>
 #include "DebugPlot.h"
-#include "../Core/pixels.h"
+#include "../Core/Pixels.h"
 #include "IoHelpers.cpp"
 
 extern "C"

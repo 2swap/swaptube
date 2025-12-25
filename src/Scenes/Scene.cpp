@@ -4,7 +4,7 @@
 #include <chrono>
 #include <glm/glm.hpp>
 #include "../Core/State/StateManager.cpp"
-#include "../Core/pixels.h"
+#include "../Core/Pixels.h"
 #include "../Core/Macroblock.cpp"
 #include "../IO/VisualMedia.cpp"
 #include "../IO/DebugPlot.h"

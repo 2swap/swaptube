@@ -1,12 +1,19 @@
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Media/PngScene.cpp"
+#include "../Scenes/Media/WhitePaperScene.cpp"
 #include "../Scenes/Connect4/C4Scene.cpp"
 #include "../Scenes/Connect4/C4GraphScene.cpp"
 #include "../DataObjects/Connect4/TreeValidator.cpp"
 
 void render_video() {
 
+    WhitePaperScene wps("page");
+    wps.stage_macroblock(SilenceBlock(2), 1);
+    wps.manager.transition(MICRO, "completion", "1", false);
+    wps.render_microblock();
+
+    return;
     CompositeScene cs;
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
     shared_ptr<PngScene> sky = make_shared<PngScene>("Sky");

@@ -12,7 +12,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#include "../misc/pixels.h"
+#include "../misc/Pixels.h"
 
 // mp4_to_pix_bounding_box:
 // Loads the specified frame (by index) from the given MP4 file,

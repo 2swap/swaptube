@@ -171,7 +171,6 @@ __global__ void conway_draw_kernel(Bitboard* board, int w_bitboards, int h_bitbo
 
 extern "C" void draw_conway(Bitboard* d_board, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by)
 {
-    size_t board_sz = w_bitboards * h_bitboards * sizeof(Bitboard);
     size_t pix_sz = pixels_w * pixels_h * sizeof(unsigned int);
 
     unsigned int* d_pixels;

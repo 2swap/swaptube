@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include "../Host_Device_Shared/helpers.h"
-#include "color.cpp"
+#include "Color.cpp"
 
 using namespace std;
 
@@ -57,6 +57,19 @@ public:
     inline void set_pixel(int x, int y, int col) {
         if(out_of_range(x, y)) return;
         pixels[w*y+x] = col;
+    }
+
+    inline void darken(float factor){
+        for(int i = 0; i < w*h; i++){
+            int a = geta(pixels[i]);
+            int r = getr(pixels[i]);
+            int g = getg(pixels[i]);
+            int b = getb(pixels[i]);
+            r = static_cast<int>(r * factor);
+            g = static_cast<int>(g * factor);
+            b = static_cast<int>(b * factor);
+            pixels[i] = argb(a, r, g, b);
+        }
     }
 
     inline void set_alpha(int x, int y, int a) {

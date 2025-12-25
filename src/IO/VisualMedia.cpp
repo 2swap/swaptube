@@ -6,7 +6,8 @@
 #include <sys/stat.h>
 #include <cmath>
 #include <sstream>
-#include "../Core/pixels.h"
+#include <unordered_map>
+#include "../Core/Pixels.h"
 
 enum class ScalingMode {
     BoundingBox,
@@ -207,8 +208,17 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
         filename += ".png";  // Append the ".png" suffix if it's not present
     }
 
+    string fullpath = "io_in/" + filename;
+
+    // Check cache
+    static unordered_map<string, Pixels> png_cache;
+    auto it = png_cache.find(fullpath);
+    if (it != png_cache.end()) {
+        return it->second;
+    }
+
     // Open the PNG file
-    FILE* fp = fopen(("io_in/" + filename).c_str(), "rb");
+    FILE* fp = fopen(fullpath.c_str(), "rb");
     if (!fp) {
         throw runtime_error("Failed to open PNG file " + filename);
     }
@@ -297,10 +307,35 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
     png_destroy_read_struct(&png, &info, nullptr);
     fclose(fp);
 
+    // Store in cache
+    png_cache[fullpath] = ret;
+
     return ret;
 }
 
+// Custom hash and equality for pair<string, pair<int,int>>
+struct StringIntPairHash {
+    size_t operator()(const pair<string, pair<int, int>>& p) const noexcept {
+        size_t h1 = std::hash<string>{}(p.first);
+        size_t h2 = (static_cast<size_t>(p.second.first) << 32) ^ static_cast<size_t>(p.second.second);
+        // boost-like mix
+        return h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1<<6) + (h1>>2));
+    }
+};
+struct StringIntPairEq {
+    bool operator()(const pair<string, pair<int, int>>& a, const pair<string, pair<int, int>>& b) const noexcept {
+        return a.first == b.first && a.second.first == b.second.first && a.second.second == b.second.second;
+    }
+};
+
 Pixels png_to_pix_bounding_box(const string& filename, int w, int h) {
+    static unordered_map<pair<string, pair<int, int>>, Pixels, StringIntPairHash, StringIntPairEq> png_bounding_box_cache;
+    auto key = make_pair(filename, make_pair(w, h));
+    auto it = png_bounding_box_cache.find(key);
+    if (it != png_bounding_box_cache.end()) {
+        return it->second;
+    }
+
     Pixels image = png_to_pix(filename);
 
     // Calculate the scaling factor based on the bounding box
@@ -311,7 +346,12 @@ Pixels png_to_pix_bounding_box(const string& filename, int w, int h) {
     int new_height = static_cast<int>(image.h * scale);
 
     // Scale the image using bicubic interpolation
-    return image.bicubic_scale(new_width, new_height);
+    Pixels scaled = image.bicubic_scale(new_width, new_height);
+
+    // Store in cache with scale
+    png_bounding_box_cache[key] = scaled;
+
+    return scaled;
 }
 
 // Create an unordered_map to store the cached results

@@ -7,8 +7,8 @@
 #include <memory>
 #include <unordered_set>
 
-#include "../Core/color.cpp"
-#include "../Core/pixels.h"
+#include "../Core/Color.cpp"
+#include "../Core/Pixels.h"
 #include "DataObject.cpp"
 
 using namespace std;

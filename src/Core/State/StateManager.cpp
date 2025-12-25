@@ -8,7 +8,6 @@
 #include <regex>
 #include <cassert>
 #include <iostream>
-#include "../calculator.h"
 #include "GlobalState.cpp"
 #include "UnresolvedStateEquation.cpp"
 #include "ResolvedStateEquationComponent.c"
@@ -193,7 +192,7 @@ public:
         }
     }
 
-    StateSet transition(const TransitionType tt, const string& variable, const string& equation) {
+    StateSet transition(const TransitionType tt, const string& variable, const string& equation, const bool smooth = true) {
         if(!contains(variable)){
             print_state();
             throw runtime_error("ERROR: Attempted to transition nonexistent variable " + variable + "!\nState printed above.");
@@ -211,7 +210,7 @@ public:
 
         // No point in doing a noop transition
         if(eq1 != equation) {
-            string lerp_both = eq1 + " " + equation + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} smoothlerp";
+            string lerp_both = eq1 + " " + equation + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} " + (smooth?"smooth":"") + "lerp";
             set(variable+".post_transition", equation);
             set(variable, lerp_both);
                  if(tt == MICRO) in_microblock_transition.insert(variable);
@@ -220,10 +219,10 @@ public:
 
         return { {variable, eq1} };
     }
-    StateSet transition(const TransitionType tt, const StateSet& equations) {
+    StateSet transition(const TransitionType tt, const StateSet& equations, bool smooth = true) {
         StateSet ret = {};
         for(auto it = equations.begin(); it != equations.end(); it++){
-            StateSet prev = transition(tt, it->first, it->second);
+            StateSet prev = transition(tt, it->first, it->second, smooth);
             ret.insert(prev.begin(), prev.end());
         }
         return ret;
