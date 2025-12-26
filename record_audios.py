@@ -127,7 +127,7 @@ def main():
             # Print the next 5 entries for lookahead
             print_lookahead(entries, index + 1)
 
-            temp_path = os.path.join(temp_recordings_dir, f"{current_filename}.wav")
+            temp_path = os.path.join(temp_recordings_dir, current_filename)
 
             # Start recording with ffmpeg in the background
             print("Recording... Press Enter to stop.")

@@ -7,20 +7,12 @@
 #include "../DataObjects/Connect4/TreeValidator.cpp"
 
 void render_video() {
-
-    WhitePaperScene wps("page");
-    wps.stage_macroblock(SilenceBlock(2), 1);
-    wps.manager.transition(MICRO, "completion", "1", false);
-    wps.render_microblock();
-
-    return;
     CompositeScene cs;
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
     shared_ptr<PngScene> sky = make_shared<PngScene>("Sky");
     shared_ptr<PngScene> god1 = make_shared<PngScene>("God1", .3, .6);
     shared_ptr<PngScene> god2 = make_shared<PngScene>("God2", .4, .8);
 
-    FOR_REAL = true;
     cs.stage_macroblock(FileBlock("Suppose two omniscient gods play a game of Connect 4."), 2);
     cs.add_scene_fade_in(MICRO, sky, "sky");
     cs.add_scene_fade_in(MICRO, god1, "god1");
@@ -56,7 +48,7 @@ void render_video() {
     c4s->play("4");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("What would happen?"), 1);
+    cs.stage_macroblock(CompositeBlock(SilenceBlock(.5), FileBlock("What would happen?")), 1);
     c4s->undo(100);
     cs.render_microblock();
 
@@ -78,12 +70,13 @@ void render_video() {
     cs.render_microblock();
 
     Graph g;
-    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", RANDOM);
+    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", LEFTMOST_LOWEST_2);
     c4gs->manager.set({{"dimensions", "2"}, {"physics_multiplier", "2"}});
-    cs.fade_all_subscenes(MICRO, 0.2);
+    cs.fade_all_subscenes(MICRO, 0);
     cs.add_scene_fade_in(MICRO, c4gs, "c4gs");
     cs.stage_macroblock(FileBlock("You see, after analyzing every possible variation of every opening, God 2 realized there was no way of stopping God 1 from making a red line of 4."), 1);
     cs.render_microblock();
+    cs.remove_all_subscenes_except("c4gs");
 
     cs.stage_macroblock(FileBlock("This was first discovered by computer scientists in 1988."), 2);
     shared_ptr<PngScene> JamesDowAllen = make_shared<PngScene>("JamesDowAllen", .4, .8);
@@ -105,26 +98,66 @@ void render_video() {
     cs.remove_all_subscenes_except("c4gs");
 
     cs.stage_macroblock(FileBlock("they wrote computer programs to search all possible variations,"), 1);
+    c4gs->manager.transition("desired_nodes", "1.5 time_since_graph_init ^");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("showing that player 1 will win, if they play perfectly."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("This was wonderful work by the computer scientists of the day,"), 1);
+    shared_ptr<WhitePaperScene> wps = make_shared<WhitePaperScene>("allis_paper", 4);
+    wps->manager.transition(MICRO, "completion", "1", false);
+    cs.add_scene(wps, "wps");
+    cs.stage_macroblock(FileBlock("Now, don't get me wrong, this was wonderful work by the computer scientists of the day,"), 1);
     cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("But it kind of leaves you wanting."), 1);
+    wps->manager.transition(MICRO, "completion", "0", true);
     cs.render_microblock();
+    cs.remove_subscene("wps");
+
     cs.stage_macroblock(FileBlock("Ok, so player 1 wins, but _why_?"), 1);
     cs.render_microblock();
-    return;
 
     cs.stage_macroblock(FileBlock("A computer might be able to iterate over billions of positions to check this result,"), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("But what's left for us humans?"), 1);
-    cs.stage_macroblock(FileBlock("What are the best openings as player 2, to make it as hard as possible for player 1?"), 1);
+    shared_ptr<PngScene> human1 = make_shared<PngScene>("Thinker1", .4, .8);
+    shared_ptr<PngScene> human2 = make_shared<PngScene>("Thinker2", .4, .8);
+    cs.add_scene(human1, "human1", .2, 1.6);
+    cs.add_scene(human2, "human2", .8, 1.6);
+    cs.slide_subscene(MICRO, "human1", 0, -1);
+    cs.slide_subscene(MICRO, "human2", 0, -1);
+    cs.render_microblock();
+
+    cs.add_scene_fade_in(MICRO, c4s, "c4");
+    cs.fade_subscene(MICRO, "c4gs", 0);
+    cs.stage_macroblock(FileBlock("What are the best openings as player 2, to make it as hard as possible for player 1?"), 5);
+    cs.render_microblock();
+    cs.remove_subscene("c4gs");
+    c4s->play("4");
+    cs.render_microblock();
+    c4s->undo(1);
+    cs.render_microblock();
+    c4s->play("3");
+    cs.render_microblock();
+    c4s->undo(1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("Is there some change of perspective that shows how mere mortals could win against god 2?"), 1);
-    cs.stage_macroblock(FileBlock("More specifically, is there a general algorithm, or strategy, that can plausibly be memorized and run by a human brain?"), 1);
+    cs.slide_subscene(MICRO, "human2", 0, 1);
+    cs.add_scene_fade_in(MICRO, god2, "god2", .75, -.5);
+    cs.manager.transition(MICRO, floating_gods);
+    cs.render_microblock();
+    cs.remove_subscene("human2");
+
     cs.stage_macroblock(FileBlock("These questions have gone unanswered..."), 1);
+    cs.render_microblock();
+
     cs.stage_macroblock(FileBlock("until now."), 1);
+    cs.render_microblock();
+
+    return;
     //Intro
     cs.stage_macroblock(FileBlock(""), 1);
     cs.stage_macroblock(FileBlock(""), 1);
