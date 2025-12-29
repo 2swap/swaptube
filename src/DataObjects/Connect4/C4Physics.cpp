@@ -45,7 +45,7 @@ public:
     void inverse_gravity_up_to_index(int index) {
         for (Disc& disc : discs) {
             if (disc.index >= index) {
-                disc.ay = (disc.py + disc.x % 3 + 1) / 60;
+                disc.ay = (disc.py + disc.x % 3 + 3) / 100;
             }
         }
         mark_updated();

@@ -21,6 +21,33 @@ C4Board::C4Board(const string& rep, shared_ptr<SteadyState> ss) : steadystate(ss
     fill_board_from_string(rep);
 }
 
+// Returns a bitboard with bits set for all winning discs
+Bitboard C4Board::winning_discs() const {
+    Bitboard ret;
+    for(int i = 0; i < 2; i++){
+        const Bitboard b = i==0?red_bitboard:yellow_bitboard;
+        Bitboard win_bits = 0ul;
+        Bitboard temp;
+
+        // Horizontal
+        temp = b & (b>>1);
+        ret |= temp & (temp>>2);
+
+        // Vertical
+        temp = b & (b>>(C4_WIDTH+1));
+        ret |= temp & (temp>>2*(C4_WIDTH+1));
+
+        // Diagonal /
+        temp = b & (b>>(C4_WIDTH));
+        ret |= temp & (temp>>2*(C4_WIDTH));
+
+        // Diagonal backslash
+        temp = b & (b>>(C4_WIDTH+2));
+        ret |= temp & (temp>>2*(C4_WIDTH+2));
+    }
+    return ret;
+}
+
 // Returns 0 if the spot is empty, 1 if red, 2 if yellow
 int C4Board::piece_code_at(int x, int y) const {
     return bitboard_at(red_bitboard, x, y) + (2*bitboard_at(yellow_bitboard, x, y));

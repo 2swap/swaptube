@@ -21,6 +21,8 @@ public:
     }
 
     void begin_transition(const TransitionType tt, const Pixels& p) {
+        if(!state.contains("in_transition_state"))
+            throw runtime_error("ConvolutionScene must be rendered once before calling begin_transition!");
         if(state["in_transition_state"]) end_transition();
         p2 = p;
 

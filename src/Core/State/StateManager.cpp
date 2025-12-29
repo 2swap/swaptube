@@ -387,7 +387,7 @@ private:
         ResolvedStateEquation rse = resolve_state_equation(vc.equation);
         try {
             int error = 0;
-            float blank_cuda_tags[8] = {704.0f, -.19f, 90.0f, 1.0f, 2.0f, 3.0f, -4.0f, 5.0f};
+            float blank_cuda_tags[8] = {1.20f, -.19f, 90.0f, 1.0f, 2.0f, 3.0f, -4.0f, 5.0f};
             vc.value = evaluate_resolved_state_equation(rse.size(), rse.data(), blank_cuda_tags, 8, error);
             if(error != 0) {
                 throw runtime_error("Error code " + to_string(error) + " returned from evaluate_resolved_state_equation.");
@@ -452,6 +452,8 @@ private:
                     break;
                 case UNRESOLVED_GLOBAL_VARIABLE:
                     rsec.type = RESOLVED_CONSTANT;
+                    if(global_state.find(comp.content.variable_name) == global_state.end())
+                        throw runtime_error("ERROR: Attempted to access nonexistent global variable {" + comp.content.variable_name + "} during resolution.");
                     rsec.content.constant = global_state.at(comp.content.variable_name);
                     break;
                 case UNRESOLVED_CUDA_TAG:

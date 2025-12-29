@@ -20,19 +20,22 @@ class C4Scene : public Scene {
 private:
     C4Physics board;
     string annotations = empty_annotations;
+    string representation;
 
 public:
     C4Scene(const string& rep, const double width = 1, const double height = 1)
-        :Scene(width, height), board(7, 6) {
+        :Scene(width, height), board(7, 6), representation(rep){
             board.append_to_queue(rep);
     }
 
     void undo(int steps) {
         board.undo(steps);
+        representation = representation.substr(0, representation.size()-steps);
     }
 
     void play(const string& rep){
         board.append_to_queue(rep);
+        representation += rep;
     }
 
     void set_annotations(string s){annotations = s;}
@@ -49,6 +52,24 @@ public:
                 double px, py;
                 get_disc_screen_coordinates(x, y, px, py);
                 pix.fill_ellipse(px, py, get_stone_width()*.3, get_stone_width()*.3, C4_EMPTY);
+            }
+        }
+    }
+
+    void highlight_winning_discs(){
+        double highlight = state["highlight"];
+        if(highlight <= 0.1) return;
+
+        C4Board b(representation);
+        Bitboard winning_discs = b.winning_discs();
+        for (int x=0; x<board.w; x++) {
+            for (int y=0; y<board.h; y++) {
+                if(!bitboard_at(winning_discs, x, y)) continue;
+                double px, py;
+                get_disc_screen_coordinates(x, y, px, py);
+                double stone_width = get_stone_width();
+                double ellipse_width = stone_width * .3 * highlight;
+                pix.fill_ellipse(px, py, ellipse_width, ellipse_width, OPAQUE_WHITE);
             }
         }
     }
@@ -86,7 +107,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{};
+        return StateQuery{"highlight"};
     }
 
     void mark_data_unchanged() override { board.mark_unchanged(); }

@@ -8,8 +8,8 @@ class C4GraphScene : public GraphScene {
 public:
     C4GraphScene(Graph* g, bool surfaces_on, string rep, C4BranchMode mode, const double width = 1, const double height = 1)
     : GraphScene(g, surfaces_on, width, height), root_node_representation(rep) {
-        manager.add_timer("time_since_graph_init");
-        manager.set("desired_nodes", "time_since_graph_init");
+        manager.begin_timer("time_since_graph_init");
+        manager.set("desired_nodes", "<time_since_graph_init>");
 
         c4_branch_mode = mode;
 

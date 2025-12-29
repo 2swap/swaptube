@@ -82,6 +82,7 @@ public:
     unordered_set<GenericBoard*> get_children();
     unordered_set<double> get_children_hashes();
     json get_data() const override;
+    Bitboard winning_discs() const;
 };
 
 void fhourstones_tests(){

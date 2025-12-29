@@ -1,7 +1,7 @@
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Connect4/Connect4Scene.cpp"
-#include "../Scenes/Connect4/Connect4GraphScene.cpp"
+#include "../Scenes/Connect4/C4Scene.cpp"
+#include "../Scenes/Connect4/C4GraphScene.cpp"
 #include "../DataObjects/Connect4/TreeValidator.cpp"
 
 void find_steadystates_by_children(const Graph& g, Node& node) {
@@ -53,6 +53,8 @@ void render_video() {
         Graph g;
         string variation = "";
         C4GraphScene gs(&g, false, variation, TRIM_STEADY_STATES);
+        g.expand(-1);
+        g.make_bidirectional();
 
         gs.manager.set({
             {"q1", "1"},
