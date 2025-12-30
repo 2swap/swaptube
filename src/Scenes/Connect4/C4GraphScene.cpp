@@ -9,7 +9,9 @@ public:
     C4GraphScene(Graph* g, bool surfaces_on, string rep, C4BranchMode mode, const double width = 1, const double height = 1)
     : GraphScene(g, surfaces_on, width, height), root_node_representation(rep) {
         manager.begin_timer("time_since_graph_init");
-        manager.set("desired_nodes", "<time_since_graph_init>");
+        manager.set("desired_nodes", "200 1.1 <time_since_graph_init> ^ * 199 - 20000 min");
+        manager.set("physics_multiplier", "5");
+        manager.set("decay", "0.5");
 
         c4_branch_mode = mode;
 

@@ -93,25 +93,11 @@ void intro(CompositeScene& cs) {
     cs.move_to_front("god2");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The rules are simple:"), 1);
+    cs.stage_macroblock(FileBlock("Players take turns dropping discs in the columns,"), 1);
     c4s->play("433335526245");
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Players take turns dropping discs in the columns,"), 1);
-    cs.render_microblock();
-
     cs.stage_macroblock(FileBlock("and the first to make a line of 4 wins."), 3);
-    c4s->play("6");
-    cs.render_microblock();
-    c4s->manager.transition(MICRO, "highlight", "1");
-    cs.render_microblock();
-    c4s->manager.transition(MICRO, "highlight", "0");
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("Diagonals count too."), 5);
-    c4s->undo(1);
-    cs.render_microblock();
-    cs.render_microblock();
     c4s->play("4");
     cs.render_microblock();
     c4s->manager.transition(MICRO, "highlight", "1");
@@ -142,8 +128,7 @@ void intro(CompositeScene& cs) {
 
     Graph g;
     shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", LEFTMOST_LOWEST_2);
-    c4gs->manager.set("desired_nodes", "1.2 <time_since_graph_init> ^");
-    c4gs->manager.set({{"dimensions", "2"}, {"physics_multiplier", "<desired_nodes>"}});
+    c4gs->manager.set({{"dimensions", "2"}, {"physics_multiplier", "<desired_nodes> 100 min"}});
     cs.fade_all_subscenes(MICRO, 0);
     cs.add_scene_fade_in(MICRO, c4gs, "c4gs");
     cs.stage_macroblock(FileBlock("You see, after analyzing every possible variation of every opening, God 2 realized there was no way of stopping God 1 from making a red line of 4."), 1);
@@ -272,49 +257,93 @@ void build_graph(CompositeScene& cs) {
 }
 
 void explanation(CompositeScene& cs) {
-    /*
-    cs.stage_macroblock(FileBlock("Suppose you're going to a connect 4 competition, and you want a strategy to play perfectly."), 1);
+    shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
+    cs.add_scene_fade_in(MACRO, c4s, "c4s");
+    cs.stage_macroblock(FileBlock("Suppose you're going to play as red, and you want a strategy to play perfectly."), 3);
+    cs.render_microblock();
+    string starting_variation = "4443674433";
+    c4s->play(starting_variation);
+    cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("One option is reading all the variations on the fly- brute force search."), 1);
-    cs.render_microblock();
+    c4s->set_fast_mode(true);
+    int vars_to_read = 5;
+    int vars_depth = 20;
+    cs.stage_macroblock(FileBlock("What options are there, besides running brute force search in your head?"), vars_to_read * 2);
+    for(int i = 0; i < vars_to_read; i++) {
+        // String of random numbers in [1,7], length vars_depth
+        string str = "";
+        C4Board b(starting_variation);
+        for(int j = 0; j < vars_depth; j++) {
+            int move = rand() % 7 + 1;
+            cout << move << flush;
+            if(!b.is_legal(move)) {
+                cout << "x" << flush;
+                j--;
+                continue;
+            }
+            C4Board child(b);
+            child.play_piece(move);
+            if(child.who_won() != INCOMPLETE) {
+                cout << "w" << flush;
+                j--;
+                continue;
+            }
+            b.play_piece(move);
+            str += to_string(move);
+        }
+        c4s->play(str);
+        cout << str << endl;
+        cs.render_microblock();
+        c4s->undo(vars_depth);
+        cs.render_microblock();
+    }
 
-    cs.stage_macroblock(FileBlock("But of course, there's just too many variations to read. You'll run out of time."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("Instead you consider memorizing all of the branches upfront."), 1);
+    cs.stage_macroblock(FileBlock("Instead you could memorize every branch upfront."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("That way you can just recall the right response during the tournament."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Well, you're going to need to memorize 14 terabytes of connect 4 positions, as this unfortunate redditor found out."), 1);
+    shared_ptr<PngScene> terabytes = make_shared<PngScene>("15TB", .6, .6);
+    cs.stage_macroblock(FileBlock("Well, you'll need to memorize 15 terabytes of connect 4 positions, as this poor soul found out."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("These two strategies interface with the same data- the same tree of positions."), 1);
+    Graph g;
+    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", FULL);
+
+    cs.add_scene(c4gs, "c4gs");
+    cs.stage_macroblock(FileBlock("These two strategies- brute force search and upfront memorization- involve the same tree of positions."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The difference is that the former makes you think a lot, and the latter makes you remember a lot."), 1);
+    cs.stage_macroblock(FileBlock("The difference is that the former makes you think a lot, and the latter makes you remember a lot."), 2);
+    shared_ptr<PngScene> cpu = make_shared<PngScene>("cpu", .4, .4);
+    cs.add_scene_fade_in(MICRO, cpu, "cpu", .25, .5);
     cs.render_microblock();
-    */
+    shared_ptr<PngScene> hdd = make_shared<PngScene>("hdd", .4, .4);
+    cs.add_scene_fade_in(MICRO, hdd, "hdd", .75, .5);
+    cs.render_microblock();
 
+    cs.stage_macroblock(SilenceBlock(1), 1);
+    cs.fade_all_subscenes(MICRO, 0);
     shared_ptr<RealFunctionScene> rfs= make_shared<RealFunctionScene>();
-    cs.add_scene(rfs, "rfs");
-
-    rfs->manager.transition(MICRO, "function0", "(a) exp");
+    rfs->manager.set("zero_crosshair_opacity", "1");
+    rfs->manager.set({{"center_x", "3"}, {"center_y", "<center_x>"}, {"zoom", "-1.5"}});
+    cs.add_scene_fade_in(MICRO, rfs, "rfs");
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("rfs");
 
     cs.stage_macroblock(FileBlock("Plotting the amount of variations that we would need to search with brute force after some amount of moves,"), 1);
-    cout << "A" << endl;
+    rfs->manager.transition(MICRO, "function0", "(a) exp");
     cs.render_microblock();
-    cout << "B" << endl;
 
     cs.stage_macroblock(FileBlock("it looks like this."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("And plotting the positions you'd need to memorize to cover all variations up to the nth move,"), 1);
+    cs.stage_macroblock(FileBlock("And plotting the positions you'd need to memorize to get to the nth move,"), 1);
     cs.render_microblock();
 
-    rfs->manager.transition(MICRO, "function1", "3 (a) - exp");
+    rfs->manager.transition(MICRO, "function1", "<center_x> 2 * (a) - exp");
 
     cs.stage_macroblock(FileBlock("we see the opposite curve."), 1);
     cs.render_microblock();
@@ -322,16 +351,34 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("This suggests a hybrid approach-"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock(""), 1);
+    string hybrid = "(a) exp <center_x> 2 * (a) - exp min";
+
+    rfs->manager.transition(MICRO, "function0", hybrid);
+    cs.stage_macroblock(FileBlock("Memorizing all positions only up to the midgame,"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock(""), 1);
+    rfs->manager.transition(MICRO, "function1", hybrid);
+    cs.stage_macroblock(FileBlock("and using search after the middle of the game,"), 1);
     cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("we can balance compute and memory to avoid these exponential explosions."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("And it makes sense- this is exactly what chess players do in practice."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("They memorize openings, and practice reading after the position is already developed."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("One of those early solvers of connect 4, Victor Allis, published just that- a table of 500,000 openings, and a computer algorithm which could solve endgames in a few seconds."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Now I don't know about you, but I can't memorize half a million positions."), 1);
 }
 
 void render_video() {
     CompositeScene cs;
-    //intro(cs);
-    //build_graph(cs);
+    intro(cs);
+    build_graph(cs);
     explanation(cs);
 }

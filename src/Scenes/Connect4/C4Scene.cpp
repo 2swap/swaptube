@@ -26,6 +26,7 @@ public:
     C4Scene(const string& rep, const double width = 1, const double height = 1)
         :Scene(width, height), board(7, 6), representation(rep){
             board.append_to_queue(rep);
+            manager.set("highlight", "0");
     }
 
     void undo(int steps) {
@@ -46,6 +47,10 @@ public:
         return annotations[x+(board.h-1-y)*board.w];
     }
 
+    void set_fast_mode(bool fast){
+        board.fast_mode = fast;
+    }
+
     void draw_empty_board(){
         for(int x=0; x<board.w; x++){
             for(int y=0; y<board.h; y++){
@@ -62,13 +67,14 @@ public:
 
         C4Board b(representation);
         Bitboard winning_discs = b.winning_discs();
+        print_bitboard(winning_discs);
+        double stone_width = get_stone_width();
+        double ellipse_width = stone_width * .2 * highlight;
         for (int x=0; x<board.w; x++) {
             for (int y=0; y<board.h; y++) {
                 if(!bitboard_at(winning_discs, x, y)) continue;
                 double px, py;
-                get_disc_screen_coordinates(x, y, px, py);
-                double stone_width = get_stone_width();
-                double ellipse_width = stone_width * .3 * highlight;
+                get_disc_screen_coordinates(x, C4_HEIGHT - 1 - y, px, py);
                 pix.fill_ellipse(px, py, ellipse_width, ellipse_width, OPAQUE_WHITE);
             }
         }
@@ -124,5 +130,6 @@ public:
             draw_c4_disc(disc.x, disc.py, disc.index%2==0);
         }
         draw_annotations();
+        highlight_winning_discs();
     }
 };

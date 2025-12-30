@@ -23,7 +23,10 @@ C4Board::C4Board(const string& rep, shared_ptr<SteadyState> ss) : steadystate(ss
 
 // Returns a bitboard with bits set for all winning discs
 Bitboard C4Board::winning_discs() const {
-    Bitboard ret;
+    Bitboard ret = 0ul;
+    int vert_slide = C4_WIDTH + 1;
+    int diag_slide = C4_WIDTH;
+    int back_slide = C4_WIDTH + 2;
     for(int i = 0; i < 2; i++){
         const Bitboard b = i==0?red_bitboard:yellow_bitboard;
         Bitboard win_bits = 0ul;
@@ -31,19 +34,23 @@ Bitboard C4Board::winning_discs() const {
 
         // Horizontal
         temp = b & (b>>1);
-        ret |= temp & (temp>>2);
+        temp &= (temp>>2);
+        ret |= temp | (temp<<1) | (temp<<2) | (temp<<3);
 
         // Vertical
-        temp = b & (b>>(C4_WIDTH+1));
-        ret |= temp & (temp>>2*(C4_WIDTH+1));
+        temp = b & (b>>vert_slide);
+        temp &= (temp>>(2*vert_slide));
+        ret |= temp | (temp<<vert_slide) | (temp<<(2*vert_slide)) | (temp<<(3*vert_slide));
 
         // Diagonal /
-        temp = b & (b>>(C4_WIDTH));
-        ret |= temp & (temp>>2*(C4_WIDTH));
+        temp = b & (b>>diag_slide);
+        temp &= (temp>>(2*diag_slide));
+        ret |= temp | (temp<<diag_slide) | (temp<<(2*diag_slide)) | (temp<<(3*diag_slide));
 
         // Diagonal backslash
-        temp = b & (b>>(C4_WIDTH+2));
-        ret |= temp & (temp>>2*(C4_WIDTH+2));
+        temp = b & (b>>back_slide);
+        temp &= (temp>>(2*back_slide));
+        ret |= temp | (temp<<back_slide) | (temp<<(2*back_slide)) | (temp<<(3*back_slide));
     }
     return ret;
 }

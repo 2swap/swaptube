@@ -14,6 +14,7 @@ public:
 
 class C4Physics : public DataObject {
 public:
+    bool fast_mode = false;
     vector<Disc> discs;
     string queue = "";
     int w; int h;
@@ -33,19 +34,45 @@ public:
         discs.push_back(new_disc);
         mark_updated();
 
-        queue.erase(0, 1);
         moves_yet++;
+
+        if(fast_mode) {
+            // immediately settle the disc
+            new_disc.py = 0;
+            for (const Disc& disc : discs) {
+                if (disc.x == new_disc.x && disc.index != new_disc.index) {
+                    new_disc.py = max(new_disc.py, disc.py + 1);
+                }
+            }
+            discs.back() = new_disc;
+            mark_updated();
+        }
     }
 
     void undo(int steps) {
-        inverse_gravity_up_to_index(moves_yet - steps);
-        moves_yet = max(0, moves_yet - steps);
+        // Push back "x" to the queue steps times
+        for (int i = 0; i < steps; i++)
+            queue.push_back('x');
+    }
+
+    void undo_once() {
+        moves_yet = max(0, moves_yet - 1);
+        inverse_gravity_up_to_index(moves_yet);
     }
 
     void inverse_gravity_up_to_index(int index) {
-        for (Disc& disc : discs) {
+        auto it = discs.begin();
+        while (it != discs.end()) {
+            Disc& disc = *it;
             if (disc.index >= index) {
-                disc.ay = (disc.py + disc.x % 3 + 3) / 100;
+                if(fast_mode)
+                    it = discs.erase(it);
+                else {
+                    disc.ay = (disc.py + disc.x % 3 + 3) / 100;
+                    ++it;
+                }
+            } else {
+                ++it;
             }
         }
         mark_updated();
@@ -65,7 +92,7 @@ public:
 
     bool all_discs_below_top() const {
         for (const Disc& disc : discs) {
-            if (disc.py >= h - 1) {
+            if (disc.py >= h - .5) {
                 return false;
             }
         }
@@ -80,7 +107,11 @@ public:
         if (queue.empty() || !all_discs_below_top()) {
             return;
         }
-        add_disc_from_queue();
+        if(queue.front() == 'x')
+            undo_once();
+        else
+            add_disc_from_queue();
+        queue.erase(0, 1);
     }
 
     ~C4Physics() { }
