@@ -67,7 +67,6 @@ public:
 
         C4Board b(representation);
         Bitboard winning_discs = b.winning_discs();
-        print_bitboard(winning_discs);
         double stone_width = get_stone_width();
         double ellipse_width = stone_width * .2 * highlight;
         for (int x=0; x<board.w; x++) {

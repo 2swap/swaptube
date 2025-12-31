@@ -54,16 +54,25 @@ public:
             opacities.push_back(state["function" + to_string(i) + "_opacity"]);
         }
 
+        float thickness = get_geom_mean_size() / 200.f;
         for (int func_idx = 0; func_idx < 2; func_idx++) {
             float opacity = opacities[func_idx];
             if (opacity <= 0.01) continue;
 
             const ResolvedStateEquation& re = resolved_equations[func_idx];
+            glm::vec2 last_pixel = {-1, -1};
+            bool first_point = true;
+            int color = function_colors[func_idx];
             for (double x = left_bound; x <= right_bound; x += dx) {
                 float val = call_the_function(x, re);
                 glm::vec2 pixel = point_to_pixel({x, val});
-                float sz = get_geom_mean_size() / 200.f;
-                pix.fill_rect(pixel.x - sz / 2, pixel.y - sz / 2, sz, sz, 0xFFFFFFFF);
+                if (first_point) {
+                    first_point = false;
+                    last_pixel = pixel;
+                    continue;
+                }
+                pix.bresenham(pixel.x, pixel.y, last_pixel.x, last_pixel.y, color, opacity, thickness);
+                last_pixel = pixel;
             }
         }
     }
@@ -77,5 +86,8 @@ public:
     void mark_data_unchanged() override {}
     void change_data() override {} // RealFunctionScene has no DataObjects
     bool check_if_data_changed() const override { return false; }
+
+private:
+    vector<unsigned int> function_colors = {0xFF0088FF, 0xFFFF0088};
 };
 

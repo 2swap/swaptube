@@ -136,7 +136,7 @@ public:
 
     void crop(int x, int y, int cw, int ch, Pixels &cropped) const {
         if(x < 0 || y < 0 || x + cw > w || y + ch > h)
-            throw runtime_error("Crop dimensions out of range.");
+            throw runtime_error("Crop dimensions out of range: " + to_string(x) + "," + to_string(y) + "," + to_string(cw) + "," + to_string(ch) + " for image of size " + to_string(w) + "x" + to_string(h));
         cropped = Pixels(cw, ch);
         for(int dx = 0; dx < cw; dx++)
             for(int dy = 0; dy < ch; dy++)
@@ -189,6 +189,8 @@ public:
     }
 
     void fill_rect(int x, int y, int rw, int rh, int col){
+        if(x < 0) { rw += x; x = 0; }
+        if(y < 0) { rh += y; y = 0; }
         if(x + rw > w) rw = w - x;
         if(y + rh > h) rh = h - y;
         for(int dx = 0; dx < rw; dx++)

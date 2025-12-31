@@ -60,7 +60,6 @@ public:
             {"construction_opacity", "1"},
             {"ticks_opacity", "0"},
             {"zero_crosshair_opacity", "0"},
-            {"zero_crosshair_width", "5"},
             {"center_x", "0"},
             {"center_y", "0"},
             {"zoom", "0"},
@@ -175,17 +174,13 @@ public:
 
     void draw_zero_crosshair() {
         const float zc_opacity = state["zero_crosshair_opacity"];
-        const float zc_width   = state["zero_crosshair_width"];
         if(zc_opacity < 0.01) return;
         const int w = get_width();
         const int h = get_height();
         const float gmsz = get_geom_mean_size();
-        const glm::vec2 left = point_to_pixel(glm::vec2(-zc_width,0));
-        const glm::vec2 right = point_to_pixel(glm::vec2(zc_width,0));
-        const glm::vec2 top = point_to_pixel(glm::vec2(0,zc_width));
-        const glm::vec2 bottom = point_to_pixel(glm::vec2(0,-zc_width));
-        pix.bresenham(left.x, left.y, right.x, right.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
-        pix.bresenham(top.x, top.y, bottom.x, bottom.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
+        const glm::vec2 zero = point_to_pixel(glm::vec2(0,0));
+        pix.bresenham(zero.x, 0, zero.x, h-1.f, OPAQUE_WHITE, zc_opacity, gmsz/400.);
+        pix.bresenham(0, zero.y, w-1.f, zero.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
     }
 
     void draw_axes() {
@@ -237,7 +232,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "construction_opacity", "zero_crosshair_opacity", "zero_crosshair_width"};
+        StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "construction_opacity", "zero_crosshair_opacity"};
         for(const GeometricPoint& p : construction.points) {
             if(!p.old) {
                 sq.insert("microblock_fraction_passthrough");

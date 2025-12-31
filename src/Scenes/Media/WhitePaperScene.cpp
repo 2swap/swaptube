@@ -25,7 +25,7 @@ public:
     void change_data() override { }
 
     void draw() override {
-        // Expect 3 files of the form prefix-0i.png
+        // Expect files of the form prefix-0i.png
         double page_height = get_height() * .8;
         double page_width = 5000;
         for(int i = num_pages; i >= 1; --i) {

@@ -160,6 +160,7 @@ void intro(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("showing that player 1 will win, if they play perfectly."), 1);
     cs.render_microblock();
 
+    cs.fade_all_subscenes(MICRO, 0);
     shared_ptr<WhitePaperScene> wps = make_shared<WhitePaperScene>("allis_paper", 4);
     wps->manager.transition(MICRO, "completion", "1", false);
     cs.add_scene(wps, "wps");
@@ -174,7 +175,7 @@ void intro(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("Ok, so player 1 wins, but _why_?"), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("A computer might be able to iterate over billions of positions to check this result,"), 1);
+    cs.stage_macroblock(FileBlock("A computer can iterate over billions of positions to check this result,"), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("But what's left for us humans?"), 1);
@@ -186,11 +187,16 @@ void intro(CompositeScene& cs) {
     cs.slide_subscene(MICRO, "human2", 0, -1);
     cs.render_microblock();
 
+    c4s = make_shared<C4Scene>("");
     cs.add_scene_fade_in(MICRO, c4s, "c4");
     cs.fade_subscene(MICRO, "c4gs", 0);
-    cs.stage_macroblock(FileBlock("What are the best openings as player 2, to make it as hard as possible for player 1?"), 5);
+    cs.stage_macroblock(FileBlock("After player 1 plays in the center, what player 2 openings make it as hard as possible for player 1?"), 2);
+    cs.render_microblock();
+    c4s->play("4");
     cs.render_microblock();
     cs.remove_subscene("c4gs");
+
+    cs.stage_macroblock(FileBlock("To confuse red, should player 2 respond in the center, or one over? What about all the way on the side?"), 6);
     c4s->play("4");
     cs.render_microblock();
     c4s->undo(1);
@@ -199,8 +205,12 @@ void intro(CompositeScene& cs) {
     cs.render_microblock();
     c4s->undo(1);
     cs.render_microblock();
+    c4s->play("7");
+    cs.render_microblock();
+    c4s->undo(1);
+    cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Is there some change of perspective that shows how mere mortals could win against god 2?"), 1);
+    cs.stage_macroblock(FileBlock("Is there some change of perspective that shows how us mortals could win against god 2?"), 1);
     cs.slide_subscene(MICRO, "human2", 0, 1);
     god2 = make_shared<PngScene>("God2", .4, .8);
     cs.add_scene_fade_in(MICRO, god2, "god2", .75, -.5);
@@ -228,27 +238,32 @@ void build_graph(CompositeScene& cs) {
         {"surfaces_opacity","0"},
         {"points_opacity","0"},
         {"mirror_force",".005"},
-        {"desired_nodes", "10000 4 <time_since_graph_init> ^ 20 * min"},
+        {"desired_nodes", "10000 3 <time_since_graph_init> ^ 20 * min"},
         {"dimensions", "3"},
         {"physics_multiplier", "<desired_nodes> sqrt"},
         {"flip_by_symmetry", "0"},
     });
     gs->manager.transition(MICRO, "decay", ".4");
 
-    cs.stage_macroblock(FileBlock("Because today, I'm going to show you connect 4 through the eyes of God 1."), 1);
+    cs.stage_macroblock(FileBlock("Because today, I'm going to show you connect 4 through the eyes of God 1."), 2);
+    cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(1), 2);
+    cs.stage_macroblock(SilenceBlock(3), 3);
 
     shared_ptr<LatexScene> ls = make_shared<LatexScene>("\\text{ALL {\\scriptsize IT} {\\small TAKES}}", 1, .6, .3);
     cs.add_scene(ls, "ls", .3, .15);
     cs.render_microblock();
 
     shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("\\text{{\\scriptsize TO PLAY} PERFECTLY}", 1, .8, .4);
-    cs.add_scene(ls2, "ls2", .6, .8);
+    cs.add_scene(ls2, "ls2", .6, .3);
     cs.render_microblock();
 
-    cs.stage_macroblock(SilenceBlock(1), 1);
+    shared_ptr<LatexScene> ls3 = make_shared<LatexScene>("\\text{{\\small IS} THIS GRAPH}", 1, .6, .3);
+    cs.add_scene(ls3, "ls3", .3, .85);
+    cs.render_microblock();
+
+    cs.stage_macroblock(SilenceBlock(3), 1);
     gs->manager.transition(MICRO, "d", "-1");
     gs->manager.transition(MICRO, "physics_multiplier", "0");
     cs.fade_all_subscenes_except(MICRO, "gs", 0);
@@ -257,6 +272,7 @@ void build_graph(CompositeScene& cs) {
 }
 
 void explanation(CompositeScene& cs) {
+    FOR_REAL = false;
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
     cs.add_scene_fade_in(MACRO, c4s, "c4s");
     cs.stage_macroblock(FileBlock("Suppose you're going to play as red, and you want a strategy to play perfectly."), 3);
@@ -302,27 +318,33 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("Instead you could memorize every branch upfront."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("That way you can just recall the right response during the tournament."), 1);
+    cs.stage_macroblock(FileBlock("That way you can just recall the right response during the game."), 1);
     cs.render_microblock();
+    FOR_REAL = true;
 
     shared_ptr<PngScene> terabytes = make_shared<PngScene>("15TB", .6, .6);
+    cs.add_scene_fade_in(MICRO, terabytes, "terabytes");
     cs.stage_macroblock(FileBlock("Well, you'll need to memorize 15 terabytes of connect 4 positions, as this poor soul found out."), 3);
-    double dividing_line = 0.15;
-    terabytes->manager.set("crop_bottom", to_string(dividing_line));
     cs.render_microblock();
     terabytes->manager.transition(MICRO, {
-            {"crop_top", to_string(1-dividing_line)},
-            {"crop_bottom", "0"},
+            {"crop_top", ".87"},
+            {"crop_bottom", ".07"},
+            {"crop_right", ".355"},
+            {"crop_left", ".05"},
+            {"w", ".8"},
+            {"h", ".8"},
     });
     cs.render_microblock();
     cs.render_microblock();
-    return;
 
     Graph g;
     shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", FULL);
 
+    cs.fade_all_subscenes(MICRO, 0);
     cs.add_scene(c4gs, "c4gs");
-    cs.stage_macroblock(FileBlock("These two strategies- brute force search and upfront memorization- involve the same tree of positions."), 1);
+    cs.stage_macroblock(FileBlock("These two strategies- brute force search and upfront memorization- involve the same tree of positions."), 3);
+    cs.render_microblock();
+    cs.render_microblock();
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The difference is that the former makes you think a lot, and the latter makes you remember a lot."), 2);
@@ -336,14 +358,17 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.fade_all_subscenes(MICRO, 0);
     shared_ptr<RealFunctionScene> rfs= make_shared<RealFunctionScene>();
+    rfs->manager.set("ticks_opacity", "0");
     rfs->manager.set("zero_crosshair_opacity", "1");
-    rfs->manager.set({{"center_x", "3"}, {"center_y", "<center_x>"}, {"zoom", "-1.5"}});
+    rfs->manager.set("function0_opacity", "0");
+    rfs->manager.set({{"center_x", "5"}, {"center_y", "5"}, {"zoom", "-1"}});
     cs.add_scene_fade_in(MICRO, rfs, "rfs");
     cs.render_microblock();
     cs.remove_all_subscenes_except("rfs");
 
     cs.stage_macroblock(FileBlock("Plotting the amount of variations that we would need to search with brute force after some amount of moves,"), 1);
-    rfs->manager.transition(MICRO, "function0", "(a) exp");
+    string function0 = "1.4 (a) <center_x> - ^";
+    rfs->manager.transition(MICRO, {{"function0", function0}, {"function0_opacity", "1"}});
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("it looks like this."), 1);
@@ -352,7 +377,8 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("And plotting the positions you'd need to memorize to get to the nth move,"), 1);
     cs.render_microblock();
 
-    rfs->manager.transition(MICRO, "function1", "<center_x> 2 * (a) - exp");
+    string function1 = "1.4 -1 (a) * <center_x> - ^";
+    rfs->manager.transition(MICRO, {{"function1", function1}, {"function1_opacity", "1"}});
 
     cs.stage_macroblock(FileBlock("we see the opposite curve."), 1);
     cs.render_microblock();
@@ -360,7 +386,7 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("This suggests a hybrid approach-"), 1);
     cs.render_microblock();
 
-    string hybrid = "(a) exp <center_x> 2 * (a) - exp min";
+    string hybrid = function0 + " " + function1 + " min";
 
     rfs->manager.transition(MICRO, "function0", hybrid);
     cs.stage_macroblock(FileBlock("Memorizing all positions only up to the midgame,"), 1);
@@ -373,13 +399,10 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("we can balance compute and memory to avoid these exponential explosions."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("And it makes sense- this is exactly what chess players do in practice."), 1);
+    cs.stage_macroblock(FileBlock("This is why chess players memorize openings, and start reading after the position has developed beyond their memory."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("They memorize openings, and practice reading after the position is already developed."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(FileBlock("One of those early solvers of connect 4, Victor Allis, published just that- a table of 500,000 openings, and a computer algorithm which could solve endgames in a few seconds."), 1);
+    cs.stage_macroblock(FileBlock("Victor Allis published just that in the 1988: a table of 500,000 openings, and a computer algorithm which could solve endgames in a few seconds."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Now I don't know about you, but I can't memorize half a million positions."), 1);

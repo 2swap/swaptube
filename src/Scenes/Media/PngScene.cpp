@@ -30,10 +30,8 @@ public:
         // Load the PNG image into a Pixels object
         Pixels image = png_to_pix(picture_name);
 
-        int w = get_width();
-        int h = get_height();
-        double cropped_width = w * (1.0 - state["crop_left"] - state["crop_right"]);
-        double cropped_height = h * (1.0 - state["crop_top"] - state["crop_bottom"]);
+        double cropped_width = image.w * (1.0 - state["crop_left"] - state["crop_right"]);
+        double cropped_height = image.h * (1.0 - state["crop_top"] - state["crop_bottom"]);
         Pixels cropped;
         
         image.crop(
@@ -44,11 +42,11 @@ public:
         );
 
         Pixels scaled;
-        cropped.scale_to_bounding_box(w, h, scaled);
+        cropped.scale_to_bounding_box(get_width(), get_height(), scaled);
 
         // Calculate the position to center the image within the bounding box
-        int x_offset = (get_width() - image.w) / 2;
-        int y_offset = (get_height() - image.h) / 2;
+        int x_offset = (get_width() - scaled.w) / 2;
+        int y_offset = (get_height() - scaled.h) / 2;
 
         // Overwrite the scaled image onto the scene's pixel buffer
         pix.overwrite(scaled, x_offset, y_offset);
