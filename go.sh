@@ -129,6 +129,10 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
 
     clear
 
+    # Print the command as run
+    echo "$0 $*"
+    echo ""
+
     echo "==============================================="
     echo "=================== COMPILE ==================="
     echo "==============================================="

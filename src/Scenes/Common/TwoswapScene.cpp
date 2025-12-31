@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include "../../IO/VisualMedia.cpp"
 #include "../Scene.cpp"
 

@@ -1,4 +1,4 @@
-#include "../Scenes/Connect4/Connect4GraphScene.cpp"
+#include "../Scenes/Connect4/C4GraphScene.cpp"
 #include "../Scenes/Common/CompositeScene.cpp"
 
 void render_video() {

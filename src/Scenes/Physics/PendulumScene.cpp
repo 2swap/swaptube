@@ -43,9 +43,9 @@ public:
         generate_tone();
         for(int x = 0; x < path_background.w; x++) {
             for(int y = 0; y < path_background.h; y++) {
-                int alpha = geta(path_background.get_pixel(x, y));
+                int alpha = geta(path_background.get_pixel_carelessly(x, y));
                 alpha = max(0,alpha-alpha_subtract);
-                path_background.set_pixel(x, y, argb(alpha, 255, 255, 255));
+                path_background.set_pixel_carelessly(x, y, argb(alpha, 255, 255, 255));
             }
         }
     }

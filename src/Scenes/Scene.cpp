@@ -150,7 +150,7 @@ public:
         sq.insert("w");
         sq.insert("h");
         state = manager.respond_to_query(sq);
-        if(global_identifier.size() > 0) publish_global(stage_publish_to_global());
+        if(global_identifier.size() > 0) publish_global();
     }
 
     int get_width() const{
@@ -166,9 +166,16 @@ public:
     }
 
     StateManager manager;
-    string global_identifier = ""; // This is prefixed before the published global state elements
-                                   // to uniquely identify this scene if necessary.
-                                   // Empty by default, meaning no state is published.
+
+    void set_global_identifier(const string& id){
+        // What we are actually here to do
+        global_identifier = id;
+
+        // We also need to publish it immediately, or else it may not be present on the first frame
+        // of something trying to read from global, since global ordering is not guaranteed.
+        // Update_state does this for us.
+        update_state();
+    }
 
 protected:
     Pixels pix;
@@ -182,11 +189,16 @@ protected:
     double get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }
 
 private:
+    string global_identifier = ""; // This is prefixed before the published global state elements
+                                   // to uniquely identify this scene if necessary.
+                                   // Empty by default, meaning no state is published.
+
     StateReturn last_state;
     bool has_updated_since_last_query = false;
 
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
-    void publish_global(const unordered_map<string, double>& s) const {
+    void publish_global() {
+        const unordered_map<string, double>& s = stage_publish_to_global();
         for(const auto& p : s) {
             global_state[global_identifier + "." + p.first] = p.second;
         }

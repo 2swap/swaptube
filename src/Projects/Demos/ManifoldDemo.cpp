@@ -4,8 +4,8 @@ void render_video() {
     ManifoldScene ms;
 
     ms.add_manifold("",
-        "(u)", "0", "(v)",
-        "(u)", "(v)",
+        "(a)", "0", "(b)",
+        "(a)", "(b)",
         "-1", "1", "3000",
         "-1", "1", "3000"
     );
@@ -28,27 +28,27 @@ void render_video() {
         {"mult", "2"},
     });
     ms.manager.transition(MICRO, {
-        {"manifold_x", "(u) -.1 +"},
-        {"manifold_y", "(u) <u_wave> * sin (v) <v_wave> * sin + <mult> /"},
-        {"manifold_z", "(v)"},
+        {"manifold_x", "(a) -.1 +"},
+        {"manifold_y", "(a) <u_wave> * sin (b) <v_wave> * sin + <mult> /"},
+        {"manifold_z", "(b)"},
     });
     ms.render_microblock();
     ms.render_microblock();
 
     // Plane in 3D space
     ms.manager.transition(MICRO, {
-        {"manifold_x", "(u)"},
+        {"manifold_x", "(a)"},
         {"manifold_y", "0"},
-        {"manifold_z", "(v)"},
+        {"manifold_z", "(b)"},
     });
     ms.render_microblock();
     ms.render_microblock();
 
     //Parameterize a sphere with spherical coordinates
     ms.manager.transition(MICRO, {
-        {"manifold_x", "(u) cos (v) sin *"},
-        {"manifold_y", "(u) sin (v) sin *"},
-        {"manifold_z", "(v) cos"},
+        {"manifold_x", "(a) cos (b) sin *"},
+        {"manifold_y", "(a) sin (b) sin *"},
+        {"manifold_z", "(b) cos"},
         {"manifold_u_min", "-1.57"},
         {"manifold_u_max", "1.57"},
         {"manifold_v_min", "-3.14"},
@@ -59,9 +59,9 @@ void render_video() {
 
     // Back to a plane
     ms.manager.transition(MICRO, {
-        {"manifold_x", "(u)"},
+        {"manifold_x", "(a)"},
         {"manifold_y", "0"},
-        {"manifold_z", "(v)"},
+        {"manifold_z", "(b)"},
         {"manifold_u_min", "-3.14"},
         {"manifold_u_max", "3.14"},
         {"manifold_v_min", "-3.14"},
@@ -72,9 +72,9 @@ void render_video() {
 
     // Torus
     ms.manager.transition(MICRO, {
-        {"manifold_x", ".5 (u) cos * 2 + (v) cos *"},
-        {"manifold_y", ".5 (u) cos * 2 + (v) sin *"},
-        {"manifold_z", ".5 (u) sin *"},
+        {"manifold_x", ".5 (a) cos * 2 + (b) cos *"},
+        {"manifold_y", ".5 (a) cos * 2 + (b) sin *"},
+        {"manifold_z", ".5 (a) sin *"},
         {"manifold_u_min", "-3.14"},
         {"manifold_u_max", "3.14"},
         {"manifold_v_min", "-3.14"},

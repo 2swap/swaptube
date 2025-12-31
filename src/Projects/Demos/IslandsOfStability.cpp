@@ -78,6 +78,7 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
 
     CompositeScene cs;
     shared_ptr<PendulumScene> ps = make_shared<PendulumScene>(is.ps, 0.5, 1);
+    ps->set_global_identifier("ps");
     ps->alpha_subtract = 0;
     shared_ptr<LatexScene> ls = make_shared<LatexScene>("\\text{" + is.name + "}", 1, 1, 0.2);
 
@@ -115,8 +116,8 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
     ts->manager.set({
         {"zoom", to_string(is.fingerprint_zoom)},
         {"trail_opacity", "1"},
-        {"trail_x", "{pendulum_theta1}"},
-        {"trail_y", "{pendulum_theta2}"},
+        {"trail_x", "{ps.pendulum_theta1}"},
+        {"trail_y", "{ps.pendulum_theta2}"},
         {"center_x", to_string(is.ps.theta1)},
         {"center_y", to_string(is.ps.theta2)},
     });
@@ -189,8 +190,8 @@ void identify_vibrations(float t1, float t2) {
         string name = "p" + to_string(i);
         cs.add_scene(make_shared<PendulumScene>(ps), name, .75, .25+.5*i);
     }
-    specimens[0].global_identifier = "p0.";
-    specimens[1].global_identifier = "p1.";
+    specimens[0].set_global_identifier("p0");
+    specimens[1].set_global_identifier("p1");
     CoordinateSceneWithTrail coord(.5, 1);
     coord.manager.set({
         {"zoom", "0.05"},
@@ -221,7 +222,7 @@ void stack_diagrams(){
     for(int i = 0; i < bb; i++){
         PendulumScene ps(PendulumScene(isv[i].ps, .5, 1));
         string key = to_string(i);
-        ps.global_identifier = "p"+key+".";
+        ps.set_global_identifier("p"+key);
         cs.add_scene(make_shared<PendulumScene>(ps), "ps"+key, .75, .5);
         cs.manager.set({{"ps"+key+".opacity", "0"}});
     }

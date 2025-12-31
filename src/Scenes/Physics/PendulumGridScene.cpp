@@ -114,7 +114,7 @@ public:
                         color = colorlerp(color, 0xffff0000, 0.5);
                     }
                 }
-                pix.set_pixel(x, y, color);
+                pix.set_pixel_carelessly(x, y, color);
             }
         }
     }
