@@ -306,8 +306,17 @@ void explanation(CompositeScene& cs) {
     cs.render_microblock();
 
     shared_ptr<PngScene> terabytes = make_shared<PngScene>("15TB", .6, .6);
-    cs.stage_macroblock(FileBlock("Well, you'll need to memorize 15 terabytes of connect 4 positions, as this poor soul found out."), 1);
+    cs.stage_macroblock(FileBlock("Well, you'll need to memorize 15 terabytes of connect 4 positions, as this poor soul found out."), 3);
+    double dividing_line = 0.15;
+    terabytes->manager.set("crop_bottom", to_string(dividing_line));
     cs.render_microblock();
+    terabytes->manager.transition(MICRO, {
+            {"crop_top", to_string(1-dividing_line)},
+            {"crop_bottom", "0"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+    return;
 
     Graph g;
     shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, "", FULL);
@@ -378,7 +387,7 @@ void explanation(CompositeScene& cs) {
 
 void render_video() {
     CompositeScene cs;
-    intro(cs);
-    build_graph(cs);
+    //intro(cs);
+    //build_graph(cs);
     explanation(cs);
 }

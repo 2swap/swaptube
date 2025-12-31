@@ -33,17 +33,23 @@ public:
         return x < 0 || x >= w || y < 0 || y >= h;
     }
 
-    inline int get_pixel(int x, int y) const {
-        if(out_of_range(x, y)) return 0;
+    inline int get_pixel_carelessly(int x, int y) const {
+        // TODO Remove before flight
+        if(out_of_range(x, y)) throw runtime_error("Pixel access out of range.");
+        return pixels[w*y+x];
+    }
+
+    inline int get_pixel_carefully(int x, int y) const {
+        if(out_of_range(x, y)) return TRANSPARENT_BLACK; // 0
         return pixels[w*y+x];
     }
 
     inline void overlay_pixel(int x, int y, int col, double overlay_opacity_multiplier = 1){
-        set_pixel(x, y, color_combine(get_pixel(x, y), col, overlay_opacity_multiplier));
+        set_pixel_carefully(x, y, color_combine(get_pixel_carefully(x, y), col, overlay_opacity_multiplier));
     }
 
     inline void get_pixel_by_channels(int x, int y, int& a, int& r, int& g, int& b) const {
-        int col = get_pixel(x,y);
+        int col = get_pixel_carefully(x,y);
         a=geta(col);
         r=getr(col);
         g=getg(col);
@@ -51,15 +57,21 @@ public:
     }
 
     inline int get_alpha(int x, int y) const {
-        return geta(get_pixel(x,y));
+        return geta(get_pixel_carefully(x,y));
     }
 
-    inline void set_pixel(int x, int y, int col) {
+    inline void set_pixel_carelessly(int x, int y, int col) {
+        // TODO Remove before flight
+        if(out_of_range(x, y)) throw runtime_error("Pixel set out of range.");
+        pixels[w*y+x] = col;
+    }
+
+    inline void set_pixel_carefully(int x, int y, int col) {
         if(out_of_range(x, y)) return;
         pixels[w*y+x] = col;
     }
 
-    inline void darken(float factor){
+    void darken(float factor){
         for(int i = 0; i < w*h; i++){
             int a = geta(pixels[i]);
             int r = getr(pixels[i]);
@@ -110,6 +122,27 @@ public:
         }
     }
 
+    void scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const {
+        // Calculate the scaling factor based on the bounding box
+        float scale = min(static_cast<float>(box_w) / w, static_cast<float>(box_h) / h);
+
+        // Calculate the new dimensions
+        int new_width = static_cast<int>(w * scale);
+        int new_height = static_cast<int>(h * scale);
+
+        // Scale the image using bicubic interpolation
+        bicubic_scale(new_width, new_height, scaled);
+    }
+
+    void crop(int x, int y, int cw, int ch, Pixels &cropped) const {
+        if(x < 0 || y < 0 || x + cw > w || y + ch > h)
+            throw runtime_error("Crop dimensions out of range.");
+        cropped = Pixels(cw, ch);
+        for(int dx = 0; dx < cw; dx++)
+            for(int dy = 0; dy < ch; dy++)
+                cropped.set_pixel_carelessly(dx, dy, get_pixel_carelessly(x+dx, y+dy));
+    }
+
     bool is_empty() const {
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
@@ -122,14 +155,16 @@ public:
     }
 
     void add_border(int col, int thickness = 1){
+        if(thickness > w || thickness > h)
+            throw runtime_error("Border thickness too large.");
         for(int t = 0; t < thickness; t++){
             for(int x = 0; x < w; x++){
-                set_pixel(x, t, col);
-                set_pixel(x, h-1-t, col);
+                set_pixel_carelessly(x, t, col);
+                set_pixel_carelessly(x, h-1-t, col);
             }
             for(int y = 0; y < h; y++){
-                set_pixel(t, y, col);
-                set_pixel(w-1-t, y, col);
+                set_pixel_carelessly(t, y, col);
+                set_pixel_carelessly(w-1-t, y, col);
             }
         }
     }
@@ -139,7 +174,7 @@ public:
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;
             for(int y = 0; y < p.h; y++){
-                overlay_pixel(xpdx, y+dy, p.get_pixel(x, y), overlay_opacity_multiplier);
+                overlay_pixel(xpdx, y+dy, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
             }
         }
     }
@@ -148,15 +183,17 @@ public:
         for(int x = 0; x < p.w; x++){
             int xpdx = x+dx;
             for(int y = 0; y < p.h; y++){
-                set_pixel(xpdx, y+dy, p.get_pixel(x, y));
+                set_pixel_carefully(xpdx, y+dy, p.get_pixel_carefully(x, y));
             }
         }
     }
 
     void fill_rect(int x, int y, int rw, int rh, int col){
+        if(x + rw > w) rw = w - x;
+        if(y + rh > h) rh = h - y;
         for(int dx = 0; dx < rw; dx++)
             for(int dy = 0; dy < rh; dy++)
-                set_pixel(x+dx, y+dy, col);
+                set_pixel_carelessly(x+dx, y+dy, col);
     }
 
     void fill_circle(double x, double y, double r, int col, double opa=1){
@@ -232,90 +269,6 @@ public:
         }
     }
 
-    void print_colors_by_frequency(){
-        // Map to store the frequency of each color
-        unordered_map<int, int> color_frequency;
-
-        // Traverse the pixels vector and count the occurrences of each color
-        for (int x = 0; x < w; x++) for (int y = 0; y < h; y++)
-            color_frequency[get_pixel(x, y)]++;
-
-        // Convert the map to a vector of pairs (color, frequency)
-        vector<pair<int, int>> frequency_vector(color_frequency.begin(), color_frequency.end());
-
-        // Sort the vector by frequency in descending order
-        sort(frequency_vector.begin(), frequency_vector.end(), [](const pair<int, int>& a, const pair<int, int>& b) {
-            return b.second < a.second;
-        });
-
-        // Print the top 5 most common colors
-        cout << "Top 5 most common colors:" << endl;
-        for (int i = 0; i < min(5, static_cast<int>(frequency_vector.size())); ++i) {
-            int color = frequency_vector[i].first;
-            int frequency = frequency_vector[i].second;
-            cout << "Color: " << color_to_string(color) << ", Frequency: " << frequency << endl;
-        }
-    }
-
-    // TODO this doesn't work yet
-    inline float fractional_part(float x) {return x - floor(x);}
-    void xiaolin_wu(int x0, int y0, int x1, int y1, int col) {
-        bool steep = abs(y1 - y0) > abs(x1 - x0);
-        if (steep) {
-            std::swap(x0, y0);
-            std::swap(x1, y1);
-        }
-        if (x0 > x1) {
-            std::swap(x0, x1);
-            std::swap(y0, y1);
-        }
-
-        int dx = x1 - x0;
-        int dy = y1 - y0;
-        float gradient = dy / static_cast<float>(dx);
-
-        // Compute start and end points
-        int xend = round(x0);
-        float yend = y0 + gradient * (xend - x0);
-        float xgap = 1.0 - fractional_part(x0 + 0.5);
-        int xpxl1 = xend;
-        int ypxl1 = floor(yend);
-        if (steep) {
-            set_pixel(ypxl1, xpxl1, col * (1 - fractional_part(yend) * xgap));
-            set_pixel(ypxl1 + 1, xpxl1, col * fractional_part(yend) * xgap);
-        } else {
-            set_pixel(xpxl1, ypxl1, col * (1 - fractional_part(yend) * xgap));
-            set_pixel(xpxl1, ypxl1 + 1, col * fractional_part(yend) * xgap);
-        }
-
-        // Compute end points
-        xend = round(x1);
-        yend = y1 + gradient * (xend - x1);
-        xgap = fractional_part(x1 + 0.5);
-        int xpxl2 = xend;
-        int ypxl2 = floor(yend);
-        if (steep) {
-            set_pixel(ypxl2, xpxl2, col * (1 - fractional_part(yend) * xgap));
-            set_pixel(ypxl2 + 1, xpxl2, col * fractional_part(yend) * xgap);
-        } else {
-            set_pixel(xpxl2, ypxl2, col * (1 - fractional_part(yend) * xgap));
-            set_pixel(xpxl2, ypxl2 + 1, col * fractional_part(yend) * xgap);
-        }
-
-        // Main loop
-        if (steep) {
-            for (int x = xpxl1 + 1; x < xpxl2; x++) {
-                set_pixel(floor(gradient * (x - x0) + y0), x, col * (1 - fractional_part(gradient * (x - x0) + y0)));
-                set_pixel(floor(gradient * (x - x0) + y0) + 1, x, col * fractional_part(gradient * (x - x0) + y0));
-            }
-        } else {
-            for (int x = xpxl1 + 1; x < xpxl2; x++) {
-                set_pixel(x, floor(gradient * (x - x0) + y0), col * (1 - fractional_part(gradient * (x - x0) + y0)));
-                set_pixel(x, floor(gradient * (x - x0) + y0) + 1, col * fractional_part(gradient * (x - x0) + y0));
-            }
-        }
-    }
-
     // The x, y, rw, rh parameters here correspond to the external bounding box.
     void rounded_rect(float x, float y, float rw, float rh, float r, int col){
         int xplusr = round(x+r);
@@ -331,7 +284,7 @@ public:
     }
 
     void flood_fill(int x, int y, int color) {
-        int targetColor = get_pixel(x, y);
+        int targetColor = get_pixel_carefully(x, y);
 
         // Check if the target pixel already has the desired color
         if (targetColor == color)
@@ -345,15 +298,15 @@ public:
             stack.pop();
 
             // Check if current pixel is within the image boundaries
-            if (curX < 0 || curX >= w || curY < 0 || curY >= h)
+            if (out_of_range(curX, curY))
                 continue;
 
             // Check if current pixel is the target color
-            if (get_pixel(curX, curY) != targetColor)
+            if (get_pixel_carelessly(curX, curY) != targetColor)
                 continue;
 
             // Update the pixel color
-            set_pixel(curX, curY, color);
+            set_pixel_carelessly(curX, curY, color);
 
             // Push neighboring pixels onto the stack
             stack.push({curX - 1, curY}); // Left
@@ -368,43 +321,37 @@ public:
 
         for (int y = 0; y*scale_down_factor < h; y++) {
             for (int x = 0; x*scale_down_factor < w; x++) {
-                result.set_pixel(x, y, get_pixel(x*scale_down_factor, y*scale_down_factor));
+                result.set_pixel_carelessly(x, y, get_pixel_carelessly(x*scale_down_factor, y*scale_down_factor));
             }
         }
 
         return result;
     }
 
-    Pixels rotate_90_inverse() const {
-        // Create a new Pixels object with swapped dimensions
-        Pixels rotated(h, w);
+    void rotate_90_inverse(Pixels& rotated) const {
+        rotated = Pixels(h, w);
 
         // Map each pixel to its new location
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                rotated.set_pixel(y, w-1-x, get_pixel(x, y));
+                rotated.set_pixel_carelessly(y, w-1-x, get_pixel_carelessly(x, y));
             }
         }
-
-        return rotated;
     }
 
-    Pixels rotate_90() const {
-        // Create a new Pixels object with swapped dimensions
-        Pixels rotated(h, w);
+    void rotate_90(Pixels& rotated) const {
+        rotated = Pixels(h, w);
 
         // Map each pixel to its new location
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {
-                rotated.set_pixel(h-1-y, x, get_pixel(x, y));
+                rotated.set_pixel_carelessly(h-1-y, x, get_pixel_carelessly(x, y));
             }
         }
-
-        return rotated;
     }
 
-    Pixels bicubic_scale(int new_width, int new_height) const {
-        Pixels result(new_width, new_height);
+    void bicubic_scale(int new_width, int new_height, Pixels& result) const {
+        result = Pixels(new_width, new_height);
 
         float x_ratio = static_cast<float>(w) / new_width;
         float y_ratio = static_cast<float>(h) / new_height;
@@ -434,7 +381,7 @@ public:
                         xi = std::clamp(xi, 0, w - 1);
                         yi = std::clamp(yi, 0, h - 1);
 
-                        int pixel = get_pixel(xi, yi);
+                        int pixel = get_pixel_carefully(xi, yi);
                         float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
 
                         pa += weight * geta(pixel);
@@ -448,11 +395,9 @@ public:
                 pg = std::clamp(static_cast<int>(pg), 0, 255);
                 pb = std::clamp(static_cast<int>(pb), 0, 255);
 
-                result.set_pixel(x, y, argb(pa, pr, pg, pb));
+                result.set_pixel_carelessly(x, y, argb(pa, pr, pg, pb));
             }
         }
-
-        return result;
     }
 
     // Bicubic weight function
@@ -585,7 +530,7 @@ Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensi
             unsigned int intensity = intensities[y][x];
             // Square it to make it more peaky
             int normalized_squared_intensity = square(intensity - minIntensity) * 255. / square(intensityRange);
-            result.set_pixel(x, y, (normalized_squared_intensity << 24) | 0x00FFFFFF); // White color with alpha
+            result.set_pixel_carefully(x, y, (normalized_squared_intensity << 24) | 0x00FFFFFF); // White color with alpha
         }
     }
 
@@ -607,7 +552,7 @@ Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, 
     return result;
 }
 
-Pixels crop(const Pixels& p) {
+Pixels crop_by_alpha(const Pixels& p) {
     int min_x = p.w;
     int min_y = p.h;
     int max_x = -1;
@@ -635,7 +580,7 @@ Pixels crop(const Pixels& p) {
     // Copy the pixels within the bounding box to the cropped Pixels
     for (int y = min_y; y <= max_y; y++) {
         for (int x = min_x; x <= max_x; x++) {
-            cropped_pixels.set_pixel(x - min_x, y - min_y, p.get_pixel(x, y));
+            cropped_pixels.set_pixel_carelessly(x - min_x, y - min_y, p.get_pixel_carelessly(x, y));
         }
     }
 

@@ -79,7 +79,7 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     // Write image data
     for (int y = 0; y < pix.h; y++) {
         for (int x = 0; x < pix.w; x++) {
-            int pixel = pix.get_pixel(x, y);
+            int pixel = pix.get_pixel_carelessly(x, y);
             uint8_t a = (pixel >> 24) & 0xFF;
             uint8_t r = (pixel >> 16) & 0xFF;
             uint8_t g = (pixel >> 8) & 0xFF;
@@ -183,7 +183,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             int offset = (y * width + x) * 4;
-            ret.set_pixel(x, y, argb(
+            ret.set_pixel_carelessly(x, y, argb(
                 raw_data[offset + 3],  // Alpha
                 raw_data[offset + 2],  // Red
                 raw_data[offset + 1],  // Green
@@ -198,7 +198,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     g_object_unref(handle);
 
     //ret.grayscale_to_alpha();
-    return crop(ret);
+    return crop_by_alpha(ret);
 }
 
 Pixels png_to_pix(const string& filename_with_or_without_suffix) {
@@ -296,7 +296,7 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
             uint8_t g = px[1];
             uint8_t b = px[2];
             uint8_t a = px[3];
-            ret.set_pixel(x, y, argb(a, r, g, b));
+            ret.set_pixel_carelessly(x, y, argb(a, r, g, b));
         }
     }
 
@@ -338,15 +338,8 @@ Pixels png_to_pix_bounding_box(const string& filename, int w, int h) {
 
     Pixels image = png_to_pix(filename);
 
-    // Calculate the scaling factor based on the bounding box
-    float scale = min(static_cast<float>(w) / image.w, static_cast<float>(h) / image.h);
-
-    // Calculate the new dimensions
-    int new_width = static_cast<int>(image.w * scale);
-    int new_height = static_cast<int>(image.h * scale);
-
-    // Scale the image using bicubic interpolation
-    Pixels scaled = image.bicubic_scale(new_width, new_height);
+    Pixels scaled;
+    image.scale_to_bounding_box(w, h, scaled);
 
     // Store in cache with scale
     png_bounding_box_cache[key] = scaled;

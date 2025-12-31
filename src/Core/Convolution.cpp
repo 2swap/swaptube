@@ -26,12 +26,12 @@ public:
 
     inline int get_pixel(int x, int y) const {
         if (out_of_range(x, y)) return 0;
-        return pixels.get_pixel(x - translation_x, y - translation_y);
+        return pixels.get_pixel_carelessly(x - translation_x, y - translation_y);
     }
 
     inline void set_pixel(int x, int y, int col) {
         if (out_of_range(x, y)) return;
-        pixels.set_pixel(x - translation_x, y - translation_y, col);
+        pixels.set_pixel_carelessly(x - translation_x, y - translation_y, col);
     }
 
     inline int get_alpha(int x, int y) const {
@@ -86,10 +86,10 @@ void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int colo
         auto [x, y] = stack.top();
         stack.pop();
 
-        if (p.out_of_range(x, y) || p.get_alpha(x, y) == 0 || ret.get_pixel(x, y) != 0)
+        if (p.out_of_range(x, y) || p.get_alpha(x, y) == 0 || ret.get_pixel_carelessly(x, y) != 0)
             continue;
 
-        ret.set_pixel(x, y, color);
+        ret.set_pixel_carelessly(x, y, color);
 
         stack.push({x + 1, y}); // Right
         stack.push({x - 1, y}); // Left
@@ -106,7 +106,7 @@ Pixels segment(const Pixels& p, unsigned int& id) {
     // Perform flood fill for each pixel in the input TranslatedPixels
     for (int y = 0; y < ret.h; y++) {
         for (int x = 0; x < ret.w; x++) {
-            if (p.get_alpha(x, y) != 0 && ret.get_pixel(x, y) == 0) {
+            if (p.get_alpha(x, y) != 0 && ret.get_pixel_carelessly(x, y) == 0) {
                 flood_fill(ret, p, x, y, id);
                 id++; // Increment the identifier for the next shape
             }
@@ -117,19 +117,16 @@ Pixels segment(const Pixels& p, unsigned int& id) {
 }
 
 void flood_fill_connected_to_opaque(const Pixels& p, Pixels& connected_to_opaque, int x, int y) {
-    int width = p.w;
-    int height = p.h;
-
     // Check if current pixel is within bounds and has nonzero alpha channel
-    if (x < 0 || x >= width || y < 0 || y >= height || p.get_alpha(x, y) == 0)
+    if (p.out_of_range(x, y) || p.get_alpha(x, y) == 0)
         return;
 
     // Check if the current pixel is already marked in connected_to_opaque
-    if (connected_to_opaque.get_pixel(x, y) != 0)
+    if (connected_to_opaque.get_pixel_carelessly(x, y) != 0)
         return;
 
     // Mark the current pixel as connected to an opaque pixel
-    connected_to_opaque.set_pixel(x, y, 0xffffffff);
+    connected_to_opaque.set_pixel_carelessly(x, y, 0xffffffff);
 
     // Recursive flood fill for adjacent pixels
     flood_fill_connected_to_opaque(p, connected_to_opaque, x + 1, y); // Right
@@ -149,7 +146,7 @@ Pixels remove_unconnected_components(const Pixels& p) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             // Check if current pixel has alpha channel high enough and is not marked as connected_to_opaque
-            if (p.get_alpha(x, y) > 50 && output.get_pixel(x, y) == 0) {
+            if (p.get_alpha(x, y) > 50 && output.get_pixel_carelessly(x, y) == 0) {
                 // Perform flood-fill to mark all connected pixels as connected to an opaque pixel
                 flood_fill_connected_to_opaque(p, output, x, y);
             }
@@ -159,8 +156,8 @@ Pixels remove_unconnected_components(const Pixels& p) {
     // Construct the output by copying the input and bitwise AND-ing it
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            int pixel = p.get_pixel(x, y) & output.get_pixel(x, y);
-            output.set_pixel(x, y, pixel);
+            int pixel = p.get_pixel_carelessly(x, y) & output.get_pixel_carelessly(x, y);
+            output.set_pixel_carelessly(x, y, pixel);
         }
     }
 
@@ -351,7 +348,7 @@ Pixels colorize_segments(const Pixels& segmented) {
     // Iterate over each pixel in the segmented image
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            colorized.set_pixel(x, y, segment_id_to_color(segmented.get_pixel(x, y)) | 0xff000000);  // Copy the original pixel if not part of any segment
+            colorized.set_pixel_carelessly(x, y, segment_id_to_color(segmented.get_pixel_carelessly(x, y)) | 0xff000000);  // Copy the original pixel if not part of any segment
         }
     }
 
@@ -363,7 +360,7 @@ int count_pixels_with_color(const Pixels& p, const unsigned int color) {
 
     for (int y = 0; y < p.h; ++y) {
         for (int x = 0; x < p.w; ++x) {
-            if (p.get_pixel(x, y) == color) {
+            if (p.get_pixel_carelessly(x, y) == color) {
                 count++;
             }
         }
