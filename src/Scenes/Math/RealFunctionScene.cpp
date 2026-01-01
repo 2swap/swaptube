@@ -20,6 +20,10 @@ public:
         manager.set({
             {"function0", "0"},
             {"function1", "0"},
+            {"function0_left", "-100000"},
+            {"function0_right", "100000"},
+            {"function1_left", "-100000"},
+            {"function1_right", "100000"},
             {"function0_opacity", "1"},
             {"function1_opacity", "0"},
             {"ticks_opacity", "1"},
@@ -56,6 +60,9 @@ public:
 
         float thickness = get_geom_mean_size() / 200.f;
         for (int func_idx = 0; func_idx < 2; func_idx++) {
+            float left_bound_this = max(left_bound, state["function" + to_string(func_idx) + "_left"]);
+            float right_bound_this = min(right_bound, state["function" + to_string(func_idx) + "_right"]);
+            if (left_bound_this >= right_bound_this) continue;
             float opacity = opacities[func_idx];
             if (opacity <= 0.01) continue;
 
@@ -63,7 +70,7 @@ public:
             glm::vec2 last_pixel = {-1, -1};
             bool first_point = true;
             int color = function_colors[func_idx];
-            for (double x = left_bound; x <= right_bound; x += dx) {
+            for (double x = left_bound_this; x <= right_bound_this; x += dx) {
                 float val = call_the_function(x, re);
                 glm::vec2 pixel = point_to_pixel({x, val});
                 if (first_point) {
@@ -79,7 +86,7 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
-        state_query_insert_multiple(sq, {"function0", "function1", "function0_opacity", "function1_opacity"});
+        state_query_insert_multiple(sq, {"function0", "function1", "function0_opacity", "function1_opacity", "function0_left", "function0_right", "function1_left", "function1_right"});
         return sq;
     }
 

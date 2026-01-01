@@ -1,6 +1,7 @@
 #include "../Scenes/Common/CompositeScene.cpp"
 #include "../Scenes/Media/LatexScene.cpp"
 #include "../Scenes/Media/PngScene.cpp"
+#include "../Scenes/Media/Mp4Scene.cpp"
 #include "../Scenes/Media/WhitePaperScene.cpp"
 #include "../Scenes/Math/RealFunctionScene.cpp"
 #include "../Scenes/Connect4/C4Scene.cpp"
@@ -320,7 +321,6 @@ void explanation(CompositeScene& cs) {
 
     cs.stage_macroblock(FileBlock("That way you can just recall the right response during the game."), 1);
     cs.render_microblock();
-    FOR_REAL = true;
 
     shared_ptr<PngScene> terabytes = make_shared<PngScene>("15TB", .6, .6);
     cs.add_scene_fade_in(MICRO, terabytes, "terabytes");
@@ -360,15 +360,23 @@ void explanation(CompositeScene& cs) {
     shared_ptr<RealFunctionScene> rfs= make_shared<RealFunctionScene>();
     rfs->manager.set("ticks_opacity", "0");
     rfs->manager.set("zero_crosshair_opacity", "1");
-    rfs->manager.set("function0_opacity", "0");
-    rfs->manager.set({{"center_x", "5"}, {"center_y", "5"}, {"zoom", "-1"}});
+    rfs->manager.set("function0_opacity", "1");
+    rfs->manager.set("function1_opacity", "1");
+    rfs->manager.set("function0_right", "0");
+    rfs->manager.set("function0_left", "0");
+    rfs->manager.set("function1_right", "0");
+    rfs->manager.set("function1_left", "0");
+    string function0 = "1.4 (a) <center_x> - ^";
+    string function1 = "1.4 -1 (a) * <center_x> + ^";
+    rfs->manager.set("function0", function0);
+    rfs->manager.set("function1", function1);
+    rfs->manager.set({{"center_x", "8"}, {"center_y", "5"}, {"zoom", "-1"}});
     cs.add_scene_fade_in(MICRO, rfs, "rfs");
     cs.render_microblock();
     cs.remove_all_subscenes_except("rfs");
 
     cs.stage_macroblock(FileBlock("Plotting the amount of variations that we would need to search with brute force after some amount of moves,"), 1);
-    string function0 = "1.4 (a) <center_x> - ^";
-    rfs->manager.transition(MICRO, {{"function0", function0}, {"function0_opacity", "1"}});
+    rfs->manager.transition(MICRO, "function0_right", "20");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("it looks like this."), 1);
@@ -377,8 +385,7 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("And plotting the positions you'd need to memorize to get to the nth move,"), 1);
     cs.render_microblock();
 
-    string function1 = "1.4 -1 (a) * <center_x> - ^";
-    rfs->manager.transition(MICRO, {{"function1", function1}, {"function1_opacity", "1"}});
+    rfs->manager.transition(MICRO, "function1_right", "20");
 
     cs.stage_macroblock(FileBlock("we see the opposite curve."), 1);
     cs.render_microblock();
@@ -386,26 +393,36 @@ void explanation(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("This suggests a hybrid approach-"), 1);
     cs.render_microblock();
 
-    string hybrid = function0 + " " + function1 + " min";
-
-    rfs->manager.transition(MICRO, "function0", hybrid);
+    rfs->manager.transition(MICRO, "function0_right", "<center_x>");
     cs.stage_macroblock(FileBlock("Memorizing all positions only up to the midgame,"), 1);
     cs.render_microblock();
 
-    rfs->manager.transition(MICRO, "function1", hybrid);
+    rfs->manager.transition(MICRO, "function1_left", "<center_x>");
     cs.stage_macroblock(FileBlock("and using search after the middle of the game,"), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("we can balance compute and memory to avoid these exponential explosions."), 1);
     cs.render_microblock();
+    FOR_REAL = true;
 
-    cs.stage_macroblock(FileBlock("This is why chess players memorize openings, and start reading after the position has developed beyond their memory."), 1);
+    shared_ptr<Mp4Scene> chess_clip = make_shared<Mp4Scene>(vector<string>{"chess"}, 2, .6, .6);
+    cs.add_scene_fade_in(MICRO, chess_clip, "chess_clip");
+    StateSet frame = chess_clip->manager.set("current_frame", "0");
+    cs.stage_macroblock(FileBlock("This is why chess players memorize openings, and start reading after the position has developed beyond their memory."), 5);
+    cs.render_microblock();
+    chess_clip->manager.begin_timer("MP4_Frame");
+    chess_clip->manager.set(frame);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "chess_clip", 0);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Victor Allis published just that in the 1988: a table of 500,000 openings, and a computer algorithm which could solve endgames in a few seconds."), 1);
+    cs.stage_macroblock(FileBlock("Victor Allis published just that in 1988: a table of 500,000 openings, and a computer algorithm which could solve endgames in a few seconds."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Now I don't know about you, but I can't memorize half a million positions."), 1);
+    cs.render_microblock();
 }
 
 void render_video() {

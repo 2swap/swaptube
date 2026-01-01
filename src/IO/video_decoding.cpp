@@ -12,7 +12,7 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
-#include "../misc/Pixels.h"
+#include "../Core/Pixels.h"
 
 // mp4_to_pix_bounding_box:
 // Loads the specified frame (by index) from the given MP4 file,
@@ -21,34 +21,34 @@ extern "C" {
 
 class MP4FrameReader {
 public:
-    explicit MP4FrameReader(const std::string &video_name)
-        : fmtCtx(nullptr), codecCtx(nullptr), swsCtx(nullptr),
+    explicit MP4FrameReader(const std::string &vn)
+        : video_name(vn), fmtCtx(nullptr), codecCtx(nullptr), swsCtx(nullptr),
           packet(nullptr), frame(nullptr), frameRGBA(nullptr),
           buffer(nullptr), buffer_size(0), currentFrame(-1), videoStreamIdx(-1)
     {
-        open_file(video_name);
+        open_file();
     }
 
     ~MP4FrameReader() {
         cleanup();
     }
 
-    void change_video(const std::string &video_name) {
+    void change_video(const std::string &vn) {
         reset();
-        open_file(video_name);
+        video_name = vn;
+        open_file();
     }
 
-    Pixels get_frame(int frame_index, int target_width, int target_height, bool &no_more_frames) {
-        no_more_frames = false;
-
+    bool get_frame(int frame_index, int target_width, int target_height, Pixels& pix) {
         if (frame_index <= currentFrame) {
             // Requested an earlier frame -> reset decoding.
             reset();
-            open_file(filename);
+            open_file();
         }
 
         // Ensure scaling context matches requested output size.
-        ensure_scaler(target_width, target_height);
+        int scaled_width, scaled_height;
+        ensure_scaler(target_width, target_height, scaled_width, scaled_height);
 
         // Decode until reaching the desired frame.
         while (av_read_frame(fmtCtx, packet) >= 0) {
@@ -67,7 +67,7 @@ public:
 
                     currentFrame++;
                     if (currentFrame == frame_index) {
-                        // Convert frame to RGBA
+                        // Convert frame to RGBA (scaled to bounding box size)
                         sws_scale(swsCtx,
                                   frame->data,
                                   frame->linesize,
@@ -77,20 +77,20 @@ public:
                                   frameRGBA->linesize);
 
                         // Copy into Pixels
-                        Pixels pix(target_width, target_height);
-                        for (int y = 0; y < target_height; y++) {
-                            for (int x = 0; x < target_width; x++) {
+                        pix = Pixels(scaled_width, scaled_height);
+                        for (int y = 0; y < scaled_height; y++) {
+                            for (int x = 0; x < scaled_width; x++) {
                                 int offset = y * frameRGBA->linesize[0] + x * 4;
                                 uint8_t r = frameRGBA->data[0][offset];
                                 uint8_t g = frameRGBA->data[0][offset + 1];
                                 uint8_t b = frameRGBA->data[0][offset + 2];
                                 uint8_t a = frameRGBA->data[0][offset + 3];
-                                pix.set_pixel(x, y, argb(a, r, g, b));
+                                pix.set_pixel_carelessly(x, y, argb(a, r, g, b));
                             }
                         }
 
                         av_packet_unref(packet);
-                        return pix;
+                        return false;
                     }
                 }
             }
@@ -98,12 +98,11 @@ public:
         }
 
         // Reached EOF without finding the frame.
-        no_more_frames = true;
-        return Pixels();
+        return true;
     }
 
 private:
-    std::string filename;
+    std::string video_name;
     AVFormatContext *fmtCtx;
     AVCodecContext *codecCtx;
     SwsContext *swsCtx;
@@ -115,11 +114,11 @@ private:
     int currentFrame;
     int videoStreamIdx;
 
-    void open_file(const std::string &video_name) {
-        filename = video_name;
+    void open_file() {
+        string filename = video_name;
         if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".mp4")
             filename += ".mp4";
-        filename = PATH_MANAGER.this_project_media_dir + filename;
+        filename = "io_in/" + filename;
 
         if (avformat_open_input(&fmtCtx, filename.c_str(), nullptr, nullptr) != 0)
             throw std::runtime_error("Could not open video file: " + filename);
@@ -154,24 +153,39 @@ private:
         currentFrame = -1;
     }
 
-    void ensure_scaler(int width, int height) {
-        // Recreate SWS context and buffer if size changed
-        if (swsCtx && (frameRGBA->width == width && frameRGBA->height == height))
+    void ensure_scaler(int width, int height, int &scaled_width, int &scaled_height) {
+        // Compute scaled size preserving aspect ratio and not scaling up
+        int srcW = codecCtx->width;
+        int srcH = codecCtx->height;
+        if (srcW <= 0 || srcH <= 0)
+            throw std::runtime_error("Invalid source dimensions.");
+
+        double scaleX = (double)width / (double)srcW;
+        double scaleY = (double)height / (double)srcH;
+        double scale = std::min(scaleX, scaleY);
+        if (scale > 1.0) scale = 1.0; // don't scale up
+
+        scaled_width = std::max(1, (int)(srcW * scale + 0.5));
+        scaled_height = std::max(1, (int)(srcH * scale + 0.5));
+
+        // If scaler already matches desired scaled size, keep it.
+        if (swsCtx && (frameRGBA->width == scaled_width) && (frameRGBA->height == scaled_height))
             return;
 
+        // Recreate SWS context and buffer if size changed
         if (swsCtx) sws_freeContext(swsCtx);
         if (buffer) av_free(buffer);
 
-        int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGBA, width, height, 1);
+        int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGBA, scaled_width, scaled_height, 1);
         buffer = (uint8_t *)av_malloc(numBytes);
         buffer_size = numBytes;
         av_image_fill_arrays(frameRGBA->data, frameRGBA->linesize, buffer,
-                             AV_PIX_FMT_RGBA, width, height, 1);
-        frameRGBA->width = width;
-        frameRGBA->height = height;
+                             AV_PIX_FMT_RGBA, scaled_width, scaled_height, 1);
+        frameRGBA->width = scaled_width;
+        frameRGBA->height = scaled_height;
 
         swsCtx = sws_getContext(codecCtx->width, codecCtx->height, codecCtx->pix_fmt,
-                                width, height, AV_PIX_FMT_RGBA,
+                                scaled_width, scaled_height, AV_PIX_FMT_RGBA,
                                 SWS_BILINEAR, nullptr, nullptr, nullptr);
 
         if (!swsCtx)

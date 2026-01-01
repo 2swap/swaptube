@@ -5,14 +5,13 @@
 
 class Mp4Scene : public Scene {
 public:
-    Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed = 1, const double width = 1, const double height = 1)
+    Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed, const double width = 1, const double height = 1)
         : Scene(width, height), first_frame_this_video(0), current_video_index(0), video_filenames(mp4_filenames), current_video_reader(mp4_filenames[0]) {
         manager.begin_timer("MP4_Frame");
         manager.set("current_frame_index", "<MP4_Frame> " + to_string(playback_speed * FRAMERATE) + " * .5 + floor");
     }
 
-    // Since we want to update to a new video frame each time, we force a redraw.
-    bool check_if_data_changed() const override { return true; }
+    bool check_if_data_changed() const override { return false; }
     void mark_data_unchanged() override { }
     void change_data() override { }
 
@@ -25,14 +24,14 @@ public:
         cout << "rendering concatenated mp4 videos, frame " << to_string(current_frame_index_adjusted) << endl;
 
         // Load the current video frame into a Pixels object.
-        bool no_more_frames = false;
-        Pixels frame = current_video_reader.get_frame(current_frame_index_adjusted, get_width(), get_height(), no_more_frames);
+        Pixels frame;
+        bool no_more_frames = current_video_reader.get_frame(current_frame_index_adjusted, get_width(), get_height(), frame);
         if (no_more_frames) {
             cout << "No more frames!" << endl;
             first_frame_this_video = current_frame_index;
             current_video_index = (current_video_index + 1) % video_filenames.size();
             current_video_reader.change_video(video_filenames[current_video_index]);
-            frame = current_video_reader.get_frame(0, get_width(), get_height(), no_more_frames);
+            current_video_reader.get_frame(0, get_width(), get_height(), frame);
         }
 
         // Calculate the offsets to center the frame in the output
