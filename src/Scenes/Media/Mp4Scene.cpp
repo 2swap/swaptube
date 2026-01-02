@@ -8,7 +8,7 @@ public:
     Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed, const double width = 1, const double height = 1)
         : Scene(width, height), first_frame_this_video(0), current_video_index(0), video_filenames(mp4_filenames), current_video_reader(mp4_filenames[0]) {
         manager.begin_timer("MP4_Frame");
-        manager.set("current_frame_index", "<MP4_Frame> " + to_string(playback_speed * FRAMERATE) + " * .5 + floor");
+        manager.set("current_frame", "<MP4_Frame> " + to_string(playback_speed * FRAMERATE) + " * .5 + floor");
     }
 
     bool check_if_data_changed() const override { return false; }
@@ -19,16 +19,16 @@ public:
     // scales it to fit within the scene's bounding box,
     // and centers it just as in PngScene.
     void draw() override {
-        int current_frame_index = state["current_frame_index"];
-        int current_frame_index_adjusted = current_frame_index - first_frame_this_video;
-        cout << "rendering concatenated mp4 videos, frame " << to_string(current_frame_index_adjusted) << endl;
+        int current_frame = state["current_frame"];
+        int current_frame_adjusted = current_frame - first_frame_this_video;
+        cout << "rendering concatenated mp4 videos, frame " << to_string(current_frame_adjusted) << endl;
 
         // Load the current video frame into a Pixels object.
         Pixels frame;
-        bool no_more_frames = current_video_reader.get_frame(current_frame_index_adjusted, get_width(), get_height(), frame);
+        bool no_more_frames = current_video_reader.get_frame(current_frame_adjusted, get_width(), get_height(), frame);
         if (no_more_frames) {
             cout << "No more frames!" << endl;
-            first_frame_this_video = current_frame_index;
+            first_frame_this_video = current_frame;
             current_video_index = (current_video_index + 1) % video_filenames.size();
             current_video_reader.change_video(video_filenames[current_video_index]);
             current_video_reader.get_frame(0, get_width(), get_height(), frame);
@@ -42,7 +42,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"current_frame_index"};
+        return StateQuery{"current_frame"};
     }
 
 private:

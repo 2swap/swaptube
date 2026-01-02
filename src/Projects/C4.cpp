@@ -405,23 +405,150 @@ void explanation(CompositeScene& cs) {
     cs.render_microblock();
     FOR_REAL = true;
 
-    shared_ptr<Mp4Scene> chess_clip = make_shared<Mp4Scene>(vector<string>{"chess"}, 2, .6, .6);
+    cs.fade_all_subscenes(MICRO, 0);
+    shared_ptr<LatexScene> ls_memo = make_shared<LatexScene>("\\text{Common opening worth memorizing}", 1, .8, .3);
+    shared_ptr<LatexScene> ls_comp = make_shared<LatexScene>("\\text{Rare variation, switch to reading ahead}", 1, .8, .3);
+    cs.add_scene_fade_in(MICRO, ls_memo, "ls_memo", .5, .1);
+    cs.add_scene(ls_comp, "ls_comp", .5, .1);
+    cs.manager.set("ls_comp.opacity", "0");
+    shared_ptr<Mp4Scene> chess_clip = make_shared<Mp4Scene>(vector<string>{"chess"}, 3, .6, .6);
     cs.add_scene_fade_in(MICRO, chess_clip, "chess_clip");
     StateSet frame = chess_clip->manager.set("current_frame", "0");
     cs.stage_macroblock(FileBlock("This is why chess players memorize openings, and start reading after the position has developed beyond their memory."), 5);
     cs.render_microblock();
-    chess_clip->manager.begin_timer("MP4_Frame");
-    chess_clip->manager.set(frame);
+    cs.manager.begin_timer("MP4_Frame");
+    cs.manager.set(frame);
+    chess_clip->manager.set("current_frame", "[current_frame]");
+    cs.manager.set({
+        {"ls_memo.opacity", "<current_frame> 240 <"},
+        {"ls_comp.opacity", "1 <ls_memo.opacity> -"}
+    });
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cs.fade_subscene(MICRO, "chess_clip", 0);
+    cs.fade_all_subscenes(MICRO, 0);
     cs.render_microblock();
+    cs.remove_all_subscenes();
 
-    cs.stage_macroblock(FileBlock("Victor Allis published just that in 1988: a table of 500,000 openings, and a computer algorithm which could solve endgames in a few seconds."), 1);
+    shared_ptr<PngScene> allis_book0 = make_shared<PngScene>("500k_0", .6, .6);
+    shared_ptr<PngScene> allis_book1 = make_shared<PngScene>("500k_1", .6, .6);
+    shared_ptr<PngScene> allis_book2 = make_shared<PngScene>("500k_2", .6, .6);
+    cs.add_scene_fade_in(MICRO, allis_book0, "allis_book0");
+    cs.stage_macroblock(FileBlock("Victor Allis published just that in 1988: a table of 500,000 openings, and a computer algorithm to solve endgames in a few seconds."), 1);
     cs.render_microblock();
+    cs.add_scene_fade_in(MICRO, allis_book1, "allis_book1");
+    cs.render_microblock();
+    cs.remove_subscene("allis_book0");
+    cs.add_scene_fade_in(MICRO, allis_book2, "allis_book2");
+    cs.render_microblock();
+    cs.remove_subscene("allis_book1");
 
     cs.stage_macroblock(FileBlock("Now I don't know about you, but I can't memorize half a million positions."), 1);
+    cs.slide_subscene(MICRO, "allis_book2", 1, 0);
+    cs.render_microblock();
+    cs.remove_subscene("allis_book2");
+}
+
+void trees(CompositeScene& cs) {
+    cs.stage_macroblock(FileBlock("We can improve on this- there is one key insight that the prior approaches don't make use of."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Before I tell you, let me explain the various types of trees that I've been showing in the background."), 1);
+    cs.render_microblock();
+
+    Graph g1;
+    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g1, false, "", FULL);
+    c4gs->manager.set("desired_nodes", "5678 1.5 <time_since_graph_init> ^ 200 * 199 - min");
+    cs.add_scene(c4gs, "c4gs");
+    cs.stage_macroblock(FileBlock("If we add every possible connect 4 position to a tree, we get this gigantic thing."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("This full game tree up to move 5, taken as a guide on where to play, is called a 'strong solution'."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("However, this tree includes nodes where player 1, red, has already blundered."), 1);
+    cs.render_microblock();
+    
+    cs.stage_macroblock(FileBlock("We don't want to memorize those, since we'd never play them."), 1);
+    cs.render_microblock();
+
+    Graph g2;
+    shared_ptr<C4GraphScene> c4gs_union = make_shared<C4GraphScene>(&g2, false, "", UNION_WEAK);
+    g2.expand(5678); // At least as deep as the full tree
+
+    // Remove all nodes in the g1 which are not in g2
+    auto it = g1.nodes.begin();
+    for (; it != g1.nodes.end(); ) {
+        if (g2.nodes.find(it->first) == g2.nodes.end()) {
+            it = g1.nodes.erase(it);
+            // TODO We need to also remove children and deleted edges
+        } else {
+            ++it;
+        }
+    }
+    cs.stage_macroblock(FileBlock("If we trim those blunders out, we get this smaller tree."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can shrink it further though."), 1);
+    cs.render_microblock();
+
+    shared_ptr<C4Scene> c4s = make_shared<C4Scene>("43");
+    cs.add_scene_fade_in(MICRO, c4s, "c4s");
+    cs.stage_macroblock(FileBlock("Consider this position."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("It's red's move, and there are two winning options."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Red could either go here,"), 2);
+    c4s->play("6");
+    cs.render_microblock();
+    c4s->undo(1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("or here."), 1);
+    c4s->play("7");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Everything else would be a blunder."), 1);
+    cs.render_microblock();
+
+    it = g1.nodes.begin();
+    for (; it != g1.nodes.end(); ++it) {
+        if (it->second.data->representation == "436" || it->second.data->representation == "437") {
+            it->second.size = 2;
+        }
+    }
+    cs.stage_macroblock(FileBlock("Those two nodes are in our tree."), 1);
+    cs.render_microblock();
+
+    Graph g3;
+    shared_ptr<C4GraphScene> c4gs_weak = make_shared<C4GraphScene>(&g3, false, "", RANDOM_WEAK);
+    g3.expand(5678); // At least as deep as the full tree
+
+    it = g1.nodes.begin();
+    for (; it != g1.nodes.end(); ) {
+        if (g3.nodes.find(it->first) == g3.nodes.end()) {
+            if(it->second.data->representation == "436" || it->second.data->representation == "437") {
+                it = g1.nodes.erase(it);
+            }
+        } else {
+            ++it;
+        }
+    }
+    cs.stage_macroblock(FileBlock("But why memorize both options, instead of just memorizing the one we like better?"), 1);
+    cs.render_microblock();
+
+    // Delete all nodes not in c4gs_weak
+    it = g1.nodes.begin();
+    for (; it != g1.nodes.end(); ) {
+        if(g3.nodes.find(it->first) == g3.nodes.end()) {
+            it = g1.nodes.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    cs.stage_macroblock(FileBlock("Let's delete each duplicate option."), 1);
     cs.render_microblock();
 }
 
@@ -429,5 +556,6 @@ void render_video() {
     CompositeScene cs;
     //intro(cs);
     //build_graph(cs);
-    explanation(cs);
+    //explanation(cs);
+    trees(cs);
 }
