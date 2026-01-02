@@ -195,8 +195,14 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
 
     if(verbose) cout << "Calling fhourstones on " << representation << endl;
 
+    // Check that the binary is present
+    if (system("[ -f ~/Fhourstones/SearchGame ] || echo \"not found\"") != 0) {
+        throw runtime_error("fhourstones binary not found at ~/Fhourstones/SearchGame");
+    }
+
     // If not found in cache, compute using fhourstones
     char command[150];
+    // Call the fhourstones binary
     sprintf(command, "echo %s | ~/Fhourstones/SearchGame", representation.c_str());
     if (verbose) cout << "Calling fhourstones on " << command << "... ";
     FILE* pipe = popen(command, "r");
@@ -254,6 +260,34 @@ void C4Board::add_all_winning_fhourstones(unordered_set<GenericBoard*>& neighbor
 
     // Use the helper function to sort by minimum hash and insert
     insert_sorted_children_by_min_hash(children, neighbors);
+}
+
+void C4Board::add_rightmost_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
+    cout << "Adding rightmost winning fhourstones for " << representation << endl;
+
+    for(int i = 7; i >= 1; i--) {
+        if(!is_legal(i)) continue;
+        C4Board moved = child(i);
+        int work = -1;
+        if (moved.who_is_winning(work) == RED) {
+            neighbors.insert(new C4Board(moved));
+            return;
+        }
+    }
+}
+
+void C4Board::add_leftmost_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
+    cout << "Adding leftmost winning fhourstones for " << representation << endl;
+
+    for(int i = 1; i < 8; i++) {
+        if(!is_legal(i)) continue;
+        C4Board moved = child(i);
+        int work = -1;
+        if (moved.who_is_winning(work) == RED) {
+            neighbors.insert(new C4Board(moved));
+            return;
+        }
+    }
 }
 
 void C4Board::add_random_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
@@ -655,8 +689,23 @@ unordered_set<GenericBoard*> C4Board::get_children(){
             else
                 add_all_legal_children(neighbors);
             break;
+        case RIGHTMOST_WEAK:
+            if(is_reds_turn())
+                add_rightmost_winning_fhourstones(neighbors);
+            else
+                add_all_legal_children(neighbors);
+            break;
+        case LEFTMOST_WEAK:
+            if(is_reds_turn())
+                add_leftmost_winning_fhourstones(neighbors);
+            else
+                add_all_legal_children(neighbors);
+            break;
         case UNION_WEAK:
-            add_all_winning_fhourstones(neighbors);
+            if(is_reds_turn())
+                add_all_winning_fhourstones(neighbors);
+            else
+                add_all_legal_children(neighbors);
             break;
         case SIMPLE_WEAK:
             if(is_reds_turn()){

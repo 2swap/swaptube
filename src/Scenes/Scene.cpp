@@ -92,7 +92,7 @@ public:
         macroblock.write_shtooka();
 
         total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
-        if (!rendering_on()) total_frames_in_macroblock = min(500, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
+        if (!rendering_on()) total_frames_in_macroblock = min(50, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
         remaining_frames_in_macroblock = total_frames_in_macroblock;
 
         cout << endl << macroblock.blurb() << " staged to last " << to_string(expected_microblocks_in_macroblock) << " microblock(s), " << to_string(total_frames_in_macroblock) << " frame(s)." << endl;

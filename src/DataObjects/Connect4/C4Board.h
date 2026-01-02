@@ -18,6 +18,8 @@ enum C4BranchMode {
     SIMPLE_WEAK,
     RANDOM_WEAK,
     LEFTMOST_LOWEST_2,
+    LEFTMOST_WEAK,
+    RIGHTMOST_WEAK,
     FULL,
     MANUAL
 };
@@ -75,6 +77,8 @@ public:
     void add_best_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const;
     void add_all_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const;
     void add_random_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const;
+    void add_rightmost_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const;
+    void add_leftmost_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const;
     void add_all_legal_children(unordered_set<GenericBoard*>& neighbors) const;
     void add_all_good_children(unordered_set<GenericBoard*>& neighbors) const;
     void add_only_child_steady_state(unordered_set<GenericBoard*>& neighbors) const;
