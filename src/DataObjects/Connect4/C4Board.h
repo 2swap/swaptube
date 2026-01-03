@@ -23,7 +23,6 @@ enum C4BranchMode {
     FULL,
     MANUAL
 };
-C4BranchMode c4_branch_mode = TRIM_STEADY_STATES;
 
 string disk_col(int i){
     if(i == 1) return "\033[31mx\033[0m";  // Red "x"
@@ -33,8 +32,9 @@ string disk_col(int i){
 
 class C4Board : public GenericBoard {
 public:
-    int BOARD_WIDTH = C4_WIDTH;
-    int BOARD_HEIGHT = C4_HEIGHT;
+    const C4BranchMode c4_branch_mode;
+    const int BOARD_WIDTH = C4_WIDTH;
+    const int BOARD_HEIGHT = C4_HEIGHT;
     Bitboard red_bitboard = 0ul, yellow_bitboard = 0ul;
     string game_name = "c4";
     unordered_set<double> children_hashes;
@@ -44,9 +44,9 @@ public:
     shared_ptr<SteadyState> steadystate;
 
     //C4Board(const C4Board& other);
-    C4Board(const string& rep);
-    C4Board(const string& rep, shared_ptr<SteadyState> ss);
-    C4Board();
+    C4Board(const C4BranchMode mode);
+    C4Board(const C4BranchMode mode, const string& rep);
+    C4Board(const C4BranchMode mode, const string& rep, shared_ptr<SteadyState> ss);
     int piece_code_at(int x, int y) const;
     string reverse_representation() const;
     double reverse_hash();
@@ -91,7 +91,7 @@ public:
 
 void fhourstones_tests(){
     cout << "fhourstones_tests" << endl;
-    C4Board b("4444445623333356555216622");
+    C4Board b(FULL, "4444445623333356555216622");
     int work = -1;
     C4Result winner = b.who_is_winning(work);
     assert(work == 8);
@@ -103,7 +103,7 @@ void fhourstones_tests(){
 
 void construction_tests(){
     cout << "construction_tests" << endl;
-    C4Board a("71");
+    C4Board a(FULL, "71");
     a.print();
     assert(a.is_reds_turn());
     cout << a.red_bitboard << endl;
@@ -111,7 +111,7 @@ void construction_tests(){
     assert(a.red_bitboard == 70368744177664UL);
     assert(a.yellow_bitboard == 1099511627776UL);
 
-    C4Board b("4444445623333356555216622");
+    C4Board b(FULL, "4444445623333356555216622");
     assert(!b.is_reds_turn());
     b.print();
     int expected[C4_HEIGHT][C4_WIDTH] = {
@@ -163,7 +163,7 @@ void winner_tests(){
         const string& rep = pair.first;
         C4Result winner = pair.second;
 
-        C4Board b("");
+        C4Board b(FULL, "");
         for (int i = 0; i < rep.size(); i++) {
             b.play_piece(rep[i] - '0'); // Convert char to int
             C4Result observed_winner = b.who_won();

@@ -11,13 +11,11 @@
 
 Graph* graph_to_check_if_points_are_in = NULL;
 
-C4Board::C4Board() { }
-
-C4Board::C4Board(const string& rep) {
+C4Board::C4Board(const C4BranchMode mode) : c4_branch_mode(mode) { }
+C4Board::C4Board(const C4BranchMode mode, const string& rep) : c4_branch_mode(mode) {
     fill_board_from_string(rep);
 }
-
-C4Board::C4Board(const string& rep, shared_ptr<SteadyState> ss) : steadystate(ss) {
+C4Board::C4Board(const C4BranchMode mode, const string& rep, shared_ptr<SteadyState> ss) : c4_branch_mode(mode), steadystate(ss) {
     fill_board_from_string(rep);
 }
 
@@ -131,7 +129,7 @@ bool C4Board::is_solution() {
 }
 
 double C4Board::type_specific_reverse_hash() {
-    return C4Board(reverse_representation()).get_hash();
+    return C4Board(FULL, reverse_representation()).get_hash();
 }
 
 
@@ -207,7 +205,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     if (verbose) cout << "Calling fhourstones on " << command << "... ";
     FILE* pipe = popen(command, "r");
     if (!pipe) {
-        C4Board c4(representation);
+        C4Board c4(c4_branch_mode, representation);
         cout << setprecision(17) << c4.get_hash() << endl;
         throw runtime_error("fhourstones error!");
     }
@@ -463,7 +461,7 @@ int C4Board::search_nply(const int depth, int& num_ordered_unfound, bool verbose
 }
 
 int C4Board::get_human_winning_fhourstones() {
-    shared_ptr<SteadyState> ss = find_cached_steady_state(C4Board(representation));
+    shared_ptr<SteadyState> ss = find_cached_steady_state(C4Board(c4_branch_mode, representation));
     if(ss != nullptr)
         return -1;
 
@@ -522,7 +520,7 @@ int C4Board::get_human_winning_fhourstones() {
         if(snp > 0) return snp;
     }
 
-    ss = find_cached_steady_state(C4Board(representation));
+    ss = find_cached_steady_state(C4Board(c4_branch_mode, representation));
     if(ss != nullptr)
         return -1;
 
@@ -716,7 +714,7 @@ unordered_set<GenericBoard*> C4Board::get_children(){
             break;
         case TRIM_STEADY_STATES:
             if(is_reds_turn()){
-                shared_ptr<SteadyState> ss = find_cached_steady_state(C4Board(representation));
+                shared_ptr<SteadyState> ss = find_cached_steady_state(C4Board(c4_branch_mode, representation));
                 if(ss != nullptr){
                     has_steady_state = true;
                     steadystate = ss;

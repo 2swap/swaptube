@@ -65,7 +65,7 @@ public:
         double highlight = state["highlight"];
         if(highlight <= 0.1) return;
 
-        C4Board b(representation);
+        C4Board b(FULL, representation);
         Bitboard winning_discs = b.winning_discs();
         double stone_width = get_stone_width();
         double ellipse_width = stone_width * .2 * highlight;

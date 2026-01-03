@@ -290,7 +290,7 @@ void explanation(CompositeScene& cs) {
     for(int i = 0; i < vars_to_read; i++) {
         // String of random numbers in [1,7], length vars_depth
         string str = "";
-        C4Board b(starting_variation);
+        C4Board b(FULL, starting_variation);
         for(int j = 0; j < vars_depth; j++) {
             int move = rand() % 7 + 1;
             cout << move << flush;
@@ -599,43 +599,31 @@ void trees(CompositeScene& cs) {
 }
 
 void patterned(CompositeScene& cs) {
-    string variation = "4444443265523226227661335567";
-    shared_ptr<C4Scene> c4s = make_shared<C4Scene>(variation);
+    string variation = "43667555366252622655";
+    shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
     cs.add_scene_fade_in(MICRO, c4s, "c4s");
-    cs.stage_macroblock(CompositeBlock(FileBlock("This game is almost over. It's Red's move."), SilenceBlock(4)), 1);
+    cs.stage_macroblock(FileBlock("Check out this game. It's almost over, with Red to move."), 3);
+    cs.render_microblock();
+    c4s->play(variation);
+    cs.render_microblock();
     cs.render_microblock();
 
     c4s->manager.transition(MICRO, {{"w", ".3"}, {"h", ".3"}});
     cs.slide_subscene(MICRO, "c4s", 0, -.35);
 
-    cs.stage_macroblock(FileBlock("The full strong solution of this endgame looks like this:"), 1);
-    Graph g;
-    shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(&g, false, variation, FULL);
-    c4gs->manager.set("desired_nodes", "0");//4 <time_since_graph_init> ^ 20 *");
-    cs.add_scene_fade_in(MICRO, c4gs, "c4gs");
-    cs.render_microblock();
-
     cs.stage_macroblock(FileBlock("Now what do you think the weak solution looks like for this endgame?"), 1);
-    cs.fade_subscene(MICRO, "c4gs", 0);
     cs.render_microblock();
-    cs.remove_subscene("c4gs");
 
     Graph g_weak_1;
     Graph g_weak_2;
-    Graph g_weak_3;
-    Graph g_weak_4;
-    shared_ptr<C4GraphScene> c4gs_weak_1 = make_shared<C4GraphScene>(&g_weak_1, false, variation, RIGHTMOST_WEAK, .5, .5);
-    shared_ptr<C4GraphScene> c4gs_weak_2 = make_shared<C4GraphScene>(&g_weak_2, false, variation, RANDOM_WEAK, .5, .5);
-    shared_ptr<C4GraphScene> c4gs_weak_3 = make_shared<C4GraphScene>(&g_weak_3, false, variation, SIMPLE_WEAK, .5, .5);
-    shared_ptr<C4GraphScene> c4gs_weak_4 = make_shared<C4GraphScene>(&g_weak_4, false, variation, LEFTMOST_WEAK, .5, .5);
-    cs.stage_macroblock(FileBlock("I'll give you 4 options."), 4);
-    cs.add_scene_fade_in(MICRO, c4gs_weak_1, "c4gs_weak_1", .25, .25);
+    shared_ptr<C4GraphScene> c4gs_weak_1 = make_shared<C4GraphScene>(&g_weak_1, false, variation, RIGHTMOST_WEAK, .5, 1);
+    shared_ptr<C4GraphScene> c4gs_weak_2 = make_shared<C4GraphScene>(&g_weak_2, false, variation, SIMPLE_WEAK, .5, 1);
+    c4gs_weak_1->manager.set("physics_multiplier", "50");
+    c4gs_weak_2->manager.set("physics_multiplier", "50");
+    cs.stage_macroblock(FileBlock("I'll give you 2 options."), 2);
+    cs.add_scene_fade_in(MICRO, c4gs_weak_1, "c4gs_weak_1", .25, .5);
     cs.render_microblock();
-    cs.add_scene_fade_in(MICRO, c4gs_weak_2, "c4gs_weak_2", .75, .25);
-    cs.render_microblock();
-    cs.add_scene_fade_in(MICRO, c4gs_weak_3, "c4gs_weak_3", .25, .75);
-    cs.render_microblock();
-    cs.add_scene_fade_in(MICRO, c4gs_weak_4, "c4gs_weak_4", .75, .75);
+    cs.add_scene_fade_in(MICRO, c4gs_weak_2, "c4gs_weak_2", .75, .5);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Comment your guess!"), 1);
@@ -651,50 +639,19 @@ void patterned(CompositeScene& cs) {
     cs.render_microblock();
 
     c4gs_weak_1->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
-    cs.slide_subscene(MICRO, "c4gs_weak_1", .25, .25);
+    cs.slide_subscene(MICRO, "c4gs_weak_1", .25, 0);
     cs.fade_subscene(MICRO, "c4gs_weak_2", 0);
-    cs.fade_subscene(MICRO, "c4gs_weak_3", 0);
-    cs.fade_subscene(MICRO, "c4gs_weak_4", 0);
     cs.stage_macroblock(FileBlock("This one was made by always choosing the rightmost winning column."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cs.fade_subscene(MICRO, "c4gs_weak_1", 0);
     cs.fade_subscene(MICRO, "c4gs_weak_2", 1);
-    cs.fade_subscene(MICRO, "c4gs_weak_3", 1);
-    cs.fade_subscene(MICRO, "c4gs_weak_4", 1);
     cs.render_microblock();
     cs.remove_subscene("c4gs_weak_1");
 
     c4gs_weak_2->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
-    cs.slide_subscene(MICRO, "c4gs_weak_2", -.25, .25);
-    cs.fade_subscene(MICRO, "c4gs_weak_3", 0);
-    cs.fade_subscene(MICRO, "c4gs_weak_4", 0);
-    cs.stage_macroblock(FileBlock("This one was made by always choosing the leftmost winning column."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(SilenceBlock(1), 1);
-    cs.fade_subscene(MICRO, "c4gs_weak_2", 0);
-    cs.fade_subscene(MICRO, "c4gs_weak_3", 1);
-    cs.fade_subscene(MICRO, "c4gs_weak_4", 1);
-    cs.render_microblock();
-    cs.remove_subscene("c4gs_weak_2");
-
-    c4gs_weak_4->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
-    cs.slide_subscene(MICRO, "c4gs_weak_4", -.25, -.25);
-    cs.fade_subscene(MICRO, "c4gs_weak_3", 0);
-    cs.stage_macroblock(FileBlock("This one was made by choosing randomly."), 1);
-    cs.render_microblock();
-
-    cs.stage_macroblock(SilenceBlock(1), 1);
-    cs.fade_subscene(MICRO, "c4gs_weak_3", 1);
-    cs.fade_subscene(MICRO, "c4gs_weak_4", 0);
-    cs.render_microblock();
-    cs.remove_subscene("c4gs_weak_4");
-
-    c4gs_weak_3->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
-    cs.slide_subscene(MICRO, "c4gs_weak_3", .25, -.25);
-
+    cs.slide_subscene(MICRO, "c4gs_weak_2", -.25, 0);
     cs.stage_macroblock(FileBlock("This one was made using black magic."), 1);
     cs.render_microblock();
 }

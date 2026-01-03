@@ -381,7 +381,7 @@ bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins
 
     if(b.is_reds_turn()){
         // Query the steady state and play the determined disk
-        int columnToPlay = query_steady_state(b.representation);
+        int columnToPlay = query_steady_state(b);
         C4Board child = b;
         if (columnToPlay >= 1 && columnToPlay <= 7) child.play_piece(columnToPlay);
         else {
@@ -468,7 +468,7 @@ shared_ptr<SteadyState> find_steady_state(const string& representation, const sh
     if(verbose) cout << "Finding for a steady state of " << representation << "..." << endl;
     if(representation.size() % 2 == 1)
         throw runtime_error("Steady state requested on board which is yellow-to-move!");
-    C4Board board(representation);
+    C4Board board(FULL, representation);
 
     // Check if a cached steady state file exists and read from it
     shared_ptr<SteadyState> cached = find_cached_steady_state(board);
@@ -550,7 +550,7 @@ shared_ptr<SteadyState> find_steady_state(const string& representation, const sh
 }
 
 void run_test(const string& board_str, const int expected, const SteadyState& ss) {
-    C4Board board(board_str);
+    C4Board board(FULL, board_str);
     int actual = ss.query_steady_state(board);
     if(actual != expected) {
         board.print();
@@ -627,7 +627,7 @@ void steady_state_unit_tests_problem_6() {
 
 
     string s = "";
-    C4Board b("4444443552522");
+    C4Board b(FULL, "4444443552522");
     for(int i = 0; i < 1000; i++){
         assert(ss.play_one_game(b) == RED);
     }
