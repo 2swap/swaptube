@@ -46,9 +46,9 @@ public:
             {"highlight_point_opacity", "1"},
             {"flip_by_symmetry", "0"},
             {"q1", "1"},
-            {"qi", ".5 .1 {t} sin 4 / * +"},
+            {"qi", "{t} sin 4 /"},
             {"qj", "0"},
-            {"qk", ".1 {t} cos 4 / *"},
+            {"qk", "{t} cos 4 /"},
         });
     }
 

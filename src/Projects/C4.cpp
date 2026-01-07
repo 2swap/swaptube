@@ -599,7 +599,8 @@ void trees(CompositeScene& cs) {
 }
 
 void patterned(CompositeScene& cs) {
-    string variation = "43667555366252622655";
+    FOR_REAL = false;
+    string variation = "43636335555665773563";
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
     cs.add_scene_fade_in(MICRO, c4s, "c4s");
     cs.stage_macroblock(FileBlock("Check out this game. It's almost over, with Red to move."), 3);
@@ -620,28 +621,42 @@ void patterned(CompositeScene& cs) {
     shared_ptr<C4GraphScene> c4gs_weak_2 = make_shared<C4GraphScene>(&g_weak_2, false, variation, SIMPLE_WEAK, .5, 1);
     c4gs_weak_1->manager.set("physics_multiplier", "50");
     c4gs_weak_2->manager.set("physics_multiplier", "50");
-    cs.stage_macroblock(FileBlock("I'll give you 2 options."), 2);
-    cs.add_scene_fade_in(MICRO, c4gs_weak_1, "c4gs_weak_1", .25, .5);
-    cs.render_microblock();
-    cs.add_scene_fade_in(MICRO, c4gs_weak_2, "c4gs_weak_2", .75, .5);
+    cs.stage_macroblock(FileBlock("I'll give you 2 options."), 1);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Comment your guess!"), 1);
+    cs.stage_macroblock(FileBlock("Do you think it looks like this messy tree?"), 1);
+    cs.add_scene(c4gs_weak_1, "c4gs_weak_1", .25, .5);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The answer is... all of them!"), 1);
+    cs.stage_macroblock(FileBlock("Or do you think that it looks like this nice pillow shape?"), 1);
+    cs.add_scene(c4gs_weak_2, "c4gs_weak_2", .75, .5);
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Remember how I chose between two winning options earlier?"), 1);
+    cs.stage_macroblock(FileBlock("The answer is... both of them!"), 1);
+    cs.render_microblock();
+
+    shared_ptr<C4Scene> c4s_compare = make_shared<C4Scene>("");
+    cs.stage_macroblock(FileBlock("Remember how I chose between two winning options earlier?"), 5);
+    cs.add_scene_fade_in(MICRO, c4s_compare, "c4s_compare");
+    cs.render_microblock();
+    c4s_compare->play("45");
+    cs.render_microblock();
+    c4s_compare->play("2");
+    cs.render_microblock();
+    c4s_compare->undo(1);
+    cs.render_microblock();
+    c4s_compare->play("1");
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Up to the choices we make, we can get much different trees!"), 1);
+    cs.fade_subscene(MICRO, "c4s_compare", 0);
     cs.render_microblock();
+    cs.remove_subscene("c4s_compare");
 
     c4gs_weak_1->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
     cs.slide_subscene(MICRO, "c4gs_weak_1", .25, 0);
     cs.fade_subscene(MICRO, "c4gs_weak_2", 0);
-    cs.stage_macroblock(FileBlock("This one was made by always choosing the rightmost winning column."), 1);
+    cs.stage_macroblock(FileBlock("I made this one by always choosing the rightmost winning column."), 1);
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
@@ -652,7 +667,79 @@ void patterned(CompositeScene& cs) {
 
     c4gs_weak_2->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
     cs.slide_subscene(MICRO, "c4gs_weak_2", -.25, 0);
-    cs.stage_macroblock(FileBlock("This one was made using black magic."), 1);
+    cs.stage_macroblock(FileBlock("But I made this one by identifying a regular pattern within the connect 4 position."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Regular patterns are nice because they let us compress information."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("It's much easier to remember a hundred 5s in a row than a hundred random digits."), 1);
+    cs.render_microblock();
+    FOR_REAL = true;
+
+    cs.fade_all_subscenes_except(MICRO, "c4s", 0);
+    c4s->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
+    cs.slide_subscene(MICRO, "c4s", 0, .35);
+    cs.stage_macroblock(FileBlock("So how do we identify these regular weak solutions?"), 1);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("c4s");
+
+    c4s->set_annotations_from_steadystate();
+    cs.stage_macroblock(FileBlock("I use what I call a 'steady state diagram'."), 1);
+    cs.render_microblock();
+    c4s->clear_annotations();
+
+    cs.stage_macroblock(FileBlock("This is a particularly simple example. Let's look at a more realistic one."), 3);
+    cs.render_microblock();
+    c4s->undo(100);
+    cs.render_microblock();
+    c4s->play("473534");
+    cs.render_microblock();
+    c4s->set_annotations_from_steadystate();
+
+    cs.stage_macroblock(FileBlock("This is what a steady state diagram looks like in a real game."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("The diagram is like a cheat-sheet, telling Red how to win the game from here until the end of the game."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("It is read using a series of 8 rules."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("The rules are organized in a list of priorities."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Each rule applies under a certain condition,"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("and if that condition isn't met, you don't use it."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("In this game, it's red's move. Let's follow the diagram to win the game."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Rule 1: Is there a winning move available?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Nope. Move on to rule 2."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Is the opponent about to win, such that we need to block it?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Nope. Continue!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Can we play on an exclamation mark?"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Yes!"), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Yellow decides to play here."), 1);
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("Once again, there's no winning move, no "), 1);
     cs.render_microblock();
 }
 

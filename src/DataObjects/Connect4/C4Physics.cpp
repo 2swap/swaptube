@@ -99,6 +99,15 @@ public:
         return true;
     }
 
+    bool all_discs_accelerating_down() const {
+        for (const Disc& disc : discs) {
+            if (disc.ay > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void append_to_queue(string s) {
         queue += s;
     }
@@ -107,11 +116,13 @@ public:
         if (queue.empty() || !all_discs_below_top()) {
             return;
         }
-        if(queue.front() == 'x')
+        if(queue.front() == 'x') {
             undo_once();
-        else
+            queue.erase(0, 1);
+        } else if(all_discs_accelerating_down()) {
             add_disc_from_queue();
-        queue.erase(0, 1);
+            queue.erase(0, 1);
+        }
     }
 
     ~C4Physics() { }

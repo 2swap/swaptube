@@ -30,8 +30,11 @@ public:
     }
 
     void undo(int steps) {
+        if(steps > representation.size()) steps = representation.size();
+        int new_size = representation.size() - steps;
         board.undo(steps);
-        representation = representation.substr(0, representation.size()-steps);
+        representation = representation.substr(0, new_size);
+        cout << "Undo " << steps << " steps. New representation: " << representation << endl;
     }
 
     void play(const string& rep){
@@ -40,8 +43,15 @@ public:
     }
 
     void set_annotations(string s){annotations = s;}
+    void set_annotations_from_steadystate() {
+        shared_ptr<SteadyState> ss = find_steady_state(representation, nullptr);
+        annotations = ss->to_string();
+        // Replace all '2's and '1's with spaces
+        replace(annotations.begin(), annotations.end(), '2', ' ');
+        replace(annotations.begin(), annotations.end(), '1', ' ');
+    }
     string get_annotations(){return annotations;}
-    void unannotate() {annotations = empty_annotations;}
+    void clear_annotations() {annotations = empty_annotations;}
 
     char get_annotation(int x, int y){
         return annotations[x+(board.h-1-y)*board.w];
@@ -125,10 +135,10 @@ public:
 
     void draw() override{
         draw_empty_board();
+        draw_annotations();
         for(const Disc& disc : board.discs){
             draw_c4_disc(disc.x, disc.py, disc.index%2==0);
         }
-        draw_annotations();
         highlight_winning_discs();
     }
 };
