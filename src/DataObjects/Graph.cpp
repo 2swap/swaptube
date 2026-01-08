@@ -351,6 +351,26 @@ public:
         return {path, edges};
     }
 
+    void collapse_two_nodes(double hash_keep, double hash_remove) {
+        if (!node_exists(hash_keep) || !node_exists(hash_remove)) return;
+        if (hash_keep == hash_remove) return;
+
+        Node& node_keep = nodes.at(hash_keep);
+        Node& node_remove = nodes.at(hash_remove);
+
+        // Transfer edges from node_remove to node_keep
+        for (const auto& edge : node_remove.neighbors) {
+            if (edge.to != hash_keep) { // Avoid self-loop
+                add_directed_edge(hash_keep, edge.to, edge.opacity);
+                add_directed_edge(edge.to, hash_keep, edge.opacity);
+            }
+        }
+
+        // Remove the node to be removed
+        remove_node(hash_remove);
+        mark_updated();
+    }
+
     void delete_isolated() {
         unordered_set<double> non_isolated;
 

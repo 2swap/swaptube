@@ -105,7 +105,7 @@ void pix_to_png(const Pixels& pix, const string& filename) {
 
 Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
     // Check if the filename already ends with ".svg"
-    string filename = filename_with_or_without_suffix;
+    string filename = "io_in/" + filename_with_or_without_suffix;
     if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".svg") {
         filename += ".svg";  // Append the ".svg" suffix if it's not present
     }
@@ -197,7 +197,6 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     cairo_surface_destroy(surface);
     g_object_unref(handle);
 
-    //ret.grayscale_to_alpha();
     return crop_by_alpha(ret);
 }
 
@@ -377,7 +376,8 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
     char full_directory_path[PATH_MAX];
     string latex_dir = "io_in/latex/";
     realpath(latex_dir.c_str(), full_directory_path);
-    string name = string(full_directory_path) + "/" + to_string(hasher(latex)) + ".svg";
+    string name_without_folder = to_string(hasher(latex)) + ".svg";
+    string name = string(full_directory_path) + "/" + name_without_folder;
 
     if (access(name.c_str(), F_OK) == -1) {
         string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -output=" + name + " >/dev/null 2>&1";
@@ -389,7 +389,7 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
     }
 
     // System call successful, return the generated SVG
-    Pixels pixels = svg_to_pix(name, scaling_params);
+    Pixels pixels = svg_to_pix("latex/" + name_without_folder, scaling_params);
     latex_cache[cache_key] = make_pair(pixels, scaling_params.scale_factor); // Cache the result before returning
     return pixels;
 }

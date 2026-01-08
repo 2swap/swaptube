@@ -55,6 +55,7 @@ public:
     int get_instant_win() const;
     vector<int> get_winning_moves() const;
     int get_blocking_move() const;
+    C4Board get_mirror_board() const;
     void print();
     int which_side() const override;
     int random_legal_move() const;

@@ -53,6 +53,16 @@ Bitboard C4Board::winning_discs() const {
     return ret;
 }
 
+C4Board C4Board::get_mirror_board() const {
+    C4Board mirrored_board(c4_branch_mode);
+    for (char ch : representation) {
+        int num = ch - '0';
+        int mirroredNum = C4_WIDTH + 1 - num;
+        mirrored_board.play_piece(mirroredNum);
+    }
+    return mirrored_board;
+}
+
 // Returns 0 if the spot is empty, 1 if red, 2 if yellow
 int C4Board::piece_code_at(int x, int y) const {
     return bitboard_at(red_bitboard, x, y) + (2*bitboard_at(yellow_bitboard, x, y));

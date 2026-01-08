@@ -174,22 +174,12 @@ def main():
                     ffplay_cmd = [ 'ffplay', final_path ]
                     ffplay_process = subprocess.Popen(ffplay_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                     ffmpeg_process.wait()
-                    cont = False
-                    while True:
-                        user_check = input("Was it good? [y/n]")
-                        if user_check == 'n':
-                            print(f"Deleting {final_path}...")
-                            os.remove(final_path)
-                            cont = True
-                            break
-                        elif user_check == 'y':
-                            print("Great! Let's continue.")
-                            break
-                        else:
-                            print("Please answer with 'y' or 'n'.")
-                            continue
-                    if cont:
-                        continue
+                    user_check = input("Was it good? [Y/n]")
+                    if user_check == 'n' or user_check == 'N':
+                        print(f"Deleting {final_path}...")
+                        os.remove(final_path)
+                    else:
+                        print("Great! Let's continue.")
                 break
 
     delete_temp_recordings(temp_recordings_dir)

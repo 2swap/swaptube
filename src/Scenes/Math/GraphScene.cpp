@@ -45,10 +45,10 @@ public:
             {"mirror_force", "0"},
             {"highlight_point_opacity", "1"},
             {"flip_by_symmetry", "0"},
-            {"q1", "1"},
-            {"qi", "{t} sin 4 /"},
-            {"qj", "0"},
-            {"qk", "{t} cos 4 /"},
+            {"q1", "1 {t} 4 / sin <dimensions> 2 - lerp"},
+            {"qi", "0"},
+            {"qj", "{t} 4 / cos <dimensions> 2 - *"},
+            {"qk", "0"},
         });
     }
 

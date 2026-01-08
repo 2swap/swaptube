@@ -46,6 +46,7 @@ public:
     void set_annotations_from_steadystate() {
         shared_ptr<SteadyState> ss = find_steady_state(representation, nullptr);
         annotations = ss->to_string();
+        cout << "Annotations from steady state: " << annotations << endl;
         // Replace all '2's and '1's with spaces
         replace(annotations.begin(), annotations.end(), '2', ' ');
         replace(annotations.begin(), annotations.end(), '1', ' ');
@@ -109,7 +110,10 @@ public:
                     double px, py;
                     get_disc_screen_coordinates(x, y, px, py);
                     ScalingParams sp(get_stone_width(), get_stone_width());
-                    Pixels latex = latex_to_pix(string("\\text{")+annotation+"}", sp);
+                    string annotation_str(1, annotation);
+                    if(annotation != '@') annotation_str = "\\text{" + annotation_str + "}";
+                    else annotation_str = "\\@";
+                    Pixels latex = latex_to_pix(annotation_str, sp);
                     pix.overlay(latex, px-latex.w/2, py-latex.h/2);
                 }
             }
