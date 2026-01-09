@@ -45,9 +45,9 @@ public:
             {"mirror_force", "0"},
             {"highlight_point_opacity", "1"},
             {"flip_by_symmetry", "0"},
-            {"q1", "1 {t} 4 / sin <dimensions> 2 - lerp"},
+            {"q1", "1 {t} 12 / sin <dimensions> 2 - lerp"},
             {"qi", "0"},
-            {"qj", "{t} 4 / cos <dimensions> 2 - *"},
+            {"qj", "{t} 12 / cos <dimensions> 2 - *"},
             {"qk", "0"},
         });
     }
