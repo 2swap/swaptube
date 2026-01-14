@@ -19,6 +19,14 @@ extern "C"
     #include <libavutil/channel_layout.h>
 }
 
+#if LIBAVUTIL_VERSION_MAJOR >= 57
+    // FFmpeg 5+
+    #define USE_NEW_CHANNEL_LAYOUT_API 1
+#else
+    // FFmpeg 4.4
+    #define USE_NEW_CHANNEL_LAYOUT_API 0
+#endif
+
 using namespace std;
 
 // Helpful commands
@@ -91,7 +99,12 @@ public:
             if (!outputCodecContexts[i]) throw runtime_error("Error: Could not allocate codec context for encoder.");
 
             outputCodecContexts[i]->sample_rate = SAMPLERATE;
+#if USE_NEW_CHANNEL_LAYOUT_API
             av_channel_layout_default(&outputCodecContexts[i]->ch_layout, audio_channels);
+#else
+            outputCodecContexts[i]->channel_layout = AV_CH_LAYOUT_STEREO;
+            outputCodecContexts[i]->channels = audio_channels;
+#endif
             outputCodecContexts[i]->sample_fmt = output_sample_format;
             outputCodecContexts[i]->time_base = {1, outputCodecContexts[i]->sample_rate};
 
@@ -247,10 +260,18 @@ public:
         }
 
         // Ensure the audio is stereo
+#if USE_NEW_CHANNEL_LAYOUT_API
         if (audioStreamInput->codecpar->ch_layout.order == AV_CHANNEL_ORDER_UNSPEC) {
+#else
+        if (audioStreamInput->codecpar->channel_layout == 0) {
+#endif
             throw runtime_error("Error: Channel order is unspecified.");
         }
+#if USE_NEW_CHANNEL_LAYOUT_API
         int num_channels = audioStreamInput->codecpar->ch_layout.nb_channels;
+#else
+        int num_channels = audioStreamInput->codecpar->channels;
+#endif
         if (num_channels != audio_channels) {
             throw runtime_error("Error: Unsupported channel count: " + to_string(num_channels) + ". Expected " + to_string(audio_channels) + " channels.");
         }
@@ -360,7 +381,12 @@ public:
             // Setup frame properties
             auto setupFrame = [&](AVFrame* frame, AVCodecContext* codecCtx){
                 frame->nb_samples = frameSize;
+#if USE_NEW_CHANNEL_LAYOUT_API
                 av_channel_layout_default(&frame->ch_layout, 2); // stereo
+#else
+                frame->channel_layout = codecCtx->channel_layout;
+                frame->channels = codecCtx->channels;
+#endif
                 frame->sample_rate = codecCtx->sample_rate;
                 frame->format = codecCtx->sample_fmt;
 

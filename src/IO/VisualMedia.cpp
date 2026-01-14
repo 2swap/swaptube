@@ -103,6 +103,19 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     fclose(fp);
 }
 
+static gboolean get_svg_intrinsic_size(RsvgHandle *handle, gdouble* width, gdouble* height) {
+    #if LIBRSVG_CHECK_VERSION(2, 52, 0)
+        return rsvg_handle_get_intrinsic_size_in_pixels(handle, width, height);
+    #else
+        RsvgDimensionData dim;
+        rsvg_handle_get_dimensions(handle, &dim);
+        if (dim.width <= 0 || dim.height <= 0) return FALSE;
+        *width  = dim.width;
+        *height = dim.height;
+        return TRUE;
+    #endif
+}
+
 Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
     // Check if the filename already ends with ".svg"
     string filename = "io_in/" + filename_with_or_without_suffix;
@@ -120,7 +133,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     }
 
     gdouble gwidth, gheight;
-    if (!rsvg_handle_get_intrinsic_size_in_pixels(handle, &gwidth, &gheight))
+    if (!get_svg_intrinsic_size(handle, &gwidth, &gheight))
         throw runtime_error("Could not get intrinsic size of SVG file " + filename);
 
     // Calculate scale factor
