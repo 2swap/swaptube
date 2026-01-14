@@ -6,7 +6,9 @@
 #include <algorithm>
 
 inline int C4_RED           = 0xffff0000;
+inline int C4_RED_DARK      = 0xff7f0000;
 inline int C4_YELLOW        = 0xffffff00;
+inline int C4_YELLOW_DARK   = 0xff7f7f00;
 inline int C4_EMPTY         = 0xff666699;
 
 inline string empty_annotations = "       "
@@ -20,6 +22,7 @@ class C4Scene : public Scene {
 private:
     C4Physics board;
     string annotations = empty_annotations;
+    bool annotations_have_changed = false;
     string representation;
 
 public:
@@ -42,7 +45,10 @@ public:
         representation += rep;
     }
 
-    void set_annotations(string s){annotations = s;}
+    void set_annotations(string s){
+        annotations = s;
+        annotations_have_changed = true;
+    }
     void set_annotations_from_steadystate() {
         shared_ptr<SteadyState> ss = find_steady_state(representation, nullptr);
         annotations = ss->to_string();
@@ -50,9 +56,13 @@ public:
         // Replace all '2's and '1's with spaces
         replace(annotations.begin(), annotations.end(), '2', ' ');
         replace(annotations.begin(), annotations.end(), '1', ' ');
+        annotations_have_changed = true;
     }
     string get_annotations(){return annotations;}
-    void clear_annotations() {annotations = empty_annotations;}
+    void clear_annotations() {
+        annotations = empty_annotations;
+        annotations_have_changed = true;
+    }
 
     char get_annotation(int x, int y){
         return annotations[x+(board.h-1-y)*board.w];
@@ -85,7 +95,7 @@ public:
                 if(!bitboard_at(winning_discs, x, y)) continue;
                 double px, py;
                 get_disc_screen_coordinates(x, C4_HEIGHT - 1 - y, px, py);
-                pix.fill_ellipse(px, py, ellipse_width, ellipse_width, OPAQUE_WHITE);
+                pix.fill_ellipse(px, py, ellipse_width, ellipse_width, C4_EMPTY);
             }
         }
     }
@@ -94,12 +104,13 @@ public:
         double px, py;
         get_disc_screen_coordinates(disc_x, disc_y, px, py);
         int col = is_red ? C4_RED : C4_YELLOW;
+        int darkcol = is_red ? C4_RED_DARK : C4_YELLOW_DARK;
 
         double stone_width = get_stone_width();
         double piece_fill_radius = stone_width*.35;
         double piece_stroke_radius = stone_width*.47;
-        pix.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, colorlerp(col, OPAQUE_BLACK, 0.5));
-        pix.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , colorlerp(col, OPAQUE_BLACK, 0.0));
+        pix.fill_ellipse(px, py, piece_stroke_radius, piece_stroke_radius, col);
+        pix.fill_ellipse(px, py, piece_fill_radius  , piece_fill_radius  , darkcol);
     }
 
     void draw_annotations(){
@@ -129,9 +140,9 @@ public:
         return StateQuery{"highlight"};
     }
 
-    void mark_data_unchanged() override { board.mark_unchanged(); }
+    void mark_data_unchanged() override { board.mark_unchanged(); annotations_have_changed = false; }
     void change_data() override { board.iterate_physics(); }
-    bool check_if_data_changed() const override { return board.has_been_updated_since_last_scene_query(); }
+    bool check_if_data_changed() const override { return board.has_been_updated_since_last_scene_query() || annotations_have_changed; }
 
     double get_stone_width() const {
         return min(get_width(), get_height())/10;

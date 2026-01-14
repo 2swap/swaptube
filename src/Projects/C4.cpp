@@ -810,7 +810,7 @@ void patterned(CompositeScene& cs) {
     cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("Let's say yellow blocks the immediate threat."), 1);
+    cs.stage_macroblock(FileBlock("Our opponent blocks the threat. What should we do now?"), 1);
     c4s->play("3");
     cs.render_microblock();
 
@@ -855,7 +855,7 @@ void patterned(CompositeScene& cs) {
     cs.render_microblock();
 
     rules->begin_svg_transition(MICRO, "steady_state_rules_0");
-    cs.stage_macroblock(FileBlock("Let's say yellow plays here."), 2);
+    cs.stage_macroblock(FileBlock("Our opponent plays here."), 2);
     cs.render_microblock();
     c4s->play("1");
     cs.render_microblock();
@@ -872,14 +872,8 @@ void patterned(CompositeScene& cs) {
     cs.render_microblock();
     cs.render_microblock();
 
-    cs.stage_macroblock(FileBlock("The last two rules are to play on equals signs when available, and finally minus signs as a last option."), 2);
-    rules->begin_svg_transition(MICRO, "steady_state_rules_7");
-    cs.render_microblock();
-    rules->begin_svg_transition(MICRO, "steady_state_rules_8");
-    cs.render_microblock();
-
     cs.stage_macroblock(FileBlock("As Red, if you follow this cheat sheet, you'll eventually win the game."), 5);
-    c4s->play("41335744776666116611");
+    c4s->play("413357447766661166117755");
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
@@ -920,11 +914,14 @@ void patterned(CompositeScene& cs) {
     c4s->play("44444221");
     cs.render_microblock();
     c4s->set_annotations_from_steadystate();
+}
 
+void trimmed_solution(CompositeScene& cs) {
     cs.stage_macroblock(FileBlock("So we're back to old-reliable: brute-force search."), 2);
     cs.fade_subscene(MICRO, "c4s", 0);
     cs.render_microblock();
     cs.remove_all_subscenes();
+
     Graph g;
     shared_ptr<C4GraphScene> weakc4 = make_shared<C4GraphScene>(&g, false, "", TRIM_STEADY_STATES);
     g.expand(-1);
@@ -1038,12 +1035,40 @@ void patterned(CompositeScene& cs) {
     }
 }
 
+void anki(CompositeScene& cs) {
+    shared_ptr<Mp4Scene> anki_clip = make_shared<Mp4Scene>(vector<string>{"anki_connect4"});
+    cs.add_scene(anki_clip, "anki_clip");
+    cs.stage_macroblock(FileBlock("Having created a connect 4 strategy which I claim is human-memorizable,"), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("I'm putting my money where my mouth is-"), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("I made a deck using the spaced-repetition flash card app Anki, which I will attempt to memorize!"), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("If you want to learn too, you can download the deck in the description!"), 1);
+    cs.render_microblock();
+    cs.remove_all_subscenes();
+    shared_ptr<Mp4Scene> site_clip = make_shared<Mp4Scene>(vector<string>{"connect4_website"});
+    cs.add_scene(site_clip, "site_clip");
+    cs.stage_macroblock(FileBlock("I've also included a website where you can play against the weak solution,"), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("and explore the tree as you traverse it."), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("Good luck winning... you'll need it!"), 1);
+    cs.render_microblock();
+    cs.stage_macroblock(FileBlock("The site includes a lot of technical details which I glazed over."), 1);
+    cs.render_microblock();
+}
+
 void render_video() {
     VIDEO_BACKGROUND_COLOR = 0xff000022;
     CompositeScene cs;
-    //intro(cs);
-    //build_graph(cs);
-    //explanation(cs);
-    //trees(cs);
+    FOR_REAL = false;
+    /*
+    intro(cs);
+    build_graph(cs);
+    explanation(cs);
+    trees(cs);
     patterned(cs);
+    */
+    trimmed_solution(cs);
 }
