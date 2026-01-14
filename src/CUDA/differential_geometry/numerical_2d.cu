@@ -10,7 +10,7 @@
 
 __constant__ ManifoldData d_manifold;
 
-__device__ glm::vec3 surface(glm::vec2 v) {
+__device__ glm::vec3 surface_2d(glm::vec2 v) {
     float cuda_tags[2] = { v.x, v.y };
 
     int error = 0;
@@ -37,9 +37,9 @@ __device__ glm::vec3 surface(glm::vec2 v) {
 
 // Compute partial derivatives of the surface embedding wrt parameter axes
 static __device__ void dsurface_dv_numerical(glm::vec2 v, glm::vec3& d_dx, glm::vec3& d_dy) {
-    glm::vec3 here   = surface(v);
-    glm::vec3 plus_x = surface(v + glm::vec2(numeric_delta, 0.0f));
-    glm::vec3 plus_y = surface(v + glm::vec2(0.0f, numeric_delta));
+    glm::vec3 here   = surface_2d(v);
+    glm::vec3 plus_x = surface_2d(v + glm::vec2(numeric_delta, 0.0f));
+    glm::vec3 plus_y = surface_2d(v + glm::vec2(0.0f, numeric_delta));
     d_dx = (plus_x - here) / numeric_delta;
     d_dy = (plus_y - here) / numeric_delta;
 }
@@ -206,7 +206,7 @@ __global__ void geodesics_2d_kernel(
     float start_x, start_y, start_z;
     bool last_behind_camera = false;
     d_coordinate_to_pixel(
-        surface(glm::vec2(state[0], state[1])),
+        surface_2d(glm::vec2(state[0], state[1])),
         last_behind_camera,
         camera_direction,
         camera_pos,
@@ -226,7 +226,7 @@ __global__ void geodesics_2d_kernel(
         bool behind_camera = false;
         float out_x, out_y, out_z;
         d_coordinate_to_pixel(
-            surface(glm::vec2(state[0], state[1])),
+            surface_2d(glm::vec2(state[0], state[1])),
             behind_camera,
             camera_direction,
             camera_pos,
