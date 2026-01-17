@@ -213,7 +213,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     return crop_by_alpha(ret);
 }
 
-Pixels png_to_pix(const string& filename_with_or_without_suffix) {
+void png_to_pix(Pixels& pix, const string& filename_with_or_without_suffix) {
     // Check if the filename already ends with ".png"
     string filename = filename_with_or_without_suffix;
     if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".png") {
@@ -226,13 +226,14 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
     static unordered_map<string, Pixels> png_cache;
     auto it = png_cache.find(fullpath);
     if (it != png_cache.end()) {
-        return it->second;
+        pix = it->second;
+        return;
     }
 
     // Open the PNG file
     FILE* fp = fopen(fullpath.c_str(), "rb");
     if (!fp) {
-        throw runtime_error("Failed to open PNG file " + filename);
+        throw runtime_error("Failed to open PNG file " + fullpath);
     }
 
     // Create and initialize the png_struct
@@ -297,7 +298,7 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
     png_read_image(png, row_pointers.data());
 
     // Create a Pixels object
-    Pixels ret(width, height);
+    pix = Pixels(width, height);
 
     // Copy data to Pixels object
     for (int y = 0; y < height; y++) {
@@ -308,7 +309,7 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
             uint8_t g = px[1];
             uint8_t b = px[2];
             uint8_t a = px[3];
-            ret.set_pixel_carelessly(x, y, argb(a, r, g, b));
+            pix.set_pixel_carelessly(x, y, argb(a, r, g, b));
         }
     }
 
@@ -320,9 +321,7 @@ Pixels png_to_pix(const string& filename_with_or_without_suffix) {
     fclose(fp);
 
     // Store in cache
-    png_cache[fullpath] = ret;
-
-    return ret;
+    png_cache[fullpath] = pix;
 }
 
 // Custom hash and equality for pair<string, pair<int,int>>
@@ -340,23 +339,22 @@ struct StringIntPairEq {
     }
 };
 
-Pixels png_to_pix_bounding_box(const string& filename, int w, int h) {
+void png_to_pix_bounding_box(Pixels& pix, const string& filename, int w, int h) {
     static unordered_map<pair<string, pair<int, int>>, Pixels, StringIntPairHash, StringIntPairEq> png_bounding_box_cache;
     auto key = make_pair(filename, make_pair(w, h));
     auto it = png_bounding_box_cache.find(key);
     if (it != png_bounding_box_cache.end()) {
-        return it->second;
+        pix = it->second;
+        return;
     }
 
-    Pixels image = png_to_pix(filename);
+    Pixels image;
+    png_to_pix(image, filename);
 
-    Pixels scaled;
-    image.scale_to_bounding_box(w, h, scaled);
+    image.scale_to_bounding_box(w, h, pix);
 
     // Store in cache with scale
-    png_bounding_box_cache[key] = scaled;
-
-    return scaled;
+    png_bounding_box_cache[key] = pix;
 }
 
 // Create an unordered_map to store the cached results
@@ -405,4 +403,50 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
     Pixels pixels = svg_to_pix("latex/" + name_without_folder, scaling_params);
     latex_cache[cache_key] = make_pair(pixels, scaling_params.scale_factor); // Cache the result before returning
     return pixels;
+}
+
+void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, const int page_number) {
+    if (page_number < 1) {
+        throw runtime_error("PDF page number is 1-indexed and should be positive.");
+    }
+    if (page_number >= 100) {
+        throw runtime_error("PDF page number too large; pdf_page_to_pix only supports up to 99 pages. (TODO)");
+    }
+
+    // HOW TO MAKE PAGES:
+    // pdftocairo -png -f 1 -l 3 -r 300 paper.pdf prefix
+    // (This makes 3 pages at 300 DPI, named prefix-01.png, prefix-02.png, prefix-03.png)
+    const string resolved_filename_without_suffix = "io_in/" + pdf_filename_without_suffix;
+    if (resolved_filename_without_suffix.length() >= 4 && resolved_filename_without_suffix.substr(resolved_filename_without_suffix.length() - 4) == ".pdf") {
+        throw runtime_error("pdf_page_to_pix: please provide the pdf filename without the .pdf suffix.");
+    }
+    const string resolved_filename_with_suffix = resolved_filename_without_suffix + ".pdf";
+
+    const string png_filename = resolved_filename_without_suffix + "-" + (page_number < 10 ? "0" : "") + to_string(page_number) + ".png";
+
+    struct stat buffer;
+    bool png_file_exists = false;
+    if (stat(png_filename.c_str(), &buffer) == 0) {
+        png_file_exists = true;
+    }
+
+    // Execute pdftocairo command to convert the specified page to PNG
+    if (!png_file_exists) {
+        cout << "Converting PDF page " << page_number << " to PNG..." << endl;
+        const string page_number_str = to_string(page_number);
+        const string command = "pdftocairo -png -f " + page_number_str + " -l " + page_number_str + " -r 300 " + resolved_filename_with_suffix + " " + resolved_filename_without_suffix;
+        int result = system(command.c_str());
+        if (result != 0) {
+            throw runtime_error("Failed to convert PDF page to PNG using pdftocairo.");
+        }
+    }
+
+    // Verify that the PNG file was created
+    if (stat(png_filename.c_str(), &buffer) != 0) {
+        throw runtime_error("PNG file was not created after pdftocairo command.");
+    }
+
+    // Load the generated PNG into the provided Pixels object
+    const string png_filename_without_prefix = png_filename.substr(6);
+    png_to_pix(pix, png_filename_without_prefix);
 }

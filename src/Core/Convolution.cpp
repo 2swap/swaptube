@@ -461,6 +461,7 @@ vector<StepResult> find_intersections(const Pixels& p1, const Pixels& p2) {
         // Store the result of this step
         StepResult step_result(max_x, max_y, cm, induced1.pixels, induced2.pixels, current_p1, current_p2, erasure.pixels);
         results.push_back(step_result);
+        if(!rendering_on()) break;
     }
 
     return results;

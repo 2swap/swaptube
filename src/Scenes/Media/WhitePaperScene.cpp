@@ -3,10 +3,6 @@
 #include "../../IO/VisualMedia.cpp"
 #include "../Scene.cpp"
 
-// HOW TO MAKE PAGES:
-// pdftocairo -png -f 1 -l 3 -r 300 paper.pdf prefix
-// (This makes 3 pages at 300 DPI, named prefix-01.png, prefix-02.png, prefix-03.png)
-
 extern "C" void cuda_overlay(
     unsigned int* h_background, const int bw, const int bh,
     unsigned int* h_foreground, const int fw, const int fh,
@@ -15,9 +11,17 @@ extern "C" void cuda_overlay(
 
 class WhitePaperScene : public Scene {
 public:
-    WhitePaperScene(const string& prefix, const int np, const double width = 1, const double height = 1)
-        : Scene(width, height), prefix(prefix), num_pages(np) {
-        manager.set("completion", "0");
+    WhitePaperScene(const string& prefix, const vector<int>& page_numbers, const double width = 1, const double height = 1)
+        : Scene(width, height), prefix(prefix), page_numbers(page_numbers) {
+        manager.set({
+            {"completion", "0"},
+            {"which_page", "1"},
+            {"page_focus", "0"},
+            {"crop_top", "0"},
+            {"crop_bottom", "0"},
+            {"crop_left", "0"},
+            {"crop_right", "0"},
+        });
     }
 
     bool check_if_data_changed() const override { return false; }
@@ -28,31 +32,56 @@ public:
         // Expect files of the form prefix-0i.png
         double page_height = get_height() * .8;
         double page_width = 5000;
-        for(int i = num_pages; i >= 1; --i) {
-            string picture_name = prefix + "-" + (i < 10 ? "0" : "") + to_string(i);
-            Pixels picture = png_to_pix_bounding_box(picture_name, page_width, page_height);
-            if(i != 1) picture.darken(1.0f - (i-1) * .1f);
+        int num_pages = page_numbers.size();
+        for(int i = num_pages - 1; i >= 0; --i) {
+            int page_number = page_numbers[i];
+            Pixels picture;
+            pdf_page_to_pix(picture, prefix, page_number);
+            Pixels cropped;
+            picture.crop_by_fractions(
+                state["crop_top"],
+                state["crop_bottom"],
+                state["crop_left"],
+                state["crop_right"],
+                cropped
+            );
+
+            Pixels scaled;
+            cropped.scale_to_bounding_box(get_width(), get_height(), scaled);
+
+            if(i != 1) scaled.darken(1.0f - i * .1f);
+
             // Center the scaled image within the scene
-            double c = state["completion"];
-            double this_c = clamp(c * (num_pages - 1) - (i - 1) / 2., 0, 1);
-            float pages_centered = i - (num_pages + 1) / 2.0f;
-            float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-c))));
+            double completion = state["completion"];
+            int which_page = state["which_page"];
+            double page_focus = state["page_focus"];
+
+            double this_c = clamp(completion * (num_pages - 1) - i / 2., 0, 1);
+            float pages_centered = i + 1 - (num_pages + 1) / 2.0f;
+
+            double page_focus_multiplier = cos(page_focus * 3.1415 / 2);
+            if(which_page != page_number) {
+                page_focus_multiplier = 1 / page_focus_multiplier;
+            }
+
+            float x_center = (.5 + page_focus_multiplier * pages_centered * (.08 + .08*(1-square(1-completion))));
             float y_center = (.25/sin(this_c*3.1415/2)+.25 + pages_centered*.05);
-            float x_offset = get_width() * x_center - picture.w * .5;
-            float y_offset = get_height() * y_center - picture.h * .5;
+            float x_offset = get_width() * x_center - scaled.w * .5;
+            float y_offset = get_height() * y_center - scaled.h * .5;
 
             cuda_overlay(pix.pixels.data(), pix.w, pix.h,
-                         picture.pixels.data(), picture.w, picture.h,
+                         scaled.pixels.data(), scaled.w, scaled.h,
                          (int)x_offset, (int)y_offset,
                          1.0f);
         }
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"completion"};
+        return StateQuery{"completion", "which_page", "page_focus",
+                          "crop_top", "crop_bottom", "crop_left", "crop_right"};
     }
 
 private:
     const string prefix;
-    const int num_pages;
+    const vector<int> page_numbers;
 };

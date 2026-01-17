@@ -9,7 +9,7 @@
 #include <vector>
 #include <algorithm>
 
-Graph* graph_to_check_if_points_are_in = NULL;
+shared_ptr<Graph> graph_to_check_if_points_are_in = nullptr;
 
 C4Board::C4Board(const C4BranchMode mode) : c4_branch_mode(mode) { }
 C4Board::C4Board(const C4BranchMode mode, const string& rep) : c4_branch_mode(mode) {

@@ -32,9 +32,9 @@ string disk_col(int i){
 
 class C4Board : public GenericBoard {
 public:
-    const C4BranchMode c4_branch_mode;
-    const int BOARD_WIDTH = C4_WIDTH;
-    const int BOARD_HEIGHT = C4_HEIGHT;
+    C4BranchMode c4_branch_mode;
+    int BOARD_WIDTH = C4_WIDTH;
+    int BOARD_HEIGHT = C4_HEIGHT;
     Bitboard red_bitboard = 0ul, yellow_bitboard = 0ul;
     string game_name = "c4";
     unordered_set<double> children_hashes;

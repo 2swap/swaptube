@@ -52,8 +52,8 @@ int RGBtoOKLAB(int rgb)
     int g = getg(rgb);
     int b = getb(rgb);
     float l = 0.4122214708f * r + 0.5363325363f * g + 0.0514459929f * b;
-	float m = 0.2119034982f * r + 0.6806995451f * g + 0.1073969566f * b;
-	float s = 0.0883024619f * r + 0.2817188376f * g + 0.6299787005f * b;
+    float m = 0.2119034982f * r + 0.6806995451f * g + 0.1073969566f * b;
+    float s = 0.0883024619f * r + 0.2817188376f * g + 0.6299787005f * b;
 
     float l_ = cbrtf(l);
     float m_ = cbrtf(m);
@@ -69,9 +69,9 @@ int RGBtoOKLAB(int rgb)
 
 float linear_srgb_to_srgb(float x) {
     //return x;
-	if (x >= 0.0031308)
-		return 1.055*pow(x, 1.0/2.4) - 0.055;
-	return 12.92 * x;
+    if (x >= 0.0031308)
+        return 1.055*pow(x, 1.0/2.4) - 0.055;
+    return 12.92 * x;
 }
 
 int OKLABtoRGB(int alpha, float L, float a, float b)
@@ -86,9 +86,9 @@ int OKLABtoRGB(int alpha, float L, float a, float b)
 
     return argb(
         alpha,
-		256*linear_srgb_to_srgb(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s),
-		256*linear_srgb_to_srgb(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s),
-		256*linear_srgb_to_srgb(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s)
+        256*linear_srgb_to_srgb(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s),
+        256*linear_srgb_to_srgb(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s),
+        256*linear_srgb_to_srgb(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s)
     );
 }
 

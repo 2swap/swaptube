@@ -16,7 +16,7 @@ public:
             {"crop_top", "0"},
             {"crop_bottom", "0"},
             {"crop_left", "0"},
-            {"crop_right", "0"}
+            {"crop_right", "0"},
         });
     }
 
@@ -28,16 +28,15 @@ public:
         cout << "rendering png: " << picture_name << endl;
         
         // Load the PNG image into a Pixels object
-        Pixels image = png_to_pix(picture_name);
+        Pixels image;
+        png_to_pix(image, picture_name);
 
-        double cropped_width = image.w * (1.0 - state["crop_left"] - state["crop_right"]);
-        double cropped_height = image.h * (1.0 - state["crop_top"] - state["crop_bottom"]);
         Pixels cropped;
-        
-        image.crop(
-            image.w * state["crop_left"],
-            image.h * state["crop_top"],
-            cropped_width, cropped_height,
+        image.crop_by_fractions(
+            state["crop_top"],
+            state["crop_bottom"],
+            state["crop_left"],
+            state["crop_right"],
             cropped
         );
 

@@ -143,6 +143,14 @@ public:
                 cropped.set_pixel_carelessly(dx, dy, get_pixel_carelessly(x+dx, y+dy));
     }
 
+    void crop_by_fractions(float crop_top, float crop_bottom, float crop_left, float crop_right, Pixels &cropped) const {
+        int x =  w * crop_left;
+        int y =  h * crop_top;
+        int cw =  w * (1.0f - crop_left - crop_right);
+        int ch =  h * (1.0f - crop_top - crop_bottom);
+        crop(x, y, cw, ch, cropped);
+    }
+
     bool is_empty() const {
         for (int y = 0; y < h; y++) {
             for (int x = 0; x < w; x++) {

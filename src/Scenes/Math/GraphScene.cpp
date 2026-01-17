@@ -34,7 +34,7 @@ public:
     double curr_hash = 0;
     double next_hash = 0;
     vector<unsigned int> color_scheme{0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};
-    GraphScene(Graph* g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g) {
+    GraphScene(shared_ptr<Graph> g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g) {
         manager.set({
             {"repel", "1"},
             {"attract", "1"},
@@ -49,6 +49,8 @@ public:
             {"qi", "0"},
             {"qj", "{t} 12 / cos <dimensions> 2 - *"},
             {"qk", "0"},
+            {"desired_nodes", "<growth_rate> 1.5 <time_since_graph_init> ^ 1 - * 1000000 min"},
+            {"growth_rate", "100"},
         });
     }
 
@@ -67,7 +69,7 @@ public:
             glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);
             if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
             if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
-            add_point(Point(node_pos, node.color, 1, node.radius()));
+            //add_point(Point(node_pos, node.color, 1, node.radius()));
             double so = node.splash_opacity();
             int color = color_scheme[static_cast<int>(abs(p.first)*4)%4];
             if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
@@ -106,12 +108,17 @@ public:
 
     const StateQuery populate_state_query() const override {
         StateQuery s = ThreeDimensionScene::populate_state_query();
-        state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
+        state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
         return s;
     }
 
     void mark_data_unchanged() override { graph->mark_unchanged(); }
     void change_data() override {
+        int nodes_to_add = state["desired_nodes"] - graph->size();
+        if(nodes_to_add > 0) {
+            graph->expand(nodes_to_add);
+            graph->make_bidirectional();
+        }
         if(last_node_count > -1){
             int diff = graph->size() - last_node_count;
             for(int i = 0; i < abs(diff); i++) {
@@ -167,8 +174,6 @@ public:
         }
     }
 
-    Graph* expose_graph_ptr() { return graph; }
-
     virtual Surface make_surface(Node node) const {
         return Surface(glm::vec3(node.position.x, node.position.y, node.position.z),
                        glm::vec3(1,0,0),
@@ -201,9 +206,9 @@ public:
     }
 
     bool surfaces_override_unsafe = false; // For really big graphs, you can permanently turn off node stuff. This happens in the constructor, but careful when handling manually.
+    shared_ptr<Graph> graph;
 
 protected:
-    Graph* graph;
     unordered_map<string, pair<Surface, shared_ptr<Scene>>> graph_surface_map;
 
 private:

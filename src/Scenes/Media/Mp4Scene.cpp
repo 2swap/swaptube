@@ -5,7 +5,7 @@
 
 class Mp4Scene : public Scene {
 public:
-    Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed, const double width = 1, const double height = 1)
+    Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed = 1, const double width = 1, const double height = 1)
         : Scene(width, height), first_frame_this_video(0), current_video_index(0), video_filenames(mp4_filenames), current_video_reader(mp4_filenames[0]) {
         manager.begin_timer("MP4_Frame");
         manager.set("current_frame", "<MP4_Frame> " + to_string(playback_speed * FRAMERATE) + " * .5 + floor");
@@ -17,7 +17,7 @@ public:
 
     // Each call to draw loads the next frame from the concatenated videos,
     // scales it to fit within the scene's bounding box,
-    // and centers it just as in PngScene.
+    // and centers it, just as in PngScene.
     void draw() override {
         int current_frame = state["current_frame"];
         int current_frame_adjusted = current_frame - first_frame_this_video;

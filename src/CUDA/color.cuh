@@ -83,9 +83,9 @@ __device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, fl
 
 __device__ __forceinline__ float d_linear_srgb_to_srgb(float x) {
     return x;
-	if (x >= 0.0031308)
-		return 1.055*pow(x, 1.0/2.4) - 0.055;
-	return 12.92 * x;
+    if (x >= 0.0031308)
+        return 1.055*pow(x, 1.0/2.4) - 0.055;
+    return 12.92 * x;
 }
 
 __device__ __forceinline__ int d_OKLABtoRGB(int alpha, float L, float a, float b)
@@ -100,9 +100,9 @@ __device__ __forceinline__ int d_OKLABtoRGB(int alpha, float L, float a, float b
 
     return d_argb(
         alpha,
-		256*d_linear_srgb_to_srgb(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s),
-		256*d_linear_srgb_to_srgb(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s),
-		256*d_linear_srgb_to_srgb(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s)
+        256*d_linear_srgb_to_srgb(+4.0767416621f * l - 3.3077115913f * m + 0.2309699292f * s),
+        256*d_linear_srgb_to_srgb(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s),
+        256*d_linear_srgb_to_srgb(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s)
     );
 }
 

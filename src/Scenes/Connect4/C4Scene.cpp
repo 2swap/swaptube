@@ -30,6 +30,7 @@ public:
         :Scene(width, height), board(7, 6), representation(rep){
             board.append_to_queue(rep);
             manager.set("highlight", "0");
+            manager.set("annotations_opacity", "0");
     }
 
     void undo(int steps) {
@@ -45,11 +46,12 @@ public:
         representation += rep;
     }
 
-    void set_annotations(string s){
+    void set_annotations(string s, TransitionType tt) {
         annotations = s;
         annotations_have_changed = true;
+        manager.transition(tt, "annotations_opacity", "1");
     }
-    void set_annotations_from_steadystate() {
+    void set_annotations_from_steadystate(TransitionType tt) {
         shared_ptr<SteadyState> ss = find_steady_state(representation, nullptr);
         annotations = ss->to_string();
         cout << "Annotations from steady state: " << annotations << endl;
@@ -57,11 +59,13 @@ public:
         replace(annotations.begin(), annotations.end(), '2', ' ');
         replace(annotations.begin(), annotations.end(), '1', ' ');
         annotations_have_changed = true;
+        manager.transition(tt, "annotations_opacity", "1");
     }
     string get_annotations(){return annotations;}
-    void clear_annotations() {
+    void clear_annotations(TransitionType tt) {
         annotations = empty_annotations;
         annotations_have_changed = true;
+        manager.transition(tt, "annotations_opacity", "0");
     }
 
     char get_annotation(int x, int y){
@@ -114,6 +118,7 @@ public:
     }
 
     void draw_annotations(){
+        if(state["annotations_opacity"] <= 0.01) return;
         for(int x=0; x<board.w; x++){
             for(int y=0; y<board.h; y++){
                 char annotation = get_annotation(x, y);
@@ -125,7 +130,7 @@ public:
                     if(annotation != '@') annotation_str = "\\text{" + annotation_str + "}";
                     else annotation_str = "\\@";
                     Pixels latex = latex_to_pix(annotation_str, sp);
-                    pix.overlay(latex, px-latex.w/2, py-latex.h/2);
+                    pix.overlay(latex, px-latex.w/2, py-latex.h/2, state["annotations_opacity"]);
                 }
             }
         }
@@ -137,7 +142,7 @@ public:
     }
 
     const StateQuery populate_state_query() const override {
-        return StateQuery{"highlight"};
+        return StateQuery{"highlight", "annotations_opacity"};
     }
 
     void mark_data_unchanged() override { board.mark_unchanged(); annotations_have_changed = false; }

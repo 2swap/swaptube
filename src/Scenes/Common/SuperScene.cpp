@@ -59,6 +59,14 @@ public:
         render_order.push_front(name);
     }
 
+    shared_ptr<Scene> get_subscene_pointer(const string& name) {
+        auto it = subscenes.find(name);
+        if(it != subscenes.end())
+            return it->second;
+        else
+            throw runtime_error("Error: Attempted to get pointer to non-existent subscene: " + name);
+    }
+
 protected:
     SuperScene(const double width = 1, const double height = 1)
         : Scene(width, height) {}
