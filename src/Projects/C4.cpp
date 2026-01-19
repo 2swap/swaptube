@@ -4,72 +4,11 @@
 #include "../Scenes/Media/Mp4Scene.cpp"
 #include "../Scenes/Media/WhitePaperScene.cpp"
 #include "../Scenes/Math/RealFunctionScene.cpp"
+#include "../Scenes/Math/BarChartScene.cpp"
 #include "../Scenes/Connect4/C4Scene.cpp"
 #include "../Scenes/Media/SvgScene.cpp"
 #include "../Scenes/Connect4/C4GraphScene.cpp"
 #include "../DataObjects/Connect4/TreeValidator.cpp"
-
-void ideas() {
-    CompositeScene cs;
-    shared_ptr<Graph> g = make_shared<Graph>();
-    string variation = "444";
-    shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(g, false, variation, TRIM_STEADY_STATES);
-    shared_ptr<LatexScene> ls_opening = make_shared<LatexScene>("\\text{Opening: "+variation+"}", 1, .2, .1);
-    shared_ptr<LatexScene> ls_size = make_shared<LatexScene>("\\text{Node count: "+to_string(g->size())+"}", 1, .2, .1);
-    shared_ptr<C4Scene> c4s = make_shared<C4Scene>(variation, .2, .4);
-    cs.add_scene(gs, "gs");
-    cs.add_scene(ls_opening, "ls_opening", .1, .05);
-    cs.add_scene(ls_size, "ls_size", .1, .12);
-    cs.add_scene(c4s, "c4s", .1, .26);
-    //ValidateC4Graph(g);
-
-    StateSet state{
-        {"q1", "{t} .1 * cos"},
-        {"qi", "0"},
-        {"qj", "{t} .1 * sin"},
-        {"qk", "0"},
-        {"surfaces_opacity", "0"},
-        {"points_opacity", "0"},
-        {"physics_multiplier", "30"},
-    };
-    gs->manager.set(state);
-
-    cs.stage_macroblock(FileBlock("This video isn't about connect four. It's not entirely about computer science, either."), 1);
-    cs.stage_macroblock(FileBlock("It's about systems' ability to yield complexity that cannot be expressed in simpler terms."), 1);
-    cs.stage_macroblock(FileBlock("It's about our language, and its insufficiency to perfectly describe the world around us."), 1);
-    cs.stage_macroblock(FileBlock("It's about emergent behavior- behavior not baked into the 'rules of the game', but arising from them."), 1);
-    cs.stage_macroblock(FileBlock("Connect 4 isn't special- the world as we know it contains a myriad of emergent objects built on a bedrock of simple rules."), 1);
-    cs.stage_macroblock(FileBlock("It may contain systems like double pendulums, which are fundamentally unpredictable despite being deterministic."), 1);
-    cs.stage_macroblock(FileBlock("But that doesn't stop us from navigating and discussing most aspects of the world around us with our finite vocabulary, finite mathematical symbols, or you name it."), 1);
-    cs.stage_macroblock(FileBlock("Connect 4 shows us a glimpse of that same emergent substance, distilled down to a system which we can play with and study."), 1);
-
-
-// Talk about the tree, and how steadystates are sparsely placed on that tree.
-    cs.stage_macroblock(FileBlock("Some people have commented that this is all pointless- that connect 4 is solved, it's a closed case."), 1);
-    cs.stage_macroblock(FileBlock("And, speaking as someone who has independently solved connect 4 using a novel method,"), 1);
-    cs.stage_macroblock(FileBlock("this is dead wrong."), 1);
-    cs.stage_macroblock(FileBlock("Not only is there an infinitude of technical details of this simple game that we don't have answers to, and plenty that in my opinion we may never have answers to,"), 1);
-    cs.stage_macroblock(FileBlock("but all of them are just reverberations of that one pesky bedrock problem that seemingly lies at the bottom of everything:"), 1);
-    cs.stage_macroblock(FileBlock("What is the nature of emergent systems?"), 1);
-    cs.stage_macroblock(FileBlock("How can it be that a game with rules simple enough to teach to schoolchildren took mathematicians until the mid 1980s to tell us who should win"), 1);
-    cs.stage_macroblock(FileBlock("How can it be that such a game gives rise to all of these bizarre behaviors that demand an entire youtube explainer series along with esoteric German or Japanese words like Zugzwang and Miai to describe them?"), 1);
-    cs.stage_macroblock(FileBlock("The rules are simple! Why is there any mystery here???"), 1);
-    cs.stage_macroblock(FileBlock("Such is the problem of mathematics."), 1);
-    cs.stage_macroblock(FileBlock("We can come up with a set of axioms, but that doesn't mean we know their results."), 1);
-    cs.stage_macroblock(FileBlock("After all, the definition of a prime number can be stated concisely in one sentence,"), 1);
-    cs.stage_macroblock(FileBlock("but to this day, their distribution is shrouded in mystery."), 1);
-    cs.stage_macroblock(FileBlock("Even if we know the forces that guide particle interactions,"), 1);
-    cs.stage_macroblock(FileBlock("that doesn't make it any more self-evident that an atom with 43 protons has no stable isotopes,"), 1);
-    cs.stage_macroblock(FileBlock("or that this protein is particularly easy at adjoining to this thing which provides biological systems with an easy way to store and recover chemical energy (ATP)"), 1);
-    cs.stage_macroblock(FileBlock("Simple rules do not imply obvious behavior."), 1);
-    cs.stage_macroblock(FileBlock("Connect 4 provides a very unique combination of properties."), 1);
-    cs.stage_macroblock(FileBlock("I hope I have driven home throughout this series that, just like Chess, just like any other sufficiently expressive system, connect 4 yields worlds of complexity beyond the mere language of its axioms."), 1);
-    cs.stage_macroblock(FileBlock("Yet, somehow, it is just small enough that I can throw compute at the problem, and make formal mathematical claims that I can back up with actual data."), 1);
-    cs.stage_macroblock(FileBlock("And that I can display to you in full!"), 1);
-    cs.stage_macroblock(FileBlock("It carries within it that core kernel of emergence, yet on the 7x6 board size, remains just within reach,"), 1);
-    cs.stage_macroblock(FileBlock("presenting the mathematician with a unique opportunity for just a glance of that elusive emergent substance."), 1);
-    cs.stage_macroblock(FileBlock("This has been 2swap."), 1);
-}
 
 void intro(CompositeScene& cs) {
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
@@ -1008,6 +947,7 @@ void trimmed_solution(CompositeScene& cs) {
     wps->manager.transition(MICRO, "page_focus", "1");
     cs.render_microblock();
 
+    weakc4->manager.transition(MICRO, "physics_multiplier", "0");
     cs.stage_macroblock(FileBlock("Allis's opening book was more than a hundred times as large, with half a million nodes."), 4);
     wps->manager.transition(MICRO, {{"crop_top", ".133"}, {"crop_bottom", ".558"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
 
@@ -1054,7 +994,15 @@ void trimmed_solution(CompositeScene& cs) {
     }
 }
 
-void flood_fill_edges_to_highlight(shared_ptr<Graph> g, double start_node_id) {
+void flood_fill_edges_to_highlight(shared_ptr<Graph> g, C4Board& b, shared_ptr<C4GraphScene> gs) {
+    double start_node_id = b.get_hash();
+    if(!g->node_exists(start_node_id))
+        start_node_id = b.get_mirror_board().get_hash();
+    if(!g->node_exists(start_node_id))
+        throw runtime_error("Node not found in graph! " + b.representation);
+
+    gs->next_hash = start_node_id;
+
     // First set all edges to low opacity
     for (auto& pair : g->nodes) {
         Node& node = pair.second;
@@ -1081,6 +1029,15 @@ void flood_fill_edges_to_highlight(shared_ptr<Graph> g, double start_node_id) {
         }
     };
     dfs(start_node_id);
+}
+
+void reset_graph_edge_opacities(shared_ptr<Graph> g) {
+    for (auto& pair : g->nodes) {
+        Node& node = pair.second;
+        for (const Edge& edge : node.neighbors) {
+            const_cast<Edge&>(edge).opacity = 1;
+        }
+    }
 }
 
 void hardest_openings(CompositeScene& cs) {
@@ -1112,13 +1069,7 @@ void hardest_openings(CompositeScene& cs) {
         c4s->play(move);
         b.play_piece(move[0] - '0');
 
-        double node_id = b.get_hash();
-        if(!g->node_exists(node_id))
-            node_id = b.get_mirror_board().get_hash();
-        if(!g->node_exists(node_id))
-            throw runtime_error("Node not found in graph!");
-
-        flood_fill_edges_to_highlight(g, node_id);
+        flood_fill_edges_to_highlight(g, b, weakc4);
 
         cs.render_microblock();
     }
@@ -1128,13 +1079,7 @@ void hardest_openings(CompositeScene& cs) {
 
     cs.stage_macroblock(FileBlock("What about the hardest opening for player 1?"), 1);
     c4s->undo(variation.length());
-    // Reset graph edge opacities
-    for (auto& pair : g->nodes) {
-        Node& node = pair.second;
-        for (const Edge& edge : node.neighbors) {
-            const_cast<Edge&>(edge).opacity = 1;
-        }
-    }
+    reset_graph_edge_opacities(g);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("The first move which preserves the longest downstream subgraph is..."), 1);
@@ -1144,13 +1089,7 @@ void hardest_openings(CompositeScene& cs) {
 
     c4s->play("3");
     b.play_piece(3);
-    double node_id = b.get_hash();
-    if(!g->node_exists(node_id))
-        node_id = b.get_mirror_board().get_hash();
-    if(!g->node_exists(node_id))
-        throw runtime_error("Node not found in graph!");
-
-    flood_fill_edges_to_highlight(g, node_id);
+    flood_fill_edges_to_highlight(g, b, weakc4);
     cs.stage_macroblock(FileBlock("One-off from center!"), 1);
     cs.render_microblock();
 
@@ -1163,13 +1102,7 @@ void hardest_openings(CompositeScene& cs) {
         c4s->play(move);
         b.play_piece(move[0] - '0');
 
-        double node_id = b.get_hash();
-        if(!g->node_exists(node_id))
-            node_id = b.get_mirror_board().get_hash();
-        if(!g->node_exists(node_id))
-            throw runtime_error("Node not found in graph!");
-
-        flood_fill_edges_to_highlight(g, node_id);
+        flood_fill_edges_to_highlight(g, b, weakc4);
 
         cs.render_microblock();
     }
@@ -1181,13 +1114,8 @@ void hardest_openings(CompositeScene& cs) {
 
     cs.stage_macroblock(SilenceBlock(2), 1);
     c4s->undo(variation.length() + 1);
-    // Reset graph edge opacities
-    for (auto& pair : g->nodes) {
-        Node& node = pair.second;
-        for (const Edge& edge : node.neighbors) {
-            const_cast<Edge&>(edge).opacity = 1;
-        }
-    }
+    b = C4Board(FULL, "4");
+    reset_graph_edge_opacities(g);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("A close second place goes to the center-column opening. These first 5 moves are entirely forced."), 4);
@@ -1197,34 +1125,113 @@ void hardest_openings(CompositeScene& cs) {
         c4s->play(move);
         b.play_piece(move[0] - '0');
 
-        double node_id = b.get_hash();
-        if(!g->node_exists(node_id))
-            node_id = b.get_mirror_board().get_hash();
-        if(!g->node_exists(node_id))
-            throw runtime_error("Node not found in graph!");
-
-        flood_fill_edges_to_highlight(g, node_id);
+        flood_fill_edges_to_highlight(g, b, weakc4);
 
         cs.render_microblock();
     }
 
-    cs.stage_macroblock(FileBlock("From here, a large amount of nodes are dedicated to variations of the candlesticks opening, which involves making towers like so, which is also mostly forced."), 8);
-    variation = "66222266";
+    cs.stage_macroblock(FileBlock("From here, a large amount of nodes are dedicated to variations of the candlesticks opening, which involves making towers like so, which is also forced."), 8);
+    variation = "66662222";
     for(char c : variation) {
         string move(1, c);
         c4s->play(move);
         b.play_piece(move[0] - '0');
 
-        double node_id = b.get_hash();
-        if(!g->node_exists(node_id))
-            node_id = b.get_mirror_board().get_hash();
-        if(!g->node_exists(node_id))
-            throw runtime_error("Node not found in graph!");
-
-        flood_fill_edges_to_highlight(g, node_id);
+        flood_fill_edges_to_highlight(g, b, weakc4);
 
         cs.render_microblock();
     }
+}
+
+void solution_types(CompositeScene& cs) {
+    cs.stage_macroblock(FileBlock("Now, we've covered a whole bunch of solutions to connect four."), 1);
+    cs.render_microblock();
+
+    shared_ptr<BarChartScene> bcs = make_shared<BarChartScene>("Brute Force Search", vector<string>{"Computation", "Memory"});
+
+    cs.stage_macroblock(FileBlock("Brute force relies intensively on reading ahead, but needs no memory."), 2);
+    cs.add_scene_fade_in(MICRO, bcs, "bcs");
+    cs.render_microblock();
+    bcs->manager.transition(MICRO, {{"bar0", "1"}, {"bar1", "0.05"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("A lookup table of the whole game tree takes up a ton of data, but no CPU."), 2);
+    bcs->change_title(MICRO, "Lookup Table");
+    cs.render_microblock();
+    bcs->manager.transition(MICRO, {{"bar0", "0.05"}, {"bar1", "1"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("We can balance these extremes by memorizing openings and searching at the end, demanding just a little memory and just a little compute."), 2);
+    bcs->change_title(MICRO, "Memorize Openings, Search Endgames");
+    cs.render_microblock();
+    bcs->manager.transition(MICRO, {{"bar0", "0.2"}, {"bar1", "0.2"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("And finally, we can use pattern recognition to compress the tree upfront, demanding even less memory and even less compute during use,"), 2);
+    bcs->change_title(MICRO, "Steady State Diagram Compression");
+    cs.render_microblock();
+    bcs->manager.transition(MICRO, {{"bar0", "0.05"}, {"bar1", "0.05"}});
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("at the behest of a lot of resources used in upfront preparation, data compression, and pattern identification."), 2);
+    bcs->add_bar(MICRO, "Preparation");
+    cs.render_microblock();
+    bcs->manager.transition(MICRO, "bar2", "2");
+    cs.render_microblock();
+
+    cs.stage_macroblock(FileBlock("In all of these cases, we're just making trade-offs between different resources."), 2);
+    bcs->manager.transition(MICRO, {
+        {"bar0", "{t} 3 * sin .4 * .5 +"},
+        {"bar1", "{t} 4 * sin .4 * .5 +"},
+        {"bar2", "{t} 5 * sin .4 * .5 +"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+}
+
+void ideas(CompositeScene& cs) {
+    shared_ptr<Graph> g = make_shared<Graph>();
+    string variation = "444";
+    shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(g, false, variation, TRIM_STEADY_STATES);
+    shared_ptr<LatexScene> ls_opening = make_shared<LatexScene>("\\text{Opening: "+variation+"}", 1, .2, .1);
+    shared_ptr<LatexScene> ls_size = make_shared<LatexScene>("\\text{Node count: "+to_string(g->size())+"}", 1, .2, .1);
+    shared_ptr<C4Scene> c4s = make_shared<C4Scene>(variation, .2, .4);
+    cs.add_scene(gs, "gs");
+    cs.add_scene(ls_opening, "ls_opening", .1, .05);
+    cs.add_scene(ls_size, "ls_size", .1, .12);
+    cs.add_scene(c4s, "c4s", .1, .26);
+    //ValidateC4Graph(g);
+
+    StateSet state{
+        {"q1", "{t} .1 * cos"},
+        {"qi", "0"},
+        {"qj", "{t} .1 * sin"},
+        {"qk", "0"},
+        {"surfaces_opacity", "0"},
+        {"points_opacity", "0"},
+        {"physics_multiplier", "30"},
+    };
+    gs->manager.set(state);
+
+    cs.stage_macroblock(FileBlock("This video isn't about connect four. It's not entirely about computer science, either."), 1);
+    cs.stage_macroblock(FileBlock("It's about how systems yield complexity that can't be expressed in simpler terms."), 1);
+    cs.stage_macroblock(FileBlock("It's about language, and its shortcomings in describing the world around us."), 1);
+    cs.stage_macroblock(FileBlock("It's about emergent behavior- behavior not baked into the rules of connect 4, but arising as a result of them."), 1);
+
+    cs.stage_macroblock(FileBlock("Just from knowing the rules of connect 4, there's no trick to win without somehow relying heavily on computation, raw memorization, or _something_..."), 1);
+    cs.stage_macroblock(FileBlock("and you can't simply figure out that candlesticks openings naturally arise as a strategy."), 1);
+    cs.stage_macroblock(FileBlock("Connect 4 isn't special- the world as we know it contains a myriad of emergent objects built on a bedrock of simple rules."), 1);
+    cs.stage_macroblock(FileBlock("Just from knowing the laws of particle interactions, that doesn't make a physicist any good at predicting the weather,"), 1);
+    cs.stage_macroblock(FileBlock("and that physicist wouldn't be able to mathematically derive the existence of a cumulonimbus cloud."), 1);
+
+    cs.stage_macroblock(FileBlock("But that doesn't stop us from discussing candlesticks openings or cumulonimbus clouds."), 1);
+    cs.stage_macroblock(FileBlock("This sort of behavior is the norm when you take a set of simple rules, and iterate them over and over again."), 1);
+    cs.stage_macroblock(FileBlock("The results are best described not in terms of the original system- say in the language of particle interations,"), 1);
+    cs.stage_macroblock(FileBlock("but in the language of a whole new philosophy seemingly invented by the system, far abstracted from the rules."), 1);
+
+    cs.stage_macroblock(FileBlock("Connect 4 shows us a glimpse of that same emergent substance, distilled down to a system which we can play with and study."), 1);
+    cs.stage_macroblock(FileBlock("complex enough to have that spark of emergent fertility, but simple enough that with modern computers, I can show you this graph and say,"), 1);
+    cs.stage_macroblock(FileBlock("'Here is its shape. This is connect 4.'"), 1);
 }
 
 void anki(CompositeScene& cs) {
@@ -1259,10 +1266,11 @@ void render_video() {
     build_graph(cs);
     explanation(cs);
     trees(cs);
-    */
     FOR_REAL = false;
     patterned(cs);
     trimmed_solution(cs);
     FOR_REAL = true;
     hardest_openings(cs);
+    */
+    solution_types(cs);
 }
