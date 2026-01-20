@@ -31,7 +31,7 @@ public:
     void draw() override {
         // Expect files of the form prefix-0i.png
         double page_height = get_height() * .8;
-        double page_width = 5000;
+        double page_width = get_width() * .8;
         int num_pages = page_numbers.size();
         for(int i = num_pages - 1; i >= 0; --i) {
             int page_number = page_numbers[i];
@@ -47,7 +47,7 @@ public:
             );
 
             Pixels scaled;
-            cropped.scale_to_bounding_box(get_width(), get_height(), scaled);
+            cropped.scale_to_bounding_box(page_width, page_height, scaled);
 
             if(i != 1) scaled.darken(1.0f - i * .1f);
 
@@ -64,8 +64,10 @@ public:
                 page_focus_multiplier = 1 / page_focus_multiplier;
             }
 
-            float x_center = (.5 + page_focus_multiplier * pages_centered * (.08 + .08*(1-square(1-completion))));
-            float y_center = (.25/sin(this_c*3.1415/2)+.25 + pages_centered*.05);
+            pages_centered *= page_focus_multiplier;
+
+            float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-completion))));
+            float y_center = (.25/sin(this_c*3.1415/2) + .25 + pages_centered*.05);
             float x_offset = get_width() * x_center - scaled.w * .5;
             float y_offset = get_height() * y_center - scaled.h * .5;
 

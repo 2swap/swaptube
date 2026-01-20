@@ -44,6 +44,6 @@ void render_video() {
     }
     g.expand();
     cout << g.size() << endl;
-    gs.stage_macroblock(SilenceBlock(5), 1);
+    stage_macroblock(SilenceBlock(5), 1);
     gs.render_microblock();
 }

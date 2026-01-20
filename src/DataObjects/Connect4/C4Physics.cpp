@@ -19,6 +19,7 @@ public:
     string queue = "";
     int w; int h;
     int moves_yet = 0;
+    int time_since_last_drop = 1000;
 
     C4Physics(const int width, const int height) : w(width), h(height), moves_yet(0) {
         mark_updated();
@@ -119,15 +120,17 @@ public:
         if(queue.front() == 'x') {
             undo_once();
             queue.erase(0, 1);
-        } else if(all_discs_accelerating_down()) {
+        } else if(all_discs_accelerating_down() && time_since_last_drop >= 8) {
             add_disc_from_queue();
             queue.erase(0, 1);
+            time_since_last_drop = 0;
         }
     }
 
     ~C4Physics() { }
 
     void iterate_physics() {
+        time_since_last_drop++;
         check_queue();
 
         const double elasticity = 0.35;

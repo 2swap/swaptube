@@ -108,7 +108,7 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
     vector<sample_t> audio_left;
     vector<sample_t> audio_right;
     ps->generate_audio(10, audio_left, audio_right);
-    cs.stage_macroblock(GeneratedBlock(audio_left, audio_right), 3);
+    stage_macroblock(GeneratedBlock(audio_left, audio_right), 3);
 
     cs.manager.transition(MICRO, {
         //{"pgs.opacity", ".4"},
@@ -143,7 +143,7 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
         //{"zoomexp", "1 6.283 / log"},
         //{"circles_opacity", "1"},
     });
-    cs.stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
     //cs.remove_subscene("pgs");
 }
@@ -207,7 +207,7 @@ void identify_vibrations(float t1, float t2) {
     string latex_str = "\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy + ", \\pi = " + to_string(period);
     LatexScene ls(latex_str, 1, 1, 0.12);
     cs.add_scene(make_shared<LatexScene>(ls), "ls", 0.5, 0.1);
-    cs.stage_macroblock(SilenceBlock(14), 1);
+    stage_macroblock(SilenceBlock(14), 1);
     cs.render_microblock();
 }
 
@@ -238,7 +238,7 @@ void stack_diagrams(){
         });
         cs.add_scene(make_shared<CoordinateSceneWithTrail>(cswt), "coord"+key, (i+.5)/bb, 0.5);
     }
-    cs.stage_macroblock(SilenceBlock(10), 1);
+    stage_macroblock(SilenceBlock(10), 1);
     cs.render_microblock();
 }
 

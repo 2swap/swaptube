@@ -15,11 +15,11 @@ void render_video() {
     cs.add_scene(mic_n, "mic_n", 0.75, 0.2);
     cs.add_scene(frame, "frame", 0.5, 0.1);
     cs.add_scene(timer, "timer", 0.5, 0.2);
-    cs.stage_macroblock(CompositeBlock(SilenceBlock(1), SilenceBlock(1)), 5);
+    stage_macroblock(CompositeBlock(SilenceBlock(1), SilenceBlock(1)), 5);
     while (remaining_microblocks_in_macroblock) cs.render_microblock();
-    cs.stage_macroblock(SilenceBlock(1), 5);
+    stage_macroblock(SilenceBlock(1), 5);
     while (remaining_microblocks_in_macroblock) cs.render_microblock();
-    cs.stage_macroblock(SilenceBlock(1), 2);
+    stage_macroblock(SilenceBlock(1), 2);
     while (remaining_microblocks_in_macroblock) cs.render_microblock();
 }
 

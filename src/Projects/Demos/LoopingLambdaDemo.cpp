@@ -21,7 +21,7 @@ void render_video() {
     term->flush_uid_recursive();
 
     LambdaScene ls(term);
-    ls.stage_macroblock(SilenceBlock(1.33), 2);
+    stage_macroblock(SilenceBlock(1.33), 2);
     while(remaining_microblocks_in_macroblock) {
         ls.reduce();
         ls.render_microblock();

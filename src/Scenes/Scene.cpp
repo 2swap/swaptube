@@ -14,6 +14,41 @@ static int remaining_frames_in_macroblock = 0;
 static int total_microblocks_in_macroblock = 0;
 static int total_frames_in_macroblock = 0;
 
+static void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_macroblock){
+    if (expected_microblocks_in_macroblock <= 0) {
+        throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count. (" + to_string(expected_microblocks_in_macroblock) + " microblocks)");
+    }
+    if (remaining_microblocks_in_macroblock != 0) {
+        throw runtime_error("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render_microblock()!\n"
+                "This macroblock had " + to_string(total_microblocks_in_macroblock) + " microblocks, "
+                "but render_microblock() was only called " + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
+    }
+
+    WRITER->audio->encode_buffers();
+
+    total_microblocks_in_macroblock = remaining_microblocks_in_macroblock = expected_microblocks_in_macroblock;
+    macroblock.write_shtooka();
+
+    total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
+    if (!rendering_on()) total_frames_in_macroblock = min(10, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
+    remaining_frames_in_macroblock = total_frames_in_macroblock;
+
+    cout << endl << macroblock.blurb() << " staged to last " << to_string(expected_microblocks_in_macroblock) << " microblock(s), " << to_string(total_frames_in_macroblock) << " frame(s)." << endl;
+
+    double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / FRAMERATE;
+
+    if (AUDIO_HINTS) { // Add hints for audio synchronization
+        double time = get_global_state("t");
+        double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
+        int macroblock_length_samples = round(macroblock_length_seconds * SAMPLERATE);
+        int microblock_length_samples = round(microblock_length_seconds * SAMPLERATE);
+        WRITER->audio->add_blip(round(time * SAMPLERATE), MACRO, macroblock_length_samples, microblock_length_samples);
+        for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
+            WRITER->audio->add_blip(round((time + i * microblock_length_seconds) * SAMPLERATE), MICRO, macroblock_length_samples, microblock_length_samples);
+        }
+    } // Audio hints
+}
+
 class Scene {
 public:
     Scene(const double width = 1, const double height = 1)
@@ -73,42 +108,6 @@ public:
         has_updated_since_last_query = false;
         p=&pix;
         cout << ")" << flush;
-    }
-
-    // TODO can this be made a global static function instead of a member function?
-    void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_macroblock){
-        if (expected_microblocks_in_macroblock <= 0) {
-            throw runtime_error("ERROR: Staged a macroblock with non-positive microblock count. (" + to_string(expected_microblocks_in_macroblock) + " microblocks)");
-        }
-        if (remaining_microblocks_in_macroblock != 0) {
-            throw runtime_error("ERROR: Attempted to add audio without having finished rendering video!\nYou probably forgot to use render_microblock()!\n"
-                    "This macroblock had " + to_string(total_microblocks_in_macroblock) + " microblocks, "
-                    "but render_microblock() was only called " + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
-        }
-
-        WRITER->audio->encode_buffers();
-
-        total_microblocks_in_macroblock = remaining_microblocks_in_macroblock = expected_microblocks_in_macroblock;
-        macroblock.write_shtooka();
-
-        total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
-        if (!rendering_on()) total_frames_in_macroblock = min(10, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
-        remaining_frames_in_macroblock = total_frames_in_macroblock;
-
-        cout << endl << macroblock.blurb() << " staged to last " << to_string(expected_microblocks_in_macroblock) << " microblock(s), " << to_string(total_frames_in_macroblock) << " frame(s)." << endl;
-
-        double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / FRAMERATE;
-
-        if (AUDIO_HINTS) { // Add hints for audio synchronization
-            double time = get_global_state("t");
-            double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
-            int macroblock_length_samples = round(macroblock_length_seconds * SAMPLERATE);
-            int microblock_length_samples = round(microblock_length_seconds * SAMPLERATE);
-            WRITER->audio->add_blip(round(time * SAMPLERATE), MACRO, macroblock_length_samples, microblock_length_samples);
-            for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
-                WRITER->audio->add_blip(round((time + i * microblock_length_seconds) * SAMPLERATE), MICRO, macroblock_length_samples, microblock_length_samples);
-            }
-        } // Audio hints
     }
 
     void render_microblock(){

@@ -7,7 +7,7 @@ void render_video() {
     dragon.manager.set("zoom", "1");
 
     dragon.manager.transition(MACRO, "zoom", "7.5");
-    dragon.stage_macroblock(SilenceBlock(4), depth);
+    stage_macroblock(SilenceBlock(4), depth);
     for(int i = 0; i < depth; i++) {
         int j = 0;
         int multiple = 1 << (depth-i);
@@ -20,11 +20,11 @@ void render_video() {
     }
 
     dragon.manager.transition(MACRO, "zoom", "8.5");
-    dragon.stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(1), 1);
     dragon.render_microblock();
 
     dragon.manager.transition(MACRO, "zoom", "5.5");
-    dragon.stage_macroblock(SilenceBlock(4), depth);
+    stage_macroblock(SilenceBlock(4), depth);
     for(int i = depth-1; i >= 0; i--) {
         int j = 0;
         int multiple = 1 << (depth-i);

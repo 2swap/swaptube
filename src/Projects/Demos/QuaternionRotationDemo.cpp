@@ -27,7 +27,7 @@ void render_3d(){
     tds.manager.set("qi", std::to_string(q.x));
     tds.manager.set("qj", std::to_string(q.y));
     tds.manager.set("qk", std::to_string(q.z));
-    tds.stage_macroblock(SilenceBlock(2), 1);
+    stage_macroblock(SilenceBlock(2), 1);
     tds.render_microblock();
 
     glm::quat quats[6] = {PITCH_DOWN,PITCH_UP,YAW_RIGHT,YAW_LEFT,ROLL_CW,ROLL_CCW};
@@ -38,7 +38,7 @@ void render_3d(){
                                              {"qj", std::to_string(q.y)},
                                              {"qk", std::to_string(q.z)}
         });
-        tds.stage_macroblock(SilenceBlock(2), 1);
+        stage_macroblock(SilenceBlock(2), 1);
         tds.render_microblock();
     }
 }

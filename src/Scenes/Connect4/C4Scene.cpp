@@ -22,7 +22,6 @@ class C4Scene : public Scene {
 private:
     C4Physics board;
     string annotations = empty_annotations;
-    bool annotations_have_changed = false;
     string representation;
 
 public:
@@ -48,7 +47,6 @@ public:
 
     void set_annotations(string s, TransitionType tt) {
         annotations = s;
-        annotations_have_changed = true;
         manager.transition(tt, "annotations_opacity", "1");
     }
     void set_annotations_from_steadystate(TransitionType tt) {
@@ -58,13 +56,10 @@ public:
         // Replace all '2's and '1's with spaces
         replace(annotations.begin(), annotations.end(), '2', ' ');
         replace(annotations.begin(), annotations.end(), '1', ' ');
-        annotations_have_changed = true;
         manager.transition(tt, "annotations_opacity", "1");
     }
     string get_annotations(){return annotations;}
     void clear_annotations(TransitionType tt) {
-        annotations = empty_annotations;
-        annotations_have_changed = true;
         manager.transition(tt, "annotations_opacity", "0");
     }
 
@@ -145,9 +140,9 @@ public:
         return StateQuery{"highlight", "annotations_opacity"};
     }
 
-    void mark_data_unchanged() override { board.mark_unchanged(); annotations_have_changed = false; }
+    void mark_data_unchanged() override { board.mark_unchanged(); }
     void change_data() override { board.iterate_physics(); }
-    bool check_if_data_changed() const override { return board.has_been_updated_since_last_scene_query() || annotations_have_changed; }
+    bool check_if_data_changed() const override { return board.has_been_updated_since_last_scene_query(); }
 
     double get_stone_width() const {
         return min(get_width(), get_height())/10;

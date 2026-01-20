@@ -9,8 +9,8 @@ void render_video(){
         CompositeScene cs;
         cs.add_scene(ks, "ks", 0.25, 0.25*VIDEO_WIDTH/VIDEO_HEIGHT);
 
-        Graph g;
-        g.add_to_stack(new KlotskiBoard(ks->copy_board()));
+        shared_ptr<Graph> g = make_shared<Graph>();
+        g->add_to_stack(new KlotskiBoard(ks->copy_board()));
 
         int g_size;
         {
@@ -19,7 +19,7 @@ void render_video(){
             g2.expand();
             g_size = g2.size();
         }
-        shared_ptr<GraphScene> gs = make_shared<GraphScene>(&g, false);
+        shared_ptr<GraphScene> gs = make_shared<GraphScene>(g, false);
         gs->manager.set({
             {"q1", "0"},
             {"qi", "{t} .1 * cos"},
@@ -35,12 +35,12 @@ void render_video(){
         cs.add_scene(gs, "gs");
 
         // Let a random agent make move around on the board and build the graph as it does, for 50 moves
-        cs.stage_macroblock(SilenceBlock(5), 50); // Stage a macroblock with 50 microblocks
+        stage_macroblock(SilenceBlock(5), 50); // Stage a macroblock with 50 microblocks
         while(remaining_microblocks_in_macroblock) {
             ks->stage_random_move();
             // Add the new node
-            g.add_to_stack(new KlotskiBoard(ks->copy_board()));
-            g.add_missing_edges();
+            g->add_to_stack(new KlotskiBoard(ks->copy_board()));
+            g->add_missing_edges();
             // Highlight the node of the board on the manager-space graph
             gs->next_hash = ks->copy_board().get_hash();
             cs.render_microblock(); // Render a microblock

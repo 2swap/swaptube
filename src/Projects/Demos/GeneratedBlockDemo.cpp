@@ -27,6 +27,6 @@ void render_video() {
     vector<sample_t> left;
     vector<sample_t> right;
     generate_audio(12, left, right);
-    cs.stage_macroblock(GeneratedBlock(left, right), 1);
+    stage_macroblock(GeneratedBlock(left, right), 1);
     cs.render_microblock();
 }
