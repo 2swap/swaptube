@@ -1,8 +1,8 @@
 #include "../Scenes/Connect4/C4GraphScene.cpp"
 
 void render_video() {
-    Graph g;
-    C4GraphScene gs(&g, false, "444", MANUAL);
+    shared_ptr<Graph> g = make_shared<Graph>();
+    C4GraphScene gs(g, false, "444", MANUAL);
 
     gs.manager.set({
         {"q1", "{t} 4 / cos"},
@@ -29,8 +29,8 @@ void render_video() {
     stage_macroblock(SilenceBlock(1), 1);
     gs.render_microblock();
     for(int i = 1; i <= 7; i++){
-        g.add_node(new C4Board("444" + to_string(i)));
-        g.add_missing_edges();
+        g->add_node(new C4Board(FULL, "444" + to_string(i)));
+        g->add_missing_edges();
     }
     stage_macroblock(SilenceBlock(1), 1);
     gs.render_microblock();

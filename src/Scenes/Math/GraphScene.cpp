@@ -35,6 +35,7 @@ public:
     double next_hash = 0;
     vector<unsigned int> color_scheme{0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};
     GraphScene(shared_ptr<Graph> g, bool surfaces_on, const double width = 1, const double height = 1) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g) {
+        manager.begin_timer("time_since_graph_init");
         manager.set({
             {"repel", "1"},
             {"attract", "1"},

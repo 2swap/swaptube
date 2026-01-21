@@ -8,7 +8,6 @@ class C4GraphScene : public GraphScene {
 public:
     C4GraphScene(shared_ptr<Graph> g, bool surfaces_on, const string& rep, const C4BranchMode mode, const double width = 1, const double height = 1)
     : GraphScene(g, surfaces_on, width, height), root_node_representation(rep) {
-        manager.begin_timer("time_since_graph_init");
         manager.set("physics_multiplier", "5");
         manager.set("decay", "0.5");
 

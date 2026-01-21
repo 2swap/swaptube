@@ -8,6 +8,7 @@
 #include "../Scenes/Connect4/C4Scene.cpp"
 #include "../Scenes/Media/SvgScene.cpp"
 #include "../Scenes/Connect4/C4GraphScene.cpp"
+#include "../Scenes/Physics/BouncingBallScene.cpp"
 #include "../DataObjects/Connect4/TreeValidator.cpp"
 
 void intro(CompositeScene& cs) {
@@ -1092,7 +1093,7 @@ void trimmed_solution(CompositeScene& cs) {
     }
 }
 
-void hardest_openings(CompositeScene& cs) {
+shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
     shared_ptr<C4GraphScene> weakc4 = dynamic_pointer_cast<C4GraphScene>(cs.get_subscene_pointer("weakc4"));
     shared_ptr<Graph> g = weakc4->graph;
 
@@ -1201,6 +1202,7 @@ void hardest_openings(CompositeScene& cs) {
     cs.fade_all_subscenes(MICRO, 0);
     cs.render_microblock();
     cs.remove_all_subscenes();
+    return weakc4;
 }
 
 void solution_types(CompositeScene& cs) {
@@ -1272,48 +1274,39 @@ void solution_types(CompositeScene& cs) {
     cs.render_microblock();
 }
 
-void ideas(CompositeScene& cs) {
-    shared_ptr<Graph> g = make_shared<Graph>();
-    string variation = "444";
-    shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(g, false, variation, TRIM_STEADY_STATES);
-    shared_ptr<LatexScene> ls_opening = make_shared<LatexScene>("\\text{Opening: "+variation+"}", 1, .2, .1);
-    shared_ptr<LatexScene> ls_size = make_shared<LatexScene>("\\text{Node count: "+to_string(g->size())+"}", 1, .2, .1);
-    shared_ptr<C4Scene> c4s = make_shared<C4Scene>(variation, .2, .4);
-    cs.add_scene(gs, "gs");
-    cs.add_scene(ls_opening, "ls_opening", .1, .05);
-    cs.add_scene(ls_size, "ls_size", .1, .12);
-    cs.add_scene(c4s, "c4s", .1, .26);
-    //ValidateC4Graph(g);
-
-    StateSet state{
-        {"q1", "{t} .1 * cos"},
-        {"qi", "0"},
-        {"qj", "{t} .1 * sin"},
-        {"qk", "0"},
-        {"surfaces_opacity", "0"},
-        {"points_opacity", "0"},
-        {"physics_multiplier", "30"},
-    };
-    gs->manager.set(state);
-
+void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
+    /*
     stage_macroblock(FileBlock("This video isn't about connect four. It's not entirely about computer science, either."), 1);
     stage_macroblock(FileBlock("It's about how systems yield complexity that can't be expressed in simpler terms."), 1);
     stage_macroblock(FileBlock("It's about language, and its shortcomings in describing the world around us."), 1);
     stage_macroblock(FileBlock("It's about emergent behavior- behavior not baked into the rules of connect 4, but arising as a result of them."), 1);
+*/
 
-    stage_macroblock(FileBlock("Just by knowing the rules of connect 4, there's no trick to win without somehow relying heavily on computation, raw memorization, or _something_..."), 1);
-    stage_macroblock(FileBlock("and you can't simply figure out that candlesticks openings naturally arise as a strategy."), 1);
-    stage_macroblock(FileBlock("Connect 4 isn't special- the world as we know it contains a myriad of emergent objects built on a bedrock of simple rules."), 1);
-    stage_macroblock(FileBlock("Just by knowing the laws of particle interactions, that doesn't make a physicist any good at predicting the weather,"), 1);
-    stage_macroblock(FileBlock("and that physicist wouldn't be able to mathematically derive the existence of a cumulonimbus cloud."), 1);
+    shared_ptr<C4Scene> c4s = make_shared<C4Scene>("");
+    cs.add_scene_fade_in(MICRO, weakc4, "weakc4");
+    stage_macroblock(FileBlock("Just knowing the rules doesn't mean you can win without somehow relying heavily on computation, raw memorization, or _something_..."), 1);
+    cs.render_microblock();
+    stage_macroblock(FileBlock("you can't just intuitively derive that the candlesticks opening is a naturally arising strategy."), 1);
+    cs.render_microblock();
+    shared_ptr<BouncingBallScene> bbs = make_shared<BouncingBallScene>(100);
+    cs.add_scene(bbs, "bbs");
+    stage_macroblock(FileBlock("Just knowing the laws of particle interactions doesn't mean you can predict the weather,"), 1);
+    cs.render_microblock();
+    stage_macroblock(FileBlock("or tell you that there is such thing as a cumulonimbus cloud."), 1);
+    return;
 
     stage_macroblock(FileBlock("But that doesn't stop us from discussing candlesticks openings or cumulonimbus clouds."), 1);
-    stage_macroblock(FileBlock("Such behavior is the norm when you take a set of simple rules, and iterate them over and over again."), 1);
-    stage_macroblock(FileBlock("The results are best described not in terms of the original system- say in the language of particle interations,"), 1);
-    stage_macroblock(FileBlock("but in the language of a whole new philosophy seemingly invented by the system, far abstracted from the rules."), 1);
+    stage_macroblock(FileBlock("Maybe we can't concisely explain them from first principles, but that doesn't make them any less real."), 1);
+    stage_macroblock(FileBlock("Clouds are best described not in the language of particle interations,"), 1);
+    stage_macroblock(FileBlock("but in the language of a whole new philosophy seemingly invented out of thin air, far abstracted from the rules."), 1);
 
-    stage_macroblock(FileBlock("Connect 4 shows us a glimpse of that same emergent substance, distilled down to a system which we can play with and study."), 1);
-    stage_macroblock(FileBlock("complex enough to have that spark of emergent fertility, but simple enough that with modern computers, I can show you this graph and say,"), 1);
+    stage_macroblock(FileBlock("Connect 4 shows us a glimpse of that same emergent substance."), 1);
+    stage_macroblock(FileBlock("It shows us that complexity and mystery aren't unique to those laws which gave us stars and galaxies, benzene rings and toothpaste."), 1);
+    stage_macroblock(FileBlock("but are rather an inevitability more fundamental than our particular reality."), 1);
+
+    stage_macroblock(FileBlock("Equivalent magic arises from even the most humble systems of iterated rules,"), 1);
+    stage_macroblock(FileBlock("and connect 4 is no exception- complex enough to invoke that same spark of emergent fertility in full force,"), 1);
+    stage_macroblock(FileBlock("but simple enough that with modern computers, I can show you this graph and say,"), 1);
     stage_macroblock(FileBlock("'Here is its shape. This is connect 4.'"), 1);
 }
 
@@ -1362,8 +1355,9 @@ void render_video() {
     trees(cs);
     patterned(cs);
     trimmed_solution(cs);
-    hardest_openings(cs);
+    shared_ptr<C4GraphScene> weakc4 = hardest_openings(cs);
     solution_types(cs);
     */
-    anki(cs);
+    ideas(cs, weakc4);
+    //anki(cs);
 }
