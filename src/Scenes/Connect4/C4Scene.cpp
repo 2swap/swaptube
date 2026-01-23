@@ -120,7 +120,7 @@ public:
                 if(annotation != ' ') {
                     double px, py;
                     get_disc_screen_coordinates(x, y, px, py);
-                    ScalingParams sp(get_stone_width(), get_stone_width());
+                    ScalingParams sp(get_stone_width()*1.3, get_stone_width()*1.3);
                     string annotation_str(1, annotation);
                     if(annotation != '@') annotation_str = "\\text{" + annotation_str + "}";
                     else annotation_str = "\\@";

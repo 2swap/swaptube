@@ -120,7 +120,7 @@ public:
         if(queue.front() == 'x') {
             undo_once();
             queue.erase(0, 1);
-        } else if(all_discs_accelerating_down() && time_since_last_drop >= 8) {
+        } else if(all_discs_accelerating_down() && (time_since_last_drop >= 5 || fast_mode)) {
             add_disc_from_queue();
             queue.erase(0, 1);
             time_since_last_drop = 0;

@@ -15,7 +15,7 @@ public:
         const double width = 1,
         const double height = 1
     )
-        :CoordinateScene(width, height), balls(n, simulation_width, simulation_height, .1f) {}
+        :CoordinateScene(width, height), balls(n, simulation_width, simulation_height, .05f) {}
 
     void mark_data_unchanged() override { balls.mark_unchanged(); }
     void change_data() override { balls.iterate(); }

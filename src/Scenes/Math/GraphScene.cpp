@@ -64,13 +64,13 @@ public:
         glm::vec3 next_pos;
         bool curr_found = false;
         bool next_found = false;
-        // Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
+        // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
         for(pair<double, Node> p : graph->nodes){
             Node node = p.second;
             glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);
             if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
             if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
-            //add_point(Point(node_pos, node.color, 1, node.radius()));
+            if(node.draw_point) add_point(Point(node_pos, node.color, 1, node.radius()));
             double so = node.splash_opacity();
             int color = color_scheme[static_cast<int>(abs(p.first)*4)%4];
             if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
@@ -89,7 +89,7 @@ public:
             double smooth_interp = smoother2(state["microblock_fraction"]);
             if     (!curr_found) pos_to_render = next_pos;
             else if(!next_found) pos_to_render = curr_pos;
-            else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
+            else                 pos_to_render = curr_pos;// TODO should be veclerp(curr_pos, next_pos, smooth_interp);
             opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
             double hpo = state["highlight_point_opacity"];
             if(hpo > 0.001)

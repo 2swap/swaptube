@@ -66,6 +66,7 @@ public:
     int index = -1;
     unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
+    bool draw_point = false;
     double opacity = 1;
     int color = 0xffffffff;
     float size = 1;
