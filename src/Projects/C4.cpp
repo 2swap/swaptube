@@ -5,6 +5,7 @@
 #include "../Scenes/Media/Mp4Scene.cpp"
 #include "../Scenes/Media/WhitePaperScene.cpp"
 #include "../Scenes/Math/RealFunctionScene.cpp"
+#include "../Scenes/Math/MandelbrotScene.cpp"
 #include "../Scenes/Math/BarChartScene.cpp"
 #include "../Scenes/Connect4/C4Scene.cpp"
 #include "../Scenes/Media/SvgScene.cpp"
@@ -142,8 +143,11 @@ void intro(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_subscene("god2");
 
+    cs.fade_subscene(MICRO, "human2", .2);
     stage_macroblock(FileBlock("After player 1 plays in the center, what player 2 openings make it as hard as possible for player 1?"), 2);
     cs.render_microblock();
+    cs.fade_subscene(MICRO, "human2", 0);
+    cs.fade_subscene(MICRO, "human1", .2);
     shared_ptr<PngScene> human2_trick = make_shared<PngScene>("Thinker2_trick", .3, .6);
     cs.add_scene_fade_in(MICRO, human2_trick, "human2_trick", .85, .7);
     cs.render_microblock();
@@ -262,7 +266,6 @@ void explanation(CompositeScene& cs) {
 
     stage_macroblock(FileBlock("Instead you could memorize every branch upfront."), 1);
     cs.fade_all_subscenes(MICRO, 0);
-    shared_ptr<CompositeScene> lots_of_branches = make_shared<CompositeScene>();
     unordered_map<string, string> branches = {
         {"44436445527455", "Play in third column"},
         {"42656566544", "Play in fourth column"},
@@ -272,16 +275,16 @@ void explanation(CompositeScene& cs) {
         {"45212244174556", "Play in seventh column"},
         {"46251324442252", "Play in fifth column"},
     };
-    lots_of_branches->manager.begin_timer("shift");
+    cs.manager.begin_timer("shift");
     int which_branch = 0;
     for(const auto& pair : branches) {
         shared_ptr<C4Scene> branch_scene = make_shared<C4Scene>("", .5, .5);
         branch_scene->set_fast_mode(true);
         branch_scene->play(pair.first);
         shared_ptr<LatexScene> branch_label = make_shared<LatexScene>("\\text{" + pair.second + "}", 1, .5, .5);
-        lots_of_branches->add_scene(branch_scene, "branch_scene"+to_string(which_branch));
-        lots_of_branches->add_scene(branch_label, "branch_label"+to_string(which_branch));
-        lots_of_branches->manager.set({
+        cs.add_scene_fade_in(MICRO, branch_scene, "branch_scene"+to_string(which_branch));
+        cs.add_scene_fade_in(MICRO, branch_label, "branch_label"+to_string(which_branch));
+        cs.manager.set({
             {"branch_scene.x", ".25"},
             {"branch_scene.y", ".25 " + to_string(which_branch) + " .5 * + <shift> +"},
             {"branch_label.x", ".75"},
@@ -289,20 +292,19 @@ void explanation(CompositeScene& cs) {
         });
         which_branch++;
     }
-    cs.add_scene_fade_in(MICRO, lots_of_branches, "lots_of_branches");
     cs.render_microblock();
 
-    lots_of_branches->fade_all_subscenes(MICRO, .3);
-    lots_of_branches->manager.begin_timer("shift_2");
+    cs.fade_all_subscenes(MICRO, .3);
+    cs.manager.begin_timer("shift_2");
     which_branch = 0;
     for(const auto& pair : branches) {
         shared_ptr<C4Scene> branch_scene = make_shared<C4Scene>("", .5, .5);
         branch_scene->set_fast_mode(true);
         branch_scene->play(pair.first);
         shared_ptr<LatexScene> branch_label = make_shared<LatexScene>("\\text{" + pair.second + "}", 1, .5, .5);
-        lots_of_branches->add_scene_fade_in(MICRO, branch_scene, "branch_scene_"+to_string(which_branch));
-        lots_of_branches->add_scene_fade_in(MICRO, branch_label, "branch_label_"+to_string(which_branch));
-        lots_of_branches->manager.set({
+        cs.add_scene_fade_in(MICRO, branch_scene, "branch_scene_"+to_string(which_branch));
+        cs.add_scene_fade_in(MICRO, branch_label, "branch_label_"+to_string(which_branch));
+        cs.manager.set({
             {"branch_scene.x", ".25 " + to_string(which_branch) + " .5 * + <shift_2> +"},
             {"branch_scene.y", ".25"},
             {"branch_label.x", ".25 " + to_string(which_branch) + " .5 * + <shift_2> +"},
@@ -313,12 +315,12 @@ void explanation(CompositeScene& cs) {
     stage_macroblock(FileBlock("That way you can just recall the right response during the game."), 1);
     cs.render_microblock();
 
-    cs.fade_subscene(MICRO, "lots_of_branches", 0);
+    cs.fade_all_subscenes(MICRO, 0);
     shared_ptr<PngScene> terabytes = make_shared<PngScene>("15TB", .6, .6);
     cs.add_scene_fade_in(MICRO, terabytes, "terabytes");
     stage_macroblock(FileBlock("Well, you'll need to memorize 15 terabytes of connect 4 positions, as this poor soul found out."), 3);
     cs.render_microblock();
-    cs.remove_subscene("lots_of_branches");
+    cs.remove_all_subscenes_except("terabytes");
     terabytes->manager.transition(MICRO, {
             {"crop_top", ".87"},
             {"crop_bottom", ".07"},
@@ -767,6 +769,7 @@ void patterned(CompositeScene& cs) {
     stage_macroblock(CompositeBlock(FileBlock("So, make your guess! Which one do you think it is?"), SilenceBlock(1)), 1);
     cs.render_microblock();
 
+    cs.remove_subscene("ps");
     stage_macroblock(FileBlock("The answer is... both of them!"), 1);
     cs.render_microblock();
 
@@ -1023,7 +1026,8 @@ void trimmed_solution(CompositeScene& cs) {
     g->remove_node(node_id); // remove so we can regrow it
     weakc4->manager.begin_timer("subtree_grow");
     weakc4->manager.transition(MICRO, "desired_nodes", to_string(g->size()) + " <subtree_grow> 100 * +");
-    g->add_to_stack(new C4Board(C4BranchMode::SIMPLE_WEAK, variation));
+    shared_ptr<SteadyState> ss = find_steady_state(variation, nullptr, true);
+    g->add_to_stack(new C4Board(C4BranchMode::SIMPLE_WEAK, variation, ss));
     cs.render_microblock();
     if(!rendering_on()) {
         g->expand(-1);
@@ -1041,9 +1045,10 @@ void trimmed_solution(CompositeScene& cs) {
             to_delete.insert(pair.first);
         }
     }
+    weakc4->manager.set("desired_nodes", "0");
     stage_macroblock(SilenceBlock(1), to_delete.size());
     for(double node_id : to_delete) {
-        g->nodes.erase(node_id);
+        g->remove_node(node_id);
         cs.render_microblock();
     }
     cs.remove_subscene("c4s_steady");
@@ -1456,7 +1461,11 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     stage_macroblock(FileBlock("but are rather an inevitability more fundamental than our particular reality."), 1);
     cs.render_microblock();
 
-    //TODO mandelbrot clip?
+    shared_ptr<MandelbrotScene> ms = make_shared<MandelbrotScene>();
+    cs.add_scene_fade_in(MICRO, ms, "mandelbrot", .5, .5, .5, true);
+    ms->manager.begin_timer("zoom");
+    ms->manager.set("seed_c_r", "0.743643887037151");
+    ms->manager.set("seed_c_i", "0.131825904205330");
     stage_macroblock(FileBlock("Equivalent magic arises from even the most humble systems of iterated rules, and this game is no exception."), 1);
     cs.render_microblock();
     stage_macroblock(FileBlock("Complex enough to invoke that same spark of emergent fertility in full force,"), 1);
