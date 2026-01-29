@@ -11,8 +11,8 @@ extern "C" void cuda_overlay(
 
 class WhitePaperScene : public Scene {
 public:
-    WhitePaperScene(const string& prefix, const vector<int>& page_numbers, const double width = 1, const double height = 1)
-        : Scene(width, height), prefix(prefix), page_numbers(page_numbers) {
+    WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const double width = 1, const double height = 1)
+        : Scene(width, height), prefix(prefix), author(author), page_numbers(page_numbers) {
         manager.set({
             {"completion", "0"},
             {"which_page", "1"},
@@ -30,7 +30,7 @@ public:
 
     void draw() override {
         // Expect files of the form prefix-0i.png
-        double page_height = get_height() * .8;
+        double page_height = get_height() * .65;
         double page_width = get_width() * .8;
         int num_pages = page_numbers.size();
         for(int i = num_pages - 1; i >= 0; --i) {
@@ -67,15 +67,25 @@ public:
             pages_centered *= page_focus_multiplier;
 
             float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-completion))));
-            float y_center = (.25/sin(this_c*3.1415/2) + .25 + pages_centered*.05);
+            float y_center = (.25/sin(this_c*3.1415/2) + .25 + 1/6. + pages_centered*.05);
             float x_offset = get_width() * x_center - scaled.w * .5;
             float y_offset = get_height() * y_center - scaled.h * .5;
 
             cuda_overlay(pix.pixels.data(), pix.w, pix.h,
                          scaled.pixels.data(), scaled.w, scaled.h,
                          (int)x_offset, (int)y_offset,
-                         1.0f);
+                         1.0f
+            );
         }
+
+        ScalingParams sp = ScalingParams(get_width(), get_height()/6);
+        Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
+        int offset_y = get_height() * lerp(-1/6., .02, state["completion"]);
+        cuda_overlay(pix.pixels.data(), pix.w, pix.h,
+                     text_pixels.pixels.data(), text_pixels.w, text_pixels.h,
+                     (int)((get_width() - text_pixels.w) / 2), offset_y,
+                     1.0f
+        );
     }
 
     const StateQuery populate_state_query() const override {
@@ -85,5 +95,6 @@ public:
 
 private:
     const string prefix;
+    const string author;
     const vector<int> page_numbers;
 };

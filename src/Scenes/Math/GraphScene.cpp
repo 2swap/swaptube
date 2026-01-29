@@ -89,7 +89,7 @@ public:
             double smooth_interp = smoother2(state["microblock_fraction"]);
             if     (!curr_found) pos_to_render = next_pos;
             else if(!next_found) pos_to_render = curr_pos;
-            else                 pos_to_render = curr_pos;// TODO should be veclerp(curr_pos, next_pos, smooth_interp);
+            else                 pos_to_render = next_pos;// TODO should be veclerp(curr_pos, next_pos, smooth_interp);
             opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
             double hpo = state["highlight_point_opacity"];
             if(hpo > 0.001)
@@ -127,7 +127,9 @@ public:
             }
         }
         last_node_count = graph->size();
-        graph->iterate_physics(state["physics_multiplier"], state["repel"], state["attract"], state["decay"], state["centering_strength"], state["dimensions"], state["mirror_force"], state["flip_by_symmetry"]>0);
+        int amount_to_iterate = state["physics_multiplier"];
+        if(!rendering_on()) amount_to_iterate = min(amount_to_iterate, 1); // No need to spread graphs out in smoketest
+        graph->iterate_physics(amount_to_iterate, state["repel"], state["attract"], state["decay"], state["centering_strength"], state["dimensions"], state["mirror_force"], state["flip_by_symmetry"]>0);
         if(graph->has_been_updated_since_last_scene_query()) {
             graph_to_3d();
             clear_surfaces();

@@ -21,12 +21,12 @@ using json = nlohmann::json;
 
 extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
 
-glm::vec4 random_unit_cube_vector() {
+glm::vec4 random_unit_cube_vector(mt19937& rng, uniform_real_distribution<float>& dist) {
     return glm::vec4(
-        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f,
-        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f,
-        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f,
-        2.0f * static_cast<float>(rand()) / RAND_MAX - 1.0f
+        2.0f * dist(rng) - 1.0f,
+        2.0f * dist(rng) - 1.0f,
+        2.0f * dist(rng) - 1.0f,
+        2.0f * dist(rng) - 1.0f
     );
 }
 
@@ -58,8 +58,8 @@ public:
      * @param t The data associated with the node.
      */
     Node(GenericBoard* t, double hash) : data(t), hash(hash),
-        velocity(random_unit_cube_vector()),
-        position(random_unit_cube_vector()) {}
+        velocity(random_unit_cube_vector(rng, dist)),
+        position(random_unit_cube_vector(rng, dist)) {}
 
     GenericBoard* data;
     double hash = 0;
@@ -92,8 +92,10 @@ public:
     deque<double> traverse_deque;
     unordered_map<double, Node> nodes;
     double root_node_hash = 0;
+    uniform_real_distribution<float> dist;
+    mt19937 rng;
 
-    Graph(){}
+    Graph() : dist(0.0f, 1.0f), rng(0) {}
 
     ~Graph() {
         clear();
@@ -259,7 +261,7 @@ public:
                 Node& child = nodes.find(child_hash)->second;
                 if(child.age == 0 && parent.age != 0 && !does_edge_exist(parent.hash, child_hash)){//if child is orphaned
                     // Teleport children to parents
-                    child.position = parent.position + random_unit_cube_vector();
+                    child.position = parent.position + random_unit_cube_vector(rng, dist);
                     child.velocity = parent.velocity;
                 }
                 add_directed_edge(parent.hash, child_hash);

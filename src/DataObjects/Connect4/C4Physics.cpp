@@ -30,7 +30,7 @@ public:
 
         Disc new_disc;
         new_disc.index = moves_yet;
-        new_disc.py = h;
+        new_disc.py = h + 1;
         new_disc.x = column;
         discs.push_back(new_disc);
         mark_updated();
@@ -48,6 +48,10 @@ public:
             discs.back() = new_disc;
             mark_updated();
         }
+    }
+
+    void flush_queue() {
+        queue = "";
     }
 
     void undo(int steps) {
@@ -82,7 +86,7 @@ public:
     void remove_all_discs_above_top() {
         auto it = discs.begin();
         while (it != discs.end()) {
-            if (it->py > h) {
+            if (it->py > h + 1) {
                 it = discs.erase(it);
                 mark_updated();
             } else {
@@ -93,7 +97,7 @@ public:
 
     bool all_discs_below_top() const {
         for (const Disc& disc : discs) {
-            if (disc.py >= h - .5) {
+            if (disc.py >= h) {
                 return false;
             }
         }

@@ -40,6 +40,10 @@ public:
         cout << "Undo " << steps << " steps. New representation: " << representation << endl;
     }
 
+    void flush_queue() {
+        board.flush_queue();
+    }
+
     void play(const string& rep){
         board.append_to_queue(rep);
         representation += rep;
@@ -106,6 +110,9 @@ public:
         get_disc_screen_coordinates(disc_x, disc_y, px, py);
         int col = is_red ? C4_RED : C4_YELLOW;
         int darkcol = is_red ? C4_RED_DARK : C4_YELLOW_DARK;
+        double clamped_w = clamp(disc_y - board.h, 0.0, 1.0);
+        col = colorlerp(col, col & 0x00ffffff, clamped_w);
+        darkcol = colorlerp(darkcol, darkcol & 0x00ffffff, clamped_w);
 
         double stone_width = get_stone_width();
         double piece_fill_radius = stone_width*.35;
