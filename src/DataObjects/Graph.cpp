@@ -57,9 +57,8 @@ public:
      * Constructor to create a new node.
      * @param t The data associated with the node.
      */
-    Node(GenericBoard* t, double hash) : data(t), hash(hash),
-        velocity(random_unit_cube_vector(rng, dist)),
-        position(random_unit_cube_vector(rng, dist)) {}
+    Node(GenericBoard* t, double hash, glm::vec4 position, glm::vec4 velocity) :
+        data(t), hash(hash), velocity(velocity), position(position) {}
 
     GenericBoard* data;
     double hash = 0;
@@ -136,7 +135,7 @@ public:
             delete t;
             return hash;
         }
-        Node new_node(t, hash);
+        Node new_node(t, hash, random_unit_cube_vector(rng, dist), random_unit_cube_vector(rng, dist));
         if (size() == 0) {
             root_node_hash = hash;
         }
@@ -294,7 +293,7 @@ public:
         mark_updated();
     }
 
-    int dist(double start, double end) {
+    int measure_distance(double start, double end) {
         return shortest_path(start, end).first.size();
     }
 

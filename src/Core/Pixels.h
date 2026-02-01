@@ -21,6 +21,12 @@ inline int OPAQUE_WHITE = 0xFFFFFFFF;
 inline int TRANSPARENT_BLACK = 0x00000000;
 inline int TRANSPARENT_WHITE = 0x00FFFFFF;
 
+extern "C" void cuda_overlay(
+    unsigned int* h_background, const int bw, const int bh,
+    unsigned int* h_foreground, const int fw, const int fh,
+    const int dx, const int dy,
+    const float opacity);
+
 class Pixels{
 public:
     int w;
@@ -149,6 +155,73 @@ public:
         int cw =  w * (1.0f - crop_left - crop_right);
         int ch =  h * (1.0f - crop_top - crop_bottom);
         crop(x, y, cw, ch, cropped);
+    }
+
+    int get_pixel_bilinear(double x, double y) const {
+        int x0 = static_cast<int>(floor(x));
+        int x1 = x0 + 1;
+        int y0 = static_cast<int>(floor(y));
+        int y1 = y0 + 1;
+
+        double dx = x - x0;
+        double dy = y - y0;
+
+        int c00 = get_pixel_carefully(x0, y0);
+        int c10 = get_pixel_carefully(x1, y0);
+        int c01 = get_pixel_carefully(x0, y1);
+        int c11 = get_pixel_carefully(x1, y1);
+
+        int a00 = geta(c00), r00 = getr(c00), g00 = getg(c00), b00 = getb(c00);
+        int a10 = geta(c10), r10 = getr(c10), g10 = getg(c10), b10 = getb(c10);
+        int a01 = geta(c01), r01 = getr(c01), g01 = getg(c01), b01 = getb(c01);
+        int a11 = geta(c11), r11 = getr(c11), g11 = getg(c11), b11 = getb(c11);
+
+        int a0 = static_cast<int>(a00 * (1 - dx) + a10 * dx);
+        int r0 = static_cast<int>(r00 * (1 - dx) + r10 * dx);
+        int g0 = static_cast<int>(g00 * (1 - dx) + g10 * dx);
+        int b0 = static_cast<int>(b00 * (1 - dx) + b10 * dx);
+
+        int a1 = static_cast<int>(a01 * (1 - dx) + a11 * dx);
+        int r1 = static_cast<int>(r01 * (1 - dx) + r11 * dx);
+        int g1 = static_cast<int>(g01 * (1 - dx) + g11 * dx);
+        int b1 = static_cast<int>(b01 * (1 - dx) + b11 * dx);
+
+        int a = static_cast<int>(a0 * (1 - dy) + a1 * dy);
+        int r = static_cast<int>(r0 * (1 - dy) + r1 * dy);
+        int g = static_cast<int>(g0 * (1 - dy) + g1 * dy);
+        int b = static_cast<int>(b0 * (1 - dy) + b1 * dy);
+        return argb(a, r, g, b);
+    }
+
+    void rotate_arbitrary_angle(double angle_rad, Pixels &rotated) const {
+        // Calculate the center of the original image
+        double cx = w / 2.0;
+        double cy = h / 2.0;
+
+        // Calculate the dimensions of the rotated image
+        double cos_angle = fabs(cos(angle_rad));
+        double sin_angle = fabs(sin(angle_rad));
+        int new_w = static_cast<int>(w * cos_angle + h * sin_angle);
+        int new_h = static_cast<int>(h * cos_angle + w * sin_angle);
+
+        rotated = Pixels(new_w, new_h);
+
+        // Calculate the center of the rotated image
+        double ncx = new_w / 2.0;
+        double ncy = new_h / 2.0;
+
+        // Perform the rotation
+        for (int x = 0; x < new_w; x++) {
+            for (int y = 0; y < new_h; y++) {
+                // Find the corresponding pixel in the original image
+                double tx = cos(angle_rad) * (x - ncx) + sin(angle_rad) * (y - ncy) + cx;
+                double ty = -sin(angle_rad) * (x - ncx) + cos(angle_rad) * (y - ncy) + cy;
+
+                // Get the pixel color using bilinear interpolation
+                int col = get_pixel_bilinear(tx, ty);
+                rotated.set_pixel_carefully(x, y, col);
+            }
+        }
     }
 
     bool is_empty() const {

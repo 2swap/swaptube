@@ -3,12 +3,6 @@
 #include "../../IO/VisualMedia.cpp"
 #include "../Scene.cpp"
 
-extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity);
-
 class WhitePaperScene : public Scene {
 public:
     WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const double width = 1, const double height = 1)
@@ -30,7 +24,7 @@ public:
 
     void draw() override {
         // Expect files of the form prefix-0i.png
-        double page_height = get_height() * .65;
+        double page_height = get_height() * .68;
         double page_width = get_width() * .8;
         int num_pages = page_numbers.size();
         for(int i = num_pages - 1; i >= 0; --i) {
@@ -67,7 +61,7 @@ public:
             pages_centered *= page_focus_multiplier;
 
             float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-completion))));
-            float y_center = (.25/sin(this_c*3.1415/2) + .25 + 1/6. + pages_centered*.05);
+            float y_center = (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05);
             float x_offset = get_width() * x_center - scaled.w * .5;
             float y_offset = get_height() * y_center - scaled.h * .5;
 
@@ -80,7 +74,7 @@ public:
 
         ScalingParams sp = ScalingParams(get_width(), get_height()/6);
         Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
-        int offset_y = get_height() * lerp(-1/6., .02, state["completion"]);
+        int offset_y = get_height() * smoothlerp(-1/6., .02, state["completion"]);
         cuda_overlay(pix.pixels.data(), pix.w, pix.h,
                      text_pixels.pixels.data(), text_pixels.w, text_pixels.h,
                      (int)((get_width() - text_pixels.w) / 2), offset_y,

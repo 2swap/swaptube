@@ -9,7 +9,7 @@ inline int C4_RED           = 0xffff0000;
 inline int C4_RED_DARK      = 0xff7f0000;
 inline int C4_YELLOW        = 0xffffff00;
 inline int C4_YELLOW_DARK   = 0xff7f7f00;
-inline int C4_EMPTY         = 0xff666699;
+inline int C4_EMPTY         = 0xff444466;
 
 inline string empty_annotations = "       "
                                   "       "

@@ -89,7 +89,7 @@ public:
             double smooth_interp = smoother2(state["microblock_fraction"]);
             if     (!curr_found) pos_to_render = next_pos;
             else if(!next_found) pos_to_render = curr_pos;
-            else                 pos_to_render = next_pos;// TODO should be veclerp(curr_pos, next_pos, smooth_interp);
+            else                 pos_to_render = veclerp(curr_pos, next_pos, cbrt(smooth_interp)); // TODO remove the cbrt here.
             opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
             double hpo = state["highlight_point_opacity"];
             if(hpo > 0.001)

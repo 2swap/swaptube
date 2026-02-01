@@ -3,12 +3,6 @@
 #include "../../IO/VisualMedia.cpp"
 #include "../Scene.cpp"
 
-extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity);
-
 class PngScene : public Scene {
 public:
     PngScene(string pn, const double width = 1, const double height = 1) : Scene(width, height), picture_name(pn) {

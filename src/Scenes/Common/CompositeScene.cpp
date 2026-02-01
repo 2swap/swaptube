@@ -5,12 +5,6 @@
 #include <stdexcept>
 #include <algorithm>
 
-extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity);
-
 class CompositeScene : public SuperScene {
 public:
     CompositeScene(const double width = 1, const double height = 1)

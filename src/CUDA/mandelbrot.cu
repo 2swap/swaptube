@@ -43,19 +43,6 @@ __device__ unsigned int get_mandelbrot_color(float iterations, int max_iteration
         iterations += (1-nu) * gradation; // Do not use gradient for exponential parameterization
     }
 
-    /* const unsigned int color_palette[] = {
-        0xffffffff,
-        0xffff2e63,
-        0xffffffff,
-        0xff08d9d6,
-    }; Pastel red and blue and black POP */
-    /* const unsigned int color_palette[] = {
-        0xffffffff,
-        0xffff33fc,
-        0xff5d21a7,
-        0xff1571df,
-        0xff25f7ff,
-    }; Used in the mandelbrot thumbnail */
     const unsigned int color_palette[] = {
         0xffffffff,
         0xff000088,
@@ -87,11 +74,16 @@ __device__ void compute_z_x_c(
     cuComplex point = make_cuComplex(point_vec.x, point_vec.y);
 
     // Compute z, x, and c based on seed values and multipliers
-    z = cuCaddf(seed_z, cuCmulf(make_cuComplex(pixel_parameter_multipliers.x, 0), point));
-    x = cuCaddf(seed_x, cuCmulf(make_cuComplex(pixel_parameter_multipliers.y, 0), point));
-    c = cuCaddf(seed_c, cuCmulf(make_cuComplex(pixel_parameter_multipliers.z, 0), point));
-    float rpe = cuCrealf(x);
-    log_real_part_exp = log(rpe);
+    cuComplex param_complex_x = make_cuComplex(pixel_parameter_multipliers.x, 0);
+    cuComplex param_complex_y = make_cuComplex(pixel_parameter_multipliers.y, 0);
+    cuComplex param_complex_z = make_cuComplex(pixel_parameter_multipliers.z, 0);
+    cuComplex inv_param_complex_x = make_cuComplex(1-pixel_parameter_multipliers.x, 0);
+    cuComplex inv_param_complex_y = make_cuComplex(1-pixel_parameter_multipliers.y, 0);
+    cuComplex inv_param_complex_z = make_cuComplex(1-pixel_parameter_multipliers.z, 0);
+    z = cuCaddf(cuCmulf(inv_param_complex_x, seed_z), cuCmulf(param_complex_x, point));
+    x = cuCaddf(cuCmulf(inv_param_complex_y, seed_x), cuCmulf(param_complex_y, point));
+    c = cuCaddf(cuCmulf(inv_param_complex_z, seed_c), cuCmulf(param_complex_z, point));
+    log_real_part_exp = log(cuCrealf(x));
 }
 
 __device__ int mandelbrot_iterations(

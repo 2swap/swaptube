@@ -39,12 +39,6 @@ extern "C" void cuda_render_manifold(
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius);
 
-extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity);
-
 extern "C" void cuda_render_geodesics_2d(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData& manifold,
