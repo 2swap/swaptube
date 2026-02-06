@@ -4,7 +4,12 @@
 #include "../../Host_Device_Shared/find_roots.c"
 #include "../../DataObjects/ConwayGrid.cpp"
 
-extern "C" void draw_conway(Bitboard* h_board, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by);
+extern "C" void draw_conway(
+    Bitboard* h_board, Bitboard* h_board_2,
+    int w_bitboards, int h_bitboards,
+    unsigned int* h_pixels, int pixels_w, int pixels_h,
+    glm::vec2 lx_ty, glm::vec2 rx_by, float transition
+);
 
 class ConwayScene : public CoordinateScene {
 private:
@@ -14,22 +19,39 @@ private:
     ConwayGrid conway_grid;
 
 public:
-    ConwayScene(const float width = 1, const float height = 1) : CoordinateScene(width, height), conway_grid(grid_width * 8, grid_height * 8) { }
+    ConwayScene(const float width = 1, const float height = 1) : CoordinateScene(width, height), conway_grid(grid_width * 8, grid_height * 8) {
+        conway_grid.iterate();
+    }
 
     void draw() override {
-        draw_conway(conway_grid.d_board, grid_width, grid_height, pix.pixels.data(), pix.w, pix.h,
-                          glm::vec2(state["left_x"], state["top_y"]),
-                          glm::vec2(state["right_x"], state["bottom_y"]));
+        draw_conway(
+            conway_grid.d_board_2,
+            conway_grid.d_board,
+            grid_width,
+            grid_height,
+            pix.pixels.data(), pix.w, pix.h,
+            glm::vec2(state[ "left_x"], state[   "top_y"]),
+            glm::vec2(state["right_x"], state["bottom_y"]),
+            state["microblock_fraction_passthrough"]
+        );
         CoordinateScene::draw();
     }
 
     const StateQuery populate_state_query() const override {
         StateQuery sq = CoordinateScene::populate_state_query();
+        state_query_insert_multiple(sq, {
+            "microblock_fraction_passthrough"
+        });
         return sq;
     }
 
-    void change_data() override {
+    void on_end_transition_extra_behavior(const TransitionType tt){
+        if(tt == MICRO)
         conway_grid.iterate();
+    }
+
+    void change_data() override {
+        //conway_grid.iterate();
     }
 
     bool check_if_data_changed() const override {

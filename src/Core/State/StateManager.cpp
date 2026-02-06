@@ -428,7 +428,7 @@ private:
     ResolvedStateEquation resolve_state_equation(const UnresolvedStateEquation& ueq) const {
         ResolvedStateEquation rse;
         for(const UnresolvedStateEquationComponent& comp : ueq.components){
-            ResolvedStateEquationComponent rsec(0.0);
+            ResolvedStateEquationComponent rsec;
             switch (comp.type){
                 case UNRESOLVED_CONSTANT:
                     rsec.type = RESOLVED_CONSTANT;
@@ -459,11 +459,13 @@ private:
                 case UNRESOLVED_CUDA_TAG:
                     rsec.type = RESOLVED_CUDA_TAG;
                     rsec.content.cuda_tag = comp.content.cuda_tag;
+                    if(rsec.content.cuda_tag >= 10 || rsec.content.cuda_tag < 0)
+                        throw runtime_error("ERROR: Invalid CUDA tag index " + to_string(rsec.content.cuda_tag) + " during resolution.");
                     break;
                 case UNRESOLVED_OPERATOR:
                     rsec.type = RESOLVED_OPERATOR;
                     rsec.content.op = comp.content.op;
-                    if(string(state_operator_to_string(comp.content.op)) == string("UNKNOWN_OPERATOR"))
+                    if(get_operator_arity(comp.content.op) == -1)
                         throw runtime_error("Invalid operator found during resolution.");
                     break;
                 default:

@@ -15,10 +15,10 @@ enum UnresolvedStateEquationComponentType {
 };
 
 struct UnresolvedContent {
-    double constant;
+    float constant;
     StateOperator op;
     std::string variable_name;
-    char cuda_tag;
+    int cuda_tag;
 };
 
 class UnresolvedStateEquationComponent {
@@ -56,13 +56,13 @@ public:
         // Check for CUDA tag
         if (space_delimited_string.front() == '(' && space_delimited_string.back() == ')' && space_delimited_string.length() == 3) {
             type = UNRESOLVED_CUDA_TAG;
-            content.cuda_tag = space_delimited_string[1];
+            content.cuda_tag = space_delimited_string[1] - 'a';
             return;
         }
 
         // Check for constant
         char* end;
-        double constant_ = strtod(space_delimited_string.c_str(), &end);
+        float constant_ = strtof(space_delimited_string.c_str(), &end);
         if (*end == '\0') {
             type = UNRESOLVED_CONSTANT;
             content.constant = constant_;
@@ -87,7 +87,7 @@ public:
             case UNRESOLVED_PARENT_VARIABLE:
                 return "[" + content.variable_name + "]";
             case UNRESOLVED_CUDA_TAG:
-                return "(" + std::string(1, content.cuda_tag) + ")";
+                return "(" + std::string(1, content.cuda_tag + 'a') + ")";
             default:
                 return "";
         }

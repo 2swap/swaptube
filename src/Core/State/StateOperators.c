@@ -68,38 +68,38 @@ HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
     }
 }
 
-HOST_DEVICE inline static double evaluate_operator(StateOperator op, double *a) {
+HOST_DEVICE inline static float evaluate_operator(StateOperator op, float *a) {
     switch (op) {
         case OP_ADD:        return a[0] + a[1];
         case OP_SUB:        return a[0] - a[1];
         case OP_MUL:        return a[0] * a[1];
         case OP_DIV:        return a[0] / a[1];
-        case OP_POW:        return pow(a[0], a[1]);
-        case OP_SIN:        return sin(a[0]);
-        case OP_COS:        return cos(a[0]);
-        case OP_ATAN2:      return atan2(a[0], a[1]);
-        case OP_EXP:        return exp(a[0]);
-        case OP_SQRT:       return sqrt(a[0]);
-        case OP_ABS:        return fabs(a[0]);
-        case OP_LOG:        return log(a[0]);
-        case OP_FLOOR:      return floor(a[0]);
-        case OP_CEIL:       return ceil(a[0]);
-        case OP_PI:         return M_PI;
-        case OP_E:          return M_E;
-        case OP_PHI:        return 1.618033988749895;
-        case OP_GT:         return a[0] > a[1] ? 1.0 : 0.0;
-        case OP_LT:         return a[0] < a[1] ? 1.0 : 0.0;
-        case OP_GTE:        return a[0] >= a[1] ? 1.0 : 0.0;
-        case OP_LTE:        return a[0] <= a[1] ? 1.0 : 0.0;
-        case OP_EQ:         return fabs(a[0] - a[1]) < 1e-9 ? 1.0 : 0.0;
-        case OP_NEQ:        return fabs(a[0] - a[1]) >= 1e-9 ? 1.0 : 0.0;
+        case OP_POW:        return powf(a[0], a[1]);
+        case OP_SIN:        return sinf(a[0]);
+        case OP_COS:        return cosf(a[0]);
+        case OP_ATAN2:      return atan2f(a[0], a[1]);
+        case OP_EXP:        return expf(a[0]);
+        case OP_SQRT:       return sqrtf(a[0]);
+        case OP_ABS:        return fabsf(a[0]);
+        case OP_LOG:        return logf(a[0]);
+        case OP_FLOOR:      return floorf(a[0]);
+        case OP_CEIL:       return ceilf(a[0]);
+        case OP_PI:         return 3.141592653589793f;
+        case OP_E:          return 2.718281828459045f;
+        case OP_PHI:        return 1.618033988749895f;
+        case OP_GT:         return a[0] > a[1] ? 1.0f : 0.0f;
+        case OP_LT:         return a[0] < a[1] ? 1.0f : 0.0f;
+        case OP_GTE:        return a[0] >= a[1] ? 1.0f : 0.0f;
+        case OP_LTE:        return a[0] <= a[1] ? 1.0f : 0.0f;
+        case OP_EQ:         return fabsf(a[0] - a[1]) < 1e-9 ? 1.0f : 0.0f;
+        case OP_NEQ:        return fabsf(a[0] - a[1]) >= 1e-9 ? 1.0f : 0.0f;
         case OP_SMOOTHLERP: return smoothlerp(a[0], a[1], a[2]);
         case OP_LERP:       return a[0] + a[2] * (a[1] - a[0]);
-        case OP_LOGISTIC:   return 1.0 / (1.0 + exp(-a[0]));
-        case OP_MIN:        return fmin(a[0], a[1]);
-        case OP_MAX:        return fmax(a[0], a[1]);
+        case OP_LOGISTIC:   return 1.0f / (1.0f + expf(-a[0]));
+        case OP_MIN:        return fminf(a[0], a[1]);
+        case OP_MAX:        return fmaxf(a[0], a[1]);
                             // Should not reach here, return NaN
-        default:            return nan("");
+        default:            return nanf("");
     }
 }
 

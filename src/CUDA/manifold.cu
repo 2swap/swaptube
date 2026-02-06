@@ -27,7 +27,7 @@ __global__ void render_manifold_kernel(
     float u = d_manifold.u_min + (d_manifold.u_max - d_manifold.u_min) * u_idx / (d_manifold.u_steps - 1);
     float v = d_manifold.v_min + (d_manifold.v_max - d_manifold.v_min) * v_idx / (d_manifold.v_steps - 1);
 
-    float cuda_tags[2] = { u, v };
+    float cuda_tags[3] = { u, v, 0 };
 
     // Evaluate manifold equations to get 3D point
     int error = 0;
@@ -55,8 +55,8 @@ __global__ void render_manifold_kernel(
     int pixel_y = out_y;
 
     // Evaluate color equations to get color
-    float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 2, error);
-    float i = evaluate_resolved_state_equation(d_manifold.i_size, d_manifold.i_eq, cuda_tags, 2, error);
+    float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 3, error);
+    float i = evaluate_resolved_state_equation(d_manifold.i_size, d_manifold.i_eq, cuda_tags, 3, error);
 
     uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
 

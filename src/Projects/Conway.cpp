@@ -8,6 +8,8 @@ void render_video() {
     cs.manager.set("ticks_opacity", "1");
 
     //cs.manager.transition(MICRO, "zoom", "-10");
-    cs.stage_macroblock(SilenceBlock(3), 1);
-    cs.render_microblock();
+    stage_macroblock(SilenceBlock(5), 3);
+    while(remaining_microblocks_in_macroblock) {
+        cs.render_microblock();
+    }
 }

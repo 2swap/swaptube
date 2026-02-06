@@ -122,7 +122,7 @@ extern "C" void iterate_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bit
     cudaDeviceSynchronize();
 }
 
-__global__ void conway_draw_kernel(Bitboard* board, int w_bitboards, int h_bitboards, unsigned int* pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by)
+__global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bitboards, int h_bitboards, unsigned int* pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by, float w_t)
 {
     int px = blockDim.x * blockIdx.x + threadIdx.x;
     int py = blockDim.y * blockIdx.y + threadIdx.y;
@@ -141,12 +141,23 @@ __global__ void conway_draw_kernel(Bitboard* board, int w_bitboards, int h_bitbo
         return;
     }
 
-    int board_x = (int)(point_vec.x) / 8;
-    int board_y = (int)(point_vec.y) / 8;
-    int bit_x = (int)(point_vec.x) % 8;
-    int bit_y = 7 - (int)(point_vec.y) % 8;
+    int mboard_x =     (int)(point_vec.x - 1) / 8;
+    int mboard_y =     (int)(point_vec.y - 1) / 8;
+    int   mbit_x =     (int)(point_vec.x - 1) % 8;
+    int   mbit_y = 7 - (int)(point_vec.y - 1) % 8;
+
+    int board_x =     (int)(point_vec.x) / 8;
+    int board_y =     (int)(point_vec.y) / 8;
+    int   bit_x =     (int)(point_vec.x) % 8;
+    int   bit_y = 7 - (int)(point_vec.y) % 8;
+
+    int pboard_x =     (int)(point_vec.x + 1) / 8;
+    int pboard_y =     (int)(point_vec.y + 1) / 8;
+    int   pbit_x =     (int)(point_vec.x + 1) % 8;
+    int   pbit_y = 7 - (int)(point_vec.y + 1) % 8;
 
     /*
+    // Highlight bit boundaries
     float decimal_x = point_vec.x - floor(point_vec.x);
     float decimal_y = point_vec.y - floor(point_vec.y);
     if(decimal_x > 0.8 && bit_x == 7) {
@@ -159,17 +170,58 @@ __global__ void conway_draw_kernel(Bitboard* board, int w_bitboards, int h_bitbo
     }
     */
 
-    int board_idx = board_y * w_bitboards + board_x;
-    Bitboard board_cell = board[board_idx];
-    Bitboard mask = (Bitboard)1 << (bit_y * 8 + bit_x);
-    if (board_cell & mask) {
+
+    // Trilinear Interpolation
+    float w_x = point_vec.x - floor(point_vec.x);
+    float w_y = point_vec.y - floor(point_vec.y);
+
+    bool b000 = board[board_y * w_bitboards + board_x] & ((Bitboard)1 << (bit_y * 8 + bit_x));
+    bool b100 = board_2[board_y * w_bitboards + board_x] & ((Bitboard)1 << (bit_y * 8 + bit_x));
+
+    if(b000 == b100) {
+        if(b000) {
+            pixels[pixel_idx] = 0xFFFFFFFF; // White
+        } else {
+            pixels[pixel_idx] = 0xFF000000; // Black
+        }
+        return;
+    }
+
+    bool tpx = board[board_y * w_bitboards + pboard_x] & ((Bitboard)1 << (bit_y * 8 + pbit_x));
+    bool tpy = board[pboard_y * w_bitboards + board_x] & ((Bitboard)1 << (pbit_y * 8 + bit_x));
+    bool tmx = board[board_y * w_bitboards + mboard_x] & ((Bitboard)1 << (bit_y * 8 + mbit_x));
+    bool tmy = board[mboard_y * w_bitboards + board_x] & ((Bitboard)1 << (mbit_y * 8 + bit_x));
+
+    float dpx = .1 + 1 - w_x;
+    float dmx = .1 + w_x;
+    float dpy = .1 + 1 - w_y;
+    float dmy = .1 + w_y;
+    float dpt = .1 + 1 - w_t;
+    float dmt = .1 + w_t;
+
+    float amount_vote_on = 0.0f;
+    float amount_vote_off = 0.0f;
+    if(tpx) amount_vote_on += 1/dpx; else amount_vote_off += 1/dpx;
+    if(tmx) amount_vote_on += 1/dmx; else amount_vote_off += 1/dmx;
+    if(tpy) amount_vote_on += 1/dpy; else amount_vote_off += 1/dpy;
+    if(tmy) amount_vote_on += 1/dmy; else amount_vote_off += 1/dmy;
+    if(b100) amount_vote_on += 2/dpt; else amount_vote_off += 2/dpt;
+    if(b000) amount_vote_on += 2/dmt; else amount_vote_off += 2/dmt;
+
+    float proportion = (amount_vote_on / (amount_vote_on + amount_vote_off));
+
+    float aa = lerp(b000, proportion, w_t);
+    float bb = lerp(proportion, b100, w_t);
+    float f = lerp(aa, bb, w_t);
+
+    if (f > .5) {
         pixels[pixel_idx] = 0xFFFFFFFF; // White
     } else {
         pixels[pixel_idx] = 0xFF000000; // Black
     }
 }
 
-extern "C" void draw_conway(Bitboard* d_board, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by)
+extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by, float transition)
 {
     size_t pix_sz = pixels_w * pixels_h * sizeof(unsigned int);
 
@@ -179,7 +231,7 @@ extern "C" void draw_conway(Bitboard* d_board, int w_bitboards, int h_bitboards,
 
     dim3 blockSize(16, 16);
     dim3 numBlocks((pixels_w + blockSize.x - 1) / blockSize.x, (pixels_h + blockSize.y - 1) / blockSize.y);
-    conway_draw_kernel<<<numBlocks, blockSize>>>(d_board, w_bitboards, h_bitboards, d_pixels, pixels_w, pixels_h, lx_ty, rx_by);
+    conway_draw_kernel<<<numBlocks, blockSize>>>(d_board, d_board_2, w_bitboards, h_bitboards, d_pixels, pixels_w, pixels_h, lx_ty, rx_by, transition);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
