@@ -5,15 +5,6 @@
 #include <stdexcept>
 #include <string>
 
-inline string replace_substring(string str, const string& from, const string& to) {
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Move past the replacement to avoid infinite loop
-    }
-    return str;
-}
-
 class RealFunctionScene : public CoordinateScene {
 public:
     RealFunctionScene(const double width = 1, const double height = 1) : CoordinateScene(width, height) {
@@ -89,10 +80,6 @@ public:
         state_query_insert_multiple(sq, {"function0", "function1", "function0_opacity", "function1_opacity", "function0_left", "function0_right", "function1_left", "function1_right"});
         return sq;
     }
-
-    void mark_data_unchanged() override {}
-    void change_data() override {} // RealFunctionScene has no DataObjects
-    bool check_if_data_changed() const override { return false; }
 
 private:
     vector<unsigned int> function_colors = {0xFF0088FF, 0xFFFF0088};

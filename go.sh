@@ -41,6 +41,8 @@ if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     # Verify installation
     if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
         echo "Installation aborted or failed. Please follow the instructions manually: https://github.com/NanoMichael/MicroTeX"
+        echo "HINT: If you are unable to install gtksourceviewmm-3.0 using your distro's package manager, try building it yourself using these instructions:"
+        echo "https://github.com/end-4/dots-hyprland/issues/955#issuecomment-2486579754"
         exit 1
     fi
 

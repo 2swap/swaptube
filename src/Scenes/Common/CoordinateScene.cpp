@@ -201,11 +201,11 @@ public:
         const float log10z = log10(z);
         int order_mag = floor(-log10z);
         const float log_decimal = log10z-floor(log10z);
-        bool not_fiveish = log_decimal < .5;
+        bool fiveish = log_decimal >= .5;
         const float interpolator = (log_decimal >= .5 ? -1 : 0) + log_decimal * 2;
         unordered_set<string> done_numbers;
         for(int d_om = 0; d_om < 2; d_om++){
-            float increment = pow(10, order_mag) * (not_fiveish ? 1 : 0.5);
+            float increment = pow(10, order_mag) * (fiveish ? 0.5 : 1);
             for(float x_y = floor(lower_bound/increment)*increment; x_y < upper_bound; x_y += increment) {
                 string truncated = truncate_tick(x_y, ymode && complex_plane);
                 if(done_numbers.find(truncated) != done_numbers.end()) continue;
@@ -226,8 +226,8 @@ public:
                     if(!ymode)pix.overlay(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
                 }
             }
-            if(!not_fiveish) order_mag--;
-            not_fiveish = !not_fiveish;
+            if(fiveish) order_mag--;
+            fiveish = !fiveish;
         }
     }
 
