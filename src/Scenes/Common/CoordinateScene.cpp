@@ -9,6 +9,8 @@ string float_to_pretty_string(const float value) {
 
     // Convert float to string with a stream
     ostringstream oss;
+    if(value == (int)value)
+        oss << fixed;
     oss << value;
     string str = oss.str();
 

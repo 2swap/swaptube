@@ -6,7 +6,7 @@
 #include "../Math/MandelbrotScene.cpp"
 
 void stripey_effect(Pixels& in, Pixels& out, const float amount) {
-    vector<double> stripe_shift_multipliers = {-.5, 1.5, -.5, .5, -1.5, .5};
+    vector<double> stripe_shift_multipliers = {-.5, 1.5, -.5, 1, -1, .5, -1.5, .5, -1, 1};
     // One substripe per scanline for some extra noise
     vector<double> substripe_shift_multipliers(in.h);
     // For approximately one of every 5 lines, put either -1 or 1, otherwise 0
@@ -20,12 +20,11 @@ void stripey_effect(Pixels& in, Pixels& out, const float amount) {
     out = Pixels(in.w, in.h);
     for(int y = 0; y < in.h; y++) {
         for(int x = 0; x < in.w; x++) {
-            int stripe_number = y * 20 / in.h;
+            int stripe_number = y * 30 / in.h;
             double shift_amount = stripe_shift_multipliers[stripe_number % stripe_shift_multipliers.size()] * amount * in.w;
             double subshift_amount = substripe_shift_multipliers[y] * in.w * 0.002;
             int col  = in.get_pixel_carefully(x + shift_amount + subshift_amount, y) & 0xff00ff00;
-                col |= in.get_pixel_carefully(x - shift_amount + subshift_amount, y) & 0xffff0000;
-                col |= in.get_pixel_carefully(x                + subshift_amount, y) & 0xff0000ff;
+                col |= in.get_pixel_carefully(x - shift_amount + subshift_amount, y) & 0xffff00ff;
             out.set_pixel_carelessly(x, y, col);
         }
     }

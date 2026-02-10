@@ -40,6 +40,10 @@ public:
         cout << "Undo " << steps << " steps. New representation: " << representation << endl;
     }
 
+    void use_up_queue() {
+        board.use_up_queue();
+    }
+
     void flush_queue_undo_all() {
         board.flush_queue();
         undo(representation.size());

@@ -52,7 +52,7 @@ public:
         }
     }
 
-    void add_data_point(float y) {
+    void add_data_point(TransitionType tt, float y) {
         number_to_add = y;
         ready_to_add = true;
         float min_val = min(get_min_data_point(), y) - 1;
@@ -60,7 +60,7 @@ public:
         float range = max_val - min_val;
         min_val = min_val - range * .1f;
         max_val = max_val + range * .1f;
-        manager.transition(MICRO, {
+        manager.transition(tt, {
             {"left_x", "-1"},
             {"right_x", to_string(data_points.size() + 1)},
             {"bottom_y", to_string(max_val)},

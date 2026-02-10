@@ -117,6 +117,19 @@ public:
         queue += s;
     }
 
+    void use_up_queue() {
+        fast_mode = true;
+        while (!queue.empty()) {
+            if (queue.front() == 'x') {
+                undo_once();
+                queue.erase(0, 1);
+            } else {
+                add_disc_from_queue();
+                queue.erase(0, 1);
+            }
+        }
+    }
+
     void check_queue() {
         if (queue.empty() || !all_discs_below_top()) {
             return;
