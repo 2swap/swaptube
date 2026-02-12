@@ -10,3 +10,6 @@ src/sfx/*
 *~
 *.swp
 *.swo
+
+# CodeQL
+_codeql_detected_source_root
