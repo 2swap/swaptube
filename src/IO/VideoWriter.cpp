@@ -5,6 +5,7 @@
 #include <regex>
 #include <sstream>
 #include <cassert>
+#include <unistd.h>
 #include "DebugPlot.h"
 #include "Writer.h"
 
