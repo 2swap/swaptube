@@ -1,21 +1,7 @@
-#pragma once
-
+#include "IoHelpers.h"
 #include <unistd.h>
-#include <string>
+#include <cstdio>
 
-extern "C" {
-    #include <libavutil/error.h>  // AV_ERROR_MAX_STRING_SIZE, av_strerror
-}
-
-static inline std::string ff_errstr(int errnum) {
-    char buf[AV_ERROR_MAX_STRING_SIZE];
-    if (av_strerror(errnum, buf, sizeof(buf)) < 0) {
-        return "Unknown FFmpeg error " + std::to_string(errnum);
-    }
-    return std::string(buf);
-}
-
-// Function to redirect stderr to a pipe
 int redirect_stderr(int pipefd[2]) {
     fflush(stderr);
     if (pipe(pipefd) == -1) {
@@ -38,16 +24,14 @@ int redirect_stderr(int pipefd[2]) {
     return original_stderr;
 }
 
-// Function to restore the original stderr
 void restore_stderr(int original_stderr) {
     fflush(stderr);
     dup2(original_stderr, STDERR_FILENO);
     close(original_stderr);
 }
 
-// Function to read from a file descriptor into a string
-string read_from_fd(int fd) {
-    string output;
+std::string read_from_fd(int fd) {
+    std::string output;
     char buffer[1024];
     ssize_t bytes_read;
 

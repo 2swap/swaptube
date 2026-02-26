@@ -1,6 +1,6 @@
 #include <cuda_runtime.h>
 #include <vector>
-#include "../Host_Device_Shared/PendulumHelpers.cpp"
+#include "../Host_Device_Shared/PendulumHelpers.h"
 
 // Kernel to update pendulum states
 __global__ void pendulum_simulation_kernel(

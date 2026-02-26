@@ -1,10 +1,13 @@
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../Scenes/Common/CoordinateSceneWithTrail.cpp"
-#include "../Scenes/Common/CoordinateScene.cpp"
-#include "../Scenes/Physics/PendulumScene.cpp"
-#include "../Scenes/Physics/PendulumGridScene.cpp"
-#include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Common/TwoswapScene.cpp"
+#include "../Scenes/Common/CompositeScene.h"
+#include "../Scenes/Common/CoordinateSceneWithTrail.h"
+#include "../Scenes/Common/CoordinateScene.h"
+#include "../Scenes/Physics/PendulumScene.h"
+#include "../Scenes/Physics/PendulumGridScene.h"
+#include "../Scenes/Media/LatexScene.h"
+#include "../Scenes/Common/TwoswapScene.h"
+#include "../DataObjects/Pendulum.h"
+#include "../IO/Writer.h"
+#include "../Core/Smoketest.h"
 
 struct IslandShowcase {
     PendulumState ps;
@@ -243,23 +246,24 @@ void stack_diagrams(){
 }
 
 void render_video() {
-    SAVE_FRAME_PNGS = false;
     //PRINT_TO_TERMINAL = false;
     //FOR_REAL = false;
 
     const int frequency = 10;
-    const int physmult = frequency/FRAMERATE;
+    const int physmult = frequency/get_video_framerate_fps();
     const double stepsize = 1./frequency;
     //stack_diagrams();
     //return;
 
     double delta = 0.001;
-    vector<PendulumGrid> grids{PendulumGrid(VIDEO_HEIGHT*2, VIDEO_HEIGHT*2, delta, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0)};
+    PendulumGrid p(get_video_height_pixels()*2, get_video_height_pixels()*2, delta, -M_PI, M_PI, -M_PI, M_PI, 0, 0, 0, 0);
+    vector<PendulumGrid> grids{p};
     for (const vector<IslandShowcase>& isvh : {isv}) for(const IslandShowcase& is : isvh) {
         const double ro2 = is.range/2;
         const double t1 = is.ps.theta1;
         const double t2 = is.ps.theta2;
-        grids.push_back(PendulumGrid(VIDEO_WIDTH, VIDEO_HEIGHT, delta, t1-ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t1+ro2*VIDEO_WIDTH/VIDEO_HEIGHT, t2-ro2, t2+ro2, 0, 0, 0, 0));
+        double aspect = get_video_aspect_ratio();
+        grids.push_back(PendulumGrid(get_video_width_pixels(), get_video_height_pixels(), delta, t1-ro2*aspect, t1+ro2*aspect, t2-ro2, t2+ro2, 0, 0, 0, 0));
     }
     shared_ptr<PendulumGridScene> pgs = make_shared<PendulumGridScene>(grids);
     /*
@@ -279,5 +283,6 @@ void render_video() {
     */
     for(IslandShowcase is : isv) {
         showcase_an_island(pgs, is);
+        if(!rendering_on()) return;
     }
 }

@@ -1,4 +1,4 @@
-#include "../Scenes/Common/TwoswapScene.cpp"
+#include "../Scenes/Common/TwoswapScene.h"
 
 void render_video() {
     TwoswapScene ts;

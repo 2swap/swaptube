@@ -1,8 +1,7 @@
-#include "../Scenes/Math/LambdaScene.cpp"
+#include "../Scenes/Math/LambdaScene.h"
+#include "../DataObjects/LambdaCalculus/LambdaUtils.h"
 
 void render_video() {
-
-    VIDEO_BACKGROUND_COLOR = 0xff101010;
     // Option 1: period length 3
     //string loop_part = "(\\x. (\\y. (((\\i. (i i)) x) y)))";
     //string term_string = "(" + loop_part + " " + loop_part + ")";
@@ -22,6 +21,7 @@ void render_video() {
 
     LambdaScene ls(term);
     stage_macroblock(SilenceBlock(1.33), 2);
+    cout << remaining_microblocks_in_macroblock << endl;
     while(remaining_microblocks_in_macroblock) {
         ls.reduce();
         ls.render_microblock();

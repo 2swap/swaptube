@@ -1,7 +1,8 @@
 // This file renders a specified 3d manifold in CUDA.
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <cstring>
 #include "color.cuh" // For complex_to_srgb

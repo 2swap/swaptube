@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../Core/State/ResolvedStateEquationComponent.c"
 // Simple header used by both manifold.cu and ManifoldScene.cpp
 struct ManifoldData {

@@ -1,6 +1,4 @@
-#pragma once
-
-#include "../Scene.cpp"
+#include "../Scene.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>

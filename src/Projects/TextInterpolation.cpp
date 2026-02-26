@@ -1,7 +1,7 @@
-#include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Media/StateSliderScene.cpp"
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../Scenes/Common/ExposedPixelsScene.cpp"
+#include "../Scenes/Media/LatexScene.h"
+#include "../Scenes/Media/StateSliderScene.h"
+#include "../Scenes/Common/CompositeScene.h"
+#include "../Scenes/Common/ExposedPixelsScene.h"
 
 void render_video(){
     FOR_REAL = false;

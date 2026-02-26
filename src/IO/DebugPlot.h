@@ -8,6 +8,8 @@
 #include <cstdlib>
 #include <cassert>
 
+using namespace std;
+
 class DebugPlot {
 public:
     // Constructor that initializes the plot name, data series names, and file paths

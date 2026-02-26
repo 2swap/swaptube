@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <vector>
 #include <glm/gtx/quaternion.hpp>
 #include <iostream>

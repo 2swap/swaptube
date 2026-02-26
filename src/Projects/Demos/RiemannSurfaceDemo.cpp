@@ -1,4 +1,4 @@
-#include "../Scenes/Math/ManifoldScene.cpp"
+#include "../Scenes/Math/ManifoldScene.h"
 
 void render_video() {
     ManifoldScene ms;

@@ -1,28 +1,18 @@
 #pragma once
 
-class C4Board;
-
 #include <unordered_set>
 #include <list>
 #include <array>
 #include <algorithm>
+#include <fstream>
+#include <vector>
+#include "Bitboard.h"
+#include "C4Board.h"
+#include "JsonC4Cache.h"
 
-const int C4_HEIGHT = 6;
-const int C4_WIDTH = 7;
+using namespace std;
 
-enum C4Result {
-    TIE,
-    RED,
-    YELLOW,
-    INCOMPLETE
-};
-
-vector<char> miai = {'@', '#'};
-vector<char> priority_list = {'+', '=', '-'};
-vector<char> claims = {' ', '|'};
-vector<char> disks = {'1', '2'};
-
-bool is_miai(char c){
+inline bool is_miai(char c){
     return c == '@' || c == '#';
 }
 
@@ -47,8 +37,8 @@ public:
     Bitboard bitboard_then = 0ul;
     Bitboard bitboard_if = 0ul;
     void populate_char_array(const array<string, C4_HEIGHT>& source);
-    bool validate(C4Board b, bool verbose);
-    bool validate_recursive_call(C4Board b, unordered_set<double>& wins_cache, bool verbose);
+    bool validate(C4Board b, bool verbose = false);
+    bool validate_recursive_call(C4Board b, unordered_set<double>& wins_cache, bool verbose = false);
     char get_char(const int x, const int y) const;
     void set_char(const int x, const int y, const char c);
     void set_char_bitboard(const Bitboard point, const char c);
@@ -67,59 +57,11 @@ public:
     }
 };
 
-SteadyState read_from_file(const string& filename, bool read_reverse) {
-    array<string, C4_HEIGHT> chars;
-
-    ifstream file(filename);
-    if (file.is_open()) {
-        for (int y = 0; y < C4_HEIGHT; ++y) {
-            string line;
-            if (getline(file, line)) { // Read the entire line as a string
-                // Check if the line length matches the expected width
-                if (line.length() == static_cast<size_t>(C4_WIDTH)) {
-                    if (read_reverse) reverse(line.begin(), line.end());
-                    chars[y] = line;
-                } else throw runtime_error("Invalid line length in the file " + filename);
-            } else throw runtime_error("STEADYSTATE CACHE READ ERROR " + filename);
-        }
-    } else throw runtime_error("Failed to read SteadyState file " + filename);
-    return SteadyState(chars);
-}
-
-SteadyState make_steady_state_from_string(const string& input) {
-    // Check that the input length matches the expected size
-    if (input.length() != static_cast<size_t>(C4_WIDTH * C4_HEIGHT)) {
-        throw runtime_error("Invalid input length. Expected " + to_string(C4_WIDTH * C4_HEIGHT));
-    }
-
-    // Create an array to hold the rows
-    array<string, C4_HEIGHT> chars;
-
-    // Fill the array with chunks of C4_WIDTH length from the input string
-    for (int y = 0; y < C4_HEIGHT; ++y) {
-        chars[y] = input.substr(y * C4_WIDTH, C4_WIDTH);
-    }
-
-    return SteadyState(chars);
-}
-
-string reverse_ss(const std::string& input) {
-    // Calculate the expected length of the input string
-    int expectedLength = C4_WIDTH * C4_HEIGHT;
-
-    // Validate the input string length
-    if (input.length() != expectedLength) {
-        throw invalid_argument("Input string length does not match C4_WIDTH * C4_HEIGHT");
-    }
-
-    // Output string to store the result
-    string output = input;
-
-    // Reverse each chunk of length C4_WIDTH
-    for (int i = 0; i < C4_HEIGHT; ++i) {
-        int startIdx = i * C4_WIDTH;
-        reverse(output.begin() + startIdx, output.begin() + startIdx + C4_WIDTH);
-    }
-
-    return output;
-}
+SteadyState create_empty_steady_state(const C4Board& b);
+SteadyState create_random_steady_state(const C4Board& b);
+SteadyState make_steady_state_from_string(const string& input);
+shared_ptr<SteadyState> find_cached_steady_state(C4Board b);
+shared_ptr<SteadyState> modify_child_suggestion(const shared_ptr<SteadyState> parent, const C4Board& b);
+shared_ptr<SteadyState> find_steady_state(const string& representation, const shared_ptr<SteadyState> suggestion, bool verbose = false, bool read_from_cache = true, int pool = 40, int generations = 50);
+SteadyState read_from_file(const string& filename, bool read_reverse);
+string reverse_ss(const std::string& input);

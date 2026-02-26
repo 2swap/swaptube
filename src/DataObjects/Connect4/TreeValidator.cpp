@@ -1,4 +1,7 @@
 #include <chrono>
+#include "C4Board.h"
+#include "../Graph.h"
+#include "SteadyState.h"
 
 bool ValidateC4Graph(Graph& graph, bool try_to_fix = true) {
     auto start_time = std::chrono::high_resolution_clock::now();

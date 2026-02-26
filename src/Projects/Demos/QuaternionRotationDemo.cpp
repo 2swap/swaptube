@@ -1,4 +1,4 @@
-#include "../Scenes/Common/ThreeDimensionScene.cpp"
+#include "../Scenes/Common/ThreeDimensionScene.h"
 
 double sqrt2over2 = 0.7071067811865476;
 glm::quat PITCH_DOWN(sqrt2over2, sqrt2over2, 0, 0);

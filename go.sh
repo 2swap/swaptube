@@ -11,7 +11,7 @@ check_command_available() {
 
 # Check for required commands
 check_command_available "cmake"
-check_command_available "make"
+check_command_available "ninja"
 check_command_available "gnuplot"
 # Check if MicroTeX build exists
 if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
@@ -141,11 +141,11 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
+    cmake -G Ninja .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
 
-    echo "go.sh: Running \`make -j12\`"
+    echo "go.sh: Compiling..."
     # build the project
-    make -j12
+    ninja -j"$(nproc)"
 
     # Check if the build was successful
     if [ $? -ne 0 ]; then

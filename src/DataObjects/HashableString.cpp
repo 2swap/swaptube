@@ -1,14 +1,9 @@
-#pragma once
+#include "HashableString.h"
+#include <functional>
 
-#include <string>
-#include <unordered_map>
+HashableString::HashableString(const std::string& str) : GenericBoard(str) {}
 
-class HashableString : public GenericBoard {
-public:
-    HashableString(const string& str) : GenericBoard(str) {}
-
-    double type_specific_hash() override {
-        std::hash<string> hasher;
-        return static_cast<double>(hasher(representation));
-    }
-};
+double HashableString::type_specific_hash() {
+    std::hash<std::string> hasher;
+    return static_cast<double>(hasher(representation));
+}

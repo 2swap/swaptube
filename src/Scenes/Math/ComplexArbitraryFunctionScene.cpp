@@ -1,6 +1,5 @@
-#pragma once
-
-#include "../Common/CoordinateScene.cpp"
+#include "../Common/CoordinateScene.h"
+#include "../../Core/State/StateManager.h"
 
 // This is a sorta one-time use scene for the Quintic video for rendering complex plots of sqrt, sin, exp, etc.
 

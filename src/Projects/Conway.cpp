@@ -1,4 +1,4 @@
-#include "../Scenes/Math/ConwayScene.cpp"
+#include "../Scenes/Math/ConwayScene.h"
 
 void render_video() {
     ConwayScene cs;

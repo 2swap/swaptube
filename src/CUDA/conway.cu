@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <cstdint>
 #include <utility>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include "../Host_Device_Shared/helpers.h"
 
 typedef uint64_t Bitboard;

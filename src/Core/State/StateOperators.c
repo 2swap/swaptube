@@ -1,7 +1,7 @@
 #pragma once
-
 #include "../../Host_Device_Shared/helpers.h"
 #include "../../Host_Device_Shared/shared_precompiler_directives.h"
+#include <cstring>
 
 enum StateOperator {
     OP_ADD,

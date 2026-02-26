@@ -1,7 +1,7 @@
-#include "../Scenes/Physics/OrbitScene2D.cpp"
-#include "../Scenes/Media/StateSliderScene.cpp"
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../misc/ColorScheme.cpp"
+#include "../Scenes/Physics/OrbitScene2D.h"
+#include "../Scenes/Media/StateSliderScene.h"
+#include "../Scenes/Common/CompositeScene.h"
+#include "../misc/ColorScheme.h"
 
 void render_video() {
     throw runtime_error("This demo has regressed and I have not fixed it yet...");

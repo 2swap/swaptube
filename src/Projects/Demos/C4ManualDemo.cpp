@@ -1,4 +1,4 @@
-#include "../Scenes/Connect4/C4GraphScene.cpp"
+#include "../Scenes/Connect4/C4GraphScene.h"
 
 void render_video() {
     shared_ptr<Graph> g = make_shared<Graph>();

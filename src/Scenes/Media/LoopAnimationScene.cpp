@@ -1,8 +1,6 @@
-#pragma once
-
 #include <unordered_map>
-#include "../../IO/VisualMedia.cpp"
-#include "../Scene.cpp"
+#include "../../IO/VisualMedia.h"
+#include "../Scene.h"
 
 class LoopAnimationScene : public Scene {
 public:
@@ -33,11 +31,12 @@ public:
             memo_w = w;
             memo_h = h;
         }
+        Pixels image;
         if(pixel_cache.find(picture_name) == pixel_cache.end()) {
             cout << "rendering png: " << picture_name << endl;
-            pixel_cache[picture_name] = png_to_pix_bounding_box(picture_name, w, h);
+            png_to_pix_bounding_box(image, picture_name, w, h);
+            pixel_cache[picture_name] = image;
         }
-        Pixels image = pixel_cache[picture_name];
 
         // Calculate the position to center the image within the bounding box
         int x_offset = (get_width() - image.w) / 2;

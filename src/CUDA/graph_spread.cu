@@ -1,6 +1,9 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/geometric.hpp>
+#include <float.h>
 #include "../Host_Device_Shared/helpers.h"
 
 #define GRID_SIZE 10 // 10x10x10 bins

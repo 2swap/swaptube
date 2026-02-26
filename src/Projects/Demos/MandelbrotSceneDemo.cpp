@@ -1,4 +1,4 @@
-#include "../Scenes/Math/MandelbrotScene.cpp"
+#include "../Scenes/Math/MandelbrotScene.h"
 
 void render_video() {
     MandelbrotScene ms;

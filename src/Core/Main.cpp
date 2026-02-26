@@ -5,37 +5,12 @@
 
 using namespace std;
 
-static int VIDEO_WIDTH;
-static int VIDEO_HEIGHT;
-static int FRAMERATE;
-static int SAMPLERATE;
+#include "Timer.h"
+#include "Smoketest.h"
+#include "../IO/Writer.h"
+#include "State/GlobalState.h"
 
-static bool SAVE_FRAME_PNGS = true;   // Whether to save every keyframe as a PNG for debugging
-static bool PRINT_TO_TERMINAL = true;
-
-static bool FOR_REAL = true; // Flag exposed to the project definition to disable sections of video
-static bool SMOKETEST= false;// Overall smoketest flag
-
-bool rendering_on() { return FOR_REAL && !SMOKETEST; }
-
-enum TransitionType {
-    MICRO,
-    MACRO
-};
-
-int VIDEO_BACKGROUND_COLOR = 0xff000000;
-
-#include "Timer.cpp"
-#include "../IO/Writer.cpp"
-
-// Initialize globals
-static Writer* WRITER = nullptr;
-
-// The go.sh script temporarily moves the current project to this location:
-#include "../Projects/.active_project.cpp"
-// The project file is expected to do two things:
-// (1) include all relevant scenes for the video
-// (2) define a function "render_video" which uses those scenes to define the video timeline.
+void render_video(); // Forward declaration, provided by the user in their project file
 
 void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& smoketest) {
     cout << "Parsing command line arguments... " << flush;
@@ -47,13 +22,13 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
         throw runtime_error("Invalid width argument: " + string(argv[1]) );
     }
-    global_state["VIDEO_WIDTH"] = w;
+    set_global_state("VIDEO_WIDTH", w);
     cout << "Width: " << w << ", " << flush;
 
     if (sscanf(argv[2], "%d", &h) != 1 || h < 1 || h > 10000) {
         throw runtime_error("Invalid height argument: " + string(argv[2]) );
     }
-    global_state["VIDEO_HEIGHT"] = h;
+    set_global_state("VIDEO_HEIGHT", h);
     cout << "Height: " << h << ", " << flush;
 
     if (sscanf(argv[3], "%d", &framerate) != 1 || framerate < 1 || framerate > 240) {
@@ -76,7 +51,7 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
     }
     cout << "Smoketest: " << (smoketest ? "true" : "false") << endl;
 
-    if(SAMPLERATE % FRAMERATE != 0){
+    if(samplerate % framerate != 0) {
         throw runtime_error("Video framerate must be divisible by audio sample rate.");
     }
 }
@@ -86,11 +61,13 @@ inline void signal_handler(int signal) {
 }
 
 void setup_output_subfolders() {
+    cout << "Setting up output subfolders... " << endl;
     string cmd = "mkdir -p io_out/frames io_out/data io_out/plots";
     system(cmd.c_str());
 }
 
 int main(int argc, char* argv[]) {
+    int VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE;
     parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, SMOKETEST);
 
     Timer timer;
@@ -99,7 +76,8 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, signal_handler);
     try {
         setup_output_subfolders();
-        WRITER = new Writer();
+        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000022);
+        cout << "Rendering video... " << endl;
         render_video();
     } catch(std::exception& e) {
         // Change to red text
@@ -108,18 +86,16 @@ int main(int argc, char* argv[]) {
         cout << endl << "====================" << endl;
         cout << "EXCEPTION CAUGHT IN RUNTIME: " << endl;
         cout << e.what() << endl;
-        cout << "Last written subtitle: " << WRITER->subtitle->get_last_written_subtitle() << endl;
+        cout << "Last written subtitle: " << get_writer().subtitle->get_last_written_subtitle() << endl;
         cout << "====================" << endl;
 
         // Change back to normal text
         cout << "\033[0m" << endl;
-        delete WRITER;
         return 1;
     }
 
     cout << "\033[1;32m" << endl << "====================" << endl;
     cout << "Completed successfully!" << endl;
     cout << "====================" << "\033[0m" << endl << endl;
-    delete WRITER;
     return 0;
 }

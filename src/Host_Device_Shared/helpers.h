@@ -1,8 +1,9 @@
 // Everything in this file is inline, c-compatible, and therefore usable in both CUDA and C++.
 
 #pragma once
-
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <string>
 #include <cstdlib>
 #include "math.h"

@@ -1,4 +1,4 @@
-#include "../Scenes/Math/GeodesicScene.cpp"
+#include "../Scenes/Math/GeodesicScene.h"
 
 void render_video() {
     GeodesicScene gs;

@@ -1,6 +1,5 @@
-#pragma once
-#include "../../DataObjects/Pendulum.cpp"
-#include "../Common/CoordinateScene.cpp"
+#include "../../DataObjects/Pendulum.h"
+#include "../Common/CoordinateScene.h"
 #include <math.h>
 
 class MovingPendulumGridScene : public CoordinateScene {
@@ -84,7 +83,7 @@ public:
                 else if(mode <= 1.999 && mode >= 1.001) color = colorlerp(color_mode1, color_mode2, mode-1);
                 else if(mode > 2.999) color = color_mode3;
                 else if(mode <= 2.999 && mode >= 2.001) color = colorlerp(color_mode2, color_mode3, mode-2);
-                pix.set_pixel(x, y, color);
+                pix.set_pixel_carelessly(x, y, color);
             }
         }
     }

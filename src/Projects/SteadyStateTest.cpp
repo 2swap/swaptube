@@ -1,8 +1,8 @@
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Connect4/Connect4Scene.cpp"
-#include "../Scenes/Connect4/Connect4GraphScene.cpp"
-#include "../DataObjects/Connect4/TreeValidator.cpp"
+#include "../Scenes/Common/CompositeScene.h"
+#include "../Scenes/Media/LatexScene.h"
+#include "../Scenes/Connect4/Connect4Scene.h"
+#include "../Scenes/Connect4/Connect4GraphScene.h"
+#include "../DataObjects/Connect4/TreeValidator.h"
 
 void render_video() {
     SAVE_FRAME_PNGS = false;

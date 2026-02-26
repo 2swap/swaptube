@@ -1,5 +1,7 @@
 #include <cuda_runtime.h>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
+#include <glm/geometric.hpp>
 #include <vector>
 
 __device__ float magnitude_force_given_distance_squared_device(float eps, float force_constant, float d2) {

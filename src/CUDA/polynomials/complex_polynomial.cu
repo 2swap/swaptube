@@ -3,7 +3,8 @@
 #include "../../Host_Device_Shared/helpers.h"
 #include "../color.cuh"
 #include <cmath>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 
 __device__ thrust::complex<float> evaluate_polynomial_given_coefficients(const thrust::complex<float>* coefficients, int degree, const thrust::complex<float>& point) {
     thrust::complex<float> result(0.0, 0.0);

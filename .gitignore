@@ -2,9 +2,6 @@ build
 out
 media
 src/Projects/.active_project.cpp
-src/sfx/*
-!src/sfx/*.fft
-!src/sfx/*.cpp
 
 # vim temp files
 *~

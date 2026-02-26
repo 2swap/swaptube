@@ -1,4 +1,4 @@
-#include "../Scenes/Math/LineChartScene.cpp"
+#include "../Scenes/Math/LineChartScene.h"
 
 void render_video() {
     LineChartScene lcs;

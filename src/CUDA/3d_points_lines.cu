@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <utility>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "../Host_Device_Shared/ThreeDimensionStructs.h"
 #include "color.cuh" // Contains overlay_pixel and set_pixel

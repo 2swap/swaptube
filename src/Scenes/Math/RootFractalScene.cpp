@@ -1,6 +1,5 @@
-#pragma once
-
-#include "../Common/CoordinateScene.cpp"
+#include "../Common/CoordinateScene.h"
+#include <complex>
 
 extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float brightness);
 

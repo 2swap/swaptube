@@ -1,5 +1,3 @@
-#pragma once
-
 #ifdef __CUDACC__
 
 #define HOST_DEVICE __device__

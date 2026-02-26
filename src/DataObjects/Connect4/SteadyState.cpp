@@ -1,5 +1,3 @@
-#pragma once
-
 #include <list>
 #include <unordered_set>
 #include "SteadyState.h"
@@ -7,9 +5,14 @@
 #include <cassert>
 #include <array>
 #include "C4Board.h"
-#include "JsonC4Cache.cpp"
+#include "JsonC4Cache.h"
 
 const bool VISION = true;
+
+vector<char> miai = {'@', '#'};
+vector<char> priority_list = {'+', '=', '-'};
+vector<char> claims = {' ', '|'};
+vector<char> disks = {'1', '2'};
 
 vector<char> replacement_chars = {'+', '=', '-'};
 vector<char> all_instructions = {'+', '=', '-', '|', ' ', '@', '!'};
@@ -277,35 +280,6 @@ void SteadyState::print() const {
     cout << endl;
 }
 
-SteadyState create_empty_steady_state(const C4Board& b) {
-    array<string, C4_HEIGHT> chars; // Should contain C4_HEIGHT strings, each with length C4_WIDTH, full of spaces.
-    for (int y = 0; y < C4_HEIGHT; ++y)
-        chars[y] = string(C4_WIDTH, ' ');
-
-    for (int y = 0; y < C4_HEIGHT; ++y) {
-        for (int x = 0; x < C4_WIDTH; ++x) {
-            int pc = b.piece_code_at(x, y);
-            char c = ' ';
-                 if (pc == 1) c = '1';
-            else if (pc == 2) c = '2';
-            chars[y][x] = c;
-        }
-    }
-    SteadyState ss(chars);
-    return ss;
-}
-
-SteadyState create_random_steady_state(const C4Board& b) {
-    SteadyState ss = create_empty_steady_state(b);
-    ss.mutate();
-    ss.mutate();
-    ss.mutate();
-    ss.mutate();
-    ss.mutate();
-    ss.mutate();
-    return ss;
-}
-
 C4Result SteadyState::play_one_game(const C4Board& b) const {
     C4Board board = b;
     C4Result winner = INCOMPLETE;
@@ -357,7 +331,7 @@ bool SteadyState::check_no_illegal_characters() const {
     return true;
 }
 
-bool SteadyState::validate(C4Board b, bool verbose = false) {
+bool SteadyState::validate(C4Board b, bool verbose) {
     if(!check_matches_board(b)) {
         if(verbose) cout << "Steady state does not match board representation." << endl;
         return false;
@@ -369,14 +343,14 @@ bool SteadyState::validate(C4Board b, bool verbose = false) {
     unordered_set<double> wins_cache;
     bool validated = validate_recursive_call(b, wins_cache, verbose);
     if(validated){
-        movecache.AddOrUpdateEntry(b.get_hash(), b.get_reverse_hash(), b.representation, to_string());
+        get_movecache().AddOrUpdateEntry(b.get_hash(), b.get_reverse_hash(), b.representation, to_string());
         //cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
     }
     return validated;
 }
 
 // Given a steady state and a board position, make sure that steady state solves that position
-bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins_cache, bool verbose = false) {
+bool SteadyState::validate_recursive_call(C4Board b, unordered_set<double>& wins_cache, bool verbose) {
     if(wins_cache.find(b.get_hash()) != wins_cache.end()) return true;
 
     if(b.is_reds_turn()){
@@ -418,12 +392,58 @@ bool SteadyState::check_ss_matches_board(C4Board b){
     return b.yellow_bitboard == bitboard_yellow && b.red_bitboard == bitboard_red;
 }
 
+SteadyState create_empty_steady_state(const C4Board& b) {
+    array<string, C4_HEIGHT> chars; // Should contain C4_HEIGHT strings, each with length C4_WIDTH, full of spaces.
+    for (int y = 0; y < C4_HEIGHT; ++y)
+        chars[y] = string(C4_WIDTH, ' ');
+
+    for (int y = 0; y < C4_HEIGHT; ++y) {
+        for (int x = 0; x < C4_WIDTH; ++x) {
+            int pc = b.piece_code_at(x, y);
+            char c = ' ';
+                 if (pc == 1) c = '1';
+            else if (pc == 2) c = '2';
+            chars[y][x] = c;
+        }
+    }
+    SteadyState ss(chars);
+    return ss;
+}
+
+SteadyState create_random_steady_state(const C4Board& b) {
+    SteadyState ss = create_empty_steady_state(b);
+    ss.mutate();
+    ss.mutate();
+    ss.mutate();
+    ss.mutate();
+    ss.mutate();
+    ss.mutate();
+    return ss;
+}
+
+SteadyState make_steady_state_from_string(const string& input) {
+    // Check that the input length matches the expected size
+    if (input.length() != static_cast<size_t>(C4_WIDTH * C4_HEIGHT)) {
+        throw runtime_error("Invalid input length. Expected " + to_string(C4_WIDTH * C4_HEIGHT));
+    }
+
+    // Create an array to hold the rows
+    array<string, C4_HEIGHT> chars;
+
+    // Fill the array with chunks of C4_WIDTH length from the input string
+    for (int y = 0; y < C4_HEIGHT; ++y) {
+        chars[y] = input.substr(y * C4_WIDTH, C4_WIDTH);
+    }
+
+    return SteadyState(chars);
+}
+
 shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
     // First check the movecache.
     {
         int move = -1;
         string ss = "";
-        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.get_reverse_hash(), move, ss);
+        bool found = get_movecache().GetSuggestedMoveIfExists(b.get_hash(), b.get_reverse_hash(), move, ss);
         if(ss.size() == C4_WIDTH*C4_HEIGHT){
             return make_shared<SteadyState>(make_steady_state_from_string(ss));
         }
@@ -432,7 +452,7 @@ shared_ptr<SteadyState> find_cached_steady_state(C4Board b) {
     {
         int move = -1;
         string ss = "";
-        bool found = movecache.GetSuggestedMoveIfExists(b.get_hash(), b.get_reverse_hash(), move, ss);
+        bool found = get_movecache().GetSuggestedMoveIfExists(b.get_hash(), b.get_reverse_hash(), move, ss);
         if(ss.size() == C4_WIDTH*C4_HEIGHT){
             return make_shared<SteadyState>(make_steady_state_from_string(ss));
         }
@@ -463,7 +483,47 @@ shared_ptr<SteadyState> modify_child_suggestion(const shared_ptr<SteadyState> pa
     return make_shared<SteadyState>(child);
 }
 
-shared_ptr<SteadyState> find_steady_state(const string& representation, const shared_ptr<SteadyState> suggestion, bool verbose = false, bool read_from_cache = true, int pool = 40, int generations = 50) {
+SteadyState read_from_file(const string& filename, bool read_reverse) {
+    array<string, C4_HEIGHT> chars;
+
+    ifstream file(filename);
+    if (file.is_open()) {
+        for (int y = 0; y < C4_HEIGHT; ++y) {
+            string line;
+            if (getline(file, line)) { // Read the entire line as a string
+                // Check if the line length matches the expected width
+                if (line.length() == static_cast<size_t>(C4_WIDTH)) {
+                    if (read_reverse) reverse(line.begin(), line.end());
+                    chars[y] = line;
+                } else throw runtime_error("Invalid line length in the file " + filename);
+            } else throw runtime_error("STEADYSTATE CACHE READ ERROR " + filename);
+        }
+    } else throw runtime_error("Failed to read SteadyState file " + filename);
+    return SteadyState(chars);
+}
+
+string reverse_ss(const std::string& input) {
+    // Calculate the expected length of the input string
+    int expectedLength = C4_WIDTH * C4_HEIGHT;
+
+    // Validate the input string length
+    if (input.length() != expectedLength) {
+        throw invalid_argument("Input string length does not match C4_WIDTH * C4_HEIGHT");
+    }
+
+    // Output string to store the result
+    string output = input;
+
+    // Reverse each chunk of length C4_WIDTH
+    for (int i = 0; i < C4_HEIGHT; ++i) {
+        int startIdx = i * C4_WIDTH;
+        reverse(output.begin() + startIdx, output.begin() + startIdx + C4_WIDTH);
+    }
+
+    return output;
+}
+
+shared_ptr<SteadyState> find_steady_state(const string& representation, const shared_ptr<SteadyState> suggestion, bool verbose, bool read_from_cache, int pool, int generations) {
     if(pool < 3) throw runtime_error("Pool size too small! Must be at least 3 for propagation strategy.");
     if(verbose) cout << "Finding for a steady state of " << representation << "..." << endl;
     if(representation.size() % 2 == 1)

@@ -18,7 +18,7 @@ The following external dependencies are required for specific functionalities wi
 
 | Item | What functionality is it needed for? | Used Where? | Used How? | Sample Ubuntu Installation |
 |------------|---------|---------|----------------|--------------|
-| CMake | Everything | go.sh script | Compiles the project | `sudo apt install cmake` |
+| CMake and Ninja | Everything | go.sh script | Compiles the project | `sudo apt install cmake` |
 | FFMPEG 5.0 or higher, and associated development libraries | Everything | audio_video folder | Encoding and processing video and audio streams | `sudo apt install ffmpeg libswscale-dev libavcodec-dev libavformat-dev libavdevice-dev libavutil-dev libavfilter-dev` Note: compiling ffmpeg from source, it will likely be compiled with support for extra features detected on your system, which are not baked into my CMake config. I suggest installing a precompiled binary. |
 | CUDA | Computationally intensive graphics | Video render loop | Various | Hardware-dependent |
 | gnuplot | Debug plot generation | DebugPlot.h | Data dumped in out/ is rendered to a PNG | `sudo apt install gnuplot` |

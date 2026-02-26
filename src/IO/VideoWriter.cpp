@@ -1,24 +1,12 @@
-#pragma once
+#include "VideoWriter.h"
+
 #include <iostream>
 #include <string>
 #include <regex>
+#include <sstream>
 #include <cassert>
 #include "DebugPlot.h"
-#include "../Core/Pixels.h"
-#include "IoHelpers.cpp"
-
-extern "C"
-{
-    #include <libavcodec/avcodec.h>
-    #include <libavformat/avformat.h>
-    #include <libswscale/swscale.h>
-    #include <libavutil/opt.h>
-}
-
-extern "C"
-void alpha_overlay_cuda(unsigned int* src_host,
-                        int width, int height,
-                        unsigned int bg_color);
+#include "Writer.h"
 
 using namespace std;
 
@@ -66,165 +54,151 @@ int send_frame(AVCodecContext* vcc, AVFrame* frame){
     return ret;
 }
 
-class VideoWriter {
-private:
-    //note that the FormatContext has shared ownership with audioWriter and MovieWriter
-    AVFormatContext *fc = nullptr;
+bool VideoWriter::encode_and_write_frame(AVFrame* frame){
+    int ret = send_frame(videoCodecContext, frame);
+    if (ret<0 && frame != NULL) throw runtime_error("Failed to encode video!");
 
-    AVStream *videoStream = nullptr;
-    AVCodecContext *videoCodecContext = nullptr;
-    AVFrame *yuvpic = nullptr;
-    AVPacket pkt = {0};
-    unsigned outframe = 0;
-    SwsContext* sws_ctx = nullptr;
+    int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
+    if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) return false;
+    else if (ret2!=0) throw runtime_error("Failed to receive video packet!");
 
-    bool encode_and_write_frame(AVFrame* frame){
-        int ret = send_frame(videoCodecContext, frame);
-        if (ret<0 && frame != NULL) throw runtime_error("Failed to encode video!");
+    // We set the packet PTS and DTS taking in the account our FPS (second argument),
+    // and the time base that our selected format uses (third argument).
+    av_packet_rescale_ts(&pkt, { 1, get_video_framerate_fps() }, videoStream->time_base);
 
-        int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
-        if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) return false;
-        else if (ret2!=0) throw runtime_error("Failed to receive video packet!");
+    pkt.stream_index = videoStream->index;
 
-        // We set the packet PTS and DTS taking in the account our FPS (second argument),
-        // and the time base that our selected format uses (third argument).
-        av_packet_rescale_ts(&pkt, { 1, FRAMERATE }, videoStream->time_base);
+    // Write the encoded frame to the mp4 file.
+    int pipefd[2];
+    int original_stderr = redirect_stderr(pipefd);
+    av_interleaved_write_frame(fc, &pkt);
+    restore_stderr(original_stderr);
+    close(pipefd[0]);
 
-        pkt.stream_index = videoStream->index;
+    return true;
+}
 
-        // Write the encoded frame to the mp4 file.
-        int pipefd[2];
-        int original_stderr = redirect_stderr(pipefd);
-        av_interleaved_write_frame(fc, &pkt);
-        restore_stderr(original_stderr);
-        close(pipefd[0]);
+VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int video_width_pixels, int video_height_pixels, int video_framerate_fps) : fc(fc_) {
+    av_log_set_level(AV_LOG_DEBUG);
 
-        return true;
+    // Setting up the codec.
+    const AVCodec* codec = avcodec_find_encoder_by_name("libx264");
+    if (!codec) {
+        throw runtime_error("Failed to find video codec");
     }
 
-public:
-    VideoWriter(AVFormatContext *fc_, const string& video_path) : fc(fc_) {
-        av_log_set_level(AV_LOG_DEBUG);
+    AVDictionary* opt = NULL;
+    av_dict_set(&opt, "preset", "medium", 0);
+    av_dict_set(&opt, "tune", "film", 0);
+    av_dict_set(&opt, "crf", "18", 0);
 
-        // Setting up the codec.
-        const AVCodec* codec = avcodec_find_encoder_by_name("libx264");
-        if (!codec) {
-            throw runtime_error("Failed to find video codec");
-        }
-
-        AVDictionary* opt = NULL;
-        av_dict_set(&opt, "preset", "medium", 0);
-        av_dict_set(&opt, "tune", "film", 0);
-        av_dict_set(&opt, "crf", "18", 0);
-
-        videoStream = avformat_new_stream(fc, codec);
-        if (!videoStream) {
-            throw runtime_error("Failed to create new videostream!");
-        }
-
-        videoCodecContext = avcodec_alloc_context3(codec);
-        if (!videoCodecContext) {
-            throw runtime_error("Failed to allocate video codec context.");
-        }
-        videoCodecContext->width = VIDEO_WIDTH;
-        videoCodecContext->height = VIDEO_HEIGHT;
-        videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;//10LE;
-        videoCodecContext->time_base = videoStream->time_base = { 1, FRAMERATE };
-        videoCodecContext->color_range = AVCOL_RANGE_JPEG;
-        videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-
-        int ret = avcodec_open2(videoCodecContext, codec, &opt);
-        if (ret < 0) {
-            throw runtime_error("Failed avcodec_open2!");
-        }
-        av_dict_free(&opt);
-
-        ret = avcodec_parameters_from_context(videoStream->codecpar, videoCodecContext);
-        if (ret < 0) {
-            throw runtime_error("Failed avcodec_parameters_from_context!");
-        }
-
-        ret = avio_open(&fc->pb, video_path.c_str(), AVIO_FLAG_WRITE);
-        if (ret < 0) {
-            throw runtime_error("Failed avio_open!");
-        }
-
-        ret = avformat_write_header(fc, &opt);
-        if (ret < 0) {
-            cout << "Failed to write header: " << ff_errstr(ret) << endl;
-            throw runtime_error("Failed to write header!");
-        }
-
-        // Allocating memory for each YUV frame.
-        yuvpic = av_frame_alloc();
-        yuvpic->format = AV_PIX_FMT_YUV420P;
-        yuvpic->width = VIDEO_WIDTH;
-        yuvpic->height = VIDEO_HEIGHT;
-        av_frame_get_buffer(yuvpic, 1);
-
-        sws_ctx = sws_getContext(
-            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_BGRA,
-            VIDEO_WIDTH, VIDEO_HEIGHT, AV_PIX_FMT_YUV420P,
-            SWS_BICUBIC,
-            nullptr, nullptr, nullptr);
-
-        if (!sws_ctx) {
-            throw std::runtime_error("Failed to create SwsContext for RGB->YUV conversion!");
-        }
+    videoStream = avformat_new_stream(fc, codec);
+    if (!videoStream) {
+        throw runtime_error("Failed to create new videostream!");
     }
 
-    void add_frame(Pixels& p) {
-        if (p.w != VIDEO_WIDTH || p.h != VIDEO_HEIGHT)
-            throw runtime_error("Frame dimensions were expected to be (" + to_string(VIDEO_WIDTH) + ", " + to_string(VIDEO_HEIGHT) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
+    videoCodecContext = avcodec_alloc_context3(codec);
+    if (!videoCodecContext) {
+        throw runtime_error("Failed to allocate video codec context.");
+    }
+    videoCodecContext->width = video_width_pixels;
+    videoCodecContext->height = video_height_pixels;
+    videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;//10LE;
+    videoCodecContext->time_base = videoStream->time_base = { 1, video_framerate_fps };
+    videoCodecContext->color_range = AVCOL_RANGE_JPEG;
+    videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-        // Allocate a temporary RGB frame wrapper (no copy of pixel data)
-        AVFrame* rgb_frame = av_frame_alloc();
-        rgb_frame->format = AV_PIX_FMT_BGRA;
-        rgb_frame->width  = VIDEO_WIDTH;
-        rgb_frame->height = VIDEO_HEIGHT;
+    int ret = avcodec_open2(videoCodecContext, codec, &opt);
+    if (ret < 0) {
+        throw runtime_error("Failed avcodec_open2!");
+    }
+    av_dict_free(&opt);
 
-        #ifdef USE_CUDA
-        alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), VIDEO_WIDTH, VIDEO_HEIGHT, VIDEO_BACKGROUND_COLOR);
-        #endif
-
-        // Point FFmpeg directly to your source data
-        rgb_frame->data[0] = reinterpret_cast<uint8_t*>(p.pixels.data());
-        rgb_frame->linesize[0] = VIDEO_WIDTH * 4;
-
-        // Convert RGB → YUV using swscale
-        sws_scale(sws_ctx,
-                  rgb_frame->data,
-                  rgb_frame->linesize,
-                  0, VIDEO_HEIGHT,
-                  yuvpic->data,
-                  yuvpic->linesize);
-
-        rgb_frame->data[0] = nullptr;
-        av_frame_free(&rgb_frame);
-
-        // Assign PTS and encode
-        yuvpic->pts = outframe++;
-        encode_and_write_frame(yuvpic);
+    ret = avcodec_parameters_from_context(videoStream->codecpar, videoCodecContext);
+    if (ret < 0) {
+        throw runtime_error("Failed avcodec_parameters_from_context!");
     }
 
-    ~VideoWriter() {
-        cout << "Cleaning up VideoWriter..." << endl;
-
-        // Writing the delayed video frames
-        while(encode_and_write_frame(NULL));
-
-        // Free the video codec context.
-        avcodec_free_context(&videoCodecContext);
-
-        // Freeing video specific resources
-        av_frame_free(&yuvpic);
-
-        av_packet_unref(&pkt);
-
-        av_write_trailer(fc);
-        avio_closep(&fc->pb);
-        avformat_free_context(fc);
-
-        if (sws_ctx) sws_freeContext(sws_ctx);
+    ret = avio_open(&fc->pb, video_path.c_str(), AVIO_FLAG_WRITE);
+    if (ret < 0) {
+        throw runtime_error("Failed avio_open!");
     }
-};
+
+    ret = avformat_write_header(fc, &opt);
+    if (ret < 0) {
+        cout << "Failed to write header: " << ff_errstr(ret) << endl;
+        throw runtime_error("Failed to write header!");
+    }
+
+    // Allocating memory for each YUV frame.
+    yuvpic = av_frame_alloc();
+    yuvpic->format = AV_PIX_FMT_YUV420P;
+    yuvpic->width = video_width_pixels;
+    yuvpic->height = video_height_pixels;
+    av_frame_get_buffer(yuvpic, 1);
+
+    sws_ctx = sws_getContext(
+        video_width_pixels, video_height_pixels, AV_PIX_FMT_BGRA,
+        video_width_pixels, video_height_pixels, AV_PIX_FMT_YUV420P,
+        SWS_BICUBIC,
+        nullptr, nullptr, nullptr);
+
+    if (!sws_ctx) {
+        throw std::runtime_error("Failed to create SwsContext for RGB->YUV conversion!");
+    }
+}
+
+void VideoWriter::add_frame(Pixels& p) {
+    if (p.w != get_video_width_pixels() || p.h != get_video_height_pixels())
+        throw runtime_error("Frame dimensions were expected to be (" + to_string(get_video_width_pixels()) + ", " + to_string(get_video_height_pixels()) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
+
+    // Allocate a temporary RGB frame wrapper (no copy of pixel data)
+    AVFrame* rgb_frame = av_frame_alloc();
+    rgb_frame->format = AV_PIX_FMT_BGRA;
+    rgb_frame->width  = get_video_width_pixels();
+    rgb_frame->height = get_video_height_pixels();
+
+    #ifdef USE_CUDA
+    alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_width_pixels(), get_video_height_pixels(), get_video_background_color());
+    #endif
+
+    // Point FFmpeg directly to your source data
+    rgb_frame->data[0] = reinterpret_cast<uint8_t*>(p.pixels.data());
+    rgb_frame->linesize[0] = get_video_width_pixels() * 4; // Assuming 4 bytes per pixel (BGRA)
+
+    // Convert RGB → YUV using swscale
+    sws_scale(sws_ctx,
+              rgb_frame->data,
+              rgb_frame->linesize,
+              0, get_video_height_pixels(),
+              yuvpic->data,
+              yuvpic->linesize);
+
+    rgb_frame->data[0] = nullptr;
+    av_frame_free(&rgb_frame);
+
+    // Assign PTS and encode
+    yuvpic->pts = outframe++;
+    encode_and_write_frame(yuvpic);
+}
+
+VideoWriter::~VideoWriter() {
+    cout << "Cleaning up VideoWriter..." << endl;
+
+    // Writing the delayed video frames
+    while(encode_and_write_frame(NULL));
+
+    // Free the video codec context.
+    avcodec_free_context(&videoCodecContext);
+
+    // Freeing video specific resources
+    av_frame_free(&yuvpic);
+
+    av_packet_unref(&pkt);
+
+    av_write_trailer(fc);
+    avio_closep(&fc->pb);
+    avformat_free_context(fc);
+
+    if (sws_ctx) sws_freeContext(sws_ctx);
+}

@@ -1,7 +1,6 @@
-#pragma once
-
-#include "../Common/CoordinateScene.cpp"
+#include "../Common/CoordinateScene.h"
 #include "../../Host_Device_Shared/find_roots.c"
+#include "../../Core/State/StateManager.h"
 
 extern "C" void color_complex_polynomial(
     unsigned int* h_pixels, // to be overwritten with the result
@@ -196,10 +195,10 @@ public:
         if(root_or_coefficient) roots_to_coefficients();
         else coefficients_to_roots();
         string type = root_or_coefficient ? "coefficient" : "root";
-        const string r0 = state.get_equation(type + root1 + "_r");
-        const string i0 = state.get_equation(type + root1 + "_i");
-        const string r1 = state.get_equation(type + root2 + "_r");
-        const string i1 = state.get_equation(type + root2 + "_i");
+        const string r0 = manager.get_equation_string(type + root1 + "_r");
+        const string i0 = manager.get_equation_string(type + root1 + "_i");
+        const string r1 = manager.get_equation_string(type + root2 + "_r");
+        const string i1 = manager.get_equation_string(type + root2 + "_i");
 
         const string midpoint_r = r0 + " " + r1 + " + 2 /";
         const string midpoint_i = i0 + " " + i1 + " + 2 /";

@@ -1,4 +1,5 @@
 #pragma once
+
 #include <thrust/complex.h>
 #include "../Host_Device_Shared/helpers.h"
 

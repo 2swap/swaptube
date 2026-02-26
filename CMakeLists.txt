@@ -4,14 +4,6 @@ message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
 project(swaptube LANGUAGES CXX)
 message(STATUS "Project '${PROJECT_NAME}' initialized")
 
-# Pass user-specified values as preprocessor macros
-add_definitions(-DPROJECT_NAME_MACRO="${PROJECT_NAME_MACRO}")
-add_definitions(-DAUDIO_HINTS=${AUDIO_HINTS})
-add_definitions(-DAUDIO_SFX=${AUDIO_SFX})
-add_definitions(-DGLM_ENABLE_EXPERIMENTAL)
-add_definitions(-DCMAKE_VERBOSE_MAKEFILE=ON)
-message(STATUS "Preprocessor definitions added")
-
 set(ENV{GLIBCXX_FORCE_NEW} 1)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -26,8 +18,15 @@ find_package(PNG REQUIRED)
 find_package(glm REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
-# Initialize the sources list with the main project file. We will append to it soon.
-set(SOURCES "src/Core/Main.cpp")
+set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
+set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
+
+# Add globbed cpp files: all .cpp files in src, including subdirectories.
+# Exclude the src/Projects/ directory.
+# Include, however, src/Projects/.active_project.cpp
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+list(FILTER SOURCES EXCLUDE REGEX "src/Projects/.*")
+file(GLOB_RECURSE ACTIVE_PROJECT_SOURCE "src/Projects/.active_project.cpp")
 
 include(CheckLanguage)
 message(STATUS "Checking for CUDA support...")
@@ -41,19 +40,31 @@ if(CMAKE_CUDA_COMPILER)
     set(CMAKE_CUDA_STANDARD 17)
     set(CMAKE_CUDA_ARCHITECTURES native)
     file(GLOB_RECURSE CUDA_SOURCES "src/CUDA/*.cu")
+    set(CMAKE_CONFIGURE_DEPENDS ${CUDA_SOURCES})
     add_compile_options($<$<COMPILE_LANGUAGE:CUDA>:-Xcudafe> $<$<COMPILE_LANGUAGE:CUDA>:"--diag_suppress=20012">)
 else()
     message(WARNING "CUDA not found. Please refer to readme for building without GPU support.")
 endif()
 
-add_executable(${PROJECT_NAME} ${SOURCES} ${CUDA_SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES} ${ACTIVE_PROJECT_SOURCE} ${CUDA_SOURCES})
 message(STATUS "Executable target ${PROJECT_NAME} added")
 
-include_directories(${PROJECT_NAME} ${FFMPEG_INCLUDE_DIRS} ${RSVG_INCLUDE_DIRS} ${GLIB_INCLUDE_DIRS})
-include_directories("/usr/include/gdk-pixbuf-2.0")
-include_directories("/usr/include/cairo")
-include_directories(${PNG_INCLUDE_DIR})
-include_directories(${GLM_INCLUDE_DIRS})
+# Pass user-specified values as preprocessor macros
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    PROJECT_NAME_MACRO="${PROJECT_NAME_MACRO}"
+    AUDIO_HINTS=${AUDIO_HINTS}
+    AUDIO_SFX=${AUDIO_SFX}
+    GLM_ENABLE_EXPERIMENTAL
+)
+message(STATUS "Preprocessor definitions added")
+
+target_include_directories(${PROJECT_NAME} PRIVATE
+    ${PROJECT_NAME} ${FFMPEG_INCLUDE_DIRS} ${RSVG_INCLUDE_DIRS} ${GLIB_INCLUDE_DIRS}
+    "/usr/include/gdk-pixbuf-2.0"
+    "/usr/include/cairo"
+    ${PNG_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIRS}
+)
 
 target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${RSVG_LIBRARIES} ${FDKAAC_LIBRARIES} cairo gobject-2.0 lzma ${PNG_LIBRARIES} ${GPU_LIBRARIES} ${X11_LIBRARIES} nlohmann_json::nlohmann_json)
 message(STATUS "Link libraries configured for ${PROJECT_NAME}")

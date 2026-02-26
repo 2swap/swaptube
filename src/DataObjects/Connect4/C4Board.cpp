@@ -1,10 +1,7 @@
-#pragma once
-
 #include "C4Board.h"
-#include "SteadyState.cpp"
-#include "JsonC4Cache.cpp"
-#include "FhourstonesCache.cpp"
-#include "../Graph.cpp"
+#include "SteadyState.h"
+#include "JsonC4Cache.h"
+#include "FhourstonesCache.h"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -190,7 +187,7 @@ C4Board C4Board::child(int piece) const{
 C4Result C4Board::who_is_winning(int& work, bool verbose) {
 
     string winner;
-    if (fhourstonesCache.GetEntryIfExists(get_hash(), get_reverse_hash(), winner)) {
+    if (get_fhourstonescache().GetEntryIfExists(get_hash(), get_reverse_hash(), winner)) {
         if (verbose) cout << "Using cached result..." << endl;
 
         // Convert winner string to C4Result
@@ -201,18 +198,17 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
         throw runtime_error("Invalid winner value in fhourstonescache: " + winner);
     }
 
-    if(verbose) cout << "Calling fhourstones on " << representation << endl;
-
     // Check that the binary is present
     if (system("[ -f ~/Fhourstones/SearchGame ] || echo \"not found\"") != 0) {
         throw runtime_error("fhourstones binary not found at ~/Fhourstones/SearchGame");
     }
 
+    cout << "Calling fhourstones on " << representation << endl;
+
     // If not found in cache, compute using fhourstones
     char command[150];
     // Call the fhourstones binary
     sprintf(command, "echo %s | ~/Fhourstones/SearchGame", representation.c_str());
-    if (verbose) cout << "Calling fhourstones on " << command << "... ";
     FILE* pipe = popen(command, "r");
     if (!pipe) {
         C4Board c4(c4_branch_mode, representation);
@@ -248,7 +244,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     }
 
     // Store result in persistent cache
-    fhourstonesCache.AddOrUpdateEntry(get_hash(), get_reverse_hash(), representation, winner);
+    get_fhourstonescache().AddOrUpdateEntry(get_hash(), get_reverse_hash(), representation, winner);
 
     return gameResult;
 }
@@ -489,7 +485,7 @@ int C4Board::get_human_winning_fhourstones() {
     if(SKIP_UNFOUND_STEADYSTATES || representation.size() < 5){
         int move = -1;
         string ss = "";
-        bool found = movecache.GetSuggestedMoveIfExists(get_hash(), get_reverse_hash(), move, ss);
+        bool found = get_movecache().GetSuggestedMoveIfExists(get_hash(), get_reverse_hash(), move, ss);
         if(ss != "") throw runtime_error("Cached steady state found in ghwf, but should have been caught before entry");
         if(move > 0) return move;
     }
@@ -538,7 +534,7 @@ int C4Board::get_human_winning_fhourstones() {
     {
         int move = -1;
         string ss = "";
-        int ret = movecache.GetSuggestedMoveIfExists(get_hash(), get_reverse_hash(), move, ss);
+        int ret = get_movecache().GetSuggestedMoveIfExists(get_hash(), get_reverse_hash(), move, ss);
         if(move > 0) return move;
     }
 
@@ -570,7 +566,7 @@ int C4Board::get_human_winning_fhourstones() {
         }
     } while (find(winning_columns.begin(), winning_columns.end(), choice) == winning_columns.end());
 
-    movecache.WriteCache();
+    get_movecache().WriteCache();
     return choice;
 }
 
@@ -710,9 +706,10 @@ unordered_set<GenericBoard*> C4Board::get_children(){
                 add_all_legal_children(neighbors);
             break;
         case UNION_WEAK:
-            if(is_reds_turn())
+            if(is_reds_turn()) {
+                cout << "Adding union of winning fhourstones for " << representation << endl;
                 add_all_winning_fhourstones(neighbors);
-            else
+            } else
                 add_all_legal_children(neighbors);
             break;
         case SIMPLE_WEAK:
@@ -732,7 +729,7 @@ unordered_set<GenericBoard*> C4Board::get_children(){
                 }
                 int hwf = get_human_winning_fhourstones();
                 if(hwf == -1) break;
-                else movecache.AddOrUpdateEntry(get_hash(), get_reverse_hash(), representation, hwf);
+                else get_movecache().AddOrUpdateEntry(get_hash(), get_reverse_hash(), representation, hwf);
                 C4Board moved = child(hwf);
                 neighbors.insert(new C4Board(moved));
             } else { // yellow's move

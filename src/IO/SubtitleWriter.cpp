@@ -1,111 +1,105 @@
-#pragma once
-
+#include "SubtitleWriter.h"
 #include <iostream>
 #include <fstream>
 #include <iomanip>
 #include <string>
 #include <cctype>
-#include "../Core/State/StateManager.cpp"
+#include <stdexcept>
+#include "../Core/State/StateManager.h"
+#include "Writer.h"
+#include "../Core/Smoketest.h"
+#include "../Core/State/TransitionType.h"
 
 using namespace std;
 
-class SubtitleWriter {
-private:
-    ofstream srt_file;
-    double substime = 0;
-    int subtitle_count = 0;
-    string last_written_subtitle = "";
+SubtitleWriter::SubtitleWriter() {
+    const string srt_path = "io_out/Video.srt";
+    srt_file.open(srt_path);
+    if (!srt_file.is_open()) throw runtime_error("Failed to open file: " + srt_path);
+}
 
-    void add_srt_time(double s) {
-        // Format the elapsed time and duration in HH:MM:SS,mmm format
-        int hours = static_cast<int>(s / 3600);
-        s -= hours * 3600;
-        int minutes = static_cast<int>(s / 60);
-        s -= minutes * 60;
-        int seconds = static_cast<int>(s);
-        s -= seconds;
-        int milliseconds = static_cast<int>(s * 1000);
+SubtitleWriter::~SubtitleWriter() {
+    if (srt_file.is_open()) srt_file.close();
+}
 
-        srt_file << setfill('0')
-                 << setw(2) << hours << ":"
-                 << setw(2) << minutes << ":"
-                 << setw(2) << seconds << ","
-                 << setw(3) << milliseconds;
-    }
+string SubtitleWriter::get_last_written_subtitle() const {
+    return last_written_subtitle;
+}
 
-public:
-    SubtitleWriter() {
-        const string srt_path = "io_out/Video.srt";
-        srt_file.open(srt_path);
-        if (!srt_file.is_open()) throw runtime_error("Failed to open file: " + srt_path);
-    }
+void SubtitleWriter::add_srt_time(double s) {
+    // Format the elapsed time and duration in HH:MM:SS,mmm format
+    int hours = static_cast<int>(s / 3600);
+    s -= hours * 3600;
+    int minutes = static_cast<int>(s / 60);
+    s -= minutes * 60;
+    int seconds = static_cast<int>(s);
+    s -= seconds;
+    int milliseconds = static_cast<int>(s * 1000);
 
-    ~SubtitleWriter() {
-        if (srt_file.is_open()) srt_file.close();
-    }
+    srt_file << setfill('0')
+             << setw(2) << hours << ":"
+             << setw(2) << minutes << ":"
+             << setw(2) << seconds << ","
+             << setw(3) << milliseconds;
+}
 
-    string get_last_written_subtitle() const {
-        return last_written_subtitle;
-    }
+void SubtitleWriter::get_substime(double t_seconds) {
+    get_substime(get_global_state("frame_number") / get_video_framerate_fps());
+}
 
-    void get_substime(double t_seconds) {
-        get_substime(global_state["frame_number"] / FRAMERATE);
-    }
+void SubtitleWriter::add_silence(double duration) {
+    if (!rendering_on()) return;
+    substime += duration;
+}
 
-    void add_silence(double duration) {
-        if (!rendering_on()) return;
-        substime += duration;
-    }
+void SubtitleWriter::add_subtitle(double duration, const string& text) {
+    last_written_subtitle = text;
+    if (!rendering_on()) return;
 
-    void add_subtitle(double duration, const string& text) {
-        last_written_subtitle = text;
-        if (!rendering_on()) return;
+    if (text.size() > 120) {
+        cout << "Subtitle too long!" << endl;
+        size_t center = text.size() / 2;
 
-        if (text.size() > 120) {
-            cout << "Subtitle too long!" << endl;
-            size_t center = text.size() / 2;
+        // Find the nearest non-alphanumeric character to the center
+        size_t left = center;
+        size_t right = center;
 
-            // Find the nearest non-alphanumeric character to the center
-            size_t left = center;
-            size_t right = center;
-
-            while (left > 0 || right < text.size() - 1) {
-                if (left > 0 && !isalnum(text[left])) {
-                    break;
-                }
-                if (right < text.size() - 1 && !isalnum(text[right])) {
-                    break;
-                }
-                if (left > 0) left--;
-                if (right < text.size() - 1) right++;
+        while (left > 0 || right < text.size() - 1) {
+            if (left > 0 && !isalnum(text[left])) {
+                break;
             }
-
-            size_t split_pos = (left > 0 && !isalnum(text[left])) ? left : right;
-
-            // Split the text into first and remaining parts
-            string firstPart = text.substr(0, split_pos + 1);
-            string remainingPart = text.substr(split_pos + 1);
-
-            // Calculate modified duration for the first part
-            double modifiedDuration = duration * (firstPart.size() / static_cast<double>(text.size()));
-
-            // Write the first part of the subtitle
-            add_subtitle(modifiedDuration, firstPart);
-
-            // Call the function recursively for the remaining part
-            add_subtitle(duration - modifiedDuration, remainingPart);
-            return;
+            if (right < text.size() - 1 && !isalnum(text[right])) {
+                break;
+            }
+            if (left > 0) left--;
+            if (right < text.size() - 1) right++;
         }
 
-        // Recursive base case
-        subtitle_count++;
+        size_t split_pos = (left > 0 && !isalnum(text[left])) ? left : right;
 
-        // Write the complete subtitle entry to the file
-        srt_file << subtitle_count << endl;
-        add_srt_time(substime);
-        srt_file << " --> ";
-        substime += duration;
-        add_srt_time(substime - 0.05); // Slightly reduce end time to avoid overlap
-        srt_file << endl << text << endl << endl;
+        // Split the text into first and remaining parts
+        string firstPart = text.substr(0, split_pos + 1);
+        string remainingPart = text.substr(split_pos + 1);
+
+        // Calculate modified duration for the first part
+        double modifiedDuration = duration * (firstPart.size() / static_cast<double>(text.size()));
+
+        // Write the first part of the subtitle
+        add_subtitle(modifiedDuration, firstPart);
+
+        // Call the function recursively for the remaining part
+        add_subtitle(duration - modifiedDuration, remainingPart);
+        return;
     }
-};
+
+    // Recursive base case
+    subtitle_count++;
+
+    // Write the complete subtitle entry to the file
+    srt_file << subtitle_count << endl;
+    add_srt_time(substime);
+    srt_file << " --> ";
+    substime += duration;
+    add_srt_time(substime - 0.05); // Slightly reduce end time to avoid overlap
+    srt_file << endl << text << endl << endl;
+}

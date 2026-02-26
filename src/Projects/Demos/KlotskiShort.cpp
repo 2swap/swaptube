@@ -1,13 +1,14 @@
-#include "../Scenes/Math/KlotskiScene.cpp"
-#include "../DataObjects/KlotskiBoard.cpp"
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../Scenes/Math/GraphScene.cpp"
+#include "../Scenes/Math/KlotskiScene.h"
+#include "../DataObjects/KlotskiBoard.h"
+#include "../Scenes/Common/CompositeScene.h"
+#include "../Scenes/Math/GraphScene.h"
+#include "../IO/Writer.h"
 
 void render_video(){
     for(KlotskiBoard kb : {apk, beginner, intermediate}){
-        shared_ptr<KlotskiScene> ks = make_shared<KlotskiScene>(kb, .5, .5*VIDEO_WIDTH/VIDEO_HEIGHT);
+        shared_ptr<KlotskiScene> ks = make_shared<KlotskiScene>(kb, .5, .5 * get_video_width_pixels()/get_video_height_pixels());
         CompositeScene cs;
-        cs.add_scene(ks, "ks", 0.25, 0.25*VIDEO_WIDTH/VIDEO_HEIGHT);
+        cs.add_scene(ks, "ks", 0.25, 0.25*get_video_width_pixels()/get_video_height_pixels());
 
         shared_ptr<Graph> g = make_shared<Graph>();
         g->add_to_stack(new KlotskiBoard(ks->copy_board()));

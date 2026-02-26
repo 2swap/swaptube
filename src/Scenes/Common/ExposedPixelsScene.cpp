@@ -1,13 +1,12 @@
-#pragma once
-
-#include "../Scene.cpp"
+#include "../../IO/Writer.h"
+#include "../Scene.h"
 
 // The idea here is that the user does whatever they want with the Pixels object, manually
 class ExposedPixelsScene : public Scene {
 public:
     Pixels exposed_pixels;
     ExposedPixelsScene(const double width = 1, const double height = 1) : Scene(width, height) {
-        exposed_pixels = Pixels(width * VIDEO_WIDTH, height * VIDEO_HEIGHT);
+        exposed_pixels = Pixels(width * get_video_width_pixels(), height * get_video_height_pixels());
     }
 
     const StateQuery populate_state_query() const override {

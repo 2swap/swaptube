@@ -1,5 +1,3 @@
-#pragma once
-
 // Given a pixel buffer and depth buffer, highlight edges based on depth discontinuities.
 #include <cuda_runtime.h>
 #include "color.cuh"

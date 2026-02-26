@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../Core/State/ResolvedStateEquationComponent.c"
 #include "../Host_Device_Shared/ManifoldData.c"
 

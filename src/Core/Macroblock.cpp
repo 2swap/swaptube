@@ -1,9 +1,13 @@
-#pragma once
+#include "Macroblock.h"
 
 #include <iostream>
-#include <string>
 #include <algorithm>
 #include <cctype>
+#include <stdexcept>
+#include <vector>
+#include "../IO/Writer.h"
+
+using namespace std;
 
 // Function to sanitize a string for use as a filename
 string sanitize_filename(const string& text) {
@@ -17,94 +21,59 @@ string sanitize_filename(const string& text) {
     return sanitized + ".wav";
 }
 
-class Macroblock {
-public:
-    virtual ~Macroblock() = default;
-    virtual void write_shtooka() const {}
-    virtual string blurb() const = 0; // This is how the macroblock identifies itself in log outputs
-    virtual int write_and_get_duration_frames() const = 0;
-};
-
-class SilenceBlock : public Macroblock {
-public:
-    SilenceBlock(const double duration_seconds)
-        : duration_frames(duration_seconds * FRAMERATE) {
-        if (duration_frames <= 0) {
-            throw invalid_argument("Duration must be greater than 0");
-        }
+SilenceBlock::SilenceBlock(const double duration_seconds)
+    : duration_frames(duration_seconds * get_video_framerate_fps()) {
+    if (duration_frames <= 0) {
+        throw invalid_argument("Duration must be greater than 0");
     }
+}
 
-    int write_and_get_duration_frames() const override {
-        WRITER->audio->add_silence(duration_frames);
-        WRITER->subtitle->add_silence(static_cast<double>(duration_frames) / FRAMERATE);
-        return duration_frames;
+int SilenceBlock::write_and_get_duration_frames() const {
+    get_writer().audio->add_silence(duration_frames);
+    get_writer().subtitle->add_silence(static_cast<double>(duration_frames) / get_video_framerate_fps());
+    return duration_frames;
+}
+string SilenceBlock::blurb() const { return "SilenceBlock(" + to_string(static_cast<double>(duration_frames) / get_video_framerate_fps()) + "s)"; }
+
+FileBlock::FileBlock(const string& subtitle_text)
+    : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
+
+void FileBlock::write_shtooka() const {
+    get_writer().shtooka->add_shtooka_entry(audio_filename, subtitle_text);
+}
+
+int FileBlock::write_and_get_duration_frames() const {
+    int duration_frames = get_writer().audio->add_audio_from_file(audio_filename);
+    get_writer().subtitle->add_subtitle(static_cast<double>(duration_frames) / get_video_framerate_fps(), subtitle_text);
+    return duration_frames;
+}
+string FileBlock::blurb() const { return "FileBlock(" + subtitle_text + ")"; }
+
+GeneratedBlock::GeneratedBlock(const vector<int32_t>& leftBuffer, const vector<int32_t>& rightBuffer)
+    : leftBuffer(leftBuffer), rightBuffer(rightBuffer) {
+    if (leftBuffer.size() != rightBuffer.size()) {
+        throw invalid_argument("Left and right buffers must have the same size");
     }
-    string blurb() const override { return "SilenceBlock(" + to_string(static_cast<double>(duration_frames) / FRAMERATE) + ")"; }
+}
 
-private:
-    const int duration_frames;
-};
+int GeneratedBlock::write_and_get_duration_frames() const {
+    int duration_frames = get_writer().audio->add_generated_audio(leftBuffer, rightBuffer);
+    get_writer().subtitle->add_subtitle(static_cast<double>(duration_frames) / get_video_framerate_fps(), "[Computer Generated Sound]");
+    return duration_frames;
+}
+string GeneratedBlock::blurb() const { return "GeneratedBlock(" + to_string(leftBuffer.size() / get_audio_samplerate_hz()) + "s)"; }
 
-class FileBlock : public Macroblock {
-public:
-    FileBlock(const string& subtitle_text)
-        : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
+CompositeBlock::CompositeBlock(const Macroblock& a, const Macroblock& b)
+    : a(a), b(b) {}
 
-    void write_shtooka() const override {
-        WRITER->shtooka->add_shtooka_entry(audio_filename, subtitle_text);
-    }
+void CompositeBlock::write_shtooka() const {
+    a.write_shtooka();
+    b.write_shtooka();
+}
 
-    int write_and_get_duration_frames() const override {
-        int duration_frames = WRITER->audio->add_audio_from_file(audio_filename);
-        WRITER->subtitle->add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, subtitle_text);
-        return duration_frames;
-    }
-    string blurb() const override { return "FileBlock(" + subtitle_text + ")"; }
-
-private:
-    const string subtitle_text;
-    const string audio_filename;
-};
-
-class GeneratedBlock : public Macroblock {
-public:
-    GeneratedBlock(const vector<int32_t>& leftBuffer, const vector<int32_t>& rightBuffer)
-        : leftBuffer(leftBuffer), rightBuffer(rightBuffer) {
-        if (leftBuffer.size() != rightBuffer.size()) {
-            throw invalid_argument("Left and right buffers must have the same size");
-        }
-    }
-
-    int write_and_get_duration_frames() const override {
-        int duration_frames = WRITER->audio->add_generated_audio(leftBuffer, rightBuffer);
-        WRITER->subtitle->add_subtitle(static_cast<double>(duration_frames) / FRAMERATE, "[Computer Generated Sound]");
-        return duration_frames;
-    }
-    string blurb() const override { return "GeneratedBlock(" + to_string(leftBuffer.size()/SAMPLERATE) + ")"; }
-
-private:
-    const vector<int32_t> leftBuffer;
-    const vector<int32_t> rightBuffer;
-};
-
-class CompositeBlock : public Macroblock {
-public:
-    CompositeBlock(const Macroblock& a, const Macroblock& b)
-        : a(a), b(b) {}
-
-    void write_shtooka() const override {
-        a.write_shtooka();
-        b.write_shtooka();
-    }
-
-    int write_and_get_duration_frames() const override {
-        int a_duration = a.write_and_get_duration_frames();
-        int b_duration = b.write_and_get_duration_frames();
-        return a_duration + b_duration;
-    }
-    string blurb() const override { return "CompositeBlock(" + a.blurb() + ", " + b.blurb() + ")"; }
-
-private:
-    const Macroblock& a;
-    const Macroblock& b;
-};
+int CompositeBlock::write_and_get_duration_frames() const {
+    int a_duration = a.write_and_get_duration_frames();
+    int b_duration = b.write_and_get_duration_frames();
+    return a_duration + b_duration;
+}
+string CompositeBlock::blurb() const { return "CompositeBlock(" + a.blurb() + ", " + b.blurb() + ")"; }

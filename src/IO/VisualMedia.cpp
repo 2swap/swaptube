@@ -1,4 +1,5 @@
-#pragma once
+#include "VisualMedia.h"
+
 #include <png.h>
 #include <vector>
 #include <stdexcept>
@@ -7,26 +8,13 @@
 #include <cmath>
 #include <sstream>
 #include <unordered_map>
-#include "../Core/Pixels.h"
+#include <limits.h>
+#include <unistd.h>
+#include <cairo.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#include <iostream>
 
-enum class ScalingMode {
-    BoundingBox,
-    ScaleFactor
-};
-
-struct ScalingParams {
-    ScalingMode mode;
-    float max_width;
-    float max_height;
-    double scale_factor;
-
-    // Constructors for different modes
-    ScalingParams(float width, float height) 
-        : mode(ScalingMode::BoundingBox), max_width(width), max_height(height), scale_factor(0) {}
-
-    ScalingParams(double factor) 
-        : mode(ScalingMode::ScaleFactor), max_width(0), max_height(0), scale_factor(factor) {}
-};
+using namespace std;
 
 void pix_to_png(const Pixels& pix, const string& filename) {
     if(pix.w * pix.h == 0) return; // cowardly exit.
@@ -360,7 +348,7 @@ void png_to_pix_bounding_box(Pixels& pix, const string& filename, int w, int h) 
 // Create an unordered_map to store the cached results
 unordered_map<string, pair<Pixels, double>> latex_cache;
 
-string generate_cache_key(const string& text, const ScalingParams& scaling_params) {
+static string generate_cache_key(const string& text, const ScalingParams& scaling_params) {
     hash<string> hasher;
     string key = text + "_" + to_string(static_cast<int>(scaling_params.mode)) + "_" + 
                  to_string(scaling_params.max_width) + "_" + 

@@ -3,7 +3,8 @@
 #include <complex>
 #include <cmath>
 #include <cstdio>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include "../common_graphics.cuh"
 #include "../../Host_Device_Shared/find_roots.c"
 #include "../../Host_Device_Shared/helpers.h"

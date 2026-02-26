@@ -1,6 +1,7 @@
 #include <cuda_runtime.h>
 #include <vector>
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <complex>
 #include "../Host_Device_Shared/helpers.h"
 #include <cuComplex.h>  // Use cuComplex for complex numbers in CUDA

@@ -1,5 +1,5 @@
-#include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Common/CompositeScene.cpp"
+#include "../Scenes/Media/LatexScene.h"
+#include "../Scenes/Common/CompositeScene.h"
 
 void render_video(){
     /*

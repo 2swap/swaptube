@@ -1,20 +1,24 @@
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../Scenes/Common/PauseScene.cpp"
-#include "../Scenes/Common/TwoswapScene.cpp"
-#include "../Scenes/Media/LatexScene.cpp"
-#include "../Scenes/Media/PngScene.cpp"
-#include "../Scenes/Media/Mp4Scene.cpp"
-#include "../Scenes/Media/WhitePaperScene.cpp"
-#include "../Scenes/Math/RealFunctionScene.cpp"
-#include "../Scenes/Math/LineChartScene.cpp"
-#include "../Scenes/Math/MandelbrotScene.cpp"
-#include "../Scenes/Math/BarChartScene.cpp"
-#include "../Scenes/Connect4/C4Scene.cpp"
-#include "../Scenes/Media/SvgScene.cpp"
-#include "../Scenes/Connect4/C4GraphScene.cpp"
-#include "../Scenes/Physics/BouncingBallScene.cpp"
-#include "../DataObjects/Connect4/TreeValidator.cpp"
-// TODO answer Tromp's questions
+#include "../Scenes/Scene.h"
+#include "../Core/Smoketest.h"
+#include "../DataObjects/Connect4/SteadyState.h"
+#include "../IO/Writer.h"
+#include "../Core/Macroblock.h"
+
+#include "../Scenes/Common/CompositeScene.h"
+#include "../Scenes/Common/PauseScene.h"
+#include "../Scenes/Common/TwoswapScene.h"
+#include "../Scenes/Media/LatexScene.h"
+#include "../Scenes/Media/PngScene.h"
+#include "../Scenes/Media/Mp4Scene.h"
+#include "../Scenes/Media/WhitePaperScene.h"
+#include "../Scenes/Math/RealFunctionScene.h"
+#include "../Scenes/Math/LineChartScene.h"
+#include "../Scenes/Math/MandelbrotScene.h"
+#include "../Scenes/Math/BarChartScene.h"
+#include "../Scenes/Connect4/C4Scene.h"
+#include "../Scenes/Media/SvgScene.h"
+#include "../Scenes/Connect4/C4GraphScene.h"
+#include "../Scenes/Physics/BouncingBallScene.h"
 
 double find_node_id_from_board(shared_ptr<Graph> g, C4Board& b) {
     double start_node_id = b.get_hash();
@@ -68,11 +72,15 @@ void reset_graph_edge_opacities(shared_ptr<Graph> g) {
 }
 
 void preintro(CompositeScene& cs) {
+    cout << "Preintro" << endl;
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(g, false, "", TRIM_STEADY_STATES, 1.2, 1);
+    cout << "Graph scene created" << endl;
     if(!rendering_on()) {
         g->expand(-1);
+        cout << "Graph expanded" << endl;
         g->make_bidirectional();
+        cout << "Graph made bidirectional" << endl;
     }
     cs.add_scene(gs, "gs", .6, .5);
 
@@ -270,7 +278,7 @@ void intro(CompositeScene& cs) {
     shared_ptr<LatexScene> ls_jda = make_shared<LatexScene>("\\text{James Dow Allen}", 1, .45, .3);
     cs.add_scene_fade_in(MICRO, ls_jda, "ls_jda", .25, .9);
     cs.render_microblock();
-    shared_ptr<PngScene> VictorAllis = make_shared<PngScene>("va_circle", .7, .6);
+    shared_ptr<PngScene> VictorAllis = make_shared<PngScene>("VictorAllis", .7, .6);
     cs.add_scene(VictorAllis, "VA", .75, -.45);
     cs.slide_subscene(MICRO, "VA", 0, 1);
     shared_ptr<LatexScene> ls_va = make_shared<LatexScene>("\\text{Victor Allis}", 1, .45, .3);
@@ -689,6 +697,8 @@ void explanation(CompositeScene& cs) {
     cs.add_scene_fade_in(MICRO, almost_over, "almost_over");
     almost_over->set_fast_mode(true);
     almost_over->use_up_queue();
+    cs.render_microblock();
+
     stage_macroblock(FileBlock("For a game like this that's almost over,"), 1);
     cs.render_microblock();
 
@@ -721,6 +731,8 @@ void explanation(CompositeScene& cs) {
         almost_over->undo(vars_depth);
         cs.render_microblock();
     }
+
+    stage_macroblock(SilenceBlock(1), 2);
     cs.render_microblock();
     cs.fade_subscene(MICRO, "almost_over", 0);
     cs.render_microblock();
@@ -833,8 +845,11 @@ void trees(CompositeScene& cs) {
 
     shared_ptr<Graph> g2 = make_shared<Graph>();
     shared_ptr<C4GraphScene> c4gs_union = make_shared<C4GraphScene>(g2, false, "", UNION_WEAK);
+    cout << "Created union graph scene, now expanding..." << endl;
     g2->expand(5677); // At least as deep as the full tree
+    cout << "Expanded union graph, now making bidirectional..." << endl;
     g2->make_bidirectional();
+    cout << "Made union graph bidirectional" << endl;
 
     // Remove all nodes in the g1 which are not in g2
     vector<double> to_delete;
@@ -1838,8 +1853,8 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cumulonimbus->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
     cs.add_scene_fade_in(MICRO, cumulonimbus, "cumulonimbus");
     cs.render_microblock();
-    cs.remove_subscene("bbs");
     cs.render_microblock();
+    cs.remove_subscene("bbs");
 
     stage_macroblock(FileBlock("But that doesn't stop us from discussing candlesticks openings or clouds."), 1);
     //TODO footage from the textbook
@@ -1863,11 +1878,11 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.remove_all_subscenes_except("weather_1");
 
-    stage_macroblock(FileBlock("a whole new philosophy spawned out of thin air, far abstracted from any rules of physics or chemistry."), 9);
-    for(int i = 2; i < 2+9; i++) {
-        shared_ptr<PngScene> weather = make_shared<PngScene>("weather_" + to_string(i+2));
-        cs.remove_subscene("weather_" + to_string(i+1));
-        cs.add_scene(weather, "weather_" + to_string(i+2));
+    stage_macroblock(FileBlock("a whole new philosophy spawned out of thin air, far abstracted from any rules of physics or chemistry."), 7);
+    for(int i = 2; i < 9; i++) {
+        shared_ptr<PngScene> weather = make_shared<PngScene>("weather_" + to_string(i));
+        cs.remove_subscene("weather_" + to_string(i-1));
+        cs.add_scene(weather, "weather_" + to_string(i));
         cs.render_microblock();
     }
 
@@ -1953,7 +1968,7 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     ts->manager.transition(MICRO, "2swap_effect_completion", "1");
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("with music by 6884."), 1);
+    stage_macroblock(FileBlock("with music by 6884."), 3);
     cs.render_microblock();
     cs.render_microblock();
     ts->manager.transition(MICRO, "6884_effect_completion", "1");
@@ -1985,7 +2000,7 @@ void anki(CompositeScene& cs) {
     stage_macroblock(FileBlock("Good luck winning... you'll need it!"), 1);
     cs.render_microblock();
 
-    shared_ptr<PngScene> explanation = make_shared<PngScene>("explanation_page", 1.01, 1.01*2.85037 * VIDEO_WIDTH / VIDEO_HEIGHT);
+    shared_ptr<PngScene> explanation = make_shared<PngScene>("explanation_page", 1.01, 1.01*2.85037 * get_video_width_pixels() / get_video_height_pixels());
     cs.add_scene_fade_in(MICRO, explanation, "explanation", .5, 2);
     stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
@@ -1997,9 +2012,10 @@ void anki(CompositeScene& cs) {
 }
 
 void render_video() {
-    VIDEO_BACKGROUND_COLOR = 0xff000022;
+    cout << "Rendering C4 video..." << endl;
     CompositeScene cs;
     preintro(cs);
+    return;
     intro(cs);
     build_graph(cs);
     explanation(cs);
@@ -2007,7 +2023,7 @@ void render_video() {
     patterned(cs);
     trimmed_solution(cs);
     shared_ptr<C4GraphScene> weakc4 = hardest_openings(cs);
-    solution_types(cs);
+    solution_types(cs, weakc4);
     ideas(cs, weakc4);
     anki(cs);
     //TODO sponsor segment

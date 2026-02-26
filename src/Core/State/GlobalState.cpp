@@ -1,4 +1,10 @@
-#pragma once
+#include "GlobalState.h"
+#include <stdexcept>
+#include <iostream>
+#include <unordered_map>
+#include <string>
+
+using namespace std;
 
 static unordered_map<string, double> global_state{
     {"frame_number", 0},
@@ -15,7 +21,7 @@ void print_global_state(){
     }
     cout << "======================" << endl << endl;
 }
-double get_global_state(string key){
+double get_global_state(const string& key){
     const auto& pair = global_state.find(key);
     if(pair == global_state.end()){
         // I used to error on this always. However, there is a general pattern in which
@@ -33,4 +39,10 @@ double get_global_state(string key){
         return 0;
     }
     return pair->second;
+}
+void set_global_state(const string& key, double value){
+    global_state[key] = value;
+}
+bool global_state_exists(const string& key){
+    return global_state.find(key) != global_state.end();
 }

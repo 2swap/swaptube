@@ -1,11 +1,9 @@
-#pragma once
-
 #include <string>
 #include <unordered_set>
 #include <sstream>
 #include <cstdio>
 #include <stdexcept>
-#include "HashableString.cpp"
+#include "HashableString.h"
 
 using namespace std;
 

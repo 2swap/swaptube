@@ -1,6 +1,5 @@
-#pragma once
-
-#include <glm/glm.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec3.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include "color.cuh"
 
@@ -47,16 +46,17 @@ __device__ __forceinline__ void d_coordinate_to_pixel(
     const glm::quat& camera_direction,
     const glm::vec3& camera_pos,
     const glm::quat& conjugate_camera_direction,
-    float fov,
-    float geom_mean_size,
-    int width,
-    int height,
+    const float fov,
+    const float geom_mean_size,
+    const int width,
+    const int height,
     float& outx,
     float& outy,
     float& outz)
 {
     behind_camera = false;
-    glm::vec3 rotated = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
+    glm::vec3 relative_pos = coordinate - camera_pos;
+    glm::vec3 rotated = camera_direction * relative_pos;
     if (rotated.z <= 0) { behind_camera = true; return; }
     float scale = (geom_mean_size * fov) / rotated.z;
     outx = scale * rotated.x + width * 0.5f;

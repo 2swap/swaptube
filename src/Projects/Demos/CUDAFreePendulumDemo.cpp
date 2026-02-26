@@ -1,4 +1,4 @@
-#include "../Scenes/Physics/PendulumScene.cpp"
+#include "../Scenes/Physics/PendulumScene.h"
 
 void render_video() {
     PendulumScene ps({0.5, 1.2, 0, 0});

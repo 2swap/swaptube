@@ -1,8 +1,7 @@
-#pragma once
-
-#include "../Common/CoordinateScene.cpp"
+#include "../Common/CoordinateScene.h"
 #include "../../Host_Device_Shared/find_roots.c"
-#include "../../DataObjects/ConwayGrid.cpp"
+#include "../../DataObjects/ConwayGrid.h"
+#include "../../Core/State/StateManager.h"
 
 extern "C" void draw_conway(
     Bitboard* h_board, Bitboard* h_board_2,

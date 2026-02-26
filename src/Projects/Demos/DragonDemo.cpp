@@ -1,4 +1,4 @@
-#include "../Scenes/Math/AngularFractalScene.cpp"
+#include "../Scenes/Math/AngularFractalScene.h"
 
 void render_video() {
     int depth = 10;
