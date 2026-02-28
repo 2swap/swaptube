@@ -1,92 +1,50 @@
-from google.cloud import storage
-import sys
-import os
-from pathlib import Path
+# !/bin/bash
+#
+# Shell script which uploads completed swaptube output folders recursively
+# to a gcloud bucket using `gcloud storage cp` command.
+# The structure of the bucket is as follows:
+# gs://swaptube-out/output_uploads/video_name/run_number/...
+#
+# The user will provide the video name.
+# The completed output folder can then be found in `out/video_name/run_number/`.
+# This script will identify the latest local run for the video,
+# prompt the user to confirm the upload, and then proceed to upload.
+#
+# The script locates the bucket ID from the file `gcskey`
+# in the user's home directory.
 
-def upload_file(bucket, source_file_path, destination_blob_name):
-    """Uploads a single file to the given GCS bucket."""
-    blob = bucket.blob(destination_blob_name)
-    try:
-        blob.upload_from_filename(source_file_path)
-        print(f"Uploaded {source_file_path} -> gs://{bucket.name}/{destination_blob_name}")
-    except Exception as e:
-        print(f"Error uploading {source_file_path} to gs://{bucket.name}/{destination_blob_name}: {e}")
-        raise
+# Argument parsing
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <project_name>"
+    echo "Example: $0 myproject"
+    exit 1
+fi
 
-def upload_directory(bucket, source_dir, destination_prefix):
-    """Recursively uploads a directory to GCS under the given prefix."""
-    source_dir = Path(source_dir)
-    if not source_dir.is_dir():
-        raise ValueError(f"Source {source_dir} is not a directory")
-    for root, _, files in os.walk(source_dir):
-        root_path = Path(root)
-        for fname in files:
-            local_path = root_path / fname
-            rel_path = local_path.relative_to(source_dir).as_posix()
-            if destination_prefix:
-                blob_name = f"{destination_prefix.rstrip('/')}/{rel_path}"
-            else:
-                blob_name = rel_path
-            upload_file(bucket, str(local_path), blob_name)
+PROJECT_NAME=$1
 
-def find_latest_subdir(project_name):
-    base = Path("out") / project_name
-    if not base.exists() or not base.is_dir():
-        return None
-    # find immediate subdirectories
-    subdirs = [p for p in base.iterdir() if p.is_dir()]
-    if not subdirs:
-        return None
-    # sort by name and pick the last (replicates `ls | sort | tail -n1`)
-    subdirs_sorted = sorted(subdirs, key=lambda p: p.name)
-    return subdirs_sorted[-1]
+OUTPUT_FOLDER=$(ls -1d out/${PROJECT_NAME}/*/ 2>/dev/null | sort | tail -n 1)
 
-def read_object_id_from_gcskey():
-    key_path = Path.home() / "gcskey"
-    if not key_path.exists():
-        return None
-    try:
-        content = key_path.read_text().strip()
-    except Exception:
-        return None
-    return content if content else None
+if [ -z "$OUTPUT_FOLDER" ]; then
+    echo "No runs found for project '$PROJECT_NAME' in the 'out' directory."
+    exit 1
+fi
 
-def main(argv):
-    if len(argv) not in (2, 3):
-        print("Usage: python3 script.py <ProjectName> [bucket_name]")
-        sys.exit(1)
+echo
+echo "Latest run for project '$PROJECT_NAME': $OUTPUT_FOLDER"
+echo "Contents of the run folder:"
+ls -lah "$OUTPUT_FOLDER"
+echo
 
-    project_name = argv[1]
-    bucket_name = argv[2] if len(argv) == 3 else "swaptube-out"
+read -p "Do you want to upload this run to the gcloud bucket? (y/n) "
 
-    destination_prefix = read_object_id_from_gcskey()
-    if destination_prefix is None:
-        print("Error: object ID not found. Expected a non-empty file at ~/gcskey containing the destination prefix.")
-        sys.exit(1)
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Upload cancelled."
+    exit 0
+fi
 
-    ultimate_subdir = find_latest_subdir(project_name)
-    if ultimate_subdir is None:
-        print(f"No output directory found for project {project_name}. Expected directories under out/{project_name}/")
-        sys.exit(1)
+echo "Proceeding with upload..."
 
-    storage_client = storage.Client()
-    try:
-        bucket = storage_client.bucket(bucket_name)
-        # validate bucket exists by fetching metadata
-        if not bucket.exists():
-            print(f"Error: bucket '{bucket_name}' does not exist or is not accessible.")
-            sys.exit(1)
-    except Exception as e:
-        print(f"Error accessing bucket '{bucket_name}': {e}")
-        sys.exit(1)
-
-    try:
-        upload_directory(bucket, ultimate_subdir, destination_prefix)
-    except Exception as e:
-        print(f"Upload failed: {e}")
-        sys.exit(1)
-
-    print("Upload completed successfully.")
-
-if __name__ == "__main__":
-    main(sys.argv)
+# Upload the run folder to the gcloud bucket
+DESTINATION="gs://swaptube-out/output_uploads/${PROJECT_NAME}/$(basename $OUTPUT_FOLDER)"
+echo "Uploading to $DESTINATION..."
+gcloud storage cp --recursive "$OUTPUT_FOLDER" "$DESTINATION"

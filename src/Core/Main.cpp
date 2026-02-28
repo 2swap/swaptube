@@ -12,7 +12,7 @@ using namespace std;
 
 void render_video(); // Forward declaration, provided by the user in their project file
 
-void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& smoketest) {
+void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate) {
     cout << "Parsing command line arguments... " << flush;
 
     if (argc != 6) {
@@ -43,13 +43,13 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
 
     string smoketest_arg = argv[5];
     if (smoketest_arg == "smoketest") {
-        smoketest = true;
+        set_smoketest(true);
     } else if (smoketest_arg == "render") {
-        smoketest = false;
+        set_smoketest(false);
     } else {
         throw runtime_error("Invalid smoketest flag argument: " + smoketest_arg);
     }
-    cout << "Smoketest: " << (smoketest ? "true" : "false") << endl;
+    cout << "Smoketest: " << (is_smoketest() ? "true" : "false") << endl;
 
     if(samplerate % framerate != 0) {
         throw runtime_error("Video framerate must be divisible by audio sample rate.");
@@ -68,7 +68,7 @@ void setup_output_subfolders() {
 
 int main(int argc, char* argv[]) {
     int VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE;
-    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, SMOKETEST);
+    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE);
 
     Timer timer;
 
