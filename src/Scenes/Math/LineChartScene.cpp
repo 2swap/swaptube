@@ -70,11 +70,11 @@ void LineChartScene::render_chart() {
 
     float thickness = get_geom_mean_size() / 200.f;
 
-    glm::vec2 last_pixel = {-1, -1};
+    vec2 last_pixel = {-1, -1};
     bool first_point = true;
     for (int x = 0; x < data_points.size(); x++) {
         float val = data_points[x];
-        glm::vec2 pixel = point_to_pixel({x, val});
+        vec2 pixel = point_to_pixel({(float)x, val});
 
         string val_string = float_to_pretty_string(val);
         ScalingParams sp(get_width()/10., get_height()/10.);

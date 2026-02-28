@@ -15,7 +15,6 @@ pkg_check_modules(GLIB REQUIRED glib-2.0)
 find_package(Cairo REQUIRED)
 find_package(RSVG REQUIRED)
 find_package(PNG REQUIRED)
-find_package(glm REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
 set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
@@ -46,6 +45,8 @@ else()
     message(WARNING "CUDA not found. Please refer to readme for building without GPU support.")
 endif()
 
+add_compile_options(-fdiagnostics-color=always)
+
 add_executable(${PROJECT_NAME} ${SOURCES} ${ACTIVE_PROJECT_SOURCE} ${CUDA_SOURCES})
 message(STATUS "Executable target ${PROJECT_NAME} added")
 
@@ -54,7 +55,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     PROJECT_NAME_MACRO="${PROJECT_NAME_MACRO}"
     AUDIO_HINTS=${AUDIO_HINTS}
     AUDIO_SFX=${AUDIO_SFX}
-    GLM_ENABLE_EXPERIMENTAL
 )
 message(STATUS "Preprocessor definitions added")
 
@@ -63,7 +63,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     "/usr/include/gdk-pixbuf-2.0"
     "/usr/include/cairo"
     ${PNG_INCLUDE_DIR}
-    ${GLM_INCLUDE_DIRS}
 )
 
 target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${RSVG_LIBRARIES} ${FDKAAC_LIBRARIES} cairo gobject-2.0 lzma ${PNG_LIBRARIES} ${GPU_LIBRARIES} ${X11_LIBRARIES} nlohmann_json::nlohmann_json)

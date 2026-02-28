@@ -7,7 +7,7 @@ extern "C" void draw_conway(
     Bitboard* h_board, Bitboard* h_board_2,
     int w_bitboards, int h_bitboards,
     unsigned int* h_pixels, int pixels_w, int pixels_h,
-    glm::vec2 lx_ty, glm::vec2 rx_by, float transition
+    vec2 lx_ty, vec2 rx_by, float transition
 );
 
 class ConwayScene : public CoordinateScene {
@@ -29,8 +29,8 @@ public:
             grid_width,
             grid_height,
             pix.pixels.data(), pix.w, pix.h,
-            glm::vec2(state[ "left_x"], state[   "top_y"]),
-            glm::vec2(state["right_x"], state["bottom_y"]),
+            vec2(state[ "left_x"], state[   "top_y"]),
+            vec2(state["right_x"], state["bottom_y"]),
             state["microblock_fraction_passthrough"]
         );
         CoordinateScene::draw();

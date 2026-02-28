@@ -461,9 +461,9 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
+    cps->construction.add(GeometricPoint(vec2(0, 1), "i"));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(2, -1), "2-i"));
+    cps->construction.add(GeometricPoint(vec2(2, -1), "2-i"));
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
@@ -481,9 +481,9 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
     cps->construction.clear();
     cps->state.set("construction_opacity", "1");
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "in", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "in", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "out", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "out", .7, true));
     cps->state.set({
         {"d0r", "<root0_r> <point_in_x> -"},
         {"d1r", "<root1_r> <point_in_x> -"},
@@ -511,7 +511,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
 
     cs.stage_macroblock(SilenceBlock(1), 1);
     cps->state.transition(MICRO, "zero_crosshair_opacity", ".5");
-    cps->construction.add(GeometricLine(glm::vec2(0, 0), glm::vec2(0, 0), "vec", true));
+    cps->construction.add(GeometricLine(vec2(0, 0), vec2(0, 0), "vec", true));
     cps->state.set({
         {"line_vec_start_x", "0"},
         {"line_vec_start_y", "0"},
@@ -620,7 +620,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     shared_ptr<RealFunctionScene> rfs = make_shared<RealFunctionScene>();
     rfs->add_function("? 1.2 - ? .3 + ? 1.2 + * *", 0xffff0000);
     rfs->state.set("ticks_opacity", "0");
-    tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
+    tds.add_surface(Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(0, 0, .5), "rfs"), rfs);
     tds.state.transition(MICRO, {
         {"qi", "-.3 {t} sin .07 * +"},
         {"qj", "{t} cos .025 *"},
@@ -629,8 +629,8 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
 
     shared_ptr<LatexScene> f_complex = make_shared<LatexScene>("\\text{Complex Function}", 1, .5, .5);
     shared_ptr<LatexScene> f_real    = make_shared<LatexScene>("\\text{Real Function}", 1, .5, .5);
-    tds.add_surface_fade_in(MICRO, Surface(glm::vec3(0,.25,-.05), glm::vec3(.25, 0, 0), glm::vec3(0, .25, 0), "f_complex"), f_complex);
-    tds.add_surface_fade_in(MICRO, Surface(glm::vec3(0,.05,-.25), glm::vec3(.25, 0, 0), glm::vec3(0, 0, .25), "f_real"), f_real);
+    tds.add_surface_fade_in(MICRO, Surface(vec3(0,.25,-.05), vec3(.25, 0, 0), vec3(0, .25, 0), "f_complex"), f_complex);
+    tds.add_surface_fade_in(MICRO, Surface(vec3(0,.05,-.25), vec3(.25, 0, 0), vec3(0, 0, .25), "f_real"), f_real);
     tds.stage_macroblock(FileBlock("You might ask, what's all this complex number business? Why leave the familiar land of real numbers?"), 2);
     tds.render_microblock();
     tds.render_microblock();
@@ -669,7 +669,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
     cs.render_microblock();
     for(int x = 0; x <= 4; x++) {
-        cps->construction.add(GeometricPoint(glm::vec2(x, 0), to_string(x)));
+        cps->construction.add(GeometricPoint(vec2(x, 0), to_string(x)));
         cs.render_microblock();
     }
     cs.render_microblock();
@@ -691,11 +691,11 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
     impossible->begin_latex_transition(MICRO, latex_color(0xff222222, latex_color(OPAQUE_WHITE, "2")+"x+"+latex_color(OPAQUE_WHITE, "4")+"="+latex_color(OPAQUE_WHITE, "0")));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(2, 0), ""));
+    cps->construction.add(GeometricPoint(vec2(2, 0), ""));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(4, 0), ""));
+    cps->construction.add(GeometricPoint(vec2(4, 0), ""));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), ""));
+    cps->construction.add(GeometricPoint(vec2(0, 0), ""));
     cs.render_microblock();
     impossible->begin_latex_transition(MICRO, "2x+4=0");
     cs.render_microblock();
@@ -749,7 +749,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
 
     cs.stage_macroblock(FileBlock("To solve this, we _need_ to invent -2..."), 2);
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(-2, 0), "-2"));
+    cps->construction.add(GeometricPoint(vec2(-2, 0), "-2"));
     cs.render_microblock();
 
     cps->state.transition(MICRO, {
@@ -769,7 +769,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
             {"coefficient0_i", "0"},
         });
         cs.render_microblock();
-        cps->construction.add(GeometricPoint(glm::vec2(x, 0), to_string(x)));
+        cps->construction.add(GeometricPoint(vec2(x, 0), to_string(x)));
         cs.render_microblock();
     }
 
@@ -797,7 +797,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
     cps->transition_coefficient_rings(MICRO, 0);
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(-.5, 0), "-.5", .45));
+    cps->construction.add(GeometricPoint(vec2(-.5, 0), "-.5", .45));
     impossible->begin_latex_transition(MICRO, "2\\cdot"+latex_color(0xff00ff00, "-.5")+"+1=0");
     cs.render_microblock();
     cs.render_microblock();
@@ -810,7 +810,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
             float dx = 1.0 / (1 << -power_of_two);
             for(float x = -5 + dx; x <= 5 - dx; x+=2*dx) {
                 if(counting == 1) {
-                    if(x != -0.5) cps->construction.add(GeometricPoint(glm::vec2(x, 0), float_to_pretty_string(x), dx*.9));
+                    if(x != -0.5) cps->construction.add(GeometricPoint(vec2(x, 0), float_to_pretty_string(x), dx*.9));
                     cs.render_microblock();
                 }
                 else microblock_count++;
@@ -824,7 +824,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Heck, let's just add all decimals. We get a nice continuum of numbers."), 1);
-    cps->construction.add(GeometricLine(glm::vec2(-5, 0), glm::vec2(5, 0)));
+    cps->construction.add(GeometricLine(vec2(-5, 0), vec2(5, 0)));
     cs.render_microblock();
     cs.remove_all_subscenes();
 
@@ -839,8 +839,8 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     shared_ptr<RealFunctionScene> rfs2 = make_shared<RealFunctionScene>(1, 1);
     rfs2->state.set("ticks_opacity", "0");
     rfs2->add_function("1 ? ? * -", 0xffcc00ff);
-    tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(0, .5, 0), glm::vec3(0, 0, .5), "rfs2"), rfs2);
-    tds2->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, 0, .5), "rfs"), rfs);
+    tds2->add_surface(Surface(vec3(0, 0, 0), vec3(0, .5, 0), vec3(0, 0, .5), "rfs2"), rfs2);
+    tds2->add_surface(Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(0, 0, .5), "rfs"), rfs);
     tds2->state.transition(MICRO, {
         {"qi", "-.1 {t} 2 / sin .02 * +"},
         {"d", "1.5"},
@@ -908,9 +908,9 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     cs.stage_macroblock(FileBlock("Let's call these solutions 'i' and '-i'."), 4);
     cs.render_microblock();
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
+    cps->construction.add(GeometricPoint(vec2(0, 1), "i"));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, -1), "-i"));
+    cps->construction.add(GeometricPoint(vec2(0, -1), "-i"));
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("and add 2i, negative 2i, and so on,"), 3);
@@ -918,10 +918,10 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
     for(int y : {2, -2}) {
         string label = to_string(y) + "i";
         if(y == -1) label = "-i";
-        cps->construction.add(GeometricPoint(glm::vec2(0, y), label));
+        cps->construction.add(GeometricPoint(vec2(0, y), label));
         cs.render_microblock();
     }
-    cps->construction.add(GeometricLine(glm::vec2(0, -2.7), glm::vec2(0, 2.7)));
+    cps->construction.add(GeometricLine(vec2(0, -2.7), vec2(0, 2.7)));
     cs.render_microblock();
     cs.remove_subscene("impossible_sq");
 
@@ -939,7 +939,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
                     if(abs(y) != 1) label += to_string(abs(y));
                     label += "i";
                 }
-                cps->construction.add(GeometricPoint(glm::vec2(x, y), label, .5));
+                cps->construction.add(GeometricPoint(vec2(x, y), label, .5));
             }
         }
         cs.render_microblock();
@@ -1131,7 +1131,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
         {"ab_dilation", "2"},
     });
     cps->state.begin_timer("theta");
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "", .7, true));
     cps->state.set({
         {"point__x", "<root0_r>"},
         {"point__y", "<root0_i>"},
@@ -1227,7 +1227,7 @@ void part_0(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps) {
         {"point__y", "<root0_i> {t} 3 * cos .1 * +"},
     });
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "out", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "out", .7, true));
     cps->state.set({
         {"d0r", "<root0_r> <point__x> -"},
         {"d1r", "<root1_r> <point__x> -"},
@@ -2186,12 +2186,12 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"coefficient0_i", "0"},
     });
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(2, 0), "2"));
+    cps->construction.add(GeometricPoint(vec2(2, 0), "2"));
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("as well as the negative square root, -2."), 2);
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(-2, 0), "-2"));
+    cps->construction.add(GeometricPoint(vec2(-2, 0), "-2"));
     cs.render_microblock();
 
     cs.stage_macroblock(CompositeBlock(FileBlock("By convention, we define the 'square root' to be positive, "), SilenceBlock(1)), 8);
@@ -2219,11 +2219,11 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("We _define_ i as being precisely that,"), 1);
-    cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
+    cps->construction.add(GeometricPoint(vec2(0, 1), "i"));
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("but -i works too."), 1);
-    cps->construction.add(GeometricPoint(glm::vec2(0, -1), "-i"));
+    cps->construction.add(GeometricPoint(vec2(0, -1), "-i"));
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("It goes deeper than that though."), 1);
@@ -2249,7 +2249,7 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"coefficient2_r", "<realline> 1.2 * 2 + 2 / sin 3 *"},
         {"coefficient2_i", "0"},
     });
-    cps->construction.add(GeometricLine(glm::vec2(-5, 0), glm::vec2(5, 0)));
+    cps->construction.add(GeometricLine(vec2(-5, 0), vec2(5, 0)));
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(4), 1);
@@ -2295,9 +2295,9 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.stage_macroblock(FileBlock("So any definition for i written using the real numbers must simultaneously include -i!"), 2);
     cps->construction.clear();
     cps->state.set("construction_opacity", "1");
-    cps->construction.add(GeometricPoint(glm::vec2(0, 1), "i"));
+    cps->construction.add(GeometricPoint(vec2(0, 1), "i"));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, -1), "-i"));
+    cps->construction.add(GeometricPoint(vec2(0, -1), "-i"));
     cps->state.transition(MICRO, {
         {"ab_dilation", "1"},
         {"dot_radius", "1"},
@@ -2335,7 +2335,7 @@ void part_2(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.remove_all_subscenes_except("cafs");
     cs.add_scene_fade_in(MICRO, sqrt_function, "sqrt_function", .75, .25, .3);
     cs.render_microblock();
-    cafs->construction.add(GeometricLine(glm::vec2(-5, 0), glm::vec2(0, 0)));
+    cafs->construction.add(GeometricLine(vec2(-5, 0), vec2(0, 0)));
     cafs->state.transition(MICRO, "construction_opacity", "0");
     cs.fade_subscene(MICRO, "sqrt_function", 0);
     cs.render_microblock();
@@ -3052,11 +3052,11 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     });
     cs.stage_macroblock(FileBlock("But watch what happens if I label the solutions this time!"), 3);
     cps->transition_coefficient_opacities(MACRO, 0);
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "3", .7, true));
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(4), 4);
@@ -3104,9 +3104,9 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     shared_ptr<LatexScene> label1 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label2 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label3 = make_shared<LatexScene>("3", 1, 0.2, 0.2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label1"), label1);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label2"), label2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label3"), label3);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label1"), label1);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label2"), label2);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label3"), label3);
     ms->use_state_for_center = true;
     ms->state.set({
         {"label1.x", "<ztheta> pi 2 * + 3 / cos <zradius> * .1 + <xshift> +"},
@@ -3187,8 +3187,8 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     ms->state.transition(MICRO, "surfaces_opacity", "1");
     shared_ptr<LatexScene> label4 = make_shared<LatexScene>("1", 1, 0.2, 0.2);
     shared_ptr<LatexScene> label5 = make_shared<LatexScene>("2", 1, 0.2, 0.2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label4"), label4);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label5"), label5);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label4"), label4);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label5"), label5);
     cs.render_microblock();
     ms->state.transition(MICRO, "loop3", "1");
     cs.render_microblock();
@@ -3203,9 +3203,9 @@ void part_3(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("No matter what commutator the input follows, or which root we try it on, each output always spins back to where it was before the commutator."), 7);
-    ms->add_surface_fade_in(MICRO, Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label1"), label1);
-    ms->add_surface_fade_in(MICRO, Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label2"), label2);
-    ms->add_surface_fade_in(MICRO, Surface(glm::vec3(0, 0, 0), glm::vec3(.2, 0, 0), glm::vec3(0, 0, -.2), "label3"), label3);
+    ms->add_surface_fade_in(MICRO, Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label1"), label1);
+    ms->add_surface_fade_in(MICRO, Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label2"), label2);
+    ms->add_surface_fade_in(MICRO, Surface(vec3(0, 0, 0), vec3(.2, 0, 0), vec3(0, 0, -.2), "label3"), label3);
     cs.render_microblock();
     ms->state.transition(MICRO, "loop1", "1");
     ms->state.transition(MICRO, "loop3", "1");
@@ -3427,11 +3427,11 @@ void part_3p5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<M
         {"label3.z", "<label_twist> 3 / pi 7 * 3 / + sin"},
     });
     cs.stage_macroblock(FileBlock("Pay attention to the 3 outputs here."), 3);
-    ms->add_surface(Surface(glm::vec3(0, .5, 0), glm::vec3(.3, 0, 0), glm::vec3(0, 0, -.3), "label1"), label1);
+    ms->add_surface(Surface(vec3(0, .5, 0), vec3(.3, 0, 0), vec3(0, 0, -.3), "label1"), label1);
     cs.render_microblock();
-    ms->add_surface(Surface(glm::vec3(0, .5, 0), glm::vec3(.3, 0, 0), glm::vec3(0, 0, -.3), "label2"), label2);
+    ms->add_surface(Surface(vec3(0, .5, 0), vec3(.3, 0, 0), vec3(0, 0, -.3), "label2"), label2);
     cs.render_microblock();
-    ms->add_surface(Surface(glm::vec3(0, .5, 0), glm::vec3(.3, 0, 0), glm::vec3(0, 0, -.3), "label3"), label3);
+    ms->add_surface(Surface(vec3(0, .5, 0), vec3(.3, 0, 0), vec3(0, 0, -.3), "label3"), label3);
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("Loop, loop, undo, undo..."), 5);
@@ -3589,13 +3589,13 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"point_4_y", "<root3_i>"},
     });
     cs.stage_macroblock(FileBlock("Watch me do a nested commutator on the solutions."), 4);
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "3", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "4", .7, true));
     cs.render_microblock();
 
     // Nested Commutator on S4
@@ -3664,9 +3664,9 @@ void part_4(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     shared_ptr<LatexScene> label1 = make_shared<LatexScene>("1", 1, 0.3, 0.3);
     shared_ptr<LatexScene> label2 = make_shared<LatexScene>("2", 1, 0.3, 0.3);
     shared_ptr<LatexScene> label3 = make_shared<LatexScene>("3", 1, 0.3, 0.3);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.3, 0, 0), glm::vec3(0, 0, -.3), "label1"), label1);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.3, 0, 0), glm::vec3(0, 0, -.3), "label2"), label2);
-    ms->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.3, 0, 0), glm::vec3(0, 0, -.3), "label3"), label3);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.3, 0, 0), vec3(0, 0, -.3), "label1"), label1);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.3, 0, 0), vec3(0, 0, -.3), "label2"), label2);
+    ms->add_surface(Surface(vec3(0, 0, 0), vec3(.3, 0, 0), vec3(0, 0, -.3), "label3"), label3);
     ms->state.set({
         {"label_twist", "pi"},
     });
@@ -4109,9 +4109,9 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"point_2_x", "{cps.root1_r}"},
         {"point_2_y", "{cps.root1_i}"},
     });
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
 
     cs.stage_macroblock(FileBlock("A commutator doesn't really make sense here because there's only one swap to choose from."), 4);
@@ -4159,11 +4159,11 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
         {"point_3_y", "{cps.root2_i}"},
     });
     cs.stage_macroblock(CompositeBlock(FileBlock("With three objects, there are commutators which leave them scrambled,"), SilenceBlock(2)), 8);
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "3", .7, true));
     cs.render_microblock();
     cps->stage_swap(MICRO, "0", "1", false, true);
     cs.render_microblock();
@@ -4231,11 +4231,11 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.stage_macroblock(SilenceBlock(3), 5);
     cs.render_microblock();
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "3", .7, true));
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(2), 2);
@@ -4279,13 +4279,13 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     });
 
     cs.stage_macroblock(CompositeBlock(FileBlock("With four objects, there are commutators of commutators which leave them scrambled,"), SilenceBlock(2)), 20);
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "3", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "4", .7, true));
     cs.render_microblock();
 
     cps->stage_swap(MICRO, "0", "1", false, true);
@@ -4327,13 +4327,13 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.stage_macroblock(SilenceBlock(2), 6);
     cs.render_microblock();
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "3", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "4", .7, true));
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(1), 1);
@@ -4391,13 +4391,13 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
     cs.stage_macroblock(SilenceBlock(2), 6);
     cs.render_microblock();
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "1", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "1", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "2", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "2", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "3", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "3", .7, true));
     cs.render_microblock();
-    cps->construction.add(GeometricPoint(glm::vec2(0, 0), "4", .7, true));
+    cps->construction.add(GeometricPoint(vec2(0, 0), "4", .7, true));
     cs.render_microblock();
 
     cs.stage_macroblock(SilenceBlock(3), 3);
@@ -4446,11 +4446,11 @@ void part_5(CompositeScene& cs, shared_ptr<ComplexPlotScene> cps, shared_ptr<Man
 
     cs.stage_macroblock(FileBlock("But once you have 5 objects, there's a trick."), 5);
     vector<GeometricPoint> labeled_points{
-        GeometricPoint(glm::vec2(0, 0), "1", .7, true, "\\uparrow"),
-        GeometricPoint(glm::vec2(0, 0), "2", .7, true, "\\leftarrow"),
-        GeometricPoint(glm::vec2(0, 0), "3", .7, true, "\\bullet"),
-        GeometricPoint(glm::vec2(0, 0), "4", .7, true, "\\rightarrow"),
-        GeometricPoint(glm::vec2(0, 0), "5", .7, true, "\\downarrow"),
+        GeometricPoint(vec2(0, 0), "1", .7, true, "\\uparrow"),
+        GeometricPoint(vec2(0, 0), "2", .7, true, "\\leftarrow"),
+        GeometricPoint(vec2(0, 0), "3", .7, true, "\\bullet"),
+        GeometricPoint(vec2(0, 0), "4", .7, true, "\\rightarrow"),
+        GeometricPoint(vec2(0, 0), "5", .7, true, "\\downarrow"),
     };
     for(GeometricPoint& gp : labeled_points) {
         gp.draw_shape = false;

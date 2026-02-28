@@ -2,8 +2,8 @@
 #include "../../DataObjects/OrbitSim.h"
 
 extern "C" void render_predictions_cuda(
-const vector<glm::vec3>& positions, // Planet data
-const int width, const int height, const int depth, const glm::vec3 screen_center, const float zoom, // Geometry of query
+const vector<vec3>& positions, // Planet data
+const int width, const int height, const int depth, const vec3 screen_center, const float zoom, // Geometry of query
 const float force_constant, const float collision_threshold_squared, const float drag, const double tick_duration, const float eps, // Adjustable parameters
 int* colors, int* times // outputs
 );
@@ -16,8 +16,8 @@ public:
         : CoordinateScene(width, height), simulation(sim) {}
 
     void render_point_path(){
-        glm::vec3 pos(state["point_path.x"], state["point_path.y"], 0);
-        glm::vec3 vel(0.f,0.f,0.f);
+        vec3 pos(state["point_path.x"], state["point_path.y"], 0);
+        vec3 vel(0.f,0.f,0.f);
         float opacity = state["point_path.opacity"];
         for(int i = 0; i < 10000; i++){
             int dont_care_which_planet;
@@ -29,9 +29,9 @@ public:
     }
 
     void render_predictions() {
-        glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
+        vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
 
-        vector<glm::vec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
+        vector<vec3> planet_positions; vector<int> planet_colors; vector<float> opacities;
         simulation->get_fixed_object_data_for_cuda(planet_positions, planet_colors, opacities, manager);
 
         float collision_threshold_squared = square(state["collision_threshold"]);
@@ -56,17 +56,17 @@ public:
     }
 
     void sim_to_2d() {
-        glm::vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
-        glm::vec3 halfsize(get_width_height()/2.f);
+        vec3 screen_center(state["screen_center_x"], state["screen_center_y"], state["screen_center_z"]);
+        vec3 halfsize(get_width_height()/2.f);
         float zoom = state["zoom"] * get_height();
         int w = get_width();
 
         for (const auto& obj : simulation->mobile_objects) {
-            glm::vec3 pix_position = (obj.position - screen_center) * zoom + halfsize;
+            vec3 pix_position = (obj.position - screen_center) * zoom + halfsize;
             pix.fill_circle(pix_position.x, pix_position.y, w/300., obj.color);
         }
         for (const auto& obj : simulation->fixed_objects) {
-            glm::vec3 pix_position = (obj.get_position(manager) - screen_center) * zoom + halfsize;
+            vec3 pix_position = (obj.get_position(manager) - screen_center) * zoom + halfsize;
             pix.fill_circle(pix_position.x, pix_position.y, w/100., obj.color);
             pix.fill_circle(pix_position.x, pix_position.y, w/200., OPAQUE_BLACK);
         }

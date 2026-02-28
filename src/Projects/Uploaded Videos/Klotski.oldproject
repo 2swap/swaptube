@@ -1043,7 +1043,7 @@ hhh..e
     shared_ptr<KlotskiScene> bds = make_shared<KlotskiScene>(bd_only);
     ThreeDimensionScene tds;
     cs.remove_subscene("ks_int");
-    tds.add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "ks_int"), ks_int);
+    tds.add_surface(Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(0, .5, 0), "ks_int"), ks_int);
     tds.stage_macroblock(FileBlock("From this perspective, the puzzle is almost symmetrical."), 5);
     tds.render_microblock();
     tds.render_microblock();
@@ -1732,7 +1732,7 @@ void part7(shared_ptr<GraphScene>& tgs, shared_ptr<KlotskiScene>& tks) {
 
     shared_ptr<ThreeDimensionScene> tds = make_shared<ThreeDimensionScene>();
     cs.remove_subscene("ks_start");
-    tds->add_surface(Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), "ks_start"), ks_start);
+    tds->add_surface(Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(0, .5, 0), "ks_start"), ks_start);
     cs.add_scene(tds, "tds");
     cs.stage_macroblock(FileBlock("Although _in theory_ you could rearrange all the pieces upside down,"), 5);
     cs.render_microblock();

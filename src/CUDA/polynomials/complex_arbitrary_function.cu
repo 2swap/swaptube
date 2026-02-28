@@ -18,10 +18,10 @@ __device__ thrust::complex<float> complex_sqrt(const thrust::complex<float>& z, 
 
 __global__ void render_kernel(
     int* d_pixels,
-    glm::vec2 wh,
+    Cuda::vec2 wh,
     float sqrt_coef, float sqrt_branch_cut, float sin_coef, float cos_coef, float exp_coef,
-    glm::vec2 lx_ty,
-    glm::vec2 rx_by,
+    Cuda::vec2 lx_ty,
+    Cuda::vec2 rx_by,
     float ab_dilation,
     float dot_radius
 ) {
@@ -29,7 +29,7 @@ __global__ void render_kernel(
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     if (x >= wh.x || y >= wh.y) return;
 
-    const glm::vec2 point = pixel_to_point(glm::vec2(x,y), lx_ty, rx_by, wh);
+    const Cuda::vec2 point = pixel_to_point(Cuda::vec2(x,y), lx_ty, rx_by, wh);
     thrust::complex<float> val(point.x, point.y);
     const thrust::complex<float> sqrt_val = complex_sqrt(val, sqrt_branch_cut);
     const thrust::complex<float> sin_val = thrust::sin(val);
@@ -56,9 +56,9 @@ extern "C" void color_complex_arbitrary_function(
     cudaMalloc(&d_pixels, w * h * sizeof(int));
 
     // Define the region in complex plane
-    glm::vec2 wh(w, h);
-    glm::vec2 lx_ty(lx, ty);
-    glm::vec2 rx_by(rx, by);
+    Cuda::vec2 wh(w, h);
+    Cuda::vec2 lx_ty(lx, ty);
+    Cuda::vec2 rx_by(rx, by);
 
     // Kernel config
     dim3 blockSize(16, 16);

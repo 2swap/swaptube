@@ -1,8 +1,5 @@
 #include "../Scene.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-#include <glm/gtx/string_cast.hpp>
+#include "../../Host_Device_Shared/vec.h"
 #include "../../Host_Device_Shared/ManifoldData.c"
 
 ResolvedStateEquation r_eq = {
@@ -31,23 +28,23 @@ extern "C" void launch_cuda_surface_raymarch(
     int z_size, ResolvedStateEquationComponent* z_eq,
     int w_size, ResolvedStateEquationComponent* w_eq,
     int is_special,
-    glm::quat camera_orientation, glm::vec3 camera_position,
+    quat camera_orientation, vec3 camera_position,
     float fov_rad, float max_dist,
     float floor_y, float ceiling_y, float grid_thickness);
 
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData* manifolds, const int num_manifolds,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius);
 
 extern "C" void cuda_render_geodesics_2d(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData& manifold,
-    const glm::vec2 start_position, const glm::vec2 start_velocity,
+    const vec2 start_position, const vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov, const float opacity);
 
 class GeodesicScene : public Scene {
@@ -94,9 +91,8 @@ public:
                           ResolvedStateEquation& y_eq,
                           ResolvedStateEquation& z_eq,
                           ResolvedStateEquation& w_eq) {
-        glm::vec3 camera_pos = glm::vec3(state["pov_x"], state["pov_y"], state["pov_z"]);
-        glm::quat camera_direction = glm::normalize(glm::quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
-        glm::quat conjugate_camera_direction = glm::conjugate(camera_direction);
+        vec3 camera_pos = vec3(state["pov_x"], state["pov_y"], state["pov_z"]);
+        quat camera_direction = normalize(quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
 
         bool x_y_z_flat = (
             x_eq.size() == 1 && x_eq.data()[0].type == RESOLVED_CUDA_TAG && x_eq.data()[0].content.cuda_tag == 0 &&
@@ -142,9 +138,8 @@ public:
             1.0f,
             (int)(1500 * steps_mult),
         };
-        glm::quat manifold_rotation = glm::normalize(glm::quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
-        glm::quat conjugate_manifold_rotation = glm::conjugate(manifold_rotation);
-        glm::vec3 manifold_position = conjugate_manifold_rotation * glm::vec3(0.0f, 0.0f, (float)-state["manifold_d"]) * manifold_rotation;
+        quat manifold_rotation = normalize(quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
+        vec3 manifold_position = manifold_rotation * vec3(0.0f, 0.0f, (float)-state["manifold_d"]);
 
         if(state["manifold_opacity"] >= 0.01f) {
             Pixels manifold_pix(pix.w, pix.h);
@@ -157,7 +152,6 @@ public:
                 1,
                 manifold_position,
                 manifold_rotation,
-                conjugate_manifold_rotation,
                 geom_mean(manifold_pix.w, manifold_pix.h),
                 state["manifold_fov"],
                 1,
@@ -176,9 +170,9 @@ public:
         double geodesics_opacity = state["geodesics_opacity"];
         if(num_geodesics > 0 && geodesic_steps > 0 && geodesics_opacity >= 0.01f) {
             Pixels geodesic_pix(pix.w, pix.h);
-            glm::vec2 start_position = glm::vec2(state["pov_x"], state["pov_z"]);
-            glm::vec2 start_velocity = glm::vec2(state["pov_q1"], state["pov_qj"]);
-            start_velocity = glm::normalize(start_velocity);
+            vec2 start_position = vec2(state["pov_x"], state["pov_z"]);
+            vec2 start_velocity = vec2(state["pov_q1"], state["pov_qj"]);
+            start_velocity = normalize(start_velocity);
             cuda_render_geodesics_2d(
                 geodesic_pix.pixels.data(),
                 geodesic_pix.w, geodesic_pix.h,
@@ -188,7 +182,6 @@ public:
                 state["geodesics_spread_angle"],
                 manifold_position,
                 manifold_rotation,
-                conjugate_manifold_rotation,
                 geom_mean(geodesic_pix.w, geodesic_pix.h),
                 state["manifold_fov"],
                 state["geodesics_opacity"]

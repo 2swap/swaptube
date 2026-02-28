@@ -1,8 +1,6 @@
 #include <cuda_runtime.h>
 #include "../color.cuh"
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include "../../Host_Device_Shared/vec.h"
 #include <stdint.h>
 #include "../../Core/State/ResolvedStateEquationComponent.c"
 
@@ -20,7 +18,7 @@ __constant__ int special_case_code; // 0 is general case, 1 is x,y,z are identit
 __constant__ float     delta =        .01f;
 __constant__ float inv_delta = 1.0f / .01f;
 
-__device__ glm::vec4 surface_eval_general_case(float x, float y, float z) {
+__device__ vec4 surface_eval_general_case(float x, float y, float z) {
     int error_x = 0;
     int error_y = 0;
     int error_z = 0;
@@ -34,49 +32,49 @@ __device__ glm::vec4 surface_eval_general_case(float x, float y, float z) {
     if(error_x) {
         printf("Error calculating manifold x at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_x);
         print_resolved_state_equation(d_x_size, d_x_eq);
-        return glm::vec4(0.0f);
+        return vec4(0.0f);
     }
     if(error_y) {
         printf("Error calculating manifold y at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_y);
         print_resolved_state_equation(d_y_size, d_y_eq);
-        return glm::vec4(0.0f);
+        return vec4(0.0f);
     }
     if(error_z) {
         printf("Error calculating manifold z at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_z);
         print_resolved_state_equation(d_z_size, d_z_eq);
-        return glm::vec4(0.0f);
+        return vec4(0.0f);
     }
     if(error_w) {
         printf("Error calculating manifold w at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_w);
         print_resolved_state_equation(d_w_size, d_w_eq);
-        return glm::vec4(0.0f);
+        return vec4(0.0f);
     }
 
-    return glm::vec4(ox, oy, oz, ow);
+    return vec4(ox, oy, oz, ow);
 }
 
 // Compute partial derivatives of the surface embedding wrt parameter axes
-static __device__ void dsurface_dv_numerical_general_case(float x, float y, float z, glm::vec4& d_dx, glm::vec4& d_dy, glm::vec4& d_dz) {
-    glm::vec4 here   = surface_eval_general_case(x, y, z);
-    glm::vec4 plus_x = surface_eval_general_case(x + delta, y, z);
-    glm::vec4 plus_y = surface_eval_general_case(x, y + delta, z);
-    glm::vec4 plus_z = surface_eval_general_case(x, y, z + delta);
+static __device__ void dsurface_dv_numerical_general_case(float x, float y, float z, vec4& d_dx, vec4& d_dy, vec4& d_dz) {
+    vec4 here   = surface_eval_general_case(x, y, z);
+    vec4 plus_x = surface_eval_general_case(x + delta, y, z);
+    vec4 plus_y = surface_eval_general_case(x, y + delta, z);
+    vec4 plus_z = surface_eval_general_case(x, y, z + delta);
     d_dx = (plus_x - here) * inv_delta;
     d_dy = (plus_y - here) * inv_delta;
     d_dz = (plus_z - here) * inv_delta;
 }
 
 static __device__ void metric_tensor_general_case(float x, float y, float z, float g[3][3]) {
-    glm::vec4 d_dx, d_dy, d_dz;
+    vec4 d_dx, d_dy, d_dz;
     dsurface_dv_numerical_general_case(x, y, z, d_dx, d_dy, d_dz);
 
-    g[0][0] = glm::dot(d_dx, d_dx);
-    g[1][1] = glm::dot(d_dy, d_dy);
-    g[2][2] = glm::dot(d_dz, d_dz);
+    g[0][0] = dot(d_dx, d_dx);
+    g[1][1] = dot(d_dy, d_dy);
+    g[2][2] = dot(d_dz, d_dz);
 
-    g[0][1] = g[1][0] = glm::dot(d_dx, d_dy);
-    g[0][2] = g[2][0] = glm::dot(d_dx, d_dz);
-    g[1][2] = g[2][1] = glm::dot(d_dy, d_dz);
+    g[0][1] = g[1][0] = dot(d_dx, d_dy);
+    g[0][2] = g[2][0] = dot(d_dx, d_dz);
+    g[1][2] = g[2][1] = dot(d_dy, d_dz);
 }
 
 static __device__ void dmetric_dv_numerical_general_case(float x, float y, float z, float dg[3][3][3], float g[3][3]) {
@@ -205,7 +203,7 @@ static __device__ bool invert3x3(const float m[3][3], float invOut[3][3]) {
 
 // Christoffel symbols Γ^i_jk at parameter-space point v using central differences.
 // Gamma is output as Gamma[i][j][k]
-static __device__ bool christoffel_symbols(glm::vec3 v, float Gamma[3][3][3]) {
+static __device__ bool christoffel_symbols(vec3 v, float Gamma[3][3][3]) {
     // compute metric at center
     float g[3][3];
     float dg[3][3][3];
@@ -233,7 +231,7 @@ static __device__ bool christoffel_symbols(glm::vec3 v, float Gamma[3][3][3]) {
 
 // Geodesic RHS: input Y[6] = [u, v, w, up, vp, wp] -> outputs dY[6]
 static __device__ bool geodesic_rhs(const float Y[6], float dY[6]) {
-    glm::vec3 pos = glm::vec3(Y[0], Y[1], Y[2]);
+    vec3 pos = vec3(Y[0], Y[1], Y[2]);
     float vel[3] = { Y[3], Y[4], Y[5] };
 
     float Gamma[3][3][3];
@@ -272,14 +270,6 @@ static __device__ bool rk4_step_geodesic(float Y[6], float Y2[6], float dt) {
     for (int i = 0; i < 6; ++i)
         Y2[i] = Y[i] + (dt / 6.0f) * (k1[i] + 2.0f * k2[i] + 2.0f * k3[i] + k4[i]);
     return true;
-}
-
-// Rotate vec by quat (device compatible)
-static __device__ glm::vec3 quat_rotate(const glm::quat& q, const glm::vec3& v) {
-    // v' = q * (v,0) * q^{-1}
-    glm::quat vq(0.0f, v.x, v.y, v.z);
-    glm::quat res = q * vq * glm::conjugate(q);
-    return glm::vec3(res.x, res.y, res.z);
 }
 
 static __device__ bool collision_cube(float Y[6], uint32_t& color, float floor_y, float ceiling_y, float& dist) {
@@ -330,8 +320,8 @@ static __device__ bool collision_grid(float Y[6], uint32_t& color, float grid_th
 
 // Kernel: trace one ray per pixel, integrate geodesic in parameter-space
 __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
-                                             glm::quat camera_orientation,
-                                             glm::vec3 camera_position,
+                                             quat camera_orientation,
+                                             vec3 camera_position,
                                              float fov, float max_dist,
                                              float floor_y, float ceiling_y, float grid_thickness) {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
@@ -346,9 +336,9 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     float aspect = float(w) / float(h);
     float px_cam = ndc_x * tanf(fov * 0.5f) * aspect;
     float py_cam = -ndc_y * tanf(fov * 0.5f); // negative to flip Y to image coords
-    glm::vec3 dir_cam = glm::vec3(px_cam, py_cam, -1.0f);
-    glm::vec3 dir_world = quat_rotate(camera_orientation, dir_cam);
-    dir_world = glm::normalize(dir_world);
+    vec3 dir_cam = vec3(px_cam, py_cam, -1.0f);
+    vec3 dir_world = quat_rotate(camera_orientation, dir_cam);
+    dir_world = normalize(dir_world);
 
     // Initialize state in parameter-space (we treat param-space coords directly)
     float Y[6];
@@ -418,7 +408,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
                                              int z_size, ResolvedStateEquationComponent* z_eq,
                                              int w_size, ResolvedStateEquationComponent* w_eq,
                                              int special,
-                                             glm::quat camera_orientation, glm::vec3 camera_position,
+                                             quat camera_orientation, vec3 camera_position,
                                              float fov_rad, float max_dist,
                                              float floor_y, float ceiling_y, float grid_thickness) {
 

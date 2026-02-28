@@ -1,7 +1,12 @@
 #pragma once
 
 #include "../Core/State/ResolvedStateEquationComponent.c"
+#include "shared_precompiler_directives.h"
+
 // Simple header used by both manifold.cu and ManifoldScene.cpp
+
+SHARED_FILE_PREFIX
+
 struct ManifoldData {
     size_t x_size;
     ResolvedStateEquationComponent* x_eq;
@@ -20,3 +25,5 @@ struct ManifoldData {
     float v_max;
     int v_steps;
 };
+
+SHARED_FILE_SUFFIX

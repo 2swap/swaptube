@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 #include <chrono>
-#include <glm/glm.hpp>
+#include "../Host_Device_Shared/vec.h"
 #include "../Core/State/StateManager.h"
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
@@ -65,7 +65,7 @@ protected:
     StateReturn state;
     bool has_ever_rendered = false;
 
-    glm::vec2 get_width_height() const;
+    vec2 get_width_height() const;
 
     double get_geom_mean_size() const;
 

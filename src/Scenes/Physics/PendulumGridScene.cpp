@@ -60,7 +60,7 @@ void PendulumGridScene::draw_grid() {
     const double inv_x_range = 1./(g0.max1-g0.min1);
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
-            glm::vec2 pos = pixel_to_point(glm::vec2(x,y));
+            vec2 pos = pixel_to_point(vec2(x,y));
             double pos_x = extended_mod(pos.x-g0.min1, g0.max1-g0.min1)+g0.min1;
             double pos_y = extended_mod(pos.y-g0.min2, g0.max2-g0.min2)+g0.min2;
 
@@ -129,11 +129,11 @@ void PendulumGridScene::draw_pendulum_trail(){
     const float trail_start_y = state["trail_start_y"];
     const float trail_length = state["trail_length"];
     Pendulum p({trail_start_x, trail_start_y, 0, 0});
-    list<pair<glm::vec2, int>> trail;
+    list<pair<vec2, int>> trail;
     for(int i = 0; i < trail_length; i++){
         p.iterate_physics(1, 0.01);
-        trail.push_back(make_pair(glm::vec2(p.state.theta1, p.state.theta2), 0xffff0000));
+        trail.push_back(make_pair(vec2(p.state.theta1, p.state.theta2), 0xffff0000));
     }
     draw_trail(trail, trail_opacity);
-    draw_point(glm::vec2(trail_start_x, trail_start_y), 0xffff0000, trail_opacity);
+    draw_point(vec2(trail_start_x, trail_start_y), 0xffff0000, trail_opacity);
 }

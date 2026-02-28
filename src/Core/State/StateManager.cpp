@@ -1,4 +1,5 @@
 #include "StateManager.h"
+#include <cstdint>
 
 using namespace std;
 

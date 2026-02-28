@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "../Host_Device_Shared/vec.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <deque>
@@ -32,11 +32,11 @@ public:
 };
 using EdgeSet = std::unordered_set<Edge, Edge::HashFunction, std::equal_to<Edge>>;
 
-glm::vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<float>& dist);
+vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<float>& dist);
 
 class Node {
 public:
-    Node(GenericBoard* t, double hash, glm::vec4 position, glm::vec4 velocity);
+    Node(GenericBoard* t, double hash, vec4 position, vec4 velocity);
 
     GenericBoard* data;
     double hash = 0;
@@ -48,8 +48,8 @@ public:
     int color = 0xffffffff;
     float size = 1;
     double age = 0;
-    glm::vec4 velocity;
-    glm::vec4 position;
+    vec4 velocity;
+    vec4 position;
     float weight() const;
     double radius() const;
     double splash_opacity() const;
@@ -80,7 +80,7 @@ public:
     int expand(int n = -1);
 
     void add_node_with_position(GenericBoard* t, double x, double y, double z);
-    void move_node(double hash, double x, double y, double z, double w = 0);
+    void move_node(double hash, float x, float y, float z, float w = 0);
 
     void add_directed_edge(double from, double to, double opacity = 1);
     void remove_edge(double from, double to);
@@ -105,7 +105,7 @@ public:
 
     void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const bool flip_by_symmetry);
 
-    glm::vec4 center_of_mass() const;
+    vec4 center_of_mass() const;
 
     float af_dist() const;
 

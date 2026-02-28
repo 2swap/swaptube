@@ -15,8 +15,8 @@ bool BouncingBallScene::check_if_data_changed() const { return balls.has_been_up
 
 void BouncingBallScene::draw(){
     for(const Ball& ball : balls.balls){
-        glm::vec2 pixel = point_to_pixel({ball.x, ball.y});
-        glm::vec2 rim = point_to_pixel({ball.x + balls.ball_radius, ball.y});
+        vec2 pixel = point_to_pixel({ball.x, ball.y});
+        vec2 rim = point_to_pixel({ball.x + balls.ball_radius, ball.y});
         pix.fill_circle(pixel.x, pixel.y, rim.x - pixel.x, 0xFFFFFFFF);
     }
 }

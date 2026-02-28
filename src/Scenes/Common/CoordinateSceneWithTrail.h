@@ -7,7 +7,7 @@
 class CoordinateSceneWithTrail : public CoordinateScene {
 public:
     int trail_color = OPAQUE_WHITE;
-    list<pair<glm::vec2, int>> trail;
+    list<pair<vec2, int>> trail;
     CoordinateSceneWithTrail(const double width = 1, const double height = 1);
 
     void draw() override;

@@ -25,6 +25,7 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 
     total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
     if (!rendering_on()) total_frames_in_macroblock = min(10, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
+    cout << "Set total frames in macroblock to " << to_string(total_frames_in_macroblock) << ". We are " << (rendering_on() ? "rendering" : "smoketesting") << "." << endl;
     remaining_frames_in_macroblock = total_frames_in_macroblock;
 
     cout << endl << macroblock.blurb() << " staged to last " << to_string(expected_microblocks_in_macroblock) << " microblock(s), " << to_string(total_frames_in_macroblock) << " frame(s)." << endl;
@@ -160,8 +161,8 @@ void Scene::set_global_identifier(const string& id){
     update_state();
 }
 
-glm::vec2 Scene::get_width_height() const{
-    return glm::vec2(get_width(), get_height());
+vec2 Scene::get_width_height() const{
+    return vec2(get_width(), get_height());
 }
 
 double Scene::get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }

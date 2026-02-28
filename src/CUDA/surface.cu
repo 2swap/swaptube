@@ -1,12 +1,8 @@
 #include <cuda_runtime.h>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include "../Host_Device_Shared/vec.h"
 #include <vector>
-#include <glm/gtx/quaternion.hpp>
 #include <iostream>
 #include "color.cuh"
-
-using namespace std;
 
 __global__ void render_surface_kernel(
     // d_pixels is the array which we will plop a surface on. The surface is bounded by (x1,y1) on the top left and (x2,y2) on the top right.
@@ -20,14 +16,13 @@ __global__ void render_surface_kernel(
     int surface_w,
     int surface_h,
     float opacity,
-    glm::vec3 camera_pos,
-    glm::quat camera_direction,
-    glm::quat conjugate_camera_direction,
+    Cuda::vec3 camera_pos,
+    Cuda::quat camera_direction,
     float dotnormcam,
-    const glm::vec3 surface_normal,
-    const glm::vec3 surface_center,
-    const glm::vec3 surface_pos_x_dir,
-    const glm::vec3 surface_pos_y_dir,
+    const Cuda::vec3 surface_normal,
+    const Cuda::vec3 surface_center,
+    const Cuda::vec3 surface_pos_x_dir,
+    const Cuda::vec3 surface_pos_y_dir,
     const float surface_ilr2,
     const float surface_iur2,
     float halfwidth,
@@ -44,18 +39,18 @@ __global__ void render_surface_kernel(
     int py = idx / plot_w + y1;
 
     // Compute the ray direction from the camera through the screen point
-    glm::vec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1.0f);
-    ray_dir = conjugate_camera_direction * ray_dir * camera_direction;
+    Cuda::vec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1.0f);
+    ray_dir = camera_direction * ray_dir;
 
     // Compute the intersection point in 3D space
-    const float t = dotnormcam / glm::dot(surface_normal, ray_dir);
+    const float t = dotnormcam / Cuda::dot(surface_normal, ray_dir);
 
     // Convert 3D intersection point to surface's local 2D coordinates
-    glm::vec3 centered = camera_pos + t * ray_dir - surface_center;
+    Cuda::vec3 centered = camera_pos + t * ray_dir - surface_center;
 
-    glm::vec2 surface_coords(
-        glm::dot(centered, surface_pos_x_dir) * surface_ilr2 + 0.5f,
-        glm::dot(centered, surface_pos_y_dir) * surface_iur2 + 0.5f
+    Cuda::vec2 surface_coords(
+        Cuda::dot(centered, surface_pos_x_dir) * surface_ilr2 + 0.5f,
+        Cuda::dot(centered, surface_pos_y_dir) * surface_iur2 + 0.5f
     );
 
     int pixels_index = px + py * pixels_w;
@@ -82,20 +77,19 @@ extern "C" void cuda_render_surface(
     int surface_w,
     int surface_h,
     float opacity,
-    glm::vec3 camera_pos,
-    glm::quat camera_direction,
-    glm::quat conjugate_camera_direction,
-    const glm::vec3& surface_normal,
-    const glm::vec3& surface_center,
-    const glm::vec3& surface_pos_x_dir,
-    const glm::vec3& surface_pos_y_dir,
+    Cuda::vec3 camera_pos,
+    Cuda::quat camera_direction,
+    const Cuda::vec3& surface_normal,
+    const Cuda::vec3& surface_center,
+    const Cuda::vec3& surface_pos_x_dir,
+    const Cuda::vec3& surface_pos_y_dir,
     const float surface_ilr2,
     const float surface_iur2,
     float halfwidth,
     float halfheight,
     float over_w_fov) {
     
-    float dotnormcam = glm::dot(surface_normal, (surface_center - camera_pos));
+    float dotnormcam = Cuda::dot(surface_normal, (surface_center - camera_pos));
 
     // Allocate memory on the device
     size_t pixels_size = pix.size() * sizeof(int);
@@ -118,7 +112,7 @@ extern "C" void cuda_render_surface(
     render_surface_kernel<<<numBlocks, blockSize>>>(
         d_pixels_dev, x1, y1, plot_w, plot_h, pixels_w,
         d_surface_dev, surface_w, surface_h, opacity,
-        camera_pos, camera_direction, conjugate_camera_direction,
+        camera_pos, camera_direction,
         dotnormcam, surface_normal, surface_center, surface_pos_x_dir, surface_pos_y_dir, surface_ilr2, surface_iur2, halfwidth, halfheight, over_w_fov
     );
 

@@ -1,15 +1,15 @@
 #include "MandelbrotScene.h"
-#include <glm/glm.hpp>
+#include "../../Host_Device_Shared/vec.h"
 #include <complex>
 
 using std::complex;
 
 extern "C" void mandelbrot_render(
     const int width, const int height,
-    const glm::vec2 lx_ty,
-    const glm::vec2 rx_by,
+    const vec2 lx_ty,
+    const vec2 rx_by,
     const complex<float> seed_z, const complex<float> seed_x, const complex<float> seed_c,
-    const glm::vec3 pixel_parameter_multipliers,
+    const vec3 pixel_parameter_multipliers,
     int max_iterations,
     float gradation,
     float phase_shift,
@@ -50,13 +50,13 @@ void MandelbrotScene::change_data() {}
 bool MandelbrotScene::check_if_data_changed() const {return false;}
 
 void MandelbrotScene::draw() {
-    glm::vec3 pixel_params = glm::normalize(glm::vec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
+    vec3 pixel_params = normalize(vec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
     complex<float> seed_z(state["seed_z_r"], state["seed_z_i"]);
     complex<float> seed_x(state["seed_x_r"], state["seed_x_i"]);
     complex<float> seed_c(state["seed_c_r"], state["seed_c_i"]);
     mandelbrot_render(pix.w, pix.h,
-                      glm::vec2(state["left_x"], state["top_y"]),
-                      glm::vec2(state["right_x"], state["bottom_y"]),
+                      vec2(state["left_x"], state["top_y"]),
+                      vec2(state["right_x"], state["bottom_y"]),
                       seed_z, seed_x, seed_c,
                       pixel_params,
                       state["max_iterations"],
@@ -70,15 +70,15 @@ void MandelbrotScene::draw() {
         int startcol = 0xffff0000;
         int pathcol = 0xff880000;
         complex<float> z(state["point_path_start_r"], state["point_path_start_i"]);
-        glm::vec2 start = point_to_pixel(glm::vec2(state["point_path_start_r"], state["point_path_start_i"]));
+        vec2 start = point_to_pixel(vec2(state["point_path_start_r"], state["point_path_start_i"]));
         float r = get_width()/300.;
         float thickness = get_width()/960.;
         pix.fill_circle(start.x, start.y, r, startcol);
         int iter_count = state["point_path_length"];
         for(int i = 0; i < iter_count; i++){
             complex<float> new_z = pow(z, seed_x) + seed_c;
-            glm::vec2 prev = point_to_pixel(glm::vec2(z.real(), z.imag()));
-            glm::vec2 next = point_to_pixel(glm::vec2(new_z.real(), new_z.imag()));
+            vec2 prev = point_to_pixel(vec2(z.real(), z.imag()));
+            vec2 next = point_to_pixel(vec2(new_z.real(), new_z.imag()));
             pix.fill_circle(next.x, next.y, r, pathcol);
             pix.bresenham(prev.x, prev.y, next.x, next.y, pathcol, 1, thickness);
             z = new_z;

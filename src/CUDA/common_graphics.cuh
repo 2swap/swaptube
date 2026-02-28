@@ -1,7 +1,8 @@
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <cuda_runtime.h>
 #include "color.cuh"
+#include "../Host_Device_Shared/vec.h"
+
+namespace Cuda {
 
 // Fill a circle on a pixel buffer
 __device__ __forceinline__ void d_fill_circle(float cx, float cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
@@ -41,11 +42,10 @@ __device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int co
 }
 
 __device__ __forceinline__ void d_coordinate_to_pixel(
-    const glm::vec3& coordinate,
+    const vec3& coordinate,
     bool &behind_camera,
-    const glm::quat& camera_direction,
-    const glm::vec3& camera_pos,
-    const glm::quat& conjugate_camera_direction,
+    const quat& camera_direction,
+    const vec3& camera_pos,
     const float fov,
     const float geom_mean_size,
     const int width,
@@ -55,11 +55,13 @@ __device__ __forceinline__ void d_coordinate_to_pixel(
     float& outz)
 {
     behind_camera = false;
-    glm::vec3 relative_pos = coordinate - camera_pos;
-    glm::vec3 rotated = camera_direction * relative_pos;
+    vec3 relative_pos = coordinate - camera_pos;
+    vec3 rotated = camera_direction * relative_pos;
     if (rotated.z <= 0) { behind_camera = true; return; }
     float scale = (geom_mean_size * fov) / rotated.z;
     outx = scale * rotated.x + width * 0.5f;
     outy = scale * rotated.y + height * 0.5f;
     outz = rotated.z;
+}
+
 }

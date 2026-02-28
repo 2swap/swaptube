@@ -3,8 +3,7 @@
 #include <complex>
 #include <cmath>
 #include <cstdio>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include "../../Host_Device_Shared/vec.h"
 #include "../common_graphics.cuh"
 #include "../../Host_Device_Shared/find_roots.c"
 #include "../../Host_Device_Shared/helpers.h"
@@ -83,8 +82,8 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
 
     // Plot the roots
     for (int i = 0; i < degree; i++) {
-        glm::vec2 point(cuCrealf(roots[i]), cuCimagf(roots[i]));
-        glm::vec2 pixel = point_to_pixel(point, glm::vec2(lx, ty), glm::vec2(rx, by), glm::vec2(w, h));
+        Cuda::vec2 point(cuCrealf(roots[i]), cuCimagf(roots[i]));
+        Cuda::vec2 pixel = point_to_pixel(point, Cuda::vec2(lx, ty), Cuda::vec2(rx, by), Cuda::vec2(w, h));
         d_gradient_circle(pixel.x, pixel.y, radius, red, green, blue, d_alpha, d_red, d_green, d_blue, w, h, opacity);
     }
 }
@@ -109,10 +108,10 @@ __global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, fl
     g_mod *= 256.0f-brightness;
     b_mod *= 256.0f-brightness;
 
-    unsigned int a = clamp(d_alpha[idx] * 2.5, 0.0f, 255.9f);
-    unsigned int r = clamp(r_mod + brightness, 0.0f, 255.9f);
-    unsigned int g = clamp(g_mod + brightness, 0.0f, 255.9f);
-    unsigned int b = clamp(b_mod + brightness, 0.0f, 255.9f);
+    unsigned int a = Cuda::clamp(d_alpha[idx] * 2.5, 0.0f, 255.9f);
+    unsigned int r = Cuda::clamp(r_mod + brightness, 0.0f, 255.9f);
+    unsigned int g = Cuda::clamp(g_mod + brightness, 0.0f, 255.9f);
+    unsigned int b = Cuda::clamp(b_mod + brightness, 0.0f, 255.9f);
 
     d_pixels[idx] = d_argb(a, r, g, b);
 }

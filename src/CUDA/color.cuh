@@ -3,10 +3,10 @@
 #include <thrust/complex.h>
 #include "../Host_Device_Shared/helpers.h"
 
-__device__ __forceinline__ int d_argb(int a, int r, int g, int b){return (int(clamp(a,0,255))<<24)|
-                                                                         (int(clamp(r,0,255))<<16)|
-                                                                         (int(clamp(g,0,255))<<8 )|
-                                                                         (int(clamp(b,0,255))    );}
+__device__ __forceinline__ int d_argb(int a, int r, int g, int b){return (int(Cuda::clamp(a,0,255))<<24)|
+                                                                         (int(Cuda::clamp(r,0,255))<<16)|
+                                                                         (int(Cuda::clamp(g,0,255))<<8 )|
+                                                                         (int(Cuda::clamp(b,0,255))    );}
 
 __device__ __forceinline__ int d_geta(int color) { 
     return (color >> 24) & 0xFF; 
@@ -49,7 +49,7 @@ __device__ __forceinline__ void d_set_pixel(int x, int y, int col, unsigned int*
 
 __device__ __forceinline__ void d_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
-    opacity = clamp(opacity, 0.0f, 1.0f);
+    opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
     int idx = y * width + x;
     int base = pixels[idx];
     int blended = d_color_combine(base, col, opacity);
@@ -58,7 +58,7 @@ __device__ __forceinline__ void d_overlay_pixel(int x, int y, int col, float opa
 
 __device__ __forceinline__ void d_naive_add_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
-    opacity = clamp(opacity, 0.0f, 1.0f);
+    opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
     int idx = y * width + x;
     int base = pixels[idx];
     // Naively add each channel multiplied by opacity, clamping to 255
@@ -72,7 +72,7 @@ __device__ __forceinline__ void d_naive_add_pixel(int x, int y, int col, float o
 
 __device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
-    opacity = clamp(opacity, 0.0f, 1.0f);
+    opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
     int idx = y * width + x;
 
     unsigned int old_pixel = pixels[idx];
@@ -112,7 +112,7 @@ __device__ __forceinline__ int d_complex_to_srgb(const thrust::complex<float>& c
     if(mag < 1e-7) return d_argb(255, 255, 255, 255); // white to dodge division by zero 
     thrust::complex<float> norm = (c * ab_dilation / mag + thrust::complex<float>(1,1)) * .5;
     float am = 2*atan(mag/dot_radius)/M_PI;
-    return d_OKLABtoRGB(255, 1-.8*am, lerp(-.233888, .276216, norm.real()), lerp(-.311528, .198570, norm.imag()));
+    return d_OKLABtoRGB(255, 1-.8*am, Cuda::lerp(-.233888, .276216, norm.real()), Cuda::lerp(-.311528, .198570, norm.imag()));
 }
 
 __device__ __forceinline__ int d_HSVtoRGB(float h, float s, float v, int alpha = 255) {
@@ -140,8 +140,8 @@ __device__ __forceinline__ int d_HSVtoRGB(float h, float s, float v, int alpha =
     }
 
     // Scale to [0, 255] and clamp
-    int r = clamp(static_cast<int>(round(r_f * 255.0)), 0, 255);
-    int g = clamp(static_cast<int>(round(g_f * 255.0)), 0, 255);
-    int b = clamp(static_cast<int>(round(b_f * 255.0)), 0, 255);
+    int r = Cuda::clamp(static_cast<int>(round(r_f * 255.0)), 0, 255);
+    int g = Cuda::clamp(static_cast<int>(round(g_f * 255.0)), 0, 255);
+    int b = Cuda::clamp(static_cast<int>(round(b_f * 255.0)), 0, 255);
     return d_argb(alpha, r, g, b);
 }

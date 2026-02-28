@@ -3,6 +3,8 @@
 #include "../../Host_Device_Shared/shared_precompiler_directives.h"
 #include <cstring>
 
+SHARED_FILE_PREFIX
+
 enum StateOperator {
     OP_ADD,
     OP_SUB,
@@ -169,3 +171,5 @@ StateOperator inline parse_state_operator(const char* in){
     throw runtime_error("Unknown state operator");
     return OP_ADD;
 }
+
+SHARED_FILE_SUFFIX

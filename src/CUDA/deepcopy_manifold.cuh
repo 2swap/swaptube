@@ -1,10 +1,10 @@
 #include "../Core/State/ResolvedStateEquationComponent.c"
 #include "../Host_Device_Shared/ManifoldData.c"
 
-inline ManifoldData deepcopy_manifold(const ManifoldData& h_manifold) {
-    ManifoldData d_manifold = h_manifold;
+inline Cuda::ManifoldData deepcopy_manifold(const Cuda::ManifoldData& h_manifold) {
+    Cuda::ManifoldData d_manifold = h_manifold;
 
-    size_t sz = sizeof(ResolvedStateEquationComponent);
+    size_t sz = sizeof(Cuda::ResolvedStateEquationComponent);
 
     size_t x_sz = h_manifold.x_size * sz;
     size_t y_sz = h_manifold.y_size * sz;
@@ -27,7 +27,7 @@ inline ManifoldData deepcopy_manifold(const ManifoldData& h_manifold) {
     return d_manifold;
 }
 
-inline void free_manifold(const ManifoldData& d_manifold) {
+inline void free_manifold(const Cuda::ManifoldData& d_manifold) {
     cudaFree(d_manifold.x_eq);
     cudaFree(d_manifold.y_eq);
     cudaFree(d_manifold.z_eq);

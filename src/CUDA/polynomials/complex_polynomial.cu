@@ -3,8 +3,7 @@
 #include "../../Host_Device_Shared/helpers.h"
 #include "../color.cuh"
 #include <cmath>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include "../../Host_Device_Shared/vec.h"
 
 __device__ thrust::complex<float> evaluate_polynomial_given_coefficients(const thrust::complex<float>* coefficients, int degree, const thrust::complex<float>& point) {
     thrust::complex<float> result(0.0, 0.0);
@@ -20,9 +19,9 @@ __global__ void render_kernel(
     int* d_pixels,
     const thrust::complex<float>* d_coefficients,
     int degree,
-    glm::vec2 wh,
-    glm::vec2 lx_ty,
-    glm::vec2 rx_by,
+    Cuda::vec2 wh,
+    Cuda::vec2 lx_ty,
+    Cuda::vec2 rx_by,
     float ab_dilation,
     float dot_radius
 ) {
@@ -30,7 +29,7 @@ __global__ void render_kernel(
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     if (x >= wh.x || y >= wh.y) return;
 
-    const glm::vec2 point = pixel_to_point(glm::vec2(x,y), lx_ty, rx_by, wh);
+    const Cuda::vec2 point = pixel_to_point(Cuda::vec2(x,y), lx_ty, rx_by, wh);
     const thrust::complex<float> val = evaluate_polynomial_given_coefficients(d_coefficients, degree, thrust::complex<float>(point.x, point.y));
     const int color = d_complex_to_srgb(val, ab_dilation, dot_radius);
 
@@ -68,9 +67,9 @@ extern "C" void color_complex_polynomial(
     delete[] h_coefficients;
 
     // Define the region in complex plane
-    glm::vec2 wh(w, h);
-    glm::vec2 lx_ty(lx, ty);
-    glm::vec2 rx_by(rx, by);
+    Cuda::vec2 wh(w, h);
+    Cuda::vec2 lx_ty(lx, ty);
+    Cuda::vec2 rx_by(rx, by);
 
     // Kernel config
     dim3 blockSize(16, 16);

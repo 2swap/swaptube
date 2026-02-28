@@ -13,21 +13,22 @@
 #include <cmath>
 #include <algorithm>
 #include <numeric>
+#include "../Host_Device_Shared/vec.h"
 
 using json = nlohmann::json;
 
-extern "C" void compute_repulsion_cuda(glm::vec4* h_positions, glm::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
+extern "C" void compute_repulsion_cuda(vec4* h_positions, vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
 
-glm::vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<float>& dist) {
-    return glm::vec4(
+vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<float>& dist) {
+    return {
         2.0f * dist(rng) - 1.0f,
         2.0f * dist(rng) - 1.0f,
         2.0f * dist(rng) - 1.0f,
         2.0f * dist(rng) - 1.0f
-    );
+    };
 }
 
-Node::Node(GenericBoard* t, double hash, glm::vec4 position, glm::vec4 velocity) :
+Node::Node(GenericBoard* t, double hash, vec4 position, vec4 velocity) :
     data(t), hash(hash), velocity(velocity), position(position) {}
 
 float Node::weight() const { return sigmoid(age*.2f + 0.01f); }
@@ -120,11 +121,11 @@ void Graph::add_node_with_position(GenericBoard* t, double x, double y, double z
     move_node(hash, x, y, z);
 }
 
-void Graph::move_node(double hash, double x, double y, double z, double w) {
+void Graph::move_node(double hash, float x, float y, float z, float w) {
     auto it = nodes.find(hash);
     if (it == nodes.end()) return;
     Node& node = it->second;
-    node.position = glm::vec4(x,y,z,w);
+    node.position = {x, y, z, w};
     mark_updated();
 }
 
@@ -361,10 +362,10 @@ void Graph::iterate_physics(const int iterations, const float repel, const float
     for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age++; }
 
     int s = node_vector.size();
-    std::vector<glm::vec4> positions(s);
-    std::vector<glm::vec4> velocities(s);
+    std::vector<vec4> positions(s);
+    std::vector<vec4> velocities(s);
 
-    glm::vec4 com = center_of_mass() * centering_strength;
+    vec4 com = center_of_mass() * centering_strength;
     for (int i = 0; i < s; ++i) {
          positions[i] = node_vector[i]->position - com;
         velocities[i] = node_vector[i]->velocity;
@@ -407,19 +408,19 @@ void Graph::iterate_physics(const int iterations, const float repel, const float
     mark_updated();
 }
 
-glm::vec4 Graph::center_of_mass() const {
-    glm::vec4 sum_position(0.0f);
+vec4 Graph::center_of_mass() const {
+    vec4 sum_position(0.0f);
     float mass = 0.1;
 
     for (const auto& node_pair : nodes) {
         const Node& node = node_pair.second;
         float sig = node.weight();
-        glm::vec4 addy = sig*node.position;
+        vec4 addy(sig*node.position);
         sum_position += addy;
         mass += sig;
     }
 
-    glm::vec4 ret = sum_position / mass;
+    vec4 ret = sum_position / mass;
     return ret;
 }
 
@@ -427,13 +428,13 @@ float Graph::af_dist() const {
     float sum_distance_sq = 0.0;
     float ct = 0.1;
 
-    glm::vec4 com = center_of_mass();
+    vec4 com = center_of_mass();
 
     for (const auto& node_pair : nodes) {
         const Node& node = node_pair.second;
         float sig = node.weight();
-        glm::vec4 pos_com = node.position - com;
-        sum_distance_sq += sig * glm::dot(pos_com, pos_com);
+        vec4 pos_com = node.position - com;
+        sum_distance_sq += sig * dot(pos_com, pos_com);
         ct += sig;
     }
 

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "StateOperators.c"
+#include "../../Host_Device_Shared/shared_precompiler_directives.h"
+
+SHARED_FILE_PREFIX
 
 enum ResolvedStateEquationComponentType {
     RESOLVED_CONSTANT,
@@ -77,3 +80,4 @@ HOST_DEVICE inline float evaluate_resolved_state_equation(const int num_componen
     return stack[0];
 }
 
+SHARED_FILE_SUFFIX

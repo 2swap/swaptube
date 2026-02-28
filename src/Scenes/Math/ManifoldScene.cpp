@@ -5,7 +5,7 @@
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData* manifolds, const int num_manifolds,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius
 );
@@ -101,7 +101,6 @@ void ManifoldScene::draw() {
         manifold_names.size(),
         camera_pos,
         camera_direction,
-        conjugate_camera_direction,
         geom_mean_size,
         state["fov"],
         state["ab_dilation"],

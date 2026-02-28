@@ -77,32 +77,32 @@ CoordinateScene::CoordinateScene(const float width, const float height)
     });
 }
 
-glm::vec2 CoordinateScene::point_to_pixel(const glm::vec2& p) {
-    const glm::vec2 wh(get_width(), get_height());
-    const glm::vec2 rx_by(state["right_x"], state["bottom_y"]);
-    const glm::vec2 lx_ty(state["left_x"], state["top_y"]);
-    const glm::vec2 flip(wh * (p-lx_ty)/(rx_by-lx_ty));
-    return glm::vec2(flip.x, get_height()-1-flip.y);
+vec2 CoordinateScene::point_to_pixel(const vec2& p) {
+    const vec2 wh(get_width(), get_height());
+    const vec2 rx_by(state["right_x"], state["bottom_y"]);
+    const vec2 lx_ty(state["left_x"], state["top_y"]);
+    const vec2 flip(wh * (p-lx_ty)/(rx_by-lx_ty));
+    return vec2(flip.x, get_height()-1-flip.y);
 }
 
-glm::vec2 CoordinateScene::pixel_to_point(const glm::vec2& pix) {
-    const glm::vec2 wh(get_width(), get_height());
-    const glm::vec2 rx_by(state["right_x"], state["bottom_y"]);
-    const glm::vec2 lx_ty(state["left_x"], state["top_y"]);
-    const glm::vec2 flip(pix.x, get_height()-1-pix.y);
+vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
+    const vec2 wh(get_width(), get_height());
+    const vec2 rx_by(state["right_x"], state["bottom_y"]);
+    const vec2 lx_ty(state["left_x"], state["top_y"]);
+    const vec2 flip(pix.x, get_height()-1-pix.y);
     return lx_ty + (rx_by-lx_ty) * flip / wh;
 }
 
 // This is not used here, but it is used in some classes which inherit from CoordinateScene
-void CoordinateScene::draw_trail(const list<pair<glm::vec2, int>>& trail, const float trail_opacity) {
+void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float trail_opacity) {
     if(trail.size() == 0) return;
     if(trail_opacity < 0.01) return;
     float line_width = get_geom_mean_size()/500.;
-    glm::vec2 last_pixel = glm::vec2(0,0);
+    vec2 last_pixel{0,0};
     int i = 0;
-    for(const pair<glm::vec2, int>& p : trail) {
+    for(const pair<vec2, int>& p : trail) {
         if(i != 0) {
-            const glm::vec2 next_pixel = point_to_pixel(p.first);
+            const vec2 next_pixel(point_to_pixel(p.first));
             pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, p.second, trail_opacity, line_width);
         }
         last_pixel = point_to_pixel(p.first);
@@ -110,8 +110,8 @@ void CoordinateScene::draw_trail(const list<pair<glm::vec2, int>>& trail, const 
     }
 }
 
-void CoordinateScene::draw_point(const glm::vec2 point, int point_color, float point_opacity) {
-    const glm::vec2 pixel = point_to_pixel(point);
+void CoordinateScene::draw_point(const vec2 point, int point_color, float point_opacity) {
+    const vec2 pixel = point_to_pixel(point);
     pix.fill_circle(pixel.x, pixel.y, get_geom_mean_size()/100., point_color, point_opacity);
 }
 
@@ -141,15 +141,15 @@ void CoordinateScene::draw_construction() {
 
     for(const GeometricLine& l : construction.lines) {
         if(!l.draw_shape) continue;
-        glm::vec2 start_point = l.start;
-        glm::vec2 end_point = l.end;
+        vec2 start_point = l.start;
+        vec2 end_point = l.end;
         if(l.use_state) {
-            start_point = glm::vec2(state["line_"+l.identifier+"_start_x"], state["line_"+l.identifier+"_start_y"]);
-            end_point = glm::vec2(state["line_"+l.identifier+"_end_x"], state["line_"+l.identifier+"_end_y"]);
+            start_point = vec2(state["line_"+l.identifier+"_start_x"], state["line_"+l.identifier+"_start_y"]);
+            end_point = vec2(state["line_"+l.identifier+"_end_x"], state["line_"+l.identifier+"_end_y"]);
         }
-        glm::vec2 start_pixel = point_to_pixel(start_point);
-        glm::vec2 end_pixel = point_to_pixel(end_point);
-        const glm::vec2 mid_pixel = (start_pixel + end_pixel) / 2.f;
+        vec2 start_pixel = point_to_pixel(start_point);
+        vec2 end_pixel = point_to_pixel(end_point);
+        const vec2 mid_pixel = (start_pixel + end_pixel) / 2.f;
         if(!l.old) {
             // Multiply line length by bounce
             start_pixel = mid_pixel + (start_pixel - mid_pixel) * bounce;
@@ -158,9 +158,9 @@ void CoordinateScene::draw_construction() {
         geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, line_color, 1, line_thickness*.75);
     }
     for(const GeometricPoint& p : construction.points) {
-        glm::vec2 position = p.position;
-        if(p.use_state) position = glm::vec2(state["point_"+p.identifier+"_x"], state["point_"+p.identifier+"_y"]);
-        const glm::vec2 position_pixel = point_to_pixel(position);
+        vec2 position = p.position;
+        if(p.use_state) position = vec2(state["point_"+p.identifier+"_x"], state["point_"+p.identifier+"_y"]);
+        const vec2 position_pixel = point_to_pixel(position);
         double radius = line_thickness * p.width_multiplier * 2;
         if(p.draw_shape){
             if(!p.old) {
@@ -186,7 +186,7 @@ void CoordinateScene::draw_zero_crosshair() {
     const int w = get_width();
     const int h = get_height();
     const float gmsz = get_geom_mean_size();
-    const glm::vec2 zero = point_to_pixel(glm::vec2(0,0));
+    const vec2 zero = point_to_pixel(vec2(0,0));
     pix.bresenham(zero.x, 0, zero.x, h-1.f, OPAQUE_WHITE, zc_opacity, gmsz/400.);
     pix.bresenham(0, zero.y, w-1.f, zero.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
 }
@@ -219,7 +219,7 @@ void CoordinateScene::draw_one_axis(bool ymode) {
             if(done_numbers.find(truncated) != done_numbers.end()) continue;
             done_numbers.insert(truncated);
             float tick_length = (d_om == 1 ? 2 * interpolator : 2) * gmsz / 192.;
-            glm::vec2 point = point_to_pixel(glm::vec2(x_y, x_y));
+            vec2 point = point_to_pixel(vec2(x_y, x_y));
             float coordinate = ymode?point.y:point.x;
             float number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
             number_opacity *= ticks_opacity * (1-square(square(2.5*(.5-coordinate/(ymode?h:w)))));

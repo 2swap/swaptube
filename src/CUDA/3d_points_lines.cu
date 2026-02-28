@@ -1,20 +1,21 @@
+#include "../Host_Device_Shared/vec.h"
+#include <cuda.h>
 #include <cuda_runtime.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <utility>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include "../Host_Device_Shared/ThreeDimensionStructs.h"
 #include "color.cuh" // Contains overlay_pixel and set_pixel
 #include "common_graphics.cuh" // Contains fill_circle
+
+namespace Cuda {
 
 __global__ void render_points_kernel(
     unsigned int* pixels, int width, int height,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Point* points, int num_points,
-    glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov)
+    quat camera_direction, vec3 camera_pos, float fov)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= num_points) return;
@@ -24,7 +25,7 @@ __global__ void render_points_kernel(
     float px, py, pz;
     d_coordinate_to_pixel(
         p.center, behind_camera,
-        camera_direction, camera_pos, conjugate_camera_direction, fov,
+        camera_direction, camera_pos, fov,
         geom_mean_size, width, height, px, py, pz);
     if (behind_camera) return;
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 400.0f;
@@ -35,7 +36,7 @@ __global__ void render_lines_kernel(
     unsigned int* pixels, int width, int height,
     float geom_mean_size, int thickness, float lines_opacity,
     Line* lines, int num_lines,
-    glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov)
+    quat camera_direction, vec3 camera_pos, float fov)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= num_lines) return;
@@ -45,13 +46,14 @@ __global__ void render_lines_kernel(
     float p1x, p1y, p1z, p2x, p2y, p2z;
     d_coordinate_to_pixel(
         ln.start, behind_camera1,
-        camera_direction, camera_pos, conjugate_camera_direction, fov,
+        camera_direction, camera_pos, fov,
         geom_mean_size, width, height, p1x, p1y, p1z);
+    if (behind_camera1) return;
     d_coordinate_to_pixel(
         ln.end,   behind_camera2,
-        camera_direction, camera_pos, conjugate_camera_direction, fov,
+        camera_direction, camera_pos, fov,
         geom_mean_size, width, height, p2x, p2y, p2z);
-    if (behind_camera1 || behind_camera2) return;
+    if (behind_camera2) return;
     bresenham(
         p1x, p1y, p2x, p2y,
         ln.color, lines_opacity * ln.opacity, thickness,
@@ -62,7 +64,7 @@ extern "C" void render_points_on_gpu(
     unsigned int* h_pixels, int width, int height,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Point* h_points, int num_points,
-    glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov)
+    quat camera_direction, vec3 camera_pos, float fov)
 {
     unsigned int* d_pixels = nullptr;
     Point*        d_points = nullptr;
@@ -81,7 +83,7 @@ extern "C" void render_points_on_gpu(
         d_pixels, width, height,
         geom_mean_size, points_opacity, points_radius_multiplier,
         d_points, num_points,
-        camera_direction, camera_pos, conjugate_camera_direction, fov);
+        camera_direction, camera_pos, fov);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
@@ -93,7 +95,7 @@ extern "C" void render_lines_on_gpu(
     unsigned int* h_pixels, int width, int height,
     float geom_mean_size, int thickness, float lines_opacity,
     Line* h_lines, int num_lines,
-    glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov)
+    quat camera_direction, vec3 camera_pos, float fov)
 {
     unsigned int* d_pixels = nullptr;
     Line*         d_lines  = nullptr;
@@ -112,10 +114,12 @@ extern "C" void render_lines_on_gpu(
         d_pixels, width, height,
         geom_mean_size, thickness, lines_opacity,
         d_lines, num_lines,
-        camera_direction, camera_pos, conjugate_camera_direction, fov);
+        camera_direction, camera_pos, fov);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
     cudaFree(d_pixels);
     cudaFree(d_lines);
+}
+
 }

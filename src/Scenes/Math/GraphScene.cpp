@@ -3,6 +3,7 @@
 #include "../../DataObjects/Graph.h"
 #include "../../IO/Writer.h"
 #include "../../Core/Smoketest.h"
+#include "../../Host_Device_Shared/vec.h"
 
 vector<int> tones = {0,4,7};
 int tone_incr = 0;
@@ -59,14 +60,14 @@ void GraphScene::graph_to_3d(){
     clear_lines();
     clear_points();
 
-    glm::vec3 curr_pos;
-    glm::vec3 next_pos;
+    vec3 curr_pos;
+    vec3 next_pos;
     bool curr_found = false;
     bool next_found = false;
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     for(pair<double, Node> p : graph->nodes){
         Node node = p.second;
-        glm::vec3 node_pos = glm::vec3(node.position.x, node.position.y, node.position.z);
+        vec3 node_pos(node.position.x, node.position.y, node.position.z); // convert 4d to 3d
         if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
         if(node.draw_point) add_point(Point(node_pos, node.color, 1, node.radius()));
@@ -77,13 +78,13 @@ void GraphScene::graph_to_3d(){
         for(const Edge& neighbor_edge : node.neighbors){
             double neighbor_id = neighbor_edge.to;
             Node neighbor = graph->nodes.find(neighbor_id)->second;
-            glm::vec3 neighbor_pos = glm::vec3(neighbor.position);
+            vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
             add_line(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor), neighbor_edge.opacity));
         }
     }
 
     float opa = 0;
-    glm::vec3 pos_to_render(0,0,0);
+    vec3 pos_to_render(0,0,0);
     if(curr_found || next_found){
         double smooth_interp = smoother2(state["microblock_fraction"]);
         if     (!curr_found) pos_to_render = next_pos;
@@ -92,7 +93,7 @@ void GraphScene::graph_to_3d(){
         opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
         double hpo = state["highlight_point_opacity"];
         if(hpo > 0.001)
-            add_point(Point(pos_to_render, 0xffff0000, hpo*opa, 3*opa));
+            add_point(Point(vec3{pos_to_render.x, pos_to_render.y, pos_to_render.z}, 0xffff0000, hpo*opa, 3*opa));
     }
 
     // automagical camera distancing
@@ -156,7 +157,7 @@ void GraphScene::update_surfaces(){
 
         auto it = graph_surface_map.find(rep);
         if(it != graph_surface_map.end()) {
-            it->second.first.center = glm::vec3(node.position.x, node.position.y, node.position.z);
+            it->second.first.center = vec3(node.position.x, node.position.y, node.position.z);
         } else {
             graph_surface_map.emplace(rep, make_pair(make_surface(node), node.data->make_scene()));
         }
@@ -177,30 +178,29 @@ void GraphScene::update_surfaces(){
 }
 
 Surface GraphScene::make_surface(Node node) const {
-    return Surface(glm::vec3(node.position.x, node.position.y, node.position.z),
-                   glm::vec3(1,0,0),
-                   glm::vec3(0,static_cast<float>(get_video_height_pixels())/get_video_width_pixels(), 0),
+    return Surface(vec3(node.position.x, node.position.y, node.position.z),
+                   vec3(1,0,0),
+                   vec3(0,static_cast<float>(get_video_height_pixels())/get_video_width_pixels(), 0),
                    node.data->representation);
 }
 
 // Override the default surface render routine to make all graph surfaces point at the camera
 void GraphScene::render_surface(const Surface& surface) {
     //make all the boards face the camera
-    glm::dquat conj2 = glm::conjugate(camera_direction) * glm::conjugate(camera_direction);
-    glm::dquat cam2 = camera_direction * camera_direction;
+    quat cam2 = camera_direction * camera_direction;
 
     // Rotate pos_x_dir vector
-    glm::dquat left_as_quat(0.0f, surface.pos_x_dir.x, surface.pos_x_dir.y, surface.pos_x_dir.z);
-    glm::dquat rotated_left_quat = conj2 * left_as_quat * cam2;
+    quat left_as_quat(0.0f, surface.pos_x_dir.x, surface.pos_x_dir.y, surface.pos_x_dir.z);
+    quat rotated_left_quat = cam2 * left_as_quat;
 
     // Rotate pos_y_dir vector
-    glm::dquat up_as_quat(0.0f, surface.pos_y_dir.x, surface.pos_y_dir.y, surface.pos_y_dir.z);
-    glm::dquat rotated_up_quat = conj2 * up_as_quat * cam2;
+    quat up_as_quat(0.0f, surface.pos_y_dir.x, surface.pos_y_dir.y, surface.pos_y_dir.z);
+    quat rotated_up_quat = cam2 * up_as_quat;
 
     Surface surface_rotated(
         surface.center,
-        glm::vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
-        glm::vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
+        vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
+        vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
         surface.name
     );
 

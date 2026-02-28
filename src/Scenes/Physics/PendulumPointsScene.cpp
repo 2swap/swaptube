@@ -1,6 +1,6 @@
 #include "../Common/CoordinateScene.h"
 #include "../../DataObjects/Pendulum.h"
-#include <glm/glm.hpp>
+#include "../../Host_Device_Shared/vec.h"
 
 class PendulumPointsScene : public CoordinateScene {
 public:
@@ -22,8 +22,8 @@ public:
                 PendulumState this_ps = grid.pendulum_states[i];
                 PendulumState start_ps = grid.start_states[i];
                 int point_color = pendulum_color(start_ps.theta1, start_ps.theta2, start_ps.p1, start_ps.p2);
-                glm::vec2 curr_point = glm::vec2(this_ps.theta1, this_ps.theta2);
-                glm::vec2 curr_pixel = point_to_pixel(curr_point);
+                vec2 curr_point = vec2(this_ps.theta1, this_ps.theta2);
+                vec2 curr_pixel = point_to_pixel(curr_point);
                 pix.fill_circle(
                     curr_pixel.x,
                     curr_pixel.y,

@@ -1,20 +1,19 @@
 #include "ThreeDimensionScene.h"
 #include "../../IO/Writer.h"
-#include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include "../../Host_Device_Shared/vec.h"
 
 extern "C" {
     void render_points_on_gpu(
         unsigned int* h_pixels, int width, int height,
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
-        glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov);
+        quat camera_direction, vec3 camera_pos, float fov);
 
     void render_lines_on_gpu(
         unsigned int* h_pixels, int width, int height,
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
-        glm::quat camera_direction, glm::vec3 camera_pos, glm::quat conjugate_camera_direction, float fov);
+        quat camera_direction, vec3 camera_pos, float fov);
 
     void cuda_render_surface(
         vector<unsigned int>& pix,
@@ -27,13 +26,12 @@ extern "C" {
         int surface_w,
         int surface_h,
         float opacity,
-        glm::vec3 camera_pos,
-        glm::quat camera_direction,
-        glm::quat conjugate_camera_direction,
-        const glm::vec3& surface_normal,
-        const glm::vec3& surface_center,
-        const glm::vec3& surface_pos_x_dir,
-        const glm::vec3& surface_pos_y_dir,
+        vec3 camera_pos,
+        quat camera_direction,
+        const vec3& surface_normal,
+        const vec3& surface_center,
+        const vec3& surface_pos_x_dir,
+        const vec3& surface_pos_y_dir,
         const float surface_ilr2,
         const float surface_iur2,
         float halfwidth,
@@ -41,24 +39,24 @@ extern "C" {
         float over_w_fov);
 }
 
-Surface::Surface(const glm::vec3& c, const glm::vec3& l, const glm::vec3& u, const string& n)
+Surface::Surface(const vec3& c, const vec3& l, const vec3& u, const string& n)
     : center(c),
       pos_x_dir(l * static_cast<float>(geom_mean(get_video_width_pixels(), get_video_height_pixels()) / get_video_height_pixels())),
       pos_y_dir(u * static_cast<float>(geom_mean(get_video_width_pixels(), get_video_height_pixels()) / get_video_width_pixels())),
       name(n) {
     ilr2 = 0.5f / (square(pos_x_dir.x) + square(pos_x_dir.y) + square(pos_x_dir.z));
     iur2 = 0.5f / (square(pos_y_dir.x) + square(pos_y_dir.y) + square(pos_y_dir.z));
-    normal = glm::cross(pos_x_dir, pos_y_dir);
+    normal = cross(pos_x_dir, pos_y_dir);
 }
 
 // constructor to make the surface fill the screen.
-Surface::Surface(const string& n) : Surface(glm::vec3(0, 0, 0), glm::vec3(.5, 0, 0), glm::vec3(0, .5, 0), n) {}
+Surface::Surface(const string& n) : Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(0, .5, 0), n) {}
 
 Path::Path(const string& n, int clr, float op)
     : name(n), color(clr), opacity(op) { }
 
 ThreeDimensionScene::ThreeDimensionScene(const double width, const double height)
-    : SuperScene(width, height), use_state_for_center(false), auto_distance(-1), auto_camera(glm::vec3(0,0,0)) {
+    : SuperScene(width, height), use_state_for_center(false), auto_distance(-1), auto_camera(vec3(0,0,0)) {
     manager.set({
         {"fov", "1"},
         {"x", "0"},
@@ -76,15 +74,15 @@ ThreeDimensionScene::ThreeDimensionScene(const double width, const double height
     });
 }
 
-glm::vec2 ThreeDimensionScene::coordinate_to_pixel(glm::vec3 coordinate, bool& behind_camera) {
-    coordinate = camera_direction * (coordinate - camera_pos) * conjugate_camera_direction;
+vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, bool& behind_camera) {
+    coordinate = camera_direction * (coordinate - camera_pos);
     if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
     float scale = (get_geom_mean_size()*fov) / coordinate.z;
-    return scale * glm::vec2(coordinate.x, coordinate.y) + get_width_height()*.5f;
+    return scale * vec2(coordinate.x, coordinate.y) + get_width_height()*.5f;
 }
 
-bool ThreeDimensionScene::isOutsideScreen(const glm::vec2& point) {
+bool ThreeDimensionScene::isOutsideScreen(const vec2& point) {
     return point.x < 0 || point.x >= get_width() || point.y < 0 || point.y >= get_height();
 }
 
@@ -92,21 +90,21 @@ bool ThreeDimensionScene::isOutsideScreen(const glm::vec2& point) {
 // The function returns:
 // 1 --> Clockwise
 // 2 --> Counterclockwise
-int ThreeDimensionScene::orientation(const glm::vec2& p, const glm::vec2& q, const glm::vec2& r) {
+int ThreeDimensionScene::orientation(const vec2& p, const vec2& q, const vec2& r) {
     int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
     return (val > 0) ? 1 : 2; // clockwise or counterclockwise
 }
 
 // Function to check if a point is on the left side of a directed line segment.
-bool ThreeDimensionScene::isLeft(const glm::vec2& a, const glm::vec2& b, const glm::vec2& c) {
+bool ThreeDimensionScene::isLeft(const vec2& a, const vec2& b, const vec2& c) {
     return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
 }
 
-bool ThreeDimensionScene::isInsideConvexPolygon(const glm::vec2& point, const vector<glm::vec2>& polygon) {
+bool ThreeDimensionScene::isInsideConvexPolygon(const vec2& point, const vector<vec2>& polygon) {
     if (polygon.size() < 3) return false; // Not a polygon
 
     // Extend the point to the right infinitely
-    glm::vec2 extreme = {100000, point.y};
+    vec2 extreme{100000, point.y};
     for (int i = 0; i < polygon.size(); i++) {
         int next = (i + 1) % polygon.size();
         if (lineSegmentsIntersect(polygon[i], polygon[next], point, extreme)) {
@@ -116,7 +114,7 @@ bool ThreeDimensionScene::isInsideConvexPolygon(const glm::vec2& point, const ve
     return false;
 }
 
-bool ThreeDimensionScene::lineSegmentsIntersect(const glm::vec2& p1, const glm::vec2& q1, const glm::vec2& p2, const glm::vec2& q2) {
+bool ThreeDimensionScene::lineSegmentsIntersect(const vec2& p1, const vec2& q1, const vec2& p2, const vec2& q2) {
     // Find the four orientations needed for the general and special cases
     int o1 = orientation(p1, q1, p2);
     int o2 = orientation(p1, q1, q2);
@@ -128,14 +126,14 @@ bool ThreeDimensionScene::lineSegmentsIntersect(const glm::vec2& p1, const glm::
 }
 
 // Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'
-bool ThreeDimensionScene::onSegment(const glm::vec2& p, const glm::vec2& q, const glm::vec2& r) {
+bool ThreeDimensionScene::onSegment(const vec2& p, const vec2& q, const vec2& r) {
     if (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) &&
         q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y))
         return true;
     return false;
 }
 
-bool ThreeDimensionScene::should_render_surface(vector<glm::vec2> corners){
+bool ThreeDimensionScene::should_render_surface(vector<vec2> corners){
     // We identify that polygons A and B share some amount of area, if and only if any one of these 3 conditions are met:
     // 1. A corner of A is inside B
     // 2. A corner of B is inside A
@@ -148,7 +146,7 @@ bool ThreeDimensionScene::should_render_surface(vector<glm::vec2> corners){
 
     int w = get_width();
     int h = get_height();
-    vector<glm::vec2> screenCorners = {glm::vec2(0, 0), glm::vec2(w, 0), glm::vec2(w, h), glm::vec2(0, h)};
+    vector<vec2> screenCorners = {vec2(0, 0), vec2(w, 0), vec2(w, h), vec2(0, h)};
     for (const auto& corner : screenCorners)
         if (isInsideConvexPolygon(corner, corners))
             return true;
@@ -164,11 +162,11 @@ bool ThreeDimensionScene::should_render_surface(vector<glm::vec2> corners){
 void ThreeDimensionScene::render_surface(const Surface& surface) {
     float this_surface_opacity = state[surface.name + ".opacity"] * state["surfaces_opacity"];
 
-    glm::vec3 surface_center = surface.center;
-    if(use_state_for_center) surface_center = glm::vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
+    vec3 surface_center = surface.center;
+    if(use_state_for_center) surface_center = vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
     if(this_surface_opacity < .001) return;
 
-    vector<glm::vec2> corners(4);
+    vector<vec2> corners(4);
     bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
     corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
     corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
@@ -207,7 +205,6 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
         this_surface_opacity,
         camera_pos,
         camera_direction,
-        conjugate_camera_direction,
         surface.normal,
         surface_center,
         surface.pos_x_dir,
@@ -221,16 +218,15 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 }
 
 void ThreeDimensionScene::set_camera_direction() {
-    camera_direction = glm::normalize(glm::quat(state["q1"], state["qi"], state["qj"], state["qk"]));
-    conjugate_camera_direction = glm::conjugate(camera_direction);
+    camera_direction = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
     float dist_to_use = (auto_distance > 0 ? max(1.0, auto_distance) : 1)*state["d"];
-    glm::vec3 camera_to_use = auto_distance > 0 ? auto_camera : glm::vec3(state["x"], state["y"], state["z"]);
-    camera_pos = camera_to_use + conjugate_camera_direction * glm::vec3(0,0,-dist_to_use) * camera_direction;
+    vec3 camera_to_use = auto_distance > 0 ? auto_camera : vec3(state["x"], state["y"], state["z"]);
+    camera_pos = camera_to_use + camera_direction * vec3(0,0,-dist_to_use);
 }
 
-float ThreeDimensionScene::squaredDistance(const glm::vec3& a, const glm::vec3& b) {
-    glm::vec3 diff = a - b;
-    return glm::dot(diff, diff);
+float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
+    vec3 diff = a - b;
+    return dot(diff, diff);
 }
 
 void ThreeDimensionScene::draw() {
@@ -254,7 +250,6 @@ void ThreeDimensionScene::draw() {
             static_cast<int>(points.size()),
             camera_direction,
             camera_pos,
-            conjugate_camera_direction,
             fov
         );
     }
@@ -272,7 +267,6 @@ void ThreeDimensionScene::draw() {
             static_cast<int>(lines.size()),
             camera_direction,
             camera_pos,
-            conjugate_camera_direction,
             fov
         );
     }

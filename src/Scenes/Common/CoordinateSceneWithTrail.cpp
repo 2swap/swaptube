@@ -11,7 +11,7 @@ CoordinateSceneWithTrail::CoordinateSceneWithTrail(const double width, const dou
 void CoordinateSceneWithTrail::draw() {
     CoordinateScene::draw();
     draw_trail(trail, state["trail_opacity"]);
-    glm::vec2 vec = point_to_pixel(glm::vec2(state["trail_x"], state["trail_y"]));
+    vec2 vec = point_to_pixel(vec2(state["trail_x"], state["trail_y"]));
     draw_point(vec, trail_color, state["trail_opacity"]);
 }
 
@@ -25,7 +25,7 @@ const StateQuery CoordinateSceneWithTrail::populate_state_query() const {
 
 void CoordinateSceneWithTrail::change_data() {
     if(state["trail_opacity"] > 0.01)
-        trail.push_back(make_pair(glm::vec2(state["trail_x"], state["trail_y"]), trail_color));
+        trail.push_back(make_pair(vec2(state["trail_x"], state["trail_y"]), trail_color));
     else trail.clear();
 }
 

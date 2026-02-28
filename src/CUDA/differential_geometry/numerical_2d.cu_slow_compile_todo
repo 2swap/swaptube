@@ -1,8 +1,6 @@
 #include <cuda_runtime.h>
 #include <cmath>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include "../../Host_Device_Shared/vec.h"
 #include "../../Host_Device_Shared/ManifoldData.c"
 #include "../deepcopy_manifold.cuh"
 #include "../common_graphics.cuh"
@@ -11,7 +9,7 @@
 
 __constant__ ManifoldData d_manifold;
 
-__device__ glm::vec3 surface_2d(glm::vec2 v) {
+__device__ vec3 surface_2d(vec2 v) {
     float cuda_tags[2] = { v.x, v.y };
 
     int error = 0;
@@ -19,50 +17,50 @@ __device__ glm::vec3 surface_2d(glm::vec2 v) {
     if(error) {
         printf("Error calculating manifold x at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq);
-        return glm::vec3(0.0f);
+        return vec3(0.0f);
     }
     double y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 2, error);
     if(error) {
         printf("Error calculating manifold y at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq);
-        return glm::vec3(0.0f);
+        return vec3(0.0f);
     }
     double z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 2, error);
     if(error) {
         printf("Error calculating manifold z at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq);
-        return glm::vec3(0.0f);
+        return vec3(0.0f);
     }
-    return glm::vec3(x, y, z);
+    return vec3(x, y, z);
 }
 
 // Compute partial derivatives of the surface embedding wrt parameter axes
-static __device__ void dsurface_dv_numerical(glm::vec2 v, glm::vec3& d_dx, glm::vec3& d_dy) {
-    glm::vec3 here   = surface_2d(v);
-    glm::vec3 plus_x = surface_2d(v + glm::vec2(numeric_delta, 0.0f));
-    glm::vec3 plus_y = surface_2d(v + glm::vec2(0.0f, numeric_delta));
+static __device__ void dsurface_dv_numerical(vec2 v, vec3& d_dx, vec3& d_dy) {
+    vec3 here   = surface_2d(v);
+    vec3 plus_x = surface_2d(v + vec2(numeric_delta, 0.0f));
+    vec3 plus_y = surface_2d(v + vec2(0.0f, numeric_delta));
     d_dx = (plus_x - here) / numeric_delta;
     d_dy = (plus_y - here) / numeric_delta;
 }
 
-static __device__ void metric_tensor(glm::vec2 v, float g[2][2]) {
-    glm::vec3 d_dx, d_dy;
+static __device__ void metric_tensor(vec2 v, float g[2][2]) {
+    vec3 d_dx, d_dy;
     dsurface_dv_numerical(v, d_dx, d_dy);
 
-    g[0][0] = glm::dot(d_dx, d_dx);
-    g[0][1] = glm::dot(d_dx, d_dy);
+    g[0][0] = dot(d_dx, d_dx);
+    g[0][1] = dot(d_dx, d_dy);
 
-    g[1][0] = glm::dot(d_dy, d_dx);
-    g[1][1] = glm::dot(d_dy, d_dy);
+    g[1][0] = dot(d_dy, d_dx);
+    g[1][1] = dot(d_dy, d_dy);
 }
 
-static __device__ void dmetric_dv_numerical(glm::vec2 v, float dg[2][2][2]) {
+static __device__ void dmetric_dv_numerical(vec2 v, float dg[2][2][2]) {
     float g_pu[2][2], g_mu[2][2], g_pv[2][2], g_mv[2][2];
-    metric_tensor(v + glm::vec2( numeric_delta, 0.0f), g_pu);
-    metric_tensor(v + glm::vec2(-numeric_delta, 0.0f), g_mu);
+    metric_tensor(v + vec2( numeric_delta, 0.0f), g_pu);
+    metric_tensor(v + vec2(-numeric_delta, 0.0f), g_mu);
 
-    metric_tensor(v + glm::vec2(0.0f,  numeric_delta), g_pv);
-    metric_tensor(v + glm::vec2(0.0f, -numeric_delta), g_mv);
+    metric_tensor(v + vec2(0.0f,  numeric_delta), g_pv);
+    metric_tensor(v + vec2(0.0f, -numeric_delta), g_mv);
 
     float g_u[2][2], g_v[2][2];
     for (int i = 0; i < 2; ++i)
@@ -99,7 +97,7 @@ static __device__ bool invert2x2(const float m[2][2], float invOut[2][2]) {
 
 // Christoffel symbols Γ^i_jk at parameter-space point v using central differences.
 // Gamma is output as Gamma[i][j][k]
-static __device__ bool christoffel_symbols(glm::vec2 v, float Gamma[2][2][2]) {
+static __device__ bool christoffel_symbols(vec2 v, float Gamma[2][2][2]) {
     // compute metric at center
     float g[2][2];
     metric_tensor(v, g);
@@ -136,7 +134,7 @@ static __device__ bool christoffel_symbols(glm::vec2 v, float Gamma[2][2][2]) {
 
 // Geodesic RHS: input Y[4] = [u, v, up, vp] -> outputs dY[4]
 static __device__ bool geodesic_rhs(const float Y[4], float dY[4]) {
-    glm::vec2 pos = glm::vec2(Y[0], Y[1]);
+    vec2 pos = vec2(Y[0], Y[1]);
     float vel[2] = { Y[2], Y[3] };
 
     float Gamma[2][2][2];
@@ -179,9 +177,9 @@ static __device__ bool rk4_step_geodesic(float Y[4], float dt) {
 
 __global__ void geodesics_2d_kernel(
     uint32_t* pixels, const int w, const int h,
-    const glm::vec2 start_position, const glm::vec2 start_velocity,
+    const vec2 start_position, const vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
     const float u_min, const float u_max, const float v_min, const float v_max,
     const float opacity
@@ -193,7 +191,7 @@ __global__ void geodesics_2d_kernel(
     // Set up initial state
     float rotation_angle = num_geodesics > 1 ? (index / float(num_geodesics - 1)) - 0.5f : 0.0f;
     rotation_angle *= spread_angle;
-    glm::vec2 rotated_start_velocity = glm::vec2(
+    vec2 rotated_start_velocity = vec2(
         start_velocity.x * cosf(rotation_angle) - start_velocity.y * sinf(rotation_angle),
         start_velocity.x * sinf(rotation_angle) + start_velocity.y * cosf(rotation_angle)
     );
@@ -207,11 +205,10 @@ __global__ void geodesics_2d_kernel(
     float start_x, start_y, start_z;
     bool last_behind_camera = false;
     d_coordinate_to_pixel(
-        surface_2d(glm::vec2(state[0], state[1])),
+        surface_2d(vec2(state[0], state[1])),
         last_behind_camera,
         camera_direction,
         camera_pos,
-        conjugate_camera_direction,
         fov,
         geom_mean_size,
         w,
@@ -227,11 +224,10 @@ __global__ void geodesics_2d_kernel(
         bool behind_camera = false;
         float out_x, out_y, out_z;
         d_coordinate_to_pixel(
-            surface_2d(glm::vec2(state[0], state[1])),
+            surface_2d(vec2(state[0], state[1])),
             behind_camera,
             camera_direction,
             camera_pos,
-            conjugate_camera_direction,
             fov,
             geom_mean_size,
             w,
@@ -259,9 +255,9 @@ __global__ void geodesics_2d_kernel(
 extern "C" void cuda_render_geodesics_2d(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData& manifold,
-    const glm::vec2 start_position, const glm::vec2 start_velocity,
+    const vec2 start_position, const vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov, const float opacity
 ) {
     // Allocate and copy pixels to device
@@ -279,7 +275,7 @@ extern "C" void cuda_render_geodesics_2d(
         d_pixels, w, h,
         start_position, start_velocity,
         num_geodesics, num_steps, spread_angle,
-        camera_pos, camera_direction, conjugate_camera_direction,
+        camera_pos, camera_direction,
         geom_mean_size, fov,
         manifold.u_min, manifold.u_max, manifold.v_min, manifold.v_max, opacity
     );

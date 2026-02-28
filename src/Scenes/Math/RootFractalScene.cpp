@@ -44,7 +44,7 @@ public:
         for(complex<float> coeff : {c0, c1}) {
             float letter_opa = 1;
             letter_opa *= state["coefficients_opacity"];
-            const glm::vec2 pixel(point_to_pixel(glm::vec2(coeff.real(), coeff.imag())));
+            const vec2 pixel(point_to_pixel(vec2(coeff.real(), coeff.imag())));
             if(letter_opa > 0.01) {
                 ScalingParams sp = ScalingParams(gm * 16, gm * 40);
                 Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);

@@ -1,21 +1,19 @@
 // This file renders a specified 3d manifold in CUDA.
 #include <thrust/complex.h>
 #include <cuda_runtime.h>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
 #include <cstring>
 #include "color.cuh" // For complex_to_srgb
 #include "common_graphics.cuh"
 #include "edge_detect.cuh"
 #include "../Host_Device_Shared/ManifoldData.c"
+#include "../Host_Device_Shared/vec.h"
 #include "deepcopy_manifold.cuh"
 
 // Kernel
 __global__ void render_manifold_kernel(
     uint32_t* pixels, const int w, const int h,
-    const ManifoldData d_manifold,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const Cuda::ManifoldData d_manifold,
+    const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
     float* depth_buffer,
     const float ab_dilation, const float dot_radius
@@ -40,11 +38,10 @@ __global__ void render_manifold_kernel(
     bool behind_camera = false;
     float out_x, out_y, out_z;
     d_coordinate_to_pixel(
-        glm::vec3(x, y, z),
+        {x, y, z},
         behind_camera,
         camera_direction,
         camera_pos,
-        conjugate_camera_direction,
         fov,
         geom_mean_size,
         w,
@@ -86,8 +83,8 @@ __global__ void render_manifold_kernel(
 // Externed entry point
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
-    const ManifoldData* manifold, const int num_manifolds,
-    const glm::vec3 camera_pos, const glm::quat camera_direction, const glm::quat conjugate_camera_direction,
+    const Cuda::ManifoldData* manifold, const int num_manifolds,
+    const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius
 ) {
@@ -105,14 +102,14 @@ extern "C" void cuda_render_manifold(
     free(h_depth);
 
     for(int m = 0; m < num_manifolds; ++m) {
-        ManifoldData d_manifold = deepcopy_manifold(manifold[m]);
+        Cuda::ManifoldData d_manifold = deepcopy_manifold(manifold[m]);
 
         dim3 blockSize(16, 16);
         dim3 gridSize((manifold[m].u_steps + blockSize.x - 1) / blockSize.x, (manifold[m].v_steps + blockSize.y - 1) / blockSize.y);
         render_manifold_kernel<<<gridSize, blockSize>>>(
             d_pixels, w, h,
             d_manifold,
-            camera_pos, camera_direction, conjugate_camera_direction,
+            camera_pos, camera_direction,
             geom_mean_size, fov,
             d_depth_buffer,
             ab_dilation, dot_radius

@@ -1447,7 +1447,7 @@ void trimmed_solution(CompositeScene& cs) {
     C4Board asymm_board(FULL, "4444445");
     flood_fill_edges_to_highlight(g, asymm_board, weakc4);
     double hash = asymm_board.get_hash();
-    glm::vec4 pos = g->nodes.find(hash)->second.position;
+    vec4 pos = g->nodes.find(hash)->second.position;
     weakc4->manager.transition(MICRO, {{"x", to_string(pos.x)}, {"y", to_string(pos.y)}, {"z", to_string(pos.z)}, {"d", ".5"}});
     cs.render_microblock();
     cs.render_microblock();

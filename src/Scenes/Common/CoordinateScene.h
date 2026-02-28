@@ -19,13 +19,13 @@ public:
     GeometricConstruction construction;
     CoordinateScene(const float width = 1, const float height = 1);
 
-    glm::vec2 point_to_pixel(const glm::vec2& p);
-    glm::vec2 pixel_to_point(const glm::vec2& pix);
+    vec2 point_to_pixel(const vec2& p);
+    vec2 pixel_to_point(const vec2& pix);
 
     // This is not used here, but it is used in some classes which inherit from CoordinateScene
-    void draw_trail(const std::list<std::pair<glm::vec2, int>>& trail, const float trail_opacity);
+    void draw_trail(const std::list<std::pair<vec2, int>>& trail, const float trail_opacity);
 
-    void draw_point(const glm::vec2 point, int point_color, float point_opacity);
+    void draw_point(const vec2 point, int point_color, float point_opacity);
 
     void draw() override;
 

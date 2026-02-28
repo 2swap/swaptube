@@ -4,9 +4,10 @@
 #include <stdlib.h>
 #include <cstdint>
 #include <utility>
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
+#include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
+
+namespace Cuda {
 
 typedef uint64_t Bitboard;
 
@@ -123,15 +124,15 @@ extern "C" void iterate_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bit
     cudaDeviceSynchronize();
 }
 
-__global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bitboards, int h_bitboards, unsigned int* pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by, float w_t)
+__global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bitboards, int h_bitboards, unsigned int* pixels, int pixels_w, int pixels_h, vec2 lx_ty, vec2 rx_by, float w_t)
 {
     int px = blockDim.x * blockIdx.x + threadIdx.x;
     int py = blockDim.y * blockIdx.y + threadIdx.y;
     if (px >= pixels_w || py >= pixels_h) return;
 
     int pixel_idx = py * pixels_w + px;
-    glm::vec2 point_vec = pixel_to_point(glm::vec2(px, py), lx_ty, rx_by, glm::vec2(pixels_w, pixels_h));
-    point_vec += glm::vec2(4.0f * w_bitboards, 4.0f * h_bitboards); // Centering
+    vec2 point_vec = pixel_to_point(vec2(px, py), lx_ty, rx_by, vec2(pixels_w, pixels_h));
+    point_vec += vec2(4.0f * w_bitboards, 4.0f * h_bitboards); // Centering
 
     if(point_vec.x < 0 || point_vec.y < 0) {
         pixels[pixel_idx] = 0xff808080;
@@ -222,7 +223,7 @@ __global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bit
     }
 }
 
-extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, glm::vec2 lx_ty, glm::vec2 rx_by, float transition)
+extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, vec2 lx_ty, vec2 rx_by, float transition)
 {
     size_t pix_sz = pixels_w * pixels_h * sizeof(unsigned int);
 
@@ -255,4 +256,6 @@ extern "C" void allocate_conway_grid(Bitboard** d_board, Bitboard** d_board_2, i
 extern "C" void free_conway_grid(Bitboard* d_board, Bitboard* d_board_2) {
     cudaFree(d_board);
     cudaFree(d_board_2);
+}
+
 }

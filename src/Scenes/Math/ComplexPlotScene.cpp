@@ -315,7 +315,7 @@ public:
         for(int i = 0; i < roots.size(); i++){
             float opa = state["root"+to_string(i)+"_ring"];
             if(opa < 0.01) continue;
-            const glm::vec2 pixel(point_to_pixel(glm::vec2(roots[i].real(), roots[i].imag())));
+            const vec2 pixel(point_to_pixel(vec2(roots[i].real(), roots[i].imag())));
             pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa * .55);
         }
 
@@ -323,7 +323,7 @@ public:
         for(int i = 0; i < coefficients.size(); i++){
             float ring_opa = state["coefficient"+to_string(i)+"_ring"];
             float letter_opa = state["coefficient"+to_string(i)+"_opacity"];
-            const glm::vec2 pixel(point_to_pixel(glm::vec2(coefficients[i].real(), coefficients[i].imag())));
+            const vec2 pixel(point_to_pixel(vec2(coefficients[i].real(), coefficients[i].imag())));
             if(ring_opa > 0.01) {
                 pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, ring_opa * .55);
             }
@@ -351,7 +351,7 @@ public:
                 const complex<float> discriminant = b*b - complex<float>(4,0)*a*c;
                 const complex<float> sqrt_disc = std::sqrt(discriminant);
                 const complex<float> root = (-b + sqrt_disc * sign_c) / (2.0f*a);
-                const glm::vec2 pixel(point_to_pixel(glm::vec2(root.real(), root.imag())));
+                const vec2 pixel(point_to_pixel(vec2(root.real(), root.imag())));
                 const int color = (sign == 1) ? 0xffff0000 : 0xff00ff00;
                 pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, color, opa);
             }

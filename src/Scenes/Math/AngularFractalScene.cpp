@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 #include <cmath>
-#include <glm/glm.hpp>
+#include "../../Host_Device_Shared/vec.h"
 
 using std::to_string;
 using std::list;
@@ -20,15 +20,15 @@ void AngularFractalScene::draw() {
 }
 
 void AngularFractalScene::draw_angular_fractal() {
-    list<pair<glm::vec2, int>> trail;
-    glm::vec2 current_point = glm::vec2(0,0);
+    list<pair<vec2, int>> trail;
+    vec2 current_point = vec2(0,0);
     double current_angle = 0;
     trail.push_back({current_point, OPAQUE_WHITE});
     float segment_length = 1. / size;
     for(int i = 0; i < size; i++) {
         double angle = state["angle_"+to_string(i)];
         current_angle += angle;
-        glm::vec2 direction = glm::vec2(cos(current_angle), sin(current_angle)) * (float)segment_length;
+        vec2 direction = vec2(cos(current_angle), sin(current_angle)) * (float)segment_length;
         current_point += direction;
         trail.push_back({current_point, OPAQUE_WHITE});
     }

@@ -18,7 +18,7 @@ void generate_audio(double duration, vector<sample_t>& left, vector<sample_t>& r
             float f = .03*sin(i*pow(2, notes[note]/12.)*2050./get_audio_samplerate_hz());
             f *= pow(.5, 4*pct_complete);
             f += .04*sin(i*pow(2, bass[note]/12.-1)*2050./get_audio_samplerate_hz());
-            sample_t val = float_to_sample(val);
+            sample_t val = float_to_sample(f);
             left.push_back(val);
             right.push_back(val);
         }

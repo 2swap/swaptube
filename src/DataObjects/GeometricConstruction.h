@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <string>
-#include <glm/glm.hpp>
+#include "../Host_Device_Shared/vec.h"
 #include "DataObject.h"
 using namespace std;
 
@@ -18,16 +18,16 @@ public:
 
 class GeometricPoint : public GeometricItem {
 public:
-    glm::vec2 position;
+    vec2 position;
     float width_multiplier; // For rendering size
-    GeometricPoint(glm::vec2 pos, string id = "", float wm = 1.0f, bool u_s = false, string l = "") : GeometricItem(id, l==""?id:l, u_s), position(pos), width_multiplier(wm) {}
+    GeometricPoint(vec2 pos, string id = "", float wm = 1.0f, bool u_s = false, string l = "") : GeometricItem(id, l==""?id:l, u_s), position(pos), width_multiplier(wm) {}
 };
 
 class GeometricLine : public GeometricItem {
 public:
-    glm::vec2 start;
-    glm::vec2 end;
-    GeometricLine(glm::vec2 s, glm::vec2 e, string id = "", bool u_s = false, string l = "") : GeometricItem(id, l==""?id:l, u_s), start(s), end(e) {}
+    vec2 start;
+    vec2 end;
+    GeometricLine(vec2 s, vec2 e, string id = "", bool u_s = false, string l = "") : GeometricItem(id, l==""?id:l, u_s), start(s), end(e) {}
 };
 
 class GeometricConstruction : public DataObject {
