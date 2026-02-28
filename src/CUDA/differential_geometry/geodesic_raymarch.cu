@@ -6,10 +6,10 @@
 
 // Store x equations and sizes in constant memory for fast access
 #define MAX_EQ 256
-__constant__ ResolvedStateEquationComponent d_x_eq[MAX_EQ];
-__constant__ ResolvedStateEquationComponent d_y_eq[MAX_EQ];
-__constant__ ResolvedStateEquationComponent d_z_eq[MAX_EQ];
-__constant__ ResolvedStateEquationComponent d_w_eq[MAX_EQ];
+__constant__ Cuda::ResolvedStateEquationComponent d_x_eq[MAX_EQ];
+__constant__ Cuda::ResolvedStateEquationComponent d_y_eq[MAX_EQ];
+__constant__ Cuda::ResolvedStateEquationComponent d_z_eq[MAX_EQ];
+__constant__ Cuda::ResolvedStateEquationComponent d_w_eq[MAX_EQ];
 __constant__ int d_x_size;
 __constant__ int d_y_size;
 __constant__ int d_z_size;
@@ -18,7 +18,7 @@ __constant__ int special_case_code; // 0 is general case, 1 is x,y,z are identit
 __constant__ float     delta =        .01f;
 __constant__ float inv_delta = 1.0f / .01f;
 
-__device__ vec4 surface_eval_general_case(float x, float y, float z) {
+__device__ Cuda::vec4 surface_eval_general_case(float x, float y, float z) {
     int error_x = 0;
     int error_y = 0;
     int error_z = 0;
@@ -32,40 +32,40 @@ __device__ vec4 surface_eval_general_case(float x, float y, float z) {
     if(error_x) {
         printf("Error calculating manifold x at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_x);
         print_resolved_state_equation(d_x_size, d_x_eq);
-        return vec4(0.0f);
+        return {0.0f, 0.0f, 0.0f, 0.0f};
     }
     if(error_y) {
         printf("Error calculating manifold y at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_y);
         print_resolved_state_equation(d_y_size, d_y_eq);
-        return vec4(0.0f);
+        return {0.0f, 0.0f, 0.0f, 0.0f};
     }
     if(error_z) {
         printf("Error calculating manifold z at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_z);
         print_resolved_state_equation(d_z_size, d_z_eq);
-        return vec4(0.0f);
+        return {0.0f, 0.0f, 0.0f, 0.0f};
     }
     if(error_w) {
         printf("Error calculating manifold w at a=%f b=%f c=%f\n. Error code: %d\n", x, y, z, error_w);
         print_resolved_state_equation(d_w_size, d_w_eq);
-        return vec4(0.0f);
+        return {0.0f, 0.0f, 0.0f, 0.0f};
     }
 
-    return vec4(ox, oy, oz, ow);
+    return { ox, oy, oz, ow };
 }
 
 // Compute partial derivatives of the surface embedding wrt parameter axes
-static __device__ void dsurface_dv_numerical_general_case(float x, float y, float z, vec4& d_dx, vec4& d_dy, vec4& d_dz) {
-    vec4 here   = surface_eval_general_case(x, y, z);
-    vec4 plus_x = surface_eval_general_case(x + delta, y, z);
-    vec4 plus_y = surface_eval_general_case(x, y + delta, z);
-    vec4 plus_z = surface_eval_general_case(x, y, z + delta);
+static __device__ void dsurface_dv_numerical_general_case(float x, float y, float z, Cuda::vec4& d_dx, Cuda::vec4& d_dy, Cuda::vec4& d_dz) {
+    Cuda::vec4 here   = surface_eval_general_case(x, y, z);
+    Cuda::vec4 plus_x = surface_eval_general_case(x + delta, y, z);
+    Cuda::vec4 plus_y = surface_eval_general_case(x, y + delta, z);
+    Cuda::vec4 plus_z = surface_eval_general_case(x, y, z + delta);
     d_dx = (plus_x - here) * inv_delta;
     d_dy = (plus_y - here) * inv_delta;
     d_dz = (plus_z - here) * inv_delta;
 }
 
-static __device__ void metric_tensor_general_case(float x, float y, float z, float g[3][3]) {
-    vec4 d_dx, d_dy, d_dz;
+static __noinline__ __device__ void metric_tensor_general_case(float x, float y, float z, float g[3][3]) {
+    Cuda::vec4 d_dx, d_dy, d_dz;
     dsurface_dv_numerical_general_case(x, y, z, d_dx, d_dy, d_dz);
 
     g[0][0] = dot(d_dx, d_dx);
@@ -77,7 +77,7 @@ static __device__ void metric_tensor_general_case(float x, float y, float z, flo
     g[1][2] = g[2][1] = dot(d_dy, d_dz);
 }
 
-static __device__ void dmetric_dv_numerical_general_case(float x, float y, float z, float dg[3][3][3], float g[3][3]) {
+static __noinline__ __device__ void dmetric_dv_numerical_general_case(float x, float y, float z, float dg[3][3][3], float g[3][3]) {
     float g_pu[3][3], g_pv[3][3], g_pw[3][3];
     metric_tensor_general_case(x, y, z, g);
     metric_tensor_general_case(x + delta, y, z, g_pu);
@@ -92,7 +92,7 @@ static __device__ void dmetric_dv_numerical_general_case(float x, float y, float
         }
 }
 
-__device__ float surface_eval_special_case(float x, float y, float z) {
+__noinline__ __device__ float surface_eval_special_case(float x, float y, float z) {
     int error = 0;
     // Create vector of x, y, and z for evaluation
     float cuda_tags[3] = { x, y, z };
@@ -105,7 +105,7 @@ __device__ float surface_eval_special_case(float x, float y, float z) {
     return w;
 }
 
-static __device__ void dmetric_dv_numerical_special_case(float x, float y, float z, float dg[3][3][3], float g[3][3]) {
+static __noinline__ __device__ void dmetric_dv_numerical_special_case(float x, float y, float z, float dg[3][3][3], float g[3][3]) {
     float xd = x + delta;
     float yd = y + delta;
     float zd = z + delta;
@@ -203,7 +203,7 @@ static __device__ bool invert3x3(const float m[3][3], float invOut[3][3]) {
 
 // Christoffel symbols Γ^i_jk at parameter-space point v using central differences.
 // Gamma is output as Gamma[i][j][k]
-static __device__ bool christoffel_symbols(vec3 v, float Gamma[3][3][3]) {
+static __device__ bool christoffel_symbols(Cuda::vec3 v, float Gamma[3][3][3]) {
     // compute metric at center
     float g[3][3];
     float dg[3][3][3];
@@ -230,8 +230,8 @@ static __device__ bool christoffel_symbols(vec3 v, float Gamma[3][3][3]) {
 }
 
 // Geodesic RHS: input Y[6] = [u, v, w, up, vp, wp] -> outputs dY[6]
-static __device__ bool geodesic_rhs(const float Y[6], float dY[6]) {
-    vec3 pos = vec3(Y[0], Y[1], Y[2]);
+static __noinline__ __device__ bool geodesic_rhs(const float Y[6], float dY[6]) {
+    Cuda::vec3 pos = Cuda::vec3(Y[0], Y[1], Y[2]);
     float vel[3] = { Y[3], Y[4], Y[5] };
 
     float Gamma[3][3][3];
@@ -320,8 +320,8 @@ static __device__ bool collision_grid(float Y[6], uint32_t& color, float grid_th
 
 // Kernel: trace one ray per pixel, integrate geodesic in parameter-space
 __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
-                                             quat camera_orientation,
-                                             vec3 camera_position,
+                                             Cuda::quat camera_orientation,
+                                             Cuda::vec3 camera_position,
                                              float fov, float max_dist,
                                              float floor_y, float ceiling_y, float grid_thickness) {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
@@ -336,8 +336,8 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     float aspect = float(w) / float(h);
     float px_cam = ndc_x * tanf(fov * 0.5f) * aspect;
     float py_cam = -ndc_y * tanf(fov * 0.5f); // negative to flip Y to image coords
-    vec3 dir_cam = vec3(px_cam, py_cam, -1.0f);
-    vec3 dir_world = quat_rotate(camera_orientation, dir_cam);
+    Cuda::vec3 dir_cam = Cuda::vec3(px_cam, py_cam, -1.0f);
+    Cuda::vec3 dir_world(camera_orientation * dir_cam);
     dir_world = normalize(dir_world);
 
     // Initialize state in parameter-space (we treat param-space coords directly)
@@ -403,20 +403,20 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
 
 // Host-facing launcher
 extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
-                                             int x_size, ResolvedStateEquationComponent* x_eq,
-                                             int y_size, ResolvedStateEquationComponent* y_eq,
-                                             int z_size, ResolvedStateEquationComponent* z_eq,
-                                             int w_size, ResolvedStateEquationComponent* w_eq,
+                                             int x_size, Cuda::ResolvedStateEquationComponent* x_eq,
+                                             int y_size, Cuda::ResolvedStateEquationComponent* y_eq,
+                                             int z_size, Cuda::ResolvedStateEquationComponent* z_eq,
+                                             int w_size, Cuda::ResolvedStateEquationComponent* w_eq,
                                              int special,
-                                             quat camera_orientation, vec3 camera_position,
+                                             Cuda::quat camera_orientation, Cuda::vec3 camera_position,
                                              float fov_rad, float max_dist,
                                              float floor_y, float ceiling_y, float grid_thickness) {
 
     // Write equations to constant memory
-    cudaMemcpyToSymbol(d_x_eq, x_eq, sizeof(ResolvedStateEquationComponent) * x_size);
-    cudaMemcpyToSymbol(d_y_eq, y_eq, sizeof(ResolvedStateEquationComponent) * y_size);
-    cudaMemcpyToSymbol(d_z_eq, z_eq, sizeof(ResolvedStateEquationComponent) * z_size);
-    cudaMemcpyToSymbol(d_w_eq, w_eq, sizeof(ResolvedStateEquationComponent) * w_size);
+    cudaMemcpyToSymbol(d_x_eq, x_eq, sizeof(Cuda::ResolvedStateEquationComponent) * x_size);
+    cudaMemcpyToSymbol(d_y_eq, y_eq, sizeof(Cuda::ResolvedStateEquationComponent) * y_size);
+    cudaMemcpyToSymbol(d_z_eq, z_eq, sizeof(Cuda::ResolvedStateEquationComponent) * z_size);
+    cudaMemcpyToSymbol(d_w_eq, w_eq, sizeof(Cuda::ResolvedStateEquationComponent) * w_size);
     cudaMemcpyToSymbol(d_x_size, &x_size, sizeof(int));
     cudaMemcpyToSymbol(d_y_size, &y_size, sizeof(int));
     cudaMemcpyToSymbol(d_z_size, &z_size, sizeof(int));

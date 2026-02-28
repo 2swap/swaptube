@@ -6,45 +6,46 @@
 #include "../common_graphics.cuh"
 
 #define numeric_delta 1e-2f
+// TODO noinlines here: should they be removed for runtime speed? Compile speed is very slow without them.
 
-__constant__ ManifoldData d_manifold;
+__constant__ Cuda::ManifoldData d_manifold;
 
-__device__ vec3 surface_2d(vec2 v) {
+__noinline__ __device__ Cuda::vec3 surface_2d(Cuda::vec2 v) {
     float cuda_tags[2] = { v.x, v.y };
 
     int error = 0;
-    double x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 2, error);
+    float x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 2, error);
     if(error) {
         printf("Error calculating manifold x at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq);
-        return vec3(0.0f);
+        return Cuda::vec3(0.0f);
     }
-    double y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 2, error);
+    float y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 2, error);
     if(error) {
         printf("Error calculating manifold y at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq);
-        return vec3(0.0f);
+        return Cuda::vec3(0.0f);
     }
-    double z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 2, error);
+    float z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 2, error);
     if(error) {
         printf("Error calculating manifold z at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq);
-        return vec3(0.0f);
+        return Cuda::vec3(0.0f);
     }
-    return vec3(x, y, z);
+    return Cuda::vec3(x, y, z);
 }
 
 // Compute partial derivatives of the surface embedding wrt parameter axes
-static __device__ void dsurface_dv_numerical(vec2 v, vec3& d_dx, vec3& d_dy) {
-    vec3 here   = surface_2d(v);
-    vec3 plus_x = surface_2d(v + vec2(numeric_delta, 0.0f));
-    vec3 plus_y = surface_2d(v + vec2(0.0f, numeric_delta));
+static __device__ void dsurface_dv_numerical(Cuda::vec2 v, Cuda::vec3& d_dx, Cuda::vec3& d_dy) {
+    Cuda::vec3 here   = surface_2d(v);
+    Cuda::vec3 plus_x = surface_2d(v + Cuda::vec2(numeric_delta, 0.0f));
+    Cuda::vec3 plus_y = surface_2d(v + Cuda::vec2(0.0f, numeric_delta));
     d_dx = (plus_x - here) / numeric_delta;
     d_dy = (plus_y - here) / numeric_delta;
 }
 
-static __device__ void metric_tensor(vec2 v, float g[2][2]) {
-    vec3 d_dx, d_dy;
+static __noinline__ __device__ void metric_tensor(Cuda::vec2 v, float g[2][2]) {
+    Cuda::vec3 d_dx, d_dy;
     dsurface_dv_numerical(v, d_dx, d_dy);
 
     g[0][0] = dot(d_dx, d_dx);
@@ -54,13 +55,13 @@ static __device__ void metric_tensor(vec2 v, float g[2][2]) {
     g[1][1] = dot(d_dy, d_dy);
 }
 
-static __device__ void dmetric_dv_numerical(vec2 v, float dg[2][2][2]) {
+static __device__ void dmetric_dv_numerical(Cuda::vec2 v, float dg[2][2][2]) {
     float g_pu[2][2], g_mu[2][2], g_pv[2][2], g_mv[2][2];
-    metric_tensor(v + vec2( numeric_delta, 0.0f), g_pu);
-    metric_tensor(v + vec2(-numeric_delta, 0.0f), g_mu);
+    metric_tensor(v + Cuda::vec2( numeric_delta, 0.0f), g_pu);
+    metric_tensor(v + Cuda::vec2(-numeric_delta, 0.0f), g_mu);
 
-    metric_tensor(v + vec2(0.0f,  numeric_delta), g_pv);
-    metric_tensor(v + vec2(0.0f, -numeric_delta), g_mv);
+    metric_tensor(v + Cuda::vec2(0.0f,  numeric_delta), g_pv);
+    metric_tensor(v + Cuda::vec2(0.0f, -numeric_delta), g_mv);
 
     float g_u[2][2], g_v[2][2];
     for (int i = 0; i < 2; ++i)
@@ -97,7 +98,7 @@ static __device__ bool invert2x2(const float m[2][2], float invOut[2][2]) {
 
 // Christoffel symbols Γ^i_jk at parameter-space point v using central differences.
 // Gamma is output as Gamma[i][j][k]
-static __device__ bool christoffel_symbols(vec2 v, float Gamma[2][2][2]) {
+static __noinline__ __device__ bool christoffel_symbols(Cuda::vec2 v, float Gamma[2][2][2]) {
     // compute metric at center
     float g[2][2];
     metric_tensor(v, g);
@@ -133,8 +134,8 @@ static __device__ bool christoffel_symbols(vec2 v, float Gamma[2][2][2]) {
 }
 
 // Geodesic RHS: input Y[4] = [u, v, up, vp] -> outputs dY[4]
-static __device__ bool geodesic_rhs(const float Y[4], float dY[4]) {
-    vec2 pos = vec2(Y[0], Y[1]);
+static __noinline__ __device__ bool geodesic_rhs(const float Y[4], float dY[4]) {
+    Cuda::vec2 pos = Cuda::vec2(Y[0], Y[1]);
     float vel[2] = { Y[2], Y[3] };
 
     float Gamma[2][2][2];
@@ -177,9 +178,9 @@ static __device__ bool rk4_step_geodesic(float Y[4], float dt) {
 
 __global__ void geodesics_2d_kernel(
     uint32_t* pixels, const int w, const int h,
-    const vec2 start_position, const vec2 start_velocity,
+    const Cuda::vec2 start_position, const Cuda::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
-    const vec3 camera_pos, const quat camera_direction,
+    const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
     const float u_min, const float u_max, const float v_min, const float v_max,
     const float opacity
@@ -191,10 +192,10 @@ __global__ void geodesics_2d_kernel(
     // Set up initial state
     float rotation_angle = num_geodesics > 1 ? (index / float(num_geodesics - 1)) - 0.5f : 0.0f;
     rotation_angle *= spread_angle;
-    vec2 rotated_start_velocity = vec2(
+    Cuda::vec2 rotated_start_velocity{
         start_velocity.x * cosf(rotation_angle) - start_velocity.y * sinf(rotation_angle),
         start_velocity.x * sinf(rotation_angle) + start_velocity.y * cosf(rotation_angle)
-    );
+    };
     float state[4];
     state[0] = start_position.x;
     state[1] = start_position.y;
@@ -205,7 +206,7 @@ __global__ void geodesics_2d_kernel(
     float start_x, start_y, start_z;
     bool last_behind_camera = false;
     d_coordinate_to_pixel(
-        surface_2d(vec2(state[0], state[1])),
+        surface_2d(Cuda::vec2(state[0], state[1])),
         last_behind_camera,
         camera_direction,
         camera_pos,
@@ -224,7 +225,7 @@ __global__ void geodesics_2d_kernel(
         bool behind_camera = false;
         float out_x, out_y, out_z;
         d_coordinate_to_pixel(
-            surface_2d(vec2(state[0], state[1])),
+            surface_2d(Cuda::vec2(state[0], state[1])),
             behind_camera,
             camera_direction,
             camera_pos,
@@ -238,7 +239,7 @@ __global__ void geodesics_2d_kernel(
         int pixel_y = out_y;
 
         if (!behind_camera && !last_behind_camera && pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
-            bresenham(
+            Cuda::bresenham(
                 last_pixel_x, last_pixel_y,
                 pixel_x, pixel_y,
                 0xffff0000, opacity, 2,
@@ -254,10 +255,10 @@ __global__ void geodesics_2d_kernel(
 
 extern "C" void cuda_render_geodesics_2d(
     uint32_t* pixels, const int w, const int h,
-    const ManifoldData& manifold,
-    const vec2 start_position, const vec2 start_velocity,
+    const Cuda::ManifoldData& manifold,
+    const Cuda::vec2 start_position, const Cuda::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
-    const vec3 camera_pos, const quat camera_direction,
+    const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov, const float opacity
 ) {
     // Allocate and copy pixels to device
@@ -265,8 +266,8 @@ extern "C" void cuda_render_geodesics_2d(
     cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
     cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
-    ManifoldData cp_manifold = deepcopy_manifold(manifold);
-    cudaMemcpyToSymbol(d_manifold, &cp_manifold, sizeof(ManifoldData));
+    Cuda::ManifoldData cp_manifold = deepcopy_manifold(manifold);
+    cudaMemcpyToSymbol(d_manifold, &cp_manifold, sizeof(Cuda::ManifoldData));
 
     // Launch kernel: one thread per geodesic
     int blockSize = 256;

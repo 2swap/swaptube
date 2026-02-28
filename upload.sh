@@ -45,6 +45,6 @@ fi
 echo "Proceeding with upload..."
 
 # Upload the run folder to the gcloud bucket
-DESTINATION="gs://swaptube-out/output_uploads/${PROJECT_NAME}/$(basename $OUTPUT_FOLDER)"
+DESTINATION="gs://swaptube-out/output-uploads/${PROJECT_NAME}/$(basename $OUTPUT_FOLDER)"
 echo "Uploading to $DESTINATION..."
 gcloud storage cp --recursive "$OUTPUT_FOLDER" "$DESTINATION"
