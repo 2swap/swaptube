@@ -36,7 +36,7 @@ __global__ void cuda_edge_detect_kernel(
         max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
 
-    d_pixels[idx] = d_color_combine(d_pixels[idx], edge_color, fmin(max_depth_diff * 2.0f, 1.0f));
+    d_pixels[idx] = d_color_combine(d_pixels[idx], edge_color, fmin(max_depth_diff * 6.0f, 1.0f));
 }
 
 void cuda_edge_detect(

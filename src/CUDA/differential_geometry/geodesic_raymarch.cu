@@ -272,48 +272,62 @@ static __device__ bool rk4_step_geodesic(float Y[6], float Y2[6], float dt) {
     return true;
 }
 
-static __device__ bool collision_cube(float Y[6], uint32_t& color, float floor_y, float ceiling_y, float& dist) {
-    if (Y[1] < floor_y) { // Floor Pattern
+static __device__ bool collision_cube(float Y[6], uint32_t& color, float& dist) {
+    const int wall_dist = 4;
+    const int floor_ceiling_dist = 1;
+    if (Y[0] < -wall_dist) { // Left Wall Pattern
+        int square_num = floorf(floorf(Y[1]+.5) + floorf(Y[2]+.5));
+        color = square_num % 2 ?
+            0xffff0000 : // red
+            0xff990000;  // dark red
+        return true;
+    }
+
+    else if (Y[0] > wall_dist) { // Right Wall Pattern
+        int square_num = floorf(floorf(Y[1]+.5) + floorf(Y[2]+.5));
+        color = square_num % 2 ?
+            0xffff8800 : // orange
+            0xff994400;  // dark orange
+        return true;
+    }
+
+    else if (Y[1] < -floor_ceiling_dist) { // Floor Pattern
         int square_num = floorf(floorf(Y[0]+.5) + floorf(Y[2]+.5));
         color = square_num % 2 ?
-            0xff00bb00 : // green
-            0xff009900;  // dark green
+            0xffffffff : // white
+            0xffcccccc;  // light gray
         return true;
     }
 
-    if (Y[1] > ceiling_y) { // Ceiling Pattern
+    else if (Y[1] > floor_ceiling_dist) { // Ceiling Pattern
         int square_num = floorf(floorf(Y[0]+.5) + floorf(Y[2]+.5));
         color = square_num % 2 ?
-            0xff87ceeb : // light blue
-            0xff4682b4;  // steel blue
+            0xffffff00 : // yellow
+            0xffff9900;  // dark yellow
         return true;
     }
 
-    dist = fminf(Y[1] - floor_y, ceiling_y - Y[1]);
-
-    return false; // no collision
-}
-
-static __device__ bool collision_grid(float Y[6], uint32_t& color, float grid_thickness, float& dist) {
-    float x = (Y[0] + 1) * .5f;
-    float y = (Y[1] + 1) * .5f;
-    float z = (Y[2] + 1) * .5f;
-    float decimal_x = x - floorf(x); if(decimal_x > .5) decimal_x = 1.0f - decimal_x;
-    float decimal_y = y - floorf(y); if(decimal_y > .5) decimal_y = 1.0f - decimal_y;
-    float decimal_z = z - floorf(z); if(decimal_z > .5) decimal_z = 1.0f - decimal_z;
-
-    float half_thickness = grid_thickness * 0.5f;
-
-    int x_collision = decimal_x < half_thickness;
-    int y_collision = decimal_y < half_thickness;
-    int z_collision = decimal_z < half_thickness;
-
-    if(x_collision + y_collision + z_collision >= 2) {
-        color = 0xffffffff; // white grid lines
+    else if (Y[2] < -wall_dist) { // Back Wall Pattern
+        int square_num = floorf(floorf(Y[0]+.5) + floorf(Y[1]+.5));
+        color = square_num % 2 ?
+            0xff008800 : // green
+            0xff004400;  // dark green
+        return true;
+    }
+    
+    else if (Y[2] > wall_dist) { // Front Wall Pattern
+        int square_num = floorf(floorf(Y[0]+.5) + floorf(Y[1]+.5));
+        color = square_num % 2 ?
+            0xff0022ff : // blue
+            0xff000099;  // dark blue
         return true;
     }
 
-    dist = fminf(decimal_x, fminf(decimal_y, decimal_z)) - half_thickness;
+    dist = fminf(fminf(
+        fminf(1 - Y[0], Y[0] + 1),
+        fminf(1 - Y[1], Y[1] + 1)),
+        fminf(1 - Y[2], Y[2] + 1)
+    );
 
     return false; // no collision
 }
@@ -322,8 +336,7 @@ static __device__ bool collision_grid(float Y[6], uint32_t& color, float grid_th
 __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
                                              Cuda::quat camera_orientation,
                                              Cuda::vec3 camera_position,
-                                             float fov, float max_dist,
-                                             float floor_y, float ceiling_y, float grid_thickness) {
+                                             float fov, float max_dist) {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
     if (px >= w || py >= h) return;
@@ -337,8 +350,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     float px_cam = ndc_x * tanf(fov * 0.5f) * aspect;
     float py_cam = -ndc_y * tanf(fov * 0.5f); // negative to flip Y to image coords
     Cuda::vec3 dir_cam = Cuda::vec3(px_cam, py_cam, -1.0f);
-    Cuda::vec3 dir_world(camera_orientation * dir_cam);
-    dir_world = normalize(dir_world);
+    Cuda::vec3 dir_world(normalize(rotate_vector(dir_cam, camera_orientation)));
 
     // Initialize state in parameter-space (we treat param-space coords directly)
     float Y[6];
@@ -351,11 +363,11 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     Y[5] = dir_world.z;
 
     uint32_t out = 0xff00ff00u;
-    float last_dist = 1.0f;
+    float last_dist = 4.0f;
     float dist_traveled = 0.0f;
     while (dist_traveled < max_dist) {
-        if(last_dist < 0.001f) last_dist = 0.001f; // prevent tiny steps
-        float dt = fminf(0.1f, last_dist * 1.5f); // adaptive step size
+        if(last_dist < 0.004f) last_dist = 0.004f; // prevent tiny steps
+        float dt = fminf(0.4f, last_dist * 1.2f); // adaptive step size
         if(special_case_code == 2) {
             // Flat metric special case: straight line
             Y2[0] = Y[0] + Y[3] * dt;
@@ -374,14 +386,10 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
             }
         }
 
-        float ceil_floor_dist;
-        float grid_dist;
-        bool collided = collision_cube(Y2, out, floor_y, ceiling_y, ceil_floor_dist);
-        bool collided_grid = collision_grid(Y2, out, grid_thickness, grid_dist);
-        if(collided || collided_grid) {
-            break;
-        }
-        last_dist = fminf(ceil_floor_dist, grid_dist);
+        float cube_dist;
+        bool collided = collision_cube(Y2, out, cube_dist);
+        if(collided) break;
+        last_dist = cube_dist;
 
         dist_traveled += dt;
 
@@ -409,8 +417,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
                                              int w_size, Cuda::ResolvedStateEquationComponent* w_eq,
                                              int special,
                                              Cuda::quat camera_orientation, Cuda::vec3 camera_position,
-                                             float fov_rad, float max_dist,
-                                             float floor_y, float ceiling_y, float grid_thickness) {
+                                             float fov_rad, float max_dist) {
 
     // Write equations to constant memory
     cudaMemcpyToSymbol(d_x_eq, x_eq, sizeof(Cuda::ResolvedStateEquationComponent) * x_size);
@@ -431,8 +438,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
     dim3 grid( (w + block.x - 1) / block.x, (h + block.y - 1) / block.y );
     cuda_surface_raymarch_kernel<<<grid, block>>>(
         d_pixels, w, h, camera_orientation, camera_position,
-        fov_rad, max_dist,
-        floor_y, ceiling_y, grid_thickness
+        fov_rad, max_dist
     );
     cudaDeviceSynchronize();
 

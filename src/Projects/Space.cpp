@@ -1,10 +1,39 @@
 #include "../Scenes/Math/GeodesicScene.h"
 
-// *space warping all around*
+void render_video() {
+    GeodesicScene gs;
+
+    gs.manager.set({
+        {"scrunch", "{t} sin .5 * 1 +"},
+    });
+
+    gs.manager.set(unordered_map<string, string>{
+        {"space_x", "(a)"},
+        {"space_y", "(b)"},
+        {"space_z", "(c)"},
+        {"space_w", "(c) <scrunch> * sin (a) cos (b) cos + +"}
+    });
+
 // *knock knock knock*
-// [Agent] Interdimensional FBI! Open up!
-// [2swap] *softly* Oh crap.
-// [2swap] One moment!
+    gs.manager.transition(MICRO, {
+        {"pov_fov", "1.5"},
+        {"pov_q1", ".2"},
+        {"pov_qj", "1"},
+    });
+    stage_macroblock(SilenceBlock(1), 1);
+    gs.render_microblock();
+
+    stage_macroblock(FileBlock("Interdimensional FBI! Open up!"), 1);
+    gs.render_microblock();
+
+    // Turn towards door
+
+    stage_macroblock(FileBlock("*softly* Oh crap."), 1);
+    gs.render_microblock();
+
+    stage_macroblock(FileBlock("One moment!"), 1);
+    gs.render_microblock();
+
 // (2swap slams kill switch on space warping device, surfaces begin to flatten out)
 // [Agent] Open the door, now!
 // [2swap] Coming, coming!
@@ -66,7 +95,9 @@
 // [Dealer] If you sail the arctic ocean from Alaska to Norway, to you the path seems straight, but on the globe, you are actually curving downwards since the Earth isn't flat. A geodesic is a curve like this- when you're stuck on a curvy space and walk straight without turning left or right, you are following a geodesic.
 // [Dealer] The light inside your room follows a geodesic curve in non-euclidean space.
 
-void render_video() {
+}
+
+void old() {
     GeodesicScene gs;
 
     gs.manager.set({

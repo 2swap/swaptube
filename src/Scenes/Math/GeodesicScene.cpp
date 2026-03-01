@@ -3,6 +3,8 @@
 #include <string>
 
 ResolvedStateEquation r_eq = {
+    {RESOLVED_CONSTANT, .content = {.constant = 0.0}},
+    /*
     {RESOLVED_CUDA_TAG, .content = {.cuda_tag = 0}},
     {RESOLVED_CONSTANT, .content = {.constant = 10.0}},
     {RESOLVED_OPERATOR, .content = {.op = OP_MUL}},
@@ -17,6 +19,7 @@ ResolvedStateEquation r_eq = {
     {RESOLVED_OPERATOR, .content = {.op = OP_GT}},
     {RESOLVED_CONSTANT, .content = {.constant = 20.0}},
     {RESOLVED_OPERATOR, .content = {.op = OP_MUL}},
+    */
 };
 ResolvedStateEquation i_eq = {
     {RESOLVED_CONSTANT, .content = {.constant = 0.0}},
@@ -29,8 +32,7 @@ extern "C" void launch_cuda_surface_raymarch(
     int w_size, ResolvedStateEquationComponent* w_eq,
     int is_special,
     quat camera_orientation, vec3 camera_position,
-    float fov_rad, float max_dist,
-    float floor_y, float ceiling_y, float grid_thickness);
+    float fov_rad, float max_dist);
 
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
@@ -64,14 +66,11 @@ GeodesicScene::GeodesicScene(const double width, const double height)
         {"pov_qj", "0"},
         {"pov_qk", "0"},
         {"pov_fov", "2"},
-        {"pov_max_dist", "5"},
-        {"pov_floor_y", "-1"},
-        {"pov_ceiling_y", "1"},
-        {"pov_grid_thickness", "0.1"},
+        {"pov_max_dist", "9"},
 
 //Manifold Stuff
-        {"manifold_d", "15.0"},
-        {"manifold_fov", "1"},
+        {"manifold_d", "20.0"},
+        {"manifold_fov", "2"},
         {"manifold_opacity", "1"},
 
         {"geodesics_count", "1"},
@@ -88,9 +87,9 @@ GeodesicScene::GeodesicScene(const double width, const double height)
 void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
                           ResolvedStateEquation& y_eq,
                           ResolvedStateEquation& z_eq,
-                          ResolvedStateEquation& w_eq) {
+                          ResolvedStateEquation& w_eq,
+                          quat camera_direction) {
     vec3 camera_pos = vec3(state["pov_x"], state["pov_y"], state["pov_z"]);
-    quat camera_direction = normalize(quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
 
     bool x_y_z_flat = (
         x_eq.size() == 1 && x_eq.data()[0].type == RESOLVED_CUDA_TAG && x_eq.data()[0].content.cuda_tag == 0 &&
@@ -109,38 +108,42 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
                                  w_eq.size(), w_eq.data(),
                                  special_case_code,
                                  camera_direction, camera_pos,
-                                 state["pov_fov"], state["pov_max_dist"],
-                                 state["pov_floor_y"], state["pov_ceiling_y"], state["pov_grid_thickness"]);
+                                 state["pov_fov"], state["pov_max_dist"]);
 }
 
 void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
                        ResolvedStateEquation& y_eq,
                        ResolvedStateEquation& z_eq,
-                       ResolvedStateEquation& w_eq) {
+                       ResolvedStateEquation& w_eq,
+                       quat camera_direction) {
     float steps_mult = geom_mean(pix.w, pix.h) / 1500.0f;
+
+    vec3 camera_position = rotate_vector(vec3(0, 0, -state["manifold_d"]), conjugate(camera_direction));
+
+    camera_position.y += -2.f; // Lift the camera a bit, so it's not exactly at the same height as the manifold
+
     ManifoldData manifold1{
         x_eq.size(),
         x_eq.data(),
-        y_eq.size(),
-        y_eq.data(),
         w_eq.size(),
         w_eq.data(),
+        z_eq.size(),
+        z_eq.data(),
         r_eq.size(),
         r_eq.data(),
         i_eq.size(),
         i_eq.data(),
-        -1.0f,
-        1.0f,
+        -4.0f, // Should be equal to room size
+        4.0f,
         (int)(1500 * steps_mult),
-        -1.0f,
-        1.0f,
+        -4.0f,
+        4.0f,
         (int)(1500 * steps_mult),
     };
-    quat manifold_rotation = normalize(quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
-    vec3 manifold_position = manifold_rotation * vec3(0.0f, 0.0f, (float)-state["manifold_d"]);
 
     if(state["manifold_opacity"] >= 0.01f) {
-        Pixels manifold_pix(pix.w, pix.h);
+        int div_factor = 2;
+        Pixels manifold_pix(pix.w / div_factor, pix.h / div_factor);
         ManifoldData manifolds[] = { manifold1 };
         cuda_render_manifold(
             manifold_pix.pixels.data(),
@@ -148,8 +151,8 @@ void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
             manifold_pix.h,
             manifolds,
             1,
-            manifold_position,
-            manifold_rotation,
+            camera_position,
+            camera_direction,
             geom_mean(manifold_pix.w, manifold_pix.h),
             state["manifold_fov"],
             1,
@@ -158,7 +161,7 @@ void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
         cuda_overlay(
             pix.pixels.data(), pix.w, pix.h,
             manifold_pix.pixels.data(), manifold_pix.w, manifold_pix.h,
-            0, 0,
+            pix.w - manifold_pix.w, pix.h - manifold_pix.h,
             state["manifold_opacity"]
         );
     }
@@ -178,8 +181,8 @@ void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
             start_position, start_velocity,
             num_geodesics, geodesic_steps,
             state["geodesics_spread_angle"],
-            manifold_position,
-            manifold_rotation,
+            camera_position,
+            camera_direction,
             geom_mean(geodesic_pix.w, geodesic_pix.h),
             state["manifold_fov"],
             state["geodesics_opacity"]
@@ -199,9 +202,11 @@ void GeodesicScene::draw() {
     ResolvedStateEquation z_eq = manager.get_resolved_equation("space_z");
     ResolvedStateEquation w_eq = manager.get_resolved_equation("space_w");
 
-    draw_perspective(x_eq, y_eq, z_eq, w_eq);
+    quat camera_direction = normalize(quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
 
-    //draw_manifold(x_eq, y_eq, z_eq, w_eq);
+    draw_perspective(x_eq, y_eq, z_eq, w_eq, camera_direction);
+
+    draw_manifold(x_eq, y_eq, z_eq, w_eq, camera_direction);
 }
 
 const StateQuery GeodesicScene::populate_state_query() const {
@@ -211,8 +216,6 @@ const StateQuery GeodesicScene::populate_state_query() const {
         "pov_x", "pov_y", "pov_z",
         "pov_q1", "pov_qi", "pov_qj", "pov_qk",
         "pov_fov", "pov_max_dist",
-        "pov_floor_y", "pov_ceiling_y",
-        "pov_grid_thickness",
 
         "manifold_d", "manifold_fov",
         "manifold_opacity",

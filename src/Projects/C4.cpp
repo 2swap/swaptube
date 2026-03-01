@@ -72,6 +72,7 @@ void reset_graph_edge_opacities(shared_ptr<Graph> g) {
 }
 
 void preintro(CompositeScene& cs) {
+    // TODO The graph spread is a bit jittery, we should always run spread before rendering
     cout << "Preintro" << endl;
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(g, false, "", TRIM_STEADY_STATES, 1.2, 1);
@@ -363,7 +364,7 @@ void intro(CompositeScene& cs) {
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("Furthermore, is there some change of perspective that shows how us mortals could hang on to the player one advantage, and defeat god 2?"), 4);
+    stage_macroblock(FileBlock("Furthermore, is there some change of perspective that shows how us mortals could hang on to the player one advantage, and defeat a perfect player 2?"), 4);
     cs.slide_subscene(MICRO, "human2", 0, 1);
     cs.render_microblock();
     cs.remove_subscene("human2");
@@ -1872,17 +1873,20 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
 
     stage_macroblock(FileBlock("but in the language of cold fronts, dew points, and vapor pressure-"), 2);
     cs.render_microblock();
-    shared_ptr<PngScene> weather_1 = make_shared<PngScene>("weather_1");
-    cs.add_scene(weather_1, "weather_1", .5, 1.5);
-    cs.slide_subscene(MICRO, "weather_1", 0, -1);
+    shared_ptr<PngScene> weather_01 = make_shared<PngScene>("weather_01");
+    cs.add_scene(weather_01, "weather_01", .5, 1.5);
+    cs.slide_subscene(MICRO, "weather_01", 0, -1);
     cs.render_microblock();
-    cs.remove_all_subscenes_except("weather_1");
+    cs.remove_all_subscenes_except("weather_01");
 
-    stage_macroblock(FileBlock("a whole new philosophy spawned out of thin air, far abstracted from any rules of physics or chemistry."), 7);
-    for(int i = 2; i < 9; i++) {
-        shared_ptr<PngScene> weather = make_shared<PngScene>("weather_" + to_string(i));
-        cs.remove_subscene("weather_" + to_string(i-1));
-        cs.add_scene(weather, "weather_" + to_string(i));
+    int greatest_weather_file_number = 32;
+    stage_macroblock(FileBlock("a whole new philosophy spawned out of thin air, far abstracted from any rules of physics or chemistry."), greatest_weather_file_number - 1);
+    for(int i = 2; i <= greatest_weather_file_number; i++) {
+        string key = (i <= 9 ? "weather_0" : "weather_") + to_string(i);
+        string last_key = (i-1 <= 9 ? "weather_0" : "weather_") + to_string(i-1);
+        shared_ptr<PngScene> weather = make_shared<PngScene>(key);
+        cs.remove_subscene(last_key);
+        cs.add_scene(weather, key);
         cs.render_microblock();
     }
 

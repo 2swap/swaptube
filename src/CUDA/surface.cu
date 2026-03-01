@@ -40,7 +40,7 @@ __global__ void render_surface_kernel(
 
     // Compute the ray direction from the camera through the screen point
     Cuda::vec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1.0f);
-    ray_dir = camera_direction * ray_dir;
+    ray_dir = rotate_vector(ray_dir, camera_direction);
 
     // Compute the intersection point in 3D space
     const float t = dotnormcam / Cuda::dot(surface_normal, ray_dir);

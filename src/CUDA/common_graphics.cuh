@@ -50,18 +50,15 @@ __device__ __forceinline__ void d_coordinate_to_pixel(
     const float geom_mean_size,
     const int width,
     const int height,
-    float& outx,
-    float& outy,
-    float& outz)
+    vec3& out)
 {
     behind_camera = false;
-    vec3 relative_pos = coordinate - camera_pos;
-    vec3 rotated = camera_direction * relative_pos;
+    vec3 rotated = rotate_vector(coordinate - camera_pos, camera_direction);
     if (rotated.z <= 0) { behind_camera = true; return; }
     float scale = (geom_mean_size * fov) / rotated.z;
-    outx = scale * rotated.x + width * 0.5f;
-    outy = scale * rotated.y + height * 0.5f;
-    outz = rotated.z;
+    out.x = scale * rotated.x + width * 0.5f;
+    out.y = scale * rotated.y + height * 0.5f;
+    out.z = rotated.z;
 }
 
 }

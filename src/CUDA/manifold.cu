@@ -26,17 +26,19 @@ __global__ void render_manifold_kernel(
     float u = d_manifold.u_min + (d_manifold.u_max - d_manifold.u_min) * u_idx / (d_manifold.u_steps - 1);
     float v = d_manifold.v_min + (d_manifold.v_max - d_manifold.v_min) * v_idx / (d_manifold.v_steps - 1);
 
-    float cuda_tags[3] = { u, v, 0 };
+    float cuda_tags[3] = { u, v, v }; // The two vs here are an evil hack to make this work with GeodesicScene
+                                      // which plots on a manifold the room's x versus its z.
+                                      // So v goes in the z position.
 
     // Evaluate manifold equations to get 3D point
     int error = 0;
-    float x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 2, error);
-    float y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 2, error);
-    float z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 2, error);
+    float x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 3, error);
+    float y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 3, error);
+    float z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 3, error);
 
     // Project 3D point to 2D screen space
     bool behind_camera = false;
-    float out_x, out_y, out_z;
+    Cuda::vec3 out;
     d_coordinate_to_pixel(
         {x, y, z},
         behind_camera,
@@ -46,11 +48,9 @@ __global__ void render_manifold_kernel(
         geom_mean_size,
         w,
         h,
-        out_x, out_y, out_z
+        out
     );
-    //if(behind_camera) return; // Don't render points behind camera
-    int pixel_x = out_x;
-    int pixel_y = out_y;
+    if(behind_camera) return; // Don't render points behind camera
 
     // Evaluate color equations to get color
     float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 3, error);
@@ -59,16 +59,16 @@ __global__ void render_manifold_kernel(
     uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
 
     // Depth test and write pixel
-    if (pixel_x >= 0 && pixel_x < w && pixel_y >= 0 && pixel_y < h) {
-        int pixel_index = pixel_y * w + pixel_x;
+    if (out.x >= 0 && out.x < w && out.y >= 0 && out.y < h) {
+        int pixel_index = (int)out.y * w + out.x;
         // Atomically test and update depth using atomicCAS on float bit patterns
         const float eps = 3e-3f; // epsilon to avoid z-fighting
         unsigned int* depth_ui = (unsigned int*)(depth_buffer + pixel_index);
         unsigned int old_ui = *depth_ui;
         for (;;) {
             float old_f = __int_as_float(old_ui);
-            if (!(out_z < old_f - eps)) break; // no update needed
-            unsigned int new_ui = __float_as_int(out_z);
+            if (!(out.z < old_f - eps)) break; // no update needed
+            unsigned int new_ui = __float_as_int(out.z);
             unsigned int prev_ui = atomicCAS(depth_ui, old_ui, new_ui);
             if (prev_ui == old_ui) {
                 // successfully updated depth, write pixel color
@@ -119,7 +119,7 @@ extern "C" void cuda_render_manifold(
         free_manifold(d_manifold);
     }
 
-    //cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xffffbbbb);
+    cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xff0000ff);
 
     // Copy pixels back to host
     cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);

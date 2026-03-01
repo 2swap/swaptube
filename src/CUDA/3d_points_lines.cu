@@ -22,14 +22,14 @@ __global__ void render_points_kernel(
     Point p = points[idx];
     if (p.opacity == 0) return;
     bool behind_camera = false;
-    float px, py, pz;
+    Cuda::vec3 pixel;
     d_coordinate_to_pixel(
         p.center, behind_camera,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, px, py, pz);
+        geom_mean_size, width, height, pixel);
     if (behind_camera) return;
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 400.0f;
-    d_fill_circle(px, py, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
+    d_fill_circle(pixel.x, pixel.y, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
 }
 
 __global__ void render_lines_kernel(
@@ -43,19 +43,19 @@ __global__ void render_lines_kernel(
     Line ln = lines[idx];
     if (ln.opacity == 0) return;
     bool behind_camera1 = false, behind_camera2 = false;
-    float p1x, p1y, p1z, p2x, p2y, p2z;
+    vec3 p1, p2;
     d_coordinate_to_pixel(
         ln.start, behind_camera1,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, p1x, p1y, p1z);
+        geom_mean_size, width, height, p1);
     if (behind_camera1) return;
     d_coordinate_to_pixel(
         ln.end,   behind_camera2,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, p2x, p2y, p2z);
+        geom_mean_size, width, height, p2);
     if (behind_camera2) return;
     bresenham(
-        p1x, p1y, p2x, p2y,
+        p1.x, p1.y, p2.x, p2.y,
         ln.color, lines_opacity * ln.opacity, thickness,
         pixels, width, height);
 }

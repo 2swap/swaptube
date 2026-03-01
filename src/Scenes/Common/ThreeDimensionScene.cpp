@@ -74,8 +74,9 @@ ThreeDimensionScene::ThreeDimensionScene(const double width, const double height
     });
 }
 
+// TODO this is duplicate code from CUDA/common_graphics.h and we should unify them.
 vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, bool& behind_camera) {
-    coordinate = camera_direction * (coordinate - camera_pos);
+    coordinate = rotate_vector(coordinate - camera_pos, camera_direction);
     if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
     float scale = (get_geom_mean_size()*fov) / coordinate.z;
@@ -221,7 +222,8 @@ void ThreeDimensionScene::set_camera_direction() {
     camera_direction = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
     float dist_to_use = (auto_distance > 0 ? max(1.0, auto_distance) : 1)*state["d"];
     vec3 camera_to_use = auto_distance > 0 ? auto_camera : vec3(state["x"], state["y"], state["z"]);
-    camera_pos = camera_to_use + camera_direction * vec3(0,0,-dist_to_use);
+    // Camera position is always at a distance of dist_to_use from the center, and pointing in the origin.
+    camera_pos = camera_to_use + rotate_vector(vec3(0,0,-dist_to_use), conjugate(camera_direction));
 }
 
 float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {

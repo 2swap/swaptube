@@ -11,12 +11,14 @@ public:
     void draw_perspective(ResolvedStateEquation& x_eq,
                           ResolvedStateEquation& y_eq,
                           ResolvedStateEquation& z_eq,
-                          ResolvedStateEquation& w_eq);
+                          ResolvedStateEquation& w_eq,
+                          quat camera_direction);
 
     void draw_manifold(ResolvedStateEquation& x_eq,
                        ResolvedStateEquation& y_eq,
                        ResolvedStateEquation& z_eq,
-                       ResolvedStateEquation& w_eq);
+                       ResolvedStateEquation& w_eq,
+                       quat camera_direction);
 
     void draw() override;
 

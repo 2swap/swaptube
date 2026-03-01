@@ -199,8 +199,8 @@ void GraphScene::render_surface(const Surface& surface) {
 
     Surface surface_rotated(
         surface.center,
-        vec3(rotated_left_quat.x, rotated_left_quat.y, rotated_left_quat.z),
-        vec3(rotated_up_quat.x, rotated_up_quat.y, rotated_up_quat.z),
+        vec3(rotated_left_quat.i, rotated_left_quat.j, rotated_left_quat.k),
+        vec3(rotated_up_quat.i, rotated_up_quat.j, rotated_up_quat.k),
         surface.name
     );
 
