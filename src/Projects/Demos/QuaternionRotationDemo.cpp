@@ -23,20 +23,20 @@ void render_3d(){
     tds.manager.set("surfaces_opacity", "1");
     tds.manager.set("points_opacity", "1");
     tds.manager.set("lines_opacity", "1");
-    tds.manager.set("q1", std::to_string(q.w));
-    tds.manager.set("qi", std::to_string(q.x));
-    tds.manager.set("qj", std::to_string(q.y));
-    tds.manager.set("qk", std::to_string(q.z));
+    tds.manager.set("q1", std::to_string(q.u));
+    tds.manager.set("qi", std::to_string(q.i));
+    tds.manager.set("qj", std::to_string(q.j));
+    tds.manager.set("qk", std::to_string(q.k));
     stage_macroblock(SilenceBlock(2), 1);
     tds.render_microblock();
 
     quat quats[6] = {PITCH_DOWN,PITCH_UP,YAW_RIGHT,YAW_LEFT,ROLL_CW,ROLL_CCW};
     for(quat mult : quats){
         q *= mult;
-        tds.manager.transition(MICRO, {{"q1", std::to_string(q.w)},
-                                             {"qi", std::to_string(q.x)},
-                                             {"qj", std::to_string(q.y)},
-                                             {"qk", std::to_string(q.z)}
+        tds.manager.transition(MICRO, {{"q1", std::to_string(q.u)},
+                                       {"qi", std::to_string(q.i)},
+                                       {"qj", std::to_string(q.j)},
+                                       {"qk", std::to_string(q.k)}
         });
         stage_macroblock(SilenceBlock(2), 1);
         tds.render_microblock();
