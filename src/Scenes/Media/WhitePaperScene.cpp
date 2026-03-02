@@ -1,5 +1,11 @@
 #include "WhitePaperScene.h"
 
+extern "C" void cuda_overlay_with_rotation (
+    unsigned int* h_background, const int bw, const int bh,
+    unsigned int* h_foreground, const int fw, const int fh,
+    const int dx, const int dy,
+    const float opacity, const float angle);
+
 WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const double width, const double height)
     : Scene(width, height), prefix(prefix), author(author), page_numbers(page_numbers) {
     manager.set({
@@ -22,6 +28,11 @@ void WhitePaperScene::draw() {
     double page_height = get_height() * .68;
     double page_width = get_width() * .8;
     int num_pages = page_numbers.size();
+
+    double completion = state["completion"];
+    int which_page = state["which_page"];
+    double page_focus = state["page_focus"];
+
     for(int i = num_pages - 1; i >= 0; --i) {
         int page_number = page_numbers[i];
         Pixels picture;
@@ -38,15 +49,15 @@ void WhitePaperScene::draw() {
         Pixels scaled;
         cropped.scale_to_bounding_box(page_width, page_height, scaled);
 
-        if(i != 1) scaled.darken(1.0f - i * .1f);
+        float this_page_is_focused = (which_page == page_number ? 1.0f : 0.0f) * page_focus;
+        float this_page_not_focused = 1.0f - this_page_is_focused;
 
-        // Center the scaled image within the scene
-        double completion = state["completion"];
-        int which_page = state["which_page"];
-        double page_focus = state["page_focus"];
+        float darken_factor = 1.0f - (i * .1f) * this_page_not_focused;
+
+        if(i != 0) scaled.darken(darken_factor);
 
         double this_c = clamp(completion * (num_pages - 1) - i / 2., 0, 1);
-        float pages_centered = i + 1 - (num_pages + 1) / 2.0f;
+        float pages_centered = i - (num_pages - 1) / 2.0f;
 
         double page_focus_multiplier = cos(page_focus * 3.1415 / 2);
         if(which_page != page_number) {
@@ -60,10 +71,12 @@ void WhitePaperScene::draw() {
         float x_offset = get_width() * x_center - scaled.w * .5;
         float y_offset = get_height() * y_center - scaled.h * .5;
 
-        cuda_overlay(pix.pixels.data(), pix.w, pix.h,
+        float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
+
+        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
                      scaled.pixels.data(), scaled.w, scaled.h,
                      (int)x_offset, (int)y_offset,
-                     1.0f
+                     1.0f, angle
         );
     }
 

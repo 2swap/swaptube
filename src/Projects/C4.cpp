@@ -83,7 +83,7 @@ void preintro(CompositeScene& cs) {
         g->make_bidirectional();
         cout << "Graph made bidirectional" << endl;
     }
-    cs.add_scene(gs, "gs", .6, .5);
+    cs.add_scene(gs, "gs");
 
     gs->manager.set({
         {"q1", "1"},
@@ -108,12 +108,13 @@ void preintro(CompositeScene& cs) {
 
     stage_macroblock(SilenceBlock(1), 1);
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("", .6, .6);
+    cs.slide_subscene(MICRO, "gs", .1, 0);
     cs.add_scene_fade_in(MICRO, c4s, "c4s", .18, .2);
     cs.render_microblock();
 
     string variation = "43676647444776412773";
     gs->manager.transition(MACRO, "d", ".5");
-    stage_macroblock(CompositeBlock(FileBlock("Each branch emanating from this central node is a different connect 4 opening."), SilenceBlock(2)), variation.size());
+    stage_macroblock(CompositeBlock(FileBlock("Each branch emanating from this central node is a different connect 4 opening."), SilenceBlock(3)), variation.size());
     C4Board b(FULL, "");
     for(char c : variation) {
         string move(1, c);
@@ -134,7 +135,7 @@ void preintro(CompositeScene& cs) {
     cs.render_microblock();
 
     variation = "426566454465564522224215";
-    gs->manager.transition(MACRO, "d", ".5");
+    gs->manager.transition(MACRO, {{"d", ".5"}, {"qj", ".2"}});
     stage_macroblock(CompositeBlock(FileBlock("Some are long and convoluted, but don't have much room for deviation."), SilenceBlock(2)), variation.size());
     for(char c : variation) {
         string move(1, c);
@@ -146,8 +147,8 @@ void preintro(CompositeScene& cs) {
         cs.render_microblock();
     }
 
-    stage_macroblock(SilenceBlock(0.8), 1);
-    gs->manager.transition(MACRO, "d", "1");
+    stage_macroblock(SilenceBlock(2), 1);
+    gs->manager.transition(MACRO, {{"d", "1"}, {"qj", "0"}});
     c4s->undo(variation.size());
     b = C4Board(FULL, "");
     reset_graph_edge_opacities(g);
@@ -156,7 +157,7 @@ void preintro(CompositeScene& cs) {
 
     variation = "4365567535573336661573";
     stage_macroblock(CompositeBlock(FileBlock("Some, on the other hand, have a whole bunch of variations on the same theme, as indicated by this large blob of opportunities."), SilenceBlock(2)), variation.size());
-    gs->manager.transition(MACRO, "d", ".5");
+    gs->manager.transition(MACRO, "d", ".3");
     for(char c : variation) {
         string move(1, c);
         c4s->play(move);
@@ -166,6 +167,17 @@ void preintro(CompositeScene& cs) {
 
         cs.render_microblock();
     }
+
+    stage_macroblock(SilenceBlock(2), 1);
+    gs->manager.transition(MACRO, {{"d", "1"}, {"qj", "0"}});
+    c4s->undo(variation.size());
+    b = C4Board(FULL, "");
+    reset_graph_edge_opacities(g);
+    gs->next_hash = b.get_hash();
+    cs.slide_subscene(MICRO, "gs", -.1, 0);
+    cs.fade_subscene(MICRO, "c4s", 0);
+    cs.render_microblock();
+    cs.remove_subscene("c4s");
 
     stage_macroblock(FileBlock("But how can we come up with a connect 4 solution like this, which fits in a cute little graph?"), 2);
     gs->manager.transition(MACRO, "d", "1");
@@ -227,7 +239,7 @@ void intro(CompositeScene& cs) {
     c4s->undo(1);
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("If God 1 started one column over, he would lose as well!"), 4);
+    stage_macroblock(FileBlock("Starting one column over, he would lose as well!"), 4);
     cs.render_microblock();
     c4s->play("2");
     cs.render_microblock();
@@ -243,9 +255,10 @@ void intro(CompositeScene& cs) {
     c4s->undo(1);
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("But playing right in the center should result in victory, even against a flawless opponent."), 2);
+    stage_macroblock(FileBlock("But playing right in the center should result in victory, even against a flawless opponent."), 3);
     cs.render_microblock();
     c4s->play("4");
+    cs.render_microblock();
     cs.render_microblock();
 
     stage_macroblock(FileBlock("God 2, playing yellow, comes to the same realization, and promptly resigns."), 4);
@@ -279,6 +292,7 @@ void intro(CompositeScene& cs) {
     shared_ptr<LatexScene> ls_jda = make_shared<LatexScene>("\\text{James Dow Allen}", 1, .45, .3);
     cs.add_scene_fade_in(MICRO, ls_jda, "ls_jda", .25, .9);
     cs.render_microblock();
+    // TODO image permissions?
     shared_ptr<PngScene> VictorAllis = make_shared<PngScene>("VictorAllis", .7, .6);
     cs.add_scene(VictorAllis, "VA", .75, -.45);
     cs.slide_subscene(MICRO, "VA", 0, 1);
@@ -315,7 +329,7 @@ void intro(CompositeScene& cs) {
     c4s->play("4");
     cs.render_microblock();
 
-    god2 = make_shared<PngScene>("God2", .4, .8);
+    god2 = make_shared<PngScene>("God2_notice", .4, .8);
     cs.add_scene(god2, "god2", .75, -.5);
     cs.manager.transition(MICRO, floating_gods);
     stage_macroblock(FileBlock("A computer, or a god, can evaluate billions of positions to check this result,"), 1);
@@ -337,14 +351,15 @@ void intro(CompositeScene& cs) {
     cs.render_microblock();
     cs.render_microblock();
     c4s->play("4");
-    cs.render_microblock();
-    cs.render_microblock();
     cs.fade_subscene(MICRO, "human2", 1);
     cs.fade_subscene(MICRO, "human1", .2);
+    cs.render_microblock();
+    cs.render_microblock();
     shared_ptr<PngScene> human2_trick = make_shared<PngScene>("Thinker2_trick", .3, .6);
     cs.add_scene_fade_in(MICRO, human2_trick, "human2_trick", .85, .7);
     cs.render_microblock();
     cs.render_microblock();
+    c4s->undo(1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("To confuse red, should player 2 respond in the center, or one over? What about all the way on the side?"), 8);
@@ -410,7 +425,7 @@ void build_graph(CompositeScene& cs) {
     cs.render_microblock();
     cs.render_microblock();
 
-    gs->manager.transition(MICRO, {{"q1", "1"}, {"qj", "0"}, {"qi", "{t} 3 / sin"}, {"qk", "0"}});
+    gs->manager.transition(MICRO, {{"q1", "1"}, {"qi", "{t} 3 / cos"}, {"qj", "{t} 3 / sin"}, {"qk", "0"}});
     stage_macroblock(FileBlock("Because instead of relying on brute force search, I found a profoundly simpler way to play perfect connect 4. All it takes is this graph."), 1);
     cs.render_microblock();
 
@@ -531,9 +546,9 @@ void explanation(CompositeScene& cs) {
         cs.add_scene_fade_in(MICRO, branch_label, "branch_label__"+to_string(which_branch));
         cs.manager.set({
             {"branch_scene__" + to_string(which_branch) + ".x", ".25 " + to_string(which_branch) + " .4 * - <shift_3> 2 / +"},
-            {"branch_scene__" + to_string(which_branch) + ".y", ".25"},
+            {"branch_scene__" + to_string(which_branch) + ".y", ".45"},
             {"branch_label__" + to_string(which_branch) + ".x", ".25 " + to_string(which_branch) + " .4 * - <shift_3> 2 / +"},
-            {"branch_label__" + to_string(which_branch) + ".y", ".75"},
+            {"branch_label__" + to_string(which_branch) + ".y", ".95"},
         });
         which_branch++;
     }
@@ -761,7 +776,7 @@ void explanation(CompositeScene& cs) {
     cs.add_scene_fade_in(MICRO, chess_clip, "chess_clip");
     StateSet frame = chess_clip->manager.set("current_frame", "0");
     stage_macroblock(CompositeBlock(FileBlock("This is why chess players memorize openings. By memorizing openings, you can avoid the potential for making a mistake reading ahead, up to a certain depth."),
-                     CompositeBlock(FileBlock("Eventually, the breadth of variations reachable at some depth is not memorizable, and you have to start thinking ahead."), SilenceBlock(2))), 5);
+                     CompositeBlock(FileBlock("Eventually, the breadth of variations reachable at some depth is not memorizable, and you have to start thinking ahead."), SilenceBlock(1))), 5);
     cs.render_microblock();
     cs.manager.begin_timer("MP4_Frame");
     cs.manager.set(frame);
@@ -780,18 +795,20 @@ void explanation(CompositeScene& cs) {
 
     shared_ptr<WhitePaperScene> wps = make_shared<WhitePaperScene>("allis_paper", "Allis (1988)", vector<int>{1, 7, 10, 82});
     cs.add_scene(wps, "wps");
-    stage_macroblock(FileBlock("Victor Allis published a conect 4 solution like that in 1988: a table of 500,000 perfect openings, and a computer algorithm to solve endgames in a few seconds."), 8);
+    stage_macroblock(FileBlock("Victor Allis published a conect 4 solution like that in 1988."), 3);
     wps->manager.transition(MICRO, "completion", "1", false);
     cs.render_microblock();
     cs.render_microblock();
     wps->manager.set("which_page", "82");
     wps->manager.transition(MICRO, "page_focus", "1");
     cs.render_microblock();
+
+    stage_macroblock(FileBlock("He found a table of 500,000 perfect openings, and a computer algorithm to solve endgames in a few seconds."), 5);
     cs.render_microblock();
-    wps->manager.transition(MICRO, {{"crop_top", ".253"}, {"crop_bottom", ".707"}});
+    wps->manager.transition(MICRO, {{"crop_top", ".253"}, {"crop_bottom", ".707"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
     shared_ptr<WhitePaperScene> wps_highlight = make_shared<WhitePaperScene>("allis_paper", "Allis (1988)", vector<int>{1, 7, 10, 83});
     wps_highlight->manager.set({{"completion", "1"}, {"page_focus", "1"}, {"which_page", "83"}});
-    wps_highlight->manager.transition(MICRO, {{"crop_top", ".253"}, {"crop_bottom", ".707"}});
+    wps_highlight->manager.transition(MICRO, {{"crop_top", ".253"}, {"crop_bottom", ".707"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
     cs.add_scene_fade_in(MICRO, wps_highlight, "wps_highlight");
     cs.render_microblock();
     cs.render_microblock();
@@ -803,13 +820,13 @@ void explanation(CompositeScene& cs) {
 
     stage_macroblock(FileBlock("Now I don't know about you, but I can't memorize half a million positions."), 2);
     wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".558"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
-    cs.render_microblock();
-    cs.fade_all_subscenes(MICRO, 0);
-    cs.render_microblock();
-    cs.remove_all_subscenes();
+    wps->render_microblock();
+    wps->render_microblock();
 }
 
 void trees(CompositeScene& cs) {
+    cs.fade_all_subscenes(MICRO, 0);
+
     shared_ptr<Graph> g1 = make_shared<Graph>();
     shared_ptr<C4GraphScene> c4gs = make_shared<C4GraphScene>(g1, false, "", FULL);
     c4gs->manager.set("desired_nodes", "5678 1.5 <time_since_graph_init> ^ 200 * 199 - min");
@@ -831,12 +848,21 @@ void trees(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_subscene("ls_strong");
 
-    shared_ptr<C4Scene> c4s_blunder = make_shared<C4Scene>("");
-    cs.add_scene_fade_in(MICRO, c4s_blunder, "c4s_blunder", .5, .5);
-    stage_macroblock(FileBlock("Remember, God 1 determined that starting all the way on the side is a losing first move..."), 1);
+    shared_ptr<C4Scene> c4s_blunder = make_shared<C4Scene>("", .5, .5);
+    shared_ptr<PngScene> god1 = make_shared<PngScene>("God1", .3, .3);
+    cs.add_scene_fade_in(MICRO, c4s_blunder, "c4s_blunder", .3, .2);
+    cs.add_scene_fade_in(MICRO, god1, "god1", .15, .2);
+    cs.manager.set("god1.y", ".2 {t} sin .07 * +");
+    cs.slide_subscene(MICRO, "c4gs", .15, 0);
+    stage_macroblock(FileBlock("Remember, God 1 determined that starting all the way on the side is a losing first move..."), 4);
+    cs.render_microblock();
+    c4s_blunder->play("1");
+    cs.render_microblock();
+    cs.render_microblock();
     cs.render_microblock();
 
     cs.fade_subscene(MICRO, "c4s_blunder", 0);
+    cs.slide_subscene(MICRO, "c4gs", -.15, 0);
     stage_macroblock(FileBlock("but it's recorded inside this strong solution graph."), 1);
     cs.render_microblock();
     cs.remove_subscene("c4s_blunder");
@@ -871,6 +897,7 @@ void trees(CompositeScene& cs) {
     }
 
     stage_macroblock(FileBlock("We get this smaller tree."), 1);
+    c4gs->manager.transition(MICRO, "d", ".9");
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(2), 1);
@@ -905,17 +932,28 @@ void trees(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_subscene("c4s");
 
+    stage_macroblock(FileBlock("Those two nodes are in our tree."), 3);
+    c4gs->manager.set(MICRO, "points_opacity", "1");
+    cs.render_microblock();
     it = g1->nodes.begin();
     for (; it != g1->nodes.end(); ++it) {
         it->second.opacity = 0;
-        if (it->second.data->representation == "452" || it->second.data->representation == "451") {
+        if (it->second.data->representation == "452") {
             it->second.opacity = 1;
-            it->second.size = 15;
+            it->second.size = 8;
             it->second.draw_point = true;
         }
     }
-    stage_macroblock(FileBlock("Those two nodes are in our tree."), 1);
-    c4gs->manager.transition(MICRO, "points_opacity", "1");
+    cs.render_microblock();
+    it = g1->nodes.begin();
+    for (; it != g1->nodes.end(); ++it) {
+        it->second.opacity = 0;
+        if (it->second.data->representation == "453") {
+            it->second.opacity = 1;
+            it->second.size = 8;
+            it->second.draw_point = true;
+        }
+    }
     cs.render_microblock();
 
     shared_ptr<Graph> g3 = make_shared<Graph>();
@@ -963,6 +1001,7 @@ void trees(CompositeScene& cs) {
     }
 
     stage_macroblock(FileBlock("This tree is sufficient- we can still play perfectly up to move 5 by memorizing it. We've just cut out all the stupid variations that we don't need."), 1);
+    c4gs->manager.transition(MICRO, "d", ".7");
     cs.render_microblock();
 
     shared_ptr<LatexScene> ls_weak = make_shared<LatexScene>("\\text{Weak Solution {\\tiny (Depth 5)}}", 1, .5, .2);
@@ -1025,40 +1064,36 @@ void patterned(CompositeScene& cs) {
     shared_ptr<Graph> g_weak_l = make_shared<Graph>();
     shared_ptr<Graph> g_weak_g = make_shared<Graph>();
     shared_ptr<Graph> g_weak_s = make_shared<Graph>();
-    shared_ptr<C4GraphScene> c4gs_weak_r = make_shared<C4GraphScene>(g_weak_r, false, variation, RIGHTMOST_WEAK, .5, .5);
-    shared_ptr<C4GraphScene> c4gs_weak_l = make_shared<C4GraphScene>(g_weak_l, false, variation, LEFTMOST_WEAK, .5, .5);
-    shared_ptr<C4GraphScene> c4gs_weak_g = make_shared<C4GraphScene>(g_weak_g, false, variation, RANDOM_WEAK, .5, .5);
-    shared_ptr<C4GraphScene> c4gs_weak_s = make_shared<C4GraphScene>(g_weak_s, false, variation, SIMPLE_WEAK, .5, .5);
-    c4gs_weak_r->manager.set("physics_multiplier", "50");
-    c4gs_weak_l->manager.set("physics_multiplier", "50");
-    c4gs_weak_g->manager.set("physics_multiplier", "50");
-    c4gs_weak_s->manager.set("physics_multiplier", "50");
-    c4gs_weak_r->manager.set("growth_rate", "150");
-    c4gs_weak_l->manager.set("growth_rate", "150");
-    c4gs_weak_g->manager.set("growth_rate", "150");
-    c4gs_weak_s->manager.set("growth_rate", "8");
     stage_macroblock(FileBlock("I'll give you a few options."), 1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Do you think it looks like this messy tree?"), 1);
+    shared_ptr<C4GraphScene> c4gs_weak_r = make_shared<C4GraphScene>(g_weak_r, false, variation, RIGHTMOST_WEAK);
+    c4gs_weak_r->manager.set({{"d", "1.5"}, {"physics_multiplier", "50"}, {"growth_rate", "150"}});
     cs.add_scene(c4gs_weak_r, "c4gs_weak_r", .25, .25);
     cs.render_microblock();
     stage_macroblock(SilenceBlock(2), 1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Or this other messy tree?"), 1);
+    shared_ptr<C4GraphScene> c4gs_weak_l = make_shared<C4GraphScene>(g_weak_l, false, variation, LEFTMOST_WEAK);
+    c4gs_weak_l->manager.set({{"d", "1.5"}, {"physics_multiplier", "50"}, {"growth_rate", "150"}});
     cs.add_scene(c4gs_weak_l, "c4gs_weak_l", .75, .25);
     cs.render_microblock();
     stage_macroblock(SilenceBlock(2), 1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("How about this third messy tree?"), 1);
+    shared_ptr<C4GraphScene> c4gs_weak_g = make_shared<C4GraphScene>(g_weak_g, false, variation, RANDOM_WEAK);
+    c4gs_weak_g->manager.set({{"d", "1.5"}, {"physics_multiplier", "50"}, {"growth_rate", "150"}});
     cs.add_scene(c4gs_weak_g, "c4gs_weak_g", .25, .75);
     cs.render_microblock();
     stage_macroblock(SilenceBlock(2), 1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Or do you think that it looks like this nice pillow shape?"), 1);
+    shared_ptr<C4GraphScene> c4gs_weak_s = make_shared<C4GraphScene>(g_weak_s, false, variation, SIMPLE_WEAK);
+    c4gs_weak_s->manager.set({{"d", "1.5"}, {"physics_multiplier", "50"}, {"growth_rate", "8"}});
     cs.add_scene(c4gs_weak_s, "c4gs_weak_s", .75, .75);
     cs.render_microblock();
 
@@ -1072,6 +1107,7 @@ void patterned(CompositeScene& cs) {
 
     cs.fade_all_subscenes(MICRO, 1);
     shared_ptr<PauseScene> ps = make_shared<PauseScene>();
+    ps->manager.set({{"timer", "{macroblock_fraction}"}});
     cs.add_scene(ps, "ps");
     stage_macroblock(CompositeBlock(FileBlock("So, make your guess! Which one do you think it is?"), SilenceBlock(1)), 2);
     cs.render_microblock();
@@ -1158,7 +1194,7 @@ void patterned(CompositeScene& cs) {
     cs.remove_subscene("c4gs_weak_l");
     cs.remove_subscene("c4gs_weak_g");
 
-    c4gs_weak_s->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
+    c4gs_weak_s->manager.transition(MICRO, "d", "1");
     cs.slide_subscene(MICRO, "c4gs_weak_s", -.25, -.25);
     stage_macroblock(FileBlock("But how on earth did I make this one?"), 1);
     cs.render_microblock();
@@ -1220,15 +1256,26 @@ void patterned(CompositeScene& cs) {
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("Our opponent blocks the threat. What should we do now?"), 2);
+    stage_macroblock(FileBlock("Now, remember, this secret diagram tells us what to do, but not the opponent!"), 6);
+    cs.render_microblock();
+    rules->manager.transition(MICRO, "w", ".6");
+    cs.render_microblock();
+    rules->manager.transition(MICRO, "w", ".5");
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Our opponent chooses to block the threat. What should we do now?"), 3);
     cs.render_microblock();
     c4s->play("3");
     cs.render_microblock();
+    cs.render_microblock();
 
-    rules->begin_svg_transition(MICRO, "steady_state_rules_6");
     stage_macroblock(FileBlock("The first rule that applies now is rule 6, which says to play on a plus sign."), 4);
     cs.render_microblock();
     cs.render_microblock();
+    rules->begin_svg_transition(MICRO, "steady_state_rules_6");
     cs.render_microblock();
     c4s->play("2");
     cs.render_microblock();
@@ -1289,28 +1336,50 @@ void patterned(CompositeScene& cs) {
     c4s->manager.transition(MICRO, "highlight", "0");
     cs.render_microblock();
 
-    cs.fade_all_subscenes_except(MICRO, "c4s", 0);
+    cs.fade_all_subscenes_except(MACRO, "c4s", 0);
     stage_macroblock(SilenceBlock(2), 1);
-    c4s->clear_annotations(MICRO);
     c4s->undo(100);
+    cs.render_microblock();
+    c4s->clear_annotations(MICRO);
     cs.render_microblock();
     cs.remove_all_subscenes_except("c4s");
 
     stage_macroblock(FileBlock("These diagrams are effectively a form of compression."), 1);
     c4s->play(variation);
     cs.render_microblock();
-    c4s->set_annotations_from_steadystate(MICRO);
+    string cb = "   |   ";
+    c4s->set_annotations(cb + cb + cb + cb + cb + cb + "       ");
 
-    stage_macroblock(FileBlock("By identifying such a simple program to solve a connect 4 position, we can memorize that program instead of some convoluted tree."), 3);
+    stage_macroblock(FileBlock("By identifying such a simple program to play perfect endgames, which describes a very compressible solution for our position,"), 1);
+    c4s->manager.transition(MICRO, {{"w", "1.2"}, {"h", "1.2"}});
+    cs.render_microblock();
+    c4s->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
+    cs.render_microblock();
+    cs.add_scene_fade_in(MICRO, c4gs_weak_s, "c4gs_weak_s", .75, .5, .3);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "c4gs_weak_s", .3);
+    cs.render_microblock();
+    cs.remove_subscene("c4gs_weak_s");
+
+    stage_macroblock(FileBlock("we can memorize that program instead of some convoluted search tree."), 5);
+    c4gs_weak_g->manager.set("d", "1");
     cs.add_scene_fade_in(MICRO, c4gs_weak_g, "c4gs_weak_g", .25, .5);
     cs.render_microblock();
+    c4s->manager.transition(MICRO, {{"w", "1.2"}, {"h", "1.2"}});
     cs.render_microblock();
-    c4s->clear_annotations(MICRO);
+    c4s->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
+    cs.render_microblock();
+    cs.render_microblock();
+    c4gs_weak_g->manager.transition(MICRO, {{"w", "1.2"}, {"h", "1.2"}});
+    cs.render_microblock();
+    c4gs_weak_g->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(1), 1);
     cs.render_microblock();
 
+    c4s->clear_annotations(MICRO);
     cs.slide_subscene(MICRO, "c4s", -.2, 0);
     cs.fade_subscene(MICRO, "c4gs_weak_g", 0);
     stage_macroblock(FileBlock("So, what is the cheat sheet for the starting position?"), 1);
@@ -1369,10 +1438,11 @@ void trimmed_solution(CompositeScene& cs) {
         cs.render_microblock();
     }
 
-    stage_macroblock(FileBlock("we instead have a steady state diagram showing how to continue perfect play after that point,"), 1);
+    stage_macroblock(FileBlock("we instead have a steady state diagram showing how to continue perfect play after that point,"), 2);
     c4s_steady->set_annotations_from_steadystate(MICRO);
     c4s_steady->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
     cs.manager.transition(MICRO, {{"c4s_steady.x", ".5"}, {"c4s_steady.y", ".5"}});
+    cs.render_microblock();
     cs.render_microblock();
 
     stage_macroblock(FileBlock("implicitly defining the remaining compressed game tree."), 1);
@@ -1394,6 +1464,21 @@ void trimmed_solution(CompositeScene& cs) {
     }
     cs.render_microblock();
 
+    stage_macroblock(FileBlock("This is just the compressed subgraph resulting from one particular leaf node."), 1);
+    c4s_steady->manager.transition(MICRO, "d", ".3");
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("And it's a small one too. These implicit continuations get up to hundreds of millions of nodes large."), 1);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Imagine having to memorize those subtrees for every single leaf node on the graph!"), 1);
+    c4s_steady->manager.transition(MICRO, "d", "1");
+    // TODO I should really make a manager.undo function...
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("I couldn't even show you every implicit subtree simultaneously- it's around a hundred thousand times more lines than I can render!"), 1);
+    cs.render_microblock();
+
     b = C4Board(FULL, "");
     weakc4->next_hash = b.get_hash();
     reset_graph_edge_opacities(g);
@@ -1406,15 +1491,16 @@ void trimmed_solution(CompositeScene& cs) {
         }
     }
     weakc4->manager.set("desired_nodes", "0");
-    stage_macroblock(SilenceBlock(1), to_delete.size());
+    stage_macroblock(CompositeBlock(FileBlock("That's the degree of compression we're dealing with."), SilenceBlock(1)), to_delete.size());
+    cs.render_microblock();
     for(double node_id : to_delete) {
         g->remove_node(node_id);
         cs.render_microblock();
     }
 
     weakc4->manager.transition(MICRO, {{"q1", "1"}, {"qj", "0"}, {"qi", "{t} 10 / sin 10 /"}, {"qk", "0"}});
-    weakc4->manager.set("physics_multiplier", "0");
-    stage_macroblock(FileBlock("The first thing you might notice is that it's symmetrical."), 1);
+    weakc4->manager.transition(MICRO, "physics_multiplier", "0");
+    stage_macroblock(FileBlock("The first thing you might notice about this graph is that it's symmetrical."), 1);
     cs.render_microblock();
 
     shared_ptr<C4Scene> c4s_left = make_shared<C4Scene>("", .5, 1);
@@ -1434,16 +1520,16 @@ void trimmed_solution(CompositeScene& cs) {
     cs.render_microblock();
     c4s_left->play("6");
     c4s_right->play("2");
-    cs.fade_subscene(MICRO, "weakc4", 1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("There's a few exceptions to this rule. For example, this section only has one asymmetric copy."), 3);
+    cs.fade_subscene(MICRO, "weakc4", 1);
     cs.slide_subscene(MICRO, "c4s_left", -.5, 0);
     cs.slide_subscene(MICRO, "c4s_right", .5, 0);
     cs.render_microblock();
     cs.remove_subscene("c4s_left");
     cs.remove_subscene("c4s_right");
-    weakc4->manager.transition(MICRO, {{"q1", "1"}, {"qj", "0"}, {"qi", "{t} 10 / sin 10 / .5 +"}, {"qk", "0"}});
+    weakc4->manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "{t} 10 / sin 10 / .5 +"}, {"qk", "0"}});
 
     C4Board asymm_board(FULL, "4444445");
     flood_fill_edges_to_highlight(g, asymm_board, weakc4);
@@ -1472,6 +1558,7 @@ void trimmed_solution(CompositeScene& cs) {
     cs.render_microblock();
     cs.fade_subscene(MICRO, "c4s_asymm", 0);
     cs.fade_subscene(MICRO, "weakc4", 1);
+    weakc4->manager.transition(MICRO, "physics_multiplier", "500");
     cs.render_microblock();
     cs.remove_subscene("c4s_asymm");
     reset_graph_edge_opacities(g);
@@ -1490,19 +1577,19 @@ void trimmed_solution(CompositeScene& cs) {
     }
     stage_macroblock(FileBlock("Let's fuse together mirror-symmetric nodes!"), 1);
     weakc4->manager.set("mirror_force","0");
-    weakc4->manager.set("physics_multiplier", "500");
     weakc4->manager.transition(MICRO, {{"x", "0"}, {"y", "0"}, {"z", "0"}, {"d", "1"}, {"q1", "1"}, {"qi", "0"}, {"qj", ".3"}, {"qk", "0"}});
     C4Board empty_board(FULL, "");
     weakc4->next_hash = empty_board.get_hash();
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(3), sqrt(to_merge.size()) + 5);
+    gs->manager.transition(MICRO, "decay", ".3");
+    stage_macroblock(SilenceBlock(3), cbrt(to_merge.size()) + 50);
     int iter = 0;
     int n = 1;
     for(const auto& p : to_merge) {
         g->collapse_two_nodes(p.first, p.second);
         iter++;
-        if(iter != n * n) continue;
+        if(iter != n * n * n) continue;
         n += 1;
         cs.render_microblock();
     }
@@ -1511,6 +1598,8 @@ void trimmed_solution(CompositeScene& cs) {
     }
 
     stage_macroblock(FileBlock("This connect 4 solution has only 4,550 nodes!"), 1);
+    weakc4->begin_timer("fused");
+    weakc4->manager.transition(MACRO, {{"q1", "1"}, {"qj", "<fused> 13 / cos 3 /"}, {"qi", "<fused> 10 / sin 3 /"}, {"qk", "0"}, {"d", ".5"}});
     weakc4->manager.transition(MICRO, "decay", ".85");
     cs.render_microblock();
 
@@ -1529,8 +1618,8 @@ void trimmed_solution(CompositeScene& cs) {
     wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".558"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
 
     cs.render_microblock();
-    cs.render_microblock();
     wps->manager.transition(MICRO, {{"crop_top", ".253"}, {"crop_bottom", ".707"}});
+    cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
 
@@ -1583,13 +1672,16 @@ shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
 
     C4Board b426566(FULL, "426566");
     flood_fill_edges_to_highlight(g, b426566, weakc4);
+    weakc4->manager.transition(MICRO, "d", ".8");
     stage_macroblock(FileBlock("Long branches represent openings which don't quickly simplify for player 1."), 1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("They correspond quite well to openings which Connect 4 players actually study in practice."), 1);
+    weakc4->manager.transition(MICRO, "d", ".5");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("And this is great- it provides a framework to measure the difficulty of openings."), 1);
+    weakc4->manager.transition(MICRO, "d", ".9");
     cs.render_microblock();
 
     C4Board b(FULL, "4");
@@ -1598,7 +1690,8 @@ shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
     shared_ptr<C4Scene> c4s = make_shared<C4Scene>("4", .7, .7);
     cs.add_scene(c4s, "c4s", -.3, .3);
     cs.slide_subscene(MICRO, "c4s", .5, 0);
-    weakc4->manager.transition(MACRO, "d", ".5");
+    cs.slide_subscene(MICRO, "weakc4", .15, 0);
+    weakc4->manager.transition(MACRO, "d", ".2");
     cs.render_microblock();
 
     for(char c : variation) {
@@ -1611,9 +1704,12 @@ shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
         cs.render_microblock();
     }
 
-    stage_macroblock(FileBlock("We run into a steady state right away, meaning Yellow didn't play a very challenging opening."), 2);
+    stage_macroblock(FileBlock("We run into a steady state right away, meaning Yellow didn't play a very challenging opening."), 3);
     c4s->set_annotations_from_steadystate(MICRO);
     cs.render_microblock();
+    c4s->clear_annotations(MICRO);
+    cs.render_microblock();
+    c4s->set_annotations_from_steadystate(MICRO);
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(1), 1);
@@ -1663,7 +1759,7 @@ shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
     weakc4->next_hash = b.get_hash();
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("The center-column openings also contribute a large amount of size to the graph, second only to playing adjacent to the center. These first central moves are entirely forced."), 4);
+    stage_macroblock(FileBlock("The center-column openings come in second place, also contributing a lot of nodes to the graph. These first central moves are entirely forced."), 4);
     variation = "4444";
     for(char c : variation) {
         string move(1, c);
@@ -1696,6 +1792,7 @@ shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
 }
 
 void solution_types(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
+    // TODO no animation
     stage_macroblock(FileBlock("We've covered a whole bunch of solutions to connect four."), 1);
     cs.render_microblock();
 
@@ -1764,9 +1861,9 @@ void solution_types(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.remove_subscene("steady_state");
     bcs->manager.transition(MICRO, {
-        {"bar0", "{t} 1.38 * sin .2 * .5 +"},
-        {"bar1", "{t} 2 * sin .2 * .5 +"},
-        {"bar2", "{t} 1.77 * sin .2 * .5 +"},
+        {"bar0", "{t} 1.38 * sin .1 * .5 +"},
+        {"bar1", "{t} 2 * sin .1 * .5 +"},
+        {"bar2", "{t} 1.77 * sin .1 * .5 +"},
     });
     cs.render_microblock();
 
@@ -1775,8 +1872,8 @@ void solution_types(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     bcs->manager.transition(MICRO, "bar0", "0.02");
     cs.render_microblock();
+    bcs->manager.transition(MICRO, {{"bar1", ".8"}, {"bar2", ".4"}});
     cs.render_microblock();
-    bcs->manager.transition(MICRO, {{"bar1", ".6"}, {"bar2", ".4"}});
     cs.render_microblock();
     cs.render_microblock();
 
@@ -1811,6 +1908,7 @@ void solution_types(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
 
     cs.fade_all_subscenes(MICRO, 0);
     stage_macroblock(FileBlock("and yet, the rules of the game can be defined in a single sentence of plain English."), 1);
+    // TODO write the rules in a single sentence
     cs.render_microblock();
     cs.remove_all_subscenes();
 }
@@ -1858,8 +1956,8 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.remove_subscene("bbs");
 
     stage_macroblock(FileBlock("But that doesn't stop us from discussing candlesticks openings or clouds."), 1);
-    //TODO footage from the textbook
-    cs.render_microblock();
+    Mp4Scene textbook(vector<string>{"candlesticks_book"});
+    textbook.render_microblock();
     stage_macroblock(FileBlock("Maybe we can't concisely explain them from first principles, but that doesn't make them any less real."), 1);
     cs.render_microblock();
 

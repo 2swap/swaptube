@@ -70,7 +70,7 @@ GeodesicScene::GeodesicScene(const double width, const double height)
 
 //Manifold Stuff
         {"manifold_d", "20.0"},
-        {"manifold_fov", "2"},
+        {"manifold_fov", "1.5"},
         {"manifold_opacity", "1"},
 
         {"geodesics_count", "1"},

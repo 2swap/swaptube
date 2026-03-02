@@ -10,6 +10,8 @@
 #include <limits>
 #include "../IO/Writer.h"
 
+extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
+
 Pixels::Pixels() : w(0), h(0), pixels(0) {}
 Pixels::Pixels(int width, int height) : w(width), h(height), pixels(width*height) {}
 
@@ -402,68 +404,7 @@ void Pixels::rotate_90(Pixels& rotated) const {
 
 void Pixels::bicubic_scale(int new_width, int new_height, Pixels& result) const {
     result = Pixels(new_width, new_height);
-
-    float x_ratio = static_cast<float>(w) / new_width;
-    float y_ratio = static_cast<float>(h) / new_height;
-
-    for (int y = 0; y < new_height; y++) {
-        for (int x = 0; x < new_width; x++) {
-            float gx = x * x_ratio;
-            float gy = y * y_ratio;
-
-            int gxi = static_cast<int>(gx);
-            int gyi = static_cast<int>(gy);
-
-            float dx = gx - gxi;
-            float dy = gy - gyi;
-
-            float pa = 0;
-            float pr = 0;
-            float pg = 0;
-            float pb = 0;
-
-            // Iterate over the surrounding 4x4 block of pixels
-            for (int m = -1; m <= 2; m++) {
-                for (int n = -1; n <= 2; n++) {
-                    int xi = gxi + m;
-                    int yi = gyi + n;
-
-                    xi = std::clamp(xi, 0, w - 1);
-                    yi = std::clamp(yi, 0, h - 1);
-
-                    int pixel = get_pixel_carefully(xi, yi);
-                    float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
-
-                    pa += weight * geta(pixel);
-                    pr += weight * getr(pixel);
-                    pg += weight * getg(pixel);
-                    pb += weight * getb(pixel);
-                }
-            }
-            pa = std::clamp(static_cast<int>(pa), 0, 255);
-            pr = std::clamp(static_cast<int>(pr), 0, 255);
-            pg = std::clamp(static_cast<int>(pg), 0, 255);
-            pb = std::clamp(static_cast<int>(pb), 0, 255);
-
-            result.set_pixel_carelessly(x, y, argb(pa, pr, pg, pb));
-        }
-    }
-}
-
-float Pixels::bicubic_weight(float t) const {
-    const float a = -0.5f; // Commonly used value for bicubic interpolation
-
-    if (t < 0) t = -t;
-    float t2 = t * t;
-    float t3 = t2 * t;
-
-    if (t <= 1) {
-        return (a + 2) * t3 - (a + 3) * t2 + 1;
-    } else if (t < 2) {
-        return a * (t3 - 5 * t2 + 8 * t - 4);
-    } else {
-        return 0;
-    }
+    cuda_bicubic_scale(pixels.data(), w, h, result.pixels.data(), new_width, new_height);
 }
 
 void Pixels::print_to_terminal() {

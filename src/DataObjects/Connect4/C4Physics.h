@@ -10,7 +10,7 @@ public:
     int x; // 0-indexed column
     double py;
     double vy = 0.0;
-    double ay = -0.05;
+    double ay = -0.07;
     int index;
 };
 

@@ -362,7 +362,6 @@ static string generate_cache_key(const string& text, const ScalingParams& scalin
  * We use MicroTEX to convert LaTeX equations into svg files.
  */
 Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
-    cout << "Generating LaTeX for: " << latex << endl;
     // Generate a cache key based on the equation and scaling parameters
     string cache_key = generate_cache_key(latex, scaling_params);
 
@@ -372,6 +371,8 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
         scaling_params.scale_factor = it->second.second;
         return it->second.first; // Return the cached Pixels object
     }
+
+    cout << "Generating LaTeX for: " << latex << endl;
 
     hash<string> hasher;
     char full_directory_path[PATH_MAX];

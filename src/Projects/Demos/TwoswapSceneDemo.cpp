@@ -1,0 +1,15 @@
+#include "../Scenes/Common/TwoswapScene.h"
+
+void render_video() {
+    TwoswapScene ts;
+    stage_macroblock(SilenceBlock(5), 3);
+    ts.manager.set("swaptube_opacity", "0");
+    ts.manager.set("zoom", "2.1");
+    ts.render_microblock();
+
+    ts.manager.transition(MICRO, {
+        {"2swap_effect_completion", "1"}
+    });
+    ts.render_microblock();
+    ts.render_microblock();
+}

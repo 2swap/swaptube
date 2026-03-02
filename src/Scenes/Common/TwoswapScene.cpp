@@ -63,7 +63,7 @@ const StateQuery TwoswapScene::populate_state_query() const {
 void TwoswapScene::draw(){
     MandelbrotScene::draw();
 
-    { // 2swap logo effect
+    if (state["2swap_effect_completion"] > 0.01) { // 2swap logo effect
         Pixels foreground_pix(pix.w, pix.h * .3);
 
         ScalingParams sp(pix.w * .6, pix.h * .4);
@@ -83,7 +83,7 @@ void TwoswapScene::draw(){
             (pix.w-rotated_pix.w)/2, (pix.h-rotated_pix.h)/2 - pix.h*.04, state["2swap_effect_completion"]);
     }
 
-    { // 6884 logo effect
+    if (state["6884_effect_completion"] > 0.01) { // 6884 logo effect
         Pixels foreground_pix(pix.w, pix.h * .2);
 
         Pixels image;

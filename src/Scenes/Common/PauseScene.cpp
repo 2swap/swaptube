@@ -8,9 +8,7 @@
 
 PauseScene::PauseScene(const double width, const double height)
 : Scene(width, height) {
-    manager.set(unordered_map<string, string>{
-        {"timer", "{microblock_fraction}"},
-    });
+    manager.set({{"timer", "{microblock_fraction}"}});
 }
 
 void PauseScene::draw() {

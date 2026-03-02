@@ -4,24 +4,35 @@ void render_video() {
     GeodesicScene gs;
 
     gs.manager.set({
-        {"scrunch", "{t} sin .5 * 1 +"},
-    });
-
-    gs.manager.set(unordered_map<string, string>{
-        {"space_x", "(a)"},
-        {"space_y", "(b)"},
-        {"space_z", "(c)"},
-        {"space_w", "(c) <scrunch> * sin (a) cos (b) cos + +"}
+        {"scrunch", "{t} 2 * sin 4 +"},
+        {"amp", "{t} 3.14 * sin"},
     });
 
 // *knock knock knock*
     gs.manager.transition(MICRO, {
-        {"pov_fov", "1.5"},
         {"pov_q1", ".2"},
         {"pov_qj", "1"},
     });
     stage_macroblock(SilenceBlock(1), 1);
     gs.render_microblock();
+
+    gs.manager.transition(MICRO, {
+        {"pov_q1", "1"},
+        {"pov_qj", "0"},
+    });
+    stage_macroblock(SilenceBlock(1), 1);
+    gs.render_microblock();
+
+    gs.manager.transition(MICRO, {
+        {"space_x", "(a)"},
+        {"space_y", "(b)"},
+        {"space_z", "(c)"},
+        {"space_w", "(c) <scrunch> * sin (a) <scrunch> * sin (b) <scrunch> * sin + + <amp> *"},
+    });
+    stage_macroblock(SilenceBlock(3), 1);
+    gs.render_microblock();
+
+    return;
 
     stage_macroblock(FileBlock("Interdimensional FBI! Open up!"), 1);
     gs.render_microblock();
