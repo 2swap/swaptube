@@ -11,7 +11,7 @@ private:
     std::unordered_set<std::string> manifold_names;
 
 public:
-    ManifoldScene(const double width = 1, const double height = 1);
+    ManifoldScene(const vec2& dimensions = vec2(1, 1));
 
     void add_manifold(const std::string& name,
                       const std::string& x_eq, const std::string& y_eq, const std::string& z_eq, const std::string& r_eq, const std::string& i_eq,

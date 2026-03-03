@@ -8,7 +8,7 @@ private:
     const int size;
 
 public:
-    AngularFractalScene(int sz, const float width = 1, const float height = 1);
+    AngularFractalScene(int sz, const vec2& dimensions = vec2(1, 1));
     void draw() override;
     void draw_angular_fractal();
     const StateQuery populate_state_query() const override;

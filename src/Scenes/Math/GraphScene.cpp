@@ -30,7 +30,8 @@ void node_pop(double subdiv, bool added_not_deleted) {
     get_writer().audio->add_sfx(left, right, (time+subdiv/get_video_framerate_fps())*get_audio_samplerate_hz());
 }
 
-GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const double width, const double height) : ThreeDimensionScene(width, height), surfaces_override_unsafe(!surfaces_on), graph(g) {
+GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions)
+    : ThreeDimensionScene(dimensions), surfaces_override_unsafe(!surfaces_on), graph(g) {
     curr_hash = 0;
     next_hash = 0;
     color_scheme = {0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};

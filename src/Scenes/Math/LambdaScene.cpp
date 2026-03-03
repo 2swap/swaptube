@@ -6,7 +6,8 @@
 
 using namespace std;
 
-LambdaScene::LambdaScene(const shared_ptr<const LambdaExpression> lambda, const double width, const double height) : Scene(width, height), le(lambda->clone()) {
+LambdaScene::LambdaScene(const shared_ptr<const LambdaExpression> lambda, const vec2& dimensions) :
+    Scene(dimensions), le(lambda->clone()) {
     le->set_positions();
     manager.set({{"latex_opacity", "0"}, {"title_opacity", "0"}});
 }

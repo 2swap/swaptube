@@ -7,8 +7,8 @@ namespace {
 inline double transparency_profile(double x){return x<.5 ? cube(x/.5) : 1;}
 }
 
-ConvolutionScene::ConvolutionScene(const double width, const double height)
-: Scene(width, height) {
+ConvolutionScene::ConvolutionScene(const vec2& dimensions)
+: Scene(dimensions) {
     manager.set({
         {"transparency_profile", "<in_transition_state> {microblock_fraction} *"},
         {"in_transition_state", "0"},

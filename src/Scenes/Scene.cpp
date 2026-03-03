@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "../Core/Smoketest.h"
 #include "../IO/Writer.h"
+#include "../Host_Device_Shared/vec.h"
 
 int remaining_microblocks_in_macroblock = 0;
 int remaining_frames_in_macroblock = 0;
@@ -44,11 +45,11 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
     } // Audio hints
 }
 
-Scene::Scene(const double width, const double height)
+Scene::Scene(const vec2& dimensions)
     : state() {
     manager.set({
-        {"w", to_string(width)},
-        {"h", to_string(height)},
+        {"w", to_string(dimensions.x)},
+        {"h", to_string(dimensions.y)}
     });
 }
 

@@ -13,8 +13,7 @@ public:
         const int n,
         const double simulation_width = 10,
         const double simulation_height = 10,
-        const double width = 1,
-        const double height = 1
+        const vec2& dimensions = vec2(1, 1)
     );
 
     void mark_data_unchanged() override;

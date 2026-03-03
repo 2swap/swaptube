@@ -17,7 +17,7 @@ extern "C" void mandelbrot_render(
     unsigned int* depths
 );
 
-MandelbrotScene::MandelbrotScene(const double width, const double height) : CoordinateScene(width, height) {
+MandelbrotScene::MandelbrotScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({
         {"max_iterations", "32"},
         {"seed_z_r", "0"},

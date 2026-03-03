@@ -4,8 +4,7 @@
 #include <algorithm>
 #include <string>
 
-CompositeScene::CompositeScene(const double width, const double height)
-    : SuperScene(width, height) {}
+CompositeScene::CompositeScene(const vec2& dimensions) : SuperScene(dimensions) {}
 
 void CompositeScene::add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, std::string state_name, double x, double y, double opa, bool behind){
     add_scene(sc, state_name, x, y, behind);

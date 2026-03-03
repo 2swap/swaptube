@@ -27,8 +27,8 @@ public:
     std::shared_ptr<Scene> get_subscene_pointer(const std::string& name);
 
 protected:
-    SuperScene(const double width = 1, const double height = 1)
-        : Scene(width, height) {}
+    SuperScene(const vec2& dimensions = vec2(1, 1))
+        : Scene(dimensions) {}
 
     bool needs_redraw() const override;
 

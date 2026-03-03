@@ -8,7 +8,7 @@
 
 class LambdaScene : public Scene {
 public:
-    LambdaScene(const std::shared_ptr<const LambdaExpression> lambda, const double width = 1, const double height = 1);
+    LambdaScene(const std::shared_ptr<const LambdaExpression> lambda, const vec2& dimensions = vec2(1, 1));
 
     const StateQuery populate_state_query() const override;
 

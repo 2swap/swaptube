@@ -3,8 +3,8 @@
 
 using namespace std;
 
-Mp4Scene::Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed, const double width, const double height)
-    : Scene(width, height), first_frame_this_video(0), current_video_index(0), video_filenames(mp4_filenames), current_video_reader(mp4_filenames[0]) {
+Mp4Scene::Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed, const vec2& dimensions)
+    : Scene(dimensions), first_frame_this_video(0), current_video_index(0), video_filenames(mp4_filenames), current_video_reader(mp4_filenames[0]) {
     manager.begin_timer("MP4_Frame");
     manager.set("current_frame", "<MP4_Frame> " + to_string(playback_speed * get_video_framerate_fps()) + " * .5 + floor");
 }

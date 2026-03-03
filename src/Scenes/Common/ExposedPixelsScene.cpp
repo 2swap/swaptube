@@ -1,19 +1,13 @@
-#include "../../IO/Writer.h"
-#include "../Scene.h"
+#include "ExposedPixelsScene.h"
 
-// The idea here is that the user does whatever they want with the Pixels object, manually
-class ExposedPixelsScene : public Scene {
-public:
-    Pixels exposed_pixels;
-    ExposedPixelsScene(const double width = 1, const double height = 1) : Scene(width, height) {
-        exposed_pixels = Pixels(width * get_video_width_pixels(), height * get_video_height_pixels());
-    }
+ExposedPixelsScene::ExposedPixelsScene(const vec2& dimensions) : Scene(dimensions) {
+    exposed_pixels = Pixels(get_width(), get_height());
+}
 
-    const StateQuery populate_state_query() const override {
-        return StateQuery{};
-    }
-    void mark_data_unchanged() override { }
-    void change_data() override { }
-    bool check_if_data_changed() const override { return true; }
-    void draw() override{pix = exposed_pixels;}
-};
+const StateQuery ExposedPixelsScene::populate_state_query() const {
+    return StateQuery{};
+}
+void ExposedPixelsScene::mark_data_unchanged() { }
+void ExposedPixelsScene::change_data() { }
+bool ExposedPixelsScene::check_if_data_changed() const { return true; }
+void ExposedPixelsScene::draw() { pix = exposed_pixels; }

@@ -55,8 +55,8 @@ Surface::Surface(const string& n) : Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(
 Path::Path(const string& n, int clr, float op)
     : name(n), color(clr), opacity(op) { }
 
-ThreeDimensionScene::ThreeDimensionScene(const double width, const double height)
-    : SuperScene(width, height), use_state_for_center(false), auto_distance(-1), auto_camera(vec3(0,0,0)) {
+ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
+    : SuperScene(dimensions), use_state_for_center(false), auto_distance(-1), auto_camera(vec3(0,0,0)) {
     manager.set({
         {"fov", "1"},
         {"x", "0"},

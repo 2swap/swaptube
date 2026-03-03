@@ -30,7 +30,7 @@ void stripey_effect(Pixels& in, Pixels& out, const float amount) {
     }
 }
 
-TwoswapScene::TwoswapScene(const double width, const double height) : MandelbrotScene(width, height) {
+TwoswapScene::TwoswapScene(const vec2& dimensions) : MandelbrotScene(dimensions) {
     manager.set({
         {"swaptube_opacity", "1"},
         {"2swap_effect_completion", "0"},

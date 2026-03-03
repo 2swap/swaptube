@@ -8,7 +8,7 @@ class CoordinateSceneWithTrail : public CoordinateScene {
 public:
     int trail_color = OPAQUE_WHITE;
     list<pair<vec2, int>> trail;
-    CoordinateSceneWithTrail(const double width = 1, const double height = 1);
+    CoordinateSceneWithTrail(const vec2& dimensions = vec2(1, 1));
 
     void draw() override;
 

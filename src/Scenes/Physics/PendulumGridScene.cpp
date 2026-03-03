@@ -2,7 +2,7 @@
 #include <math.h>
 #include <algorithm>
 
-PendulumGridScene::PendulumGridScene(const vector<PendulumGrid>& pgv, const double width, const double height) : CoordinateScene(width, height), grids(pgv) {
+PendulumGridScene::PendulumGridScene(const vector<PendulumGrid>& pgv, const vec2& dimensions) : CoordinateScene(dimensions), grids(pgv) {
     manager.set({{"contrast", "1"},
                        {"mode", "0"},
                        {"physics_multiplier", "0"},

@@ -2,7 +2,8 @@
 #include <cmath>
 #include <algorithm>
 
-PendulumScene::PendulumScene(PendulumState s, const double width, const double height) : Scene(width, height), pend(s), start_state(s), path_background(width*get_video_width_pixels(), height*get_video_height_pixels()) {
+PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(dimensions), pend(s), start_state(s) {
+    path_background = Pixels(get_width(), get_height());
     manager.set({{"tone", "1"},
                        {"volume", "0"},
                        {"path_opacity", "0"},

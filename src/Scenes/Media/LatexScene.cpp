@@ -3,8 +3,8 @@
 #include <stdexcept>
 #include "../../Core/Smoketest.h"
 
-LatexScene::LatexScene(const string& l, double box_scale, const double width, const double height)
-: ConvolutionScene(width, height), latex(l), box_scale(box_scale) {}
+LatexScene::LatexScene(const string& l, double box_scale, const vec2& dimensions)
+: ConvolutionScene(dimensions), latex(l), box_scale(box_scale) {}
 
 void LatexScene::begin_latex_transition(const TransitionType tt, const string& l) {
     cout << "LatexScene: begin_latex_transition called with TransitionType: " << tt << " and latex: " << l << endl;

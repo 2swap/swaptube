@@ -3,7 +3,7 @@
 #include <string>
 #include <algorithm>
 
-LineChartScene::LineChartScene(const double width, const double height) : CoordinateScene(width, height) {
+LineChartScene::LineChartScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({
         {"ticks_opacity", "1"},
         {"left_x", "-.1"},

@@ -17,7 +17,7 @@ class CoordinateScene : public Scene {
 public:
     bool complex_plane = false;
     GeometricConstruction construction;
-    CoordinateScene(const float width = 1, const float height = 1);
+    CoordinateScene(const vec2& dimensions = vec2(1, 1));
 
     vec2 point_to_pixel(const vec2& p);
     vec2 pixel_to_point(const vec2& pix);

@@ -5,7 +5,7 @@
 
 class SvgScene : public ConvolutionScene {
 public:
-    SvgScene(const std::string& l, double box_scale, const double width = 1, const double height = 1);
+    SvgScene(const std::string& l, double box_scale, const vec2& dimensions = vec2(1, 1));
 
     void begin_svg_transition(const TransitionType tt, const std::string& l);
     void jump_svg(std::string l);

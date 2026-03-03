@@ -10,7 +10,7 @@ using std::to_string;
 using std::list;
 using std::pair;
 
-AngularFractalScene::AngularFractalScene(int sz, const float width, const float height) : CoordinateScene(width, height), size(sz) {
+AngularFractalScene::AngularFractalScene(int sz, const vec2& dimensions) : CoordinateScene(dimensions), size(sz) {
     for(int i = 0; i < sz; i++) manager.set("angle_"+to_string(i), "0");
 }
 

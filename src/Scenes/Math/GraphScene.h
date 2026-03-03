@@ -14,7 +14,7 @@ public:
     double curr_hash;
     double next_hash;
     std::vector<unsigned int> color_scheme;
-    GraphScene(std::shared_ptr<Graph> g, bool surfaces_on, const double width = 1, const double height = 1);
+    GraphScene(std::shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions = vec2(1, 1));
 
     void graph_to_3d();
 

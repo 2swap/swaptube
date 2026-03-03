@@ -8,8 +8,8 @@
 
 using std::string;
 
-SvgScene::SvgScene(const string& l, double box_scale, const double width, const double height)
-: ConvolutionScene(width, height), latex(l), box_scale(box_scale) {}
+SvgScene::SvgScene(const string& l, double box_scale, const vec2& dimensions)
+: ConvolutionScene(dimensions), latex(l), box_scale(box_scale) {}
 
 void SvgScene::begin_svg_transition(const TransitionType tt, const string& l) {
     latex = l;

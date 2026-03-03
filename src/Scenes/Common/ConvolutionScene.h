@@ -7,7 +7,7 @@
 
 class ConvolutionScene : public Scene {
 public:
-    ConvolutionScene(const double width = 1, const double height = 1);
+    ConvolutionScene(const vec2& dimensions = vec2(1, 1));
 
     std::pair<int, int> get_coords_from_pixels(const Pixels& p);
 

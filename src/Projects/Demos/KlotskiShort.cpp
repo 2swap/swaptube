@@ -6,7 +6,7 @@
 
 void render_video(){
     for(KlotskiBoard kb : {apk, beginner, intermediate}){
-        shared_ptr<KlotskiScene> ks = make_shared<KlotskiScene>(kb, .5, .5 * get_video_width_pixels()/get_video_height_pixels());
+        shared_ptr<KlotskiScene> ks = make_shared<KlotskiScene>(kb, vec2(.5, .5 * get_video_width_pixels()/get_video_height_pixels()));
         CompositeScene cs;
         cs.add_scene(ks, "ks", 0.25, 0.25*get_video_width_pixels()/get_video_height_pixels());
 

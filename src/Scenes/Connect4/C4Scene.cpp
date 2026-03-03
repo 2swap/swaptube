@@ -3,8 +3,8 @@
 #include <iostream>
 using namespace std;
 
-C4Scene::C4Scene(const std::string& rep, const double width, const double height)
-    :Scene(width, height), board(7, 6), annotations(empty_annotations), representation(rep){
+C4Scene::C4Scene(const std::string& rep, const vec2& dimensions)
+    :Scene(dimensions), board(7, 6), annotations(empty_annotations), representation(rep){
         board.append_to_queue(rep);
         manager.set("highlight", "0");
         manager.set("annotations_opacity", "0");

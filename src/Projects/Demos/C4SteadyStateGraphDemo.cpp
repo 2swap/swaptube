@@ -6,7 +6,7 @@ void render_video() {
     shared_ptr<Graph> g = make_shared<Graph>();
     string variation = "436675555353311111133222";
     shared_ptr<C4GraphScene> gs = make_shared<C4GraphScene>(g, false, variation, SIMPLE_WEAK);
-    shared_ptr<C4Scene> c4s = make_shared<C4Scene>(variation, .5, .5);
+    shared_ptr<C4Scene> c4s = make_shared<C4Scene>(variation, vec2(.5, .5));
     CompositeScene cs;
     cs.add_scene(gs, "gs");
     cs.add_scene(c4s, "c4s", .25, .25);

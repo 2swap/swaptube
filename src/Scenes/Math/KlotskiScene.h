@@ -14,7 +14,7 @@ private:
 
 public:
     char highlight_char = '.';
-    KlotskiScene(const KlotskiBoard& _kb, const double width = 1, const double height = 1);
+    KlotskiScene(const KlotskiBoard& _kb, const vec2& dimensions = vec2(1, 1));
 
     // No interactive state is needed for this static klotski scene.
     void on_end_transition_extra_behavior(const TransitionType tt) override;

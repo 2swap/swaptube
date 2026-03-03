@@ -6,7 +6,7 @@
 
 class RealFunctionScene : public CoordinateScene {
 public:
-    RealFunctionScene(const double width = 1, const double height = 1);
+    RealFunctionScene(const vec2& dimensions = vec2(1, 1));
 
     // Evaluates the function at x by replacing '{a}' with the x-value,
     // computing the current function and its transitional variant, then smoothing between them.

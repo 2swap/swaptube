@@ -5,8 +5,8 @@ int piece_color(int cell){
     return rainbow(cell*.618034);
 }
 
-KlotskiScene::KlotskiScene(const KlotskiBoard& _kb, const double width, const double height)
-    : Scene(width, height), kb(_kb) {
+KlotskiScene::KlotskiScene(const KlotskiBoard& _kb, const vec2& dimensions)
+    : Scene(dimensions), kb(_kb) {
         manager.set({
             {"margin", "0.2"},
             {"dots", kb.rushhour?"1":"0"},

@@ -37,7 +37,7 @@ struct Path {
 class ThreeDimensionScene : public SuperScene {
 public:
     bool use_state_for_center;
-    ThreeDimensionScene(const double width = 1, const double height = 1);
+    ThreeDimensionScene(const vec2& dimensions = vec2(1, 1));
 
     vec2 coordinate_to_pixel(vec3 coordinate, bool& behind_camera);
 

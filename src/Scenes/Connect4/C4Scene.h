@@ -27,7 +27,7 @@ private:
     std::string representation;
 
 public:
-    C4Scene(const std::string& rep, const double width = 1, const double height = 1);
+    C4Scene(const std::string& rep, const vec2& dimensions = vec2(1, 1));
 
     void undo(int steps);
     void use_up_queue();

@@ -49,8 +49,8 @@ extern "C" void cuda_render_geodesics_2d(
     const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov, const float opacity);
 
-GeodesicScene::GeodesicScene(const double width, const double height)
-    : Scene(width, height) {
+GeodesicScene::GeodesicScene(const vec2& dimensions)
+    : Scene(dimensions) {
     manager.set(unordered_map<string, string>{
         {"space_x", "(a)"},
         {"space_y", "(b)"},

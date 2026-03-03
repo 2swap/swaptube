@@ -7,7 +7,7 @@
 
 class LineChartScene : public CoordinateScene {
 public:
-    LineChartScene(const double width = 1, const double height = 1);
+    LineChartScene(const vec2& dimensions = vec2(1, 1));
 
     float number_to_add = 0;
     bool ready_to_add = false;

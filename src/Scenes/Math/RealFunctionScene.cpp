@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <string>
 
-RealFunctionScene::RealFunctionScene(const double width, const double height) : CoordinateScene(width, height) {
+RealFunctionScene::RealFunctionScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({
         {"function0", "0"},
         {"function1", "0"},

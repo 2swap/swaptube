@@ -1,8 +1,8 @@
 #include "CoordinateSceneWithTrail.h"
 #include <vector>
 
-CoordinateSceneWithTrail::CoordinateSceneWithTrail(const double width, const double height)
-    : CoordinateScene(width, height) {
+CoordinateSceneWithTrail::CoordinateSceneWithTrail(const vec2& dimensions)
+    : CoordinateScene(dimensions) {
     manager.set({{"trail_opacity", "1"},
                {"trail_x", "0"},
                {"trail_y", "0"}});

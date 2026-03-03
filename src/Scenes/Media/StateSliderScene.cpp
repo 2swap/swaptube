@@ -31,8 +31,8 @@ string double_to_string(double value) {
     return str;
 }
 
-StateSliderScene::StateSliderScene(const string& vn, const string& dn, double min_val, double max_val, const double width, const double height)
-: Scene(width, height), display_name(dn), min_value(min_val), max_value(max_val) {
+StateSliderScene::StateSliderScene(const string& vn, const string& dn, double min_val, double max_val, const vec2& dimensions)
+: Scene(dimensions), display_name(dn), min_value(min_val), max_value(max_val) {
     manager.set("value", vn);
 }
 

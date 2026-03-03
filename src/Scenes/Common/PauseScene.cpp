@@ -6,8 +6,8 @@
 #include <string>
 #include "../../IO/VisualMedia.h"
 
-PauseScene::PauseScene(const double width, const double height)
-: Scene(width, height) {
+PauseScene::PauseScene(const vec2& dimensions)
+: Scene(dimensions) {
     manager.set({{"timer", "{microblock_fraction}"}});
 }
 

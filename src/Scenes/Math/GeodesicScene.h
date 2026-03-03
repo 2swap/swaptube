@@ -6,7 +6,7 @@
 
 class GeodesicScene : public Scene {
 public:
-    GeodesicScene(const double width = 1, const double height = 1);
+    GeodesicScene(const vec2& dimensions = vec2(1, 1));
 
     void draw_perspective(ResolvedStateEquation& x_eq,
                           ResolvedStateEquation& y_eq,

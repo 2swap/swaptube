@@ -58,8 +58,8 @@ string truncate_tick(const float value, const bool append_i) {
     return str;
 }
 
-CoordinateScene::CoordinateScene(const float width, const float height)
-    : Scene(width, height) {
+CoordinateScene::CoordinateScene(const vec2& dimensions)
+    : Scene(dimensions) {
     manager.set({
         {"left_x"   , "<center_x> .5 <window_width> / -"},
         {"right_x"  , "<center_x> .5 <window_width> / +"},

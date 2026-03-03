@@ -8,7 +8,7 @@ BarChartScene::BarChartScene(
     const double height
 ) : CompositeScene() {
     const string latex = "\\text{" + title + "}";
-    title_scene = make_shared<LatexScene>(latex, .5, 1, 0.2);
+    title_scene = make_shared<LatexScene>(latex, .5, vec2(1, 0.2));
     add_scene(title_scene, "title", .5, .1);
     manager.set({
         {"bar0", "0"},
@@ -31,7 +31,7 @@ void BarChartScene::change_title(const TransitionType tt, const string& new_titl
 
 void BarChartScene::add_bar(const TransitionType tt, const string& label, bool should_reposition_bars) {
     const string bar_latex = "\\text{" + label + "}";
-    shared_ptr<LatexScene> bar_scene = make_shared<LatexScene>(bar_latex, 1, 0.5, 0.08);
+    shared_ptr<LatexScene> bar_scene = make_shared<LatexScene>(bar_latex, 1, vec2(0.5, 0.08));
     bar_scenes.push_back(bar_scene);
     add_scene_fade_in(tt, bar_scene, "bar" + to_string(bar_scenes.size() - 1), 0.15 * bar_scenes.size(), .9);
     if (should_reposition_bars) {

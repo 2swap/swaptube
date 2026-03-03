@@ -10,7 +10,7 @@
 
 class PendulumScene : public Scene {
 public:
-    PendulumScene(PendulumState s, const double width = 1, const double height = 1);
+    PendulumScene(PendulumState s, const vec2& dimensions = vec2(1, 1));
 
     int alpha_subtract = 2;
 

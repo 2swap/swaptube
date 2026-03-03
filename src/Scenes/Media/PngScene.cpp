@@ -5,7 +5,7 @@
 using std::cout;
 using std::endl;
 
-PngScene::PngScene(string pn, const double width, const double height) : Scene(width, height), picture_name(pn) {
+PngScene::PngScene(string pn, const vec2& dimensions) : Scene(dimensions), picture_name(pn) {
     manager.set({
         {"crop_top", "0"},
         {"crop_bottom", "0"},

@@ -27,7 +27,7 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 
 class Scene {
 public:
-    Scene(const double width = 1, const double height = 1);
+    Scene(const vec2& dimensions = vec2(1, 1));
 
     virtual const StateQuery populate_state_query() const = 0;
     virtual bool check_if_data_changed() const = 0;

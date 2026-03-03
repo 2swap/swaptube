@@ -10,7 +10,7 @@ extern "C" void cuda_render_manifold(
     const float ab_dilation, const float dot_radius
 );
 
-ManifoldScene::ManifoldScene(const double width, const double height) : ThreeDimensionScene(width, height) {
+ManifoldScene::ManifoldScene(const vec2& dimensions) : ThreeDimensionScene(dimensions) {
     manager.set({
         {"ab_dilation", ".8"},
         {"dot_radius", "1"},

@@ -4,8 +4,8 @@
 #include <stdexcept>
 #include <algorithm>
 
-C4GraphScene::C4GraphScene(shared_ptr<Graph> g, bool surfaces_on, const string& rep, const C4BranchMode mode, const double width, const double height)
-: GraphScene(g, surfaces_on, width, height), root_node_representation(rep) {
+C4GraphScene::C4GraphScene(shared_ptr<Graph> g, bool surfaces_on, const string& rep, const C4BranchMode mode, const vec2& dimensions)
+: GraphScene(g, surfaces_on, dimensions), root_node_representation(rep) {
     manager.set("physics_multiplier", "5");
     manager.set("decay", "0.5");
 

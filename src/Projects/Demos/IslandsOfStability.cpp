@@ -98,9 +98,9 @@ void showcase_an_island(shared_ptr<PendulumGridScene>& pgs, const IslandShowcase
     bool moveup = false;
     if(is.ps.p1 != 0) { latex_str += ", p_1 = " + str_p1; moveup = true; }
     if(is.ps.p2 != 0)   latex_str += ", p_2 = " + str_p2;
-    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>(latex_str, 1, 1, 0.12);
+    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>(latex_str, 1, vec2(1, 0.12));
 
-    shared_ptr<CoordinateSceneWithTrail> ts = make_shared<CoordinateSceneWithTrail>(0.5, 1);
+    shared_ptr<CoordinateSceneWithTrail> ts = make_shared<CoordinateSceneWithTrail>(vec2(0.5, 1));
     //cs.add_scene        (make_shared<PendulumGridScene>(pgs), "pgs", 0.5 , 0.5 );
     cs.add_scene_fade_in(MICRO, ps , "ps" , 0.75, 0.5 );
     cs.add_scene_fade_in(MICRO, ls , "ls" , 0.5 , 0.15);
@@ -208,8 +208,8 @@ void identify_vibrations(float t1, float t2) {
     str_cx = str_cx.erase(str_cx.find_last_not_of('0') + 1);
     str_cy = str_cy.erase(str_cy.find_last_not_of('0') + 1);
     string latex_str = "\\theta_1 = " + str_cx + ", \\theta_2 = " + str_cy + ", \\pi = " + to_string(period);
-    LatexScene ls(latex_str, 1, 1, 0.12);
-    cs.add_scene(make_shared<LatexScene>(ls), "ls", 0.5, 0.1);
+    LatexScene ls(latex_str, 1, vec2(1, 0.12));
+    cs.add_scene(make_shared<LatexScene>(ls), "ls", vec2(0.5, 0.1));
     stage_macroblock(SilenceBlock(14), 1);
     cs.render_microblock();
 }

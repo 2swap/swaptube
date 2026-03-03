@@ -6,7 +6,7 @@
 
 class WhitePaperScene : public Scene {
 public:
-    WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const double width = 1, const double height = 1);
+    WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const vec2& dimensions = vec2(1, 1));
 
     bool check_if_data_changed() const override;
     void mark_data_unchanged() override;

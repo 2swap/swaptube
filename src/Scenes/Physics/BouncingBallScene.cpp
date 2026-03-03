@@ -4,10 +4,9 @@ BouncingBallScene::BouncingBallScene(
     const int n,
     const double simulation_width,
     const double simulation_height,
-    const double width,
-    const double height
+    const vec2& dimensions
 )
-    : CoordinateScene(width, height), balls(n, simulation_width, simulation_height, .05f) {}
+    : CoordinateScene(dimensions), balls(n, simulation_width, simulation_height, .05f) {}
 
 void BouncingBallScene::mark_data_unchanged() { balls.mark_unchanged(); }
 void BouncingBallScene::change_data() { balls.iterate(); }

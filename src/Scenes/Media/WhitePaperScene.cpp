@@ -6,8 +6,8 @@ extern "C" void cuda_overlay_with_rotation (
     const int dx, const int dy,
     const float opacity, const float angle);
 
-WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const double width, const double height)
-    : Scene(width, height), prefix(prefix), author(author), page_numbers(page_numbers) {
+WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const vec2& dimensions)
+    : Scene(dimensions), prefix(prefix), author(author), page_numbers(page_numbers) {
     manager.set({
         {"completion", "0"},
         {"which_page", "1"},
