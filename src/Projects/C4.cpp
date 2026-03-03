@@ -20,6 +20,7 @@
 #include "../Scenes/Connect4/C4GraphScene.h"
 #include "../Scenes/Physics/BouncingBallScene.h"
 
+// TODO GraphScene sfx
 double find_node_id_from_board(shared_ptr<Graph> g, C4Board& b) {
     double start_node_id = b.get_hash();
     if(!g->node_exists(start_node_id))
@@ -113,7 +114,7 @@ void preintro(CompositeScene& cs) {
     cs.render_microblock();
 
     string variation = "43676647444776412773";
-    gs->manager.transition(MACRO, "d", ".5");
+    gs->manager.transition(MACRO, "d", ".3");
     stage_macroblock(CompositeBlock(FileBlock("Each branch emanating from this central node is a different connect 4 opening."), SilenceBlock(3)), variation.size());
     C4Board b(FULL, "");
     for(char c : variation) {
@@ -136,7 +137,7 @@ void preintro(CompositeScene& cs) {
 
     variation = "426566454465564522224215";
     gs->manager.transition(MACRO, {{"d", ".5"}, {"qj", ".2"}});
-    stage_macroblock(CompositeBlock(FileBlock("Some are long and convoluted, but don't have much room for deviation."), SilenceBlock(2)), variation.size());
+    stage_macroblock(FileBlock("Some are long and convoluted, but don't have much room for deviation, like this long, unbranching line."), variation.size());
     for(char c : variation) {
         string move(1, c);
         c4s->play(move);
@@ -281,6 +282,7 @@ void intro(CompositeScene& cs) {
     cs.add_scene_fade_in(MICRO, c4gs, "c4gs");
     stage_macroblock(FileBlock("After analyzing millions of variations of every opening imaginable, God 2 realized there was no way of stopping God 1 from making a red line of 4."), 1);
     cs.render_microblock();
+    cs.render_microblock();
     cs.remove_all_subscenes_except("c4gs");
 
     stage_macroblock(FileBlock("This was first discovered independently by computer scientists James Dow Allen and Victor Allis in 1988."), 5);
@@ -306,7 +308,7 @@ void intro(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_all_subscenes_except("c4gs");
 
-    stage_macroblock(FileBlock("using computer programs to search all possible variations."), 1);
+    stage_macroblock(FileBlock("using computer programs to search all possible branches."), 1);
     cs.render_microblock();
 
     cs.fade_all_subscenes(MICRO, 0);
@@ -594,21 +596,24 @@ void explanation(CompositeScene& cs) {
     cs.add_scene_fade_in(MICRO, hdd, "hdd", .75, .5);
     cs.render_microblock();
 
+    g.clear();
+    shared_ptr<C4GraphScene> num_moves_tracker = make_shared<C4GraphScene>(g, false, "", FULL, .5, .5);
+    cs.add_scene(num_moves_tracker, "num_moves_tracker", .25, .5);
+
     shared_ptr<LineChartScene> lcs = make_shared<LineChartScene>();
     stage_macroblock(SilenceBlock(1), 1);
     cs.fade_all_subscenes(MICRO, 0);
     cs.add_scene_fade_in(MICRO, lcs, "lcs");
+    lcs->add_data_point(MACRO, 1);
     cs.render_microblock();
     cs.remove_all_subscenes_except("lcs");
 
     stage_macroblock(FileBlock("The amount of positions to memorize up to a certain depth grows really fast."), 1);
     cs.render_microblock();
 
-    lcs->add_data_point(MACRO, 1);
     stage_macroblock(SilenceBlock(1), 1);
-    cs.fade_subscene(MICRO, "lcs", 0.3);
-    shared_ptr<C4Scene> quick_display = make_shared<C4Scene>("");
-    cs.add_scene_fade_in(MICRO, quick_display, "quick_display");
+    shared_ptr<C4Scene> quick_display = make_shared<C4Scene>("", .5, .5);
+    cs.add_scene_fade_in(MICRO, quick_display, "quick_display", .25, .25);
     quick_display->set_fast_mode(true);
     cs.render_microblock();
 
@@ -621,6 +626,8 @@ void explanation(CompositeScene& cs) {
         quick_display->undo(1);
         quick_display->play(to_string(i+1));
         quick_display->use_up_queue();
+        g.expand(1);
+        g.make_bidirectional();
         cs.render_microblock();
     }
     quick_display->undo(1);
@@ -633,6 +640,8 @@ void explanation(CompositeScene& cs) {
         quick_display->play(to_string(i%7 + 1));
         quick_display->play(to_string(i/7 + 1));
         quick_display->use_up_queue();
+        g.expand(1);
+        g.make_bidirectional();
         cs.render_microblock();
     }
     quick_display->undo(2);
@@ -648,10 +657,13 @@ void explanation(CompositeScene& cs) {
         quick_display->play(random_sequence);
         quick_display->undo(5);
     }
+    num_moves_tracker->manager.set("desired_nodes", "238");
     lcs->add_data_point(MICRO, 238);
     cs.render_microblock();
+    num_moves_tracker->manager.set("desired_nodes", "1120");
     lcs->add_data_point(MICRO, 1120);
     cs.render_microblock();
+    num_moves_tracker->manager.set("desired_nodes", "4263");
     lcs->add_data_point(MICRO, 4263);
     cs.render_microblock();
     quick_display->flush_queue_undo_all();
@@ -666,6 +678,9 @@ void explanation(CompositeScene& cs) {
         quick_display->play(random_sequence);
         quick_display->undo(10);
     }
+    num_moves_tracker->manager.set("desired_nodes", "16422");
+    num_moves_tracker->manager.transition("physics_multiplier", "0");
+    cs.slide_subscene(MICRO, "num_moves_tracker", -.5, 0);
     lcs->add_data_point(MICRO, 16422);
     cs.render_microblock();
     lcs->add_data_point(MICRO, 54859);
@@ -703,10 +718,15 @@ void explanation(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_all_subscenes_except("rfs");
 
+    stage_macroblock(FileBlock("Now, after n moves have already transpired, if we plot the amount of work needed to brute-force solve the rest of the game..."), 1);
     rfs->manager.transition(MICRO, "function1_right", "20");
-    stage_macroblock(CompositeBlock(FileBlock("Now, after n moves have already transpired, if we plot the amount of work needed to brute-force solve the rest of the game..."),
-                                    FileBlock("The amount of reading ahead required follows an opposite curve.")), 1);
+    cs.render_microblock();
 
+    stage_macroblock(FileBlock("The amount of reading ahead required follows an opposite curve."), 1);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("For a game like this that's almost over,"), 1);
+    cs.fade_subscene(MICRO, "rfs", 0);
     vars_to_read = 5;
     vars_depth = 10;
     shared_ptr<C4Scene> almost_over = make_shared<C4Scene>("44444555557733333321222114772627");
@@ -714,9 +734,7 @@ void explanation(CompositeScene& cs) {
     almost_over->set_fast_mode(true);
     almost_over->use_up_queue();
     cs.render_microblock();
-
-    stage_macroblock(FileBlock("For a game like this that's almost over,"), 1);
-    cs.render_microblock();
+    cs.remove_all_subscenes_except("almost_over");
 
     stage_macroblock(FileBlock("there's much less work needed to read through it, compared to brute forcing the opening position."), 2 * vars_to_read);
     for(int i = 0; i < vars_to_read; i++) {
@@ -751,6 +769,7 @@ void explanation(CompositeScene& cs) {
     stage_macroblock(SilenceBlock(1), 2);
     cs.render_microblock();
     cs.fade_subscene(MICRO, "almost_over", 0);
+    cs.add_scene_fade_in(MICRO, rfs, "rfs");
     cs.render_microblock();
     cs.remove_all_subscenes_except("rfs");
 
@@ -1450,7 +1469,6 @@ void trimmed_solution(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_subscene("c4s_steady");
 
-    // TODO comment on how EACH individual leaf is like this, and therefore we are compressing a TON?
     stage_macroblock(SilenceBlock(6), 1);
     double node_id = find_node_id_from_board(g, b);
     g->remove_node(node_id); // remove so we can regrow it
@@ -1908,15 +1926,18 @@ void solution_types(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
 
     cs.fade_all_subscenes(MICRO, 0);
     stage_macroblock(FileBlock("and yet, the rules of the game can be defined in a single sentence of plain English."), 1);
-    // TODO write the rules in a single sentence
+    shared_ptr<LatexScene> rules = make_shared<LatexScene>("rules", "\\text{Players alternate dropping disks into a 7 by 6 grid,} \\\\\\\\ \\text{where a player wins upon constructing a diagonal or orthogonal line of 4.}}", 1);
+    cs.add_scene_fade_in(MICRO, rules, "rules", .5, .5);
     cs.render_microblock();
-    cs.remove_all_subscenes();
 }
 
 void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
+    cs.fade_subscene(MICRO, "rules", 0);
     cs.add_scene_fade_in(MICRO, weakc4, "weakc4");
     stage_macroblock(FileBlock("This video isn't about connect four. It's not entirely about computer science, either."), 1);
     cs.render_microblock();
+    cs.remove_subscene("rules");
+
     stage_macroblock(FileBlock("It's about how systems yield complexity that can't be expressed in simpler terms."), 1);
     cs.render_microblock();
 
@@ -1948,7 +1969,8 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     bbs->manager.transition(MACRO, "zoom", "-3");
     cs.render_microblock();
     cs.render_microblock();
-    shared_ptr<Mp4Scene> cumulonimbus = make_shared<Mp4Scene>(vector<string>{"cumulonimbus"}, 1, 4, 4);
+    // TODO the zoom in isn't working right here
+    shared_ptr<Mp4Scene> cumulonimbus = make_shared<Mp4Scene>(vector<string>{"cumulonimbus"}, 1, 3, 3);
     cumulonimbus->manager.transition(MICRO, {{"w", "1"}, {"h", "1"}});
     cs.add_scene_fade_in(MICRO, cumulonimbus, "cumulonimbus");
     cs.render_microblock();
@@ -1977,7 +1999,7 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.remove_all_subscenes_except("weather_01");
 
-    int greatest_weather_file_number = 32;
+    int greatest_weather_file_number = 56;
     stage_macroblock(FileBlock("a whole new philosophy spawned out of thin air, far abstracted from any rules of physics or chemistry."), greatest_weather_file_number - 1);
     for(int i = 2; i <= greatest_weather_file_number; i++) {
         string key = (i <= 9 ? "weather_0" : "weather_") + to_string(i);
@@ -2005,9 +2027,26 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.remove_subscene("ccvol_2");
 
-    // TODO add some pictures of clouds and their names.
-    stage_macroblock(FileBlock("There is no such rule, and yet we live in a world of intricate species of clouds, with a whole subfield of meteorology concerned with their nomenclature and taxonomy."), 1);
-    cs.add_scene_fade_in(MICRO, ccvol_1, "ccvol_1");
+    shared_ptr<PngScene> cloud1 = make_shared<PngScene>("cloud_Stratocumulus_Stratiformis", .3, .3);
+    shared_ptr<PngScene> cloud2 = make_shared<PngScene>("cloud_Cirrus", .3, .3);
+    shared_ptr<PngScene> cloud3 = make_shared<PngScene>("cloud_cumulus_humilis_w_cumulus_incus", .3, .3);
+    stage_macroblock(FileBlock("There is no such rule, and yet we live in a world of intricate species of clouds, with a whole subfield of meteorology concerned with their nomenclature and taxonomy."), 5);
+    cs.fade_all_subscenes(MICRO, 0);
+    cs.render_microblock();
+    cs.remove_all_subscenes();
+    cs.add_scene(cloud1, "cloud1", .5, -1);
+    cs.manager.set("cloud1_angle", "-.2");
+    cs.slide_subscene(MICRO, "cloud1", -.25, -1.5);
+    cs.render_microblock();
+    cs.add_scene(cloud2, "cloud2", .5, -1);
+    cs.manager.set("cloud2_angle", "0");
+    cs.slide_subscene(MICRO, "cloud2", 0, -1.5);
+    cs.render_microblock();
+    cs.add_scene(cloud3, "cloud3", .5, -1);
+    cs.manager.set("cloud3_angle", ".2");
+    cs.slide_subscene(MICRO, "cloud3", .25, -1.5);
+    // TODO add clip on top of writing the cloud names
+    cs.render_microblock();
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Connect 4 shows us a glimpse of that same emergent substance."), 1);

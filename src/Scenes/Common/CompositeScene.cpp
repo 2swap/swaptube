@@ -17,6 +17,7 @@ void CompositeScene::add_scene(std::shared_ptr<Scene> sc, const std::string& sta
     manager.set({
         {state_name + ".x", std::to_string(x)},
         {state_name + ".y", std::to_string(y)},
+        {state_name + ".angle", "0"},
     });
     add_subscene_check_dupe(state_name, sc, behind);
 }
@@ -40,9 +41,26 @@ void CompositeScene::draw() {
         int x = w*state[name + ".x"];
         int y = h*state[name + ".y"];
 
-        cuda_overlay(pix.pixels.data(), pix.w, pix.h,
-                       p->pixels.data(), p->w, p->h,
-                       x - subscene->get_width ()/2, y - subscene->get_height()/2, opa);
+        // Angle in radians, clamped to [0, 2*pi)
+        float angle = extended_mod(state[name + ".angle"], 2*M_PI);
+
+        float center_x = x - subscene->get_width ()/2;
+        float center_y = y - subscene->get_height()/2;
+
+        if (angle > 0.01 && angle < 2*M_PI - 0.01) {
+            cuda_overlay_with_rotation(
+                pix.pixels.data(), pix.w, pix.h,
+                pix.pixels.data(), pix.w, pix.h,
+                center_x, center_y, opa, angle
+            );
+        }
+        else {
+            cuda_overlay(
+                pix.pixels.data(), pix.w, pix.h,
+                p->pixels.data(), p->w, p->h,
+                center_x, center_y, opa
+            );
+        }
     }
 }
 

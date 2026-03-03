@@ -159,7 +159,7 @@ extern "C" void cuda_overlay(
 __global__ void overlay_rotation_kernel(
     unsigned int* background, const int bw, const int bh,
     unsigned int* foreground, const int fw, const int fh,
-    const int dx, const int dy, const float opacity, const float angle)
+    const int dx, const int dy, const float opacity, const float angle_rad)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= bw * bh) return;
@@ -178,8 +178,8 @@ __global__ void overlay_rotation_kernel(
     // Translate to center, apply inverse rotation, translate back
     float fx = lx - cx;
     float fy = ly - cy;
-    float cosA = cosf(angle);
-    float sinA = sinf(angle);
+    float cosA = cosf(angle_rad);
+    float sinA = sinf(angle_rad);
     // inverse rotation by -angle -> use cos, -sin
     float srcx =  cosA * fx + sinA * fy + cx;
     float srcy = -sinA * fx + cosA * fy + cy;
@@ -252,7 +252,7 @@ extern "C" void cuda_overlay_with_rotation (
     unsigned int* h_background, const int bw, const int bh,
     unsigned int* h_foreground, const int fw, const int fh,
     const int dx, const int dy,
-    const float opacity, const float angle)
+    const float opacity, const float angle_rad)
 {
     // Functionally equivalent to cuda_overlay, but the foreground is rotated about its center
     // by the specified angle (in radians) before being overlaid onto the background.
@@ -277,7 +277,7 @@ extern "C" void cuda_overlay_with_rotation (
     overlay_rotation_kernel<<<numBlocks, blockSize>>>(
         d_background, bw, bh,
         d_foreground, fw, fh,
-        dx, dy, opacity, angle);
+        dx, dy, opacity, angle_rad);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_background, d_background, bg_size, cudaMemcpyDeviceToHost);

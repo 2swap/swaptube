@@ -20,6 +20,11 @@ extern "C" void cuda_overlay(
     unsigned int* h_foreground, const int fw, const int fh,
     const int dx, const int dy,
     const float opacity);
+extern "C" void cuda_overlay_with_rotation(
+    unsigned int* h_background, const int bw, const int bh,
+    unsigned int* h_foreground, const int fw, const int fh,
+    const int dx, const int dy,
+    const float opacity, const float angle_rad);
 
 class Pixels{
 public:
