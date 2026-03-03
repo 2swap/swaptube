@@ -34,10 +34,10 @@ public:
     void flush_queue_undo_all();
     void play(const std::string& rep);
 
-    void set_annotations(std::string s, TransitionType tt);
-    void set_annotations_from_steadystate(TransitionType tt);
+    void set_annotations(const TransitionType tt, const std::string& s);
+    void set_annotations_from_steadystate(const TransitionType tt);
     std::string get_annotations();
-    void clear_annotations(TransitionType tt);
+    void clear_annotations(const TransitionType tt);
 
     char get_annotation(int x, int y);
 

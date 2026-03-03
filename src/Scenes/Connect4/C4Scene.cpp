@@ -32,12 +32,12 @@ void C4Scene::play(const std::string& rep){
     representation += rep;
 }
 
-void C4Scene::set_annotations(std::string s, TransitionType tt) {
+void C4Scene::set_annotations(const TransitionType tt, const std::string& s) {
     annotations = s;
     manager.transition(tt, "annotations_opacity", "1");
 }
 
-void C4Scene::set_annotations_from_steadystate(TransitionType tt) {
+void C4Scene::set_annotations_from_steadystate(const TransitionType tt) {
     shared_ptr<SteadyState> ss = find_steady_state(representation, nullptr);
     annotations = ss->to_string();
     cout << "Annotations from steady state: " << annotations << endl;
@@ -49,7 +49,7 @@ void C4Scene::set_annotations_from_steadystate(TransitionType tt) {
 
 std::string C4Scene::get_annotations(){return annotations;}
 
-void C4Scene::clear_annotations(TransitionType tt) {
+void C4Scene::clear_annotations(const TransitionType tt) {
     manager.transition(tt, "annotations_opacity", "0");
 }
 

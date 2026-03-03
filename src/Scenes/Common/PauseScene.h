@@ -4,7 +4,7 @@
 
 class PauseScene : public Scene {
 public:
-    PauseScene(const vec2& dimensions);
+    PauseScene(const vec2& dimensions = vec2(1, 1));
 
     void draw() override;
 
