@@ -7,6 +7,9 @@ SwapTube is built on FFMPEG, but most of the functionalities above the layer of 
 # Tutorial Video
 [![Swaptube Tutorial Video](http://img.youtube.com/vi/paqBduieRks/0.jpg)](https://www.youtube.com/watch?v=paqBduieRks "SwapTube Tutorial Video")
 
+# Learn SwapTube Discord Server
+https://discord.gg/a786NZXYQ3
+
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
 
