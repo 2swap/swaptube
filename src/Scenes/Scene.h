@@ -7,7 +7,6 @@
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
 #include "../IO/VisualMedia.h"
-#include "../IO/DebugPlot.h"
 #include <string>
 #include <iostream>
 #include <sstream>

@@ -33,7 +33,14 @@ void BarChartScene::add_bar(const TransitionType tt, const string& label, bool s
     const string bar_latex = "\\text{" + label + "}";
     shared_ptr<LatexScene> bar_scene = make_shared<LatexScene>(bar_latex, 1, vec2(0.5, 0.08));
     bar_scenes.push_back(bar_scene);
-    add_scene_fade_in(tt, bar_scene, "bar" + to_string(bar_scenes.size() - 1), 0.15 * bar_scenes.size(), .9);
+    int new_bar_index = bar_scenes.size() - 1;
+    add_scene_fade_in(
+        tt,
+        bar_scene,
+        "bar" + to_string(new_bar_index),
+        0.5 + (new_bar_index - (bar_scenes.size() - 1) / 2.0) * 0.15,
+        .9
+    );
     if (should_reposition_bars) {
         reposition_bars(tt);
     }

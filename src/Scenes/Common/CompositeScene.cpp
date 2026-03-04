@@ -49,11 +49,10 @@ void CompositeScene::draw() {
         if (angle > 0.01 && angle < 2*M_PI - 0.01) {
             cuda_overlay_with_rotation(
                 pix.pixels.data(), pix.w, pix.h,
-                pix.pixels.data(), pix.w, pix.h,
+                p->pixels.data(), p->w, p->h,
                 center_x, center_y, opa, angle
             );
-        }
-        else {
+        } else {
             cuda_overlay(
                 pix.pixels.data(), pix.w, pix.h,
                 p->pixels.data(), p->w, p->h,

@@ -4,7 +4,6 @@
 #include <string>
 #include <cstdint>
 #include "../Core/State/TransitionType.h"
-#include "DebugPlot.h"
 #include "IoHelpers.h"
 
 struct AVCodecContext;

@@ -82,7 +82,7 @@ void WhitePaperScene::draw() {
 
     ScalingParams sp = ScalingParams(get_width(), get_height()/6);
     Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
-    int offset_y = get_height() * smoothlerp(-1/6., .02, state["completion"]);
+    int offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
     cuda_overlay(pix.pixels.data(), pix.w, pix.h,
                  text_pixels.pixels.data(), text_pixels.w, text_pixels.h,
                  (int)((get_width() - text_pixels.w) / 2), offset_y,

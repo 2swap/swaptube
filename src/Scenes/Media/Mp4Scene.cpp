@@ -3,8 +3,19 @@
 
 using namespace std;
 
-Mp4Scene::Mp4Scene(const vector<string>& mp4_filenames, const double playback_speed, const vec2& dimensions)
-    : Scene(dimensions), first_frame_this_video(0), current_video_index(0), video_filenames(mp4_filenames), current_video_reader(mp4_filenames[0]) {
+Mp4Scene::Mp4Scene(
+    const vector<string>& mp4_filenames,
+    const double playback_speed,
+    const Mp4EndBehavior behavior,
+    const vec2& dimensions)
+:
+    Scene(dimensions),
+    first_frame_this_video(0),
+    current_video_index(0),
+    video_filenames(mp4_filenames),
+    current_video_reader(mp4_filenames[0]),
+    end_behavior(behavior)
+{
     manager.begin_timer("MP4_Frame");
     manager.set("current_frame", "<MP4_Frame> " + to_string(playback_speed * get_video_framerate_fps()) + " * .5 + floor");
 }
@@ -14,6 +25,7 @@ void Mp4Scene::mark_data_unchanged() { }
 void Mp4Scene::change_data() { }
 
 void Mp4Scene::draw() {
+    cout << "Mp4Scene::draw() called with width " << get_width() << " and height " << get_height() << endl;
     int current_frame = state["current_frame"];
     int current_frame_adjusted = current_frame - first_frame_this_video;
     cout << "rendering concatenated mp4 videos, frame " << to_string(current_frame_adjusted) << endl;
@@ -22,6 +34,7 @@ void Mp4Scene::draw() {
     Pixels frame;
     bool no_more_frames = current_video_reader.get_frame(current_frame_adjusted, get_width(), get_height(), frame);
     if (no_more_frames) {
+        if (end_behavior == Mp4EndBehavior::Stop) return;
         cout << "No more frames!" << endl;
         first_frame_this_video = current_frame;
         current_video_index = (current_video_index + 1) % video_filenames.size();

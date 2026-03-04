@@ -33,14 +33,25 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 
     double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
-    if (AUDIO_HINTS) { // Add hints for audio synchronization
+    if (AUDIO_HINTS && rendering_on()) { // Add hints for audio synchronization
         double time = get_global_state("t");
         double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
         int macroblock_length_samples = round(macroblock_length_seconds * get_audio_samplerate_hz());
         int microblock_length_samples = round(microblock_length_seconds * get_audio_samplerate_hz());
-        get_writer().audio->add_blip(round(time * get_audio_samplerate_hz()), MACRO, macroblock_length_samples, microblock_length_samples);
+        get_writer().audio->add_blip(
+            round(time * get_audio_samplerate_hz()),
+            MACRO,
+            macroblock_length_samples,
+            microblock_length_samples
+        );
+
         for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
-            get_writer().audio->add_blip(round((time + i * microblock_length_seconds) * get_audio_samplerate_hz()), MICRO, macroblock_length_samples, microblock_length_samples);
+            get_writer().audio->add_blip(
+                round((time + i * microblock_length_seconds) * get_audio_samplerate_hz()),
+                MICRO,
+                macroblock_length_samples,
+                microblock_length_samples
+            );
         }
     } // Audio hints
 }

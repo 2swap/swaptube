@@ -267,7 +267,6 @@ void C4Board::add_all_winning_fhourstones(unordered_set<GenericBoard*>& neighbor
 }
 
 void C4Board::add_rightmost_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
-    cout << "Adding rightmost winning fhourstones for " << representation << endl;
 
     for(int i = 7; i >= 1; i--) {
         if(!is_legal(i)) continue;
@@ -281,7 +280,6 @@ void C4Board::add_rightmost_winning_fhourstones(unordered_set<GenericBoard*>& ne
 }
 
 void C4Board::add_leftmost_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
-    cout << "Adding leftmost winning fhourstones for " << representation << endl;
 
     for(int i = 1; i < 8; i++) {
         if(!is_legal(i)) continue;
@@ -295,22 +293,17 @@ void C4Board::add_leftmost_winning_fhourstones(unordered_set<GenericBoard*>& nei
 }
 
 void C4Board::add_random_winning_fhourstones(unordered_set<GenericBoard*>& neighbors) const {
-    cout << "Adding random winning fhourstones for " << representation << endl;
-    vector<GenericBoard*> children;
 
-    int iter_count = 0;
-    for(int i = 1; i < 8; i++) {
-        if(!is_legal(i)) continue;
-        C4Board moved = child(i);
-        int work = -1;
-        if (moved.who_is_winning(work) == RED) {
-            children.push_back(new C4Board(moved));
-            break;
-        }
-        if(iter_count > 1000) throw runtime_error("No winning moves found after 1000 tries! " + representation);
+    vector<int> winning_moves = get_winning_moves();
+    if (winning_moves.size() == 0) throw runtime_error("No winning moves found in add_random_winning_fhourstones!");
+
+    // Select index pseudorandomly by summing the digits of the representation
+    int random_index = 0;
+    for (char ch : representation) {
+        random_index += ch;
     }
-
-    insert_sorted_children_by_min_hash(children, neighbors);
+    int move = winning_moves[random_index % winning_moves.size()];
+    neighbors.insert(new C4Board(child(move)));
 }
 
 int C4Board::get_instant_win() const{

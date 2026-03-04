@@ -11,7 +11,6 @@
 #include <cmath>
 #include <cstdint>
 #include "Writer.h"
-#include "DebugPlot.h"
 #include "IoHelpers.h"
 #include "../Core/Smoketest.h"
 #include "../Core/State/TransitionType.h"
@@ -142,6 +141,9 @@ void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<samp
 }
 
 void AudioWriter::add_blip(const int t, const TransitionType tt, const int upcoming_macroblock_length_samples, const int upcoming_microblock_length_samples) {
+    if (!rendering_on() || !AUDIO_HINTS)
+        throw runtime_error("Blips should not be added when rendering is off or audio hints are disabled.");
+
     current_macroblock_length_samples = upcoming_macroblock_length_samples;
     current_microblock_length_samples = upcoming_microblock_length_samples;
 
@@ -149,8 +151,6 @@ void AudioWriter::add_blip(const int t, const TransitionType tt, const int upcom
 
     if(sample_idx < 0)
         throw runtime_error("Blip copy start was negative: " + to_string(sample_idx) + ". " + to_string(t) + " " + to_string(total_samples_processed));
-
-    if (!rendering_on() || !AUDIO_HINTS) return; // Don't write in smoketest
 
     // Ensure blips_buffer has enough capacity and add samples (convert floats to int32)
     int new_size = (sample_idx + 1) * audio_channels;

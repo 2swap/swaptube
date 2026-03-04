@@ -164,37 +164,6 @@ int Pixels::get_pixel_bilinear(double x, double y) const {
     return argb(a, r, g, b);
 }
 
-void Pixels::rotate_arbitrary_angle(double angle_rad, Pixels &rotated) const {
-    // Calculate the center of the original image
-    double cx = w / 2.0;
-    double cy = h / 2.0;
-
-    // Calculate the dimensions of the rotated image
-    double cos_angle = fabs(cos(angle_rad));
-    double sin_angle = fabs(sin(angle_rad));
-    int new_w = static_cast<int>(w * cos_angle + h * sin_angle);
-    int new_h = static_cast<int>(h * cos_angle + w * sin_angle);
-
-    rotated = Pixels(new_w, new_h);
-
-    // Calculate the center of the rotated image
-    double ncx = new_w / 2.0;
-    double ncy = new_h / 2.0;
-
-    // Perform the rotation
-    for (int x = 0; x < new_w; x++) {
-        for (int y = 0; y < new_h; y++) {
-            // Find the corresponding pixel in the original image
-            double tx = cos(angle_rad) * (x - ncx) + sin(angle_rad) * (y - ncy) + cx;
-            double ty = -sin(angle_rad) * (x - ncx) + cos(angle_rad) * (y - ncy) + cy;
-
-            // Get the pixel color using bilinear interpolation
-            int col = get_pixel_bilinear(tx, ty);
-            rotated.set_pixel_carefully(x, y, col);
-        }
-    }
-}
-
 bool Pixels::is_empty() const {
     for (int y = 0; y < h; y++) {
         for (int x = 0; x < w; x++) {

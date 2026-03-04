@@ -96,7 +96,7 @@ void C4Scene::draw_c4_disc(int disc_x, double disc_y, bool is_red) {
     get_disc_screen_coordinates(disc_x, disc_y, px, py);
     int col = is_red ? C4_RED : C4_YELLOW;
     int darkcol = is_red ? C4_RED_DARK : C4_YELLOW_DARK;
-    double clamped_w = clamp(disc_y - board.h, 0.0, 1.0);
+    double clamped_w = clamp((disc_y - board.h + 1) / 2, 0.0, 1.0);
     col = colorlerp(col, col & 0x00ffffff, clamped_w);
     darkcol = colorlerp(darkcol, darkcol & 0x00ffffff, clamped_w);
 

@@ -115,28 +115,42 @@ const StateQuery GraphScene::populate_state_query() const {
 }
 
 void GraphScene::mark_data_unchanged() { graph->mark_unchanged(); }
+
 void GraphScene::change_data() {
     int nodes_to_add = state["desired_nodes"] - graph->size();
     if(nodes_to_add > 0) {
         graph->expand(nodes_to_add);
         graph->make_bidirectional();
     }
+
+    // SFX
     if(last_node_count > -1){
         int diff = graph->size() - last_node_count;
         for(int i = 0; i < abs(diff); i++) {
             node_pop(static_cast<double>(i)/abs(diff), diff>0);
         }
     }
+
     last_node_count = graph->size();
     int amount_to_iterate = state["physics_multiplier"];
     if(!rendering_on()) amount_to_iterate = min(amount_to_iterate, 1); // No need to spread graphs out in smoketest
-    graph->iterate_physics(amount_to_iterate, state["repel"], state["attract"], state["decay"], state["centering_strength"], state["dimensions"], state["mirror_force"], state["flip_by_symmetry"]>0);
+    graph->iterate_physics(
+        amount_to_iterate,
+        state["repel"],
+        state["attract"],
+        state["decay"],
+        state["centering_strength"],
+        state["dimensions"],
+        state["mirror_force"],
+        state["flip_by_symmetry"]>0
+    );
     if(graph->has_been_updated_since_last_scene_query()) {
         graph_to_3d();
         clear_surfaces();
         update_surfaces();
     }
 }
+
 bool GraphScene::check_if_data_changed() const {
     return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();
 }

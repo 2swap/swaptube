@@ -82,5 +82,5 @@ int get_samples_per_frame() {
     return get_writer().get_audio_samplerate_hz() / get_writer().get_video_framerate_fps();
 }
 float get_video_aspect_ratio() {
-    return get_writer().get_video_width_pixels() / get_writer().get_video_height_pixels();
+    return get_writer().get_video_width_pixels() / (float)get_writer().get_video_height_pixels();
 }

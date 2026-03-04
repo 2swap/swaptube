@@ -256,7 +256,6 @@ void ThreeDimensionScene::draw() {
         );
     }
     if (!lines.empty() && state["lines_opacity"] > .001) {
-        cout << "Rendering " << lines.size() << " lines with opacity " << state["lines_opacity"] << " and thickness " << static_cast<int>(get_geom_mean_size() / 640.0) << endl;
         int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
             pix.pixels.data(),

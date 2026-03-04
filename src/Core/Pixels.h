@@ -63,8 +63,6 @@ public:
 
     int get_pixel_bilinear(double x, double y) const;
 
-    void rotate_arbitrary_angle(double angle_rad, Pixels &rotated) const;
-
     bool is_empty() const;
 
     void add_border(int col, int thickness = 1);

@@ -141,7 +141,6 @@ void MP4FrameReader::ensure_scaler(int width, int height, int &scaled_width, int
     double scaleX = (double)width / (double)srcW;
     double scaleY = (double)height / (double)srcH;
     double scale = std::min(scaleX, scaleY);
-    if (scale > 1.0) scale = 1.0; // don't scale up
 
     scaled_width = std::max(1, (int)(srcW * scale + 0.5));
     scaled_height = std::max(1, (int)(srcH * scale + 0.5));
