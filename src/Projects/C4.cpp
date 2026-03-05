@@ -21,13 +21,10 @@
 #include "../Scenes/Connect4/C4GraphScene.h"
 #include "../Scenes/Physics/BouncingBallScene.h"
 
-// TODO FINAL re-record
 // TODO LATER tromp's questions
+// TODO LATER we can compress under 70kb
 // TODO LATER make anki deck
 // TODO LATER I should really make a manager.undo function...
-// TODO BLOCKED Allis image permissions?
-// TODO BLOCKED
-// TODO FINAL Weather Gifs
 
 double find_node_id_from_board(shared_ptr<Graph> g, C4Board& b) {
     double start_node_id = b.get_hash();
@@ -304,19 +301,19 @@ void intro(CompositeScene& cs) {
     stage_macroblock(FileBlock("This was first discovered independently by computer scientists James Dow Allen and Victor Allis in 1988."), 5);
     cs.render_microblock();
     cs.render_microblock();
-    shared_ptr<PngScene> JamesDowAllen = make_shared<PngScene>("JDA", vec2(.3, .6));
-    cs.add_scene(JamesDowAllen, "JDA", .25, 1.45);
+    shared_ptr<PngScene> JamesDowAllen = make_shared<PngScene>("jda_circle", vec2(.3, .6));
+    cs.add_scene(JamesDowAllen, "JDA", .3, 1.45);
     cs.manager.set("JDA.angle", "-.1");
     cs.slide_subscene(MICRO, "JDA", 0, -1);
     shared_ptr<LatexScene> ls_jda = make_shared<LatexScene>("\\text{James Dow Allen}", 1, vec2(.45, .3));
-    cs.add_scene_fade_in(MICRO, ls_jda, "ls_jda", .25, .9);
+    cs.add_scene_fade_in(MICRO, ls_jda, "ls_jda", .3, .9);
     cs.render_microblock();
-    shared_ptr<PngScene> VictorAllis = make_shared<PngScene>("VictorAllis", vec2(.3, .6));
-    cs.add_scene(VictorAllis, "VA", .75, -.45);
+    shared_ptr<PngScene> VictorAllis = make_shared<PngScene>("va_circle", vec2(.3, .6));
+    cs.add_scene(VictorAllis, "VA", .7, -.45);
     cs.manager.set("VA.angle", ".05");
     cs.slide_subscene(MICRO, "VA", 0, 1);
     shared_ptr<LatexScene> ls_va = make_shared<LatexScene>("\\text{Victor Allis}", 1, vec2(.45, .3));
-    cs.add_scene_fade_in(MICRO, ls_va, "ls_va", .75, .9);
+    cs.add_scene_fade_in(MICRO, ls_va, "ls_va", .7, .9);
     cs.render_microblock();
     cs.render_microblock();
 
@@ -705,7 +702,8 @@ void explanation(CompositeScene& cs) {
     cs.render_microblock();
     num_moves_tracker->manager.set("desired_nodes", "184275");
     cs.render_microblock();
-    // TODO add note "too big to render"?
+    shared_ptr<LatexScene> too_big = make_shared<LatexScene>("\\text{Too big to render}", 1, vec2(.3, .3));
+    cs.add_scene(too_big, "too_big", .25, .25);
     cs.slide_subscene(MICRO, "num_moves_tracker", -.5, 0);
     lcs->add_data_point(MICRO, 558186);
     cs.render_microblock();
@@ -1153,20 +1151,24 @@ void patterned(CompositeScene& cs) {
     stage_macroblock(FileBlock("This isn't just some trivial question about appearance."), 1);
     cs.render_microblock();
 
-    // TODO add "compressible" text?
     stage_macroblock(FileBlock("If the weak solution is particularly simple, that means we can compress the information contained within it."), 2);
     cs.fade_all_subscenes_except(MICRO, "c4gs_weak_s", .1);
     c4gs_weak_s->manager.transition(MICRO, "d", "1");
     cs.render_microblock();
+    shared_ptr<LatexScene> compressible = make_shared<LatexScene>("\\text{Evidence for Compressibility!}", 1, vec2(.35, .2));
+    cs.add_scene_fade_in(MICRO, compressible, "compressible", .7, .7);
+    cs.manager.set("compressible.angle", "-.5");
     c4gs_weak_s->manager.transition(MICRO, "d", "1.5");
     cs.render_microblock();
 
-    cs.fade_all_subscenes(MICRO, 1);
+    cs.fade_all_subscenes_except(MICRO, "compressible", 1);
+    cs.fade_subscene(MICRO, "compressible", 0);
     shared_ptr<PauseScene> ps = make_shared<PauseScene>();
     ps->manager.set({{"timer", "{macroblock_fraction}"}});
     cs.add_scene(ps, "ps");
     stage_macroblock(CompositeBlock(FileBlock("So, make your guess! Which one do you think it is?"), SilenceBlock(1)), 2);
     cs.render_microblock();
+    cs.remove_subscene("compressible");
     cs.render_microblock();
 
     cs.remove_subscene("ps");
@@ -2036,9 +2038,13 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.remove_subscene("bbs");
 
     stage_macroblock(CompositeBlock(FileBlock("But that doesn't stop us from discussing candlesticks openings or clouds."), FileBlock("Maybe we can't concisely explain them from first principles, but that doesn't make them any less real.")), 3);
-    Mp4Scene textbook(vector<string>{"candlesticks_book"});
-    textbook.render_microblock();
-    textbook.render_microblock();
+    CompositeScene brief_textbook;
+    shared_ptr<Mp4Scene> textbook = make_shared<Mp4Scene>(vector<string>{"candlesticks_book"});
+    shared_ptr<LatexScene> jda = make_shared<LatexScene>("\\textit{The Complete Book of Connect Four} \\text{(James D. Allen, 2011)}", 1, vec2(.5, .15));
+    brief_textbook.add_scene(textbook, "textbook");
+    brief_textbook.add_scene(jda, "jda", .5, .15);
+    brief_textbook.render_microblock();
+    brief_textbook.render_microblock();
     cs.remove_subscene("cumulonimbus");
     // Restart the video since it's quite short
     cumulonimbus = make_shared<Mp4Scene>(vector<string>{"cumulonimbus"}, 1);
@@ -2227,6 +2233,7 @@ void anki(CompositeScene& cs) {
 }
 
 void sponsor(CompositeScene& cs) {
+    //TODO
 }
 
 void render_video() {
