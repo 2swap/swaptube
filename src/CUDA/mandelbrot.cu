@@ -5,8 +5,6 @@
 #include "../Host_Device_Shared/helpers.h"
 #include <cuComplex.h>  // Use cuComplex for complex numbers in CUDA
 
-namespace Cuda {
-
 const float bailout_radius = 256;
 const float bailout_radius_sq = bailout_radius*bailout_radius;
 
@@ -63,16 +61,16 @@ __device__ unsigned int get_mandelbrot_color(float iterations, int max_iteration
 }
 
 __device__ void compute_z_x_c(
-    const vec2 pixel,
-    const vec2 wh,
-    const vec2 lx_ty,
-    const vec2 rx_by,
+    const Cuda::vec2 pixel,
+    const Cuda::vec2 wh,
+    const Cuda::vec2 lx_ty,
+    const Cuda::vec2 rx_by,
     const cuComplex seed_z, const cuComplex seed_x, const cuComplex seed_c,
-    const vec3 pixel_parameter_multipliers,
+    const Cuda::vec3 pixel_parameter_multipliers,
     cuComplex& z, cuComplex& x, cuComplex& c, float& log_real_part_exp
 ) {
     // Calculate the complex point based on pixel coordinates
-    vec2 point_vec = pixel_to_point(pixel, lx_ty, rx_by, wh);
+    Cuda::vec2 point_vec = pixel_to_point(pixel, lx_ty, rx_by, wh);
     cuComplex point = make_cuComplex(point_vec.x, point_vec.y);
 
     // Compute z, x, and c based on seed values and multipliers
@@ -152,10 +150,10 @@ __device__ int mandelbrot_iterations_2or3(
 
 __global__ void go(
     const int width, const int height,
-    const vec2 lx_ty,
-    const vec2 rx_by,
+    const Cuda::vec2 lx_ty,
+    const Cuda::vec2 rx_by,
     const cuComplex seed_z, const cuComplex seed_x, const cuComplex seed_c,
-    const vec3 pixel_parameter_multipliers,
+    const Cuda::vec3 pixel_parameter_multipliers,
     int max_iterations,
     float gradation,
     float phase_shift,
@@ -165,11 +163,11 @@ __global__ void go(
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
     int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
     if (pixel_x >= width || pixel_y >= height) return;
-    vec2 pixel(pixel_x, pixel_y);
+    Cuda::vec2 pixel(pixel_x, pixel_y);
 
     cuComplex z, x, c; 
     float log_real_part_exp, sq_radius = 0;
-    vec2 wh(width, height);
+    Cuda::vec2 wh(width, height);
     compute_z_x_c(pixel, wh, lx_ty, rx_by, seed_z, seed_x, seed_c, pixel_parameter_multipliers, z, x, c, log_real_part_exp);
 
     // Check if the exponent 'x' is a positive integer
@@ -191,10 +189,10 @@ __global__ void go(
 // Host function to launch the kernel
 extern "C" void mandelbrot_render(
     const int width, const int height,
-    const vec2 lx_ty,
-    const vec2 rx_by,
+    const Cuda::vec2 lx_ty,
+    const Cuda::vec2 rx_by,
     const std::complex<float> seed_z, const std::complex<float> seed_x, const std::complex<float> seed_c,
-    const vec3 pixel_parameter_multipliers,
+    const Cuda::vec3 pixel_parameter_multipliers,
     int max_iterations,  // Pass max_iterations as a parameter
     float gradation,
     float phase_shift,
@@ -224,6 +222,4 @@ extern "C" void mandelbrot_render(
 
     // Free the device memory
     cudaFree(d_colors);
-}
-
 }
