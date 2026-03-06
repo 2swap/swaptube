@@ -3,6 +3,7 @@
 #include "../Scenes/Connect4/C4Scene.h"
 #include "../Scenes/Connect4/C4GraphScene.h"
 #include "../DataObjects/Connect4/TreeValidator.h"
+#include "../DataObjects/Connect4/SteadyState.h"
 
 void find_steadystates_by_children(const Graph& g, Node& node) {
     /*
@@ -48,13 +49,14 @@ void find_steadystates_by_children(const Graph& g, Node& node) {
 }
 void render_video() {
     try{
-        SAVE_FRAME_PNGS = false;
-
-        Graph g;
+        cout << "Building graph..." << endl;
+        shared_ptr<Graph> g = make_shared<Graph>();
         string variation = "";
-        C4GraphScene gs(&g, false, variation, TRIM_STEADY_STATES);
-        g.expand(-1);
-        g.make_bidirectional();
+        C4GraphScene gs(g, false, variation, TRIM_STEADY_STATES);
+        cout << "Expanding graph..." << endl;
+        g->expand(-1);
+        g->make_bidirectional();
+        cout << "Graph built with " << g->size() << " nodes." << endl;
 
         gs.manager.set({
             {"q1", "1"},
@@ -70,10 +72,11 @@ void render_video() {
             {"flip_by_symmetry","1"},
         });
 
+        /*
         // Iterate over all graph nodes and search for steadystates
         int count = 0;
-        movecache.WriteCache();
 
+        movecache.WriteCache();
         if(false) for (auto& pair : g.nodes) {
             count++;
             auto& node = pair.second;
@@ -84,28 +87,30 @@ void render_video() {
             find_steadystates_by_children(g, node);
         }
         movecache.WriteCache();
+        */
 
-        if(false && !ValidateC4Graph(g)) {
+        cout << "Validating graph..." << endl;
+        if(!ValidateC4Graph(*g)) {
             cout << "Graph validation failed!" << endl;
             return;
         }
 
-        gs.stage_macroblock(SilenceBlock(.3), 1);
+        stage_macroblock(SilenceBlock(.3), 1);
         gs.render_microblock();
-        gs.stage_macroblock(SilenceBlock(.5), 1);
+        stage_macroblock(SilenceBlock(.5), 1);
         gs.manager.set("flip_by_symmetry", "0");
         gs.render_microblock();
-        gs.stage_macroblock(SilenceBlock(.5), 1);
+        stage_macroblock(SilenceBlock(.5), 1);
         gs.manager.transition(MICRO, "decay", ".6");
         gs.render_microblock();
 
-        g.render_json("c4_full.js");
+        g->render_json("c4_full.js");
 
-        cout << g.size() << " nodes" << endl;
+        cout << g->size() << " nodes" << endl;
 
     } catch (exception& e){
         cout << "Exception: " << e.what() << endl;
-        movecache.WriteCache();
-        fhourstonesCache.WriteCache();
+        //movecache.WriteCache();
+        //fhourstonesCache.WriteCache();
     }
 }
