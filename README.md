@@ -13,7 +13,11 @@ https://discord.gg/a786NZXYQ3
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
 
-The main compatibility constraint is availability of CUDA and an appropriate NVIDIA GPU for hardware-accelerated rendering. Most visually complex scenes require CUDA. If CUDA is not installed, you will notice linker errors. If it is improperly installed (for example, if the CUDA version is incompatible with the hardware present,) such scenes will look entirely black or grey if run on a machine without CUDA support. If you wish to run SwapTube on CPU alone, some scenes will work- for example, you should be able to use the CUDAFreePendulumDemo project and get working video output, yielding a video of a swinging double pendulum. Many (but not all) scenes will fail to render on systems without CUDA.
+SwapTube was originally designed to work only with CUDA, requiring an NVIDIA GPU. It should now be possible to run on AMD using HIP by running the hipifyCUDA.sh script. This feature is new and may have errors. AMD ROCm is required if HIP is used in place of CUDA. Follow [this guide](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) to install ROCm and HIP.
+
+If you don't have an NVIDIA or AMD GPU capable of CUDA or HIP, respectively, (i.e. integrated graphics or Intel Arc), you will be unable to run projects that use CUDA. CUDAFreePendulumDemo may work without hardware support.
+
+If neither CUDA nor HIP is properly installed (for example, if the CUDA version is incompatible with the hardware present,) projects such as MandelbrotDemo will look entirely black or grey if run on a machine without support. 
 
 ## Setup
 ### External Dependencies
@@ -23,7 +27,7 @@ The following external dependencies are required for specific functionalities wi
 |------------|---------|---------|----------------|--------------|
 | CMake and Ninja | Everything | go.sh script | Compiles the project | `sudo apt install cmake` |
 | FFMPEG 5.0 or higher, and associated development libraries | Everything | audio_video folder | Encoding and processing video and audio streams | `sudo apt install ffmpeg libswscale-dev libavcodec-dev libavformat-dev libavdevice-dev libavutil-dev libavfilter-dev` Note: compiling ffmpeg from source, it will likely be compiled with support for extra features detected on your system, which are not baked into my CMake config. I suggest installing a precompiled binary. |
-| CUDA | Computationally intensive graphics | Video render loop | Various | Hardware-dependent |
+| CUDA or HIP/ROCm | Computationally intensive graphics | Video render loop | Various | Hardware-dependent |
 | gnuplot | Debug plot generation | DebugPlot.h | Data dumped in out/ is rendered to a PNG | `sudo apt install gnuplot` |
 | MicroTeX | In-Video LaTeX, LatexScene | visual_media.cpp | Converts LaTeX equations into SVG files for rendering | Instructions are here: https://github.com/NanoMichael/MicroTeX/ You should install MicroTeX in MicroTeX-master alongside the swaptube checkout. Instructions will be printed if not found. |
 | RSVG and GLib | In-Video LaTeX | visual_media.cpp | Loads and renders SVG files into pixel data | `sudo apt install librsvg2-dev libglib2.0-dev` |
@@ -73,6 +77,8 @@ You can validate your local installation with ./test.sh, which will compile and 
 - **play.sh**: Plays back the most recently rendered video with the provided project name.
 
 - **test.sh**: Compiles and smoketests all demo projects.
+
+- **hipifyCUDA.sh**: Converts CUDA source files in src/CUDA into HIP files, creating the src/HIP directory. If on HIP-compatible AMD hardware, run this script after first install and after changing any CUDA files.
 
 # Design Philosophy
 

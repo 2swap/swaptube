@@ -5,7 +5,7 @@
 #include <cstdio>
 #include "../../Host_Device_Shared/vec.h"
 #include "../common_graphics.cuh"
-#include "../../Host_Device_Shared/find_roots.c"
+#include "../find_roots.cuh"
 #include "../../Host_Device_Shared/helpers.h"
 
 __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
