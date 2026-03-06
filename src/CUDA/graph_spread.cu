@@ -5,6 +5,7 @@
 #include "../Host_Device_Shared/vec.h"
 
 #define GRID_SIZE 10 // 10x10x10 bins
+#define NUM_BINS (GRID_SIZE * GRID_SIZE * GRID_SIZE)
 #define BIN_INDEX(a) ((a.z) * GRID_SIZE * GRID_SIZE + (a.y) * GRID_SIZE + (a.x))
 
 struct Bin {
@@ -39,11 +40,10 @@ __global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda
 void sort_positions_by_bins_with_indices(const Cuda::vec4* positions, Cuda::vec4* sorted_positions, 
                                          const int* node_bins, int* sorted_indices, int num_nodes, int* bin_counts) {
     // Step 1: Compute cumulative bin counts to determine sorted indices
-    int num_bins = GRID_SIZE * GRID_SIZE * GRID_SIZE;
-    int* bin_offsets = new int[num_bins];
+    int* bin_offsets = new int[NUM_BINS];
     bin_offsets[0] = 0;
 
-    for (int i = 0; i < num_bins - 1; ++i) {
+    for (int i = 0; i < NUM_BINS - 1; ++i) {
         bin_offsets[i + 1] = bin_offsets[i] + bin_counts[i];
     }
 
@@ -170,9 +170,9 @@ __global__ void populate_bins(const Cuda::vec4* positions, Bin* bins, int num_no
     atomicAdd(&bins[bin_flat_idx].center_of_mass.w, pos.w);
 }
 
-__global__ void finalize_bins(Bin* bins, int num_bins) {
+__global__ void finalize_bins(Bin* bins) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= num_bins) return;
+    if (i >= NUM_BINS) return;
 
     if (bins[i].count > 0) {
         bins[i].center_of_mass /= float(bins[i].count);
@@ -339,8 +339,6 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
             cudaDeviceSynchronize();
         }
     } else {
-        int num_bins = GRID_SIZE * GRID_SIZE * GRID_SIZE;
-
         // Host data for bounds and bin size
         Cuda::vec4 h_min_bounds(FLT_MAX, FLT_MAX, FLT_MAX, FLT_MAX);
         Cuda::vec4 h_max_bounds(-FLT_MAX, -FLT_MAX, -FLT_MAX, -FLT_MAX);
@@ -348,7 +346,7 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         Bin* d_bins;
         int* d_node_bins;
 
-        size_t bin_size_bytes = num_bins * sizeof(Bin);
+        size_t bin_size_bytes = NUM_BINS * sizeof(Bin);
         size_t node_bins_size = num_nodes * sizeof(int);
 
         cudaMalloc(&d_bins, bin_size_bytes);
@@ -384,7 +382,7 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         int* h_sorted_indices = new int[num_nodes];
 
         // Populate bin counts and sort positions
-        int bin_counts[num_bins] = {0};
+        int bin_counts[NUM_BINS] = {0};
         for (int i = 0; i < num_nodes; ++i) {
             bin_counts[h_node_bins[i]]++;
         }
@@ -398,15 +396,15 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         cudaMemcpy(d_sorted_positions, h_sorted_positions, vec4_size, cudaMemcpyHostToDevice);
 
         // Compute bin start indices using prefix sum on host
-        int* h_bin_start_indices = new int[num_bins];
+        int* h_bin_start_indices = new int[NUM_BINS];
         h_bin_start_indices[0] = 0;
-        for (int i = 1; i < num_bins; ++i) {
+        for (int i = 1; i < NUM_BINS; ++i) {
             h_bin_start_indices[i] = h_bin_start_indices[i - 1] + bin_counts[i - 1];
         }
 
         int* d_bin_start_indices;
-        cudaMalloc(&d_bin_start_indices, num_bins * sizeof(int));
-        cudaMemcpy(d_bin_start_indices, h_bin_start_indices, num_bins * sizeof(int), cudaMemcpyHostToDevice);
+        cudaMalloc(&d_bin_start_indices, NUM_BINS * sizeof(int));
+        cudaMemcpy(d_bin_start_indices, h_bin_start_indices, NUM_BINS * sizeof(int), cudaMemcpyHostToDevice);
 
         int* d_sorted_indices;
         cudaMalloc(&d_sorted_indices, num_nodes * sizeof(int));
@@ -417,7 +415,7 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         cudaDeviceSynchronize();
 
         // Step 4: Finalize bins
-        finalize_bins<<<(num_bins + blockSize - 1) / blockSize, blockSize>>>(d_bins, num_bins);
+        finalize_bins<<<(NUM_BINS + blockSize - 1) / blockSize, blockSize>>>(d_bins);
         cudaDeviceSynchronize();
 
         // Step 5: Compute repulsion forces
