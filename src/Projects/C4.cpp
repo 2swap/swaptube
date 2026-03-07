@@ -26,7 +26,6 @@
 // TODO LATER make anki deck
 // TODO LATER I should really make a manager.undo function...
 // TODO Thumbnail
-// TODO description
 
 double find_node_id_from_board(shared_ptr<Graph> g, C4Board& b) {
     double start_node_id = b.get_hash();
@@ -94,7 +93,7 @@ void preintro(CompositeScene& cs) {
 
     gs->manager.set({
         {"q1", "1"},
-        {"qi", "0"},
+        {"qi", ".5"},
         {"qj", "0"},
         {"qk", "0"},
         {"decay",".5"},
@@ -109,7 +108,7 @@ void preintro(CompositeScene& cs) {
     stage_macroblock(FileBlock("This is a map of perfect play of Connect 4."), 1);
     cs.render_microblock();
 
-    gs->manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "{t} 3 / sin .1 *"}, {"qk", "0"}});
+    gs->manager.transition(MICRO, {{"q1", "1"}, {"qi", ".5"}, {"qj", "{t} 3 / sin .1 *"}, {"qk", "0"}});
     stage_macroblock(SilenceBlock(4), 1);
     cs.render_microblock();
 
@@ -633,9 +632,10 @@ void explanation(CompositeScene& cs) {
     cs.render_microblock();
 
     g->clear();
-    shared_ptr<C4GraphScene> num_moves_tracker = make_shared<C4GraphScene>(g, false, "", FULL, vec2(.5, .5));
+    shared_ptr<C4GraphScene> num_moves_tracker = make_shared<C4GraphScene>(g, false, "", FULL, vec2(.8, .8));
     num_moves_tracker->manager.set("desired_nodes", "1");
-    cs.add_scene(num_moves_tracker, "num_moves_tracker", .25, .5);
+    num_moves_tracker->manager.set("d", "1");
+    cs.add_scene(num_moves_tracker, "num_moves_tracker", .25, .55);
 
     stage_macroblock(FileBlock("There's one empty position,"), 2);
     lcs->add_data_point(MICRO, 1);
@@ -700,10 +700,7 @@ void explanation(CompositeScene& cs) {
     num_moves_tracker->manager.set("desired_nodes", "184275");
     num_moves_tracker->manager.transition(MICRO, "physics_multiplier", "0");
     cs.render_microblock();
-    shared_ptr<LatexScene> too_big = make_shared<LatexScene>("\\text{Too big to render :(}", 1, vec2(.2, .2));
-    cs.add_scene_fade_in(MICRO, too_big, "too_big", .25, .25);
-    cs.manager.set("too_big.angle", "-.2");
-    cs.slide_subscene(MICRO, "num_moves_tracker", -.5, 0);
+    cs.fade_subscene(MICRO, "num_moves_tracker", 0);
     lcs->add_data_point(MICRO, 558186);
     cs.render_microblock();
     cs.remove_subscene("num_moves_tracker");
@@ -867,7 +864,7 @@ void explanation(CompositeScene& cs) {
     cs.remove_subscene("wps_highlight");
 
     stage_macroblock(FileBlock("Now I don't know about you, but I can't memorize half a million positions."), 2);
-    wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".558"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
+    wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".565"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
     wps->render_microblock();
     wps->render_microblock();
 }
@@ -1120,7 +1117,7 @@ void patterned(CompositeScene& cs) {
 
     stage_macroblock(FileBlock("Do you think it looks like this messy tree?"), 1);
     shared_ptr<C4GraphScene> c4gs_weak_r = make_shared<C4GraphScene>(g_weak_r, false, variation, LEFTMOST_WEAK);
-    c4gs_weak_r->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "150"}});
+    c4gs_weak_r->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "220"}});
     cs.add_scene(c4gs_weak_r, "c4gs_weak_r", .25, .25);
     cs.render_microblock();
     stage_macroblock(SilenceBlock(2), 1);
@@ -1128,7 +1125,7 @@ void patterned(CompositeScene& cs) {
 
     stage_macroblock(FileBlock("Or this other messy tree?"), 1);
     shared_ptr<C4GraphScene> c4gs_weak_l = make_shared<C4GraphScene>(g_weak_l, false, variation, RIGHTMOST_WEAK);
-    c4gs_weak_l->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "150"}});
+    c4gs_weak_l->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "200"}});
     cs.add_scene(c4gs_weak_l, "c4gs_weak_l", .75, .25);
     cs.render_microblock();
     stage_macroblock(SilenceBlock(2), 1);
@@ -1136,7 +1133,7 @@ void patterned(CompositeScene& cs) {
 
     stage_macroblock(FileBlock("How about this third messy tree?"), 1);
     shared_ptr<C4GraphScene> c4gs_weak_g = make_shared<C4GraphScene>(g_weak_g, false, variation, RANDOM_WEAK);
-    c4gs_weak_g->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "800"}});
+    c4gs_weak_g->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "1600"}});
     cs.add_scene(c4gs_weak_g, "c4gs_weak_g", .25, .75);
     cs.render_microblock();
     stage_macroblock(SilenceBlock(2), 1);
@@ -1144,7 +1141,7 @@ void patterned(CompositeScene& cs) {
 
     stage_macroblock(FileBlock("Or do you think that it looks like this nice pillow shape?"), 1);
     shared_ptr<C4GraphScene> c4gs_weak_s = make_shared<C4GraphScene>(g_weak_s, false, variation, SIMPLE_WEAK);
-    c4gs_weak_s->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "80"}});
+    c4gs_weak_s->manager.set({{"d", "1.4"}, {"physics_multiplier", "50"}, {"growth_rate", "90"}});
     cs.add_scene(c4gs_weak_s, "c4gs_weak_s", .75, .75);
     cs.render_microblock();
 
@@ -1675,7 +1672,7 @@ void trimmed_solution(CompositeScene& cs) {
 
     weakc4->manager.transition(MICRO, "physics_multiplier", "0");
     stage_macroblock(FileBlock("Allis's opening book was more than a hundred times as large, with half a million nodes."), 4);
-    wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".558"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
+    wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".565"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
 
     cs.render_microblock();
     wps->manager.transition(MICRO, {{"crop_top", ".253"}, {"crop_bottom", ".707"}});
@@ -1684,7 +1681,7 @@ void trimmed_solution(CompositeScene& cs) {
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(1), 1);
-    wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".558"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
+    wps->manager.transition(MICRO, {{"crop_top", ".14"}, {"crop_bottom", ".565"}, {"crop_left", ".1"}, {"crop_right", ".1"}});
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Furthermore, unlike the few seconds of search that Allis used,"), 2);
@@ -2053,9 +2050,9 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     stage_macroblock(CompositeBlock(FileBlock("But that doesn't stop us from discussing candlesticks openings or clouds."), FileBlock("Maybe we can't concisely explain them from first principles, but that doesn't make them any less real.")), 3);
     CompositeScene brief_textbook;
     shared_ptr<Mp4Scene> textbook = make_shared<Mp4Scene>(vector<string>{"candlesticks_book"});
-    shared_ptr<LatexScene> jda = make_shared<LatexScene>("\\text{The Complete Book of Connect Four} \\\\\\\\ \\text{(James D. Allen, 2011)}", 1, vec2(.3, .2));
+    shared_ptr<LatexScene> jda = make_shared<LatexScene>("\\text{The Complete Book of Connect Four} \\\\\\\\ \\text{(James D. Allen, 2010)}", 1, vec2(.2, .13));
     brief_textbook.add_scene(textbook, "textbook");
-    brief_textbook.add_scene(jda, "jda", .15, .1);
+    brief_textbook.add_scene(jda, "jda", .15, .06);
     brief_textbook.render_microblock();
     brief_textbook.render_microblock();
     cs.remove_subscene("cumulonimbus");
@@ -2080,10 +2077,7 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
         shared_ptr<PngScene> weather = make_shared<PngScene>(key, vec2(.8, .8));
         cs.remove_subscene(last_key);
         cs.add_scene(weather, key);
-        int num_files_left = greatest_weather_file_number - i + 1;
-        float opacity = min(1.f, num_files_left / 10.f);
-        opacity = min(opacity, i / 10.f);
-        cs.manager.set(key + ".opacity", to_string(opacity));
+        cs.manager.set(key + ".opacity", "2 {macroblock_fraction} .5 - 2 ^ 8 * - 1 min");
         cs.render_microblock();
     }
 
@@ -2125,8 +2119,8 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.manager.set("cloud3.angle", ".2");
     cs.manager.transition(MICRO, {{"cloud3.x", ".8"}, {"cloud3.y", ".6"}});
     cs.render_microblock();
-    shared_ptr<Mp4Scene> unfiltered = make_shared<Mp4Scene>(vector<string>{"cloudwriting"}, 10, Mp4EndBehavior::Stop);
-    unfiltered->manager.set("current_frame", "<MP4_Frame> " + to_string(get_video_framerate_fps()) + " * .5 + floor 1400 min");
+    shared_ptr<Mp4Scene> unfiltered = make_shared<Mp4Scene>(vector<string>{"cloudwriting"}, 7, Mp4EndBehavior::Stop);
+    unfiltered->manager.set("current_frame", "<MP4_Frame> " + to_string(7 * get_video_framerate_fps()) + " * .5 + floor 1400 min");
     shared_ptr<AlphaFilterScene> cloudwriting = make_shared<AlphaFilterScene>(unfiltered, 0xffff0000);
     cs.add_scene(cloudwriting, "cloudwriting");
     cs.render_microblock();
@@ -2159,8 +2153,6 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     stage_macroblock(FileBlock("but are a mathematical inevitability more fundamental than physics, more real than reality."), 1);
     cs.render_microblock();
     cs.remove_subscene("galaxy_clip");
-    //cs.remove_subscene("benzene");
-    //cs.remove_subscene("toothpaste");
 
     cs.fade_all_subscenes(MICRO, 0);
     weakc4->next_hash = 0;
@@ -2172,6 +2164,7 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.remove_all_subscenes_except("weakc4");
 
+    weakc4->manager.transition(MICRO, "d", ".8");
     stage_macroblock(FileBlock("Complex enough to invoke that same spark of emergent fertility in full force,"), 1);
     cs.render_microblock();
     stage_macroblock(FileBlock("but simple enough that with modern computers, I can show you this graph and say,"), 1);

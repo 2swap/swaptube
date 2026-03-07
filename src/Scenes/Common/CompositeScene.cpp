@@ -33,7 +33,7 @@ void CompositeScene::draw() {
     int h = get_height();
     for (const std::string& name : render_order){
         double opa = state[name + ".opacity"];
-        if(opa < 0.01) continue;
+        if(opa < 0.001) continue;
         Pixels* p = nullptr;
         std::shared_ptr<Scene> subscene = subscenes[name];
         subscene->query(p);
