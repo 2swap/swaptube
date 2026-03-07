@@ -1,9 +1,11 @@
+#include "TreeValidator.h"
 #include <chrono>
+#include <cmath>
 #include "C4Board.h"
 #include "../Graph.h"
 #include "SteadyState.h"
 
-bool ValidateC4Graph(Graph& graph, bool try_to_fix = true) {
+bool ValidateC4Graph(Graph& graph, bool try_to_fix) {
     auto start_time = std::chrono::high_resolution_clock::now();
 
     int i = 0;

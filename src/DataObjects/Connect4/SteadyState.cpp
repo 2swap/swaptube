@@ -344,7 +344,7 @@ bool SteadyState::validate(C4Board b, bool verbose) {
     bool validated = validate_recursive_call(b, wins_cache, verbose);
     if(validated){
         get_movecache().AddOrUpdateEntry(b.get_hash(), b.get_reverse_hash(), b.representation, to_string());
-        //cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
+        if (wins_cache.size() > 10000) cout << "Steady state validated on " << wins_cache.size() << " non-leaves." << endl;
     }
     return validated;
 }

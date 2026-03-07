@@ -25,7 +25,6 @@ void Mp4Scene::mark_data_unchanged() { }
 void Mp4Scene::change_data() { }
 
 void Mp4Scene::draw() {
-    cout << "Mp4Scene::draw() called with width " << get_width() << " and height " << get_height() << endl;
     int current_frame = state["current_frame"];
     int current_frame_adjusted = current_frame - first_frame_this_video;
     cout << "rendering concatenated mp4 videos, frame " << to_string(current_frame_adjusted) << endl;

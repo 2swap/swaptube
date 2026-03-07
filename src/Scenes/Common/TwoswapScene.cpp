@@ -49,7 +49,7 @@ TwoswapScene::TwoswapScene(const vec2& dimensions) : MandelbrotScene(dimensions)
         {"pixel_param_z", "1"},
         {"pixel_param_x", "0"},
         {"pixel_param_c", "0"},
-        {"phase_shift", "{t} 35 +"},
+        {"phase_shift", "<init_time> 37 +"},
     });
 }
 
