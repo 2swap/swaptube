@@ -53,6 +53,8 @@ elseif(CMAKE_HIP_COMPILER)
     file(GLOB_RECURSE GPU_SOURCES "src/HIP/*.cu")
     set_source_files_properties(${GPU_SOURCES} PROPERTIES LANGUAGE HIP)
     set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
+    # TODO: Check error ouput on CUDA/HIP function calls so we don't have to suppress warnings
+    add_compile_options("-Wno-unused-value")
 else()
     message(WARNING "Neither CUDA nor HIP found. Please refer to readme for building without GPU support.")
 endif()
