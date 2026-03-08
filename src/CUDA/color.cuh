@@ -21,6 +21,11 @@ __device__ __forceinline__ int d_getb(int color) {
     return color & 0xFF; 
 }
 
+__device__ __forceinline__ int d_rainbow(float x){return d_argb(255,
+                                            sin((x+1/3.)*M_PI*2)*128.+128,
+                                            sin((x+2/3.)*M_PI*2)*128.+128,
+                                            sin((x     )*M_PI*2)*128.+128);}
+
 __device__ __forceinline__ int d_colorlerp(int c1, int c2, float t) {
     int a1 = (c1 >> 24) & 0xFF; int r1 = (c1 >> 16) & 0xFF; int g1 = (c1 >> 8) & 0xFF; int b1 = c1 & 0xFF;
     int a2 = (c2 >> 24) & 0xFF; int r2 = (c2 >> 16) & 0xFF; int g2 = (c2 >> 8) & 0xFF; int b2 = c2 & 0xFF;

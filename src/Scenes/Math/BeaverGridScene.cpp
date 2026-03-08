@@ -6,11 +6,13 @@ BeaverGridScene::BeaverGridScene(const int num_states, const int num_symbols, co
 : CoordinateScene(dimension), num_states(num_states), num_symbols(num_symbols) {
     manager.set("max_steps", "0");
     manager.set("ticks_opacity", "1");
+    manager.set("num_states", std::to_string(num_states));
+    manager.set("num_symbols", std::to_string(num_symbols));
 }
 
 void BeaverGridScene::draw() {
     beaver_grid_cuda(
-        num_states, num_symbols,
+        state["num_states"], state["num_symbols"],
         pix.pixels.data(), pix.w, pix.h,
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
@@ -22,7 +24,7 @@ void BeaverGridScene::draw() {
 
 const StateQuery BeaverGridScene::populate_state_query() const {
     StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, { "max_steps" });
+    state_query_insert_multiple(sq, { "max_steps", "num_states", "num_symbols" });
     return sq;
 }
 
