@@ -52,7 +52,7 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, unsigned int
     }
 
     Cuda::vec2 point_vec = Cuda::pixel_to_point(Cuda::vec2(idx, idy), lx_ty, rx_by, Cuda::vec2(w, h));
-    point_vec *= Cuda::vec2(grid_w, grid_h);
+    //point_vec *= Cuda::vec2(grid_w, grid_h);
     point_vec += Cuda::vec2(grid_w * .5, grid_h * .5); // Centering
 
     if(point_vec.x < 0 || point_vec.x >= grid_w || point_vec.y < 0 || point_vec.y >= grid_h) {
@@ -79,20 +79,21 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, unsigned int
         }
         steps++;
     }
-    int num_ones = 0;
+
+    /* int num_ones = 0;
     for (int i = 0; i < 1001; i++) {
         if (tape[i] == 1) {
             num_ones++;
         }
-    }
+    }*/
 
     bool halted = current_state == -1;
 
-    int col = 0xff000000 | (0x3f << ((head_position - 498) * 4));
+    //int col = 0xff000000 | (0x3f << ((head_position - 498) * 4));
     //int col = 0xff000000 | (0x3f << (current_state * 8));
-    pixels[pixel_index] = halted ? d_rainbow((float) head_position / 42) : 0xff000000;
-    //float atan_steps = atanf(num_ones / 4.) / 1.57079632679f; // Normalize to [0, 1]
-    //pixels[pixel_index] = halted ? d_rainbow(atan_steps) : 0xff000000;
+    //pixels[pixel_index] = halted ? d_rainbow((float) head_position / 42) : 0xff000000;
+    float atan_steps = atanf(steps / 4.) / 1.57079632679f; // Normalize to [0, 1]
+    pixels[pixel_index] = halted ? d_rainbow(atan_steps) : 0xff000000;
 }
 
 extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* pixels, int w, int h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {

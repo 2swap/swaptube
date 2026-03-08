@@ -108,7 +108,7 @@ void preintro(CompositeScene& cs) {
     stage_macroblock(FileBlock("This is a map of perfect play of Connect 4."), 1);
     cs.render_microblock();
 
-    gs->manager.transition(MICRO, {{"q1", "1"}, {"qi", ".5"}, {"qj", "{t} 3 / sin .1 *"}, {"qk", "0"}});
+    gs->manager.transition(MICRO, {{"q1", "1"}, {"qi", ".8"}, {"qj", "{t} 3 / sin .1 *"}, {"qk", "0"}});
     stage_macroblock(SilenceBlock(4), 1);
     cs.render_microblock();
 
@@ -634,7 +634,7 @@ void explanation(CompositeScene& cs) {
     g->clear();
     shared_ptr<C4GraphScene> num_moves_tracker = make_shared<C4GraphScene>(g, false, "", FULL, vec2(.8, .8));
     num_moves_tracker->manager.set("desired_nodes", "1");
-    num_moves_tracker->manager.set("d", "1");
+    num_moves_tracker->manager.set("d", "1.2");
     cs.add_scene(num_moves_tracker, "num_moves_tracker", .25, .55);
 
     stage_macroblock(FileBlock("There's one empty position,"), 2);
@@ -840,7 +840,7 @@ void explanation(CompositeScene& cs) {
 
     shared_ptr<WhitePaperScene> wps = make_shared<WhitePaperScene>("allis_paper", "Allis (1988)", vector<int>{1, 7, 10, 82});
     cs.add_scene(wps, "wps");
-    stage_macroblock(FileBlock("Victor Allis published a conect 4 solution like that in 1988."), 3);
+    stage_macroblock(FileBlock("Victor Allis published a connect 4 solution like that in 1988."), 3);
     wps->manager.transition(MICRO, "completion", "1", false);
     cs.render_microblock();
     cs.render_microblock();
@@ -1214,6 +1214,7 @@ void patterned(CompositeScene& cs) {
     cs.remove_subscene("c4s_compare");
 
     cs.fade_subscene(MICRO, "c4gs_weak_r", 1);
+    c4gs_weak_r->manager.transition(MICRO, "d", "1.2");
     cs.fade_subscene(MICRO, "c4gs_weak_l", .2);
     cs.fade_subscene(MICRO, "c4gs_weak_g", .2);
     cs.fade_subscene(MICRO, "c4gs_weak_s", .2);
@@ -1223,7 +1224,9 @@ void patterned(CompositeScene& cs) {
     cs.render_microblock();
 
     cs.fade_subscene(MICRO, "c4gs_weak_r", .2);
+    c4gs_weak_r->manager.transition(MICRO, "d", "1.4");
     cs.fade_subscene(MICRO, "c4gs_weak_l", 1);
+    c4gs_weak_l->manager.transition(MICRO, "d", "1.2");
     cs.fade_subscene(MICRO, "c4gs_weak_g", .2);
     cs.fade_subscene(MICRO, "c4gs_weak_s", .2);
     stage_macroblock(FileBlock("This tree involves always picking the rightmost option."), 3);
@@ -1233,7 +1236,9 @@ void patterned(CompositeScene& cs) {
 
     cs.fade_subscene(MICRO, "c4gs_weak_r", .2);
     cs.fade_subscene(MICRO, "c4gs_weak_l", .2);
+    c4gs_weak_l->manager.transition(MICRO, "d", "1.4");
     cs.fade_subscene(MICRO, "c4gs_weak_g", 1);
+    c4gs_weak_g->manager.transition(MICRO, "d", "1.4");
     cs.fade_subscene(MICRO, "c4gs_weak_s", .2);
     stage_macroblock(FileBlock("This tree involves picking randomly between the winning options."), 3);
     cs.render_microblock();
@@ -1469,7 +1474,7 @@ void trimmed_solution(CompositeScene& cs) {
 
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<C4GraphScene> weakc4 = make_shared<C4GraphScene>(g, false, "", TRIM_STEADY_STATES);
-    weakc4->manager.set({{"q1", "1"}, {"qi", "0"}, {"qj", "0"}, {"qk", "0"}, {"mirror_force",".005"}});
+    weakc4->manager.set({{"q1", "1"}, {"qi", ".8"}, {"qj", "0"}, {"qk", "0"}, {"mirror_force",".005"}});
     if (!rendering_on()) {
         g->expand(-1);
         g->make_bidirectional();
@@ -1948,7 +1953,7 @@ void solution_types(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.render_microblock();
     bcs->manager.transition(MICRO, "bar0", "0.02");
-    bcs->manager.transition(MICRO, {{"bar1", ".8"}, {"bar2", ".5"}});
+    bcs->manager.transition(MICRO, {{"bar1", ".9"}, {"bar2", ".7"}});
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
@@ -2153,6 +2158,9 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     stage_macroblock(FileBlock("but are a mathematical inevitability more fundamental than physics, more real than reality."), 1);
     cs.render_microblock();
     cs.remove_subscene("galaxy_clip");
+
+    stage_macroblock(SilenceBlock(.6), 1);
+    cs.render_microblock();
 
     cs.fade_all_subscenes(MICRO, 0);
     weakc4->next_hash = 0;

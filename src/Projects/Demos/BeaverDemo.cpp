@@ -16,10 +16,22 @@ void bb52() {
     BeaverGridScene bs(5, 2);
     bs.manager.set("zoom", "-16.3");
     bs.manager.set("max_steps", "400");
-    bs.manager.set("center_x", "e <zoom> -1 * ^ {t} sin * 2 * 37900 -");
+    bs.manager.set("center_x", "e <zoom> -1 * ^ {t} sin * 2 * 1037900 -");
     bs.manager.set("center_y", "e <zoom> -1 * ^ {t} cos * 7350 +");
-    stage_macroblock(SilenceBlock(50), 1);
+    stage_macroblock(SilenceBlock(5), 7);
     bs.manager.transition(MACRO, "zoom", "-3");
+    bs.render_microblock();
+    bs.export_frame("bb52_1");
+    bs.render_microblock();
+    bs.export_frame("bb52_2");
+    bs.render_microblock();
+    bs.export_frame("bb52_3");
+    bs.render_microblock();
+    bs.export_frame("bb52_4");
+    bs.render_microblock();
+    bs.export_frame("bb52_5");
+    bs.render_microblock();
+    bs.export_frame("bb52_6");
     bs.render_microblock();
 }
 void bb52_norm() {
@@ -87,5 +99,5 @@ void bb23() {
 }
 
 void render_video() {
-    bb52_norm();
+    bb52();
 }
