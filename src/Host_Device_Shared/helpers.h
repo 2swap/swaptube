@@ -41,12 +41,12 @@ HOST_DEVICE inline double extended_mod(double a, double b) {
     return result;
 }
 
-HOST_DEVICE inline vec2 pixel_to_point(const vec2& pixel, const vec2& lx_ty, const vec2& rx_by, const vec2& wh) {
+HOST_DEVICE inline vec2 pixel_to_point_in_screen(const vec2& pixel, const vec2& lx_ty, const vec2& rx_by, const vec2& wh) {
     const vec2 flip(pixel.x, wh.y-1-pixel.y);
     return flip * (rx_by - lx_ty) / wh + lx_ty;
 }
 
-HOST_DEVICE inline vec2 point_to_pixel(const vec2& point, const vec2& lx_ty, const vec2& rx_by, const vec2& wh) {
+HOST_DEVICE inline vec2 point_to_pixel_in_screen(const vec2& point, const vec2& lx_ty, const vec2& rx_by, const vec2& wh) {
     const vec2 flip((point - lx_ty) * wh / (rx_by - lx_ty));
     return vec2(flip.x, wh.y-1-flip.y);
 }

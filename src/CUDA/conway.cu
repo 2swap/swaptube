@@ -129,7 +129,7 @@ __global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bit
     if (px >= pixels_w || py >= pixels_h) return;
 
     int pixel_idx = py * pixels_w + px;
-    Cuda::vec2 point_vec = pixel_to_point(Cuda::vec2(px, py), lx_ty, rx_by, Cuda::vec2(pixels_w, pixels_h));
+    Cuda::vec2 point_vec = pixel_to_point_in_screen(Cuda::vec2(px, py), lx_ty, rx_by, Cuda::vec2(pixels_w, pixels_h));
     point_vec += Cuda::vec2(4.0f * w_bitboards, 4.0f * h_bitboards); // Centering
 
     if(point_vec.x < 0 || point_vec.y < 0) {

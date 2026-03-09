@@ -15,13 +15,8 @@
 #include <stdio.h>
 #include <math.h>
 #include "../Host_Device_Shared/vec.h"
+#include "../Host_Device_Shared/TuringMachine.h"
 #include "common_graphics.cuh"
-
-struct TuringMachine {
-    bool left_right[10];
-    int write_symbol[10];
-    int next_state[10];
-};
 
 __device__ void decode_turing_machine_index(int x, int y, int grid_w, int grid_h, int num_states, int num_symbols, TuringMachine* tm) {
     int remaining_x = x;
@@ -51,7 +46,7 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, unsigned int
         return;
     }
 
-    Cuda::vec2 point_vec = Cuda::pixel_to_point(Cuda::vec2(idx, idy), lx_ty, rx_by, Cuda::vec2(w, h));
+    Cuda::vec2 point_vec = Cuda::pixel_to_point_in_screen(Cuda::vec2(idx, idy), lx_ty, rx_by, Cuda::vec2(w, h));
     //point_vec *= Cuda::vec2(grid_w, grid_h);
     point_vec += Cuda::vec2(grid_w * .5, grid_h * .5); // Centering
 

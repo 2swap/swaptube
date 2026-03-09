@@ -3,7 +3,7 @@
 extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* pixels, int w, int h, vec2 lx_ty, vec2 rx_by, int max_steps);
 
 BeaverGridScene::BeaverGridScene(const int num_states, const int num_symbols, const vec2& dimension)
-: CoordinateScene(dimension), num_states(num_states), num_symbols(num_symbols) {
+: CoordinateScene(dimension) {
     manager.set("max_steps", "0");
     manager.set("ticks_opacity", "1");
     manager.set("num_states", std::to_string(num_states));

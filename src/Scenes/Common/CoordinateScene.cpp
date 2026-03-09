@@ -6,6 +6,7 @@
 #include <list>
 #include <utility>
 #include <algorithm>
+#include "../../Host_Device_Shared/helpers.h"
 
 using std::string;
 using std::ostringstream;
@@ -81,16 +82,14 @@ vec2 CoordinateScene::point_to_pixel(const vec2& p) {
     const vec2 wh(get_width(), get_height());
     const vec2 rx_by(state["right_x"], state["bottom_y"]);
     const vec2 lx_ty(state["left_x"], state["top_y"]);
-    const vec2 flip(wh * (p-lx_ty)/(rx_by-lx_ty));
-    return vec2(flip.x, get_height()-1-flip.y);
+    return point_to_pixel_in_screen(p, lx_ty, rx_by, wh);
 }
 
 vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
     const vec2 wh(get_width(), get_height());
     const vec2 rx_by(state["right_x"], state["bottom_y"]);
     const vec2 lx_ty(state["left_x"], state["top_y"]);
-    const vec2 flip(pix.x, get_height()-1-pix.y);
-    return lx_ty + (rx_by-lx_ty) * flip / wh;
+    return pixel_to_point_in_screen(pix, lx_ty, rx_by, wh);
 }
 
 // This is not used here, but it is used in some classes which inherit from CoordinateScene

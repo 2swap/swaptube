@@ -83,7 +83,7 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
     // Plot the roots
     for (int i = 0; i < degree; i++) {
         Cuda::vec2 point(cuCrealf(roots[i]), cuCimagf(roots[i]));
-        Cuda::vec2 pixel = point_to_pixel(point, Cuda::vec2(lx, ty), Cuda::vec2(rx, by), Cuda::vec2(w, h));
+        Cuda::vec2 pixel = point_to_pixel_in_screen(point, Cuda::vec2(lx, ty), Cuda::vec2(rx, by), Cuda::vec2(w, h));
         d_gradient_circle(pixel.x, pixel.y, radius, red, green, blue, d_alpha, d_red, d_green, d_blue, w, h, opacity);
     }
 }

@@ -70,7 +70,7 @@ __device__ void compute_z_x_c(
     cuComplex& z, cuComplex& x, cuComplex& c, float& log_real_part_exp
 ) {
     // Calculate the complex point based on pixel coordinates
-    Cuda::vec2 point_vec = pixel_to_point(pixel, lx_ty, rx_by, wh);
+    Cuda::vec2 point_vec = pixel_to_point_in_screen(pixel, lx_ty, rx_by, wh);
     cuComplex point = make_cuComplex(point_vec.x, point_vec.y);
 
     // Compute z, x, and c based on seed values and multipliers

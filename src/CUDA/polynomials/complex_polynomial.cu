@@ -29,7 +29,7 @@ __global__ void render_kernel(
     const int y = blockIdx.y * blockDim.y + threadIdx.y;
     if (x >= wh.x || y >= wh.y) return;
 
-    const Cuda::vec2 point = pixel_to_point(Cuda::vec2(x,y), lx_ty, rx_by, wh);
+    const Cuda::vec2 point = pixel_to_point_in_screen(Cuda::vec2(x,y), lx_ty, rx_by, wh);
     const thrust::complex<float> val = evaluate_polynomial_given_coefficients(d_coefficients, degree, thrust::complex<float>(point.x, point.y));
     const int color = d_complex_to_srgb(val, ab_dilation, dot_radius);
 
