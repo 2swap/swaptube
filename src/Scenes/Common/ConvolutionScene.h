@@ -9,7 +9,7 @@ class ConvolutionScene : public Scene {
 public:
     ConvolutionScene(const vec2& dimensions = vec2(1, 1));
 
-    std::pair<int, int> get_coords_from_pixels(const Pixels& p);
+    vec2 get_coords_from_pixels(const Pixels& p);
 
     void begin_transition(const TransitionType tt, const Pixels& p);
     void jump(const Pixels& p);
@@ -27,9 +27,9 @@ private:
     // Things used for non-transition states
     TransitionType current_transition_type;
     Pixels p1;
-    std::pair<int, int> coords;
+    vec2 coords;
     std::vector<StepResult> intersections;
     Pixels p2;
-    std::pair<int, int> transition_coords;
+    vec2 transition_coords;
     bool jumped = false;
 };

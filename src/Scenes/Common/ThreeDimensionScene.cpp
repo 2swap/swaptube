@@ -199,7 +199,7 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 
     cuda_render_surface(
         pix.pixels,
-        x1, y1, plot_w, plot_h, pix.w,
+        x1, y1, plot_w, plot_h, pix.size.x,
         queried->pixels.data(),
         subscenes[surface.name]->get_width(),
         subscenes[surface.name]->get_height(),

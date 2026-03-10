@@ -75,6 +75,9 @@ int get_video_framerate_fps() {
 int get_video_height_pixels() {
     return get_writer().get_video_height_pixels();
 }
+vec2 get_video_size_pixels() {
+    return vec2(get_writer().get_video_width_pixels(), get_writer().get_video_height_pixels());
+}
 uint32_t get_video_background_color() {
     return get_writer().get_video_background_color();
 }

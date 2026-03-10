@@ -53,6 +53,8 @@ public:
 
     int get_height() const;
 
+    vec2 get_dimensions() const;
+
     void export_frame(const string& filename, int scaledown = 1) const;
 
     StateManager manager;

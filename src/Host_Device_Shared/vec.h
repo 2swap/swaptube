@@ -112,6 +112,9 @@ HOST_DEVICE inline vec2& operator/=(vec2& a, const vec2& b) { a.x /= b.x; a.y /=
 HOST_DEVICE inline vec3& operator/=(vec3& a, const vec3& b) { a.x /= b.x; a.y /= b.y; a.z /= b.z; return a; }
 HOST_DEVICE inline vec4& operator/=(vec4& a, const vec4& b) { a.x /= b.x; a.y /= b.y; a.z /= b.z; a.w /= b.w; return a; }
 
+HOST_DEVICE inline bool operator==(const vec2& a, const vec2& b) { return a.x == b.x && a.y == b.y; }
+HOST_DEVICE inline bool operator!=(const vec2& a, const vec2& b) { return a.x != b.x || a.y != b.y; }
+
 HOST_DEVICE inline float length(const vec2& v) { return sqrtf(v.x * v.x + v.y * v.y); }
 HOST_DEVICE inline float length(const vec3& v) { return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z); }
 HOST_DEVICE inline float length(const vec4& v) { return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w); }
@@ -131,7 +134,10 @@ HOST_DEVICE inline bool hasnan(const vec3& v) { return std::isnan(v.x) || std::i
 HOST_DEVICE inline bool hasnan(const vec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
 HOST_DEVICE inline bool hasnan(const quat& q) { return std::isnan(q.u) || std::isnan(q.i) || std::isnan(q.j) || std::isnan(q.k); }
 
-HOST_DEVICE inline vec3 integerize(const vec3& v) { return vec3{ floorf(v.x), floorf(v.y), floorf(v.z) }; }
+HOST_DEVICE inline vec2 vec_min(const vec2& a, const vec2& b) { return vec2(std::min(a.x, b.x), std::min(a.y, b.y)); }
+HOST_DEVICE inline vec2 vec_max(const vec2& a, const vec2& b) { return vec2(std::max(a.x, b.x), std::max(a.y, b.y)); }
+
+HOST_DEVICE inline vec3 integerize(const vec3& v) { return vec3(floorf(v.x), floorf(v.y), floorf(v.z)); }
 
 HOST_DEVICE inline quat conjugate(const quat& q) { return quat{ q.u, -q.i, -q.j, -q.k }; }
 

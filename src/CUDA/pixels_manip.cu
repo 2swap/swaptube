@@ -121,41 +121,6 @@ __global__ void overlay_kernel(
     d_overlay_pixel(x+dx, y+dy, foreground[y * fw + x], opacity, background, bw, bh);
 }
 
-extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity)
-{
-    if (opacity == 0.0f) return;
-
-    unsigned int* d_background = nullptr;
-    unsigned int* d_foreground = nullptr;
-
-    size_t bg_size = bw * bh * sizeof(unsigned int);
-    size_t fg_size = fw * fh * sizeof(unsigned int);
-
-    cudaMalloc((void**)&d_background, bg_size);
-    cudaMemcpy(d_background, h_background, bg_size, cudaMemcpyHostToDevice);
-
-    cudaMalloc((void**)&d_foreground, fg_size);
-    cudaMemcpy(d_foreground, h_foreground, fg_size, cudaMemcpyHostToDevice);
-
-    int numPixels = fw * fh;
-    int blockSize = 256;
-    int numBlocks = (numPixels + blockSize - 1) / blockSize;
-    overlay_kernel<<<numBlocks, blockSize>>>(
-        d_background, bw, bh,
-        d_foreground, fw, fh,
-        dx, dy, opacity);
-    cudaDeviceSynchronize();
-
-    cudaMemcpy(h_background, d_background, bg_size, cudaMemcpyDeviceToHost);
-
-    cudaFree(d_background);
-    cudaFree(d_foreground);
-}
-
 __global__ void overlay_rotation_kernel(
     unsigned int* background, const int bw, const int bh,
     unsigned int* foreground, const int fw, const int fh,
@@ -248,14 +213,11 @@ __global__ void overlay_rotation_kernel(
     d_overlay_pixel(bx, by, d_argb(255, rf, gf, bf), fg_alpha, background, bw, bh);
 }
 
-extern "C" void cuda_overlay_with_rotation (
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity, const float angle_rad)
+extern "C" void cuda_overlay (
+    unsigned int* h_background, const vec2& b_size,
+    unsigned int* h_foreground, const vec2& f_size,
+    const vec2& delta, const float opacity, const float angle_rad)
 {
-    // Functionally equivalent to cuda_overlay, but the foreground is rotated about its center
-    // by the specified angle (in radians) before being overlaid onto the background.
     if (opacity == 0.0f) return;
 
     unsigned int* d_background = nullptr;
@@ -270,16 +232,26 @@ extern "C" void cuda_overlay_with_rotation (
     cudaMalloc((void**)&d_foreground, fg_size);
     cudaMemcpy(d_foreground, h_foreground, fg_size, cudaMemcpyHostToDevice);
 
-    // TODO instead use the envelope surrounding the rotation INTERSECT the background itself
-    int numPixels = bw * bh; // iterate over full background and map into rotated foreground via inverse transform
-    int blockSize = 256;
-    int numBlocks = (numPixels + blockSize - 1) / blockSize;
-    overlay_rotation_kernel<<<numBlocks, blockSize>>>(
-        d_background, bw, bh,
-        d_foreground, fw, fh,
-        dx, dy, opacity, angle_rad);
+    if(angle_rad != 0) {
+        // TODO instead use the envelope surrounding the rotation INTERSECT the background itself
+        int numPixels = bw * bh; // iterate over full background and map into rotated foreground via inverse transform
+        int blockSize = 256;
+        int numBlocks = (numPixels + blockSize - 1) / blockSize;
+        overlay_rotation_kernel<<<numBlocks, blockSize>>>(
+            d_background, bw, bh,
+            d_foreground, fw, fh,
+            dx, dy, opacity, angle_rad);
+    } else {
+        
+        int numPixels = fw * fh;
+        int blockSize = 256;
+        int numBlocks = (numPixels + blockSize - 1) / blockSize;
+        overlay_kernel<<<numBlocks, blockSize>>>(
+            d_background, bw, bh,
+            d_foreground, fw, fh,
+            dx, dy, opacity);
+    }
     cudaDeviceSynchronize();
-
     cudaMemcpy(h_background, d_background, bg_size, cudaMemcpyDeviceToHost);
 
     cudaFree(d_background);

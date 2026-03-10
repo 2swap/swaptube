@@ -1,11 +1,5 @@
 #include "WhitePaperScene.h"
 
-extern "C" void cuda_overlay_with_rotation (
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity, const float angle);
-
 WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const vec2& dimensions)
     : Scene(dimensions), prefix(prefix), author(author), page_numbers(page_numbers) {
     manager.set({

@@ -111,7 +111,7 @@ void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float
 
 void CoordinateScene::draw_point(const vec2 point, int point_color, float point_opacity) {
     const vec2 pixel = point_to_pixel(point);
-    pix.fill_circle(pixel.x, pixel.y, get_geom_mean_size()/100., point_color, point_opacity);
+    pix.fill_circle(pixel, get_geom_mean_size()/100., point_color, point_opacity);
 }
 
 void CoordinateScene::draw() {
@@ -136,7 +136,7 @@ void CoordinateScene::draw_construction() {
     float bounce = 1 - square(square(microblock_fraction - 1));
     float interp = smoother2(microblock_fraction);
 
-    Pixels geometry(pix.w, pix.h);
+    Pixels geometry(pix.size);
 
     for(const GeometricLine& l : construction.lines) {
         if(!l.draw_shape) continue;
@@ -165,18 +165,20 @@ void CoordinateScene::draw_construction() {
             if(!p.old) {
                 double radius_pop = line_thickness * p.width_multiplier * 8 * bounce;
                 radius = min(radius, radius_pop);
-                geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, point_color, (1-interp)*.8);
+                geometry.fill_circle(position_pixel, radius_pop, point_color, (1-interp)*.8);
             }
-            geometry.fill_circle(position_pixel.x, position_pixel.y, radius, point_color, 1);
+            geometry.fill_circle(position_pixel, radius, point_color, 1);
         }
         if(p.label != "" && p.width_multiplier > .4) {
             ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
             Pixels latex = latex_to_pix(latex_color(text_color, p.label), sp);
-            geometry.overlay(latex, position_pixel.x - latex.w/2, position_pixel.y - line_thickness * 6 - latex.h/2, p.old ? 1 : interp);
+            vec2 pos = position_pixel - latex.size/2;
+            pos.y -= line_thickness * 6;
+            geometry.overlay(latex, vec2(position_pixel), p.old ? 1 : interp);
         }
     }
 
-    pix.overlay(geometry, 0, 0, construction_opacity);
+    pix.overlay(geometry, vec2(0, 0), construction_opacity);
 }
 
 void CoordinateScene::draw_zero_crosshair() {
@@ -228,9 +230,8 @@ void CoordinateScene::draw_one_axis(bool ymode) {
             if(number_opacity > 0){
                 ScalingParams sp(gmsz/9., gmsz/18.);
                 Pixels latex = latex_to_pix(truncated, sp);
-                //if(ymode) latex = latex.rotate_90();
-                if(ymode) pix.overlay(latex, tick_length * .8/*1.5*/, coordinate - latex.h*1.1/*.5*/, number_opacity);
-                if(!ymode)pix.overlay(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
+                if(ymode) pix.overlay(latex, vec2(tick_length * .8, coordinate - latex.size.y*1.1), number_opacity);
+                if(!ymode)pix.overlay(latex, vec2(coordinate - latex.size.x/2, h-1-tick_length * 1.5 - latex.size.y), number_opacity);
             }
         }
         if(fiveish) order_mag--;

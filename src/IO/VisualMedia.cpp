@@ -18,7 +18,7 @@
 using namespace std;
 
 void pix_to_png(const Pixels& pix, const string& filename) {
-    if(pix.w * pix.h == 0) return; // cowardly exit.
+    if(pix.size.x * pix.size.y == 0) return; // cowardly exit.
 
     // Open the file for writing (binary mode)
     FILE* fp = fopen(("io_out/" + filename + ".png").c_str(), "wb");
@@ -52,13 +52,13 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     png_init_io(png, fp);
 
     // Write header (8 bit color depth)
-    png_set_IHDR(png, info, pix.w, pix.h,
+    png_set_IHDR(png, info, pix.size.x, pix.size.y,
                  8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_write_info(png, info);
 
     // Allocate memory for one row
-    png_bytep row = (png_bytep)malloc(4 * pix.w * sizeof(png_byte));
+    png_bytep row = (png_bytep)malloc(4 * pix.size.x * sizeof(png_byte));
     if (!row) {
         png_destroy_write_struct(&png, &info);
         fclose(fp);
@@ -66,8 +66,8 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     }
 
     // Write image data
-    for (int y = 0; y < pix.h; y++) {
-        for (int x = 0; x < pix.w; x++) {
+    for (int y = 0; y < pix.size.y; y++) {
+        for (int x = 0; x < pix.size.x; x++) {
             int pixel = pix.get_pixel_carelessly(x, y);
             uint8_t a = (pixel >> 24) & 0xFF;
             uint8_t r = (pixel >> 16) & 0xFF;
@@ -143,7 +143,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
         throw runtime_error("Computed output size for SVG file " + filename + " is invalid: width=" + to_string(width) + ", height=" + to_string(height) + ", scaling factor=" + to_string(scaling_params.scale_factor));
     }
 
-    Pixels ret(width, height);
+    Pixels ret(vec2(width, height));
 
     // Allocate pixel buffer
     vector<uint8_t> raw_data(width * height * 4, 0);
@@ -287,7 +287,7 @@ void png_to_pix(Pixels& pix, const string& filename_with_or_without_suffix) {
     png_read_image(png, row_pointers.data());
 
     // Create a Pixels object
-    pix = Pixels(width, height);
+    pix = Pixels(vec2(width, height));
 
     // Copy data to Pixels object
     for (int y = 0; y < height; y++) {
@@ -314,23 +314,23 @@ void png_to_pix(Pixels& pix, const string& filename_with_or_without_suffix) {
 }
 
 // Custom hash and equality for pair<string, pair<int,int>>
-struct StringIntPairHash {
-    size_t operator()(const pair<string, pair<int, int>>& p) const noexcept {
+struct StringVecHash {
+    size_t operator()(const pair<string, vec2>& p) const noexcept {
         size_t h1 = std::hash<string>{}(p.first);
-        size_t h2 = (static_cast<size_t>(p.second.first) << 32) ^ static_cast<size_t>(p.second.second);
+        size_t h2 = (static_cast<size_t>(p.second.x) << 32) ^ static_cast<size_t>(p.second.y);
         // boost-like mix
         return h1 ^ (h2 + 0x9e3779b97f4a7c15ULL + (h1<<6) + (h1>>2));
     }
 };
-struct StringIntPairEq {
-    bool operator()(const pair<string, pair<int, int>>& a, const pair<string, pair<int, int>>& b) const noexcept {
-        return a.first == b.first && a.second.first == b.second.first && a.second.second == b.second.second;
+struct StringVecEq {
+    bool operator()(const pair<string, vec2>& a, const pair<string, vec2>& b) const noexcept {
+        return a.first == b.first && a.second == b.second;
     }
 };
 
-void png_to_pix_bounding_box(Pixels& pix, const string& filename, int w, int h) {
-    static unordered_map<pair<string, pair<int, int>>, Pixels, StringIntPairHash, StringIntPairEq> png_bounding_box_cache;
-    auto key = make_pair(filename, make_pair(w, h));
+void png_to_pix_bounding_box(Pixels& pix, const string& filename, const vec2& box) {
+    static unordered_map<pair<string, vec2>, Pixels, StringVecHash, StringVecEq> png_bounding_box_cache;
+    const pair<string, vec2> key = make_pair(filename, box);
     auto it = png_bounding_box_cache.find(key);
     if (it != png_bounding_box_cache.end()) {
         pix = it->second;
@@ -340,7 +340,7 @@ void png_to_pix_bounding_box(Pixels& pix, const string& filename, int w, int h) 
     Pixels image;
     png_to_pix(image, filename);
 
-    image.scale_to_bounding_box(w, h, pix);
+    image.scale_to_bounding_box(box, pix);
 
     // Store in cache with scale
     png_bounding_box_cache[key] = pix;

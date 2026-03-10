@@ -20,7 +20,7 @@ public:
 
     void change_video(const std::string &vn);
     // get_frame returns true on EOF / failure to find frame, false on success.
-    bool get_frame(int frame_index, int target_width, int target_height, Pixels& pix);
+    bool get_frame(int frame_index, const vec2& target_size, Pixels& pix);
 
 private:
     std::string video_name;
@@ -36,7 +36,7 @@ private:
     int videoStreamIdx;
 
     void open_file();
-    void ensure_scaler(int width, int height, int &scaled_width, int &scaled_height);
+    void ensure_scaler(const vec2& target_size, vec2 &scaled_size);
     void reset();
     void cleanup();
 };

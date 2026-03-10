@@ -10,22 +10,22 @@
 #include <limits>
 #include "../IO/Writer.h"
 
-extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
+extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, const vec2& input_dim, unsigned int* output_pixels, const vec2& output_dim);
 
-Pixels::Pixels() : w(0), h(0), pixels(0) {}
-Pixels::Pixels(int width, int height) : w(width), h(height), pixels(width*height) {}
+Pixels::Pixels() : size(0,0), pixels(0) {}
+Pixels::Pixels(const vec2& dim) : size(vec2((int) dim.x, (int) dim.y)), pixels((int)dim.x * (int)dim.y) {}
 
 bool Pixels::out_of_range(int x, int y) const {
-    return x < 0 || x >= w || y < 0 || y >= h;
+    return x < 0 || x >= size.x || y < 0 || y >= size.y;
 }
 
 int Pixels::get_pixel_carelessly(int x, int y) const {
-    return pixels[w*y+x];
+    return pixels[size.x*y+x];
 }
 
 int Pixels::get_pixel_carefully(int x, int y) const {
     if(out_of_range(x, y)) return TRANSPARENT_BLACK; // 0
-    return pixels[w*y+x];
+    return pixels[size.x*y+x];
 }
 
 void Pixels::overlay_pixel(int x, int y, int col, double overlay_opacity_multiplier){
@@ -45,16 +45,16 @@ int Pixels::get_alpha(int x, int y) const {
 }
 
 void Pixels::set_pixel_carelessly(int x, int y, int col) {
-    pixels[w*y+x] = col;
+    pixels[size.x*y+x] = col;
 }
 
 void Pixels::set_pixel_carefully(int x, int y, int col) {
     if(out_of_range(x, y)) return;
-    pixels[w*y+x] = col;
+    pixels[size.x*y+x] = col;
 }
 
 void Pixels::darken(float factor){
-    for(int i = 0; i < w*h; i++){
+    for(int i = 0; i < size.x * size.y; i++){
         int a = geta(pixels[i]);
         int r = getr(pixels[i]);
         int g = getg(pixels[i]);
@@ -68,7 +68,7 @@ void Pixels::darken(float factor){
 
 void Pixels::set_alpha(int x, int y, int a) {
     if(out_of_range(x, y) || a < 0 || a > 255) return;
-    pixels[w*y+x] = (pixels[w*y+x] & 0x00ffffff) | (a << 24);
+    pixels[size.x*y+x] = (pixels[size.x*y+x] & 0x00ffffff) | (a << 24);
 }
 
 void Pixels::get_average_color(int x_start, int y_start, int x_end, int y_end,
@@ -99,33 +99,31 @@ void Pixels::get_average_color(int x_start, int y_start, int x_end, int y_end,
     }
 }
 
-void Pixels::scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const {
+void Pixels::scale_to_bounding_box(const vec2& box_dim, Pixels &scaled) const {
     // Calculate the scaling factor based on the bounding box
-    float scale = min(static_cast<float>(box_w) / w, static_cast<float>(box_h) / h);
+    const vec2 div = box_dim / size;
+    float scale = min(div.x, div.y);
 
     // Calculate the new dimensions
-    int new_width = static_cast<int>(w * scale);
-    int new_height = static_cast<int>(h * scale);
+    const vec2 new_dim = scale * size;
 
     // Scale the image using bicubic interpolation
-    bicubic_scale(new_width, new_height, scaled);
+    bicubic_scale(new_dim, scaled);
 }
 
-void Pixels::crop(int x, int y, int cw, int ch, Pixels &cropped) const {
-    if(x < 0 || y < 0 || x + cw > w || y + ch > h)
-        throw runtime_error("Crop dimensions out of range: " + to_string(x) + "," + to_string(y) + "," + to_string(cw) + "," + to_string(ch) + " for image of size " + to_string(w) + "x" + to_string(h));
-    cropped = Pixels(cw, ch);
-    for(int dx = 0; dx < cw; dx++)
-        for(int dy = 0; dy < ch; dy++)
-            cropped.set_pixel_carelessly(dx, dy, get_pixel_carelessly(x+dx, y+dy));
+void Pixels::crop(const vec2& top_left, const vec2& cropped_dimensions, Pixels &cropped) const {
+    if(top_left.x < 0 || top_left.y < 0 || top_left.x + cropped_dimensions.x > size.x || top_left.y + cropped_dimensions.y > size.y)
+        throw runtime_error("Crop dimensions out of range: " + to_string(top_left.x) + "," + to_string(top_left.y) + "," + to_string(cropped_dimensions.x) + "," + to_string(cropped_dimensions.y) + " for image of size " + to_string(size.x) + "x" + to_string(size.y));
+    cropped = Pixels(cropped_dimensions);
+    for(int dx = 0; dx < cropped_dimensions.x; dx++)
+        for(int dy = 0; dy < cropped_dimensions.y; dy++)
+            cropped.set_pixel_carelessly(dx, dy, get_pixel_carelessly(top_left.x+dx, top_left.y+dy));
 }
 
-void Pixels::crop_by_fractions(float crop_top, float crop_bottom, float crop_left, float crop_right, Pixels &cropped) const {
-    int x =  w * crop_left;
-    int y =  h * crop_top;
-    int cw =  w * (1.0f - crop_left - crop_right);
-    int ch =  h * (1.0f - crop_top - crop_bottom);
-    crop(x, y, cw, ch, cropped);
+void Pixels::crop_by_fractions(const vec2& crop_top_left, const vec2& crop_bottom_right, Pixels &cropped) const {
+    const vec2 tl_pos = size * crop_top_left;
+    const vec2 dim = size * (crop_bottom_right - crop_top_left);
+    crop(tl_pos, dim, cropped);
 }
 
 int Pixels::get_pixel_bilinear(double x, double y) const {
@@ -164,80 +162,68 @@ int Pixels::get_pixel_bilinear(double x, double y) const {
     return argb(a, r, g, b);
 }
 
-bool Pixels::is_empty() const {
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            if (get_alpha(x, y) != 0) {
-                return false; // Found a pixel with non-zero alpha, so the Pixels is not empty
-            }
-        }
-    }
-    return true; // No pixel with non-zero alpha found, Pixels is empty
-}
-
-void Pixels::add_border(int col, int thickness){
-    if(thickness > w || thickness > h)
-        throw runtime_error("Border thickness too large.");
-    for(int t = 0; t < thickness; t++){
-        for(int x = 0; x < w; x++){
-            set_pixel_carelessly(x, t, col);
-            set_pixel_carelessly(x, h-1-t, col);
-        }
-        for(int y = 0; y < h; y++){
-            set_pixel_carelessly(t, y, col);
-            set_pixel_carelessly(w-1-t, y, col);
-        }
-    }
-}
-
-void Pixels::overlay(Pixels p, int dx, int dy, double overlay_opacity_multiplier){
-    for(int x = 0; x < p.w; x++){
+void Pixels::overlay(const Pixels& p, const vec2& pos, double overlay_opacity_multiplier){
+    int dx = pos.x;
+    int dy = pos.y;
+    for(int x = 0; x < p.size.x; x++){
         int xpdx = x+dx;
-        for(int y = 0; y < p.h; y++){
+        for(int y = 0; y < p.size.y; y++){
             overlay_pixel(xpdx, y+dy, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
         }
     }
 }
 
-void Pixels::overwrite(Pixels p, int dx, int dy){
-    for(int x = 0; x < p.w; x++){
+void Pixels::overwrite(const Pixels& p, const vec2& pos) {
+    int dx = pos.x;
+    int dy = pos.y;
+    for(int x = 0; x < p.size.x; x++){
         int xpdx = x+dx;
-        for(int y = 0; y < p.h; y++){
+        for(int y = 0; y < p.size.y; y++){
             set_pixel_carefully(xpdx, y+dy, p.get_pixel_carefully(x, y));
         }
     }
 }
 
-void Pixels::fill_rect(int x, int y, int rw, int rh, int col){
+void Pixels::fill_rect(const vec2& pos, const vec2& dimensions, int col){
+    int x = pos.x;
+    int y = pos.y;
+    int rw = dimensions.x;
+    int rh = dimensions.y;
     if(x < 0) { rw += x; x = 0; }
     if(y < 0) { rh += y; y = 0; }
-    if(x + rw > w) rw = w - x;
-    if(y + rh > h) rh = h - y;
+    if(x + rw > size.x) rw = size.x - x;
+    if(y + rh > size.y) rh = size.y - y;
     for(int dx = 0; dx < rw; dx++)
         for(int dy = 0; dy < rh; dy++)
             set_pixel_carelessly(x+dx, y+dy, col);
 }
 
-void Pixels::fill_circle(double x, double y, double r, int col, double opa){
-    fill_ring(x, y, r, 0, col, opa);
+void Pixels::fill_circle(const vec2& pos, double r, int col, double opa){
+    fill_ring(pos, r, 0, col, opa);
 }
 
-void Pixels::fill_ring(double x, double y, double r_outer, double r_inner, int col, double opa){
-    double r_outer_sq = square(r_outer);
-    double r_inner_sq = square(r_inner);
+void Pixels::fill_ring(const vec2& pos, double r_outer, double r_inner, int col, double opa){
+    const int x = pos.x;
+    const int y = pos.y;
+    const double r_outer_sq = square(r_outer);
+    const double r_inner_sq = square(r_inner);
     for(double dx = -r_outer+1; dx < r_outer; dx++){
-        double sdx = square(dx);
+        const double sdx = square(dx);
         for(double dy = -r_outer+1; dy < r_outer; dy++) {
-            double sdy = square(dy);
-            if(sdx+sdy < r_outer_sq && sdx+sdy >= r_inner_sq)
+            const double sdx_sdy = sdx + square(dy);
+            if(sdx_sdy < r_outer_sq && sdx_sdy >= r_inner_sq)
                 overlay_pixel(x+dx, y+dy, col, opa);
         }
     }
 }
 
-void Pixels::fill_ellipse(double x, double y, double rw, double rh, int col, double opa){
+void Pixels::fill_ellipse(const vec2& pos, const vec2& dimensions, int col, double opa){
+    const int x = pos.x;
+    const int y = pos.y;
+    const int rw = dimensions.x;
+    const int rh = dimensions.y;
     for(double dx = -rw+1; dx < rw; dx++){
-        double sdx = square(dx/rw);
+        const double sdx = square(dx/rw);
         for(double dy = -rh+1; dy < rh; dy++)
             if(sdx+square(dy/rh) < 1)
                 overlay_pixel(x+dx, y+dy, col, opa);
@@ -291,57 +277,21 @@ void Pixels::bresenham(int x1, int y1, int x2, int y2, int col, float opacity, i
     }
 }
 
-void Pixels::rounded_rect(float x, float y, float rw, float rh, float r, int col){
-    int xplusr = round(x+r);
-    int yplusr = round(y+r);
-    int rwmrt2 = round(rw-r*2);
-    int rhmrt2 = round(rh-r*2);
-    int xprwmr = round(x+rw-r);
-    int yprhmr = round(y+rh-r);
-    fill_rect(xplusr, y, rwmrt2, rh, col);
-    fill_rect(x, yplusr, rw, rhmrt2, col);
+void Pixels::rounded_rect(const vec2& pos, const vec2& dimensions, float r, int col){
+    const vec2 posplusr = pos + vec2(r,r);
+    const vec2 dimm2r = dimensions - vec2(2*r, 2*r);
+    const vec2 xpdimmr = pos + dimensions - vec2(r,r);
+    fill_rect(vec2(posplusr.x, pos.y), vec2(dimm2r.x, dimensions.y), col);
+    fill_rect(vec2(pos.x, posplusr.y), vec2(dimensions.x, dimm2r.y), col);
     for(int i = 0; i < 4; i++)
-        fill_ellipse(i%2==0 ? xplusr : xprwmr, i/2==0 ? yplusr : yprhmr, r, r, col);
-}
-
-void Pixels::flood_fill(int x, int y, int color) {
-    int targetColor = get_pixel_carefully(x, y);
-
-    // Check if the target pixel already has the desired color
-    if (targetColor == color)
-        return;
-
-    std::stack<std::pair<int, int>> stack;
-    stack.push({x, y});
-
-    while (!stack.empty()) {
-        auto [curX, curY] = stack.top();
-        stack.pop();
-
-        // Check if current pixel is within the image boundaries
-        if (out_of_range(curX, curY))
-            continue;
-
-        // Check if current pixel is the target color
-        if (get_pixel_carelessly(curX, curY) != targetColor)
-            continue;
-
-        // Update the pixel color
-        set_pixel_carelessly(curX, curY, color);
-
-        // Push neighboring pixels onto the stack
-        stack.push({curX - 1, curY}); // Left
-        stack.push({curX + 1, curY}); // Right
-        stack.push({curX, curY - 1}); // Up
-        stack.push({curX, curY + 1}); // Down
-    }
+        fill_circle(vec2(i%2==0 ? posplusr.x : xpdimmr.x, i/2==0 ? posplusr.y : xpdimmr.y), r, col);
 }
 
 Pixels Pixels::naive_scale_down(int scale_down_factor) const {
-    Pixels result(w/scale_down_factor, h/scale_down_factor);
+    Pixels result(size/scale_down_factor);
 
-    for (int y = 0; y*scale_down_factor < h; y++) {
-        for (int x = 0; x*scale_down_factor < w; x++) {
+    for (int y = 0; y*scale_down_factor < size.y; y++) {
+        for (int x = 0; x*scale_down_factor < size.x; x++) {
             result.set_pixel_carelessly(x, y, get_pixel_carelessly(x*scale_down_factor, y*scale_down_factor));
         }
     }
@@ -349,31 +299,9 @@ Pixels Pixels::naive_scale_down(int scale_down_factor) const {
     return result;
 }
 
-void Pixels::rotate_90_inverse(Pixels& rotated) const {
-    rotated = Pixels(h, w);
-
-    // Map each pixel to its new location
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            rotated.set_pixel_carelessly(y, w-1-x, get_pixel_carelessly(x, y));
-        }
-    }
-}
-
-void Pixels::rotate_90(Pixels& rotated) const {
-    rotated = Pixels(h, w);
-
-    // Map each pixel to its new location
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            rotated.set_pixel_carelessly(h-1-y, x, get_pixel_carelessly(x, y));
-        }
-    }
-}
-
-void Pixels::bicubic_scale(int new_width, int new_height, Pixels& result) const {
-    result = Pixels(new_width, new_height);
-    cuda_bicubic_scale(pixels.data(), w, h, result.pixels.data(), new_width, new_height);
+void Pixels::bicubic_scale(const vec2& new_dim, Pixels& result) const {
+    result = Pixels(new_dim);
+    cuda_bicubic_scale(pixels.data(), size, result.pixels.data(), new_dim);
 }
 
 void Pixels::print_to_terminal() {
@@ -389,8 +317,8 @@ void Pixels::print_to_terminal() {
     // Assume a half-block is square
     const double charAspect = 2.0;
 
-    int outputWidth = min(w, termWidth);
-    double imageAspect = static_cast<double>(w) / h;
+    int outputWidth = min((int)size.x, termWidth);
+    double imageAspect = static_cast<double>(size.x) / size.y;
 
     // Determine the effective vertical resolution (in image pixels) that we wish to sample.
     // We multiply by 2 because each printed line represents two image rows.
@@ -405,16 +333,16 @@ void Pixels::print_to_terminal() {
     for (int y = 0; y < printedLines; ++y) {
         for (int x = 0; x < outputWidth; ++x) {
             // Determine the horizontal region that maps to this terminal column.
-            int x0 = x * w / outputWidth;
-            int x1 = (x + 1) * w / outputWidth;
+            int x0 = x * size.x / outputWidth;
+            int x1 = (x + 1) * size.x / outputWidth;
 
             // For the top half of the character cell:
-            int top_y0 = (2 * y) * h / sample_height;
-            int top_y1 = (2 * y + 1) * h / sample_height;
+            int top_y0 = (2 * y) * size.y / sample_height;
+            int top_y1 = (2 * y + 1) * size.y / sample_height;
 
             // For the bottom half of the character cell:
-            int bot_y0 = (2 * y + 1) * h / sample_height;
-            int bot_y1 = (2 * y + 2) * h / sample_height;
+            int bot_y0 = (2 * y + 1) * size.y / sample_height;
+            int bot_y1 = (2 * y + 2) * size.y / sample_height;
 
             int a_top, r_top, g_top, b_top;
             int a_bot, r_bot, g_bot, b_bot;
@@ -457,7 +385,7 @@ Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensi
     int height = intensities.size();
     int width = (height > 0) ? intensities[0].size() : 0;
 
-    Pixels result(width, height);
+    Pixels result(vec2(width, height));
 
     // Find the minimum and maximum intensity values
     unsigned int minIntensity = numeric_limits<unsigned int>::max();
@@ -491,50 +419,31 @@ Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensi
     return result;
 }
 
-Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, int negative_intensity) {
-    int height = colors.size();
-    int width = (height > 0) ? colors[0].size() : 0;
-
-    Pixels result(width, height);
-
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            result.pixels[y+x*width] = colors[y][x];
-        }
-    }
-
-    return result;
-}
-
 Pixels crop_by_alpha(const Pixels& p) {
-    int min_x = p.w;
-    int min_y = p.h;
-    int max_x = -1;
-    int max_y = -1;
+    vec2 min_pos(p.size);
+    vec2 max_pos(-1,-1);
 
     // Find the bounding box of non-zero alpha pixels
-    for (int y = 0; y < p.h; y++) {
-        for (int x = 0; x < p.w; x++) {
+    for (int y = 0; y < p.size.y; y++) {
+        for (int x = 0; x < p.size.x; x++) {
             if (p.get_alpha(x, y) > 0) {
-                min_x = min(min_x, x);
-                min_y = min(min_y, y);
-                max_x = max(max_x, x);
-                max_y = max(max_y, y);
+                const vec2 pos(x,y);
+                min_pos = vec_min(min_pos, pos);
+                max_pos = vec_max(max_pos, pos);
             }
         }
     }
 
     // Calculate the dimensions of the cropped Pixels
-    int width = max_x - min_x + 1;
-    int height = max_y - min_y + 1;
+    const vec2 cropped_dim(max_pos - min_pos + vec2(1,1));
 
     // Create the cropped Pixels object
-    Pixels cropped_pixels(width, height);
+    Pixels cropped_pixels(cropped_dim);
 
     // Copy the pixels within the bounding box to the cropped Pixels
-    for (int y = min_y; y <= max_y; y++) {
-        for (int x = min_x; x <= max_x; x++) {
-            cropped_pixels.set_pixel_carelessly(x - min_x, y - min_y, p.get_pixel_carelessly(x, y));
+    for (int y = min_pos.y; y <= max_pos.y; y++) {
+        for (int x = min_pos.x; x <= max_pos.x; x++) {
+            cropped_pixels.set_pixel_carelessly(x - min_pos.x, y - min_pos.y, p.get_pixel_carelessly(x, y));
         }
     }
 

@@ -6,13 +6,12 @@
 
 extern "C" void color_complex_polynomial(
     unsigned int* h_pixels, // to be overwritten with the result
-    int w,
-    int h,
+    vec2 size,
     const float* h_coefficients_real,
     const float* h_coefficients_imag,
     int degree,
-    float lx, float ty,
-    float rx, float by,
+    vec2 lx_ty,
+    vec2 rx_by,
     float ab_dilation,
     float dot_radius
 );
@@ -294,13 +293,12 @@ void ComplexPlotScene::draw() {
 
     color_complex_polynomial(
         pix.pixels.data(),
-        pix.w,
-        pix.h,
+        pix.size,
         h_coefficients_real,
         h_coefficients_imag,
         degree,
-        state["left_x"], state["top_y"],
-        state["right_x"], state["bottom_y"],
+        vec2(state["left_x"], state["top_y"]),
+        vec2(state["right_x"], state["bottom_y"]),
         state["ab_dilation"],
         state["dot_radius"] * .25
     );
@@ -312,7 +310,7 @@ void ComplexPlotScene::draw() {
         float opa = state["root"+to_string(i)+"_ring"];
         if(opa < 0.01) continue;
         const vec2 pixel(point_to_pixel(vec2(roots[i].real(), roots[i].imag())));
-        pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa * .55);
+        pix.fill_ring(pixel, gm*6, gm*5, OPAQUE_WHITE, opa * .55);
     }
 
     // Draw coefficients
@@ -321,7 +319,7 @@ void ComplexPlotScene::draw() {
         float letter_opa = state["coefficient"+to_string(i)+"_opacity"];
         const vec2 pixel(point_to_pixel(vec2(coefficients[i].real(), coefficients[i].imag())));
         if(ring_opa > 0.01) {
-            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, ring_opa * .55);
+            pix.fill_ring(pixel, gm*6, gm*5, OPAQUE_WHITE, ring_opa * .55);
         }
         if(letter_opa > 0.01) {
             ScalingParams sp = ScalingParams(gm * 16, gm * 40);
@@ -332,7 +330,7 @@ void ComplexPlotScene::draw() {
             float align_factor = 0.5f;
             if(letter == 'b' || letter == 'd' || letter == 'f' || letter == 'h' || letter == 'k' || letter == 'l' || letter == 't') align_factor = 0.68f;
             else if(letter == 'g' || letter == 'j' || letter == 'p' || letter == 'q' || letter == 'y') align_factor = 0.32f;
-            pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h * align_factor, letter_opa);
+            pix.overlay(text_pixels, pixel - text_pixels.size * vec2(.5, align_factor), letter_opa);
         }
     }
 
@@ -349,7 +347,7 @@ void ComplexPlotScene::draw() {
             const complex<float> root = (-b + sqrt_disc * sign_c) / (2.0f*a);
             const vec2 pixel(point_to_pixel(vec2(root.real(), root.imag())));
             const int color = (sign == 1) ? 0xffff0000 : 0xff00ff00;
-            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, color, opa);
+            pix.fill_ring(pixel, gm*6, gm*5, color, opa);
         }
     }
 

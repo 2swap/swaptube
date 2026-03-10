@@ -66,71 +66,68 @@ void TwoswapScene::draw(){
     double seefness = state["6884_effect_completion"];
     double swaptubeness = state["swaptube_effect_completion"];
 
-    double whole_x_shift = 0;
-    double whole_y_shift = pix.w * .04;
+    const vec2 whole_shift = vec2(0, pix.w * .04);
 
     if (twoswapness > 0.01) { // 2swap logo effect
         Pixels foreground_pix(pix.w, pix.h * .3);
 
         ScalingParams sp(pix.w * .6, pix.h * .4);
         Pixels twoswap_pix = latex_to_pix("\\text{2swap}", sp);
-        foreground_pix.fill_ellipse(pix.w/3, foreground_pix.h/2, pix.w/20, pix.w/20, OPAQUE_WHITE);
-        double yval = (foreground_pix.h-twoswap_pix.h)/2+pix.w/96;
-        foreground_pix.overwrite(twoswap_pix, pix.w/3+pix.w/20+pix.w/96, yval);
+        foreground_pix.fill_circle(foreground_pix.size/vec2(3,2), pix.size.x/20, OPAQUE_WHITE);
+        double yval = (foreground_pix.size.y/2-twoswap_pix.size.y/2)+pix.size.x/96;
+        double xval = (foreground_pix.size.x/3+pix.size.x/20)+pix.size.x/96;
+        foreground_pix.overwrite(twoswap_pix, vec2(xval, yval));
 
         Pixels stripey_pix;
         stripey_effect(foreground_pix, stripey_pix, 1-twoswapness);
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-            stripey_pix.pixels.data(), stripey_pix.w, stripey_pix.h,
-            (pix.w-stripey_pix.w)/2 - pix.w*.04 + whole_x_shift,
-            (pix.h-stripey_pix.h)/2 - pix.h*.04 + whole_y_shift,
+        cuda_overlay(pix.pixels.data(), pix.size,
+            stripey_pix.pixels.data(), stripey_pix.size,
+            (pix.size-stripey_pix.size)/2 - pix.size*.04 + whole_shift,
             twoswapness * .6, -.2
         );
     }
 
     if (seefness > 0.01) { // 6884 logo effect
-        Pixels foreground_pix(pix.w, pix.h * .2);
+        Pixels foreground_pix(pix.size * vec2(1, .2));
 
         Pixels image;
         png_to_pix(image, "musicnote");
 
         Pixels scaled;
-        image.scale_to_bounding_box(pix.w, pix.h * .14, scaled);
+        image.scale_to_bounding_box(pix.size * vec2(1, .14), scaled);
 
-        ScalingParams sp(pix.w * .25, pix.h * .25);
+        ScalingParams sp(pix.size * .25);
         Pixels seef_pix = latex_to_pix("\\text{6884}", sp);
-        cuda_overlay(foreground_pix.pixels.data(), foreground_pix.w, foreground_pix.h,
-            scaled.pixels.data(), scaled.w, scaled.h,
-            pix.w*.4, (foreground_pix.h-scaled.h)/2 + scaled.h*.1, 1.0f);
-        double yval = (foreground_pix.h-seef_pix.h)/2;
-        foreground_pix.overwrite(seef_pix, pix.w*.4 + scaled.w+pix.w/96, yval);
+        cuda_overlay(foreground_pix.pixels.data(), foreground_pix.size,
+            scaled.pixels.data(), scaled.size,
+            pix.size.x*.4, (foreground_pix.size.y-scaled.size.y)/2 + scaled.size.y*.1, 1.0f);
+        double yval = (foreground_pix.size.y-seef_pix.size.y)/2;
+        foreground_pix.overwrite(seef_pix, pix.size.x*.4 + scaled.size.x+pix.size.x/96, yval);
 
         Pixels stripey_pix;
         stripey_effect(foreground_pix, stripey_pix, 1-seefness);
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-            stripey_pix.pixels.data(), stripey_pix.w, stripey_pix.h,
-            (pix.w-stripey_pix.w)/2 - pix.w*.029 + whole_x_shift,
-            (pix.h-stripey_pix.h)/2 + pix.h*.110 + whole_y_shift,
+        cuda_overlay(pix.pixels.data(), pix.size,
+            stripey_pix.pixels.data(), stripey_pix.size,
+            (pix.size-stripey_pix.size)/2 - pix.size*vec2(.029, .110) + whole_shift,
             seefness * .6, -.2
         );
     }
 
     if (swaptubeness > 0.01) { // SwapTube logo effect
-        double height = pix.h * .14;
+        double height = pix.size.y * .14;
         ScalingParams sp2(pix.w * .32, height);
         Pixels swaptube_pix_small_box = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{\\quad Commit Hash: " + swaptube_commit_hash() + "}", sp2);
-        Pixels swaptube_pix = Pixels(pix.w, height);
-        swaptube_pix.overwrite(swaptube_pix_small_box, (pix.w - swaptube_pix_small_box.w)/2, (height - swaptube_pix_small_box.h)/2);
+        Pixels swaptube_pix = Pixels(pix.size * vec2(1, .14));
+        swaptube_pix.overwrite(swaptube_pix_small_box, (vec2(pix.w, height) - swaptube_pix_small_box.size)/2);
 
         Pixels stripey_pix;
         stripey_effect(swaptube_pix, stripey_pix, 1-swaptubeness);
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-            stripey_pix.pixels.data(), stripey_pix.w, stripey_pix.h,
-            (pix.w-stripey_pix.w)/2 + pix.w*.03 + whole_x_shift,
-            (pix.h-stripey_pix.h)/2 - pix.h*.15 + whole_y_shift,
+        cuda_overlay(pix.pixels.data(), pix.size,
+            stripey_pix.pixels.data(), stripey_pix.size,
+            (pix.size-stripey_pix.size)/2 + pix.size*vec2(.03, .15) + whole_shift,
             swaptubeness * .6, -.2
         );
     }

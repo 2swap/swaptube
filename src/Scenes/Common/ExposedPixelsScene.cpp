@@ -1,7 +1,7 @@
 #include "ExposedPixelsScene.h"
 
 ExposedPixelsScene::ExposedPixelsScene(const vec2& dimensions) : Scene(dimensions) {
-    exposed_pixels = Pixels(get_width(), get_height());
+    exposed_pixels = Pixels(get_dimensions());
 }
 
 const StateQuery ExposedPixelsScene::populate_state_query() const {

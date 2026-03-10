@@ -159,6 +159,11 @@ int Scene::get_height() const{
     return get_video_height_pixels() * manager.respond_to_query({"h"})["h"];
 }
 
+vec2 Scene::get_dimensions() const{
+    StateResult sr = manager.respond_to_query({"w", "h"});
+    return get_video_dimensions() * vec2(sr["w"], sr["h"]);
+}
+
 void Scene::export_frame(const string& filename, int scaledown) const {
     pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
 }

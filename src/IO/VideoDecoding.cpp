@@ -30,7 +30,7 @@ void MP4FrameReader::change_video(const std::string &vn) {
     open_file();
 }
 
-bool MP4FrameReader::get_frame(int frame_index, int target_width, int target_height, Pixels& pix) {
+bool MP4FrameReader::get_frame(int frame_index, const vec2& target_size, Pixels& pix) {
     if (frame_index <= currentFrame) {
         // Requested an earlier frame -> reset decoding.
         reset();
@@ -38,8 +38,8 @@ bool MP4FrameReader::get_frame(int frame_index, int target_width, int target_hei
     }
 
     // Ensure scaling context matches requested output size.
-    int scaled_width, scaled_height;
-    ensure_scaler(target_width, target_height, scaled_width, scaled_height);
+    vec2 scaled_size;
+    ensure_scaler(target_size, scaled_size);
 
     // Decode until reaching the desired frame.
     while (av_read_frame(fmtCtx, packet) >= 0) {
@@ -68,9 +68,9 @@ bool MP4FrameReader::get_frame(int frame_index, int target_width, int target_hei
                               frameRGBA->linesize);
 
                     // Copy into Pixels
-                    pix = Pixels(scaled_width, scaled_height);
-                    for (int y = 0; y < scaled_height; y++) {
-                        for (int x = 0; x < scaled_width; x++) {
+                    pix = Pixels(scaled_size);
+                    for (int y = 0; y < scaled_size.y; y++) {
+                        for (int x = 0; x < scaled_size.x; x++) {
                             int offset = y * frameRGBA->linesize[0] + x * 4;
                             uint8_t r = frameRGBA->data[0][offset];
                             uint8_t g = frameRGBA->data[0][offset + 1];
@@ -131,38 +131,37 @@ void MP4FrameReader::open_file() {
     currentFrame = -1;
 }
 
-void MP4FrameReader::ensure_scaler(int width, int height, int &scaled_width, int &scaled_height) {
+void MP4FrameReader::ensure_scaler(const vec2& target_size, vec2 &scaled_size) {
     // Compute scaled size preserving aspect ratio and not scaling up
     int srcW = codecCtx->width;
     int srcH = codecCtx->height;
     if (srcW <= 0 || srcH <= 0)
         throw std::runtime_error("Invalid source dimensions.");
 
-    double scaleX = (double)width / (double)srcW;
-    double scaleY = (double)height / (double)srcH;
-    double scale = std::min(scaleX, scaleY);
+    const vec2 src_size(srcW, srcH);
+    const vec2 scale_vec = target_size / src_size;
+    double scale = std::min(scale_vec.x, scale_vec.y);
 
-    scaled_width = std::max(1, (int)(srcW * scale + 0.5));
-    scaled_height = std::max(1, (int)(srcH * scale + 0.5));
+    scaled_size = vec_max(vec2(1,1), src_size * scale + vec2(0.5,0.5));
 
     // If scaler already matches desired scaled size, keep it.
-    if (swsCtx && (frameRGBA->width == scaled_width) && (frameRGBA->height == scaled_height))
+    if (swsCtx && (frameRGBA->width == scaled_size.x) && (frameRGBA->height == scaled_size.y))
         return;
 
     // Recreate SWS context and buffer if size changed
     if (swsCtx) sws_freeContext(swsCtx);
     if (buffer) av_free(buffer);
 
-    int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGBA, scaled_width, scaled_height, 1);
+    int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGBA, scaled_size.x, scaled_size.y, 1);
     buffer = (uint8_t *)av_malloc(numBytes);
     buffer_size = numBytes;
     av_image_fill_arrays(frameRGBA->data, frameRGBA->linesize, buffer,
-                         AV_PIX_FMT_RGBA, scaled_width, scaled_height, 1);
-    frameRGBA->width = scaled_width;
-    frameRGBA->height = scaled_height;
+                         AV_PIX_FMT_RGBA, scaled_size.x, scaled_size.y, 1);
+    frameRGBA->width = scaled_size.y;
+    frameRGBA->height = scaled_size.y;
 
     swsCtx = sws_getContext(codecCtx->width, codecCtx->height, codecCtx->pix_fmt,
-                            scaled_width, scaled_height, AV_PIX_FMT_RGBA,
+                            scaled_size.x, scaled_size.y, AV_PIX_FMT_RGBA,
                             SWS_BILINEAR, nullptr, nullptr, nullptr);
 
     if (!swsCtx)

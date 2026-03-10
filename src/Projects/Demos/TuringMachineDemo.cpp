@@ -18,9 +18,9 @@ void render_video() {
     char tc2[21] = "1RB1LB_0RC0LA_1LC0LA";
     char bb5[35] = "1RB1LC_1RC1RB_1RD0LE_1LA1LD_1RZ0LA";
     char bb4[28] = "1RB1LB_1LA0LC_1RZ1LD_1RD0RA";
-    render_tm(tc1, 3, 2);
+    //render_tm(tc1, 3, 2);
     render_tm(tc2, 3, 2);
-    render_tm(bb5, 5, 2);
-    render_tm(bb4, 4, 2);
+    //render_tm(bb5, 5, 2);
+    //render_tm(bb4, 4, 2);
 }
 

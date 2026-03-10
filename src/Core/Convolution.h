@@ -26,14 +26,18 @@ struct StepResult {
             : max_x(mx), max_y(my), map(cm), induced1(i1), induced2(i2), current_p1(p1), current_p2(p2), intersection(i) {}
 };
 
+bool pix_is_empty(const Pixels& p);
+
+void flood_fill(const Pixels& pix, int x, int y, int color);
+
 class TranslatedPixels {
 public:
     int translation_x;
     int translation_y;
     Pixels pixels;
 
-    TranslatedPixels(int width, int height, int tx, int ty)
-        : translation_x(tx), translation_y(ty), pixels(width, height) {}
+    TranslatedPixels(const vec2& dim, int tx, int ty)
+        : translation_x(tx), translation_y(ty), pixels(dim) {}
 
     TranslatedPixels(const Pixels& p, int tx, int ty)
         : translation_x(tx), translation_y(ty), pixels(p) {}
@@ -60,7 +64,7 @@ public:
     }
 
     inline bool is_empty() const {
-        return pixels.is_empty();
+        return pix_is_empty(pixels);
     }
 };
 

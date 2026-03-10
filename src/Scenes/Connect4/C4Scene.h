@@ -47,7 +47,7 @@ public:
     void highlight_winning_discs();
     void draw_c4_disc(int disc_x, double disc_y, bool is_red);
     void draw_annotations();
-    void get_disc_screen_coordinates(int stonex, double stoney, double& px, double& py);
+    void get_disc_screen_coordinates(const vec2& stone, vec2& disc);
 
     const StateQuery populate_state_query() const override;
 

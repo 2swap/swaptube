@@ -12,13 +12,10 @@ PauseScene::PauseScene(const vec2& dimensions)
 }
 
 void PauseScene::draw() {
-    const int w = get_width();
-    const int h = get_height();
-
     double timer_value = state["timer"]; // expected to be between 0 and 1
 
-    double center_x = w / 2.0;
-    double center_y = h / 2.0;
+    const vec2 dimensions = get_dimensions();
+    const vec2 center = dimensions / 2;
 
     int color = OPAQUE_WHITE;
 
@@ -28,14 +25,16 @@ void PauseScene::draw() {
     const double border_thickness = get_geom_mean_size() / 200.;
 
     // Top border (from center of top edge to the corners)
-    const double top_width = w * timer_value;
-    pix.fill_rect(center_x - top_width/2.,                  0, top_width, border_thickness, color);
-    pix.fill_rect(center_x - top_width/2., h-border_thickness, top_width, border_thickness, color);
+    const double top_width = dimensions.x * timer_value;
+    const vec2 horizontal_bar_size(top_width, border_thickness);
+    pix.fill_rect(vec2(center.x - top_width/2.,                  0), horizontal_bar_size, color);
+    pix.fill_rect(vec2(center.x - top_width/2., dimensions.y-border_thickness), horizontal_bar_size, color);
 
     // Left border (from center left edge toward top-left and bottom-left corners)
-    const double left_height = h * timer_value;
-    pix.fill_rect(                 0, center_y - left_height/2., border_thickness, left_height, color);
-    pix.fill_rect(w-border_thickness, center_y - left_height/2., border_thickness, left_height, color);
+    const double left_height = dimensions.y * timer_value;
+    const vec2 vertical_bar_size(border_thickness, left_height);
+    pix.fill_rect(vec2(                 0, center.y - left_height/2.), vertical_bar_size, color);
+    pix.fill_rect(vec2(dimensions.x-border_thickness, center.y - left_height/2.), vertical_bar_size, color);
 }
 
 const StateQuery PauseScene::populate_state_query() const {

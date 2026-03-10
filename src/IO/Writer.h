@@ -37,6 +37,7 @@ Writer& get_writer();
 
 int get_video_width_pixels();
 int get_video_height_pixels();
+vec2 get_video_size_pixels();
 float get_video_aspect_ratio();
 int get_video_framerate_fps();
 int get_audio_samplerate_hz();

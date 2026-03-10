@@ -15,8 +15,8 @@ ConvolutionScene::ConvolutionScene(const vec2& dimensions)
     });
 }
 
-std::pair<int, int> ConvolutionScene::get_coords_from_pixels(const Pixels& p){
-    return std::make_pair((get_width()-p.w)/2, (get_height()-p.h)/2);
+vec2 ConvolutionScene::get_coords_from_pixels(const Pixels& p){
+    return (get_dimensions()-p.size)/2;
 }
 
 void ConvolutionScene::begin_transition(const TransitionType tt, const Pixels& p) {
@@ -71,28 +71,29 @@ void ConvolutionScene::draw(){
 
         for (int i = 0; i < intersections.size(); i++) {
             const StepResult& step = intersections[i];
-            int x = round(lerp(coords.first , transition_coords.first -step.max_x, smooth));
-            int y = round(lerp(coords.second, transition_coords.second-step.max_y, smooth));
+            int x = round(lerp(coords.x, transition_coords.x-step.max_x, smooth));
+            int y = round(lerp(coords.y, transition_coords.y-step.max_y, smooth));
             // Render the intersection at the interpolated position
-            pix.overlay(step.induced1, x, y, tp1);
-            pix.overlay(step.induced2, x+step.max_x, y+step.max_y, tp );
+            pix.overlay(step.induced1, vec2(x, y), tp1);
+            pix.overlay(step.induced2, vec2(x+step.max_x, y+step.max_y), tp );
 
             if(i == 0 && false){
-                top_vx += transition_coords.first  - step.max_x - coords.first ;
-                top_vy += transition_coords.second - step.max_y - coords.second;
+                top_vx += transition_coords.x - step.max_x - coords.x;
+                top_vy += transition_coords.y - step.max_y - coords.y;
             }
         }
 
         int dx = round(lerp(-top_vx, 0, smooth));
         int dy = round(lerp(-top_vy, 0, smooth));
+	vec2 delta(dx, dy);
 
         StepResult last_intersection = intersections[intersections.size()-1];
-        pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
-        pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
+        pix.overlay(last_intersection.current_p1, delta + coords, tp1*tp1);
+        pix.overlay(last_intersection.current_p2, delta + transition_coords, tp *tp );
     } else {
         p1 = get_p1();
         coords = get_coords_from_pixels(p1);
-        pix.overwrite(p1, coords.first, coords.second);
+        pix.overwrite(p1, coords);
     }
 }
 
