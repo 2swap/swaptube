@@ -1,7 +1,7 @@
 struct TuringMachine {
     int num_symbols;
     int num_states;
-    bool left_right[10];
-    int write_symbol[10];
-    int next_state[10];
+    bool left_right[12];
+    int write_symbol[12];
+    int next_state[12];
 };

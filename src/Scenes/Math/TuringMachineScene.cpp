@@ -1,4 +1,29 @@
 #include "TuringMachineScene.h"
+#include "../../IO/Writer.h"
+#include <vector>
+
+void beep(int state, int symbol, int num_states){
+    int tone_number = state + symbol * num_states;
+    vector<double> notes{12, 5, 17, 22, 21, 15, 9, 29, 34, 33, 25, 17, 27, 19, 29, 24, 21, 22, 15, 17, 27, 26, 22, 10, 19, 17, 12, 5, 15, 14, 10, 22, 24, 17, 20, 22, 29, 24, 22, 24};
+    double tone = pow(2,notes[tone_number]/12.);
+
+    int samplerate = get_audio_samplerate_hz();
+    int num_samples = samplerate * .1;
+    vector<sample_t> left;
+    vector<sample_t> right;
+     left.reserve(num_samples);
+    right.reserve(num_samples);
+
+    for(int i = 0; i < num_samples; i++){
+        float val_f = .07 * pow(.5,i*20./samplerate) * sin(tone*i*6.283*440/samplerate);
+        sample_t val = float_to_sample(val_f);
+         left.push_back(val);
+        right.push_back(val);
+    }
+
+    double time = get_global_state("t");
+    get_writer().audio->add_sfx(left, right, time*get_audio_samplerate_hz());
+}
 
 // For example, 1RB0LB_1LC0RE_1LA1LD_0LC---_0RB0RF_1RE1RB has 2 symbols and 5 states.
 void parse_tm_from_string(char* s, int num_states, int num_symbols, TuringMachine& tm) {
@@ -23,41 +48,49 @@ TuringMachineScene::TuringMachineScene(const TuringMachine& tm, const vec2& dime
 : CoordinateScene(dimension), tm(tm) {
     manager.set("iterations", "0");
     manager.set("ticks_opacity", "1");
-    manager.set("zoom", "-3");
+    manager.set("zoom", "-1.5");
 }
 
 void TuringMachineScene::draw() {
     const int tape_length = 301;//iterations * 2 + 1;
+    int iter_diffs = (int)state["iterations"] - last_iter;
+    last_iter = state["iterations"];
     int tape[tape_length] = {0};
     int head_position = tape_length/2;
     int current_state = 0;
     int steps = 0;
     bool halted = false;
+    int lowest_touched_index = head_position;
+    int highest_touched_index = head_position;
     while (steps < state["iterations"]) {
         //int action_index = current_state * num_symbols + tape[head_position];
+        int ls = tape[head_position];
         int action_index = current_state + tm.num_states * tape[head_position];
+
+        if (iter_diffs > 0 && steps >= state["iterations"] - 1)
+            beep(current_state, tape[head_position], tm.num_states);
 
         tape[head_position] = tm.write_symbol[action_index];
         head_position += tm.left_right[action_index] ? 1 : -1;
         current_state = tm.next_state[action_index];
-	cout << "Current state: " << current_state << endl;
-	cout << tm.write_symbol[action_index] << (tm.left_right[action_index]?"R":"L") << (char)('A' + tm.next_state[action_index]) << endl;
+        lowest_touched_index = min(lowest_touched_index, head_position);
+        highest_touched_index = max(highest_touched_index, head_position);
 
         if(current_state == -1) {
             halted = true;
             break;
         }
-        for (int i = 0; i < tape_length; i++) {
-            vec2 point(i-tape_length/2., steps);
+        for (int i = lowest_touched_index; i < highest_touched_index; i++) {
+            if(!tape[i]) continue;
+            vec2 point(i-tape_length/2. + .1, steps-.1);
             vec2 pix1 = point_to_pixel(point);
-            vec2 wh = point_to_pixel(point + vec2(1,-1)) - pix1;
-            if(tape[i])
-                pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xffffffff);
+            vec2 wh = point_to_pixel(point + vec2(.8,-.8)) - pix1;
+            pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xffffffff);
         }
-            vec2 point(head_position-tape_length/2., steps);
-            vec2 pix1 = point_to_pixel(point);
-            vec2 wh = point_to_pixel(point + vec2(1,-1)) - pix1;
-                pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xff00ff00);
+        vec2 point(head_position-tape_length/2. + .25, steps - .25);
+        vec2 pix1 = point_to_pixel(point);
+        vec2 wh = point_to_pixel(point + vec2(.5,-.5)) - pix1;
+        pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xff7f00ff);
         steps++;
     }
 
