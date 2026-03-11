@@ -6,9 +6,7 @@
 
 class ConwayScene : public CoordinateScene {
 private:
-    // 10 by 10 grid of conway cells
-    int grid_width = 10000;
-    int grid_height = 10000;
+    const vec2 size_bitboards = vec2(10000,10000);
     ConwayGrid conway_grid;
 
 public:

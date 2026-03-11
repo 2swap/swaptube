@@ -10,7 +10,7 @@
 #include <limits>
 #include "../IO/Writer.h"
 
-extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, const vec2& input_dim, unsigned int* output_pixels, const vec2& output_dim);
+extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, const vec2& input_size, unsigned int* output_pixels, const vec2& output_size);
 
 Pixels::Pixels() : size(0,0), pixels(0) {}
 Pixels::Pixels(const vec2& dim) : size(vec2((int) dim.x, (int) dim.y)), pixels((int)dim.x * (int)dim.y) {}
@@ -54,7 +54,7 @@ void Pixels::set_pixel_carefully(int x, int y, int col) {
 }
 
 void Pixels::darken(float factor){
-    for(int i = 0; i < size.x * size.y; i++){
+    for(int i = 0; i < (int)(size.x)*(int)(size.y); i++){
         int a = geta(pixels[i]);
         int r = getr(pixels[i]);
         int g = getg(pixels[i]);
@@ -122,7 +122,7 @@ void Pixels::crop(const vec2& top_left, const vec2& cropped_dimensions, Pixels &
 
 void Pixels::crop_by_fractions(const vec2& crop_top_left, const vec2& crop_bottom_right, Pixels &cropped) const {
     const vec2 tl_pos = size * crop_top_left;
-    const vec2 dim = size * (crop_bottom_right - crop_top_left);
+    const vec2 dim = size * (vec2(1,1) - crop_bottom_right - crop_top_left);
     crop(tl_pos, dim, cropped);
 }
 
@@ -230,7 +230,11 @@ void Pixels::fill_ellipse(const vec2& pos, const vec2& dimensions, int col, doub
     }
 }
 
-void Pixels::bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness) {
+void Pixels::bresenham(const vec2& start, const vec2& end, int col, float opacity, int thickness) {
+    int x1 = start.x;
+    int y1 = start.y;
+    int x2 = end.x;
+    int y2 = end.y;
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
     if(dx > 10000 || dy > 10000){

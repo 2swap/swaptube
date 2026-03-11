@@ -43,7 +43,7 @@ __global__ void conway_kernel(Bitboard* board, Bitboard* board_2, int w_bitboard
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
     if (idx >= w_bitboards * h_bitboards) return;
 
-    int bx = idx % w_bitboards;
+    int bx = idx % (int)w_bitboards;
     int by = idx / w_bitboards;
     int d = (by + 1) % h_bitboards;
     int l = (bx + 1) % w_bitboards;
@@ -122,21 +122,22 @@ extern "C" void iterate_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bit
     cudaDeviceSynchronize();
 }
 
-__global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bitboards, int h_bitboards, unsigned int* pixels, int pixels_w, int pixels_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, float w_t)
+__global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2,
+    const Cuda::vec2 size_bitboards, unsigned int* pixels, const Cuda::vec2 pixels_size, const Cuda::vec2 lx_ty, const Cuda::vec2 rx_by, float w_t)
 {
     int px = blockDim.x * blockIdx.x + threadIdx.x;
     int py = blockDim.y * blockIdx.y + threadIdx.y;
-    if (px >= pixels_w || py >= pixels_h) return;
+    if (px >= pixels_size.x || py >= pixels_size.y) return;
 
-    int pixel_idx = py * pixels_w + px;
-    Cuda::vec2 point_vec = pixel_to_point_in_screen(Cuda::vec2(px, py), lx_ty, rx_by, Cuda::vec2(pixels_w, pixels_h));
-    point_vec += Cuda::vec2(4.0f * w_bitboards, 4.0f * h_bitboards); // Centering
+    int pixel_idx = py * pixels_size.x + px;
+    Cuda::vec2 point_vec = pixel_to_point_in_screen(Cuda::vec2(px, py), lx_ty, rx_by, pixels_size);
+    point_vec += 4 * size_bitboards; // Centering
 
     if(point_vec.x < 0 || point_vec.y < 0) {
         pixels[pixel_idx] = 0xff808080;
         return;
     }
-    if(point_vec.x >= w_bitboards * 8 || point_vec.y >= h_bitboards * 8) {
+    if(point_vec.x >= size_bitboards.x * 8 || point_vec.y >= size_bitboards.y * 8) {
         pixels[pixel_idx] = 0xff808080;
         return;
     }
@@ -175,8 +176,8 @@ __global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bit
     float w_x = point_vec.x - floor(point_vec.x);
     float w_y = point_vec.y - floor(point_vec.y);
 
-    bool b000 = board[board_y * w_bitboards + board_x] & ((Bitboard)1 << (bit_y * 8 + bit_x));
-    bool b100 = board_2[board_y * w_bitboards + board_x] & ((Bitboard)1 << (bit_y * 8 + bit_x));
+    bool b000 = board[board_y * (int)size_bitboards.x + board_x] & ((Bitboard)1 << (bit_y * 8 + bit_x));
+    bool b100 = board_2[board_y * (int)size_bitboards.x + board_x] & ((Bitboard)1 << (bit_y * 8 + bit_x));
 
     if(b000 == b100) {
         if(b000) {
@@ -187,10 +188,10 @@ __global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bit
         return;
     }
 
-    bool tpx = board[board_y * w_bitboards + pboard_x] & ((Bitboard)1 << (bit_y * 8 + pbit_x));
-    bool tpy = board[pboard_y * w_bitboards + board_x] & ((Bitboard)1 << (pbit_y * 8 + bit_x));
-    bool tmx = board[board_y * w_bitboards + mboard_x] & ((Bitboard)1 << (bit_y * 8 + mbit_x));
-    bool tmy = board[mboard_y * w_bitboards + board_x] & ((Bitboard)1 << (mbit_y * 8 + bit_x));
+    bool tpx = board[board_y  * (int)size_bitboards.x + pboard_x] & ((Bitboard)1 << (bit_y * 8 + pbit_x));
+    bool tpy = board[pboard_y * (int)size_bitboards.x + board_x] & ((Bitboard)1 << (pbit_y * 8 + bit_x));
+    bool tmx = board[board_y  * (int)size_bitboards.x + mboard_x] & ((Bitboard)1 << (bit_y * 8 + mbit_x));
+    bool tmy = board[mboard_y * (int)size_bitboards.x + board_x] & ((Bitboard)1 << (mbit_y * 8 + bit_x));
 
     float dpx = .1 + 1 - w_x;
     float dmx = .1 + w_x;
@@ -221,31 +222,31 @@ __global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bit
     }
 }
 
-extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, float transition)
+extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, const Cuda::vec2& size_bitboards, unsigned int* h_pixels, const Cuda::vec2& pix_size, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, float transition)
 {
-    size_t pix_sz = pixels_w * pixels_h * sizeof(unsigned int);
+    size_t pix_mem = pix_size.x * pix_size.y * sizeof(unsigned int);
 
     unsigned int* d_pixels;
 
-    cudaMalloc((void**)&d_pixels, pix_sz);
+    cudaMalloc((void**)&d_pixels, pix_mem);
 
     dim3 blockSize(16, 16);
-    dim3 numBlocks((pixels_w + blockSize.x - 1) / blockSize.x, (pixels_h + blockSize.y - 1) / blockSize.y);
-    conway_draw_kernel<<<numBlocks, blockSize>>>(d_board, d_board_2, w_bitboards, h_bitboards, d_pixels, pixels_w, pixels_h, lx_ty, rx_by, transition);
+    dim3 numBlocks((pix_size.x + blockSize.x - 1) / blockSize.x, (pix_size.y + blockSize.y - 1) / blockSize.y);
+    conway_draw_kernel<<<numBlocks, blockSize>>>(d_board, d_board_2, size_bitboards, d_pixels, pix_size, lx_ty, rx_by, transition);
     cudaDeviceSynchronize();
 
-    cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_pixels, d_pixels, pix_mem, cudaMemcpyDeviceToHost);
 
     cudaFree(d_pixels);
 }
 
-extern "C" void allocate_conway_grid(Bitboard** d_board, Bitboard** d_board_2, int w_bitboards, int h_bitboards) {
-    size_t board_sz = w_bitboards * h_bitboards * sizeof(Bitboard);
+extern "C" void allocate_conway_grid(Bitboard** d_board, Bitboard** d_board_2, const Cuda::vec2& size_bitboards) {
+    size_t board_sz = size_bitboards.x * size_bitboards.y * sizeof(Bitboard);
     cudaMalloc((void**)d_board, board_sz);
     cudaMalloc((void**)d_board_2, board_sz);
     // Initialize with random data
     Bitboard* h_board = (Bitboard*)malloc(board_sz);
-    for (int i = 0; i < w_bitboards * h_bitboards; i+=3) {
+    for (int i = 0; i < size_bitboards.x * size_bitboards.y; i+=3) {
         h_board[i] = rand();
     }
     cudaMemcpy(*d_board, h_board, board_sz, cudaMemcpyHostToDevice);

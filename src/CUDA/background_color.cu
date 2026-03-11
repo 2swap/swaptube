@@ -7,16 +7,16 @@
 
 __global__
 void alpha_overlay_kernel(unsigned int* pixels,
-                          int width, int height,
+                          const Cuda::vec2 size,
                           int bg)
 {
     // 2D coordinates
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (x >= width || y >= height) return;
+    if (x >= size.x || y >= size.y) return;
 
-    int idx = y * width + x;
+    int idx = y * size.x + x;
 
     unsigned int pix = pixels[idx];
 
@@ -25,12 +25,12 @@ void alpha_overlay_kernel(unsigned int* pixels,
 
 extern "C"
 void alpha_overlay_cuda(unsigned int* src_host,
-                        int width, int height,
+                        const Cuda::vec2& size,
                         unsigned int bg_color)
 {
-    if (!src_host || width <= 0 || height <= 0) return;
+    if (!src_host || size.x <= 0 || size.y <= 0) return;
 
-    size_t npixels = (size_t)width * (size_t)height;
+    size_t npixels = (size_t)size.x * (size_t)size.y;
     size_t src_bytes = npixels * sizeof(uint32_t);
 
     uint32_t* d_src = nullptr;
@@ -41,11 +41,11 @@ void alpha_overlay_cuda(unsigned int* src_host,
 
     // Launch configuration: 16x16 threads per block is common for 2D workloads
     dim3 threads(16, 16);
-    dim3 blocks( (width  + threads.x - 1) / threads.x,
-                 (height + threads.y - 1) / threads.y );
+    dim3 blocks( (size.x + threads.x - 1) / threads.x,
+                 (size.y + threads.y - 1) / threads.y );
 
     // Launch kernel
-    alpha_overlay_kernel<<<blocks, threads>>>(d_src, width, height, bg_color);
+    alpha_overlay_kernel<<<blocks, threads>>>(d_src, size, bg_color);
     cudaDeviceSynchronize();
 
     // Copy result back to host

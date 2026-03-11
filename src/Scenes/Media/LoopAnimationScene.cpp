@@ -21,28 +21,25 @@ void LoopAnimationScene::draw() {
         throw runtime_error("Looped animation frame out of bounds!");
     const string& picture_name = picture_names[frame_no];
 
-    int w = get_width();
-    int h = get_height();
+    const vec2 size = get_dimensions();
 
     // Retrieve or create the cached PNG image Pixels object
-    if(memo_w != w || memo_h != h){
+    if(memo_size != size) {
         pixel_cache.clear();
-        memo_w = w;
-        memo_h = h;
+        memo_size = size;
     }
     Pixels image;
     if(pixel_cache.find(picture_name) == pixel_cache.end()) {
         cout << "rendering png: " << picture_name << endl;
-        png_to_pix_bounding_box(image, picture_name, w, h);
+        png_to_pix_bounding_box(image, picture_name, size);
         pixel_cache[picture_name] = image;
     }
 
     // Calculate the position to center the image within the bounding box
-    int x_offset = (get_width() - image.w) / 2;
-    int y_offset = (get_height() - image.h) / 2;
+    const vec2 offset = (size - image.size) / 2;
 
     // Overwrite the scaled image onto the scene's pixel buffer
-    pix.overwrite(image, x_offset, y_offset);
+    pix.overwrite(image, offset);
 }
 
 const StateQuery LoopAnimationScene::populate_state_query() const {

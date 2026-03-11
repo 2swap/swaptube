@@ -20,10 +20,11 @@ HOST_DEVICE inline double clamp(double val, double bottom, double top){return mi
 HOST_DEVICE inline double square(double x){return x * x;}
 HOST_DEVICE inline double cube(double x){return x * x * x;}
 HOST_DEVICE inline double fourth(double x){return square(square(x));}
-HOST_DEVICE inline double smoother1(double x){return 3*x*x-2*x*x*x;} // We used to use this but not anymore
+//HOST_DEVICE inline double smoother1(double x){return 3*x*x-2*x*x*x;} // We used to use this but not anymore
 HOST_DEVICE inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
 HOST_DEVICE inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
 HOST_DEVICE inline float float_lerp(float a, float b, float w){return a*(1-w)+b*w;}
+HOST_DEVICE inline vec2 veclerp(vec2 a, vec2 b, double w){return a*(1-w)+b*w;}
 HOST_DEVICE inline vec3 veclerp(vec3 a, vec3 b, double w){return a*(1-w)+b*w;}
 HOST_DEVICE inline vec4 veclerp(vec4 a, vec4 b, double w){return a*(1-w)+b*w;}
 HOST_DEVICE inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}

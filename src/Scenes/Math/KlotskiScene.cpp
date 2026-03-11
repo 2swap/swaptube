@@ -67,28 +67,34 @@ void KlotskiScene::draw() {
     double microblock_fraction = state["microblock_fraction"];
     double micro  = smoothlerp(0,1,microblock_fraction);
 
-    pix.fill_rect(offset_x-margin, offset_y-margin, hm, 2*margin + board_height, OPAQUE_WHITE);
-    pix.fill_rect(offset_x-margin, offset_y-margin, 2*margin + board_width, hm, OPAQUE_WHITE);
-    pix.fill_rect(offset_x+board_width+hm, offset_y-margin, hm, 2*margin + board_height, OPAQUE_WHITE);
-    pix.fill_rect(offset_x-margin, offset_y+board_height+hm, 2*margin + board_width, hm, OPAQUE_WHITE);
+    vec2 horizontal_line_size(2*margin + board_width, hm);
+    vec2 vertical_line_size(hm, 2*margin + board_height);
+    vec2 top_left(offset_x-margin, offset_y-margin);
+    vec2 top_right(offset_x+board_width+hm, offset_y-margin);
+    vec2 bottom_left(offset_x-margin, offset_y+board_height+hm);
+    pix.fill_rect(top_left, vertical_line_size, OPAQUE_WHITE);
+    pix.fill_rect(top_left, horizontal_line_size, OPAQUE_WHITE);
+    pix.fill_rect(top_right, vertical_line_size, OPAQUE_WHITE);
+    pix.fill_rect(bottom_left, horizontal_line_size, OPAQUE_WHITE);
     if (kb.rushhour && kb.w == 6 && kb.h == 6) {
-        pix.fill_rect(offset_x+board_width+hm, offset_y+qm+square_size*2, hm, square_size-hm, TRANSPARENT_BLACK);
+        pix.fill_rect(vec2(offset_x+board_width+hm, offset_y+qm+square_size*2), vec2(hm, square_size-hm), TRANSPARENT_BLACK);
     }
     if (!kb.rushhour && kb.w == 4 && kb.h == 5) {
-        pix.fill_rect(offset_x+qm+square_size, offset_y+board_height+hm, 2*square_size-hm, hm, TRANSPARENT_BLACK);
-        pix.fill_rect(offset_x+hm+square_size, offset_y+board_height+hm, 2*square_size-margin, hm, piece_color('b'));
+        pix.fill_rect(vec2(offset_x+qm+square_size, offset_y+board_height+hm), vec2(2*square_size-hm, hm), TRANSPARENT_BLACK);
+        pix.fill_rect(vec2(offset_x+hm+square_size, offset_y+board_height+hm), vec2(2*square_size-margin, hm), piece_color('b'));
     }
     if(dots > 0.01){
+        vec2 dot_size(dots*hm, dots*hm);
         // Loop over every cell in the board.
         for (int y = 1; y < kb.h; y++) {
             for (int x = 1; x < kb.w; x++) {
 
                 // Calculate pixel coordinates for the block.
-                double rect_x = (offset_x + x * square_size);
-                double rect_y = (offset_y + y * square_size);
+                double rect_x = (offset_x + x * square_size) - dots*qm;
+                double rect_y = (offset_y + y * square_size) - dots*qm;
 
                 // Draw the block.
-                pix.fill_rect(rect_x - dots*qm, rect_y - dots*qm, dots*hm, dots*hm, OPAQUE_WHITE);
+                pix.fill_rect(vec2(rect_x, rect_y), dot_size, OPAQUE_WHITE);
             }
         }
     }
@@ -132,10 +138,10 @@ void KlotskiScene::draw() {
             if(cell!=highlight_char && highlight_char != '.') color = colorlerp(color, 0xff000000, .75);
 
             // Draw the block.
-                        pix.fill_rect(mx+rect_x             , my+rect_y              , rect_width, rect_height, color);
-            if(hor_ext) pix.fill_rect(mx+rect_x+rect_width-1, my+rect_y              , margin+2  , rect_height, color);
-            if(ver_ext) pix.fill_rect(mx+rect_x             , my+rect_y+rect_height-1, rect_width, margin+2   , color);
-            if(mid_squ) pix.fill_rect(mx+rect_x+rect_width-1, my+rect_y+rect_height-1, margin+2  , margin+2   , color);
+                        pix.fill_rect(vec2(mx+rect_x             , my+rect_y              ), vec2(rect_width, rect_height), color);
+            if(hor_ext) pix.fill_rect(vec2(mx+rect_x+rect_width-1, my+rect_y              ), vec2(margin+2  , rect_height), color);
+            if(ver_ext) pix.fill_rect(vec2(mx+rect_x             , my+rect_y+rect_height-1), vec2(rect_width, margin+2   ), color);
+            if(mid_squ) pix.fill_rect(vec2(mx+rect_x+rect_width-1, my+rect_y+rect_height-1), vec2(margin+2  , margin+2   ), color);
         }
     }
 }

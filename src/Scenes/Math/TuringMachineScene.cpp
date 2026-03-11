@@ -85,12 +85,12 @@ void TuringMachineScene::draw() {
             vec2 point(i-tape_length/2. + .1, steps-.1);
             vec2 pix1 = point_to_pixel(point);
             vec2 wh = point_to_pixel(point + vec2(.8,-.8)) - pix1;
-            pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xffffffff);
+            pix.fill_rect(pix1, wh, 0xffffffff);
         }
         vec2 point(head_position-tape_length/2. + .25, steps - .25);
         vec2 pix1 = point_to_pixel(point);
         vec2 wh = point_to_pixel(point + vec2(.5,-.5)) - pix1;
-        pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xff7f00ff);
+        pix.fill_rect(pix1, wh, 0xff7f00ff);
         steps++;
     }
 

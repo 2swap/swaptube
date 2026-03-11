@@ -77,9 +77,9 @@ void LineChartScene::render_chart() {
         vec2 pixel = point_to_pixel({(float)x, val});
 
         string val_string = float_to_pretty_string(val);
-        ScalingParams sp(get_width()/10., get_height()/10.);
+        ScalingParams sp(get_dimensions() / 10.);
         Pixels latex = latex_to_pix(val_string, sp);
-        pix.overlay(latex, pixel.x - latex.w*.5, pixel.y - latex.h*1.1, 1.0f);
+        pix.overlay(latex, pixel - latex.size*vec2(.5,1.1), 1.0f);
 
         if (first_point) {
             first_point = false;
@@ -87,7 +87,7 @@ void LineChartScene::render_chart() {
             continue;
         }
 
-        pix.bresenham(pixel.x, pixel.y, last_pixel.x, last_pixel.y, 0xff00ffff, 1.0f, thickness);
+        pix.bresenham(pixel, last_pixel, 0xff00ffff, 1.0f, thickness);
 
         last_pixel = pixel;
     }

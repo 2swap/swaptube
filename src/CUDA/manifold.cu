@@ -11,7 +11,7 @@
 
 // Kernel
 __global__ void render_manifold_kernel(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const Cuda::vec2 size,
     const Cuda::ManifoldData d_manifold,
     const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
@@ -46,8 +46,7 @@ __global__ void render_manifold_kernel(
         camera_pos,
         fov,
         geom_mean_size,
-        w,
-        h,
+        size,
         out
     );
     if(behind_camera) return; // Don't render points behind camera
@@ -59,8 +58,8 @@ __global__ void render_manifold_kernel(
     uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
 
     // Depth test and write pixel
-    if (out.x >= 0 && out.x < w && out.y >= 0 && out.y < h) {
-        int pixel_index = (int)out.y * w + out.x;
+    if (out.x >= 0 && out.x < size.x && out.y >= 0 && out.y < size.y) {
+        int pixel_index = (int)out.y * size.x + out.x;
         // Atomically test and update depth using atomicCAS on float bit patterns
         const float eps = 3e-3f; // epsilon to avoid z-fighting
         unsigned int* depth_ui = (unsigned int*)(depth_buffer + pixel_index);
@@ -82,23 +81,23 @@ __global__ void render_manifold_kernel(
 
 // Externed entry point
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const Cuda::vec2& size,
     const Cuda::ManifoldData* manifold, const int num_manifolds,
-    const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
+    const Cuda::vec3& camera_pos, const Cuda::quat& camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
-    cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_pixels, size.x * size.y * sizeof(uint32_t));
+    cudaMemcpy(d_pixels, pixels, size.x * size.y * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
     // Allocate zeroized depth buffer on device (initialize to large values from host)
     float* d_depth_buffer;
-    cudaMalloc(&d_depth_buffer, w * h * sizeof(float));
-    float* h_depth = (float*)malloc(w * h * sizeof(float));
-    for (int i = 0; i < w * h; ++i) h_depth[i] = 1e30f;
-    cudaMemcpy(d_depth_buffer, h_depth, w * h * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_depth_buffer, size.x * size.y * sizeof(float));
+    float* h_depth = (float*)malloc(size.x * size.y * sizeof(float));
+    for (int i = 0; i < size.x * size.y; ++i) h_depth[i] = 1e30f;
+    cudaMemcpy(d_depth_buffer, h_depth, size.x * size.y * sizeof(float), cudaMemcpyHostToDevice);
     free(h_depth);
 
     for(int m = 0; m < num_manifolds; ++m) {
@@ -107,7 +106,7 @@ extern "C" void cuda_render_manifold(
         dim3 blockSize(16, 16);
         dim3 gridSize((manifold[m].u_steps + blockSize.x - 1) / blockSize.x, (manifold[m].v_steps + blockSize.y - 1) / blockSize.y);
         render_manifold_kernel<<<gridSize, blockSize>>>(
-            d_pixels, w, h,
+            d_pixels, size,
             d_manifold,
             camera_pos, camera_direction,
             geom_mean_size, fov,
@@ -119,10 +118,10 @@ extern "C" void cuda_render_manifold(
         free_manifold(d_manifold);
     }
 
-    cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xff0000ff);
+    cuda_edge_detect(d_pixels, d_depth_buffer, size, 0xff0000ff);
 
     // Copy pixels back to host
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pixels, d_pixels, size.x * size.y * sizeof(uint32_t), cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_pixels);

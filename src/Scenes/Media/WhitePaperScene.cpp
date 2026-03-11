@@ -19,13 +19,13 @@ void WhitePaperScene::change_data() { }
 
 void WhitePaperScene::draw() {
     // Expect files of the form prefix-0i.png
-    double page_height = get_height() * .68;
-    double page_width = get_width() * .8;
-    int num_pages = page_numbers.size();
+    cout << "A" << endl;
+    const vec2 page_size = get_dimensions() * vec2(.8, .68);
+    const int num_pages = page_numbers.size();
 
-    double completion = state["completion"];
-    int which_page = state["which_page"];
-    double page_focus = state["page_focus"];
+    const double completion = state["completion"];
+    const int which_page = state["which_page"];
+    const double page_focus = state["page_focus"];
 
     for(int i = num_pages - 1; i >= 0; --i) {
         int page_number = page_numbers[i];
@@ -33,15 +33,13 @@ void WhitePaperScene::draw() {
         pdf_page_to_pix(picture, prefix, page_number);
         Pixels cropped;
         picture.crop_by_fractions(
-            state["crop_top"],
-            state["crop_bottom"],
-            state["crop_left"],
-            state["crop_right"],
+            vec2(state["crop_left"], state["crop_top"]),
+            vec2(state["crop_right"], state["crop_bottom"]),
             cropped
         );
 
         Pixels scaled;
-        cropped.scale_to_bounding_box(page_width, page_height, scaled);
+        cropped.scale_to_bounding_box(page_size, scaled);
 
         float this_page_is_focused = (which_page == page_number ? 1.0f : 0.0f) * page_focus;
         float this_page_not_focused = 1.0f - this_page_is_focused;
@@ -62,25 +60,25 @@ void WhitePaperScene::draw() {
 
         float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-completion))));
         float y_center = (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05);
-        float x_offset = get_width() * x_center - scaled.w * .5;
-        float y_offset = get_height() * y_center - scaled.h * .5;
+        vec2 center = vec2(x_center, y_center);
+        vec2 offset = get_dimensions() * center - scaled.size * .5;
 
         float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-                     scaled.pixels.data(), scaled.w, scaled.h,
-                     (int)x_offset, (int)y_offset,
-                     1.0f, angle
+        cuda_overlay(pix.pixels.data(), pix.size,
+                     scaled.pixels.data(), scaled.size,
+                     offset, 1.0f, angle
         );
     }
 
-    ScalingParams sp = ScalingParams(get_width(), get_height()/6);
+    ScalingParams sp = ScalingParams(get_dimensions() / vec2(1, 6));
     Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
+    int offset_x = (get_width() - text_pixels.size.x) / 2;
     int offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
-    cuda_overlay(pix.pixels.data(), pix.w, pix.h,
-                 text_pixels.pixels.data(), text_pixels.w, text_pixels.h,
-                 (int)((get_width() - text_pixels.w) / 2), offset_y,
-                 1.0f
+    cuda_overlay(pix.pixels.data(), pix.size,
+                 text_pixels.pixels.data(), text_pixels.size,
+                 vec2(offset_x, offset_y),
+                 1.0f, 0
     );
 }
 

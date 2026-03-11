@@ -35,8 +35,8 @@ void AlphaFilterScene::draw() {
     int w = get_width();
     int h = get_height();
 
-    for(int x = 0; x < pix.w; x++) {
-        for(int y = 0; y < pix.h; y++) {
+    for(int x = 0; x < w; x++) {
+        for(int y = 0; y < h; y++) {
             unsigned int col = subscene_pix->get_pixel_carelessly(x, y);
             int dist = coldist(col, preserve_col);
             if (dist < 256) pix.set_pixel_carelessly(x, y, col);

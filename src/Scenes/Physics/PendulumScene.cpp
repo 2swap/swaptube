@@ -3,15 +3,13 @@
 #include <algorithm>
 
 PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(dimensions), pend(s), start_state(s) {
-    path_background = Pixels(get_width(), get_height());
+    path_background = Pixels(get_dimensions());
     manager.set({{"tone", "1"},
                        {"volume", "0"},
                        {"path_opacity", "0"},
                        {"physics_multiplier", "30"},
                        {"rk4_step_size", "1 30 / <physics_multiplier> 0.01 + /"},
                        {"pendulum_opacity", "1"},
-                       {"top_angle_opacity", "0"},
-                       {"bottom_angle_opacity", "0"},
                        {"rainbow", "1"},
                        {"manual_mode", "0"},
                        {"theta1_manual", "0"},
@@ -19,29 +17,27 @@ PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(di
 }
 
 const StateQuery PendulumScene::populate_state_query() const {
-    return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "physics_multiplier", "rk4_step_size", "pendulum_opacity"};
+    return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "volume", "rainbow", "tone", "path_opacity", "physics_multiplier", "rk4_step_size", "pendulum_opacity"};
 }
 
 void PendulumScene::mark_data_unchanged() { pend.mark_unchanged(); }
 
 void PendulumScene::change_data() {
-    double w = get_width(); double h = get_height();
-    double line_thickness = h/80;
-    double length = h/(pendulum_count * 2 + 1.);
+    const vec2 size = get_dimensions();
+    double line_thickness = size.y/80;
+    double length = size.y/(pendulum_count * 2 + 1.);
     double pm = state["physics_multiplier"];
-    double last_x = w/2 + (sin(pend.state.theta1)+sin(pend.state.theta2))*length;
-    double last_y = h/2 + (cos(pend.state.theta1)+cos(pend.state.theta2))*length;
+    vec2 last_pos = size/2 + length*(cis(pend.state.theta1)+cis(pend.state.theta2));
     for(int i = 0; i < pm; i++) {
         pend.iterate_physics(1, state["rk4_step_size"]);
-        double x = w/2 + (sin(pend.state.theta1)+sin(pend.state.theta2))*length;
-        double y = h/2 + (cos(pend.state.theta1)+cos(pend.state.theta2))*length;
-        path_background.bresenham(last_x, last_y, x, y, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
-        last_x = x; last_y = y;
+        const vec2 pos(size/2 + length*(cis(pend.state.theta1)+cis(pend.state.theta2)));
+        path_background.bresenham(last_pos, pos, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
+        last_pos = pos;
     }
     energy_slew = square(compute_kinetic_energy(pend.state))/100.;
     generate_tone();
-    for(int x = 0; x < path_background.w; x++) {
-        for(int y = 0; y < path_background.h; y++) {
+    for(int x = 0; x < path_background.size.x; x++) {
+        for(int y = 0; y < path_background.size.y; y++) {
             int alpha = geta(path_background.get_pixel_carelessly(x, y));
             alpha = std::max(0,alpha-alpha_subtract);
             path_background.set_pixel_carelessly(x, y, argb(alpha, 255, 255, 255));
@@ -61,9 +57,9 @@ std::unordered_map<std::string, double> PendulumScene::stage_publish_to_global()
 }
 
 void PendulumScene::draw() {
-    double w = get_width(); double h = get_height();
-    double line_thickness = h/80;
-    double posx = w/2; double posy = h/2;
+    const vec2 size = get_dimensions();
+    double line_thickness = size.y/80;
+    vec2 pos(get_dimensions()/2);
     double in_manual_mode = state["manual_mode"];
     std::vector<double> thetas = {lerp(pend.state.theta1, state["theta1_manual"], in_manual_mode),
                                  lerp(pend.state.theta2, state["theta2_manual"], in_manual_mode)};
@@ -72,31 +68,18 @@ void PendulumScene::draw() {
         pix.overlay(path_background, 0, 0);
 
     double pend_opa = state["pendulum_opacity"];
+    double length = size.y/(pendulum_count * 2 + 1.);
     if(pend_opa > 0.01) {
         double rainbow = state["rainbow"];
         int pendulum_color = colorlerp(OPAQUE_WHITE, color, rainbow);
         for (int i = 0; i < pendulum_count; i++) {
             double theta = thetas[i];
-            double length = h/(pendulum_count * 2 + 1.);
-            double dx = sin(theta) * length; double dy = cos(theta) * length;
-            pix.fill_circle(posx, posy, line_thickness * 2, pendulum_color, pend_opa);
-            pix.bresenham(posx, posy, posx + dx, posy + dy, pendulum_color, pend_opa, line_thickness);
-            double ao = i==0?state["top_angle_opacity"]:state["bottom_angle_opacity"];
-            if(ao > 0.01){
-                double theta_modified = theta+199*M_PI;
-                theta_modified -= static_cast<int>(theta_modified/(2*M_PI))*2*M_PI + M_PI;
-                pix.bresenham(posx, posy, posx, posy + length, OPAQUE_WHITE, ao, .5*line_thickness);
-                const double d_angle = .01;
-                for(double angle = 0; angle < 1; angle+=d_angle) {
-                    pix.bresenham(posx + sin( angle         *theta_modified)*length*.5,
-                                  posy + cos( angle         *theta_modified)*length*.5,
-                                  posx + sin((angle-d_angle)*theta_modified)*length*.5,
-                                  posy + cos((angle-d_angle)*theta_modified)*length*.5, OPAQUE_WHITE, ao, .25*line_thickness);
-                }
-            }
-            posx += dx; posy += dy;
+            vec2 delta = length * cis(theta);
+            pix.fill_circle(pos, line_thickness * 2, pendulum_color, pend_opa);
+            pix.bresenham(pos, pos + delta, pendulum_color, pend_opa, line_thickness);
+            pos += delta;
         }
-        pix.fill_circle(posx, posy, line_thickness*2, pendulum_color, pend_opa);
+        pix.fill_circle(pos, line_thickness*2, pendulum_color, pend_opa);
     }
 }
 

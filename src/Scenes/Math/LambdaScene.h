@@ -35,8 +35,6 @@ private:
     std::shared_ptr<LambdaExpression> le;
     std::shared_ptr<LambdaExpression> last_le;
     Pixels le_pix;
-    int last_le_w = 0;
-    int last_le_h = 0;
     int tick = 0;
     std::string title;
 };

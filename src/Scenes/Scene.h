@@ -66,8 +66,6 @@ protected:
     StateReturn state;
     bool has_ever_rendered = false;
 
-    vec2 get_width_height() const;
-
     double get_geom_mean_size() const;
 
 private:

@@ -3,12 +3,12 @@
 
 extern "C" void draw_conway(
     Bitboard* h_board, Bitboard* h_board_2,
-    int w_bitboards, int h_bitboards,
-    unsigned int* h_pixels, int pixels_w, int pixels_h,
-    vec2 lx_ty, vec2 rx_by, float transition
+    const vec2& size_bitboards,
+    unsigned int* h_pixels, const vec2& pix_size,
+    const vec2& lx_ty, const vec2& rx_by, float transition
 );
 
-ConwayScene::ConwayScene(const vec2& dimensions) : CoordinateScene(dimensions), conway_grid(grid_width * 8, grid_height * 8) {
+ConwayScene::ConwayScene(const vec2& dimensions) : CoordinateScene(dimensions), conway_grid(size_bitboards * 8) {
     conway_grid.iterate();
 }
 
@@ -16,9 +16,8 @@ void ConwayScene::draw() {
     draw_conway(
         conway_grid.d_board_2,
         conway_grid.d_board,
-        grid_width,
-        grid_height,
-        pix.pixels.data(), pix.w, pix.h,
+        size_bitboards,
+        pix.pixels.data(), pix.size,
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
         state["microblock_fraction_passthrough"]

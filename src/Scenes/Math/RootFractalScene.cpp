@@ -44,9 +44,9 @@ void RootFractalScene::draw() {
         letter_opa *= state["coefficients_opacity"];
         const vec2 pixel(point_to_pixel(vec2(coeff.real(), coeff.imag())));
         if(letter_opa > 0.01) {
-            ScalingParams sp = ScalingParams(gm * 16, gm * 40);
+            ScalingParams sp = ScalingParams(gm * vec2(16, 40));
             Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
-            pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
+            pix.overlay(text_pixels, pixel - text_pixels.size / 2, letter_opa);
         }
         i++;
     }

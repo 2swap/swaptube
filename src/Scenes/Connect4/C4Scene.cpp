@@ -115,7 +115,7 @@ void C4Scene::draw_annotations(){
             if(annotation != ' ') {
                 vec2 disc;
                 get_disc_screen_coordinates(vec2(x, y), disc);
-                ScalingParams sp(get_stone_width()*1.3, get_stone_width()*1.3);
+                ScalingParams sp(vec2(get_stone_width()*1.3, get_stone_width()*1.3));
                 std::string annotation_str(1, annotation);
                 if(annotation != '@') annotation_str = "\\text{" + annotation_str + "}";
                 else annotation_str = "\\@";

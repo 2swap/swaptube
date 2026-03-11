@@ -6,13 +6,13 @@
 // If the depth difference between a pixel and any of its 4-connected neighbors
 // is greater than .1, color the pixel with edge_color.
 __global__ void cuda_edge_detect_kernel(
-    uint32_t* d_pixels, float* d_depth_buffer, int w, int h, uint32_t edge_color
+    uint32_t* d_pixels, float* d_depth_buffer, const Cuda::vec2 size, uint32_t edge_color
 ) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
-    if (x >= w || y >= h) return;
+    if (x >= size.x || y >= size.y) return;
 
-    int idx = y * w + x;
+    int idx = y * size.x + x;
     float depth = d_depth_buffer[idx];
     if (depth == 0) return; // Ignore background
 
@@ -20,19 +20,19 @@ __global__ void cuda_edge_detect_kernel(
     float max_depth_diff = 0.0f;
 
     if (x > 0) {
-        float neighbor_depth = d_depth_buffer[y * w + (x - 1)];
+        float neighbor_depth = d_depth_buffer[y * (int)size.x + (x - 1)];
         max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
-    if (x < w - 1) {
-        float neighbor_depth = d_depth_buffer[y * w + (x + 1)];
+    if (x < size.x - 1) {
+        float neighbor_depth = d_depth_buffer[y * (int)size.x + (x + 1)];
         max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
     if (y > 0) {
-        float neighbor_depth = d_depth_buffer[(y - 1) * w + x];
+        float neighbor_depth = d_depth_buffer[(y - 1) * (int)size.x + x];
         max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
-    if (y < h - 1) {
-        float neighbor_depth = d_depth_buffer[(y + 1) * w + x];
+    if (y < size.y - 1) {
+        float neighbor_depth = d_depth_buffer[(y + 1) * (int)size.x + x];
         max_depth_diff = fmax(max_depth_diff, fabs(depth - neighbor_depth));
     }
 
@@ -40,12 +40,12 @@ __global__ void cuda_edge_detect_kernel(
 }
 
 void cuda_edge_detect(
-    uint32_t* d_pixels, float* d_depth_buffer, int w, int h, uint32_t edge_color
+    uint32_t* d_pixels, float* d_depth_buffer, const Cuda::vec2& size, uint32_t edge_color
 ) {
     dim3 blockSize(16, 16);
-    dim3 gridSize((w + blockSize.x - 1) / blockSize.x, (h + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize((size.x + blockSize.x - 1) / blockSize.x, (size.y + blockSize.y - 1) / blockSize.y);
     cuda_edge_detect_kernel<<<gridSize, blockSize>>>(
-        d_pixels, d_depth_buffer, w, h, edge_color
+        d_pixels, d_depth_buffer, size, edge_color
     );
     cudaDeviceSynchronize();
 }

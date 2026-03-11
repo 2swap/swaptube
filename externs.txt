@@ -1,0 +1,15 @@
+CUDA/manifold.cu:extern "C" void cuda_render_manifold(
+CUDA/gravity_basins.cu_needs_refactor:extern "C" void render_predictions_cuda(
+CUDA/pendulum_fractal.cu:extern "C" void simulatePendulum(
+CUDA/pendulum_fractal.cu:extern "C" void simulate_pendulum_pair(
+CUDA/beaver_grid.cu:extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* pixels, const Cuda::vec2& size, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, int max_steps) {
+CUDA/mandelbrot.cu:extern "C" void mandelbrot_render(
+CUDA/conway.cu:extern "C" void iterate_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards)
+CUDA/conway.cu:extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, const Cuda::vec2& size_bitboards, unsigned int* h_pixels, const Cuda::vec2& pix_size, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, float transition)
+CUDA/conway.cu:extern "C" void allocate_conway_grid(Bitboard** d_board, Bitboard** d_board_2, const Cuda::vec2& size_bitboards) {
+CUDA/conway.cu:extern "C" void free_conway_grid(Bitboard* d_board, Bitboard* d_board_2) {
+CUDA/surface.cu:extern "C" void cuda_render_surface(
+CUDA/differential_geometry/geodesic_raymarch.cu:extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, const Cuda::vec2& size
+CUDA/differential_geometry/numerical_2d.cu:extern "C" void cuda_render_geodesics_2d(
+CUDA/polynomials/complex_polynomial.cu:extern "C" void color_complex_polynomial(
+CUDA/polynomials/root_fractal.cu:extern "C" void draw_root_fractal(

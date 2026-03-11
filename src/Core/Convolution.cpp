@@ -1,7 +1,10 @@
 #include "Convolution.h"
 #include "Smoketest.h"
 
-extern "C" void convolve_map_cuda(const unsigned int* a, const int aw, const int ah, const unsigned int* b, const int bw, const int bh, unsigned int* map, const int mapw, const int maph);
+extern "C" void convolve_map_cuda(
+    const unsigned int* a, const vec2& a_size,
+    const unsigned int* b, const vec2& b_size,
+    unsigned int* map, const vec2& map_size);
 
 void flood_fill(Pixels& pix, int x, int y, int color) {
     int targetColor = pix.get_pixel_carefully(x, y);
@@ -48,22 +51,21 @@ bool pix_is_empty(const Pixels& p) {
 }
 
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) {
-    int mapw = p1.size.x + p2.size.x - 1;
-    int maph = p1.size.y + p2.size.y - 1;
-    vector<unsigned int> map(maph * mapw);
+    const vec2 map_size = p1.size + p2.size - vec2(1, 1);
+    vector<unsigned int> map(map_size.x * map_size.y);
 
     // Perform the convolution using CUDA
-    convolve_map_cuda(p1.pixels.data(), p1.size.x, p1.size.y, p2.pixels.data(), p2.size.x, p2.size.y, map.data(), mapw, maph);
+    convolve_map_cuda(p1.pixels.data(), p1.size, p2.pixels.data(), p2.size, map.data(), map_size);
 
-    vector<vector<unsigned int>> map_2d(maph, vector<unsigned int>(mapw, -1));
+    vector<vector<unsigned int>> map_2d(map_size.y, vector<unsigned int>(map_size.x, -1));
     
     // Initialize max_value to the minimum possible value
     unsigned int max_value = 0u;
 
     // Copy data from the flat map to the 2D map_2d and find the max value coordinates
-    for (int y = 0; y < maph; ++y) {
-        for (int x = 0; x < mapw; ++x) {
-            unsigned int value = map[y * mapw + x];
+    for (int y = 0; y < map_size.y; ++y) {
+        for (int x = 0; x < map_size.x; ++x) {
+            unsigned int value = map[y * (int)map_size.x + x];
             map_2d[y][x] = value;
 
             // Check if this value is the new maximum

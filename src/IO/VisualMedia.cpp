@@ -128,8 +128,8 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     // Calculate scale factor
     if (scaling_params.mode == ScalingMode::BoundingBox) {
         scaling_params.scale_factor = min(
-            static_cast<double>(scaling_params.max_width) / gwidth,
-            static_cast<double>(scaling_params.max_height) / gheight
+            (scaling_params.max_dimensions.x) / gwidth,
+            (scaling_params.max_dimensions.y) / gheight
         );
     } else if (scaling_params.scale_factor <= 0) {
         throw runtime_error("Invalid scale factor: " + to_string(scaling_params.scale_factor));
@@ -352,8 +352,8 @@ unordered_map<string, pair<Pixels, double>> latex_cache;
 static string generate_cache_key(const string& text, const ScalingParams& scaling_params) {
     hash<string> hasher;
     string key = text + "_" + to_string(static_cast<int>(scaling_params.mode)) + "_" + 
-                 to_string(scaling_params.max_width) + "_" + 
-                 to_string(scaling_params.max_height) + "_" + 
+                 to_string(scaling_params.max_dimensions.x) + "_" +
+                 to_string(scaling_params.max_dimensions.y) + "_" +
                  to_string(scaling_params.scale_factor);
     return to_string(hasher(key));
 }

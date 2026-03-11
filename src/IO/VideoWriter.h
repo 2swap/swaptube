@@ -14,7 +14,7 @@ extern "C"
 
 extern "C"
 void alpha_overlay_cuda(unsigned int* src_host,
-                        int width, int height,
+                        const vec2& size,
                         unsigned int bg_color);
 
 class VideoWriter {

@@ -102,7 +102,7 @@ void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float
     for(const pair<vec2, int>& p : trail) {
         if(i != 0) {
             const vec2 next_pixel(point_to_pixel(p.first));
-            pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, p.second, trail_opacity, line_width);
+            pix.bresenham(last_pixel, next_pixel, p.second, trail_opacity, line_width);
         }
         last_pixel = point_to_pixel(p.first);
         i++;
@@ -154,7 +154,7 @@ void CoordinateScene::draw_construction() {
             start_pixel = mid_pixel + (start_pixel - mid_pixel) * bounce;
             end_pixel = mid_pixel + (end_pixel - mid_pixel) * bounce;
         }
-        geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, line_color, 1, line_thickness*.75);
+        geometry.bresenham(start_pixel, end_pixel, line_color, 1, line_thickness*.75);
     }
     for(const GeometricPoint& p : construction.points) {
         vec2 position = p.position;
@@ -170,7 +170,7 @@ void CoordinateScene::draw_construction() {
             geometry.fill_circle(position_pixel, radius, point_color, 1);
         }
         if(p.label != "" && p.width_multiplier > .4) {
-            ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
+            ScalingParams sp(vec2(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier));
             Pixels latex = latex_to_pix(latex_color(text_color, p.label), sp);
             vec2 pos = position_pixel - latex.size/2;
             pos.y -= line_thickness * 6;
@@ -188,8 +188,8 @@ void CoordinateScene::draw_zero_crosshair() {
     const int h = get_height();
     const float gmsz = get_geom_mean_size();
     const vec2 zero = point_to_pixel(vec2(0,0));
-    pix.bresenham(zero.x, 0, zero.x, h-1.f, OPAQUE_WHITE, zc_opacity, gmsz/400.);
-    pix.bresenham(0, zero.y, w-1.f, zero.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
+    pix.bresenham(vec2(zero.x, 0), vec2(zero.x, h-1.f), OPAQUE_WHITE, zc_opacity, gmsz/400.);
+    pix.bresenham(vec2(0, zero.y), vec2(w-1.f, zero.y), OPAQUE_WHITE, zc_opacity, gmsz/400.);
 }
 
 void CoordinateScene::draw_axes() {
@@ -225,10 +225,10 @@ void CoordinateScene::draw_one_axis(bool ymode) {
             float number_opacity = d_om == 1 ? (interpolator<.5? 0 : interpolator*2-1) : 1;
             number_opacity *= ticks_opacity * (1-square(square(2.5*(.5-coordinate/(ymode?h:w)))));
             if(number_opacity < 0) number_opacity = 0;
-            if(ymode) pix.bresenham(0, coordinate, tick_length, coordinate, OPAQUE_WHITE, number_opacity, 1);
-            else      pix.bresenham(coordinate, h-1, coordinate, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
+            if(ymode) pix.bresenham(vec2(  0, coordinate), vec2(    tick_length, coordinate), OPAQUE_WHITE, number_opacity, 1);
+            else      pix.bresenham(vec2(coordinate, h-1), vec2(coordinate, h-1-tick_length), OPAQUE_WHITE, number_opacity, 1);
             if(number_opacity > 0){
-                ScalingParams sp(gmsz/9., gmsz/18.);
+                ScalingParams sp(vec2(gmsz/9., gmsz/18.));
                 Pixels latex = latex_to_pix(truncated, sp);
                 if(ymode) pix.overlay(latex, vec2(tick_length * .8, coordinate - latex.size.y*1.1), number_opacity);
                 if(!ymode)pix.overlay(latex, vec2(coordinate - latex.size.x/2, h-1-tick_length * 1.5 - latex.size.y), number_opacity);

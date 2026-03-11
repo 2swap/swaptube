@@ -4,30 +4,27 @@
 
 extern "C" {
     void render_points_on_gpu(
-        unsigned int* h_pixels, int width, int height,
+        unsigned int* h_pixels, const vec2& size,
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
-        quat camera_direction, vec3 camera_pos, float fov);
+        const quat& camera_direction, const vec3& camera_pos, float fov);
 
     void render_lines_on_gpu(
-        unsigned int* h_pixels, int width, int height,
+        unsigned int* h_pixels, const vec2& size,
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
-        quat camera_direction, vec3 camera_pos, float fov);
+        const quat& camera_direction, const vec3& camera_pos, float fov);
 
     void cuda_render_surface(
         vector<unsigned int>& pix,
-        int x1,
-        int y1,
-        int plot_w,
-        int plot_h,
-        int pixels_w,
+        const vec2& x1y1,
+        const vec2& plot_size,
+        const vec2& pixels_size,
         unsigned int* d_surface,
-        int surface_w,
-        int surface_h,
+        const vec2& surface_size,
         float opacity,
-        vec3 camera_pos,
-        quat camera_direction,
+        const vec3& camera_pos,
+        const quat& camera_direction,
         const vec3& surface_normal,
         const vec3& surface_center,
         const vec3& surface_pos_x_dir,
@@ -80,7 +77,7 @@ vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, bool& behind_came
     if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
     float scale = (get_geom_mean_size()*fov) / coordinate.z;
-    return scale * vec2(coordinate.x, coordinate.y) + get_width_height()*.5f;
+    return scale * vec2(coordinate.x, coordinate.y) + get_dimensions()*.5f;
 }
 
 bool ThreeDimensionScene::isOutsideScreen(const vec2& point) {
@@ -199,10 +196,11 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 
     cuda_render_surface(
         pix.pixels,
-        x1, y1, plot_w, plot_h, pix.size.x,
+        vec2(x1, y1),
+        vec2(plot_w, plot_h),
+        get_dimensions(),
         queried->pixels.data(),
-        subscenes[surface.name]->get_width(),
-        subscenes[surface.name]->get_height(),
+        subscenes[surface.name]->get_dimensions(),
         this_surface_opacity,
         camera_pos,
         camera_direction,
@@ -243,8 +241,7 @@ void ThreeDimensionScene::draw() {
     if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
         render_points_on_gpu(
             pix.pixels.data(),
-            get_width(),
-            get_height(),
+            get_dimensions(),
             get_geom_mean_size(),
             state["points_opacity"],
             state["points_radius_multiplier"],
@@ -259,8 +256,7 @@ void ThreeDimensionScene::draw() {
         int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
             pix.pixels.data(),
-            get_width(),
-            get_height(),
+            get_dimensions(),
             get_geom_mean_size(),
             thickness,
             state["lines_opacity"],

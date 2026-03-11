@@ -20,7 +20,6 @@ public:
 
 private:
     const std::vector<std::string> picture_names;
-    int memo_w = 0;
-    int memo_h = 0;
+    vec2 memo_size;
     std::unordered_map<std::string, Pixels> pixel_cache;
 };

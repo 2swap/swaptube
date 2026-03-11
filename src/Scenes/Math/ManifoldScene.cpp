@@ -3,7 +3,7 @@
 #include "ManifoldScene.h"
 
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const vec2& size,
     const ManifoldData* manifolds, const int num_manifolds,
     const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
@@ -95,8 +95,7 @@ void ManifoldScene::draw() {
 
     cuda_render_manifold(
         pix.pixels.data(),
-        pix.w,
-        pix.h,
+        pix.size,
         manifolds,
         manifold_names.size(),
         camera_pos,

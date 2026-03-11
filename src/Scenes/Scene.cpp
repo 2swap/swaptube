@@ -98,7 +98,7 @@ void Scene::query(Pixels*& p) {
     // The only time we skip render entirely is when the project flags to skip a section.
     if(needs_redraw() && is_for_real()) {
         has_ever_rendered = true;
-        pix = Pixels(get_width(), get_height());
+        pix = Pixels(get_dimensions());
         cout << "|" << flush;
         draw();
     }
@@ -160,8 +160,8 @@ int Scene::get_height() const{
 }
 
 vec2 Scene::get_dimensions() const{
-    StateResult sr = manager.respond_to_query({"w", "h"});
-    return get_video_dimensions() * vec2(sr["w"], sr["h"]);
+    StateReturn sr = manager.respond_to_query({"w", "h"});
+    return get_video_size_pixels() * vec2(sr["w"], sr["h"]);
 }
 
 void Scene::export_frame(const string& filename, int scaledown) const {
@@ -176,10 +176,6 @@ void Scene::set_global_identifier(const string& id){
     // of something trying to read from global, since global ordering is not guaranteed.
     // Update_state does this for us.
     update_state();
-}
-
-vec2 Scene::get_width_height() const{
-    return vec2(get_width(), get_height());
 }
 
 double Scene::get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }

@@ -28,8 +28,6 @@ void LambdaScene::reduce(){
 void LambdaScene::set_expression(shared_ptr<LambdaExpression> lambda) {
     last_le = le->clone();
     le = lambda->clone();
-    last_le_w = le_pix.w;
-    last_le_h = le_pix.h;
     le->set_positions();
 }
 
@@ -61,26 +59,27 @@ float LambdaScene::get_scale(shared_ptr<const LambdaExpression> expr) {
 void LambdaScene::draw() {
     if(last_le == nullptr){
         render_diagrams(); 
-        pix.overwrite(le_pix, (pix.w-le_pix.w)*.5, (pix.h-le_pix.h)*.5);
+        pix.overwrite(le_pix, (pix.size-le_pix.size)*.5);
     } else {
         float trans_frac = state["microblock_fraction"];
         pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> interpolated = get_interpolated(last_le, le, trans_frac);
         float scale = smoothlerp(get_scale(last_le), get_scale(le), trans_frac);
         Pixels p1 = interpolated.first->draw_lambda_diagram(scale);
         Pixels p2 = interpolated.second->draw_lambda_diagram(scale);
-        float pixw = smoothlerp(p1.w, p2.w, trans_frac);
-        float pixh = smoothlerp(p1.h, p2.h, trans_frac);
-        pix.overwrite(p1, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
-        pix.overlay  (p2, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
+        const vec2 lerp_dim = veclerp(p1.size, p2.size, smoother2(trans_frac));
+        pix.overwrite(p1, (pix.size-lerp_dim)*.5);
+        pix.overlay  (p2, (pix.size-lerp_dim)*.5);
     }
     if(state["latex_opacity"] > 0.01){
-        ScalingParams sp(pix.w, pix.h / 4);
+        ScalingParams sp(pix.size * vec2(1, .25));
         Pixels latex = latex_to_pix(le->get_latex(), sp);
-        pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["latex_opacity"]);
+        vec2 latex_pos = pix.size * vec2(.5, .875) - latex.size*vec2(.5,1);
+        pix.overlay(latex, latex_pos, state["latex_opacity"]);
     }
     if(state["title_opacity"] > 0.01){
-        ScalingParams sp(pix.w, pix.h / 4);
+        ScalingParams sp(pix.size * vec2(1, .25));
         Pixels latex = latex_to_pix("\\text{" + title + "}", sp);
-        pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["title_opacity"]);
+        vec2 latex_pos = pix.size * vec2(.5, .875) - latex.size*vec2(.5,1);
+        pix.overlay(latex, latex_pos, state["title_opacity"]);
     }
 }

@@ -65,7 +65,7 @@ void RealFunctionScene::render_functions() {
                 last_pixel = pixel;
                 continue;
             }
-            pix.bresenham(pixel.x, pixel.y, last_pixel.x, last_pixel.y, color, opacity, thickness);
+            pix.bresenham(pixel, last_pixel, color, opacity, thickness);
             last_pixel = pixel;
         }
     }

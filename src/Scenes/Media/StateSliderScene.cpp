@@ -37,12 +37,12 @@ StateSliderScene::StateSliderScene(const string& vn, const string& dn, double mi
 }
 
 void StateSliderScene::draw() {
-    ScalingParams sp(pix.w, pix.h);
+    ScalingParams sp(pix.size);
     if(display_name != "") {
         string eqn_str = display_name + " = " + double_to_string(state["value"]);
         Pixels equation_pixels = latex_to_pix(eqn_str, sp);
         draw_slider();
-        pix.overlay(equation_pixels, get_height()/2, (get_height()-equation_pixels.h)/2.); // h/2 shifts the text over horizontally a little out of the left wall
+        pix.overlay(equation_pixels, vec2(get_height()/2, (get_height()-equation_pixels.size.y)/2.)); // h/2 shifts the text over horizontally a little out of the left wall
     } else {
         draw_slider();
     }
@@ -59,19 +59,17 @@ void StateSliderScene::draw_slider() {
     const int h = get_height();
     const int w = get_width();
 
-    // vv Change away!! vv
     const int outer_color = 0xff444444; // Dark gray
     const int inner_color = 0xff000000; // Black
     const int  knob_color = 0xff444444; // Dark gray
     const double outer_radius = h * .5;
     const double inner_radius = h * .45;
     const double  knob_radius = h * .4;
-    // ^^ Change away!! ^^
 
     const double outer_margin = h * .5 - outer_radius;
     const double inner_margin = h * .5 - inner_radius;
-    pix.rounded_rect(outer_margin, outer_margin, w - outer_margin * 2, h - outer_margin * 2, outer_radius, outer_color);
-    pix.rounded_rect(inner_margin, inner_margin, w - inner_margin * 2, h - inner_margin * 2, inner_radius, inner_color);
+    pix.rounded_rect(vec2(outer_margin, outer_margin), vec2(w - outer_margin * 2, h - outer_margin * 2), outer_radius, outer_color);
+    pix.rounded_rect(vec2(inner_margin, inner_margin), vec2(w - inner_margin * 2, h - inner_margin * 2), inner_radius, inner_color);
 
     // Calculate the position of the knob based on the variable value
     double value = state["value"];

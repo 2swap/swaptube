@@ -31,21 +31,20 @@ void Mp4Scene::draw() {
 
     // Load the current video frame into a Pixels object.
     Pixels frame;
-    bool no_more_frames = current_video_reader.get_frame(current_frame_adjusted, get_width(), get_height(), frame);
+    bool no_more_frames = current_video_reader.get_frame(current_frame_adjusted, get_dimensions(), frame);
     if (no_more_frames) {
         if (end_behavior == Mp4EndBehavior::Stop) return;
         cout << "No more frames!" << endl;
         first_frame_this_video = current_frame;
         current_video_index = (current_video_index + 1) % video_filenames.size();
         current_video_reader.change_video(video_filenames[current_video_index]);
-        current_video_reader.get_frame(0, get_width(), get_height(), frame);
+        current_video_reader.get_frame(0, get_dimensions(), frame);
     }
 
     // Calculate the offsets to center the frame in the output
-    int x_offset = (get_width() - frame.w) / 2;
-    int y_offset = (get_height() - frame.h) / 2;
+    const vec2 offset((get_dimensions() - frame.size) / 2);
 
-    pix.overwrite(frame, x_offset, y_offset);
+    pix.overwrite(frame, offset);
 }
 
 const StateQuery Mp4Scene::populate_state_query() const {

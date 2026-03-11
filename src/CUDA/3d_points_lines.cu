@@ -10,7 +10,7 @@
 #include "common_graphics.cuh" // Contains fill_circle
 
 __global__ void render_points_kernel(
-    unsigned int* pixels, int width, int height,
+    unsigned int* pixels, const Cuda::vec2 size,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* points, int num_points,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
@@ -24,14 +24,14 @@ __global__ void render_points_kernel(
     d_coordinate_to_pixel(
         p.center, behind_camera,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, pixel);
+        geom_mean_size, size, pixel);
     if (behind_camera) return;
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 400.0f;
-    Cuda::d_fill_circle(pixel.x, pixel.y, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
+    Cuda::d_fill_circle(pixel, dot_size, p.color, pixels, size, points_opacity * p.opacity);
 }
 
 __global__ void render_lines_kernel(
-    unsigned int* pixels, int width, int height,
+    unsigned int* pixels, Cuda::vec2 size,
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* lines, int num_lines,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
@@ -45,28 +45,28 @@ __global__ void render_lines_kernel(
     Cuda::d_coordinate_to_pixel(
         ln.start, behind_camera1,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, p1);
+        geom_mean_size, size, p1);
     if (behind_camera1) return;
     Cuda::d_coordinate_to_pixel(
         ln.end,   behind_camera2,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, p2);
+        geom_mean_size, size, p2);
     if (behind_camera2) return;
     Cuda::bresenham(
-        p1.x, p1.y, p2.x, p2.y,
+        p1, p2,
         ln.color, lines_opacity * ln.opacity, thickness,
-        pixels, width, height);
+        pixels, size);
 }
 
 extern "C" void render_points_on_gpu(
-    unsigned int* h_pixels, int width, int height,
+    unsigned int* h_pixels, const Cuda::vec2& size,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* h_points, int num_points,
-    Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov)
 {
     unsigned int* d_pixels = nullptr;
     Cuda::Point*        d_points = nullptr;
-    size_t pix_sz = width * height * sizeof(unsigned int);
+    size_t pix_sz = size.x * size.y * sizeof(unsigned int);
     size_t pt_sz  = num_points * sizeof(Cuda::Point);
 
     cudaMalloc((void**)&d_pixels, pix_sz);
@@ -78,7 +78,7 @@ extern "C" void render_points_on_gpu(
     int blockSize = 256;
     int numBlocks = (num_points + blockSize - 1) / blockSize;
     render_points_kernel<<<numBlocks, blockSize>>>(
-        d_pixels, width, height,
+        d_pixels, size,
         geom_mean_size, points_opacity, points_radius_multiplier,
         d_points, num_points,
         camera_direction, camera_pos, fov);
@@ -90,14 +90,14 @@ extern "C" void render_points_on_gpu(
 }
 
 extern "C" void render_lines_on_gpu(
-    unsigned int* h_pixels, int width, int height,
+    unsigned int* h_pixels, const Cuda::vec2& size,
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* h_lines, int num_lines,
-    Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov)
 {
     unsigned int* d_pixels = nullptr;
     Cuda::Line*         d_lines  = nullptr;
-    size_t pix_sz = width * height * sizeof(unsigned int);
+    size_t pix_sz = size.y * size.x * sizeof(unsigned int);
     size_t ln_sz  = num_lines * sizeof(Cuda::Line);
 
     cudaMalloc((void**)&d_pixels, pix_sz);
@@ -109,7 +109,7 @@ extern "C" void render_lines_on_gpu(
     int blockSize = 256;
     int numBlocks = (num_lines + blockSize - 1) / blockSize;
     render_lines_kernel<<<numBlocks, blockSize>>>(
-        d_pixels, width, height,
+        d_pixels, size,
         geom_mean_size, thickness, lines_opacity,
         d_lines, num_lines,
         camera_direction, camera_pos, fov);

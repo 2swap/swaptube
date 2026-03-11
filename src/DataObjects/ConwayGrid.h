@@ -2,15 +2,16 @@
 
 #include <cstdint>
 #include "DataObject.h"
+#include "../Host_Device_Shared/vec.h"
 
 typedef uint64_t Bitboard;
 
 class ConwayGrid : public DataObject {
 public:
-    int w_bitboards; int h_bitboards;
+    const vec2 size_bitboards;
     Bitboard* d_board;
     Bitboard* d_board_2;
-    ConwayGrid(const int width, const int height);
+    ConwayGrid(const vec2& sz);
     ~ConwayGrid();
     void iterate();
 };

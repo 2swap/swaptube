@@ -159,7 +159,7 @@ void VideoWriter::add_frame(Pixels& p) {
     rgb_frame->height = get_video_height_pixels();
 
     #ifdef USE_CUDA
-    alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_width_pixels(), get_video_height_pixels(), get_video_background_color());
+    alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_size_pixels(), get_video_background_color());
     #endif
 
     // Point FFmpeg directly to your source data

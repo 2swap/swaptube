@@ -61,10 +61,10 @@ __device__ unsigned int get_mandelbrot_color(float iterations, int max_iteration
 }
 
 __device__ void compute_z_x_c(
-    const Cuda::vec2 pixel,
-    const Cuda::vec2 wh,
-    const Cuda::vec2 lx_ty,
-    const Cuda::vec2 rx_by,
+    const Cuda::vec2& pixel,
+    const Cuda::vec2& wh,
+    const Cuda::vec2& lx_ty,
+    const Cuda::vec2& rx_by,
     const cuComplex seed_z, const cuComplex seed_x, const cuComplex seed_c,
     const Cuda::vec3 pixel_parameter_multipliers,
     cuComplex& z, cuComplex& x, cuComplex& c, float& log_real_part_exp
@@ -149,7 +149,7 @@ __device__ int mandelbrot_iterations_2or3(
 }
 
 __global__ void go(
-    const int width, const int height,
+    const Cuda::vec2 wh,
     const Cuda::vec2 lx_ty,
     const Cuda::vec2 rx_by,
     const cuComplex seed_z, const cuComplex seed_x, const cuComplex seed_c,
@@ -162,12 +162,11 @@ __global__ void go(
 ) {
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
     int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
-    if (pixel_x >= width || pixel_y >= height) return;
+    if (pixel_x >= wh.x || pixel_y >= wh.y) return;
     Cuda::vec2 pixel(pixel_x, pixel_y);
 
     cuComplex z, x, c; 
     float log_real_part_exp, sq_radius = 0;
-    Cuda::vec2 wh(width, height);
     compute_z_x_c(pixel, wh, lx_ty, rx_by, seed_z, seed_x, seed_c, pixel_parameter_multipliers, z, x, c, log_real_part_exp);
 
     // Check if the exponent 'x' is a positive integer
@@ -183,16 +182,16 @@ __global__ void go(
     
     bool bailed_out = iterations < max_iterations;
 
-    colors[pixel_y * width + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, gradation, sq_radius, log_real_part_exp, phase_shift, internal_color);
+    colors[pixel_y * (int)wh.x + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, gradation, sq_radius, log_real_part_exp, phase_shift, internal_color);
 }
 
 // Host function to launch the kernel
 extern "C" void mandelbrot_render(
-    const int width, const int height,
-    const Cuda::vec2 lx_ty,
-    const Cuda::vec2 rx_by,
+    const Cuda::vec2& wh,
+    const Cuda::vec2& lx_ty,
+    const Cuda::vec2& rx_by,
     const std::complex<float> seed_z, const std::complex<float> seed_x, const std::complex<float> seed_c,
-    const Cuda::vec3 pixel_parameter_multipliers,
+    const Cuda::vec3& pixel_parameter_multipliers,
     int max_iterations,  // Pass max_iterations as a parameter
     float gradation,
     float phase_shift,
@@ -202,23 +201,30 @@ extern "C" void mandelbrot_render(
     unsigned int* d_colors;
 
     // Allocate memory on the device for the depth buffer
-    cudaMalloc(&d_colors, width * height * sizeof(unsigned int));
+    size_t color_array_size = (int)wh.x * (int)wh.y * sizeof(unsigned int);
+    printf("Allocating %zu bytes for color array on device\n", color_array_size);
+    cudaMalloc(&d_colors, color_array_size);
 
     // Define grid and block dimensions
     dim3 threadsPerBlock(16, 16);  // 2D block of 16x16 threads
-    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 numBlocks((wh.x + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (wh.y + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // Launch the kernel
+    printf("Launching kernel with %d blocks of %d threads each\n", numBlocks.x * numBlocks.y, threadsPerBlock.x * threadsPerBlock.y);
     go<<<numBlocks, threadsPerBlock>>>(
-        width, height, lx_ty, rx_by,
+        wh, lx_ty, rx_by,
         make_cuComplex(seed_z.real(), seed_z.imag()), make_cuComplex(seed_x.real(), seed_x.imag()), make_cuComplex(seed_c.real(), seed_c.imag()),
         pixel_parameter_multipliers,
         max_iterations, gradation, phase_shift, internal_color, d_colors
     );
+    cudaDeviceSynchronize();
+    printf("Launched kernel\n");
 
     // Copy results back from device to host
-    cudaMemcpy(colors, d_colors, width * height * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    printf("Allocating %zu bytes for color array on device\n", color_array_size);
+    cudaMemcpy(colors, d_colors, color_array_size, cudaMemcpyDeviceToHost);
+    printf("3 kernel\n");
 
     // Free the device memory
     cudaFree(d_colors);

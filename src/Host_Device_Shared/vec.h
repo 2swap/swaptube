@@ -134,12 +134,14 @@ HOST_DEVICE inline bool hasnan(const vec3& v) { return std::isnan(v.x) || std::i
 HOST_DEVICE inline bool hasnan(const vec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
 HOST_DEVICE inline bool hasnan(const quat& q) { return std::isnan(q.u) || std::isnan(q.i) || std::isnan(q.j) || std::isnan(q.k); }
 
-HOST_DEVICE inline vec2 vec_min(const vec2& a, const vec2& b) { return vec2(std::min(a.x, b.x), std::min(a.y, b.y)); }
-HOST_DEVICE inline vec2 vec_max(const vec2& a, const vec2& b) { return vec2(std::max(a.x, b.x), std::max(a.y, b.y)); }
+HOST_DEVICE inline vec2 vec_min(const vec2& a, const vec2& b) { return vec2(a.x < b.x ? a.x : b.x, a.y < b.y ? a.y : b.y); }
+HOST_DEVICE inline vec2 vec_max(const vec2& a, const vec2& b) { return vec2(a.x > b.x ? a.x : b.x, a.y > b.y ? a.y : b.y); }
 
 HOST_DEVICE inline vec3 integerize(const vec3& v) { return vec3(floorf(v.x), floorf(v.y), floorf(v.z)); }
 
 HOST_DEVICE inline quat conjugate(const quat& q) { return quat{ q.u, -q.i, -q.j, -q.k }; }
+
+HOST_DEVICE inline vec2 cis(float angle) { return vec2{ cosf(angle), sinf(angle) }; }
 
 HOST_DEVICE inline vec2 clamp(const vec2& v, const vec2& min, const vec2& max) {
     return vec2{

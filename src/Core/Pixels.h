@@ -15,10 +15,10 @@ inline constexpr int OPAQUE_WHITE = 0xFFFFFFFF;
 inline constexpr int TRANSPARENT_BLACK = 0x00000000;
 inline constexpr int TRANSPARENT_WHITE = 0x00FFFFFF;
 
-extern "C" void cuda_overlay(
+extern "C" void cuda_overlay (
     unsigned int* h_background, const vec2& b_size,
     unsigned int* h_foreground, const vec2& f_size,
-    const vec2& center, const float opacity, const float angle_rad);
+    const vec2& delta, const float opacity, const float angle_rad);
 
 class Pixels{
 public:
@@ -70,7 +70,7 @@ public:
 
     void fill_ellipse(const vec2& pos, const vec2& dimensions, int col, double opa = 1);
 
-    void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness);
+    void bresenham(const vec2& start, const vec2& end, int col, float opacity, int thickness);
 
     void rounded_rect(const vec2& pos, const vec2& dimensions, float r, int col);
 

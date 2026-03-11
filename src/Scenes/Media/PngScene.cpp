@@ -27,22 +27,20 @@ void PngScene::draw() {
 
     Pixels cropped;
     image.crop_by_fractions(
-        state["crop_top"],
-        state["crop_bottom"],
-        state["crop_left"],
-        state["crop_right"],
+        vec2(state["crop_left"], state["crop_top"]),
+        vec2(state["crop_right"], state["crop_bottom"]),
         cropped
     );
 
     Pixels scaled;
-    cropped.scale_to_bounding_box(get_width(), get_height(), scaled);
+    cropped.scale_to_bounding_box(pix.size, scaled);
 
     // Calculate the position to center the image within the bounding box
-    int x_offset = (get_width() - scaled.w) / 2;
-    int y_offset = (get_height() - scaled.h) / 2;
+    const vec2 offset = (pix.size - scaled.size) / 2;
 
     // Overwrite the scaled image onto the scene's pixel buffer
-    pix.overwrite(scaled, x_offset, y_offset);
+    pix.overwrite(scaled, offset);
+    cout << "finished rendering png: " << picture_name << endl;
 }
 
 const StateQuery PngScene::populate_state_query() const {

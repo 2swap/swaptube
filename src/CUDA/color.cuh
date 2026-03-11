@@ -52,15 +52,6 @@ __device__ __forceinline__ void d_set_pixel(int x, int y, int col, unsigned int*
     pixels[y * width + x] = col;
 }
 
-__device__ __forceinline__ void d_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
-    if (x < 0 || x >= width || y < 0 || y >= height) return;
-    opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
-    int idx = y * width + x;
-    int base = pixels[idx];
-    int blended = d_color_combine(base, col, opacity);
-    pixels[idx] = blended;
-}
-
 __device__ __forceinline__ void d_naive_add_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
     if (x < 0 || x >= width || y < 0 || y >= height) return;
     opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
@@ -75,10 +66,10 @@ __device__ __forceinline__ void d_naive_add_pixel(int x, int y, int col, float o
     pixels[idx] = blended;
 }
 
-__device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
-    if (x < 0 || x >= width || y < 0 || y >= height) return;
+__device__ __forceinline__ void d_atomic_overlay_pixel(const Cuda::vec2 pixel, int col, float opacity, unsigned int* pixels, const Cuda::vec2 size) {
+    if (pixel.x < 0 || pixel.x >= size.x || pixel.y < 0 || pixel.y >= size.y) return;
     opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
-    int idx = y * width + x;
+    int idx = pixel.y * size.x + pixel.x;
 
     unsigned int old_pixel = pixels[idx];
     int base = old_pixel;

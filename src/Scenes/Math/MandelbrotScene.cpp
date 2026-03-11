@@ -5,11 +5,11 @@
 using std::complex;
 
 extern "C" void mandelbrot_render(
-    const int width, const int height,
-    const vec2 lx_ty,
-    const vec2 rx_by,
-    const complex<float> seed_z, const complex<float> seed_x, const complex<float> seed_c,
-    const vec3 pixel_parameter_multipliers,
+    const vec2& size,
+    const vec2& lx_ty,
+    const vec2& rx_by,
+    const complex<float>& seed_z, const complex<float>& seed_x, const complex<float>& seed_c,
+    const vec3& pixel_parameter_multipliers,
     int max_iterations,
     float gradation,
     float phase_shift,
@@ -54,7 +54,8 @@ void MandelbrotScene::draw() {
     complex<float> seed_z(state["seed_z_r"], state["seed_z_i"]);
     complex<float> seed_x(state["seed_x_r"], state["seed_x_i"]);
     complex<float> seed_c(state["seed_c_r"], state["seed_c_i"]);
-    mandelbrot_render(pix.w, pix.h,
+    cout << "B" << endl;
+    mandelbrot_render(pix.size,
                       vec2(state["left_x"], state["top_y"]),
                       vec2(state["right_x"], state["bottom_y"]),
                       seed_z, seed_x, seed_c,
@@ -65,6 +66,7 @@ void MandelbrotScene::draw() {
                       OPAQUE_BLACK,
                       pix.pixels.data()
     );
+    cout << "A" << endl;
     if(state["point_path_length"] > 0) {
         // TODO convert to use CoordinateSceneWithTrail
         int startcol = 0xffff0000;
@@ -79,8 +81,8 @@ void MandelbrotScene::draw() {
             complex<float> new_z = pow(z, seed_x) + seed_c;
             vec2 prev = point_to_pixel(vec2(z.real(), z.imag()));
             vec2 next = point_to_pixel(vec2(new_z.real(), new_z.imag()));
-            pix.fill_circle(next.x, next.y, r, pathcol);
-            pix.bresenham(prev.x, prev.y, next.x, next.y, pathcol, 1, thickness);
+            pix.fill_circle(next, r, pathcol);
+            pix.bresenham(prev, next, pathcol, 1, thickness);
             z = new_z;
             if(abs(z) > 100) return;
         }

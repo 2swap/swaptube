@@ -322,7 +322,7 @@ void ComplexPlotScene::draw() {
             pix.fill_ring(pixel, gm*6, gm*5, OPAQUE_WHITE, ring_opa * .55);
         }
         if(letter_opa > 0.01) {
-            ScalingParams sp = ScalingParams(gm * 16, gm * 40);
+            ScalingParams sp = ScalingParams(vec2(gm * 16, gm * 40));
             char letter = char('a' + coefficients.size() - 1 - i);
             Pixels text_pixels = latex_to_pix(string(1, letter), sp);
 
