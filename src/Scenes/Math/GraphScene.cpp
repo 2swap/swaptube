@@ -2,6 +2,7 @@
 #include "../Media/LatexScene.h"
 #include "../../DataObjects/Graph.h"
 #include "../../IO/Writer.h"
+#include "../../IO/SFX.h"
 #include "../../Core/Smoketest.h"
 #include "../../Host_Device_Shared/vec.h"
 
@@ -11,23 +12,7 @@ void node_pop(double subdiv, bool added_not_deleted) {
     int tone_number = added_not_deleted?tones[tone_incr%tones.size()]:-6;
     double tone = pow(2,tone_number/12.);
     tone_incr++;
-    int samplerate = get_audio_samplerate_hz();
-    int num_samples = samplerate * .1;
-    vector<sample_t> left;
-    vector<sample_t> right;
-     left.reserve(num_samples);
-    right.reserve(num_samples);
-    for(int i = 0; i < num_samples; i++){
-        float val_f = .07 * pow(.5,i*80./samplerate) * sin(tone*i*6.283*440/samplerate);
-        // convert float to sample_t, which is 32-bit signed integer
-        sample_t val = static_cast<sample_t>(val_f * 2147483648); // scale to 32-bit signed integer range
-             if(val_f < -1.0) val = -2147483648; // clamp to -1.0
-        else if(val_f >  1.0) val =  2147483647; // clamp to 1.0
-         left.push_back(val);
-        right.push_back(val);
-    }
-    double time = get_global_state("t");
-    get_writer().audio->add_sfx(left, right, (time+subdiv/get_video_framerate_fps())*get_audio_samplerate_hz());
+    sfx_boink(get_global_state("t"), tone * 440, 1/80., 1);
 }
 
 GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions)

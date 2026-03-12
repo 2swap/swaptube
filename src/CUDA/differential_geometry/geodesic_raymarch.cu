@@ -366,8 +366,8 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     float last_dist = 4.0f;
     float dist_traveled = 0.0f;
     while (dist_traveled < max_dist) {
-        if(last_dist < 0.004f) last_dist = 0.004f; // prevent tiny steps
-        float dt = fminf(0.4f, last_dist * 1.2f); // adaptive step size
+        if(last_dist < 0.01f) last_dist = 0.01f; // prevent tiny steps
+        float dt = fminf(0.5f, last_dist * 1.2f); // adaptive step size
         if(special_case_code == 2) {
             // Flat metric special case: straight line
             Y2[0] = Y[0] + Y[3] * dt;

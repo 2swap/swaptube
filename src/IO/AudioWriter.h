@@ -43,7 +43,7 @@ private:
 
 public:
     AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz);
-    void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const int t);
+    void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const double t);
 
     // These are used for 6884's transition curve hints
     int current_macroblock_length_samples;

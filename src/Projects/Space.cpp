@@ -4,51 +4,64 @@ void render_video() {
     GeodesicScene gs;
 
     gs.manager.set({
-        {"scrunch", "{t} 2 * sin 4 +"},
-        {"amp", "{t} 3.14 * sin"},
+        {"scrunch", "2"},
+        {"amp", "0"}
     });
 
-// *knock knock knock*
-    gs.manager.transition(MICRO, {
-        {"pov_q1", ".2"},
-        {"pov_qj", "1"},
-    });
-    stage_macroblock(SilenceBlock(1), 1);
-    gs.render_microblock();
-
-    gs.manager.transition(MICRO, {
-        {"pov_q1", "1"},
-        {"pov_qj", "0"},
-    });
-    stage_macroblock(SilenceBlock(1), 1);
-    gs.render_microblock();
-
-    gs.manager.transition(MICRO, {
+    gs.manager.set({
         {"space_x", "(a)"},
         {"space_y", "(b)"},
         {"space_z", "(c)"},
         {"space_w", "(c) <scrunch> * sin (a) <scrunch> * sin (b) <scrunch> * sin + + <amp> *"},
     });
-    stage_macroblock(SilenceBlock(3), 1);
+    gs.manager.transition(MACRO, {
+        {"pov_qj", ".2"},
+    });
+    stage_macroblock(SilenceBlock(2), 2);
+    gs.manager.transition(MICRO, {
+        {"amp", ".25"}
+    });
+    gs.render_microblock();
+    gs.manager.transition(MICRO, {
+        {"amp", "0"}
+    });
     gs.render_microblock();
 
-    return;
+    gs.manager.set({
+        {"scrunch", "10"},
+    });
 
-    stage_macroblock(FileBlock("Interdimensional FBI! Open up!"), 1);
+    stage_macroblock(SilenceBlock(1), 1);
+    gs.manager.transition(MICRO, {
+        {"amp", ".05"}
+    });
+    gs.render_microblock();
+
+    stage_macroblock(FileBlock("Woooahhh!"), 2);
+    gs.render_microblock();
+    gs.manager.transition(MICRO, {
+        {"scrunch", "8"}
+    });
+    gs.render_microblock();
+
+    stage_macroblock(FileBlock("*knock knock knock* Interdimensional FBI! Open up!"), 1);
     gs.render_microblock();
 
     // Turn towards door
 
-    stage_macroblock(FileBlock("*softly* Oh crap."), 1);
+    stage_macroblock(FileBlock("(softly) Oh crap."), 1);
     gs.render_microblock();
 
     stage_macroblock(FileBlock("One moment!"), 1);
+    // (2swap slams kill switch on space warping device, surfaces begin to flatten out)
+    gs.manager.transition(MICRO, {
+        {"space_w", "0"},
+    });
     gs.render_microblock();
 
-// (2swap slams kill switch on space warping device, surfaces begin to flatten out)
-// [Agent] Open the door, now!
-// [2swap] Coming, coming!
-// [Agent] *Bursts open the door* Put your hands where I can see them!
+    stage_macroblock(FileBlock("(Door bursts open) Put your hands where I can see them!"), 1);
+    gs.render_microblock();
+
 // [Agent] Do you live here?
 // [2swap] Yes officer.
 // [Agent] Our instruments show a large non-zero gaussian curvature in this room. What on earth are you doing in here?
@@ -94,10 +107,10 @@ void render_video() {
 // [Dealer] This is an extrinsic perspective, since we perceive that curved space as it is embedded in our higher dimension.
 // [Dealer] However, there is an equivalent point of view called the intrinsic perspective, where we can understand the geometry of a curved space from local measurements of angles, distances, and so on, without needing to embed it within a higher dimension at all.
 // [Dealer] For example, when crocheting, one can create a flat sheet by making a regular grid of stitches. By altering the amount of stitches in different areas, we can create a curved surface.
-// [Dealer] But distances in this surface don't depend on its embedding in three-dimensional space: all you need to know is the length of string present between two points.
+// [Dealer] But distances in this surface don't depend on its embedding in three-dimensional space: the way that it curves in space is downstream of the length and angles of the strings holding it together.
 // [Dealer] This is the intrinsic perspective. The notion of geometry is intrinsic to a particular space, independent of its representation.
 // [Dealer] In differential geometry, this is known as Gauss's Theorema Egregium.
-// [Dealer] Gauss showed that these two perspectives are mathematically equivalent. The device merely displays the extrinsic perspective to make it easier to visualize the curvature at play.
+// [Dealer] Gauss showed that these two perspectives are mathematically equivalent. The device merely displays the extrinsic embedding to make it easier to visualize the curvature at play.
 // [Dealer] At our lab, we still haven't discovered whether or not there is truly a higher-dimensional embedding being manipulated from a physical perspective, since both interpretations are predictively equivalent.
 // [2swap] Ok... so if I'm understanding you right, the device manipulates the curvature of this space, within which my walls live, but it doesn't actually move the walls themselves. So, why do my walls look like they're moving when I turn it on?
 // [Dealer] Remember how the straight line on the map is different from the straight line on the globe? It's the same idea here. Light itself follows straight lines. So if the geometry of space is warped, the straight line that light follows before reaching your eyes is different, and thus the image of the walls that you see is warped as well.

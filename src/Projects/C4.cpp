@@ -2239,10 +2239,19 @@ void anki(CompositeScene& cs) {
     cs.slide_subscene(MICRO, "explanation", vec2(0, -1));
     stage_macroblock(FileBlock("The site includes a lot of technical details which I glazed over, so be sure to check it out!"), 1);
     cs.render_microblock();
-}
+    return;
 
-void sponsor(CompositeScene& cs) {
-    //TODO
+    // TODO working on this next part, not done yet
+    // Opera Browser Sponsor Segment
+    stage_macroblock(FileBlock("I think the best way to learn the game is to play online, and in between rounds, reviewing the variations you played in the tree to see what a better response could have been."), 1);
+    stage_macroblock(FileBlock("Using Opera's side-by-side browsing feature, you can easily replay your games in the tree alongside your online matches."), 1);
+    stage_macroblock(FileBlock("If you find yourself exploring a lot of positions using online strong solvers, the tab group feature can help you keep them organized."), 1);
+    stage_macroblock(FileBlock("Usually this website is an ugly shiny white, but Opera features a built-in universal dark mode which I prefer."), 1);
+    stage_macroblock(FileBlock("You could, of course, use these features for research or something... psssh who am I kidding, just use it to play connect 4!"), 1);
+    stage_macroblock(FileBlock("Opera is top notch when it comes to customization and productivity. In addition to helping you organize your browsing, it has a side-bar that makes common apps super easy to access."), 1);
+     stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable, including a built-in adblocker, and a video pop-out feature that lets you pretend that you're getting work done while watching 2swap instead."), 1);
+     stage_macroblock(FileBlock("It has a video skip button that works in YouTube, Netflix, and so on... wait wait wait don't click it now-"), 1);
+     //video abruptly ends
 }
 
 void render_video() {

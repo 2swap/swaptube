@@ -113,23 +113,25 @@ void AudioWriter::encode_and_write_audio(AVCodecContext* codecCtx, AVStream* str
     }
 }
 
-void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer, const int t) {
+void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer, const double t_seconds) {
+    const int t_samples = ceil(t_seconds * get_audio_samplerate_hz());
+
     if (left_buffer.size() != right_buffer.size()) {
         throw runtime_error("SFX buffer lengths do not match. Left: " + to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
     }
 
-    if (!rendering_on() || !AUDIO_SFX) return; // Don't write in smoketest
+    if (!rendering_on()) return; // Don't write in smoketest
 
     int numSamples = left_buffer.size(); // number of frames
-    int sample_copy_start_frames = t - total_samples_processed;
+    int sample_copy_start_frames = t_samples - total_samples_processed;
     int sample_copy_end_frames = sample_copy_start_frames + numSamples;
 
     if(sample_copy_start_frames < 0)
-        throw runtime_error("Sfx copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t) + " " + to_string(total_samples_processed));
+        throw runtime_error("Sfx copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t_samples) + " " + to_string(total_samples_processed));
 
     int start_idx = sample_copy_start_frames * audio_channels;
     int end_idx = sample_copy_end_frames * audio_channels;
-    // Ensure sfx_buffer has enough capacity and add samples (convert floats to int32)
+
     if (sfx_buffer.size() < static_cast<size_t>(end_idx)) {
         sfx_buffer.resize(end_idx, 0); // Extend with silence
     }
@@ -396,9 +398,9 @@ void AudioWriter::encode_buffers() {
             int track_number = 0;
 
             if(AUDIO_SFX){
-                // Merged audio track
-                dst[track_number][idxL] = voice_left + sfx_left;
-                dst[track_number][idxR] = voice_right+ sfx_right;
+                // Voice-only track
+                dst[track_number][idxL] = voice_left;
+                dst[track_number][idxR] = voice_right;
                 track_number++;
 
                 // Sfx-only track
@@ -407,9 +409,9 @@ void AudioWriter::encode_buffers() {
                 track_number++;
             }
 
-            // Always include voice.
-            dst[track_number][idxL] = voice_left;
-            dst[track_number][idxR] = voice_right;
+            // Merged audio track
+            dst[track_number][idxL] = voice_left + sfx_left;
+            dst[track_number][idxR] = voice_right+ sfx_right;
             track_number++;
 
             if(AUDIO_HINTS){

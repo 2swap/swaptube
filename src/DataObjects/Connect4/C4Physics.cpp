@@ -1,4 +1,6 @@
 #include "C4Physics.h"
+#include "../../IO/SFX.h"
+#include "../../Core/State/GlobalState.h"
 #include <algorithm>
 #include <cmath>
 
@@ -139,13 +141,20 @@ void C4Physics::iterate_physics() {
         double pre_y = disc.py;
         disc.vy += disc.ay;
         disc.py += disc.vy;
+        double volume = abs(disc.vy) * 3;
+        volume *= volume;
         if (disc.py < 0) {
             disc.vy *= -elasticity;
             disc.py = 0;
+            if(!fast_mode && abs(disc.vy) > 0.2)
+                sfx_boink(get_global_state("t"), 200, 0.05, volume);
         }
         for(Disc& other_disc : discs) {
             if (&disc != &other_disc && disc.x == other_disc.x) {
                 if (disc.py < other_disc.py + 1 && disc.py > other_disc.py) {
+                    if(!fast_mode && abs(disc.vy) > 0.2) {
+                        sfx_boink(get_global_state("t"), 200, 0.05, volume);
+                    }
                     disc.py = other_disc.py + 1;
                     if(abs(other_disc.vy) < 0.1) {
                         disc.vy *= -0.3;

@@ -1,28 +1,13 @@
 #include "TuringMachineScene.h"
 #include "../../IO/Writer.h"
+#include "../../IO/SFX.h"
 #include <vector>
 
 void beep(int state, int symbol, int num_states){
     int tone_number = state + symbol * num_states;
-    vector<double> notes{12, 5, 17, 22, 21, 15, 9, 29, 34, 33, 25, 17, 27, 19, 29, 24, 21, 22, 15, 17, 27, 26, 22, 10, 19, 17, 12, 5, 15, 14, 10, 22, 24, 17, 20, 22, 29, 24, 22, 24};
+    vector<double> notes{12, 5, 17, 22, 21, 15, 9, 29, 25, 27, 19};
     double tone = pow(2,notes[tone_number]/12.);
-
-    int samplerate = get_audio_samplerate_hz();
-    int num_samples = samplerate * .1;
-    vector<sample_t> left;
-    vector<sample_t> right;
-     left.reserve(num_samples);
-    right.reserve(num_samples);
-
-    for(int i = 0; i < num_samples; i++){
-        float val_f = .07 * pow(.5,i*20./samplerate) * sin(tone*i*6.283*440/samplerate);
-        sample_t val = float_to_sample(val_f);
-         left.push_back(val);
-        right.push_back(val);
-    }
-
-    double time = get_global_state("t");
-    get_writer().audio->add_sfx(left, right, time*get_audio_samplerate_hz());
+    sfx_boink(get_global_state("t"), tone * 440, .05, 1);
 }
 
 // For example, 1RB0LB_1LC0RE_1LA1LD_0LC---_0RB0RF_1RE1RB has 2 symbols and 5 states.

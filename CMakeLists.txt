@@ -8,9 +8,7 @@ set(ENV{GLIBCXX_FORCE_NEW} 1)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(PkgConfig REQUIRED)
-message(STATUS "Searching for FFMPEG libraries...")
 pkg_check_modules(FFMPEG REQUIRED libswscale libavcodec libavformat libavdevice libavutil libavfilter)
-message(STATUS "FFMPEG Libraries -> ${FFMPEG_LIBRARIES}")
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 find_package(Cairo REQUIRED)
 find_package(RSVG REQUIRED)
@@ -73,13 +71,28 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
 message(STATUS "Preprocessor definitions added")
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${PROJECT_NAME} ${FFMPEG_INCLUDE_DIRS} ${RSVG_INCLUDE_DIRS} ${GLIB_INCLUDE_DIRS}
+    ${PROJECT_NAME}
+    ${FFMPEG_INCLUDE_DIRS} ${RSVG_INCLUDE_DIRS} ${GLIB_INCLUDE_DIRS}
     "/usr/include/gdk-pixbuf-2.0"
     "/usr/include/cairo"
     ${PNG_INCLUDE_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES} ${FFMPEG_LIBRARIES} ${RSVG_LIBRARIES} ${FDKAAC_LIBRARIES} cairo gobject-2.0 lzma ${PNG_LIBRARIES} ${GPU_LIBRARIES} ${X11_LIBRARIES} nlohmann_json::nlohmann_json)
+target_link_libraries(
+    ${PROJECT_NAME}
+    ${GLIB_LIBRARIES}
+    ${FFMPEG_LIBRARIES}
+    ${RSVG_LIBRARIES}
+    ${FDKAAC_LIBRARIES}
+    cairo
+    gobject-2.0
+    lzma
+    ${PNG_LIBRARIES}
+    ${GPU_LIBRARIES}
+    ${X11_LIBRARIES}
+    nlohmann_json::nlohmann_json
+)
+
 message(STATUS "Link libraries configured for ${PROJECT_NAME}")
 target_compile_options(${PROJECT_NAME} PRIVATE -Wreorder)
 message(STATUS "Configuration complete.")
