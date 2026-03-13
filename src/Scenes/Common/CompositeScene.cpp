@@ -6,7 +6,7 @@
 
 CompositeScene::CompositeScene(const vec2& dimensions) : SuperScene(dimensions) {}
 
-void CompositeScene::add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, std::string state_name, const vec2& pos, double opa, bool behind){
+void CompositeScene::add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos, double opa, bool behind){
     add_scene(sc, state_name, pos, behind);
     manager.set(state_name + ".opacity", "0");
     fade_subscene(tt, state_name, opa);

@@ -9,7 +9,7 @@ BarChartScene::BarChartScene(
 ) : CompositeScene() {
     const string latex = "\\text{" + title + "}";
     title_scene = make_shared<LatexScene>(latex, .5, vec2(1, 0.2));
-    add_scene(title_scene, "title", .5, .1);
+    add_scene(title_scene, "title", vec2(.5, .1));
     manager.set({
         {"bar0", "0"},
         {"bar1", "0"},
@@ -38,8 +38,8 @@ void BarChartScene::add_bar(const TransitionType tt, const string& label, bool s
         tt,
         bar_scene,
         "bar" + to_string(new_bar_index),
-        0.5 + (new_bar_index - (bar_scenes.size() - 1) / 2.0) * 0.15,
-        .9
+        vec2(0.5 + (new_bar_index - (bar_scenes.size() - 1) / 2.0) * 0.15,
+        .9)
     );
     if (should_reposition_bars) {
         reposition_bars(tt);

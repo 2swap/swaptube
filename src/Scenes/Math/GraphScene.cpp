@@ -12,7 +12,7 @@ void node_pop(double subdiv, bool added_not_deleted) {
     int tone_number = added_not_deleted?tones[tone_incr%tones.size()]:-6;
     double tone = pow(2,tone_number/12.);
     tone_incr++;
-    sfx_boink(get_global_state("t"), tone * 440, 1/80., 1);
+    sfx_boink(get_global_state("t") + subdiv, tone * 440, 1/80., 1);
 }
 
 GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions)
