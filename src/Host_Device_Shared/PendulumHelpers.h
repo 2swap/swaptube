@@ -5,10 +5,10 @@ SHARED_FILE_PREFIX
 
 typedef double pendulum_type;
 
-inline constexpr pendulum_type pend_g = 9.8f; // gravitational acceleration (m/s^2)
-inline constexpr pendulum_type pend_l = 1.0f; // length of pendulum arms (m)
-inline constexpr pendulum_type pend_m = 1.0f; // mass of pendulums (kg)
-inline constexpr pendulum_type mll = pend_m * pend_l * pend_l;
+constexpr pendulum_type pend_g = 9.8f; // gravitational acceleration (m/s^2)
+constexpr pendulum_type pend_l = 1.0f; // length of pendulum arms (m)
+constexpr pendulum_type pend_m = 1.0f; // mass of pendulums (kg)
+constexpr pendulum_type mll = pend_m * pend_l * pend_l;
 
 struct PendulumState {
     pendulum_type theta1, theta2, p1, p2;

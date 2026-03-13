@@ -9,6 +9,7 @@ using namespace std;
 #include "Smoketest.h"
 #include "../IO/Writer.h"
 #include "State/GlobalState.h"
+#include <filesystem>
 
 void render_video(); // Forward declaration, provided by the user in their project file
 
@@ -62,8 +63,9 @@ inline void signal_handler(int signal) {
 
 void setup_output_subfolders() {
     cout << "Setting up output subfolders... " << endl;
-    string cmd = "mkdir -p io_out/frames io_out/data io_out/plots";
-    system(cmd.c_str());
+    std::filesystem::create_directories("io_out/frames");
+    std::filesystem::create_directories("io_out/data");
+    std::filesystem::create_directories("io_out/plots");
 }
 
 int main(int argc, char* argv[]) {

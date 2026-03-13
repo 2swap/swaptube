@@ -1,24 +1,65 @@
 #include "VisualMedia.h"
 
+#include <filesystem>
 #include <png.h>
 #include <vector>
 #include <stdexcept>
 #include <librsvg-2.0/librsvg/rsvg.h>
-#include <sys/stat.h>
 #include <cmath>
 #include <sstream>
 #include <unordered_map>
-#include <limits.h>
-#include <unistd.h>
 #include <cairo.h>
-#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <iostream>
 #include <cstdint>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 void pix_to_png(const Pixels& pix, const string& filename) {
     if(pix.w * pix.h == 0) return; // cowardly exit.
+
+#ifdef _WIN32
+    cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, pix.w, pix.h);
+    if (!surface || cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) {
+        if (surface) cairo_surface_destroy(surface);
+        throw runtime_error("Failed to create cairo surface for PNG writing: " + filename);
+    }
+
+    unsigned char* data = cairo_image_surface_get_data(surface);
+    const int stride = cairo_image_surface_get_stride(surface);
+    for (int y = 0; y < pix.h; y++) {
+        unsigned char* row = data + y * stride;
+        for (int x = 0; x < pix.w; x++) {
+            const int pixel = pix.get_pixel_carelessly(x, y);
+            const uint8_t a = (pixel >> 24) & 0xFF;
+            uint8_t r = (pixel >> 16) & 0xFF;
+            uint8_t g = (pixel >> 8) & 0xFF;
+            uint8_t b = pixel & 0xFF;
+
+            // Cairo ARGB32 expects premultiplied channels.
+            if (a != 255) {
+                r = static_cast<uint8_t>((static_cast<int>(r) * a + 127) / 255);
+                g = static_cast<uint8_t>((static_cast<int>(g) * a + 127) / 255);
+                b = static_cast<uint8_t>((static_cast<int>(b) * a + 127) / 255);
+            }
+
+            unsigned char* px = row + x * 4;
+            px[0] = b;
+            px[1] = g;
+            px[2] = r;
+            px[3] = a;
+        }
+    }
+    cairo_surface_mark_dirty(surface);
+
+    const string outpath = "io_out/" + filename + ".png";
+    const cairo_status_t status = cairo_surface_write_to_png(surface, outpath.c_str());
+    cairo_surface_destroy(surface);
+    if (status != CAIRO_STATUS_SUCCESS) {
+        throw runtime_error("Failed to write PNG file " + outpath + " via cairo.");
+    }
+    return;
+#endif
 
     // Open the file for writing (binary mode)
     FILE* fp = fopen(("io_out/" + filename + ".png").c_str(), "wb");
@@ -157,29 +198,35 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     // Set scale
     cairo_scale(cr, scaling_params.scale_factor, scaling_params.scale_factor);
 
-    // Define viewport for rendering
-    RsvgRectangle viewport = {
-        .x = 0,
-        .y = 0,
-        .width = gwidth,
-        .height = gheight
-    };
-
-    if (viewport.width <= 0 || viewport.height <= 0) {
+    if (gwidth <= 0 || gheight <= 0) {
         cairo_destroy(cr);
         cairo_surface_destroy(surface);
         g_object_unref(handle);
         throw runtime_error("Invalid viewport size for SVG file " + filename);
     }
 
-    // Render SVG
+#if LIBRSVG_CHECK_VERSION(2, 52, 0)
+    RsvgRectangle viewport;
+    viewport.x = 0;
+    viewport.y = 0;
+    viewport.width = gwidth;
+    viewport.height = gheight;
     if (!rsvg_handle_render_document(handle, cr, &viewport, &error)) {
-        g_error_free(error);
+        string msg = (error != nullptr) ? error->message : "unknown error";
+        if (error != nullptr) g_error_free(error);
         cairo_destroy(cr);
         cairo_surface_destroy(surface);
         g_object_unref(handle);
-        throw runtime_error("Failed to render SVG file " + filename + ": " + error->message);
+        throw runtime_error("Failed to render SVG file " + filename + ": " + msg);
     }
+#else
+    if (!rsvg_handle_render_cairo(handle, cr)) {
+        cairo_destroy(cr);
+        cairo_surface_destroy(surface);
+        g_object_unref(handle);
+        throw runtime_error("Failed to render SVG file " + filename + " using legacy librsvg API.");
+    }
+#endif
 
     // Copy pixels into Pixels object
     for (int y = 0; y < height; ++y) {
@@ -218,6 +265,51 @@ void png_to_pix(Pixels& pix, const string& filename_with_or_without_suffix) {
         pix = it->second;
         return;
     }
+
+#ifdef _WIN32
+    cairo_surface_t* surface = cairo_image_surface_create_from_png(fullpath.c_str());
+    if (!surface || cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) {
+        string msg = surface ? cairo_status_to_string(cairo_surface_status(surface)) : "unknown error";
+        if (surface) cairo_surface_destroy(surface);
+        throw runtime_error("Failed to open PNG file " + fullpath + " via cairo: " + msg);
+    }
+
+    cairo_surface_flush(surface);
+    const int surface_width = cairo_image_surface_get_width(surface);
+    const int surface_height = cairo_image_surface_get_height(surface);
+    const int stride = cairo_image_surface_get_stride(surface);
+    unsigned char* data = cairo_image_surface_get_data(surface);
+    if (surface_width <= 0 || surface_height <= 0 || data == nullptr) {
+        cairo_surface_destroy(surface);
+        throw runtime_error("Invalid PNG surface for " + fullpath);
+    }
+
+    pix = Pixels(surface_width, surface_height);
+    for (int y = 0; y < surface_height; y++) {
+        unsigned char* row = data + y * stride;
+        for (int x = 0; x < surface_width; x++) {
+            unsigned char* px = row + x * 4;
+            const uint8_t b_premul = px[0];
+            const uint8_t g_premul = px[1];
+            const uint8_t r_premul = px[2];
+            const uint8_t a = px[3];
+
+            uint8_t r = r_premul;
+            uint8_t g = g_premul;
+            uint8_t b = b_premul;
+            if (a != 0 && a != 255) {
+                r = static_cast<uint8_t>(min(255, (static_cast<int>(r_premul) * 255 + a / 2) / a));
+                g = static_cast<uint8_t>(min(255, (static_cast<int>(g_premul) * 255 + a / 2) / a));
+                b = static_cast<uint8_t>(min(255, (static_cast<int>(b_premul) * 255 + a / 2) / a));
+            }
+            pix.set_pixel_carelessly(x, y, argb(a, r, g, b));
+        }
+    }
+
+    cairo_surface_destroy(surface);
+    png_cache[fullpath] = pix;
+    return;
+#endif
 
     // Open the PNG file
     FILE* fp = fopen(fullpath.c_str(), "rb");
@@ -375,14 +467,35 @@ Pixels latex_to_pix(const string& latex, ScalingParams& scaling_params) {
     cout << "Generating LaTeX for: " << latex << endl;
 
     hash<string> hasher;
-    char full_directory_path[PATH_MAX];
     string latex_dir = "io_in/latex/";
-    realpath(latex_dir.c_str(), full_directory_path);
     string name_without_folder = to_string(hasher(latex)) + ".svg";
-    string name = string(full_directory_path) + "/" + name_without_folder;
+    string name = (fs::absolute(latex_dir) / name_without_folder).string();
 
-    if (access(name.c_str(), F_OK) == -1) {
-        string command = "cd ../../MicroTeX-master/build/ && ./LaTeX -headless -foreground=#ffffffff \"-input=" + latex + "\" -output=" + name + " >/dev/null 2>&1";
+    if (!fs::exists(name)) {
+#ifdef _WIN32
+        string output_name = name;
+        for (char& c : output_name) {
+            if (c == '\\') {
+                c = '/';
+            }
+        }
+        string microtex_build_dir = fs::absolute("../../MicroTeX-master/build-mingw-headless").string();
+        bool use_mingw_headless = fs::exists(microtex_build_dir);
+        if (!use_mingw_headless) {
+            microtex_build_dir = fs::absolute("../../MicroTeX-master/build").string();
+        }
+        string command =
+            "cd /d \"" + microtex_build_dir + "\" && "
+            ".\\LaTeX.exe -headless -foreground=#ffffffff "
+            "\"-input=" + latex + "\" "
+            "\"-output=" + output_name + "\"";
+#else
+        string command =
+            "cd ../../MicroTeX-master/build/ && "
+            "./LaTeX -headless -foreground=#ffffffff "
+            "\"-input=" + latex + "\" "
+            "\"-output=" + name + "\" >/dev/null 2>&1";
+#endif
         int result = system(command.c_str());
         if(result != 0) {
             cout << command << endl;
@@ -415,11 +528,7 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
 
     const string png_filename = resolved_filename_without_suffix + "-" + (page_number < 10 ? "0" : "") + to_string(page_number) + ".png";
 
-    struct stat buffer;
-    bool png_file_exists = false;
-    if (stat(png_filename.c_str(), &buffer) == 0) {
-        png_file_exists = true;
-    }
+    bool png_file_exists = fs::exists(png_filename);
 
     // Execute pdftocairo command to convert the specified page to PNG
     if (!png_file_exists) {
@@ -433,7 +542,7 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
     }
 
     // Verify that the PNG file was created
-    if (stat(png_filename.c_str(), &buffer) != 0) {
+    if (!fs::exists(png_filename)) {
         throw runtime_error("PNG file was not created after pdftocairo command.");
     }
 

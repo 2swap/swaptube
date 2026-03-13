@@ -1,13 +1,21 @@
+#ifdef _WIN32
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
+
 #include "Pixels.h"
 
-#include <unistd.h>
-#include <sys/ioctl.h>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#ifndef _WIN32
+#include <sys/ioctl.h>
+#include <unistd.h>
+#endif
 #include "../IO/Writer.h"
 
 extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
@@ -381,10 +389,20 @@ void Pixels::print_to_terminal() {
     cout << endl;
 
     // Get terminal dimensions.
+#ifdef _WIN32
+    CONSOLE_SCREEN_BUFFER_INFO info;
+    int termWidth = 80;
+    HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (handle != INVALID_HANDLE_VALUE && GetConsoleScreenBufferInfo(handle, &info)) {
+        termWidth = info.srWindow.Right - info.srWindow.Left + 1;
+        if (termWidth <= 0) termWidth = 80;
+    }
+#else
     struct winsize wsz;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &wsz);
-    const int termWidth = wsz.ws_col;
-    // Note: we are not using termHeight here.
+    int termWidth = wsz.ws_col;
+    if (termWidth <= 0) termWidth = 80;
+#endif
 
     // Assume a half-block is square
     const double charAspect = 2.0;
@@ -525,6 +543,11 @@ Pixels crop_by_alpha(const Pixels& p) {
     }
 
     // Calculate the dimensions of the cropped Pixels
+    if (max_x < min_x || max_y < min_y) {
+        // No visible pixels (all alpha == 0); preserve the original canvas.
+        return p;
+    }
+
     int width = max_x - min_x + 1;
     int height = max_y - min_y + 1;
 

@@ -65,17 +65,17 @@ void SubtitleWriter::add_subtitle(double duration, const string& text) {
         size_t right = center;
 
         while (left > 0 || right < text.size() - 1) {
-            if (left > 0 && !isalnum(text[left])) {
+            if (left > 0 && !isalnum(static_cast<unsigned char>(text[left]))) {
                 break;
             }
-            if (right < text.size() - 1 && !isalnum(text[right])) {
+            if (right < text.size() - 1 && !isalnum(static_cast<unsigned char>(text[right]))) {
                 break;
             }
             if (left > 0) left--;
             if (right < text.size() - 1) right++;
         }
 
-        size_t split_pos = (left > 0 && !isalnum(text[left])) ? left : right;
+        size_t split_pos = (left > 0 && !isalnum(static_cast<unsigned char>(text[left]))) ? left : right;
 
         // Split the text into first and remaining parts
         string firstPart = text.substr(0, split_pos + 1);

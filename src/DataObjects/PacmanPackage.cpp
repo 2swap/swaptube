@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <stdexcept>
 #include "HashableString.h"
+#include "../IO/IoHelpers.h"
 
 using namespace std;
 
@@ -12,70 +13,33 @@ public:
     PacmanPackage(const string& str) : HashableString(str) {}
 
     bool is_solution() override {
-        // Build the pacman command
-        string command = "pacman -Qi " + representation;
-        FILE* pipe = popen(command.c_str(), "r");
-        if (!pipe) {
-            throw runtime_error("Failed to open pipe for pacman command.");
-        }
-
-        bool explicitlyInstalled = false;
-        char buffer[4096];
-        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-            string line(buffer);
-            // Look for the "Install Reason" line
-            if (line.find("Install Reason") != string::npos) {
-                if (line.find("Explicitly installed") != string::npos) {
-                    explicitlyInstalled = true;
-                }
-                break; // Found the field; no need to continue
-            }
-        }
-        pclose(pipe);
-        return explicitlyInstalled;
+        // Run pacman to see if the package is installed
+        string cmd = "pacman -Qi " + representation + " > /dev/null 2>&1";
+        int result = system(cmd.c_str());
+        return result == 0;
     }
 
     unordered_set<GenericBoard*> get_children() override {
         unordered_set<GenericBoard*> children;
-        // Build the pacman command
-        string command = "pacman -Qi " + representation;
-        FILE* pipe = popen(command.c_str(), "r");
+        // Run pacman to get the dependencies of the package
+        string cmd = "pacman -Qi " + representation + " | grep 'Depends On' | cut -d ':' -f 2";
+        FILE* pipe = portable_popen(cmd.c_str(), "r");
         if (!pipe) {
-            throw runtime_error("Failed to open pipe for pacman command.");
+            throw runtime_error("pacman error!");
         }
-
-        char buffer[4096];
-        bool readingDeps = false;
-        string dependencies;
-
-        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-            string line(buffer);
-            // If we haven't yet started collecting dependencies,
-            // look for the "Required By" header.
-            if (!readingDeps) {
-                if (line.find("Required By") != string::npos) {
-                    readingDeps = true;
-                    size_t colonPos = line.find(":");
-                    if (colonPos != string::npos) {
-                        dependencies += line.substr(colonPos + 1);
-                    }
-                }
-            } else {
-                // Once in dependency collection mode, check if the line is indented.
-                if (!line.empty() && isspace(line[0])) {
-                    dependencies += " " + line;
-                } else {
-                    // If the line is not indented, the dependency block has ended.
-                    break;
-                }
+        char buffer[128];
+        string result = "";
+        while (!feof(pipe)) {
+            if (fgets(buffer, 128, pipe) != NULL) {
+                result += buffer;
             }
         }
-        pclose(pipe);
+        portable_pclose(pipe);
 
-        // Split the accumulated dependencies string into individual package names.
-        istringstream iss(dependencies);
+        // Parse the dependencies from the result string
+        stringstream ss(result);
         string pkg;
-        while (iss >> pkg) {
+        while (ss >> pkg) {
             if (pkg != "None") {
                 // Create a new PacmanPackage instance for each dependency
                 children.insert(new PacmanPackage(pkg));
@@ -84,4 +48,3 @@ public:
         return children;
     }
 };
-

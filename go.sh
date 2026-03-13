@@ -9,10 +9,85 @@ check_command_available() {
     fi
 }
 
+find_windows_vcvars64() {
+    local candidates=(
+        "/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Auxiliary/Build/vcvars64.bat"
+        "/c/Program Files/Microsoft Visual Studio/2022/BuildTools/VC/Auxiliary/Build/vcvars64.bat"
+        "/c/Program Files (x86)/Microsoft Visual Studio/2022/Community/VC/Auxiliary/Build/vcvars64.bat"
+        "/c/Program Files (x86)/Microsoft Visual Studio/2022/Professional/VC/Auxiliary/Build/vcvars64.bat"
+        "/c/Program Files (x86)/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat"
+    )
+    local c
+    for c in "${candidates[@]}"; do
+        if [ -f "$c" ]; then
+            cygpath -w "$c"
+            return 0
+        fi
+    done
+
+    if [ -f "/c/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe" ]; then
+        powershell.exe -NoProfile -Command "& '${env:ProgramFiles(x86)}\\Microsoft Visual Studio\\Installer\\vswhere.exe' -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find 'VC\\Auxiliary\\Build\\vcvars64.bat'" | tr -d '\r' | head -n 1
+        return 0
+    fi
+    return 1
+}
+
+find_windows_msys2_root() {
+    local candidates=(
+        "/c/msys64"
+        "$HOME/scoop/apps/msys2/current"
+    )
+    local c
+    for c in "${candidates[@]}"; do
+        if [ -f "$c/mingw64/include/glib-2.0/glib.h" ]; then
+            cygpath -m "$c"
+            return 0
+        fi
+    done
+    return 1
+}
+
+find_windows_ffmpeg_root() {
+    local c
+    for c in /c/ProgramData/chocolatey/lib/ffmpeg-shared/tools/* "$HOME/scoop/apps/ffmpeg-shared/current"; do
+        [ -d "$c" ] || continue
+        if [ -f "$c/include/libavcodec/avcodec.h" ] && [ -f "$c/lib/avcodec.lib" ]; then
+            cygpath -m "$c"
+            return 0
+        fi
+    done
+    return 1
+}
+
+run_windows_dev_cmd() {
+    local vcvars_bat="$1"
+    local inner_cmd="$2"
+    local runner_bat=".go_windows_dev_cmd.bat"
+    {
+        echo "@echo off"
+        echo "call \"${vcvars_bat}\" >nul"
+        echo "if errorlevel 1 exit /b 1"
+        echo "${inner_cmd}"
+        echo "exit /b %errorlevel%"
+    } > "${runner_bat}"
+
+    local runner_win
+    runner_win="$(cygpath -w "${runner_bat}")"
+    powershell.exe -NoProfile -Command "& '${runner_win}'; exit \$LASTEXITCODE"
+    local rc=$?
+    rm -f "${runner_bat}"
+    return $rc
+}
+
 # Check for required commands
 check_command_available "cmake"
 check_command_available "ninja"
-check_command_available "gnuplot"
+# gnuplot is used only for debug plot generation and is treated as Linux-only.
+case "$(uname -s)" in
+    Linux*)
+        check_command_available "gnuplot"
+        ;;
+esac
 # Check if MicroTeX build exists
 if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     echo "Error: ../MicroTeX-master/build/LaTeX does not exist. MicroTeX is required for this project."
@@ -115,9 +190,22 @@ cp "$PROJECT_PATH" "$TEMPFILE"
 OUTPUT_FOLDER_NAME=$(date +"%Y%m%d_%H%M%S")
 OUTPUT_DIR="out/${PROJECT_NAME}/${OUTPUT_FOLDER_NAME}"
 mkdir -p "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR/frames"
 
 INPUT_DIR="media/${PROJECT_NAME}"
 mkdir -p "$INPUT_DIR/latex"
+
+is_windows_msys=0
+case "${OSTYPE:-}" in
+    msys*|cygwin*|win32*)
+        is_windows_msys=1
+        ;;
+esac
+
+SWAPTUBE_BIN="./swaptube"
+if [ $is_windows_msys -eq 1 ]; then
+    SWAPTUBE_BIN="./swaptube.exe"
+fi
 
 echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_FOLDER_NAME}"
 (
@@ -140,12 +228,41 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     echo "==============================================="
     echo "go.sh: Running \`cmake ..\` from build directory"
 
-    # Pass the variables to CMake as options
-    cmake -G Ninja .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
+    BUILD_JOBS="$(nproc 2>/dev/null || echo 8)"
+    if [ $is_windows_msys -eq 1 ]; then
+        VCVARS64_BAT="$(find_windows_vcvars64 | tr -d '\r')"
+        if [ -z "$VCVARS64_BAT" ]; then
+            echo "go.sh: Unable to locate vcvars64.bat. Install Visual Studio Build Tools with C++ workload."
+            exit 1
+        fi
+        WINDOWS_RUNTIME_DIRS=""
+        WINDOWS_CMAKE_ARGS="-DCMAKE_CXX_COMPILER=cl.exe"
+        MSYS2_ROOT_HINT="$(find_windows_msys2_root || true)"
+        if [ -n "$MSYS2_ROOT_HINT" ]; then
+            WINDOWS_CMAKE_ARGS="${WINDOWS_CMAKE_ARGS} -DMSYS2_ROOT=\"${MSYS2_ROOT_HINT}\""
+            WINDOWS_RUNTIME_DIRS="${WINDOWS_RUNTIME_DIRS}$(cygpath -w "${MSYS2_ROOT_HINT}/mingw64/bin" | tr -d '\r');"
+            echo "go.sh: Using MSYS2_ROOT=${MSYS2_ROOT_HINT}"
+        fi
+        FFMPEG_ROOT_HINT="$(find_windows_ffmpeg_root || true)"
+        if [ -n "$FFMPEG_ROOT_HINT" ]; then
+            WINDOWS_CMAKE_ARGS="${WINDOWS_CMAKE_ARGS} -DFFMPEG_ROOT=\"${FFMPEG_ROOT_HINT}\""
+            WINDOWS_RUNTIME_DIRS="${WINDOWS_RUNTIME_DIRS}$(cygpath -w "${FFMPEG_ROOT_HINT}/bin" | tr -d '\r');"
+            echo "go.sh: Using FFMPEG_ROOT=${FFMPEG_ROOT_HINT}"
+        fi
+        echo "go.sh: Bootstrapping MSVC toolchain via $VCVARS64_BAT"
+        run_windows_dev_cmd "$VCVARS64_BAT" "cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DPROJECT_NAME_MACRO=${PROJECT_NAME} -DAUDIO_HINTS=${AUDIO_HINTS} -DAUDIO_SFX=${AUDIO_SFX} ${WINDOWS_CMAKE_ARGS}"
+    else
+        # Pass the variables to CMake as options
+        cmake -G Ninja .. -DCMAKE_BUILD_TYPE=Release -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
+    fi
 
     echo "go.sh: Compiling..."
-    # build the project
-    ninja -j"$(nproc)"
+    if [ $is_windows_msys -eq 1 ]; then
+        run_windows_dev_cmd "$VCVARS64_BAT" "ninja -j${BUILD_JOBS}"
+    else
+        # build the project
+        ninja -j"${BUILD_JOBS}"
+    fi
 
     # Check if the build was successful
     if [ $? -ne 0 ]; then
@@ -157,21 +274,36 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     echo "===================== RUN ====================="
     echo "==============================================="
 
-    # Symlink "io_out" to the output directory for this project
-    unlink io_out 2>/dev/null
-    ln -s "../${OUTPUT_DIR}" io_out
-
-    # Symlink "io_in" to the media assets directory
-    unlink io_in 2>/dev/null
-    ln -s "../${INPUT_DIR}" io_in
+    # Wire io paths for renderer input/output.
+    if [ $is_windows_msys -eq 1 ]; then
+        # Avoid Windows symlink/junction edge cases under Git Bash.
+        rm -rf io_out io_in
+        mkdir -p io_out/frames io_in
+        cp -rf "../${INPUT_DIR}/." io_in/
+    else
+        rm -rf io_out
+        ln -s "../${OUTPUT_DIR}" io_out
+        rm -rf io_in
+        ln -s "../${INPUT_DIR}" io_in
+    fi
 
     # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
     # Swaptube errors are printed to stdout.
 
     # Smoketest
     if [ $SKIP_SMOKETEST -eq 0 ]; then
-        ./swaptube 160 90 $FRAMERATE $SAMPLERATE smoketest 2>/dev/null
-        if [ $? -ne 0 ]; then
+        if [ $is_windows_msys -eq 1 ]; then
+            WINDOWS_RUNTIME_PREFIX=""
+            if [ -n "$WINDOWS_RUNTIME_DIRS" ]; then
+                WINDOWS_RUNTIME_PREFIX="set \"PATH=${WINDOWS_RUNTIME_DIRS}%PATH%\" && "
+            fi
+            run_windows_dev_cmd "$VCVARS64_BAT" "${WINDOWS_RUNTIME_PREFIX}swaptube.exe 160 90 ${FRAMERATE} ${SAMPLERATE} smoketest"
+        else
+            "$SWAPTUBE_BIN" 160 90 $FRAMERATE $SAMPLERATE smoketest
+        fi
+        SWAPTUBE_STATUS=$?
+        echo "go.sh: Smoketest exit code ${SWAPTUBE_STATUS}"
+        if [ $SWAPTUBE_STATUS -ne 0 ]; then
             echo "go.sh: Execution failed in smoketest."
             exit 2
         fi
@@ -181,10 +313,24 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     if [ $SKIP_RENDER -eq 0 ]; then
         # Clear all files from the smoketest
         rm io_out/* -rf
-        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render 2>/dev/null
-        if [ $? -ne 0 ]; then
+        mkdir -p io_out/frames
+        if [ $is_windows_msys -eq 1 ]; then
+            WINDOWS_RUNTIME_PREFIX=""
+            if [ -n "$WINDOWS_RUNTIME_DIRS" ]; then
+                WINDOWS_RUNTIME_PREFIX="set \"PATH=${WINDOWS_RUNTIME_DIRS}%PATH%\" && "
+            fi
+            run_windows_dev_cmd "$VCVARS64_BAT" "${WINDOWS_RUNTIME_PREFIX}swaptube.exe ${VIDEO_WIDTH} ${VIDEO_HEIGHT} ${FRAMERATE} ${SAMPLERATE} render"
+        else
+            "$SWAPTUBE_BIN" $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render
+        fi
+        SWAPTUBE_STATUS=$?
+        echo "go.sh: Render exit code ${SWAPTUBE_STATUS}"
+        if [ $SWAPTUBE_STATUS -ne 0 ]; then
             echo "go.sh: Execution failed in render."
             exit 2
+        fi
+        if [ $is_windows_msys -eq 1 ]; then
+            cp -rf io_out/. "../${OUTPUT_DIR}/"
         fi
     fi
 
@@ -192,8 +338,13 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
 )
 RESULT=$?
 
-unlink "build/io_in"
-unlink "build/io_out"
+if [ $is_windows_msys -eq 1 ]; then
+    MSYS2_ARG_CONV_EXCL='*' cmd.exe //C "if exist build\\io_in rmdir /S /Q build\\io_in" >/dev/null 2>&1
+    MSYS2_ARG_CONV_EXCL='*' cmd.exe //C "if exist build\\io_out rmdir /S /Q build\\io_out" >/dev/null 2>&1
+else
+    rm -rf "build/io_in"
+    rm -rf "build/io_out"
+fi
 mv "$TEMPFILE" "$OUTPUT_DIR"
 
 # Play video if compilation succeeded, and not in smoketest-only mode

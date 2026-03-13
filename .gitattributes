@@ -1,0 +1,20 @@
+# Handle line endings automatically for files detected as text
+# and leave binary files untouched
+* text=auto
+
+# Explicitly declare text files you want to always be LF or CRLF
+*.cpp text eol=lf
+*.h text eol=lf
+*.cu text eol=lf
+*.c text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.cmake text eol=lf
+CMakeLists.txt text eol=lf
+
+# Denote all files that are truly binary and should not be modified
+*.png binary
+*.mkv binary
+*.mp4 binary
+*.oldproject binary

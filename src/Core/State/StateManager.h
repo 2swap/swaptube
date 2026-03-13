@@ -16,8 +16,8 @@
 #include "ResolvedStateEquationComponent.c"
 
 typedef std::vector<ResolvedStateEquationComponent> ResolvedStateEquation;
-using StateQuery = unordered_set<string>;
-using StateSet = unordered_map<string, string>;
+using StateQuery = std::unordered_set<std::string>;
+using StateSet = std::unordered_map<std::string, std::string>;
 void state_query_insert_multiple(StateQuery& sq, const StateQuery& additions);
 
 /* StateManager is a DAG (Directed Acyclic Graph) of state assignments
@@ -51,73 +51,73 @@ struct VariableContents {
     std::list<std::string> local_dependencies;
 
     VariableContents();
-    VariableContents(string eq, double val = 0.0, bool fr = true);
+    VariableContents(std::string eq, double val = 0.0, bool fr = true);
 };
 
 class StateReturn {
 public:
     StateReturn();
-    StateReturn(const unordered_map<string, double>& m);
+    StateReturn(const std::unordered_map<std::string, double>& m);
 
     void print() const;
     int size() const;
 
-    void set(const string& key, double value);
-    bool contains(const string& key) const;
-    const double& operator[](const string& key) const;
+    void set(const std::string& key, double value);
+    bool contains(const std::string& key) const;
+    const double& operator[](const std::string& key) const;
 
     bool operator==(const StateReturn& other) const;
     bool operator!=(const StateReturn& other) const;
 
-    unordered_map<string, double> get_map() const;
+    std::unordered_map<std::string, double> get_map() const;
 
 private:
-    unordered_map<string, double> map;
+    std::unordered_map<std::string, double> map;
 };
 
 class StateManager {
 public:
     StateManager();
 
-    bool contains(const string& varname) const;
+    bool contains(const std::string& varname) const;
     void print_state() const;
 
-    StateSet set(const string& variable, const string& equation);
+    StateSet set(const std::string& variable, const std::string& equation);
     StateSet set(const StateSet& equations);
 
-    void remove(const string& variable);
-    void remove(const unordered_set<string>& equations);
+    void remove(const std::string& variable);
+    void remove(const std::unordered_set<std::string>& equations);
 
-    StateSet transition(TransitionType tt, const string& variable, const string& equation, bool smooth = true);
+    StateSet transition(TransitionType tt, const std::string& variable, const std::string& equation, bool smooth = true);
     StateSet transition(TransitionType tt, const StateSet& equations, bool smooth = true);
     void close_transitions(TransitionType tt);
 
-    void set_parent(StateManager* p, const string& name);
+    void set_parent(StateManager* p, const std::string& name);
 
     void evaluate_all();
 
-    string get_equation_string(const string& variable) const;
-    double get_local_value(const string& variable) const;
+    std::string get_equation_string(const std::string& variable) const;
+    double get_local_value(const std::string& variable) const;
 
     const void set_subjugated(bool b);
-    const void begin_timer(const string& timer_name);
+    const void begin_timer(const std::string& timer_name);
 
     const StateReturn respond_to_query(const StateQuery& query) const;
-    const ResolvedStateEquation get_resolved_equation(const string& variable) const;
+    const ResolvedStateEquation get_resolved_equation(const std::string& variable) const;
 
 private:
-    unordered_map<string, VariableContents> variables;
-    list<string> last_compute_order;
-    unordered_set<string> in_microblock_transition;
-    unordered_set<string> in_macroblock_transition;
+    std::unordered_map<std::string, VariableContents> variables;
+    std::list<std::string> last_compute_order;
+    std::unordered_set<std::string> in_microblock_transition;
+    std::unordered_set<std::string> in_macroblock_transition;
 
     StateManager* parent;
     bool subjugated;
 
-    void evaluate_single_variable(const string& variable);
-    VariableContents get_local_variable(const string& variable) const;
-    double get_parent_value(const string& variable) const;
-    void close_all_transitions(unordered_set<string>& in_transition);
+    void evaluate_single_variable(const std::string& variable);
+    VariableContents get_local_variable(const std::string& variable) const;
+    double get_parent_value(const std::string& variable) const;
+    void close_all_transitions(std::unordered_set<std::string>& in_transition);
 
     ResolvedStateEquation resolve_state_equation(const UnresolvedStateEquation& ueq) const;
 };

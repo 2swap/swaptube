@@ -196,7 +196,12 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     query(p);
 
     bool fifth_frame = int(get_global_state("frame_number")) % 5 == 0;
-    if(!rendering_on() || fifth_frame) p->print_to_terminal();
+    bool should_print_preview = (!rendering_on() || fifth_frame);
+#ifdef _WIN32
+    // Windows console / PTY handling is unstable with ANSI half-block preview output.
+    should_print_preview = false;
+#endif
+    if (should_print_preview) p->print_to_terminal();
 
     if (rendering_on()) { // Do not encode during smoketest
         get_writer().video->add_frame(*p);

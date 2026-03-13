@@ -285,8 +285,8 @@ void ComplexPlotScene::draw() {
     int h = get_height();
 
     // Decompose coefficients into separate real and imag arrays for CUDA call
-    float h_coefficients_real[degree + 1];
-    float h_coefficients_imag[degree + 1];
+    std::vector<float> h_coefficients_real(degree + 1);
+    std::vector<float> h_coefficients_imag(degree + 1);
     for (int i = 0; i < coefficients.size(); ++i) {
         h_coefficients_real[i] = coefficients[i].real();
         h_coefficients_imag[i] = coefficients[i].imag();
@@ -296,8 +296,8 @@ void ComplexPlotScene::draw() {
         pix.pixels.data(),
         pix.w,
         pix.h,
-        h_coefficients_real,
-        h_coefficients_imag,
+        h_coefficients_real.data(),
+        h_coefficients_imag.data(),
         degree,
         state["left_x"], state["top_y"],
         state["right_x"], state["bottom_y"],

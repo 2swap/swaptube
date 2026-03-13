@@ -6,17 +6,23 @@
 #include <cstdlib>
 #include "math.h"
 #include <cmath>
-#include <sys/sysinfo.h>
 #include <iostream>
+#include <algorithm>
+#include <cctype>
 #include <csignal>
 #include "shared_precompiler_directives.h"
 
-using namespace std;
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 SHARED_FILE_PREFIX
 
 HOST_DEVICE inline double sigmoid(double x){return 2/(1+exp(-x))-1;}
-HOST_DEVICE inline double clamp(double val, double bottom, double top){return min(top, max(val, bottom));}
+HOST_DEVICE inline double clamp(double val, double bottom, double top){
+    double intermediate = (val < bottom) ? bottom : val;
+    return (intermediate < top) ? intermediate : top;
+}
 HOST_DEVICE inline double square(double x){return x * x;}
 HOST_DEVICE inline double cube(double x){return x * x * x;}
 HOST_DEVICE inline double fourth(double x){return square(square(x));}
@@ -27,14 +33,14 @@ HOST_DEVICE inline float float_lerp(float a, float b, float w){return a*(1-w)+b*
 HOST_DEVICE inline vec3 veclerp(vec3 a, vec3 b, double w){return a*(1-w)+b*w;}
 HOST_DEVICE inline vec4 veclerp(vec4 a, vec4 b, double w){return a*(1-w)+b*w;}
 HOST_DEVICE inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
-HOST_DEVICE inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
+inline bool is_single_letter(const std::string& str) {return str.length() == 1 && std::isalpha(static_cast<unsigned char>(str[0]));}
 HOST_DEVICE inline void print_vec3(vec3 v){printf("vec3(%.3f, %.3f, %.3f)\n", v.x, v.y, v.z);}
 HOST_DEVICE inline void print_vec4(vec4 v){printf("vec4(%.3f, %.3f, %.3f, %.3f)\n", v.x, v.y, v.z, v.w);}
-HOST_DEVICE inline double geom_mean(double x, double y) { return sqrt(x*y); }
+HOST_DEVICE inline double geom_mean(double x, double y) { return std::sqrt(x*y); }
 HOST_DEVICE inline int signum(double x) { return (x > 0) - (x < 0); }
 
 HOST_DEVICE inline double extended_mod(double a, double b) {
-    double result = fmod(a, b);
+    double result = std::fmod(a, b);
     if (result < 0) {
         result += b;  // Ensures non-negative remainder
     }

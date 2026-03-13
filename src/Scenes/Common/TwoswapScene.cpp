@@ -4,6 +4,7 @@
 #include <random>
 #include <cstdio>
 #include <stdexcept>
+#include "../../IO/IoHelpers.h"
 
 void stripey_effect(Pixels& in, Pixels& out, const float amount) {
     vector<double> stripe_shift_multipliers = {-.3, 1.5, -.7, 1, -1, .3, -1.5, .7, -1, 1};
@@ -150,7 +151,7 @@ std::string TwoswapScene::swaptube_commit_hash() {
     string result;
 
     // Open pipe to file
-    unique_ptr<FILE, int(*)(FILE*)> pipe(popen(command, "r"), pclose);
+    unique_ptr<FILE, int(*)(FILE*)> pipe(portable_popen(command, "r"), portable_pclose);
     if (!pipe) {
         throw runtime_error("popen() failed!");
     }

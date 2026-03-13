@@ -16,7 +16,7 @@ string sanitize_filename(const string& text) {
     replace(sanitized.begin(), sanitized.end(), ' ', '_');
     // Remove non-alphanumeric characters except underscores
     sanitized.erase(remove_if(sanitized.begin(), sanitized.end(),
-        [](char c) { return !isalnum(c) && c != '_'; }),
+        [](unsigned char c) { return !isalnum(c) && c != '_'; }),
         sanitized.end());
     return sanitized + ".wav";
 }

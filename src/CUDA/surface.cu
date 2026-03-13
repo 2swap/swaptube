@@ -67,7 +67,7 @@ __global__ void render_surface_kernel(
 }
 
 extern "C" void cuda_render_surface(
-    vector<unsigned int>& pix,
+    std::vector<unsigned int>& pix,
     int x1,
     int y1,
     int plot_w,

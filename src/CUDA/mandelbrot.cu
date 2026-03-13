@@ -5,8 +5,8 @@
 #include "../Host_Device_Shared/helpers.h"
 #include <cuComplex.h>  // Use cuComplex for complex numbers in CUDA
 
-const float bailout_radius = 256;
-const float bailout_radius_sq = bailout_radius*bailout_radius;
+constexpr float bailout_radius = 256.0f;
+constexpr float bailout_radius_sq = bailout_radius * bailout_radius;
 
 // Function to linearly interpolate between two colors
 __device__ unsigned int cuda_color_lerp(unsigned int c1, unsigned int c2, float t) {

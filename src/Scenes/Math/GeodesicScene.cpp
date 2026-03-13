@@ -2,8 +2,17 @@
 #include <unordered_map>
 #include <string>
 
+namespace {
+ResolvedStateEquationComponent resolved_constant(float value) {
+    ResolvedStateEquationComponent component{};
+    component.type = RESOLVED_CONSTANT;
+    component.content.constant = value;
+    return component;
+}
+}
+
 ResolvedStateEquation r_eq = {
-    {RESOLVED_CONSTANT, .content = {.constant = 0.0}},
+    resolved_constant(0.0f),
     /*
     {RESOLVED_CUDA_TAG, .content = {.cuda_tag = 0}},
     {RESOLVED_CONSTANT, .content = {.constant = 10.0}},
@@ -22,7 +31,7 @@ ResolvedStateEquation r_eq = {
     */
 };
 ResolvedStateEquation i_eq = {
-    {RESOLVED_CONSTANT, .content = {.constant = 0.0}},
+    resolved_constant(0.0f),
 };
 extern "C" void launch_cuda_surface_raymarch(
     uint32_t* h_pixels, int w, int h,
@@ -51,7 +60,7 @@ extern "C" void cuda_render_geodesics_2d(
 
 GeodesicScene::GeodesicScene(const vec2& dimensions)
     : Scene(dimensions) {
-    manager.set(unordered_map<string, string>{
+    manager.set(std::unordered_map<std::string, std::string>{
         {"space_x", "(a)"},
         {"space_y", "(b)"},
         {"space_z", "(c)"},

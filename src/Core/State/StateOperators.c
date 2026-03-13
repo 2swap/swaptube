@@ -2,6 +2,7 @@
 #include "../../Host_Device_Shared/helpers.h"
 #include "../../Host_Device_Shared/shared_precompiler_directives.h"
 #include <cstring>
+#include <stdexcept>
 
 SHARED_FILE_PREFIX
 
@@ -168,7 +169,7 @@ StateOperator inline parse_state_operator(const char* in){
     if(strcmp(in, "logistic") == 0) return OP_LOGISTIC;
     if(strcmp(in, "min") == 0) return OP_MIN;
     if(strcmp(in, "max") == 0) return OP_MAX;
-    throw runtime_error("Unknown state operator");
+    throw std::runtime_error("Unknown state operator");
     return OP_ADD;
 }
 

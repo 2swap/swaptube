@@ -5,7 +5,6 @@
 #include <regex>
 #include <sstream>
 #include <cassert>
-#include <unistd.h>
 #include "Writer.h"
 
 using namespace std;
@@ -49,7 +48,7 @@ int send_frame(AVCodecContext* vcc, AVFrame* frame){
     int ret = avcodec_send_frame(vcc, frame);
     restore_stderr(original_stderr);
     string debug_output = read_from_fd(pipefd[0]);
-    close(pipefd[0]);
+    close_fd_portable(pipefd[0]);
     parse_debug_output(debug_output);
     return ret;
 }
@@ -73,7 +72,7 @@ bool VideoWriter::encode_and_write_frame(AVFrame* frame){
     int original_stderr = redirect_stderr(pipefd);
     av_interleaved_write_frame(fc, &pkt);
     restore_stderr(original_stderr);
-    close(pipefd[0]);
+    close_fd_portable(pipefd[0]);
 
     return true;
 }

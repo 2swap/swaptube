@@ -126,10 +126,16 @@ HOST_DEVICE inline float dot(const vec2& a, const vec2& b) { return a.x * b.y + 
 HOST_DEVICE inline float dot(const vec3& a, const vec3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 HOST_DEVICE inline float dot(const vec4& a, const vec4& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 
-HOST_DEVICE inline bool hasnan(const vec2& v) { return std::isnan(v.x) || std::isnan(v.y); }
-HOST_DEVICE inline bool hasnan(const vec3& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z); }
-HOST_DEVICE inline bool hasnan(const vec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
-HOST_DEVICE inline bool hasnan(const quat& q) { return std::isnan(q.u) || std::isnan(q.i) || std::isnan(q.j) || std::isnan(q.k); }
+#ifdef __CUDA_ARCH__
+#define IS_NAN(x) isnan(x)
+#else
+#define IS_NAN(x) std::isnan(x)
+#endif
+
+HOST_DEVICE inline bool hasnan(const vec2& v) { return IS_NAN(v.x) || IS_NAN(v.y); }
+HOST_DEVICE inline bool hasnan(const vec3& v) { return IS_NAN(v.x) || IS_NAN(v.y) || IS_NAN(v.z); }
+HOST_DEVICE inline bool hasnan(const vec4& v) { return IS_NAN(v.x) || IS_NAN(v.y) || IS_NAN(v.z) || IS_NAN(v.w); }
+HOST_DEVICE inline bool hasnan(const quat& q) { return IS_NAN(q.u) || IS_NAN(q.i) || IS_NAN(q.j) || IS_NAN(q.k); }
 
 HOST_DEVICE inline vec3 integerize(const vec3& v) { return vec3{ floorf(v.x), floorf(v.y), floorf(v.z) }; }
 

@@ -2,6 +2,7 @@
 #include "SteadyState.h"
 #include "JsonC4Cache.h"
 #include "FhourstonesCache.h"
+#include "../../IO/IoHelpers.h"
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -209,7 +210,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
     char command[150];
     // Call the fhourstones binary
     sprintf(command, "echo %s | ~/Fhourstones/SearchGame", representation.c_str());
-    FILE* pipe = popen(command, "r");
+    FILE* pipe = portable_popen(command, "r");
     if (!pipe) {
         C4Board c4(c4_branch_mode, representation);
         cout << setprecision(17) << c4.get_hash() << endl;
@@ -222,7 +223,7 @@ C4Result C4Board::who_is_winning(int& work, bool verbose) {
             result += buffer;
         }
     }
-    pclose(pipe);
+    portable_pclose(pipe);
 
     C4Result gameResult;
     size_t workPos = result.find("work = ");

@@ -7,6 +7,7 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
+#include <map>
 #include <limits>
 #include "../../Host_Device_Shared/ThreeDimensionStructs.h"
 #include "../../Host_Device_Shared/vec.h"
@@ -95,5 +96,5 @@ protected:
     vector<Point> points;
     vector<Line> lines;
     vector<Surface> surfaces;
-    map<string, Path> paths;
+    std::map<string, Path> paths;
 };

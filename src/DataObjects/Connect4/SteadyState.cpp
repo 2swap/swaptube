@@ -270,7 +270,7 @@ void SteadyState::print() const {
     for(int y = 0; y < C4_HEIGHT; y++) {
         for(int x = 0; x < C4_WIDTH; x++) {
             char c = get_char(x, y);
-            if(c == '1' or c == '2')
+            if(c == '1' || c == '2')
                 cout << disk_col(c-'0') << " ";
             else
                 cout << c << " ";
