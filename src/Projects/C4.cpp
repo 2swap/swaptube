@@ -144,7 +144,7 @@ void preintro(CompositeScene& cs) {
     cs.render_microblock();
 
     variation = "426566454465564522224215";
-    gs->manager.transition(MACRO, {{"d", ".25"}, {"qj", ".2"}});
+    gs->manager.transition(MACRO, {{"d", ".25"}, {"qj", ".6"}});
     stage_macroblock(FileBlock("Some are long and convoluted, but don't have much room for deviation, like this long, unbranching line."), variation.size());
     for(char c : variation) {
         string move(1, c);
@@ -376,7 +376,7 @@ void intro(CompositeScene& cs) {
     cs.fade_subscene(MICRO, "human1", .2);
     cs.render_microblock();
     cs.render_microblock();
-    c4s->play("4");
+    c4s->play("2");
     shared_ptr<PngScene> human2_trick = make_shared<PngScene>("Thinker2_trick", vec2(.3, .6));
     cs.add_scene_fade_in(MICRO, human2_trick, "human2_trick", vec2(.85, .7));
     cs.render_microblock();
@@ -449,6 +449,7 @@ void build_graph(CompositeScene& cs) {
     cs.render_microblock();
 
     gs->manager.transition(MICRO, {{"q1", "1"}, {"qi", "{t} 3 / cos"}, {"qj", "{t} 3 / sin"}, {"qk", "0"}});
+    gs->manager.transition(MICRO, {{"x", "10"}, {"y", "8"}, {"z", "3"}});
     stage_macroblock(FileBlock("Because instead of relying on brute force search, I found a profoundly simpler way to play perfect connect 4. All it takes is this graph."), 1);
     cs.render_microblock();
 
@@ -608,14 +609,14 @@ void explanation(CompositeScene& cs) {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("The difference is that just reading ahead makes you think a lot, and memorizing branches makes you remember a lot."), 2);
-    cs.fade_subscene(MICRO, "c4gs", 0);
     shared_ptr<PngScene> cpu = make_shared<PngScene>("cpu", vec2(.4, .4));
-    cs.add_scene_fade_in(MICRO, cpu, "cpu", vec2(.25, .5));
+    cs.add_scene_fade_in(MICRO, cpu, "cpu", vec2(.2, .5));
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "c4gs", 0);
+    shared_ptr<PngScene> hdd = make_shared<PngScene>("hdd", vec2(.4, .4));
+    cs.add_scene_fade_in(MICRO, hdd, "hdd", vec2(.8, .5));
     cs.render_microblock();
     cs.remove_subscene("c4gs");
-    shared_ptr<PngScene> hdd = make_shared<PngScene>("hdd", vec2(.4, .4));
-    cs.add_scene_fade_in(MICRO, hdd, "hdd", vec2(.75, .5));
-    cs.render_microblock();
 
     shared_ptr<LineChartScene> lcs = make_shared<LineChartScene>();
     stage_macroblock(SilenceBlock(1), 1);
@@ -1050,6 +1051,7 @@ void trees(CompositeScene& cs) {
 
     stage_macroblock(FileBlock("This tree is sufficient- we can still play perfectly up to move 5 by memorizing it. We've just cut out all of the stupid variations that we don't need."), 1);
     c4gs->manager.transition(MICRO, "d", ".7");
+    c4gs->manager.transition(MICRO, "mirror_force", ".005");
     cs.render_microblock();
 
     shared_ptr<LatexScene> ls_weak = make_shared<LatexScene>("\\text{Weak Solution {\\tiny (Depth 5)}}", 1, vec2(.5, .2));
@@ -1591,14 +1593,14 @@ void trimmed_solution(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_subscene("c4s_left");
     cs.remove_subscene("c4s_right");
-    weakc4->manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "{t} 10 / sin 10 / .7 +"}, {"qk", "0"}});
 
     C4Board asymm_board(FULL, "4444445");
     flood_fill_edges_to_highlight(g, asymm_board, weakc4);
     double hash = asymm_board.get_hash();
     vec4 pos = g->nodes.find(hash)->second.position;
-    weakc4->manager.transition(MICRO, {{"x", to_string(pos.x)}, {"y", to_string(pos.y)}, {"z", to_string(pos.z)}, {"d", ".5"}});
     cs.render_microblock();
+    weakc4->manager.transition(MICRO, {{"x", to_string(pos.x)}, {"y", to_string(pos.y)}, {"z", to_string(pos.z)}, {"d", ".5"}});
+    weakc4->manager.transition(MICRO, {{"q1", "1"}, {"qi", "0"}, {"qj", "{t} 10 / sin 10 / .8 -"}, {"qk", "0"}});
     cs.render_microblock();
 
     stage_macroblock(FileBlock("In this case, both players made a perfectly symmetrical opening, and Red must pick a side to continue on."), 5);
@@ -2060,10 +2062,12 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cs.render_microblock();
     // Restart the video since it's quite short
     cumulonimbus = make_shared<Mp4Scene>(vector<string>{"cumulonimbus"}, 1);
     cs.add_scene_fade_in(MICRO, cumulonimbus, "cumulonimbus");
+    cs.render_microblock();
+    cs.remove_subscene("textbook");
+    cs.remove_subscene("jda");
     cs.render_microblock();
     cs.render_microblock();
 
@@ -2094,10 +2098,10 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cs.render_microblock();
     cs.fade_all_subscenes(MICRO, 0);
     shared_ptr<PngScene> ccvol_1 = make_shared<PngScene>("ccvol_1");
     cs.add_scene_fade_in(MICRO, ccvol_1, "ccvol_1");
+    cs.render_microblock();
     cs.render_microblock();
     shared_ptr<PngScene> ccvol_2 = make_shared<PngScene>("ccvol_2");
     cs.add_scene_fade_in(MICRO, ccvol_2, "ccvol_2");
@@ -2244,23 +2248,65 @@ void anki(CompositeScene& cs) {
     cs.slide_subscene(MICRO, "explanation", vec2(0, -1));
     stage_macroblock(FileBlock("The site includes a lot of technical details which I glazed over, so be sure to check it out!"), 1);
     cs.render_microblock();
-    return;
+}
 
-    // TODO working on this next part, not done yet
-    // Opera Browser Sponsor Segment
-    stage_macroblock(FileBlock("I think the best way to learn the game is to play online, and in between rounds, reviewing the variations you played in the tree to see what a better response could have been."), 1);
-    stage_macroblock(FileBlock("Using the side-by-side browsing feature on this video's sponsor, Opera, you can easily replay your games in the tree alongside your online matches."), 1);
-    stage_macroblock(FileBlock("If you find yourself exploring a lot of positions using online strong solvers, the tab group feature can help you keep them organized."), 1);
-    stage_macroblock(FileBlock("Pascal Pons's online solver came in a lot of handy when debugging my own solution. Usually this website is an ugly shiny white, but Opera features a built-in universal dark mode which makes it much easier on the eyes."), 1);
-    stage_macroblock(FileBlock("You could, of course, use these features for research or something... psssh who am I kidding, just use it to play connect 4!"), 1);
+void sponsor(CompositeScene& cs) {
+    shared_ptr<Mp4Scene> opera_gamereview = make_shared<Mp4Scene>(vector<string>{"opera_gamereview"}, 1);
+    cs.add_scene(opera_gamereview, "opera_gamereview");
+    stage_macroblock(FileBlock("I think the best way to learn the game is to play online, and in between rounds, review the variations you played in the tree to see what a better response could have been."), 1);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("And that's where the sponsor, Opera Browser can help!"), 4);
+    shared_ptr<PngScene> opera_logo = make_shared<PngScene>("opera_logo");  
+    cs.add_scene_fade_in(MICRO, opera_logo, "opera_logo", vec2(.5, 1.5));
+    cs.slide_subscene(MICRO, "opera_logo", vec2(0, -1));
+    cs.fade_subscene(MICRO, "opera_gamereview", 0.2);
+    cs.manager.set("opera_logo.angle", "-.1");
+    cs.manager.transition(MACRO, "opera_logo.angle", ".1");
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "opera_gamereview", 1);
+    cs.slide_subscene(MICRO, "opera_logo", vec2(0, 1));
+    cs.render_microblock();
+    cs.remove_subscene("opera_logo");
+
+    stage_macroblock(FileBlock("Using Opera's side-by-side browsing feature, you can easily replay your games in the tree alongside your online matches."), 1);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("In this case, I created a steady state position early, after reaching the 6-1 opening, but my opponent blundered and just gave me the win..."), 1);
+    cs.render_microblock();
+    cs.remove_all_subscenes();
+
+    shared_ptr<Mp4Scene> opera_darkmode_tabs = make_shared<Mp4Scene>(vector<string>{"opera_darkmode_tabs"}, 1);
+    cs.add_scene(opera_darkmode_tabs, "opera_darkmode_tabs");
+    stage_macroblock(FileBlock("Pascal Pons's online solver came in a lot of handy when debugging my own solution. Usually this website is an ugly shiny white, but Opera features a built-in universal dark mode option which makes it much easier on the eyes."), 1);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("If you find yourself exploring a lot of positions, you can group your tabs into 'islands' to stay organized."), 1);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("I guess you could, like, use these features for organizing your research or something... but who am I kidding, this is practically made for connect 4 study."), 1);
+    cs.render_microblock();
+    cs.remove_all_subscenes();
+
     stage_macroblock(FileBlock("Opera is top notch when it comes to customization and productivity. In addition to helping you organize your browsing, it has a side-bar that makes common apps super easy to access."), 1);
-     stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable, including a built-in adblocker, and a video pop-out feature that lets you pretend that you're getting work done while watching 2swap instead."), 1);
-     stage_macroblock(FileBlock("It has a video skip button that works in YouTube, Netflix, and so on... wait wait wait don't click it now-"), 1);
-     //video abruptly ends
+    cs.render_microblock();
+
+    shared_ptr<Mp4Scene> opera_popout = make_shared<Mp4Scene>(vector<string>{"opera_popout"}, 1);
+    cs.add_scene(opera_popout, "opera_popout");
+    stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable, including a built-in adblocker, and a video pop-out feature that lets you pretend that you're getting work done while watching 2swap instead."), 1);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("It has a video skip button that works in YouTube, Netflix, and so on... wait wait wait don't click it now-"), 1);
+    cs.render_microblock();
+
+    //video abruptly ends
 }
 
 void render_video() {
     CompositeScene cs;
+    /*
     preintro(cs);
     intro(cs);
     build_graph(cs);
@@ -2272,4 +2318,6 @@ void render_video() {
     solution_types(cs, weakc4);
     ideas(cs, weakc4);
     anki(cs);
+    */
+    sponsor(cs);
 }
