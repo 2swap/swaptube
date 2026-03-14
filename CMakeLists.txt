@@ -330,4 +330,8 @@ target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-Wreorder>
 )
 
+if(MSVC)
+    target_link_options(${PROJECT_NAME} PRIVATE "/NODEFAULTLIB:libcmt.lib")
+endif()
+
 message(STATUS "Configuration complete.")
