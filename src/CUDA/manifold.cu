@@ -16,7 +16,8 @@ __global__ void render_manifold_kernel(
     const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
     float* depth_buffer,
-    const float ab_dilation, const float dot_radius
+    const float ab_dilation, const float dot_radius,
+    const uint32_t* tex_pixels, const int tex_w, const int tex_h
 ) {
     // Determine u, v from thread indices
     int u_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -52,11 +53,24 @@ __global__ void render_manifold_kernel(
     );
     if(behind_camera) return; // Don't render points behind camera
 
-    // Evaluate color equations to get color
-    float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 3, error);
-    float i = evaluate_resolved_state_equation(d_manifold.i_size, d_manifold.i_eq, cuda_tags, 3, error);
+    uint32_t color = 0;
 
-    uint32_t color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
+    if (tex_pixels != nullptr) {
+        // Map u,v into texture coordinates by stretching uv space onto the texture (nearest-neighbor)
+        float u_range = d_manifold.u_max - d_manifold.u_min;
+        float v_range = d_manifold.v_max - d_manifold.v_min;
+        float u_norm = (u - d_manifold.u_min) / u_range;
+        float v_norm = 1 - (v - d_manifold.v_min) / v_range;
+        int tu = (int)(u_norm * tex_w + 0.5f);
+        int tv = (int)(v_norm * tex_h + 0.5f);
+        color = tex_pixels[tv * tex_w + tu];
+    } else {
+        // Evaluate color equations to get color
+        float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 3, error);
+        float i = evaluate_resolved_state_equation(d_manifold.i_size, d_manifold.i_eq, cuda_tags, 3, error);
+
+        color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
+    }
 
     // Depth test and write pixel
     if (out.x >= 0 && out.x < w && out.y >= 0 && out.y < h) {
@@ -86,7 +100,8 @@ extern "C" void cuda_render_manifold(
     const Cuda::ManifoldData* manifold, const int num_manifolds,
     const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
-    const float ab_dilation, const float dot_radius
+    const float ab_dilation, const float dot_radius,
+    const uint32_t* d_tex_pixels, const int tex_w, const int tex_h
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
@@ -112,7 +127,8 @@ extern "C" void cuda_render_manifold(
             camera_pos, camera_direction,
             geom_mean_size, fov,
             d_depth_buffer,
-            ab_dilation, dot_radius
+            ab_dilation, dot_radius,
+            d_tex_pixels, tex_w, tex_h
         );
         cudaDeviceSynchronize();
 
@@ -127,4 +143,15 @@ extern "C" void cuda_render_manifold(
     // Free device memory
     cudaFree(d_pixels);
     cudaFree(d_depth_buffer);
+}
+
+extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const int tex_w, const int tex_h) {
+    size_t tex_size = (size_t)tex_w * (size_t)tex_h * sizeof(uint32_t);
+    uint32_t* d_tex_pixels;
+    cudaMalloc(&d_tex_pixels, tex_size);
+    cudaMemcpy(d_tex_pixels, h_tex_pixels, tex_size, cudaMemcpyHostToDevice);
+    return d_tex_pixels;
+}
+extern "C" void cuda_free_texture(uint32_t* d_tex_pixels) {
+    cudaFree(d_tex_pixels);
 }
