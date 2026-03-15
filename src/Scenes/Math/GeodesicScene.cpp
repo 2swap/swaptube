@@ -48,7 +48,9 @@ extern "C" void cuda_render_manifold(
     const ManifoldData* manifolds, const int num_manifolds,
     const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
-    const float ab_dilation, const float dot_radius);
+    const float ab_dilation, const float dot_radius,
+    uint32_t* tex_pixels, const int tex_w, const int tex_h
+);
 
 extern "C" void cuda_render_geodesics_2d(
     uint32_t* pixels, const int w, const int h,
@@ -97,7 +99,8 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
                           ResolvedStateEquation& y_eq,
                           ResolvedStateEquation& z_eq,
                           ResolvedStateEquation& w_eq,
-                          quat camera_direction) {
+                          const quat& camera_direction)
+{
     vec3 camera_pos = vec3(state["pov_x"], state["pov_y"], state["pov_z"]);
 
     bool x_y_z_flat = (
@@ -120,13 +123,20 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
                                  state["pov_fov"], state["pov_max_dist"]);
 }
 
-void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
+void GeodesicScene::draw_manifold(
+                       ResolvedStateEquation& x_eq,
                        ResolvedStateEquation& y_eq,
                        ResolvedStateEquation& z_eq,
                        ResolvedStateEquation& w_eq,
-                       quat camera_direction) {
+                       const quat& fov_quat)
+{
+
     float steps_mult = geom_mean(pix.w, pix.h) / 1500.0f;
 
+    quat yaw = normalize(quat(fov_quat.u, 0, fov_quat.j, 0));
+    double pitch_angle = 20 * M_PI / 180.0;
+    quat pitch = normalize(quat(cos(pitch_angle / 2), sin(pitch_angle / 2), 0, 0));
+    quat camera_direction = normalize(pitch * yaw);
     vec3 camera_position = rotate_vector(vec3(0, 0, -state["manifold_d"]), conjugate(camera_direction));
 
     camera_position.y += -2.f; // Lift the camera a bit, so it's not exactly at the same height as the manifold
@@ -165,7 +175,8 @@ void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
             geom_mean(manifold_pix.w, manifold_pix.h),
             state["manifold_fov"],
             1,
-            1
+            1,
+            nullptr,0,0 // No textures
         );
         cuda_overlay(
             pix.pixels.data(), pix.w, pix.h,

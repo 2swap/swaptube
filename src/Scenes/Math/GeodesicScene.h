@@ -12,13 +12,13 @@ public:
                           ResolvedStateEquation& y_eq,
                           ResolvedStateEquation& z_eq,
                           ResolvedStateEquation& w_eq,
-                          quat camera_direction);
+                          const quat& camera_direction);
 
     void draw_manifold(ResolvedStateEquation& x_eq,
                        ResolvedStateEquation& y_eq,
                        ResolvedStateEquation& z_eq,
                        ResolvedStateEquation& w_eq,
-                       quat camera_direction);
+                       const quat& fov_quat);
 
     void draw() override;
 
