@@ -83,6 +83,12 @@ if(WIN32)
         set(SWAPTUBE_VCPKG_TRIPLET "x64-windows")
     endif()
 
+    # Prefer MSVC-friendly import libraries when both static .a and import .dll.a exist.
+    if(MSVC)
+        list(PREPEND CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll.a")
+        list(REMOVE_DUPLICATES CMAKE_FIND_LIBRARY_SUFFIXES)
+    endif()
+
     find_program(FFMPEG_EXECUTABLE NAMES ffmpeg.exe ffmpeg)
     if(FFMPEG_EXECUTABLE)
         get_filename_component(_swaptube_ffmpeg_bin "${FFMPEG_EXECUTABLE}" DIRECTORY)
@@ -135,6 +141,9 @@ if(WIN32)
     find_library(SWSCALE_LIBRARY NAMES swscale libswscale
         HINTS ${SWAPTUBE_WINDOWS_PREFIXES}
         PATH_SUFFIXES lib)
+    find_library(SWRESAMPLE_LIBRARY NAMES swresample libswresample
+        HINTS ${SWAPTUBE_WINDOWS_PREFIXES}
+        PATH_SUFFIXES lib)
 
     set(FFMPEG_LIBRARIES
         ${SWSCALE_LIBRARY}
@@ -143,6 +152,7 @@ if(WIN32)
         ${AVDEVICE_LIBRARY}
         ${AVUTIL_LIBRARY}
         ${AVFILTER_LIBRARY}
+        ${SWRESAMPLE_LIBRARY}
     )
     list(FILTER FFMPEG_LIBRARIES EXCLUDE REGEX "^$")
 
@@ -227,11 +237,16 @@ if(WIN32)
         OR NOT PNG_INCLUDE_DIR OR NOT PNG_LIBRARIES
         OR NOT GDK_PIXBUF_INCLUDE_DIRS OR NOT GDK_PIXBUF_LIBRARY
         OR NOT GOBJECT_LIBRARY)
+        message(STATUS "DEBUG: FFMPEG_INCLUDE_DIRS=${FFMPEG_INCLUDE_DIRS}")
+        message(STATUS "DEBUG: AVCODEC_LIBRARY=${AVCODEC_LIBRARY}")
+        message(STATUS "DEBUG: RSVG_INCLUDE_DIRS=${RSVG_INCLUDE_DIRS}")
+        message(STATUS "DEBUG: CAIRO_INCLUDE_DIRS=${CAIRO_INCLUDE_DIRS}")
+        message(STATUS "DEBUG: GLIB_INCLUDE_DIRS=${GLIB_INCLUDE_DIRS}")
         message(FATAL_ERROR "Required Windows dependencies were not found.")
     endif()
 else()
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(FFMPEG REQUIRED libswscale libavcodec libavformat libavdevice libavutil libavfilter)
+    pkg_check_modules(FFMPEG REQUIRED libswscale libavcodec libavformat libavdevice libavutil libavfilter libswresample)
     pkg_check_modules(GLIB REQUIRED glib-2.0)
     find_package(Cairo REQUIRED)
     find_package(RSVG REQUIRED)
@@ -324,14 +339,13 @@ if(WIN32)
         ${GDK_PIXBUF_LIBRARY}
         ${CAIRO_GOBJECT_LIBRARY}
     )
+    if(MSVC)
+        target_link_options(${PROJECT_NAME} PRIVATE "/NODEFAULTLIB:libcmt.lib")
+    endif()
 endif()
 
 target_compile_options(${PROJECT_NAME} PRIVATE
     $<$<COMPILE_LANG_AND_ID:CXX,GNU,Clang,AppleClang>:-Wreorder>
 )
-
-if(MSVC)
-    target_link_options(${PROJECT_NAME} PRIVATE "/NODEFAULTLIB:libcmt.lib")
-endif()
 
 message(STATUS "Configuration complete.")
