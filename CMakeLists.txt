@@ -219,7 +219,14 @@ if(WIN32)
             INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/deps/nlohmann/direct_deploy/nlohmann_json/include"
         )
     else()
-        find_package(nlohmann_json CONFIG REQUIRED)
+        find_package(nlohmann_json CONFIG QUIET)
+        if(NOT nlohmann_json_FOUND)
+            include(FetchContent)
+            FetchContent_Declare(json
+                URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+            )
+            FetchContent_MakeAvailable(json)
+        endif()
     endif()
 
     swaptube_define_imported_library(cairo "${CAIRO_LIBRARY}")
@@ -251,7 +258,14 @@ else()
     find_package(Cairo REQUIRED)
     find_package(RSVG REQUIRED)
     find_package(PNG REQUIRED)
-    find_package(nlohmann_json CONFIG REQUIRED)
+    find_package(nlohmann_json CONFIG QUIET)
+    if(NOT nlohmann_json_FOUND)
+        include(FetchContent)
+        FetchContent_Declare(json
+            URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+        )
+        FetchContent_MakeAvailable(json)
+    endif()
 endif()
 
 find_package(CUDA REQUIRED)
