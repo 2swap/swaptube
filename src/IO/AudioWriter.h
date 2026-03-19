@@ -16,10 +16,15 @@ const static int audio_channels = 2; // Stereo
 const static int num_audio_streams = 1 + (AUDIO_SFX?2:0) + (AUDIO_HINTS?2:0);
 
 inline constexpr sample_t line_max = (static_cast<sample_t>(1) << (sizeof(sample_t) * 8 - 3)) - 1;
+
 inline sample_t float_to_sample(float f) {
     if (f > 1.0f) f = 1.0f;
     if (f < -1.0f) f = -1.0f;
     return static_cast<sample_t>(f * line_max);
+}
+
+inline float sample_to_float(sample_t s) {
+    return static_cast<float>(s) / line_max;
 }
 
 class AudioWriter {
@@ -36,6 +41,12 @@ private:
 
     int total_samples_processed;
 
+    std::vector<sample_t> max_sample_per_frame; // Can be read by a Scene
+    int current_max_sample = 0;
+    int current_sample_index_in_frame = 0;
+
+    void reset_framewise_tracking();
+
     bool file_exists(const std::string& filename);
 
     // Encodes and writes packets from a given codec context and stream, returns encoded length in seconds
@@ -43,7 +54,7 @@ private:
 
 public:
     AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz);
-    void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const int t);
+    void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const double t);
 
     // These are used for 6884's transition curve hints
     int current_macroblock_length_samples;
@@ -55,6 +66,7 @@ public:
     int add_generated_audio(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer);
     int add_silence(int duration_frames);
     int add_audio_from_file(const std::string& filename);
+    sample_t get_max_sample_for_frame(int frame_index);
 
     int macroblock_line;
     int microblock_line;

@@ -127,8 +127,8 @@ void C4Scene::draw_annotations(){
 }
 
 void C4Scene::get_disc_screen_coordinates(int stonex, double stoney, double& px, double& py){
-    px = round(( stonex - board.w /2.+.5)*get_stone_width()+pix.w/2);
-    py = round((-stoney + board.h /2.-.5)*get_stone_width()+pix.h/2);
+    px = ( stonex - board.w/2. +.5)*get_stone_width() + get_width ()/2.;
+    py = (-stoney + board.h/2. -.5)*get_stone_width() + get_height()/2.;
 }
 
 const StateQuery C4Scene::populate_state_query() const {

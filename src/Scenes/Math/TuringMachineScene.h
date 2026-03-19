@@ -8,6 +8,7 @@ public:
     TuringMachineScene(const TuringMachine& tm, const vec2& dimension = vec2(1, 1));
 
 private:
+    int last_iter;
     TuringMachine tm;
 
     void draw() override;

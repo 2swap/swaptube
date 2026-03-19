@@ -6,25 +6,25 @@
 
 CompositeScene::CompositeScene(const vec2& dimensions) : SuperScene(dimensions) {}
 
-void CompositeScene::add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, std::string state_name, double x, double y, double opa, bool behind){
-    add_scene(sc, state_name, x, y, behind);
+void CompositeScene::add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos, double opa, bool behind){
+    add_scene(sc, state_name, pos, behind);
     manager.set(state_name + ".opacity", "0");
     fade_subscene(tt, state_name, opa);
 }
 
-void CompositeScene::add_scene(std::shared_ptr<Scene> sc, const std::string& state_name, double x, double y, bool behind){
+void CompositeScene::add_scene(std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos, bool behind){
     manager.set({
-        {state_name + ".x", std::to_string(x)},
-        {state_name + ".y", std::to_string(y)},
+        {state_name + ".x", std::to_string(pos.x)},
+        {state_name + ".y", std::to_string(pos.y)},
         {state_name + ".angle", "0"},
     });
     add_subscene_check_dupe(state_name, sc, behind);
 }
 
-void CompositeScene::slide_subscene(const TransitionType tt, const std::string& name, const double dx, const double dy){
+void CompositeScene::slide_subscene(const TransitionType tt, const std::string& name, const vec2& delta){
     manager.transition(tt, {
-        {name + ".x", manager.get_equation_string(name + ".x") + " " + std::to_string(dx) + " +"},
-        {name + ".y", manager.get_equation_string(name + ".y") + " " + std::to_string(dy) + " +"},
+        {name + ".x", manager.get_equation_string(name + ".x") + " " + std::to_string(delta.x) + " +"},
+        {name + ".y", manager.get_equation_string(name + ".y") + " " + std::to_string(delta.y) + " +"},
     });
 }
 

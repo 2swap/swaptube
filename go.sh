@@ -112,7 +112,7 @@ fi
 cp "$PROJECT_PATH" "$TEMPFILE"
 
 # Generate a timestamp for this build
-OUTPUT_FOLDER_NAME=$(date +"%Y%m%d_%H%M%S")
+OUTPUT_FOLDER_NAME=$(date +"%Y-%m-%d_%H.%M.%S")
 OUTPUT_DIR="out/${PROJECT_NAME}/${OUTPUT_FOLDER_NAME}"
 mkdir -p "$OUTPUT_DIR"
 

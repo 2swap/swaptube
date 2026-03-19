@@ -1,4 +1,5 @@
 #include "GeodesicScene.h"
+#include "../../IO/Writer.h"
 #include <unordered_map>
 #include <string>
 
@@ -31,15 +32,18 @@ extern "C" void launch_cuda_surface_raymarch(
     int z_size, ResolvedStateEquationComponent* z_eq,
     int w_size, ResolvedStateEquationComponent* w_eq,
     int is_special,
-    quat camera_orientation, vec3 camera_position,
-    float fov_rad, float max_dist);
+    const quat& camera_orientation, const vec3& camera_position,
+    float fov_rad, float max_dist, float sphere_radius, const vec3& sphere_center
+);
 
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
     const ManifoldData* manifolds, const int num_manifolds,
     const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
-    const float ab_dilation, const float dot_radius);
+    const float ab_dilation, const float dot_radius,
+    uint32_t* tex_pixels, const int tex_w, const int tex_h
+);
 
 extern "C" void cuda_render_geodesics_2d(
     uint32_t* pixels, const int w, const int h,
@@ -68,6 +72,11 @@ GeodesicScene::GeodesicScene(const vec2& dimensions)
         {"pov_fov", "2"},
         {"pov_max_dist", "9"},
 
+        {"sphere_x", "0"},
+        {"sphere_y", "0"},
+        {"sphere_z", "5"},
+        {"sphere_radius", ".5"},
+
 //Manifold Stuff
         {"manifold_d", "20.0"},
         {"manifold_fov", "1.5"},
@@ -88,7 +97,8 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
                           ResolvedStateEquation& y_eq,
                           ResolvedStateEquation& z_eq,
                           ResolvedStateEquation& w_eq,
-                          quat camera_direction) {
+                          const quat& camera_direction)
+{
     vec3 camera_pos = vec3(state["pov_x"], state["pov_y"], state["pov_z"]);
 
     bool x_y_z_flat = (
@@ -100,6 +110,7 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
     int special_case_code = 0;
     if(x_y_z_flat) special_case_code = 1;
     if(x_y_z_flat && w_flat) special_case_code = 2;
+    vec3 sphere_center(state["sphere_x"], state["sphere_y"], state["sphere_z"]);
 
     launch_cuda_surface_raymarch(pix.pixels.data(), get_width(), get_height(),
                                  x_eq.size(), x_eq.data(),
@@ -108,16 +119,24 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
                                  w_eq.size(), w_eq.data(),
                                  special_case_code,
                                  camera_direction, camera_pos,
-                                 state["pov_fov"], state["pov_max_dist"]);
+                                 state["pov_fov"], state["pov_max_dist"],
+                                 state["sphere_radius"], sphere_center);
 }
 
-void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
+void GeodesicScene::draw_manifold(
+                       ResolvedStateEquation& x_eq,
                        ResolvedStateEquation& y_eq,
                        ResolvedStateEquation& z_eq,
                        ResolvedStateEquation& w_eq,
-                       quat camera_direction) {
+                       const quat& fov_quat)
+{
+
     float steps_mult = geom_mean(pix.w, pix.h) / 1500.0f;
 
+    quat yaw = normalize(quat(fov_quat.u, 0, fov_quat.j, 0));
+    double pitch_angle = 20 * M_PI / 180.0;
+    quat pitch = normalize(quat(cos(pitch_angle / 2), sin(pitch_angle / 2), 0, 0));
+    quat camera_direction = normalize(pitch * yaw);
     vec3 camera_position = rotate_vector(vec3(0, 0, -state["manifold_d"]), conjugate(camera_direction));
 
     camera_position.y += -2.f; // Lift the camera a bit, so it's not exactly at the same height as the manifold
@@ -156,7 +175,8 @@ void GeodesicScene::draw_manifold(ResolvedStateEquation& x_eq,
             geom_mean(manifold_pix.w, manifold_pix.h),
             state["manifold_fov"],
             1,
-            1
+            1,
+            nullptr,0,0 // No textures
         );
         cuda_overlay(
             pix.pixels.data(), pix.w, pix.h,
@@ -216,6 +236,7 @@ const StateQuery GeodesicScene::populate_state_query() const {
         "pov_x", "pov_y", "pov_z",
         "pov_q1", "pov_qi", "pov_qj", "pov_qk",
         "pov_fov", "pov_max_dist",
+        "sphere_x", "sphere_y", "sphere_z", "sphere_radius",
 
         "manifold_d", "manifold_fov",
         "manifold_opacity",

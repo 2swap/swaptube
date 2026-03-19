@@ -1,0 +1,69 @@
+#include "CodeScene.h"
+
+#include <iostream>
+
+CodeScene::CodeScene(const std::string& code, const vec2& dimensions)
+    : Scene(dimensions), code(code) {
+    view = Gtk::make_managed<GtkSource::View>();
+
+    buffer = GtkSource::Buffer::create();
+
+    auto lang_manager = GtkSource::LanguageManager::get_default();
+    auto language = lang_manager->get_language("cpp");
+
+    if (language)
+        buffer->set_language(language);
+
+    buffer->set_text(code);
+
+    view->set_buffer(buffer);
+    view->set_show_line_numbers(true);
+    view->set_monospace(true);
+
+    view->set_size_request(pix.size.x, pix.size.y);
+}
+
+bool CodeScene::check_if_data_changed() const { return false; }
+void CodeScene::mark_data_unchanged() {}
+void CodeScene::change_data() {}
+
+void CodeScene::draw() {
+    if (!view)
+        return;
+
+    auto paintable = view->snapshot();
+
+    if (!paintable)
+        return;
+
+    auto texture = Glib::RefPtr<Gdk::Texture>::cast_dynamic(paintable);
+
+    if (!texture)
+        return;
+
+    int width = texture->get_width();
+    int height = texture->get_height();
+
+    std::vector<unsigned char> data(width * height * 4);
+
+    texture->download(data.data(), width * 4);
+
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            int i = (y * width + x) * 4;
+
+            unsigned char r = data[i];
+            unsigned char g = data[i + 1];
+            unsigned char b = data[i + 2];
+
+            pix.data[y * width + x] =
+                0xff000000 | (r << 16) | (g << 8) | b;
+        }
+    }
+}
+
+const StateQuery CodeScene::populate_state_query() const {
+    return StateQuery{"scroll"};
+}

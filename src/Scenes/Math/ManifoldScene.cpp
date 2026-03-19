@@ -7,10 +7,13 @@ extern "C" void cuda_render_manifold(
     const ManifoldData* manifolds, const int num_manifolds,
     const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
-    const float ab_dilation, const float dot_radius
+    const float ab_dilation, const float dot_radius,
+    const uint32_t* tex_pixels, const int tex_w, const int tex_h
 );
+extern "C" void cuda_free_texture(uint32_t* d_tex_pixels);
+extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const int tex_w, const int tex_h);
 
-ManifoldScene::ManifoldScene(const vec2& dimensions) : ThreeDimensionScene(dimensions) {
+ManifoldScene::ManifoldScene(const vec2& dimensions) : ThreeDimensionScene(dimensions), d_texture_data(nullptr), texture_w(0), texture_h(0) {
     manager.set({
         {"ab_dilation", ".8"},
         {"dot_radius", "1"},
@@ -104,7 +107,10 @@ void ManifoldScene::draw() {
         geom_mean_size,
         state["fov"],
         state["ab_dilation"],
-        state["dot_radius"]
+        state["dot_radius"],
+        d_texture_data,
+        texture_w,
+        texture_h
     );
     ThreeDimensionScene::draw();
 }
@@ -129,4 +135,19 @@ const StateQuery ManifoldScene::populate_state_query() const {
     }
     state_query_insert_multiple(s, {"ab_dilation", "dot_radius"});
     return s;
+}
+
+void ManifoldScene::set_texture(const Pixels& new_texture) {
+    if(d_texture_data) {
+        cuda_free_texture(d_texture_data);
+    }
+    d_texture_data = cuda_copy_texture_to_device(new_texture.pixels.data(), new_texture.w, new_texture.h);
+    texture_w = new_texture.w;
+    texture_h = new_texture.h;
+}
+
+ManifoldScene::~ManifoldScene() {
+    if(d_texture_data) {
+        cuda_free_texture(d_texture_data);
+    }
 }

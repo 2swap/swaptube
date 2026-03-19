@@ -9,6 +9,9 @@
 class ManifoldScene : public ThreeDimensionScene {
 private:
     std::unordered_set<std::string> manifold_names;
+    uint32_t* d_texture_data;
+    int texture_w;
+    int texture_h;
 
 public:
     ManifoldScene(const vec2& dimensions = vec2(1, 1));
@@ -23,4 +26,8 @@ public:
     void draw() override;
 
     const StateQuery populate_state_query() const override;
+
+    void set_texture(const Pixels& new_texture);
+
+    ~ManifoldScene();
 };

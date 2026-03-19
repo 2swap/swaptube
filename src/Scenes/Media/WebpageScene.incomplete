@@ -1,0 +1,105 @@
+#include "WebpageScene.h"
+
+#include <gtkmm.h>
+#include <webkit2/webkit2gtkmm.h>
+#include <iostream>
+
+WebpageScene::WebpageScene(const std::string& url, const vec2& dimensions)
+    : Scene(dimensions), url(url) {
+    webview = WebKit::WebView::create();
+
+    webview->signal_load_changed().connect(
+        sigc::mem_fun(*this, &WebpageScene::on_load_changed)
+    );
+
+    webview->load_uri(url);
+
+    manager.set({
+        {"scroll", "0"},
+    });
+}
+
+bool WebpageScene::check_if_data_changed() const { return false; }
+void WebpageScene::mark_data_unchanged() {}
+void WebpageScene::change_data() {}
+
+void WebpageScene::draw() {
+    if(!webview)
+        return;
+
+    if(webview->is_loading()) {
+        std::cout << "Webpage still loading..." << std::endl;
+        return;
+    }
+
+    request_snapshot();
+}
+
+void WebpageScene::on_load_changed(WebKit::LoadEvent event) {
+    if(event == WebKit::LoadEvent::FINISHED)
+    {
+        request_scroll_position();
+        request_snapshot();
+    }
+}
+
+void WebpageScene::request_scroll_position() {
+    webview->evaluate_javascript(
+        "window.scrollY",
+        sigc::mem_fun(*this, &WebpageScene::on_scroll_js_finished)
+    );
+}
+
+void WebpageScene::on_scroll_js_finished(const Glib::RefPtr<Gio::AsyncResult>& result) {
+    try {
+        auto value = webview->evaluate_javascript_finish(result);
+        double scroll = value.get_double();
+
+        manager.set("scroll", std::to_string(scroll));
+    }
+    catch(const Glib::Error& err) {
+        std::cerr << "JS evaluation failed: " << err.what() << std::endl;
+    }
+}
+
+void WebpageScene::request_snapshot() {
+    webview->get_snapshot(
+        WebKit::SnapshotRegion::VISIBLE,
+        WebKit::SnapshotOptions::NONE,
+        sigc::mem_fun(*this, &WebpageScene::on_snapshot_ready)
+    );
+}
+
+void WebpageScene::on_snapshot_ready(const Glib::RefPtr<Gio::AsyncResult>& result) {
+    try {
+        auto surface = webview->get_snapshot_finish(result);
+
+        int width = cairo_image_surface_get_width(surface->cobj());
+        int height = cairo_image_surface_get_height(surface->cobj());
+
+        unsigned char* data =
+            cairo_image_surface_get_data(surface->cobj());
+
+        for(int y = 0; y < height; ++y)
+        {
+            for(int x = 0; x < width; ++x)
+            {
+                int index = (y * width + x) * 4;
+
+                unsigned char b = data[index];
+                unsigned char g = data[index + 1];
+                unsigned char r = data[index + 2];
+
+                pix.data[y * width + x] =
+                    0xff000000 | (r << 16) | (g << 8) | b;
+            }
+        }
+    }
+    catch(const Glib::Error& err) {
+        std::cerr << "Snapshot failed: " << err.what() << std::endl;
+    }
+}
+
+const StateQuery WebpageScene::populate_state_query() const {
+    return StateQuery{"scroll"};
+}
