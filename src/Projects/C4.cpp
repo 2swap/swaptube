@@ -169,7 +169,7 @@ void preintro(CompositeScene& cs) {
 
     variation = "4365567535573336661573";
     stage_macroblock(CompositeBlock(FileBlock("Some, on the other hand, have a whole bunch of variations on the same theme, as indicated by this large blob of opportunities."), SilenceBlock(2)), variation.size());
-    gs->manager.transition(MACRO, "d", ".3");
+    gs->manager.transition(MACRO, "d", ".2");
     for(char c : variation) {
         string move(1, c);
         c4s->play(move);

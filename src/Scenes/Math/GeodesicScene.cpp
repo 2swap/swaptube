@@ -1,4 +1,5 @@
 #include "GeodesicScene.h"
+#include "../../IO/Writer.h"
 #include <unordered_map>
 #include <string>
 
@@ -31,8 +32,9 @@ extern "C" void launch_cuda_surface_raymarch(
     int z_size, ResolvedStateEquationComponent* z_eq,
     int w_size, ResolvedStateEquationComponent* w_eq,
     int is_special,
-    quat camera_orientation, vec3 camera_position,
-    float fov_rad, float max_dist);
+    const quat& camera_orientation, const vec3& camera_position,
+    float fov_rad, float max_dist, float sphere_radius, const vec3& sphere_center
+);
 
 extern "C" void cuda_render_manifold(
     uint32_t* pixels, const int w, const int h,
@@ -70,6 +72,11 @@ GeodesicScene::GeodesicScene(const vec2& dimensions)
         {"pov_fov", "2"},
         {"pov_max_dist", "9"},
 
+        {"sphere_x", "0"},
+        {"sphere_y", "0"},
+        {"sphere_z", "5"},
+        {"sphere_radius", ".5"},
+
 //Manifold Stuff
         {"manifold_d", "20.0"},
         {"manifold_fov", "1.5"},
@@ -103,6 +110,7 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
     int special_case_code = 0;
     if(x_y_z_flat) special_case_code = 1;
     if(x_y_z_flat && w_flat) special_case_code = 2;
+    vec3 sphere_center(state["sphere_x"], state["sphere_y"], state["sphere_z"]);
 
     launch_cuda_surface_raymarch(pix.pixels.data(), get_width(), get_height(),
                                  x_eq.size(), x_eq.data(),
@@ -111,7 +119,8 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
                                  w_eq.size(), w_eq.data(),
                                  special_case_code,
                                  camera_direction, camera_pos,
-                                 state["pov_fov"], state["pov_max_dist"]);
+                                 state["pov_fov"], state["pov_max_dist"],
+                                 state["sphere_radius"], sphere_center);
 }
 
 void GeodesicScene::draw_manifold(
@@ -227,6 +236,7 @@ const StateQuery GeodesicScene::populate_state_query() const {
         "pov_x", "pov_y", "pov_z",
         "pov_q1", "pov_qi", "pov_qj", "pov_qk",
         "pov_fov", "pov_max_dist",
+        "sphere_x", "sphere_y", "sphere_z", "sphere_radius",
 
         "manifold_d", "manifold_fov",
         "manifold_opacity",

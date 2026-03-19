@@ -1,15 +1,17 @@
 #include "../Scenes/Math/GeodesicScene.h"
 #include "../Scenes/Math/ManifoldScene.h"
-#include "../Scenes/Math/ManifoldScene.h"
+#include "../Core/Smoketest.h"
 
 void first_half() {
     GeodesicScene gs;
 
+    set_for_real(false);
     gs.manager.set({
         {"scrunch_x", "2"},
         {"scrunch_y", "2"},
         {"scrunch_z", "2"},
-        {"amp", "0"}
+        {"amp", "0"},
+        {"pov_qj", "1"},
     });
 
     gs.manager.set({
@@ -19,7 +21,8 @@ void first_half() {
         {"space_w", "(a) <scrunch_x> * sin (b) <scrunch_y> * sin (c) <scrunch_z> * sin + + <amp> *"},
     });
     gs.manager.transition(MACRO, {
-        {"pov_qj", "1.5"},
+        {"pov_q1", "-.5"},
+        {"pov_qj", "1"},
     });
     stage_macroblock(SilenceBlock(2), 2);
     gs.manager.transition(MICRO, {
@@ -32,7 +35,9 @@ void first_half() {
     gs.render_microblock();
 
     gs.manager.set({
-        {"scrunch", "10"},
+        {"scrunch_x", "10 {t} sin +"},
+        {"scrunch_y", "10 {t} cos +"},
+        {"scrunch_z", "10"},
     });
 
     stage_macroblock(SilenceBlock(1), 1);
@@ -44,7 +49,7 @@ void first_half() {
     stage_macroblock(FileBlock("Woooahhh!"), 2);
     gs.render_microblock();
     gs.manager.transition(MICRO, {
-        {"scrunch", "8"}
+        {"pov_x", "1"},
     });
     gs.render_microblock();
 
@@ -52,26 +57,48 @@ void first_half() {
     gs.render_microblock();
 
     // Turn towards door
+    gs.manager.transition(MICRO, {
+        {"pov_qj", "0"},
+        {"pov_q1", "1"},
+    });
 
     stage_macroblock(FileBlock("(softly) Oh crap."), 1);
     gs.render_microblock();
 
-    stage_macroblock(FileBlock("One moment!"), 1);
-    return;
+    stage_macroblock(FileBlock("Open up now!"), 1);
+    gs.manager.transition(MICRO, {
+        {"pov_x", "0"},
+        {"pov_z", "2"},
+    });
     // (2swap slams kill switch on space warping device, surfaces begin to flatten out)
     gs.manager.transition(MICRO, {
         {"space_w", "0"},
     });
     gs.render_microblock();
+    set_for_real(true);
 
-    stage_macroblock(FileBlock("(Door bursts open) Put your hands where I can see them!"), 1);
+    stage_macroblock(FileBlock("(Door bursts open) Put your hands where I can see them!"), 2);
+    gs.manager.set("sphere_radius", ".1 {voice} * .5 +");
+    gs.manager.transition(MICRO, "sphere_z", "3");
+    gs.render_microblock();
     gs.render_microblock();
 
     stage_macroblock(FileBlock("Do you live here?"), 1);
     gs.render_microblock();
 
-    stage_macroblock(FileBlock("Y-yes!"), 1);
+    stage_macroblock(FileBlock("Y-yes!"), 4);
+    // Nod head
+    gs.manager.transition(MICRO, {
+        {"pov_qi", "{t} 15 * sin .05 *"},
+    });
     gs.render_microblock();
+    gs.render_microblock();
+    gs.manager.transition(MICRO, {
+        {"pov_qi", "0"},
+    });
+    gs.render_microblock();
+    gs.render_microblock();
+    return;
 
     stage_macroblock(FileBlock("Our instruments show a large non-zero gaussian curvature in this room. What on earth are you doing in here?"), 1);
     gs.render_microblock();
@@ -79,7 +106,7 @@ void first_half() {
     stage_macroblock(FileBlock("It wasn't me, I swear!"), 1);
     gs.render_microblock();
 
-    stage_macroblock(FileBlock("Are you in possession of any counterfeit items?"), 1);
+    stage_macroblock(FileBlock("Are you in possession of any contraband items?"), 1);
     gs.render_microblock();
 
     stage_macroblock(FileBlock("What, like, drugs?"), 1);
@@ -89,7 +116,7 @@ void first_half() {
     stage_macroblock(FileBlock("No! Tesseracts, Klein bottles, Möbius strips..."), 1);
     gs.render_microblock();
 
-    stage_macroblock(FileBlock("Oh, I think I have seen my roommate playing with those before... (points at door)"), 1);
+    stage_macroblock(FileBlock("Oh, I think I saw my roommate playing with those before... (points at door)"), 1);
     gs.render_microblock();
 
     stage_macroblock(FileBlock("*Agent walks toward door*"), 1);
@@ -104,6 +131,7 @@ void first_half() {
     // but voice is warped and cut off as space around him is warped and disconnected into a small bubble*
 
     stage_macroblock(FileBlock("How in the heck did they figure out..."), 1);
+    gs.manager.set("sphere_radius", "0");
     gs.render_microblock();
 
     // 2swap dials a number on his phone while fiddling with the device and warping space to and fro*
@@ -308,9 +336,10 @@ void second_half() {
 }
 
 void render_video() {
-    //first_half();
+    first_half();
+    return;
     globe();
-    //second_half();
+    second_half();
 }
 
 void old() {

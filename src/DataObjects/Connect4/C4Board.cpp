@@ -498,11 +498,19 @@ int C4Board::get_human_winning_fhourstones() {
         }
     }
 
-    if(find_steady_state(representation, nullptr, false, true, 80, 100) != nullptr)
+    if(find_steady_state(representation, nullptr, false, true, 50, 50) != nullptr)
         return -1;
-    if(find_steady_state(representation, nullptr, false, true, 80, 100) != nullptr)
+    if(find_steady_state(representation, nullptr, false, true, 50, 50) != nullptr)
         return -1;
-    if(find_steady_state(representation, nullptr, false, true, 80, 100) != nullptr)
+    if(find_steady_state(representation, nullptr, false, true, 50, 50) != nullptr)
+        return -1;
+    if(find_steady_state(representation, nullptr, false, true, 100, 100) != nullptr)
+        return -1;
+    if(find_steady_state(representation, nullptr, false, true, 150, 150) != nullptr)
+        return -1;
+    if(find_steady_state(representation, nullptr, false, true, 200, 200) != nullptr)
+        return -1;
+    if(find_steady_state(representation, nullptr, false, true, 200, 200) != nullptr)
         return -1;
 
     if (winning_columns.size() == 1) {
@@ -533,7 +541,7 @@ int C4Board::get_human_winning_fhourstones() {
 
     print();
 
-    cout << representation << " (" << get_hash() << ") has multiple winning columns. Please select one:" << endl;
+    cout << representation << " (" << get_hash() << ", inverse " << get_reverse_hash() << ") has multiple winning columns. Please select one:" << endl;
     for (const int i : winning_columns) {
         cout << i << " : Column " << i << endl;
     }
