@@ -5,7 +5,7 @@
 
 using namespace Cuda;
 
-const EPSILON = 2e-4f;
+const float EPSILON = 2e-4f;
 
 __device__ unsigned int getLighting(vec3 pos, vec3 lightPos, vec3 normal, float shadow, float iters, float maxIters){
     float light = max(dot(normal, normalize(lightPos - pos)), 0.0);
