@@ -5,7 +5,8 @@
 
 using namespace Cuda;
 
-const float EPSILON = 2e-4f;
+// NVCC on Windows does not reliably treat namespace-scope const floats as device constants.
+#define RAYMARCH_EPSILON 2e-4f
 
 __device__ unsigned int getLighting(vec3 pos, vec3 lightPos, vec3 normal, float shadow, float iters, float maxIters){
     float light = max(dot(normal, normalize(lightPos - pos)), 0.0);
@@ -28,7 +29,7 @@ __device__ vec4 raymarch(vec3 ro, vec3 rd, float maxDist, int maxIters){
     for(int i = 0; i < maxIters; i++){
         r = ro + t * rd;
         d = distMap(r);
-        if(d < EPSILON){
+        if(d < RAYMARCH_EPSILON){
             return vec4(r.x, r.y, r.z, (float) i);
         }
         t += d;
@@ -50,7 +51,7 @@ __device__ float marchLight(vec3 pos, vec3 lightPos, float minStep, int maxIters
     for(int i = 0; i < maxIters; i++){
         r = pos + t * rd;
         d = distMap(r);
-        if(d < EPSILON){
+        if(d < RAYMARCH_EPSILON){
             return 0.0;
         }
         shadow = min(shadow, d / t);
@@ -65,9 +66,9 @@ __device__ float marchLight(vec3 pos, vec3 lightPos, float minStep, int maxIters
 // Approximates gradient of SDF at point to be normal of surface
 __device__ vec3 getNormal(vec3 pos){
     return normalize(vec3(
-        distMap(pos + vec3(EPSILON, 0, 0)) - distMap(pos - vec3(EPSILON, 0, 0)),
-        distMap(pos + vec3(0, EPSILON, 0)) - distMap(pos - vec3(0, EPSILON, 0)),
-        distMap(pos + vec3(0, 0, EPSILON)) - distMap(pos - vec3(0, 0, EPSILON))
+        distMap(pos + vec3(RAYMARCH_EPSILON, 0, 0)) - distMap(pos - vec3(RAYMARCH_EPSILON, 0, 0)),
+        distMap(pos + vec3(0, RAYMARCH_EPSILON, 0)) - distMap(pos - vec3(0, RAYMARCH_EPSILON, 0)),
+        distMap(pos + vec3(0, 0, RAYMARCH_EPSILON)) - distMap(pos - vec3(0, 0, RAYMARCH_EPSILON))
     ));
 }
 
@@ -94,7 +95,7 @@ __global__ void runRaymarch(const int width, const int height, float ratio, vec3
     
     // Determines whether to color pixel
     if(iters >= 0.0){
-        float shadow = marchLight(pos, lightPos, 8.0 * EPSILON, maxIters);
+        float shadow = marchLight(pos, lightPos, 8.0 * RAYMARCH_EPSILON, maxIters);
         vec3 normal = getNormal(pos);
         color = getLighting(pos, lightPos, normal, shadow, iters, maxIters);
     }else{
