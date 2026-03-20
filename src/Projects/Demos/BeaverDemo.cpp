@@ -16,8 +16,8 @@ void bb52() {
     BeaverGridScene bs(5, 2);
     bs.manager.set("zoom", "-16.3");
     bs.manager.set("max_steps", "400");
-    bs.manager.set("center_x", "e <zoom> -1 * ^ {t} sin * 2 * 1037900 -");
-    bs.manager.set("center_y", "e <zoom> -1 * ^ {t} cos * 7350 +");
+    bs.manager.set("center_x", "e <zoom> -1 * ^ {t} sin * 2 * 1034000 -");
+    bs.manager.set("center_y", "e <zoom> -1 * ^ {t} cos * 7500 +");
     stage_macroblock(SilenceBlock(5), 7);
     bs.manager.transition(MACRO, "zoom", "-3");
     bs.render_microblock();
