@@ -72,9 +72,12 @@ __global__ void render_manifold_kernel(
         color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
     }
 
+    out.x = (int)out.x; // Need these to be integers for comparison and indexing
+    out.y = (int)out.y;
+
     // Depth test and write pixel
     if (out.x >= 0 && out.x < w && out.y >= 0 && out.y < h) {
-        int pixel_index = (int)out.y * w + out.x;
+        int pixel_index = out.y * w + out.x;
         // Atomically test and update depth using atomicCAS on float bit patterns
         const float eps = 3e-3f; // epsilon to avoid z-fighting
         unsigned int* depth_ui = (unsigned int*)(depth_buffer + pixel_index);

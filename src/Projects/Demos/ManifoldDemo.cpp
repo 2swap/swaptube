@@ -23,13 +23,13 @@ void render_video() {
     ms.render_microblock();
 
     ms.manager.set({
-        {"u_wave", "3"},
-        {"v_wave", "9"},
+        {"a_wave", "3"},
+        {"b_wave", "9"},
         {"mult", "2"},
     });
     ms.manager.transition(MICRO, {
         {"manifold_x", "(a) -.1 +"},
-        {"manifold_y", "(a) <u_wave> * sin (b) <v_wave> * sin + <mult> /"},
+        {"manifold_y", "(a) <a_wave> * sin (b) <b_wave> * sin + <mult> /"},
         {"manifold_z", "(b)"},
     });
     ms.render_microblock();
@@ -49,10 +49,10 @@ void render_video() {
         {"manifold_x", "(a) cos (b) sin *"},
         {"manifold_y", "(a) sin (b) sin *"},
         {"manifold_z", "(b) cos"},
-        {"manifold_u_min", "-1.57"},
-        {"manifold_u_max", "1.57"},
-        {"manifold_v_min", "-3.14"},
-        {"manifold_v_max", "3.14"},
+        {"manifold_a_min", "-1.57"},
+        {"manifold_a_max", "1.57"},
+        {"manifold_b_min", "-3.14"},
+        {"manifold_b_max", "3.14"},
     });
     ms.render_microblock();
     ms.render_microblock();
@@ -62,10 +62,10 @@ void render_video() {
         {"manifold_x", "(a)"},
         {"manifold_y", "0"},
         {"manifold_z", "(b)"},
-        {"manifold_u_min", "-3.14"},
-        {"manifold_u_max", "3.14"},
-        {"manifold_v_min", "-3.14"},
-        {"manifold_v_max", "3.14"},
+        {"manifold_a_min", "-3.14"},
+        {"manifold_a_max", "3.14"},
+        {"manifold_b_min", "-3.14"},
+        {"manifold_b_max", "3.14"},
     });
     ms.render_microblock();
     ms.render_microblock();
@@ -75,10 +75,10 @@ void render_video() {
         {"manifold_x", ".5 (a) cos * 2 + (b) cos *"},
         {"manifold_y", ".5 (a) cos * 2 + (b) sin *"},
         {"manifold_z", ".5 (a) sin *"},
-        {"manifold_u_min", "-3.14"},
-        {"manifold_u_max", "3.14"},
-        {"manifold_v_min", "-3.14"},
-        {"manifold_v_max", "3.14"},
+        {"manifold_a_min", "-3.14"},
+        {"manifold_a_max", "3.14"},
+        {"manifold_b_min", "-3.14"},
+        {"manifold_b_max", "3.14"},
     });
     ms.render_microblock();
     ms.render_microblock();

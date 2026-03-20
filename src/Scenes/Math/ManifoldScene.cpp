@@ -31,12 +31,12 @@ void ManifoldScene::add_manifold(const std::string& name,
         {tag + "z", z_eq},
         {tag + "r", r_eq},
         {tag + "i", i_eq},
-        {tag + "u_min", u_min},
-        {tag + "u_max", u_max},
-        {tag + "u_steps", u_steps},
-        {tag + "v_min", v_min},
-        {tag + "v_max", v_max},
-        {tag + "v_steps", v_steps},
+        {tag + "a_min", u_min},
+        {tag + "a_max", u_max},
+        {tag + "a_steps", u_steps},
+        {tag + "b_min", v_min},
+        {tag + "b_max", v_max},
+        {tag + "b_steps", v_steps},
     });
     manifold_names.insert(name);
 }
@@ -49,12 +49,12 @@ void ManifoldScene::remove_manifold(const std::string& name) {
         tag + "z",
         tag + "r",
         tag + "i",
-        tag + "u_min",
-        tag + "u_max",
-        tag + "u_steps",
-        tag + "v_min",
-        tag + "v_max",
-        tag + "v_steps"
+        tag + "a_min",
+        tag + "a_max",
+        tag + "a_steps",
+        tag + "b_min",
+        tag + "b_max",
+        tag + "b_steps"
     });
     manifold_names.erase(name);
 }
@@ -85,12 +85,12 @@ void ManifoldScene::draw() {
             z_eq.size(), z_eq.data(),
             r_eq.size(), r_eq.data(),
             i_eq.size(), i_eq.data(),
-            (float)state[tag + "u_min"],
-            (float)state[tag + "u_max"],
-            (int)(state[tag + "u_steps"] * steps_mult),
-            (float)state[tag + "v_min"],
-            (float)state[tag + "v_max"],
-            (int)(state[tag + "v_steps"] * steps_mult)
+            (float)state[tag + "a_min"],
+            (float)state[tag + "a_max"],
+            (int)(state[tag + "a_steps"] * steps_mult),
+            (float)state[tag + "b_min"],
+            (float)state[tag + "b_max"],
+            (int)(state[tag + "b_steps"] * steps_mult)
         };
         manifolds[i] = manifold;
         i++;
@@ -125,12 +125,12 @@ const StateQuery ManifoldScene::populate_state_query() const {
             tag + "z",
             tag + "r",
             tag + "i",
-            tag + "u_min",
-            tag + "u_max",
-            tag + "u_steps",
-            tag + "v_min",
-            tag + "v_max",
-            tag + "v_steps"
+            tag + "a_min",
+            tag + "a_max",
+            tag + "a_steps",
+            tag + "b_min",
+            tag + "b_max",
+            tag + "b_steps"
         });
     }
     state_query_insert_multiple(s, {"ab_dilation", "dot_radius"});
