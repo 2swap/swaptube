@@ -48,6 +48,25 @@ elseif(CMAKE_HIP_COMPILER)
     set(GPU_LANGUAGE HIP)
     set(CMAKE_HIP_STANDARD 17)
     set(CMAKE_HIP_ARCHITECTURES native)
+    message(STATUS "Translating CUDA to HIP")
+    find_program(HIPIFY_PERL hipify-perl REQUIRED)
+    file(GLOB_RECURSE CUDA_TO_TRANSLATE CONFIGURE_DEPENDS "src/CUDA/*.cu" "src/CUDA/*.cuh")
+
+    foreach(cuda_file ${CUDA_TO_TRANSLATE})
+        file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}/src/CUDA" "${cuda_file}")
+        set(hip_file "${CMAKE_SOURCE_DIR}/src/HIP/${rel_path}")
+
+        add_custom_command(
+            OUTPUT ${hip_file}
+            COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:${PROJECT_NAME}>/../src/HIP/$(dirname ${rel_path})"
+            COMMAND ${CMAKE_COMMAND} -E copy ${cuda_file} ${hip_file}
+            COMMAND ${HIPIFY_PERL} ${hip_file} -inplace
+            DEPENDS ${cuda_file}
+            COMMENT "Hipifying ${rel_path}"
+            VERBATIM
+        )
+    endforeach()
+
     file(GLOB_RECURSE GPU_SOURCES "src/HIP/*.cu")
     set_source_files_properties(${GPU_SOURCES} PROPERTIES LANGUAGE HIP)
     set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
