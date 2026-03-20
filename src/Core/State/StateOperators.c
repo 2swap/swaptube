@@ -168,7 +168,7 @@ StateOperator inline parse_state_operator(const char* in){
     if(strcmp(in, "logistic") == 0) return OP_LOGISTIC;
     if(strcmp(in, "min") == 0) return OP_MIN;
     if(strcmp(in, "max") == 0) return OP_MAX;
-    throw runtime_error("Unknown state operator");
+    throw runtime_error("Unknown state operator: " + string(in));
     return OP_ADD;
 }
 

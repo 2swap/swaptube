@@ -15,26 +15,27 @@ using namespace std;
 
 SHARED_FILE_PREFIX
 
-HOST_DEVICE inline double sigmoid(double x){return 2/(1+exp(-x))-1;}
-HOST_DEVICE inline double clamp(double val, double bottom, double top){return min(top, max(val, bottom));}
-HOST_DEVICE inline double square(double x){return x * x;}
-HOST_DEVICE inline double cube(double x){return x * x * x;}
-HOST_DEVICE inline double fourth(double x){return square(square(x));}
-HOST_DEVICE inline double smoother1(double x){return 3*x*x-2*x*x*x;} // We used to use this but not anymore
-HOST_DEVICE inline double smoother2(double x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
-HOST_DEVICE inline double lerp(double a, double b, double w){return a*(1-w)+b*w;}
+HOST_DEVICE inline float sigmoid(float x){return 2/(1+exp(-x))-1;}
+HOST_DEVICE inline float clamp(float val, float bottom, float top){return min(top, max(val, bottom));}
+HOST_DEVICE inline float square(float x){return x * x;}
+HOST_DEVICE inline float cube(float x){return x * x * x;}
+HOST_DEVICE inline float fourth(float x){return square(square(x));}
+HOST_DEVICE inline float smoother1(float x){return 3*x*x-2*x*x*x;} // We used to use this but not anymore
+HOST_DEVICE inline float smoother2(float x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
+HOST_DEVICE inline float lerp(float a, float b, float w){return a*(1-w)+b*w;}
 HOST_DEVICE inline float float_lerp(float a, float b, float w){return a*(1-w)+b*w;}
-HOST_DEVICE inline vec3 veclerp(vec3 a, vec3 b, double w){return a*(1-w)+b*w;}
-HOST_DEVICE inline vec4 veclerp(vec4 a, vec4 b, double w){return a*(1-w)+b*w;}
-HOST_DEVICE inline double smoothlerp(double a, double b, double w){double v = smoother2(w);return a*(1-v)+b*v;}
+HOST_DEVICE inline vec3 veclerp(vec3 a, vec3 b, float w){return a*(1-w)+b*w;}
+HOST_DEVICE inline vec4 veclerp(vec4 a, vec4 b, float w){return a*(1-w)+b*w;}
+HOST_DEVICE inline float smoothlerp(float a, float b, float w){float v = smoother2(w);return a*(1-v)+b*v;}
 HOST_DEVICE inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
 HOST_DEVICE inline void print_vec3(vec3 v){printf("vec3(%.3f, %.3f, %.3f)\n", v.x, v.y, v.z);}
 HOST_DEVICE inline void print_vec4(vec4 v){printf("vec4(%.3f, %.3f, %.3f, %.3f)\n", v.x, v.y, v.z, v.w);}
-HOST_DEVICE inline double geom_mean(double x, double y) { return sqrt(x*y); }
-HOST_DEVICE inline int signum(double x) { return (x > 0) - (x < 0); }
+HOST_DEVICE inline float geom_mean(float x, float y) { return sqrt(x*y); }
+HOST_DEVICE inline int signum(float x) { return (x > 0) - (x < 0); }
 
-HOST_DEVICE inline double extended_mod(double a, double b) {
-    double result = fmod(a, b);
+HOST_DEVICE inline float extended_mod(float a, float b) {
+    b = fabs(b);
+    float result = fmod(a, b);
     if (result < 0) {
         result += b;  // Ensures non-negative remainder
     }
