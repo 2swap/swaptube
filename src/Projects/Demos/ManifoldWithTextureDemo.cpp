@@ -24,15 +24,14 @@ void render_video() {
         {"manifold_x", "(a) cos (b) sin *"},
         {"manifold_y", "(b) cos"},
         {"manifold_z", "(a) sin (b) sin *"},
-        {"manifold_u_min", "0"},
-        {"manifold_u_max", "pi 2 *"},
-        {"manifold_v_min", "0"},
-        {"manifold_v_max", "pi"},
+        {"manifold_a_min", "0"},
+        {"manifold_a_max", "pi 2 *"},
+        {"manifold_b_min", "0"},
+        {"manifold_b_max", "pi"},
     });
     ms.render_microblock();
     ms.render_microblock();
 
-    // Back to a plane
     ms.manager.transition(MICRO, {
         {"q1", "{t} 2 / sin"},
         {"qi", "{t} 2 * sin .6 *"},

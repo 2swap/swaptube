@@ -18,8 +18,6 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
                 "but render_microblock() was only called " + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
     }
 
-    get_writer().audio->encode_buffers();
-
     total_microblocks_in_macroblock = remaining_microblocks_in_macroblock = expected_microblocks_in_macroblock;
     cout << "Set remaining microblocks in macroblock to " << to_string(remaining_microblocks_in_macroblock) << endl;
     macroblock.write_shtooka();
@@ -54,6 +52,8 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
             );
         }
     } // Audio hints
+
+    get_writer().audio->encode_buffers();
 }
 
 Scene::Scene(const vec2& dimensions)
@@ -189,8 +189,10 @@ void Scene::publish_global() {
 void Scene::render_one_frame(int microblock_frame_number, int scene_duration_frames) {
     cout << "[" << flush;
 
+    sample_t sample = get_writer().audio->get_max_sample_for_frame(total_frames_in_macroblock - remaining_frames_in_macroblock);
     set_global_state("macroblock_fraction", 1 - static_cast<double>(remaining_frames_in_macroblock) / total_frames_in_macroblock);
     set_global_state("microblock_fraction", static_cast<double>(microblock_frame_number) / scene_duration_frames);
+    set_global_state("voice", sample_to_float(sample));
 
     Pixels* p = nullptr;
     query(p);

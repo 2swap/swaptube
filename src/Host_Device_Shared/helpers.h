@@ -17,7 +17,6 @@
 #endif
 
 SHARED_FILE_PREFIX
-
 HOST_DEVICE inline double sigmoid(double x){return 2/(1+exp(-x))-1;}
 HOST_DEVICE inline double clamp(double val, double bottom, double top){
     double intermediate = (val < bottom) ? bottom : val;
