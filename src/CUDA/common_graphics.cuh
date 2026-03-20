@@ -61,4 +61,15 @@ __device__ __forceinline__ void d_coordinate_to_pixel(
     out.z = rotated.z;
 }
 
+__device__ __forceinline__ Cuda::vec3 get_raymarch_vector(int px, int py, float w, float h, float fov, const quat& camera_orientation) {
+    // NDC coordinates [-1,1]
+    float ndc_x = ((px + 0.5f) / w) * 2.0f - 1.0f;
+    float ndc_y = ((py + 0.5f) / h) * 2.0f - 1.0f;
+
+    float px_cam = ndc_x * tanf(fov * 0.5f) * w / h;
+    float py_cam = ndc_y * tanf(fov * 0.5f);
+    Cuda::vec3 dir_cam = Cuda::vec3(px_cam, py_cam, -1.0f);
+    return -normalize(rotate_vector(dir_cam, camera_orientation));
+}
+
 }

@@ -3,30 +3,28 @@
 #include <cuda_runtime.h>
 #include "../Host_Device_Shared/vec.h"
 
-using namespace Cuda;
-
 namespace sdf{
     enum{
         MANDELBULB
     };
     // Computes Signed Distance Function to the Mandelbulb fractal (degree 8)
     // Based off work by Inigo Quilez: https://iquilezles.org/articles/mandelbulb/
-    __device__ float mandelbulb(vec3 pos, int maxIters){ 
-        vec3 w = pos;
-        float m = dot(w, w);
+    __device__ float mandelbulb(const Cuda::vec3 pos, int maxIters){ 
+        Cuda::vec3 w = pos;
         float dz = 1.0;
+        float m;
 
         for(int i = 0; i < maxIters; i++){
-            dz = (8.0 * pow(m, 3.5) * dz ) + 1.0;
-      
-            float r = length(w);
-            float b = 8.0 * acosf(w.y / r);
+            m = dot(w, w);
+            if(m > 2.0) break;
+            float invr = 1/sqrtf(m);
+            float r8 = m * m * m * m;
+            dz = (8.0 * r8 * invr * dz ) + 1.0;
+
+            float b = 8.0 * acosf(w.y * invr);
             float a = 8.0 * atan2f(w.x, w.z);
-            w = pos + pow(r, 8.0) * vec3( sinf(b) * sinf(a), cosf(b), sinf(b) * cosf(a));
-            m = dot(w , w);
-            if(m > 256.0){
-                break;
-            }
+            float sinfb = sinf(b);
+            w = pos + r8 * Cuda::vec3(sinfb * sinf(a), cosf(b), sinfb * cosf(a));
         }
         float d = 0.25 * log(m) * sqrt(m) / dz;
 

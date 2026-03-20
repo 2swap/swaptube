@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 #include "../color.cuh"
+#include "../common_graphics.cuh"
 #include "../../Host_Device_Shared/vec.h"
 #include <stdint.h>
 #include "../../Core/State/ResolvedStateEquationComponent.c"
@@ -357,15 +358,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     if (px >= w || py >= h) return;
     d_pixels[py * w + px] = 0xff0000ff; // default to blue
 
-    // NDC coordinates [-1,1]
-    float ndc_x = ((px + 0.5f) / float(w)) * 2.0f - 1.0f;
-    float ndc_y = ((py + 0.5f) / float(h)) * 2.0f - 1.0f;
-
-    float aspect = float(w) / float(h);
-    float px_cam = ndc_x * tanf(fov * 0.5f) * aspect;
-    float py_cam = ndc_y * tanf(fov * 0.5f);
-    Cuda::vec3 dir_cam = Cuda::vec3(px_cam, py_cam, -1.0f);
-    Cuda::vec3 dir_world(-normalize(rotate_vector(dir_cam, camera_orientation)));
+    Cuda::vec3 dir_world(Cuda::get_raymarch_vector(px, py, w, h, fov, camera_orientation));
 
     // Initialize state in parameter-space (we treat param-space coords directly)
     float Y[6];
