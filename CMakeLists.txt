@@ -59,6 +59,7 @@ elseif(CMAKE_HIP_COMPILER)
             OUTPUT ${hip_file}
             COMMAND ${CMAKE_COMMAND} -E copy ${cuda_file} ${hip_file}
             COMMAND ${HIPIFY_PERL} ${hip_file} -inplace
+            COMMAND rm "${hip_file}.prehip"
             DEPENDS ${cuda_file}
             COMMAND echo "Hipifying ${rel_path}"
             VERBATIM
@@ -72,13 +73,13 @@ elseif(CMAKE_HIP_COMPILER)
             OUTPUT ${hip_file}
             COMMAND ${CMAKE_COMMAND} -E copy ${cuda_file} ${hip_file}
             COMMAND ${HIPIFY_PERL} ${hip_file} -inplace
+            COMMAND rm "${hip_file}.prehip"
             DEPENDS ${cuda_file} ${HIP_HEADERS}
             COMMAND echo "Hipifying ${rel_path}"
             VERBATIM
         )
         list(APPEND GPU_SOURCES ${hip_file})
     endforeach()
-    file(REMOVE_RECURSE "src/HIP/*.prehip")
     set_source_files_properties(${GPU_SOURCES} PROPERTIES LANGUAGE HIP)
     set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
     # TODO: Check error ouput on CUDA/HIP function calls so we don't have to suppress warnings
