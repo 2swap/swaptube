@@ -13,6 +13,8 @@ https://discord.gg/a786NZXYQ3
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
 
+There is an experimental Windows/MSVC build available in a fork: [meghanto/swaptube](https://github.com/meghanto/swaptube). It is not officially supported here, may lag behind `master`, and comes with no guarantee of ongoing maintenance.
+
 SwapTube was originally designed to work only with CUDA, requiring an NVIDIA GPU. It should now be possible to run on AMD using HIP. This feature is new and may have errors. AMD ROCm is required if HIP is used in place of CUDA. Follow [this guide](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) to install ROCm and HIP.
 
 Note that the HIP folder is generated on HIP-compatible machines by translating the CUDA folder with hipify. Do not modify any of the contents in HIP/, instead treat the CUDA folder as the source of truth and modify that. It will be re-translated in CMake.
