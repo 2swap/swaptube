@@ -1,4 +1,6 @@
 #include "VideoWriter.h"
+#include "../Core/State/GlobalState.h"
+#include "../Core/Smoketest.h"
 
 #include <iostream>
 #include <string>
@@ -161,6 +163,9 @@ void VideoWriter::add_frame(Pixels& p) {
     #ifdef USE_GPU
     alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_width_pixels(), get_video_height_pixels(), get_video_background_color());
     #endif
+
+    bool fifth_frame = int(get_global_state("frame_number")) % 5 == 0;
+    if(fifth_frame) p.print_to_terminal();
 
     // Point FFmpeg directly to your source data
     rgb_frame->data[0] = reinterpret_cast<uint8_t*>(p.pixels.data());
