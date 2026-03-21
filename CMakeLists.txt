@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(swaptube LANGUAGES CXX CUDA)
+project(swaptube LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 14)
@@ -18,33 +18,6 @@ if(NOT DEFINED AUDIO_SFX)
     set(AUDIO_SFX 0 CACHE STRING "Enable audio SFX streams")
 endif()
 
-if(CMAKE_CUDA_COMPILER_VERSION)
-    message(STATUS "CUDA toolkit version: ${CMAKE_CUDA_COMPILER_VERSION}")
-endif()
-
-if(NOT DEFINED SWAPTUBE_CUDA_ARCH OR SWAPTUBE_CUDA_ARCH STREQUAL "")
-    if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
-        set(_swaptube_default_cuda_arch "60")
-    else()
-        set(_swaptube_default_cuda_arch "50")
-    endif()
-    set(SWAPTUBE_CUDA_ARCH "${_swaptube_default_cuda_arch}" CACHE STRING "CUDA compute capability target used for nvcc gencode flags")
-endif()
-
-if(NOT SWAPTUBE_CUDA_ARCH MATCHES "^[0-9]+$")
-    message(FATAL_ERROR
-        "SWAPTUBE_CUDA_ARCH must be a numeric compute capability such as 50, 75, or 86."
-    )
-endif()
-
-if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0 AND SWAPTUBE_CUDA_ARCH VERSION_LESS 60)
-    message(FATAL_ERROR
-        "CUDA ${CMAKE_CUDA_COMPILER_VERSION} does not support compute capability ${SWAPTUBE_CUDA_ARCH}. "
-        "Set SWAPTUBE_CUDA_ARCH to a supported architecture, or build with a CUDA toolkit that still supports Maxwell-era targets."
-    )
-endif()
-
-message(STATUS "CUDA architecture target: ${SWAPTUBE_CUDA_ARCH}")
 message(STATUS "Project '${PROJECT_NAME}' initialized")
 message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
 
@@ -268,7 +241,62 @@ else()
     endif()
 endif()
 
-find_package(CUDA REQUIRED)
+include(CheckLanguage)
+message(STATUS "Checking for CUDA and HIP support...")
+check_language(CUDA)
+check_language(HIP)
+
+set(GPU_SOURCES "")
+set(SWAPTUBE_USE_CUDA OFF)
+set(SWAPTUBE_USE_HIP OFF)
+
+if(CMAKE_CUDA_COMPILER)
+    message(STATUS "CUDA compiler detected.")
+    enable_language(CUDA)
+    message(STATUS "CUDA compiler found: ${CMAKE_CUDA_COMPILER}")
+    if(CMAKE_CUDA_COMPILER_VERSION)
+        message(STATUS "CUDA toolkit version: ${CMAKE_CUDA_COMPILER_VERSION}")
+    endif()
+
+    if(NOT DEFINED SWAPTUBE_CUDA_ARCH OR SWAPTUBE_CUDA_ARCH STREQUAL "")
+        if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0)
+            set(_swaptube_default_cuda_arch "60")
+        else()
+            set(_swaptube_default_cuda_arch "50")
+        endif()
+        set(SWAPTUBE_CUDA_ARCH "${_swaptube_default_cuda_arch}" CACHE STRING "CUDA compute capability target used for nvcc gencode flags")
+    endif()
+
+    if(NOT SWAPTUBE_CUDA_ARCH MATCHES "^[0-9]+$")
+        message(FATAL_ERROR
+            "SWAPTUBE_CUDA_ARCH must be a numeric compute capability such as 50, 75, or 86."
+        )
+    endif()
+
+    if(CMAKE_CUDA_COMPILER_VERSION VERSION_GREATER_EQUAL 13.0 AND SWAPTUBE_CUDA_ARCH VERSION_LESS 60)
+        message(FATAL_ERROR
+            "CUDA ${CMAKE_CUDA_COMPILER_VERSION} does not support compute capability ${SWAPTUBE_CUDA_ARCH}. "
+            "Set SWAPTUBE_CUDA_ARCH to a supported architecture, or build with a CUDA toolkit that still supports Maxwell-era targets."
+        )
+    endif()
+
+    message(STATUS "CUDA architecture target: ${SWAPTUBE_CUDA_ARCH}")
+    set(CMAKE_CUDA_STANDARD 14)
+    file(GLOB_RECURSE GPU_SOURCES "src/CUDA/*.cu")
+    set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
+    set(SWAPTUBE_USE_CUDA ON)
+elseif(CMAKE_HIP_COMPILER)
+    message(STATUS "HIP compiler detected.")
+    enable_language(HIP)
+    message(STATUS "HIP compiler found: ${CMAKE_HIP_COMPILER}")
+    set(CMAKE_HIP_STANDARD 17)
+    file(GLOB_RECURSE GPU_SOURCES "src/HIP/*.cu")
+    set_source_files_properties(${GPU_SOURCES} PROPERTIES LANGUAGE HIP)
+    set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
+    set(SWAPTUBE_USE_HIP ON)
+else()
+    message(WARNING "Neither CUDA nor HIP found. Please refer to readme for building without GPU support.")
+endif()
 
 # =====================
 # Sources
@@ -280,37 +308,45 @@ file(GLOB_RECURSE SOURCES "src/*.cpp")
 list(FILTER SOURCES EXCLUDE REGEX "src/Projects/.*")
 file(GLOB_RECURSE ACTIVE_PROJECT_SOURCE "src/Projects/.active_project.cpp")
 
-file(GLOB_RECURSE CUDA_SOURCES src/CUDA/*.cu)
-
 # =====================
 # Executable
 # =====================
 add_executable(${PROJECT_NAME}
     ${ACTIVE_PROJECT_SOURCE}
     ${SOURCES}
-    ${CUDA_SOURCES}
+    ${GPU_SOURCES}
 )
-set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
+if(SWAPTUBE_USE_CUDA)
+    set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES OFF)
+endif()
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE
     PROJECT_NAME_MACRO="${PROJECT_NAME_MACRO}"
     AUDIO_HINTS=${AUDIO_HINTS}
     AUDIO_SFX=${AUDIO_SFX}
     GLM_ENABLE_EXPERIMENTAL
-    USE_CUDA
 )
+if(SWAPTUBE_USE_CUDA OR SWAPTUBE_USE_HIP)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE USE_CUDA)
+endif()
 
 # =====================
 # CUDA architecture (CRITICAL FIX)
 # =====================
-target_compile_options(${PROJECT_NAME} PRIVATE
-    $<$<COMPILE_LANGUAGE:CUDA>:
-        -gencode=arch=compute_${SWAPTUBE_CUDA_ARCH},code=sm_${SWAPTUBE_CUDA_ARCH}
-        -gencode=arch=compute_${SWAPTUBE_CUDA_ARCH},code=compute_${SWAPTUBE_CUDA_ARCH}
-        --expt-relaxed-constexpr
-        -Xcudafe --diag_suppress=20012
-    >
-)
+if(SWAPTUBE_USE_CUDA)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:
+            -gencode=arch=compute_${SWAPTUBE_CUDA_ARCH},code=sm_${SWAPTUBE_CUDA_ARCH}
+            -gencode=arch=compute_${SWAPTUBE_CUDA_ARCH},code=compute_${SWAPTUBE_CUDA_ARCH}
+            --expt-relaxed-constexpr
+            -Xcudafe --diag_suppress=20012
+        >
+    )
+elseif(SWAPTUBE_USE_HIP)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<COMPILE_LANGUAGE:HIP>:-Wno-unused-value>
+    )
+endif()
 
 # =====================
 # Includes

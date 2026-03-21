@@ -9,6 +9,22 @@ check_command_available() {
     fi
 }
 
+find_microtex_binary() {
+    local candidates=(
+        "../MicroTeX-master/build/LaTeX"
+        "../MicroTeX-master/build/LaTeX.exe"
+        "../MicroTeX-master/build-mingw-headless/LaTeX.exe"
+    )
+    local c
+    for c in "${candidates[@]}"; do
+        if [ -s "$c" ]; then
+            printf '%s\n' "$c"
+            return 0
+        fi
+    done
+    return 1
+}
+
 find_windows_vcvars64() {
     local candidates=(
         "/c/Program Files (x86)/Microsoft Visual Studio/2022/BuildTools/VC/Auxiliary/Build/vcvars64.bat"
@@ -88,9 +104,10 @@ case "$(uname -s)" in
         check_command_available "gnuplot"
         ;;
 esac
+MICROTEX_BINARY="$(find_microtex_binary || true)"
 # Check if MicroTeX build exists
-if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
-    echo "Error: ../MicroTeX-master/build/LaTeX does not exist. MicroTeX is required for this project."
+if [ -z "$MICROTEX_BINARY" ]; then
+    echo "Error: A MicroTeX binary was not found. MicroTeX is required for this project."
     echo "Install instructions are available at https://github.com/NanoMichael/MicroTeX"
 
     # Ask the user for confirmation
@@ -114,14 +131,15 @@ if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     esac
 
     # Verify installation
-    if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
+    MICROTEX_BINARY="$(find_microtex_binary || true)"
+    if [ -z "$MICROTEX_BINARY" ]; then
         echo "Installation aborted or failed. Please follow the instructions manually: https://github.com/NanoMichael/MicroTeX"
         echo "HINT: If you are unable to install gtksourceviewmm-3.0 using your distro's package manager, try building it yourself using these instructions:"
         echo "https://github.com/end-4/dots-hyprland/issues/955#issuecomment-2486579754"
         exit 1
     fi
 
-    echo "MicroTeX installation verified."
+    echo "MicroTeX installation verified at ${MICROTEX_BINARY}."
 fi
 
 # Check if the number of arguments is less or more than expected
