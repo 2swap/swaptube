@@ -13,7 +13,9 @@ https://discord.gg/a786NZXYQ3
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
 
-SwapTube was originally designed to work only with CUDA, requiring an NVIDIA GPU. It should now be possible to run on AMD using HIP by running the hipifyCUDA.sh script. This feature is new and may have errors. AMD ROCm is required if HIP is used in place of CUDA. Follow [this guide](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) to install ROCm and HIP.
+SwapTube was originally designed to work only with CUDA, requiring an NVIDIA GPU. It should now be possible to run on AMD using HIP. This feature is new and may have errors. AMD ROCm is required if HIP is used in place of CUDA. Follow [this guide](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) to install ROCm and HIP.
+
+Note that the HIP folder is generated on HIP-compatible machines by translating the CUDA folder with hipify. Do not modify any of the contents in HIP/, instead treat the CUDA folder as the source of truth and modify that. It will be re-translated in CMake.
 
 If you don't have an NVIDIA or AMD GPU capable of CUDA or HIP, respectively, (i.e. integrated graphics or Intel Arc), you will be unable to run projects that use CUDA. CUDAFreePendulumDemo may work without hardware support.
 
@@ -77,8 +79,6 @@ You can validate your local installation with ./test.sh, which will compile and 
 - **play.sh**: Plays back the most recently rendered video with the provided project name.
 
 - **test.sh**: Compiles and smoketests all demo projects.
-
-- **hipifyCUDA.sh**: Converts CUDA source files in src/CUDA into HIP files, creating the src/HIP directory. If on HIP-compatible AMD hardware, run this script after first install and after changing any CUDA files.
 
 # Design Philosophy
 

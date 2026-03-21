@@ -50,9 +50,9 @@ if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
 fi
 
 # Check if the number of arguments is less or more than expected
-if [ $# -lt 4 ] || [ $# -gt 5 ]; then
+if [ $# -lt 4 ]; then
     echo "go.sh: Suppose that in the Projects/ directory you have made a project called myproject.cpp."
-    echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight> <Framerate> [-s|-h|-x|-hx]"
+    echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight> <Framerate> [optional extra flags]"
     echo "go.sh: Example: $0 myproject 640 360 30 -hx"
     exit 1
 fi
@@ -61,6 +61,7 @@ PROJECT_NAME=$1
 VIDEO_WIDTH=$2
 VIDEO_HEIGHT=$3
 FRAMERATE=$4
+shift; shift; shift; shift;
 # Check that the video dimensions are valid integers
 if ! [[ "$VIDEO_WIDTH" =~ ^[0-9]+$ ]] || ! [[ "$VIDEO_HEIGHT" =~ ^[0-9]+$ ]] || ! [[ "$FRAMERATE" =~ ^[0-9]+$ ]]; then
     echo "go.sh: Error - Video width, height, and framerate must be valid integers."
@@ -73,30 +74,50 @@ SKIP_SMOKETEST=0
 AUDIO_HINTS=0
 AUDIO_SFX=0
 INVALID_FLAG=0
-# If the 5th argument is provided, check if it is valid
-if [ $# -eq 5 ]; then
-    if [ "$5" == "-s" ]; then
-        SKIP_RENDER=1
-    elif [ "$5" == "-n" ]; then
-        SKIP_SMOKETEST=1
-    elif [ "$5" == "-h" ]; then
-        AUDIO_HINTS=1
-    elif [ "$5" == "-x" ]; then
-        AUDIO_SFX=1
-    elif [ "$5" == "-hx" ] || [ "$5" == "-xh" ]; then
-        AUDIO_HINTS=1
-        AUDIO_SFX=1
-    else
-        INVALID_FLAG=1
-    fi
-fi
+USE_HIP="FALSE"
+# Parse flags
+while getopts "snhxc:" flag; do
+    case "$flag" in
+        s) 
+            SKIP_RENDER=1
+            ;;
+        n) 
+            SKIP_SMOKETEST=1
+            ;;
+        h) 
+            AUDIO_HINTS=1
+            ;;
+        x) 
+            AUDIO_SFX=1
+            ;;
+        c)  
+            case "$OPTARG" in
+                CUDA)
+                    USE_HIP="FALSE"
+                    ;;
+                HIP)
+                    USE_HIP="TRUE"
+                    ;;
+                *)
+                    echo "Invalid compute language specified: use CUDA or HIP"
+                    exit 1
+                    ;;
+            esac
+            ;;
+        *)
+            INVALID_FLAG=1
+            ;;
+    esac
+done
+
 # If the final flag is illegal, print an error message and exit
 if [ $INVALID_FLAG -eq 1 ]; then
-    echo "go.sh: Error - The 4th argument has 4 options:"
+    echo "go.sh: Error - Invalid flag:"
     echo "-s means to only run the smoketest."
+    echo "-n means to only run the render"
     echo "-h means to include audio hints."
     echo "-x means to include sound effects."
-    echo "-hx or -xh means to include both audio hints and sound effects."
+    echo "-c means to specify compute language (takes arguments \"CUDA\" or \"HIP\")"
     exit 1
 fi
 
@@ -129,8 +150,6 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
         exit 1
     fi
 
-    clear
-
     # Print the command as run
     echo "$0 $*"
     echo ""
@@ -141,7 +160,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake -G Ninja .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}"
+    cmake -G Ninja .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}" -DUSE_HIP="${USE_HIP}"
 
     echo "go.sh: Compiling..."
     # build the project
