@@ -158,7 +158,7 @@ void VideoWriter::add_frame(Pixels& p) {
     rgb_frame->width  = get_video_width_pixels();
     rgb_frame->height = get_video_height_pixels();
 
-    #ifdef USE_CUDA
+    #ifdef USE_GPU
     alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_width_pixels(), get_video_height_pixels(), get_video_background_color());
     #endif
 
