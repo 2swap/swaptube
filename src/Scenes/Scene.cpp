@@ -197,9 +197,6 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     Pixels* p = nullptr;
     query(p);
 
-    bool fifth_frame = int(get_global_state("frame_number")) % 5 == 0;
-    if(!rendering_on() || fifth_frame) p->print_to_terminal();
-
     if (rendering_on()) { // Do not encode during smoketest
         get_writer().video->add_frame(*p);
     }
