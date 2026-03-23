@@ -48,38 +48,25 @@ elseif(CMAKE_HIP_COMPILER)
     set(GPU_LANGUAGE HIP)
     set(CMAKE_HIP_STANDARD 17)
     set(CMAKE_HIP_ARCHITECTURES native)
-    message(STATUS "Translating CUDA to HIP")
     find_program(HIPIFY_PERL hipify-perl REQUIRED)
-    file(GLOB_RECURSE CUDA_TO_TRANSLATE_CU CONFIGURE_DEPENDS "src/CUDA/*.cu")
-    file(GLOB_RECURSE CUDA_TO_TRANSLATE_CUH CONFIGURE_DEPENDS "src/CUDA/*.cuh")
-    foreach(cuda_file ${CUDA_TO_TRANSLATE_CUH})
+    file(GLOB_RECURSE CUDA_TO_TRANSLATE CONFIGURE_DEPENDS "src/CUDA/*.cu" "src/CUDA/*.cuh")
+    foreach(cuda_file ${CUDA_TO_TRANSLATE})
         file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}/src/CUDA" "${cuda_file}")
         set(hip_file "${CMAKE_SOURCE_DIR}/src/HIP/${rel_path}")
         add_custom_command(
             OUTPUT ${hip_file}
-            COMMAND ${CMAKE_COMMAND} -E copy ${cuda_file} ${hip_file}
-            COMMAND ${HIPIFY_PERL} ${hip_file} -inplace
-            COMMAND rm "${hip_file}.prehip"
+            COMMAND echo "Hipifying ${rel_path}"
+            COMMAND ${HIPIFY_PERL} ${cuda_file} > ${hip_file}
             DEPENDS ${cuda_file}
-            COMMAND echo "Hipifying ${rel_path}"
             VERBATIM
         )
-        list(APPEND HIP_HEADERS ${hip_file})
+        if(${hip_file} MATCHES ".*\.cuh$")
+            list(APPEND HIP_HEADERS ${hip_file})
+        elseif(${hip_file} MATCHES ".*\.cu$")
+            list(APPEND GPU_SOURCES ${hip_file})
+        endif()
     endforeach()
-    foreach(cuda_file ${CUDA_TO_TRANSLATE_CU})
-        file(RELATIVE_PATH rel_path "${CMAKE_SOURCE_DIR}/src/CUDA" "${cuda_file}")
-        set(hip_file "${CMAKE_SOURCE_DIR}/src/HIP/${rel_path}")
-        add_custom_command(
-            OUTPUT ${hip_file}
-            COMMAND ${CMAKE_COMMAND} -E copy ${cuda_file} ${hip_file}
-            COMMAND ${HIPIFY_PERL} ${hip_file} -inplace
-            COMMAND rm "${hip_file}.prehip"
-            DEPENDS ${cuda_file} ${HIP_HEADERS}
-            COMMAND echo "Hipifying ${rel_path}"
-            VERBATIM
-        )
-        list(APPEND GPU_SOURCES ${hip_file})
-    endforeach()
+    add_custom_target(convert_headers ALL DEPENDS ${HIP_HEADERS})
     set_source_files_properties(${GPU_SOURCES} PROPERTIES LANGUAGE HIP)
     set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
     # TODO: Check error ouput on CUDA/HIP function calls so we don't have to suppress warnings
