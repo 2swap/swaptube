@@ -1,6 +1,6 @@
 #include "TuringMachineScene.h"
-#include "../../IO/Writer.h"
-#include "../../IO/SFX.h"
+#include "../../../IO/Writer.h"
+#include "../../../IO/SFX.h"
 #include <vector>
 
 void beep(int state, int symbol, int num_states){

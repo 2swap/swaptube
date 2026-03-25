@@ -107,6 +107,7 @@ extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* 
     cudaMalloc(&d_pixels, size);
     dim3 blockSize(16, 16);
     dim3 gridSize((w + blockSize.x - 1) / blockSize.x, (h + blockSize.y - 1) / blockSize.y);
+
     beaver_grid_kernel<<<gridSize, blockSize>>>(num_states, num_symbols, d_pixels, w, h, grid_w, grid_h, lx_ty, rx_by, max_steps);
     cudaDeviceSynchronize();
     cudaMemcpy(pixels, d_pixels, size, cudaMemcpyDeviceToHost);

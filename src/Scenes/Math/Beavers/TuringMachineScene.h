@@ -1,5 +1,5 @@
-#include "../Common/CoordinateScene.h"
-#include "../../Host_Device_Shared/TuringMachine.h"
+#include "../../Common/CoordinateScene.h"
+#include "../../../Host_Device_Shared/TuringMachine.h"
 
 void parse_tm_from_string(char* s, int num_states, int num_symbols, TuringMachine& tm);
 

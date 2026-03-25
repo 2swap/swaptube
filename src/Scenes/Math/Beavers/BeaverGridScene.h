@@ -1,4 +1,4 @@
-#include "../Common/CoordinateScene.h"
+#include "../../Common/CoordinateScene.h"
 
 class BeaverGridScene : public CoordinateScene {
 public:
