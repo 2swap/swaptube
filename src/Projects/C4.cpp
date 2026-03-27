@@ -22,8 +22,6 @@
 #include "../Scenes/Physics/BouncingBallScene.h"
 
 // TODO LATER tromp's questions
-// TODO LATER we can compress under 70kb
-// TODO LATER make anki deck
 // TODO LATER I should really make a manager.undo function...
 // TODO Thumbnail
 
@@ -361,8 +359,8 @@ void intro(CompositeScene& cs) {
     cs.fade_subscene(MICRO, "god2", 0);
     shared_ptr<PngScene> human1 = make_shared<PngScene>("Thinker1", vec2(.3, .6));
     shared_ptr<PngScene> human2 = make_shared<PngScene>("Thinker2", vec2(.3, .6));
-    cs.add_scene(human1, "human1", vec2(.15, 1.7));
-    cs.add_scene(human2, "human2", vec2(.85, 1.7));
+    cs.add_scene(human1, "human1", vec2(.12, 1.7));
+    cs.add_scene(human2, "human2", vec2(.88, 1.7));
     cs.slide_subscene(MICRO, "human1", vec2(0, -1));
     cs.slide_subscene(MICRO, "human2", vec2(0, -1));
     cs.render_microblock();
@@ -378,7 +376,7 @@ void intro(CompositeScene& cs) {
     cs.render_microblock();
     c4s->play("2");
     shared_ptr<PngScene> human2_trick = make_shared<PngScene>("Thinker2_trick", vec2(.3, .6));
-    cs.add_scene_fade_in(MICRO, human2_trick, "human2_trick", vec2(.85, .7));
+    cs.add_scene_fade_in(MICRO, human2_trick, "human2_trick", vec2(.88, .7));
     cs.render_microblock();
     cs.render_microblock();
     c4s->undo(1);
@@ -449,7 +447,7 @@ void build_graph(CompositeScene& cs) {
     cs.render_microblock();
 
     gs->manager.transition(MICRO, {{"q1", "1"}, {"qi", "{t} 3 / cos"}, {"qj", "{t} 3 / sin"}, {"qk", "0"}});
-    gs->manager.transition(MICRO, {{"x", "10"}, {"y", "8"}, {"z", "3"}});
+    gs->manager.transition(MICRO, {{"x", "24"}, {"y", "28"}, {"z", "30"}});
     stage_macroblock(FileBlock("Because instead of relying on brute force search, I found a profoundly simpler way to play perfect connect 4. All it takes is this graph."), 1);
     cs.render_microblock();
 
@@ -620,17 +618,16 @@ void explanation(CompositeScene& cs) {
 
     shared_ptr<LineChartScene> lcs = make_shared<LineChartScene>();
     stage_macroblock(SilenceBlock(1), 1);
-    cs.fade_all_subscenes(MICRO, 0);
-    cs.add_scene_fade_in(MICRO, lcs, "lcs");
     cs.render_microblock();
-    cs.remove_all_subscenes_except("lcs");
 
     shared_ptr<C4Scene> quick_display = make_shared<C4Scene>("", vec2(.5, .5));
-    cs.add_scene_fade_in(MICRO, quick_display, "quick_display", vec2(.25, .2));
     quick_display->set_fast_mode(true);
-
     stage_macroblock(FileBlock("The amount of positions to memorize up to a certain depth grows really fast."), 1);
+    cs.fade_all_subscenes(MICRO, 0);
+    cs.add_scene_fade_in(MICRO, quick_display, "quick_display", vec2(.25, .2));
     cs.render_microblock();
+    cs.remove_all_subscenes_except("quick_display");
+    cs.add_scene_fade_in(MICRO, lcs, "lcs");
 
     g->clear();
     shared_ptr<C4GraphScene> num_moves_tracker = make_shared<C4GraphScene>(g, false, "", FULL, vec2(.8, .8));
@@ -1535,17 +1532,17 @@ void trimmed_solution(CompositeScene& cs) {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("This is just the compressed subgraph resulting from one particular leaf node."), 2);
-    weakc4->manager.transition(MICRO, "d", ".25");
+    weakc4->manager.transition(MICRO, "d", ".35");
     cs.render_microblock();
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Imagine having to memorize those subtrees for every single leaf node on the graph!"), 2);
+    b = C4Board(FULL, "");
+    weakc4->next_hash = b.get_hash();
     cs.render_microblock();
     weakc4->manager.transition(MICRO, "d", ".9");
     cs.render_microblock();
 
-    b = C4Board(FULL, "");
-    weakc4->next_hash = b.get_hash();
     reset_graph_edge_opacities(g);
     g->remove_node(node_id); // remove so we can regrow it
     g->add_to_stack(new C4Board(C4BranchMode::FULL, variation));
@@ -2306,7 +2303,6 @@ void sponsor(CompositeScene& cs) {
 
 void render_video() {
     CompositeScene cs;
-    /*
     preintro(cs);
     intro(cs);
     build_graph(cs);
@@ -2318,6 +2314,5 @@ void render_video() {
     solution_types(cs, weakc4);
     ideas(cs, weakc4);
     anki(cs);
-    */
     sponsor(cs);
 }
