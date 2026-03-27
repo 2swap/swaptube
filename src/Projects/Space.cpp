@@ -1,9 +1,12 @@
 #include "../Scenes/Math/GeodesicScene.h"
 #include "../Scenes/Math/ManifoldScene.h"
 #include "../Scenes/Common/CompositeScene.h"
+#include "../Scenes/Media/Mp4Scene.h"
 #include "../Core/Smoketest.h"
+#include "../Scenes/Media/AlphaFilterScene.h"
 
 void first_half() {
+    set_for_real(false);
     shared_ptr<GeodesicScene> gs = make_shared<GeodesicScene>();
 
     gs->manager.set({
@@ -70,11 +73,17 @@ void first_half() {
         {"pov_x", "0"},
         {"pov_z", "2"},
     });
-    // (2swap slams kill switch on space warping device, surfaces begin to flatten out)
+
+    CompositeScene cs_killswitch;
+    shared_ptr<Mp4Scene> killswitch = make_shared<Mp4Scene>(vector<string>{"greenscreen_killswitch"}, 1);
+    shared_ptr<AlphaFilterScene> alpha_killswitch = make_shared<AlphaFilterScene>(killswitch, 0xff00ff00, true);
+    cs_killswitch.add_scene(gs, "gs");
+    cs_killswitch.add_scene(alpha_killswitch, "alpha");
     gs->manager.transition(MICRO, {
         {"space_w", "0"},
     });
-    gs->render_microblock();
+    cs_killswitch.render_microblock();
+    cs_killswitch.remove_all_subscenes();
 
     stage_macroblock(FileBlock("(Door bursts open) Put your hands where I can see them!"), 2);
     gs->manager.set("sphere_radius", ".1 {voice} * .5 +");
@@ -101,8 +110,18 @@ void first_half() {
     stage_macroblock(FileBlock("Our instruments show a large non-zero gaussian curvature in this room. What on earth are you doing in here?"), 1);
     gs->render_microblock();
 
+    CompositeScene cs_handsup;
+    shared_ptr<Mp4Scene> handsup = make_shared<Mp4Scene>(vector<string>{"greenscreen_wheel"}, 1);
+    shared_ptr<AlphaFilterScene> alpha_handsup = make_shared<AlphaFilterScene>(handsup, 0xff00ff00, true);
+    cs_handsup.add_scene(gs, "gs");
+    cs_handsup.add_scene(alpha_handsup, "alpha");
     stage_macroblock(FileBlock("It wasn't me, I swear!"), 1);
-    gs->render_microblock();
+    gs->manager.transition(MICRO, {
+        {"pov_q1", "1"},
+        {"pov_qj", "-1"},
+    });
+    cs_handsup.render_microblock();
+    cs_handsup.remove_all_subscenes();
 
     stage_macroblock(FileBlock("Are you in possession of any contraband items?"), 1);
     gs->render_microblock();
@@ -240,7 +259,7 @@ void first_half() {
         {"manifold_b_steps", "100"},
     };
 
-    stage_macroblock(FileBlock("No! Tesseracts, Möbius strips, or perhaps... a Klein bottle?"), 17);
+    stage_macroblock(FileBlock("No! Tesseracts, Möbius strips, or perhaps... a Klein bottle?"), 13);
     ms->manager.set(plane1);
     cs.render_microblock();
     ms->manager.transition(MICRO, tesseract);
@@ -259,14 +278,22 @@ void first_half() {
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
+    cs.fade_all_subscenes(MICRO, 1);
     cs.render_microblock();
+    cs.remove_all_subscenes();
 
+    CompositeScene cs_pointdoor;
+    shared_ptr<Mp4Scene> pointdoor = make_shared<Mp4Scene>(vector<string>{"greenscreen_pointdoor"}, 1);
+    shared_ptr<AlphaFilterScene> alpha_pointdoor = make_shared<AlphaFilterScene>(pointdoor, 0xff00ff00, true);
+    cs_pointdoor.add_scene(gs, "gs");
+    cs_pointdoor.add_scene(alpha_pointdoor, "alpha");
     stage_macroblock(FileBlock("Oh, I think I saw my roommate playing with those before... (points at door)"), 1);
     gs->manager.transition(MICRO, {
         {"pov_q1", "1"},
         {"pov_qj", "-1"},
     });
-    gs->render_microblock();
+    cs_pointdoor.render_microblock();
+    cs_pointdoor.remove_all_subscenes();
 
     stage_macroblock(FileBlock("*Agent walks toward door*"), 1);
     gs->manager.transition(MICRO, {
@@ -274,7 +301,28 @@ void first_half() {
         {"sphere_z", "0"},
     });
     gs->render_microblock();
+    set_for_real(true);
 
+    stage_macroblock(SilenceBlock(1), 1);
+    gs->manager.set({
+        {"pov_q1", "1"},
+        {"pov_qj", "0"},
+        {"pov_x", "0"},
+        {"pov_y", "0"},
+        {"pov_z", "-2"},
+        {"geodesics_steps", "1000"},
+        {"geodesics_count", "4"},
+    });
+    gs->manager.transition(MICRO, {
+        {"space_x", "(a) (b) (c) balloon_b (a) * (a) +"},
+        {"space_y", "(a) (b) (c) balloon_b (b) * (b) +"},
+        {"space_z", "(a) (b) (c) balloon_b (c) * (c) +"},
+        {"space_w", "(a) (b) (c) balloon_z"},
+    });
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1), 1);
+    gs->render_microblock();
     return;
 
     // *Agent walks toward door*
@@ -495,202 +543,4 @@ void render_video() {
     return;
     globe();
     second_half();
-}
-
-void old() {
-    GeodesicScene gs;
-
-    gs.manager.set({
-        {"pov_fov", "2"},
-        {"pov_z", "5"},
-        {"manifold_opacity", "0"},
-        {"pov_grid_thickness", "0.1"},
-        {"pov_floor_y", "<pov_max_dist> -1 *"},
-        {"pov_ceiling_y", "<pov_max_dist>"},
-    });
-
-    stage_macroblock(FileBlock("Space is a place where there are things."), 2);
-    gs.manager.transition(MICRO, {
-        {"pov_max_dist", "20"},
-        {"pov_q1", ".2"},
-        {"pov_qj", "1"},
-    });
-    gs.render_microblock();
-    gs.manager.transition(MICRO, {
-        {"pov_q1", "1"},
-        {"pov_qj", "0"},
-    });
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("For example, this floor or this ceiling."), 4);
-    gs.render_microblock();
-    gs.manager.transition(MICRO, "pov_floor_y", "-1");
-    gs.render_microblock();
-    gs.manager.transition(MICRO, "pov_ceiling_y", "1");
-    gs.render_microblock();
-    gs.manager.transition(MICRO, "pov_grid_thickness", "0");
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("Floors and ceilings are usually flat..."), 1);
-    gs.manager.transition(MICRO, {
-        {"pov_q1", "1"},
-        {"pov_qj", "{t} .3 * cos .1 *"},
-    });
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("meaning, they follow the straight lines of some underlying coordinate system."), 1);
-    gs.manager.transition(MICRO, {
-        {"pov_grid_thickness", ".1"},
-    });
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("Lines are great! They follow beside you when you walk straight."), 2);
-    gs.manager.transition(MICRO, {
-        {"pov_q1", "1"},
-        {"pov_qi", "0"},
-        {"pov_qj", "0"},
-    });
-    gs.render_microblock();
-    gs.manager.transition(MICRO, "pov_z", "-5");
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("They always point the same way, so if I follow one, I won't go astray."), 1);
-    gs.manager.transition(MICRO, "pov_z", "5");
-    gs.render_microblock();
-
-    gs.manager.set({
-        {"pov_max_dist", "0"},
-    });
-
-    gs.manager.set({
-        {"geodesics_count", "1"},
-        {"geodesics_spread_angle", ".1"},
-    });
-
-    stage_macroblock(FileBlock("For an ant on a sheet walking from A to B, there's just one straight path, and it's always the shortest."), 3);
-    gs.manager.transition(MICRO, {
-        {"manifold_opacity", ".4"},
-        {"geodesics_steps", "50"},
-    });
-    gs.render_microblock();
-    gs.render_microblock();
-    gs.render_microblock();
-
-    stage_macroblock(SilenceBlock(1), 1);
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("...except when there's not!"), 1);
-    gs.manager.transition(MICRO, {
-        {"space_w", "(a) sin (b) sin +"},
-        {"geodesics_steps", "200"},
-    });
-    gs.render_microblock();
-
-    stage_macroblock(SilenceBlock(1), 1);
-    gs.manager.set({
-        {"space_w", "(a) <warp> * sin (b) <warp> * sin + <warp> /"},
-        {"warp", "1"},
-    });
-    gs.manager.transition(MICRO, {
-        {"geodesics_steps", "300"},
-        {"warp", "3"},
-    });
-    gs.render_microblock();
-
-    stage_macroblock(SilenceBlock(1), 1);
-    gs.manager.transition(MICRO, {
-        {"warp", "5"},
-    });
-    gs.render_microblock();
-
-    StateSet undo = gs.manager.transition(MICRO, {
-        {"pov_q1", "1.0"},
-        {"pov_qi", "0"},
-        {"pov_qj", "0"},
-        {"pov_qk", "0"},
-    });
-    stage_macroblock(SilenceBlock(1), 1);
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("Bending the space that the ant lives on, if it walks straight..."), 2);
-    gs.manager.transition(MICRO, {
-        {"space_w", "1 (a) (a) * (b) (b) * + .5 + /"},
-    });
-    gs.manager.transition(MICRO, undo);
-    gs.render_microblock();
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("its path is anything but!"), 2);
-    gs.render_microblock();
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("We can imagine all of the straight paths that it could take."), 2);
-    gs.manager.transition(MICRO, {
-        {"space_w", "0"},
-        {"geodesics_steps", "0"},
-    });
-    gs.render_microblock();
-    gs.manager.set({
-        {"geodesics_count", "10000"},
-        {"geodesics_opacity", ".03"},
-        {"geodesics_spread_angle", "pi 2 *"},
-    });
-    gs.manager.transition(MICRO, {
-        {"geodesics_steps", "100"},
-    });
-    gs.render_microblock();
-
-    stage_macroblock(FileBlock("and you'll notice strange effects between them when space is curved."), 1);
-    gs.manager.transition(MICRO, "space_w", "1 (a) (a) * (b) (b) * + .5 + /");
-    gs.render_microblock();
-
-    stage_macroblock(SilenceBlock(5), 3);
-    gs.manager.transition(MICRO, "space_w", "0");
-    gs.render_microblock();
-    gs.manager.transition(MICRO, "space_w", "(a) <warp> * sin (b) <warp> * sin + <warp> /");
-    gs.render_microblock();
-    gs.render_microblock();
-
-    gs.manager.transition(MICRO, {
-        {"geodesics_spread_angle", "pi .2 *"},
-        {"geodesics_count", "1000"},
-    });
-    return;
-
-    stage_macroblock(FileBlock("Since light follows a straight line to get to the ant,"), 1);
-    stage_macroblock(FileBlock("a straight walk of the ant is the same path as its line of sight."), 1);
-
-    // Now, this is all cool, but of course it depends on us embedding this curved space into our usual three-dimensional world.
-    // Luckily for us three-dimensionalites, our world can't be bent around in three-dimensional space, since it already is three-dimensional space. Right?
-    // (Voice) Mwahahaha!
-    // *Shriek* Who are you!? What did you do to my floor and my ceiling?!
-    // (Voice) You think you're so special with your voluminous third dimension. You're no different than that ant! I've come from the fourth dimension to teach you a thing or two!
-
-    // echo??
-    stage_macroblock(FileBlock("If the ant were in a room,"), 1);
-    stage_macroblock(FileBlock("by looking in this direction,"), 1);
-    stage_macroblock(FileBlock("it would see the wall behind it!"), 1);
-    stage_macroblock(FileBlock("Its entire field of view would be warped out of shape."), 1);
-
-    stage_macroblock(FileBlock("What's more, there are now several straight lines from A to B!"), 1);
-    stage_macroblock(FileBlock("If the ant starts walking in any given direction,"), 1);
-    stage_macroblock(FileBlock("it's no longer easy to tell where it will end up."), 1);
-    stage_macroblock(FileBlock("Something like this."), 1);
-    stage_macroblock(FileBlock("By changing how its space is bent, we change the nature of geometry in that space."), 1);
-    stage_macroblock(FileBlock("Straight lines are no longer straight, parallel lines intersect, three right turns get you back to where you began..."), 1);
-
-    stage_macroblock(FileBlock("But, you say, we haven't changed space itself at all!"), 1);
-    stage_macroblock(FileBlock("We've just warped the ant's ground into a higher dimension."), 1);
-    stage_macroblock(FileBlock("It still implicitly exists within our usual three-dimensional world."), 1);
-
-    stage_macroblock(FileBlock("Hold that thought."), 1);
-    stage_macroblock(FileBlock("Imagine a set of points, and only when two are connected, they have a distance of 1."), 1);
-    stage_macroblock(FileBlock("If we make a fabric of these points, it's just like a flat plane."), 1);
-    stage_macroblock(FileBlock("But if we start adding more connections..."), 1);
-    stage_macroblock(FileBlock(""), 1);
-    stage_macroblock(FileBlock(""), 1);
-    stage_macroblock(FileBlock(""), 1);
-    stage_macroblock(FileBlock(""), 1);
-    stage_macroblock(FileBlock(""), 1);
-    stage_macroblock(FileBlock(""), 1);
 }

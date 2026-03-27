@@ -11,22 +11,22 @@
 __constant__ Cuda::ManifoldData d_manifold;
 
 __noinline__ __device__ Cuda::vec3 surface_2d(Cuda::vec2 v) {
-    float cuda_tags[2] = { v.x, v.y };
+    float cuda_tags[3] = { v.x, v.y, v.y };
 
     int error = 0;
-    float x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 2, error);
+    float x = evaluate_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq, cuda_tags, 3, error);
     if(error) {
         printf("Error calculating manifold x at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.x_size, d_manifold.x_eq);
         return Cuda::vec3(0.0f);
     }
-    float y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 2, error);
+    float y = evaluate_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq, cuda_tags, 3, error);
     if(error) {
         printf("Error calculating manifold y at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.y_size, d_manifold.y_eq);
         return Cuda::vec3(0.0f);
     }
-    float z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 2, error);
+    float z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 3, error);
     if(error) {
         printf("Error calculating manifold z at u=%f v=%f\n. Error code: %d\n", v.x, v.y, error);
         print_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq);

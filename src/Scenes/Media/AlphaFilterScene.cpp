@@ -7,7 +7,8 @@
 AlphaFilterScene::AlphaFilterScene(
     std::shared_ptr<Scene> sc,
     const unsigned int preserve_col,
-    const vec2& dimensions) : SuperScene(dimensions), preserve_col(preserve_col)
+    const bool inv,
+    const vec2& dimensions) : SuperScene(dimensions), preserve_col(preserve_col), inversed(inv)
 {
     add_subscene_check_dupe("main", sc);
 }
@@ -39,7 +40,7 @@ void AlphaFilterScene::draw() {
         for(int y = 0; y < pix.h; y++) {
             unsigned int col = subscene_pix->get_pixel_carelessly(x, y);
             int dist = coldist(col, preserve_col);
-            if (dist < 256) pix.set_pixel_carelessly(x, y, col);
+            if ((dist < 256) ^ inversed) pix.set_pixel_carelessly(x, y, col);
         }
     }
 }

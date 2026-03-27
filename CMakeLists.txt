@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
@@ -77,8 +77,6 @@ elseif(CMAKE_HIP_COMPILER)
 else()
     message(WARNING "Neither CUDA nor HIP found. Please refer to readme for building without GPU support.")
 endif()
-
-add_compile_options(-fdiagnostics-color=always)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${ACTIVE_PROJECT_SOURCE} ${GPU_SOURCES})
 message(STATUS "Executable target ${PROJECT_NAME} added")
