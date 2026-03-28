@@ -15,7 +15,6 @@ using namespace std;
 
 SHARED_FILE_PREFIX
 
-HOST_DEVICE inline float sigmoid(float x){return 2/(1+exp(-x))-1;}
 HOST_DEVICE inline float clamp(float val, float bottom, float top){return min(top, max(val, bottom));}
 HOST_DEVICE inline float square(float x){return x * x;}
 HOST_DEVICE inline float cube(float x){return x * x * x;}

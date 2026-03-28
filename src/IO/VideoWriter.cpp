@@ -154,18 +154,21 @@ void VideoWriter::add_frame(Pixels& p) {
     if (p.w != get_video_width_pixels() || p.h != get_video_height_pixels())
         throw runtime_error("Frame dimensions were expected to be (" + to_string(get_video_width_pixels()) + ", " + to_string(get_video_height_pixels()) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
 
-    // Allocate a temporary RGB frame wrapper (no copy of pixel data)
-    AVFrame* rgb_frame = av_frame_alloc();
-    rgb_frame->format = AV_PIX_FMT_BGRA;
-    rgb_frame->width  = get_video_width_pixels();
-    rgb_frame->height = get_video_height_pixels();
-
     #ifdef USE_GPU
     alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_width_pixels(), get_video_height_pixels(), get_video_background_color());
     #endif
 
     bool fifth_frame = int(get_global_state("frame_number")) % 5 == 0;
-    if(fifth_frame) p.print_to_terminal();
+    bool live = rendering_on();
+    if(!live || fifth_frame) p.print_to_terminal(); // Print every smoketest frame, and every 5th normal frame
+
+    if(!live) return; // Don't encode video in smoketest
+
+    // Allocate a temporary RGB frame wrapper (no copy of pixel data)
+    AVFrame* rgb_frame = av_frame_alloc();
+    rgb_frame->format = AV_PIX_FMT_BGRA;
+    rgb_frame->width  = get_video_width_pixels();
+    rgb_frame->height = get_video_height_pixels();
 
     // Point FFmpeg directly to your source data
     rgb_frame->data[0] = reinterpret_cast<uint8_t*>(p.pixels.data());

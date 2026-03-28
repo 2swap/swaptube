@@ -2,6 +2,7 @@
 #include "../Core/Smoketest.h"
 #include "../IO/Writer.h"
 #include "../Host_Device_Shared/vec.h"
+#include "../Host_Device_Shared/helpers.h"
 
 int remaining_microblocks_in_macroblock = 0;
 int remaining_frames_in_macroblock = 0;
@@ -21,6 +22,8 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
     total_microblocks_in_macroblock = remaining_microblocks_in_macroblock = expected_microblocks_in_macroblock;
     cout << "Set remaining microblocks in macroblock to " << to_string(remaining_microblocks_in_macroblock) << endl;
     macroblock.write_shtooka();
+
+    get_writer().audio->encode_buffers();
 
     total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
     if (!rendering_on()) total_frames_in_macroblock = min(10, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
@@ -52,8 +55,6 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
             );
         }
     } // Audio hints
-
-    get_writer().audio->encode_buffers();
 }
 
 Scene::Scene(const vec2& dimensions)
@@ -197,9 +198,7 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     Pixels* p = nullptr;
     query(p);
 
-    if (rendering_on()) { // Do not encode during smoketest
-        get_writer().video->add_frame(*p);
-    }
+    get_writer().video->add_frame(*p);
 
     remaining_frames_in_macroblock--;
     set_global_state("frame_number", get_global_state("frame_number") + 1);

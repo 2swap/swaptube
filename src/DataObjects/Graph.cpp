@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <numeric>
 #include "../Host_Device_Shared/vec.h"
+#include "../Host_Device_Shared/helpers.h"
 
 using json = nlohmann::json;
 
@@ -31,7 +32,7 @@ vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<f
 Node::Node(GenericBoard* t, double hash, vec4 position, vec4 velocity) :
     data(t), hash(hash), velocity(velocity), position(position) {}
 
-float Node::weight() const { return sigmoid(age*.2f + 0.01f); }
+float Node::weight() const { float x = age*.2f + 0.01f; return 2/(1+exp(-x))-1; }
 double Node::radius() const { return size * (((3*age - 1) * exp(-.5*age)) + 1); }
 double Node::splash_opacity() const { return 1-square(age/12.); }
 double Node::splash_radius() const { return size * age * .4; }

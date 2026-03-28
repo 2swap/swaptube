@@ -139,7 +139,7 @@ void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<samp
     int sample_copy_end_frames = sample_copy_start_frames + numSamples;
 
     if(sample_copy_start_frames < 0)
-        throw runtime_error("Sfx copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t_samples) + " " + to_string(total_samples_processed));
+        throw runtime_error("Sfx copy start was negative: " + to_string(sample_copy_start_frames) + ". " + to_string(t_samples) + " is the time in samples requested (" + to_string(t_seconds) + " seconds.) " + to_string(total_samples_processed));
 
     int start_idx = sample_copy_start_frames * audio_channels;
     int end_idx = sample_copy_end_frames * audio_channels;
