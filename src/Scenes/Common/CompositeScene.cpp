@@ -46,7 +46,7 @@ void CompositeScene::draw() {
         float center_x = x - subscene->get_width ()/2;
         float center_y = y - subscene->get_height()/2;
 
-        if (angle > 0.01 && angle < 2*M_PI - 0.01) {
+        if (angle > 0.0001 && angle < 2*M_PI - 0.0001) {
             cuda_overlay_with_rotation(
                 pix.pixels.data(), pix.w, pix.h,
                 p->pixels.data(), p->w, p->h,

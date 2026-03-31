@@ -24,7 +24,6 @@
 // TODO LATER tromp's questions
 // TODO LATER I should really make a manager.undo function...
 // TODO Thumbnail
-// TODO Candlesticks opening first introduction - dont jump away
 
 double find_node_id_from_board(shared_ptr<Graph> g, C4Board& b) {
     double start_node_id = b.get_hash();
@@ -1863,10 +1862,7 @@ shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
     }
 
     weakc4->manager.transition(MACRO, "d", "1");
-    b = C4Board(FULL, "4");
-    weakc4->next_hash = b.get_hash();
     stage_macroblock(SilenceBlock(2), 1);
-    reset_graph_edge_opacities(g);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("We've covered a whole bunch of solutions to connect four."), 1);
@@ -1874,6 +1870,10 @@ shared_ptr<C4GraphScene> hardest_openings(CompositeScene& cs) {
     cs.render_microblock();
     cs.remove_all_subscenes();
     weakc4->manager.set("w", "1");
+
+    b = C4Board(FULL, "4");
+    weakc4->next_hash = weakc4->curr_hash = b.get_hash();
+    reset_graph_edge_opacities(g);
     return weakc4;
 }
 
@@ -2255,11 +2255,19 @@ void anki(CompositeScene& cs) {
 
 void sponsor(CompositeScene& cs) {
     shared_ptr<Mp4Scene> opera_gamereview = make_shared<Mp4Scene>(vector<string>{"opera_gamereview"}, 1);
-    cs.add_scene(opera_gamereview, "opera_gamereview");
-    stage_macroblock(FileBlock("I think the best way to learn the game is to play online, and in between rounds, review the variations you played in the tree to see what a better response could have been."), 1);
+    shared_ptr<Mp4Scene> opera_splitscreen = make_shared<Mp4Scene>(vector<string>{"opera_splitscreen"}, 1);
+    cs.add_scene_fade_in(MICRO, opera_gamereview, "opera_gamereview");
+    opera_gamereview->manager.set("MP4_Frame", "20");
+    opera_gamereview->manager.transition(MACRO, "MP4_Frame", "30", false);
+    stage_macroblock(FileBlock("I think the best way to learn the game is to play online, and in between rounds, review the variations you played in the tree to see what a better response could have been."), 5);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("And that's where the sponsor, Opera Browser can help!"), 4);
+    stage_macroblock(FileBlock("And that's where our sponsor, Opera Browser can help!"), 4);
+    opera_gamereview->manager.transition(MICRO, "MP4_Frame", "35", false);
     shared_ptr<PngScene> opera_logo = make_shared<PngScene>("opera_logo");  
     cs.add_scene_fade_in(MICRO, opera_logo, "opera_logo", vec2(.5, 1.5));
     cs.slide_subscene(MICRO, "opera_logo", vec2(0, -1));
@@ -2275,32 +2283,36 @@ void sponsor(CompositeScene& cs) {
     cs.remove_subscene("opera_logo");
 
     stage_macroblock(FileBlock("Using Opera's side-by-side browsing feature, you can easily replay your games in the tree alongside your online matches."), 1);
-    cs.render_microblock();
+    opera_splitscreen->render_microblock();
 
-    stage_macroblock(FileBlock("In this case, I created a steady state position early, after reaching the 6-1 opening, but my opponent blundered and just gave me the win..."), 1);
+    stage_macroblock(FileBlock("In this case, we can see that I played out this variation of the 6-1 exactly as suggested by the solution graph!"), 2);
+    opera_gamereview->manager.set("MP4_Frame", "0");
+    opera_gamereview->manager.transition(MICRO, "MP4_Frame", "71");
+    cs.render_microblock();
+    opera_gamereview->manager.transition(MICRO, "MP4_Frame", "88");
     cs.render_microblock();
     cs.remove_all_subscenes();
 
-    shared_ptr<Mp4Scene> opera_darkmode_tabs = make_shared<Mp4Scene>(vector<string>{"opera_darkmode_tabs"}, 1);
-    cs.add_scene(opera_darkmode_tabs, "opera_darkmode_tabs");
-    stage_macroblock(FileBlock("Pascal Pons's online solver came in a lot of handy when debugging my own solution. Usually this website is an ugly shiny white, but Opera features a built-in universal dark mode option which makes it much easier on the eyes."), 1);
-    cs.render_microblock();
-
-    stage_macroblock(FileBlock("If you find yourself exploring a lot of positions, you can group your tabs into 'islands' to stay organized."), 1);
+    shared_ptr<Mp4Scene> opera_tabislands = make_shared<Mp4Scene>(vector<string>{"opera_tabislands"}, 1);
+    cs.add_scene(opera_tabislands, "opera_tabislands");
+    stage_macroblock(FileBlock("I found myself using Opera's tab islands to organize positions which I was in the process of analyzing."), 1);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("I guess you could, like, use these features for organizing your research or something... but who am I kidding, this is practically made for connect 4 study."), 1);
     cs.render_microblock();
     cs.remove_all_subscenes();
 
-    stage_macroblock(FileBlock("Opera is top notch when it comes to customization and productivity. In addition to helping you organize your browsing, it has a side-bar that makes common apps super easy to access."), 1);
+    stage_macroblock(FileBlock("Opera is top notch when it comes to customization and productivity. In addition to organizing your browsing, it has a side-bar that makes common apps super easy to access."), 1);
     cs.render_microblock();
 
     shared_ptr<Mp4Scene> opera_popout = make_shared<Mp4Scene>(vector<string>{"opera_popout"}, 1);
     cs.add_scene(opera_popout, "opera_popout");
-    stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable, including a built-in adblocker, and a video pop-out feature that lets you pretend that you're getting work done while watching 2swap instead."), 1);
+    stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable, including a built-in adblocker, and a video pop-out feature that lets you pretend that you're getting research done while watching 2swap instead."), 1);
     cs.render_microblock();
+    cs.remove_all_subscenes();
 
+    shared_ptr<Mp4Scene> opera_skipvideo = make_shared<Mp4Scene>(vector<string>{"opera_skipvideo"}, 1);
+    cs.add_scene(opera_skipvideo, "opera_skipvideo");
     stage_macroblock(FileBlock("It has a video skip button that works in YouTube, Netflix, and so on... wait wait wait don't click it now-"), 1);
     cs.render_microblock();
 
@@ -2309,6 +2321,7 @@ void sponsor(CompositeScene& cs) {
 
 void render_video() {
     CompositeScene cs;
+    /*
     preintro(cs);
     intro(cs);
     build_graph(cs);
@@ -2320,5 +2333,6 @@ void render_video() {
     solution_types(cs, weakc4);
     ideas(cs, weakc4);
     anki(cs);
+    */
     sponsor(cs);
 }
