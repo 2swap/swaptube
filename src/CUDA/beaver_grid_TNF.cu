@@ -7,18 +7,18 @@
 
 constexpr int half_tape_length = 20;
 
-__device__ void get_child(TuringMachine& tm, int action_index, const Cuda::vec2& pixel, Cuda::vec2* lx_ty, Cuda::vec2* rx_by, unsigned int* pixels, int pixel_index) {
+__device__ void get_child(TuringMachine& tm, int action_index, const Cuda::vec2& pixel, Cuda::vec2& lx_ty, Cuda::vec2& rx_by) {
     bool symbols_split_rows = true;
     bool dirs_split_rows = true;
     bool states_split_rows = false;
     int num_cols = (symbols_split_rows ? 1 : tm.num_symbols) * (dirs_split_rows ? 1 : 2) * (states_split_rows ? 1 : tm.num_states);
     int num_rows = (2 * tm.num_symbols * tm.num_states) / num_cols;
-    Cuda::vec2 child_size = (*rx_by - *lx_ty) / Cuda::vec2(num_cols, num_rows);
+    Cuda::vec2 child_size = (rx_by - lx_ty) / Cuda::vec2(num_cols, num_rows);
 
     /* ivecs don't exist yet
-    Cuda::ivec2 child_pos = floor((pixel - *lx_ty) / child_size);
-    *lx_ty += child_size * child_pos;
-    *rx_by = *lx_ty + child_size;
+    Cuda::ivec2 child_pos = floor((pixel - lx_ty) / child_size);
+    lx_ty += child_size * child_pos;
+    rx_by = lx_ty + child_size;
     tm.left_right[action_index] = (dirs_split_rows ? child_pos.y : child_pos.x) % 2;
     tm.write_symbol[action_index] = ((symbols_split_rows ? child_pos.y : child_pos.x) / (dirs_split_rows == symbols_split_rows ? 2 : 1)) % tm.num_symbols;
     tm.next_state[action_index] = states_split_rows ? (child_pos.y * num_states) / num_rows : (child_pos.x * num_states) / num_cols;
@@ -26,10 +26,10 @@ __device__ void get_child(TuringMachine& tm, int action_index, const Cuda::vec2&
     tm.num_states += (int)(tm.next_state[action_index] == tm.num_states-1);
     */
 
-    int child_x = floor((pixel.x - (*lx_ty).x) / child_size.x);
-    int child_y = floor((pixel.y - (*lx_ty).y) / child_size.y);
-    *lx_ty += child_size * Cuda::vec2(child_x, child_y);
-    *rx_by = *lx_ty + child_size;
+    int child_x = floor((pixel.x - lx_ty.x) / child_size.x);
+    int child_y = floor((pixel.y - lx_ty.y) / child_size.y);
+    lx_ty += child_size * Cuda::vec2(child_x, child_y);
+    rx_by = lx_ty + child_size;
     tm.left_right[action_index] = (dirs_split_rows ? child_y : child_x) % 2;
     tm.write_symbol[action_index] = ((symbols_split_rows ? child_y : child_x) / (dirs_split_rows == symbols_split_rows ? 2 : 1)) % tm.num_symbols;
     tm.next_state[action_index] = states_split_rows ? (child_y * tm.num_states) / num_rows : (child_x * tm.num_states) / num_cols;
@@ -102,7 +102,7 @@ __global__ void beaver_TNF_kernel(unsigned int* pixels, int w, int h, Cuda::vec2
                 break;
             }
 
-            get_child(tm, action_index, Cuda::vec2(idx, idy), &lx_ty, &rx_by, pixels, pixel_index);
+            get_child(tm, action_index, Cuda::vec2(idx, idy), lx_ty, rx_by);
             depth += 1;
         }
         tape[head_position] = tm.write_symbol[action_index];
