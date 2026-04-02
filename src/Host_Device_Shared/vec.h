@@ -172,4 +172,30 @@ HOST_DEVICE inline vec3 rotate_vector(const vec3& v, const quat& q) {
     return vec3{ rotated.i, rotated.j, rotated.k };
 }
 
+HOST_DEVICE inline quat get_quat(const vec3& forward, const vec3& up) {
+    vec3 unit_z = normalize(forward);
+    vec3 unit_y = normalize(up - dot(up, unit_z) * unit_z);
+    vec3 unit_x = cross(unit_y, unit_z);
+    float t;
+    quat q;
+    if (unit_z.z < 0) {
+	if (unit_x.x > unit_y.y) {
+	    t = 1.0f + unit_x.x - unit_y.y - unit_z.z;
+	    q = quat(unit_y.z - unit_z.y, t, unit_x.y + unit_y.x, unit_x.z + unit_z.x);
+	} else {
+	    t = 1.0f - unit_x.x + unit_y.y - unit_z.z;
+	    q = quat(unit_z.x - unit_x.z, unit_x.y + unit_y.x, t, unit_y.z + unit_z.y);
+	}
+    } else {
+	if (unit_x.x < -unit_y.y) {
+	    t = 1.0f - unit_x.x - unit_y.y + unit_z.z;
+	    q = quat(unit_x.y - unit_y.x, unit_x.z + unit_z.x, unit_y.z + unit_z.y, t);
+	} else {
+	    t = 1.0f + unit_x.x + unit_y.y + unit_z.z;
+	    q = quat(t, unit_y.z - unit_z.y, unit_z.x - unit_x.z, unit_x.y - unit_y.x);
+	}
+    }
+    return q * 0.5f / sqrtf(t);
+}
+
 SHARED_FILE_SUFFIX
