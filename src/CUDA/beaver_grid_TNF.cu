@@ -122,7 +122,7 @@ __global__ void beaver_TNF_kernel(unsigned int* pixels, int w, int h, Cuda::vec2
         }
     }*/
 
-    bool halted = current_state == -1;
+    //bool halted = current_state == -1;
 
     //int col = 0xff000000 | (0x3f << ((head_position - 2 * half_tape_length + 2) * 4));
     //int col = 0xff000000 | (0x3f << (current_state * 8));

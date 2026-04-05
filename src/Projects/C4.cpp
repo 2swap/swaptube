@@ -2192,6 +2192,9 @@ void ideas(CompositeScene& cs, shared_ptr<C4GraphScene> weakc4) {
     stage_macroblock(FileBlock("'Here is its shape. This is connect 4.'"), 1);
     cs.render_microblock();
 
+    stage_macroblock(SilenceBlock(4), 1);
+    cs.render_microblock();
+
     cs.fade_all_subscenes(MICRO, 0);
     stage_macroblock(SilenceBlock(3), 1);
     cs.render_microblock();
@@ -2254,11 +2257,11 @@ void anki(CompositeScene& cs) {
 }
 
 void sponsor(CompositeScene& cs) {
-    shared_ptr<Mp4Scene> opera_gamereview = make_shared<Mp4Scene>(vector<string>{"opera_gamereview"}, 1);
-    shared_ptr<Mp4Scene> opera_splitscreen = make_shared<Mp4Scene>(vector<string>{"opera_splitscreen"}, 1);
-    cs.add_scene_fade_in(MICRO, opera_gamereview, "opera_gamereview");
-    opera_gamereview->manager.set("MP4_Frame", "20");
-    opera_gamereview->manager.transition(MACRO, "MP4_Frame", "30", false);
+    //shared_ptr<Mp4Scene> mp4 = make_shared<Mp4Scene>(vector<string>{"opera_gamereview"}, 1);
+    shared_ptr<Scene> mp4 = make_shared<LatexScene>("Gameplay footage TODO", 1);
+    cs.add_scene_fade_in(MICRO, mp4, "mp4");
+    mp4->manager.set("MP4_Frame", "20");
+    mp4->manager.transition(MACRO, "MP4_Frame", "30", false);
     stage_macroblock(FileBlock("I think the best way to learn the game is to play online, and in between rounds, review the variations you played in the tree to see what a better response could have been."), 5);
     cs.render_microblock();
     cs.render_microblock();
@@ -2267,56 +2270,85 @@ void sponsor(CompositeScene& cs) {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("And that's where our sponsor, Opera Browser can help!"), 4);
-    opera_gamereview->manager.transition(MICRO, "MP4_Frame", "35", false);
+    mp4->manager.transition(MICRO, "MP4_Frame", "35", false);
     shared_ptr<PngScene> opera_logo = make_shared<PngScene>("opera_logo");  
     cs.add_scene_fade_in(MICRO, opera_logo, "opera_logo", vec2(.5, 1.5));
     cs.slide_subscene(MICRO, "opera_logo", vec2(0, -1));
-    cs.fade_subscene(MICRO, "opera_gamereview", 0.2);
+    cs.fade_subscene(MICRO, "mp4", 0.2);
     cs.manager.set("opera_logo.angle", "-.1");
     cs.manager.transition(MACRO, "opera_logo.angle", ".1");
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
-    cs.fade_subscene(MICRO, "opera_gamereview", 1);
+    cs.fade_subscene(MICRO, "mp4", 1);
     cs.slide_subscene(MICRO, "opera_logo", vec2(0, 1));
     cs.render_microblock();
     cs.remove_subscene("opera_logo");
 
-    stage_macroblock(FileBlock("Using Opera's side-by-side browsing feature, you can easily replay your games in the tree alongside your online matches."), 1);
-    opera_splitscreen->render_microblock();
+    stage_macroblock(FileBlock("Using Opera's split-screen browsing feature, you can easily replay your games in the tree alongside your online matches."), 1);
+    mp4->render_microblock();
 
     stage_macroblock(FileBlock("In this case, we can see that I played out this variation of the 6-1 exactly as suggested by the solution graph!"), 2);
-    opera_gamereview->manager.set("MP4_Frame", "0");
-    opera_gamereview->manager.transition(MICRO, "MP4_Frame", "71");
-    cs.render_microblock();
-    opera_gamereview->manager.transition(MICRO, "MP4_Frame", "88");
-    cs.render_microblock();
-    cs.remove_all_subscenes();
+    mp4->manager.set("MP4_Frame", "0");
+    mp4->manager.transition(MICRO, "MP4_Frame", "71");
+    mp4->render_microblock();
+    mp4->manager.transition(MICRO, "MP4_Frame", "88");
+    mp4->render_microblock();
 
-    shared_ptr<Mp4Scene> opera_tabislands = make_shared<Mp4Scene>(vector<string>{"opera_tabislands"}, 1);
-    cs.add_scene(opera_tabislands, "opera_tabislands");
+    cs.remove_subscene("mp4");
+    mp4 = make_shared<Mp4Scene>(vector<string>{"opera"}, 1);
+    cs.add_scene(mp4, "mp4");
+
+    mp4->manager.set("MP4_Frame", "16");
+    stage_macroblock(FileBlock("Want to read while waiting for an opponent?"), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "21");
+    mp4->render_microblock();
+
+    stage_macroblock(FileBlock("Just add another split-screen window! Opera lets you split your view into two, three, or even four windows simultaneously."), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "46");
+    mp4->render_microblock();
+
     stage_macroblock(FileBlock("I found myself using Opera's tab islands to organize positions which I was in the process of analyzing."), 1);
-    cs.render_microblock();
+    mp4->manager.transition(MICRO, "MP4_Frame", "56");
+    mp4->render_microblock();
 
-    stage_macroblock(FileBlock("I guess you could, like, use these features for organizing your research or something... but who am I kidding, this is practically made for connect 4 study."), 1);
-    cs.render_microblock();
-    cs.remove_all_subscenes();
+	stage_macroblock(FileBlock("Opera automatically groups your tabs to keep everything in place, and you can name or color-code these islands so you know exactly where your research is at a glance."), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "74");
+    mp4->render_microblock();
 
-    stage_macroblock(FileBlock("Opera is top notch when it comes to customization and productivity. In addition to organizing your browsing, it has a side-bar that makes common apps super easy to access."), 1);
-    cs.render_microblock();
+    stage_macroblock(FileBlock("I guess you could, like, use these features for organizing your research or travel plans or something... but who am I kidding, this is practically made for connect 4 study."), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "93");
+    mp4->render_microblock();
 
-    shared_ptr<Mp4Scene> opera_popout = make_shared<Mp4Scene>(vector<string>{"opera_popout"}, 1);
-    cs.add_scene(opera_popout, "opera_popout");
-    stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable, including a built-in adblocker, and a video pop-out feature that lets you pretend that you're getting research done while watching 2swap instead."), 1);
-    cs.render_microblock();
-    cs.remove_all_subscenes();
+	stage_macroblock(FileBlock("Opera is top-notch for productivity, especially with its Sidebar that puts Google services like Gmail and Google Calendar just one click away."), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "102");
+    mp4->render_microblock();
 
-    shared_ptr<Mp4Scene> opera_skipvideo = make_shared<Mp4Scene>(vector<string>{"opera_skipvideo"}, 1);
-    cs.add_scene(opera_skipvideo, "opera_skipvideo");
-    stage_macroblock(FileBlock("It has a video skip button that works in YouTube, Netflix, and so on... wait wait wait don't click it now-"), 1);
-    cs.render_microblock();
+	stage_macroblock(FileBlock("I can quickly check my schedule and my email without ever having to leave the page I’m working on."), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "116");
+    mp4->render_microblock();
 
-    //video abruptly ends
+	stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable."), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "127");
+    mp4->render_microblock();
+
+	stage_macroblock(FileBlock("It has a built-in adblocker, and even a video pop-out feature so that you can drag the video outside of your browser window, letting you pretend that you're getting research done while watching 2swap instead."), 1);
+    mp4->manager.transition(MICRO, "MP4_Frame", "141");
+    mp4->render_microblock();
+
+    stage_macroblock(FileBlock("To try out Opera for yourself, click the link in the description to download it for free!"), 5);
+    cs.add_scene_fade_in(MICRO, opera_logo, "opera_logo", vec2(.5, 1.5));
+    cs.slide_subscene(MICRO, "opera_logo", vec2(0, -1));
+    cs.fade_subscene(MICRO, "mp4", 0.2);
+    cs.manager.set("opera_logo.angle", "-.1");
+    cs.manager.transition(MACRO, "opera_logo.angle", ".1");
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "mp4", 1);
+    cs.slide_subscene(MICRO, "opera_logo", vec2(0, 1));
+    cs.render_microblock();
+    cs.remove_subscene("opera_logo");
 }
 
 void render_video() {
