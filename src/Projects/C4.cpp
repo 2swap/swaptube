@@ -2257,8 +2257,7 @@ void anki(CompositeScene& cs) {
 }
 
 void sponsor(CompositeScene& cs) {
-    //shared_ptr<Mp4Scene> mp4 = make_shared<Mp4Scene>(vector<string>{"opera_gamereview"}, 1);
-    shared_ptr<Scene> mp4 = make_shared<LatexScene>("Gameplay footage TODO", 1);
+    shared_ptr<Mp4Scene> mp4 = make_shared<Mp4Scene>(vector<string>{"opera_gamereview"}, 1);
     cs.add_scene_fade_in(MICRO, mp4, "mp4");
     mp4->manager.set("MP4_Frame", "20");
     mp4->manager.transition(MACRO, "MP4_Frame", "30", false);
