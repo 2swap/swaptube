@@ -2352,7 +2352,6 @@ void sponsor(CompositeScene& cs) {
 
 void render_video() {
     CompositeScene cs;
-    /*
     preintro(cs);
     intro(cs);
     build_graph(cs);
@@ -2364,6 +2363,5 @@ void render_video() {
     solution_types(cs, weakc4);
     ideas(cs, weakc4);
     anki(cs);
-    */
     sponsor(cs);
 }
