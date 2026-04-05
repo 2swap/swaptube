@@ -2256,7 +2256,8 @@ void anki(CompositeScene& cs) {
     cs.render_microblock();
 }
 
-void sponsor(CompositeScene& cs) {
+void sponsor() {
+    CompositeScene cs;
     shared_ptr<Mp4Scene> mp4 = make_shared<Mp4Scene>(vector<string>{"opera_gamereview"}, 1);
     cs.add_scene_fade_in(MICRO, mp4, "mp4");
     mp4->manager.set("MP4_Frame", "20");
@@ -2363,5 +2364,5 @@ void render_video() {
     solution_types(cs, weakc4);
     ideas(cs, weakc4);
     anki(cs);
-    sponsor(cs);
+    sponsor();
 }

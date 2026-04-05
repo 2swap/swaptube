@@ -105,7 +105,7 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
     }
     videoCodecContext->width = video_width_pixels;
     videoCodecContext->height = video_height_pixels;
-    videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P;//10LE;
+    videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P10LE;
     videoCodecContext->time_base = videoStream->time_base = { 1, video_framerate_fps };
     videoCodecContext->color_range = AVCOL_RANGE_JPEG;
     videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
@@ -134,14 +134,14 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
 
     // Allocating memory for each YUV frame.
     yuvpic = av_frame_alloc();
-    yuvpic->format = AV_PIX_FMT_YUV420P;
+    yuvpic->format = videoCodecContext->pix_fmt;
     yuvpic->width = video_width_pixels;
     yuvpic->height = video_height_pixels;
     av_frame_get_buffer(yuvpic, 1);
 
     sws_ctx = sws_getContext(
         video_width_pixels, video_height_pixels, AV_PIX_FMT_BGRA,
-        video_width_pixels, video_height_pixels, AV_PIX_FMT_YUV420P,
+        video_width_pixels, video_height_pixels, videoCodecContext->pix_fmt,
         SWS_BICUBIC,
         nullptr, nullptr, nullptr);
 
