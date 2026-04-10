@@ -12,7 +12,7 @@ private:
     std::shared_ptr<LambdaExpression> first;
     std::shared_ptr<LambdaExpression> second;
 public:
-    LambdaApplication(std::shared_ptr<LambdaExpression> f, std::shared_ptr<LambdaExpression> s, const int c, std::weak_ptr<LambdaExpression> p = std::shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
+    LambdaApplication(std::shared_ptr<LambdaExpression> f, std::shared_ptr<LambdaExpression> s, Color c, std::weak_ptr<LambdaExpression> p = std::shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
 
     std::unordered_set<char> all_referenced_variables() const override;
     std::unordered_set<char> free_variables() const override;
@@ -29,11 +29,11 @@ public:
 
     void interpolate_recursive(std::shared_ptr<const LambdaExpression> l2, const float weight);
 
-    void tint_recursive(const int c);
+    void tint_recursive(Color c);
 
     void flush_uid_recursive();
 
-    void set_color_recursive(const int c);
+    void set_color_recursive(Color c);
 
     int parenthetical_depth() const override;
 

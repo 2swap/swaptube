@@ -20,7 +20,7 @@ void PauseScene::draw() {
     double center_x = w / 2.0;
     double center_y = h / 2.0;
 
-    int color = OPAQUE_WHITE;
+    Color color = OPAQUE_WHITE;
 
     // Draw expanding borders from center of each side outward towards corners
     // At 0 timer_value nothing drawn, at 1 timer_value the fill_rect reaches the corners

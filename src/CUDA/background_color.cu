@@ -6,9 +6,9 @@
 #include "color.cuh"
 
 __global__
-void alpha_overlay_kernel(unsigned int* pixels,
+void alpha_overlay_kernel(Color* pixels,
                           int width, int height,
-                          int bg)
+                          Color bg)
 {
     // 2D coordinates
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -18,15 +18,15 @@ void alpha_overlay_kernel(unsigned int* pixels,
 
     int idx = y * width + x;
 
-    unsigned int pix = pixels[idx];
+    Color pix = pixels[idx];
 
     pixels[idx] = d_color_combine(bg, pix);
 }
 
 extern "C"
-void alpha_overlay_cuda(unsigned int* src_host,
+void alpha_overlay_cuda(Color* src_host,
                         int width, int height,
-                        unsigned int bg_color)
+                        Color bg_color)
 {
     if (!src_host || width <= 0 || height <= 0) return;
 
@@ -54,4 +54,3 @@ void alpha_overlay_cuda(unsigned int* src_host,
     // Free device memory
     cudaFree(d_src);
 }
-

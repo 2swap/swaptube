@@ -1,6 +1,6 @@
 #include "BeaverGridTNF3DScene.h"
 
-extern "C" void beaver_grid_TNF_3D_cuda(unsigned int* pixels, int w, int h, vec3 pos, quat camera, float fov, vec3 target, vec3 up, float use_quat_camera, float shell_border, float core_border, vec3 scale, int max_steps);
+extern "C" void beaver_grid_TNF_3D_cuda(Color* pixels, int w, int h, vec3 pos, quat camera, float fov, vec3 target, vec3 up, float use_quat_camera, float shell_border, float core_border, vec3 scale, int max_steps);
 
 BeaverGridTNF3DScene::BeaverGridTNF3DScene(const vec2& dimension) {
     manager.set({

@@ -18,7 +18,7 @@ using std::max;
 using std::runtime_error;
 using std::to_string;
 
-LambdaApplication::LambdaApplication(shared_ptr<LambdaExpression> f, shared_ptr<LambdaExpression> s, const int c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u)
+LambdaApplication::LambdaApplication(shared_ptr<LambdaExpression> f, shared_ptr<LambdaExpression> s, Color c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u)
     : LambdaExpression("Application", c, p, x, y, w, h, u), first(f), second(s) { }
 
 unordered_set<char> LambdaApplication::all_referenced_variables() const {
@@ -73,7 +73,7 @@ void LambdaApplication::interpolate_recursive(shared_ptr<const LambdaExpression>
     mark_updated();
 }
 
-void LambdaApplication::tint_recursive(const int c) {
+void LambdaApplication::tint_recursive(Color c) {
     first->tint_recursive(c);
     second->tint_recursive(c);
     set_color(colorlerp(color, c, 0.5));
@@ -86,7 +86,7 @@ void LambdaApplication::flush_uid_recursive() {
     uid = rand();
 }
 
-void LambdaApplication::set_color_recursive(const int c) {
+void LambdaApplication::set_color_recursive(Color c) {
     first->set_color_recursive(c);
     second->set_color_recursive(c);
     set_color(c);

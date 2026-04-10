@@ -54,7 +54,7 @@ void MovingPendulumGridScene::draw_grid() {
             int i = x+y*w;
 
             int color_mode0 = 0; int color_mode1 = 0; int color_mode2 = 0; int color_mode3 = 0;
-            int color = 0xffff0000;
+            Color color = 0xffff0000;
 
             double how_chaotic = max(0.,grid.diff_sums[i]/grid.samples*contrast);
             double use_p1 = grid.pendulum_states[i].p1 * mvg;

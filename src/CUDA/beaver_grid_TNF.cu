@@ -37,7 +37,7 @@ __device__ void get_child(TuringMachine& tm, int action_index, const Cuda::vec2&
     tm.num_states += (int)(tm.next_state[action_index] == tm.num_states-1);
 }
 
-__global__ void beaver_TNF_kernel(unsigned int* pixels, int w, int h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, bool corners_in_01, float border_thickness, TuringMachine TNF_root, int max_steps) {
+__global__ void beaver_TNF_kernel(Color* pixels, int w, int h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, bool corners_in_01, float border_thickness, TuringMachine TNF_root, int max_steps) {
     // convert the corners so that instead of storing the screen corners in the CoordinateScene's coordinate system, they store the TNF grid corners in the screen's coordinate system
     Cuda::vec2 grid_lx_ty = -lx_ty / (rx_by - lx_ty);
     rx_by = (Cuda::vec2(1,1) - lx_ty) / (rx_by - lx_ty);
@@ -134,9 +134,9 @@ __global__ void beaver_TNF_kernel(unsigned int* pixels, int w, int h, Cuda::vec2
     pixels[pixel_index] = d_rainbow(atanf(depth*depth / 200.) / 1.57079632679f);
 }
 
-extern "C" void beaver_grid_TNF_cuda(unsigned int* pixels, int w, int h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
-    unsigned int* d_pixels;
-    size_t size = w * h * sizeof(unsigned int);
+extern "C" void beaver_grid_TNF_cuda(Color* pixels, int w, int h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
+    Color* d_pixels;
+    size_t size = w * h * sizeof(Color);
     cudaMalloc(&d_pixels, size);
     dim3 blockSize(16, 16);
     dim3 gridSize((w + blockSize.x - 1) / blockSize.x, (h + blockSize.y - 1) / blockSize.y);

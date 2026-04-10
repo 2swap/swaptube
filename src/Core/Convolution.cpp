@@ -38,7 +38,7 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) 
     return create_alpha_from_intensities(map_2d);
 }
 
-void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int color) {
+void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, Color color) {
     stack<pair<int, int>> stack;
     stack.push({start_x, start_y});
 
@@ -116,7 +116,7 @@ Pixels remove_unconnected_components(const Pixels& p) {
     // Construct the output by copying the input and bitwise AND-ing it
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
-            int pixel = p.get_pixel_carelessly(x, y) & output.get_pixel_carelessly(x, y);
+            Color pixel = p.get_pixel_carelessly(x, y) & output.get_pixel_carelessly(x, y);
             output.set_pixel_carelessly(x, y, pixel);
         }
     }
@@ -283,12 +283,12 @@ Pixels colorize_segments(const Pixels& segmented) {
     Pixels colorized(width, height);
 
     // A simple function to generate a deterministic but pseudo-random color based on segment ID
-    auto segment_id_to_color = [](unsigned int id) -> int {
+    auto segment_id_to_color = [](unsigned int id) -> Color {
         // Example: Use a hash-like function to generate color from segment ID
         unsigned int r = (id * 137 + 113) % 256;
         unsigned int g = (id * 149 + 157) % 256;
         unsigned int b = (id * 163 + 173) % 256;
-        return (r << 16) | (g << 8) | b;
+        return (static_cast<Color>(r) << 16) | (static_cast<Color>(g) << 8) | static_cast<Color>(b);
     };
 
     // Iterate over each pixel in the segmented image
@@ -301,7 +301,7 @@ Pixels colorize_segments(const Pixels& segmented) {
     return colorized;
 }
 
-int count_pixels_with_color(const Pixels& p, const unsigned int color) {
+int count_pixels_with_color(const Pixels& p, Color color) {
     int count = 0;
 
     for (int y = 0; y < p.h; ++y) {

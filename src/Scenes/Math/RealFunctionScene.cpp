@@ -56,7 +56,7 @@ void RealFunctionScene::render_functions() {
         const ResolvedStateEquation& re = resolved_equations[func_idx];
         vec2 last_pixel = {-1, -1};
         bool first_point = true;
-        int color = function_colors[func_idx];
+        Color color = function_colors[func_idx];
         for (float x = left_bound_this; x <= right_bound_this; x += dx) {
             float val = call_the_function(x, re);
             vec2 pixel = point_to_pixel({x, val});

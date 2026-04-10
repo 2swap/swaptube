@@ -5,7 +5,7 @@
 #include <iostream>
 
 extern "C" void color_complex_polynomial(
-    unsigned int* h_pixels, // to be overwritten with the result
+    Color* h_pixels, // to be overwritten with the result
     int w,
     int h,
     const float* h_coefficients_real,
@@ -348,7 +348,7 @@ void ComplexPlotScene::draw() {
             const complex<float> sqrt_disc = std::sqrt(discriminant);
             const complex<float> root = (-b + sqrt_disc * sign_c) / (2.0f*a);
             const vec2 pixel(point_to_pixel(vec2(root.real(), root.imag())));
-            const int color = (sign == 1) ? 0xffff0000 : 0xff00ff00;
+            const Color color = (sign == 1) ? 0xffff0000 : 0xff00ff00;
             pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, color, opa);
         }
     }

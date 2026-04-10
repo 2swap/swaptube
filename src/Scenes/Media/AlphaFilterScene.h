@@ -7,7 +7,7 @@ class AlphaFilterScene : public SuperScene {
 public:
     AlphaFilterScene(
         std::shared_ptr<Scene> sc,
-        const unsigned int preserve_col,
+        Color preserve_col,
         const bool inv = false,
         const vec2& dimensions = vec2(1, 1)
     );
@@ -15,6 +15,6 @@ public:
     void draw() override;
 
 private:
-    unsigned int preserve_col;
-    unsigned int inversed;
+    Color preserve_col;
+    bool inversed;
 };

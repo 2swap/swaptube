@@ -15,7 +15,7 @@ private:
     char bound_variable;
     shared_ptr<LambdaExpression> body;
 public:
-    LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
+    LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, Color c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
 
     unordered_set<char> all_referenced_variables() const override;
     unordered_set<char> free_variables() const override;
@@ -26,9 +26,9 @@ public:
     float get_width_recursive() const;
     float get_height_recursive() const;
     void interpolate_recursive(shared_ptr<const LambdaExpression> l2, const float weight);
-    void tint_recursive(const int c);
+    void tint_recursive(Color c);
     void flush_uid_recursive();
-    void set_color_recursive(const int c);
+    void set_color_recursive(Color c);
     int parenthetical_depth() const override;
     int num_variable_instantiations() const override;
     bool is_reducible() const override;

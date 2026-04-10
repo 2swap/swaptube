@@ -3,15 +3,15 @@
 #include "ManifoldScene.h"
 
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    Color* pixels, const int w, const int h,
     const ManifoldData* manifolds, const int num_manifolds,
     const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
-    const uint32_t* tex_pixels, const int tex_w, const int tex_h
+    const Color* tex_pixels, const int tex_w, const int tex_h
 );
-extern "C" void cuda_free_texture(uint32_t* d_tex_pixels);
-extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const int tex_w, const int tex_h);
+extern "C" void cuda_free_texture(Color* d_tex_pixels);
+extern "C" Color* cuda_copy_texture_to_device(const Color* h_tex_pixels, const int tex_w, const int tex_h);
 
 ManifoldScene::ManifoldScene(const vec2& dimensions) : ThreeDimensionScene(dimensions), d_texture_data(nullptr), texture_w(0), texture_h(0) {
     manager.set({

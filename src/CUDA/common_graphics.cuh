@@ -5,7 +5,7 @@
 namespace Cuda {
 
 // Fill a circle on a pixel buffer
-__device__ __forceinline__ void d_fill_circle(float cx, float cy, float r, int col, unsigned int* pixels, int width, int height, float opa=1.0f) {
+__device__ __forceinline__ void d_fill_circle(float cx, float cy, float r, Color col, Color* pixels, int width, int height, float opa=1.0f) {
     // breakout if outside of screen
     if (cx + r < 0 || cx - r >= width || cy + r < 0 || cy - r >= height)
         return;
@@ -19,7 +19,7 @@ __device__ __forceinline__ void d_fill_circle(float cx, float cy, float r, int c
     }
 }
 
-__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height) {
+__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, Color col, float opacity, int thickness, Color* pixels, int width, int height) {
     int dx = abs(x2 - x1), dy = abs(y2 - y1);
     if (dx > 10000 || dy > 10000) return;
     int sx = (x1 < x2) ? 1 : -1;

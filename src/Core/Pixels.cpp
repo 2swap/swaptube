@@ -10,7 +10,7 @@
 #include <limits>
 #include "../IO/Writer.h"
 
-extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
+extern "C" int cuda_bicubic_scale(const Color* input_pixels, int input_w, int input_h, Color* output_pixels, int output_w, int output_h);
 
 Pixels::Pixels() : w(0), h(0), pixels(0) {}
 Pixels::Pixels(int width, int height) : w(width), h(height), pixels(width*height) {}
@@ -19,21 +19,21 @@ bool Pixels::out_of_range(int x, int y) const {
     return x < 0 || x >= w || y < 0 || y >= h;
 }
 
-int Pixels::get_pixel_carelessly(int x, int y) const {
+Color Pixels::get_pixel_carelessly(int x, int y) const {
     return pixels[w*y+x];
 }
 
-int Pixels::get_pixel_carefully(int x, int y) const {
+Color Pixels::get_pixel_carefully(int x, int y) const {
     if(out_of_range(x, y)) return TRANSPARENT_BLACK; // 0
     return pixels[w*y+x];
 }
 
-void Pixels::overlay_pixel(int x, int y, int col, double overlay_opacity_multiplier){
+void Pixels::overlay_pixel(int x, int y, Color col, double overlay_opacity_multiplier){
     set_pixel_carefully(x, y, color_combine(get_pixel_carefully(x, y), col, overlay_opacity_multiplier));
 }
 
 void Pixels::get_pixel_by_channels(int x, int y, int& a, int& r, int& g, int& b) const {
-    int col = get_pixel_carefully(x,y);
+    Color col = get_pixel_carefully(x,y);
     a=geta(col);
     r=getr(col);
     g=getg(col);
@@ -44,11 +44,11 @@ int Pixels::get_alpha(int x, int y) const {
     return geta(get_pixel_carefully(x,y));
 }
 
-void Pixels::set_pixel_carelessly(int x, int y, int col) {
+void Pixels::set_pixel_carelessly(int x, int y, Color col) {
     pixels[w*y+x] = col;
 }
 
-void Pixels::set_pixel_carefully(int x, int y, int col) {
+void Pixels::set_pixel_carefully(int x, int y, Color col) {
     if(out_of_range(x, y)) return;
     pixels[w*y+x] = col;
 }
@@ -128,7 +128,7 @@ void Pixels::crop_by_fractions(float crop_top, float crop_bottom, float crop_lef
     crop(x, y, cw, ch, cropped);
 }
 
-int Pixels::get_pixel_bilinear(double x, double y) const {
+Color Pixels::get_pixel_bilinear(double x, double y) const {
     int x0 = static_cast<int>(floor(x));
     int x1 = x0 + 1;
     int y0 = static_cast<int>(floor(y));
@@ -137,10 +137,10 @@ int Pixels::get_pixel_bilinear(double x, double y) const {
     double dx = x - x0;
     double dy = y - y0;
 
-    int c00 = get_pixel_carefully(x0, y0);
-    int c10 = get_pixel_carefully(x1, y0);
-    int c01 = get_pixel_carefully(x0, y1);
-    int c11 = get_pixel_carefully(x1, y1);
+    Color c00 = get_pixel_carefully(x0, y0);
+    Color c10 = get_pixel_carefully(x1, y0);
+    Color c01 = get_pixel_carefully(x0, y1);
+    Color c11 = get_pixel_carefully(x1, y1);
 
     int a00 = geta(c00), r00 = getr(c00), g00 = getg(c00), b00 = getb(c00);
     int a10 = geta(c10), r10 = getr(c10), g10 = getg(c10), b10 = getb(c10);
@@ -175,7 +175,7 @@ bool Pixels::is_empty() const {
     return true; // No pixel with non-zero alpha found, Pixels is empty
 }
 
-void Pixels::add_border(int col, int thickness){
+void Pixels::add_border(Color col, int thickness){
     if(thickness > w || thickness > h)
         throw runtime_error("Border thickness too large.");
     for(int t = 0; t < thickness; t++){
@@ -208,7 +208,7 @@ void Pixels::overwrite(Pixels p, int dx, int dy){
     }
 }
 
-void Pixels::fill_rect(int x, int y, int rw, int rh, int col){
+void Pixels::fill_rect(int x, int y, int rw, int rh, Color col){
     if(x < 0) { rw += x; x = 0; }
     if(y < 0) { rh += y; y = 0; }
     if(x + rw > w) rw = w - x;
@@ -218,11 +218,11 @@ void Pixels::fill_rect(int x, int y, int rw, int rh, int col){
             set_pixel_carelessly(x+dx, y+dy, col);
 }
 
-void Pixels::fill_circle(double x, double y, double r, int col, double opa){
+void Pixels::fill_circle(double x, double y, double r, Color col, double opa){
     fill_ring(x, y, r, 0, col, opa);
 }
 
-void Pixels::fill_ring(double x, double y, double r_outer, double r_inner, int col, double opa){
+void Pixels::fill_ring(double x, double y, double r_outer, double r_inner, Color col, double opa){
     double r_outer_sq = square(r_outer);
     double r_inner_sq = square(r_inner);
     for(double dx = -r_outer+1; dx < r_outer; dx++){
@@ -235,7 +235,7 @@ void Pixels::fill_ring(double x, double y, double r_outer, double r_inner, int c
     }
 }
 
-void Pixels::fill_ellipse(double x, double y, double rw, double rh, int col, double opa){
+void Pixels::fill_ellipse(double x, double y, double rw, double rh, Color col, double opa){
     for(double dx = -rw+1; dx < rw; dx++){
         double sdx = square(dx/rw);
         for(double dy = -rh+1; dy < rh; dy++)
@@ -244,7 +244,7 @@ void Pixels::fill_ellipse(double x, double y, double rw, double rh, int col, dou
     }
 }
 
-void Pixels::bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness) {
+void Pixels::bresenham(int x1, int y1, int x2, int y2, Color col, float opacity, int thickness) {
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
     if(dx > 10000 || dy > 10000){
@@ -291,7 +291,7 @@ void Pixels::bresenham(int x1, int y1, int x2, int y2, int col, float opacity, i
     }
 }
 
-void Pixels::rounded_rect(float x, float y, float rw, float rh, float r, int col){
+void Pixels::rounded_rect(float x, float y, float rw, float rh, float r, Color col){
     int xplusr = round(x+r);
     int yplusr = round(y+r);
     int rwmrt2 = round(rw-r*2);
@@ -304,7 +304,7 @@ void Pixels::rounded_rect(float x, float y, float rw, float rh, float r, int col
         fill_ellipse(i%2==0 ? xplusr : xprwmr, i/2==0 ? yplusr : yprhmr, r, r, col);
 }
 
-void Pixels::flood_fill(int x, int y, int color) {
+void Pixels::flood_fill(int x, int y, Color color) {
     int targetColor = get_pixel_carefully(x, y);
 
     // Check if the target pixel already has the desired color
@@ -477,7 +477,7 @@ Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensi
     return result;
 }
 
-Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, int negative_intensity) {
+Pixels create_pixels_from_2d_vector(const vector<vector<Color>>& colors, int negative_intensity) {
     int height = colors.size();
     int width = (height > 0) ? colors[0].size() : 0;
 

@@ -58,7 +58,7 @@ void GraphScene::graph_to_3d(){
         if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
         if(node.draw_point) add_point(Point(node_pos, node.color, 1, node.radius()));
         double so = node.splash_opacity();
-        int color = color_scheme[static_cast<int>(abs(p.first)*4)%4];
+        Color color = color_scheme[static_cast<int>(abs(p.first)*4)%4];
         if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
 
         for(const Edge& neighbor_edge : node.neighbors){
@@ -89,7 +89,7 @@ void GraphScene::graph_to_3d(){
     cout << ">";
 }
 
-int GraphScene::get_edge_color(const Node& node, const Node& neighbor){
+Color GraphScene::get_edge_color(const Node& node, const Node& neighbor){
     return OPAQUE_WHITE;
 }
 

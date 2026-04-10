@@ -10,7 +10,7 @@ using std::runtime_error;
 using std::max;
 using std::dynamic_pointer_cast;
 
-LambdaAbstraction::LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, const int c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u)
+LambdaAbstraction::LambdaAbstraction(const char v, shared_ptr<LambdaExpression> b, Color c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u)
     : LambdaExpression("Abstraction", c, p, x, y, w, h, u), bound_variable(v), body(b) { }
 
 unordered_set<char> LambdaAbstraction::all_referenced_variables() const {
@@ -57,7 +57,7 @@ void LambdaAbstraction::interpolate_recursive(shared_ptr<const LambdaExpression>
     mark_updated();
 }
 
-void LambdaAbstraction::tint_recursive(const int c) {
+void LambdaAbstraction::tint_recursive(Color c) {
     body->tint_recursive(c);
     set_color(colorlerp(color, c, 0.5));
     mark_updated();
@@ -68,7 +68,7 @@ void LambdaAbstraction::flush_uid_recursive() {
     uid = rand();
 }
 
-void LambdaAbstraction::set_color_recursive(const int c) {
+void LambdaAbstraction::set_color_recursive(Color c) {
     body->set_color_recursive(c);
     set_color(c);
     mark_updated();

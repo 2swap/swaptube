@@ -1,53 +1,54 @@
 #pragma once
 
 #include <iomanip>
+#include "../Host_Device_Shared/Color.h"
 #include "../Host_Device_Shared/helpers.h"
 
 // Colors are everywhere. For the sake of speed, we do not give them a dedicated class.
-// They are ints under the hood, and are always 32-bit, 4-channel ARGB.
+// They are Colors under the hood, and are always 32-bit, 4-channel ARGB.
 
-inline int argb(int a, int r, int g, int b){return (a<<24)+
-                                                   (r<<16)+
-                                                   (g<<8 )+
-                                                   (b    );}
-inline int geta(int col){return (col&0xff000000)>>24;}
-inline int getr(int col){return (col&0x00ff0000)>>16;}
-inline int getg(int col){return (col&0x0000ff00)>>8 ;}
-inline int getb(int col){return (col&0x000000ff)    ;}
-inline int alpha_multiply(int col, float opacity){return (static_cast<int>(geta(col) * opacity) << 24) | col&0xffffff;}
-inline int coldist(int col1, int col2){return abs(geta(col1) - geta(col2)) +
-                                              abs(getr(col1) - getr(col2)) +
-                                              abs(getg(col1) - getg(col2)) +
-                                              abs(getb(col1) - getb(col2));}
-inline int rainbow(float x){return argb(255,
-                                            sin((x+1/3.)*M_PI*2)*128.+128,
-                                            sin((x+2/3.)*M_PI*2)*128.+128,
-                                            sin((x     )*M_PI*2)*128.+128);}
-inline int colorlerp(int col1, int col2, float w){return argb(round(lerp(geta(col1), geta(col2), w)),
-                                                                      round(lerp(getr(col1), getr(col2), w)),
-                                                                      round(lerp(getg(col1), getg(col2), w)),
-                                                                      round(lerp(getb(col1), getb(col2), w)));}
-inline string color_to_string(int c){return "(" + to_string(geta(c)) + ", " + to_string(getr(c)) + ", " + to_string(getg(c)) + ", " + to_string(getb(c)) + ")";}
-inline void print_argb(int c){cout << color_to_string(c) << endl;}
+inline Color argb(int a, int r, int g, int b){return (static_cast<Color>(a) << 24) |
+                                                      (static_cast<Color>(r) << 16) |
+                                                      (static_cast<Color>(g) << 8 ) |
+                                                       static_cast<Color>(b);}
+inline int geta(Color col){return (col&0xff000000)>>24;}
+inline int getr(Color col){return (col&0x00ff0000)>>16;}
+inline int getg(Color col){return (col&0x0000ff00)>>8 ;}
+inline int getb(Color col){return (col&0x000000ff)    ;}
+inline Color alpha_multiply(Color col, float opacity){return (static_cast<Color>(geta(col) * opacity) << 24) | (col&0x00ffffff);}
+inline int coldist(Color col1, Color col2){return abs(geta(col1) - geta(col2)) +
+                                                  abs(getr(col1) - getr(col2)) +
+                                                  abs(getg(col1) - getg(col2)) +
+                                                  abs(getb(col1) - getb(col2));}
+inline Color rainbow(float x){return argb(255,
+                                              sin((x+1/3.)*M_PI*2)*128.+128,
+                                              sin((x+2/3.)*M_PI*2)*128.+128,
+                                              sin((x     )*M_PI*2)*128.+128);}
+inline Color colorlerp(Color col1, Color col2, float w){return argb(round(lerp(geta(col1), geta(col2), w)),
+                                                                            round(lerp(getr(col1), getr(col2), w)),
+                                                                            round(lerp(getg(col1), getg(col2), w)),
+                                                                            round(lerp(getb(col1), getb(col2), w)));}
+inline string color_to_string(Color c){return "(" + to_string(geta(c)) + ", " + to_string(getr(c)) + ", " + to_string(getg(c)) + ", " + to_string(getb(c)) + ")";}
+inline void print_argb(Color c){cout << color_to_string(c) << endl;}
 
-inline int color_combine(int base_color, int over_color, float overlay_opacity_multiplier = 1) {
+inline Color color_combine(Color base_color, Color over_color, float overlay_opacity_multiplier = 1) {
     float base_opacity = geta(base_color) / 255.0;
     float over_opacity = geta(over_color) / 255.0 * overlay_opacity_multiplier;
     float final_opacity = 1 - (1 - base_opacity) * (1 - over_opacity);
     if (final_opacity == 0) return 0x00000000;
     int final_alpha = round(final_opacity * 255.0);
-    float chroma_weight = over_opacity / final_opacity;
-    int final_rgb = colorlerp(base_color, over_color, chroma_weight) & 0x00ffffff;
-    return (final_alpha << 24) | (final_rgb);
+    const float chroma_weight = over_opacity / final_opacity;
+    const Color final_rgb = colorlerp(base_color, over_color, chroma_weight) & 0x00ffffff;
+    return (static_cast<Color>(final_alpha) << 24) | final_rgb;
 }
 
-inline int black_to_blue_to_white(double w){
+inline Color black_to_blue_to_white(double w){
     int rainbow_part1 = max(0.,min(1.,w*2-0))*255.;
     int rainbow_part2 = max(0.,min(1.,w*2-1))*255.;
     return argb(255, rainbow_part2, rainbow_part2, rainbow_part1);
 }
 
-inline int RGBtoOKLAB(int rgb)
+inline Color RGBtoOKLAB(Color rgb)
 {
     int r = getr(rgb);
     int g = getg(rgb);
@@ -75,7 +76,7 @@ inline float linear_srgb_to_srgb(float x) {
     return 12.92 * x;
 }
 
-inline int OKLABtoRGB(int alpha, float L, float a, float b)
+inline Color OKLABtoRGB(int alpha, float L, float a, float b)
 {
     float l_ = L + 0.3963377774f * a + 0.2158037573f * b;
     float m_ = L - 0.1055613458f * a - 0.0638541728f * b;
@@ -94,7 +95,7 @@ inline int OKLABtoRGB(int alpha, float L, float a, float b)
 }
 
 // Convert RGB to YUV
-inline int RGBtoYUV(const int rgb) {
+inline Color RGBtoYUV(const Color rgb) {
     int r = getr(rgb);
     int g = getg(rgb);
     int b = getb(rgb);
@@ -112,7 +113,7 @@ inline int RGBtoYUV(const int rgb) {
 }
 
 // Convert YUV to RGB
-inline int YUVtoRGB(const int yuv) {
+inline Color YUVtoRGB(const Color yuv) {
     int y = getr(yuv);
     int u = getg(yuv)-128;
     int v = getb(yuv)-128;
@@ -131,7 +132,7 @@ inline int YUVtoRGB(const int yuv) {
 
 // Convert HSV to RGB
 // h, s, v are in the range [0, 1]
-inline int HSVtoRGB(double h, double s, double v, int alpha = 255) {
+inline Color HSVtoRGB(double h, double s, double v, int alpha = 255) {
     double r_f, g_f, b_f;
 
     if (s == 0.0) {
@@ -162,7 +163,7 @@ inline int HSVtoRGB(double h, double s, double v, int alpha = 255) {
     return argb(alpha, r, g, b);
 }
 
-inline int pendulum_color_old(double angle1, double angle2) {
+inline Color pendulum_color_old(double angle1, double angle2) {
     angle1 += M_PI;
     double y_f = 127.5 +  64 * sin(angle1 + angle2);
     double u_f = 127.5 + 128 * sin(angle1)*cos(angle2);
@@ -174,7 +175,7 @@ inline int pendulum_color_old(double angle1, double angle2) {
     return YUVtoRGB(argb(255, y, u, v));
 }
 
-inline int pendulum_color(double angle1, double angle2, double p1, double p2) {
+inline Color pendulum_color(double angle1, double angle2, double p1, double p2) {
     float sa1 = sin(angle1) + 0.000001;
     float sa2 = sin(angle2);
     float h = atan2(sa2, sa1)/6.283+1;
@@ -183,9 +184,9 @@ inline int pendulum_color(double angle1, double angle2, double p1, double p2) {
     return HSVtoRGB(h, s, v);
 }
 
-inline string latex_color(unsigned int color, string text) {
+inline string latex_color(Color color, string text) {
     // Mask out the alpha channel
-    unsigned int rgb = color & 0x00FFFFFF;
+    Color rgb = color & 0x00FFFFFF;
 
     // Convert to a hex string
     stringstream ss;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Host_Device_Shared/vec.h"
+#include "../Host_Device_Shared/Color.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <deque>
@@ -45,7 +46,7 @@ public:
     EdgeSet neighbors;
     bool draw_point = false;
     double opacity = 1;
-    int color = 0xffffffff;
+    Color color = 0xffffffff;
     float size = 1;
     double age = 0;
     vec4 velocity;

@@ -266,7 +266,7 @@ __device__ void loop5(Cuda::vec3& raypos, Cuda::vec3 raydir, Cuda::vec4& raycol,
 
 
 
-__global__ void beaver_raytrace_kernel(unsigned int* pixels, int w, int h, Cuda::vec3 raypos, Cuda::quat camera, float fov, int max_steps, float shell_border, float core_border, Cuda::vec3 scale, Cuda::vec3 target) {
+__global__ void beaver_raytrace_kernel(Color* pixels, int w, int h, Cuda::vec3 raypos, Cuda::quat camera, float fov, int max_steps, float shell_border, float core_border, Cuda::vec3 scale, Cuda::vec3 target) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx >= w || idy >= h) {
@@ -318,11 +318,11 @@ __global__ void beaver_raytrace_kernel(unsigned int* pixels, int w, int h, Cuda:
             t++;
         }
     }
-    pixels[pixel_index] = ((unsigned int)(floor(raycol.x * 255)) << 24) | ((unsigned int)(floor(raycol.y * 255)) << 16) | ((unsigned int)(floor(raycol.z * 255)) << 8) | (unsigned int)(floor(raycol.w * 255));
+    pixels[pixel_index] = (static_cast<Color>(floor(raycol.x * 255)) << 24) | (static_cast<Color>(floor(raycol.y * 255)) << 16) | (static_cast<Color>(floor(raycol.z * 255)) << 8) | static_cast<Color>(floor(raycol.w * 255));
 }
 
 extern "C" void beaver_grid_TNF_3D_cuda(
-    unsigned int* pixels,
+    Color* pixels,
     int w, int h,
     Cuda::vec3 pos, Cuda::quat camera, float fov,
     Cuda::vec3 target, Cuda::vec3 up, float use_quat_camera,
@@ -330,9 +330,9 @@ extern "C" void beaver_grid_TNF_3D_cuda(
     Cuda::vec3 scale,
     int max_steps
 ){
-    unsigned int* d_pixels;
+    Color* d_pixels;
 
-    cudaMalloc(&d_pixels, w * h * sizeof(unsigned int));
+    cudaMalloc(&d_pixels, w * h * sizeof(Color));
     dim3 threads(16, 16);
     dim3 block((w + threads.x - 1) / threads.x, (h + threads.y - 1) / threads.y);
 
@@ -344,7 +344,7 @@ extern "C" void beaver_grid_TNF_3D_cuda(
 
     beaver_raytrace_kernel<<<block, threads>>>(d_pixels, w, h, pos, camera, fov, max_steps, shell_border, core_border, scale, target);
 
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pixels, d_pixels, w * h * sizeof(Color), cudaMemcpyDeviceToHost);
 
     cudaFree(d_pixels);
 }

@@ -122,7 +122,7 @@ extern "C" void iterate_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bit
     cudaDeviceSynchronize();
 }
 
-__global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bitboards, int h_bitboards, unsigned int* pixels, int pixels_w, int pixels_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, float w_t)
+__global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bitboards, int h_bitboards, Color* pixels, int pixels_w, int pixels_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, float w_t)
 {
     int px = blockDim.x * blockIdx.x + threadIdx.x;
     int py = blockDim.y * blockIdx.y + threadIdx.y;
@@ -221,11 +221,11 @@ __global__ void conway_draw_kernel(Bitboard* board, Bitboard* board_2, int w_bit
     }
 }
 
-extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards, unsigned int* h_pixels, int pixels_w, int pixels_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, float transition)
+extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, int w_bitboards, int h_bitboards, Color* h_pixels, int pixels_w, int pixels_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, float transition)
 {
-    size_t pix_sz = pixels_w * pixels_h * sizeof(unsigned int);
+    size_t pix_sz = pixels_w * pixels_h * sizeof(Color);
 
-    unsigned int* d_pixels;
+    Color* d_pixels;
 
     cudaMalloc((void**)&d_pixels, pix_sz);
 

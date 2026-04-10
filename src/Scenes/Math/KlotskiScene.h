@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-int piece_color(int cell);
+Color piece_color(int cell);
 
 class KlotskiScene : public Scene {
 private:

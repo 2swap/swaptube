@@ -17,8 +17,8 @@ using std::weak_ptr;
 using std::string;
 using std::pair;
 
-shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
-shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, const int c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
+shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, Color c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
+shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, Color c, weak_ptr<LambdaExpression> p = shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
 
 shared_ptr<LambdaExpression> get_interpolated_half(shared_ptr<LambdaExpression> l1, shared_ptr<const LambdaExpression> l2, const float weight);
 pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> get_interpolated(shared_ptr<LambdaExpression> l1, shared_ptr<LambdaExpression> l2, const float weight);

@@ -93,13 +93,13 @@ vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
 }
 
 // This is not used here, but it is used in some classes which inherit from CoordinateScene
-void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float trail_opacity) {
+void CoordinateScene::draw_trail(const list<pair<vec2, Color>>& trail, const float trail_opacity) {
     if(trail.size() == 0) return;
     if(trail_opacity < 0.01) return;
     float line_width = get_geom_mean_size()/500.;
     vec2 last_pixel{0,0};
     int i = 0;
-    for(const pair<vec2, int>& p : trail) {
+    for(const pair<vec2, Color>& p : trail) {
         if(i != 0) {
             const vec2 next_pixel(point_to_pixel(p.first));
             pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, p.second, trail_opacity, line_width);
@@ -109,7 +109,7 @@ void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float
     }
 }
 
-void CoordinateScene::draw_point(const vec2 point, int point_color, float point_opacity) {
+void CoordinateScene::draw_point(const vec2 point, Color point_color, float point_opacity) {
     const vec2 pixel = point_to_pixel(point);
     pix.fill_circle(pixel.x, pixel.y, get_geom_mean_size()/100., point_color, point_opacity);
 }
@@ -127,9 +127,9 @@ void CoordinateScene::draw_construction() {
 
     double gm = get_geom_mean_size();
     double line_thickness = gm/200.;
-    int point_color = 0xffffffff;
-    int line_color = 0xff6666ff;
-    int text_color = 0xffffffff;
+    Color point_color = 0xffffffff;
+    Color line_color = 0xff6666ff;
+    Color text_color = 0xffffffff;
     float microblock_fraction = 0.5;
     if(state.contains("microblock_fraction_passthrough")) microblock_fraction = state["microblock_fraction_passthrough"];
 

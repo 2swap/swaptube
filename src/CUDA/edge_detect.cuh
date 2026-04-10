@@ -6,7 +6,7 @@
 // If the depth difference between a pixel and any of its 4-connected neighbors
 // is greater than .1, color the pixel with edge_color.
 __global__ void cuda_edge_detect_kernel(
-    uint32_t* d_pixels, float* d_depth_buffer, int w, int h, uint32_t edge_color
+    Color* d_pixels, float* d_depth_buffer, int w, int h, Color edge_color
 ) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -40,7 +40,7 @@ __global__ void cuda_edge_detect_kernel(
 }
 
 void cuda_edge_detect(
-    uint32_t* d_pixels, float* d_depth_buffer, int w, int h, uint32_t edge_color
+    Color* d_pixels, float* d_depth_buffer, int w, int h, Color edge_color
 ) {
     dim3 blockSize(16, 16);
     dim3 gridSize((w + blockSize.x - 1) / blockSize.x, (h + blockSize.y - 1) / blockSize.y);

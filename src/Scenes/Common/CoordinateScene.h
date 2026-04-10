@@ -23,9 +23,9 @@ public:
     vec2 pixel_to_point(const vec2& pix);
 
     // This is not used here, but it is used in some classes which inherit from CoordinateScene
-    void draw_trail(const std::list<std::pair<vec2, int>>& trail, const float trail_opacity);
+    void draw_trail(const std::list<std::pair<vec2, Color>>& trail, const float trail_opacity);
 
-    void draw_point(const vec2 point, int point_color, float point_opacity);
+    void draw_point(const vec2 point, Color point_color, float point_opacity);
 
     void draw() override;
 

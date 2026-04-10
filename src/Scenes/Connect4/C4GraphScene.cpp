@@ -25,6 +25,6 @@ C4GraphScene::C4GraphScene(shared_ptr<Graph> g, bool surfaces_on, const string& 
     graph->add_to_stack(board);
 }
 
-int C4GraphScene::get_edge_color(const Node& node, const Node& neighbor){
+Color C4GraphScene::get_edge_color(const Node& node, const Node& neighbor){
     return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
 }

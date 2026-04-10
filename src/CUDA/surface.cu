@@ -6,13 +6,13 @@
 
 __global__ void render_surface_kernel(
     // d_pixels is the array which we will plop a surface on. The surface is bounded by (x1,y1) on the top left and (x2,y2) on the top right.
-    unsigned int* d_pixels_dev,
+    Color* d_pixels_dev,
     int x1,
     int y1,
     int plot_w,
     int plot_h,
     int pixels_w,
-    unsigned int* d_surface,
+    Color* d_surface,
     int surface_w,
     int surface_h,
     float opacity,
@@ -61,19 +61,19 @@ __global__ void render_surface_kernel(
     int surface_x = surface_coords.x * surface_w;
     int surface_y = surface_coords.y * surface_h;
 
-    unsigned int color = d_surface[surface_x + surface_y * surface_w];
+    Color color = d_surface[surface_x + surface_y * surface_w];
 
     d_pixels_dev[pixels_index] = d_color_combine(d_pixels_dev[pixels_index], color, opacity);
 }
 
 extern "C" void cuda_render_surface(
-    vector<unsigned int>& pix,
+    vector<Color>& pix,
     int x1,
     int y1,
     int plot_w,
     int plot_h,
     int pixels_w,
-    unsigned int* d_surface,
+    Color* d_surface,
     int surface_w,
     int surface_h,
     float opacity,
@@ -93,12 +93,12 @@ extern "C" void cuda_render_surface(
 
     // Allocate memory on the device
     size_t pixels_size = pix.size() * sizeof(int);
-    unsigned int* d_pixels_dev;
+    Color* d_pixels_dev;
     cudaMalloc(&d_pixels_dev, pixels_size);
     cudaMemcpy(d_pixels_dev, pix.data(), pixels_size, cudaMemcpyHostToDevice);
 
-    size_t surface_size = surface_w * surface_h * sizeof(unsigned int);
-    unsigned int* d_surface_dev;
+    size_t surface_size = surface_w * surface_h * sizeof(Color);
+    Color* d_surface_dev;
     cudaMalloc(&d_surface_dev, surface_size);
 
     // Copy data to device

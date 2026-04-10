@@ -9,11 +9,11 @@ const float bailout_radius = 256;
 const float bailout_radius_sq = bailout_radius*bailout_radius;
 
 // Function to linearly interpolate between two colors
-__device__ unsigned int cuda_color_lerp(unsigned int c1, unsigned int c2, float t) {
-    return ((unsigned int)((1 - t) * ((c1 >> 24) & 0xff) + t * ((c2 >> 24) & 0xff)) << 24) |
-           ((unsigned int)((1 - t) * ((c1 >> 16) & 0xff) + t * ((c2 >> 16) & 0xff)) << 16) |
-           ((unsigned int)((1 - t) * ((c1 >> 8 ) & 0xff) + t * ((c2 >> 8 ) & 0xff)) << 8 ) |
-           ((unsigned int)((1 - t) * ( c1        & 0xff) + t * ( c2        & 0xff))      ) ;
+__device__ Color cuda_color_lerp(Color c1, Color c2, float t) {
+    return (static_cast<Color>((1 - t) * ((c1 >> 24) & 0xff) + t * ((c2 >> 24) & 0xff)) << 24) |
+           (static_cast<Color>((1 - t) * ((c1 >> 16) & 0xff) + t * ((c2 >> 16) & 0xff)) << 16) |
+           (static_cast<Color>((1 - t) * ((c1 >> 8 ) & 0xff) + t * ((c2 >> 8 ) & 0xff)) << 8 ) |
+            static_cast<Color>((1 - t) * ( c1        & 0xff) + t * ( c2        & 0xff));
 }
 
 __device__ cuComplex cuCpow(cuComplex base, cuComplex exponent) {
@@ -34,7 +34,7 @@ __device__ cuComplex cuCpow(cuComplex base, cuComplex exponent) {
 }
 
 // Color interpolation function (shared)
-__device__ unsigned int get_mandelbrot_color(float iterations, int max_iterations, bool bailed_out, float gradation, float sq_radius, float log_real_part_exp, float phase_shift, unsigned int internal_color) {
+__device__ Color get_mandelbrot_color(float iterations, int max_iterations, bool bailed_out, float gradation, float sq_radius, float log_real_part_exp, float phase_shift, Color internal_color) {
     if(!bailed_out) return internal_color;
 
     if(bailed_out && gradation > 0.01){
@@ -43,7 +43,7 @@ __device__ unsigned int get_mandelbrot_color(float iterations, int max_iteration
         iterations += (1-nu) * gradation; // Do not use gradient for exponential parameterization
     }
 
-    const unsigned int color_palette[] = {
+    const Color color_palette[] = {
         0xffffffff,
         0xff000088,
         0xff000000,
@@ -157,8 +157,8 @@ __global__ void go(
     int max_iterations,
     float gradation,
     float phase_shift,
-    unsigned int internal_color,
-    unsigned int* colors
+    Color internal_color,
+    Color* colors
 ) {
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
     int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -196,13 +196,13 @@ extern "C" void mandelbrot_render(
     int max_iterations,  // Pass max_iterations as a parameter
     float gradation,
     float phase_shift,
-    unsigned int internal_color,
-    unsigned int* colors
+    Color internal_color,
+    Color* colors
 ) {
-    unsigned int* d_colors;
+    Color* d_colors;
 
     // Allocate memory on the device for the depth buffer
-    cudaMalloc(&d_colors, width * height * sizeof(unsigned int));
+    cudaMalloc(&d_colors, width * height * sizeof(Color));
 
     // Define grid and block dimensions
     dim3 threadsPerBlock(16, 16);  // 2D block of 16x16 threads
@@ -218,7 +218,7 @@ extern "C" void mandelbrot_render(
     );
 
     // Copy results back from device to host
-    cudaMemcpy(colors, d_colors, width * height * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(colors, d_colors, width * height * sizeof(Color), cudaMemcpyDeviceToHost);
 
     // Free the device memory
     cudaFree(d_colors);

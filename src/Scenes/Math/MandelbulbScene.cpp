@@ -5,7 +5,7 @@ extern "C" void render_raymarch(
     const vec3& pos, const quat& camera, float fov,
     const vec3& lightPos,
     const int max_raymarch_iterations, const int max_mandelbulb_iterations,
-    unsigned int* colors
+    Color* colors
 );
 
 MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions){

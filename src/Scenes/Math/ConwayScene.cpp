@@ -4,7 +4,7 @@
 extern "C" void draw_conway(
     Bitboard* h_board, Bitboard* h_board_2,
     int w_bitboards, int h_bitboards,
-    unsigned int* h_pixels, int pixels_w, int pixels_h,
+    Color* h_pixels, int pixels_w, int pixels_h,
     vec2 lx_ty, vec2 rx_by, float transition
 );
 

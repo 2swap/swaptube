@@ -11,13 +11,13 @@
 
 // Kernel
 __global__ void render_manifold_kernel(
-    uint32_t* pixels, const int w, const int h,
+    Color* pixels, const int w, const int h,
     const Cuda::ManifoldData d_manifold,
     const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
     float* depth_buffer,
     const float ab_dilation, const float dot_radius,
-    const uint32_t* tex_pixels, const int tex_w, const int tex_h
+    const Color* tex_pixels, const int tex_w, const int tex_h
 ) {
     // Determine u, v from thread indices
     int u_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -53,7 +53,7 @@ __global__ void render_manifold_kernel(
     );
     if(behind_camera) return; // Don't render points behind camera
 
-    uint32_t color = 0;
+    Color color = 0;
 
     if (tex_pixels != nullptr) {
         // Map u,v into texture coordinates by stretching uv space onto the texture (nearest-neighbor)
@@ -99,17 +99,17 @@ __global__ void render_manifold_kernel(
 
 // Externed entry point
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    Color* pixels, const int w, const int h,
     const Cuda::ManifoldData* manifold, const int num_manifolds,
     const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
-    const uint32_t* d_tex_pixels, const int tex_w, const int tex_h
+    const Color* d_tex_pixels, const int tex_w, const int tex_h
 ) {
     // Allocate and copy pixels to device
-    uint32_t* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
-    cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    Color* d_pixels;
+    cudaMalloc(&d_pixels, w * h * sizeof(Color));
+    cudaMemcpy(d_pixels, pixels, w * h * sizeof(Color), cudaMemcpyHostToDevice);
 
     // Allocate zeroized depth buffer on device (initialize to large values from host)
     float* d_depth_buffer;
@@ -141,20 +141,20 @@ extern "C" void cuda_render_manifold(
     cuda_edge_detect(d_pixels, d_depth_buffer, w, h, 0xff0000ff);
 
     // Copy pixels back to host
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pixels, d_pixels, w * h * sizeof(Color), cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_pixels);
     cudaFree(d_depth_buffer);
 }
 
-extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const int tex_w, const int tex_h) {
-    size_t tex_size = (size_t)tex_w * (size_t)tex_h * sizeof(uint32_t);
-    uint32_t* d_tex_pixels;
+extern "C" Color* cuda_copy_texture_to_device(const Color* h_tex_pixels, const int tex_w, const int tex_h) {
+    size_t tex_size = (size_t)tex_w * (size_t)tex_h * sizeof(Color);
+    Color* d_tex_pixels;
     cudaMalloc(&d_tex_pixels, tex_size);
     cudaMemcpy(d_tex_pixels, h_tex_pixels, tex_size, cudaMemcpyHostToDevice);
     return d_tex_pixels;
 }
-extern "C" void cuda_free_texture(uint32_t* d_tex_pixels) {
+extern "C" void cuda_free_texture(Color* d_tex_pixels) {
     cudaFree(d_tex_pixels);
 }
