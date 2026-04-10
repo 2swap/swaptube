@@ -17,7 +17,7 @@ void PendulumPointsScene::render_points() {
             int i = x + y * grid.w;
             PendulumState this_ps = grid.pendulum_states[i];
             PendulumState start_ps = grid.start_states[i];
-            int point_color = pendulum_color(start_ps.theta1, start_ps.theta2, start_ps.p1, start_ps.p2);
+            Color point_color = pendulum_color(start_ps.theta1, start_ps.theta2, start_ps.p1, start_ps.p2);
             vec2 curr_point = vec2(this_ps.theta1, this_ps.theta2);
             vec2 curr_pixel = point_to_pixel(curr_point);
             pix.fill_circle(

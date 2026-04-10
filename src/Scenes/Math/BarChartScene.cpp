@@ -60,7 +60,7 @@ void BarChartScene::draw() {
         double bar_x = state["bar" + to_string(i) + ".x"] * pix.w - bar_width / 2;
         double bar_y = pix.h * .8 - bar_height;
         int alpha = state["bar" + to_string(i) + ".opacity"] * 255;
-        int color = alpha << 24 | 0xffffff;
+        Color color = (static_cast<Color>(alpha) << 24) | 0xffffff;
         pix.fill_rect(bar_x, bar_y, bar_width, bar_height, color);
     }
 }

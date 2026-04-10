@@ -19,8 +19,8 @@ __device__ float bicubic_weight(float t) {
 };
 
 __global__ void bicubic_scale_kernel(
-    const unsigned int* in_pixels, const int in_w, const int in_h,
-    unsigned int* out_pixels, const int out_w, const int out_h,
+    const Color* in_pixels, const int in_w, const int in_h,
+    Color* out_pixels, const int out_w, const int out_h,
     const float x_ratio, const float y_ratio)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -52,7 +52,7 @@ __global__ void bicubic_scale_kernel(
             xi = Cuda::clamp(xi, 0, in_w - 1);
             yi = Cuda::clamp(yi, 0, in_h - 1);
 
-            unsigned int pixel = in_pixels[yi * in_w + xi];
+            Color pixel = in_pixels[yi * in_w + xi];
             float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
 
             pa += weight * d_geta(pixel);
@@ -75,12 +75,12 @@ __global__ void bicubic_scale_kernel(
     out_pixels[y * out_w + x] = d_argb(ia, ir, ig, ib);
 }
 
-extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h) {
-    unsigned int* d_input = nullptr;
-    unsigned int* d_output = nullptr;
+extern "C" int cuda_bicubic_scale(const Color* input_pixels, int input_w, int input_h, Color* output_pixels, int output_w, int output_h) {
+    Color* d_input = nullptr;
+    Color* d_output = nullptr;
 
-    size_t in_size = input_w * input_h * sizeof(unsigned int);
-    size_t out_size = output_w * output_h * sizeof(unsigned int);
+    size_t in_size = input_w * input_h * sizeof(Color);
+    size_t out_size = output_w * output_h * sizeof(Color);
 
     cudaMalloc((void**)&d_input, in_size);
     cudaMemcpy(d_input, input_pixels, in_size, cudaMemcpyHostToDevice);
@@ -108,8 +108,8 @@ extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w,
 }
 
 __global__ void overlay_kernel(
-    unsigned int* background, const int bw, const int bh,
-    unsigned int* foreground, const int fw, const int fh,
+    Color* background, const int bw, const int bh,
+    Color* foreground, const int fw, const int fh,
     const int dx, const int dy, const float opacity)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -122,18 +122,18 @@ __global__ void overlay_kernel(
 }
 
 extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
+    Color* h_background, const int bw, const int bh,
+    Color* h_foreground, const int fw, const int fh,
     const int dx, const int dy,
     const float opacity)
 {
     if (opacity == 0.0f) return;
 
-    unsigned int* d_background = nullptr;
-    unsigned int* d_foreground = nullptr;
+    Color* d_background = nullptr;
+    Color* d_foreground = nullptr;
 
-    size_t bg_size = bw * bh * sizeof(unsigned int);
-    size_t fg_size = fw * fh * sizeof(unsigned int);
+    size_t bg_size = bw * bh * sizeof(Color);
+    size_t fg_size = fw * fh * sizeof(Color);
 
     cudaMalloc((void**)&d_background, bg_size);
     cudaMemcpy(d_background, h_background, bg_size, cudaMemcpyHostToDevice);
@@ -157,8 +157,8 @@ extern "C" void cuda_overlay(
 }
 
 __global__ void overlay_rotation_kernel(
-    unsigned int* background, const int bw, const int bh,
-    unsigned int* foreground, const int fw, const int fh,
+    Color* background, const int bw, const int bh,
+    Color* foreground, const int fw, const int fh,
     const int dx, const int dy, const float opacity, const float angle_rad)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -199,10 +199,10 @@ __global__ void overlay_rotation_kernel(
     float sx = srcx - x0;
     float sy = srcy - y0;
 
-    unsigned int p00 = foreground[y0 * fw + x0];
-    unsigned int p10 = foreground[y0 * fw + x1];
-    unsigned int p01 = foreground[y1 * fw + x0];
-    unsigned int p11 = foreground[y1 * fw + x1];
+    Color p00 = foreground[y0 * fw + x0];
+    Color p10 = foreground[y0 * fw + x1];
+    Color p01 = foreground[y1 * fw + x0];
+    Color p11 = foreground[y1 * fw + x1];
 
     float a00 = static_cast<float>(d_geta(p00));
     float r00 = static_cast<float>(d_getr(p00));
@@ -249,8 +249,8 @@ __global__ void overlay_rotation_kernel(
 }
 
 extern "C" void cuda_overlay_with_rotation (
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
+    Color* h_background, const int bw, const int bh,
+    Color* h_foreground, const int fw, const int fh,
     const int dx, const int dy,
     const float opacity, const float angle_rad)
 {
@@ -258,11 +258,11 @@ extern "C" void cuda_overlay_with_rotation (
     // by the specified angle (in radians) before being overlaid onto the background.
     if (opacity == 0.0f) return;
 
-    unsigned int* d_background = nullptr;
-    unsigned int* d_foreground = nullptr;
+    Color* d_background = nullptr;
+    Color* d_foreground = nullptr;
 
-    size_t bg_size = bw * bh * sizeof(unsigned int);
-    size_t fg_size = fw * fh * sizeof(unsigned int);
+    size_t bg_size = bw * bh * sizeof(Color);
+    size_t fg_size = fw * fh * sizeof(Color);
 
     cudaMalloc((void**)&d_background, bg_size);
     cudaMemcpy(d_background, h_background, bg_size, cudaMemcpyHostToDevice);

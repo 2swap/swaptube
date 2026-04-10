@@ -6,8 +6,8 @@
 
 class CoordinateSceneWithTrail : public CoordinateScene {
 public:
-    int trail_color = OPAQUE_WHITE;
-    list<pair<vec2, int>> trail;
+    Color trail_color = OPAQUE_WHITE;
+    list<pair<vec2, Color>> trail;
     CoordinateSceneWithTrail(const vec2& dimensions = vec2(1, 1));
 
     void draw() override;

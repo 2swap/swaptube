@@ -80,7 +80,7 @@ void PendulumGridScene::draw_grid() {
             int i = arr_x+arr_y*grid.w;
 
             int color_mode0 = 0; int color_mode1 = 0; int color_mode2 = 0; int color_mode3 = 0;
-            int color = 0xffff0000;
+            Color color = 0xffff0000;
 
             double how_chaotic = max(0.,grid.diff_sums[i]/grid.samples*contrast);
             double use_p1 = grid.pendulum_states[i].p1 * mvg;
@@ -129,7 +129,7 @@ void PendulumGridScene::draw_pendulum_trail(){
     const float trail_start_y = state["trail_start_y"];
     const float trail_length = state["trail_length"];
     Pendulum p({trail_start_x, trail_start_y, 0, 0});
-    list<pair<vec2, int>> trail;
+    list<pair<vec2, Color>> trail;
     for(int i = 0; i < trail_length; i++){
         p.iterate_physics(1, 0.01);
         trail.push_back(make_pair(vec2(p.state.theta1, p.state.theta2), 0xffff0000));

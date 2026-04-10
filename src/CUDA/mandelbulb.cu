@@ -6,7 +6,7 @@
 
 const float EPSILON = 2e-4f;
 
-__device__ unsigned int getLighting(const Cuda::vec3& pos, const Cuda::vec3& lightPos, const Cuda::vec3& normal, float shadow, float iters, float max_raymarch_iters){
+__device__ Color getLighting(const Cuda::vec3& pos, const Cuda::vec3& lightPos, const Cuda::vec3& normal, float shadow, float iters, float max_raymarch_iters){
     float light = max(dot(normal, normalize(lightPos - pos)), 0.0);
     light *= max(shadow, 0.1);
     float glow = min(iters / max_raymarch_iters, 1.0);
@@ -70,7 +70,7 @@ __device__ Cuda::vec3 getNormal(const Cuda::vec3& pos, int max_mandelbulb_iters)
     ));
 }
 
-__global__ void runRaymarch(const int width, const int height, const Cuda::vec3 pos, const Cuda::quat camera_orientation, float fov, const Cuda::vec3 lightPos, int max_raymarch_iters, int max_mandelbulb_iters, unsigned int* colors){
+__global__ void runRaymarch(const int width, const int height, const Cuda::vec3 pos, const Cuda::quat camera_orientation, float fov, const Cuda::vec3 lightPos, int max_raymarch_iters, int max_mandelbulb_iters, Color* colors){
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
     int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -84,7 +84,7 @@ __global__ void runRaymarch(const int width, const int height, const Cuda::vec3 
     const Cuda::vec3 end_pos = rayEnd;
     float iters = rayEnd.w;
     
-    unsigned int color;
+    Color color;
     
     // Determines whether to color pixel
     if(iters >= 0.0){
@@ -103,12 +103,12 @@ extern "C" void render_raymarch(
     const Cuda::vec3& pos, const Cuda::quat& camera, float fov,
     const Cuda::vec3& lightPos,
     const int max_raymarch_iters, const int max_mandelbulb_iters,
-    unsigned int* colors
+    Color* colors
 ){
-    unsigned int* d_colors;
+    Color* d_colors;
 
     // Allocates device memory for color array (image buffer)
-    cudaMalloc(&d_colors, width * height * sizeof(unsigned int)); 
+    cudaMalloc(&d_colors, width * height * sizeof(Color)); 
 
     // Defines thread and block sizes for kernel launch
     dim3 threads(16, 16);
@@ -116,7 +116,7 @@ extern "C" void render_raymarch(
 
     runRaymarch<<<block, threads>>>(width, height, pos, normalize(camera), fov, lightPos, max_raymarch_iters, max_mandelbulb_iters, d_colors);
 
-    cudaMemcpy(colors, d_colors, width * height * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(colors, d_colors, width * height * sizeof(Color), cudaMemcpyDeviceToHost);
 
     cudaFree(d_colors);
 }

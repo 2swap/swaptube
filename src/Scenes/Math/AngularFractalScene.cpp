@@ -20,7 +20,7 @@ void AngularFractalScene::draw() {
 }
 
 void AngularFractalScene::draw_angular_fractal() {
-    list<pair<vec2, int>> trail;
+    list<pair<vec2, Color>> trail;
     vec2 current_point = vec2(0,0);
     double current_angle = 0;
     trail.push_back({current_point, OPAQUE_WHITE});

@@ -1,7 +1,7 @@
 #include "LambdaVariable.h"
 #include <cstdlib>
 
-LambdaVariable::LambdaVariable(const char vn, const int c, std::weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u) : LambdaExpression("Variable", c, p, x, y, w, h, u), varname(vn) {
+LambdaVariable::LambdaVariable(const char vn, Color c, std::weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u) : LambdaExpression("Variable", c, p, x, y, w, h, u), varname(vn) {
     if(!std::isalpha(static_cast<unsigned char>(vn))){
         throw std::runtime_error("Lambda variable was not a letter!");
     }
@@ -37,7 +37,7 @@ void LambdaVariable::interpolate_recursive(std::shared_ptr<const LambdaExpressio
     mark_updated();
 }
 
-void LambdaVariable::tint_recursive(const int c) {
+void LambdaVariable::tint_recursive(Color c) {
     set_color(colorlerp(color, c, 0.5));
     mark_updated();
 }
@@ -46,7 +46,7 @@ void LambdaVariable::flush_uid_recursive() {
     uid = std::rand();
 }
 
-void LambdaVariable::set_color_recursive(const int c) {
+void LambdaVariable::set_color_recursive(Color c) {
     set_color(c);
     mark_updated();
 }

@@ -3,7 +3,7 @@
 #include "LambdaAbstraction.h"
 #include "LambdaApplication.h"
 
-LambdaExpression::LambdaExpression(const std::string& t, const int c, std::weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u)
+LambdaExpression::LambdaExpression(const std::string& t, Color c, std::weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u)
     : type(t), color(c), parent(p), x(x), y(y), w(w), h(h), uid(u) {}
 
 std::unordered_set<std::shared_ptr<LambdaExpression>> LambdaExpression::get_all_legal_reductions() {
@@ -45,7 +45,7 @@ void LambdaExpression::set_parent(std::weak_ptr<LambdaExpression> p) {
     mark_updated();
 }
 
-void LambdaExpression::set_color(const int c) {
+void LambdaExpression::set_color(Color c) {
     color = c;
     mark_updated();
 }
@@ -54,7 +54,7 @@ std::string LambdaExpression::get_type() const {
     return type;
 }
 
-int LambdaExpression::get_color() const {
+Color LambdaExpression::get_color() const {
     return color;
 }
 

@@ -1,7 +1,7 @@
 #include "RootFractalScene.h"
 #include <cmath>
 
-extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float brightness);
+extern "C" void draw_root_fractal(Color* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float brightness);
 
 RootFractalScene::RootFractalScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({

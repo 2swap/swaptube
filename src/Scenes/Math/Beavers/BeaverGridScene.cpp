@@ -1,6 +1,6 @@
 #include "BeaverGridScene.h"
 
-extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* pixels, int w, int h, vec2 lx_ty, vec2 rx_by, int max_steps);
+extern "C" void beaver_grid_cuda(int num_states, int num_symbols, Color* pixels, int w, int h, vec2 lx_ty, vec2 rx_by, int max_steps);
 
 BeaverGridScene::BeaverGridScene(const int num_states, const int num_symbols, const vec2& dimension)
 : CoordinateScene(dimension) {

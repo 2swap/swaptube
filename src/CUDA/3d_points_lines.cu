@@ -10,7 +10,7 @@
 #include "common_graphics.cuh" // Contains fill_circle
 
 __global__ void render_points_kernel(
-    unsigned int* pixels, int width, int height,
+    Color* pixels, int width, int height,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* points, int num_points,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
@@ -31,7 +31,7 @@ __global__ void render_points_kernel(
 }
 
 __global__ void render_lines_kernel(
-    unsigned int* pixels, int width, int height,
+    Color* pixels, int width, int height,
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* lines, int num_lines,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
@@ -59,14 +59,14 @@ __global__ void render_lines_kernel(
 }
 
 extern "C" void render_points_on_gpu(
-    unsigned int* h_pixels, int width, int height,
+    Color* h_pixels, int width, int height,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* h_points, int num_points,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
 {
-    unsigned int* d_pixels = nullptr;
+    Color* d_pixels = nullptr;
     Cuda::Point*        d_points = nullptr;
-    size_t pix_sz = width * height * sizeof(unsigned int);
+    size_t pix_sz = width * height * sizeof(Color);
     size_t pt_sz  = num_points * sizeof(Cuda::Point);
 
     cudaMalloc((void**)&d_pixels, pix_sz);
@@ -90,14 +90,14 @@ extern "C" void render_points_on_gpu(
 }
 
 extern "C" void render_lines_on_gpu(
-    unsigned int* h_pixels, int width, int height,
+    Color* h_pixels, int width, int height,
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* h_lines, int num_lines,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
 {
-    unsigned int* d_pixels = nullptr;
+    Color* d_pixels = nullptr;
     Cuda::Line*         d_lines  = nullptr;
-    size_t pix_sz = width * height * sizeof(unsigned int);
+    size_t pix_sz = width * height * sizeof(Color);
     size_t ln_sz  = num_lines * sizeof(Cuda::Line);
 
     cudaMalloc((void**)&d_pixels, pix_sz);

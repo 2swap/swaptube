@@ -85,7 +85,7 @@ void C4Scene::highlight_winning_discs(){
             double px, py;
             get_disc_screen_coordinates(x, C4_HEIGHT - 1 - y, px, py);
             bool is_red = bitboard_at(b.red_bitboard, x, y);
-            int color = is_red ? C4_RED : C4_YELLOW;
+            Color color = is_red ? C4_RED : C4_YELLOW;
             pix.fill_ellipse(px, py, ellipse_width, ellipse_width, color);
         }
     }

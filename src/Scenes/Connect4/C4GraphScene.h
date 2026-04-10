@@ -13,7 +13,7 @@ class C4GraphScene : public GraphScene {
 public:
     C4GraphScene(shared_ptr<Graph> g, bool surfaces_on, const string& rep, const C4BranchMode mode, const vec2& dimensions = vec2(1, 1));
 
-    int get_edge_color(const Node& node, const Node& neighbor);
+    Color get_edge_color(const Node& node, const Node& neighbor);
 
 private:
     string root_node_representation;

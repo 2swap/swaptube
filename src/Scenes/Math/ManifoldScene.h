@@ -9,7 +9,7 @@
 class ManifoldScene : public ThreeDimensionScene {
 private:
     std::unordered_set<std::string> manifold_names;
-    uint32_t* d_texture_data;
+    Color* d_texture_data;
     int texture_w;
     int texture_h;
 

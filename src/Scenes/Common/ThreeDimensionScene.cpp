@@ -4,25 +4,25 @@
 
 extern "C" {
     void render_points_on_gpu(
-        unsigned int* h_pixels, int width, int height,
+        Color* h_pixels, int width, int height,
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
         quat camera_direction, vec3 camera_pos, float fov);
 
     void render_lines_on_gpu(
-        unsigned int* h_pixels, int width, int height,
+        Color* h_pixels, int width, int height,
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
         quat camera_direction, vec3 camera_pos, float fov);
 
     void cuda_render_surface(
-        vector<unsigned int>& pix,
+        vector<Color>& pix,
         int x1,
         int y1,
         int plot_w,
         int plot_h,
         int pixels_w,
-        unsigned int* d_surface,
+        Color* d_surface,
         int surface_w,
         int surface_h,
         float opacity,
@@ -52,7 +52,7 @@ Surface::Surface(const vec3& c, const vec3& l, const vec3& u, const string& n)
 // constructor to make the surface fill the screen.
 Surface::Surface(const string& n) : Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(0, .5, 0), n) {}
 
-Path::Path(const string& n, int clr, float op)
+Path::Path(const string& n, Color clr, float op)
     : name(n), color(clr), opacity(op) { }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)

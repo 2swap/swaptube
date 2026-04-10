@@ -29,9 +29,9 @@ struct Surface {
 struct Path {
     string name;
     vector<vec3> points;
-    int color;
+    Color color;
     float opacity;
-    Path(const string& n, int clr, float op = 1);
+    Path(const string& n, Color clr, float op = 1);
 };
 
 class ThreeDimensionScene : public SuperScene {

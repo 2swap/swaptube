@@ -16,7 +16,7 @@ __device__ thrust::complex<float> evaluate_polynomial_given_coefficients(const t
 }
 
 __global__ void render_kernel(
-    int* d_pixels,
+    Color* d_pixels,
     const thrust::complex<float>* d_coefficients,
     int degree,
     Cuda::vec2 wh,
@@ -31,13 +31,13 @@ __global__ void render_kernel(
 
     const Cuda::vec2 point = pixel_to_point_in_screen(Cuda::vec2(x,y), lx_ty, rx_by, wh);
     const thrust::complex<float> val = evaluate_polynomial_given_coefficients(d_coefficients, degree, thrust::complex<float>(point.x, point.y));
-    const int color = d_complex_to_srgb(val, ab_dilation, dot_radius);
+    const Color color = d_complex_to_srgb(val, ab_dilation, dot_radius);
 
     d_pixels[y * int(wh.x) + x] = color;
 }
 
 extern "C" void color_complex_polynomial(
-    unsigned int* h_pixels, // to be overwritten with the result
+    Color* h_pixels, // to be overwritten with the result
     int w,
     int h,
     const float* h_coefficients_real,
@@ -49,8 +49,8 @@ extern "C" void color_complex_polynomial(
     float dot_radius
 ) {
     // Allocate device memory for pixels
-    int* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(int));
+    Color* d_pixels;
+    cudaMalloc(&d_pixels, w * h * sizeof(Color));
 
     // Allocate device memory for coefficients
     thrust::complex<float>* d_coefficients;
@@ -80,7 +80,7 @@ extern "C" void color_complex_polynomial(
     cudaDeviceSynchronize();
 
     // Copy pixels back to host
-    cudaMemcpy(h_pixels, d_pixels, w * h * sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_pixels, d_pixels, w * h * sizeof(Color), cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_pixels);

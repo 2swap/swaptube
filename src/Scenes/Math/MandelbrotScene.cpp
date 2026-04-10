@@ -13,8 +13,8 @@ extern "C" void mandelbrot_render(
     int max_iterations,
     float gradation,
     float phase_shift,
-    unsigned int internal_color,
-    unsigned int* depths
+    Color internal_color,
+    Color* depths
 );
 
 MandelbrotScene::MandelbrotScene(const vec2& dimensions) : CoordinateScene(dimensions) {
@@ -67,8 +67,8 @@ void MandelbrotScene::draw() {
     );
     if(state["point_path_length"] > 0) {
         // TODO convert to use CoordinateSceneWithTrail
-        int startcol = 0xffff0000;
-        int pathcol = 0xff880000;
+        Color startcol = 0xffff0000;
+        Color pathcol = 0xff880000;
         complex<float> z(state["point_path_start_r"], state["point_path_start_i"]);
         vec2 start = point_to_pixel(vec2(state["point_path_start_r"], state["point_path_start_i"]));
         float r = get_width()/300.;

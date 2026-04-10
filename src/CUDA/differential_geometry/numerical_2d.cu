@@ -177,7 +177,7 @@ static __device__ bool rk4_step_geodesic(float Y[4], float dt) {
 }
 
 __global__ void geodesics_2d_kernel(
-    uint32_t* pixels, const int w, const int h,
+    Color* pixels, const int w, const int h,
     const Cuda::vec2 start_position, const Cuda::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
     const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
@@ -249,7 +249,7 @@ __global__ void geodesics_2d_kernel(
 }
 
 extern "C" void cuda_render_geodesics_2d(
-    uint32_t* pixels, const int w, const int h,
+    Color* pixels, const int w, const int h,
     const Cuda::ManifoldData& manifold,
     const Cuda::vec2 start_position, const Cuda::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
@@ -257,9 +257,9 @@ extern "C" void cuda_render_geodesics_2d(
     const float geom_mean_size, const float fov, const float opacity
 ) {
     // Allocate and copy pixels to device
-    uint32_t* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
-    cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    Color* d_pixels;
+    cudaMalloc(&d_pixels, w * h * sizeof(Color));
+    cudaMemcpy(d_pixels, pixels, w * h * sizeof(Color), cudaMemcpyHostToDevice);
 
     Cuda::ManifoldData cp_manifold = deepcopy_manifold(manifold);
     cudaMemcpyToSymbol(d_manifold, &cp_manifold, sizeof(Cuda::ManifoldData));
@@ -278,7 +278,7 @@ extern "C" void cuda_render_geodesics_2d(
     cudaDeviceSynchronize();
 
     // Copy pixels back to host
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pixels, d_pixels, w * h * sizeof(Color), cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_pixels);

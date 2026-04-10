@@ -19,5 +19,5 @@ public:
     const StateQuery populate_state_query() const override;
 
 private:
-    std::vector<unsigned int> function_colors = {0xFF0088FF, 0xFFFF0088};
+    std::vector<Color> function_colors = {0xFF0088FF, 0xFFFF0088};
 };

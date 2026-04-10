@@ -10,7 +10,7 @@ ResolvedStateEquation i_eq = {
     {RESOLVED_CONSTANT, .content = {.constant = 0.0}},
 };
 extern "C" void launch_cuda_surface_raymarch(
-    uint32_t* h_pixels, int w, int h,
+    Color* h_pixels, int w, int h,
     int x_size, ResolvedStateEquationComponent* x_eq,
     int y_size, ResolvedStateEquationComponent* y_eq,
     int z_size, ResolvedStateEquationComponent* z_eq,
@@ -21,16 +21,16 @@ extern "C" void launch_cuda_surface_raymarch(
 );
 
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    Color* pixels, const int w, const int h,
     const ManifoldData* manifolds, const int num_manifolds,
     const vec3 camera_pos, const quat camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
-    uint32_t* tex_pixels, const int tex_w, const int tex_h
+    Color* tex_pixels, const int tex_w, const int tex_h
 );
 
 extern "C" void cuda_render_geodesics_2d(
-    uint32_t* pixels, const int w, const int h,
+    Color* pixels, const int w, const int h,
     const ManifoldData& manifold,
     const vec2 start_position, const vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,

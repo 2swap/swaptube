@@ -10,7 +10,7 @@
 class LambdaExpression : public DataObject, public std::enable_shared_from_this<LambdaExpression> {
 protected:
     const std::string type;
-    int color;
+    Color color;
     std::weak_ptr<LambdaExpression> parent;
     float x;
     float y;
@@ -18,7 +18,7 @@ protected:
     float h;
     int uid;
 public:
-    LambdaExpression(const std::string& t, const int c, std::weak_ptr<LambdaExpression> p = std::shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
+    LambdaExpression(const std::string& t, Color c, std::weak_ptr<LambdaExpression> p = std::shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
     virtual std::shared_ptr<LambdaExpression> clone() const = 0;
 
     virtual std::unordered_set<char> free_variables() const = 0;
@@ -35,9 +35,9 @@ public:
     virtual float get_width_recursive() const = 0;
     virtual float get_height_recursive() const = 0;
     virtual bool is_reducible() const = 0;
-    virtual void set_color_recursive(const int c) = 0;
+    virtual void set_color_recursive(Color c) = 0;
     virtual void flush_uid_recursive() = 0;
-    virtual void tint_recursive(const int c) = 0;
+    virtual void tint_recursive(Color c) = 0;
     virtual void interpolate_recursive(std::shared_ptr<const LambdaExpression> l2, const float weight) = 0;
     virtual void check_children_parents() const = 0;
     std::unordered_set<std::shared_ptr<LambdaExpression>> get_all_legal_reductions();
@@ -45,9 +45,9 @@ public:
     int count_reductions();
     char get_fresh() const;
     void set_parent(std::weak_ptr<LambdaExpression> p);
-    void set_color(const int c);
+    void set_color(Color c);
     std::string get_type() const;
-    int get_color() const;
+    Color get_color() const;
     std::shared_ptr<const LambdaExpression> get_parent() const;
 
     int get_type_depth(const std::string& s) const;

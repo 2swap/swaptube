@@ -60,9 +60,9 @@ void StateSliderScene::draw_slider() {
     const int w = get_width();
 
     // vv Change away!! vv
-    const int outer_color = 0xff444444; // Dark gray
-    const int inner_color = 0xff000000; // Black
-    const int  knob_color = 0xff444444; // Dark gray
+    const Color outer_color = 0xff444444; // Dark gray
+    const Color inner_color = 0xff000000; // Black
+    const Color  knob_color = 0xff444444; // Dark gray
     const double outer_radius = h * .5;
     const double inner_radius = h * .45;
     const double  knob_radius = h * .4;

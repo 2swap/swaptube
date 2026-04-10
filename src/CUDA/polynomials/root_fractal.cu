@@ -92,7 +92,7 @@ __device__ float sigmoid(float x) {
     return 3*x*x-2*x*x*x;
 }
 
-__global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, float* d_red, float* d_green, float* d_blue, int w, int h, float brightness) {
+__global__ void finalize_color_kernel(Color* d_pixels, float* d_alpha, float* d_red, float* d_green, float* d_blue, int w, int h, float brightness) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int total = w * h;
 
@@ -117,7 +117,7 @@ __global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, fl
 }
 
 extern "C" void draw_root_fractal(
-    unsigned int* pixels,
+    Color* pixels,
     int w,
     int h,
     std::complex<float> c1,
@@ -144,8 +144,8 @@ extern "C" void draw_root_fractal(
     root_fractal_kernel<<<blocks, threadsPerBlock>>>(d_alpha, d_red, d_green, d_blue, w, h, dc1, dc2, terms, lx, ty, rx, by, radius, opacity);
     cudaDeviceSynchronize();
 
-    unsigned int* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(unsigned int));
+    Color* d_pixels;
+    cudaMalloc(&d_pixels, w * h * sizeof(Color));
 
     int finalize_threadsPerBlock = 256;
     int finalize_blocks = (w * h + finalize_threadsPerBlock - 1) / finalize_threadsPerBlock;
@@ -157,6 +157,6 @@ extern "C" void draw_root_fractal(
     cudaFree(d_green);
     cudaFree(d_blue);
 
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pixels, d_pixels, w * h * sizeof(Color), cudaMemcpyDeviceToHost);
     cudaFree(d_pixels);
 }

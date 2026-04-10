@@ -1,6 +1,6 @@
 #include "BeaverGridTNFScene.h"
 
-extern "C" void beaver_grid_TNF_cuda(unsigned int* pixels, int w, int h, vec2 lx_ty, vec2 rx_by, int max_steps);
+extern "C" void beaver_grid_TNF_cuda(Color* pixels, int w, int h, vec2 lx_ty, vec2 rx_by, int max_steps);
 
 BeaverGridTNFScene::BeaverGridTNFScene(const vec2& dimension)
 : CoordinateScene(dimension) {

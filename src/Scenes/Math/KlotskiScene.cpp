@@ -1,7 +1,7 @@
 #include "KlotskiScene.h"
 #include "../../Core/Color.h"
 
-int piece_color(int cell){
+Color piece_color(int cell){
     return rainbow(cell*.618034);
 }
 
@@ -124,7 +124,7 @@ void KlotskiScene::draw() {
             double rect_height = square_size - margin;
 
             // Simple pseudo-random color based on the character value.
-            uint32_t color = piece_color(cell);
+            Color color = piece_color(cell);
             if(rainbow_pct<0.999) color = colorlerp(OPAQUE_WHITE, color, rainbow_pct);
 
             double triple_micro = microblock_fraction*3;

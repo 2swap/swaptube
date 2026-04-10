@@ -67,14 +67,14 @@ void PendulumScene::draw() {
     double in_manual_mode = state["manual_mode"];
     std::vector<double> thetas = {lerp(pend.state.theta1, state["theta1_manual"], in_manual_mode),
                                  lerp(pend.state.theta2, state["theta2_manual"], in_manual_mode)};
-    int color = pendulum_color(thetas[0], thetas[1], pend.state.p1, pend.state.p2);
+    Color color = pendulum_color(thetas[0], thetas[1], pend.state.p1, pend.state.p2);
     if(state["path_opacity"] > 0.01)
         pix.overlay(path_background, 0, 0);
 
     double pend_opa = state["pendulum_opacity"];
     if(pend_opa > 0.01) {
         double rainbow = state["rainbow"];
-        int pendulum_color = colorlerp(OPAQUE_WHITE, color, rainbow);
+        Color pendulum_color = colorlerp(OPAQUE_WHITE, color, rainbow);
         for (int i = 0; i < pendulum_count; i++) {
             double theta = thetas[i];
             double length = h/(pendulum_count * 2 + 1.);

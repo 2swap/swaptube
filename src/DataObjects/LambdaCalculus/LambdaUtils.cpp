@@ -18,7 +18,7 @@
 
 using namespace std;
 
-shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, const int c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u){
+shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, const shared_ptr<const LambdaExpression> s, Color c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u){
     shared_ptr<LambdaExpression> nf = f->clone();
     shared_ptr<LambdaExpression> ns = s->clone();
     shared_ptr<LambdaExpression> ret = make_shared<LambdaApplication>(nf, ns, c, p, x, y, w, h, u);
@@ -27,7 +27,7 @@ shared_ptr<LambdaExpression> apply(const shared_ptr<const LambdaExpression> f, c
     return ret;
 }
 
-shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, const int c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u){
+shared_ptr<LambdaExpression> abstract(const char v, const shared_ptr<const LambdaExpression> b, Color c, weak_ptr<LambdaExpression> p, float x, float y, float w, float h, int u){
     shared_ptr<LambdaExpression> nb = b->clone();
     shared_ptr<LambdaExpression> ret = make_shared<LambdaAbstraction>(v, nb, c, p, x, y, w, h, u);
     nb->set_parent(ret);
@@ -104,7 +104,7 @@ Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
             Iterator it(shared_from_this());
             while (it.has_next()) {
                 shared_ptr<LambdaExpression> current = it.next();
-                int color = current->get_color();
+                Color color = current->get_color();
                 if((i==0)==(geta(color) == 255)) continue;
                 if (current->get_type() == "Variable" && step == 0) {
                     pix.fill_rect((current->x+2) * scale, (current->y+2) * scale, scale, current->h * scale, color);

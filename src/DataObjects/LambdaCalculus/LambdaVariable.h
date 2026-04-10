@@ -14,7 +14,7 @@ class LambdaVariable : public LambdaExpression {
 private:
     char varname;
 public:
-    LambdaVariable(const char vn, const int c, std::weak_ptr<LambdaExpression> p = std::shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
+    LambdaVariable(const char vn, Color c, std::weak_ptr<LambdaExpression> p = std::shared_ptr<LambdaExpression>(), float x = 0, float y = 0, float w = 0, float h = 0, int u = 0);
     std::unordered_set<char> all_referenced_variables() const override;
     std::unordered_set<char> free_variables() const override;
     std::shared_ptr<LambdaExpression> clone() const override;
@@ -22,9 +22,9 @@ public:
     float get_width_recursive() const;
     float get_height_recursive() const;
     void interpolate_recursive(std::shared_ptr<const LambdaExpression> l2, const float weight);
-    void tint_recursive(const int c);
+    void tint_recursive(Color c);
     void flush_uid_recursive();
-    void set_color_recursive(const int c);
+    void set_color_recursive(Color c);
     int parenthetical_depth() const override;
     int num_variable_instantiations() const override;
     std::string get_string() const override;

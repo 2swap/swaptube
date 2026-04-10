@@ -45,12 +45,12 @@ public:
         return pixels.out_of_range(x - translation_x, y - translation_y);
     }
 
-    inline int get_pixel(int x, int y) const {
+    inline Color get_pixel(int x, int y) const {
         if (out_of_range(x, y)) return 0;
         return pixels.get_pixel_carelessly(x - translation_x, y - translation_y);
     }
 
-    inline void set_pixel(int x, int y, int col) {
+    inline void set_pixel(int x, int y, Color col) {
         if (out_of_range(x, y)) return;
         pixels.set_pixel_carelessly(x - translation_x, y - translation_y, col);
     }
@@ -66,7 +66,7 @@ public:
 
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y);
 
-void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int color);
+void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, Color color);
 
 Pixels segment(const Pixels& p, unsigned int& id);
 
@@ -86,7 +86,7 @@ TranslatedPixels induce(const TranslatedPixels& original, const TranslatedPixels
 
 Pixels colorize_segments(const Pixels& segmented);
 
-int count_pixels_with_color(const Pixels& p, const unsigned int color);
+int count_pixels_with_color(const Pixels& p, Color color);
 
 TranslatedPixels erase_low_iou(const TranslatedPixels& intersection, const TranslatedPixels& unified, float threshold);
 
