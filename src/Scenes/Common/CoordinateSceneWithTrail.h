@@ -14,9 +14,5 @@ public:
 
     const StateQuery populate_state_query() const override;
 
-    void change_data() override;
-
     void clear_trail();
-
-    bool check_if_data_changed() const override;
 };

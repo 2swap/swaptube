@@ -29,10 +29,11 @@ public:
     Scene(const vec2& dimensions = vec2(1, 1));
 
     virtual const StateQuery populate_state_query() const = 0;
-    virtual bool check_if_data_changed() const = 0;
     virtual void draw() = 0;
-    virtual void change_data() = 0;
-    virtual void mark_data_unchanged() = 0;
+
+    bool check_if_data_changed() const;
+    void mark_data_unchanged();
+    void change_data();
 
     virtual void on_end_transition_extra_behavior(const TransitionType tt){};
     void on_end_transition(const TransitionType tt);

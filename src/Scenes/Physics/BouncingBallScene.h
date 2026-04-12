@@ -16,9 +16,5 @@ public:
         const vec2& dimensions = vec2(1, 1)
     );
 
-    void mark_data_unchanged() override;
-    void change_data() override;
-    bool check_if_data_changed() const override;
-
     void draw() override;
 };

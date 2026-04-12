@@ -268,7 +268,7 @@ int AudioWriter::add_audio_from_file(const string& filename) {
 #else
     if (audioStreamInput->codecpar->channel_layout == 0) {
 #endif
-        throw runtime_error("Error: Channel order is unspecified.");
+        //throw runtime_error("Error: Channel order is unspecified.");
     }
 #if USE_NEW_CHANNEL_LAYOUT_API
     int num_channels = audioStreamInput->codecpar->ch_layout.nb_channels;

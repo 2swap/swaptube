@@ -21,9 +21,6 @@ public:
     KlotskiBoard copy_staged_board();
     KlotskiBoard copy_board();
     const StateQuery populate_state_query() const override;
-    void mark_data_unchanged() override;
-    void change_data() override;
-    bool check_if_data_changed() const override;
 
     void stage_move(const KlotskiMove& km);
 

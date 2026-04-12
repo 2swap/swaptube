@@ -23,8 +23,4 @@ public:
     void draw() override;
 
     const StateQuery populate_state_query() const override;
-
-    bool check_if_data_changed() const;
-    void change_data();
-    void mark_data_unchanged();
 };

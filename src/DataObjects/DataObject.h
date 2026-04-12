@@ -5,6 +5,7 @@ public:
     // Initialize to updated, since on the first step we wish to redraw the scene.
     void mark_unchanged();
     bool has_been_updated_since_last_scene_query() const;
+    void tick();
 private:
     bool updated_since_last_scene_query = true;
 protected:
