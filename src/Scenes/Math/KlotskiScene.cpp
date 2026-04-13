@@ -29,9 +29,6 @@ KlotskiBoard KlotskiScene::copy_board() {
 const StateQuery KlotskiScene::populate_state_query() const {
     return StateQuery{"dots", "margin", "microblock_fraction", "t", "rainbow"};
 }
-void KlotskiScene::mark_data_unchanged() { }
-void KlotskiScene::change_data() { }
-bool KlotskiScene::check_if_data_changed() const { return false; }
 
 void KlotskiScene::stage_move(const KlotskiMove& km) {
     staged_move = km;

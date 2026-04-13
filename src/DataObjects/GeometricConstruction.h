@@ -44,4 +44,6 @@ public:
 
     vector<GeometricPoint> points;
     vector<GeometricLine> lines;
+
+    void tick(const StateReturn& state);
 };

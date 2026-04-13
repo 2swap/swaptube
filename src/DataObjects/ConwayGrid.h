@@ -12,5 +12,5 @@ public:
     Bitboard* d_board_2;
     ConwayGrid(const int width, const int height);
     ~ConwayGrid();
-    void iterate();
+    void tick(const StateReturn& state);
 };

@@ -17,8 +17,7 @@ BouncingBalls::BouncingBalls(const int n, const int sw, const int sh, const floa
     mark_updated();
 }
 
-void BouncingBalls::iterate() {
-
+void BouncingBalls::tick(const StateReturn& state) {
     for(size_t i = 0; i < balls.size(); i++) {
         for(size_t j = i + 1; j < balls.size(); j++) {
             float dx = balls[j].x - balls[i].x;

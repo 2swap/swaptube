@@ -36,7 +36,4 @@ public:
 
 protected:
     std::unordered_map<std::string, std::pair<Surface, std::shared_ptr<Scene>>> graph_surface_map;
-
-private:
-    int last_node_count;
 };

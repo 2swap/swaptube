@@ -205,3 +205,24 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("t", get_global_state("frame_number") / get_video_framerate_fps());
     cout << "]" << flush;
 }
+
+bool Scene::check_if_data_changed() const {
+    for(const DataObject& obj : data_objects) {
+        if(obj.has_been_updated_since_last_scene_query()) {
+            return true;
+        }
+    }
+    return false;
+}
+void Scene::mark_data_unchanged() {
+    for(DataObject& obj : data_objects) {
+        obj.mark_unchanged();
+    }
+}
+void Scene::change_data() {
+    for(DataObject& obj : data_objects) {
+        obj.tick(state);
+        obj.mark_updated();
+    }
+}
+

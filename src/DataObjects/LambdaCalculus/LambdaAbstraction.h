@@ -39,4 +39,5 @@ public:
     shared_ptr<LambdaExpression> specific_reduction(int x) override;
     char get_bound_variable() const;
     shared_ptr<LambdaExpression> get_body() const;
+    void tick(const StateReturn& state);
 };

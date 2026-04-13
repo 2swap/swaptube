@@ -8,9 +8,7 @@ extern "C" void draw_conway(
     vec2 lx_ty, vec2 rx_by, float transition
 );
 
-ConwayScene::ConwayScene(const vec2& dimensions) : CoordinateScene(dimensions), conway_grid(grid_width * 8, grid_height * 8) {
-    conway_grid.iterate();
-}
+ConwayScene::ConwayScene(const vec2& dimensions) : CoordinateScene(dimensions), conway_grid(grid_width * 8, grid_height * 8) { }
 
 void ConwayScene::draw() {
     draw_conway(
@@ -36,13 +34,5 @@ const StateQuery ConwayScene::populate_state_query() const {
 
 void ConwayScene::on_end_transition_extra_behavior(const TransitionType tt){
     if(tt == MICRO)
-        conway_grid.iterate();
-}
-
-void ConwayScene::change_data() {
-    //conway_grid.iterate();
-}
-
-bool ConwayScene::check_if_data_changed() const {
-    return conway_grid.has_been_updated_since_last_scene_query();
+        ;//conway_grid.iterate();
 }

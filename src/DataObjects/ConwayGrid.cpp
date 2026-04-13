@@ -13,7 +13,7 @@ ConwayGrid::~ConwayGrid() {
     mark_updated();
     free_conway_grid(d_board, d_board_2);
 }
-void ConwayGrid::iterate() {
+void ConwayGrid::tick(const StateReturn& state) {
     mark_updated();
     iterate_conway(d_board, d_board_2, w_bitboards, h_bitboards);
     Bitboard* temp = d_board;

@@ -80,12 +80,14 @@ void SuperScene::add_subscene_check_dupe(const std::string& name, std::shared_pt
 }
 
 void SuperScene::change_data() {
+    Scene::change_data();
     for(const auto& kv : subscenes) {
         kv.second->update();
     }
 }
 
 bool SuperScene::check_if_data_changed() const {
+    if (Scene::check_if_data_changed()) return true;
     for(const auto& kv : subscenes){
         if(kv.second->check_if_data_changed()) return true;
     }
@@ -106,6 +108,7 @@ bool SuperScene::subscene_needs_redraw() const {
 }
 
 void SuperScene::mark_data_unchanged() {
+    Scene::mark_data_unchanged();
     for(const auto& kv : subscenes){
         kv.second->mark_data_unchanged();
     }

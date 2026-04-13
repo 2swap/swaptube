@@ -24,7 +24,3 @@ const StateQuery BeaverGridTNFScene::populate_state_query() const {
     sq.insert("max_steps");
     return sq;
 }
-
-void BeaverGridTNFScene::mark_data_unchanged() { }
-void BeaverGridTNFScene::change_data() { }
-bool BeaverGridTNFScene::check_if_data_changed() const { return false; }

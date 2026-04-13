@@ -18,4 +18,5 @@ public:
     float ball_radius;
     BouncingBalls(const int n, const int sw, const int sh, const float br);
     void iterate();
+    void tick(const StateReturn& state);
 };

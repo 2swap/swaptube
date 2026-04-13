@@ -46,7 +46,3 @@ const StateQuery BeaverGridTNF3DScene::populate_state_query() const {
     StateQuery sq = {"fov", "x", "y", "z", "q1", "qi", "qj", "qk", "max_steps", "target_x", "target_y", "target_z", "up_x", "up_y", "up_z", "use_quat_camera", "shell_border", "core_border", "scale_x", "scale_y", "scale_z"};
     return sq;
 }
-
-void BeaverGridTNF3DScene::mark_data_unchanged() { }
-void BeaverGridTNF3DScene::change_data() { }
-bool BeaverGridTNF3DScene::check_if_data_changed() const { return false; }

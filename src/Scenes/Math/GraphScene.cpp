@@ -6,15 +6,6 @@
 #include "../../Core/Smoketest.h"
 #include "../../Host_Device_Shared/vec.h"
 
-vector<int> tones = {0,4,7};
-int tone_incr = 0;
-void node_pop(double subdiv, bool added_not_deleted) {
-    int tone_number = added_not_deleted?tones[tone_incr%tones.size()]:-6;
-    double tone = pow(2,tone_number/12.);
-    tone_incr++;
-    sfx_boink(get_global_state("t") + subdiv, tone * 440, 1/80., 1);
-}
-
 GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions)
     : ThreeDimensionScene(dimensions), surfaces_override_unsafe(!surfaces_on), graph(g) {
     curr_hash = 0;
@@ -38,7 +29,6 @@ GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimens
         {"desired_nodes", "<growth_rate> 1.5 <time_since_graph_init> ^ 1 - * 1000000 min"},
         {"growth_rate", "100"},
     });
-    last_node_count = -1;
 }
 
 void GraphScene::graph_to_3d(){
@@ -97,47 +87,6 @@ const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
     state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
     return s;
-}
-
-void GraphScene::mark_data_unchanged() { graph->mark_unchanged(); }
-
-void GraphScene::change_data() {
-    int nodes_to_add = state["desired_nodes"] - graph->size();
-    if(nodes_to_add > 0) {
-        graph->expand(nodes_to_add);
-        graph->make_bidirectional();
-    }
-
-    // SFX
-    if(last_node_count > -1){
-        int diff = graph->size() - last_node_count;
-        for(int i = 0; i < abs(diff); i++) {
-            node_pop(static_cast<double>(i)/abs(diff), diff>0);
-        }
-    }
-
-    last_node_count = graph->size();
-    int amount_to_iterate = state["physics_multiplier"];
-    if(!rendering_on()) amount_to_iterate = min(amount_to_iterate, 1); // No need to spread graphs out in smoketest
-    graph->iterate_physics(
-        amount_to_iterate,
-        state["repel"],
-        state["attract"],
-        state["decay"],
-        state["centering_strength"],
-        state["dimensions"],
-        state["mirror_force"],
-        state["flip_by_symmetry"]>0
-    );
-    if(graph->has_been_updated_since_last_scene_query()) {
-        graph_to_3d();
-        clear_surfaces();
-        update_surfaces();
-    }
-}
-
-bool GraphScene::check_if_data_changed() const {
-    return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();
 }
 
 void GraphScene::on_end_transition_extra_behavior(const TransitionType tt) {

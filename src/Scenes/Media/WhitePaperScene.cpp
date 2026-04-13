@@ -19,10 +19,6 @@ WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, con
     });
 }
 
-bool WhitePaperScene::check_if_data_changed() const { return false; }
-void WhitePaperScene::mark_data_unchanged() { }
-void WhitePaperScene::change_data() { }
-
 void WhitePaperScene::draw() {
     // Expect files of the form prefix-0i.png
     double page_height = get_height() * .68;

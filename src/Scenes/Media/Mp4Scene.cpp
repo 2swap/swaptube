@@ -20,10 +20,6 @@ Mp4Scene::Mp4Scene(
     manager.set("current_frame", "<MP4_Frame> " + to_string(playback_speed * get_video_framerate_fps()) + " * .5 + floor");
 }
 
-bool Mp4Scene::check_if_data_changed() const { return false; }
-void Mp4Scene::mark_data_unchanged() { }
-void Mp4Scene::change_data() { }
-
 void Mp4Scene::draw() {
     int current_frame = state["current_frame"];
     int current_frame_adjusted = current_frame - first_frame_this_video;

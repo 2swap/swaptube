@@ -231,7 +231,3 @@ const StateQuery GeodesicScene::populate_state_query() const {
     };
     return sq;
 }
-
-bool GeodesicScene::check_if_data_changed() const { return false; }
-void GeodesicScene::change_data() {}
-void GeodesicScene::mark_data_unchanged() {}

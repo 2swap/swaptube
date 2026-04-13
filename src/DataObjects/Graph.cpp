@@ -15,10 +15,21 @@
 #include <numeric>
 #include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
+#include "../Core/Smoketest.h"
+#include "../IO/SFX.h"
 
 using json = nlohmann::json;
 
 extern "C" void compute_repulsion_cuda(vec4* h_positions, vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
+
+vector<int> tones = {0,4,7};
+int tone_incr = 0;
+void node_pop(double subdiv, bool added_not_deleted) {
+    int tone_number = added_not_deleted?tones[tone_incr%tones.size()]:-6;
+    double tone = pow(2,tone_number/12.);
+    tone_incr++;
+    sfx_boink(get_global_state("t") + subdiv, tone * 440, 1/80., 1);
+}
 
 vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<float>& dist) {
     return {
@@ -45,6 +56,41 @@ Graph::~Graph() {
 
 int Graph::size() const {
     return nodes.size();
+}
+
+void Graph::tick(const StateReturn& state) {
+    int nodes_to_add = state["desired_nodes"] - size();
+    if(nodes_to_add > 0) {
+        expand(nodes_to_add);
+        make_bidirectional();
+    }
+
+    // SFX
+    if(last_node_count > -1){
+        int diff = size() - last_node_count;
+        for(int i = 0; i < abs(diff); i++) {
+            node_pop(static_cast<double>(i)/abs(diff), diff>0);
+        }
+    }
+
+    last_node_count = size();
+    int amount_to_iterate = state["physics_multiplier"];
+    if(!rendering_on()) amount_to_iterate = min(amount_to_iterate, 1); // No need to spread graphs out in smoketest
+    iterate_physics(
+        amount_to_iterate,
+        state["repel"],
+        state["attract"],
+        state["decay"],
+        state["centering_strength"],
+        state["dimensions"],
+        state["mirror_force"],
+        state["flip_by_symmetry"]>0
+    );
+    if(has_been_updated_since_last_scene_query()) {
+        //graph_to_3d();
+        //clear_surfaces();
+        //update_surfaces();
+    }
 }
 
 void Graph::clear_queue() {

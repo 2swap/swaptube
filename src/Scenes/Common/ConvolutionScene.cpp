@@ -99,9 +99,3 @@ void ConvolutionScene::draw(){
 const StateQuery ConvolutionScene::populate_state_query() const {
     return StateQuery{"transparency_profile", "in_transition_state"};
 }
-void ConvolutionScene::mark_data_unchanged() { jumped = false; }
-void ConvolutionScene::change_data() { }
-bool ConvolutionScene::check_if_data_changed() const {
-    double its = state["in_transition_state"];
-    return (its == 1) || jumped;
-} // No DataObjects, but we treat transitioning as changing data

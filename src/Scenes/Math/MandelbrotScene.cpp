@@ -45,10 +45,6 @@ const StateQuery MandelbrotScene::populate_state_query() const {
     return sq;
 }
 
-void MandelbrotScene::mark_data_unchanged() {}
-void MandelbrotScene::change_data() {}
-bool MandelbrotScene::check_if_data_changed() const {return false;}
-
 void MandelbrotScene::draw() {
     vec3 pixel_params = normalize(vec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
     complex<float> seed_z(state["seed_z_r"], state["seed_z_i"]);

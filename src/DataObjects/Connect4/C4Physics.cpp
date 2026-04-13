@@ -132,7 +132,7 @@ void C4Physics::check_queue() {
 
 C4Physics::~C4Physics() { }
 
-void C4Physics::iterate_physics() {
+void C4Physics::tick(const StateReturn& state) {
     time_since_last_drop++;
     check_queue();
 

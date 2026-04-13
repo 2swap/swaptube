@@ -55,4 +55,5 @@ public:
 
     std::shared_ptr<LambdaExpression> get_first() const;
     std::shared_ptr<LambdaExpression> get_second() const;
+    void tick(const StateReturn& state);
 };

@@ -23,14 +23,6 @@ const StateQuery CoordinateSceneWithTrail::populate_state_query() const {
     return sq;
 }
 
-void CoordinateSceneWithTrail::change_data() {
-    if(state["trail_opacity"] > 0.01)
-        trail.push_back(make_pair(vec2(state["trail_x"], state["trail_y"]), trail_color));
-    else trail.clear();
-}
-
 void CoordinateSceneWithTrail::clear_trail() {
     trail.clear();
 }
-
-bool CoordinateSceneWithTrail::check_if_data_changed() const { return true; }

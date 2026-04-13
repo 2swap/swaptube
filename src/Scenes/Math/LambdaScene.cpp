@@ -48,11 +48,6 @@ shared_ptr<LambdaExpression> LambdaScene::get_clone(){
 
 // TODO transitions always assumed to be per-microblock, perhaps add macroblock transitioning?
 void LambdaScene::on_end_transition_extra_behavior(const TransitionType tt) { last_le = nullptr; }
-void LambdaScene::mark_data_unchanged() { le->mark_unchanged(); }
-void LambdaScene::change_data() { } // This scene is expected to only be manipulated by the customer
-bool LambdaScene::check_if_data_changed() const {
-    return le->has_been_updated_since_last_scene_query();
-}
 
 float LambdaScene::get_scale(shared_ptr<const LambdaExpression> expr) {
     return min(get_width()/(expr->get_width_recursive() + 4), get_height()/(expr->get_height_recursive() + 4));

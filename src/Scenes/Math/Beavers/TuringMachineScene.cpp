@@ -87,7 +87,3 @@ const StateQuery TuringMachineScene::populate_state_query() const {
     state_query_insert_multiple(sq, { "iterations" });
     return sq;
 }
-
-void TuringMachineScene::mark_data_unchanged() { }
-void TuringMachineScene::change_data() { }
-bool TuringMachineScene::check_if_data_changed() const { return false; }

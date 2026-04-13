@@ -41,6 +41,7 @@ public:
     unordered_set<GenericBoard*> get_children();
     void get_random_move(KlotskiMove& km);
     KlotskiMove move_required_to_reach(const KlotskiBoard& kb);
+    void tick(const StateReturn& state);
 };
 
 // Common Boards
