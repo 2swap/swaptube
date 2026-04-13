@@ -43,7 +43,6 @@ public:
     int index = -1;
     std::unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
-    bool draw_point = false;
     double opacity = 1;
     int color = 0xffffffff;
     float size = 1;
@@ -83,6 +82,7 @@ public:
     void move_node(double hash, float x, float y, float z, float w = 0);
 
     void add_directed_edge(double from, double to, double opacity = 1);
+    void add_bidirectional_edge(double from, double to, double opacity = 1);
     void remove_edge(double from, double to);
     const Edge* get_edge(double from, double to);
     bool does_edge_exist(double from, double to);
@@ -112,6 +112,7 @@ public:
     void render_json(std::string json_out_filename);
 
     std::unordered_set<double> get_neighborhood(double hash, int dist);
+    std::unordered_set<double> get_neighbors(double hash);
 
     void make_bidirectional();
 };

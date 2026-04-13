@@ -112,7 +112,7 @@ extern "C" void cuda_render_surface(
     render_surface_kernel<<<numBlocks, blockSize>>>(
         d_pixels_dev, x1, y1, plot_w, plot_h, pixels_w,
         d_surface_dev, surface_w, surface_h, opacity,
-        camera_pos, camera_direction,
+        camera_pos, conjugate(camera_direction),
         dotnormcam, surface_normal, surface_center, surface_pos_x_dir, surface_pos_y_dir, surface_ilr2, surface_iur2, halfwidth, halfheight, over_w_fov
     );
 
