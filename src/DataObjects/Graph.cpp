@@ -182,6 +182,11 @@ void Graph::add_directed_edge(double from, double to, double opacity) {
     mark_updated();
 }
 
+void Graph::add_bidirectional_edge(double from, double to, double opacity) {
+    add_directed_edge(from, to, opacity);
+    add_directed_edge(to, from, opacity);
+}
+
 void Graph::remove_edge(double from, double to) {
     if (!node_exists(from) || !node_exists(to)) return;
     
@@ -563,6 +568,16 @@ std::unordered_set<double> Graph::get_neighborhood(double hash, int dist) {
     }
 
     return neighborhood;
+}
+
+std::unordered_set<double> Graph::get_neighbors(double hash) {
+    std::unordered_set<double> neighbors;
+    if (!node_exists(hash)) return neighbors;
+    const Node& node = nodes.at(hash);
+    for (const Edge& edge : node.neighbors) {
+        neighbors.insert(edge.to);
+    }
+    return neighbors;
 }
 
 void Graph::make_bidirectional() {

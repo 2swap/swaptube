@@ -240,21 +240,6 @@ void ThreeDimensionScene::draw() {
     // Render surfaces via their CUDA integration.
     if (state["surfaces_opacity"] > 0.001) for (const Surface& surface : surfaces) render_surface(surface);
 
-    if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
-        render_points_on_gpu(
-            pix.pixels.data(),
-            get_width(),
-            get_height(),
-            get_geom_mean_size(),
-            state["points_opacity"],
-            state["points_radius_multiplier"],
-            points.data(),
-            static_cast<int>(points.size()),
-            camera_direction,
-            camera_pos,
-            fov
-        );
-    }
     if (!lines.empty() && state["lines_opacity"] > .001) {
         int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
@@ -266,6 +251,21 @@ void ThreeDimensionScene::draw() {
             state["lines_opacity"],
             lines.data(),
             static_cast<int>(lines.size()),
+            camera_direction,
+            camera_pos,
+            fov
+        );
+    }
+    if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
+        render_points_on_gpu(
+            pix.pixels.data(),
+            get_width(),
+            get_height(),
+            get_geom_mean_size(),
+            state["points_opacity"],
+            state["points_radius_multiplier"],
+            points.data(),
+            static_cast<int>(points.size()),
             camera_direction,
             camera_pos,
             fov

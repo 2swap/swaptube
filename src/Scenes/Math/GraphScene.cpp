@@ -31,8 +31,20 @@ GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimens
     });
 }
 
+void GraphScene::transition_node_position(const TransitionType tt, const double hash, const vec4& shift){
+    vec4 old_position = graph->nodes.find(hash)->second.position;
+    pair<vec4, vec4> transition_pair = make_pair(old_position, old_position + shift);
+    if(tt == TransitionType::MICRO) nodes_in_micro_transition[hash] = transition_pair;
+    else                            nodes_in_macro_transition[hash] = transition_pair;
+}
+
+void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
+    if(tt == MACRO) nodes_in_macro_transition.clear();
+    nodes_in_micro_transition.clear();
+    curr_hash = next_hash;
+}
+
 void GraphScene::graph_to_3d(){
-    cout << "<";
     clear_lines();
     clear_points();
 
@@ -46,7 +58,7 @@ void GraphScene::graph_to_3d(){
         vec3 node_pos(node.position.x, node.position.y, node.position.z); // convert 4d to 3d
         if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
-        if(node.draw_point) add_point(Point(node_pos, node.color, 1, node.radius()));
+        add_point(Point(node_pos, node.color, 1, node.radius()));
         double so = node.splash_opacity();
         int color = color_scheme[static_cast<int>(abs(p.first)*4)%4];
         if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
@@ -76,7 +88,6 @@ void GraphScene::graph_to_3d(){
     auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
     auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
     // Looks jarring when puzzle moves if we simply do: //auto_camera = pos_to_render * opa;
-    cout << ">";
 }
 
 int GraphScene::get_edge_color(const Node& node, const Node& neighbor){
@@ -89,8 +100,21 @@ const StateQuery GraphScene::populate_state_query() const {
     return s;
 }
 
-void GraphScene::on_end_transition_extra_behavior(const TransitionType tt) {
-    curr_hash = next_hash;
+void GraphScene::change_data() {
+    for(pair<double, pair<vec4, vec4>> p : nodes_in_micro_transition){
+        double hash = p.first;
+        vec4 start = p.second.first;
+        vec4 end = p.second.second;
+        vec4 interp_pos = veclerp(start, end, smoother2(state["microblock_fraction"]));
+        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
+    }
+    for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
+        double hash = p.first;
+        vec4 start = p.second.first;
+        vec4 end = p.second.second;
+        vec4 interp_pos = veclerp(start, end, smoother2(state["macroblock_fraction"]));
+        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
+    }
 }
 
 void GraphScene::update_surfaces(){

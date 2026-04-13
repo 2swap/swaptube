@@ -34,6 +34,13 @@ public:
     bool surfaces_override_unsafe; // For really big graphs, you can permanently turn off node stuff. This happens in the constructor, but careful when handling manually.
     std::shared_ptr<Graph> graph;
 
+    void transition_node_position(const TransitionType tt, const double hash, const vec4& shift);
+
 protected:
     std::unordered_map<std::string, std::pair<Surface, std::shared_ptr<Scene>>> graph_surface_map;
+
+private:
+    int last_node_count;
+    std::unordered_map<double, std::pair<vec4, vec4>> nodes_in_micro_transition;
+    std::unordered_map<double, std::pair<vec4, vec4>> nodes_in_macro_transition;
 };
