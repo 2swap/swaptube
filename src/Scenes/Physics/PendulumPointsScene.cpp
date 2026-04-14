@@ -35,7 +35,3 @@ const StateQuery PendulumPointsScene::populate_state_query() const {
     state_query_insert_multiple(s, {"points_opacity", "physics_multiplier", "rk4_step_size"});
     return s;
 }
-
-void PendulumPointsScene::mark_data_unchanged() { grid.mark_unchanged(); }
-void PendulumPointsScene::change_data() { grid.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]); }
-bool PendulumPointsScene::check_if_data_changed() const { return grid.has_been_updated_since_last_scene_query(); }

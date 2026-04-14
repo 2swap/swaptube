@@ -269,9 +269,6 @@ const StateQuery CoordinateScene::populate_state_query() const {
     return sq;
 }
 
-void CoordinateScene::mark_data_unchanged() { construction.mark_unchanged(); }
-void CoordinateScene::change_data() { /*construction.update();*/ }
-bool CoordinateScene::check_if_data_changed() const { return construction.has_been_updated_since_last_scene_query(); }
 void CoordinateScene::on_end_transition_extra_behavior(const TransitionType tt) {
     // TODO make this micro or macroblock based
     construction.set_all_old();

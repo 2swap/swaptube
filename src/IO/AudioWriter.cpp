@@ -40,7 +40,9 @@ using namespace std;
 const AVCodecID output_codec = AV_CODEC_ID_PCM_S32LE;
 const AVSampleFormat output_sample_format = AV_SAMPLE_FMT_S32;
 
-AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz) :
+AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& audio_hints, const bool& audio_sfx) :
+    audio_hints(audio_hints), audio_sfx(audio_sfx),
+    num_audio_streams(1 + (audio_sfx?2:0) + (audio_hints?2:0)),
     outputCodecContexts(std::vector<AVCodecContext*>(num_audio_streams, nullptr)),
     audioStreams(std::vector<AVStream*>(num_audio_streams, nullptr)),
     fc(fc_), sample_buffer(), sfx_buffer(), blips_buffer(), total_samples_processed(0),
@@ -85,6 +87,7 @@ AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz) :
             throw runtime_error("Error: Could not initialize stream parameters from codec context.");
         }
     }
+    cout << "AudioWriter initialized with " << num_audio_streams << " audio stream(s)." << endl;
 }
 
 sample_t AudioWriter::get_max_sample_for_frame(int frame_index_this_macroblock) {
@@ -155,7 +158,7 @@ void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<samp
 }
 
 void AudioWriter::add_blip(const int t, const TransitionType tt, const int upcoming_macroblock_length_samples, const int upcoming_microblock_length_samples) {
-    if (!rendering_on() || !AUDIO_HINTS)
+    if (!rendering_on() || !audio_hints)
         throw runtime_error("Blips should not be added when rendering is off or audio hints are disabled.");
 
     current_macroblock_length_samples = upcoming_macroblock_length_samples;
@@ -268,7 +271,7 @@ int AudioWriter::add_audio_from_file(const string& filename) {
 #else
     if (audioStreamInput->codecpar->channel_layout == 0) {
 #endif
-        throw runtime_error("Error: Channel order is unspecified.");
+        //throw runtime_error("Error: Channel order is unspecified.");
     }
 #if USE_NEW_CHANNEL_LAYOUT_API
     int num_channels = audioStreamInput->codecpar->ch_layout.nb_channels;
@@ -420,7 +423,7 @@ void AudioWriter::encode_buffers() {
 
             int track_number = 0;
 
-            if(AUDIO_SFX){
+            if(audio_sfx){
                 // Voice-only track
                 dst[track_number][idxL] = voice_left;
                 dst[track_number][idxR] = voice_right;
@@ -448,7 +451,7 @@ void AudioWriter::encode_buffers() {
             }
 
 
-            if(AUDIO_HINTS){
+            if(audio_hints){
                 // Blips-only track
                 dst[track_number][idxL] = blips_left;
                 dst[track_number][idxR] = blips_right;

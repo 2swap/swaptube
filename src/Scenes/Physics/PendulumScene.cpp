@@ -16,40 +16,12 @@ PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(di
                        {"manual_mode", "0"},
                        {"theta1_manual", "0"},
                        {"theta2_manual", "0"}});
+    add_data_object(&pend);
 }
 
 const StateQuery PendulumScene::populate_state_query() const {
     return StateQuery{"manual_mode", "theta1_manual", "theta2_manual", "top_angle_opacity", "bottom_angle_opacity", "volume", "rainbow", "tone", "path_opacity", "physics_multiplier", "rk4_step_size", "pendulum_opacity"};
 }
-
-void PendulumScene::mark_data_unchanged() { pend.mark_unchanged(); }
-
-void PendulumScene::change_data() {
-    double w = get_width(); double h = get_height();
-    double line_thickness = h/80;
-    double length = h/(pendulum_count * 2 + 1.);
-    double pm = state["physics_multiplier"];
-    double last_x = w/2 + (sin(pend.state.theta1)+sin(pend.state.theta2))*length;
-    double last_y = h/2 + (cos(pend.state.theta1)+cos(pend.state.theta2))*length;
-    for(int i = 0; i < pm; i++) {
-        pend.iterate_physics(1, state["rk4_step_size"]);
-        double x = w/2 + (sin(pend.state.theta1)+sin(pend.state.theta2))*length;
-        double y = h/2 + (cos(pend.state.theta1)+cos(pend.state.theta2))*length;
-        path_background.bresenham(last_x, last_y, x, y, OPAQUE_WHITE, state["path_opacity"], line_thickness/4.);
-        last_x = x; last_y = y;
-    }
-    energy_slew = square(compute_kinetic_energy(pend.state))/100.;
-    generate_tone();
-    for(int x = 0; x < path_background.w; x++) {
-        for(int y = 0; y < path_background.h; y++) {
-            int alpha = geta(path_background.get_pixel_carelessly(x, y));
-            alpha = std::max(0,alpha-alpha_subtract);
-            path_background.set_pixel_carelessly(x, y, argb(alpha, 255, 255, 255));
-        }
-    }
-}
-
-bool PendulumScene::check_if_data_changed() const { return pend.has_been_updated_since_last_scene_query(); }
 
 std::unordered_map<std::string, double> PendulumScene::stage_publish_to_global() const {
     return std::unordered_map<std::string, double> {

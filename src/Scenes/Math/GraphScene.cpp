@@ -6,17 +6,8 @@
 #include "../../Core/Smoketest.h"
 #include "../../Host_Device_Shared/vec.h"
 
-vector<int> tones = {0,4,7};
-int tone_incr = 0;
-void node_pop(double subdiv, bool added_not_deleted) {
-    int tone_number = added_not_deleted?tones[tone_incr%tones.size()]:-6;
-    double tone = pow(2,tone_number/12.);
-    tone_incr++;
-    sfx_boink(get_global_state("t") + subdiv, tone * 440, 1/80., 1);
-}
-
 GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions)
-    : ThreeDimensionScene(dimensions), surfaces_override_unsafe(!surfaces_on), graph(g) {
+    : ThreeDimensionScene(dimensions), graph(g) {
     curr_hash = 0;
     next_hash = 0;
     color_scheme = {0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};
@@ -38,7 +29,7 @@ GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimens
         {"desired_nodes", "<growth_rate> 1.5 <time_since_graph_init> ^ 1 - * 1000000 min"},
         {"growth_rate", "100"},
     });
-    last_node_count = -1;
+    add_data_object(&(*graph));
 }
 
 void GraphScene::transition_node_position(const TransitionType tt, const double hash, const vec4& shift){
@@ -54,7 +45,23 @@ void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
     curr_hash = next_hash;
 }
 
-void GraphScene::graph_to_3d(){
+void GraphScene::draw(){
+    // TODO we only need to do this if data changed, not if state changed.
+    for(pair<double, pair<vec4, vec4>> p : nodes_in_micro_transition){
+        double hash = p.first;
+        vec4 start = p.second.first;
+        vec4 end = p.second.second;
+        vec4 interp_pos = veclerp(start, end, smoother2(state["microblock_fraction"]));
+        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
+    }
+    for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
+        double hash = p.first;
+        vec4 start = p.second.first;
+        vec4 end = p.second.second;
+        vec4 interp_pos = veclerp(start, end, smoother2(state["macroblock_fraction"]));
+        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
+    }
+
     clear_lines();
     clear_points();
 
@@ -98,6 +105,8 @@ void GraphScene::graph_to_3d(){
     auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
     auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
     // Looks jarring when puzzle moves if we simply do: //auto_camera = pos_to_render * opa;
+
+    ThreeDimensionScene::draw();
 }
 
 int GraphScene::get_edge_color(const Node& node, const Node& neighbor){
@@ -108,123 +117,4 @@ const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
     state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
     return s;
-}
-
-void GraphScene::mark_data_unchanged() { graph->mark_unchanged(); }
-
-void GraphScene::change_data() {
-    for(pair<double, pair<vec4, vec4>> p : nodes_in_micro_transition){
-        double hash = p.first;
-        vec4 start = p.second.first;
-        vec4 end = p.second.second;
-        vec4 interp_pos = veclerp(start, end, smoother2(state["microblock_fraction"]));
-        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
-    }
-    for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
-        double hash = p.first;
-        vec4 start = p.second.first;
-        vec4 end = p.second.second;
-        vec4 interp_pos = veclerp(start, end, smoother2(state["macroblock_fraction"]));
-        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
-    }
-
-    int nodes_to_add = state["desired_nodes"] - graph->size();
-    if(nodes_to_add > 0) {
-        graph->expand(nodes_to_add);
-        graph->make_bidirectional();
-    }
-
-    // SFX
-    if(last_node_count > -1){
-        int diff = graph->size() - last_node_count;
-        for(int i = 0; i < abs(diff); i++) {
-            node_pop(static_cast<double>(i)/abs(diff), diff>0);
-        }
-    }
-
-    last_node_count = graph->size();
-    int amount_to_iterate = state["physics_multiplier"];
-    if(!rendering_on()) amount_to_iterate = min(amount_to_iterate, 1); // No need to spread graphs out in smoketest
-    graph->iterate_physics(
-        amount_to_iterate,
-        state["repel"],
-        state["attract"],
-        state["decay"],
-        state["centering_strength"],
-        state["dimensions"],
-        state["mirror_force"],
-        state["flip_by_symmetry"]>0
-    );
-    if(graph->has_been_updated_since_last_scene_query()) {
-        graph_to_3d();
-        clear_surfaces();
-        update_surfaces();
-    }
-}
-
-bool GraphScene::check_if_data_changed() const {
-    return ThreeDimensionScene::check_if_data_changed() || graph->has_been_updated_since_last_scene_query();
-}
-
-void GraphScene::update_surfaces(){
-    if(surfaces_override_unsafe) {
-        graph_surface_map.clear(); return;
-    }
-    unordered_set<string> updated_ids;
-
-    for(pair<double, Node> p : graph->nodes){
-        Node& node = p.second;
-        if(node.data->get_highlight_type() == 1) continue;
-        string rep = node.data->representation;
-
-        auto it = graph_surface_map.find(rep);
-        if(it != graph_surface_map.end()) {
-            it->second.first.center = vec3(node.position.x, node.position.y, node.position.z);
-        } else {
-            graph_surface_map.emplace(rep, make_pair(make_surface(node), node.data->make_scene()));
-        }
-
-        // Add this id to the set of updated or created surfaces
-        updated_ids.insert(rep);
-    }
-
-    // Remove any surfaces from graph_surface_map that were not updated or created
-    for (auto it = graph_surface_map.begin(); it != graph_surface_map.end(); ) {
-        if (updated_ids.find(it->first) == updated_ids.end()) {
-            it = graph_surface_map.erase(it);
-        } else {
-            add_surface(it->second.first, it->second.second);
-            ++it;
-        }
-    }
-}
-
-Surface GraphScene::make_surface(Node node) const {
-    return Surface(vec3(node.position.x, node.position.y, node.position.z),
-                   vec3(1,0,0),
-                   vec3(0,static_cast<float>(get_video_height_pixels())/get_video_width_pixels(), 0),
-                   node.data->representation);
-}
-
-// Override the default surface render routine to make all graph surfaces point at the camera
-void GraphScene::render_surface(const Surface& surface) {
-    //make all the boards face the camera
-    quat cam2 = camera_direction * camera_direction;
-
-    // Rotate pos_x_dir vector
-    quat left_as_quat(0.0f, surface.pos_x_dir.x, surface.pos_x_dir.y, surface.pos_x_dir.z);
-    quat rotated_left_quat = cam2 * left_as_quat;
-
-    // Rotate pos_y_dir vector
-    quat up_as_quat(0.0f, surface.pos_y_dir.x, surface.pos_y_dir.y, surface.pos_y_dir.z);
-    quat rotated_up_quat = cam2 * up_as_quat;
-
-    Surface surface_rotated(
-        surface.center,
-        vec3(rotated_left_quat.i, rotated_left_quat.j, rotated_left_quat.k),
-        vec3(rotated_up_quat.i, rotated_up_quat.j, rotated_up_quat.k),
-        surface.name
-    );
-
-    ThreeDimensionScene::render_surface(surface_rotated);
 }

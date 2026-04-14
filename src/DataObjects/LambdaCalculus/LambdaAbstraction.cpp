@@ -143,3 +143,5 @@ char LambdaAbstraction::get_bound_variable() const {
 shared_ptr<LambdaExpression> LambdaAbstraction::get_body() const {
     return body;
 }
+
+void LambdaAbstraction::tick(const StateReturn& state) { }

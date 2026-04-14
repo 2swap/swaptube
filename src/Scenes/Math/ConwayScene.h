@@ -19,8 +19,4 @@ public:
     const StateQuery populate_state_query() const override;
 
     void on_end_transition_extra_behavior(const TransitionType tt) override;
-
-    void change_data() override;
-
-    bool check_if_data_changed() const override;
 };

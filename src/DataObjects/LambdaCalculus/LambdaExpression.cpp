@@ -126,3 +126,5 @@ void LambdaExpression::Iterator::push_children(std::shared_ptr<LambdaExpression>
         if (abs->get_body()) node_stack.push(abs->get_body());
     }
 }
+
+void LambdaExpression::tick(const StateReturn& state) { }

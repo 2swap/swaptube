@@ -1,4 +1,4 @@
-#include "../Scenes/Math/BeaverGridScene.h"
+#include "../Scenes/Math/Beavers/BeaverGridScene.h"
 
 void bb52_progress() {
     BeaverGridScene bs(5, 2);

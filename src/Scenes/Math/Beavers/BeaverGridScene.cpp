@@ -27,7 +27,3 @@ const StateQuery BeaverGridScene::populate_state_query() const {
     state_query_insert_multiple(sq, { "max_steps", "num_states", "num_symbols" });
     return sq;
 }
-
-void BeaverGridScene::mark_data_unchanged() { }
-void BeaverGridScene::change_data() { }
-bool BeaverGridScene::check_if_data_changed() const { return false; }

@@ -15,3 +15,5 @@ bool HashableString::is_solution() {
 std::unordered_set<GenericBoard*> HashableString::get_children() {
     return {};
 }
+
+void HashableString::tick(const StateReturn& result) { }

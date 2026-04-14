@@ -63,6 +63,7 @@ public:
     Pixels draw_lambda_diagram(float scale);
     void set_positions();
     void interpolate_positions(std::shared_ptr<const LambdaExpression> l2, const float weight);
+    void tick(const StateReturn& state);
 };
 
 class LambdaExpression::Iterator {

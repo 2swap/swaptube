@@ -37,3 +37,5 @@ void GeometricConstruction::remove_line(const string& id) {
     }), lines.end());
     mark_updated();
 }
+
+void GeometricConstruction::tick(const StateReturn& state) { }

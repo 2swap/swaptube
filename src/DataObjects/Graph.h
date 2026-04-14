@@ -115,4 +115,9 @@ public:
     std::unordered_set<double> get_neighbors(double hash);
 
     void make_bidirectional();
+
+    void tick(const StateReturn& state);
+
+private:
+    int last_node_count = -1;
 };

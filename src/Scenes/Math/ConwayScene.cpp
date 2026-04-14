@@ -9,7 +9,7 @@ extern "C" void draw_conway(
 );
 
 ConwayScene::ConwayScene(const vec2& dimensions) : CoordinateScene(dimensions), conway_grid(grid_width * 8, grid_height * 8) {
-    conway_grid.iterate();
+    add_data_object(&conway_grid);
 }
 
 void ConwayScene::draw() {
@@ -21,7 +21,7 @@ void ConwayScene::draw() {
         pix.pixels.data(), pix.w, pix.h,
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
-        state["microblock_fraction_passthrough"]
+        0//state["microblock_fraction_passthrough"]
     );
     CoordinateScene::draw();
 }
@@ -36,13 +36,5 @@ const StateQuery ConwayScene::populate_state_query() const {
 
 void ConwayScene::on_end_transition_extra_behavior(const TransitionType tt){
     if(tt == MICRO)
-        conway_grid.iterate();
-}
-
-void ConwayScene::change_data() {
-    //conway_grid.iterate();
-}
-
-bool ConwayScene::check_if_data_changed() const {
-    return conway_grid.has_been_updated_since_last_scene_query();
+    ;//    conway_grid.iterate();
 }

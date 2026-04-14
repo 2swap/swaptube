@@ -34,18 +34,17 @@ protected:
 
     void add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind = false);
 
-    void change_data() override;
-
-    bool check_if_data_changed() const override;
-
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 
     bool subscene_needs_redraw() const;
-
-    void mark_data_unchanged() override;
 
     const StateQuery populate_state_query() const override;
 
     std::list<std::string> render_order;
     std::unordered_map<std::string, std::shared_ptr<Scene>> subscenes;
+
+private:
+    bool check_if_data_changed() const override;
+    void mark_data_unchanged() override;
+    void change_data() override;
 };

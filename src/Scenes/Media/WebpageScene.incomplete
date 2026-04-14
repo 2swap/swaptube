@@ -19,10 +19,6 @@ WebpageScene::WebpageScene(const std::string& url, const vec2& dimensions)
     });
 }
 
-bool WebpageScene::check_if_data_changed() const { return false; }
-void WebpageScene::mark_data_unchanged() {}
-void WebpageScene::change_data() {}
-
 void WebpageScene::draw() {
     if(!webview)
         return;

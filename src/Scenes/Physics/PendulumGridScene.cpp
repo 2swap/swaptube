@@ -25,21 +25,6 @@ const StateQuery PendulumGridScene::populate_state_query() const {
     return s;
 }
 
-void PendulumGridScene::mark_data_unchanged() {
-    for(PendulumGrid& grid : grids)
-        grid.mark_unchanged();
-}
-void PendulumGridScene::change_data() {
-    for(PendulumGrid& grid : grids)
-        grid.iterate_physics(state["physics_multiplier"], state["rk4_step_size"]);
-}
-bool PendulumGridScene::check_if_data_changed() const {
-    for(const PendulumGrid& grid : grids)
-        if(grid.has_been_updated_since_last_scene_query())
-            return true;
-    return false;
-}
-
 void PendulumGridScene::draw_grid() {
     int w = get_width();
     int h = get_height();
@@ -130,8 +115,9 @@ void PendulumGridScene::draw_pendulum_trail(){
     const float trail_length = state["trail_length"];
     Pendulum p({trail_start_x, trail_start_y, 0, 0});
     list<pair<vec2, int>> trail;
+    const StateReturn sr({{"physics_multiplier", 1.0f}, {"rk4_step_size", 0.01f}});
     for(int i = 0; i < trail_length; i++){
-        p.iterate_physics(1, 0.01);
+        p.tick(sr);
         trail.push_back(make_pair(vec2(p.state.theta1, p.state.theta2), 0xffff0000));
     }
     draw_trail(trail, trail_opacity);

@@ -195,3 +195,5 @@ shared_ptr<LambdaExpression> LambdaApplication::get_first() const {
 shared_ptr<LambdaExpression> LambdaApplication::get_second() const {
     return second;
 }
+
+void LambdaApplication::tick(const StateReturn& state) { }

@@ -99,3 +99,5 @@ std::shared_ptr<LambdaExpression> LambdaVariable::specific_reduction(int x) {
     throw std::runtime_error("Reduction was attempted, but no legal reduction was found!");
     return nullptr;
 }
+
+void LambdaVariable::tick(const StateReturn& state) { }

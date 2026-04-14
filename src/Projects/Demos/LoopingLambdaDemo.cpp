@@ -21,7 +21,6 @@ void render_video() {
 
     LambdaScene ls(term);
     stage_macroblock(SilenceBlock(1.33), 2);
-    cout << remaining_microblocks_in_macroblock << endl;
     while(remaining_microblocks_in_macroblock) {
         ls.reduce();
         ls.render_microblock();

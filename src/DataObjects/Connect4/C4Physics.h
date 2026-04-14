@@ -40,4 +40,5 @@ public:
     ~C4Physics();
 
     void iterate_physics();
+    void tick(const StateReturn& state);
 };

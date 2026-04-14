@@ -51,9 +51,6 @@ void StateSliderScene::draw() {
 const StateQuery StateSliderScene::populate_state_query() const {
     return StateQuery{"value"};
 }
-void StateSliderScene::mark_data_unchanged() { }
-void StateSliderScene::change_data() { }
-bool StateSliderScene::check_if_data_changed() const { return false; } // No DataObjects
 
 void StateSliderScene::draw_slider() {
     const int h = get_height();

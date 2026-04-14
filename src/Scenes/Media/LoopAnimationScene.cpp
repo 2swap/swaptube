@@ -11,10 +11,6 @@ LoopAnimationScene::LoopAnimationScene(const vector<string>& pn, const vec2& dim
     });
 }
 
-bool LoopAnimationScene::check_if_data_changed() const { return false; }
-void LoopAnimationScene::mark_data_unchanged() { }
-void LoopAnimationScene::change_data() { }
-
 void LoopAnimationScene::draw() {
     const int frame_no = state["loop_start"] + extended_mod(state["animated_frame"], state["loop_length"]);
     if(frame_no < 0 || frame_no >= picture_names.size())

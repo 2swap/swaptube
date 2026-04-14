@@ -8,6 +8,7 @@ C4Scene::C4Scene(const std::string& rep, const vec2& dimensions)
         board.append_to_queue(rep);
         manager.set("highlight", "0");
         manager.set("annotations_opacity", "0");
+    add_data_object(&board);
 }
 
 void C4Scene::undo(int steps) {
@@ -134,10 +135,6 @@ void C4Scene::get_disc_screen_coordinates(int stonex, double stoney, double& px,
 const StateQuery C4Scene::populate_state_query() const {
     return StateQuery{"highlight", "annotations_opacity"};
 }
-
-void C4Scene::mark_data_unchanged() { board.mark_unchanged(); }
-void C4Scene::change_data() { board.iterate_physics(); }
-bool C4Scene::check_if_data_changed() const { return board.has_been_updated_since_last_scene_query(); }
 
 double C4Scene::get_stone_width() const {
     return min(get_width(), get_height())/10;

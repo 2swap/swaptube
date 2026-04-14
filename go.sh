@@ -160,7 +160,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake -G Ninja .. -DPROJECT_NAME_MACRO="${PROJECT_NAME}" -DAUDIO_HINTS="${AUDIO_HINTS}" -DAUDIO_SFX="${AUDIO_SFX}" -DUSE_HIP="${USE_HIP}"
+    cmake -G Ninja .. -DUSE_HIP="${USE_HIP}"
 
     echo "go.sh: Compiling..."
     # build the project
@@ -189,7 +189,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
 
     # Smoketest
     if [ $SKIP_SMOKETEST -eq 0 ]; then
-        ./swaptube 160 90 $FRAMERATE $SAMPLERATE smoketest 2>/dev/null
+        ./swaptube 160 90 $FRAMERATE $SAMPLERATE smoketest $AUDIO_HINTS $AUDIO_SFX 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in smoketest."
             exit 2
@@ -200,7 +200,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     if [ $SKIP_RENDER -eq 0 ]; then
         # Clear all files from the smoketest
         rm io_out/* -rf
-        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render 2>/dev/null
+        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $AUDIO_HINTS $AUDIO_SFX 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
             exit 2

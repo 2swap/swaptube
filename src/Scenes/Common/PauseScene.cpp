@@ -41,6 +41,3 @@ void PauseScene::draw() {
 const StateQuery PauseScene::populate_state_query() const {
     return StateQuery{"timer"};
 }
-void PauseScene::mark_data_unchanged() { }
-void PauseScene::change_data() { }
-bool PauseScene::check_if_data_changed() const { return false; }

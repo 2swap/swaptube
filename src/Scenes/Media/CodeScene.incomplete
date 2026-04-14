@@ -23,10 +23,6 @@ CodeScene::CodeScene(const std::string& code, const vec2& dimensions)
     view->set_size_request(pix.size.x, pix.size.y);
 }
 
-bool CodeScene::check_if_data_changed() const { return false; }
-void CodeScene::mark_data_unchanged() {}
-void CodeScene::change_data() {}
-
 void CodeScene::draw() {
     if (!view)
         return;

@@ -7,6 +7,7 @@
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
 #include "../IO/VisualMedia.h"
+#include "../DataObjects/DataObject.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -29,10 +30,7 @@ public:
     Scene(const vec2& dimensions = vec2(1, 1));
 
     virtual const StateQuery populate_state_query() const = 0;
-    virtual bool check_if_data_changed() const = 0;
     virtual void draw() = 0;
-    virtual void change_data() = 0;
-    virtual void mark_data_unchanged() = 0;
 
     virtual void on_end_transition_extra_behavior(const TransitionType tt){};
     void on_end_transition(const TransitionType tt);
@@ -59,6 +57,10 @@ public:
 
     void set_global_identifier(const string& id);
 
+    virtual bool check_if_data_changed() const;
+    virtual void mark_data_unchanged();
+    virtual void change_data();
+
 protected:
     Pixels pix;
     StateReturn state;
@@ -68,7 +70,11 @@ protected:
 
     double get_geom_mean_size() const;
 
+    void add_data_object(DataObject* data_object);
+
 private:
+    vector<DataObject*> data_objects;
+
     string global_identifier = ""; // This is prefixed before the published global state elements
                                    // to uniquely identify this scene if necessary.
                                    // Empty by default, meaning no state is published.

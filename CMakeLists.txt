@@ -96,14 +96,6 @@ add_compile_options(-fdiagnostics-color=always)
 add_executable(${PROJECT_NAME} ${SOURCES} ${ACTIVE_PROJECT_SOURCE} ${GPU_SOURCES})
 message(STATUS "Executable target ${PROJECT_NAME} added")
 
-# Pass user-specified values as preprocessor macros
-target_compile_definitions(${PROJECT_NAME} PRIVATE
-    PROJECT_NAME_MACRO="${PROJECT_NAME_MACRO}"
-    AUDIO_HINTS=${AUDIO_HINTS}
-    AUDIO_SFX=${AUDIO_SFX}
-)
-message(STATUS "Preprocessor definitions added")
-
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJECT_NAME}
     ${FFMPEG_INCLUDE_DIRS} ${RSVG_INCLUDE_DIRS} ${GLIB_INCLUDE_DIRS}

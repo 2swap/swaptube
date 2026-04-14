@@ -14,7 +14,8 @@ echo "===================================================="
 for demo in "${DEMOS[@]}"; do
     echo ""
     echo "---- Running smoketest for project: ${demo} ----"
-    ./go.sh "$demo" 160 90 30 -s > /dev/null
+    #./go.sh "$demo" 160 90 30 -s > /dev/null
+    ./go.sh "$demo" 160 90 30 -n
     RESULT=$?
     if [ $RESULT -eq 0 ]; then
         echo "✅ ${demo}: PASS"

@@ -31,10 +31,6 @@ const StateQuery MandelbulbScene::populate_state_query() const {
     return {"x", "y", "z", "d", "q1", "qi", "qj", "qk", "fov", "light_x", "light_y", "light_z", "max_mandelbulb_iterations", "max_raymarch_iterations"};
 }
 
-bool MandelbulbScene::check_if_data_changed() const {return false;}
-void MandelbulbScene::change_data(){}
-void MandelbulbScene::mark_data_unchanged(){}
-
 void MandelbulbScene::draw(){
     const vec3 focus_position(state["x"], state["y"], state["z"]);
     const quat camera_quat = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));

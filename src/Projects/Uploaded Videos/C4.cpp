@@ -23,7 +23,6 @@
 
 // TODO LATER tromp's questions
 // TODO LATER I should really make a manager.undo function...
-// TODO Thumbnail
 
 double find_node_id_from_board(shared_ptr<Graph> g, C4Board& b) {
     double start_node_id = b.get_hash();
@@ -899,7 +898,6 @@ void trees(CompositeScene& cs) {
     cs.add_scene_fade_in(MICRO, god1, "god1", vec2(.08, .25));
     cs.manager.set("god1.y", ".2 {t} sin .07 * +");
     cs.slide_subscene(MICRO, "c4gs", vec2(.15, 0));
-    // TODO crackly
     stage_macroblock(FileBlock("Remember, God 1 determined that starting all the way on the side is a losing first move..."), 4);
     cs.render_microblock();
     c4s_blunder->play("1");
@@ -2299,17 +2297,17 @@ void sponsor() {
     mp4 = make_shared<Mp4Scene>(vector<string>{"opera"}, 1);
     cs.add_scene(mp4, "mp4");
 
-    mp4->manager.set("MP4_Frame", "16");
+    mp4->manager.set("MP4_Frame", "2");
     stage_macroblock(FileBlock("Want to read while waiting for an opponent?"), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "21");
+    mp4->manager.transition(MICRO, "MP4_Frame", "6");
     mp4->render_microblock();
 
     stage_macroblock(FileBlock("Just add another split-screen window! Opera lets you split your view into two, three, or even four windows simultaneously."), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "46");
+    mp4->manager.transition(MICRO, "MP4_Frame", "22");
     mp4->render_microblock();
 
     stage_macroblock(FileBlock("I found myself using Opera's tab islands to organize positions which I was in the process of analyzing."), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "56");
+    mp4->manager.transition(MICRO, "MP4_Frame", "45");
     mp4->render_microblock();
 
 	stage_macroblock(FileBlock("Opera automatically groups your tabs to keep everything in place, and you can name or color-code these islands so you know exactly where your research is at a glance."), 1);
@@ -2317,23 +2315,27 @@ void sponsor() {
     mp4->render_microblock();
 
     stage_macroblock(FileBlock("I guess you could, like, use these features for organizing your research or travel plans or something... but who am I kidding, this is practically made for connect 4 study."), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "93");
+    mp4->manager.transition(MICRO, "MP4_Frame", "76");
     mp4->render_microblock();
 
 	stage_macroblock(FileBlock("Opera is top-notch for productivity, especially with its Sidebar that puts Google services like Gmail and Google Calendar just one click away."), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "102");
+    mp4->manager.transition(MICRO, "MP4_Frame", "84");
     mp4->render_microblock();
 
-	stage_macroblock(FileBlock("I can quickly check my schedule and my email without ever having to leave the page I’m working on."), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "116");
+	stage_macroblock(FileBlock("I can quickly check my schedule and my email without ever having to leave the page I’m working on."), 2);
+    mp4->manager.transition(MICRO, "MP4_Frame", "87");
+    mp4->render_microblock();
+    mp4->manager.set("MP4_Frame", "95");
+    mp4->manager.transition(MICRO, "MP4_Frame", "107");
     mp4->render_microblock();
 
 	stage_macroblock(FileBlock("It also makes the YouTube experience more enjoyable."), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "127");
+    mp4->manager.transition(MICRO, "MP4_Frame", "119");
     mp4->render_microblock();
 
-	stage_macroblock(FileBlock("It has a built-in adblocker, and even a video pop-out feature so that you can drag the video outside of your browser window, letting you pretend that you're getting research done while watching 2swap instead."), 1);
-    mp4->manager.transition(MICRO, "MP4_Frame", "141");
+	stage_macroblock(FileBlock("It has a video pop-out feature so that you can drag the video outside of your browser window, letting you pretend that you're getting research done while watching 2swap instead."), 1);
+    mp4->manager.set("MP4_Frame", "122");
+    mp4->manager.transition(MICRO, "MP4_Frame", "139");
     mp4->render_microblock();
 
     stage_macroblock(FileBlock("To try out Opera for yourself, click the link in the description to download it for free!"), 5);

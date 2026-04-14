@@ -11,7 +11,7 @@ class Pendulum : public DataObject {
 public:
     PendulumState state;
     Pendulum(const PendulumState& s);
-    void iterate_physics(int multiplier, pendulum_type step_size);
+    void tick(const StateReturn& s);
 };
 
 class PendulumGrid : public DataObject {
@@ -41,5 +41,5 @@ public:
         const pendulum_type p1_min, const pendulum_type p1_max,
         const pendulum_type p2_min, const pendulum_type p2_max
     );
-    void iterate_physics(int multiplier, pendulum_type step_size);
+    void tick(const StateReturn& state);
 };

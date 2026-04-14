@@ -14,10 +14,6 @@ PngScene::PngScene(string pn, const vec2& dimensions) : Scene(dimensions), pictu
     });
 }
 
-bool PngScene::check_if_data_changed() const { return false; }
-void PngScene::mark_data_unchanged() { }
-void PngScene::change_data() { }
-
 void PngScene::draw() {
     cout << "rendering png: " << picture_name << endl;
     

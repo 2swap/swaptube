@@ -13,7 +13,6 @@ struct AVFormatContext;
 typedef int32_t sample_t;
 
 const static int audio_channels = 2; // Stereo
-const static int num_audio_streams = 1 + (AUDIO_SFX?2:0) + (AUDIO_HINTS?2:0);
 
 inline constexpr sample_t line_max = (static_cast<sample_t>(1) << (sizeof(sample_t) * 8 - 3)) - 1;
 
@@ -28,7 +27,13 @@ inline float sample_to_float(sample_t s) {
 }
 
 class AudioWriter {
+public:
+    const bool audio_hints;
+    const bool audio_sfx;
+
 private:
+    const int num_audio_streams;
+
     std::vector<AVCodecContext*> outputCodecContexts;
     std::vector<AVStream*>      audioStreams;
 
@@ -53,7 +58,7 @@ private:
     void encode_and_write_audio(AVCodecContext* codecCtx, AVStream* stream);
 
 public:
-    AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz);
+    AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& audio_hints, const bool& audio_sfx);
     void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const double t);
 
     // These are used for 6884's transition curve hints
@@ -70,6 +75,7 @@ public:
 
     int macroblock_line;
     int microblock_line;
+
     void encode_buffers();
 
     ~AudioWriter();
