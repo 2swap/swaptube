@@ -266,8 +266,7 @@ void render_video() {
     stage_macroblock(SilenceBlock(5), g->size());
     for(auto& [hash, node] : g->nodes) {
         cs.render_microblock();
-        if(hash != HashableString("0").get_hash() && hash) continue;
-        float zdiff = rand();
+        int zdiff = rand() % 10;
         gs->transition_node_position(MICRO, hash, vec4(0,0,zdiff,0));
     }
 }
