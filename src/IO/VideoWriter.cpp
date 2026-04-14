@@ -112,6 +112,10 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
 
     int ret = avcodec_open2(videoCodecContext, codec, &opt);
     if (ret < 0) {
+        // Print the error message from FFmpeg to stderr for debugging
+        char errbuf[256];
+        av_strerror(ret, errbuf, sizeof(errbuf));
+        cout << "Failed to open video codec: " << errbuf << endl;
         throw runtime_error("Failed avcodec_open2!");
     }
     av_dict_free(&opt);
