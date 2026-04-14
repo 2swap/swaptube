@@ -4,6 +4,8 @@
 #include "../Scenes/Media/PngScene.h"
 #include "../Scenes/Math/GraphScene.h"
 
+#define GRAPH_WIDTH 10
+
 double a_star_heuristic(vec4 node, vec4 goal) {
     return length(node - goal);
 }
@@ -154,7 +156,9 @@ void render_video() {
         {"qk", "0"},
         {"decay",".8"},
         {"dimensions","2"},
-        {"surfaces_opacity","0"},
+        {"autofocus","0"},
+        {"d", "60"},
+        {"surfaces_opacity","1"},
         {"points_opacity","1"},
         {"points_radius_multiplier","3"},
         {"physics_multiplier","5"},
@@ -162,10 +166,10 @@ void render_video() {
 
     stage_macroblock(SilenceBlock(1), 75);
 
-    for(int xplusy = 0; xplusy <= 18; xplusy++) {
+    for(int xplusy = 0; xplusy <= (GRAPH_WIDTH - 1) * 2; xplusy++) {
         for(int y = 0; y <= xplusy; y++) {
             int x = xplusy - y;
-            int i = x + 10*y;
+            int i = x + y * GRAPH_WIDTH;
             bool is_i_prime = i > 1;
             for(int d = 2; d <= sqrt(i); d++) {
                 if(i % d == 0) {
@@ -174,10 +178,10 @@ void render_video() {
                 }
             }
             if(is_i_prime) continue;
-            if(x < 0 || x > 9 || y < 0 || y > 9) continue;
+            if(x < 0 || x >= GRAPH_WIDTH || y < 0 || y >= GRAPH_WIDTH) continue;
             HashableString node(to_string(i));
             HashableString left(to_string(i-1));
-            HashableString up(to_string(i-10));
+            HashableString up(to_string(i-GRAPH_WIDTH));
             g->add_node(new HashableString(to_string(i)));
             if(x > 0) g->add_bidirectional_edge(left.get_hash(), node.get_hash());
             if(y > 0) g->add_bidirectional_edge(up.get_hash(), node.get_hash());
@@ -220,7 +224,6 @@ void render_video() {
         {"qi", "[qi]"},
         {"qj", "[qj]"},
         {"qk", "[qk]"},
-        {"d", "[d]"},
         {"x", "[x]"},
         {"y", "[y]"},
         {"z", "[z]"},
@@ -231,7 +234,6 @@ void render_video() {
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"},
-        {"d","1"},
         {"x","0"},
         {"y","0"},
         {"z","0"},
@@ -244,15 +246,14 @@ void render_video() {
     cs.render_microblock();
 
     quat down = quat(1, -1.1, 0, 0);
-    quat right = quat(1, 0, .2, 0);
-    quat rot = right * down;
+    quat right = quat(1, 0, 0, .2);
+    quat rot = down * right;
 
     cs.manager.transition(MICRO, {
         {"q1", to_string(rot.u)},
         {"qi", to_string(rot.i)},
         {"qj", to_string(rot.j)},
         {"qk", to_string(rot.k)},
-        {"d","1"},
         {"x","0"},
         {"y","0"},
         {"z","0"},
@@ -262,11 +263,28 @@ void render_video() {
     cs.render_microblock();
 
     gs->manager.set("physics_multiplier", "0");
+    gs->manager.set("centering_strength", "0");
 
-    stage_macroblock(SilenceBlock(5), g->size());
+    stage_macroblock(SilenceBlock(3), 1);
     for(auto& [hash, node] : g->nodes) {
-        cs.render_microblock();
-        int zdiff = rand() % 10;
+        int zdiff = rand() % 15;
         gs->transition_node_position(MICRO, hash, vec4(0,0,zdiff,0));
     }
+    cs.render_microblock();
+
+    right = quat(1, 0, 0, .8);
+    rot = down * right;
+
+    cs.manager.transition(MICRO, {
+        {"q1", to_string(rot.u)},
+        {"qi", to_string(rot.i)},
+        {"qj", to_string(rot.j)},
+        {"qk", to_string(rot.k)},
+        {"x","0"},
+        {"y","0"},
+        {"z","0"},
+    });
+
+    stage_macroblock(SilenceBlock(3), 1);
+    cs.render_microblock();
 }

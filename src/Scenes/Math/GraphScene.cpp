@@ -18,6 +18,7 @@ GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimens
         {"decay", ".95"},
         {"physics_multiplier", "1"},
         {"centering_strength", ".1"},
+        {"autofocus", "1"},
         {"dimensions", "3"},
         {"mirror_force", "0"},
         {"highlight_point_opacity", "1"},
@@ -101,8 +102,7 @@ void GraphScene::draw(){
             add_point(Point(vec3{pos_to_render.x, pos_to_render.y, pos_to_render.z}, 0xffff0000, hpo*opa, 3*opa));
     }
 
-    // automagical camera distancing
-    auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
+    if(state["autofocus"]) auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
     auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
     // Looks jarring when puzzle moves if we simply do: //auto_camera = pos_to_render * opa;
 
@@ -115,6 +115,6 @@ int GraphScene::get_edge_color(const Node& node, const Node& neighbor){
 
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
+    state_query_insert_multiple(s, {"autofocus", "desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
     return s;
 }
