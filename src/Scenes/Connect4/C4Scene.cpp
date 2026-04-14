@@ -8,6 +8,7 @@ C4Scene::C4Scene(const std::string& rep, const vec2& dimensions)
         board.append_to_queue(rep);
         manager.set("highlight", "0");
         manager.set("annotations_opacity", "0");
+    add_data_object(&board);
 }
 
 void C4Scene::undo(int steps) {

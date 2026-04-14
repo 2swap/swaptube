@@ -70,8 +70,10 @@ protected:
 
     double get_geom_mean_size() const;
 
+    void add_data_object(DataObject* data_object);
+
 private:
-    vector<DataObject> data_objects;
+    vector<DataObject*> data_objects;
 
     string global_identifier = ""; // This is prefixed before the published global state elements
                                    // to uniquely identify this scene if necessary.

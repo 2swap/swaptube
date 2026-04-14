@@ -16,7 +16,7 @@ public:
     std::vector<unsigned int> color_scheme;
     GraphScene(std::shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions = vec2(1, 1));
 
-    void graph_to_3d();
+    void draw() override;
 
     virtual int get_edge_color(const Node& node, const Node& neighbor);
 
@@ -24,20 +24,9 @@ public:
 
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 
-    void update_surfaces();
-
-    virtual Surface make_surface(Node node) const;
-
-    // Override the default surface render routine to make all graph surfaces point at the camera
-    void render_surface(const Surface& surface) override;
-
-    bool surfaces_override_unsafe; // For really big graphs, you can permanently turn off node stuff. This happens in the constructor, but careful when handling manually.
     std::shared_ptr<Graph> graph;
 
     void transition_node_position(const TransitionType tt, const double hash, const vec4& shift);
-
-protected:
-    std::unordered_map<std::string, std::pair<Surface, std::shared_ptr<Scene>>> graph_surface_map;
 
 private:
     int last_node_count;

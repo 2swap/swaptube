@@ -16,6 +16,7 @@ PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(di
                        {"manual_mode", "0"},
                        {"theta1_manual", "0"},
                        {"theta2_manual", "0"}});
+    add_data_object(&pend);
 }
 
 const StateQuery PendulumScene::populate_state_query() const {

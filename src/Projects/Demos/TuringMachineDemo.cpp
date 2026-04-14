@@ -1,4 +1,4 @@
-#include "../Scenes/Math/TuringMachineScene.h"
+#include "../Scenes/Math/Beavers/TuringMachineScene.h"
 
 void render_tm(char* tc, int states, int symbols) {
     TuringMachine tm;

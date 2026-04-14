@@ -34,7 +34,7 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 
     double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
-    if (AUDIO_HINTS && rendering_on()) { // Add hints for audio synchronization
+    if (rendering_on() && get_writer().audio->audio_hints) { // Add hints for audio synchronization
         double time = get_global_state("t");
         double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
         int macroblock_length_samples = round(macroblock_length_seconds * get_audio_samplerate_hz());
@@ -206,23 +206,27 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     cout << "]" << flush;
 }
 
+void Scene::add_data_object(DataObject* obj) {
+    data_objects.push_back(obj);
+}
+
 bool Scene::check_if_data_changed() const {
-    for(const DataObject& obj : data_objects) {
-        if(obj.has_been_updated_since_last_scene_query()) {
+    for(const DataObject* obj : data_objects) {
+        if(obj->has_been_updated_since_last_scene_query()) {
             return true;
         }
     }
     return false;
 }
 void Scene::mark_data_unchanged() {
-    for(DataObject& obj : data_objects) {
-        obj.mark_unchanged();
+    for(DataObject* obj : data_objects) {
+        obj->mark_unchanged();
     }
 }
 void Scene::change_data() {
-    for(DataObject& obj : data_objects) {
-        obj.tick(state);
-        obj.mark_updated();
+    for(DataObject* obj : data_objects) {
+        obj->tick(state);
+        obj->mark_updated();
     }
 }
 
