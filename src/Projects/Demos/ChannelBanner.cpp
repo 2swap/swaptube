@@ -1,19 +1,18 @@
-#include "../Scenes/Common/CompositeScene.cpp"
-#include "../Scenes/Math/MandelbrotScene.cpp"
-#include "../Scenes/Common/TwoswapScene.cpp"
+#include "../Scenes/Common/CompositeScene.h"
+#include "../Scenes/Math/MandelbrotScene.h"
+#include "../Scenes/Media/LatexScene.h"
 
 void render_video() {
-    TwoswapScene ts(.4, .4);
-    MandelbrotScene ms;
+    shared_ptr<LatexScene> ts = make_shared<LatexScene>("\\text{2swap}", .3);
+    shared_ptr<MandelbrotScene> ms = make_shared<MandelbrotScene>();
     CompositeScene cs;
-    cs.add_scene(&ts, "ts");
-    cs.add_scene(&ms, "ms");
-    ts.state.set(unordered_map<string,string>{
+    cs.add_scene(ms, "ms");
+    cs.add_scene(ts, "ts");
+    ts->manager.set(unordered_map<string,string>{
         {"swaptube_opacity", "0"},
     });
-    ms.state.set(unordered_map<string,string>{
-        {"zoom_r", ".0000021"},
-        {"zoom_i", "0"},
+    ms->manager.set({
+        {"zoom", "13.073"},
         {"max_iterations", "180"},
         {"pixel_param_z", "0"},
         {"pixel_param_x", "0"},
@@ -32,12 +31,12 @@ void render_video() {
         {"seed_x_r", "2"},
         {"seed_x_i", "0"},
     });
-    cs.stage_macroblock_and_render(SilenceSegment(2));
-    /*
+    stage_macroblock(SilenceBlock(2), 1);
+    cs.render_microblock();
+
     Pixels *pix;
-    ms.query(pix);
+    ms->query(pix);
     pix_to_png(*pix, "mandelbrot");
     cs.query(pix);
     pix_to_png(*pix, "2swap");
-    */
 }
