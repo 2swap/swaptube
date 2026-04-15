@@ -6,7 +6,7 @@
 #include "../../Core/Smoketest.h"
 #include "../../Host_Device_Shared/vec.h"
 
-GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions)
+GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
     : ThreeDimensionScene(dimensions), graph(g) {
     curr_hash = 0;
     next_hash = 0;
@@ -18,7 +18,6 @@ GraphScene::GraphScene(shared_ptr<Graph> g, bool surfaces_on, const vec2& dimens
         {"decay", ".95"},
         {"physics_multiplier", "1"},
         {"centering_strength", ".1"},
-        {"autofocus", "1"},
         {"dimensions", "3"},
         {"mirror_force", "0"},
         {"highlight_point_opacity", "1"},
@@ -70,10 +69,13 @@ void GraphScene::draw(){
     vec3 next_pos;
     bool curr_found = false;
     bool next_found = false;
+
+    float inv_af = 1/graph->autofocus_dist();
+
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     for(pair<double, Node> p : graph->nodes){
         Node node = p.second;
-        vec3 node_pos(node.position.x, node.position.y, node.position.z); // convert 4d to 3d
+        vec3 node_pos = vec3(node.position.x, node.position.y, node.position.z) * inv_af; // convert 4d to 3d
         if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
         add_point(Point(node_pos, node.color, 1, node.radius()));
@@ -85,7 +87,7 @@ void GraphScene::draw(){
             double neighbor_id = neighbor_edge.to;
             Node neighbor = graph->nodes.find(neighbor_id)->second;
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
-            add_line(Line(node_pos, neighbor_pos, get_edge_color(node, neighbor), neighbor_edge.opacity));
+            add_line(Line(node_pos, neighbor_pos*inv_af, neighbor_edge.color, neighbor_edge.opacity));
         }
     }
 
@@ -99,22 +101,17 @@ void GraphScene::draw(){
         opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
         double hpo = state["highlight_point_opacity"];
         if(hpo > 0.001)
-            add_point(Point(vec3{pos_to_render.x, pos_to_render.y, pos_to_render.z}, 0xffff0000, hpo*opa, 3*opa));
+            add_point(Point(inv_af*vec3{pos_to_render.x, pos_to_render.y, pos_to_render.z}, 0xffff0000, hpo*opa, 3*opa));
     }
 
-    if(state["autofocus"]) auto_distance = lerp(auto_distance, graph->af_dist(), 0.1);
     auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
     // Looks jarring when puzzle moves if we simply do: //auto_camera = pos_to_render * opa;
 
     ThreeDimensionScene::draw();
 }
 
-int GraphScene::get_edge_color(const Node& node, const Node& neighbor){
-    return OPAQUE_WHITE;
-}
-
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"autofocus", "desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
+    state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
     return s;
 }

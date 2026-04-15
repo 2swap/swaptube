@@ -147,7 +147,7 @@ void run_a_star(shared_ptr<Graph> g, shared_ptr<GraphScene> gs) {
 void render_video() {
     cout << "Building graph..." << endl;
     shared_ptr<Graph> g = make_shared<Graph>();
-    shared_ptr<GraphScene> gs = make_shared<GraphScene>(g, false);
+    shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
 
     gs->manager.set({
         {"q1", "1"},
@@ -156,8 +156,7 @@ void render_video() {
         {"qk", "0"},
         {"decay",".8"},
         {"dimensions","2"},
-        {"autofocus","0"},
-        {"d", "60"},
+        {"d", "1"},
         {"surfaces_opacity","1"},
         {"points_opacity","1"},
         {"points_radius_multiplier","3"},
@@ -183,8 +182,8 @@ void render_video() {
             HashableString left(to_string(i-1));
             HashableString up(to_string(i-GRAPH_WIDTH));
             g->add_node(new HashableString(to_string(i)));
-            if(x > 0) g->add_bidirectional_edge(left.get_hash(), node.get_hash());
-            if(y > 0) g->add_bidirectional_edge(up.get_hash(), node.get_hash());
+            if(x > 0) g->add_edge(left.get_hash(), node.get_hash());
+            if(y > 0) g->add_edge(up.get_hash(), node.get_hash());
             gs->render_microblock();
         }
     }
@@ -213,50 +212,27 @@ void render_video() {
     */
 
     shared_ptr<PngScene> ps = make_shared<PngScene>("nyc");
-    shared_ptr<ThreeDimensionScene> tds = make_shared<ThreeDimensionScene>();
-    tds->add_surface(Surface("ps"), ps);
+    gs->add_surface(Surface("ps"), ps);
+    gs->manager.set("ps.opacity", "0");
+    gs->manager.transition(MICRO, "ps.opacity", "0.2");
     CompositeScene cs;
-    cs.add_scene_fade_in(MICRO, tds, "tds", vec2(0.5,0.5), 0.2);
     cs.add_scene(gs, "gs");
-
-    StateSet parent_state_set{
-        {"q1", "[q1]"},
-        {"qi", "[qi]"},
-        {"qj", "[qj]"},
-        {"qk", "[qk]"},
-        {"x", "[x]"},
-        {"y", "[y]"},
-        {"z", "[z]"},
-    };
-
-    cs.manager.set({
-        {"q1", "1"},
-        {"qi", "0"},
-        {"qj", "0"},
-        {"qk", "0"},
-        {"x","0"},
-        {"y","0"},
-        {"z","0"},
-    });
-
-    gs->manager.set(parent_state_set);
-    tds->manager.set(parent_state_set);
 
     stage_macroblock(SilenceBlock(.5), 1);
     cs.render_microblock();
 
-    quat down = quat(1, -1.1, 0, 0);
+    quat down = quat(1, -1, 0, 0);
     quat right = quat(1, 0, 0, .2);
     quat rot = down * right;
 
-    cs.manager.transition(MICRO, {
+    gs->manager.transition(MICRO, {
         {"q1", to_string(rot.u)},
         {"qi", to_string(rot.i)},
         {"qj", to_string(rot.j)},
         {"qk", to_string(rot.k)},
         {"x","0"},
         {"y","0"},
-        {"z","0"},
+        {"z",".1"},
     });
 
     stage_macroblock(SilenceBlock(1), 1);
@@ -275,14 +251,14 @@ void render_video() {
     right = quat(1, 0, 0, .8);
     rot = down * right;
 
-    cs.manager.transition(MICRO, {
+    gs->manager.transition(MICRO, {
         {"q1", to_string(rot.u)},
         {"qi", to_string(rot.i)},
         {"qj", to_string(rot.j)},
         {"qk", to_string(rot.k)},
         {"x","0"},
         {"y","0"},
-        {"z","0"},
+        {"z",".1"},
     });
 
     stage_macroblock(SilenceBlock(3), 1);

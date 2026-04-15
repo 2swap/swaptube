@@ -161,6 +161,7 @@ bool ThreeDimensionScene::should_render_surface(vector<vec2> corners){
 }
 
 void ThreeDimensionScene::render_surface(const Surface& surface) {
+    cout << "Rendering surface: " << surface.name << endl;
     float this_surface_opacity = state[surface.name + ".opacity"] * state["surfaces_opacity"];
 
     vec3 surface_center = surface.center;
@@ -220,10 +221,8 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 
 void ThreeDimensionScene::set_camera_direction() {
     camera_direction = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
-    float dist_to_use = (auto_distance > 0 ? max(1.0, auto_distance) : 1)*state["d"];
-    vec3 camera_to_use = auto_distance > 0 ? auto_camera : vec3(state["x"], state["y"], state["z"]);
-    // Camera position is always at a distance of dist_to_use from the center, and pointing in the origin.
-    camera_pos = camera_to_use + rotate_vector(vec3(0,0,-dist_to_use), conjugate(camera_direction));
+    vec3 camera_to_use = vec3(state["x"], state["y"], state["z"]);
+    camera_pos = camera_to_use + rotate_vector(vec3(0,0,-state["d"]), conjugate(camera_direction));
 }
 
 float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
@@ -238,7 +237,10 @@ void ThreeDimensionScene::draw() {
     set_camera_direction();
 
     // Render surfaces via their CUDA integration.
-    if (state["surfaces_opacity"] > 0.001) for (const Surface& surface : surfaces) render_surface(surface);
+    if (state["surfaces_opacity"] > 0.001) {
+        cout << "Rendering surface!!" << endl;
+        for (const Surface& surface : surfaces) render_surface(surface);
+    }
 
     if (!lines.empty() && state["lines_opacity"] > .001) {
         int thickness = static_cast<int>(get_geom_mean_size() / 640.0);

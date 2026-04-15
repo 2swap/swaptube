@@ -14,11 +14,9 @@ public:
     double curr_hash;
     double next_hash;
     std::vector<unsigned int> color_scheme;
-    GraphScene(std::shared_ptr<Graph> g, bool surfaces_on, const vec2& dimensions = vec2(1, 1));
+    GraphScene(std::shared_ptr<Graph> g, const vec2& dimensions = vec2(1, 1));
 
     void draw() override;
-
-    virtual int get_edge_color(const Node& node, const Node& neighbor);
 
     const StateQuery populate_state_query() const override;
 

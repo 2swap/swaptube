@@ -14,10 +14,11 @@
 
 class Edge {
 public:
-    Edge(double f, double t, double opa = 1) : from(f), to(t), opacity(opa) {}
+    Edge(double f, double t, double opa = 1, uint32_t col = 0xffffffff) : from(f), to(t), opacity(opa), color(col) {}
     double from;
     double to;
     double opacity;
+    uint32_t color;
 
     bool operator==(const Edge& other) const {
         return (this->to == other.to && this->from == other.from);
@@ -62,16 +63,12 @@ public:
 
     int size() const;
 
-    std::deque<double> traverse_deque;
     std::unordered_map<double, Node> nodes;
-    double root_node_hash;
     std::uniform_real_distribution<float> dist;
     std::mt19937 rng;
 
     void clear_queue();
     void clear();
-
-    void add_to_stack(GenericBoard* t);
 
     double add_node(GenericBoard* t);
     double add_node_without_edges(GenericBoard* t);
@@ -81,8 +78,7 @@ public:
     void add_node_with_position(GenericBoard* t, double x, double y, double z);
     void move_node(double hash, float x, float y, float z, float w = 0);
 
-    void add_directed_edge(double from, double to, double opacity = 1);
-    void add_bidirectional_edge(double from, double to, double opacity = 1);
+    void add_edge(double from, double to, double opacity = 1);
     void remove_edge(double from, double to);
     const Edge* get_edge(double from, double to);
     bool does_edge_exist(double from, double to);
@@ -96,25 +92,18 @@ public:
     int measure_distance(double start, double end);
     std::pair<std::list<double>, std::list<Edge*>> shortest_path(double start, double end);
 
-    void collapse_two_nodes(double hash_keep, double hash_remove);
-
-    void delete_isolated();
-    void delete_orphans();
-
     std::vector<int> make_adjacency_matrix(const std::vector<Node*>& node_vector, int &max_degree);
 
     void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const bool flip_by_symmetry);
 
     vec4 center_of_mass() const;
 
-    float af_dist() const;
+    float autofocus_dist() const;
 
     void render_json(std::string json_out_filename);
 
     std::unordered_set<double> get_neighborhood(double hash, int dist);
     std::unordered_set<double> get_neighbors(double hash);
-
-    void make_bidirectional();
 
     void tick(const StateReturn& state);
 

@@ -4,8 +4,8 @@
 #include <stdexcept>
 #include <algorithm>
 
-C4GraphScene::C4GraphScene(shared_ptr<Graph> g, bool surfaces_on, const string& rep, const C4BranchMode mode, const vec2& dimensions)
-: GraphScene(g, surfaces_on, dimensions), root_node_representation(rep) {
+C4GraphScene::C4GraphScene(shared_ptr<Graph> g, const string& rep, const C4BranchMode mode, const vec2& dimensions)
+: GraphScene(g, dimensions), root_node_representation(rep) {
     manager.set("physics_multiplier", "5");
     manager.set("decay", "0.5");
 
@@ -22,9 +22,5 @@ C4GraphScene::C4GraphScene(shared_ptr<Graph> g, bool surfaces_on, const string& 
     } else {
         board = new C4Board(mode, root_node_representation);
     }
-    graph->add_to_stack(board);
-}
-
-int C4GraphScene::get_edge_color(const Node& node, const Node& neighbor){
-    return min(node.data->representation.size(), neighbor.data->representation.size())%2==0 ? C4_RED : C4_YELLOW;
+    //graph->add_to_stack(board);
 }

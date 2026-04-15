@@ -48,7 +48,7 @@ double Node::radius() const { return size * (((3*age - 1) * exp(-.5*age)) + 1); 
 double Node::splash_opacity() const { return 1-square(age/12.); }
 double Node::splash_radius() const { return size * age * .4; }
 
-Graph::Graph() : root_node_hash(0), dist(0.0f, 1.0f), rng(0) {}
+Graph::Graph() : dist(0.0f, 1.0f), rng(0) {}
 
 Graph::~Graph() {
     clear();
@@ -60,10 +60,6 @@ int Graph::size() const {
 
 void Graph::tick(const StateReturn& state) {
     int nodes_to_add = state["desired_nodes"] - size();
-    if(nodes_to_add > 0) {
-        expand(nodes_to_add);
-        make_bidirectional();
-    }
 
     // SFX
     if(last_node_count > -1){
@@ -93,12 +89,7 @@ void Graph::tick(const StateReturn& state) {
     }
 }
 
-void Graph::clear_queue() {
-    traverse_deque.clear();
-}
-
 void Graph::clear() {
-    traverse_deque.clear();
     while (nodes.size()>0) {
         auto i = nodes.begin();
         delete i->second.data;
@@ -106,61 +97,15 @@ void Graph::clear() {
     }
 }
 
-void Graph::add_to_stack(GenericBoard* t){
-    double hash = t->get_hash();
-    add_node_without_edges(t);
-    traverse_deque.push_front(hash);
-}
-
 double Graph::add_node(GenericBoard* t){
-    double x = add_node_without_edges(t);
-    add_missing_edges();
-    return x;
-}
-double Graph::add_node_without_edges(GenericBoard* t){
     double hash = t->get_hash();
     if (node_exists(hash)) {
         delete t;
         return hash;
     }
     Node new_node(t, hash, random_unit_cube_vector(rng, dist), random_unit_cube_vector(rng, dist));
-    if (size() == 0) {
-        root_node_hash = hash;
-    }
     nodes.emplace(hash, new_node);
     return hash;
-}
-
-int Graph::expand(int n) {
-    if(n == 0) return 0;
-    int added = 0;
-    while (!traverse_deque.empty()) {
-        double id = traverse_deque.front();
-        traverse_deque.pop_front();
-
-        std::unordered_set<GenericBoard*> child_nodes = nodes.at(id).data->get_children();
-        bool done = false;
-        for (const auto& child : child_nodes) {
-            double child_hash = child->get_hash();
-            if (done || node_exists(child_hash)) delete child;
-            else {
-                add_node_without_edges(child);
-                if(n>0) traverse_deque.push_front(id); // No need to save progress if expanding whole graph
-                traverse_deque.push_back(child_hash); // push_back: bfs // push_front: dfs
-                added++;
-                std::cout << "." << std::flush;
-                if(added >= n && n > 0) done = true;
-            }
-        }
-        if(done) {
-            add_missing_edges();
-            mark_updated();
-            return added;
-        }
-    }
-    add_missing_edges();
-    if(added > 0) mark_updated();
-    return added;
 }
 
 void Graph::add_node_with_position(GenericBoard* t, double x, double y, double z) {
@@ -176,15 +121,11 @@ void Graph::move_node(double hash, float x, float y, float z, float w) {
     mark_updated();
 }
 
-void Graph::add_directed_edge(double from, double to, double opacity) {
+void Graph::add_edge(double from, double to, double opacity) {
     if (!node_exists(from) || !node_exists(to)) return;
     nodes.at(from).neighbors.insert(Edge(from, to, opacity));
+    nodes.at(to  ).neighbors.insert(Edge(to, from, opacity));
     mark_updated();
-}
-
-void Graph::add_bidirectional_edge(double from, double to, double opacity) {
-    add_directed_edge(from, to, opacity);
-    add_directed_edge(to, from, opacity);
 }
 
 void Graph::remove_edge(double from, double to) {
@@ -220,24 +161,6 @@ bool Graph::does_edge_exist(double from, double to){
     }
 
     return false;
-}
-
-void Graph::add_missing_edges() {
-    for (auto& pair : nodes) {
-        Node& parent = pair.second;
-        if(parent.expected_children_hashes.size() == 0)
-            parent.expected_children_hashes = parent.data->get_children_hashes();
-
-        for (double child_hash : parent.expected_children_hashes) {
-            if(!node_exists(child_hash)) continue;
-            Node& child = nodes.find(child_hash)->second;
-            if(child.age == 0 && parent.age != 0 && !does_edge_exist(parent.hash, child_hash)){
-                child.position = parent.position + random_unit_cube_vector(rng, dist);
-                child.velocity = parent.velocity;
-            }
-            add_directed_edge(parent.hash, child_hash);
-        }
-    }
 }
 
 bool Graph::node_exists(double id) const {
@@ -310,72 +233,6 @@ std::pair<std::list<double>, std::list<Edge*>> Graph::shortest_path(double start
     path.push_front(start);
 
     return {path, edges};
-}
-
-void Graph::collapse_two_nodes(double hash_keep, double hash_remove) {
-    if (!node_exists(hash_keep) || !node_exists(hash_remove)) return;
-    if (hash_keep == hash_remove) return;
-
-    Node& node_keep = nodes.at(hash_keep);
-    Node& node_remove = nodes.at(hash_remove);
-
-    for (const auto& edge : node_remove.neighbors) {
-        if (edge.to != hash_keep) {
-            add_directed_edge(hash_keep, edge.to, edge.opacity);
-            add_directed_edge(edge.to, hash_keep, edge.opacity);
-        }
-    }
-
-    remove_node(hash_remove);
-    mark_updated();
-}
-
-void Graph::delete_isolated() {
-    std::unordered_set<double> non_isolated;
-
-    for (const auto& node_pair : nodes) {
-        const Node& node = node_pair.second;
-        for (const auto& edge : node.neighbors) {
-            non_isolated.insert(edge.to);
-            non_isolated.insert(edge.from);
-        }
-    }
-
-    for (auto it = nodes.begin(); it != nodes.end(); ) {
-        if (non_isolated.find(it->first) == non_isolated.end() && it->first != root_node_hash) {
-            delete it->second.data;
-            it = nodes.erase(it);
-        } else {
-            ++it;
-        }
-    }
-    mark_updated();
-}
-
-void Graph::delete_orphans() {
-    bool orphan_found;
-    do {
-        orphan_found = false;
-        std::unordered_set<double> non_orphans;
-
-        for (const auto& node_pair : nodes) {
-            const Node& node = node_pair.second;
-            for (const auto& edge : node.neighbors) {
-                non_orphans.insert(edge.to);
-            }
-        }
-
-        for (auto it = nodes.begin(); it != nodes.end(); ) {
-            if (non_orphans.find(it->first) == non_orphans.end() && it->first != root_node_hash) {
-                delete it->second.data;
-                it = nodes.erase(it);
-                orphan_found = true;
-            } else {
-                ++it;
-            }
-        }
-    } while (orphan_found);
-    mark_updated();
 }
 
 std::vector<int> Graph::make_adjacency_matrix(const std::vector<Node*>& node_vector, int &max_degree) {
@@ -476,7 +333,7 @@ vec4 Graph::center_of_mass() const {
     return ret;
 }
 
-float Graph::af_dist() const {
+float Graph::autofocus_dist() const {
     float sum_distance_sq = 0.0;
     float ct = 0.1;
 
@@ -529,8 +386,6 @@ void Graph::render_json(std::string json_out_filename) {
     json_data["nodes_to_use"].dump(4, ' ', false, json::error_handler_t::ignore);
 
     std::ostringstream oss;
-    oss << std::setprecision(17) << root_node_hash;
-    json_data["root_node_hash"] = oss.str();
     json_data["board_w"  ] = 7;
     json_data["board_h"  ] = 6;
     json_data["game_name"] = "c4";
@@ -578,21 +433,4 @@ std::unordered_set<double> Graph::get_neighbors(double hash) {
         neighbors.insert(edge.to);
     }
     return neighbors;
-}
-
-void Graph::make_bidirectional() {
-    std::vector<std::pair<double, double>> edges_to_add;
-    for (const auto& pair : nodes) {
-        double from = pair.first;
-        const EdgeSet& neighbors = pair.second.neighbors;
-        for (const Edge& edge : neighbors) {
-            double to = edge.to;
-            if (!does_edge_exist(to, from)) {
-                edges_to_add.emplace_back(to, from);
-            }
-        }
-    }
-    for (const auto& edge : edges_to_add) {
-        add_directed_edge(edge.first, edge.second);
-    }
 }
