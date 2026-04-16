@@ -163,7 +163,7 @@ void render_video() {
         {"physics_multiplier","5"},
     });
 
-    stage_macroblock(SilenceBlock(1), 75);
+    stage_macroblock(SilenceBlock(3), 75);
 
     for(int xplusy = 0; xplusy <= (GRAPH_WIDTH - 1) * 2; xplusy++) {
         for(int y = 0; y <= xplusy; y++) {
@@ -181,9 +181,10 @@ void render_video() {
             HashableString node(to_string(i));
             HashableString left(to_string(i-1));
             HashableString up(to_string(i-GRAPH_WIDTH));
-            g->add_node(new HashableString(to_string(i)));
-            if(x > 0) g->add_edge(left.get_hash(), node.get_hash());
-            if(y > 0) g->add_edge(up.get_hash(), node.get_hash());
+            vector<double> neighbor_hashes;
+            if(x > 0) neighbor_hashes.push_back(left.get_hash());
+            if(y > 0) neighbor_hashes.push_back(up.get_hash());
+            g->add_node_with_neighbors(new HashableString(to_string(i)), neighbor_hashes);
             gs->render_microblock();
         }
     }

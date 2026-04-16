@@ -108,9 +108,23 @@ double Graph::add_node(GenericBoard* t){
     return hash;
 }
 
-void Graph::add_node_with_position(GenericBoard* t, double x, double y, double z) {
+void Graph::add_node_with_neighbors(GenericBoard* t, std::vector<double> neighbor_hashes) {
     double hash = add_node(t);
-    move_node(hash, x, y, z);
+    if (neighbor_hashes.empty()) return;
+    vec4 avg_position(0.0f);
+    vec4 avg_velocity(0.0f);
+    for (double neighbor_hash : neighbor_hashes) {
+        if (!node_exists(neighbor_hash)) continue;
+        const Node& neighbor = nodes.at(neighbor_hash);
+        avg_position += neighbor.position + 0.01f * random_unit_cube_vector(rng, dist);
+        avg_velocity += neighbor.velocity;
+        add_edge(hash, neighbor_hash);
+    }
+    int count = neighbor_hashes.size();
+    avg_position /= count;
+    avg_velocity /= count;
+    nodes.at(hash).position = avg_position;
+    nodes.at(hash).velocity = avg_velocity;
 }
 
 void Graph::move_node(double hash, float x, float y, float z, float w) {

@@ -75,7 +75,7 @@ public:
 
     int expand(int n = -1);
 
-    void add_node_with_position(GenericBoard* t, double x, double y, double z);
+    void add_node_with_neighbors(GenericBoard* t, std::vector<double> neighbor_hashes);
     void move_node(double hash, float x, float y, float z, float w = 0);
 
     void add_edge(double from, double to, double opacity = 1);

@@ -161,7 +161,6 @@ bool ThreeDimensionScene::should_render_surface(vector<vec2> corners){
 }
 
 void ThreeDimensionScene::render_surface(const Surface& surface) {
-    cout << "Rendering surface: " << surface.name << endl;
     float this_surface_opacity = state[surface.name + ".opacity"] * state["surfaces_opacity"];
 
     vec3 surface_center = surface.center;
@@ -238,7 +237,6 @@ void ThreeDimensionScene::draw() {
 
     // Render surfaces via their CUDA integration.
     if (state["surfaces_opacity"] > 0.001) {
-        cout << "Rendering surface!!" << endl;
         for (const Surface& surface : surfaces) render_surface(surface);
     }
 
