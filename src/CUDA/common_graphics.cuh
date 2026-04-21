@@ -68,7 +68,8 @@ __device__ __forceinline__ Cuda::vec3 get_raymarch_vector(int px, int py, float 
 
     float px_cam = ndc_x * tanf(fov * 0.5f) * w / h;
     float py_cam = ndc_y * tanf(fov * 0.5f);
-    Cuda::vec3 dir_cam = Cuda::vec3(px_cam, py_cam, -1.0f);
+    // TODO: figure out what sign things should be (everything seems wrong)
+    Cuda::vec3 dir_cam = Cuda::vec3(-px_cam, py_cam, -1.0f);
     return -normalize(rotate_vector(dir_cam, camera_orientation));
 }
 
