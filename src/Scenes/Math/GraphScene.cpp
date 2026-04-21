@@ -52,14 +52,14 @@ void GraphScene::draw(){
         vec4 start = p.second.first;
         vec4 end = p.second.second;
         vec4 interp_pos = veclerp(start, end, smoother2(state["microblock_fraction"]));
-        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
+        graph->move_node(hash, interp_pos);
     }
     for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
         double hash = p.first;
         vec4 start = p.second.first;
         vec4 end = p.second.second;
         vec4 interp_pos = veclerp(start, end, smoother2(state["macroblock_fraction"]));
-        graph->move_node(hash, interp_pos.x, interp_pos.y, interp_pos.z);
+        graph->move_node(hash, interp_pos);
     }
 
     clear_lines();

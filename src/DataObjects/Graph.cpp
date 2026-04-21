@@ -127,11 +127,11 @@ void Graph::add_node_with_neighbors(GenericBoard* t, std::vector<double> neighbo
     nodes.at(hash).velocity = avg_velocity;
 }
 
-void Graph::move_node(double hash, float x, float y, float z, float w) {
+void Graph::move_node(double hash, vec4 pos) {
     auto it = nodes.find(hash);
     if (it == nodes.end()) return;
     Node& node = it->second;
-    node.position = {x, y, z, w};
+    node.position = pos;
     mark_updated();
 }
 
@@ -441,10 +441,45 @@ std::unordered_set<double> Graph::get_neighborhood(double hash, int dist) {
 
 std::unordered_set<double> Graph::get_neighbors(double hash) {
     std::unordered_set<double> neighbors;
-    if (!node_exists(hash)) return neighbors;
+    if (!node_exists(hash)) {
+        throw std::runtime_error("Node with hash " + std::to_string(hash) + " does not exist.");
+        return neighbors;
+    }
     const Node& node = nodes.at(hash);
     for (const Edge& edge : node.neighbors) {
         neighbors.insert(edge.to);
     }
     return neighbors;
+}
+
+void Graph::color_all_edges(uint32_t color) {
+    for (auto& node_pair : nodes) {
+        Node& node = node_pair.second;
+        for (const Edge& edge : node.neighbors) {
+            // Pointer hack to change const
+            const_cast<Edge&>(edge).color = color;
+        }
+    }
+    mark_updated();
+}
+
+void Graph::color_edge(double from, double to, uint32_t color) {
+    if (!node_exists(from) || !node_exists(to)) return;
+    Node& from_node = nodes.at(from);
+    for (const Edge& edge : from_node.neighbors) {
+        if (edge.to == to) {
+            // Pointer hack to change const
+            const_cast<Edge&>(edge).color = color;
+            break;
+        }
+    }
+    Node& to_node = nodes.at(to);
+    for (const Edge& edge : to_node.neighbors) {
+        if (edge.to == from) {
+            // Pointer hack to change const
+            const_cast<Edge&>(edge).color = color;
+            break;
+        }
+    }
+    mark_updated();
 }

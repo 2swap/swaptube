@@ -76,7 +76,7 @@ public:
     int expand(int n = -1);
 
     void add_node_with_neighbors(GenericBoard* t, std::vector<double> neighbor_hashes);
-    void move_node(double hash, float x, float y, float z, float w = 0);
+    void move_node(double hash, vec4 pos);
 
     void add_edge(double from, double to, double opacity = 1);
     void remove_edge(double from, double to);
@@ -104,6 +104,9 @@ public:
 
     std::unordered_set<double> get_neighborhood(double hash, int dist);
     std::unordered_set<double> get_neighbors(double hash);
+
+    void color_edge(double from, double to, uint32_t color);
+    void color_all_edges(uint32_t color);
 
     void tick(const StateReturn& state);
 
