@@ -45,7 +45,7 @@ VolumetricScene::~VolumetricScene(){
 }
 
 const StateQuery VolumetricScene::populate_state_query() const {
-    return {"x", "y", "z", "d", "q1", "qi", "qj", "qk", "fov", "light_x", "light_y", "light_z", "max_mandelbulb_iterations", "max_raymarch_iterations", "p", "voxel_grid_size"};
+    return {"x", "y", "z", "d", "q1", "qi", "qj", "qk", "fov", "light_x", "light_y", "light_z", "max_mandelbulb_iterations", "max_raymarch_iterations", "power", "voxel_grid_size"};
 }
 
 void VolumetricScene::load_voxels(const int width, const int height, const int depth){ // x, y, z dimensions
