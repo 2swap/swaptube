@@ -79,7 +79,7 @@ void LineChartScene::render_chart() {
         string val_string = float_to_pretty_string(val);
         ScalingParams sp(get_width()/10., get_height()/10.);
         Pixels latex = latex_to_pix(val_string, sp);
-        pix.overlay(latex, pixel.x - latex.w*.5, pixel.y - latex.h*1.1, 1.0f);
+        pix.overlay_cpu(latex, pixel.x - latex.w*.5, pixel.y - latex.h*1.1, 1.0f);
 
         if (first_point) {
             first_point = false;

@@ -332,7 +332,7 @@ void ComplexPlotScene::draw() {
             float align_factor = 0.5f;
             if(letter == 'b' || letter == 'd' || letter == 'f' || letter == 'h' || letter == 'k' || letter == 'l' || letter == 't') align_factor = 0.68f;
             else if(letter == 'g' || letter == 'j' || letter == 'p' || letter == 'q' || letter == 'y') align_factor = 0.32f;
-            pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h * align_factor, letter_opa);
+            pix.overlay_cpu(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h * align_factor, letter_opa);
         }
     }
 

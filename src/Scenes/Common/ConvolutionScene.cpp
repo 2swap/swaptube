@@ -74,8 +74,8 @@ void ConvolutionScene::draw(){
             int x = round(lerp(coords.first , transition_coords.first -step.max_x, smooth));
             int y = round(lerp(coords.second, transition_coords.second-step.max_y, smooth));
             // Render the intersection at the interpolated position
-            pix.overlay(step.induced1, x, y, tp1);
-            pix.overlay(step.induced2, x+step.max_x, y+step.max_y, tp );
+            pix.overlay_gpu(step.induced1, x, y, tp1);
+            pix.overlay_gpu(step.induced2, x+step.max_x, y+step.max_y, tp );
 
             if(i == 0 && false){
                 top_vx += transition_coords.first  - step.max_x - coords.first ;
@@ -87,8 +87,8 @@ void ConvolutionScene::draw(){
         int dy = round(lerp(-top_vy, 0, smooth));
 
         StepResult last_intersection = intersections[intersections.size()-1];
-        pix.overlay(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
-        pix.overlay(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
+        pix.overlay_gpu(last_intersection.current_p1, dx +            coords.first, dy +            coords.second, tp1*tp1);
+        pix.overlay_gpu(last_intersection.current_p2, dx + transition_coords.first, dy + transition_coords.second, tp *tp );
     } else {
         p1 = get_p1();
         coords = get_coords_from_pixels(p1);

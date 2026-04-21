@@ -172,11 +172,11 @@ void CoordinateScene::draw_construction() {
         if(p.label != "" && p.width_multiplier > .4) {
             ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
             Pixels latex = latex_to_pix(latex_color(text_color, p.label), sp);
-            geometry.overlay(latex, position_pixel.x - latex.w/2, position_pixel.y - line_thickness * 6 - latex.h/2, p.old ? 1 : interp);
+            geometry.overlay_cpu(latex, position_pixel.x - latex.w/2, position_pixel.y - line_thickness * 6 - latex.h/2, p.old ? 1 : interp);
         }
     }
 
-    pix.overlay(geometry, 0, 0, construction_opacity);
+    pix.overlay_gpu(geometry, 0, 0, construction_opacity);
 }
 
 void CoordinateScene::draw_zero_crosshair() {
@@ -229,8 +229,8 @@ void CoordinateScene::draw_one_axis(bool ymode) {
                 ScalingParams sp(gmsz/9., gmsz/18.);
                 Pixels latex = latex_to_pix(truncated, sp);
                 //if(ymode) latex = latex.rotate_90();
-                if(ymode) pix.overlay(latex, tick_length * .8/*1.5*/, coordinate - latex.h*1.1/*.5*/, number_opacity);
-                if(!ymode)pix.overlay(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
+                if(ymode) pix.overlay_cpu(latex, tick_length * .8/*1.5*/, coordinate - latex.h*1.1/*.5*/, number_opacity);
+                if(!ymode)pix.overlay_cpu(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
             }
         }
         if(fiveish) order_mag--;

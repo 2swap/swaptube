@@ -121,7 +121,7 @@ void C4Scene::draw_annotations(){
                 if(annotation != '@') annotation_str = "\\text{" + annotation_str + "}";
                 else annotation_str = "\\@";
                 Pixels latex = latex_to_pix(annotation_str, sp);
-                pix.overlay(latex, px-latex.w/2, py-latex.h/2, state["annotations_opacity"]);
+                pix.overlay_cpu(latex, px-latex.w/2, py-latex.h/2, state["annotations_opacity"]);
             }
         }
     }

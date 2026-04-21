@@ -97,7 +97,7 @@ void GraphScene::draw(){
         double smooth_interp = smoother2(state["microblock_fraction"]);
         if     (!curr_found) pos_to_render = next_pos;
         else if(!next_found) pos_to_render = curr_pos;
-        else                 pos_to_render = veclerp(curr_pos, next_pos, cbrt(smooth_interp)); // TODO remove the cbrt here.
+        else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
         opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
         double hpo = state["highlight_point_opacity"];
         if(hpo > 0.001)
@@ -108,6 +108,18 @@ void GraphScene::draw(){
     // Looks jarring when puzzle moves if we simply do: //auto_camera = pos_to_render * opa;
 
     ThreeDimensionScene::draw();
+
+    for(pair<double, Node> p : graph->nodes){
+        Node node = p.second;
+        if(node.label != "") {
+            bool behind_camera = false;
+            vec2 pos = coordinate_to_pixel(node.position * inv_af, behind_camera);
+            vec2 half_dim = vec2(0.1, 0.05) * get_width_height();
+            vec2 top_left = pos - half_dim;
+            vec2 bottom_right = pos + half_dim;
+            write_text(pix, node.label, top_left, bottom_right, 1);
+        }
+    }
 }
 
 const StateQuery GraphScene::populate_state_query() const {

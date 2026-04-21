@@ -235,10 +235,10 @@ void slide8() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
     gs->manager.set({
-        {"q1", "1"},
-        {"qi", "0"},
-        {"qj", "0"},
-        {"qk", "0"},
+        //{"q1", "1"},
+        //{"qi", "0"},
+        //{"qj", "0"},
+        //{"qk", "0"},
         {"physics_multiplier","0"},
         {"d", ".5"},
         {"points_radius_multiplier","3"},
@@ -284,9 +284,14 @@ void slide8() {
     gs->manager.transition(MICRO, "lines_opacity","1");
     gs->render_microblock();
 
-
+    for(int i = 0; i < 20; i++) {
+        g->label_node(HashableString(to_string(i)).get_hash(), to_string(i));
+    }
     // Pop letters in
     stage_macroblock(FileBlock("We’ll also give each city a letter, so it’s a little easier to reference them."), 1);
+    gs->render_microblock();
+
+    return;
 
     // Highlight A in green
     // Highlight M in red

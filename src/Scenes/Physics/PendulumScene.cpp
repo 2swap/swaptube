@@ -41,7 +41,7 @@ void PendulumScene::draw() {
                                  lerp(pend.state.theta2, state["theta2_manual"], in_manual_mode)};
     int color = pendulum_color(thetas[0], thetas[1], pend.state.p1, pend.state.p2);
     if(state["path_opacity"] > 0.01)
-        pix.overlay(path_background, 0, 0);
+        pix.overlay_gpu(path_background, 0, 0);
 
     double pend_opa = state["pendulum_opacity"];
     if(pend_opa > 0.01) {

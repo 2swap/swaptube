@@ -67,7 +67,8 @@ public:
 
     void add_border(int col, int thickness = 1);
 
-    void overlay(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1);
+    void overlay_cpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1);
+    void overlay_gpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1);
 
     void overwrite(Pixels p, int dx, int dy);
 

@@ -441,3 +441,10 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
     const string png_filename_without_prefix = png_filename.substr(6);
     png_to_pix(pix, png_filename_without_prefix);
 }
+
+void write_text(Pixels& pix, const std::string& latex, const vec2& top_left, const vec2& bottom_right, const double opacity) {
+    ScalingParams scaling_params(bottom_right.x - top_left.x, bottom_right.y - top_left.y);
+
+    Pixels text = latex_to_pix(latex, scaling_params);
+    pix.overlay_cpu(text, top_left.x, top_left.y, opacity);
+}

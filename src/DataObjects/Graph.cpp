@@ -483,3 +483,9 @@ void Graph::color_edge(double from, double to, uint32_t color) {
     }
     mark_updated();
 }
+
+void Graph::label_node(double hash, const std::string& label) {
+    if (!node_exists(hash)) return;
+    nodes.at(hash).label = label;
+    mark_updated();
+}

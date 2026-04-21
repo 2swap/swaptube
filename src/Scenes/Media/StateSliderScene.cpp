@@ -42,7 +42,7 @@ void StateSliderScene::draw() {
         string eqn_str = display_name + " = " + double_to_string(state["value"]);
         Pixels equation_pixels = latex_to_pix(eqn_str, sp);
         draw_slider();
-        pix.overlay(equation_pixels, get_height()/2, (get_height()-equation_pixels.h)/2.); // h/2 shifts the text over horizontally a little out of the left wall
+        pix.overlay_cpu(equation_pixels, get_height()/2, (get_height()-equation_pixels.h)/2.); // h/2 shifts the text over horizontally a little out of the left wall
     } else {
         draw_slider();
     }

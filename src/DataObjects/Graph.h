@@ -48,6 +48,7 @@ public:
     int color = 0xffffffff;
     float size = 1;
     double age = 0;
+    string label;
     vec4 velocity;
     vec4 position;
     float weight() const;
@@ -107,6 +108,8 @@ public:
 
     void color_edge(double from, double to, uint32_t color);
     void color_all_edges(uint32_t color);
+
+    void label_node(double hash, const string& label);
 
     void tick(const StateReturn& state);
 

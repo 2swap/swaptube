@@ -65,17 +65,17 @@ void LambdaScene::draw() {
         Pixels p2 = interpolated.second->draw_lambda_diagram(scale);
         float pixw = smoothlerp(p1.w, p2.w, trans_frac);
         float pixh = smoothlerp(p1.h, p2.h, trans_frac);
-        pix.overwrite(p1, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
-        pix.overlay  (p2, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
+        pix.overwrite  (p1, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
+        pix.overlay_gpu(p2, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
     }
     if(state["latex_opacity"] > 0.01){
         ScalingParams sp(pix.w, pix.h / 4);
         Pixels latex = latex_to_pix(le->get_latex(), sp);
-        pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["latex_opacity"]);
+        pix.overlay_gpu(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["latex_opacity"]);
     }
     if(state["title_opacity"] > 0.01){
         ScalingParams sp(pix.w, pix.h / 4);
         Pixels latex = latex_to_pix("\\text{" + title + "}", sp);
-        pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["title_opacity"]);
+        pix.overlay_gpu(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["title_opacity"]);
     }
 }

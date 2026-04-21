@@ -190,13 +190,17 @@ void Pixels::add_border(int col, int thickness){
     }
 }
 
-void Pixels::overlay(Pixels p, int dx, int dy, double overlay_opacity_multiplier){
+void Pixels::overlay_cpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier){
     for(int x = 0; x < p.w; x++){
         int xpdx = x+dx;
         for(int y = 0; y < p.h; y++){
             overlay_pixel(xpdx, y+dy, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
         }
     }
+}
+
+void Pixels::overlay_gpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier){
+    cuda_overlay(pixels.data(), w, h, p.pixels.data(), p.w, p.h, dx, dy, overlay_opacity_multiplier);
 }
 
 void Pixels::overwrite(Pixels p, int dx, int dy){

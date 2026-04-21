@@ -46,7 +46,7 @@ void RootFractalScene::draw() {
         if(letter_opa > 0.01) {
             ScalingParams sp = ScalingParams(gm * 16, gm * 40);
             Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
-            pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
+            pix.overlay_cpu(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
         }
         i++;
     }
