@@ -129,8 +129,8 @@ void Graph::move_node(double hash, vec4 pos) {
 
 void Graph::add_edge(double from, double to, double opacity) {
     if (!node_exists(from) || !node_exists(to)) return;
-    nodes.at(from).neighbors.insert(Edge(from, to, opacity));
-    nodes.at(to  ).neighbors.insert(Edge(to, from, opacity));
+    nodes.at(from).neighbors.insert(Edge(from, to));
+    nodes.at(to  ).neighbors.insert(Edge(to, from));
     mark_updated();
 }
 

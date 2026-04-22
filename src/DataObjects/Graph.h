@@ -14,11 +14,9 @@
 
 class Edge {
 public:
-    Edge(double f, double t, double opa = 1, uint32_t col = 0xffffffff) : from(f), to(t), opacity(opa), color(col) {}
+    Edge(double f, double t) : from(f), to(t) {}
     double from;
     double to;
-    double opacity;
-    uint32_t color;
 
     bool operator==(const Edge& other) const {
         return (this->to == other.to && this->from == other.from);

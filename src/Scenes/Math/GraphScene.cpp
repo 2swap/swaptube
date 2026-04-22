@@ -36,15 +36,16 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
     add_data_object(&(*graph));
 }
 
-void GraphScene::transition_node_position(const TransitionType tt, const double hash, const vec4& shift){
+void GraphScene::transition_node_position(const TransitionType tt, const double hash, const vec4& new_position){
     vec4 old_position = graph->nodes.find(hash)->second.position;
-    pair<vec4, vec4> transition_pair = make_pair(old_position, shift);
+    pair<vec4, vec4> transition_pair = make_pair(old_position, new_position);
     if(tt == TransitionType::MICRO) nodes_in_micro_transition[hash] = transition_pair;
     else                            nodes_in_macro_transition[hash] = transition_pair;
 }
 
 void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
     if(tt == MACRO) nodes_in_macro_transition.clear();
+    config->step_transition(tt);
     nodes_in_micro_transition.clear();
     curr_hash = next_hash;
 }
@@ -79,19 +80,24 @@ void GraphScene::draw(){
         double hash = p.first;
         Node node = p.second;
         vec3 node_pos(node.position);
+        cout << "A" << endl;
         if(hash == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(hash == next_hash) { next_pos = node_pos; next_found = true; }
+        cout << "B" << endl;
         add_point(Point(node_pos, config->get_node_color(hash), 1, config->get_node_radius(hash)));
+        cout << "C" << endl;
         //double so = node.splash_opacity();
         int color = color_scheme[static_cast<int>(abs(hash)*100)%4];
         //if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
 
+        cout << "D" << endl;
         for(const Edge& neighbor_edge : node.neighbors){
             double neighbor_id = neighbor_edge.to;
             Node neighbor = graph->nodes.find(neighbor_id)->second;
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
-            add_line(Line(node_pos, neighbor_pos, neighbor_edge.color, neighbor_edge.opacity));
+            add_line(Line(node_pos, neighbor_pos, config->get_edge_color(hash, neighbor_id)));
         }
+        cout << "E" << endl;
     }
 
     float opa = 0;
