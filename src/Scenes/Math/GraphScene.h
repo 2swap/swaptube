@@ -3,6 +3,7 @@
 #include "../Scene.h"
 #include "../Common/ThreeDimensionScene.h"
 #include "../../DataObjects/Graph.h"
+#include "../../DataObjects/GraphDrawingConfig.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
@@ -23,6 +24,7 @@ public:
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 
     std::shared_ptr<Graph> graph;
+    std::shared_ptr<GraphDrawingConfig> config;
 
     void transition_node_position(const TransitionType tt, const double hash, const vec4& shift);
 

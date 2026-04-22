@@ -13,6 +13,7 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
     color_scheme = {0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};
     manager.begin_timer("time_since_graph_init");
     manager.set({
+        {"label_size", "1"},
         {"repel", "1"},
         {"attract", "1"},
         {"decay", ".95"},
@@ -29,12 +30,15 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
         {"desired_nodes", "<growth_rate> 1.5 <time_since_graph_init> ^ 1 - * 1000000 min"},
         {"growth_rate", "100"},
     });
+
+    config = make_shared<GraphDrawingConfig>();
+    add_data_object(&(*config));
     add_data_object(&(*graph));
 }
 
 void GraphScene::transition_node_position(const TransitionType tt, const double hash, const vec4& shift){
     vec4 old_position = graph->nodes.find(hash)->second.position;
-    pair<vec4, vec4> transition_pair = make_pair(old_position, old_position + shift);
+    pair<vec4, vec4> transition_pair = make_pair(old_position, shift);
     if(tt == TransitionType::MICRO) nodes_in_micro_transition[hash] = transition_pair;
     else                            nodes_in_macro_transition[hash] = transition_pair;
 }
@@ -70,24 +74,23 @@ void GraphScene::draw(){
     bool curr_found = false;
     bool next_found = false;
 
-    float inv_af = 1/graph->autofocus_dist();
-
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     for(pair<double, Node> p : graph->nodes){
+        double hash = p.first;
         Node node = p.second;
-        vec3 node_pos = vec3(node.position.x, node.position.y, node.position.z) * inv_af; // convert 4d to 3d
-        if(p.first == curr_hash) { curr_pos = node_pos; curr_found = true; }
-        if(p.first == next_hash) { next_pos = node_pos; next_found = true; }
-        add_point(Point(node_pos, node.color, 1, node.radius()));
-        double so = node.splash_opacity();
-        int color = color_scheme[static_cast<int>(abs(p.first)*4)%4];
-        if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
+        vec3 node_pos(node.position);
+        if(hash == curr_hash) { curr_pos = node_pos; curr_found = true; }
+        if(hash == next_hash) { next_pos = node_pos; next_found = true; }
+        add_point(Point(node_pos, config->get_node_color(hash), 1, config->get_node_radius(hash)));
+        //double so = node.splash_opacity();
+        int color = color_scheme[static_cast<int>(abs(hash)*100)%4];
+        //if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
 
         for(const Edge& neighbor_edge : node.neighbors){
             double neighbor_id = neighbor_edge.to;
             Node neighbor = graph->nodes.find(neighbor_id)->second;
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
-            add_line(Line(node_pos, neighbor_pos*inv_af, neighbor_edge.color, neighbor_edge.opacity));
+            add_line(Line(node_pos, neighbor_pos, neighbor_edge.color, neighbor_edge.opacity));
         }
     }
 
@@ -101,7 +104,7 @@ void GraphScene::draw(){
         opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
         double hpo = state["highlight_point_opacity"];
         if(hpo > 0.001)
-            add_point(Point(inv_af*vec3{pos_to_render.x, pos_to_render.y, pos_to_render.z}, 0xffff0000, hpo*opa, 3*opa));
+            add_point(Point(pos_to_render, 0xffff0000, hpo*opa, 3*opa));
     }
 
     auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
@@ -109,21 +112,26 @@ void GraphScene::draw(){
 
     ThreeDimensionScene::draw();
 
-    for(pair<double, Node> p : graph->nodes){
-        Node node = p.second;
-        if(node.label != "") {
-            bool behind_camera = false;
-            vec2 pos = coordinate_to_pixel(node.position * inv_af, behind_camera);
-            vec2 half_dim = vec2(0.1, 0.05) * get_width_height();
-            vec2 top_left = pos - half_dim;
-            vec2 bottom_right = pos + half_dim;
-            write_text(pix, node.label, top_left, bottom_right, 1);
+    float label_size = state["label_size"];
+    if(label_size > 0.02) {
+        for(pair<double, Node> p : graph->nodes){
+            Node node = p.second;
+            if(node.label != "") {
+                bool behind_camera = false;
+                vec2 pos = coordinate_to_pixel(node.position, behind_camera);
+                vec2 downshift = vec2(0, 0.03) * get_width_height();
+                pos += downshift; // shift down a bit so it doesn't overlap with the point
+                vec2 half_dim = vec2(0.05, 0.02) * get_width_height() * label_size;
+                vec2 top_left = pos - half_dim;
+                vec2 bottom_right = pos + half_dim;
+                write_text(pix, "\\text{" + node.label + "}", top_left, bottom_right, 1);
+            }
         }
     }
 }
 
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
+    state_query_insert_multiple(s, {"label_size", "desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
     return s;
 }

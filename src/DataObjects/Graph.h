@@ -41,20 +41,10 @@ public:
 
     GenericBoard* data;
     double hash = 0;
-    int index = -1;
-    std::unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
-    double opacity = 1;
-    int color = 0xffffffff;
-    float size = 1;
-    double age = 0;
     string label;
     vec4 velocity;
     vec4 position;
-    float weight() const;
-    double radius() const;
-    double splash_opacity() const;
-    double splash_radius() const;
 };
 
 class Graph : public DataObject {
@@ -95,21 +85,10 @@ public:
 
     std::vector<int> make_adjacency_matrix(const std::vector<Node*>& node_vector, int &max_degree);
 
-    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const bool flip_by_symmetry);
-
-    vec4 center_of_mass() const;
-
-    float autofocus_dist() const;
-
-    void render_json(std::string json_out_filename);
+    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension, const float mirror_force);
 
     std::unordered_set<double> get_neighborhood(double hash, int dist);
     std::unordered_set<double> get_neighbors(double hash);
-
-    void color_edge(double from, double to, uint32_t color);
-    void color_all_edges(uint32_t color);
-
-    void label_node(double hash, const string& label);
 
     void tick(const StateReturn& state);
 

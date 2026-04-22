@@ -282,8 +282,8 @@ __global__ void mirror_kernel(Cuda::vec4* positions, Cuda::vec4* velocities, con
         positions[i] += mirror_force * delta;
     }
 
-    if(hasnan(velocities[i])) { velocities[i] = Cuda::vec4(0, 0, 0, 0); }
-    if(hasnan( positions[i])) {  positions[i] = Cuda::vec4(0, 0, 0, 0); }
+    //if(hasnan(velocities[i])) { velocities[i] = Cuda::vec4(0, 0, 0, 0); }
+    //if(hasnan( positions[i])) {  positions[i] = Cuda::vec4(0, 0, 0, 0); }
 
     float speedlimit = 20;
     float magnitude = length(velocities[i]);

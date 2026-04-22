@@ -8,7 +8,6 @@
 #include <limits.h>
 #include <queue>
 #include <cstdlib>
-#include <nlohmann/json.hpp>
 #include <sstream>
 #include <cmath>
 #include <algorithm>
@@ -43,11 +42,6 @@ vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<f
 Node::Node(GenericBoard* t, double hash, vec4 position, vec4 velocity) :
     data(t), hash(hash), velocity(velocity), position(position) {}
 
-float Node::weight() const { float x = age*.2f + 0.01f; return 2/(1+exp(-x))-1; }
-double Node::radius() const { return size * (((3*age - 1) * exp(-.5*age)) + 1); }
-double Node::splash_opacity() const { return 1-square(age/12.); }
-double Node::splash_radius() const { return size * age * .4; }
-
 Graph::Graph() : dist(0.0f, 1.0f), rng(0) {}
 
 Graph::~Graph() {
@@ -77,10 +71,8 @@ void Graph::tick(const StateReturn& state) {
         state["repel"],
         state["attract"],
         state["decay"],
-        state["centering_strength"],
         state["dimensions"],
-        state["mirror_force"],
-        state["flip_by_symmetry"]>0
+        state["mirror_force"]
     );
     if(has_been_updated_since_last_scene_query()) {
         //graph_to_3d();
@@ -278,21 +270,20 @@ std::vector<int> Graph::make_adjacency_matrix(const std::vector<Node*>& node_vec
     return adjacency_matrix;
 }
 
-void Graph::iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const bool flip_by_symmetry) {
+void Graph::iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension, const float mirror_force) {
     std::vector<Node*> node_vector;
+    std::unordered_map<double, int> node_indices;
 
     for (auto& node_pair : nodes) node_vector.push_back(&node_pair.second);
-    for (int i = 0; i < node_vector.size(); ++i) { node_vector[i]->age++; }
 
     int s = node_vector.size();
     std::vector<vec4> positions(s);
     std::vector<vec4> velocities(s);
 
-    vec4 com = center_of_mass() * centering_strength;
     for (int i = 0; i < s; ++i) {
-         positions[i] = node_vector[i]->position - com;
+         positions[i] = node_vector[i]->position;
         velocities[i] = node_vector[i]->velocity;
-        node_vector[i]->index = i;
+        node_indices[node_vector[i]->hash] = i;
     }
     int max_degree = 0;
     std::vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
@@ -306,111 +297,27 @@ void Graph::iterate_physics(const int iterations, const float repel, const float
             double rev_hash = node->data->get_reverse_hash();
             auto it_mirror = nodes.find(rev_hash);
             if (it_mirror != nodes.end()) {
-                mirrors[i] = it_mirror->second.index;
+                mirrors[i] = node_indices[rev_hash];
             }
         }
         {
             double rev_hash_2 = node->data->get_reverse_hash_2();
             auto it_mirror_2 = nodes.find(rev_hash_2);
             if (it_mirror_2 != nodes.end()) {
-                mirror2s[i] = it_mirror_2->second.index;
+                mirror2s[i] = node_indices[rev_hash_2];
             }
         }
     }
 
     compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension, iterations);
 
+    // TODO we should just permanently store the graph on the GPU, unless it is modified often?
     for (int i = 0; i < s; ++i) {
-        int flip = 1;
-        if(flip_by_symmetry) flip = signum(node_vector[i]->data->which_side() * node_vector[i]->position.x);
         node_vector[i]->position = positions[i];
-        node_vector[i]->position.x *= flip;
         node_vector[i]->velocity = velocities[i];
     }
 
     mark_updated();
-}
-
-vec4 Graph::center_of_mass() const {
-    vec4 sum_position(0.0f);
-    float mass = 0.1;
-
-    for (const auto& node_pair : nodes) {
-        const Node& node = node_pair.second;
-        float sig = node.weight();
-        vec4 addy(sig*node.position);
-        sum_position += addy;
-        mass += sig;
-    }
-
-    vec4 ret = sum_position / mass;
-    return ret;
-}
-
-float Graph::autofocus_dist() const {
-    float sum_distance_sq = 0.0;
-    float ct = 0.1;
-
-    vec4 com = center_of_mass();
-
-    for (const auto& node_pair : nodes) {
-        const Node& node = node_pair.second;
-        float sig = node.weight();
-        vec4 pos_com = node.position - com;
-        sum_distance_sq += sig * dot(pos_com, pos_com);
-        ct += sig;
-    }
-
-    float ans = 6 + 4.8*pow(sum_distance_sq / ct, .5);
-    return ans;
-}
-
-void Graph::render_json(std::string json_out_filename) {
-    std::ofstream myfile;
-    myfile.open(json_out_filename);
-
-    json json_data;
-
-    json nodes_to_use;
-    for (auto it = nodes.begin(); it != nodes.end(); ++it) {
-        const Node& node = it->second;
-        json node_info;
-        node_info["x"] = node.position.x;
-        node_info["y"] = node.position.y;
-        node_info["z"] = node.position.z;
-        node_info["rep"] = node.data->representation;
-        node_info["data"] = node.data->get_data();
-
-        json neighbors;
-        for (const auto& neighbor : node.neighbors) {
-            std::string neighbor_representation = nodes.at(neighbor.to).data->representation;
-            if(neighbor_representation.size() < node.data->representation.size()) continue;
-            std::ostringstream oss;
-            oss << std::setprecision(17) << neighbor.to;
-            neighbors.push_back(oss.str());
-        }
-        node_info["neighbors"] = neighbors;
-
-        std::ostringstream oss;
-        oss << std::setprecision(17) << it->first;
-        nodes_to_use[oss.str()] = node_info;
-    }
-
-    json_data["nodes_to_use"] = nodes_to_use;
-    json_data["nodes_to_use"].dump(4, ' ', false, json::error_handler_t::ignore);
-
-    std::ostringstream oss;
-    json_data["board_w"  ] = 7;
-    json_data["board_h"  ] = 6;
-    json_data["game_name"] = "c4";
-
-    myfile.seekp(0, ios::beg);
-    myfile << "var dataset = ";
-    myfile << json_data.dump();
-
-    myfile.close();
-
-    std::cout << "Rendered json!" << std::endl;
 }
 
 std::unordered_set<double> Graph::get_neighborhood(double hash, int dist) {
@@ -450,42 +357,4 @@ std::unordered_set<double> Graph::get_neighbors(double hash) {
         neighbors.insert(edge.to);
     }
     return neighbors;
-}
-
-void Graph::color_all_edges(uint32_t color) {
-    for (auto& node_pair : nodes) {
-        Node& node = node_pair.second;
-        for (const Edge& edge : node.neighbors) {
-            // Pointer hack to change const
-            const_cast<Edge&>(edge).color = color;
-        }
-    }
-    mark_updated();
-}
-
-void Graph::color_edge(double from, double to, uint32_t color) {
-    if (!node_exists(from) || !node_exists(to)) return;
-    Node& from_node = nodes.at(from);
-    for (const Edge& edge : from_node.neighbors) {
-        if (edge.to == to) {
-            // Pointer hack to change const
-            const_cast<Edge&>(edge).color = color;
-            break;
-        }
-    }
-    Node& to_node = nodes.at(to);
-    for (const Edge& edge : to_node.neighbors) {
-        if (edge.to == from) {
-            // Pointer hack to change const
-            const_cast<Edge&>(edge).color = color;
-            break;
-        }
-    }
-    mark_updated();
-}
-
-void Graph::label_node(double hash, const std::string& label) {
-    if (!node_exists(hash)) return;
-    nodes.at(hash).label = label;
-    mark_updated();
 }

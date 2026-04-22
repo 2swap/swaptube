@@ -17,22 +17,25 @@ struct ivec4 {
     int x, y, z, w;
     HOST_DEVICE ivec4(int x, int y, int z, int w) : x(x), y(y), z(z), w(w) {}
     HOST_DEVICE ivec4(int v) : x(v), y(v), z(v), w(v) {}
-    HOST_DEVICE ivec4(const vec4& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)), w(floorf(v.w)) {}
     HOST_DEVICE ivec4() {}
+
+    HOST_DEVICE ivec4(const vec4& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)), w(floorf(v.w)) {}
 };
 struct vec3 {
     float x, y, z;
     HOST_DEVICE vec3(float x, float y, float z) : x(x), y(y), z(z) {}
     HOST_DEVICE vec3(float v) : x(v), y(v), z(v) {}
     HOST_DEVICE vec3() {}
+
     HOST_DEVICE vec3(const vec4& v) : x(v.x), y(v.y), z(v.z) {}
 };
 struct ivec3 {
     int x, y, z;
     HOST_DEVICE ivec3(int x, int y, int z) : x(x), y(y), z(z) {}
     HOST_DEVICE ivec3(int v) : x(v), y(v), z(v) {}
-    HOST_DEVICE ivec3(const vec3& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)) {}
     HOST_DEVICE ivec3() {}
+
+    HOST_DEVICE ivec3(const vec3& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)) {}
     HOST_DEVICE ivec3(const ivec4& v) : x(v.x), y(v.y), z(v.z) {}
 };
 struct vec2 {
@@ -40,6 +43,7 @@ struct vec2 {
     HOST_DEVICE vec2(float x, float y) : x(x), y(y) {}
     HOST_DEVICE vec2(float v) : x(v), y(v) {}
     HOST_DEVICE vec2() {}
+
     HOST_DEVICE vec2(const vec3& v) : x(v.x), y(v.y) {}
     HOST_DEVICE vec2(const vec4& v) : x(v.x), y(v.y) {}
 };
@@ -47,8 +51,9 @@ struct ivec2 {
     int x, y;
     HOST_DEVICE ivec2(int x, int y) : x(x), y(y) {}
     HOST_DEVICE ivec2(int v) : x(v), y(v) {}
-    HOST_DEVICE ivec2(const vec2& v) : x(floorf(v.x)), y(floorf(v.y)) {}
     HOST_DEVICE ivec2() {}
+
+    HOST_DEVICE ivec2(const vec2& v) : x(floorf(v.x)), y(floorf(v.y)) {}
     HOST_DEVICE ivec2(const ivec3& v) : x(v.x), y(v.y) {}
     HOST_DEVICE ivec2(const ivec4& v) : x(v.x), y(v.y) {}
 };
@@ -230,13 +235,10 @@ HOST_DEVICE inline float dot(const ivec2& a, const ivec2& b) { return a.x * b.y 
 HOST_DEVICE inline float dot(const ivec3& a, const ivec3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 HOST_DEVICE inline float dot(const ivec4& a, const ivec4& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 
-HOST_DEVICE inline bool hasnan(const vec2& v) { return std::isnan(v.x) || std::isnan(v.y); }
-HOST_DEVICE inline bool hasnan(const vec3& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z); }
-HOST_DEVICE inline bool hasnan(const vec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
-HOST_DEVICE inline bool hasnan(const ivec2& v) { return std::isnan(v.x) || std::isnan(v.y); }
-HOST_DEVICE inline bool hasnan(const ivec3& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z); }
-HOST_DEVICE inline bool hasnan(const ivec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
-HOST_DEVICE inline bool hasnan(const quat& q) { return std::isnan(q.u) || std::isnan(q.i) || std::isnan(q.j) || std::isnan(q.k); }
+//HOST_DEVICE inline bool hasnan(const vec2& v) { return std::isnan(v.x) || std::isnan(v.y); }
+//HOST_DEVICE inline bool hasnan(const vec3& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z); }
+//HOST_DEVICE inline bool hasnan(const vec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
+//HOST_DEVICE inline bool hasnan(const quat& q) { return std::isnan(q.u) || std::isnan(q.i) || std::isnan(q.j) || std::isnan(q.k); }
 
 HOST_DEVICE inline vec3 integerize(const vec3& v) { return vec3{ floorf(v.x), floorf(v.y), floorf(v.z) }; }
 

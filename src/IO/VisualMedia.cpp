@@ -446,5 +446,7 @@ void write_text(Pixels& pix, const std::string& latex, const vec2& top_left, con
     ScalingParams scaling_params(bottom_right.x - top_left.x, bottom_right.y - top_left.y);
 
     Pixels text = latex_to_pix(latex, scaling_params);
-    pix.overlay_cpu(text, top_left.x, top_left.y, opacity);
+    int x_offset = (bottom_right.x + top_left.x) / 2 - text.w / 2;
+    int y_offset = (bottom_right.y + top_left.y) / 2 - text.h / 2;
+    pix.overlay_cpu(text, x_offset, y_offset, opacity);
 }
