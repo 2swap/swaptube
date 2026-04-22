@@ -14,7 +14,6 @@ pkg_check_modules(GLIB REQUIRED glib-2.0)
 find_package(Cairo REQUIRED)
 find_package(RSVG REQUIRED)
 find_package(PNG REQUIRED)
-find_package(nlohmann_json REQUIRED)
 
 set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
@@ -103,7 +102,6 @@ target_link_libraries(
     ${PNG_LIBRARIES}
     ${GPU_LIBRARIES}
     ${X11_LIBRARIES}
-    nlohmann_json::nlohmann_json
 )
 
 message(STATUS "Link libraries configured for ${PROJECT_NAME}")
