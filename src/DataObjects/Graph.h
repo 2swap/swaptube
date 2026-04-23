@@ -40,7 +40,6 @@ public:
     GenericBoard* data;
     double hash = 0;
     EdgeSet neighbors;
-    string label;
     vec4 velocity;
     vec4 position;
 };

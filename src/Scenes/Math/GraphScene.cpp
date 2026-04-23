@@ -13,7 +13,6 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
     color_scheme = {0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};
     manager.begin_timer("time_since_graph_init");
     manager.set({
-        {"label_size", "1"},
         {"repel", "1"},
         {"attract", "1"},
         {"decay", ".95"},
@@ -52,19 +51,29 @@ void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
 
 void GraphScene::draw(){
     // TODO we only need to do this if data changed, not if state changed.
+    float micro = state["microblock_fraction"];
+    float macro = state["macroblock_fraction"];
     for(pair<double, pair<vec4, vec4>> p : nodes_in_micro_transition){
         double hash = p.first;
         vec4 start = p.second.first;
         vec4 end = p.second.second;
-        vec4 interp_pos = veclerp(start, end, smoother2(state["microblock_fraction"]));
+        vec4 interp_pos = veclerp(start, end, smoother2(micro));
         graph->move_node(hash, interp_pos);
     }
     for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
         double hash = p.first;
         vec4 start = p.second.first;
         vec4 end = p.second.second;
-        vec4 interp_pos = veclerp(start, end, smoother2(state["macroblock_fraction"]));
+        vec4 interp_pos = veclerp(start, end, smoother2(macro));
         graph->move_node(hash, interp_pos);
+    }
+
+    for(pair<double, Node> p : graph->nodes){
+        config->add_node_if_missing(p.first);
+        for(const Edge& neighbor_edge : p.second.neighbors){
+            double neighbor_id = neighbor_edge.to;
+            config->add_edge_if_missing(p.first, neighbor_id);
+        }
     }
 
     clear_lines();
@@ -80,30 +89,25 @@ void GraphScene::draw(){
         double hash = p.first;
         Node node = p.second;
         vec3 node_pos(node.position);
-        cout << "A" << endl;
         if(hash == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(hash == next_hash) { next_pos = node_pos; next_found = true; }
-        cout << "B" << endl;
-        add_point(Point(node_pos, config->get_node_color(hash), 1, config->get_node_radius(hash)));
-        cout << "C" << endl;
+        add_point(Point(node_pos, config->get_node_color(hash, macro, micro), 1, config->get_node_radius(hash, macro, micro)));
         //double so = node.splash_opacity();
         int color = color_scheme[static_cast<int>(abs(hash)*100)%4];
         //if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
 
-        cout << "D" << endl;
         for(const Edge& neighbor_edge : node.neighbors){
             double neighbor_id = neighbor_edge.to;
             Node neighbor = graph->nodes.find(neighbor_id)->second;
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
-            add_line(Line(node_pos, neighbor_pos, config->get_edge_color(hash, neighbor_id)));
+            add_line(Line(node_pos, neighbor_pos, config->get_edge_color(hash, neighbor_id, macro, micro)));
         }
-        cout << "E" << endl;
     }
 
     float opa = 0;
     vec3 pos_to_render(0,0,0);
     if(curr_found || next_found){
-        double smooth_interp = smoother2(state["microblock_fraction"]);
+        double smooth_interp = smoother2(micro);
         if     (!curr_found) pos_to_render = next_pos;
         else if(!next_found) pos_to_render = curr_pos;
         else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
@@ -118,26 +122,25 @@ void GraphScene::draw(){
 
     ThreeDimensionScene::draw();
 
-    float label_size = state["label_size"];
-    if(label_size > 0.02) {
-        for(pair<double, Node> p : graph->nodes){
-            Node node = p.second;
-            if(node.label != "") {
-                bool behind_camera = false;
-                vec2 pos = coordinate_to_pixel(node.position, behind_camera);
-                vec2 downshift = vec2(0, 0.03) * get_width_height();
-                pos += downshift; // shift down a bit so it doesn't overlap with the point
-                vec2 half_dim = vec2(0.05, 0.02) * get_width_height() * label_size;
-                vec2 top_left = pos - half_dim;
-                vec2 bottom_right = pos + half_dim;
-                write_text(pix, "\\text{" + node.label + "}", top_left, bottom_right, 1);
-            }
+    for(pair<double, Node> p : graph->nodes){
+        Node node = p.second;
+        string label = config->get_node_label(p.first, macro, micro);
+        float label_size = config->get_node_label_size(p.first, macro, micro);
+        if(label != "" && label_size > 0.1){
+            bool behind_camera = false;
+            vec2 pos = coordinate_to_pixel(node.position, behind_camera);
+            vec2 downshift = vec2(0, 0.03) * get_width_height();
+            pos += downshift; // shift down a bit so it doesn't overlap with the point
+            vec2 half_dim = vec2(0.05, 0.02) * get_width_height() * label_size;
+            vec2 top_left = pos - half_dim;
+            vec2 bottom_right = pos + half_dim;
+            write_text(pix, "\\text{" + label + "}", top_left, bottom_right, 1);
         }
     }
 }
 
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"label_size", "desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
+    state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
     return s;
 }

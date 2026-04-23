@@ -153,7 +153,6 @@ void slide3() {
         {"physics_multiplier","0"},
         {"d", ".5"},
         {"points_radius_multiplier","3"},
-        {"centering_strength","0"},
         {"x","0"},
         {"y","0"},
         {"z","0"},
@@ -358,7 +357,6 @@ void slide8() {
         {"physics_multiplier","0"},
         {"d", "8"},
         {"points_radius_multiplier","3"},
-        {"centering_strength","0"},
         {"x","0"},
         {"y","0"},
         {"z","0"},
@@ -442,6 +440,7 @@ void slide8() {
     // Add more nodes
     stage_macroblock(FileBlock("And it is the shortest path, but what about now?"), netherlands_edges_2.size() + 2);
     gs->render_microblock();
+    gs->config->transition_all_node_colors(MICRO, 0xffffffff);
     gs->config->transition_all_edge_colors(MICRO, 0xffffffff);
     for(pair<string, string> edge : netherlands_edges_2) {
         string city = edge.first;
@@ -532,11 +531,12 @@ void slide8() {
     }
 
     gs->manager.set("physics_multiplier", "1");
-    gs->manager.set("decay", "0");
+    gs->manager.set("repel", ".1");
+    gs->manager.set("decay", "0.2");
     gs->manager.transition(MICRO, "decay", "0.5");
-    gs->manager.transition(MICRO, "d", "3");
     stage_macroblock(FileBlock("But there’s a problem. This algorithm values all of the edges the same. Just one step."), 1);
     gs->render_microblock();
+    gs->manager.set("physics_multiplier", "0");
 
     for(auto& [city, coords] : netherlands_cities) {
         vec4 position(coords.y - netherlands_cities["Arnhem"].y, -(coords.x - netherlands_cities["Arnhem"].x), 0, 0);
@@ -697,7 +697,6 @@ void play() {
     cs.render_microblock();
 
     gs->manager.set("physics_multiplier", "0");
-    gs->manager.set("centering_strength", "0");
 
     stage_macroblock(SilenceBlock(3), 1);
     for(auto& [hash, node] : g->nodes) {
