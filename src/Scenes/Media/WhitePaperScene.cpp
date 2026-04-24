@@ -1,11 +1,5 @@
 #include "WhitePaperScene.h"
 
-extern "C" void cuda_overlay_with_rotation (
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity, const float angle);
-
 WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const vec2& dimensions)
     : Scene(dimensions), prefix(prefix), author(author), page_numbers(page_numbers) {
     manager.set({
@@ -69,18 +63,13 @@ void WhitePaperScene::draw() {
 
         float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-                     scaled.pixels.data(), scaled.w, scaled.h,
-                     (int)x_offset, (int)y_offset,
-                     1.0f, angle
-        );
+        pix.overlay_gpu_with_rotation(scaled, x_offset, y_offset, 1.0f, angle);
     }
 
     ScalingParams sp = ScalingParams(get_width(), get_height()/6);
     Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
     int offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
-    cuda_overlay(pix.pixels.data(), pix.w, pix.h,
-                 text_pixels.pixels.data(), text_pixels.w, text_pixels.h,
+    pix.overlay_gpu(text_pixels,
                  (int)((get_width() - text_pixels.w) / 2), offset_y,
                  1.0f
     );

@@ -6,6 +6,23 @@
 #include "../../Core/Smoketest.h"
 #include "../../Host_Device_Shared/vec.h"
 
+string to_string_with_precision(const double a_value, const int n){
+    ostringstream out;
+    out.precision(n);
+    out << fixed << a_value;
+    string s = out.str();
+    if(s.find('.') != string::npos){
+        // trim trailing zeros
+        s.erase(s.find_last_not_of('0') + 1, string::npos);
+        // if there is a decimal point with nothing after it, trim that too
+        if(s.back() == '.') s.pop_back();
+    }
+    // Remove leading zero for numbers between -1 and 1 (e.g. 0.5 -> .5, -0.5 -> -.5)
+    if(s[0] == '0' && s[1] == '.') s.erase(0, 1);
+    else if(s[0] == '-' && s[1] == '0' && s[2] == '.') s.erase(1, 1);
+    return s;
+}
+
 GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
     : ThreeDimensionScene(dimensions), graph(g) {
     curr_hash = 0;
@@ -17,17 +34,13 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
         {"attract", "1"},
         {"decay", ".95"},
         {"physics_multiplier", "1"},
-        {"centering_strength", ".1"},
         {"dimensions", "3"},
         {"mirror_force", "0"},
-        {"highlight_point_opacity", "1"},
-        {"flip_by_symmetry", "0"},
+        {"edge_weights_size", "0"},
         {"q1", "1 {t} 12 / sin <dimensions> 2 - lerp"},
         {"qi", "0"},
         {"qj", "{t} 12 / cos <dimensions> 2 - *"},
         {"qk", "0"},
-        {"desired_nodes", "<growth_rate> 1.5 <time_since_graph_init> ^ 1 - * 1000000 min"},
-        {"growth_rate", "100"},
     });
 
     config = make_shared<GraphDrawingConfig>();
@@ -84,6 +97,8 @@ void GraphScene::draw(){
     bool curr_found = false;
     bool next_found = false;
 
+    float midpoint_thickness = get_geom_mean_size() / 1920.0;
+
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     for(pair<double, Node> p : graph->nodes){
         double hash = p.first;
@@ -91,16 +106,30 @@ void GraphScene::draw(){
         vec3 node_pos(node.position);
         if(hash == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(hash == next_hash) { next_pos = node_pos; next_found = true; }
-        add_point(Point(node_pos, config->get_node_color(hash, macro, micro), 1, config->get_node_radius(hash, macro, micro)));
-        //double so = node.splash_opacity();
-        int color = color_scheme[static_cast<int>(abs(hash)*100)%4];
-        //if(so>0) add_point(Point(node_pos, color, so, node.splash_radius()));
+        uint32_t color = config->get_node_color(hash, macro, micro);
+        add_point(Point(node_pos, color, 1, config->get_node_radius(hash, macro, micro)));
+        float splash_opacity = config->get_node_splash_opacity(hash, macro, micro);
+        float splash_radius = config->get_node_splash_radius(hash, macro, micro);
+        if (splash_opacity > 0 && splash_radius > 0) {
+            add_point(Point(node_pos, color, splash_opacity, splash_radius));
+        }
 
         for(const Edge& neighbor_edge : node.neighbors){
+            // Don't duplicate edges
+            if (hash > neighbor_edge.to) continue;
             double neighbor_id = neighbor_edge.to;
             Node neighbor = graph->nodes.find(neighbor_id)->second;
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
-            add_line(Line(node_pos, neighbor_pos, config->get_edge_color(hash, neighbor_id, macro, micro)));
+            uint32_t edge_color_1 = config->get_edge_color(hash, neighbor_id, macro, micro);
+            uint32_t edge_color_2 = config->get_edge_target_color(hash, neighbor_id, macro, micro);
+            if(edge_color_1 == edge_color_2) {
+                add_line(Line(node_pos, neighbor_pos, edge_color_1));
+            } else {
+                vec3 midpoint = veclerp(node_pos, neighbor_pos, config->get_edge_midpoint_fraction(hash, neighbor_id, macro, micro));
+                add_line(Line(midpoint, neighbor_pos, edge_color_1));
+                add_point(Point(midpoint, edge_color_2, 1, midpoint_thickness));
+                add_line(Line(node_pos, midpoint, edge_color_2));
+            }
         }
     }
 
@@ -112,16 +141,11 @@ void GraphScene::draw(){
         else if(!next_found) pos_to_render = curr_pos;
         else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
         opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
-        double hpo = state["highlight_point_opacity"];
-        if(hpo > 0.001)
-            add_point(Point(pos_to_render, 0xffff0000, hpo*opa, 3*opa));
     }
-
-    auto_camera = veclerp(auto_camera, pos_to_render * opa, 0.1);
-    // Looks jarring when puzzle moves if we simply do: //auto_camera = pos_to_render * opa;
 
     ThreeDimensionScene::draw();
 
+    vec2 node_label_downshift = vec2(0, 0.03) * get_width_height();
     for(pair<double, Node> p : graph->nodes){
         Node node = p.second;
         string label = config->get_node_label(p.first, macro, micro);
@@ -129,18 +153,54 @@ void GraphScene::draw(){
         if(label != "" && label_size > 0.1){
             bool behind_camera = false;
             vec2 pos = coordinate_to_pixel(node.position, behind_camera);
-            vec2 downshift = vec2(0, 0.03) * get_width_height();
-            pos += downshift; // shift down a bit so it doesn't overlap with the point
-            vec2 half_dim = vec2(0.05, 0.02) * get_width_height() * label_size;
+            pos += node_label_downshift; // shift down a bit so it doesn't overlap with the point
+            vec2 half_dim = vec2(0.05, 0.04) * get_width_height() * label_size;
             vec2 top_left = pos - half_dim;
             vec2 bottom_right = pos + half_dim;
-            write_text(pix, "\\text{" + label + "}", top_left, bottom_right, 1);
+            write_text(pix, label, top_left, bottom_right, 1);
+        }
+    }
+
+    // Draw edge weights if option enabled
+    double edge_weights_size = state["edge_weights_size"];
+    if (edge_weights_size > 0.1){
+        for(pair<double, Node> p : graph->nodes){
+            Node node = p.second;
+            vec3 node_pos(node.position);
+            for(const Edge& neighbor_edge : node.neighbors){
+                // Skip one direction of each edge since we'll draw the weight from both nodes
+                if (p.first > neighbor_edge.to) continue;
+                double neighbor_id = neighbor_edge.to;
+                Node neighbor = graph->nodes.find(neighbor_id)->second;
+                vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
+                vec3 midpoint = (node_pos + neighbor_pos) / 2.0f;
+                bool behind_camera = false;
+                vec2 node_screen_pos = coordinate_to_pixel(node_pos, behind_camera);
+                vec2 neighbor_screen_pos = coordinate_to_pixel(neighbor_pos, behind_camera);
+                float angle = atan2(neighbor_screen_pos.y - node_screen_pos.y, neighbor_screen_pos.x - node_screen_pos.x);
+                // Make the angle fit into -pi/2, pi/2.
+                float modulo_angle = angle;
+                while (modulo_angle > M_PI/4) modulo_angle -= M_PI/2;
+                while (modulo_angle < -M_PI/4) modulo_angle += M_PI/2;
+                angle += M_PI / 2;
+                while (angle < -M_PI) angle += M_PI;
+                while (angle > 0) angle -= M_PI;
+                vec2 offset = 0.01 * vec2(cos(angle), sin(angle)) * get_width_height();
+                vec2 pos = coordinate_to_pixel(midpoint, behind_camera) + offset;
+                // Distance in 3D space is weight
+                double weight = length(neighbor_pos - node_pos);
+                string weight_label = to_string_with_precision(weight, 1);
+                vec2 half_dim = vec2(0.035, 0.025) * get_width_height() * edge_weights_size;
+                vec2 top_left = pos - half_dim;
+                vec2 bottom_right = pos + half_dim;
+                write_text(pix, weight_label, top_left, bottom_right, 1, modulo_angle);
+            }
         }
     }
 }
 
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"desired_nodes", "physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "centering_strength", "dimensions", "mirror_force", "highlight_point_opacity", "flip_by_symmetry"});
+    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "mirror_force", "edge_weights_size"});
     return s;
 }

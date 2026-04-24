@@ -81,8 +81,7 @@ void TwoswapScene::draw(){
         Pixels stripey_pix;
         stripey_effect(foreground_pix, stripey_pix, 1-twoswapness);
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-            stripey_pix.pixels.data(), stripey_pix.w, stripey_pix.h,
+        pix.overlay_gpu_with_rotation(stripey_pix,
             (pix.w-stripey_pix.w)/2 - pix.w*.04 + whole_x_shift,
             (pix.h-stripey_pix.h)/2 - pix.h*.04 + whole_y_shift,
             twoswapness * .6, -.2
@@ -100,17 +99,14 @@ void TwoswapScene::draw(){
 
         ScalingParams sp(pix.w * .25, pix.h * .25);
         Pixels seef_pix = latex_to_pix("\\text{6884}", sp);
-        cuda_overlay(foreground_pix.pixels.data(), foreground_pix.w, foreground_pix.h,
-            scaled.pixels.data(), scaled.w, scaled.h,
-            pix.w*.4, (foreground_pix.h-scaled.h)/2 + scaled.h*.1, 1.0f);
+        foreground_pix.overlay_gpu(scaled, pix.w*.4, (foreground_pix.h-scaled.h)/2 + scaled.h*.1, 1.0f);
         double yval = (foreground_pix.h-seef_pix.h)/2;
         foreground_pix.overwrite(seef_pix, pix.w*.4 + scaled.w+pix.w/96, yval);
 
         Pixels stripey_pix;
         stripey_effect(foreground_pix, stripey_pix, 1-seefness);
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-            stripey_pix.pixels.data(), stripey_pix.w, stripey_pix.h,
+        pix.overlay_gpu_with_rotation(stripey_pix,
             (pix.w-stripey_pix.w)/2 - pix.w*.029 + whole_x_shift,
             (pix.h-stripey_pix.h)/2 + pix.h*.110 + whole_y_shift,
             seefness * .6, -.2
@@ -127,8 +123,7 @@ void TwoswapScene::draw(){
         Pixels stripey_pix;
         stripey_effect(swaptube_pix, stripey_pix, 1-swaptubeness);
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-            stripey_pix.pixels.data(), stripey_pix.w, stripey_pix.h,
+        pix.overlay_gpu_with_rotation(stripey_pix,
             (pix.w-stripey_pix.w)/2 + pix.w*.03 + whole_x_shift,
             (pix.h-stripey_pix.h)/2 - pix.h*.15 + whole_y_shift,
             swaptubeness * .6, -.2

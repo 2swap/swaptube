@@ -47,17 +47,9 @@ void CompositeScene::draw() {
         float center_y = y - subscene->get_height()/2;
 
         if (angle > 0.0001 && angle < 2*M_PI - 0.0001) {
-            cuda_overlay_with_rotation(
-                pix.pixels.data(), pix.w, pix.h,
-                p->pixels.data(), p->w, p->h,
-                center_x, center_y, opa, angle
-            );
+            pix.overlay_gpu_with_rotation(*p, center_x, center_y, opa, angle);
         } else {
-            cuda_overlay(
-                pix.pixels.data(), pix.w, pix.h,
-                p->pixels.data(), p->w, p->h,
-                center_x, center_y, opa
-            );
+            pix.overlay_gpu(*p, center_x, center_y, opa);
         }
     }
 }

@@ -139,7 +139,8 @@ void Scene::render_microblock(){
             export_frame(stream.str(), 1);
         }
     }
-    on_end_transition(done_macroblock ? MACRO : MICRO);
+    on_end_transition(MICRO);
+    if(done_macroblock) on_end_transition(MACRO);
 }
 
 void Scene::update_state() {

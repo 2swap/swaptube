@@ -36,10 +36,6 @@ int GenericBoard::get_highlight_type() {
     return highlight_type;
 }
 
-json GenericBoard::get_data() const {
-    return json();
-}
-
 std::shared_ptr<Scene> GenericBoard::make_scene() const {
     return std::make_shared<LatexScene>(representation, 1);
 }

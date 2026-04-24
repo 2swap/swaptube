@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+string to_string_with_precision(const double a_value, const int n);
+
 class GraphScene : public ThreeDimensionScene {
 public:
     double curr_hash;

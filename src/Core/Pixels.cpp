@@ -190,7 +190,7 @@ void Pixels::add_border(int col, int thickness){
     }
 }
 
-void Pixels::overlay_cpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier){
+void Pixels::overlay_cpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier){
     for(int x = 0; x < p.w; x++){
         int xpdx = x+dx;
         for(int y = 0; y < p.h; y++){
@@ -199,11 +199,41 @@ void Pixels::overlay_cpu(Pixels p, int dx, int dy, double overlay_opacity_multip
     }
 }
 
-void Pixels::overlay_gpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier){
-    cuda_overlay(pixels.data(), w, h, p.pixels.data(), p.w, p.h, dx, dy, overlay_opacity_multiplier);
+// Use bilinear interpolation to sample from p with rotation, and overlay onto this.
+// dx and dy specify the center of the rotated p in this image.
+void Pixels::overlay_cpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians){
+    angle_radians = -angle_radians; // Negate to rotate in the expected direction
+    float cos_angle = cos(angle_radians);
+    float sin_angle = sin(angle_radians);
+    int cx = p.w / 2;
+    int cy = p.h / 2;
+
+    for(int x = 0; x < p.w; x++){
+        for(int y = 0; y < p.h; y++){
+            // Rotate (x, y) around the center of p
+            float rotated_x = cos_angle * (x - cx) - sin_angle * (y - cy) + cx;
+            float rotated_y = sin_angle * (x - cx) + cos_angle * (y - cy) + cy;
+
+            // Sample the color from p using bilinear interpolation
+            int sampled_color = p.get_pixel_bilinear(rotated_x, rotated_y);
+
+            // Overlay the sampled color onto this image at the appropriate location
+            overlay_pixel(dx + x - cx, dy + y - cy, sampled_color, overlay_opacity_multiplier);
+        }
+    }
 }
 
-void Pixels::overwrite(Pixels p, int dx, int dy){
+void Pixels::overlay_gpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier){
+    const uint32_t* p_data = p.pixels.data();
+    cuda_overlay(pixels.data(), w, h, p_data, p.w, p.h, dx, dy, overlay_opacity_multiplier);
+}
+
+void Pixels::overlay_gpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians){
+    const uint32_t* p_data = p.pixels.data();
+    cuda_overlay_with_rotation(pixels.data(), w, h, p_data, p.w, p.h, dx, dy, overlay_opacity_multiplier, angle_radians);
+}
+
+void Pixels::overwrite(const Pixels& p, int dx, int dy){
     for(int x = 0; x < p.w; x++){
         int xpdx = x+dx;
         for(int y = 0; y < p.h; y++){

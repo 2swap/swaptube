@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     librsvg2-dev libglib2.0-dev libcairo2-dev \
     libpng-dev \
     python3 python3-pip \
-    nlohmann-json3-dev \
     libtinyxml2-dev \
     libgtkmm-3.0-dev \
   && rm -rf /var/lib/apt/lists/*

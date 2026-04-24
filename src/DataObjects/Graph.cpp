@@ -17,8 +17,6 @@
 #include "../Core/Smoketest.h"
 #include "../IO/SFX.h"
 
-using json = nlohmann::json;
-
 extern "C" void compute_repulsion_cuda(vec4* h_positions, vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
 
 vector<int> tones = {0,4,7};
@@ -53,8 +51,6 @@ int Graph::size() const {
 }
 
 void Graph::tick(const StateReturn& state) {
-    int nodes_to_add = state["desired_nodes"] - size();
-
     // SFX
     if(last_node_count > -1){
         int diff = size() - last_node_count;

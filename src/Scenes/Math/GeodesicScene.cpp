@@ -161,9 +161,7 @@ void GeodesicScene::draw_manifold(
             1,
             nullptr,0,0 // No textures
         );
-        cuda_overlay(
-            pix.pixels.data(), pix.w, pix.h,
-            manifold_pix.pixels.data(), manifold_pix.w, manifold_pix.h,
+        pix.overlay_gpu(manifold_pix,
             pix.w - manifold_pix.w, pix.h - manifold_pix.h,
             state["manifold_opacity"]
         );
@@ -191,9 +189,7 @@ void GeodesicScene::draw_manifold(
             state["manifold_fov"],
             state["geodesics_opacity"]
         );
-        cuda_overlay(
-            pix.pixels.data(), pix.w, pix.h,
-            geodesic_pix.pixels.data(), geodesic_pix.w, geodesic_pix.h,
+        pix.overlay_gpu(geodesic_pix,
             pix.w - geodesic_pix.w, pix.h - geodesic_pix.h,
             1.0f
         );

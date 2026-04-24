@@ -442,11 +442,14 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
     png_to_pix(pix, png_filename_without_prefix);
 }
 
-void write_text(Pixels& pix, const std::string& latex, const vec2& top_left, const vec2& bottom_right, const double opacity) {
+void write_text(Pixels& pix, const std::string& latex, const vec2& top_left, const vec2& bottom_right, const double opacity, const float angle) {
     ScalingParams scaling_params(bottom_right.x - top_left.x, bottom_right.y - top_left.y);
 
     Pixels text = latex_to_pix(latex, scaling_params);
     int x_offset = (bottom_right.x + top_left.x) / 2 - text.w / 2;
     int y_offset = (bottom_right.y + top_left.y) / 2 - text.h / 2;
-    pix.overlay_cpu(text, x_offset, y_offset, opacity);
+    if(abs(angle) > 0.001)
+        pix.overlay_cpu_with_rotation(text, x_offset, y_offset, opacity, angle);
+    else
+        pix.overlay_cpu(text, x_offset, y_offset, opacity);
 }

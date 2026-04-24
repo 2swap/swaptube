@@ -155,7 +155,8 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
 }
 
 void VideoWriter::add_frame(Pixels& p) {
-    if (p.w != get_video_width_pixels() || p.h != get_video_height_pixels())
+    bool live = rendering_on();
+    if (live && (p.w != get_video_width_pixels() || p.h != get_video_height_pixels()))
         throw runtime_error("Frame dimensions were expected to be (" + to_string(get_video_width_pixels()) + ", " + to_string(get_video_height_pixels()) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
 
     #ifdef USE_GPU
@@ -163,7 +164,6 @@ void VideoWriter::add_frame(Pixels& p) {
     #endif
 
     bool fifth_frame = int(get_global_state("frame_number")) % 5 == 0;
-    bool live = rendering_on();
     if(!live || fifth_frame) p.print_to_terminal(); // Print every smoketest frame, and every 5th normal frame
 
     if(!live) return; // Don't encode video in smoketest

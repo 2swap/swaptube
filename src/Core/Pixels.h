@@ -17,12 +17,12 @@ inline constexpr int TRANSPARENT_WHITE = 0x00FFFFFF;
 
 extern "C" void cuda_overlay(
     unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
+    const unsigned int* h_foreground, const int fw, const int fh,
     const int dx, const int dy,
     const float opacity);
 extern "C" void cuda_overlay_with_rotation(
     unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
+    const unsigned int* h_foreground, const int fw, const int fh,
     const int dx, const int dy,
     const float opacity, const float angle_rad);
 
@@ -67,10 +67,12 @@ public:
 
     void add_border(int col, int thickness = 1);
 
-    void overlay_cpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1);
-    void overlay_gpu(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1);
+    void overlay_cpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier = 1);
+    void overlay_gpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier = 1);
+    void overlay_cpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians);
+    void overlay_gpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians);
 
-    void overwrite(Pixels p, int dx, int dy);
+    void overwrite(const Pixels& p, int dx, int dy);
 
     void fill_rect(int x, int y, int rw, int rh, int col);
 

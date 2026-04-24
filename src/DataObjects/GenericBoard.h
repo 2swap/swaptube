@@ -8,8 +8,6 @@
 #include <memory>
 #include "../Scenes/Media/LatexScene.h"
 #include "../Scenes/Scene.h"
-#include <nlohmann/json.hpp>
-using json = nlohmann::json;
 using std::string;
 
 class GenericBoard {
@@ -27,8 +25,6 @@ public:
     string representation;
 
     int get_highlight_type();
-
-    virtual json get_data() const;
 
     virtual std::shared_ptr<Scene> make_scene() const;
 
