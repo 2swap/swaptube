@@ -7,6 +7,45 @@
 
 #define GRAPH_WIDTH 10
 
+quat lat_long_to_quat(vec2 lat_long) {
+    float lon = lat_long.x;
+    float lat = lat_long.y;
+
+    // Convert latitude and longitude from degrees to radians
+    float lat_rad = lat * (M_PI / 180.0f);
+    float lon_rad = lon * (M_PI / 180.0f);
+
+    // Calculate the quaternion components
+    float cy = cos(lon_rad * 0.5f);
+    float sy = sin(lon_rad * 0.5f);
+    float cp = cos(lat_rad * 0.5f);
+    float sp = sin(lat_rad * 0.5f);
+
+    return quat(
+        cy * cp,
+        sy * cp,
+        cy * sp,
+        sy * sp 
+    );
+}
+
+vec4 lat_long_to_xyz(vec2 lat_long) {
+    float lat = lat_long.x;
+    float lon = lat_long.y;
+
+    // Convert latitude and longitude from degrees to radians
+    float lat_rad = lat * (M_PI / 180.0f);
+    float lon_rad = lon * (M_PI / 180.0f);
+
+    // Calculate the Cartesian coordinates
+    lon_rad -= M_PI/2;
+    float x = cos(lat_rad) * cos(lon_rad);
+    float y = sin(lat_rad);
+    float z = cos(lat_rad) * sin(lon_rad);
+
+    return 1.01 * vec4(x, y, z, 0);
+}
+
 double a_star_heuristic(vec4 node, vec4 goal) {
     return length(node - goal);
 }
@@ -376,16 +415,17 @@ void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, 
 }
 
 void slide8() {
-    set_for_real(false);
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
+    gs->enable_globe();
+    quat rot = lat_long_to_quat(vec2(52, 5));
     gs->manager.set({
-        {"q1", "1"},
-        {"qi", "0"},
-        {"qj", "0"},
-        {"qk", "0"},
+        {"q1", to_string(rot.u)},
+        {"qi", to_string(rot.i) + " {t} sin .03 * +"},
+        {"qj", to_string(rot.j) + " {t} cos .03 * +"},
+        {"qk", to_string(rot.k)},
         {"physics_multiplier","0"},
-        {"d", "6"},
+        {"d", "1.2"},
         {"points_radius_multiplier","3"},
         {"x","0"},
         {"y","0"},
@@ -397,17 +437,13 @@ void slide8() {
 
     // Plot cities as nodes and roads as edges, expanding east->west
     for(auto& [city, coords] : netherlands_cities) {
-        double lat = coords.x - netherlands_cities["Arnhem"].x;
-        double lon = coords.y - netherlands_cities["Arnhem"].y;
-        double x = lon;
-        double y = -lat;
-        double scale = 1.5;
+        vec4 position = lat_long_to_xyz(coords);
         double hash = HashableString(city).get_hash();
         g->add_node(new HashableString(city));
-        vec4 position = scale*vec4(x, y, 0, 0);
         g->move_node(hash, position);
         gs->render_microblock();
     }
+    return;
 
 
 

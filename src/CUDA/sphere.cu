@@ -94,6 +94,7 @@ extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix
     size_t map_sz = (size_t)width * (size_t)height * sizeof(uint32_t);
     cout << "Loading texture from " << fullpath << " with dimensions " << width << "x" << height << endl;
     cudaError_t cerr = cudaMalloc((void**)&d_map, map_sz);
+    cout << "Attempting to allocate " << map_sz / (1024.0 * 1024.0 * 1024.0) << " GB for texture on GPU." << endl;
     if (cerr != cudaSuccess) {
         free(row);
         png_destroy_read_struct(&png, &info, nullptr);
@@ -101,7 +102,8 @@ extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix
         throw runtime_error("cudaMalloc failed for PNG device buffer.");
     }
 
-    uint32_t* line_buf = (uint32_t*)malloc(width * sizeof(uint32_t));
+    size_t line_buf_sz = (size_t)width * sizeof(uint32_t);
+    uint32_t* line_buf = (uint32_t*)malloc(line_buf_sz);
     if (!line_buf) {
         free(row);
         cudaFree(d_map);
@@ -118,9 +120,17 @@ extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix
             uint8_t g = px[1];
             uint8_t b = px[2];
             uint8_t a = px[3];
-            line_buf[x] = ((uint32_t)r << 24) | ((uint32_t)g << 16) | ((uint32_t)b << 8) | (uint32_t)a;
+            line_buf[x] = ((uint32_t)a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
         }
-        cudaMemcpy(d_map + (size_t)y * (size_t)width, line_buf, width * sizeof(uint32_t), cudaMemcpyHostToDevice);
+        cerr = cudaMemcpy(d_map + (y * width), line_buf, line_buf_sz, cudaMemcpyHostToDevice);
+        if (cerr != cudaSuccess) {
+            free(line_buf);
+            free(row);
+            cudaFree(d_map);
+            png_destroy_read_struct(&png, &info, nullptr);
+            fclose(fp);
+            throw runtime_error("cudaMemcpy failed while copying PNG row to device.");
+        }
     }
 
     free(line_buf);
@@ -131,46 +141,51 @@ extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix
     return d_map;
 }
 
-__device__ __forceinline__ Cuda::vec3 ray_sphere_intersect(const Cuda::vec3& ray_origin, const Cuda::vec3& ray_dir, const Cuda::vec3& sphere_center, float sphere_radius) {
-    Cuda::vec3 oc = ray_origin - sphere_center;
+__device__ __forceinline__ bool ray_sphere_intersect(const Cuda::vec3& ray_origin, const Cuda::vec3& ray_dir, Cuda::vec3& out_hit_point) {
+    Cuda::vec3 oc = ray_origin;
     float a = dot(ray_dir, ray_dir);
     float b = 2.0f * dot(oc, ray_dir);
-    float c = dot(oc, oc) - sphere_radius * sphere_radius;
+    float c = dot(oc, oc) - 1;
     float discriminant = b * b - 4 * a * c;
 
     if (discriminant < 0) {
-        return Cuda::vec3(-1.0f); // No intersection
+        return false;
     } else {
-        float t = (-b - sqrtf(discriminant)) / (2.0f * a);
+        float sqrt_disc = sqrtf(discriminant);
+        float inv_2a = 0.5f / a;
+        float t1 = (-b - sqrt_disc) * inv_2a;
+        float t2 = (-b + sqrt_disc) * inv_2a;
+        float t = (t1 > 0) ? t1 : t2; // Choose the closest positive intersection
         if (t > 0) {
-            return ray_origin + t * ray_dir; // Intersection point
+            out_hit_point = ray_origin + ray_dir * t;
+            return true;
         } else {
-            return Cuda::vec3(-1.0f); // Intersection behind the camera
+            return false;
         }
     }
 }
 
 __device__ __forceinline__ uint32_t cubic_interpolate(uint32_t v0, uint32_t v1, uint32_t v2, uint32_t v3, float t) {
     // Extract RGBA components
-    uint8_t r0 = (v0 >> 24) & 0xFF;
-    uint8_t g0 = (v0 >> 16) & 0xFF;
-    uint8_t b0 = (v0 >> 8) & 0xFF;
-    uint8_t a0 = v0 & 0xFF;
+    uint8_t a0 = (v0 >> 24) & 0xFF;
+    uint8_t r0 = (v0 >> 16) & 0xFF;
+    uint8_t g0 = (v0 >> 8) & 0xFF;
+    uint8_t b0 = v0 & 0xFF;
 
-    uint8_t r1 = (v1 >> 24) & 0xFF;
-    uint8_t g1 = (v1 >> 16) & 0xFF;
-    uint8_t b1 = (v1 >> 8) & 0xFF;
-    uint8_t a1 = v1 & 0xFF;
+    uint8_t a1 = (v1 >> 24) & 0xFF;
+    uint8_t r1 = (v1 >> 16) & 0xFF;
+    uint8_t g1 = (v1 >> 8) & 0xFF;
+    uint8_t b1 = v1 & 0xFF;
 
-    uint8_t r2 = (v2 >> 24) & 0xFF;
-    uint8_t g2 = (v2 >> 16) & 0xFF;
-    uint8_t b2 = (v2 >> 8) & 0xFF;
-    uint8_t a2 = v2 & 0xFF;
+    uint8_t a2 = (v2 >> 24) & 0xFF;
+    uint8_t r2 = (v2 >> 16) & 0xFF;
+    uint8_t g2 = (v2 >> 8) & 0xFF;
+    uint8_t b2 = v2 & 0xFF;
 
-    uint8_t r3 = (v3 >> 24) & 0xFF;
-    uint8_t g3 = (v3 >> 16) & 0xFF;
-    uint8_t b3 = (v3 >> 8) & 0xFF;
-    uint8_t a3 = v3 & 0xFF;
+    uint8_t a3 = (v3 >> 24) & 0xFF;
+    uint8_t r3 = (v3 >> 16) & 0xFF;
+    uint8_t g3 = (v3 >> 8) & 0xFF;
+    uint8_t b3 = v3 & 0xFF;
 
     // Cubic interpolation formula
     auto cubic_interp = [](uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3, float t) {
@@ -184,7 +199,7 @@ __device__ __forceinline__ uint32_t cubic_interpolate(uint32_t v0, uint32_t v1, 
     uint8_t g = cubic_interp(g0, g1, g2, g3, t);
     uint8_t b = cubic_interp(b0, b1, b2, b3, t);
     uint8_t a = cubic_interp(a0, a1, a2, a3, t);
-    return (r << 24) | (g << 16) | (b << 8) | a;
+    return (a << 24) | (r << 16) | (g << 8) | b;
 }
 
 __device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, int map_width, int map_height, float u, float v) {
@@ -216,7 +231,7 @@ __device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, int map_width,
 
 __global__ void render_sphere_kernel(
     uint32_t* pixels, int width, int height,
-    float geom_mean_size, const Cuda::vec3 center, float radius,
+    float geom_mean_size,
     uint32_t* map, int map_width, int map_height,
     const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov)
 {
@@ -227,21 +242,19 @@ __global__ void render_sphere_kernel(
     int py = idx / width;
 
     Cuda::vec3 ray_dir = get_raymarch_vector(px, py, width, height, fov, camera_direction);
-    Cuda::vec3 hit_point = ray_sphere_intersect(camera_pos, ray_dir, center, radius);
+    Cuda::vec3 hit_point;
+    bool collision = ray_sphere_intersect(camera_pos, ray_dir, hit_point);
+    if(!collision) return;
 
-    if (hit_point.x >= 0) {
-        Cuda::vec3 normal = normalize(hit_point - center);
-        float u = 0.5f + atan2f(normal.z, normal.x) / (2.0f * M_PI);
-        float v = 0.5f - asinf(normal.y) / M_PI;
-        uint32_t color = bicubic_sample(map, map_width, map_height, u, v);
-        pixels[py * width + px] = color;
-    }
+    float u = 0.5f - atan2f(hit_point.x, -hit_point.z) / (2.0f * M_PI);
+    float v = 0.5f - asinf(hit_point.y) / M_PI;
+    uint32_t color = bicubic_sample(map, map_width, map_height, u, v);
+    pixels[idx] = color;
 }
 
 extern "C" void cuda_render_sphere(
     uint32_t* h_pixels, int width, int height,
     float geom_mean_size,
-    const Cuda::vec3& center, float radius,
     uint32_t* d_map, int map_width, int map_height,
     const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov)
 {
@@ -255,7 +268,7 @@ extern "C" void cuda_render_sphere(
     int numBlocks = (width * height + blockSize - 1) / blockSize;
     render_sphere_kernel<<<numBlocks, blockSize>>>(
         d_pixels, width, height,
-        geom_mean_size, center, radius,
+        geom_mean_size,
         d_map, map_width, map_height,
         camera_direction, camera_pos, fov);
     cudaDeviceSynchronize();

@@ -38,6 +38,7 @@ class ThreeDimensionScene : public SuperScene {
 public:
     bool use_state_for_center;
     ThreeDimensionScene(const vec2& dimensions = vec2(1, 1));
+    ~ThreeDimensionScene();
 
     vec2 coordinate_to_pixel(vec3 coordinate, bool& behind_camera);
 
@@ -80,6 +81,7 @@ public:
     void add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa=1);
 
     void remove_surface(const string& name);
+    void enable_globe();
 
     void clear_lines();
     void clear_points();
@@ -96,4 +98,8 @@ protected:
     vector<Line> lines;
     vector<Surface> surfaces;
     map<string, Path> paths;
+private:
+    uint32_t* d_map;
+    int map_w;
+    int map_h;
 };

@@ -38,6 +38,13 @@ extern "C" {
         float halfheight,
         float over_w_fov);
 }
+extern "C" void cuda_render_sphere(
+    uint32_t* h_pixels, int width, int height,
+    float geom_mean_size,
+    uint32_t* d_map, int map_width, int map_height,
+    const quat& camera_direction, const vec3& camera_pos, float fov);
+extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix, int& out_width, int& out_height);
+extern "C" void cuda_free_map(uint32_t* d_map);
 
 Surface::Surface(const vec3& c, const vec3& l, const vec3& u, const string& n)
     : center(c),
@@ -56,7 +63,7 @@ Path::Path(const string& n, int clr, float op)
     : name(n), color(clr), opacity(op) { }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
-    : SuperScene(dimensions), use_state_for_center(false), auto_distance(-1), auto_camera(vec3(0,0,0)) {
+    : SuperScene(dimensions), use_state_for_center(false), auto_distance(-1), auto_camera(vec3(0,0,0)), d_map(nullptr) {
     manager.set({
         {"fov", "1"},
         {"x", "0"},
@@ -72,6 +79,14 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"points_radius_multiplier", "1"},
         {"points_opacity", "1"}
     });
+}
+
+void ThreeDimensionScene::enable_globe() {
+    d_map = cuda_copy_map("earth_small", map_w, map_h);
+}
+
+ThreeDimensionScene::~ThreeDimensionScene() {
+    if(d_map != nullptr) cuda_free_map(d_map);
 }
 
 // TODO this is duplicate code from CUDA/common_graphics.h and we should unify them.
@@ -220,8 +235,8 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 
 void ThreeDimensionScene::set_camera_direction() {
     camera_direction = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
-    vec3 camera_to_use = vec3(state["x"], state["y"], state["z"]);
-    camera_pos = camera_to_use + rotate_vector(vec3(0,0,-state["d"]), conjugate(camera_direction));
+    vec3 focus = vec3(state["x"], state["y"], state["z"]);
+    camera_pos = focus + rotate_vector(vec3(0,0,-state["d"]), camera_direction);
 }
 
 float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
@@ -234,6 +249,13 @@ void ThreeDimensionScene::draw() {
     over_w_fov = 1/(get_geom_mean_size()*fov);
 
     set_camera_direction();
+
+    if(d_map != nullptr) cuda_render_sphere(
+        pix.pixels.data(), pix.w, pix.h,
+        get_geom_mean_size(),
+        d_map, map_w, map_h,
+        camera_direction, camera_pos, fov
+    );
 
     // Render surfaces via their CUDA integration.
     if (state["surfaces_opacity"] > 0.001) {
@@ -251,7 +273,7 @@ void ThreeDimensionScene::draw() {
             state["lines_opacity"],
             lines.data(),
             static_cast<int>(lines.size()),
-            camera_direction,
+            conjugate(camera_direction),
             camera_pos,
             fov
         );
