@@ -233,7 +233,7 @@ __global__ void render_sphere_kernel(
     uint32_t* pixels, int width, int height,
     float geom_mean_size,
     uint32_t* map, int map_width, int map_height,
-    const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov)
+    const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, float opacity)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= width * height) return;
@@ -241,22 +241,22 @@ __global__ void render_sphere_kernel(
     int px = idx % width;
     int py = idx / width;
 
-    Cuda::vec3 ray_dir = get_raymarch_vector(px, py, width, height, fov, camera_direction);
+    Cuda::vec3 ray_dir = get_raymarch_vector(Cuda::vec2(px, py), Cuda::vec2(width, height), fov, camera_direction);
     Cuda::vec3 hit_point;
     bool collision = ray_sphere_intersect(camera_pos, ray_dir, hit_point);
     if(!collision) return;
 
-    float u = 0.5f - atan2f(hit_point.x, -hit_point.z) / (2.0f * M_PI);
+    float u = 0.5f + atan2f(hit_point.x, -hit_point.z) / (2.0f * M_PI);
     float v = 0.5f - asinf(hit_point.y) / M_PI;
     uint32_t color = bicubic_sample(map, map_width, map_height, u, v);
-    pixels[idx] = color;
+    pixels[idx] = (color & 0x00FFFFFF) | ((uint32_t)(opacity * 255) << 24);
 }
 
 extern "C" void cuda_render_sphere(
     uint32_t* h_pixels, int width, int height,
     float geom_mean_size,
     uint32_t* d_map, int map_width, int map_height,
-    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float opacity)
 {
     uint32_t* d_pixels = nullptr;
     size_t pix_sz = width * height * sizeof(uint32_t);
@@ -270,7 +270,7 @@ extern "C" void cuda_render_sphere(
         d_pixels, width, height,
         geom_mean_size,
         d_map, map_width, map_height,
-        camera_direction, camera_pos, fov);
+        camera_direction, camera_pos, fov, opacity);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);

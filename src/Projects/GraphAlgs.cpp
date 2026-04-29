@@ -5,10 +5,8 @@
 #include "../Scenes/Math/GraphScene.h"
 #include "../Core/Smoketest.h"
 
-#define GRAPH_WIDTH 10
-
 quat lat_long_to_quat(vec2 lat_long) {
-    float lon = lat_long.x;
+    float lon = -lat_long.x;
     float lat = lat_long.y;
 
     // Convert latitude and longitude from degrees to radians
@@ -43,7 +41,25 @@ vec4 lat_long_to_xyz(vec2 lat_long) {
     float y = sin(lat_rad);
     float z = cos(lat_rad) * sin(lon_rad);
 
-    return 1.01 * vec4(x, y, z, 0);
+    return vec4(x, y, z, 0);
+}
+
+void set_camera_to_lat_long(shared_ptr<GraphScene> gs, vec2 lat_long) {
+    vec4 focus = lat_long_to_xyz(lat_long);
+    gs->manager.set({
+        {"x",to_string(focus.x)},
+        {"y",to_string(focus.y)},
+        {"z",to_string(focus.z)},
+    });
+}
+
+void transition_camera_to_lat_long(shared_ptr<GraphScene> gs, vec2 lat_long) {
+    vec4 focus = lat_long_to_xyz(lat_long);
+    gs->manager.transition(MICRO, {
+        {"x",to_string(focus.x)},
+        {"y",to_string(focus.y)},
+        {"z",to_string(focus.z)},
+    });
 }
 
 double a_star_heuristic(vec4 node, vec4 goal) {
@@ -193,7 +209,7 @@ void slide3() {
     double endpoint_hash = HashableString("99").get_hash();
     while(remaining_microblocks_in_macroblock) {
         cout << "Flickering path " << remaining_microblocks_in_macroblock << endl;
-        gs->config->transition_all_edge_colors(MICRO, 0xffffffff);
+        gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
         while(true) {
             double current_node = HashableString("0").get_hash();
             while(current_node != endpoint_hash) {
@@ -230,7 +246,7 @@ unordered_map<string, vec2> netherlands_cities = {
     {"Utrecht", vec2(52.0907, 5.1214)},
     {"Breda", vec2(51.5719, 4.7683)},
     {"Eindhoven", vec2(51.4416, 5.4697)},
-    {"Maastricht", vec2(50.8514, 5.6900)},
+    //{"Maastricht", vec2(50.8514, 5.6900)},
     {"Arnhem", vec2(51.9851, 5.8987)},
     {"Zwolle", vec2(52.5168, 6.0830)},
     {"Emmen", vec2(52.7795, 6.9061)},
@@ -241,31 +257,12 @@ unordered_map<string, vec2> netherlands_cities = {
     {"Meppel", vec2(52.7917, 6.1789)},
 };
 
-unordered_map<string, string> netherlands_labels = {
-    {"Amsterdam", "A"},
-    {"The Hague", "H"},
-    {"Rotterdam", "R"},
-    {"Utrecht", "U"},
-    {"Breda", "B"},
-    {"Eindhoven", "I"},
-    {"Maastricht", "M"},
-    {"Arnhem", "N"},
-    {"Zwolle", "Z"},
-    {"Emmen", "E"},
-    {"Groningen", "G"},
-    {"Leeuwarden", "L"},
-    {"'s-Hertogenbosch", "C"},
-    {"Tillburg", "T"},
-    {"Meppel", "P"},
-};
-
 vector<pair<string, string>> netherlands_edges_1 = {
     {"Rotterdam", "Utrecht"},
     {"Rotterdam", "Breda"},
     {"Breda", "Tillburg"},
     {"Tillburg", "Eindhoven"},
-    {"Tillburg", "'s-Hertogenbosch"},
-    {"Eindhoven", "Maastricht"},
+    //{"Eindhoven", "Maastricht"},
     {"Eindhoven", "'s-Hertogenbosch"},
     {"'s-Hertogenbosch", "Utrecht"},
     {"Utrecht", "Arnhem"},
@@ -273,21 +270,22 @@ vector<pair<string, string>> netherlands_edges_1 = {
     {"Zwolle", "Emmen"},
     {"Zwolle", "Meppel"},
     {"Meppel", "Groningen"},
-    {"Groningen", "Leeuwarden"},
     {"Meppel", "Leeuwarden"},
+    {"Amsterdam", "The Hague"},
+    {"Amsterdam", "Utrecht"},
 };
 
 vector<pair<string, string>> netherlands_edges_2 = {
-    {"Amsterdam", "The Hague"},
     {"Amsterdam", "Zwolle"},
-    {"Amsterdam", "Utrecht"},
     {"The Hague", "Rotterdam"},
-    {"The Hague", "Utrecht"},
-    {"Rotterdam", "'s-Hertogenbosch"},
-    {"'s-Hertogenbosch", "Arnhem"},
+    {"Tillburg", "'s-Hertogenbosch"},
 };
 
 vector<pair<string, string>> netherlands_edges_3 = {
+    {"Groningen", "Leeuwarden"},
+    {"The Hague", "Utrecht"},
+    {"Rotterdam", "'s-Hertogenbosch"},
+    {"'s-Hertogenbosch", "Arnhem"},
 };
 
 vector<uint32_t> colors_by_depth = {
@@ -302,42 +300,70 @@ vector<uint32_t> colors_by_depth = {
     0xffff0080, // pink
 };
 
-void bfs(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, unordered_set<double>& border, unordered_set<double>& next_border, unordered_set<double>& visited, double target, int& depth) {
-    if(border.size() == 0) {
-        depth++;
-        border = next_border;
-        visited.insert(next_border.begin(), next_border.end());
-        next_border.clear();
-        return;
+void bfs_simul(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, unordered_set<double>& border, unordered_set<double>& next_border, unordered_set<double>& visited, int depth) {
+    double node = *border.begin();
+    gs->manager.transition(MICRO, {
+        {"x", to_string(g->nodes.find(node)->second.position.x)},
+        {"y", to_string(g->nodes.find(node)->second.position.y)},
+        {"z", to_string(g->nodes.find(node)->second.position.z)},
+    });
+    gs->render_microblock();
+    unordered_set<double> neighbors = g->get_neighbors(node);
+    for(double neighbor : neighbors) {
+        if(visited.find(neighbor) != visited.end()) continue;
+        gs->config->transition_edge_color(MICRO, node, neighbor, colors_by_depth[depth]);
     }
+    gs->render_microblock();
+    for(double neighbor : neighbors) {
+        if(visited.find(neighbor) != visited.end()) continue;
+        if (next_border.find(neighbor) == next_border.end() && border.find(neighbor) == border.end()) {
+            next_border.insert(neighbor);
+            gs->config->transition_node_color(MICRO, neighbor, colors_by_depth[depth]);
+        }
+    }
+    gs->render_microblock();
+    border.erase(node);
+    visited.insert(node);
+    gs->config->transition_node_color(MICRO, node, 0xffffffff);
+    gs->render_microblock();
 
-    else {
-        double node = *border.begin();
-        if(node == target) {
-            return;
-        }
-        unordered_set<double> neighbors = g->get_neighbors(node);
-        for(double neighbor : neighbors) {
-            if (next_border.find(neighbor) == next_border.end() && visited.find(neighbor) == visited.end()) {
-                next_border.insert(neighbor);
-                gs->config->transition_node_color(MICRO, neighbor, colors_by_depth[depth+1]);
-                gs->config->transition_edge_color(MICRO, node, neighbor, colors_by_depth[depth]);
-                return;
-            }
-        }
-        border.erase(node);
+    if(border.size() == 0) {
+        border = next_border;
+        next_border.clear();
     }
 }
 
-void bfs_rung(shared_ptr<Graph> g, unordered_set<double>& border, unordered_set<double>& next_border, unordered_set<double>& visited, double target, int& depth, shared_ptr<GraphScene> gs) {
-    while(border.size() > 0 && visited.find(target) == visited.end()) {
-        bfs(g, gs, border, next_border, visited, target, depth);
+void bfs(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, unordered_set<double>& border, unordered_set<double>& next_border, unordered_set<double>& visited, int depth, bool simul) {
+    if(simul) {
+        bfs_simul(g, gs, border, next_border, visited, depth);
+        return;
+    }
+    double node = *border.begin();
+    gs->manager.transition(MICRO, {
+        {"x", to_string(g->nodes.find(node)->second.position.x)},
+        {"y", to_string(g->nodes.find(node)->second.position.y)},
+        {"z", to_string(g->nodes.find(node)->second.position.z)},
+    });
+    unordered_set<double> neighbors = g->get_neighbors(node);
+    for(double neighbor : neighbors) {
+        if(visited.find(neighbor) != visited.end()) continue;
+        gs->config->transition_edge_color(MICRO, node, neighbor, colors_by_depth[depth]);
         gs->render_microblock();
+        if (next_border.find(neighbor) == next_border.end() && border.find(neighbor) == border.end()) {
+            next_border.insert(neighbor);
+            gs->config->transition_node_color(MICRO, neighbor, colors_by_depth[depth]);
+            gs->render_microblock();
+        }
     }
-    if(visited.find(target) == visited.end()) {
-        bfs(g, gs, border, next_border, visited, target, depth);
-    }
+    border.erase(node);
+    visited.insert(node);
+    gs->config->transition_node_color(MICRO, node, 0xff00ff00);
     gs->render_microblock();
+
+    if(border.size() == 0) {
+        border = next_border;
+        next_border.clear();
+    }
 }
 
 void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, double goal, int up_to_step) {
@@ -405,7 +431,7 @@ void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, 
             }
             if(--up_to_step == 0) return;
 
-            gs->config->transition_edge_color(MICRO, neighbor, current, 0xffffffff);
+            gs->config->fade_edge_color(MICRO, neighbor, current, 0xffffffff);
             if(--up_to_step == 0) return;
         }
         visited.insert(current);
@@ -417,23 +443,21 @@ void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, 
 void slide8() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
-    gs->enable_globe();
-    quat rot = lat_long_to_quat(vec2(52, 5));
+    gs->manager.transition(MACRO, "globe_opacity", "1");
+    quat rot = lat_long_to_quat(vec2(52.5, 5.5));
+    set_camera_to_lat_long(gs, vec2(52.5, 5.5));
     gs->manager.set({
         {"q1", to_string(rot.u)},
-        {"qi", to_string(rot.i) + " {t} sin .03 * +"},
-        {"qj", to_string(rot.j) + " {t} cos .03 * +"},
+        {"qi", to_string(rot.i) + " {t} .1 * sin .3 * +"},
+        {"qj", to_string(rot.j) + " {t} .1 * cos .3 * +"},
         {"qk", to_string(rot.k)},
         {"physics_multiplier","0"},
-        {"d", "1.2"},
+        {"d", ".07"},
         {"points_radius_multiplier","3"},
-        {"x","0"},
-        {"y","0"},
-        {"z","0"},
     });
 
     // Load Netherlands map
-    stage_macroblock(FileBlock("Here’s a simplified graph of the Netherlands:"), netherlands_cities.size());
+    stage_macroblock(FileBlock("Here's a simplified graph of the Netherlands."), netherlands_cities.size());
 
     // Plot cities as nodes and roads as edges, expanding east->west
     for(auto& [city, coords] : netherlands_cities) {
@@ -443,12 +467,10 @@ void slide8() {
         g->move_node(hash, position);
         gs->render_microblock();
     }
-    return;
-
-
 
     // Plot cities as nodes and roads as edges, expanding west->east
-    stage_macroblock(FileBlock("cities are the nodes"), 2);
+    stage_macroblock(FileBlock("The nodes represent the cities,"), 2);
+    gs->manager.transition(MICRO, "globe_opacity", ".2");
     gs->manager.set("label_size", "0");
     for(auto& [city, coords] : netherlands_cities) {
         gs->config->transition_node_label(MICRO, HashableString(city).get_hash(), "\\text{" + city + "}");
@@ -458,7 +480,7 @@ void slide8() {
     gs->manager.transition(MICRO, "label_size", "1");
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("and the roads between them are the edges."), netherlands_edges_1.size());
+    stage_macroblock(FileBlock("and the edges connecting them are the rail lines."), netherlands_edges_1.size());
     for(pair<string, string> edge : netherlands_edges_1) {
         string city = edge.first;
         string neighbor = edge.second;
@@ -468,147 +490,142 @@ void slide8() {
         gs->render_microblock();
     }
 
-    set_for_real(true);
     double rotterdam_hash = HashableString("Rotterdam").get_hash();
     double groningen_hash = HashableString("Groningen").get_hash();
-    if(false){
-        stage_macroblock(FileBlock("We’ll also give each city a letter, so it’s a little easier to reference them."), 3);
-        gs->render_microblock();
 
-        gs->manager.transition(MICRO, "label_size", "0");
-        gs->render_microblock();
-        for(auto& [city, coords] : netherlands_cities) {
-            gs->config->transition_node_label(MICRO, HashableString(city).get_hash(), "\\text{" + netherlands_labels[city] + "}");
-        }
-        gs->manager.transition(MICRO, "label_size", "1");
-        gs->render_microblock();
-
-        vector<string> path = {"Rotterdam", "Utrecht", "Arnhem", "Zwolle", "Meppel", "Groningen"};
-        stage_macroblock(FileBlock("If we want to get from R to G, this path seems immediately obvious."), path.size() + 3);
-        gs->render_microblock();
-        gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
-        gs->render_microblock();
-        gs->config->transition_node_color(MICRO, groningen_hash, 0xffff0000);
-        gs->render_microblock();
-        for(int i = 0; i < path.size() - 1; i++) {
-            string city = path[i];
-            string neighbor = path[i+1];
-            gs->config->transition_edge_color(MICRO, HashableString(city).get_hash(), HashableString(neighbor).get_hash(), 0xffff0000);
-            gs->config->transition_node_color(MICRO, HashableString(neighbor).get_hash(), 0xffff0000);
-            gs->render_microblock();
-        }
-        gs->render_microblock();
-
-        // Add more nodes
-        stage_macroblock(FileBlock("And it is the shortest path, but what about now?"), netherlands_edges_2.size() + 2);
-        gs->render_microblock();
-        gs->config->transition_all_node_colors(MICRO, 0xffffffff);
-        gs->config->transition_all_edge_colors(MICRO, 0xffffffff);
+    vector<string> path = {"Rotterdam", "Utrecht", "Arnhem", "Zwolle", "Meppel", "Groningen"};
+    stage_macroblock(FileBlock("To get from Rotterdam to Groningen, this path seems obvious."), path.size() + 3);
+    for(auto& [city, coords] : netherlands_cities) {
+        gs->config->transition_node_label(MICRO, HashableString(city).get_hash(), "");
     }
-        for(pair<string, string> edge : netherlands_edges_2) {
-            string city = edge.first;
-            string neighbor = edge.second;
-            double hash = HashableString(city).get_hash();
-            double neighbor_hash = HashableString(neighbor).get_hash();
-            g->add_edge(hash, neighbor_hash);
-            //gs->render_microblock();
-        }
-    if(false) {
+    gs->render_microblock();
+    // Label Rotterdam
+    gs->config->transition_node_label(MICRO, rotterdam_hash, "\\text{Rotterdam}");
+    gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
+    gs->render_microblock();
+    // Label Groningen
+    gs->config->transition_node_label(MICRO, groningen_hash, "\\text{Groningen}");
+    gs->config->transition_node_color(MICRO, groningen_hash, 0xffff0000);
+    gs->render_microblock();
+    for(int i = 0; i < path.size() - 1; i++) {
+        string city = path[i];
+        string neighbor = path[i+1];
+        transition_camera_to_lat_long(gs, netherlands_cities[neighbor]);
+        gs->config->transition_edge_color(MICRO, HashableString(city).get_hash(), HashableString(neighbor).get_hash(), 0xffff0000);
         gs->render_microblock();
+        gs->config->transition_node_color(MICRO, HashableString(neighbor).get_hash(), 0xffff0000);
+    }
+    transition_camera_to_lat_long(gs, vec2(52.5, 5.5));
+    gs->render_microblock();
 
-        // Add even more nodes
-        stage_macroblock(FileBlock("And now?"), netherlands_edges_3.size() + 2);
-        gs->render_microblock();
-        for(pair<string, string> edge : netherlands_edges_3) {
-            string city = edge.first;
-            string neighbor = edge.second;
-            double hash = HashableString(city).get_hash();
-            double neighbor_hash = HashableString(neighbor).get_hash();
-            g->add_edge(hash, neighbor_hash);
-            gs->render_microblock();
-        }
-        gs->render_microblock();
+    // Add more nodes
+    stage_macroblock(FileBlock("And it is the shortest path, but what about now?"), netherlands_edges_2.size() + 2);
+    gs->render_microblock();
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
 
-        // Slide 9
-
-        stage_macroblock(FileBlock("Here's a possible method:"), 1);
-        gs->render_microblock();
-
-        stage_macroblock(FileBlock("Starting from the source, we explore all of its neighboring nodes to see if the target is there."), 7);
-        gs->render_microblock();
-        uint32_t edge_dark = 0xff606060;
-        gs->config->transition_all_node_colors(MICRO, edge_dark);
-        gs->config->transition_all_edge_colors(MICRO, edge_dark);
-
-        unordered_set<double> border;
-        unordered_set<double> next_border;
-        unordered_set<double> visited;
-        border.insert(rotterdam_hash);
-        visited.insert(rotterdam_hash);
-
-        int depth = 0;
-        bfs_rung(g, border, next_border, visited, groningen_hash, depth, gs);
-
-        stage_macroblock(FileBlock("If it isn't, we move on to those explored nodes and then check their neighbors for the target."), 9);
-        bfs_rung(g, border, next_border, visited, groningen_hash, depth, gs);
-
-        stage_macroblock(FileBlock("If we don't find it, we expand again."), 7);
-        bfs_rung(g, border, next_border, visited, groningen_hash, depth, gs);
-
-        stage_macroblock(FileBlock("And we keep expanding out until we reach the target node."), 4);
-        while(border.size() > 0 && visited.find(groningen_hash) == visited.end()) {
-            bfs(g, gs, border, next_border, visited, groningen_hash, depth);
-            gs->render_microblock();
-        }
-
-        stage_macroblock(FileBlock("This algorithm is known as breadth first search."), 1);
-        gs->render_microblock();
-
-        stage_macroblock(FileBlock("It will always find the shortest path because it checks all of the nodes at every level."), 34);
-        depth = 0;
-        visited.clear();
-        border.clear();
-        next_border.clear();
-        border.insert(rotterdam_hash);
-        gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
-
-        while(border.size() > 0 && visited.find(groningen_hash) == visited.end()) {
-            bfs_rung(g, border, next_border, visited, groningen_hash, depth, gs);
-            gs->config->transition_all_edge_colors(MICRO, 0xffffffff);
-        }
-
-        depth = 0;
-        visited.clear();
-        border.clear();
-        next_border.clear();
-        border.insert(rotterdam_hash);
-        gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
-
-        stage_macroblock(FileBlock("If there was a path from R to G in two steps, we would’ve found it on the second iteration."), 16);
-        for(int i = 0; i < 2; i++) {
-            bfs_rung(g, border, next_border, visited, groningen_hash, depth, gs);
-        }
-
-        stage_macroblock(FileBlock("So five steps must be the shortest path."), 13);
-        for(int i = 0; i < 2; i++) {
-            bfs_rung(g, border, next_border, visited, groningen_hash, depth, gs);
-        }
-
-        gs->manager.set("physics_multiplier", "1");
-        gs->manager.set("repel", ".1");
-        gs->manager.set("decay", "0.2");
-        gs->manager.transition(MICRO, "decay", "0.5");
-        stage_macroblock(FileBlock("But there’s a problem. This algorithm values all of the edges the same. Just one step."), 1);
-        gs->render_microblock();
-        gs->manager.set("physics_multiplier", "0");
-
-        for(auto& [city, coords] : netherlands_cities) {
-            vec4 position(coords.y - netherlands_cities["Arnhem"].y, -(coords.x - netherlands_cities["Arnhem"].x), 0, 0);
-            gs->transition_node_position(MICRO, HashableString(city).get_hash(), position);
-        }
-        stage_macroblock(FileBlock("Here’s that same graph, but now the edges have different, positive weights to represent things like distance or travel time. Now the shortest path is much harder to figure out. Dijkstra needed a better method."), 1);
+    for(pair<string, string> edge : netherlands_edges_2) {
+        string city = edge.first;
+        string neighbor = edge.second;
+        double hash = HashableString(city).get_hash();
+        double neighbor_hash = HashableString(neighbor).get_hash();
+        g->add_edge(hash, neighbor_hash);
         gs->render_microblock();
     }
+
+    gs->render_microblock();
+
+    // Add even more nodes
+    stage_macroblock(FileBlock("And now?"), netherlands_edges_3.size() + 2);
+    gs->render_microblock();
+    for(pair<string, string> edge : netherlands_edges_3) {
+        string city = edge.first;
+        string neighbor = edge.second;
+        double hash = HashableString(city).get_hash();
+        double neighbor_hash = HashableString(neighbor).get_hash();
+        g->add_edge(hash, neighbor_hash);
+        gs->render_microblock();
+    }
+    gs->render_microblock();
+
+    // Slide 9
+
+    stage_macroblock(FileBlock("Here's a possible method:"), 1);
+    uint32_t edge_dark = 0xff808080;
+    gs->config->fade_all_node_colors(MICRO, edge_dark);
+    gs->config->fade_all_edge_colors(MICRO, edge_dark);
+    gs->render_microblock();
+
+    bool simul = true;
+    stage_macroblock(FileBlock("Starting from the source, we explore all of its neighboring nodes to see if the target is there."), simul?5:10);
+    gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
+    gs->render_microblock();
+
+    unordered_set<double> border;
+    unordered_set<double> next_border;
+    unordered_set<double> visited;
+    border.insert(rotterdam_hash);
+    visited.insert(rotterdam_hash);
+
+    bfs(g, gs, border, next_border, visited, 0, simul);
+
+    stage_macroblock(FileBlock("If it isn't, we move on to those explored nodes and then check their neighbors for the target."), simul?16:17);
+    bfs(g, gs, border, next_border, visited, 1, simul);
+    bfs(g, gs, border, next_border, visited, 1, simul);
+    bfs(g, gs, border, next_border, visited, 1, simul);
+    bfs(g, gs, border, next_border, visited, 1, simul);
+
+    stage_macroblock(FileBlock("If we don't find it, we expand again."), simul?12:7);
+    bfs(g, gs, border, next_border, visited, 2, simul);
+    bfs(g, gs, border, next_border, visited, 2, simul);
+    bfs(g, gs, border, next_border, visited, 2, simul);
+
+    stage_macroblock(FileBlock("And we keep expanding out until we reach the target node."), simul?16:12);
+    bfs(g, gs, border, next_border, visited, 3, simul);
+    bfs(g, gs, border, next_border, visited, 3, simul);
+
+    bfs(g, gs, border, next_border, visited, 4, simul);
+    bfs(g, gs, border, next_border, visited, 4, simul);
+
+    stage_macroblock(FileBlock("This algorithm is known as breadth first search."), 1);
+    gs->render_microblock();
+    gs->config->fade_all_edge_colors(MICRO, edge_dark);
+    gs->config->fade_all_node_colors(MICRO, edge_dark);
+
+    stage_macroblock(FileBlock("It will always find the shortest path because it checks all of the nodes at every level."), simul?4:9);
+    visited.clear();
+    border.clear();
+    next_border.clear();
+    border.insert(rotterdam_hash);
+    visited.insert(rotterdam_hash);
+
+    bfs(g, gs, border, next_border, visited, 0, simul);
+
+    visited.clear();
+    border.clear();
+    next_border.clear();
+    border.insert(rotterdam_hash);
+    visited.insert(rotterdam_hash);
+
+    stage_macroblock(FileBlock("If there was a path from Rotterdam to Groningen in two steps, we would’ve found it on the second iteration, so six steps must be the shortest path."), simul?17:17);
+    bfs(g, gs, border, next_border, visited, 0, simul);
+    bfs(g, gs, border, next_border, visited, 0, simul);
+    return;
+
+    gs->manager.set("physics_multiplier", "1");
+    gs->manager.set("repel", ".01");
+    gs->manager.set("decay", "0.2");
+    gs->manager.transition(MICRO, "decay", "0.5");
+    stage_macroblock(FileBlock("But there’s a problem. This algorithm values all of the edges the same. Just one step."), 1);
+    gs->render_microblock();
+    gs->manager.set("physics_multiplier", "0");
+
+    for(auto& [city, coords] : netherlands_cities) {
+        vec4 position = lat_long_to_xyz(coords);
+        gs->transition_node_position(MICRO, HashableString(city).get_hash(), position);
+    }
+    stage_macroblock(FileBlock("So let's adjust that map, and add weights to represent distance."), 1);
+    gs->render_microblock();
 
     stage_macroblock(SilenceBlock(1), 2);
     gs->manager.transition(MICRO, "edge_weights_size", "1");
@@ -617,6 +634,15 @@ void slide8() {
         double hash = HashableString(city).get_hash();
         gs->config->transition_node_label(MICRO, hash, "");
     }
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Now the shortest path is much harder to figure out."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Dijkstra realized that it wasn’t the number of edges between a node and the source that mattered, it was their distance to the source."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("So instead of exploring nodes by their level, he could explore all the nodes close to the source, and then the next closest nodes, and so on — ordered by their distance."), 1);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("Dijkstra’s algorithm works like this. Each node has a cost, or how far it is from the source."), 6);
@@ -660,9 +686,9 @@ void slide8() {
     }
 
     stage_macroblock(FileBlock("A also relaxes C to .7, D to .3, and E to 1.3."), 12);
-        gs->render_microblock();
-        gs->render_microblock();
-        gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     while(remaining_microblocks_in_macroblock) {
         run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
         gs->render_microblock();

@@ -10,23 +10,36 @@ quat ROLL_CCW(sqrt2over2, 0, 0, sqrt2over2);
 
 void render_3d(){
     ThreeDimensionScene tds;
-    for(int i = -7; i <= 7; i+=2)
-    for(int j = -7; j <= 7; j+=2)
-    for(int k = -7; k <= 7; k+=2)
+    tds.enable_globe("earth_tiny");
+    for(int i = -1; i <= 1; i+=1)
+    for(int j = -1; j <= 1; j+=1)
+    for(int k = -1; k <= 1; k+=1)
         tds.add_point(Point(vec3(i, j, k), OPAQUE_WHITE));
 
-    quat q(1,0,0,0);
+    tds.add_line(Line(vec3(0, 0, 0), vec3(2, 0, 0), 0xffff0000));
+    tds.add_line(Line(vec3(0, 0, 0), vec3(0, 2, 0), 0xff00ff00));
+    tds.add_line(Line(vec3(0, 0, 0), vec3(0, 0, 2), 0xff0000ff));
+
     tds.manager.set("x", "0");
     tds.manager.set("y", "0");
     tds.manager.set("z", "0");
-    tds.manager.set("d", "0");
+    tds.manager.set("d", "5");
     tds.manager.set("surfaces_opacity", "1");
     tds.manager.set("points_opacity", "1");
     tds.manager.set("lines_opacity", "1");
-    tds.manager.set("q1", std::to_string(q.u));
-    tds.manager.set("qi", std::to_string(q.i));
-    tds.manager.set("qj", std::to_string(q.j));
-    tds.manager.set("qk", std::to_string(q.k));
+    tds.manager.set("q1", "1");
+    tds.manager.set("qi", ".1");
+    tds.manager.set("qj", ".1");
+    tds.manager.set("qk", "0");
+
+    stage_macroblock(SilenceBlock(2), 1);
+    quat q(1,0,0,0);
+    tds.manager.transition(MICRO, "q1", std::to_string(q.u));
+    tds.manager.transition(MICRO, "qi", std::to_string(q.i));
+    tds.manager.transition(MICRO, "qj", std::to_string(q.j));
+    tds.manager.transition(MICRO, "qk", std::to_string(q.k));
+    tds.render_microblock();
+
     stage_macroblock(SilenceBlock(2), 1);
     tds.render_microblock();
 

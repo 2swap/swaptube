@@ -1,6 +1,7 @@
 #include "ThreeDimensionScene.h"
 #include "../../IO/Writer.h"
 #include "../../Host_Device_Shared/vec.h"
+#include "../../Core/Smoketest.h"
 
 extern "C" {
     void render_points_on_gpu(
@@ -42,7 +43,7 @@ extern "C" void cuda_render_sphere(
     uint32_t* h_pixels, int width, int height,
     float geom_mean_size,
     uint32_t* d_map, int map_width, int map_height,
-    const quat& camera_direction, const vec3& camera_pos, float fov);
+    const quat& camera_direction, const vec3& camera_pos, float fov, float globe_opacity);
 extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix, int& out_width, int& out_height);
 extern "C" void cuda_free_map(uint32_t* d_map);
 
@@ -77,12 +78,9 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_radius_multiplier", "1"},
-        {"points_opacity", "1"}
+        {"points_opacity", "1"},
+        {"globe_opacity", "0"}
     });
-}
-
-void ThreeDimensionScene::enable_globe() {
-    d_map = cuda_copy_map("earth_small", map_w, map_h);
 }
 
 ThreeDimensionScene::~ThreeDimensionScene() {
@@ -95,7 +93,7 @@ vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, bool& behind_came
     if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
     float scale = (get_geom_mean_size()*fov) / coordinate.z;
-    return scale * vec2(coordinate.x, coordinate.y) + get_width_height()*.5f;
+    return scale * vec2(coordinate.x, -coordinate.y) + get_width_height()*.5f;
 }
 
 bool ThreeDimensionScene::isOutsideScreen(const vec2& point) {
@@ -236,7 +234,7 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 void ThreeDimensionScene::set_camera_direction() {
     camera_direction = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
     vec3 focus = vec3(state["x"], state["y"], state["z"]);
-    camera_pos = focus + rotate_vector(vec3(0,0,-state["d"]), camera_direction);
+    camera_pos = focus - rotate_vector(vec3(0,0,state["d"]), conjugate(camera_direction));
 }
 
 float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
@@ -250,12 +248,18 @@ void ThreeDimensionScene::draw() {
 
     set_camera_direction();
 
-    if(d_map != nullptr) cuda_render_sphere(
-        pix.pixels.data(), pix.w, pix.h,
-        get_geom_mean_size(),
-        d_map, map_w, map_h,
-        camera_direction, camera_pos, fov
-    );
+    float globe_opacity = state["globe_opacity"];
+    if(globe_opacity > 0.001) {
+        string map_filename = "../earth";
+        if(!rendering_on()) map_filename = "../earth_tiny";
+        if(d_map == nullptr) d_map = cuda_copy_map(map_filename, map_w, map_h);
+        cuda_render_sphere(
+            pix.pixels.data(), pix.w, pix.h,
+            get_geom_mean_size(),
+            d_map, map_w, map_h,
+            camera_direction, camera_pos, fov, globe_opacity
+        );
+    }
 
     // Render surfaces via their CUDA integration.
     if (state["surfaces_opacity"] > 0.001) {
@@ -273,7 +277,7 @@ void ThreeDimensionScene::draw() {
             state["lines_opacity"],
             lines.data(),
             static_cast<int>(lines.size()),
-            conjugate(camera_direction),
+            camera_direction,
             camera_pos,
             fov
         );
@@ -298,8 +302,8 @@ void ThreeDimensionScene::draw() {
 const StateQuery ThreeDimensionScene::populate_state_query() const {
     StateQuery sq = SuperScene::populate_state_query();
     for(const string& x : {
-        "fov","x", "y", "z", "d", "q1", "qi", "qj",
-        "qk", "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
+        "fov","x", "y", "z", "d", "q1", "qi", "qj", "qk",
+        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier", "globe_opacity"
     }) sq.insert(x);
     if(use_state_for_center) {
         for(const Surface& surface : surfaces){

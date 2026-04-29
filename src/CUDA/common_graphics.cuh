@@ -50,26 +50,29 @@ __device__ __forceinline__ void d_coordinate_to_pixel(
     const float geom_mean_size,
     const int width,
     const int height,
-    vec3& out)
+    vec3& pixel)
 {
     behind_camera = false;
     vec3 rotated = rotate_vector(coordinate - camera_pos, camera_direction);
     if (rotated.z <= 0) { behind_camera = true; return; }
     float scale = (geom_mean_size * fov) / rotated.z;
-    out.x = scale * rotated.x + width * 0.5f;
-    out.y = scale * rotated.y + height * 0.5f;
-    out.z = rotated.z;
+    pixel.x = scale * rotated.x + width * 0.5f;
+    pixel.y = -scale * rotated.y + height * 0.5f;
+    pixel.z = rotated.z;
 }
 
-__device__ __forceinline__ Cuda::vec3 get_raymarch_vector(int px, int py, float w, float h, float fov, const quat& camera_orientation) {
-    // NDC coordinates [-1,1]
-    float ndc_x = ((px + 0.5f) / w) * 2.0f - 1.0f;
-    float ndc_y = ((py + 0.5f) / h) * 2.0f - 1.0f;
-
-    float px_cam = ndc_x * tanf(fov * 0.5f) * w / h;
-    float py_cam = ndc_y * tanf(fov * 0.5f);
-    Cuda::vec3 dir_cam = Cuda::vec3(px_cam, py_cam, -1.0f);
-    return -normalize(rotate_vector(dir_cam, camera_orientation));
+__device__ __forceinline__ Cuda::vec3 get_raymarch_vector(
+    const vec2& pixel,
+    const vec2& wh,
+    const float fov,
+    const quat& camera_orientation)
+{
+    float scale = 1 / (sqrtf(wh.x * wh.y) * fov);
+    vec3 rotated;
+    rotated.x = (pixel.x - wh.x * 0.5f) * scale;
+    rotated.y = -(pixel.y - wh.y * 0.5f) * scale;
+    rotated.z = 1.0f;
+    return rotate_vector(rotated, conjugate(camera_orientation));
 }
 
 }

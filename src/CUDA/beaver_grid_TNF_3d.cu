@@ -274,7 +274,7 @@ __global__ void beaver_raytrace_kernel(unsigned int* pixels, int w, int h, Cuda:
     }
     int pixel_index = idy * w + idx;
 
-    Cuda::vec3 raydir = Cuda::get_raymarch_vector(idx, idy, w, h, fov, camera);
+    Cuda::vec3 raydir = Cuda::get_raymarch_vector(Cuda::vec2(idx, idy), Cuda::vec2(w, h), fov, camera);
     Cuda::vec4 raycol = Cuda::vec4(0);
     Cuda::vec4 cubcol = Cuda::vec4(0.1, 1, 1, 1);
 

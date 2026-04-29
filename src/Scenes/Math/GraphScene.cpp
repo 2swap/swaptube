@@ -107,11 +107,12 @@ void GraphScene::draw(){
         if(hash == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(hash == next_hash) { next_pos = node_pos; next_found = true; }
         uint32_t color = config->get_node_color(hash, macro, micro);
-        add_point(Point(node_pos, color, 1, config->get_node_radius(hash, macro, micro)));
+        float node_radius = config->get_node_radius(hash, macro, micro);
+        add_point(Point(node_pos, color, 1, node_radius));
         float splash_opacity = config->get_node_splash_opacity(hash, macro, micro);
         float splash_radius = config->get_node_splash_radius(hash, macro, micro);
         if (splash_opacity > 0 && splash_radius > 0) {
-            add_point(Point(node_pos, color, splash_opacity, splash_radius));
+            add_point(Point(node_pos, color, splash_opacity, splash_radius + node_radius));
         }
 
         for(const Edge& neighbor_edge : node.neighbors){
@@ -121,13 +122,25 @@ void GraphScene::draw(){
             Node neighbor = graph->nodes.find(neighbor_id)->second;
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
             uint32_t edge_color_1 = config->get_edge_color(hash, neighbor_id, macro, micro);
+            uint32_t edge_color_fade = config->get_edge_fade_color(hash, neighbor_id, macro, micro);
             uint32_t edge_color_2 = config->get_edge_target_color(hash, neighbor_id, macro, micro);
             if(edge_color_1 == edge_color_2) {
                 add_line(Line(node_pos, neighbor_pos, edge_color_1));
+            } else if (edge_color_fade != edge_color_1 && edge_color_fade != edge_color_2) {
+                add_line(Line(node_pos, neighbor_pos, edge_color_fade));
             } else {
-                vec3 midpoint = veclerp(node_pos, neighbor_pos, config->get_edge_midpoint_fraction(hash, neighbor_id, macro, micro));
+                float midpoint_fraction = config->get_edge_midpoint_fraction(hash, neighbor_id, macro, micro);
+                uint32_t midpoint_color = edge_color_2;
+                if(config->get_edge_direction(hash, neighbor_id)){
+                    midpoint_fraction = 1 - midpoint_fraction;
+                    uint32_t temp = edge_color_1;
+                    edge_color_1 = edge_color_2;
+                    edge_color_2 = temp;
+                    midpoint_color = edge_color_1;
+                }
+                vec3 midpoint = veclerp(node_pos, neighbor_pos, midpoint_fraction);
                 add_line(Line(midpoint, neighbor_pos, edge_color_1));
-                add_point(Point(midpoint, edge_color_2, 1, midpoint_thickness));
+                add_point(Point(midpoint, midpoint_color, 1, midpoint_thickness));
                 add_line(Line(node_pos, midpoint, edge_color_2));
             }
         }
@@ -154,7 +167,7 @@ void GraphScene::draw(){
             bool behind_camera = false;
             vec2 pos = coordinate_to_pixel(node.position, behind_camera);
             pos += node_label_downshift; // shift down a bit so it doesn't overlap with the point
-            vec2 half_dim = vec2(0.05, 0.04) * get_width_height() * label_size;
+            vec2 half_dim = vec2(0.1, 0.02) * get_width_height() * label_size;
             vec2 top_left = pos - half_dim;
             vec2 bottom_right = pos + half_dim;
             write_text(pix, label, top_left, bottom_right, 1);

@@ -358,7 +358,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     if (px >= w || py >= h) return;
     d_pixels[py * w + px] = 0xff0000ff; // default to blue
 
-    Cuda::vec3 dir_world(Cuda::get_raymarch_vector(px, py, w, h, fov, camera_orientation));
+    Cuda::vec3 dir_world(Cuda::get_raymarch_vector(Cuda::vec2(px, py), Cuda::vec2(w, h), fov, camera_orientation));
 
 
     // Initialize state in parameter-space (we treat param-space coords directly)

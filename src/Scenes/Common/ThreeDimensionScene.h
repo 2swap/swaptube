@@ -82,6 +82,7 @@ public:
 
     void remove_surface(const string& name);
     void enable_globe();
+    void enable_globe(const string& which);
 
     void clear_lines();
     void clear_points();
