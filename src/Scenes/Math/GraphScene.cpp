@@ -33,7 +33,7 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
         {"repel", "1"},
         {"attract", "1"},
         {"decay", ".95"},
-        {"physics_multiplier", "1"},
+        {"physics_multiplier", "0"},
         {"dimensions", "3"},
         {"mirror_force", "0"},
         {"edge_weights_size", "0"},

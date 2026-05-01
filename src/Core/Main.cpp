@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, signal_handler);
     try {
         setup_output_subfolders();
-        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000022, AUDIO_HINTS, AUDIO_SFX);
+        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000000, AUDIO_HINTS, AUDIO_SFX);
         cout << "Rendering video... " << endl;
         render_video();
     } catch(std::exception& e) {

@@ -26,7 +26,7 @@ __global__ void render_points_kernel(
         camera_direction, camera_pos, fov,
         geom_mean_size, width, height, pixel);
     if (behind_camera) return;
-    float dot_size = p.size * points_radius_multiplier * geom_mean_size / 400.0f;
+    float dot_size = p.size * points_radius_multiplier * geom_mean_size / 140.0f;
     Cuda::d_fill_circle(pixel.x, pixel.y, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
 }
 

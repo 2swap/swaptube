@@ -251,7 +251,9 @@ void ThreeDimensionScene::draw() {
     float globe_opacity = state["globe_opacity"];
     if(globe_opacity > 0.001) {
         string map_filename = "../earth";
+        int width = get_width();
         if(!rendering_on()) map_filename = "../earth_tiny";
+        else if(width <= 2000) map_filename = "../earth_small";
         if(d_map == nullptr) d_map = cuda_copy_map(map_filename, map_w, map_h);
         cuda_render_sphere(
             pix.pixels.data(), pix.w, pix.h,

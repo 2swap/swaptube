@@ -108,6 +108,12 @@ void GraphDrawingConfig::transition_edge_color(const TransitionType tt, const do
     edge_configs[hash].color_fade = false;
 }
 
+void GraphDrawingConfig::splash_node(const double hash) {
+    auto& config = node_configs[hash];
+    config.splash_radius = 0.0f;
+    config.splash_opacity = 1.0f;
+}
+
 void GraphDrawingConfig::fade_edge_color(const TransitionType tt, const double hash, const uint32_t new_color) {
     edge_configs[hash].target_color = new_color;
     edge_configs[hash].color_transition_type = tt;
@@ -144,6 +150,10 @@ void GraphDrawingConfig::add_edge_if_missing(const double hash1, const double ha
     double edge_id = hash1*2+hash2;
     if (edge_configs.find(edge_id) == edge_configs.end()) {
         edge_configs[edge_id] = EdgeConfig();
+        edge_configs[edge_id].color_transition_direction = hash1 > hash2;
+        edge_configs[edge_id].color_fade = false;
+        edge_configs[edge_id].color = 0x00ffffff;
+        edge_configs[edge_id].target_color = 0xffffffff;
     }
 }
 
@@ -169,6 +179,7 @@ void GraphDrawingConfig::step_transition(const TransitionType tt) {
     for (auto& [hash, config] : node_configs) {
         if (config.radius_transition_type == tt) config.radius = config.target_radius;
         if (config. label_transition_type == tt) config.label = config.target_label;
+        if (config. color_transition_type == tt) config.color = config.target_color;
     }
     for (auto& [hash, config] : edge_configs) {
         if (config.color_transition_type == tt) config.color = config.target_color;
@@ -181,8 +192,8 @@ void GraphDrawingConfig::tick(const StateReturn& state) {
         if(config.target_color != config.color && !config.color_fade) {
             config.splash_radius = 0.0f;
             config.splash_opacity = 1.0f;
+            config.color = config.target_color;
         }
-        config.color = config.target_color;
         config.splash_radius = sqrt(config.splash_radius*config.splash_radius + .5);
         config.splash_opacity -= 0.025f;
     }

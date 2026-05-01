@@ -60,6 +60,7 @@ public:
     void tick(const StateReturn& state);
     void transition_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void       fade_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
+    void splash_node(const double hash);
     void transition_node_label(const TransitionType tt, const double hash, const std::string& new_label);
     void transition_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
     void       fade_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
