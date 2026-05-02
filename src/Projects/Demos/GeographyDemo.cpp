@@ -24,12 +24,12 @@ quat lat_long_to_quat(vec2 lat_long) {
 
 void render_video() {
     ThreeDimensionScene gs;
-    gs.enable_globe();
 
     quat netherlands = lat_long_to_quat(vec2(52.1326f, 5.2913f));
     stage_macroblock(SilenceBlock(4), 1);
     gs.manager.set({
         {"d", "2"},
+        {"globe_opacity", "0.5"},
     });
     gs.manager.transition(MICRO, {
         {"q1", to_string(netherlands.u)},

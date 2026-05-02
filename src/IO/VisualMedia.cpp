@@ -448,7 +448,7 @@ void write_text(Pixels& pix, const std::string& latex, const vec2& top_left, con
     int x_offset = (bottom_right.x + top_left.x) / 2 - text.w / 2;
     int y_offset = (bottom_right.y + top_left.y) / 2 - text.h / 2;
     if(abs(angle) > 0.001)
-        pix.overlay_cpu_with_rotation(text, x_offset, y_offset, opacity, angle);
+        pix.overlay_cpu_with_rotation(text, ivec2(x_offset, y_offset), opacity, angle);
     else
         pix.overlay_cpu(text, x_offset, y_offset, opacity);
 }

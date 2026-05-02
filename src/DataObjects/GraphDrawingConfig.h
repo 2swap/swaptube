@@ -43,6 +43,7 @@ private:
     std::unordered_map<double, EdgeConfig> edge_configs;
     void transition_edge_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void fade_edge_color(const TransitionType tt, const double hash, const uint32_t new_color);
+    void set_edge_color(const double hash, const uint32_t new_color);
 public:
     void add_node_if_missing(double node_id);
     void add_edge_if_missing(double from, double to);
@@ -60,9 +61,11 @@ public:
     void tick(const StateReturn& state);
     void transition_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void       fade_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
+    void        set_node_color(const double hash, const uint32_t new_color);
     void splash_node(const double hash);
     void transition_node_label(const TransitionType tt, const double hash, const std::string& new_label);
     void transition_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
+    void        set_edge_color(const double hash1, const double hash2, const uint32_t new_color);
     void       fade_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
     void transition_edge_label(const TransitionType tt, const double hash1, const double hash2, const std::string& new_label);
     void transition_all_node_colors(const TransitionType tt, const uint32_t new_color);

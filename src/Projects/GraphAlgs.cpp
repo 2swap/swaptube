@@ -111,7 +111,6 @@ unordered_map<string, vec2> us_cities = {
     {"Fresno", vec2(36.7378, -119.7871)},
     {"Atlanta", vec2(33.7490, -84.3880)},
     {"Kansas City", vec2(39.0997, -94.5786)},
-    {"Colorado Springs", vec2(38.8339, -104.8214)},
     {"Miami", vec2(25.7617, -80.1918)},
     {"Raleigh", vec2(35.7796, -78.6382)},
     {"Omaha", vec2(41.2565, -95.9345)},
@@ -178,6 +177,7 @@ unordered_map<string, vec2> us_cities = {
     {"Flagstaff", vec2(35.1983, -111.6513)},
     {"Grand Junction", vec2(39.0639, -108.5506)},
     {"St. George", vec2(37.0965, -113.5684)},
+    {"Tallahassee", vec2(30.4383, -84.2807)},
 };
 
 vector<pair<string, string>> us_edges;
@@ -254,6 +254,21 @@ void populate_us_edges() {
         edges_per_city[city1]++;
         edges_per_city[city2]++;
     }
+
+    // Manually add a few extras
+    us_edges.push_back({"Boise", "Portland"});
+    us_edges.push_back({"Boise", "Salt Lake City"});
+    us_edges.push_back({"Boise", "Billings"});
+    us_edges.push_back({"Salt Lake City", "Reno"});
+    us_edges.push_back({"Denver", "Wichita"});
+    us_edges.push_back({"Denver", "Lincoln"});
+    us_edges.push_back({"Rapid City", "Sioux Falls"});
+    us_edges.push_back({"Spokane", "Billings"});
+    us_edges.push_back({"Bismarck", "Billings"});
+    us_edges.push_back({"Albuquerque", "Flagstaff"});
+    us_edges.push_back({"Phoenix", "Los Angeles"});
+    us_edges.push_back({"Tucson", "San Diego"});
+    us_edges.push_back({"Birmingham", "Memphis"});
 }
 
 void find_closest_pair() {
@@ -315,8 +330,47 @@ void slide3() {
     }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("The number of possible paths from one corner to the other is in the septillions."), 1);
-    gs->render_microblock();
+    stage_macroblock(FileBlock("The number of possible paths from one corner to the other is in the septillions."), 40);
+    while (remaining_microblocks_in_macroblock) {
+        // color a random non-self-intersecting path from Miami to Seattle red
+        vector<string> path;
+        while(true) {
+            path = {"Miami"};
+            while(path.back() != "Seattle") {
+                string current_city = path.back();
+                vector<string> neighbors;
+                for(pair<string, string> edge : us_edges) {
+                    if(edge.first == current_city && find(path.begin(), path.end(), edge.second) == path.end()) {
+                        neighbors.push_back(edge.second);
+                    } else if(edge.second == current_city && find(path.begin(), path.end(), edge.first) == path.end()) {
+                        neighbors.push_back(edge.first);
+                    }
+                }
+                if(neighbors.size() == 0) {
+                    break;
+                }
+                string next_city = neighbors[rand() % neighbors.size()];
+                path.push_back(next_city);
+            }
+            if(path.back() == "Seattle") {
+                break;
+            }
+        }
+        for(int i = 0; i < path.size() - 1; i++) {
+            string city1 = path[i];
+            string city2 = path[i+1];
+            gs->config->set_edge_color(HashableString(city1).get_hash(), HashableString(city2).get_hash(), 0xffff0000);
+            gs->config->set_node_color(HashableString(city1).get_hash(), 0xffff0000);
+        }
+        gs->render_microblock();
+        // Undo
+        for(int i = 0; i < path.size() - 1; i++) {
+            string city1 = path[i];
+            string city2 = path[i+1];
+            gs->config->set_edge_color(HashableString(city1).get_hash(), HashableString(city2).get_hash(), 0xffffffff);
+            gs->config->set_node_color(HashableString(city1).get_hash(), 0xffffffff);
+        }
+    }
 }
 
 // lat long map
@@ -828,6 +882,50 @@ void slide8() {
     stage_macroblock(FileBlock("Here’s a few more examples of Dijkstra’s running through different graphs. Just like breadth-first, there’s a search-frontier that slowly spreads through the nodes. But Dijkstra’s frontier jumps around in different directions based on the edge weights."), 1);
 }
 
+// File format:
+// File starts with line NODES
+// Then nodes are listed: id (integer), latitude (float), longitude (float)
+// Then line EDGES
+// Then edges are listed: node1 (integer), node2 (integer)
+// string filename = "io_in/graph.txt";
+void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs) {
+    ifstream file("io_in/graph.txt");
+    string line;
+    enum Section { NONE, NODES, EDGES };
+    Section section = NONE;
+    int node_count = 0;
+    int edge_count = 0;
+    while(getline(file, line)) {
+        if(line == "NODES") {
+            section = NODES;
+            continue;
+        } else if(line == "EDGES") {
+            section = EDGES;
+            continue;
+        }
+        if(section == NODES) {
+            stringstream ss(line);
+            int id;
+            float lat, longi;
+            ss >> id >> lat >> longi;
+            double hash = HashableString(to_string(id)).get_hash();
+            vec4 position = lat_long_to_xyz(vec2(lat, longi));
+            g->add_node(new HashableString(to_string(id)));
+            g->move_node(hash, position);
+            node_count++;
+        } else if(section == EDGES) {
+            stringstream ss(line);
+            int id1, id2;
+            ss >> id1 >> id2;
+            double hash1 = HashableString(to_string(id1)).get_hash();
+            double hash2 = HashableString(to_string(id2)).get_hash();
+            g->add_edge(hash1, hash2);
+            edge_count++;
+        }
+    }
+    cout << "Loaded graph with " << node_count << " nodes and " << edge_count << " edges." << endl;
+}
+
 void slide20() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
@@ -835,10 +933,11 @@ void slide20() {
     gs->manager.set({
         {"globe_opacity", "0.2"},
         {"d", ".07"},
+        {"points_opacity", "0"},
     });
     // Fade globe to opacity 1
     gs->manager.transition(MICRO, "globe_opacity", "1");
-    stage_macroblock(FileBlock("But Dijkstra alone isn’t good enough for Google Maps."), 1);
+    stage_macroblock(FileBlock("But Dijkstra alone isn’t good enough for Google Maps."), 2);
     gs->render_microblock();
     gs->manager.transition(MICRO, "d", "1");
     gs->render_microblock();
@@ -848,8 +947,9 @@ void slide20() {
     transition_camera_to_lat_long(MICRO, gs, vec2(40.7128, -74.0060));
     gs->render_microblock();
 
-    gs->manager.transition(MICRO, "d", ".07");
+    gs->manager.transition(MICRO, "d", ".02");
     stage_macroblock(FileBlock("Let’s say I want to get from Newark Airport in New Jersey over to the Central Park Zoo."), 2);
+    if(rendering_on()) load_graph_from_file(g, gs);
     gs->render_microblock();
     gs->render_microblock();
 
@@ -879,24 +979,25 @@ void slide23() {
 unordered_map<string, vec2> graph_nodes = {
     {"a", vec2(-1.5, 0)},
     {"b", vec2(-.5, .5)},
-    {"c", vec2(-.5, -.5)},
-    {"d", vec2(.5, .5)},
-    {"e", vec2(.5, -.5)},
-    {"f", vec2(1.5, .5)},
-    {"g", vec2(1.5, -.5)},
+    {"c", vec2(.5, .5)},
+    {"d", vec2(1.5, .5)},
+    {"e", vec2(-.5, -.5)},
+    {"f", vec2(.5, -.5)},
+    {"h", vec2(1.5, -.5)},
 };
 
 unordered_map<string, int> graph_edges_with_weights = {
     {"ab", 2},
-    {"ac", 10},
-    {"bd", 3},
-    {"cd", 5},
-    {"ce", 1},
-    {"de", 1},
-    {"df", 2},
-    {"ef", 8},
-    {"eg", 7},
+    {"bc", 3},
+    {"cd", 2},
+    {"ae", 10},
+    {"ef", 1},
+    {"fh", 7},
+    {"ec", 5},
+    {"cf", 1},
+    {"fd", 8},
 };
+
 void slide42() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
@@ -932,50 +1033,50 @@ void slide42() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("These two nodes split the graph roughly in half,"), 4);
-    // Highlight c and d
+    // Highlight c and e
     gs->render_microblock();
     gs->config->transition_node_color(MICRO, HashableString("c").get_hash(), 0xffff0000);
     gs->render_microblock();
-    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("d").get_hash(), 0xffff0000);
+    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0xffff0000);
     gs->render_microblock();
-    gs->config->transition_node_color(MICRO, HashableString("d").get_hash(), 0xffff0000);
+    gs->config->transition_node_color(MICRO, HashableString("e").get_hash(), 0xffff0000);
     gs->render_microblock();
 
     unordered_map<string, int> node_ranks = {
         {"a", 2},
         {"b", 1},
-        {"c", 7},
-        {"d", 6},
-        {"e", 5},
-        {"f", 4},
-        {"g", 3},
+        {"c", 6},
+        {"d", 4},
+        {"e", 7},
+        {"f", 5},
+        {"h", 3},
     };
 
     stage_macroblock(FileBlock("so they will have the highest rank."), 2);
     gs->render_microblock();
     gs->config->transition_node_label(MICRO, HashableString("c").get_hash(), to_string(node_ranks["c"]));
-    gs->config->transition_node_label(MICRO, HashableString("d").get_hash(), to_string(node_ranks["d"]));
+    gs->config->transition_node_label(MICRO, HashableString("e").get_hash(), to_string(node_ranks["e"]));
     gs->render_microblock();
 
-    // Fade all nodes and edges gray except e, f, g, and their edges
+    // Fade all nodes and edges gray except for d, f and h
     stage_macroblock(FileBlock("We can split one side a little further, so that node gets the next highest rank."), 4);
     for(auto& [node, coords] : graph_nodes) {
-        if(node == "e" || node == "f" || node == "g") continue;
+        if(node == "d" || node == "f" || node == "h") continue;
         gs->config->fade_node_color(MICRO, HashableString(node).get_hash(), 0xff505050);
     }
     for(auto& [edge, weight] : graph_edges_with_weights) {
         string node1 = edge.substr(0, 1);
         string node2 = edge.substr(1, 1);
-        if((node1 == "e" || node1 == "f" || node1 == "g") && (node2 == "e" || node2 == "f" || node2 == "g")) continue;
+        if((node1 == "d" || node1 == "f" || node1 == "h") && (node2 == "d" || node2 == "f" || node2 == "h")) continue;
         double hash1 = HashableString(node1).get_hash();
         double hash2 = HashableString(node2).get_hash();
         gs->config->fade_edge_color(MICRO, hash1, hash2, 0xff505050);
     }
     gs->render_microblock();
 
-    // Highlight e
-    gs->config->transition_node_color(MICRO, HashableString("e").get_hash(), 0xff00ff00);
-    gs->config->transition_node_label(MICRO, HashableString("e").get_hash(), to_string(node_ranks["e"]));
+    // Highlight f
+    gs->config->transition_node_color(MICRO, HashableString("f").get_hash(), 0xff00ff00);
+    gs->config->transition_node_label(MICRO, HashableString("f").get_hash(), to_string(node_ranks["f"]));
     gs->render_microblock();
 
     gs->render_microblock();
@@ -985,7 +1086,7 @@ void slide42() {
 
     stage_macroblock(FileBlock("We then rank the rest of the nodes in any order with the remaining numbers."), 6);
     gs->render_microblock();
-    string remaining_nodes = "abfg";
+    string remaining_nodes = "abdh";
     double height = 0;
     for(char node : remaining_nodes) {
         string node_str(1, node);
@@ -1001,27 +1102,167 @@ void slide42() {
     gs->manager.transition(MICRO, "qi", "-.9");
     gs->render_microblock();
 
+    // Duplicate the whole graph
+    for(auto& [node, coords] : graph_nodes) {
+        double hash = HashableString(node).get_hash();
+        vec4 position = vec4(coords.x, coords.y, 0, 1);
+        g->add_node(new HashableString(node + "'"));
+        g->move_node(HashableString(node + "'").get_hash(), position);
+    }
+    // Add edges
+    for(auto& [edge, weight] : graph_edges_with_weights) {
+        string node1 = edge.substr(0, 1);
+        string node2 = edge.substr(1, 1);
+        double hash1 = HashableString(node1).get_hash();
+        double hash2 = HashableString(node2).get_hash();
+        g->add_edge(HashableString(node1 + "'").get_hash(), HashableString(node2 + "'").get_hash());
+    }
+
     stage_macroblock(FileBlock("The original graph is in white, and then the nodes are pulled down, or contracted, by their rank."), 1);
+    for(auto& [node, coords] : graph_nodes) {
+        string node_str = node;
+        vec2 position = graph_nodes[node_str];
+        gs->transition_node_position(MICRO, HashableString(node_str).get_hash(), vec4(position.x, position.y, -.1, 0));
+    }
     gs->render_microblock();
 
     stage_macroblock(CompositeBlock(FileBlock("1 is the furthest down, 2 is next up and so on."), SilenceBlock(3)), 10);
-    for (char node_ch : string("bacdefg")) {
-        string node(1, node_ch);
+    for (int rank = 1; rank <= 7; rank++) {
+        // Find node with this rank
+        string node;
+        for(auto& [n, r] : node_ranks) {
+            if(r == rank) {
+                node = n;
+                break;
+            }
+        }
         vec2 position = graph_nodes[node];
-        gs->transition_node_position(MICRO, HashableString(node).get_hash(), vec4(position.x, position.y, 2*node_ranks[node]/7.-1, 0));
-        if(node_ch == 'b' || node_ch == 'a' || node_ch == 'g') {
+        gs->transition_node_position(MICRO, HashableString(node).get_hash(), vec4(position.x, position.y, node_ranks[node]/7.-1.2, 0));
+        if(node == "b" || node == "a" || node == "h") {
             gs->render_microblock();
         }
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("Eventually, our algorithm will use a bidirectional search, but it will only ever search from low ranks to higher ranks."), 1);
+    stage_macroblock(FileBlock("Eventually, our algorithm will use a bidirectional search,"), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("but it will only ever search from low ranks to higher ranks."), 1);
+    // Transition all edge colors from side of low rank to side of high rank
+    for (auto& [edge, weight] : graph_edges_with_weights) {
+        string node1 = edge.substr(0, 1);
+        string node2 = edge.substr(1, 1);
+        string lower_rank_node = node_ranks[node1] < node_ranks[node2] ? node1 : node2;
+        string higher_rank_node = node_ranks[node1] < node_ranks[node2] ? node2 : node1;
+        double hash1 = HashableString(lower_rank_node).get_hash();
+        double hash2 = HashableString(higher_rank_node).get_hash();
+        gs->config->transition_edge_color(MICRO, hash1, hash2, 0xffff0000);
+    }
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("But if we search like that, this graph has an obvious problem."), 1);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Let’s add the edge weights back."), 1);
+    gs->manager.transition(MICRO, "edge_weights_size", "1");
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("What’s the shortest path from A to C using this hierarchy search?"), 5);
+    // Highlight A and C
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("a").get_hash(), 0xffff0000);
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("a").get_hash(), 0xffff0000);
+    gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Well, starting from A, we search up and reach E with a cost of 10."), 1);
+    // Add edge A to E
+    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0xffff0000);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("From C, we also search up and reach E with a cost of 5."), 1);
+    // Add edge C to E
+    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0xffff0000);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Shortest path is A, E, C with a cost of 15. Done."), 3);
+    gs->config->transition_node_color(MICRO, HashableString("a").get_hash(), 0xff00ff00);
+    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("e").get_hash(), 0xff00ff00);
+    gs->config->transition_edge_color(MICRO, HashableString("e").get_hash(), HashableString("c").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("c").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Except that’s not the shortest path."), 1);
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Using the path A, B, C only costs 5."), 3);
+    gs->config->transition_node_color(MICRO, HashableString("a").get_hash(), 0xff00ff00);
+    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("b").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("b").get_hash(), 0xff00ff00);
+    gs->config->transition_edge_color(MICRO, HashableString("b").get_hash(), HashableString("c").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("c").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("What went wrong?"), 1);
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("B has edges to two higher ranked nodes."), 1);
+    gs->config->transition_node_color(MICRO, HashableString("b").get_hash(), 0xffff0000);
+    gs->config->transition_edge_color(MICRO, HashableString("b").get_hash(), HashableString("a").get_hash(), 0xffff0000);
+    gs->config->transition_edge_color(MICRO, HashableString("b").get_hash(), HashableString("c").get_hash(), 0xffff0000);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("But since it’s the lowest of the three, there’s no way to consider that path."), 2);
+    // Pop B
+    gs->config->splash_node(HashableString("b").get_hash());
+    gs->render_microblock();
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Remember, our search never follows a path that’s up, down, up."), 3);
+    // Highlight path A, B, C
+    gs->config->transition_node_color(MICRO, HashableString("a").get_hash(), 0xff00ff00);
+    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("b").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("b").get_hash(), 0xff00ff00);
+    gs->config->transition_edge_color(MICRO, HashableString("b").get_hash(), HashableString("c").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("c").get_hash(), 0xff00ff00);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("To fix it, we’ll add a shortcut between A and C."), 2);
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+    g->add_edge(HashableString("a").get_hash(), HashableString("c").get_hash());
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Its weight is just the cost of the path A, B, C and it has a midpoint marker to B."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("The bidirectional search now checks both the upper path [AEC] and the shortcut to find the best path."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("But there's three more problems if we want this to work on ANY graph."), 1);
     gs->render_microblock();
 }
 
 void render_video() {
-    slide3();
+    //slide3();
     //slide8();
-    //slide20();
+    slide20();
     //slide42();
 }

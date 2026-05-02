@@ -69,7 +69,7 @@ public:
 
     void overlay_cpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier = 1);
     void overlay_gpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier = 1);
-    void overlay_cpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians);
+    void overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, double overlay_opacity_multiplier, float angle_radians);
     void overlay_gpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians);
 
     void overwrite(const Pixels& p, int dx, int dy);

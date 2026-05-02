@@ -201,24 +201,45 @@ void Pixels::overlay_cpu(const Pixels& p, int dx, int dy, double overlay_opacity
 
 // Use bilinear interpolation to sample from p with rotation, and overlay onto this.
 // dx and dy specify the center of the rotated p in this image.
-void Pixels::overlay_cpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians){
-    angle_radians = -angle_radians; // Negate to rotate in the expected direction
+void Pixels::overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, double overlay_opacity_multiplier, float angle_radians){
     float cos_angle = cos(angle_radians);
     float sin_angle = sin(angle_radians);
-    int cx = p.w / 2;
-    int cy = p.h / 2;
+    ivec2 center = ivec2(p.w / 2, p.h / 2);
 
-    for(int x = 0; x < p.w; x++){
-        for(int y = 0; y < p.h; y++){
-            // Rotate (x, y) around the center of p
-            float rotated_x = cos_angle * (x - cx) - sin_angle * (y - cy) + cx;
-            float rotated_y = sin_angle * (x - cx) + cos_angle * (y - cy) + cy;
+    // Find the leftmost, uppermost, rightmost, and bottommost points of the rotated p to determine the bounding box for iteration
+    int left = 0, right = 0, top = 0, bottom = 0;
+    for (int x = 0; x < 2; x++) {
+        for (int y = 0; y < 2; y++) {
+            int px = (x == 0) ? 0 : p.w;
+            int py = (y == 0) ? 0 : p.h;
+            ivec2 point = ivec2(px, py) - center;
+            int rotated_x = static_cast<int>(cos_angle * point.x - sin_angle * point.y);
+            int rotated_y = static_cast<int>(sin_angle * point.x + cos_angle * point.y);
+            left = min(left, rotated_x);
+            right = max(right, rotated_x);
+            top = min(top, rotated_y);
+            bottom = max(bottom, rotated_y);
+        }
+    }
+    left += offset.x;
+    right += offset.x;
+    top += offset.y;
+    bottom += offset.y;
 
-            // Sample the color from p using bilinear interpolation
-            int sampled_color = p.get_pixel_bilinear(rotated_x, rotated_y);
+    // Iterate over the bounding box of the rotated pixels
+    for (int y = top; y <= bottom; y++) {
+        for (int x = left; x <= right; x++) {
+            // Calculate the corresponding point in p by applying the inverse rotation
+            int rotated_x = x - offset.x;
+            int rotated_y = y - offset.y;
+            int original_x = static_cast<int>(cos_angle * rotated_x + sin_angle * rotated_y) + center.x;
+            int original_y = static_cast<int>(-sin_angle * rotated_x + cos_angle * rotated_y) + center.y;
 
-            // Overlay the sampled color onto this image at the appropriate location
-            overlay_pixel(dx + x - cx, dy + y - cy, sampled_color, overlay_opacity_multiplier);
+            // If the original point is within the bounds of p, overlay it
+            if (original_x >= 0 && original_x < p.w && original_y >= 0 && original_y < p.h) {
+                int col = p.get_pixel_bilinear(original_x, original_y);
+                overlay_pixel(x, y, col, overlay_opacity_multiplier);
+            }
         }
     }
 }

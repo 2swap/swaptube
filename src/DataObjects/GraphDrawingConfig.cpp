@@ -97,6 +97,11 @@ void GraphDrawingConfig::fade_node_color(const TransitionType tt, const double h
     node_configs[hash].color_fade = true;
 }
 
+void GraphDrawingConfig::set_node_color(const double hash, const uint32_t new_color){
+    node_configs[hash].target_color = new_color;
+    node_configs[hash].color = new_color;
+}
+
 void GraphDrawingConfig::transition_node_label(const TransitionType tt, const double hash, const string& new_label){
     node_configs[hash].target_label = new_label;
     node_configs[hash].label_transition_type = tt;
@@ -106,6 +111,11 @@ void GraphDrawingConfig::transition_edge_color(const TransitionType tt, const do
     edge_configs[hash].target_color = new_color;
     edge_configs[hash].color_transition_type = tt;
     edge_configs[hash].color_fade = false;
+}
+
+void GraphDrawingConfig::set_edge_color(const double hash, const uint32_t new_color) {
+    edge_configs[hash].target_color = new_color;
+    edge_configs[hash].color = new_color;
 }
 
 void GraphDrawingConfig::splash_node(const double hash) {
@@ -131,6 +141,11 @@ void GraphDrawingConfig::transition_edge_color(const TransitionType tt, const do
 void GraphDrawingConfig::fade_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color) {
     fade_edge_color(tt, hash1*2+hash2, new_color);
     fade_edge_color(tt, hash2*2+hash1, new_color);
+}
+
+void GraphDrawingConfig::set_edge_color(const double hash1, const double hash2, const uint32_t new_color) {
+    set_edge_color(hash1*2+hash2, new_color);
+    set_edge_color(hash2*2+hash1, new_color);
 }
 
 void GraphDrawingConfig::transition_edge_label(const TransitionType tt, const double hash1, const double hash2, const string& new_label) {
