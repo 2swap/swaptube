@@ -108,7 +108,9 @@ void GraphScene::draw(){
         if(hash == next_hash) { next_pos = node_pos; next_found = true; }
         uint32_t color = config->get_node_color(hash, macro, micro);
         float node_radius = config->get_node_radius(hash, macro, micro);
-        add_point(Point(node_pos, color, 1, node_radius));
+        if (node_radius > 0) {
+            add_point(Point(node_pos, color, 1, node_radius));
+        }
         float splash_opacity = config->get_node_splash_opacity(hash, macro, micro);
         float splash_radius = config->get_node_splash_radius(hash, macro, micro);
         if (splash_opacity > 0 && splash_radius > 0) {

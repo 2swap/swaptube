@@ -62,6 +62,7 @@ public:
     void transition_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void       fade_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void        set_node_color(const double hash, const uint32_t new_color);
+    void        set_node_radius(const double hash, const float new_radius);
     void splash_node(const double hash);
     void transition_node_label(const TransitionType tt, const double hash, const std::string& new_label);
     void transition_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
@@ -71,5 +72,6 @@ public:
     void transition_all_node_colors(const TransitionType tt, const uint32_t new_color);
     void       fade_all_node_colors(const TransitionType tt, const uint32_t new_color);
     void       fade_all_edge_colors(const TransitionType tt, const uint32_t new_color);
+    void        set_all_edge_colors(const uint32_t new_color);
     void step_transition(const TransitionType tt);
 };
