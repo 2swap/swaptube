@@ -65,6 +65,7 @@ public:
     void        set_node_radius(const double hash, const float new_radius);
     void splash_node(const double hash);
     void transition_node_label(const TransitionType tt, const double hash, const std::string& new_label);
+    void        set_node_label(const double hash, const string& new_label);
     void transition_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
     void        set_edge_color(const double hash1, const double hash2, const uint32_t new_color);
     void       fade_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);

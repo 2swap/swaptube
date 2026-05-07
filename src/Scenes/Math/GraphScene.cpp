@@ -160,7 +160,6 @@ void GraphScene::draw(){
 
     ThreeDimensionScene::draw();
 
-    vec2 node_label_downshift = vec2(0, 0.03) * get_width_height();
     for(pair<double, Node> p : graph->nodes){
         Node node = p.second;
         string label = config->get_node_label(p.first, macro, micro);
@@ -168,11 +167,10 @@ void GraphScene::draw(){
         if(label != "" && label_size > 0.1){
             bool behind_camera = false;
             vec2 pos = coordinate_to_pixel(node.position, behind_camera);
-            pos += node_label_downshift; // shift down a bit so it doesn't overlap with the point
-            vec2 half_dim = vec2(0.1, 0.02) * get_width_height() * label_size;
+            vec2 half_dim = vec2(0.2, 0.04) * get_width_height() * label_size;
             vec2 top_left = pos - half_dim;
             vec2 bottom_right = pos + half_dim;
-            write_text(pix, label, top_left, bottom_right, 1);
+            write_text(pix, latex_color(0xff000000, label), top_left, bottom_right, 1);
         }
     }
 

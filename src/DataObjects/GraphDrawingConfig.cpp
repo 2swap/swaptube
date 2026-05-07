@@ -3,7 +3,7 @@
 
 float GraphDrawingConfig::get_node_splash_radius(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
     auto it = node_configs.find(node_id);
-    return it->second.splash_radius * it->second.radius;
+    return it->second.splash_radius;// * it->second.radius;
 }
 
 float GraphDrawingConfig::get_node_splash_opacity(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
@@ -111,6 +111,11 @@ void GraphDrawingConfig::set_all_edge_colors(const uint32_t new_color) {
     for (auto& [hash, config] : edge_configs) {
         set_edge_color(hash, new_color);
     }
+}
+
+void GraphDrawingConfig::set_node_label(const double hash, const string& new_label){
+    node_configs[hash].target_label = new_label;
+    node_configs[hash].label = new_label;
 }
 
 void GraphDrawingConfig::transition_node_label(const TransitionType tt, const double hash, const string& new_label){
