@@ -1,88 +1,73 @@
 #include "GraphDrawingConfig.h"
-#include "../Core/Color.h"
 
-float GraphDrawingConfig::get_node_splash_radius(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
+NodeRenderData GraphDrawingConfig::get_node_render_data(const double node_id, const float macroblock_fraction, const float microblock_fraction) const {
     auto it = node_configs.find(node_id);
-    return it->second.splash_radius;// * it->second.radius;
-}
+    NodeRenderData data;
 
-float GraphDrawingConfig::get_node_splash_opacity(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
-    auto it = node_configs.find(node_id);
-    return it->second.splash_opacity;
-}
-
-uint32_t GraphDrawingConfig::get_node_color(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
-    auto it = node_configs.find(node_id);
+    // Color
     if(it->second.color_fade) {
-        TransitionType tt = it->second.color_transition_type;
-        float relevant_fraction = tt == MICRO ? microblock_fraction : macroblock_fraction;
-        return colorlerp(it->second.color, it->second.target_color, relevant_fraction);
+        TransitionType ctt = it->second.color_transition_type;
+        float color_fraction = ctt == MICRO ? microblock_fraction : macroblock_fraction;
+        data.color = colorlerp(it->second.color, it->second.target_color, color_fraction);
     }
-    return it->second.color;
+    else data.color = it->second.color;
+
+    // Radius
+    TransitionType rtt = it->second.radius_transition_type;
+    float radius_fraction = rtt == MICRO ? microblock_fraction : macroblock_fraction;
+    data.radius = smoothlerp(it->second.radius, it->second.target_radius, radius_fraction);
+
+    // Label
+    TransitionType ltt = it->second.label_transition_type;
+    float label_fraction = ltt == MICRO ? microblock_fraction : macroblock_fraction;
+    data.label = label_fraction < 0.5f ? it->second.label : it->second.target_label;
+    if (it->second.label == it->second.target_label) data.label_size = 1.0f;
+    else {
+        float magic_parabola = -12*label_fraction*label_fraction + 20*label_fraction - 7;
+        data.label_size = label_fraction < 0.5f ? (1-label_fraction*2) : magic_parabola;
+    }
+
+    // Splash
+    data.splash_radius = it->second.splash_radius;
+    data.splash_opacity = it->second.splash_opacity;
+    return data;
 }
 
-float GraphDrawingConfig::get_node_radius(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
-    auto it = node_configs.find(node_id);
-    TransitionType tt = it->second.radius_transition_type;
-    float relevant_fraction = tt == MICRO ? microblock_fraction : macroblock_fraction;
-    return smoothlerp(it->second.radius, it->second.target_radius, relevant_fraction);
-}
-
-string GraphDrawingConfig::get_node_label(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
-    auto it = node_configs.find(node_id);
-    TransitionType tt = it->second.label_transition_type;
-    float relevant_fraction = tt == MICRO ? microblock_fraction : macroblock_fraction;
-    return relevant_fraction < 0.5f ? it->second.label : it->second.target_label;
-}
-
-float GraphDrawingConfig::get_node_label_size(double node_id, const float macroblock_fraction, const float microblock_fraction) const {
-    auto it = node_configs.find(node_id);
-    if (it->second.label == it->second.target_label) return 1.0f;
-    TransitionType tt = it->second.label_transition_type;
-    float relevant_fraction = tt == MICRO ? microblock_fraction : macroblock_fraction;
-    float magic_parabola = -12*relevant_fraction*relevant_fraction + 20*relevant_fraction - 7;
-    return relevant_fraction < 0.5f ? (1-relevant_fraction*2) : magic_parabola;
-}
-
-uint32_t GraphDrawingConfig::get_edge_color(double to, double from, const float macroblock_fraction, const float microblock_fraction) const {
+EdgeRenderData GraphDrawingConfig::get_edge_render_data(double to, double from, const float macroblock_fraction, const float microblock_fraction) const {
     double edge_id = to*2+from;
     auto it = edge_configs.find(edge_id);
-    //TransitionType tt = it->second.color_transition_type;
-    //float relevant_fraction = tt == MICRO ? microblock_fraction : macroblock_fraction;
-    //return colorlerp(it->second.color, it->second.target_color, relevant_fraction);
-    return it->second.color;
-}
+    EdgeRenderData data;
 
-uint32_t GraphDrawingConfig::get_edge_fade_color(double to, double from, const float macroblock_fraction, const float microblock_fraction) const {
-    double edge_id = to*2+from;
-    auto it = edge_configs.find(edge_id);
+    // Color
+    TransitionType ctt = it->second.color_transition_type;
+    float color_fraction = ctt == MICRO ? microblock_fraction : macroblock_fraction;
     if(it->second.color_fade) {
-        TransitionType tt = it->second.color_transition_type;
-        float relevant_fraction = tt == MICRO ? microblock_fraction : macroblock_fraction;
-        return colorlerp(it->second.color, it->second.target_color, relevant_fraction);
-    } else {
-        return it->second.color;
+        data.pre_color = data.post_color = colorlerp(it->second.color, it->second.target_color, color_fraction);
+        data.is_fading = true;
     }
-}
+    else {
+        data.pre_color = it->second.color;
+        data.post_color = it->second.target_color;
+        data.is_fading = false;
+        data.midpoint_fraction = color_fraction;
+    }
 
-uint32_t GraphDrawingConfig::get_edge_target_color(double to, double from, const float macroblock_fraction, const float microblock_fraction) const {
-    double edge_id = to*2+from;
-    auto it = edge_configs.find(edge_id);
-    return it->second.target_color;
-}
+    // Label
+    TransitionType ltt = it->second.label_transition_type;
+    float label_fraction = ltt == MICRO ? microblock_fraction : macroblock_fraction;
+    data.label = label_fraction < 0.5f ? it->second.label : it->second.target_label;
 
-float GraphDrawingConfig::get_edge_midpoint_fraction(double to, double from, const float macroblock_fraction, const float microblock_fraction) const {
-    double edge_id = to*2+from;
-    auto it = edge_configs.find(edge_id);
-    TransitionType tt = it->second.color_transition_type;
-    float fraction = tt == MICRO ? microblock_fraction : macroblock_fraction;
-    return fraction;
-}
+    if (it->second.label == it->second.target_label) data.label_size = 1.0f;
+    else {
+        float relevant_fraction = ltt == MICRO ? microblock_fraction : macroblock_fraction;
+        float magic_parabola = -12*label_fraction*label_fraction + 20*label_fraction - 7;
+        data.label_size = label_fraction < 0.5f ? (1-label_fraction*2) : magic_parabola;
+    }
 
-bool GraphDrawingConfig::get_edge_direction(double to, double from) const {
-    double edge_id = to*2+from;
-    auto it = edge_configs.find(edge_id);
-    return it->second.color_transition_direction;
+    // Direction
+    data.direction = it->second.color_transition_direction;
+
+    return data;
 }
 
 void GraphDrawingConfig::transition_node_color(const TransitionType tt, const double hash, const uint32_t new_color){
@@ -97,9 +82,15 @@ void GraphDrawingConfig::fade_node_color(const TransitionType tt, const double h
     node_configs[hash].color_fade = true;
 }
 
-void GraphDrawingConfig::set_node_color(const double hash, const uint32_t new_color){
+void GraphDrawingConfig::set_node_color(const double hash, const uint32_t new_color) {
     node_configs[hash].target_color = new_color;
     node_configs[hash].color = new_color;
+}
+
+void GraphDrawingConfig::set_all_node_colors(const uint32_t new_color) {
+    for (auto& [hash, config] : node_configs) {
+        set_node_color(hash, new_color);
+    }
 }
 
 void GraphDrawingConfig::set_node_radius(const double hash, const float new_radius) {
@@ -225,7 +216,10 @@ void GraphDrawingConfig::tick(const StateReturn& state) {
             config.splash_opacity = 1.0f;
             config.color = config.target_color;
         }
-        config.splash_radius = sqrt(config.splash_radius*config.splash_radius + .5);
-        config.splash_opacity -= 0.025f;
+        int framerate = get_video_framerate_fps();
+        for(int i = 0; i < 120; i += framerate) { // Designed for 60fps
+            config.splash_radius = sqrt(config.splash_radius*config.splash_radius + .1);
+            config.splash_opacity -= 0.012f;
+        }
     }
 }

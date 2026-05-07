@@ -159,6 +159,7 @@ void render_video() {
         double hash2 = HashableString(node2).get_hash();
         g->add_edge(HashableString(node1 + "'").get_hash(), HashableString(node2 + "'").get_hash());
         gs->config->set_edge_color(HashableString(node1 + "'").get_hash(), HashableString(node2 + "'").get_hash(), 0xffffffff);
+        gs->config->transition_edge_label(MICRO, HashableString(node1 + "'").get_hash(), HashableString(node2 + "'").get_hash(), to_string(weight));
     }
     gs->config->set_all_edge_colors(0xffffffff);
     gs->render_microblock();
@@ -167,7 +168,7 @@ void render_video() {
         string node_str = node;
         vec2 position = graph_nodes[node_str];
         gs->transition_node_position(MICRO, HashableString(node_str).get_hash(), vec4(position.x, position.y + 1.5, 0, 0));
-        gs->transition_node_position(MICRO, HashableString(node_str + "'").get_hash(), vec4(position.x, position.y + .8, 0, 0));
+        gs->transition_node_position(MICRO, HashableString(node_str + "'").get_hash(), vec4(position.x, position.y - .8, 0, 0));
     }
     gs->manager.transition(MICRO, "d", "7");
     gs->render_microblock();
@@ -185,17 +186,17 @@ void render_video() {
     unordered_map<string, vec2> contracted_positions = {
         {"a", vec2(-2, 2)},
         {"b", vec2(-1, 1)},
-        {"c", vec2(.5, 6)},
+        {"c", vec2(.2, 6)},
         {"d", vec2(1, 4)},
-        {"e", vec2(0, 7)},
+        {"e", vec2(-.2, 7)},
         {"f", vec2(2, 5)},
         {"h", vec2(2, 3)},
 
-        {"i", vec2(0, 0)},
-        {"j", vec2(1, -1)},
+        {"i", vec2(0, -1)},
+        {"j", vec2(1, 0)},
 
-        {"k", vec2(0, 0)},
-        {"l", vec2(1, -1)},
+        {"k", vec2(0, -1)},
+        {"l", vec2(1, 0)},
     };
 
     stage_macroblock(CompositeBlock(FileBlock("1 is the furthest down, 2 is next up and so on."), SilenceBlock(3)), 10);
@@ -253,41 +254,54 @@ void render_video() {
     gs->config->transition_node_color(MICRO, HashableString("c'").get_hash(), 0xff00ff00);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Well, starting from A, we search up and reach E with a cost of 10."), 1);
-    // Add edge A to E
+    stage_macroblock(FileBlock("Well, starting from A, we search up and reach E with a cost of 10."), 4);
+    gs->render_microblock();
+    // Splash A
+    gs->config->splash_node(HashableString("a'").get_hash());
+    gs->render_microblock();
     gs->config->transition_edge_color(MICRO, HashableString("a'").get_hash(), HashableString("e'").get_hash(), 0xffff0000);
     gs->render_microblock();
+    gs->config->transition_node_color(MICRO, HashableString("e'").get_hash(), 0xffff0000);
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("From C, we also search up and reach E with a cost of 5."), 1);
+    stage_macroblock(FileBlock("From C, we also search up and reach E with a cost of 5."), 2);
     // Add edge C to E
     gs->config->transition_edge_color(MICRO, HashableString("c'").get_hash(), HashableString("e'").get_hash(), 0xffff0000);
     gs->render_microblock();
+    gs->config->splash_node(HashableString("e'").get_hash());
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("Shortest path is A, E, C with a cost of 15. Done."), 3);
-    trace_path(gs, {"a'", "e'", "c'"}, 0xffff0000);
-    // Fade the prime nodes and edges back to white
-    gs->config->fade_edge_color(MICRO, HashableString("a'").get_hash(), HashableString("e'").get_hash(), 0xffffffff);
-    gs->config->fade_edge_color(MICRO, HashableString("c'").get_hash(), HashableString("e'").get_hash(), 0xffffffff);
-    gs->config->fade_node_color(MICRO, HashableString("a'").get_hash(), 0xffffffff);
-    gs->config->fade_node_color(MICRO, HashableString("c'").get_hash(), 0xffffffff);
+    stage_macroblock(FileBlock("Shortest path is A, E, C with a cost of 15. Done."), 7);
+    gs->render_microblock();
+    gs->render_microblock();
+    trace_path(gs, {"a'", "e'", "c'"}, 0xffff0001);
+    gs->render_microblock();
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("Except that’s not the shortest path."), 1);
+    stage_macroblock(FileBlock("Except that’s not the shortest path."), 2);
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->render_microblock();
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("Using the path A, B, C only costs 5."), 3);
+    stage_macroblock(FileBlock("Using the path A, B, C only costs 5."), 7);
+    gs->render_microblock();
+    gs->render_microblock();
     trace_path(gs, {"a", "b", "c"}, 0xff00ff00);
+    gs->render_microblock();
+    gs->render_microblock();
 
     stage_macroblock(FileBlock("What went wrong?"), 1);
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("B has edges to two higher ranked nodes."), 1);
+    stage_macroblock(FileBlock("B has edges to two higher ranked nodes."), 3);
+    gs->render_microblock();
     gs->config->transition_node_color(MICRO, HashableString("b'").get_hash(), 0xffff0000);
     gs->config->transition_edge_color(MICRO, HashableString("b'").get_hash(), HashableString("a'").get_hash(), 0xffff0000);
     gs->config->transition_edge_color(MICRO, HashableString("b'").get_hash(), HashableString("c'").get_hash(), 0xffff0000);
+    gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(FileBlock("But since it’s the lowest of the three, there’s no way to consider that path."), 3);
@@ -308,6 +322,7 @@ void render_video() {
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->render_microblock();
     g->add_edge(HashableString("a'").get_hash(), HashableString("c'").get_hash());
+    gs->config->set_edge_color(HashableString("a'").get_hash(), HashableString("c'").get_hash(), 0x00000000);
     gs->config->transition_edge_color(MICRO, HashableString("a'").get_hash(), HashableString("c'").get_hash(), 0x2000ffff);
     gs->render_microblock();
 
@@ -421,23 +436,121 @@ void render_video() {
     stage_macroblock(FileBlock("Here's what we'll do:"), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Starting from the lowest node,"), 2);
+    stage_macroblock(FileBlock("In this example, the lowest node does connect up to two higher nodes,"), 2);
     gs->render_microblock();
-    // splash node l'
-    gs->config->splash_node(HashableString("l'").get_hash());
+    gs->config->splash_node(HashableString("k'").get_hash());
     gs->render_microblock();
 
     stage_macroblock(FileBlock("check to see if it connects to two higher nodes."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("If not, move on to the next node."), 1);
+    stage_macroblock(FileBlock("so we add a shortcut between them."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("If yes, then add a shortcut — just like before."), 1);
+    stage_macroblock(FileBlock("Like before, we find minimum cost over the lower triangles to get the shortcut weight."), 3);
     // Add edge k' c'
+    trace_path(gs, {"k'", "l'", "c'"}, 0xffff0000);
+
+    stage_macroblock(FileBlock("There's only one triangle, so it's just 2."), 2);
     g->add_edge(HashableString("k'").get_hash(), HashableString("c'").get_hash());
+    gs->config->set_edge_color(HashableString("k'").get_hash(), HashableString("c'").get_hash(), 0x00000000);
     gs->config->transition_edge_color(MICRO, HashableString("k'").get_hash(), HashableString("c'").get_hash(), 0x2000ffff);
     gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("k'").get_hash(), HashableString("c'").get_hash(), "2");
+    gs->render_microblock();
 
+    stage_macroblock(FileBlock("Now node 2 forms a lower triangle!"), 3);
+    trace_path(gs, {"a'", "k'", "c'"}, 0xffff0000);
 
+    stage_macroblock(FileBlock("We add a shortcut and compare the two lower triangles to get the minimum cost."), 10);
+    g->add_edge(HashableString("a'").get_hash(), HashableString("c'").get_hash());
+    gs->config->set_edge_color(HashableString("a'").get_hash(), HashableString("c'").get_hash(), 0x00000000);
+    gs->config->transition_edge_color(MICRO, HashableString("a'").get_hash(), HashableString("c'").get_hash(), 0x2000ffff);
+    gs->render_microblock();
+    gs->render_microblock();
+    trace_path(gs, {"a'", "k'", "c'"}, 0xffff0000);
+    trace_path(gs, {"a'", "b'", "c'"}, 0xffff0000);
+    gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("a'").get_hash(), HashableString("c'").get_hash(), "5");
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Finally, the shortcut between these two nodes points to the right path."), 6);
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+    trace_path(gs, {"a'", "b'", "c'"}, 0xffff0000);
+    gs->render_microblock();
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Adding shortcuts from the bottom up makes sure we don’t miss local routes that are better than the highway."), 6);
+    trace_path(gs, {"k'", "c'"}, 0xffff0000);
+    trace_path(gs, {"a'", "c'"}, 0xffff0000);
+    gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("After all, the shortest path will have the minimum cost,"), 3);
+    trace_path(gs, {"a'", "b'", "c'"}, 0xffff0000);
+
+    stage_macroblock(FileBlock("and the minimum cost ‘bubbles up’ as we build shortcuts."), 10);
+    trace_path(gs, {"k'", "l'", "c'"}, 0xffff0001);
+    trace_path(gs, {"k'", "c'"}, 0xffff0002);
+    trace_path(gs, {"a'", "k'", "c'"}, 0xffff0003);
+    trace_path(gs, {"a'", "c'"}, 0xffff0004);
+
+    stage_macroblock(FileBlock("If a lower path isn’t the minimum, then we discard early and we don’t need to check it again."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Onto the third problem."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Remember that we found the node ranking without considering edge weights. They could’ve been anything."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("See if you spot the problem when we change a few weights."), 7);
+    // c-d to 1
+    // c-f to 3
+    // d-f to 1
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("c").get_hash(), HashableString("d").get_hash(), "1");
+    gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("c").get_hash(), HashableString("f").get_hash(), "3");
+    gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("d").get_hash(), HashableString("f").get_hash(), "1");
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("What’s the shortest path from this node to this one?"), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Before, we had to add a shortcut because the edge didn’t exist."), 5);
+    gs->render_microblock();
+    trace_path(gs, {"a'", "c'"}, 0xffff0000);
+    gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("But we need to run the same bottom up check for any lower triangle, even if the edge already exists in the graph."), 4);
+    // f d c is a lower triangle, even though edge c-f exists
+    trace_path(gs, {"f'", "d'", "c'"}, 0xffff0000);
+    gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("f'").get_hash(), HashableString("c'").get_hash(), "2");
+
+    stage_macroblock(FileBlock("In this case, we replace these two edges with shortcuts that are the minimum cost over the lower triangles."), 4);
+    // c' f' e'
+    trace_path(gs, {"c'", "f'", "e'"}, 0xffff0000);
+    gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("c'").get_hash(), HashableString("e'").get_hash(), "3");
+
+    stage_macroblock(FileBlock("Now the graph is ready!"), 1);
+    gs->render_microblock();
+}
+
+void bad() {
+    shared_ptr<Graph> g = make_shared<Graph>();
+    shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
+    stage_macroblock(FileBlock("For a linear sequence of nodes, we don’t need to add any shortcuts if we just contract the nodes from left to right."), 1);
+    gs->render_microblock();
 }

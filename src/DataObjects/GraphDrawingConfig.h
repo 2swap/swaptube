@@ -2,6 +2,8 @@
 #include <string>
 #include <stdint.h>
 #include "DataObject.h"
+#include "../Core/Color.h"
+#include "../IO/Writer.h"
 
 struct NodeConfig {
     uint32_t color;
@@ -37,6 +39,27 @@ struct EdgeConfig {
                    color_transition_direction(false), color_fade(false) {}
 };
 
+
+struct EdgeRenderData {
+    uint32_t pre_color;
+    uint32_t post_color;
+    std::string label;
+    float label_size;
+    float midpoint_fraction;
+    bool direction; // false: from lower hash to higher hash, true: from higher hash to lower hash
+    bool is_fading;
+    uint32_t fade_color;
+};
+
+struct NodeRenderData {
+    uint32_t color;
+    float radius;
+    std::string label;
+    float label_size;
+    float splash_radius;
+    float splash_opacity;
+};
+
 class GraphDrawingConfig : public DataObject {
 private:
     std::unordered_map<double, NodeConfig> node_configs;
@@ -44,24 +67,19 @@ private:
     void transition_edge_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void fade_edge_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void set_edge_color(const double hash, const uint32_t new_color);
+
 public:
+    NodeRenderData get_node_render_data(const double node_id, const float macroblock_fraction, const float microblock_fraction) const;
+    EdgeRenderData get_edge_render_data(double to, double from, const float macroblock_fraction, const float microblock_fraction) const;
+
     void add_node_if_missing(double node_id);
     void add_edge_if_missing(double from, double to);
-    uint32_t get_node_color(double node_id, const float macroblock_fraction, const float microblock_fraction) const;
-    float get_node_radius(double node_id, const float macroblock_fraction, const float microblock_fraction) const;
-    float get_node_splash_radius(double node_id, const float macroblock_fraction, const float microblock_fraction) const;
-    float get_node_splash_opacity(double node_id, const float macroblock_fraction, const float microblock_fraction) const;
-    string get_node_label(double node_id, const float macroblock_fraction, const float microblock_fraction) const;
-    float get_node_label_size(double node_id, const float macroblock_fraction, const float microblock_fraction) const;
-    uint32_t get_edge_color(double to, double from, const float macroblock_fraction, const float microblock_fraction) const;
-    uint32_t get_edge_target_color(double to, double from, const float macroblock_fraction, const float microblock_fraction) const;
-    float get_edge_midpoint_fraction(double to, double from, const float macroblock_fraction, const float microblock_fraction) const;
-    bool get_edge_direction(double to, double from) const;
-    uint32_t get_edge_fade_color(double to, double from, const float macroblock_fraction, const float microblock_fraction) const;
+
     void tick(const StateReturn& state);
     void transition_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void       fade_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void        set_node_color(const double hash, const uint32_t new_color);
+    void        set_all_node_colors(const uint32_t new_color);
     void        set_node_radius(const double hash, const float new_radius);
     void splash_node(const double hash);
     void transition_node_label(const TransitionType tt, const double hash, const std::string& new_label);

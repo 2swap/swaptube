@@ -261,6 +261,27 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("The number of possible paths from one corner to the other is in the septillions."), 40);
+    quat rotation = lat_long_to_quat(vec2(43.909, -101.254));
+    gs->manager.transition(MACRO, {
+        {"q1", to_string(rotation.u)},
+        {"qi", to_string(rotation.i)},
+        {"qj", to_string(rotation.j)},
+        {"qk", to_string(rotation.k)},
+    });
+    double altitude = 14860;
+    // Normalize earth radius
+    altitude /= 6371;
+    altitude += 1;
+
+    gs->manager.transition(MACRO, {
+        {"d", to_string(altitude)},
+        {"x", "0"},
+        {"y", "0"},
+        {"z", "0"},
+    }, true);
+    gs->manager.transition(MACRO, "points_radius_multiplier", ".5");
+    gs->manager.transition(MACRO, "fov", "2.13");
+
     while (remaining_microblocks_in_macroblock) {
         // color a random non-self-intersecting path from Miami to Seattle red
         vector<string> path;
@@ -292,13 +313,14 @@ void render_video() {
             gs->config->set_edge_color(HashableString(city1).get_hash(), HashableString(city2).get_hash(), 0xffff0000);
             gs->config->set_node_color(HashableString(city1).get_hash(), 0xffff0000);
         }
+        // Also highlight Seattle
+        gs->config->set_node_color(HashableString("Seattle").get_hash(), 0xffff0000);
         gs->render_microblock();
         // Undo
-        for(int i = 0; i < path.size() - 1; i++) {
-            string city1 = path[i];
-            string city2 = path[i+1];
-            gs->config->set_edge_color(HashableString(city1).get_hash(), HashableString(city2).get_hash(), 0xffffffff);
-            gs->config->set_node_color(HashableString(city1).get_hash(), 0xffffffff);
-        }
+        gs->config->set_all_edge_colors(0xffffffff);
+        gs->config->set_all_node_colors(0xffffffff);
     }
+
+    stage_macroblock(SilenceBlock(.5), 1);
+    gs->render_microblock();
 }
