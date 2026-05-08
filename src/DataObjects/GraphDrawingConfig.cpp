@@ -155,6 +155,13 @@ void GraphDrawingConfig::set_edge_color(const double hash1, const double hash2, 
     set_edge_color(hash2*2+hash1, new_color);
 }
 
+void GraphDrawingConfig::set_edge_label(const double hash1, const double hash2, const string& new_label) {
+    edge_configs[hash1*2+hash2].target_label = new_label;
+    edge_configs[hash2*2+hash1].target_label = new_label;
+    edge_configs[hash1*2+hash2].label = new_label;
+    edge_configs[hash2*2+hash1].label = new_label;
+}
+
 void GraphDrawingConfig::transition_edge_label(const TransitionType tt, const double hash1, const double hash2, const string& new_label) {
     edge_configs[hash1*2+hash2].target_label = new_label;
     edge_configs[hash2*2+hash1].target_label = new_label;

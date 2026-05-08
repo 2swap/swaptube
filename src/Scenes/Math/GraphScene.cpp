@@ -56,8 +56,20 @@ void GraphScene::transition_node_position(const TransitionType tt, const double 
 }
 
 void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
-    if(tt == MACRO) nodes_in_macro_transition.clear();
+    if(tt == MACRO) {
+        for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
+            double hash = p.first;
+            vec4 end = p.second.second;
+            graph->move_node(hash, end);
+        }
+        nodes_in_macro_transition.clear();
+    }
     config->step_transition(tt);
+    for(pair<double, pair<vec4, vec4>> p : nodes_in_micro_transition){
+        double hash = p.first;
+        vec4 end = p.second.second;
+        graph->move_node(hash, end);
+    }
     nodes_in_micro_transition.clear();
     curr_hash = next_hash;
 }
@@ -137,10 +149,12 @@ void GraphScene::draw(){
             } else { // Directed transition
                 vec3 pos_pre = erd.direction ? neighbor_pos : node_pos;
                 vec3 pos_post = erd.direction ? node_pos : neighbor_pos;
+                uint32_t pre_color = erd.direction ? erd.post_color : erd.pre_color;
+                uint32_t post_color = erd.direction ? erd.pre_color : erd.post_color;
                 vec3 midpoint = veclerp(pos_pre, pos_post, erd.midpoint_fraction);
-                add_line(Line(midpoint, neighbor_pos, erd.pre_color));
+                add_line(Line(midpoint, neighbor_pos, pre_color));
                 add_point(Point(midpoint, erd.post_color, 1, midpoint_thickness));
-                add_line(Line(node_pos, midpoint, erd.post_color));
+                add_line(Line(node_pos, midpoint, post_color));
             }
 
             if(erd.label != "" && erd.label_size > 0.1) {
@@ -156,10 +170,10 @@ void GraphScene::draw(){
                 angle += M_PI / 2;
                 while (angle < -M_PI) angle += M_PI;
                 while (angle > 0) angle -= M_PI;
-                vec2 offset = 0.01 * vec2(cos(angle), sin(angle)) * get_width_height();
+                vec2 offset = 0.015 * vec2(cos(angle), sin(angle)) * get_width_height();
                 vec2 midpoint = (node_screen_pos + neighbor_screen_pos) / 2;
                 vec2 pos = midpoint + offset;
-                vec2 half_dim = vec2(0.035, 0.025) * get_width_height();
+                vec2 half_dim = vec2(0.2, 0.03) * get_width_height() * erd.label_size;
                 vec2 top_left = pos - half_dim;
                 vec2 bottom_right = pos + half_dim;
                 write_text(labels, erd.label, top_left, bottom_right, 1, 0);//modulo_angle);

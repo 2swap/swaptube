@@ -88,6 +88,7 @@ public:
     void        set_edge_color(const double hash1, const double hash2, const uint32_t new_color);
     void       fade_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
     void transition_edge_label(const TransitionType tt, const double hash1, const double hash2, const std::string& new_label);
+    void        set_edge_label(const double hash1, const double hash2, const string& new_label);
     void transition_all_node_colors(const TransitionType tt, const uint32_t new_color);
     void       fade_all_node_colors(const TransitionType tt, const uint32_t new_color);
     void       fade_all_edge_colors(const TransitionType tt, const uint32_t new_color);

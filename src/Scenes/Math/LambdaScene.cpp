@@ -1,6 +1,5 @@
 #include "LambdaScene.h"
 #include <algorithm>
-#include "../../DataObjects/LambdaCalculus/LambdaUtils.h"
 #include <cmath>
 #include <string>
 

@@ -11,6 +11,7 @@ MovingPendulumGridScene::MovingPendulumGridScene(const vec2& dimensions) : Coord
             {"theta2", "0"},
             {"p1", "0"},
             {"p2", "0"},
+            {"rk4_step_size", "0.01"},
             {"momentum_value_gradient", "1"}});
 }
 
