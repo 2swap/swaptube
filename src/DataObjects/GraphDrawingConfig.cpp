@@ -98,6 +98,11 @@ void GraphDrawingConfig::set_node_radius(const double hash, const float new_radi
     node_configs[hash].radius = new_radius;
 }
 
+void GraphDrawingConfig::transition_node_radius(const TransitionType tt, const double hash, const float new_radius) {
+    node_configs[hash].target_radius = new_radius;
+    node_configs[hash].radius_transition_type = tt;
+}
+
 void GraphDrawingConfig::set_all_edge_colors(const uint32_t new_color) {
     for (auto& [hash, config] : edge_configs) {
         set_edge_color(hash, new_color);
@@ -163,10 +168,13 @@ void GraphDrawingConfig::set_edge_label(const double hash1, const double hash2, 
 }
 
 void GraphDrawingConfig::transition_edge_label(const TransitionType tt, const double hash1, const double hash2, const string& new_label) {
-    edge_configs[hash1*2+hash2].target_label = new_label;
-    edge_configs[hash2*2+hash1].target_label = new_label;
-    edge_configs[hash1*2+hash2].label_transition_type = tt;
-    edge_configs[hash2*2+hash1].label_transition_type = tt;
+    transition_edge_label(tt, hash1*2+hash2, new_label);
+    transition_edge_label(tt, hash2*2+hash1, new_label);
+}
+
+void GraphDrawingConfig::transition_edge_label(const TransitionType tt, const double hash, const string& new_label) {
+    edge_configs[hash].target_label = new_label;
+    edge_configs[hash].label_transition_type = tt;
 }
 
 void GraphDrawingConfig::add_node_if_missing(const double hash) {
@@ -201,6 +209,18 @@ void GraphDrawingConfig::fade_all_node_colors(const TransitionType tt, const uin
 void GraphDrawingConfig::fade_all_edge_colors(const TransitionType tt, const uint32_t new_color) {
     for (auto& [hash, config] : edge_configs) {
         fade_edge_color(tt, hash, new_color);
+    }
+}
+
+void GraphDrawingConfig::transition_all_edge_labels(const TransitionType tt, const string& new_label) {
+    for (auto& [hash, config] : edge_configs) {
+        transition_edge_label(tt, hash, new_label);
+    }
+}
+
+void GraphDrawingConfig::transition_all_node_radii(const TransitionType tt, const float new_radius) {
+    for (auto& [hash, config] : node_configs) {
+        transition_node_radius(tt, hash, new_radius);
     }
 }
 

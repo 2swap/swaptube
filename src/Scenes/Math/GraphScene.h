@@ -30,6 +30,10 @@ public:
 
     void transition_node_position(const TransitionType tt, const double hash, const vec4& shift);
 
+    uint32_t label_color;
+    vec2 label_size = vec2(0.4,0.08);
+    vec2 label_offset = vec2(0, 0);
+
 private:
     int last_node_count;
     std::unordered_map<double, std::pair<vec4, vec4>> nodes_in_micro_transition;

@@ -131,10 +131,10 @@ void GraphScene::draw(){
         if (nrd.label_size > 0.1 && nrd.label != "") {
             bool behind_camera = false;
             vec2 pos = coordinate_to_pixel(node.position, behind_camera);
-            vec2 half_dim = vec2(0.2, 0.04) * get_width_height() * nrd.label_size;
-            vec2 top_left = pos - half_dim;
-            vec2 bottom_right = pos + half_dim;
-            write_text(labels, latex_color(0xff000000, nrd.label), top_left, bottom_right, 1);
+            vec2 half_dim = label_size/2 * get_width_height() * nrd.label_size;
+            vec2 top_left = pos - half_dim + label_offset * get_width_height();
+            vec2 bottom_right = pos + half_dim + label_offset * get_width_height();
+            write_text(labels, latex_color(label_color, nrd.label), top_left, bottom_right, 1);
         }
 
         for(const Edge& neighbor_edge : node.neighbors){
