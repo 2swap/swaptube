@@ -71,15 +71,11 @@ void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, 
     if(--up_to_step == 0) return;
 
     costs[start] = 0;
-    if(g->size() < 10000) gs->config->transition_node_label(MICRO, start, "0");
-    if(--up_to_step == 0) return;
 
     for(auto& [hash, node] : g->nodes) {
         if(hash == start) continue;
         costs[hash] = std::numeric_limits<double>::infinity();
-        if(g->size() < 10000) gs->config->transition_node_label(MICRO, hash, "\\infty");
     }
-    if(--up_to_step == 0) return;
 
     while(open_set.size() > 0) {
         // Find node in open set with lowest cost
@@ -135,8 +131,7 @@ void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, 
 void render_video() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
-    gs->label_color = 0xffffffff;
-    gs->label_offset = vec2(0, 0.02);
+    gs->label_color = 0xff000000;
     gs->label_size = vec2(0.4, 0.04);
     gs->manager.transition(MACRO, "globe_opacity", "1");
     set_camera_to_lat_long(gs, vec2(52.5, 5.5), true, MACRO);
@@ -188,32 +183,60 @@ void render_video() {
     stage_macroblock(FileBlock("So instead, he could explore the closest node to the source, and then the next closest node, and so on."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("He’d track the shortest known distance to the node, called its cost. That way, he could always explore nodes from lowest to highest cost, or closest to furthest from the source."), 6);
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->manager.transition(MICRO, "points_radius_multiplier", "2");
-    gs->render_microblock();
-    gs->manager.transition(MICRO, "points_radius_multiplier", "1");
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    return;
-
-    stage_macroblock(FileBlock("But until he actually explored the graph, he didn’t know the shortest distance to any node yet."), 1);
+    stage_macroblock(FileBlock("He’d track the shortest known distance to the node, called its cost."), 1);
+    gs->manager.transition(MICRO, "points_radius_multiplier", "3");
+    for(auto& [city, coords] : netherlands_cities) {
+        double hash = HashableString(city).get_hash();
+        // TODO find actual cost
+        gs->config->transition_node_label(MICRO, hash, "c");
+    }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("So at the beginning, the source's cost was zero,"), 2);
-    int step = 0;
-    run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
+    stage_macroblock(FileBlock("That way, he could always explore nodes from lowest to highest cost, or closest to furthest from the source."), 6 + netherlands_cities.size());
     gs->render_microblock();
-    run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
+    gs->render_microblock();
+    gs->render_microblock();
+    for(auto& [city, coords] : netherlands_cities) {
+        // TODO in order of increasing cost
+        double hash = HashableString(city).get_hash();
+        gs->config->splash_node(hash);
+        gs->render_microblock();
+    }
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("and every other node was infinity."), 1);
-    run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
+    stage_macroblock(FileBlock("But until he actually explored the graph, he didn’t know the shortest distance to any node yet."), 5);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    for(auto& [city, coords] : netherlands_cities) {
+        double hash = HashableString(city).get_hash();
+        gs->config->transition_node_label(MICRO, hash, "");
+    }
+    gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("So at the beginning, the source's cost was zero,"), 4);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->config->transition_node_label(MICRO, rotterdam_hash, "0");
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("and every other node was infinity."), 4);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    for(auto& [city, coords] : netherlands_cities) {
+        double hash = HashableString(city).get_hash();
+        gs->config->transition_node_label(MICRO, hash, "\\infty");
+    }
     gs->render_microblock();
 
     stage_macroblock(FileBlock("Next, when Dijkstra explored each neighboring node,"), 1);
+    int step = 0;
+    run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
     gs->render_microblock();
     stage_macroblock(FileBlock("he’d ask: is the current path the shortest one yet?"), 1);
     gs->render_microblock();
@@ -222,13 +245,13 @@ void render_video() {
     stage_macroblock(FileBlock("This path is the shortest yet to that node [1 < inf], so Dijkstra updated its cost to 1."), 1);
     gs->render_microblock();
 
+    return;
     stage_macroblock(FileBlock("After checking all of Rotterdam’s edges and updating the neighbors’ costs,"), 1);
     stage_macroblock(FileBlock("Dijkstra marked it as explored. If this was breadth first search,"), 1);
     stage_macroblock(FileBlock("he could pick any neighbor to explore next. But he wanted to prioritize closer nodes."), 1);
     stage_macroblock(FileBlock("So he explored the nodes from lowest to highest cost."), 1);
     stage_macroblock(FileBlock("With a cost of 1, this node was next."), 1);
     stage_macroblock(FileBlock("Like before, he checked each of its edges to reduce the neighbors’ costs."), 1);
-    run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("While Dijkstra could update one neighbor, he couldn’t update this one."), 1);
