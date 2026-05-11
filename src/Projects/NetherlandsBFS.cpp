@@ -39,13 +39,13 @@ vector<pair<string, string>> netherlands_edges_1 = {
     {"Zwolle", "Meppel"},
     {"Meppel", "Groningen"},
     {"Meppel", "Leeuwarden"},
-    {"Amsterdam", "The Hague"},
+    {"The Hague", "Rotterdam"},
     {"Amsterdam", "Utrecht"},
 };
 
 vector<pair<string, string>> netherlands_edges_2 = {
+    {"Amsterdam", "The Hague"},
     {"Amsterdam", "Zwolle"},
-    {"The Hague", "Rotterdam"},
     {"Tillburg", "'s-Hertogenbosch"},
 };
 
@@ -180,7 +180,7 @@ void render_video() {
     gs->render_microblock();
     // Label Groningen
     gs->config->transition_node_label(MICRO, groningen_hash, "\\text{Groningen}");
-    gs->config->transition_node_color(MICRO, groningen_hash, 0xffff0001);
+    gs->config->transition_node_color(MICRO, groningen_hash, 0xff00ff00);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("this path seems obvious."), path.size());
@@ -246,9 +246,9 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("Starting from the source, we explore its neighboring nodes for the target."), 1 + per_bfs);
-    set_camera_to_lat_long(gs, netherlands_cities["Rotterdam"], false, MACRO);
-    gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
+    set_camera_to_lat_long(gs, netherlands_cities["Rotterdam"], false, MICRO);
     gs->render_microblock();
+    gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
 
     unordered_set<double> border;
     unordered_set<double> next_border;
@@ -259,25 +259,39 @@ void render_video() {
     int depth = 0;
     bfs(g, gs, border, visited, depth++);
 
-    stage_macroblock(FileBlock("If it's not there, we move on to those explored nodes, checking _their_ neighbors."), per_bfs);
+    stage_macroblock(FileBlock("If it's not there, we move on to those explored nodes, checking _their_ neighbors."), per_bfs + 4);
     set_camera_to_lat_long(gs, netherlands_cities["Utrecht"], false, MACRO);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     bfs(g, gs, border, visited, depth++);
 
-    stage_macroblock(FileBlock("If we don't find it, we expand again."), per_bfs);
-    set_camera_to_lat_long(gs, netherlands_cities["Arnhem"], false, MACRO);
+    stage_macroblock(FileBlock("If we don't find it, we expand again."), per_bfs + 4);
+    set_camera_to_lat_long(gs, netherlands_cities["Meppel"], false, MACRO);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     bfs(g, gs, border, visited, depth++);
 
     stage_macroblock(FileBlock("And we keep expanding out until we reach the target."), per_bfs * 2);
-    set_camera_to_lat_long(gs, netherlands_cities["Meppel"], false, MACRO);
+    set_camera_to_lat_long(gs, netherlands_cities["Groningen"], false, MACRO);
     bfs(g, gs, border, visited, depth++);
     bfs(g, gs, border, visited, depth++);
 
+    stage_macroblock(SilenceBlock(1), 1);
+    gs->config->splash_node(groningen_hash);
+    gs->render_microblock();
+
     stage_macroblock(FileBlock("This algorithm is known as breadth first search."), 1);
+    set_camera_to_lat_long(gs, netherlands_cities["Arnhem"], false, MACRO);
     gs->render_microblock();
     gs->config->fade_all_edge_colors(MICRO, edge_dark);
     gs->config->fade_all_node_colors(MICRO, edge_dark);
 
-    stage_macroblock(FileBlock("It will always find the shortest path because it checks all nodes at every level."), per_bfs * 6);
+    stage_macroblock(FileBlock("It will always find the shortest path because it checks all nodes at every level."), per_bfs * 5);
+    gs->manager.transition(MACRO, "d", ".065");
     visited.clear();
     border.clear();
     next_border.clear();
@@ -285,7 +299,7 @@ void render_video() {
     visited.insert(rotterdam_hash);
     reset_graph(gs);
 
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 5; i++) {
         bfs(g, gs, border, visited, i);
     }
 
@@ -295,10 +309,22 @@ void render_video() {
     border.insert(rotterdam_hash);
     visited.insert(rotterdam_hash);
 
-    stage_macroblock(FileBlock("If there was a path from Rotterdam to Groningen in five steps,"), 1);
+    stage_macroblock(FileBlock("If there was a path from Rotterdam to Groningen in five steps,"), 6);
+    gs->render_microblock();
     reset_graph(gs);
     gs->render_microblock();
-    stage_macroblock(FileBlock("we would’ve found it on the fifth iteration, so six steps must be the shortest path."), per_bfs * 5 + 4);
+    gs->config->splash_node(rotterdam_hash);
+    set_camera_to_lat_long(gs, netherlands_cities["Utrecht"], false, MICRO);
+    gs->render_microblock();
+    gs->config->splash_node(groningen_hash);
+    vec2 midpoint = (netherlands_cities["Utrecht"] * 3 + netherlands_cities["Meppel"]) / 4.0f;
+    set_camera_to_lat_long(gs, midpoint, false, MICRO);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("we would’ve found it on the fifth iteration, so six steps must be the shortest path."), per_bfs * 5 + 18);
+    gs->manager.transition(MACRO, "d", ".07");
     for(int i = 0; i < 4; i++) {
         bfs(g, gs, border, visited, i);
     }
@@ -306,10 +332,29 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
-    bfs(g, gs, border, visited, 5);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    bfs(g, gs, border, visited, 4);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("But there’s a problem. The algorithm thinks all these edges are the same length."), 1);
-    gs->config->transition_all_edge_labels(MICRO, "1");
+    stage_macroblock(FileBlock("But there’s a problem. The algorithm thinks all these edges are the same length."), 5);
+    gs->render_microblock();
+    reset_graph(gs);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->config->transition_all_edge_labels(MICRO, "\\small{1}");
+    gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(SilenceBlock(2), 1);

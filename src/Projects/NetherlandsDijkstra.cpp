@@ -14,7 +14,6 @@ unordered_map<string, vec2> netherlands_cities = {
     {"Utrecht", vec2(52.0907, 5.1214)},
     {"Breda", vec2(51.5719, 4.7683)},
     {"Eindhoven", vec2(51.4416, 5.4697)},
-    //{"Maastricht", vec2(50.8514, 5.6900)},
     {"Arnhem", vec2(51.9851, 5.8987)},
     {"Zwolle", vec2(52.5168, 6.0830)},
     {"Emmen", vec2(52.7795, 6.9061)},
@@ -25,35 +24,28 @@ unordered_map<string, vec2> netherlands_cities = {
     {"Meppel", vec2(52.7917, 6.1789)},
 };
 
-vector<pair<string, string>> netherlands_edges_1 = {
-    {"Rotterdam", "Utrecht"},
-    {"Rotterdam", "Breda"},
-    {"Breda", "Tillburg"},
-    {"Tillburg", "Eindhoven"},
-    //{"Eindhoven", "Maastricht"},
-    {"Eindhoven", "'s-Hertogenbosch"},
-    {"'s-Hertogenbosch", "Utrecht"},
-    {"Utrecht", "Arnhem"},
-    {"Arnhem", "Zwolle"},
-    {"Zwolle", "Emmen"},
-    {"Zwolle", "Meppel"},
-    {"Meppel", "Groningen"},
-    {"Meppel", "Leeuwarden"},
-    {"Amsterdam", "The Hague"},
-    {"Amsterdam", "Utrecht"},
-};
-
-vector<pair<string, string>> netherlands_edges_2 = {
-    {"Amsterdam", "Zwolle"},
-    {"The Hague", "Rotterdam"},
-    {"Tillburg", "'s-Hertogenbosch"},
-};
-
-vector<pair<string, string>> netherlands_edges_3 = {
-    {"Groningen", "Leeuwarden"},
-    {"The Hague", "Utrecht"},
-    {"Rotterdam", "'s-Hertogenbosch"},
-    {"'s-Hertogenbosch", "Arnhem"},
+vector<tuple<string, string, int>> netherlands_edges = {
+    {"Rotterdam", "Utrecht", 3},
+    {"Rotterdam", "Breda", 2},
+    {"Breda", "Tillburg", 3},
+    {"Tillburg", "Eindhoven", 1},
+    {"Eindhoven", "'s-Hertogenbosch", 2},
+    {"'s-Hertogenbosch", "Utrecht", 2},
+    {"Utrecht", "Arnhem", 4},
+    {"Arnhem", "Zwolle", 5},
+    {"Zwolle", "Emmen", 2},
+    {"Zwolle", "Meppel", 3},
+    {"Meppel", "Groningen", 5},
+    {"Meppel", "Leeuwarden", 2},
+    {"Amsterdam", "The Hague", 5},
+    {"Amsterdam", "Utrecht", 3},
+    {"Amsterdam", "Zwolle", 5},
+    {"The Hague", "Rotterdam", 1},
+    {"Tillburg", "'s-Hertogenbosch", 1},
+    {"Groningen", "Leeuwarden", 2},
+    {"The Hague", "Utrecht", 4},
+    {"Rotterdam", "'s-Hertogenbosch", 4},
+    {"'s-Hertogenbosch", "Arnhem", 2},
 };
 
 vector<uint32_t> colors_by_depth = {
@@ -71,9 +63,7 @@ vector<uint32_t> colors_by_depth = {
 void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, double goal, int up_to_step) {
     std::unordered_set<double> visited;
     std::unordered_map<double, double> costs;
-
     std::unordered_set<double> open_set;
-
     std::unordered_map<double, double> came_from;
 
     open_set.insert(start);
@@ -145,6 +135,9 @@ void run_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, 
 void render_video() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
+    gs->label_color = 0xffffffff;
+    gs->label_offset = vec2(0, 0.02);
+    gs->label_size = vec2(0.4, 0.04);
     gs->manager.transition(MACRO, "globe_opacity", "1");
     set_camera_to_lat_long(gs, vec2(52.5, 5.5), true, MACRO);
     gs->manager.set({
@@ -152,26 +145,29 @@ void render_video() {
         {"d", ".07"},
     });
 
-    stage_macroblock(FileBlock("In other words, a shortest path algorithm."), 1);
-    gs->render_microblock();
-
-    // Load Netherlands map
-    stage_macroblock(FileBlock("Here's a simplified graph of the Netherlands."), netherlands_cities.size());
-
+    double groningen_hash = HashableString("Groningen").get_hash();
+    double rotterdam_hash = HashableString("Rotterdam").get_hash();
     // Plot cities as nodes and roads as edges, expanding east->west
+
     for(auto& [city, coords] : netherlands_cities) {
         vec4 position = lat_long_to_xyz(coords);
         double hash = HashableString(city).get_hash();
         g->add_node(new HashableString(city));
         g->move_node(hash, position);
-        gs->render_microblock();
     }
 
-    for(auto& [city, coords] : netherlands_cities) {
-        vec4 position = lat_long_to_xyz(coords);
-        gs->transition_node_position(MICRO, HashableString(city).get_hash(), position);
+    for (auto& [city1, city2, dist] : netherlands_edges) {
+        double hash1 = HashableString(city1).get_hash();
+        double hash2 = HashableString(city2).get_hash();
+        g->add_edge(hash1, hash2);
     }
+
     stage_macroblock(FileBlock("So let's add distances."), 1);
+    for (auto& [city1, city2, dist] : netherlands_edges) {
+        double hash1 = HashableString(city1).get_hash();
+        double hash2 = HashableString(city2).get_hash();
+        gs->config->transition_edge_label(MICRO, hash1, hash2, to_string(dist));
+    }
     gs->render_microblock();
 
     stage_macroblock(SilenceBlock(1), 2);
@@ -201,8 +197,10 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
+    return;
 
-    stage_macroblock(FileBlock("But until he actually explored the graph, he didn’t know the shortest distance to any node yet."), 6);
+    stage_macroblock(FileBlock("But until he actually explored the graph, he didn’t know the shortest distance to any node yet."), 1);
+    gs->render_microblock();
 
     stage_macroblock(FileBlock("So at the beginning, the source's cost was zero,"), 2);
     int step = 0;
@@ -215,60 +213,46 @@ void render_video() {
     run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("There’s two things to keep in mind:"), 1);
+    stage_macroblock(FileBlock("Next, when Dijkstra explored each neighboring node,"), 1);
     gs->render_microblock();
-    stage_macroblock(FileBlock("One, Dijkstra’s algorithm will always explore nodes from lowest to highest cost."), 1);
+    stage_macroblock(FileBlock("he’d ask: is the current path the shortest one yet?"), 1);
     gs->render_microblock();
-    stage_macroblock(FileBlock("And two, it updates costs as it finds shorter and shorter paths."), 1);
+    stage_macroblock(FileBlock("For example, this edge only has a weight of 1 while the node’s current cost is infinity."), 1);
     gs->render_microblock();
-    stage_macroblock(FileBlock("That’s why the other nodes start at infinity. It hasn’t explored any paths yet. Let’s see it in action."), 1);
+    stage_macroblock(FileBlock("This path is the shortest yet to that node [1 < inf], so Dijkstra updated its cost to 1."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Rotterdam is first, so the algorithm checks all of its edges."), 1);
+    stage_macroblock(FileBlock("After checking all of Rotterdam’s edges and updating the neighbors’ costs,"), 1);
+    stage_macroblock(FileBlock("Dijkstra marked it as explored. If this was breadth first search,"), 1);
+    stage_macroblock(FileBlock("he could pick any neighbor to explore next. But he wanted to prioritize closer nodes."), 1);
+    stage_macroblock(FileBlock("So he explored the nodes from lowest to highest cost."), 1);
+    stage_macroblock(FileBlock("With a cost of 1, this node was next."), 1);
+    stage_macroblock(FileBlock("Like before, he checked each of its edges to reduce the neighbors’ costs."), 1);
     run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("The current path from A to B costs 1, which is less than B’s current cost of infinity. It updates, or relaxes, B’s cost to 1."), 3);
-    while(remaining_microblocks_in_macroblock) {
-        run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
-        gs->render_microblock();
-    }
+    stage_macroblock(FileBlock("While Dijkstra could update one neighbor, he couldn’t update this one."), 1);
+    stage_macroblock(FileBlock("This path has a cost of 5, but the node’s cost was 3."), 1);
+    stage_macroblock(FileBlock("There was already a shorter path, so no need to update it."), 1);
+    stage_macroblock(FileBlock("This continued for the rest of the graph."), 1);
+    stage_macroblock(FileBlock("Sometimes he had to update a node's costs a few times."), 1);
+    stage_macroblock(FileBlock("For example, he first reached this node through this path with a cost of 6."), 1);
+    stage_macroblock(FileBlock("But later, he found a shorter path of cost 5 and updated the node’s cost again."), 1);
+    stage_macroblock(FileBlock("The first time Dijkstra reached Groningen, it had a cost of 18."), 1);
+    stage_macroblock(FileBlock("But it didn’t have the lowest cost out of all the unexplored nodes."), 1);
+    stage_macroblock(FileBlock("There could still be a shorter path, just like earlier."), 1);
+    stage_macroblock(FileBlock("He continued exploring nodes in cost order, and found this path with cost 17."), 1);
+    stage_macroblock(FileBlock("Now out of all the unexplored nodes, Groningen had the next lowest cost."), 1);
+    stage_macroblock(FileBlock("Dijkstra was confident he had found the shortest path."), 1);
+    stage_macroblock(FileBlock("That’s because on a road network, the cost always increases along a path."), 1);
+    stage_macroblock(FileBlock("So if the lowest cost among the unexplored nodes was 17,"), 1);
+    stage_macroblock(FileBlock("Dijkstra must have explored all the paths with cost 16, 15, 16 and so on."), 1);
+    stage_macroblock(FileBlock("And none of those paths reached Groningen, otherwise he would’ve updated its cost earlier."), 1);
+    stage_macroblock(FileBlock("It’s just like the levels of breadth-first search."), 1);
+    stage_macroblock(FileBlock("By exploring from lowest to highest cost,"), 1);
+    stage_macroblock(FileBlock("Dijkstra’s algorithm guaranteed the shortest path to any target."), 1);
+    stage_macroblock(FileBlock("To get directions for the shortest path,"), 1);
+    stage_macroblock(FileBlock("we just need to keep track of what nodes are able to relax others — a sort of predecessor list."), 1);
+    stage_macroblock(FileBlock("Then at the end, we can easily work backwards to get the nodes in order."), 1);
 
-    stage_macroblock(FileBlock("A also relaxes C to .7, D to .3, and E to 1.3."), 12);
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    while(remaining_microblocks_in_macroblock) {
-        run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("That’s all of A’s neighbors, so the algorithm marks A as explored."), 1);
-    run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("B is next since it has the lowest cost out of all the unexplored nodes."), 1);
-    run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("B relaxes G’s cost to 6 and E’s cost to 3."), 6);
-    while(remaining_microblocks_in_macroblock) {
-        run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("Remember, the cost is the distance from the source, so for G and E, we have to also add the cost to get to B."), 2);
-    while(remaining_microblocks_in_macroblock) {
-        run_dijkstra(g, gs, rotterdam_hash, groningen_hash, ++step);
-        gs->render_microblock();
-    }
-
-    return;
-
-    stage_macroblock(FileBlock("But B can’t relax C since the path A B C costs 6, when C’s current cost is 3. The algorithm only keeps the shortest paths."), 1);
-    stage_macroblock(FileBlock("This continues for the rest of the graph. If there’s any ties in the lowest cost, the algorithm can explore them in any order."), 1);
-    stage_macroblock(FileBlock("And if the algorithm runs into a node it’s relaxed once, like going from E to G, it still compares the current path to the node’s current cost. In this case, the path A - B - E - G is shorter than A - B - G. So the algorithm updates G’s cost."), 1);
-    stage_macroblock(FileBlock("When the target M has the next lowest cost, or it’s next up to be explored, the algorithm has built the shortest path up to M. It returns the shortest path length — 10. This is also M’s final cost."), 1);
-    stage_macroblock(FileBlock("And if we mark what nodes are able to relax others, a sort of predecessor list, we can easily build directions for the shortest paths."), 1);
-    stage_macroblock(FileBlock("Here’s a few more examples of Dijkstra’s running through different graphs. Just like breadth-first, there’s a search-frontier that slowly spreads through the nodes. But Dijkstra’s frontier jumps around in different directions based on the edge weights."), 1);
 }
