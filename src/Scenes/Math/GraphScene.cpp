@@ -109,7 +109,7 @@ void GraphScene::draw(){
     bool curr_found = false;
     bool next_found = false;
 
-    float midpoint_thickness = .2;
+    float midpoint_thickness = .5;
 
     Pixels labels(pix.w, pix.h);
 
