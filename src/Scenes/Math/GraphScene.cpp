@@ -168,8 +168,6 @@ void GraphScene::draw(){
                 while (modulo_angle > M_PI/4) modulo_angle -= M_PI/2;
                 while (modulo_angle < -M_PI/4) modulo_angle += M_PI/2;
                 angle += M_PI / 2;
-                while (angle < -M_PI) angle += M_PI;
-                while (angle > 0) angle -= M_PI;
                 vec2 offset = 0.015 * vec2(cos(angle), sin(angle)) * get_width_height();
                 vec2 midpoint = (node_screen_pos + neighbor_screen_pos) / 2;
                 vec2 pos = midpoint + offset;
