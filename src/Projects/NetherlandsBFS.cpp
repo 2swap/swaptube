@@ -14,7 +14,6 @@ unordered_map<string, vec2> netherlands_cities = {
     {"Utrecht", vec2(52.0907, 5.1214)},
     {"Breda", vec2(51.5719, 4.7683)},
     {"Eindhoven", vec2(51.4416, 5.4697)},
-    //{"Maastricht", vec2(50.8514, 5.6900)},
     {"Arnhem", vec2(51.9851, 5.8987)},
     {"Zwolle", vec2(52.5168, 6.0830)},
     {"Emmen", vec2(52.7795, 6.9061)},
@@ -23,6 +22,8 @@ unordered_map<string, vec2> netherlands_cities = {
     {"'s-Hertogenbosch", vec2(51.6978, 5.3037)},
     {"Tillburg", vec2(51.5555, 5.0913)},
     {"Meppel", vec2(52.7917, 6.1789)},
+    {"Veenendaal", vec2(52.0231, 5.3889)},
+    {"Almere", vec2(52.3508, 5.2647)},
 };
 
 vector<pair<string, string>> netherlands_edges_1 = {
@@ -30,10 +31,9 @@ vector<pair<string, string>> netherlands_edges_1 = {
     {"Rotterdam", "Breda"},
     {"Breda", "Tillburg"},
     {"Tillburg", "Eindhoven"},
-    //{"Eindhoven", "Maastricht"},
     {"Eindhoven", "'s-Hertogenbosch"},
     {"'s-Hertogenbosch", "Utrecht"},
-    {"Utrecht", "Arnhem"},
+    {"Veenendaal", "Arnhem"},
     {"Arnhem", "Zwolle"},
     {"Zwolle", "Emmen"},
     {"Zwolle", "Meppel"},
@@ -41,16 +41,18 @@ vector<pair<string, string>> netherlands_edges_1 = {
     {"Meppel", "Leeuwarden"},
     {"The Hague", "Rotterdam"},
     {"Amsterdam", "Utrecht"},
+    {"Amsterdam", "Almere"},
+    {"Utrecht", "Veenendaal"},
 };
 
 vector<pair<string, string>> netherlands_edges_2 = {
     {"Amsterdam", "The Hague"},
-    {"Amsterdam", "Zwolle"},
     {"Tillburg", "'s-Hertogenbosch"},
+    {"Groningen", "Leeuwarden"},
+    {"Almere", "Zwolle"},
 };
 
 vector<pair<string, string>> netherlands_edges_3 = {
-    {"Groningen", "Leeuwarden"},
     {"The Hague", "Utrecht"},
     {"Rotterdam", "'s-Hertogenbosch"},
     {"'s-Hertogenbosch", "Arnhem"},
@@ -110,10 +112,10 @@ void bfs(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, unordered_set<double>& 
     border = next_border;
 }
 
-void reset_graph(shared_ptr<GraphScene> gs) {
+void reset_graph(shared_ptr<GraphScene> gs, uint32_t col = 0xffffffff) {
     // Cleanup: transition all nodes and edges back to white and radius 1
-    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
-    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_node_colors(MICRO, col);
+    gs->config->fade_all_edge_colors(MICRO, col);
     gs->config->transition_all_node_radii(MICRO, 1);
 }
 
@@ -124,10 +126,11 @@ void render_video() {
     gs->label_offset = vec2(0, 0.02);
     gs->label_size = vec2(0.4, 0.04);
     gs->manager.transition(MACRO, "globe_opacity", "1");
-    set_camera_to_lat_long(gs, vec2(52.5, 5.5), true, MACRO);
+    vec2 center = (netherlands_cities["Utrecht"] + netherlands_cities["Zwolle"]) / 2.0;
+    set_camera_to_lat_long(gs, center, true, MACRO);
     gs->manager.set({
         {"physics_multiplier","0"},
-        {"d", ".07"},
+        {"d", ".05"},
     });
 
     // Load Netherlands map
@@ -167,9 +170,10 @@ void render_video() {
     double rotterdam_hash = HashableString("Rotterdam").get_hash();
     double groningen_hash = HashableString("Groningen").get_hash();
 
-    vector<string> path = {"Rotterdam", "Utrecht", "Arnhem", "Zwolle", "Meppel", "Groningen"};
+    vector<string> path = {"Rotterdam", "Utrecht", "Veenendaal", "Arnhem", "Zwolle", "Meppel", "Groningen"};
     stage_macroblock(FileBlock("To get from Rotterdam to Groningen,"), 3);
-    set_camera_to_lat_long(gs, netherlands_cities["Rotterdam"], false, MACRO);
+    gs->manager.transition(MACRO, "d", ".06");
+    set_camera_to_lat_long(gs, netherlands_cities["Utrecht"], false, MACRO);
     for(auto& [city, coords] : netherlands_cities) {
         gs->config->transition_node_label(MICRO, HashableString(city).get_hash(), "");
     }
@@ -184,8 +188,8 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("this path seems obvious."), path.size());
-    set_camera_to_lat_long(gs, netherlands_cities["Groningen"], false, MACRO);
-    gs->manager.transition(MACRO, "d", ".10");
+    set_camera_to_lat_long(gs, netherlands_cities["Zwolle"], false, MACRO);
+    gs->manager.transition(MACRO, "d", ".08");
     for(int i = 0; i < path.size() - 1; i++) {
         string city = path[i];
         string neighbor = path[i+1];
@@ -197,8 +201,8 @@ void render_video() {
 
     // Add more nodes
     stage_macroblock(FileBlock("And it is the shortest, but what about now?"), netherlands_edges_2.size() + 6);
-    set_camera_to_lat_long(gs, vec2(52.5, 5.5), false, MACRO);
-    gs->manager.transition(MACRO, "d", ".07");
+    set_camera_to_lat_long(gs, center, false, MACRO);
+    gs->manager.transition(MACRO, "d", ".055");
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -233,9 +237,6 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("It's not so obvious anymore."), 1);
-    gs->render_microblock();
-
     // Slide 9
 
     int per_bfs = 4;
@@ -268,7 +269,7 @@ void render_video() {
     bfs(g, gs, border, visited, depth++);
 
     stage_macroblock(FileBlock("If we don't find it, we expand again."), per_bfs + 4);
-    set_camera_to_lat_long(gs, netherlands_cities["Meppel"], false, MACRO);
+    set_camera_to_lat_long(gs, center, false, MACRO);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -276,22 +277,25 @@ void render_video() {
     bfs(g, gs, border, visited, depth++);
 
     stage_macroblock(FileBlock("And we keep expanding out until we reach the target."), per_bfs * 2);
-    set_camera_to_lat_long(gs, netherlands_cities["Groningen"], false, MACRO);
+    set_camera_to_lat_long(gs, netherlands_cities["Zwolle"], false, MACRO);
     bfs(g, gs, border, visited, depth++);
     bfs(g, gs, border, visited, depth++);
 
-    stage_macroblock(SilenceBlock(1), 1);
-    gs->config->splash_node(groningen_hash);
+    stage_macroblock(SilenceBlock(1), 2);
+    reset_graph(gs, 0xff505050);
     gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1), 6);
+    trace_path(gs, {"Rotterdam", "'s-Hertogenbosch", "Arnhem", "Zwolle", "Meppel", "Groningen"}, 0xffffffff);
 
     stage_macroblock(FileBlock("This algorithm is known as breadth first search."), 1);
-    set_camera_to_lat_long(gs, netherlands_cities["Arnhem"], false, MACRO);
+    reset_graph(gs, edge_dark);
+    set_camera_to_lat_long(gs, center, false, MACRO);
     gs->render_microblock();
-    gs->config->fade_all_edge_colors(MICRO, edge_dark);
-    gs->config->fade_all_node_colors(MICRO, edge_dark);
 
     stage_macroblock(FileBlock("It will always find the shortest path because it checks all nodes at every level."), per_bfs * 5);
-    gs->manager.transition(MACRO, "d", ".065");
+    gs->manager.transition(MACRO, "d", ".05");
     visited.clear();
     border.clear();
     next_border.clear();
@@ -317,14 +321,14 @@ void render_video() {
     set_camera_to_lat_long(gs, netherlands_cities["Utrecht"], false, MICRO);
     gs->render_microblock();
     gs->config->splash_node(groningen_hash);
-    vec2 midpoint = (netherlands_cities["Utrecht"] * 3 + netherlands_cities["Meppel"]) / 4.0f;
+    vec2 midpoint = ((netherlands_cities["Utrecht"] * 3) + netherlands_cities["Meppel"]) / 4.0f;
     set_camera_to_lat_long(gs, midpoint, false, MICRO);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(FileBlock("we would’ve found it on the fifth iteration, so six steps must be the shortest path."), per_bfs * 5 + 18);
-    gs->manager.transition(MACRO, "d", ".07");
+    gs->manager.transition(MACRO, "d", ".06");
     for(int i = 0; i < 4; i++) {
         bfs(g, gs, border, visited, i);
     }
