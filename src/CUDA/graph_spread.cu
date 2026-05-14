@@ -299,6 +299,10 @@ __global__ void mirror_kernel(Cuda::vec4* positions, Cuda::vec4* velocities, con
 }
 
 extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations) {
+    cout << "CUDA: " << num_nodes << " nodes, " << iterations << " iterations, " 
+         << (h_adjacency_matrix != nullptr ? "with adjacency matrix, " : "without adjacency matrix, ")
+         << (max_degree > 0 ? "max degree: " + to_string(max_degree) : "no max degree") 
+         << endl;
     if(num_nodes < 0) return;
 
     Cuda::vec4 *d_positions;
@@ -437,12 +441,15 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         delete[] h_bin_start_indices;
         cudaFree(d_bins);
         cudaFree(d_node_bins);
+        cudaFree(d_sorted_positions);
         cudaFree(d_sorted_indices);
         cudaFree(d_bin_start_indices);
     }
     cudaFree(d_mirror2s);
     cudaFree(d_mirrors);
-    cudaFree(d_adjacency_matrix);
+    if (d_adjacency_matrix) {
+        cudaFree(d_adjacency_matrix);
+    }
 
     // Copy final velocity deltas back to host
     cudaMemcpy(h_velocities, d_velocities, vec4_size, cudaMemcpyDeviceToHost);

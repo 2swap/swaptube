@@ -250,7 +250,7 @@ void ThreeDimensionScene::draw() {
 
     float globe_opacity = state["globe_opacity"];
     if(globe_opacity > 0.001) {
-        string map_filename = "../earth";
+        string map_filename = "../earth_half";
         int width = get_width();
         if(!rendering_on()) map_filename = "../earth_tiny";
         else if(width <= 2000) map_filename = "../earth_small";

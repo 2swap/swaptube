@@ -267,6 +267,8 @@ std::vector<int> Graph::make_adjacency_matrix(const std::vector<Node*>& node_vec
 }
 
 void Graph::iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension, const float mirror_force) {
+    if(iterations <= 0) return;
+
     std::vector<Node*> node_vector;
     std::unordered_map<double, int> node_indices;
 

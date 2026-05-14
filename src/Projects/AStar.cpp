@@ -5,6 +5,7 @@
 #include "../Scenes/Math/GraphScene.h"
 #include "../Core/Smoketest.h"
 #include "GraphAlgs_common.cpp"
+uint32_t opaque_white = 0x20ffffff;
 
 // lat long map
 
@@ -15,7 +16,7 @@
 // Then edges are listed: node1 (integer), node2 (integer)
 // Ignore any nodes or edges that are outside the given radius from the center point
 void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 center, float radius) {
-    ifstream file("io_in/graph.txt");
+    ifstream file("io_in/graph_speeds.txt");
     string line;
     enum Section { NONE, NODES, EDGES };
     Section section = NONE;
@@ -161,87 +162,24 @@ void render_video() {
 
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
-    set_camera_to_lat_long(gs, vec2(52.5, 5.5), true, MACRO);
     gs->manager.set({
-        {"globe_opacity", "0.2"},
-        {"d", ".07"},
+        {"globe_opacity", "0"},
+        {"d", ".005"},
     });
 
     // Fade globe to opacity 1
-    gs->manager.transition(MICRO, "globe_opacity", "1");
-    stage_macroblock(SilenceBlock(3), 1);
-    gs->render_microblock();
-    gs->manager.transition(MICRO, "d", "1");
-    gs->render_microblock();
-
-    // Transition to NYC
+    vec2 center = newark_lat_long;
+    set_camera_to_lat_long(gs, center, true, MICRO);
     stage_macroblock(SilenceBlock(1), 1);
-    vec2 midpoint = (newark_lat_long + zoo_lat_long) / 2.0;
-    set_camera_to_lat_long(gs, midpoint, false, MICRO);
-    gs->render_microblock();
-
-    gs->manager.transition(MICRO, "d", ".005");
-    stage_macroblock(FileBlock("Let's say I want to get from Newark Airport in New Jersey over to the Central Park Zoo."), 3);
     double newark_hash;
     double zoo_hash;
     if(rendering_on()) {
-        load_graph_from_file(g, gs, newark_lat_long, 0.25);
+        load_graph_from_file(g, gs, newark_lat_long, 0.21);
         newark_hash = get_nearest_node_in_graph(g, newark_lat_long);
         zoo_hash = get_nearest_node_in_graph(g, zoo_lat_long);
         gs->config->set_node_radius(newark_hash, 1);
         gs->config->set_node_radius(zoo_hash, 1);
     }
-    gs->render_microblock();
-    gs->config->transition_node_color(MICRO, newark_hash, 0xffff0000);
-    gs->render_microblock();
-    gs->config->transition_node_color(MICRO, zoo_hash, 0xff00ff00);
-    gs->render_microblock();
-
-    if(rendering_on() && (newark_hash == -1 || zoo_hash == -1)) {
-        cout << "Newark hash: " << newark_hash << " Zoo hash: " << zoo_hash << endl;
-        throw runtime_error("Could not find nearest node for Newark or Zoo.");
-        return;
-    }
-    if(rendering_on() && newark_hash == zoo_hash) {
-        throw runtime_error("Nearest node for Newark and Zoo is the same. Check if the graph is loaded correctly and if the nearest node function is working.");
-        return;
-    }
-
-    stage_macroblock(FileBlock("Dijkstra’s algorithm checks all the ten minute journeys,"), 100);
-    double max_dist = 0;
-    double increment = 0.00002;
-    for(int i = 0; i < 50; i++) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
-        max_dist += increment;
-        gs->render_microblock();
-    }
-    for(int i = 0; i < 50; i++) {
-        gs->render_microblock();
-    }
-
-    gs->manager.transition(MACRO, "d", ".01");
-    stage_macroblock(FileBlock("and then all the twenty minute journeys,"), 100);
-    for(int i = 0; i < 50; i++) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
-        max_dist += increment;
-        gs->render_microblock();
-    }
-    for(int i = 0; i < 50; i++) {
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("and so on until it reaches all the forty minute journeys, including the Zoo."), 50);
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
-        max_dist += increment*2;
-        gs->render_microblock();
-    }
-
-    gs->manager.transition(MACRO, "d", ".02");
-    stage_macroblock(FileBlock("The search frontier covers over 65,000 nodes and includes places that are way off, like Staten Island and large swaths of New Jersey before it even hits Central Park."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 1);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("We'd like to prioritize nodes that are closer to the Zoo."), 1);
@@ -251,15 +189,13 @@ void render_video() {
             double distance_to_zoo = length(node.position - g->nodes.find(zoo_hash)->second.position);
             double distance_zoo_to_newark = length(g->nodes.find(zoo_hash)->second.position - g->nodes.find(newark_hash)->second.position);
             double ratio = .25 * distance_to_zoo / distance_zoo_to_newark;
-            if(ratio < .05) ratio = .05;
-            if(ratio > .95) ratio = .95;
-            int red = 255 * ratio;
-            int green = 255 * (1 - ratio);
-            int color = (red << 16) | (green << 8) | (0x10 << 24);
+            uint32_t color = rainbow(ratio);
             gs->config->fade_edge_color(MICRO, hash, neighbor, color);
         }
     }
     gs->render_microblock();
+    gs->config->set_all_edge_colors(opaque_white);
+    gs->config->set_all_node_colors(0x00000000);
 
     /*
     stage_macroblock(FileBlock("Using longitudes and latitudes, we can easily calculate the straight line distance between any node and the target."), 1);
@@ -273,8 +209,8 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("Dijkstra’s search frontier spreads out in all directions."), 100);
-    max_dist = 0;
-    increment = 0.00003;
+    int max_dist = 0;
+    int increment = 0.00003;
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
         max_dist += increment;

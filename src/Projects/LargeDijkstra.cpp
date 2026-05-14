@@ -89,7 +89,7 @@ void get_new_jersey_nodes(shared_ptr<Graph> g, unordered_set<double>& new_jersey
 }
 
 void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_island_nodes) {
-    vec2 bayonne_lat_long = vec2(40.639, -74.143);
+    vec2 bayonne_lat_long = vec2(40.632, -74.145);
     vec2 goethals_lat_long = vec2(40.629, -74.185);
     vec2 verrazano_lat_long = vec2(40.602, -74.060);
     vec2 outer_bay_lat_long = vec2(40.525, -74.237);
@@ -113,7 +113,7 @@ void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_
         vec3 current_pos = g->nodes.find(current)->second.position;
         bool is_bridge = false;
         for(const vec3& bridge : staten_island_bridges_xyz) {
-            if(length(g->nodes.find(current)->second.position - bridge) < 0.0001) {
+            if(length(g->nodes.find(current)->second.position - bridge) < 0.00008) {
                 is_bridge = true;
                 break;
             }
@@ -238,7 +238,7 @@ void render_video() {
     double newark_hash;
     double zoo_hash;
     if(rendering_on()) {
-        load_graph_from_file(g, gs, newark_lat_long, 0.21);
+        load_graph_from_file(g, gs, newark_lat_long, 100);
         newark_hash = get_nearest_node_in_graph(g, newark_lat_long);
         zoo_hash = get_nearest_node_in_graph(g, zoo_lat_long);
         gs->config->set_node_radius(newark_hash, 1);
@@ -318,7 +318,7 @@ void render_video() {
     cout << "Staten Island nodes: " << staten_island_nodes.size() << " New Jersey nodes: " << new_jersey_nodes.size() << endl;
 
     stage_macroblock(FileBlock("like Staten Island and large swaths of New Jersey before it even hits Central Park."), 9);
-    gs->manager.transition(MICRO, "d", ".003");
+    gs->manager.transition(MICRO, "d", ".004");
     set_camera_to_lat_long(gs, vec2(40.584430, -74.143991), false, MICRO);
     gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, staten_island_nodes);
