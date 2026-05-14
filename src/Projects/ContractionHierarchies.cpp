@@ -286,10 +286,18 @@ void step1() {
     gs->config->splash_node(HashableString("e'").get_hash());
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Shortest path is A, E, C with a cost of 15. Done."), 7);
+    stage_macroblock(FileBlock("Shortest path is A, E, C with a cost of 15. Done."), 15);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     trace_path(gs, {"a'", "e'", "c'"}, 0xffff0001);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
 
@@ -299,10 +307,18 @@ void step1() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Using the path A, B, C only costs 5."), 7);
+    stage_macroblock(FileBlock("Using the path A, B, C only costs 5."), 15);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     trace_path(gs, {"a'", "b'", "c'"}, 0xffff0000);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
 
@@ -329,7 +345,17 @@ void step1() {
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Remember, our search never follows a path that goes down then up."), 3);
+    stage_macroblock(FileBlock("Remember, our search never follows a path that goes down then up."), 13);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     // Highlight path A, B, C
     trace_path(gs, {"a'", "b'", "c'"}, 0xffff0000);
 
@@ -342,7 +368,7 @@ void step1() {
     gs->config->transition_edge_color(MICRO, HashableString("a'").get_hash(), HashableString("c'").get_hash(), 0x2000ffff);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Its weight is just the cost of the path A, B, C and it has a midpoint marker to B."), 5);
+    stage_macroblock(FileBlock("Its weight is just the cost of the path A, B, C,"), 5);
     trace_path(gs, {"a'", "b'", "c'"}, 0xffff0000);
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
@@ -350,7 +376,15 @@ void step1() {
     gs->config->transition_edge_label(MICRO, HashableString("a'").get_hash(), HashableString("c'").get_hash(), "5 (b)");
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("The bidirectional search now checks both the upper path and the shortcut to find the best path."), 7);
+    stage_macroblock(FileBlock("and it has a midpoint marker to B."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("The bidirectional search now checks both the upper path and the shortcut to find the best path."), 12);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     trace_path(gs, {"a'", "e'", "c'"}, 0xffff0000);
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
@@ -363,6 +397,7 @@ void step1() {
     stage_macroblock(FileBlock("But there's three more problems if we want this to work on ANY graph."), 1);
     // Fade out shortcut and then remove
     gs->config->fade_edge_color(MICRO, HashableString("a'").get_hash(), HashableString("c'").get_hash(), 0x00000000);
+    gs->config->transition_edge_label(MICRO, HashableString("a'").get_hash(), HashableString("c'").get_hash(), "");
     gs->render_microblock();
     g->remove_edge(HashableString("a'").get_hash(), HashableString("c'").get_hash());
 

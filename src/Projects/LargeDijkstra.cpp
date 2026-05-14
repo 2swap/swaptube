@@ -6,6 +6,22 @@
 #include "../Core/Smoketest.h"
 #include "GraphAlgs_common.cpp"
 
+uint32_t opaque_white = 0x20ffffff;
+double get_nearest_node_in_graph(shared_ptr<Graph> g, vec2 lat_long) {
+    double nearest_node = -1;
+    double nearest_distance = std::numeric_limits<double>::infinity();
+    vec3 node_xyz = lat_long_to_xyz(lat_long);
+    for(auto& [hash, node] : g->nodes) {
+        vec3 position = node.position;
+        double distance = length(position - node_xyz);
+        if(distance < nearest_distance) {
+            nearest_distance = distance;
+            nearest_node = hash;
+        }
+    }
+    return nearest_node;
+}
+
 // lat long map
 
 // File format:
@@ -15,7 +31,7 @@
 // Then edges are listed: node1 (integer), node2 (integer)
 // Ignore any nodes or edges that are outside the given radius from the center point
 void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 center, float radius) {
-    ifstream file("io_in/graph.txt");
+    ifstream file("io_in/graph_speeds.txt");
     string line;
     enum Section { NONE, NODES, EDGES };
     Section section = NONE;
@@ -40,6 +56,7 @@ void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 c
             g->add_node(new HashableString(to_string(id)));
             g->move_node(hash, position);
             gs->config->set_node_radius(hash, 0);
+            gs->config->set_node_color(hash, 0x00000000);
             node_count++;
         } else if(section == EDGES) {
             stringstream ss(line);
@@ -48,6 +65,9 @@ void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 c
             ss >> id1 >> id2;
             double hash1 = HashableString(to_string(id1)).get_hash();
             double hash2 = HashableString(to_string(id2)).get_hash();
+            if(g->nodes.find(hash1) == g->nodes.end() || g->nodes.find(hash2) == g->nodes.end()) {
+                continue;
+            }
             g->add_edge(hash1, hash2);
             edge_count++;
         }
@@ -55,25 +75,65 @@ void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 c
     cout << "Loaded graph with " << node_count << " nodes and " << edge_count << " edges." << endl;
 }
 
-double get_nearest_node_in_graph(shared_ptr<Graph> g, vec2 lat_long) {
-    double nearest_node = -1;
-    double nearest_distance = std::numeric_limits<double>::infinity();
-    vec3 node_xyz = lat_long_to_xyz(lat_long);
+// Defined as set of nodes whose squared distance to zoo is more than twice the distance from the zoo to Newark
+void get_new_jersey_nodes(shared_ptr<Graph> g, unordered_set<double>& new_jersey_nodes) {
+    vec3 newark = lat_long_to_xyz(vec2(40.694669192970665, -74.18676933576879));
+    vec3 zoo = lat_long_to_xyz(vec2(40.767665443249214, -73.97196914550813));
+    double separation = length(newark - zoo);
     for(auto& [hash, node] : g->nodes) {
-        vec3 position = node.position;
-        double distance = length(position - node_xyz);
-        if(distance < nearest_distance) {
-            nearest_distance = distance;
-            nearest_node = hash;
+        double dist_to_zoo = length(node.position - zoo);
+        if(dist_to_zoo > separation * 1.2) {
+            new_jersey_nodes.insert(hash);
         }
     }
-    return nearest_node;
+}
+
+void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_island_nodes) {
+    vec2 bayonne_lat_long = vec2(40.639, -74.143);
+    vec2 goethals_lat_long = vec2(40.629, -74.185);
+    vec2 verrazano_lat_long = vec2(40.602, -74.060);
+    vec2 outer_bay_lat_long = vec2(40.525, -74.237);
+    vector<vec2> staten_island_bridges = {bayonne_lat_long, goethals_lat_long, verrazano_lat_long, outer_bay_lat_long};
+    vector<vec3> staten_island_bridges_xyz;
+    for(vec2 bridge : staten_island_bridges) {
+        staten_island_bridges_xyz.push_back(lat_long_to_xyz(bridge));
+        cout << "Staten Island bridge at lat long: " << bridge.x << ", " << bridge.y << " has xyz: " << staten_island_bridges_xyz.back().x << ", " << staten_island_bridges_xyz.back().y << ", " << staten_island_bridges_xyz.back().z << endl;
+    }
+    vec2 staten_island_center = vec2(40.581, -74.147);
+    double closest_node_to_center = get_nearest_node_in_graph(g, staten_island_center);
+    // Flood fill from center of staten island outwards until we hit a bridge, adding nodes to staten_island_nodes
+    unordered_set<double> visited;
+    queue<double> q;
+    q.push(closest_node_to_center);
+    while(!q.empty()) {
+        double current = q.front();
+        q.pop();
+        if(visited.find(current) != visited.end()) continue;
+        visited.insert(current);
+        vec3 current_pos = g->nodes.find(current)->second.position;
+        bool is_bridge = false;
+        for(const vec3& bridge : staten_island_bridges_xyz) {
+            if(length(g->nodes.find(current)->second.position - bridge) < 0.0001) {
+                is_bridge = true;
+                break;
+            }
+        }
+        if(is_bridge) continue;
+        staten_island_nodes.insert(current);
+        unordered_set<double> neighbors = g->get_neighbors(current);
+        for(double neighbor : neighbors) {
+            if(visited.find(neighbor) == visited.end()) {
+                q.push(neighbor);
+            }
+        }
+    }
 }
 
 // Run dijkstra's algorithm up until some node within max_dist of the goal is added to the visited set.
 // Color all searched edges blue.
-void run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, double goal, double max_dist, float heuristic_mult) {
-    gs->config->set_all_edge_colors(0x10ffffff);
+bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, double goal, double max_dist, float heuristic_mult, unordered_set<double> highlighted_nodes = {}) {
+    cout << "Running large dijkstra with max_dist " << max_dist << " and heuristic_mult " << heuristic_mult << endl;
+    //gs->config->set_all_edge_colors(opaque_white);
     std::unordered_set<double> visited;
     std::unordered_map<double, double> costs;
 
@@ -81,6 +141,7 @@ void run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
 
     std::unordered_map<double, double> came_from;
 
+    bool transition_not_fade = highlighted_nodes.size() == 0;
     open_set.insert(start);
     costs[start] = 0;
     vec4 start_pos = g->nodes.find(start)->second.position;
@@ -104,7 +165,7 @@ void run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
         vec4 current_pos = g->nodes.find(current)->second.position;
 
         if (length(current_pos - start_pos) > max_dist) {
-            return;
+            return false;
         }
         if (current == goal) {
             cout << "Reached goal!" << endl;
@@ -116,7 +177,7 @@ void run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
                 gs->config->set_edge_color(path_node, parent, 0xff00ffff);
                 path_node = parent;
             }
-            return;
+            return true;
         }
 
         open_set.erase(current);
@@ -131,8 +192,17 @@ void run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
             weight += length(g->nodes.find(neighbor)->second.position - g->nodes.find(goal)->second.position) * heuristic_mult;
             double tentative_cost = costs[current] + weight;
 
-            if(tentative_cost < max_dist)
-                gs->config->set_edge_color(current, neighbor, 0x10ff8080);
+            if(tentative_cost < max_dist) {
+                int color = 0x10ff8080;
+                if(highlighted_nodes.find(neighbor) != highlighted_nodes.end()) {
+                    color = 0x2000ff00;
+                }
+                if(transition_not_fade) {
+                    gs->config->transition_edge_color(MICRO, current, neighbor, color);
+                } else {
+                    gs->config->fade_edge_color(MICRO, current, neighbor, color);
+                }
+            }
 
             if(tentative_cost < costs[neighbor]) {
                 costs[neighbor] = tentative_cost;
@@ -145,14 +215,7 @@ void run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
         }
         visited.insert(current);
     }
-}
-
-void heuristic_slide(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double zoo_hash, double factor, TransitionType tt) {
-    for(auto& [hash, node] : g->nodes) {
-        double distance_to_zoo = length(node.position - g->nodes.find(zoo_hash)->second.position);
-        vec4 new_position = normalize(node.position) * (1 + distance_to_zoo * factor / 5);
-        gs->transition_node_position(tt, hash, new_position);
-    }
+    return false;
 }
 
 void render_video() {
@@ -161,40 +224,43 @@ void render_video() {
 
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
-    set_camera_to_lat_long(gs, vec2(52.5, 5.5), true, MACRO);
     gs->manager.set({
-        {"globe_opacity", "0.2"},
+        {"globe_opacity", "1"},
         {"d", ".07"},
+        {"points_opacity", "0"},
+        {"lines_opacity", "0"},
     });
 
     // Fade globe to opacity 1
-    gs->manager.transition(MICRO, "globe_opacity", "1");
-    stage_macroblock(FileBlock("But Dijkstra alone isn’t good enough for Google Maps."), 2);
-    gs->render_microblock();
-    gs->manager.transition(MICRO, "d", "1");
-    gs->render_microblock();
-
-    // Transition to NYC
+    vec2 center = newark_lat_long;
+    set_camera_to_lat_long(gs, center, true, MICRO);
     stage_macroblock(SilenceBlock(1), 1);
-    vec2 midpoint = (newark_lat_long + zoo_lat_long) / 2.0;
-    set_camera_to_lat_long(gs, midpoint, false, MICRO);
-    gs->render_microblock();
-
-    gs->manager.transition(MICRO, "d", ".005");
-    stage_macroblock(FileBlock("Let's say I want to get from Newark Airport in New Jersey over to the Central Park Zoo."), 3);
     double newark_hash;
     double zoo_hash;
     if(rendering_on()) {
-        load_graph_from_file(g, gs, newark_lat_long, 0.25);
+        load_graph_from_file(g, gs, newark_lat_long, 0.21);
         newark_hash = get_nearest_node_in_graph(g, newark_lat_long);
         zoo_hash = get_nearest_node_in_graph(g, zoo_lat_long);
         gs->config->set_node_radius(newark_hash, 1);
         gs->config->set_node_radius(zoo_hash, 1);
     }
     gs->render_microblock();
+
+    stage_macroblock(FileBlock("Let's say I want to get from Newark Airport in New Jersey over to the Central Park Zoo."), 3);
+    gs->config->set_all_edge_colors(opaque_white);
+    gs->config->set_all_node_colors(0x00000000);
+    gs->manager.transition(MICRO, "globe_opacity", "0.2");
+    gs->manager.transition(MICRO, "points_opacity", "1");
+    gs->manager.transition(MICRO, "lines_opacity", "1");
+    gs->manager.transition(MICRO, "d", ".01");
+    gs->render_microblock();
     gs->config->transition_node_color(MICRO, newark_hash, 0xffff0000);
     gs->render_microblock();
     gs->config->transition_node_color(MICRO, zoo_hash, 0xff00ff00);
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1), 1);
+    gs->manager.transition(MACRO, "d", ".002");
     gs->render_microblock();
 
     if(rendering_on() && (newark_hash == -1 || zoo_hash == -1)) {
@@ -207,152 +273,70 @@ void render_video() {
         return;
     }
 
-    stage_macroblock(FileBlock("Dijkstra’s algorithm checks all the ten minute journeys,"), 100);
+    int chunk = 50;
+    gs->manager.transition(MACRO, "d", ".004");
+    stage_macroblock(FileBlock("Dijkstra’s algorithm checks all the ten minute journeys,"), chunk * 2);
     double max_dist = 0;
-    double increment = 0.00002;
-    for(int i = 0; i < 50; i++) {
+    double increment = 0.00002 * 50. / chunk;
+    for(int i = 0; i < chunk; i++) {
         if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
         max_dist += increment;
         gs->render_microblock();
     }
-    for(int i = 0; i < 50; i++) {
+    for(int i = 0; i < chunk; i++) {
         gs->render_microblock();
     }
 
     gs->manager.transition(MACRO, "d", ".01");
-    stage_macroblock(FileBlock("and then all the twenty minute journeys,"), 100);
-    for(int i = 0; i < 50; i++) {
+    stage_macroblock(FileBlock("and then all the twenty minute journeys,"), chunk * 2);
+    for(int i = 0; i < chunk; i++) {
         if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
         max_dist += increment;
         gs->render_microblock();
     }
-    for(int i = 0; i < 50; i++) {
+    for(int i = 0; i < chunk; i++) {
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("and so on until it reaches all the forty minute journeys, including the Zoo."), 50);
+    bool goal = false;
+    stage_macroblock(FileBlock("and so on until it reaches all the forty minute journeys, including the Zoo."), chunk * 2);
     while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
-        max_dist += increment*2;
+        if(rendering_on() && !goal) goal = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
+        max_dist += increment;
         gs->render_microblock();
     }
 
-    gs->manager.transition(MACRO, "d", ".02");
-    stage_macroblock(FileBlock("The search frontier covers over 65,000 nodes and includes places that are way off, like Staten Island and large swaths of New Jersey before it even hits Central Park."), 1);
+    stage_macroblock(FileBlock("The search frontier covers over 65,000 nodes and includes places that are way off,"), 1);
+    gs->render_microblock();
+
+    cout << "Finding nodes in Staten Island..." << endl;
+    unordered_set<double> staten_island_nodes;
+    if(rendering_on()) get_staten_island_nodes(g, staten_island_nodes);
+    cout << "Finding nodes in New Jersey..." << endl;
+    unordered_set<double> new_jersey_nodes;
+    if(rendering_on()) get_new_jersey_nodes(g, new_jersey_nodes);
+    cout << "Staten Island nodes: " << staten_island_nodes.size() << " New Jersey nodes: " << new_jersey_nodes.size() << endl;
+
+    stage_macroblock(FileBlock("like Staten Island and large swaths of New Jersey before it even hits Central Park."), 9);
+    gs->manager.transition(MICRO, "d", ".003");
+    set_camera_to_lat_long(gs, vec2(40.584430, -74.143991), false, MICRO);
+    gs->render_microblock();
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, staten_island_nodes);
+    gs->render_microblock();
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, {-1.234567});
+    gs->render_microblock();
+    set_camera_to_lat_long(gs, vec2(40.657, -74.241), false, MICRO);
+    gs->manager.transition(MICRO, "d", ".006");
+    gs->render_microblock();
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, new_jersey_nodes);
+    gs->render_microblock();
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, {-1.234567});
+    gs->render_microblock();
+    gs->manager.transition(MICRO, "d", ".01");
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("We'd like to prioritize nodes that are closer to the Central Park Zoo."), 1);
-    for(auto& [hash, node] : g->nodes) {
-        unordered_set<double> neighbors = g->get_neighbors(hash);
-        for(double neighbor : neighbors) {
-            double distance_to_zoo = length(node.position - g->nodes.find(zoo_hash)->second.position);
-            double distance_zoo_to_newark = length(g->nodes.find(zoo_hash)->second.position - g->nodes.find(newark_hash)->second.position);
-            double ratio = .25 * distance_to_zoo / distance_zoo_to_newark;
-            if(ratio < .05) ratio = .05;
-            if(ratio > .95) ratio = .95;
-            int red = 255 * ratio;
-            int green = 255 * (1 - ratio);
-            int color = (red << 16) | (green << 8) | (0x10 << 24);
-            gs->config->fade_edge_color(MICRO, hash, neighbor, color);
-        }
-    }
-    gs->render_microblock();
-
-    /*
-    stage_macroblock(FileBlock("Using longitudes and latitudes, we can easily calculate the straight line distance between any node and the zoo."), 1);
-    stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 1);
-    stage_macroblock(FileBlock("Nodes in the opposite direction won't be explored early on."), 1);
-
-    // Re-do Dijkstra's
-    */
-    stage_macroblock(FileBlock("Let's see these two algorithms side by side."), 1);
-    gs->config->fade_all_edge_colors(MICRO, 0x10ffffff);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("Dijkstra’s search frontier spreads out in all directions."), 100);
-    max_dist = 0;
-    increment = 0.00003;
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
-        max_dist += increment;
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("But this modified Dijkstra's"), 1);
-    gs->config->fade_all_edge_colors(MICRO, 0x10ffffff);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("also called A* immediately heads towards Manhattan."), 150);
-    max_dist = 0;
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 1);
-        max_dist += increment;
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("It only checks around 7,000 nodes — that’s almost a 10x improvement!"), 1);
-    gs->render_microblock();
-
-    // Transition all nodes' positions to scale as a function of their distance to the zoo.
-    stage_macroblock(FileBlock("Each node’s height is its straight line distance to the target. This distance is also called a heuristic."), 1);
-    gs->manager.transition(MICRO, "theta", ".8");
-    gs->manager.transition(MICRO, "d", ".01");
-    heuristic_slide(g, gs, zoo_hash, 1, MICRO);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("Now we can really see how the heuristic funnels the search directly towards Central Park."), 1);
-    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("But say there’s a direct route to Central Park that starts just west of Newark. Now the shortest path to the zoo “illogically” goes west first."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("When the heuristic is zero, A* is the same as Dijkstra’s,"), 150);
-    heuristic_slide(g, gs, zoo_hash, 0, MICRO);
-    gs->render_microblock();
-    max_dist = 1000;
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
-        gs->render_microblock();
-    }
-    stage_macroblock(FileBlock("so it still finds the shortest path."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("As we raise the heuristic, our search becomes more and more directed."), 150);
-    heuristic_slide(g, gs, zoo_hash, 2, MACRO);
-    float total_microblocks = remaining_microblocks_in_macroblock;
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 2 * (1 - remaining_microblocks_in_macroblock / total_microblocks));
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("At some point, it will head towards Manhattan so aggressively, it won't explore west at all."), 150);
-    heuristic_slide(g, gs, zoo_hash, 5, MACRO);
-    total_microblocks = remaining_microblocks_in_macroblock;
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 2 + 3 * (1 - remaining_microblocks_in_macroblock / total_microblocks));
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("If we want A* to always find the shortest path, the heuristic needs to fulfill two conditions. First, it must underestimate the overall distance between a node and target."), 1);
-    gs->render_microblock();
-    stage_macroblock(FileBlock("And second, the difference between two heuristics must underestimate the true cost between those nodes. These conditions make sure the heuristic narrows the search without missing any sneaky paths."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("To optimize for time, we divide the straight line distance by the maximum speed allowed on the graph. This gives us the minimum travel time."), 150);
-    heuristic_slide(g, gs, zoo_hash, .1, MACRO);
-    total_microblocks = remaining_microblocks_in_macroblock;
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, .1 + 4.9 * (remaining_microblocks_in_macroblock / total_microblocks)) ;
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("We have to use the maximum speed and not the speed limit since there could be multiple speed limits from one node to the target. The heuristic needs to be an underestimate."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("But in this case, it’s an extreme underestimate. It flattens out the graph so much, the search ends up looking more like Dijkstra’s."), 1);
     gs->render_microblock();
 }
