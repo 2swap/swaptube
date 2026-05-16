@@ -43,7 +43,7 @@ extern "C" void cuda_render_sphere(
     uint32_t* h_pixels, int width, int height,
     float geom_mean_size,
     uint32_t* d_map, int map_width, int map_height,
-    const quat& camera_direction, const vec3& camera_pos, float fov, float globe_opacity);
+    const quat& camera_direction, const vec3& camera_pos, float fov, float globe_opacity, float texture_latlong);
 extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix, int& out_width, int& out_height);
 extern "C" void cuda_free_map(uint32_t* d_map);
 
@@ -79,7 +79,8 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"lines_opacity", "1"},
         {"points_radius_multiplier", "1"},
         {"points_opacity", "1"},
-        {"globe_opacity", "0"}
+        {"globe_opacity", "0"},
+        {"texture_or_latlong", "0"}
     });
 }
 
@@ -259,7 +260,7 @@ void ThreeDimensionScene::draw() {
             pix.pixels.data(), pix.w, pix.h,
             get_geom_mean_size(),
             d_map, map_w, map_h,
-            camera_direction, camera_pos, fov, globe_opacity
+            camera_direction, camera_pos, fov, globe_opacity, state["texture_or_latlong"]
         );
     }
 
@@ -305,7 +306,7 @@ const StateQuery ThreeDimensionScene::populate_state_query() const {
     StateQuery sq = SuperScene::populate_state_query();
     for(const string& x : {
         "fov","x", "y", "z", "d", "q1", "qi", "qj", "qk",
-        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier", "globe_opacity"
+        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier", "globe_opacity", "texture_or_latlong"
     }) sq.insert(x);
     if(use_state_for_center) {
         for(const Surface& surface : surfaces){

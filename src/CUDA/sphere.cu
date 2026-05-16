@@ -229,11 +229,29 @@ __device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, int map_width,
     return cubic_interpolate(col[0], col[1], col[2], col[3], dy);
 }
 
+__device__ __forceinline__ bool is_near_integer(float val) {
+    return fabsf(val - roundf(val)) < 0.005;
+}
+
+__device__ __forceinline__ uint32_t lat_long_line(float lat, float lon, float zoom) {
+    int floor_zoom = floorf(zoom);
+    int exp_zoom = 1 << floor_zoom;
+    float frac_part = zoom - floor_zoom;
+    if (is_near_integer(lat * exp_zoom) || is_near_integer(lon * exp_zoom)) {
+        return 0xFFFFFFFF; // White color
+    }
+    int opacity = (int)(frac_part * 255);
+    if (is_near_integer(lat * exp_zoom + 0.5) || is_near_integer(lon * exp_zoom + 0.5)) {
+        return 0xff000000 | (opacity << 16) | (opacity << 8) | opacity; // Faint white
+    }
+    return 0;
+}
+
 __global__ void render_sphere_kernel(
     uint32_t* pixels, int width, int height,
     float geom_mean_size,
     uint32_t* map, int map_width, int map_height,
-    const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, float opacity)
+    const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, float opacity, float texture_latlong)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= width * height) return;
@@ -248,7 +266,11 @@ __global__ void render_sphere_kernel(
 
     float u = 0.5f + atan2f(hit_point.x, -hit_point.z) / (2.0f * M_PI);
     float v = 0.5f - asinf(hit_point.y) / M_PI;
-    uint32_t color = bicubic_sample(map, map_width, map_height, u, v);
+    float dist_to_surface = length(camera_pos) - 1.0f;
+    uint32_t latlong_color = lat_long_line(v, u, 11.f);
+    uint32_t map_color = bicubic_sample(map, map_width, map_height, u, v);
+    // TODO we copy the giant texture to the GPU even if we might not use it. We should only copy when texture_latlong > 0
+    uint32_t color = d_colorlerp(map_color, latlong_color, texture_latlong);
     pixels[idx] = (color & 0x00FFFFFF) | ((uint32_t)(opacity * 255) << 24);
 }
 
@@ -256,7 +278,7 @@ extern "C" void cuda_render_sphere(
     uint32_t* h_pixels, int width, int height,
     float geom_mean_size,
     uint32_t* d_map, int map_width, int map_height,
-    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float opacity)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float opacity, float texture_latlong)
 {
     uint32_t* d_pixels = nullptr;
     size_t pix_sz = width * height * sizeof(uint32_t);
@@ -270,7 +292,7 @@ extern "C" void cuda_render_sphere(
         d_pixels, width, height,
         geom_mean_size,
         d_map, map_width, map_height,
-        camera_direction, camera_pos, fov, opacity);
+        camera_direction, camera_pos, fov, opacity, texture_latlong);
     cudaDeviceSynchronize();
 
     cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);

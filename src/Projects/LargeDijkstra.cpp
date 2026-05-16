@@ -6,75 +6,6 @@
 #include "../Core/Smoketest.h"
 #include "GraphAlgs_common.cpp"
 
-uint32_t opaque_white = 0x20ffffff;
-double get_nearest_node_in_graph(shared_ptr<Graph> g, vec2 lat_long) {
-    double nearest_node = -1;
-    double nearest_distance = std::numeric_limits<double>::infinity();
-    vec3 node_xyz = lat_long_to_xyz(lat_long);
-    for(auto& [hash, node] : g->nodes) {
-        vec3 position = node.position;
-        double distance = length(position - node_xyz);
-        if(distance < nearest_distance) {
-            nearest_distance = distance;
-            nearest_node = hash;
-        }
-    }
-    return nearest_node;
-}
-
-// lat long map
-
-// File format:
-// File starts with line NODES
-// Then nodes are listed: id (integer), latitude (float), longitude (float)
-// Then line EDGES
-// Then edges are listed: node1 (integer), node2 (integer)
-// Ignore any nodes or edges that are outside the given radius from the center point
-void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 center, float radius) {
-    ifstream file("io_in/graph_speeds.txt");
-    string line;
-    enum Section { NONE, NODES, EDGES };
-    Section section = NONE;
-    int node_count = 0;
-    int edge_count = 0;
-    while(getline(file, line)) {
-        if(line == "NODES") {
-            section = NODES;
-            continue;
-        } else if(line == "EDGES") {
-            section = EDGES;
-            continue;
-        }
-        if(section == NODES) {
-            stringstream ss(line);
-            int id;
-            float lat, longi;
-            ss >> id >> lat >> longi;
-            double hash = HashableString(to_string(id)).get_hash();
-            vec4 position = lat_long_to_xyz(vec2(lat, longi));
-            if (length(vec2(lat, longi) - center) > radius) continue;
-            g->add_node(new HashableString(to_string(id)));
-            g->move_node(hash, position);
-            gs->config->set_node_radius(hash, 0);
-            gs->config->set_node_color(hash, 0x00000000);
-            node_count++;
-        } else if(section == EDGES) {
-            stringstream ss(line);
-            int id1, id2;
-            double weight;
-            ss >> id1 >> id2;
-            double hash1 = HashableString(to_string(id1)).get_hash();
-            double hash2 = HashableString(to_string(id2)).get_hash();
-            if(g->nodes.find(hash1) == g->nodes.end() || g->nodes.find(hash2) == g->nodes.end()) {
-                continue;
-            }
-            g->add_edge(hash1, hash2);
-            edge_count++;
-        }
-    }
-    cout << "Loaded graph with " << node_count << " nodes and " << edge_count << " edges." << endl;
-}
-
 // Defined as set of nodes whose squared distance to zoo is more than twice the distance from the zoo to Newark
 void get_new_jersey_nodes(shared_ptr<Graph> g, unordered_set<double>& new_jersey_nodes) {
     vec3 newark = lat_long_to_xyz(vec2(40.694669192970665, -74.18676933576879));
@@ -129,94 +60,6 @@ void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_
     }
 }
 
-// Run dijkstra's algorithm up until some node within max_dist of the goal is added to the visited set.
-// Color all searched edges blue.
-bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, double goal, double max_dist, float heuristic_mult, unordered_set<double> highlighted_nodes = {}) {
-    cout << "Running large dijkstra with max_dist " << max_dist << " and heuristic_mult " << heuristic_mult << endl;
-    //gs->config->set_all_edge_colors(opaque_white);
-    std::unordered_set<double> visited;
-    std::unordered_map<double, double> costs;
-
-    std::unordered_set<double> open_set;
-
-    std::unordered_map<double, double> came_from;
-
-    bool transition_not_fade = highlighted_nodes.size() == 0;
-    open_set.insert(start);
-    costs[start] = 0;
-    vec4 start_pos = g->nodes.find(start)->second.position;
-
-    for(auto& [hash, node] : g->nodes) {
-        if(hash == start) continue;
-        costs[hash] = std::numeric_limits<double>::infinity();
-    }
-
-    while(open_set.size() > 0) {
-        // Find node in open set with lowest cost
-        double current = -1;
-        double current_cost = std::numeric_limits<double>::infinity();
-        for(double hash : open_set) {
-            if(costs[hash] < current_cost) {
-                current_cost = costs[hash];
-                current = hash;
-            }
-        }
-
-        vec4 current_pos = g->nodes.find(current)->second.position;
-
-        if (length(current_pos - start_pos) > max_dist) {
-            return false;
-        }
-        if (current == goal) {
-            cout << "Reached goal!" << endl;
-            gs->config->transition_node_color(MICRO, current, 0xff00ff01);
-            // Color the path from current to start green
-            double path_node = current;
-            while(path_node != start) {
-                double parent = came_from[path_node];
-                gs->config->set_edge_color(path_node, parent, 0xff00ffff);
-                path_node = parent;
-            }
-            return true;
-        }
-
-        open_set.erase(current);
-
-        unordered_set<double> neighbors = g->get_neighbors(current);
-
-        for(double neighbor : neighbors) {
-            if(visited.find(neighbor) != visited.end()) {
-                continue;
-            }
-            double weight = length(g->nodes.find(current)->second.position - g->nodes.find(neighbor)->second.position);
-            weight += length(g->nodes.find(neighbor)->second.position - g->nodes.find(goal)->second.position) * heuristic_mult;
-            double tentative_cost = costs[current] + weight;
-
-            if(tentative_cost < max_dist) {
-                int color = 0x10ff8080;
-                if(highlighted_nodes.find(neighbor) != highlighted_nodes.end()) {
-                    color = 0x2000ff00;
-                }
-                if(transition_not_fade) {
-                    gs->config->transition_edge_color(MICRO, current, neighbor, color);
-                } else {
-                    gs->config->fade_edge_color(MICRO, current, neighbor, color);
-                }
-            }
-
-            if(tentative_cost < costs[neighbor]) {
-                costs[neighbor] = tentative_cost;
-                came_from[neighbor] = current;
-
-                if(open_set.find(neighbor) == open_set.end()) {
-                    open_set.insert(neighbor);
-                }
-            }
-        }
-        visited.insert(current);
-    }
-    return false;
-}
 
 void render_video() {
     vec2 newark_lat_long = vec2(40.694669192970665, -74.18676933576879);
@@ -237,8 +80,9 @@ void render_video() {
     stage_macroblock(SilenceBlock(1), 1);
     double newark_hash;
     double zoo_hash;
+    unordered_map<double, double> edge_weights;
     if(rendering_on()) {
-        load_graph_from_file(g, gs, newark_lat_long, 100);
+        load_graph_from_file(g, gs, newark_lat_long, 100, edge_weights);
         newark_hash = get_nearest_node_in_graph(g, newark_lat_long);
         zoo_hash = get_nearest_node_in_graph(g, zoo_lat_long);
         gs->config->set_node_radius(newark_hash, 1);
@@ -277,9 +121,10 @@ void render_video() {
     gs->manager.transition(MACRO, "d", ".004");
     stage_macroblock(FileBlock("Dijkstra’s algorithm checks all the ten minute journeys,"), chunk * 2);
     double max_dist = 0;
-    double increment = 0.00002 * 50. / chunk;
+    double increment = 7 * 50. / chunk;
+    bool found_goal = false;
     for(int i = 0; i < chunk; i++) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
+        if(rendering_on() && !found_goal) found_goal = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
         max_dist += increment;
         gs->render_microblock();
     }
@@ -290,7 +135,7 @@ void render_video() {
     gs->manager.transition(MACRO, "d", ".01");
     stage_macroblock(FileBlock("and then all the twenty minute journeys,"), chunk * 2);
     for(int i = 0; i < chunk; i++) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
+        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
         max_dist += increment;
         gs->render_microblock();
     }
@@ -301,7 +146,7 @@ void render_video() {
     bool goal = false;
     stage_macroblock(FileBlock("and so on until it reaches all the forty minute journeys, including the Zoo."), chunk * 2);
     while(remaining_microblocks_in_macroblock) {
-        if(rendering_on() && !goal) goal = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0);
+        if(rendering_on() && !goal) goal = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
         max_dist += increment;
         gs->render_microblock();
     }
@@ -321,16 +166,16 @@ void render_video() {
     gs->manager.transition(MICRO, "d", ".004");
     set_camera_to_lat_long(gs, vec2(40.584430, -74.143991), false, MICRO);
     gs->render_microblock();
-    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, staten_island_nodes);
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, staten_island_nodes);
     gs->render_microblock();
-    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, {-1.234567});
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
     gs->render_microblock();
     set_camera_to_lat_long(gs, vec2(40.657, -74.241), false, MICRO);
     gs->manager.transition(MICRO, "d", ".006");
     gs->render_microblock();
-    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, new_jersey_nodes);
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, new_jersey_nodes);
     gs->render_microblock();
-    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 1000, 0, {-1.234567});
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
     gs->render_microblock();
     gs->manager.transition(MICRO, "d", ".01");
     gs->render_microblock();
