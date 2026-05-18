@@ -67,6 +67,8 @@ EdgeRenderData GraphDrawingConfig::get_edge_render_data(double to, double from, 
     // Direction
     data.direction = it->second.color_transition_direction;
 
+    data.is_dashed = it->second.is_dashed;
+
     return data;
 }
 
@@ -123,6 +125,11 @@ void GraphDrawingConfig::transition_edge_color(const TransitionType tt, const do
     edge_configs[hash].target_color = new_color;
     edge_configs[hash].color_transition_type = tt;
     edge_configs[hash].color_fade = false;
+}
+
+void GraphDrawingConfig::set_edge_dashed(const double hash1, const double hash2, const bool is_dashed) {
+    edge_configs[hash1*2+hash2].is_dashed = is_dashed;
+    edge_configs[hash2*2+hash1].is_dashed = is_dashed;
 }
 
 void GraphDrawingConfig::set_edge_color(const double hash, const uint32_t new_color) {

@@ -55,7 +55,7 @@ __global__ void render_lines_kernel(
     Cuda::bresenham(
         p1.x, p1.y, p2.x, p2.y,
         ln.color, lines_opacity * ln.opacity, thickness,
-        pixels, width, height);
+        pixels, width, height, ln.is_dashed);
 }
 
 extern "C" void render_points_on_gpu(
@@ -65,7 +65,7 @@ extern "C" void render_points_on_gpu(
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
 {
     unsigned int* d_pixels = nullptr;
-    Cuda::Point*        d_points = nullptr;
+    Cuda::Point*  d_points = nullptr;
     size_t pix_sz = width * height * sizeof(unsigned int);
     size_t pt_sz  = num_points * sizeof(Cuda::Point);
 

@@ -17,8 +17,9 @@ struct Line {
     float opacity;
     vec3 start;
     vec3 end;
-    Line(const vec3& s, const vec3& e, int clr, float op = 1)
-        : color(clr), opacity(op), start(s), end(e) { }
+    bool is_dashed;
+    Line(const vec3& s, const vec3& e, int clr, float op, bool dashed)
+        : color(clr), opacity(op), start(s), end(e), is_dashed(dashed) { }
 };
 
 SHARED_FILE_SUFFIX

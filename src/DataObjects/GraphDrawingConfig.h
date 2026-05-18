@@ -33,10 +33,11 @@ struct EdgeConfig {
     TransitionType label_transition_type;
     bool color_transition_direction; // false: from lower hash to higher hash, true: from higher hash to lower hash
     bool color_fade;
+    bool is_dashed;
     EdgeConfig() :        color(0xffffffff),        label(""),
                    target_color(0xffffffff), target_label(""),
                    color_transition_type(MICRO), label_transition_type(MICRO),
-                   color_transition_direction(false), color_fade(false) {}
+                   color_transition_direction(false), color_fade(false), is_dashed(false) {}
 };
 
 
@@ -49,6 +50,7 @@ struct EdgeRenderData {
     bool direction; // false: from lower hash to higher hash, true: from higher hash to lower hash
     bool is_fading;
     uint32_t fade_color;
+    bool is_dashed;
 };
 
 struct NodeRenderData {
@@ -89,6 +91,7 @@ public:
     void        set_node_label(const double hash, const string& new_label);
     void transition_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
     void        set_edge_color(const double hash1, const double hash2, const uint32_t new_color);
+    void       set_edge_dashed(const double hash1, const double hash2, const bool is_dashed);
     void       fade_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);
     void transition_edge_label(const TransitionType tt, const double hash1, const double hash2, const std::string& new_label);
     void        set_edge_label(const double hash1, const double hash2, const string& new_label);

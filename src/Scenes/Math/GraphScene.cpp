@@ -145,16 +145,16 @@ void GraphScene::draw(){
             const EdgeRenderData erd = config->get_edge_render_data(hash, neighbor_id, macro, micro);
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
             if(erd.post_color == erd.pre_color){ // Fade or no-change
-                add_line(Line(node_pos, neighbor_pos, erd.post_color));
+                add_line(Line(node_pos, neighbor_pos, erd.post_color, 1, erd.is_dashed));
             } else { // Directed transition
                 vec3 pos_pre = erd.direction ? neighbor_pos : node_pos;
                 vec3 pos_post = erd.direction ? node_pos : neighbor_pos;
                 uint32_t pre_color = erd.direction ? erd.post_color : erd.pre_color;
                 uint32_t post_color = erd.direction ? erd.pre_color : erd.post_color;
                 vec3 midpoint = veclerp(pos_pre, pos_post, erd.midpoint_fraction);
-                add_line(Line(midpoint, neighbor_pos, pre_color));
+                add_line(Line(midpoint, neighbor_pos, pre_color, 1, erd.is_dashed));
                 add_point(Point(midpoint, erd.post_color, 1, midpoint_thickness));
-                add_line(Line(node_pos, midpoint, post_color));
+                add_line(Line(node_pos, midpoint, post_color, 1, erd.is_dashed));
             }
 
             if(erd.label != "" && erd.label_size > 0.1) {
@@ -164,17 +164,20 @@ void GraphScene::draw(){
                 if(behind_camera) continue;
                 float angle = atan2(neighbor_screen_pos.y - node_screen_pos.y, neighbor_screen_pos.x - node_screen_pos.x);
                 // Make the angle fit into -pi/2, pi/2.
-                float modulo_angle = angle;
-                while (modulo_angle > M_PI/4) modulo_angle -= M_PI/2;
-                while (modulo_angle < -M_PI/4) modulo_angle += M_PI/2;
+                float text_rotation_angle = angle;
+                while (text_rotation_angle > M_PI/2) text_rotation_angle -= M_PI;
+                while (text_rotation_angle < -M_PI/2) text_rotation_angle += M_PI;
                 angle += M_PI / 2;
-                vec2 offset = 0.015 * vec2(cos(angle), sin(angle)) * get_width_height();
+                vec2 offset = 0.02 * vec2(cos(angle), sin(angle)) * get_width_height();
                 vec2 midpoint = (node_screen_pos + neighbor_screen_pos) / 2;
                 vec2 pos = midpoint + offset;
                 vec2 half_dim = vec2(0.2, 0.03) * get_width_height() * erd.label_size;
                 vec2 top_left = pos - half_dim;
                 vec2 bottom_right = pos + half_dim;
-                write_text(labels, erd.label, top_left, bottom_right, 1, 0);//modulo_angle);
+                if (erd.label.size() > 2) { // Simple edge weights (2 digit numbers) dont need rotation
+                    text_rotation_angle = 0;
+                }
+                write_text(labels, erd.label, top_left, bottom_right, 1, text_rotation_angle);
             }
         }
     }

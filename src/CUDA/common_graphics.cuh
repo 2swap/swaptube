@@ -19,21 +19,26 @@ __device__ __forceinline__ void d_fill_circle(float cx, float cy, float r, int c
     }
 }
 
-__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height) {
+__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, int width, int height, bool is_dashed) {
     int dx = abs(x2 - x1), dy = abs(y2 - y1);
     if (dx > 10000 || dy > 10000) return;
     int sx = (x1 < x2) ? 1 : -1;
     int sy = (y1 < y2) ? 1 : -1;
     int err = dx - dy;
+    int dash_counter = 0;
+    int dash_counter_modulus = (width + height) >> 7; // Naive average
 
     while (true) {
-        d_atomic_overlay_pixel(x1, y1, col, opacity, pixels, width, height);
-        for (int i = 1; i < thickness; i++) {
-            d_atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
-            d_atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
-            d_atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
-            d_atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
+        if(!is_dashed || ((dash_counter / dash_counter_modulus) % 2 == 0)) {
+            d_atomic_overlay_pixel(x1, y1, col, opacity, pixels, width, height);
+            for (int i = 1; i < thickness; i++) {
+                d_atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, width, height);
+                d_atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, width, height);
+                d_atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, width, height);
+                d_atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, width, height);
+            }
         }
+        dash_counter++;
         if (x1 == x2 && y1 == y2) break;
         int e2 = 2 * err;
         if (e2 > -dy) { err -= dy; x1 += sx; }

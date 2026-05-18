@@ -239,7 +239,7 @@ __global__ void geodesics_2d_kernel(
                 last_pixel.x, last_pixel.y,
                 pixel.x, pixel.y,
                 0xffff0000, opacity, 2,
-                pixels, w, h
+                pixels, w, h, false
             );
         }
 
