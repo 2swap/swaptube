@@ -11,8 +11,8 @@ void render_video() {
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
     gs->manager.set({
         {"q1", "1"},
-        {"qi", "0"},
-        {"qj", "0"},
+        {"qi", "{t} .09 * sin .08 *"},
+        {"qj", "{t} .07 * cos .08 *"},
         {"qk", "0"},
         {"d", "14"},
         {"edge_weights_size", "1"},
@@ -86,8 +86,9 @@ void render_video() {
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("But when we search between the two ends,"), 5);
+    stage_macroblock(FileBlock("But when we search between the two ends,"), 7);
     // Splash a and h
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -95,11 +96,27 @@ void render_video() {
     gs->render_microblock();
     gs->config->splash_node(HashableString("i").get_hash());
     gs->render_microblock();
+    gs->manager.transition(MICRO, {
+        {"d", "12"},
+        {"x", "-2"},
+        {"y", "-2"},
+    });
+    gs->render_microblock();
 
     stage_macroblock(FileBlock("we have to explore every node and edge."), 9);
+    gs->manager.transition(MACRO, {
+        {"d", "13"},
+        {"x", "2"},
+        {"y", "2"},
+    });
     trace_path(gs, {"a", "b", "c", "d", "e", "f", "g", "h", "i"}, 0xffff0000);
 
     stage_macroblock(FileBlock("No improvement from Dijkstra’s."), 1);
+    gs->manager.transition(MACRO, {
+        {"d", "14"},
+        {"x", "0"},
+        {"y", "0"},
+    });
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->render_microblock();
@@ -122,9 +139,17 @@ void render_video() {
         gs->config->transition_node_label(MICRO, HashableString(node_name).get_hash(), to_string(node_ranks[node_name]));
         gs->transition_node_position(MICRO, HashableString(node_name).get_hash(), vec4(i-4, node_ranks[node_name]-5, 0, 0));
     }
+    StateSet undo = gs->manager.transition(MACRO, {
+        {"qj", "-.1"},
+        {"x", "-1"},
+    });
     gs->render_microblock();
 
     stage_macroblock(FileBlock("with the necessary shortcuts."), 6);
+    gs->manager.transition(MACRO, {
+        {"qj", ".1"},
+        {"x", "1"},
+    });
     for(int i = 0; i < 9; i++) {
         string node_name(1, 'a' + i);
         if(node_name == "d" || node_name == "e" || node_name == "c") continue;
@@ -136,6 +161,7 @@ void render_video() {
     }
 
     stage_macroblock(FileBlock("End to end, we only need to search two edges."), 10);
+    gs->manager.transition(MACRO, undo);
     gs->render_microblock();
     gs->config->splash_node(HashableString("a").get_hash());
     gs->render_microblock();
@@ -162,6 +188,11 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("and in some sections we still have to check all the edges."), 9);
+    gs->manager.transition(MACRO, {
+        {"d", "12"},
+        {"y", "-2"},
+        {"x", "2"},
+    });
     gs->render_microblock();
     gs->config->splash_node(HashableString("e").get_hash());
     gs->render_microblock();
@@ -170,6 +201,12 @@ void render_video() {
     gs->render_microblock();
     trace_path(gs, {"e", "f", "g", "h", "i"}, 0xffff0000);
 
-    stage_macroblock(SilenceBlock(2), 1);
+    stage_macroblock(SilenceBlock(2), 2);
+    gs->manager.transition(MICRO, {
+        {"d", "14"},
+        {"y", "0"},
+        {"x", "0"},
+    });
+    gs->render_microblock();
     gs->render_microblock();
 }

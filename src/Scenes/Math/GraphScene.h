@@ -33,6 +33,7 @@ public:
     uint32_t label_color;
     vec2 label_size = vec2(0.4,0.08);
     vec2 label_offset = vec2(0, 0);
+    double edge_label_offset = 0.02;
 
 private:
     int last_node_count;

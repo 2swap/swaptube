@@ -141,7 +141,7 @@ void render_video() {
         gs->render_microblock();
     }
 
-    gs->manager.transition(MACRO, "d", ".01");
+    gs->manager.transition(MACRO, "d", ".007");
     stage_macroblock(FileBlock("and then all the twenty minute journeys,"), chunk * 2);
     for(int i = 0; i < chunk; i++) {
         if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
@@ -154,6 +154,7 @@ void render_video() {
 
     bool goal = false;
     stage_macroblock(FileBlock("and so on until it reaches all the forty minute journeys, including the Zoo."), chunk * 2);
+    gs->manager.transition(MACRO, "d", ".01");
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on() && !goal) goal = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
         max_dist += increment;
@@ -172,26 +173,28 @@ void render_video() {
     if(rendering_on()) get_new_jersey_nodes(g, new_jersey_nodes);
     cout << "Staten Island nodes: " << staten_island_nodes.size() << " New Jersey nodes: " << new_jersey_nodes.size() << endl;
 
-    stage_macroblock(FileBlock("like Staten Island and large swaths of New Jersey."), 9);
-    gs->manager.transition(MICRO, "d", ".004");
-    set_camera_to_lat_long(gs, vec2(40.584430, -74.143991), false, MICRO);
+    stage_macroblock(FileBlock("like Staten Island,"), 3);
+    gs->manager.transition(MACRO, "d", ".004");
+    set_camera_to_lat_long(gs, vec2(40.584430, -74.143991), false, MACRO);
     gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, staten_island_nodes);
     gs->render_microblock();
-    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
     gs->render_microblock();
-    set_camera_to_lat_long(gs, vec2(40.657, -74.241), false, MICRO);
-    gs->manager.transition(MICRO, "d", ".006");
+
+    stage_macroblock(FileBlock("and large swaths of New Jersey."), 5);
+    set_camera_to_lat_long(gs, vec2(40.657, -74.241), false, MACRO);
+    gs->manager.transition(MACRO, "d", ".008");
     gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, new_jersey_nodes);
     gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 3);
     gs->render_microblock();
     gs->manager.transition(MICRO, "d", ".01");
     gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 1);
     gs->render_microblock();
 }

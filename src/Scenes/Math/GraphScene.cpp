@@ -169,7 +169,7 @@ void GraphScene::draw(){
                 while (text_rotation_angle > M_PI/2) text_rotation_angle -= M_PI;
                 while (text_rotation_angle < -M_PI/2) text_rotation_angle += M_PI;
                 angle += M_PI / 2;
-                vec2 offset = 0.02 * vec2(cos(angle), sin(angle)) * get_width_height();
+                vec2 offset = edge_label_offset * vec2(cos(angle), sin(angle)) * get_width_height();
                 vec2 midpoint = (node_screen_pos + neighbor_screen_pos) / 2;
                 vec2 pos = midpoint + offset;
                 vec2 half_dim = vec2(0.2, 0.03) * get_width_height() * erd.label_size;

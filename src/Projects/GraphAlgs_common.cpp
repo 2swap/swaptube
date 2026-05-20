@@ -1,4 +1,4 @@
-uint32_t opaque_white = 0x20909090;
+uint32_t opaque_white = 0x40707070;
 
 quat lat_long_to_quat(vec2 lat_long) {
     float lon = -lat_long.x;
@@ -260,7 +260,7 @@ bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
             double tentative_fScore = tentative_gScore + length(g->nodes.find(neighbor)->second.position - g->nodes.find(goal)->second.position) * heuristic_mult;
 
             if(tentative_gScore < max_dist) {
-                int color = 0x10ff6060;
+                int color = 0x15ff6060;
                 if(highlighted_nodes.find(neighbor) != highlighted_nodes.end()) {
                     color = 0x4060ff60;
                 }

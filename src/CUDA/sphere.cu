@@ -267,7 +267,7 @@ __global__ void render_sphere_kernel(
     float u = 0.5f + atan2f(hit_point.x, -hit_point.z) / (2.0f * M_PI);
     float v = 0.5f - asinf(hit_point.y) / M_PI;
     float dist_to_surface = length(camera_pos) - 1.0f;
-    uint32_t latlong_color = lat_long_line(v, u, 9.f);
+    uint32_t latlong_color = lat_long_line(v, u, 12.f);
     uint32_t map_color = bicubic_sample(map, map_width, map_height, u, v);
     // TODO we copy the giant texture to the GPU even if we might not use it. We should only copy when texture_latlong > 0
     uint32_t color = d_colorlerp(map_color, latlong_color, texture_latlong);

@@ -70,6 +70,7 @@ void render_video() {
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
     gs->label_color = 0xffffffff;
     gs->label_offset = vec2(0, 0.02);
+    gs->edge_label_offset = 0.015;
     gs->label_size = vec2(0.4, 0.04);
     gs->manager.transition(MACRO, "globe_opacity", "1");
     vec2 center = (netherlands_cities["Utrecht"] + netherlands_cities["Zwolle"]) / 2.0;
@@ -192,11 +193,12 @@ void render_video() {
     gs->config->fade_all_edge_colors(MICRO, edge_dark);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Rotterdam is our starting point, or our source. From Rotterdam, we explore its neighboring nodes for the goal, or the target."), 1 + per_bfs);
+    stage_macroblock(FileBlock("Rotterdam is our starting point, or our source."), 1);
     set_camera_to_lat_long(gs, netherlands_cities["Rotterdam"], false, MICRO);
-    gs->render_microblock();
     gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
+    gs->render_microblock();
 
+    stage_macroblock(CompositeBlock(FileBlock("From Rotterdam, we explore its neighboring nodes for the goal, or the target."), FileBlock("If we don’t find it, we mark Rotterdam as explored and move on to its neighbors.")), per_bfs);
     unordered_set<double> border;
     unordered_set<double> visited;
     border.insert(rotterdam_hash);
@@ -205,7 +207,7 @@ void render_video() {
     int depth = 0;
     bfs(g, gs, border, visited, depth++);
 
-    stage_macroblock(FileBlock("If we don’t find it, we mark Rotterdam as explored and move on to its neighbors. We run the same check, and explore all their neighbors."), per_bfs + 4);
+    stage_macroblock(FileBlock("We run the same check, and explore all their neighbors."), per_bfs + 4);
     set_camera_to_lat_long(gs, netherlands_cities["Utrecht"], false, MACRO);
     gs->render_microblock();
     gs->render_microblock();
@@ -221,12 +223,13 @@ void render_video() {
     gs->render_microblock();
     bfs(g, gs, border, visited, depth++);
 
-    stage_macroblock(FileBlock("At every level, check all the neighboring nodes for the target."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(SilenceBlock(1), per_bfs * 2);
-    set_camera_to_lat_long(gs, netherlands_cities["Zwolle"], false, MACRO);
+    stage_macroblock(FileBlock("At every level, check all the neighboring nodes for the target."), per_bfs);
     bfs(g, gs, border, visited, depth++);
+
+    stage_macroblock(SilenceBlock(2), per_bfs + 2);
+    set_camera_to_lat_long(gs, netherlands_cities["Zwolle"], false, MACRO);
+    gs->render_microblock();
+    gs->render_microblock();
     bfs(g, gs, border, visited, depth++);
 
     stage_macroblock(SilenceBlock(1), 2);

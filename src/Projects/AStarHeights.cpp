@@ -32,8 +32,8 @@ void render_video() {
 
     // Fade globe to opacity 1
     vec2 center = newark_lat_long;
-    set_camera_to_lat_long(gs, center, true, MICRO);
-    stage_macroblock(SilenceBlock(1), 1);
+    set_camera_to_lat_long(gs, center, true, MICRO, 1.0003);
+    stage_macroblock(SilenceBlock(2), 1);
     double newark_hash;
     double zoo_hash;
     unordered_map<double, double> edge_weights;
@@ -49,13 +49,17 @@ void render_video() {
     gs->render_microblock();
 
     // Transition all nodes' positions to scale as a function of their distance to the zoo.
-    stage_macroblock(FileBlock("Each node’s height is its straight line distance to the target. The penalty A* adds, in this case the distance, is also called a heuristic."), 1);
+    stage_macroblock(FileBlock("Each node's height is its straight line distance to the target."), 2);
     gs->manager.transition(MICRO, {
-        {"theta", "1.5"},
+        {"theta", "1.55"},
         {"d", ".01"},
-        {"phi", "{t} .11 * sin .2 * 2.14 -"},
+        {"phi", "{t} .2 * sin .4 * 2.14 -"},
     });
+    gs->render_microblock();
     heuristic_slide(g, gs, zoo_hash, 1, MICRO);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("The penalty A* adds, in this case the distance, is also called a heuristic."), 1);
     gs->render_microblock();
 
     int chunks = 100;
@@ -109,14 +113,11 @@ void render_video() {
     });
     gs->render_microblock();
 
+    gs->config->chill = false;
     stage_macroblock(FileBlock("As we raise the heuristic, our search becomes more and more directed."), chunks);
-    vec4 center_with_altitude = lat_long_to_xyz(center) * 1.05;
     gs->manager.transition(MACRO, {
         {"d", ".008"},
         {"theta", "1.5"},
-        {"x", to_string(center_with_altitude.x)},
-        {"y", to_string(center_with_altitude.y)},
-        {"z", to_string(center_with_altitude.z)},
     });
     heuristic_slide(g, gs, zoo_hash, 1, MACRO);
     unordered_set<double> hack = {1,2};

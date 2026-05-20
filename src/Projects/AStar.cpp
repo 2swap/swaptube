@@ -17,12 +17,11 @@ void render_video() {
         {"d", ".005"},
         {"texture_or_latlong", "0"},
     });
-    gs->config->chill = true;
 
     // Fade globe to opacity 1
     vec2 center = newark_lat_long;
     set_camera_to_lat_long(gs, center, true, MICRO);
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(2), 1);
     double newark_hash;
     double zoo_hash;
     unordered_map<double, double> edge_weights;
@@ -39,7 +38,7 @@ void render_video() {
 
     stage_macroblock(FileBlock("We'd like to prioritize nodes that are closer to the Zoo."), 1);
     gs->manager.transition(MICRO, {
-        {"d", ".008"},
+        {"d", ".009"},
     });
     for(auto& [hash, node] : g->nodes) {
         unordered_set<double> neighbors = g->get_neighbors(hash);
@@ -115,7 +114,7 @@ void render_video() {
                 double extra_distance = 2 * (distance_to_zoo - distance_zoo_to_newark) / distance_zoo_to_newark;
                 extra_distance = max(extra_distance, 0.0);
                 extra_distance = min(extra_distance, 1.0);
-                uint32_t color = colorlerp(0x20ffffff, 0x30ff0000, extra_distance);
+                uint32_t color = colorlerp(opaque_white, 0x30ff0000, extra_distance);
                 gs->config->set_edge_color(hash, neighbor, color);
             }
         }
@@ -127,12 +126,16 @@ void render_video() {
     // Re-do Dijkstra's
     stage_macroblock(SilenceBlock(1), 1);
     gs->manager.transition(MICRO, {
-        {"d", ".005"},
+        {"d", ".004"},
     });
     gs->render_microblock();
 
+    gs->config->chill = true;
     int chunks = 100;
     stage_macroblock(FileBlock("With Dijkstra’s, the search frontier spreads out in all directions."), chunks);
+    gs->manager.transition(MACRO, {
+        {"d", ".008"},
+    });
     float max_dist = 0;
     float increment = 16 * 100. / chunks;
     bool found = false;
@@ -143,10 +146,18 @@ void render_video() {
     }
 
     stage_macroblock(FileBlock("But this modified Dijkstra's"), 1);
+    gs->manager.transition(MICRO, {
+        {"d", ".003"},
+    });
     gs->config->fade_all_edge_colors(MICRO, opaque_white);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("also called A* immediately heads towards the zoo."), chunks);
+    gs->manager.transition(MACRO, {
+        {"d", ".008"},
+    });
+    center = (newark_lat_long + zoo_lat_long) / 2.f;
+    set_camera_to_lat_long(gs, center, false, MACRO);
     max_dist = 0;
     found = false;
     while(remaining_microblocks_in_macroblock) {

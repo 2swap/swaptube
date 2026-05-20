@@ -23,7 +23,7 @@ NodeRenderData GraphDrawingConfig::get_node_render_data(const double node_id, co
     data.label = label_fraction < 0.5f ? it->second.label : it->second.target_label;
     if (it->second.label == it->second.target_label) data.label_size = 1.0f;
     else {
-        float magic_parabola = -12*label_fraction*label_fraction + 20*label_fraction - 7;
+        float magic_parabola = -8*label_fraction*label_fraction + 14*label_fraction - 5;
         data.label_size = label_fraction < 0.5f ? (1-label_fraction*2) : magic_parabola;
     }
 
@@ -60,7 +60,7 @@ EdgeRenderData GraphDrawingConfig::get_edge_render_data(double to, double from, 
     if (it->second.label == it->second.target_label) data.label_size = 1.0f;
     else {
         float relevant_fraction = ltt == MICRO ? microblock_fraction : macroblock_fraction;
-        float magic_parabola = -12*label_fraction*label_fraction + 20*label_fraction - 7;
+        float magic_parabola = -8*label_fraction*label_fraction + 14*label_fraction - 5;
         data.label_size = label_fraction < 0.5f ? (1-label_fraction*2) : magic_parabola;
     }
 
