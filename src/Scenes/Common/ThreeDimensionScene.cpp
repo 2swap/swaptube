@@ -233,6 +233,8 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 }
 
 void ThreeDimensionScene::set_camera_direction() {
+    fov = state["fov"];
+    over_w_fov = 1/(get_geom_mean_size()*fov);
     camera_direction = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
     vec3 focus = vec3(state["x"], state["y"], state["z"]);
     camera_pos = focus - rotate_vector(vec3(0,0,state["d"]), conjugate(camera_direction));
@@ -244,9 +246,6 @@ float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
 }
 
 void ThreeDimensionScene::draw() {
-    fov = state["fov"];
-    over_w_fov = 1/(get_geom_mean_size()*fov);
-
     set_camera_direction();
 
     float globe_opacity = state["globe_opacity"];

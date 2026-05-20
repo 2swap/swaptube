@@ -68,6 +68,9 @@ EdgeRenderData GraphDrawingConfig::get_edge_render_data(double to, double from, 
     data.direction = it->second.color_transition_direction;
 
     data.is_dashed = it->second.is_dashed;
+    if(chill){
+        data.post_color = data.pre_color = colorlerp(data.post_color, 0xffffffff, 1 / (1 + square(it->second.age) * .1));
+    }
 
     return data;
 }
@@ -133,6 +136,9 @@ void GraphDrawingConfig::set_edge_dashed(const double hash1, const double hash2,
 }
 
 void GraphDrawingConfig::set_edge_color(const double hash, const uint32_t new_color) {
+    if (edge_configs[hash].color != new_color) {
+        edge_configs[hash].age = 0;
+    }
     edge_configs[hash].target_color = new_color;
     edge_configs[hash].color = new_color;
 }
@@ -252,8 +258,12 @@ void GraphDrawingConfig::tick(const StateReturn& state) {
         }
         int framerate = get_video_framerate_fps();
         for(int i = 0; i < 120; i += framerate) { // Designed for 60fps
-            config.splash_radius = sqrt(config.splash_radius*config.splash_radius + .1);
-            config.splash_opacity -= 0.012f;
+            config.splash_radius = sqrt(config.splash_radius*config.splash_radius + .07);
+            config.splash_opacity -= 0.015f;
         }
+    }
+    if(chill)
+    for (auto& [hash, config] : edge_configs) {
+        config.age++;
     }
 }

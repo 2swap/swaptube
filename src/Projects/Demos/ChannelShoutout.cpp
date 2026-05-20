@@ -8,8 +8,20 @@
 void render_video() {
     CompositeScene cs;
 
+    shared_ptr<TwoswapScene> ts = make_shared<TwoswapScene>();
+    cs.add_scene(ts, "ts");
+    stage_macroblock(SilenceBlock(2), 4);
+    cs.render_microblock();
+    ts->manager.transition(MICRO, {
+        {"2swap_effect_completion", "1"}
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
     shared_ptr<Scene> ms = make_shared<MovingPendulumGridScene>();
-    cs.add_scene(ms, "ms");
+    cs.fade_subscene(MICRO, "ts", 0);
+    cs.add_scene_fade_in(MICRO, ms, "ms");
     stage_macroblock(SilenceBlock(2.5), 5);
     ms->manager.set({
         {"mode", "3"},
@@ -23,6 +35,7 @@ void render_video() {
         {"theta_or_momentum", "1.2"},
     });
     cs.render_microblock();
+    cs.remove_subscene("ts");
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
@@ -64,18 +77,6 @@ void render_video() {
     stage_macroblock(SilenceBlock(1.5), 1);
     cs.render_microblock();
 
-    shared_ptr<TwoswapScene> ts = make_shared<TwoswapScene>();
-    cs.fade_subscene(MICRO, "rfs", 0);
-    cs.add_scene_fade_in(MICRO, ts, "ts");
-    stage_macroblock(SilenceBlock(.5), 1);
-    cs.render_microblock();
-    cs.remove_subscene("rfs");
-    stage_macroblock(SilenceBlock(.5), 2);
-    ts->manager.transition(MACRO, {
-        {"2swap_effect_completion", "1"}
-    });
-    cs.render_microblock();
-    cs.render_microblock();
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(2), 1);
     cs.render_microblock();
 }

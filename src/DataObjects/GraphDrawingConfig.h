@@ -34,10 +34,11 @@ struct EdgeConfig {
     bool color_transition_direction; // false: from lower hash to higher hash, true: from higher hash to lower hash
     bool color_fade;
     bool is_dashed;
+    int age;
     EdgeConfig() :        color(0xffffffff),        label(""),
                    target_color(0xffffffff), target_label(""),
                    color_transition_type(MICRO), label_transition_type(MICRO),
-                   color_transition_direction(false), color_fade(false), is_dashed(false) {}
+                   color_transition_direction(false), color_fade(false), is_dashed(false), age(0) {}
 };
 
 
@@ -72,6 +73,7 @@ private:
     void transition_edge_label(const TransitionType tt, const double hash, const std::string& new_label);
 
 public:
+    bool chill = false;
     NodeRenderData get_node_render_data(const double node_id, const float macroblock_fraction, const float microblock_fraction) const;
     EdgeRenderData get_edge_render_data(double to, double from, const float macroblock_fraction, const float microblock_fraction) const;
 

@@ -75,6 +75,7 @@ void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
 }
 
 void GraphScene::draw(){
+    set_camera_direction();
     // TODO we only need to do this if data changed, not if state changed.
     float micro = state["microblock_fraction"];
     float macro = state["macroblock_fraction"];
@@ -152,9 +153,9 @@ void GraphScene::draw(){
                 uint32_t pre_color = erd.direction ? erd.post_color : erd.pre_color;
                 uint32_t post_color = erd.direction ? erd.pre_color : erd.post_color;
                 vec3 midpoint = veclerp(pos_pre, pos_post, erd.midpoint_fraction);
-                add_line(Line(midpoint, neighbor_pos, pre_color, 1, erd.is_dashed));
-                add_point(Point(midpoint, erd.post_color, 1, midpoint_thickness));
                 add_line(Line(node_pos, midpoint, post_color, 1, erd.is_dashed));
+                add_line(Line(neighbor_pos, midpoint, pre_color, 1, erd.is_dashed));
+                add_point(Point(midpoint, erd.post_color, 1, midpoint_thickness));
             }
 
             if(erd.label != "" && erd.label_size > 0.1) {
@@ -174,7 +175,7 @@ void GraphScene::draw(){
                 vec2 half_dim = vec2(0.2, 0.03) * get_width_height() * erd.label_size;
                 vec2 top_left = pos - half_dim;
                 vec2 bottom_right = pos + half_dim;
-                if (erd.label.size() > 2) { // Simple edge weights (2 digit numbers) dont need rotation
+                if (erd.label.size() <= 2) { // Simple edge weights (2 digit numbers) dont need rotation
                     text_rotation_angle = 0;
                 }
                 write_text(labels, erd.label, top_left, bottom_right, 1, text_rotation_angle);

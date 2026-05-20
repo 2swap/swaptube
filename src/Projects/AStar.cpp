@@ -17,6 +17,7 @@ void render_video() {
         {"d", ".005"},
         {"texture_or_latlong", "0"},
     });
+    gs->config->chill = true;
 
     // Fade globe to opacity 1
     vec2 center = newark_lat_long;
@@ -124,14 +125,14 @@ void render_video() {
     }
 
     // Re-do Dijkstra's
-    stage_macroblock(FileBlock("Let's see these two algorithms side by side."), 1);
+    stage_macroblock(SilenceBlock(1), 1);
     gs->manager.transition(MICRO, {
         {"d", ".005"},
     });
     gs->render_microblock();
 
     int chunks = 100;
-    stage_macroblock(FileBlock("Dijkstra’s search frontier spreads out in all directions."), chunks);
+    stage_macroblock(FileBlock("With Dijkstra’s, the search frontier spreads out in all directions."), chunks);
     float max_dist = 0;
     float increment = 16 * 100. / chunks;
     bool found = false;
@@ -145,7 +146,7 @@ void render_video() {
     gs->config->fade_all_edge_colors(MICRO, opaque_white);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("also called A* immediately heads towards Manhattan."), chunks);
+    stage_macroblock(FileBlock("also called A* immediately heads towards the zoo."), chunks);
     max_dist = 0;
     found = false;
     while(remaining_microblocks_in_macroblock) {

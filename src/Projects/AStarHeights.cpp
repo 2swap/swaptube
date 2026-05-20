@@ -21,13 +21,14 @@ void render_video() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
     gs->manager.set({
-        {"globe_opacity", ".2"},
+        {"globe_opacity", ".5"},
         {"d", ".005"},
-        {"texture_or_latlong", "0"},
+        {"texture_or_latlong", "1"},
     });
     gs->manager.set({
         {"theta", ".9"},
     });
+    gs->config->chill = true;
 
     // Fade globe to opacity 1
     vec2 center = newark_lat_long;
@@ -48,7 +49,7 @@ void render_video() {
     gs->render_microblock();
 
     // Transition all nodes' positions to scale as a function of their distance to the zoo.
-    stage_macroblock(FileBlock("Each node’s height is its straight line distance to the target. This distance is also called a heuristic."), 1);
+    stage_macroblock(FileBlock("Each node’s height is its straight line distance to the target. The penalty A* adds, in this case the distance, is also called a heuristic."), 1);
     gs->manager.transition(MICRO, {
         {"theta", "1.5"},
         {"d", ".01"},
@@ -79,19 +80,23 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Now the shortest path to the zoo “illogically” goes west first."), 1);
-    gs->render_microblock();
+    stage_macroblock(FileBlock("Now the shortest path “illogically” goes west first."), chunks);
+    while(remaining_microblocks_in_macroblock) {
+        if(rendering_on() && !found) found = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
+        max_dist += increment;
+        gs->render_microblock();
+    }
 
     stage_macroblock(FileBlock("When the heuristic is zero,"), 1);
+    gs->manager.transition(MACRO, {
+        {"theta", "1"},
+    });
     heuristic_slide(g, gs, zoo_hash, 0, MICRO);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("A* is the same as Dijkstra’s,"), chunks / 2);
     max_dist = 0;
     found = false;
-    gs->manager.transition(MACRO, {
-        {"theta", "1"},
-    });
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on() && !found) found = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
         max_dist += increment;
@@ -105,25 +110,41 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("As we raise the heuristic, our search becomes more and more directed."), chunks);
+    vec4 center_with_altitude = lat_long_to_xyz(center) * 1.05;
     gs->manager.transition(MACRO, {
-        {"d", ".012"},
+        {"d", ".008"},
+        {"theta", "1.5"},
+        {"x", to_string(center_with_altitude.x)},
+        {"y", to_string(center_with_altitude.y)},
+        {"z", to_string(center_with_altitude.z)},
     });
     heuristic_slide(g, gs, zoo_hash, 1, MACRO);
     unordered_set<double> hack = {1,2};
     float total_microblocks = remaining_microblocks_in_macroblock;
     while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 300000 * (1 - remaining_microblocks_in_macroblock / total_microblocks), edge_weights, hack);
+        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 100000 * (1 - remaining_microblocks_in_macroblock / total_microblocks), edge_weights, hack);
         gs->render_microblock();
     }
 
     stage_macroblock(FileBlock("At some point, it heads towards Manhattan so aggressively, it doesn't explore west at all and returns the wrong path."), chunks);
-    heuristic_slide(g, gs, zoo_hash, 1.5, MACRO);
+    heuristic_slide(g, gs, zoo_hash, 2, MACRO);
     total_microblocks = remaining_microblocks_in_macroblock;
     while(remaining_microblocks_in_macroblock) {
-        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 300000 + 600000 * (1 - remaining_microblocks_in_macroblock / total_microblocks), edge_weights, hack);
+        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 100000 + 100000 * (1 - remaining_microblocks_in_macroblock / total_microblocks), edge_weights, hack);
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("We don’t want to raise the heuristic so much that it overestimates the actual path lengths."), 1);
+    stage_macroblock(FileBlock("We don’t want to raise the heuristic so much that it overestimates the actual path lengths."), chunks);
+    heuristic_slide(g, gs, zoo_hash, 1, MACRO);
+    total_microblocks = remaining_microblocks_in_macroblock;
+    while(remaining_microblocks_in_macroblock) {
+        if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 200000 - 100000 * (1 - remaining_microblocks_in_macroblock / total_microblocks), edge_weights, hack);
+        gs->render_microblock();
+    }
+
+    stage_macroblock(FileBlock("It should always be an underestimate."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1), 1);
     gs->render_microblock();
 }

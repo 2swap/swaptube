@@ -1,4 +1,4 @@
-uint32_t opaque_white = 0x20ffffff;
+uint32_t opaque_white = 0x20909090;
 
 quat lat_long_to_quat(vec2 lat_long) {
     float lon = -lat_long.x;
@@ -50,8 +50,8 @@ void quat_mult_string(
     out_k = ru + " " + sk + " * " + ri + " " + sj + " * + " + rj + " " + si + " * - " + rk + " " + su + " * +";
 }
 
-void set_camera_to_lat_long(shared_ptr<GraphScene> gs, vec2 lat_long, bool set, TransitionType tt) {
-    vec4 f = lat_long_to_xyz(lat_long);
+void set_camera_to_lat_long(shared_ptr<GraphScene> gs, vec2 lat_long, bool set, TransitionType tt, float multiplier = 1) {
+    vec4 f = lat_long_to_xyz(lat_long) * multiplier;
     StateSet focus({
         {"x",to_string(f.x)},
         {"y",to_string(f.y)},
@@ -210,7 +210,7 @@ bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
 
     std::unordered_map<double, double> came_from;
 
-    bool transition_not_fade = highlighted_nodes.size() == 0;
+    bool transition_not_set = highlighted_nodes.size() == 0;
     open_set.insert(start);
     gScore[start] = 0;
     fScore[start] = length(g->nodes.find(start)->second.position - g->nodes.find(goal)->second.position) * heuristic_mult;
@@ -260,17 +260,11 @@ bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
             double tentative_fScore = tentative_gScore + length(g->nodes.find(neighbor)->second.position - g->nodes.find(goal)->second.position) * heuristic_mult;
 
             if(tentative_gScore < max_dist) {
-                int color = 0x10ff8080;
+                int color = 0x10ff6060;
                 if(highlighted_nodes.find(neighbor) != highlighted_nodes.end()) {
-                    color = 0x2000ff00;
+                    color = 0x4060ff60;
                 }
-                if(reset) {
-                    gs->config->set_edge_color(current, neighbor, color);
-                } else if(transition_not_fade) {
-                    gs->config->transition_edge_color(MICRO, current, neighbor, color);
-                } else {
-                    gs->config->fade_edge_color(MICRO, current, neighbor, color);
-                }
+                gs->config->set_edge_color(current, neighbor, color);
             }
 
             if(tentative_gScore < gScore[neighbor]) {
@@ -305,3 +299,58 @@ double get_nearest_node_in_graph(shared_ptr<Graph> g, vec2 lat_long) {
     }
     return nearest_node;
 }
+
+vector<uint32_t> colors_by_depth = {
+    0xffff0000, // red
+    0xffffa500, // orange
+    0xffffff00, // yellow
+    0xff00ff00, // green
+    0xff00ffff, // cyan
+    0xff0000ff, // blue
+    0xff800080, // purple
+    0xffff00ff, // magenta
+    0xffff0080, // pink
+};
+
+void bfs(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, unordered_set<double>& border, unordered_set<double>& visited, int depth) {
+    // 4 microblocks / visual transformations
+
+    // 1: splash and grow all nodes currently in the border
+    for(double node : border) {
+        gs->config->fade_node_color(MICRO, node, colors_by_depth[depth == 0 ? 0 : depth - 1]);
+        gs->config->transition_node_radius(MICRO, node, 2);
+    }
+    gs->render_microblock();
+
+    // 2: color all outgoing edges
+    unordered_set<double> next_border;
+    for(double node : border) {
+        unordered_set<double> neighbors = g->get_neighbors(node);
+        for(double neighbor : neighbors) {
+            if(visited.find(neighbor) != visited.end()) continue;
+            next_border.insert(neighbor);
+            gs->config->transition_edge_color(MICRO, node, neighbor, colors_by_depth[depth]);
+        }
+    }
+    gs->render_microblock();
+
+    // 3: Color all neighboring nodes, which will become the next border
+    for(double node : next_border) {
+        gs->config->transition_node_color(MICRO, node, colors_by_depth[depth]);
+    }
+    gs->render_microblock();
+
+    // 4: Shrink the old border and grow the new border
+    for(double node : border) {
+        gs->config->transition_node_radius(MICRO, node, 0);
+    }
+    for(double node : next_border) {
+        gs->config->transition_node_radius(MICRO, node, 2);
+    }
+    gs->render_microblock();
+
+    // Update visited and border sets
+    visited.insert(next_border.begin(), next_border.end());
+    border = next_border;
+}
+

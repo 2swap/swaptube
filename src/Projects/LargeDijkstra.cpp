@@ -67,6 +67,10 @@ void render_video() {
 
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
+    gs->config->chill = true;
+    gs->label_color = 0xffffffff;
+    gs->label_offset = vec2(0, 0.03);
+    gs->label_size = vec2(1, 0.065);
     gs->manager.set({
         {"globe_opacity", "1"},
         {"d", ".07"},
@@ -82,7 +86,7 @@ void render_video() {
     double zoo_hash;
     unordered_map<double, double> edge_weights;
     if(rendering_on()) {
-        load_graph_from_file(g, gs, newark_lat_long, 100, edge_weights);
+        load_graph_from_file(g, gs, newark_lat_long, 100000, edge_weights);
         newark_hash = get_nearest_node_in_graph(g, newark_lat_long);
         zoo_hash = get_nearest_node_in_graph(g, zoo_lat_long);
         gs->config->set_node_radius(newark_hash, 1);
@@ -99,12 +103,17 @@ void render_video() {
     gs->manager.transition(MICRO, "d", ".01");
     gs->render_microblock();
     gs->config->transition_node_color(MICRO, newark_hash, 0xffff0000);
+    gs->config->transition_node_label(MICRO, newark_hash, "\\text{Newark Airport}");
     gs->render_microblock();
     gs->config->transition_node_color(MICRO, zoo_hash, 0xff00ff00);
+    gs->config->transition_node_label(MICRO, zoo_hash, "\\text{Central Park Zoo}");
     gs->render_microblock();
 
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(1), 2);
     gs->manager.transition(MACRO, "d", ".002");
+    gs->render_microblock();
+    gs->config->transition_node_label(MICRO, newark_hash, "");
+    gs->config->transition_node_label(MICRO, zoo_hash, "");
     gs->render_microblock();
 
     if(rendering_on() && (newark_hash == -1 || zoo_hash == -1)) {
@@ -152,6 +161,7 @@ void render_video() {
     }
 
     stage_macroblock(FileBlock("The search frontier covers over 65,000 nodes and includes places that are way off,"), 1);
+    gs->config->chill = false;
     gs->render_microblock();
 
     cout << "Finding nodes in Staten Island..." << endl;
@@ -162,7 +172,7 @@ void render_video() {
     if(rendering_on()) get_new_jersey_nodes(g, new_jersey_nodes);
     cout << "Staten Island nodes: " << staten_island_nodes.size() << " New Jersey nodes: " << new_jersey_nodes.size() << endl;
 
-    stage_macroblock(FileBlock("like Staten Island and large swaths of New Jersey before it even hits Central Park."), 9);
+    stage_macroblock(FileBlock("like Staten Island and large swaths of New Jersey."), 9);
     gs->manager.transition(MICRO, "d", ".004");
     set_camera_to_lat_long(gs, vec2(40.584430, -74.143991), false, MICRO);
     gs->render_microblock();
