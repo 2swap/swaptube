@@ -21,9 +21,9 @@ void render_video() {
     shared_ptr<Graph> g = make_shared<Graph>();
     shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
     gs->manager.set({
-        {"globe_opacity", ".5"},
+        {"globe_opacity", ".7"},
         {"d", ".005"},
-        {"texture_or_latlong", "0"},
+        {"texture_or_latlong", ".7"},
     });
     gs->manager.set({
         {"theta", ".9"},
@@ -50,10 +50,16 @@ void render_video() {
 
     // Transition all nodes' positions to scale as a function of their distance to the zoo.
     stage_macroblock(FileBlock("Each node's height is its straight line distance to the target."), 2);
+    vec4 pos = 0;
+    if(rendering_on())
+        pos = g->nodes.find(newark_hash)->second.position;
     gs->manager.transition(MICRO, {
         {"theta", "1.55"},
-        {"d", ".01"},
-        {"phi", "{t} .3 * sin .2 * 2.14 -"},
+        {"d", ".0085"},
+        {"phi", "{t} .4 * sin .25 * 2.14 -"},
+        {"x", to_string(pos.x*1.0003)},
+        {"y", to_string(pos.y*1.0003)},
+        {"z", to_string(pos.z*1.0003)},
     });
     gs->render_microblock();
     heuristic_slide(g, gs, zoo_hash, 1, MICRO);
@@ -76,15 +82,16 @@ void render_video() {
     stage_macroblock(FileBlock("But say there’s a direct route to Central Park that starts just west of Newark."), 3);
     gs->config->fade_all_edge_colors(MICRO, opaque_white);
     gs->render_microblock();
+    gs->render_microblock();
     double west_of_newark_hash = get_nearest_node_in_graph(g, vec2(40.713, -74.315));
     g->add_edge(west_of_newark_hash, zoo_hash);
     gs->config->add_edge_if_missing(west_of_newark_hash, zoo_hash);
     gs->config->set_edge_color(west_of_newark_hash, zoo_hash, 0);
     gs->config->transition_edge_color(MICRO, west_of_newark_hash, zoo_hash, 0xff00ff00);
     gs->render_microblock();
-    gs->render_microblock();
 
     found = false;
+    max_dist = 0;
     stage_macroblock(FileBlock("Now the shortest path “illogically” goes west first."), chunks);
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on() && !found) found = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
@@ -93,9 +100,18 @@ void render_video() {
     }
 
     stage_macroblock(FileBlock("When the heuristic is zero,"), 2);
+    // Fade all edge colors to white and all node colors to white, except for the nodes Zoo and Newark, and the edge from west of Newark to the zoo.
+    for(auto& [hash, node] : g->nodes) {
+        if(hash != newark_hash && hash != zoo_hash)
+            gs->config->fade_node_color(MICRO, hash, 0xffffffff);
+        for(auto& [neighbor_hash, weight] : node.neighbors) {
+            if(!((hash == west_of_newark_hash && neighbor_hash == zoo_hash) || (hash == zoo_hash && neighbor_hash == west_of_newark_hash)))
+                gs->config->fade_edge_color(MICRO, hash, neighbor_hash, 0xffffffff);
+        }
+    }
     heuristic_slide(g, gs, zoo_hash, 0, MICRO);
     gs->render_microblock();
-    gs->manager.transition(MACRO, {
+    gs->manager.transition(MICRO, {
         {"theta", "1"},
     });
     gs->render_microblock();
@@ -115,23 +131,35 @@ void render_video() {
     });
     gs->render_microblock();
 
-    gs->config->chill = false;
     stage_macroblock(FileBlock("As we raise the heuristic, our search becomes more and more directed."), chunks);
-    set_camera_to_lat_long(gs, center, true, MICRO, 1.0006);
+    if(rendering_on())
+        pos = g->nodes.find(newark_hash)->second.position;
     gs->manager.transition(MACRO, {
         {"d", ".009"},
         {"theta", "1.5"},
+        {"x", to_string(pos.x*1.0003)},
+        {"y", to_string(pos.y*1.0003)},
+        {"z", to_string(pos.z*1.0003)},
     });
     heuristic_slide(g, gs, zoo_hash, 1, MACRO);
     unordered_set<double> hack = {1,2};
+    // TODO this is spamming white
     float total_microblocks = remaining_microblocks_in_macroblock;
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 100000 * (1 - remaining_microblocks_in_macroblock / total_microblocks), edge_weights, hack);
         gs->render_microblock();
     }
 
-    set_camera_to_lat_long(gs, center, true, MICRO, 1.0009);
-    stage_macroblock(FileBlock("At some point, it heads towards Manhattan so aggressively, it doesn't explore west at all and fails to find the direct route."), chunks);
+    if(rendering_on())
+        pos = g->nodes.find(newark_hash)->second.position;
+    gs->manager.transition(MACRO, {
+        {"d", ".009"},
+        {"theta", "1.5"},
+        {"x", to_string(pos.x*1.0003)},
+        {"y", to_string(pos.y*1.0003)},
+        {"z", to_string(pos.z*1.0003)},
+    });
+    stage_macroblock(FileBlock("At some point, it heads towards Manhattan so aggressively, it doesn't explore west at all and fails to find the direct, faster route."), chunks);
     heuristic_slide(g, gs, zoo_hash, 2, MACRO);
     total_microblocks = remaining_microblocks_in_macroblock;
     while(remaining_microblocks_in_macroblock) {

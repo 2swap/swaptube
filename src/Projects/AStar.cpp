@@ -6,6 +6,14 @@
 #include "../Core/Smoketest.h"
 #include "GraphAlgs_common.cpp"
 
+// Given lat long coordinates, approximate the distance in kilometers between them using a small angle approximation
+int distance_to_target_km(vec2 node_pos, vec2 target_pos) {
+    float lat_diff = abs(node_pos.x - target_pos.x);
+    float long_diff = abs(node_pos.y - target_pos.y);
+    // 111 km per degree of latitude, and 85 km per degree of longitude in NYC
+    return sqrt(pow(111 * lat_diff, 2) + pow(85 * long_diff, 2));
+}
+
 void render_video() {
     vec2 newark_lat_long = vec2(40.694669192970665, -74.18676933576879);
     vec2 zoo_lat_long = vec2(40.767665443249214, -73.97196914550813);
@@ -65,53 +73,91 @@ void render_video() {
     stage_macroblock(FileBlock("Using longitudes and latitudes,"), 1);
     gs->render_microblock();
 
-    unordered_map<int, vec2> lat_longs_to_kms = {
-        // Kearny
-        //{17, vec2(40.768, -74.145)},
-        // Montclair
-        {22, vec2(40.812484, -74.209)},
-        // Prospect Park
-        {12, vec2(40.660204, -73.968956)},
+    vector<vec2> lat_longs_to_kms = {
+        vec2(40.768, -74.145),
+        vec2(40.812484, -74.209),
+        vec2(40.660204, -73.968956),
+        vec2(40.730610, -73.935242),
+        vec2(40.760726, -73.57229),
+        vec2(40.706192, -74.008873),
     };
     stage_macroblock(FileBlock("we can easily calculate the straight line distance between any node and the target."), lat_longs_to_kms.size() * 3);
-    for (auto& [km, latlong] : lat_longs_to_kms) {
-        g->add_node(new HashableString("delete_me"));
-        double new_hash = HashableString("delete_me").get_hash();
+    int counter = 0;
+    int opaque_blue = 0xff88ccff;
+    int transparent_blue = 0x0088ccff;
+    for (auto& latlong : lat_longs_to_kms) {
+        int km = distance_to_target_km(latlong, zoo_lat_long);
+        string name = "delete_me_" + counter;
+        counter++;
+        g->add_node(new HashableString(name));
+        double new_hash = HashableString(name).get_hash();
         g->move_node(new_hash, lat_long_to_xyz(latlong));
         g->add_edge(new_hash, zoo_hash);
-        gs->config->transition_node_color(MICRO, new_hash, 0xffff0000);
-        gs->config->set_edge_color(new_hash, zoo_hash, 0x00ff0000);
-        gs->config->transition_edge_color(MICRO, new_hash, zoo_hash, 0xffff0000);
+        gs->config->transition_node_color(MICRO, new_hash, opaque_blue);
+        gs->config->set_edge_color(new_hash, zoo_hash, transparent_blue);
+        gs->config->transition_edge_color(MICRO, new_hash, zoo_hash, opaque_blue);
         gs->config->transition_edge_label(MICRO, new_hash, zoo_hash, to_string(km) + " \\text{km}");
         gs->render_microblock();
 
         gs->render_microblock();
 
-        gs->config->fade_edge_color(MICRO, new_hash, zoo_hash, 0x00ff0000);
+        gs->config->fade_edge_color(MICRO, new_hash, zoo_hash, transparent_blue);
         gs->config->transition_edge_label(MICRO, new_hash, zoo_hash, "");
-        gs->config->fade_node_color(MICRO, new_hash, 0x00ff0000);
         gs->render_microblock();
 
-        g->remove_node(new_hash);
         gs->config->set_edge_label(new_hash, zoo_hash, "");
     }
 
-    stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 1);
-    gs->manager.transition(MICRO, {
+    stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 7);
+    // Sort the above 6 nodes by their distance to the zoo
+    vector<vec2> sorted_lat_longs_to_kms(lat_longs_to_kms.begin(), lat_longs_to_kms.end());
+    sort(sorted_lat_longs_to_kms.begin(), sorted_lat_longs_to_kms.end(), [&](vec2 a, vec2 b) {
+        return distance_to_target_km(a, zoo_lat_long) < distance_to_target_km(b, zoo_lat_long);
+    });
+    counter = 0;
+    gs->manager.transition(MACRO, {
         {"globe_opacity", ".2"},
         {"texture_or_latlong", "0"},
         {"lines_opacity", "1"},
     });
+    // transition radius of the above 6 nodes to 2, and label them with "F_a", "F_b", etc (counter 0 is "a", counter 1 is "b", etc)
+    for (auto& latlong : sorted_lat_longs_to_kms) {
+        string name = "delete_me_" + counter;
+        counter++;
+        double new_hash = HashableString(name).get_hash();
+        gs->config->transition_node_radius(MICRO, new_hash, 3);
+        string label = "F_" + string(1, 'a' + counter - 1);
+        gs->config->transition_node_label(MICRO, new_hash, label);
+        gs->render_microblock();
+    }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Nodes in the opposite direction won't be explored early on."), 6);
+    stage_macroblock(FileBlock("Nodes in the opposite direction won't be explored early on."), 7);
+    // Simultaneously shrink radii of all the delete me nodes to 0, and remove their labels
+    counter = 0;
+    for (auto& latlong : sorted_lat_longs_to_kms) {
+        string name = "delete_me_" + counter;
+        counter++;
+        double new_hash = HashableString(name).get_hash();
+        gs->config->transition_node_radius(MICRO, new_hash, 0);
+        gs->config->transition_node_label(MICRO, new_hash, "");
+    }
+    gs->render_microblock();
+    // Delete all the delete me nodes
+    counter = 0;
+    for (auto& latlong : sorted_lat_longs_to_kms) {
+        string name = "delete_me_" + counter;
+        counter++;
+        double new_hash = HashableString(name).get_hash();
+        g->remove_node(new_hash);
+    }
     for(int i = 0; i < 3; i++) {
         for(auto& [hash, node] : g->nodes) {
             unordered_set<double> neighbors = g->get_neighbors(hash);
             for(double neighbor : neighbors) {
                 double distance_to_zoo = length(node.position - g->nodes.find(zoo_hash)->second.position);
                 double distance_zoo_to_newark = length(g->nodes.find(zoo_hash)->second.position - g->nodes.find(newark_hash)->second.position);
-                double extra_distance = 2 * (distance_to_zoo - distance_zoo_to_newark) / distance_zoo_to_newark;
+                double extra_distance = 2 * (distance_to_zoo - 1.3*distance_zoo_to_newark) / distance_zoo_to_newark;
                 extra_distance = max(extra_distance, 0.0);
                 extra_distance = min(extra_distance, 1.0);
                 uint32_t color = colorlerp(opaque_white, 0x30ff0000, extra_distance);
@@ -154,7 +200,7 @@ void render_video() {
 
     stage_macroblock(FileBlock("also called A* immediately heads towards the zoo."), chunks);
     gs->manager.transition(MACRO, {
-        {"d", ".008"},
+        {"d", ".006"},
     });
     center = (newark_lat_long + zoo_lat_long) / 2.f;
     set_camera_to_lat_long(gs, center, false, MACRO);
@@ -167,6 +213,9 @@ void render_video() {
     }
 
     stage_macroblock(FileBlock("It only checks around 7,000 nodes — that’s almost a 10x improvement!"), 1);
+    gs->manager.transition(MACRO, {
+        {"d", ".008"},
+    });
     gs->render_microblock();
 
     stage_macroblock(SilenceBlock(1.5), 1);

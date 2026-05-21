@@ -111,7 +111,7 @@ void render_video() {
     });
     trace_path(gs, {"a", "b", "c", "d", "e", "f", "g", "h", "i"}, 0xffff0000);
 
-    stage_macroblock(FileBlock("No improvement from Dijkstra’s."), 1);
+    stage_macroblock(FileBlock("No improvement over Dijkstra’s."), 1);
     gs->manager.transition(MACRO, {
         {"d", "14"},
         {"x", "0"},

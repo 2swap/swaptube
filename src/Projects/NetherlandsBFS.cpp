@@ -75,6 +75,7 @@ void render_video() {
     gs->manager.transition(MACRO, "globe_opacity", "1");
     vec2 center = (netherlands_cities["Utrecht"] + netherlands_cities["Zwolle"]) / 2.0;
     set_camera_to_lat_long(gs, center, true, MACRO);
+    gs->manager.set("timey", "3"); // Hack
     gs->manager.set({
         {"physics_multiplier","0"},
         {"d", ".05"},
@@ -91,6 +92,7 @@ void render_video() {
 
     // Load Netherlands map
     stage_macroblock(FileBlock("Here's a simplified graph of the Netherlands."), 1);
+    gs->manager.transition(MICRO, "timey", "{t} 3 -");
     gs->render_microblock();
 
     // Plot cities as nodes and roads as edges, expanding west->east
@@ -263,7 +265,7 @@ void render_video() {
     border.insert(rotterdam_hash);
     visited.insert(rotterdam_hash);
 
-    stage_macroblock(FileBlock("If there was a path from Rotterdam to Groningen in five steps,"), 6);
+    stage_macroblock(FileBlock("If there was a path from Rotterdam to Groningen in four steps,"), 6);
     gs->render_microblock();
     reset_graph(gs);
     gs->render_microblock();
@@ -277,7 +279,7 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("we would’ve found it on the fifth iteration, so six steps must be the shortest path."), per_bfs * 5 + 18);
+    stage_macroblock(FileBlock("we would’ve found it on the fourth iteration, so five steps must be the shortest path."), per_bfs * 5 + 18);
     gs->manager.transition(MACRO, "d", ".06");
     for(int i = 0; i < 4; i++) {
         bfs(g, gs, border, visited, i);

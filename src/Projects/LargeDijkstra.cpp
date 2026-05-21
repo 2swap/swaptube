@@ -46,6 +46,7 @@ void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_
         for(const vec3& bridge : staten_island_bridges_xyz) {
             if(length(g->nodes.find(current)->second.position - bridge) < 0.00008) {
                 is_bridge = true;
+                staten_island_nodes.insert(current);
                 break;
             }
         }
@@ -55,6 +56,14 @@ void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_
         for(double neighbor : neighbors) {
             if(visited.find(neighbor) == visited.end()) {
                 q.push(neighbor);
+            }
+        }
+    }
+    // The bridges themselves should also be considered part of Staten Island, so add any nodes within 0.00008 of the bridges to staten_island_nodes
+    for(const vec3& bridge : staten_island_bridges_xyz) {
+        for(auto& [hash, node] : g->nodes) {
+            if(length(node.position - bridge) < 0.00008) {
+                staten_island_nodes.insert(hash);
             }
         }
     }
@@ -161,7 +170,9 @@ void render_video() {
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("The search frontier covers over 65,000 nodes and includes places that are way off,"), 1);
+    stage_macroblock(FileBlock("The search frontier covers over 65,000 nodes and includes places that are way off,"), 3);
+    gs->render_microblock();
+    gs->render_microblock();
     gs->config->chill = false;
     gs->render_microblock();
 
@@ -173,25 +184,28 @@ void render_video() {
     if(rendering_on()) get_new_jersey_nodes(g, new_jersey_nodes);
     cout << "Staten Island nodes: " << staten_island_nodes.size() << " New Jersey nodes: " << new_jersey_nodes.size() << endl;
 
-    stage_macroblock(FileBlock("like Staten Island,"), 3);
+    stage_macroblock(FileBlock("like Staten Island,"), 4);
     gs->manager.transition(MACRO, "d", ".004");
     set_camera_to_lat_long(gs, vec2(40.584430, -74.143991), false, MACRO);
+    gs->render_microblock();
     gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, staten_island_nodes);
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("and large swaths of New Jersey."), 2);
+    stage_macroblock(FileBlock("and large swaths of New Jersey."), 3);
     set_camera_to_lat_long(gs, vec2(40.657, -74.241), false, MICRO);
     gs->manager.transition(MICRO, "d", ".008");
     gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, new_jersey_nodes);
     gs->render_microblock();
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 3);
+    stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 4);
+    gs->manager.transition(MACRO, "d", ".012");
+    gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
     gs->render_microblock();
-    gs->manager.transition(MICRO, "d", ".01");
     gs->render_microblock();
     gs->render_microblock();
 

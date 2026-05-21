@@ -64,7 +64,8 @@ void set_camera_to_lat_long(shared_ptr<GraphScene> gs, vec2 lat_long, bool set, 
     }
     gs->manager.set({
         {"theta", ".5"},
-        {"phi", "{t} .11 * sin .2 *"},
+        {"phi", "<timey> .11 * sin .2 *"},
+        {"timey", "{t} 3 -"},
     });
     quat rot = lat_long_to_quat(lat_long);
     string ru = "<theta> 2 / cos";
@@ -85,8 +86,8 @@ void set_camera_to_lat_long(shared_ptr<GraphScene> gs, vec2 lat_long, bool set, 
     quat_mult_string(au, ai, aj, ak, cu, ci, cj, ck, q1, qi, qj, qk);
     StateSet rot_state({
         {"q1", q1},
-        {"qi", qi + " {t} .09 * sin -.1 * +"},
-        {"qj", qj + " {t} .07 * sin -.1 * +"},
+        {"qi", qi + " <timey> .09 * sin -.1 * +"},
+        {"qj", qj + " <timey> .07 * sin -.1 * +"},
         {"qk", qk},
     });
     if(set) {
