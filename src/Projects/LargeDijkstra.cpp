@@ -181,20 +181,20 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("and large swaths of New Jersey."), 5);
-    set_camera_to_lat_long(gs, vec2(40.657, -74.241), false, MACRO);
-    gs->manager.transition(MACRO, "d", ".008");
+    stage_macroblock(FileBlock("and large swaths of New Jersey."), 2);
+    set_camera_to_lat_long(gs, vec2(40.657, -74.241), false, MICRO);
+    gs->manager.transition(MICRO, "d", ".008");
     gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, new_jersey_nodes);
     gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
-    gs->render_microblock();
 
     stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 3);
+    if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
     gs->render_microblock();
     gs->manager.transition(MICRO, "d", ".01");
     gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1.5), 1);
     gs->render_microblock();
 }

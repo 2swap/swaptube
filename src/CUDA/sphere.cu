@@ -230,7 +230,7 @@ __device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, int map_width,
 }
 
 __device__ __forceinline__ bool is_near_integer(float val) {
-    return fabsf(val - roundf(val)) < 0.005;
+    return fabsf(val - roundf(val)) < 0.01;
 }
 
 __device__ __forceinline__ uint32_t lat_long_line(float lat, float lon, float zoom) {

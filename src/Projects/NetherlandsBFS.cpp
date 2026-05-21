@@ -79,18 +79,19 @@ void render_video() {
         {"physics_multiplier","0"},
         {"d", ".05"},
     });
-
-    // Load Netherlands map
-    stage_macroblock(FileBlock("Here's a simplified graph of the Netherlands."), netherlands_cities.size());
-
     // Plot cities as nodes and roads as edges, expanding east->west
+    stage_macroblock(SilenceBlock(1), 1);
     for(auto& [city, coords] : netherlands_cities) {
         vec4 position = lat_long_to_xyz(coords);
         double hash = HashableString(city).get_hash();
         g->add_node(new HashableString(city));
         g->move_node(hash, position);
-        gs->render_microblock();
     }
+    gs->render_microblock();
+
+    // Load Netherlands map
+    stage_macroblock(FileBlock("Here's a simplified graph of the Netherlands."), 1);
+    gs->render_microblock();
 
     // Plot cities as nodes and roads as edges, expanding west->east
     stage_macroblock(FileBlock("The nodes represent the cities,"), 2);
@@ -233,8 +234,8 @@ void render_video() {
     bfs(g, gs, border, visited, depth++);
 
     stage_macroblock(SilenceBlock(1), 2);
-    reset_graph(gs, 0xff505050);
     gs->render_microblock();
+    reset_graph(gs, 0xff505050);
     gs->render_microblock();
 
     stage_macroblock(SilenceBlock(1), 6);
@@ -306,7 +307,7 @@ void render_video() {
     reset_graph(gs);
     gs->render_microblock();
     gs->render_microblock();
-    gs->config->transition_all_edge_labels(MICRO, "\\small{1}");
+    gs->config->transition_all_edge_labels(MICRO, "1");
     gs->render_microblock();
     gs->render_microblock();
 

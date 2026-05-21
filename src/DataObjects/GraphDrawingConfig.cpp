@@ -262,7 +262,6 @@ void GraphDrawingConfig::tick(const StateReturn& state) {
             config.splash_opacity -= 0.015f;
         }
     }
-    if(chill)
     for (auto& [hash, config] : edge_configs) {
         config.age++;
     }

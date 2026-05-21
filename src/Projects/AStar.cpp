@@ -168,4 +168,7 @@ void render_video() {
 
     stage_macroblock(FileBlock("It only checks around 7,000 nodes — that’s almost a 10x improvement!"), 1);
     gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1.5), 1);
+    gs->render_microblock();
 }

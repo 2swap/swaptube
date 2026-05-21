@@ -23,7 +23,7 @@ void render_video() {
     gs->manager.set({
         {"globe_opacity", ".5"},
         {"d", ".005"},
-        {"texture_or_latlong", "1"},
+        {"texture_or_latlong", "0"},
     });
     gs->manager.set({
         {"theta", ".9"},
@@ -53,7 +53,7 @@ void render_video() {
     gs->manager.transition(MICRO, {
         {"theta", "1.55"},
         {"d", ".01"},
-        {"phi", "{t} .2 * sin .4 * 2.14 -"},
+        {"phi", "{t} .3 * sin .2 * 2.14 -"},
     });
     gs->render_microblock();
     heuristic_slide(g, gs, zoo_hash, 1, MICRO);
@@ -84,6 +84,7 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
+    found = false;
     stage_macroblock(FileBlock("Now the shortest path “illogically” goes west first."), chunks);
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on() && !found) found = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
@@ -91,11 +92,12 @@ void render_video() {
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("When the heuristic is zero,"), 1);
+    stage_macroblock(FileBlock("When the heuristic is zero,"), 2);
+    heuristic_slide(g, gs, zoo_hash, 0, MICRO);
+    gs->render_microblock();
     gs->manager.transition(MACRO, {
         {"theta", "1"},
     });
-    heuristic_slide(g, gs, zoo_hash, 0, MICRO);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("A* is the same as Dijkstra’s,"), chunks / 2);
@@ -115,8 +117,9 @@ void render_video() {
 
     gs->config->chill = false;
     stage_macroblock(FileBlock("As we raise the heuristic, our search becomes more and more directed."), chunks);
+    set_camera_to_lat_long(gs, center, true, MICRO, 1.0006);
     gs->manager.transition(MACRO, {
-        {"d", ".008"},
+        {"d", ".009"},
         {"theta", "1.5"},
     });
     heuristic_slide(g, gs, zoo_hash, 1, MACRO);
@@ -127,7 +130,8 @@ void render_video() {
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("At some point, it heads towards Manhattan so aggressively, it doesn't explore west at all and returns the wrong path."), chunks);
+    set_camera_to_lat_long(gs, center, true, MICRO, 1.0009);
+    stage_macroblock(FileBlock("At some point, it heads towards Manhattan so aggressively, it doesn't explore west at all and fails to find the direct route."), chunks);
     heuristic_slide(g, gs, zoo_hash, 2, MACRO);
     total_microblocks = remaining_microblocks_in_macroblock;
     while(remaining_microblocks_in_macroblock) {

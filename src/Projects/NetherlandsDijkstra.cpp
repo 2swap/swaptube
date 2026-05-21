@@ -413,6 +413,8 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("Then, starting from the source, Dijkstra explored each of the neighboring nodes."), 2);
+    set_camera_to_lat_long(gs, (netherlands_cities["Rotterdam"] + netherlands_cities["The Hague"]) / 2, false, MICRO);
+    gs->manager.transition(MICRO, "d", "0.04");
     int step = 0;
     for(auto& node : g->get_neighbors(rotterdam_hash)) {
         gs->config->transition_edge_color(MICRO, rotterdam_hash, node, 0xfffffffe);
@@ -427,17 +429,17 @@ void render_video() {
     stage_macroblock(FileBlock("At every node, he'd ask: is the current path the shortest path so far?"), 3);
     // Zoom in on the edge
     gs->manager.transition(MICRO, "d", "0.02");
-    set_camera_to_lat_long(gs, (netherlands_cities["Rotterdam"] + netherlands_cities["The Hague"]) / 2, false, MICRO);
     gs->render_microblock();
     gs->config->transition_edge_color(MICRO, rotterdam_hash, HashableString("The Hague").get_hash(), 0xffff0000);
     gs->render_microblock();
     gs->config->fade_edge_color(MICRO, HashableString("The Hague").get_hash(), rotterdam_hash, 0xffffffff);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("For example, this edge only has a weight of 1 while the node's current cost is infinity."), 4);
+    stage_macroblock(FileBlock("For example, this edge only has a weight of 1 while the node's current cost is infinity."), 5);
     // Zoom out and recenter
     gs->render_microblock();
     gs->config->transition_edge_color(MICRO, rotterdam_hash, HashableString("The Hague").get_hash(), 0xffff0000);
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     gs->config->splash_node(HashableString("The Hague").get_hash());
@@ -464,32 +466,10 @@ void render_video() {
     attempt_relax_edge(gs, rotterdam_hash, HashableString("Breda").get_hash(), costs);
     attempt_relax_edge(gs, rotterdam_hash, HashableString("'s-Hertogenbosch").get_hash(), costs);
 
-    stage_macroblock(FileBlock("Dijkstra marked it as explored. If this was breadth first search,"), 2);
+    stage_macroblock(FileBlock("Dijkstra marked it as explored."), 1);
     put_in_visited_set(gs, rotterdam_hash, visited);
-    gs->render_microblock();
 
-    stage_macroblock(FileBlock("he could pick any neighbor to explore next."), 2);
-    gs->render_microblock();
-    gs->config->splash_node(HashableString("The Hague").get_hash());
-    gs->config->splash_node(HashableString("Utrecht").get_hash());
-    gs->config->splash_node(HashableString("'s-Hertogenbosch").get_hash());
-    gs->config->splash_node(HashableString("Breda").get_hash());
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("But he wanted to prioritize closer nodes."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("So he explored the nodes from lowest to highest cost."), 4);
-    gs->config->splash_node(HashableString("The Hague").get_hash());
-    gs->render_microblock();
-    gs->config->splash_node(HashableString("Breda").get_hash());
-    gs->render_microblock();
-    gs->config->splash_node(HashableString("Utrecht").get_hash());
-    gs->render_microblock();
-    gs->config->splash_node(HashableString("'s-Hertogenbosch").get_hash());
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("With a cost of 1, this node was next."), 2);
+    stage_macroblock(FileBlock("Since this node had the lowest cost out of all the unexplored nodes, Dijkstra explored this one next."), 2);
     gs->manager.transition(MACRO, "d", "0.03");
     set_camera_to_lat_long(gs, (netherlands_cities["Rotterdam"] + netherlands_cities["The Hague"]) / 2, false, MACRO);
     gs->render_microblock();
@@ -742,7 +722,7 @@ void render_video() {
     }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("To get directions for the shortest path,"), 1);
+    stage_macroblock(FileBlock("To get the directions,"), 1);
     gs->config->fade_all_edge_colors(MICRO, dark_blue);
     gs->config->fade_all_node_colors(MICRO, dark_blue);
     gs->render_microblock();
@@ -804,7 +784,7 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
     attempt_relax_edge(gs, leeuwarden_hash, groningen_hash, costs);
-    gs->config->fade_edge_color(MICRO, groningen_hash, HashableString("Meppel").get_hash(), dark_blue);
+    gs->config->transition_edge_color(MICRO, HashableString("Meppel").get_hash(), groningen_hash, dark_blue);
     gs->config->transition_edge_color(MICRO, groningen_hash, leeuwarden_hash, 0xffc06060);
     gs->render_microblock();
 
