@@ -16,15 +16,19 @@ void parse_tm_from_string(char* s, int num_states, int num_symbols, TuringMachin
     tm.num_states = num_states;
     for(int state = 0; state < num_states; state++) {
         for(int symbol = 0; symbol < num_symbols; symbol++) {
-            int action_index = symbol * num_states + state;
-            int string_index = state * (num_symbols * 3 + 1) + symbol * 3;
-            tm.write_symbol[action_index] = s[string_index  ] - '0';
-            tm.left_right  [action_index] = s[string_index+1] == 'R';
-            char ns = s[string_index+2];
-            if(ns == 'Z')
-                tm.next_state  [action_index] = -1;
-	    else
-                tm.next_state  [action_index] = ns - 'A';
+            int action_layer = max(state, symbol) - 1;
+            int action_side = (int)(state < symbol);
+            int action_index = action_layer * action_layer + 2 * (state + symbol) + action_side - 1;
+            if (action_index < CODON_MEM_LIMIT) {
+                int string_index = state * (num_symbols * 3 + 1) + symbol * 3;
+                tm.write_symbol[action_index] = s[string_index  ] - '0';
+                tm.left_right  [action_index] = s[string_index+1] == 'R';
+                char ns = s[string_index+2];
+                if(ns == 'Z')
+                    tm.next_state  [action_index] = -1;
+                else
+                    tm.next_state  [action_index] = ns - 'A';
+            }
         }
     }
 }
@@ -43,17 +47,32 @@ void TuringMachineScene::draw() {
     int tape[tape_length] = {0};
     int head_position = tape_length/2;
     int current_state = 0;
-    int steps = 0;
+    int steps = -1;
     bool halted = false;
     int lowest_touched_index = head_position;
     int highest_touched_index = head_position;
+
+    /*vec2 point0(head_position-tape_length/2. - .05, steps + .05);
+    vec2 pix0 = point_to_pixel(point0);
+    vec2 wh0 = point_to_pixel(point0 + vec2(1.1,-1.1)) - pix0;
+    pix.fill_rect(pix0.x, pix0.y, wh0.x, wh0.y, 0xc0000000);*/
+    vec2 point(head_position-tape_length/2. + .25, steps - .25);
+    vec2 pix1 = point_to_pixel(point);
+    vec2 wh = point_to_pixel(point + vec2(.5,-.5)) - pix1;
+    pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xff7f00ff);
+    steps++;
     while (steps < state["iterations"]) {
         //int action_index = current_state * num_symbols + tape[head_position];
         int ls = tape[head_position];
-        int action_index = current_state + tm.num_states * tape[head_position];
+        int action_layer = max(current_state, tape[head_position]) - 1;
+        int action_side = (int)(current_state < tape[head_position]);
+        int action_index = action_layer * action_layer + 2 * (current_state + tape[head_position]) + action_side - 1;
+        if (action_index >= CODON_MEM_LIMIT) {
+            break;
+        }
 
-        if (iter_diffs > 0 && steps >= state["iterations"] - 1)
-            beep(current_state, tape[head_position], tm.num_states);
+        /*if (iter_diffs > 0 && steps >= state["iterations"] - 1)
+	    beep(current_state, tape[head_position], tm.num_states);*/
 
         tape[head_position] = tm.write_symbol[action_index];
         head_position += tm.left_right[action_index] ? 1 : -1;
@@ -65,7 +84,11 @@ void TuringMachineScene::draw() {
             halted = true;
             break;
         }
-        for (int i = lowest_touched_index; i < highest_touched_index; i++) {
+        for (int i = lowest_touched_index; i <= highest_touched_index; i++) {
+	    /*vec2 point0(i-tape_length/2. - .05, steps + .05);
+            vec2 pix0 = point_to_pixel(point0);
+            vec2 wh0 = point_to_pixel(point0 + vec2(1.1,-1.1)) - pix0;
+            pix.fill_rect(pix0.x, pix0.y, wh0.x, wh0.y, 0xc0000000);*/
             if(!tape[i]) continue;
             vec2 point(i-tape_length/2. + .1, steps-.1);
             vec2 pix1 = point_to_pixel(point);
