@@ -14,9 +14,9 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <math.h>
-#include "../Host_Device_Shared/vec.h"
-#include "../Host_Device_Shared/TuringMachine.h"
-#include "common_graphics.cuh"
+#include "../../Host_Device_Shared/vec.h"
+#include "../../Host_Device_Shared/TuringMachine.h"
+#include "../common_graphics.cuh"
 
 __device__ void decode_turing_machine_index(int x, int y, int grid_w, int grid_h, int num_states, int num_symbols, TuringMachine* tm) {
     int remaining_x = x;

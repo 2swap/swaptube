@@ -1,9 +1,9 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <math.h>
-#include "../Host_Device_Shared/vec.h"
-#include "../Host_Device_Shared/TuringMachine.h"
-#include "common_graphics.cuh"
+#include "../../Host_Device_Shared/vec.h"
+#include "../../Host_Device_Shared/TuringMachine.h"
+#include "../common_graphics.cuh"
 
 constexpr int half_tape_length = 20;
 
