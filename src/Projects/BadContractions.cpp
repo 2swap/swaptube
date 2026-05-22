@@ -96,6 +96,9 @@ void render_video() {
     gs->render_microblock();
     gs->config->splash_node(HashableString("i").get_hash());
     gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(.5), 1);
     gs->manager.transition(MICRO, {
         {"d", "12"},
         {"x", "-2"},
@@ -133,6 +136,9 @@ void render_video() {
         {"i", 5},
     };
 
+    stage_macroblock(SilenceBlock(1), 1);
+    gs->render_microblock();
+
     stage_macroblock(FileBlock("Here’s another possible ranking."), 1);
     for(int i = 0; i < 9; i++) {
         string node_name(1, 'a' + i);
@@ -141,14 +147,14 @@ void render_video() {
     }
     StateSet undo = gs->manager.transition(MACRO, {
         {"qj", "-.07"},
-        {"x", "-2"},
+        {"x", "-1"},
     });
     gs->render_microblock();
 
     stage_macroblock(FileBlock("with the necessary shortcuts."), 6);
     gs->manager.transition(MACRO, {
         {"qj", ".07"},
-        {"x", "2"},
+        {"x", "1"},
     });
     for(int i = 0; i < 9; i++) {
         string node_name(1, 'a' + i);

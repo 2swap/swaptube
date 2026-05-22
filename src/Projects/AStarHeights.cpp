@@ -23,7 +23,7 @@ void render_video() {
     gs->manager.set({
         {"globe_opacity", ".7"},
         {"d", ".005"},
-        {"texture_or_latlong", ".7"},
+        {"texture_or_latlong", ".2"},
     });
     gs->manager.set({
         {"theta", ".9"},
@@ -100,15 +100,8 @@ void render_video() {
     }
 
     stage_macroblock(FileBlock("When the heuristic is zero,"), 2);
-    // Fade all edge colors to white and all node colors to white, except for the nodes Zoo and Newark, and the edge from west of Newark to the zoo.
-    for(auto& [hash, node] : g->nodes) {
-        if(hash != newark_hash && hash != zoo_hash)
-            gs->config->fade_node_color(MICRO, hash, 0xffffffff);
-        for(auto& [neighbor_hash, weight] : node.neighbors) {
-            if(!((hash == west_of_newark_hash && neighbor_hash == zoo_hash) || (hash == zoo_hash && neighbor_hash == west_of_newark_hash)))
-                gs->config->fade_edge_color(MICRO, hash, neighbor_hash, 0xffffffff);
-        }
-    }
+    gs->config->fade_all_edge_colors(MICRO, opaque_white);
+    gs->config->fade_edge_color(MICRO, west_of_newark_hash, zoo_hash, 0xff00ff00);
     heuristic_slide(g, gs, zoo_hash, 0, MICRO);
     gs->render_microblock();
     gs->manager.transition(MICRO, {
@@ -135,15 +128,14 @@ void render_video() {
     if(rendering_on())
         pos = g->nodes.find(newark_hash)->second.position;
     gs->manager.transition(MACRO, {
-        {"d", ".009"},
+        {"d", ".008"},
         {"theta", "1.5"},
-        {"x", to_string(pos.x*1.0003)},
-        {"y", to_string(pos.y*1.0003)},
-        {"z", to_string(pos.z*1.0003)},
+        {"x", to_string(pos.x*1.0005)},
+        {"y", to_string(pos.y*1.0005)},
+        {"z", to_string(pos.z*1.0005)},
     });
     heuristic_slide(g, gs, zoo_hash, 1, MACRO);
     unordered_set<double> hack = {1,2};
-    // TODO this is spamming white
     float total_microblocks = remaining_microblocks_in_macroblock;
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 100000 * (1 - remaining_microblocks_in_macroblock / total_microblocks), edge_weights, hack);
@@ -153,8 +145,6 @@ void render_video() {
     if(rendering_on())
         pos = g->nodes.find(newark_hash)->second.position;
     gs->manager.transition(MACRO, {
-        {"d", ".009"},
-        {"theta", "1.5"},
         {"x", to_string(pos.x*1.0003)},
         {"y", to_string(pos.y*1.0003)},
         {"z", to_string(pos.z*1.0003)},

@@ -254,7 +254,7 @@ void render_video() {
     border.clear();
     border.insert(rotterdam_hash);
     visited.insert(rotterdam_hash);
-    reset_graph(gs);
+    reset_graph(gs, edge_dark);
 
     for(int i = 0; i < 5; i++) {
         bfs(g, gs, border, visited, i);
@@ -267,7 +267,7 @@ void render_video() {
 
     stage_macroblock(FileBlock("If there was a path from Rotterdam to Groningen in four steps,"), 6);
     gs->render_microblock();
-    reset_graph(gs);
+    reset_graph(gs, edge_dark);
     gs->render_microblock();
     gs->config->splash_node(rotterdam_hash);
     set_camera_to_lat_long(gs, netherlands_cities["Utrecht"], false, MICRO);

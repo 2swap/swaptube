@@ -74,12 +74,12 @@ void render_video() {
     gs->render_microblock();
 
     vector<vec2> lat_longs_to_kms = {
-        vec2(40.768, -74.145),
-        vec2(40.812484, -74.209),
-        vec2(40.660204, -73.968956),
-        vec2(40.730610, -73.935242),
-        vec2(40.760726, -73.57229),
-        vec2(40.706192, -74.008873),
+        vec2(40.730610, -73.935242), // 5
+        vec2(40.706192, -74.008873), // 7
+        vec2(40.660204, -73.968956), // 11
+        vec2(40.768, -74.145), // 14
+        vec2(40.6618, -74.1213), // 17
+        vec2(40.812484, -74.209), // 20
     };
     stage_macroblock(FileBlock("we can easily calculate the straight line distance between any node and the target."), lat_longs_to_kms.size() * 3);
     int counter = 0;
@@ -110,10 +110,6 @@ void render_video() {
 
     stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 7);
     // Sort the above 6 nodes by their distance to the zoo
-    vector<vec2> sorted_lat_longs_to_kms(lat_longs_to_kms.begin(), lat_longs_to_kms.end());
-    sort(sorted_lat_longs_to_kms.begin(), sorted_lat_longs_to_kms.end(), [&](vec2 a, vec2 b) {
-        return distance_to_target_km(a, zoo_lat_long) < distance_to_target_km(b, zoo_lat_long);
-    });
     counter = 0;
     gs->manager.transition(MACRO, {
         {"globe_opacity", ".2"},
@@ -121,7 +117,7 @@ void render_video() {
         {"lines_opacity", "1"},
     });
     // transition radius of the above 6 nodes to 2, and label them with "F_a", "F_b", etc (counter 0 is "a", counter 1 is "b", etc)
-    for (auto& latlong : sorted_lat_longs_to_kms) {
+    for (auto& latlong : lat_longs_to_kms) {
         string name = "delete_me_" + counter;
         counter++;
         double new_hash = HashableString(name).get_hash();
@@ -135,7 +131,7 @@ void render_video() {
     stage_macroblock(FileBlock("Nodes in the opposite direction won't be explored early on."), 7);
     // Simultaneously shrink radii of all the delete me nodes to 0, and remove their labels
     counter = 0;
-    for (auto& latlong : sorted_lat_longs_to_kms) {
+    for (auto& latlong : lat_longs_to_kms) {
         string name = "delete_me_" + counter;
         counter++;
         double new_hash = HashableString(name).get_hash();
@@ -145,7 +141,7 @@ void render_video() {
     gs->render_microblock();
     // Delete all the delete me nodes
     counter = 0;
-    for (auto& latlong : sorted_lat_longs_to_kms) {
+    for (auto& latlong : lat_longs_to_kms) {
         string name = "delete_me_" + counter;
         counter++;
         double new_hash = HashableString(name).get_hash();

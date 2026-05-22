@@ -166,7 +166,7 @@ void load_graph_from_file(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 c
     cout << "Loaded graph with " << node_count << " nodes and " << edge_count << " edges." << endl;
 }
 
-void reset_graph(shared_ptr<Graph> g, shared_ptr<GraphScene> gs) {
+void reset_graph(shared_ptr<Graph>& g, shared_ptr<GraphScene>& gs, const unordered_set<double>& edges_to_skip) {
     // Set all edges to opaque white except for the longest one, which we set to bright green
     // distance is measured by position of nodes, not by edge weight
     double longest_edge = -1;
@@ -186,6 +186,11 @@ void reset_graph(shared_ptr<Graph> g, shared_ptr<GraphScene> gs) {
     for(auto& [hash, node] : g->nodes) {
         unordered_set<double> neighbors = g->get_neighbors(hash);
         for(double neighbor : neighbors) {
+            double edge_hash1 = hash * 5 + neighbor;
+            double edge_hash2 = neighbor * 5 + hash;
+            if(edges_to_skip.find(edge_hash1) != edges_to_skip.end() || edges_to_skip.find(edge_hash2) != edges_to_skip.end()) {
+                continue;
+            }
             if((hash == longest_edge_node1 && neighbor == longest_edge_node2) || (hash == longest_edge_node2 && neighbor == longest_edge_node1)) {
                 gs->config->set_edge_color(hash, neighbor, 0xff00ff00);
             } else {
@@ -197,12 +202,10 @@ void reset_graph(shared_ptr<Graph> g, shared_ptr<GraphScene> gs) {
 
 // Run dijkstra's algorithm up until some node within max_dist of the goal is added to the visited set.
 // Color all searched edges blue.
-bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double start, double goal, double max_dist, float heuristic_mult, unordered_map<double, double> edge_weights, unordered_set<double> highlighted_nodes = {}) {
+bool run_large_dijkstra(shared_ptr<Graph>& g, shared_ptr<GraphScene>& gs, double start, double goal, double max_dist, float heuristic_mult, const unordered_map<double, double>& edge_weights, const unordered_set<double>& highlighted_nodes = {}) {
     cout << "Running large dijkstra with max_dist " << max_dist << " and heuristic_mult " << heuristic_mult << endl;
     bool reset = highlighted_nodes.size() == 2;
-    if(reset) {
-        reset_graph(g, gs);
-    }
+    std::unordered_set<double> set_red;
     std::unordered_set<double> visited;
     std::unordered_map<double, double> gScore;
     std::unordered_map<double, double> fScore;
@@ -246,6 +249,7 @@ bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
                 gs->config->set_edge_color(path_node, parent, 0xff00ffff);
                 path_node = parent;
             }
+            if(reset) reset_graph(g, gs, set_red);
             return true;
         }
 
@@ -257,13 +261,19 @@ bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
             if(visited.find(neighbor) != visited.end()) {
                 continue;
             }
-            double tentative_gScore = gScore[current] + edge_weights[current * 5 + neighbor];
+            // zero weight if the edge isn't stored
+            double edge_hash = current * 5 + neighbor;
+            double this_weight = edge_weights.find(edge_hash) != edge_weights.end() ? edge_weights.at(edge_hash) : 0;
+            double tentative_gScore = gScore[current] + this_weight;
             double tentative_fScore = tentative_gScore + length(g->nodes.find(neighbor)->second.position - g->nodes.find(goal)->second.position) * heuristic_mult;
 
             if(tentative_gScore < max_dist) {
                 int color = 0x15ff6060;
                 if(highlighted_nodes.find(neighbor) != highlighted_nodes.end()) {
                     color = 0x4060ff60;
+                }
+                if(reset) {
+                    set_red.insert(current * 5 + neighbor);
                 }
                 gs->config->set_edge_color(current, neighbor, color);
             }
@@ -280,9 +290,11 @@ bool run_large_dijkstra(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double s
         }
         visited.insert(current);
         if (gScore[current] > max_dist) {
+            if(reset) reset_graph(g, gs, set_red);
             return false;
         }
     }
+    if(reset) reset_graph(g, gs, set_red);
     return false;
 }
 
