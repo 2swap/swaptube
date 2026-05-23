@@ -6,19 +6,6 @@
 #include "../Core/Smoketest.h"
 #include "GraphAlgs_common.cpp"
 
-// Defined as set of nodes whose squared distance to zoo is more than twice the distance from the zoo to Newark
-void get_new_jersey_nodes(shared_ptr<Graph> g, unordered_set<double>& new_jersey_nodes) {
-    vec3 newark = lat_long_to_xyz(vec2(40.694669192970665, -74.18676933576879));
-    vec3 zoo = lat_long_to_xyz(vec2(40.767665443249214, -73.97196914550813));
-    double separation = length(newark - zoo);
-    for(auto& [hash, node] : g->nodes) {
-        double dist_to_zoo = length(node.position - zoo);
-        if(dist_to_zoo > separation * 1.2) {
-            new_jersey_nodes.insert(hash);
-        }
-    }
-}
-
 void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_island_nodes) {
     vec2 bayonne_lat_long = vec2(40.632, -74.145);
     vec2 goethals_lat_long = vec2(40.629, -74.185);
@@ -69,6 +56,24 @@ void get_staten_island_nodes(shared_ptr<Graph> g, unordered_set<double>& staten_
     }
 }
 
+// Defined as set of nodes whose squared distance to zoo is more than twice the distance from the zoo to Newark
+void get_new_jersey_nodes(shared_ptr<Graph> g, unordered_set<double>& new_jersey_nodes) {
+    vec3 newark = lat_long_to_xyz(vec2(40.694669192970665, -74.18676933576879));
+    vec3 zoo = lat_long_to_xyz(vec2(40.767665443249214, -73.97196914550813));
+    double separation = length(newark - zoo);
+    for(auto& [hash, node] : g->nodes) {
+        double dist_to_zoo = length(node.position - zoo);
+        if(dist_to_zoo > separation * 1.2) {
+            new_jersey_nodes.insert(hash);
+        }
+    }
+    // Remove all nodes in staten island from new jersey nodes, since they are technically in new jersey but we want to treat them separately
+    unordered_set<double> staten_island_nodes;
+    get_staten_island_nodes(g, staten_island_nodes);
+    for(double hash : staten_island_nodes) {
+        new_jersey_nodes.erase(hash);
+    }
+}
 
 void render_video() {
     vec2 newark_lat_long = vec2(40.694669192970665, -74.18676933576879);

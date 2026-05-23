@@ -208,7 +208,42 @@ void render_video() {
     gs->render_microblock();
     trace_path(gs, {"e", "f", "g", "h", "i"}, 0xffff0000);
 
-    stage_macroblock(SilenceBlock(2), 2);
+    stage_macroblock(SilenceBlock(4), 5);
     gs->render_microblock();
+    gs->render_microblock();
+    gs->manager.transition(MICRO, {
+        {"d", "14"},
+        {"y", "0"},
+        {"x", "0"},
+    });
+    gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    // Fade all shortcuts to transparent black
+    for(int i = 0; i < 9; i++) {
+        string node_name(1, 'a' + i);
+        if(node_name == "d" || node_name == "e" || node_name == "c") continue;
+        gs->config->fade_edge_color(MICRO, HashableString(node_name).get_hash(), HashableString("d").get_hash(), 0x00000000);
+    }
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("In practice, the nested dissection method gets a decent node ordering and doesn't take too long."), 2);
+    node_ranks = {
+        {"a", 1},
+        {"b", 2},
+        {"c", 4},
+        {"d", 3},
+        {"e", 9},
+        {"f", 7},
+        {"g", 8},
+        {"h", 6},
+        {"i", 5},
+    };
+    for(int i = 0; i < 9; i++) {
+        string node_name(1, 'a' + i);
+        gs->config->transition_node_label(MICRO, HashableString(node_name).get_hash(), to_string(node_ranks[node_name]));
+        gs->transition_node_position(MICRO, HashableString(node_name).get_hash(), vec4(i-4, node_ranks[node_name]-5, 0, 0));
+    }
     gs->render_microblock();
 }

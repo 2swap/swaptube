@@ -190,11 +190,11 @@ void Pixels::add_border(int col, int thickness){
     }
 }
 
-void Pixels::overlay_cpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier){
+void Pixels::overlay_cpu(const Pixels& p, const ivec2 center, double overlay_opacity_multiplier){
     for(int x = 0; x < p.w; x++){
-        int xpdx = x+dx;
+        int xpdx = x+center.x;
         for(int y = 0; y < p.h; y++){
-            overlay_pixel(xpdx, y+dy, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
+            overlay_pixel(xpdx, y+center.y, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
         }
     }
 }

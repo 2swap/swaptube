@@ -37,6 +37,7 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
         {"dimensions", "3"},
         {"mirror_force", "0"},
         {"edge_weights_size", "0"},
+        {"midpoint_multiplier", "1"},
         {"q1", "1 {t} 12 / sin <dimensions> 2 - lerp"},
         {"qi", "0"},
         {"qj", "{t} 12 / cos <dimensions> 2 - *"},
@@ -110,7 +111,7 @@ void GraphScene::draw(){
     bool curr_found = false;
     bool next_found = false;
 
-    float midpoint_thickness = .35;
+    float midpoint_thickness = .35 * state["midpoint_multiplier"];
 
     Pixels labels(pix.w, pix.h);
 
@@ -131,11 +132,9 @@ void GraphScene::draw(){
         }
         if (nrd.label_size > 0.1 && nrd.label != "") {
             bool behind_camera = false;
-            vec2 pos = coordinate_to_pixel(node.position, behind_camera);
-            vec2 half_dim = label_size/2 * get_width_height() * nrd.label_size;
-            vec2 top_left = pos - half_dim + label_offset * get_width_height();
-            vec2 bottom_right = pos + half_dim + label_offset * get_width_height();
-            write_text(labels, latex_color(label_color, nrd.label), top_left, bottom_right, 1);
+            vec2 pos = coordinate_to_pixel(node.position, behind_camera) + label_offset * get_width_height();
+            vec2 dim = label_size * get_width_height() * nrd.label_size;
+            write_text(labels, latex_color(label_color, nrd.label), pos, dim, 1);
         }
 
         for(const Edge& neighbor_edge : node.neighbors){
@@ -172,13 +171,11 @@ void GraphScene::draw(){
                 vec2 offset = edge_label_offset * vec2(cos(angle), sin(angle)) * get_width_height();
                 vec2 midpoint = (node_screen_pos + neighbor_screen_pos) / 2;
                 vec2 pos = midpoint + offset;
-                vec2 half_dim = vec2(0.2, 0.03) * get_width_height() * erd.label_size;
-                vec2 top_left = pos - half_dim;
-                vec2 bottom_right = pos + half_dim;
+                vec2 dim = vec2(0.4, 0.06) * get_width_height() * erd.label_size;
                 if (erd.label.size() <= 2) { // Simple edge weights (2 digit numbers) dont need rotation
                     text_rotation_angle = 0;
                 }
-                write_text(labels, erd.label, top_left, bottom_right, 1, text_rotation_angle);
+                write_text(labels, erd.label, pos, dim, 1, text_rotation_angle);
             }
         }
     }
@@ -200,6 +197,6 @@ void GraphScene::draw(){
 
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "mirror_force", "edge_weights_size"});
+    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "mirror_force", "edge_weights_size", "midpoint_multiplier"});
     return s;
 }

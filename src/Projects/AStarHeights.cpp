@@ -6,8 +6,9 @@
 #include "../Core/Smoketest.h"
 #include "GraphAlgs_common.cpp"
 
-void heuristic_slide(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double zoo_hash, double factor, TransitionType tt) {
+void heuristic_slide(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double zoo_hash, double factor, TransitionType tt, unordered_set<double> exclude = {}) {
     for(auto& [hash, node] : g->nodes) {
+        if(exclude.count(hash)) continue;
         double distance_to_zoo = length(node.position - g->nodes.find(zoo_hash)->second.position);
         vec4 new_position = normalize(node.position) * (1 + distance_to_zoo * factor / 2);
         gs->transition_node_position(tt, hash, new_position);
@@ -50,23 +51,64 @@ void render_video() {
 
     // Transition all nodes' positions to scale as a function of their distance to the zoo.
     stage_macroblock(FileBlock("Each node's height is its straight line distance to the target."), 2);
+    // Make a snall list of nodes for which we will draw scaffolding lines propping them up to their new heights, so we can better see the transformation.
+    unordered_set<double> scaffold_nodes;
+    unordered_set<double> scaffold_bases;
+    unordered_map<double, double> scaffold_edges;
+    if(rendering_on()) {
+        unordered_set<int> random_indices;
+        for(int i = 0; i < 50; i++) {
+            int random_index = rand() % g->nodes.size();
+            while(random_indices.count(random_index)) {
+                random_index = rand() % g->nodes.size();
+            }
+            random_indices.insert(random_index);
+        }
+        int index = -1;
+        for(auto it = g->nodes.begin(); it != g->nodes.end(); it++) {
+            index++;
+            if(random_indices.count(index) == 0)
+                continue;
+            double random_hash = it->first;
+            scaffold_nodes.insert(random_hash);
+            string new_node_name = "scaffold_" + to_string(index);
+            double new_node_hash = HashableString(new_node_name).get_hash();
+            scaffold_bases.insert(new_node_hash);
+            scaffold_edges[new_node_hash] = random_hash;
+            g->add_node(new HashableString(new_node_name));
+            g->move_node(new_node_hash, g->nodes.find(random_hash)->second.position);
+            gs->config->set_node_color(new_node_hash, 0x00000000);
+            g->add_edge(new_node_hash, random_hash);
+            gs->config->add_edge_if_missing(new_node_hash, random_hash);
+            gs->config->set_edge_color(new_node_hash, random_hash, opaque_white);
+        }
+    }
+
     vec4 pos = 0;
     if(rendering_on())
         pos = g->nodes.find(newark_hash)->second.position;
     gs->manager.transition(MICRO, {
         {"theta", "1.55"},
         {"d", ".0085"},
-        {"phi", "{t} .4 * sin .25 * 2.14 -"},
+        {"phi", "{t} .3 * sin .25 * 2.14 -"},
         {"x", to_string(pos.x*1.0003)},
         {"y", to_string(pos.y*1.0003)},
         {"z", to_string(pos.z*1.0003)},
     });
     gs->render_microblock();
-    heuristic_slide(g, gs, zoo_hash, 1, MICRO);
+    heuristic_slide(g, gs, zoo_hash, 1, MICRO, scaffold_bases);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("The penalty A* adds, in this case the distance, is also called a heuristic."), 1);
+    //fade out scaffold edges
+    for(double hash : scaffold_bases) {
+        gs->config->fade_edge_color(MICRO, scaffold_edges[hash], hash, opaque_white);
+    }
     gs->render_microblock();
+    // Remove all scaffold nodes
+    for(double hash : scaffold_bases) {
+        g->remove_node(hash);
+    }
 
     int chunks = 100;
     stage_macroblock(FileBlock("Now we can really see how the heuristic funnels the search directly towards Central Park."), chunks);

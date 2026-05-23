@@ -69,7 +69,9 @@ EdgeRenderData GraphDrawingConfig::get_edge_render_data(double to, double from, 
 
     data.is_dashed = it->second.is_dashed;
     if(chill){
-        data.post_color = data.pre_color = colorlerp(data.post_color, 0xffffffff, 1 / (1 + square(it->second.age) * .1));
+        // This is designed for 30fps. If framerate is different, adjust.
+        int age_to_use = it->second.age * 30 / get_video_framerate_fps();
+        data.post_color = data.pre_color = colorlerp(data.post_color, 0xffffffff, 1 / (1 + square(age_to_use) * .1));
     }
 
     return data;
@@ -138,6 +140,9 @@ void GraphDrawingConfig::set_edge_dashed(const double hash1, const double hash2,
 void GraphDrawingConfig::set_edge_color(const double hash, const uint32_t new_color) {
     if (edge_configs[hash].color != new_color) {
         edge_configs[hash].age = 0;
+    }
+    if(new_color == 0xff00ffff) {
+        edge_configs[hash].age = 1000;
     }
     edge_configs[hash].target_color = new_color;
     edge_configs[hash].color = new_color;

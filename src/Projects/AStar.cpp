@@ -80,6 +80,7 @@ void render_video() {
         vec2(40.768, -74.145), // 14
         vec2(40.6618, -74.1213), // 17
         vec2(40.812484, -74.209), // 20
+        newark_lat_long + (newark_lat_long - zoo_lat_long) * vec2(.3, .5), // A lot
     };
     stage_macroblock(FileBlock("we can easily calculate the straight line distance between any node and the target."), lat_longs_to_kms.size() * 3);
     int counter = 0;
@@ -108,7 +109,7 @@ void render_video() {
         gs->config->set_edge_label(new_hash, zoo_hash, "");
     }
 
-    stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 7);
+    stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 8);
     // Sort the above 6 nodes by their distance to the zoo
     counter = 0;
     gs->manager.transition(MACRO, {
