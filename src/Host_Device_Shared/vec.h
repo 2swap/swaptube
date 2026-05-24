@@ -84,6 +84,28 @@ struct mat4 {
 };
 
 // Common operators
+HOST_DEVICE inline bool operator==(const vec2& a, const vec2& b) { return a.x == b.x && a.y == b.y; }
+HOST_DEVICE inline bool operator==(const vec3& a, const vec3& b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
+HOST_DEVICE inline bool operator==(const vec4& a, const vec4& b) { return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w; }
+HOST_DEVICE inline bool operator==(const ivec2& a, const ivec2& b) { return a.x == b.x && a.y == b.y; }
+HOST_DEVICE inline bool operator==(const ivec3& a, const ivec3& b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
+HOST_DEVICE inline bool operator==(const ivec4& a, const ivec4& b) { return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w; }
+HOST_DEVICE inline bool operator==(const quat& a, const quat& b) { return a.u == b.u && a.i == b.i && a.j == b.j && a.k == b.k; }
+HOST_DEVICE inline bool operator==(const mat2& a, const mat2& b) { return a.a == b.a && a.b == b.b; }
+HOST_DEVICE inline bool operator==(const mat3& a, const mat3& b) { return a.a == b.a && a.b == b.b && a.c == b.c; }
+HOST_DEVICE inline bool operator==(const mat4& a, const mat4& b) { return a.a == b.a && a.b == b.b && a.c == b.c && a.d == b.d; }
+
+HOST_DEVICE inline bool operator!=(const vec2& a, const vec2& b) { return a.x != b.x || a.y != b.y; }
+HOST_DEVICE inline bool operator!=(const vec3& a, const vec3& b) { return a.x != b.x || a.y != b.y || a.z != b.z; }
+HOST_DEVICE inline bool operator!=(const vec4& a, const vec4& b) { return a.x != b.x || a.y != b.y || a.z != b.z || a.w != b.w; }
+HOST_DEVICE inline bool operator!=(const ivec2& a, const ivec2& b) { return a.x != b.x || a.y != b.y; }
+HOST_DEVICE inline bool operator!=(const ivec3& a, const ivec3& b) { return a.x != b.x || a.y != b.y || a.z != b.z; }
+HOST_DEVICE inline bool operator!=(const ivec4& a, const ivec4& b) { return a.x != b.x || a.y != b.y || a.z != b.z || a.w != b.w; }
+HOST_DEVICE inline bool operator!=(const quat& a, const quat& b) { return a.u != b.u || a.i != b.i || a.j != b.j || a.k != b.k; }
+HOST_DEVICE inline bool operator!=(const mat2& a, const mat2& b) { return a.a != b.a || a.b != b.b; }
+HOST_DEVICE inline bool operator!=(const mat3& a, const mat3& b) { return a.a != b.a || a.b != b.b || a.c != b.c; }
+HOST_DEVICE inline bool operator!=(const mat4& a, const mat4& b) { return a.a != b.a || a.b != b.b || a.c != b.c || a.d != b.d; }
+
 HOST_DEVICE inline vec2 operator+(const vec2& a, const vec2& b) { return vec2{ a.x + b.x, a.y + b.y }; }
 HOST_DEVICE inline vec3 operator+(const vec3& a, const vec3& b) { return vec3{ a.x + b.x, a.y + b.y, a.z + b.z }; }
 HOST_DEVICE inline vec4 operator+(const vec4& a, const vec4& b) { return vec4{ a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w }; }
@@ -234,11 +256,6 @@ HOST_DEVICE inline float dot(const vec4& a, const vec4& b) { return a.x * b.x + 
 HOST_DEVICE inline float dot(const ivec2& a, const ivec2& b) { return a.x * b.y + a.y * b.x; }
 HOST_DEVICE inline float dot(const ivec3& a, const ivec3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 HOST_DEVICE inline float dot(const ivec4& a, const ivec4& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
-
-//HOST_DEVICE inline bool hasnan(const vec2& v) { return std::isnan(v.x) || std::isnan(v.y); }
-//HOST_DEVICE inline bool hasnan(const vec3& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z); }
-//HOST_DEVICE inline bool hasnan(const vec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
-//HOST_DEVICE inline bool hasnan(const quat& q) { return std::isnan(q.u) || std::isnan(q.i) || std::isnan(q.j) || std::isnan(q.k); }
 
 HOST_DEVICE inline vec3 integerize(const vec3& v) { return vec3{ floorf(v.x), floorf(v.y), floorf(v.z) }; }
 

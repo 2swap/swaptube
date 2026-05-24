@@ -27,6 +27,7 @@ HOST_DEVICE inline vec3 veclerp(vec3 a, vec3 b, float w){return a*(1-w)+b*w;}
 HOST_DEVICE inline vec4 veclerp(vec4 a, vec4 b, float w){return a*(1-w)+b*w;}
 HOST_DEVICE inline float smoothlerp(float a, float b, float w){float v = smoother2(w);return a*(1-v)+b*v;}
 HOST_DEVICE inline bool is_single_letter(const std::string& str) {return str.length() == 1 && isalpha(str[0]);}
+HOST_DEVICE inline void print_vec2(vec2 v){printf("vec2(%.3f, %.3f)\n", v.x, v.y);}
 HOST_DEVICE inline void print_vec3(vec3 v){printf("vec3(%.3f, %.3f, %.3f)\n", v.x, v.y, v.z);}
 HOST_DEVICE inline void print_vec4(vec4 v){printf("vec4(%.3f, %.3f, %.3f, %.3f)\n", v.x, v.y, v.z, v.w);}
 HOST_DEVICE inline float geom_mean(float x, float y) { return sqrt(x*y); }

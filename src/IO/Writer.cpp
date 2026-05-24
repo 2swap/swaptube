@@ -44,6 +44,7 @@ int Writer::get_video_width_pixels() const { return video_width_pixels; }
 int Writer::get_video_height_pixels() const { return video_height_pixels; }
 int Writer::get_video_framerate_fps() const { return video_framerate_fps; }
 int Writer::get_audio_samplerate_hz() const { return audio_samplerate_hz; }
+ivec2 Writer::get_video_dimensions_pixels() const { return ivec2(video_width_pixels, video_height_pixels); }
 uint32_t Writer::get_video_background_color() const { return video_background_color; }
 
 static std::unique_ptr<Writer> writer;
@@ -73,6 +74,9 @@ int get_video_framerate_fps() {
 }
 int get_video_height_pixels() {
     return get_writer().get_video_height_pixels();
+}
+ivec2 get_video_dimensions_pixels() {
+    return get_writer().get_video_dimensions_pixels();
 }
 uint32_t get_video_background_color() {
     return get_writer().get_video_background_color();

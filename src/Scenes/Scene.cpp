@@ -154,6 +154,7 @@ void Scene::update_state() {
 
 int Scene::get_width() const{
     // TODO shouldn't this really be the container/parent size, not the video?
+    // I have never dealt with doubly nested subscenes so I think this has never been an issue...
     return get_video_width_pixels() * manager.respond_to_query({"w"})["w"];
 }
 
@@ -176,7 +177,8 @@ void Scene::set_global_identifier(const string& id){
 }
 
 vec2 Scene::get_width_height() const{
-    return vec2(get_width(), get_height());
+    auto response = manager.respond_to_query({"w", "h"});
+    return get_video_width_pixels() * vec2(response["w"], response["h"]);
 }
 
 double Scene::get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }

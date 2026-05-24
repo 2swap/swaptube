@@ -12,8 +12,8 @@
 
 extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
 
-Pixels::Pixels() : w(0), h(0), pixels(0) {}
-Pixels::Pixels(int width, int height) : w(width), h(height), pixels(width*height) {}
+Pixels::Pixels() : wh(0,0), w(0), h(0), pixels(0) {}
+Pixels::Pixels(int width, int height) : wh(width, height), w(width), h(height), pixels(width*height) {}
 
 bool Pixels::out_of_range(int x, int y) const {
     return x < 0 || x >= w || y < 0 || y >= h;
@@ -190,11 +190,12 @@ void Pixels::add_border(int col, int thickness){
     }
 }
 
-void Pixels::overlay_cpu(const Pixels& p, const ivec2 center, double overlay_opacity_multiplier){
-    for(int x = 0; x < p.w; x++){
-        int xpdx = x+center.x;
-        for(int y = 0; y < p.h; y++){
-            overlay_pixel(xpdx, y+center.y, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
+void Pixels::overlay_cpu(const Pixels& p, const ivec2& center, double overlay_opacity_multiplier){
+    const ivec2 offset = center - p.wh / 2;
+    for(int x = 0; x < p.wh.x; x++){
+        int xpdx = x+offset.x;
+        for(int y = 0; y < p.wh.y; y++){
+            overlay_pixel(xpdx, y+offset.y, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
         }
     }
 }
@@ -204,15 +205,14 @@ void Pixels::overlay_cpu(const Pixels& p, const ivec2 center, double overlay_opa
 void Pixels::overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, double overlay_opacity_multiplier, float angle_radians){
     float cos_angle = cos(angle_radians);
     float sin_angle = sin(angle_radians);
-    ivec2 center = ivec2(p.w / 2, p.h / 2);
+    ivec2 center = p.wh / 2;
 
     // Find the leftmost, uppermost, rightmost, and bottommost points of the rotated p to determine the bounding box for iteration
     int left = 0, right = 0, top = 0, bottom = 0;
     for (int x = 0; x < 2; x++) {
         for (int y = 0; y < 2; y++) {
-            int px = (x == 0) ? 0 : p.w;
-            int py = (y == 0) ? 0 : p.h;
-            ivec2 point = ivec2(px, py) - center;
+            ivec2 pxpy = ivec2(x,y) * p.wh;
+            ivec2 point = pxpy - center;
             int rotated_x = static_cast<int>(cos_angle * point.x - sin_angle * point.y);
             int rotated_y = static_cast<int>(sin_angle * point.x + cos_angle * point.y);
             left = min(left, rotated_x);

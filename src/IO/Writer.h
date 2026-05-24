@@ -23,6 +23,7 @@ public:
     int get_video_height_pixels() const;
     int get_video_framerate_fps() const;
     int get_audio_samplerate_hz() const;
+    ivec2 get_video_dimensions_pixels() const;
     uint32_t get_video_background_color() const;
 private:
     const int video_width_pixels;
@@ -37,6 +38,7 @@ Writer& get_writer();
 
 int get_video_width_pixels();
 int get_video_height_pixels();
+ivec2 get_video_dimensions_pixels();
 float get_video_aspect_ratio();
 int get_video_framerate_fps();
 int get_audio_samplerate_hz();

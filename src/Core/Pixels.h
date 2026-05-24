@@ -28,6 +28,7 @@ extern "C" void cuda_overlay_with_rotation(
 
 class Pixels{
 public:
+    ivec2 wh;
     int w;
     int h;
     vector<unsigned int> pixels;
@@ -67,7 +68,7 @@ public:
 
     void add_border(int col, int thickness = 1);
 
-    void overlay_cpu(const Pixels& p, const ivec2 center, double overlay_opacity_multiplier = 1);
+    void overlay_cpu(const Pixels& p, const ivec2& center, double overlay_opacity_multiplier = 1);
     void overlay_gpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier = 1);
     void overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, double overlay_opacity_multiplier, float angle_radians);
     void overlay_gpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians);

@@ -156,8 +156,8 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
 
 void VideoWriter::add_frame(Pixels& p) {
     bool live = rendering_on();
-    if (live && (p.w != get_video_width_pixels() || p.h != get_video_height_pixels()))
-        throw runtime_error("Frame dimensions were expected to be (" + to_string(get_video_width_pixels()) + ", " + to_string(get_video_height_pixels()) + "), but they were instead (" + to_string(p.w) + ", " + to_string(p.h) + ")!");
+    if (live && (p.wh != get_video_dimensions_pixels()))
+        throw runtime_error("Frame dimensions were expected to be (" + to_string(get_video_width_pixels()) + ", " + to_string(get_video_height_pixels()) + "), but they were instead (" + to_string(p.wh.x) + ", " + to_string(p.wh.y) + ")!");
 
     #ifdef USE_GPU
     alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_width_pixels(), get_video_height_pixels(), get_video_background_color());
