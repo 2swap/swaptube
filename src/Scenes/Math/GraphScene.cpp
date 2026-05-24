@@ -132,9 +132,7 @@ void GraphScene::draw(){
         }
         if (nrd.label_size > 0.1 && nrd.label != "") {
             bool behind_camera = false;
-            vec2 pos = coordinate_to_pixel(node.position, behind_camera);
-            pos += label_offset * get_width_height();
-            print_vec2(pos);
+            vec2 pos = coordinate_to_pixel(node.position, behind_camera) + label_offset * get_width_height();
             vec2 dim = label_size * get_width_height() * nrd.label_size;
             write_text(labels, latex_color(label_color, nrd.label), pos, dim, 1);
         }
@@ -170,7 +168,7 @@ void GraphScene::draw(){
                 while (text_rotation_angle > M_PI/2) text_rotation_angle -= M_PI;
                 while (text_rotation_angle < -M_PI/2) text_rotation_angle += M_PI;
                 angle += M_PI / 2;
-                vec2 offset = edge_label_offset * vec2(cos(angle), sin(angle)) * get_width_height();
+                vec2 offset = edge_label_offset * vec2(cos(angle), sin(angle)) * get_geom_mean_size();
                 vec2 midpoint = (node_screen_pos + neighbor_screen_pos) / 2;
                 vec2 pos = midpoint + offset;
                 vec2 dim = vec2(0.4, 0.06) * get_width_height() * erd.label_size;

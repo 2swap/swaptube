@@ -164,9 +164,9 @@ HOST_DEVICE inline mat4& operator-=(mat4& a, const mat4& b) { a.a -= b.a; a.b -=
 HOST_DEVICE inline vec2 operator*(const vec2& a, float scalar) { return vec2{ a.x * scalar, a.y * scalar }; }
 HOST_DEVICE inline vec3 operator*(const vec3& a, float scalar) { return vec3{ a.x * scalar, a.y * scalar, a.z * scalar }; }
 HOST_DEVICE inline vec4 operator*(const vec4& a, float scalar) { return vec4{ a.x * scalar, a.y * scalar, a.z * scalar, a.w * scalar }; }
-HOST_DEVICE inline ivec2 operator*(const ivec2& a, int scalar) { return ivec2{ a.x * scalar, a.y * scalar }; }
-HOST_DEVICE inline ivec3 operator*(const ivec3& a, int scalar) { return ivec3{ a.x * scalar, a.y * scalar, a.z * scalar }; }
-HOST_DEVICE inline ivec4 operator*(const ivec4& a, int scalar) { return ivec4{ a.x * scalar, a.y * scalar, a.z * scalar, a.w * scalar }; }
+HOST_DEVICE inline ivec2 operator*(const ivec2& a, float scalar) { return ivec2{ (int)(a.x * scalar), (int)(a.y * scalar) }; }
+HOST_DEVICE inline ivec3 operator*(const ivec3& a, float scalar) { return ivec3{ (int)(a.x * scalar), (int)(a.y * scalar), (int)(a.z * scalar) }; }
+HOST_DEVICE inline ivec4 operator*(const ivec4& a, float scalar) { return ivec4{ (int)(a.x * scalar), (int)(a.y * scalar), (int)(a.z * scalar), (int)(a.w * scalar) }; }
 HOST_DEVICE inline quat operator*(const quat& a, float scalar) { return quat{ a.u * scalar, a.i * scalar, a.j * scalar, a.k * scalar }; }
 
 HOST_DEVICE inline vec2& operator*=(vec2& a, float scalar) { a.x *= scalar; a.y *= scalar; return a; }

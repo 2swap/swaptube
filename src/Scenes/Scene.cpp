@@ -178,7 +178,7 @@ void Scene::set_global_identifier(const string& id){
 
 vec2 Scene::get_width_height() const{
     auto response = manager.respond_to_query({"w", "h"});
-    return get_video_width_pixels() * vec2(response["w"], response["h"]);
+    return vec2(get_video_width_pixels() * response["w"], get_video_height_pixels() * response["h"]);
 }
 
 double Scene::get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }
