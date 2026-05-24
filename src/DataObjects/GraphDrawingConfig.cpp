@@ -63,6 +63,12 @@ EdgeRenderData GraphDrawingConfig::get_edge_render_data(double to, double from, 
         float magic_parabola = -8*label_fraction*label_fraction + 14*label_fraction - 5;
         data.label_size = label_fraction < 0.5f ? (1-label_fraction*2) : magic_parabola;
     }
+    if(it->second.label_splashing) {
+        TransitionType lstt = it->second.label_splashing_type;
+        float label_splashing_fraction = lstt == MICRO ? microblock_fraction : macroblock_fraction;
+        float magic_quartic = 1.6-square(square(label_splashing_fraction*2-1))*.6;
+        data.label_size *= magic_quartic;
+    }
 
     // Direction
     data.direction = it->second.color_transition_direction;
@@ -242,6 +248,16 @@ void GraphDrawingConfig::transition_all_node_radii(const TransitionType tt, cons
     }
 }
 
+void GraphDrawingConfig::splash_edge_label(const TransitionType tt, const double hash) {
+    edge_configs[hash].label_splashing = true;
+    edge_configs[hash].label_splashing_type = tt;
+}
+
+void GraphDrawingConfig::splash_edge_label(const TransitionType tt, const double hash1, const double hash2) {
+    splash_edge_label(tt, hash1*2+hash2);
+    splash_edge_label(tt, hash2*2+hash1);
+}
+
 void GraphDrawingConfig::step_transition(const TransitionType tt) {
     for (auto& [hash, config] : node_configs) {
         if (config.radius_transition_type == tt) config.radius = config.target_radius;
@@ -251,6 +267,7 @@ void GraphDrawingConfig::step_transition(const TransitionType tt) {
     for (auto& [hash, config] : edge_configs) {
         if (config.color_transition_type == tt) config.color = config.target_color;
         if (config.label_transition_type == tt) config.label = config.target_label;
+        if (config.label_splashing_type == tt) config.label_splashing = false;
     }
 }
 

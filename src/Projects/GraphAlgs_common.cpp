@@ -109,6 +109,14 @@ void trace_path(shared_ptr<GraphScene> gs, vector<string> path, int color) {
     gs->render_microblock();
 }
 
+void splash_edge_path(TransitionType tt, shared_ptr<GraphScene> gs, vector<string> path) {
+    for(int i = 0; i < path.size() - 1; i++) {
+        string node1 = path[i];
+        string node2 = path[i + 1];
+        gs->config->splash_edge_label(tt, HashableString(node1).get_hash(), HashableString(node2).get_hash());
+    }
+}
+
 // lat long map
 
 // File format:

@@ -134,9 +134,11 @@ void Graph::remove_edge(double from, double to) {
     if (!node_exists(from) || !node_exists(to)) return;
     
     Node& from_node = nodes.at(from);
-    Edge edge_to_remove(from, to);
+    Node& to_node = nodes.at(to);
     
-    from_node.neighbors.erase(edge_to_remove);
+    from_node.neighbors.erase(Edge(from, to));
+    to_node.neighbors.erase(Edge(to, from));
+
     mark_updated();
 }
 

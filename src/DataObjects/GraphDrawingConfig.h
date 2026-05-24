@@ -35,10 +35,13 @@ struct EdgeConfig {
     bool color_fade;
     bool is_dashed;
     int age;
+    bool label_splashing;
+    TransitionType label_splashing_type;
     EdgeConfig() :        color(0xffffffff),        label(""),
                    target_color(0xffffffff), target_label(""),
                    color_transition_type(MICRO), label_transition_type(MICRO),
-                   color_transition_direction(false), color_fade(false), is_dashed(false), age(0) {}
+                   color_transition_direction(false), color_fade(false), is_dashed(false), age(0),
+                   label_splashing(false), label_splashing_type(MICRO) {}
 };
 
 
@@ -71,6 +74,7 @@ private:
     void fade_edge_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void set_edge_color(const double hash, const uint32_t new_color);
     void transition_edge_label(const TransitionType tt, const double hash, const std::string& new_label);
+    void splash_edge_label(const TransitionType tt, const double hash);
 
 public:
     bool chill = false;
@@ -89,6 +93,7 @@ public:
     void transition_node_radius(const TransitionType tt, const double hash, const float new_radius);
     void transition_all_node_radii(const TransitionType tt, const float new_radius);
     void splash_node(const double hash);
+    void splash_edge_label(const TransitionType tt, const double hash1, const double hash2);
     void transition_node_label(const TransitionType tt, const double hash, const std::string& new_label);
     void        set_node_label(const double hash, const string& new_label);
     void transition_edge_color(const TransitionType tt, const double hash1, const double hash2, const uint32_t new_color);

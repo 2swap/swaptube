@@ -98,7 +98,7 @@ void split_graph_by_contraction(shared_ptr<GraphScene>& gs, unordered_map<string
             string node1 = edge.substr(0, 1);
             string node2 = edge.substr(1, 1);
             if(contraction[node1].first == 1 && contraction[node2].first == 1) {
-                gs->config->fade_edge_color(MICRO, HashableString(node1).get_hash(), HashableString(node2).get_hash(), 0xff00ff00);
+                gs->config->set_edge_color(HashableString(node1).get_hash(), HashableString(node2).get_hash(), 0xff00ff00);
             }
         }
     }
@@ -246,7 +246,7 @@ void add_shortcut(shared_ptr<Graph>& g, shared_ptr<GraphScene>& gs, string node1
     g->add_edge(hash1, hash2);
     gs->config->set_edge_dashed(hash1, hash2, true);
     gs->config->set_edge_color(hash1, hash2, 0x000080ff);
-    gs->config->transition_edge_color(MICRO, hash1, hash2, 0x800080ff);
+    gs->config->transition_edge_color(MICRO, hash1, hash2, 0xa00080ff);
     gs->config->transition_edge_label(MICRO, hash1, hash2, label);
 }
 
@@ -262,10 +262,11 @@ void render_video() {
         {"d", "4"},
         {"edge_weights_size", "1.2"},
         {"points_radius_multiplier", "3"},
+        {"midpoint_multiplier", ".7"},
     });
 
     // Slide 47
-    stage_macroblock(FileBlock("So let’s test this out on a smaller graph."), 1);
+    stage_macroblock(SilenceBlock(1), 1);
     for(auto& [node, coords] : graph_nodes) {
         double hash = HashableString(node).get_hash();
         vec4 position = vec4(coords.x, coords.y, 0, 1);
@@ -280,6 +281,9 @@ void render_video() {
         g->add_edge(hash1, hash2);
         gs->config->set_edge_label(hash1, hash2, to_string(weight));
     }
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("So let’s test this out on a smaller graph."), 1);
     gs->render_microblock();
 
     gs->manager.transition(MICRO, "edge_weights_size", "0");
@@ -323,9 +327,12 @@ void render_video() {
     split_graph_by_contraction(gs, contraction_1, 5, true);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("so it has the highest rank of the three."), 2);
+    stage_macroblock(FileBlock("so it has the highest rank of the three."), 5);
     gs->render_microblock();
     split_graph_by_contraction(gs, contraction_1, 6, true);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(FileBlock("We can rank the remaining two nodes in any order."), 2);
@@ -350,11 +357,16 @@ void render_video() {
     split_graph_by_contraction(gs, contraction_1, 9, true);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("so they have the next highest rank."), 1);
+    stage_macroblock(FileBlock("so they have the next highest rank."), 5);
+    gs->render_microblock();
     split_graph_by_contraction(gs, contraction_1, 10, true);
     gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("And then again, we rank the final two nodes with the remaining numbers."), 1);
+    stage_macroblock(FileBlock("And then again, we rank the final two nodes with the remaining numbers."), 2);
+    gs->render_microblock();
     split_graph_by_contraction(gs, contraction_1, 11, true);
     gs->render_microblock();
 
@@ -471,18 +483,18 @@ void render_video() {
         g->add_edge(hash1, hash2);
         gs->config->set_edge_color(hash1, hash2, 0x00ffffff);
     }
-    // Fade the prime graph to gray
+    // Fade the prime graph to blue
     for(auto& [node, coords] : graph_nodes) {
         string node_str = node + "'";
         double hash = HashableString(node_str).get_hash();
-        gs->config->fade_node_color(MICRO, hash, 0x88ffffff);
+        gs->config->set_node_color(hash, 0xffffffff);
     }
     for(auto& [edge, weight] : graph_edges_with_weights) {
         string node1 = edge.substr(0, 1) + "'";
         string node2 = edge.substr(1, 1) + "'";
         double hash1 = HashableString(node1).get_hash();
         double hash2 = HashableString(node2).get_hash();
-        gs->config->fade_edge_color(MICRO, hash1, hash2, 0x88ffffff);
+        gs->config->set_edge_color(hash1, hash2, 0xffffffff);
     }
     // Slide original graph down to y=2.5
     for(auto& [node, coords] : graph_nodes) {
@@ -505,7 +517,7 @@ void render_video() {
     };
 
     stage_macroblock(CompositeBlock(FileBlock("1 is the furthest down, 2 is next up and so on."), SilenceBlock(3)), 11);
-    gs->manager.transition(MICRO, {
+    gs->manager.transition(MACRO, {
         {"y", "1.2"},
     });
     for (int rank = 1; rank <= 9; rank++) {
@@ -605,8 +617,8 @@ void render_video() {
 
     stage_macroblock(FileBlock("it would get stuck on a lot of pairs-"), 1);
     // Highlight pair with ranks 4 and 7 (c and h)
-    gs->config->transition_node_color(MICRO, HashableString("c").get_hash(), 0xff8080ff);
-    gs->config->transition_node_color(MICRO, HashableString("h").get_hash(), 0xff8080ff);
+    gs->config->fade_node_color(MICRO, HashableString("c").get_hash(), 0xff0080ff);
+    gs->config->fade_node_color(MICRO, HashableString("h").get_hash(), 0xff0080ff);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("it can only go up and never back down."), 6);
@@ -649,13 +661,17 @@ void render_video() {
     stage_macroblock(FileBlock("Well, starting from node 4, we search up and reach node 9 with a cost of 10."), 4);
     gs->render_microblock();
     trace_path(gs, {"c", "g"}, 0xffff0001);
+    gs->config->splash_edge_label(MICRO, HashableString("c").get_hash(), HashableString("g").get_hash());
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("From node 8, we also search up and get to node 9 with a cost of 5."), 2);
+    stage_macroblock(FileBlock("From node 8, we also search up and get to node 9 with a cost of 5."), 4);
     // Add edge e to g
+    gs->render_microblock();
     gs->config->transition_edge_color(MICRO, HashableString("e").get_hash(), HashableString("g").get_hash(), 0xffff0000);
     gs->render_microblock();
     gs->config->splash_node(HashableString("g").get_hash());
+    gs->render_microblock();
+    gs->config->splash_edge_label(MICRO, HashableString("e").get_hash(), HashableString("g").get_hash());
     gs->render_microblock();
 
     stage_macroblock(FileBlock("So, that must be the shortest path with a cost of 15. Done."), 15);
@@ -667,6 +683,8 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
+    gs->config->splash_edge_label(MICRO, HashableString("c").get_hash(), HashableString("g").get_hash());
+    gs->config->splash_edge_label(MICRO, HashableString("g").get_hash(), HashableString("e").get_hash());
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -687,6 +705,7 @@ void render_video() {
     trace_path(gs, {"c", "a", "b", "e"}, 0xff00ff00);
     gs->render_microblock();
     gs->render_microblock();
+    splash_edge_path(MICRO, gs, {"c", "a", "b", "e"});
     gs->render_microblock();
     gs->render_microblock();
 
@@ -697,7 +716,7 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("that go through lower ranked nodes."), 9);
-    trace_path(gs, {"c", "a", "b", "e"}, 0xff00ff00);
+    trace_path(gs, {"c", "a", "b", "e"}, 0xffff0000);
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->render_microblock();
@@ -732,14 +751,20 @@ void render_video() {
     gs->config->transition_node_color(MICRO, HashableString("e").get_hash(), 0xffff8080);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("This is called a lower triangle."), 1);
+    stage_macroblock(FileBlock("This is called a lower triangle."), 6);
     g->add_edge(HashableString("a").get_hash(), HashableString("e").get_hash());
     gs->config->set_edge_dashed(HashableString("a").get_hash(), HashableString("e").get_hash(), true);
     gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0x00ff0000);
-    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0xffff0000);
-    gs->config->transition_edge_color(MICRO, HashableString("e").get_hash(), HashableString("b").get_hash(), 0xffff0000);
-    gs->config->transition_edge_color(MICRO, HashableString("b").get_hash(), HashableString("a").get_hash(), 0xffff0000);
-    gs->render_microblock();
+    for(int i = 0; i < 3; i++) {
+        gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0xffff0000);
+        gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("b").get_hash(), 0xffff0000);
+        gs->config->set_edge_color(HashableString("b").get_hash(), HashableString("a").get_hash(), 0xffff0000);
+        gs->render_microblock();
+        gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0x00ff0000);
+        gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("b").get_hash(), 0xffff8080);
+        gs->config->set_edge_color(HashableString("b").get_hash(), HashableString("a").get_hash(), 0xffff8080);
+        gs->render_microblock();
+    }
 
     stage_macroblock(FileBlock("And while there’s a chance this path is actually the shortest between node 3 and node 8,"), 8);
     // Splash A and E
@@ -767,22 +792,28 @@ void render_video() {
 
     stage_macroblock(FileBlock("that’s just the cost of this lower triangle."), 5);
     gs->render_microblock();
-    gs->config->transition_edge_label(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), "\\text{2 (via 1)}");
+    gs->config->splash_edge_label(MICRO, HashableString("a").get_hash(), HashableString("b").get_hash());
+    gs->config->splash_edge_label(MICRO, HashableString("b").get_hash(), HashableString("e").get_hash());
     gs->render_microblock();
     trace_path(gs, {"a", "b", "e"}, 0xffff0000);
 
+    stage_macroblock(SilenceBlock(1.5), 2);
+    gs->render_microblock();
+    gs->config->transition_edge_label(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), "\\text{2 (via 1)}");
+    gs->render_microblock();
+
     stage_macroblock(FileBlock("This edge doesn’t correspond to anything real on the road network."), 10);
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x800080ff);
+    gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x800080ff);
+    gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x800080ff);
+    gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -822,10 +853,10 @@ void render_video() {
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0xffff0000);
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x800080ff);
+    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("or there might already be an edge between the two higher nodes."), 9);
+    stage_macroblock(FileBlock("or there might already be an edge between the two higher nodes."), 11);
     // Trace paths up from node f to node e and node h
     gs->config->transition_node_color(MICRO, HashableString("f").get_hash(), 0xffff8080);
     gs->render_microblock();
@@ -839,13 +870,17 @@ void render_video() {
     fade_non_shortcuts(gs);
     gs->render_microblock();
     // Flicker e-h edge to red
-    gs->config->fade_edge_color(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffff0000);
+    gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffff0000);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffffffff);
+    gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffffffff);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffff0000);
+    gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffff0000);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffffffff);
+    gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffffffff);
+    gs->render_microblock();
+    gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffff0000);
+    gs->render_microblock();
+    gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffffffff);
     gs->render_microblock();
     // Fade that path back to white
     fade_non_shortcuts(gs);
@@ -864,7 +899,7 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(SilenceBlock(1), 2);
+    stage_macroblock(SilenceBlock(2), 4);
     // Remove all 3 shortcuts by coloring them transparent-cyan
     gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
     gs->config->fade_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x000080ff);
@@ -875,49 +910,47 @@ void render_video() {
     gs->render_microblock();
     gs->config->set_edge_dashed(HashableString("e").get_hash(), HashableString("h").get_hash(), false);
     gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0x00ffffff);
+    gs->config->transition_edge_label(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), "3");
     gs->config->fade_edge_color(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), 0xffffffff);
     gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("Building shortcuts from the bottom up"), 6);
+    stage_macroblock(FileBlock("Building shortcuts from the bottom up"), 5);
     // Splash nodes B, D, F in order
     gs->config->splash_node(HashableString("b").get_hash());
     gs->config->transition_edge_color(MICRO, HashableString("b").get_hash(), HashableString("a").get_hash(), 0xfffffffe);
     gs->config->transition_edge_color(MICRO, HashableString("b").get_hash(), HashableString("e").get_hash(), 0xfffffffe);
     gs->render_microblock();
-    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x400080ff);
+    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
     gs->render_microblock();
     // Upward-transition from each of those nodes
     gs->config->splash_node(HashableString("d").get_hash());
     gs->config->transition_edge_color(MICRO, HashableString("d").get_hash(), HashableString("c").get_hash(), 0xfffffffe);
     gs->config->transition_edge_color(MICRO, HashableString("d").get_hash(), HashableString("e").get_hash(), 0xfffffffe);
     gs->render_microblock();
-    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x400080ff);
+    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
     gs->render_microblock();
-    // Add the three shortcuts
-    gs->config->splash_node(HashableString("f").get_hash());
-    gs->config->transition_edge_color(MICRO, HashableString("f").get_hash(), HashableString("e").get_hash(), 0xfffffffe);
-    gs->config->transition_edge_color(MICRO, HashableString("f").get_hash(), HashableString("h").get_hash(), 0xfffffffe);
-    gs->render_microblock();
-    gs->config->transition_edge_color(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), 0x400080ff);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("makes sure we don’t miss these paths"), 8);
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
-    gs->config->fade_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x000080ff);
-    gs->config->fade_edge_color(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), 0x000080ff);
-    gs->config->transition_edge_label(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), "");
-    gs->config->transition_edge_label(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), "");
-    gs->config->transition_edge_label(MICRO, HashableString("e").get_hash(), HashableString("h").get_hash(), "");
+    gs->config->fade_edge_color(MACRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->fade_edge_color(MACRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->transition_edge_label(MACRO, HashableString("a").get_hash(), HashableString("e").get_hash(), "");
+    gs->config->transition_edge_label(MACRO, HashableString("c").get_hash(), HashableString("e").get_hash(), "");
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     trace_path(gs, {"c", "a", "b", "e"}, 0xffff0000);
 
-    stage_macroblock(FileBlock("while also ignoring them if they aren’t needed."), 1);
+    stage_macroblock(FileBlock("while also ignoring them if they aren’t needed."), 4);
+    gs->render_microblock();
     gs->config->set_edge_dashed(HashableString("e").get_hash(), HashableString("h").get_hash(), false);
     gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0x00ffffff);
     fade_non_shortcuts(gs);
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(FileBlock("This way, we both limit the search space and never miss the shortest path."), 1);
@@ -927,18 +960,25 @@ void render_video() {
     gs->render_microblock();
 
     // Slide 54
-    stage_macroblock(FileBlock("There’s another benefit to shortcuts."), 4);
+    stage_macroblock(FileBlock("There’s another benefit to shortcuts."), 3);
     gs->render_microblock();
     gs->render_microblock();
-    // Transition all of the 3 shortcuts in and then fade out
-    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x400080ff);
-    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x400080ff);
-    gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
-    gs->config->fade_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    // Transition all of the 3 shortcuts in
+    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
+    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("We don’t need to worry too much about getting a perfect ranking."), 1);
+    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->fade_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    // Remove all edge labels
+    for(auto& [edge, weight] : graph_edges_with_weights) {
+        string node1 = edge.substr(0, 1);
+        string node2 = edge.substr(1, 1);
+        double hash1 = HashableString(node1).get_hash();
+        double hash2 = HashableString(node2).get_hash();
+        gs->config->transition_edge_label(MICRO, hash1, hash2, "");
+    }
     // Set all label to empty
     for(auto& [node, data] : contraction_1) {
         gs->config->transition_node_label(MICRO, HashableString(node).get_hash(), "");
@@ -985,21 +1025,22 @@ void render_video() {
     stage_macroblock(FileBlock("If the ranking overlooks a shortest path,"), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("we’ll add it back later with a shortcut."), 2);
-    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x400080ff);
-    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x400080ff);
+    stage_macroblock(FileBlock("we’ll add it back later with a shortcut."), 3);
     gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
-    gs->config->fade_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->transition_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
+    gs->config->transition_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0xa00080ff);
+    gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(CompositeBlock(FileBlock("That’s why we were able to get three valid rankings"), FileBlock("using the same instructions earlier.")), 10);
+    gs->config->fade_edge_color(MICRO, HashableString("a").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->config->fade_edge_color(MICRO, HashableString("c").get_hash(), HashableString("e").get_hash(), 0x000080ff);
+    gs->render_microblock();
     g->remove_edge(HashableString("a").get_hash(), HashableString("e").get_hash());
     g->remove_edge(HashableString("c").get_hash(), HashableString("e").get_hash());
+    gs->render_microblock();
+    gs->render_microblock();
     // Animate them all
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
     for(int i = 0; i <= 11; i++){
         split_graph_by_contraction(gs, contraction_1, i, false);
     }
