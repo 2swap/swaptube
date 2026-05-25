@@ -55,10 +55,10 @@ void BarChartScene::reposition_bars(const TransitionType tt) {
 void BarChartScene::draw() {
     CompositeScene::draw();
     for (int i = 0; i < bar_scenes.size(); ++i) {
-        double bar_height = state["bar" + to_string(i)] * pix.h * .6;
-        double bar_width = 0.1 * pix.w;
-        double bar_x = state["bar" + to_string(i) + ".x"] * pix.w - bar_width / 2;
-        double bar_y = pix.h * .8 - bar_height;
+        double bar_height = state["bar" + to_string(i)] * pix.wh.y * .6;
+        double bar_width = 0.1 * pix.wh.x;
+        double bar_x = state["bar" + to_string(i) + ".x"] * pix.wh.x - bar_width / 2;
+        double bar_y = pix.wh.y * .8 - bar_height;
         int alpha = state["bar" + to_string(i) + ".opacity"] * 255;
         int color = alpha << 24 | 0xffffff;
         pix.fill_rect(bar_x, bar_y, bar_width, bar_height, color);

@@ -18,7 +18,7 @@ void ConwayScene::draw() {
         conway_grid.d_board,
         grid_width,
         grid_height,
-        pix.pixels.data(), pix.w, pix.h,
+        pix.pixels.data(), pix.wh.x, pix.wh.y,
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
         0//state["microblock_fraction_passthrough"]

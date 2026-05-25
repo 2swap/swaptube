@@ -4,12 +4,12 @@
 extern "C" void convolve_map_cuda(const unsigned int* a, const int aw, const int ah, const unsigned int* b, const int bw, const int bh, unsigned int* map, const int mapw, const int maph);
 
 Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) {
-    int mapw = p1.w + p2.w - 1;
-    int maph = p1.h + p2.h - 1;
+    int mapw = p1.wh.x + p2.wh.x - 1;
+    int maph = p1.wh.y + p2.wh.y - 1;
     vector<unsigned int> map(maph * mapw);
 
     // Perform the convolution using CUDA
-    convolve_map_cuda(p1.pixels.data(), p1.w, p1.h, p2.pixels.data(), p2.w, p2.h, map.data(), mapw, maph);
+    convolve_map_cuda(p1.pixels.data(), p1.wh.x, p1.wh.y, p2.pixels.data(), p2.wh.x, p2.wh.y, map.data(), mapw, maph);
 
     vector<vector<unsigned int>> map_2d(maph, vector<unsigned int>(mapw, -1));
     
@@ -31,8 +31,8 @@ Pixels convolve_map(const Pixels& p1, const Pixels& p2, int& max_x, int& max_y) 
         }
     }
 
-    max_x -= p2.w - 1;
-    max_y -= p2.h - 1;
+    max_x -= p2.wh.x - 1;
+    max_y -= p2.wh.y - 1;
 
     // Create the Pixels object from the intensity map
     return create_alpha_from_intensities(map_2d);
@@ -59,13 +59,13 @@ void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int colo
 }
 
 Pixels segment(const Pixels& p, unsigned int& id) {
-    Pixels ret(p.w, p.h);
+    Pixels ret(p.wh.x, p.wh.y);
 
     id = 1u;
 
     // Perform flood fill for each pixel in the input TranslatedPixels
-    for (int y = 0; y < ret.h; y++) {
-        for (int x = 0; x < ret.w; x++) {
+    for (int y = 0; y < ret.wh.y; y++) {
+        for (int x = 0; x < ret.wh.x; x++) {
             if (p.get_alpha(x, y) != 0 && ret.get_pixel_carelessly(x, y) == 0) {
                 flood_fill(ret, p, x, y, id);
                 id++; // Increment the identifier for the next shape
@@ -96,8 +96,8 @@ void flood_fill_connected_to_opaque(const Pixels& p, Pixels& connected_to_opaque
 }
 
 Pixels remove_unconnected_components(const Pixels& p) {
-    int width = p.w;
-    int height = p.h;
+    int width = p.wh.x;
+    int height = p.wh.y;
 
     // Create a Pixels object to track if each pixel is connected to an opaque pixel
     Pixels output(width, height);
@@ -128,8 +128,8 @@ TranslatedPixels intersect(const TranslatedPixels& tp1, const TranslatedPixels& 
     // Determine the intersection boundaries
     int x_min = max(tp1.translation_x, tp2.translation_x);
     int y_min = max(tp1.translation_y, tp2.translation_y);
-    int x_max = min(tp1.translation_x + tp1.pixels.w, tp2.translation_x + tp2.pixels.w);
-    int y_max = min(tp1.translation_y + tp1.pixels.h, tp2.translation_y + tp2.pixels.h);
+    int x_max = min(tp1.translation_x + tp1.pixels.wh.x, tp2.translation_x + tp2.pixels.wh.x);
+    int y_max = min(tp1.translation_y + tp1.pixels.wh.y, tp2.translation_y + tp2.pixels.wh.y);
 
     // Calculate the width and height of the resulting intersection
     int intersection_width = x_max - x_min;
@@ -166,8 +166,8 @@ TranslatedPixels unify(const TranslatedPixels& tp1, const TranslatedPixels& tp2)
     // Determine the union boundaries
     int x_min = min(tp1.translation_x, tp2.translation_x);
     int y_min = min(tp1.translation_y, tp2.translation_y);
-    int x_max = max(tp1.translation_x + tp1.pixels.w, tp2.translation_x + tp2.pixels.w);
-    int y_max = max(tp1.translation_y + tp1.pixels.h, tp2.translation_y + tp2.pixels.h);
+    int x_max = max(tp1.translation_x + tp1.pixels.wh.x, tp2.translation_x + tp2.pixels.wh.x);
+    int y_max = max(tp1.translation_y + tp1.pixels.wh.y, tp2.translation_y + tp2.pixels.wh.y);
 
     // Calculate the width and height of the resulting union
     int union_width = x_max - x_min;
@@ -197,13 +197,13 @@ TranslatedPixels unify(const TranslatedPixels& tp1, const TranslatedPixels& tp2)
 
 TranslatedPixels subtract(const TranslatedPixels& original, const TranslatedPixels& to_subtract) {
     // Create a new TranslatedPixels object to store the subtraction result
-    TranslatedPixels result(Pixels(original.pixels.w, original.pixels.h), original.translation_x, original.translation_y);
+    TranslatedPixels result(Pixels(original.pixels.wh.x, original.pixels.wh.y), original.translation_x, original.translation_y);
 
     // Iterate over the entire frame of the original TranslatedPixels
     int x_start = original.translation_x;
     int y_start = original.translation_y;
-    int x_end = original.translation_x + original.pixels.w;
-    int y_end = original.translation_y + original.pixels.h;
+    int x_end = original.translation_x + original.pixels.wh.x;
+    int y_end = original.translation_y + original.pixels.wh.y;
 
     for (int y = y_start; y < y_end; y++) {
         for (int x = x_start; x < x_end; x++) {
@@ -246,13 +246,13 @@ void flood_fill_copy_shape(const TranslatedPixels& source, TranslatedPixels& des
 
 TranslatedPixels induce(const TranslatedPixels& original, const TranslatedPixels& intersection) {
     // Create a new TranslatedPixels object with the same frame as the original
-    TranslatedPixels induced(Pixels(original.pixels.w, original.pixels.h), original.translation_x, original.translation_y);
+    TranslatedPixels induced(Pixels(original.pixels.wh.x, original.pixels.wh.y), original.translation_x, original.translation_y);
 
     // Determine the bounds of the intersection
     int x_start = intersection.translation_x;
     int y_start = intersection.translation_y;
-    int x_end = intersection.translation_x + intersection.pixels.w;
-    int y_end = intersection.translation_y + intersection.pixels.h;
+    int x_end = intersection.translation_x + intersection.pixels.wh.x;
+    int y_end = intersection.translation_y + intersection.pixels.wh.y;
 
     // Copy the intersection pixels to the induced TranslatedPixels
     for (int y = y_start; y < y_end; y++) {
@@ -278,8 +278,8 @@ TranslatedPixels induce(const TranslatedPixels& original, const TranslatedPixels
 }
 
 Pixels colorize_segments(const Pixels& segmented) {
-    int width = segmented.w;
-    int height = segmented.h;
+    int width = segmented.wh.x;
+    int height = segmented.wh.y;
     Pixels colorized(width, height);
 
     // A simple function to generate a deterministic but pseudo-random color based on segment ID
@@ -304,8 +304,8 @@ Pixels colorize_segments(const Pixels& segmented) {
 int count_pixels_with_color(const Pixels& p, const unsigned int color) {
     int count = 0;
 
-    for (int y = 0; y < p.h; ++y) {
-        for (int x = 0; x < p.w; ++x) {
+    for (int y = 0; y < p.wh.y; ++y) {
+        for (int x = 0; x < p.wh.x; ++x) {
             if (p.get_pixel_carelessly(x, y) == color) {
                 count++;
             }
@@ -330,8 +330,8 @@ TranslatedPixels erase_low_iou(const TranslatedPixels& intersection, const Trans
     // Calculate the bounds for unified
     int x_start = unified.translation_x;  // Local coordinates in unified's frame
     int y_start = unified.translation_y;  // Local coordinates in unified's frame
-    int x_end = unified.pixels.w + unified.translation_x;
-    int y_end = unified.pixels.h + unified.translation_y;
+    int x_end = unified.pixels.wh.x + unified.translation_x;
+    int y_end = unified.pixels.wh.y + unified.translation_y;
 
     // Iterate over the bounds of the unified pixels
     for (int y = y_start; y < y_end; ++y) {
@@ -354,11 +354,11 @@ TranslatedPixels erase_low_iou(const TranslatedPixels& intersection, const Trans
     }
 
     // Create a result TranslatedPixels object initialized with zero transparency
-    TranslatedPixels result(Pixels(intersection.pixels.w, intersection.pixels.h), intersection.translation_x, intersection.translation_y);
+    TranslatedPixels result(Pixels(intersection.pixels.wh.x, intersection.pixels.wh.y), intersection.translation_x, intersection.translation_y);
 
     // Copy the pixels from the intersection to the result if they belong to a component to keep
-    for (int y = segmented_intersection.translation_y; y < segmented_intersection.translation_y + segmented_intersection.pixels.h; ++y) {
-        for (int x = segmented_intersection.translation_x; x < segmented_intersection.translation_x + segmented_intersection.pixels.w; ++x) {
+    for (int y = segmented_intersection.translation_y; y < segmented_intersection.translation_y + segmented_intersection.pixels.wh.y; ++y) {
+        for (int x = segmented_intersection.translation_x; x < segmented_intersection.translation_x + segmented_intersection.pixels.wh.x; ++x) {
             int intersection_segment_id = segmented_intersection.get_pixel(x, y);
             if (should_keep_intersection[intersection_segment_id]) {
                 result.set_pixel(x, y, intersection.get_pixel(x, y));

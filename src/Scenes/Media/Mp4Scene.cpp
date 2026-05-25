@@ -38,8 +38,8 @@ void Mp4Scene::draw() {
     }
 
     // Calculate the offsets to center the frame in the output
-    int x_offset = (get_width() - frame.w) / 2;
-    int y_offset = (get_height() - frame.h) / 2;
+    int x_offset = (get_width() - frame.wh.x) / 2;
+    int y_offset = (get_height() - frame.wh.y) / 2;
 
     pix.overwrite(frame, x_offset, y_offset);
 }

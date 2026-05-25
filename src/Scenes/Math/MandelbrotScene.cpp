@@ -50,7 +50,7 @@ void MandelbrotScene::draw() {
     complex<float> seed_z(state["seed_z_r"], state["seed_z_i"]);
     complex<float> seed_x(state["seed_x_r"], state["seed_x_i"]);
     complex<float> seed_c(state["seed_c_r"], state["seed_c_i"]);
-    mandelbrot_render(pix.w, pix.h,
+    mandelbrot_render(pix.wh.x, pix.wh.y,
                       vec2(state["left_x"], state["top_y"]),
                       vec2(state["right_x"], state["bottom_y"]),
                       seed_z, seed_x, seed_c,

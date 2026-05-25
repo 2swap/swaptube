@@ -34,8 +34,8 @@ void PngScene::draw() {
     cropped.scale_to_bounding_box(get_width(), get_height(), scaled);
 
     // Calculate the position to center the image within the bounding box
-    int x_offset = (get_width() - scaled.w) / 2;
-    int y_offset = (get_height() - scaled.h) / 2;
+    int x_offset = (get_width() - scaled.wh.x) / 2;
+    int y_offset = (get_height() - scaled.wh.y) / 2;
 
     // Overwrite the scaled image onto the scene's pixel buffer
     pix.overwrite(scaled, x_offset, y_offset);

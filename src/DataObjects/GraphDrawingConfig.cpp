@@ -66,7 +66,7 @@ EdgeRenderData GraphDrawingConfig::get_edge_render_data(double to, double from, 
     if(it->second.label_splashing) {
         TransitionType lstt = it->second.label_splashing_type;
         float label_splashing_fraction = lstt == MICRO ? microblock_fraction : macroblock_fraction;
-        float magic_quartic = 1.6-square(square(label_splashing_fraction*2-1))*.6;
+        float magic_quartic = 1.75-square(square(label_splashing_fraction*2-1))*.75;
         data.label_size *= magic_quartic;
     }
 

@@ -113,7 +113,7 @@ void GeodesicScene::draw_manifold(
                        const quat& fov_quat)
 {
 
-    float steps_mult = geom_mean(pix.w, pix.h) / 1500.0f;
+    float steps_mult = geom_mean(pix.wh.x, pix.wh.y) / 1500.0f;
 
     quat yaw = normalize(quat(fov_quat.u, 0, fov_quat.j, 0));
     double pitch_angle = 20 * M_PI / 180.0;
@@ -145,24 +145,24 @@ void GeodesicScene::draw_manifold(
     float mult_factor = state["subscreen_size"];
 
     if(state["manifold_opacity"] >= 0.01f) {
-        Pixels manifold_pix(pix.w * mult_factor, pix.h * mult_factor);
+        Pixels manifold_pix(pix.wh.x * mult_factor, pix.wh.y * mult_factor);
         ManifoldData manifolds[] = { manifold1 };
         cuda_render_manifold(
             manifold_pix.pixels.data(),
-            manifold_pix.w,
-            manifold_pix.h,
+            manifold_pix.wh.x,
+            manifold_pix.wh.y,
             manifolds,
             1,
             camera_position,
             camera_direction,
-            geom_mean(manifold_pix.w, manifold_pix.h),
+            geom_mean(manifold_pix.wh.x, manifold_pix.wh.y),
             state["manifold_fov"],
             1,
             1,
             nullptr,0,0 // No textures
         );
         pix.overlay_gpu(manifold_pix,
-            pix.w - manifold_pix.w, pix.h - manifold_pix.h,
+            pix.wh.x - manifold_pix.wh.x, pix.wh.y - manifold_pix.wh.y,
             state["manifold_opacity"]
         );
     }
@@ -171,26 +171,26 @@ void GeodesicScene::draw_manifold(
     int geodesic_steps = (int)state["geodesics_steps"];
     double geodesics_opacity = state["geodesics_opacity"];
     if(num_geodesics > 0 && geodesic_steps > 0 && geodesics_opacity >= 0.01f) {
-        Pixels geodesic_pix(pix.w * mult_factor, pix.h * mult_factor);
+        Pixels geodesic_pix(pix.wh.x * mult_factor, pix.wh.y * mult_factor);
         vec2 start_position = vec2(state["pov_x"], state["pov_z"]);
         vec3 camera_dir_3d = rotate_vector(vec3(0, 0, 1), conjugate(camera_direction));
         vec2 start_velocity = vec2(camera_dir_3d.x, camera_dir_3d.z);
         start_velocity = 0.005 * normalize(start_velocity);
         cuda_render_geodesics_2d(
             geodesic_pix.pixels.data(),
-            geodesic_pix.w, geodesic_pix.h,
+            geodesic_pix.wh.x, geodesic_pix.wh.y,
             manifold1,
             start_position, start_velocity,
             num_geodesics, geodesic_steps,
             state["geodesics_spread_angle"],
             camera_position,
             camera_direction,
-            geom_mean(geodesic_pix.w, geodesic_pix.h),
+            geom_mean(geodesic_pix.wh.x, geodesic_pix.wh.y),
             state["manifold_fov"],
             state["geodesics_opacity"]
         );
         pix.overlay_gpu(geodesic_pix,
-            pix.w - geodesic_pix.w, pix.h - geodesic_pix.h,
+            pix.wh.x - geodesic_pix.wh.x, pix.wh.y - geodesic_pix.wh.y,
             1.0f
         );
     }

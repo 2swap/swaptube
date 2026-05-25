@@ -213,7 +213,7 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 
     cuda_render_surface(
         pix.pixels,
-        x1, y1, plot_w, plot_h, pix.w,
+        x1, y1, plot_w, plot_h, pix.wh.x,
         queried->pixels.data(),
         subscenes[surface.name]->get_width(),
         subscenes[surface.name]->get_height(),
@@ -256,7 +256,7 @@ void ThreeDimensionScene::draw() {
         else if(width <= 2000) map_filename = "../earth_small";
         if(d_map == nullptr) d_map = cuda_copy_map(map_filename, map_w, map_h);
         cuda_render_sphere(
-            pix.pixels.data(), pix.w, pix.h,
+            pix.pixels.data(), pix.wh.x, pix.wh.y,
             get_geom_mean_size(),
             d_map, map_w, map_h,
             camera_direction, camera_pos, fov, globe_opacity, state["texture_or_latlong"]

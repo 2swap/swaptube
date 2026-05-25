@@ -17,7 +17,7 @@
 using namespace std;
 
 void pix_to_png(const Pixels& pix, const string& filename) {
-    if(pix.w * pix.h == 0) return; // cowardly exit.
+    if(pix.wh.x * pix.wh.y == 0) return; // cowardly exit.
 
     // Open the file for writing (binary mode)
     FILE* fp = fopen(("io_out/" + filename + ".png").c_str(), "wb");
@@ -51,13 +51,13 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     png_init_io(png, fp);
 
     // Write header (8 bit color depth)
-    png_set_IHDR(png, info, pix.w, pix.h,
+    png_set_IHDR(png, info, pix.wh.x, pix.wh.y,
                  8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
                  PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
     png_write_info(png, info);
 
     // Allocate memory for one row
-    png_bytep row = (png_bytep)malloc(4 * pix.w * sizeof(png_byte));
+    png_bytep row = (png_bytep)malloc(4 * pix.wh.x * sizeof(png_byte));
     if (!row) {
         png_destroy_write_struct(&png, &info);
         fclose(fp);
@@ -65,8 +65,8 @@ void pix_to_png(const Pixels& pix, const string& filename) {
     }
 
     // Write image data
-    for (int y = 0; y < pix.h; y++) {
-        for (int x = 0; x < pix.w; x++) {
+    for (int y = 0; y < pix.wh.y; y++) {
+        for (int x = 0; x < pix.wh.x; x++) {
             int pixel = pix.get_pixel_carelessly(x, y);
             uint8_t a = (pixel >> 24) & 0xFF;
             uint8_t r = (pixel >> 16) & 0xFF;

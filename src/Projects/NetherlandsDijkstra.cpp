@@ -352,9 +352,11 @@ void render_video() {
     gs->render_microblock();
     trace_path(gs, {"Rotterdam", "The Hague"}, 0xffff0000);
     color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
+    splash_edge_path(MICRO, gs, {"Rotterdam", "The Hague"});
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
+    splash_edge_path(MICRO, gs, {"Rotterdam", "Breda"});
     trace_path(gs, {"Rotterdam", "Breda"}, 0xffff0000);
     color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
     gs->render_microblock();

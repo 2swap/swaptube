@@ -12,20 +12,20 @@
 
 extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
 
-Pixels::Pixels() : wh(0,0), w(0), h(0), pixels(0) {}
-Pixels::Pixels(int width, int height) : wh(width, height), w(width), h(height), pixels(width*height) {}
+Pixels::Pixels() : wh(0,0), pixels(0) {}
+Pixels::Pixels(int width, int height) : wh(width, height), pixels(width*height) {}
 
 bool Pixels::out_of_range(int x, int y) const {
-    return x < 0 || x >= w || y < 0 || y >= h;
+    return x < 0 || x >= wh.x || y < 0 || y >= wh.y;
 }
 
 int Pixels::get_pixel_carelessly(int x, int y) const {
-    return pixels[w*y+x];
+    return pixels[wh.x*y+x];
 }
 
 int Pixels::get_pixel_carefully(int x, int y) const {
     if(out_of_range(x, y)) return TRANSPARENT_BLACK; // 0
-    return pixels[w*y+x];
+    return pixels[wh.x*y+x];
 }
 
 void Pixels::overlay_pixel(int x, int y, int col, double overlay_opacity_multiplier){
@@ -45,16 +45,16 @@ int Pixels::get_alpha(int x, int y) const {
 }
 
 void Pixels::set_pixel_carelessly(int x, int y, int col) {
-    pixels[w*y+x] = col;
+    pixels[wh.x*y+x] = col;
 }
 
 void Pixels::set_pixel_carefully(int x, int y, int col) {
     if(out_of_range(x, y)) return;
-    pixels[w*y+x] = col;
+    pixels[wh.x*y+x] = col;
 }
 
 void Pixels::darken(float factor){
-    for(int i = 0; i < w*h; i++){
+    for(int i = 0; i < wh.x * wh.y; i++){
         int a = geta(pixels[i]);
         int r = getr(pixels[i]);
         int g = getg(pixels[i]);
@@ -68,7 +68,7 @@ void Pixels::darken(float factor){
 
 void Pixels::set_alpha(int x, int y, int a) {
     if(out_of_range(x, y) || a < 0 || a > 255) return;
-    pixels[w*y+x] = (pixels[w*y+x] & 0x00ffffff) | (a << 24);
+    pixels[wh.x*y+x] = (pixels[wh.x*y+x] & 0x00ffffff) | (a << 24);
 }
 
 void Pixels::get_average_color(int x_start, int y_start, int x_end, int y_end,
@@ -101,19 +101,19 @@ void Pixels::get_average_color(int x_start, int y_start, int x_end, int y_end,
 
 void Pixels::scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const {
     // Calculate the scaling factor based on the bounding box
-    float scale = min(static_cast<float>(box_w) / w, static_cast<float>(box_h) / h);
+    float scale = min(static_cast<float>(box_w) / wh.x, static_cast<float>(box_h) / wh.y);
 
     // Calculate the new dimensions
-    int new_width = static_cast<int>(w * scale);
-    int new_height = static_cast<int>(h * scale);
+    int new_width = static_cast<int>(wh.x * scale);
+    int new_height = static_cast<int>(wh.y * scale);
 
     // Scale the image using bicubic interpolation
     bicubic_scale(new_width, new_height, scaled);
 }
 
 void Pixels::crop(int x, int y, int cw, int ch, Pixels &cropped) const {
-    if(x < 0 || y < 0 || x + cw > w || y + ch > h)
-        throw runtime_error("Crop dimensions out of range: " + to_string(x) + "," + to_string(y) + "," + to_string(cw) + "," + to_string(ch) + " for image of size " + to_string(w) + "x" + to_string(h));
+    if(x < 0 || y < 0 || x + cw > wh.x || y + ch > wh.y)
+        throw runtime_error("Crop dimensions out of range: " + to_string(x) + "," + to_string(y) + "," + to_string(cw) + "," + to_string(ch) + " for image of size " + to_string(wh.x) + "x" + to_string(wh.y));
     cropped = Pixels(cw, ch);
     for(int dx = 0; dx < cw; dx++)
         for(int dy = 0; dy < ch; dy++)
@@ -121,10 +121,10 @@ void Pixels::crop(int x, int y, int cw, int ch, Pixels &cropped) const {
 }
 
 void Pixels::crop_by_fractions(float crop_top, float crop_bottom, float crop_left, float crop_right, Pixels &cropped) const {
-    int x =  w * crop_left;
-    int y =  h * crop_top;
-    int cw =  w * (1.0f - crop_left - crop_right);
-    int ch =  h * (1.0f - crop_top - crop_bottom);
+    int x = wh.x * crop_left;
+    int y = wh.y * crop_top;
+    int cw = wh.x * (1.0f - crop_left - crop_right);
+    int ch = wh.y * (1.0f - crop_top - crop_bottom);
     crop(x, y, cw, ch, cropped);
 }
 
@@ -165,29 +165,14 @@ int Pixels::get_pixel_bilinear(double x, double y) const {
 }
 
 bool Pixels::is_empty() const {
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
+    for (int y = 0; y < wh.y; y++) {
+        for (int x = 0; x < wh.x; x++) {
             if (get_alpha(x, y) != 0) {
                 return false; // Found a pixel with non-zero alpha, so the Pixels is not empty
             }
         }
     }
     return true; // No pixel with non-zero alpha found, Pixels is empty
-}
-
-void Pixels::add_border(int col, int thickness){
-    if(thickness > w || thickness > h)
-        throw runtime_error("Border thickness too large.");
-    for(int t = 0; t < thickness; t++){
-        for(int x = 0; x < w; x++){
-            set_pixel_carelessly(x, t, col);
-            set_pixel_carelessly(x, h-1-t, col);
-        }
-        for(int y = 0; y < h; y++){
-            set_pixel_carelessly(t, y, col);
-            set_pixel_carelessly(w-1-t, y, col);
-        }
-    }
 }
 
 void Pixels::overlay_cpu(const Pixels& p, const ivec2& center, double overlay_opacity_multiplier){
@@ -236,7 +221,7 @@ void Pixels::overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, dou
             int original_y = static_cast<int>(-sin_angle * rotated_x + cos_angle * rotated_y) + center.y;
 
             // If the original point is within the bounds of p, overlay it
-            if (original_x >= 0 && original_x < p.w && original_y >= 0 && original_y < p.h) {
+            if (!p.out_of_range(original_x, original_y)) {
                 int col = p.get_pixel_bilinear(original_x, original_y);
                 overlay_pixel(x, y, col, overlay_opacity_multiplier);
             }
@@ -246,18 +231,18 @@ void Pixels::overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, dou
 
 void Pixels::overlay_gpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier){
     const uint32_t* p_data = p.pixels.data();
-    cuda_overlay(pixels.data(), w, h, p_data, p.w, p.h, dx, dy, overlay_opacity_multiplier);
+    cuda_overlay(pixels.data(), wh.x, wh.y, p_data, p.wh.x, p.wh.y, dx, dy, overlay_opacity_multiplier);
 }
 
 void Pixels::overlay_gpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians){
     const uint32_t* p_data = p.pixels.data();
-    cuda_overlay_with_rotation(pixels.data(), w, h, p_data, p.w, p.h, dx, dy, overlay_opacity_multiplier, angle_radians);
+    cuda_overlay_with_rotation(pixels.data(), wh.x, wh.y, p_data, p.wh.x, p.wh.y, dx, dy, overlay_opacity_multiplier, angle_radians);
 }
 
 void Pixels::overwrite(const Pixels& p, int dx, int dy){
-    for(int x = 0; x < p.w; x++){
+    for(int x = 0; x < p.wh.x; x++){
         int xpdx = x+dx;
-        for(int y = 0; y < p.h; y++){
+        for(int y = 0; y < p.wh.y; y++){
             set_pixel_carefully(xpdx, y+dy, p.get_pixel_carefully(x, y));
         }
     }
@@ -266,18 +251,18 @@ void Pixels::overwrite(const Pixels& p, int dx, int dy){
 void Pixels::fill_rect(int x, int y, int rw, int rh, int col){
     if(x < 0) { rw += x; x = 0; }
     if(y < 0) { rh += y; y = 0; }
-    if(x + rw > w) rw = w - x;
-    if(y + rh > h) rh = h - y;
+    if(x + rw > wh.x) rw = wh.x - x;
+    if(y + rh > wh.y) rh = wh.y - y;
     for(int dx = 0; dx < rw; dx++)
         for(int dy = 0; dy < rh; dy++)
             set_pixel_carelessly(x+dx, y+dy, col);
 }
 
-void Pixels::fill_circle(double x, double y, double r, int col, double opa){
-    fill_ring(x, y, r, 0, col, opa);
+void Pixels::fill_circle(const ivec2& center, double r, int col, double opa){
+    fill_ring(center, r, 0, col, opa);
 }
 
-void Pixels::fill_ring(double x, double y, double r_outer, double r_inner, int col, double opa){
+void Pixels::fill_ring(const ivec2& center, double r_outer, double r_inner, int col, double opa){
     double r_outer_sq = square(r_outer);
     double r_inner_sq = square(r_inner);
     for(double dx = -r_outer+1; dx < r_outer; dx++){
@@ -285,17 +270,17 @@ void Pixels::fill_ring(double x, double y, double r_outer, double r_inner, int c
         for(double dy = -r_outer+1; dy < r_outer; dy++) {
             double sdy = square(dy);
             if(sdx+sdy < r_outer_sq && sdx+sdy >= r_inner_sq)
-                overlay_pixel(x+dx, y+dy, col, opa);
+                overlay_pixel(center.x+dx, center.y+dy, col, opa);
         }
     }
 }
 
-void Pixels::fill_ellipse(double x, double y, double rw, double rh, int col, double opa){
+void Pixels::fill_ellipse(const ivec2& center, double rw, double rh, int col, double opa){
     for(double dx = -rw+1; dx < rw; dx++){
         double sdx = square(dx/rw);
         for(double dy = -rh+1; dy < rh; dy++)
             if(sdx+square(dy/rh) < 1)
-                overlay_pixel(x+dx, y+dy, col, opa);
+                overlay_pixel(center.x+dx, center.y+dy, col, opa);
     }
 }
 
@@ -393,10 +378,10 @@ void Pixels::flood_fill(int x, int y, int color) {
 }
 
 Pixels Pixels::naive_scale_down(int scale_down_factor) const {
-    Pixels result(w/scale_down_factor, h/scale_down_factor);
+    Pixels result(wh.x/scale_down_factor, wh.y/scale_down_factor);
 
-    for (int y = 0; y*scale_down_factor < h; y++) {
-        for (int x = 0; x*scale_down_factor < w; x++) {
+    for (int y = 0; y*scale_down_factor < wh.y; y++) {
+        for (int x = 0; x*scale_down_factor < wh.x; x++) {
             result.set_pixel_carelessly(x, y, get_pixel_carelessly(x*scale_down_factor, y*scale_down_factor));
         }
     }
@@ -405,30 +390,30 @@ Pixels Pixels::naive_scale_down(int scale_down_factor) const {
 }
 
 void Pixels::rotate_90_inverse(Pixels& rotated) const {
-    rotated = Pixels(h, w);
+    rotated = Pixels(wh.y, wh.x);
 
     // Map each pixel to its new location
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            rotated.set_pixel_carelessly(y, w-1-x, get_pixel_carelessly(x, y));
+    for (int y = 0; y < wh.y; y++) {
+        for (int x = 0; x < wh.x; x++) {
+            rotated.set_pixel_carelessly(y, wh.x-1-x, get_pixel_carelessly(x, y));
         }
     }
 }
 
 void Pixels::rotate_90(Pixels& rotated) const {
-    rotated = Pixels(h, w);
+    rotated = Pixels(wh.y, wh.x);
 
     // Map each pixel to its new location
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            rotated.set_pixel_carelessly(h-1-y, x, get_pixel_carelessly(x, y));
+    for (int y = 0; y < wh.y; y++) {
+        for (int x = 0; x < wh.x; x++) {
+            rotated.set_pixel_carelessly(wh.y-1-y, x, get_pixel_carelessly(x, y));
         }
     }
 }
 
 void Pixels::bicubic_scale(int new_width, int new_height, Pixels& result) const {
     result = Pixels(new_width, new_height);
-    cuda_bicubic_scale(pixels.data(), w, h, result.pixels.data(), new_width, new_height);
+    cuda_bicubic_scale(pixels.data(), wh.x, wh.y, result.pixels.data(), new_width, new_height);
 }
 
 void Pixels::print_to_terminal() {
@@ -444,8 +429,8 @@ void Pixels::print_to_terminal() {
     // Assume a half-block is square
     const double charAspect = 2.0;
 
-    int outputWidth = min(w, termWidth);
-    double imageAspect = static_cast<double>(w) / h;
+    int outputWidth = min(wh.x, termWidth);
+    double imageAspect = static_cast<double>(wh.x) / wh.y;
 
     // Determine the effective vertical resolution (in image pixels) that we wish to sample.
     // We multiply by 2 because each printed line represents two image rows.
@@ -458,16 +443,16 @@ void Pixels::print_to_terminal() {
     for (int y = 0; y < printedLines; ++y) {
         for (int x = 0; x < outputWidth; ++x) {
             // Determine the horizontal region that maps to this terminal column.
-            int x0 = x * w / outputWidth;
-            int x1 = (x + 1) * w / outputWidth;
+            int x0 = x * wh.x / outputWidth;
+            int x1 = (x + 1) * wh.x / outputWidth;
 
             // For the top half of the character cell:
-            int top_y0 = (2 * y) * h / sample_height;
-            int top_y1 = (2 * y + 1) * h / sample_height;
+            int top_y0 = (2 * y) * wh.y / sample_height;
+            int top_y1 = (2 * y + 1) * wh.y / sample_height;
 
             // For the bottom half of the character cell:
-            int bot_y0 = (2 * y + 1) * h / sample_height;
-            int bot_y1 = (2 * y + 2) * h / sample_height;
+            int bot_y0 = (2 * y + 1) * wh.y / sample_height;
+            int bot_y1 = (2 * y + 2) * wh.y / sample_height;
 
             int a_top, r_top, g_top, b_top;
             int a_bot, r_bot, g_bot, b_bot;
@@ -548,14 +533,14 @@ Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, 
 }
 
 Pixels crop_by_alpha(const Pixels& p) {
-    int min_x = p.w;
-    int min_y = p.h;
+    int min_x = p.wh.x;
+    int min_y = p.wh.y;
     int max_x = -1;
     int max_y = -1;
 
     // Find the bounding box of non-zero alpha pixels
-    for (int y = 0; y < p.h; y++) {
-        for (int x = 0; x < p.w; x++) {
+    for (int y = 0; y < p.wh.y; y++) {
+        for (int x = 0; x < p.wh.x; x++) {
             if (p.get_alpha(x, y) > 0) {
                 min_x = min(min_x, x);
                 min_y = min(min_y, y);

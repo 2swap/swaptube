@@ -16,7 +16,7 @@ ConvolutionScene::ConvolutionScene(const vec2& dimensions)
 }
 
 std::pair<int, int> ConvolutionScene::get_coords_from_pixels(const Pixels& p){
-    return std::make_pair((get_width()-p.w)/2, (get_height()-p.h)/2);
+    return std::make_pair((get_width()-p.wh.x)/2, (get_height()-p.wh.y)/2);
 }
 
 void ConvolutionScene::begin_transition(const TransitionType tt, const Pixels& p) {

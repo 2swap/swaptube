@@ -8,19 +8,19 @@
 void stripey_effect(Pixels& in, Pixels& out, const float amount) {
     vector<double> stripe_shift_multipliers = {-.3, 1.5, -.7, 1, -1, .3, -1.5, .7, -1, 1};
     // One substripe per scanline for some extra noise
-    vector<double> substripe_shift_multipliers(in.h);
-    for(int y = 0; y < in.h; y++) {
+    vector<double> substripe_shift_multipliers(in.wh.y);
+    for(int y = 0; y < in.wh.y; y++) {
         substripe_shift_multipliers[y] = static_cast<double>(rand()) / RAND_MAX;
     }
-    out = Pixels(in.w, in.h);
-    for(int y = 0; y < in.h; y++) {
-        for(int x = 0; x < in.w; x++) {
-            int stripe_number = y * 50 / in.h;
-            double shift_amount = stripe_shift_multipliers[stripe_number % stripe_shift_multipliers.size()] * amount * in.w;
+    out = Pixels(in.wh.x, in.wh.y);
+    for(int y = 0; y < in.wh.y; y++) {
+        for(int x = 0; x < in.wh.x; x++) {
+            int stripe_number = y * 50 / in.wh.y;
+            double shift_amount = stripe_shift_multipliers[stripe_number % stripe_shift_multipliers.size()] * amount * in.wh.x;
             double tangent = tan(substripe_shift_multipliers[y] * 3.14159);
             tangent = 4 * sqrt(abs(tangent));
             tangent = clamp(-tangent, -20.0, 20.0);
-            double subshift_amount = in.w * 0.0002 * tangent;
+            double subshift_amount = in.wh.x * 0.0002 * tangent;
             int col  = in.get_pixel_carefully(x + shift_amount + subshift_amount, y) & 0xff00ff7f;
                 col |= in.get_pixel_carefully(x - shift_amount + subshift_amount, y) & 0xffff0080;
             out.set_pixel_carelessly(x, y, col);
@@ -67,76 +67,74 @@ void TwoswapScene::draw(){
     double swaptubeness = state["swaptube_effect_completion"];
 
     double whole_x_shift = 0;
-    double whole_y_shift = pix.w * .04;
+    double whole_y_shift = pix.wh.x * .04;
 
     if (twoswapness > 0.01) { // 2swap logo effect
-        Pixels foreground_pix(pix.w, pix.h * .3);
+        Pixels foreground_pix(pix.wh.x, pix.wh.y * .3);
 
-        ScalingParams sp(pix.w * .6, pix.h * .4);
+        ScalingParams sp(pix.wh.x * .6, pix.wh.y * .4);
         Pixels twoswap_pix = latex_to_pix("\\text{2swap}", sp);
-        foreground_pix.fill_ellipse(pix.w/3, foreground_pix.h/2, pix.w/20, pix.w/20, OPAQUE_WHITE);
-        double yval = (foreground_pix.h-twoswap_pix.h)/2+pix.w/96;
-        foreground_pix.overwrite(twoswap_pix, pix.w/3+pix.w/20+pix.w/96, yval);
+        foreground_pix.fill_ellipse(pix.wh.x/3, foreground_pix.wh.y/2, pix.wh.x/20, pix.wh.y/20, OPAQUE_WHITE);
+        double yval = (foreground_pix.wh.y-twoswap_pix.wh.y)/2+pix.wh.x/96;
+        foreground_pix.overwrite(twoswap_pix, pix.wh.x/3+pix.wh.x/20+pix.wh.x/96, yval);
 
         Pixels stripey_pix;
         stripey_effect(foreground_pix, stripey_pix, 1-twoswapness);
 
         pix.overlay_gpu_with_rotation(stripey_pix,
-            (pix.w-stripey_pix.w)/2 - pix.w*.04 + whole_x_shift,
-            (pix.h-stripey_pix.h)/2 - pix.h*.04 + whole_y_shift,
+            (pix.wh.x-stripey_pix.wh.x)/2 - pix.wh.x*.04 + whole_x_shift,
+            (pix.wh.y-stripey_pix.wh.y)/2 - pix.wh.y*.04 + whole_y_shift,
             twoswapness * .6, -.2
         );
     }
 
     if (seefness > 0.01) { // 6884 logo effect
-        Pixels foreground_pix(pix.w, pix.h * .2);
+        Pixels foreground_pix(pix.wh.x, pix.wh.y * .2);
 
         Pixels image;
         png_to_pix(image, "musicnote");
 
         Pixels scaled;
-        image.scale_to_bounding_box(pix.w, pix.h * .14, scaled);
+        image.scale_to_bounding_box(pix.wh.x, pix.wh.y * .14, scaled);
 
-        ScalingParams sp(pix.w * .25, pix.h * .25);
+        ScalingParams sp(pix.wh.x * .25, pix.wh.y * .25);
         Pixels seef_pix = latex_to_pix("\\text{6884}", sp);
-        foreground_pix.overlay_gpu(scaled, pix.w*.4, (foreground_pix.h-scaled.h)/2 + scaled.h*.1, 1.0f);
-        double yval = (foreground_pix.h-seef_pix.h)/2;
-        foreground_pix.overwrite(seef_pix, pix.w*.4 + scaled.w+pix.w/96, yval);
+        foreground_pix.overlay_gpu(scaled, pix.wh.x*.4, (foreground_pix.wh.y-scaled.wh.y)/2 + scaled.wh.y*.1, 1.0f);
+        double yval = (foreground_pix.wh.y-seef_pix.wh.y)/2;
+        foreground_pix.overwrite(seef_pix, pix.wh.x*.4 + scaled.wh.x+pix.wh.x/96, yval);
 
         Pixels stripey_pix;
         stripey_effect(foreground_pix, stripey_pix, 1-seefness);
 
         pix.overlay_gpu_with_rotation(stripey_pix,
-            (pix.w-stripey_pix.w)/2 - pix.w*.029 + whole_x_shift,
-            (pix.h-stripey_pix.h)/2 + pix.h*.110 + whole_y_shift,
+            (pix.wh.x-stripey_pix.wh.x)/2 - pix.wh.x*.029 + whole_x_shift,
+            (pix.wh.y-stripey_pix.wh.y)/2 + pix.wh.y*.110 + whole_y_shift,
             seefness * .6, -.2
         );
     }
 
     if (swaptubeness > 0.01) { // SwapTube logo effect
-        double height = pix.h * .14;
-        ScalingParams sp2(pix.w * .32, height);
+        double height = pix.wh.y * .14;
+        ScalingParams sp2(pix.wh.x * .32, height);
         Pixels swaptube_pix_small_box = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{\\quad Commit Hash: " + swaptube_commit_hash() + "}", sp2);
-        Pixels swaptube_pix = Pixels(pix.w, height);
-        swaptube_pix.overwrite(swaptube_pix_small_box, (pix.w - swaptube_pix_small_box.w)/2, (height - swaptube_pix_small_box.h)/2);
+        Pixels swaptube_pix = Pixels(pix.wh.x, height);
+        swaptube_pix.overwrite(swaptube_pix_small_box, (pix.wh.x - swaptube_pix_small_box.wh.x)/2, (height - swaptube_pix_small_box.wh.y)/2);
 
         Pixels stripey_pix;
         stripey_effect(swaptube_pix, stripey_pix, 1-swaptubeness);
 
         pix.overlay_gpu_with_rotation(stripey_pix,
-            (pix.w-stripey_pix.w)/2 + pix.w*.03 + whole_x_shift,
-            (pix.h-stripey_pix.h)/2 - pix.h*.15 + whole_y_shift,
+            (pix.wh.x-stripey_pix.wh.x)/2 + pix.wh.x*.03 + whole_x_shift,
+            (pix.wh.y-stripey_pix.wh.y)/2 - pix.wh.y*.15 + whole_y_shift,
             swaptubeness * .6, -.2
         );
     }
 
-    /*
     if(state["swaptube_opacity"] > 0.01){
-        ScalingParams sp2(pix.w*.23, pix.h*.14);
+        ScalingParams sp2(pix.wh.x*.23, pix.wh.y*.14);
         Pixels swaptube_pix = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{Commit Hash: " + swaptube_commit_hash() + "}", sp2);
-        pix.overlay(swaptube_pix, pix.w*.98 - swaptube_pix.w, pix.h*.03, state["swaptube_opacity"]);
+        pix.overlay_gpu(swaptube_pix, pix.wh.x*.98 - swaptube_pix.wh.x, pix.wh.y*.03, state["swaptube_opacity"]);
     }
-    */
 }
 
 std::string TwoswapScene::swaptube_commit_hash() {

@@ -113,7 +113,7 @@ void GraphScene::draw(){
 
     float midpoint_thickness = .35 * state["midpoint_multiplier"];
 
-    Pixels labels(pix.w, pix.h);
+    Pixels labels(pix.wh.x, pix.wh.y);
 
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     // I can't think of a good pattern though.

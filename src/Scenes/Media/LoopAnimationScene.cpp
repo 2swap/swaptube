@@ -34,8 +34,8 @@ void LoopAnimationScene::draw() {
     }
 
     // Calculate the position to center the image within the bounding box
-    int x_offset = (get_width() - image.w) / 2;
-    int y_offset = (get_height() - image.h) / 2;
+    int x_offset = (get_width() - image.wh.x) / 2;
+    int y_offset = (get_height() - image.wh.y) / 2;
 
     // Overwrite the scaled image onto the scene's pixel buffer
     pix.overwrite(image, x_offset, y_offset);

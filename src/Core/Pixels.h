@@ -29,8 +29,8 @@ extern "C" void cuda_overlay_with_rotation(
 class Pixels{
 public:
     ivec2 wh;
-    int w;
-    int h;
+    //int w;
+    //int h;
     vector<unsigned int> pixels;
     Pixels();
     Pixels(int width, int height);
@@ -66,8 +66,6 @@ public:
 
     bool is_empty() const;
 
-    void add_border(int col, int thickness = 1);
-
     void overlay_cpu(const Pixels& p, const ivec2& center, double overlay_opacity_multiplier = 1);
     void overlay_gpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier = 1);
     void overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, double overlay_opacity_multiplier, float angle_radians);
@@ -77,11 +75,11 @@ public:
 
     void fill_rect(int x, int y, int rw, int rh, int col);
 
-    void fill_circle(double x, double y, double r, int col, double opa = 1);
+    void fill_circle(const ivec2& center, double r, int col, double opa = 1);
 
-    void fill_ring(double x, double y, double r_outer, double r_inner, int col, double opa = 1);
+    void fill_ring(const ivec2& center, double r_outer, double r_inner, int col, double opa = 1);
 
-    void fill_ellipse(double x, double y, double rw, double rh, int col, double opa = 1);
+    void fill_ellipse(const ivec2& center, double rw, double rh, int col, double opa = 1);
 
     void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness);
 

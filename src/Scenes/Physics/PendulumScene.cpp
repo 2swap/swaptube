@@ -51,7 +51,7 @@ void PendulumScene::draw() {
             double theta = thetas[i];
             double length = h/(pendulum_count * 2 + 1.);
             double dx = sin(theta) * length; double dy = cos(theta) * length;
-            pix.fill_circle(posx, posy, line_thickness * 2, pendulum_color, pend_opa);
+            pix.fill_circle(ivec2(posx, posy), line_thickness * 2, pendulum_color, pend_opa);
             pix.bresenham(posx, posy, posx + dx, posy + dy, pendulum_color, pend_opa, line_thickness);
             double ao = i==0?state["top_angle_opacity"]:state["bottom_angle_opacity"];
             if(ao > 0.01){
@@ -68,7 +68,7 @@ void PendulumScene::draw() {
             }
             posx += dx; posy += dy;
         }
-        pix.fill_circle(posx, posy, line_thickness*2, pendulum_color, pend_opa);
+        pix.fill_circle(ivec2(posx, posy), line_thickness*2, pendulum_color, pend_opa);
     }
 }
 

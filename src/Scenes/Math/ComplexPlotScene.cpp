@@ -294,8 +294,8 @@ void ComplexPlotScene::draw() {
 
     color_complex_polynomial(
         pix.pixels.data(),
-        pix.w,
-        pix.h,
+        pix.wh.x,
+        pix.wh.y,
         h_coefficients_real,
         h_coefficients_imag,
         degree,
@@ -312,7 +312,7 @@ void ComplexPlotScene::draw() {
         float opa = state["root"+to_string(i)+"_ring"];
         if(opa < 0.01) continue;
         const vec2 pixel(point_to_pixel(vec2(roots[i].real(), roots[i].imag())));
-        pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, opa * .55);
+        pix.fill_ring(ivec2(pixel.x, pixel.y), gm*6, gm*5, OPAQUE_WHITE, opa * .55);
     }
 
     // Draw coefficients
@@ -321,7 +321,7 @@ void ComplexPlotScene::draw() {
         float letter_opa = state["coefficient"+to_string(i)+"_opacity"];
         const vec2 pixel(point_to_pixel(vec2(coefficients[i].real(), coefficients[i].imag())));
         if(ring_opa > 0.01) {
-            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, OPAQUE_WHITE, ring_opa * .55);
+            pix.fill_ring(ivec2(pixel.x, pixel.y), gm*6, gm*5, OPAQUE_WHITE, ring_opa * .55);
         }
         if(letter_opa > 0.01) {
             ScalingParams sp = ScalingParams(gm * 16, gm * 40);
@@ -332,7 +332,7 @@ void ComplexPlotScene::draw() {
             float align_factor = 0.5f;
             if(letter == 'b' || letter == 'd' || letter == 'f' || letter == 'h' || letter == 'k' || letter == 'l' || letter == 't') align_factor = 0.68f;
             else if(letter == 'g' || letter == 'j' || letter == 'p' || letter == 'q' || letter == 'y') align_factor = 0.32f;
-            pix.overlay_cpu(text_pixels, ivec2(pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h * align_factor), letter_opa);
+            pix.overlay_cpu(text_pixels, ivec2(pixel.x - text_pixels.wh.x / 2, pixel.y - text_pixels.wh.y * align_factor), letter_opa);
         }
     }
 
@@ -349,7 +349,7 @@ void ComplexPlotScene::draw() {
             const complex<float> root = (-b + sqrt_disc * sign_c) / (2.0f*a);
             const vec2 pixel(point_to_pixel(vec2(root.real(), root.imag())));
             const int color = (sign == 1) ? 0xffff0000 : 0xff00ff00;
-            pix.fill_ring(pixel.x, pixel.y, gm*6, gm*5, color, opa);
+            pix.fill_ring(ivec2(pixel.x, pixel.y), gm*6, gm*5, color, opa);
         }
     }
 

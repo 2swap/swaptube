@@ -246,4 +246,8 @@ void render_video() {
         gs->transition_node_position(MICRO, HashableString(node_name).get_hash(), vec4(i-4, node_ranks[node_name]-5, 0, 0));
     }
     gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1), 1);
+    gs->render_microblock();
 }

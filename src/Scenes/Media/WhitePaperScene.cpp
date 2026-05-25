@@ -58,8 +58,8 @@ void WhitePaperScene::draw() {
 
         float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-completion))));
         float y_center = (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05);
-        float x_offset = get_width() * x_center - scaled.w * .5;
-        float y_offset = get_height() * y_center - scaled.h * .5;
+        float x_offset = get_width() * x_center - scaled.wh.x * .5;
+        float y_offset = get_height() * y_center - scaled.wh.y * .5;
 
         float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
 
@@ -70,7 +70,7 @@ void WhitePaperScene::draw() {
     Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
     int offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
     pix.overlay_gpu(text_pixels,
-                 (int)((get_width() - text_pixels.w) / 2), offset_y,
+                 (int)((get_width() - text_pixels.wh.x) / 2), offset_y,
                  1.0f
     );
 }

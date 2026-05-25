@@ -27,8 +27,8 @@ void LambdaScene::reduce(){
 void LambdaScene::set_expression(shared_ptr<LambdaExpression> lambda) {
     last_le = le->clone();
     le = lambda->clone();
-    last_le_w = le_pix.w;
-    last_le_h = le_pix.h;
+    last_le_w = le_pix.wh.x;
+    last_le_h = le_pix.wh.y;
     le->set_positions();
 }
 
@@ -55,26 +55,26 @@ float LambdaScene::get_scale(shared_ptr<const LambdaExpression> expr) {
 void LambdaScene::draw() {
     if(last_le == nullptr){
         render_diagrams(); 
-        pix.overwrite(le_pix, (pix.w-le_pix.w)*.5, (pix.h-le_pix.h)*.5);
+        pix.overwrite(le_pix, (pix.wh.x-le_pix.wh.x)*.5, (pix.wh.y-le_pix.wh.y)*.5);
     } else {
         float trans_frac = state["microblock_fraction"];
         pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> interpolated = get_interpolated(last_le, le, trans_frac);
         float scale = smoothlerp(get_scale(last_le), get_scale(le), trans_frac);
         Pixels p1 = interpolated.first->draw_lambda_diagram(scale);
         Pixels p2 = interpolated.second->draw_lambda_diagram(scale);
-        float pixw = smoothlerp(p1.w, p2.w, trans_frac);
-        float pixh = smoothlerp(p1.h, p2.h, trans_frac);
-        pix.overwrite  (p1, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
-        pix.overlay_gpu(p2, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
+        float pixw = smoothlerp(p1.wh.x, p2.wh.x, trans_frac);
+        float pixh = smoothlerp(p1.wh.y, p2.wh.y, trans_frac);
+        pix.overwrite  (p1, (pix.wh.x-pixw)*.5, (pix.wh.y-pixh)*.5);
+        pix.overlay_gpu(p2, (pix.wh.x-pixw)*.5, (pix.wh.y-pixh)*.5);
     }
     if(state["latex_opacity"] > 0.01){
-        ScalingParams sp(pix.w, pix.h / 4);
+        ScalingParams sp(pix.wh.x, pix.wh.y / 4);
         Pixels latex = latex_to_pix(le->get_latex(), sp);
-        pix.overlay_gpu(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["latex_opacity"]);
+        pix.overlay_gpu(latex, (pix.wh.x-latex.wh.x)*.5, pix.wh.y*7/8-latex.wh.y, state["latex_opacity"]);
     }
     if(state["title_opacity"] > 0.01){
-        ScalingParams sp(pix.w, pix.h / 4);
+        ScalingParams sp(pix.wh.x, pix.wh.y / 4);
         Pixels latex = latex_to_pix("\\text{" + title + "}", sp);
-        pix.overlay_gpu(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["title_opacity"]);
+        pix.overlay_gpu(latex, (pix.wh.x-latex.wh.x)*.5, pix.wh.y*7/8-latex.wh.y, state["title_opacity"]);
     }
 }

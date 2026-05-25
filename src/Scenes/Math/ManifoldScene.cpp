@@ -98,8 +98,8 @@ void ManifoldScene::draw() {
 
     cuda_render_manifold(
         pix.pixels.data(),
-        pix.w,
-        pix.h,
+        pix.wh.x,
+        pix.wh.y,
         manifolds,
         manifold_names.size(),
         camera_pos,
@@ -141,9 +141,9 @@ void ManifoldScene::set_texture(const Pixels& new_texture) {
     if(d_texture_data) {
         cuda_free_texture(d_texture_data);
     }
-    d_texture_data = cuda_copy_texture_to_device(new_texture.pixels.data(), new_texture.w, new_texture.h);
-    texture_w = new_texture.w;
-    texture_h = new_texture.h;
+    d_texture_data = cuda_copy_texture_to_device(new_texture.pixels.data(), new_texture.wh.x, new_texture.wh.y);
+    texture_w = new_texture.wh.x;
+    texture_h = new_texture.wh.y;
 }
 
 ManifoldScene::~ManifoldScene() {
