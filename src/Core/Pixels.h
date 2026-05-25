@@ -29,11 +29,9 @@ extern "C" void cuda_overlay_with_rotation(
 class Pixels{
 public:
     ivec2 wh;
-    //int w;
-    //int h;
     vector<unsigned int> pixels;
     Pixels();
-    Pixels(int width, int height);
+    Pixels(const ivec2& dim);
 
     bool out_of_range(int x, int y) const;
 

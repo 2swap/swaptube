@@ -142,7 +142,7 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
         throw runtime_error("Computed output size for SVG file " + filename + " is invalid: width=" + to_string(width) + ", height=" + to_string(height) + ", scaling factor=" + to_string(scaling_params.scale_factor));
     }
 
-    Pixels ret(width, height);
+    Pixels ret(ivec2(width, height));
 
     // Allocate pixel buffer
     vector<uint8_t> raw_data(width * height * 4, 0);
@@ -286,7 +286,7 @@ void png_to_pix(Pixels& pix, const string& filename_with_or_without_suffix) {
     png_read_image(png, row_pointers.data());
 
     // Create a Pixels object
-    pix = Pixels(width, height);
+    pix = Pixels(ivec2(width, height));
 
     // Copy data to Pixels object
     for (int y = 0; y < height; y++) {

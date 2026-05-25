@@ -13,7 +13,7 @@
 extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
 
 Pixels::Pixels() : wh(0,0), pixels(0) {}
-Pixels::Pixels(int width, int height) : wh(width, height), pixels(width*height) {}
+Pixels::Pixels(const ivec2& dim) : wh(dim), pixels(dim.x*dim.y) {}
 
 bool Pixels::out_of_range(int x, int y) const {
     return x < 0 || x >= wh.x || y < 0 || y >= wh.y;
@@ -114,7 +114,7 @@ void Pixels::scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const {
 void Pixels::crop(int x, int y, int cw, int ch, Pixels &cropped) const {
     if(x < 0 || y < 0 || x + cw > wh.x || y + ch > wh.y)
         throw runtime_error("Crop dimensions out of range: " + to_string(x) + "," + to_string(y) + "," + to_string(cw) + "," + to_string(ch) + " for image of size " + to_string(wh.x) + "x" + to_string(wh.y));
-    cropped = Pixels(cw, ch);
+    cropped = Pixels(ivec2(cw, ch));
     for(int dx = 0; dx < cw; dx++)
         for(int dy = 0; dy < ch; dy++)
             cropped.set_pixel_carelessly(dx, dy, get_pixel_carelessly(x+dx, y+dy));
@@ -378,7 +378,7 @@ void Pixels::flood_fill(int x, int y, int color) {
 }
 
 Pixels Pixels::naive_scale_down(int scale_down_factor) const {
-    Pixels result(wh.x/scale_down_factor, wh.y/scale_down_factor);
+    Pixels result(wh/scale_down_factor);
 
     for (int y = 0; y*scale_down_factor < wh.y; y++) {
         for (int x = 0; x*scale_down_factor < wh.x; x++) {
@@ -390,7 +390,7 @@ Pixels Pixels::naive_scale_down(int scale_down_factor) const {
 }
 
 void Pixels::rotate_90_inverse(Pixels& rotated) const {
-    rotated = Pixels(wh.y, wh.x);
+    rotated = Pixels(wh);
 
     // Map each pixel to its new location
     for (int y = 0; y < wh.y; y++) {
@@ -401,7 +401,7 @@ void Pixels::rotate_90_inverse(Pixels& rotated) const {
 }
 
 void Pixels::rotate_90(Pixels& rotated) const {
-    rotated = Pixels(wh.y, wh.x);
+    rotated = Pixels(wh);
 
     // Map each pixel to its new location
     for (int y = 0; y < wh.y; y++) {
@@ -412,7 +412,7 @@ void Pixels::rotate_90(Pixels& rotated) const {
 }
 
 void Pixels::bicubic_scale(int new_width, int new_height, Pixels& result) const {
-    result = Pixels(new_width, new_height);
+    result = Pixels(ivec2(new_width, new_height));
     cuda_bicubic_scale(pixels.data(), wh.x, wh.y, result.pixels.data(), new_width, new_height);
 }
 
@@ -483,7 +483,7 @@ Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensi
     int height = intensities.size();
     int width = (height > 0) ? intensities[0].size() : 0;
 
-    Pixels result(width, height);
+    Pixels result(ivec2(width, height));
 
     // Find the minimum and maximum intensity values
     unsigned int minIntensity = numeric_limits<unsigned int>::max();
@@ -521,7 +521,7 @@ Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, 
     int height = colors.size();
     int width = (height > 0) ? colors[0].size() : 0;
 
-    Pixels result(width, height);
+    Pixels result(ivec2(width, height));
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -555,7 +555,7 @@ Pixels crop_by_alpha(const Pixels& p) {
     int height = max_y - min_y + 1;
 
     // Create the cropped Pixels object
-    Pixels cropped_pixels(width, height);
+    Pixels cropped_pixels(ivec2(width, height));
 
     // Copy the pixels within the bounding box to the cropped Pixels
     for (int y = min_y; y <= max_y; y++) {

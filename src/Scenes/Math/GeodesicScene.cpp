@@ -145,7 +145,7 @@ void GeodesicScene::draw_manifold(
     float mult_factor = state["subscreen_size"];
 
     if(state["manifold_opacity"] >= 0.01f) {
-        Pixels manifold_pix(pix.wh.x * mult_factor, pix.wh.y * mult_factor);
+        Pixels manifold_pix(pix.wh * mult_factor);
         ManifoldData manifolds[] = { manifold1 };
         cuda_render_manifold(
             manifold_pix.pixels.data(),
@@ -171,7 +171,7 @@ void GeodesicScene::draw_manifold(
     int geodesic_steps = (int)state["geodesics_steps"];
     double geodesics_opacity = state["geodesics_opacity"];
     if(num_geodesics > 0 && geodesic_steps > 0 && geodesics_opacity >= 0.01f) {
-        Pixels geodesic_pix(pix.wh.x * mult_factor, pix.wh.y * mult_factor);
+        Pixels geodesic_pix(pix.wh * mult_factor);
         vec2 start_position = vec2(state["pov_x"], state["pov_z"]);
         vec3 camera_dir_3d = rotate_vector(vec3(0, 0, 1), conjugate(camera_direction));
         vec2 start_velocity = vec2(camera_dir_3d.x, camera_dir_3d.z);

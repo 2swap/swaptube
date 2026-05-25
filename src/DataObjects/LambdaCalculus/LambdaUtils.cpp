@@ -97,7 +97,7 @@ Pixels LambdaExpression::draw_lambda_diagram(float scale = 1) {
     if(w + h + x + y == 0) throw runtime_error("Attempted drawing lambda diagram with unset positions!");
     float bounding_box_w = get_width_recursive() + 4;
     float bounding_box_h = get_height_recursive() + 4;
-    Pixels pix(bounding_box_w * scale, bounding_box_h * scale);
+    Pixels pix(ivec2(bounding_box_w * scale, bounding_box_h * scale));
 
     for(int i = 0; i < 2; i++) {
         for(int step = 0; step < 2; step++) {

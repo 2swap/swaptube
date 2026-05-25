@@ -99,7 +99,7 @@ void Scene::query(Pixels*& p) {
     // The only time we skip render entirely is when the project flags to skip a section.
     if(needs_redraw() && is_for_real()) {
         has_ever_rendered = true;
-        pix = Pixels(get_width(), get_height());
+        pix = Pixels(get_width_height());
         cout << "|" << flush;
         draw();
     }

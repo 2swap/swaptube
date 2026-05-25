@@ -33,7 +33,7 @@ public:
     Pixels pixels;
 
     TranslatedPixels(int width, int height, int tx, int ty)
-        : translation_x(tx), translation_y(ty), pixels(width, height) {}
+        : translation_x(tx), translation_y(ty), pixels(ivec2(width, height)) {}
 
     TranslatedPixels(const Pixels& p, int tx, int ty)
         : translation_x(tx), translation_y(ty), pixels(p) {}

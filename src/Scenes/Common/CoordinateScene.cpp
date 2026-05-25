@@ -136,7 +136,7 @@ void CoordinateScene::draw_construction() {
     float bounce = 1 - square(square(microblock_fraction - 1));
     float interp = smoother2(microblock_fraction);
 
-    Pixels geometry(pix.wh.x, pix.wh.y);
+    Pixels geometry(pix.wh);
 
     for(const GeometricLine& l : construction.lines) {
         if(!l.draw_shape) continue;

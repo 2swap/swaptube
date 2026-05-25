@@ -12,7 +12,7 @@ void stripey_effect(Pixels& in, Pixels& out, const float amount) {
     for(int y = 0; y < in.wh.y; y++) {
         substripe_shift_multipliers[y] = static_cast<double>(rand()) / RAND_MAX;
     }
-    out = Pixels(in.wh.x, in.wh.y);
+    out = Pixels(in.wh);
     for(int y = 0; y < in.wh.y; y++) {
         for(int x = 0; x < in.wh.x; x++) {
             int stripe_number = y * 50 / in.wh.y;
@@ -70,7 +70,7 @@ void TwoswapScene::draw(){
     double whole_y_shift = pix.wh.x * .04;
 
     if (twoswapness > 0.01) { // 2swap logo effect
-        Pixels foreground_pix(pix.wh.x, pix.wh.y * .3);
+        Pixels foreground_pix(pix.wh * vec2(1, .3));
 
         ScalingParams sp(pix.wh.x * .6, pix.wh.y * .4);
         Pixels twoswap_pix = latex_to_pix("\\text{2swap}", sp);
@@ -89,7 +89,7 @@ void TwoswapScene::draw(){
     }
 
     if (seefness > 0.01) { // 6884 logo effect
-        Pixels foreground_pix(pix.wh.x, pix.wh.y * .2);
+        Pixels foreground_pix(pix.wh.x * vec2(1, .2));
 
         Pixels image;
         png_to_pix(image, "musicnote");
@@ -117,7 +117,7 @@ void TwoswapScene::draw(){
         double height = pix.wh.y * .14;
         ScalingParams sp2(pix.wh.x * .32, height);
         Pixels swaptube_pix_small_box = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{\\quad Commit Hash: " + swaptube_commit_hash() + "}", sp2);
-        Pixels swaptube_pix = Pixels(pix.wh.x, height);
+        Pixels swaptube_pix = Pixels(pix.wh);
         swaptube_pix.overwrite(swaptube_pix_small_box, (pix.wh.x - swaptube_pix_small_box.wh.x)/2, (height - swaptube_pix_small_box.wh.y)/2);
 
         Pixels stripey_pix;
