@@ -311,12 +311,12 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("Looking at one side,"), 2);
-    gs->render_microblock();
     gs->manager.transition(MICRO, {
         {"d", "3"},
         {"x", "1"},
         {"y", "-.5"},
     });
+    gs->render_microblock();
     gs->render_microblock();
 
     stage_macroblock(FileBlock("this node splits the subset in half,"), 3);
@@ -338,6 +338,9 @@ void render_video() {
     stage_macroblock(FileBlock("We can rank the remaining two nodes in any order."), 2);
     gs->render_microblock();
     split_graph_by_contraction(gs, contraction_1, 7, true);
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(.5), 1);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("Now on the other side,"), 1);
@@ -465,6 +468,9 @@ void render_video() {
     gs->render_microblock();
 
     stage_macroblock(FileBlock("The best way to visualize this ranking is to pull down or contract the nodes in order."), 1);
+    gs->manager.transition(MACRO, {
+        {"y", "1.2"},
+    });
     // Create a duplicate graph with all transparent colors where the graph will be moved to
     // Add nodes with primes ' attached
     for(auto& [node, coords] : graph_nodes) {
@@ -517,9 +523,6 @@ void render_video() {
     };
 
     stage_macroblock(CompositeBlock(FileBlock("1 is the furthest down, 2 is next up and so on."), SilenceBlock(3)), 11);
-    gs->manager.transition(MACRO, {
-        {"y", "1.2"},
-    });
     for (int rank = 1; rank <= 9; rank++) {
         // Find node with this rank
         string node;
@@ -604,9 +607,13 @@ void render_video() {
     }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("And that’s why it’s so important to use a bidirectional Dijkstra."), 1);
+    stage_macroblock(FileBlock("And that’s why it’s so important to use a bidirectional Dijkstra."), 2);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
+    gs->render_microblock();
+    // Highlight pair with ranks 4 and 7 (c and h)
+    gs->config->fade_node_color(MICRO, HashableString("c").get_hash(), 0xff0080ff);
+    gs->config->fade_node_color(MICRO, HashableString("h").get_hash(), 0xff0080ff);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("If the algorithm could only search in one direction,"), 6);
@@ -616,9 +623,6 @@ void render_video() {
     trace_path(gs, {"c", "g", "h"}, 0xfffffffe);
 
     stage_macroblock(FileBlock("it would get stuck on a lot of pairs-"), 1);
-    // Highlight pair with ranks 4 and 7 (c and h)
-    gs->config->fade_node_color(MICRO, HashableString("c").get_hash(), 0xff0080ff);
-    gs->config->fade_node_color(MICRO, HashableString("h").get_hash(), 0xff0080ff);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("it can only go up and never back down."), 6);
@@ -674,19 +678,14 @@ void render_video() {
     gs->config->splash_edge_label(MICRO, HashableString("e").get_hash(), HashableString("g").get_hash());
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("So, that must be the shortest path with a cost of 15. Done."), 15);
-    gs->render_microblock();
+    stage_macroblock(FileBlock("So, that must be the shortest path with a cost of 15. Done."), 10);
     gs->render_microblock();
     trace_path(gs, {"c", "g", "e"}, 0xffff0100);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
     gs->config->splash_edge_label(MICRO, HashableString("c").get_hash(), HashableString("g").get_hash());
     gs->config->splash_edge_label(MICRO, HashableString("g").get_hash(), HashableString("e").get_hash());
-    gs->render_microblock();
-    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -697,16 +696,12 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Using this path only costs 3."), 12);
-    gs->render_microblock();
-    gs->render_microblock();
+    stage_macroblock(FileBlock("Using this path only costs 3."), 8);
     gs->render_microblock();
     gs->render_microblock();
     trace_path(gs, {"c", "a", "b", "e"}, 0xff00ff00);
     gs->render_microblock();
-    gs->render_microblock();
     splash_edge_path(MICRO, gs, {"c", "a", "b", "e"});
-    gs->render_microblock();
     gs->render_microblock();
 
     // Slide 52
@@ -751,7 +746,13 @@ void render_video() {
     gs->config->transition_node_color(MICRO, HashableString("e").get_hash(), 0xffff8080);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("This is called a lower triangle."), 6);
+    stage_macroblock(FileBlock("This is called a lower triangle."), 12);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     g->add_edge(HashableString("a").get_hash(), HashableString("e").get_hash());
     gs->config->set_edge_dashed(HashableString("a").get_hash(), HashableString("e").get_hash(), true);
     gs->config->set_edge_color(HashableString("a").get_hash(), HashableString("e").get_hash(), 0x00ff0000);
@@ -946,8 +947,6 @@ void render_video() {
 
     stage_macroblock(FileBlock("while also ignoring them if they aren’t needed."), 4);
     gs->render_microblock();
-    gs->config->set_edge_dashed(HashableString("e").get_hash(), HashableString("h").get_hash(), false);
-    gs->config->set_edge_color(HashableString("e").get_hash(), HashableString("h").get_hash(), 0x00ffffff);
     fade_non_shortcuts(gs);
     gs->render_microblock();
     gs->render_microblock();
@@ -1054,7 +1053,7 @@ void render_video() {
     }
     gs->render_microblock();
     for(int i = 0; i <= 11; i++){
-        split_graph_by_contraction(gs, contraction_2, i, false);
+        split_graph_by_contraction(gs, contraction_3, i, false);
     }
     gs->render_microblock();
     gs->render_microblock();
@@ -1066,7 +1065,7 @@ void render_video() {
     }
     gs->render_microblock();
     for(int i = 0; i <= 11; i++){
-        split_graph_by_contraction(gs, contraction_3, i, false);
+        split_graph_by_contraction(gs, contraction_2, i, false);
     }
     gs->render_microblock();
 

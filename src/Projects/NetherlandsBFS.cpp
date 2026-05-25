@@ -156,6 +156,8 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
 
@@ -169,11 +171,11 @@ void render_video() {
     }
 
     gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
 
     // Add even more nodes
     stage_macroblock(FileBlock("And now?"), netherlands_edges_3.size() + 4);
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
     for(pair<string, string> edge : netherlands_edges_3) {
         string city = edge.first;
@@ -183,8 +185,6 @@ void render_video() {
         g->add_edge(hash, neighbor_hash);
         gs->render_microblock();
     }
-    gs->render_microblock();
-    gs->render_microblock();
     gs->render_microblock();
 
     // Slide 9
@@ -196,8 +196,10 @@ void render_video() {
     gs->config->fade_all_edge_colors(MICRO, edge_dark);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Rotterdam is our starting point, or our source."), 1);
+    stage_macroblock(FileBlock("Rotterdam is our starting point, or our source."), 2);
+    gs->manager.transition(MICRO, "d", ".045");
     set_camera_to_lat_long(gs, netherlands_cities["Rotterdam"], false, MICRO);
+    gs->render_microblock();
     gs->config->transition_node_color(MICRO, rotterdam_hash, 0xffff0000);
     gs->render_microblock();
 
@@ -302,6 +304,9 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(1), 1);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("But there’s a problem. The algorithm thinks all these edges are the same length."), 5);

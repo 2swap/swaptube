@@ -109,8 +109,10 @@ void render_video() {
         gs->config->set_edge_label(new_hash, zoo_hash, "");
     }
 
-    stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 8);
+    stage_macroblock(FileBlock("We'll order nodes by their cost plus this straight line distance."), 10);
     // Sort the above 6 nodes by their distance to the zoo
+    gs->render_microblock();
+    gs->render_microblock();
     counter = 0;
     gs->manager.transition(MACRO, {
         {"globe_opacity", ".2"},
@@ -169,7 +171,7 @@ void render_video() {
     // Re-do Dijkstra's
     stage_macroblock(SilenceBlock(1), 1);
     gs->manager.transition(MICRO, {
-        {"d", ".004"},
+        {"d", ".003"},
     });
     gs->render_microblock();
 
@@ -177,7 +179,7 @@ void render_video() {
     int chunks = 100;
     stage_macroblock(FileBlock("With Dijkstra’s, the search frontier spreads out in all directions."), chunks);
     gs->manager.transition(MACRO, {
-        {"d", ".008"},
+        {"d", ".009"},
     });
     float max_dist = 0;
     float increment = 16 * 100. / chunks;
@@ -190,7 +192,7 @@ void render_video() {
 
     stage_macroblock(FileBlock("But this modified Dijkstra's"), 1);
     gs->manager.transition(MICRO, {
-        {"d", ".003"},
+        {"d", ".0025"},
     });
     gs->config->fade_all_edge_colors(MICRO, opaque_white);
     gs->render_microblock();

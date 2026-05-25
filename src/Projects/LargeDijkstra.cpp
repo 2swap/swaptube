@@ -208,8 +208,8 @@ void render_video() {
 
     stage_macroblock(FileBlock("But even though it searched in illogical directions, the runtime was around 91 milliseconds. Which is incredibly fast."), 4);
     gs->manager.transition(MACRO, "d", ".012");
-    gs->render_microblock();
     if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, 10000, 0, edge_weights, {-1.234567});
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();

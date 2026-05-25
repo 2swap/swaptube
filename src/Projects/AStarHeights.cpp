@@ -90,20 +90,20 @@ void render_video() {
     gs->manager.transition(MICRO, {
         {"theta", "1.55"},
         {"d", ".0085"},
-        {"phi", "{t} .3 * sin .25 * 2.14 -"},
+        {"phi", "{t} .25 * sin .22 * 2.14 -"},
         {"x", to_string(pos.x*1.0003)},
         {"y", to_string(pos.y*1.0003)},
         {"z", to_string(pos.z*1.0003)},
     });
     gs->render_microblock();
     heuristic_slide(g, gs, zoo_hash, 1, MICRO, scaffold_bases);
+    //fade out scaffold edges
+    for(double hash : scaffold_bases) {
+        gs->config->fade_edge_color(MICRO, scaffold_edges[hash], hash, opaque_white & 0x00ffffff);
+    }
     gs->render_microblock();
 
     stage_macroblock(FileBlock("The penalty A* adds, in this case the distance, is also called a heuristic."), 1);
-    //fade out scaffold edges
-    for(double hash : scaffold_bases) {
-        gs->config->fade_edge_color(MICRO, scaffold_edges[hash], hash, opaque_white);
-    }
     gs->render_microblock();
     // Remove all scaffold nodes
     for(double hash : scaffold_bases) {
