@@ -77,7 +77,7 @@ void LineChartScene::render_chart() {
         vec2 pixel = point_to_pixel({(float)x, val});
 
         string val_string = float_to_pretty_string(val);
-        ScalingParams sp(get_width()/10., get_height()/10.);
+        ScalingParams sp(get_width_height() * .1);
         Pixels latex = latex_to_pix(val_string, sp);
         pix.overlay_cpu(latex, ivec2(pixel.x - latex.wh.x*.5, pixel.y - latex.wh.y*1.1), 1.0f);
 

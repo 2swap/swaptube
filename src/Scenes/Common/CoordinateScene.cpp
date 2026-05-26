@@ -170,7 +170,7 @@ void CoordinateScene::draw_construction() {
             geometry.fill_circle(ivec2(position_pixel.x, position_pixel.y), radius, point_color, 1);
         }
         if(p.label != "" && p.width_multiplier > .4) {
-            ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
+            ScalingParams sp(vec2(160, 16) * line_thickness * p.width_multiplier);
             Pixels latex = latex_to_pix(latex_color(text_color, p.label), sp);
             geometry.overlay_cpu(latex, ivec2(position_pixel.x - latex.wh.x/2, position_pixel.y - line_thickness * 6 - latex.wh.y/2), p.old ? 1 : interp);
         }
@@ -226,7 +226,7 @@ void CoordinateScene::draw_one_axis(bool ymode) {
             if(ymode) pix.bresenham(0, coordinate, tick_length, coordinate, OPAQUE_WHITE, number_opacity, 1);
             else      pix.bresenham(coordinate, h-1, coordinate, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
             if(number_opacity > 0){
-                ScalingParams sp(gmsz/9., gmsz/18.);
+                ScalingParams sp(gmsz * vec2(1/9., 1/18.));
                 Pixels latex = latex_to_pix(truncated, sp);
                 //if(ymode) latex = latex.rotate_90();
                 if(ymode) pix.overlay_cpu(latex, ivec2(tick_length * .8      , coordinate - latex.wh.y*1.1       ), number_opacity);

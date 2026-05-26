@@ -71,7 +71,7 @@ void TwoswapScene::draw(){
     if (twoswapness > 0.01) { // 2swap logo effect
         Pixels foreground_pix(floor(pix.wh * vec2(1, .3)));
 
-        ScalingParams sp(pix.wh.x * .6, pix.wh.y * .4);
+        ScalingParams sp(pix.wh * vec2(.6, .4));
         Pixels twoswap_pix = latex_to_pix("\\text{2swap}", sp);
         foreground_pix.fill_ellipse(pix.wh.x/3, foreground_pix.wh.y/2, pix.wh.x/20, pix.wh.y/20, OPAQUE_WHITE);
         double yval = (foreground_pix.wh.y-twoswap_pix.wh.y)/2+pix.wh.x/96;
@@ -95,7 +95,7 @@ void TwoswapScene::draw(){
         Pixels scaled;
         image.scale_to_bounding_box(pix.wh.x, pix.wh.y * .14, scaled);
 
-        ScalingParams sp(pix.wh.x * .25, pix.wh.y * .25);
+        ScalingParams sp(pix.wh * .25);
         Pixels seef_pix = latex_to_pix("\\text{6884}", sp);
         foreground_pix.overlay_gpu(scaled, vec2(pix.wh.x*.4, (foreground_pix.wh.y-scaled.wh.y)/2 + scaled.wh.y*.1), 1.0f);
         double yval = (foreground_pix.wh.y-seef_pix.wh.y)/2;
@@ -112,7 +112,7 @@ void TwoswapScene::draw(){
 
     if (swaptubeness > 0.01) { // SwapTube logo effect
         vec2 size = pix.wh * vec2(1, .14);
-        ScalingParams sp2(pix.wh.x * .32, size.y);
+        ScalingParams sp2(pix.wh * vec2(.32, .14));
         Pixels swaptube_pix_small_box = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{\\quad Commit Hash: " + swaptube_commit_hash() + "}", sp2);
         Pixels swaptube_pix = Pixels(pix.wh);
         swaptube_pix.overwrite(swaptube_pix_small_box, (size - swaptube_pix_small_box.wh)/2);
@@ -127,7 +127,7 @@ void TwoswapScene::draw(){
     }
 
     if(state["swaptube_opacity"] > 0.01){
-        ScalingParams sp2(pix.wh.x*.23, pix.wh.y*.14);
+        ScalingParams sp2(pix.wh*vec2(.23, .14));
         Pixels swaptube_pix = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{Commit Hash: " + swaptube_commit_hash() + "}", sp2);
         pix.overlay_gpu(swaptube_pix, vec2(pix.wh.x*.98 - swaptube_pix.wh.x, pix.wh.y*.03), state["swaptube_opacity"]);
     }

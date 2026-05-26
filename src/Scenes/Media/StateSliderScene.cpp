@@ -37,7 +37,7 @@ StateSliderScene::StateSliderScene(const string& vn, const string& dn, double mi
 }
 
 void StateSliderScene::draw() {
-    ScalingParams sp(pix.wh.x, pix.wh.y);
+    ScalingParams sp(pix.wh);
     if(display_name != "") {
         string eqn_str = display_name + " = " + double_to_string(state["value"]);
         Pixels equation_pixels = latex_to_pix(eqn_str, sp);

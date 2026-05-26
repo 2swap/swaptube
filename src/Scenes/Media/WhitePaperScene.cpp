@@ -63,7 +63,7 @@ void WhitePaperScene::draw() {
         pix.overlay_gpu_with_rotation(scaled, offset, 1.0f, angle);
     }
 
-    ScalingParams sp = ScalingParams(get_width(), get_height()/6);
+    ScalingParams sp = ScalingParams(get_width_height() * vec2(1, .13));
     Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
     float offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
     pix.overlay_gpu(text_pixels,

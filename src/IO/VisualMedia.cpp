@@ -127,8 +127,8 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     // Calculate scale factor
     if (scaling_params.mode == ScalingMode::BoundingBox) {
         scaling_params.scale_factor = min(
-            static_cast<double>(scaling_params.max_width) / gwidth,
-            static_cast<double>(scaling_params.max_height) / gheight
+            static_cast<double>(scaling_params.bounding_box.x) / gwidth,
+            static_cast<double>(scaling_params.bounding_box.y) / gheight
         );
     } else if (scaling_params.scale_factor <= 0) {
         throw runtime_error("Invalid scale factor: " + to_string(scaling_params.scale_factor));
@@ -352,8 +352,8 @@ unordered_map<string, pair<Pixels, double>> latex_cache;
 static string generate_cache_key(const string& text, const ScalingParams& scaling_params) {
     hash<string> hasher;
     string key = text + "_" + to_string(static_cast<int>(scaling_params.mode)) + "_" + 
-                 to_string(scaling_params.max_width) + "_" + 
-                 to_string(scaling_params.max_height) + "_" + 
+                 to_string(scaling_params.bounding_box.x) + "_" + 
+                 to_string(scaling_params.bounding_box.y) + "_" +
                  to_string(scaling_params.scale_factor);
     return to_string(hasher(key));
 }
@@ -443,7 +443,7 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
 }
 
 void write_text(Pixels& pix, const std::string& latex, const vec2& center, const vec2& text_envelope, const double opacity, const float angle) {
-    ScalingParams scaling_params(text_envelope.x, text_envelope.y);
+    ScalingParams scaling_params(text_envelope);
 
     Pixels text = latex_to_pix(latex, scaling_params);
     if(abs(angle) > 0.001)
