@@ -34,11 +34,10 @@ void LoopAnimationScene::draw() {
     }
 
     // Calculate the position to center the image within the bounding box
-    int x_offset = (get_width() - image.wh.x) / 2;
-    int y_offset = (get_height() - image.wh.y) / 2;
+    const vec2 offset = (get_width_height() - image.wh) / 2;
 
     // Overwrite the scaled image onto the scene's pixel buffer
-    pix.overwrite(image, x_offset, y_offset);
+    pix.overwrite(image, offset);
 }
 
 const StateQuery LoopAnimationScene::populate_state_query() const {

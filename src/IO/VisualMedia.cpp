@@ -134,22 +134,21 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
         throw runtime_error("Invalid scale factor: " + to_string(scaling_params.scale_factor));
     }
 
-    int width  = round(gwidth  * scaling_params.scale_factor);
-    int height = round(gheight * scaling_params.scale_factor);
+    ivec2 wh = floor(vec2(gwidth, gheight) * scaling_params.scale_factor);
 
-    if (width <= 0 || height <= 0) {
+    if (wh.x <= 0 || wh.y <= 0) {
         g_object_unref(handle);
-        throw runtime_error("Computed output size for SVG file " + filename + " is invalid: width=" + to_string(width) + ", height=" + to_string(height) + ", scaling factor=" + to_string(scaling_params.scale_factor));
+        throw runtime_error("Computed output size for SVG file " + filename + " is invalid: width=" + to_string(wh.x) + ", height=" + to_string(wh.y) + ", scaling factor=" + to_string(scaling_params.scale_factor));
     }
 
-    Pixels ret(ivec2(width, height));
+    Pixels copy(wh);
 
     // Allocate pixel buffer
-    vector<uint8_t> raw_data(width * height * 4, 0);
+    vector<uint8_t> raw_data(wh.x * wh.y * 4, 0);
 
     // Create cairo surface and context
     cairo_surface_t* surface = cairo_image_surface_create_for_data(
-        raw_data.data(), CAIRO_FORMAT_ARGB32, width, height, width * 4
+        raw_data.data(), CAIRO_FORMAT_ARGB32, wh.x, wh.y, wh.x * 4
     ); 
     cairo_t* cr = cairo_create(surface);
 
@@ -181,10 +180,10 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     }
 
     // Copy pixels into Pixels object
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int offset = (y * width + x) * 4;
-            ret.set_pixel_carelessly(x, y, argb(
+    for (int y = 0; y < wh.y; ++y) {
+        for (int x = 0; x < wh.x; ++x) {
+            int offset = (y * wh.x + x) * 4;
+            copy.set_pixel_carelessly(x, y, argb(
                 raw_data[offset + 3],  // Alpha
                 raw_data[offset + 2],  // Red
                 raw_data[offset + 1],  // Green
@@ -198,7 +197,9 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
     cairo_surface_destroy(surface);
     g_object_unref(handle);
 
-    return crop_by_alpha(ret);
+    Pixels ret;
+    copy.crop_by_alpha(ret);
+    return ret;
 }
 
 void png_to_pix(Pixels& pix, const string& filename_with_or_without_suffix) {

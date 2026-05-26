@@ -176,7 +176,7 @@ void CoordinateScene::draw_construction() {
         }
     }
 
-    pix.overlay_gpu(geometry, 0, 0, construction_opacity);
+    pix.overlay_gpu(geometry, vec2(), construction_opacity);
 }
 
 void CoordinateScene::draw_zero_crosshair() {

@@ -192,7 +192,7 @@ void GraphScene::draw(){
 
     ThreeDimensionScene::draw();
 
-    pix.overlay_gpu(labels, 0, 0, 1);
+    pix.overlay_gpu(labels, vec2(0,0), 1);
 }
 
 const StateQuery GraphScene::populate_state_query() const {

@@ -51,6 +51,8 @@ public:
 
     int get_height() const;
 
+    vec2 get_width_height() const;
+
     void export_frame(const string& filename, int scaledown = 1) const;
 
     StateManager manager;
@@ -65,8 +67,6 @@ protected:
     Pixels pix;
     StateReturn state;
     bool has_ever_rendered = false;
-
-    vec2 get_width_height() const;
 
     double get_geom_mean_size() const;
 

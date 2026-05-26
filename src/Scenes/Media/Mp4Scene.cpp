@@ -38,10 +38,9 @@ void Mp4Scene::draw() {
     }
 
     // Calculate the offsets to center the frame in the output
-    int x_offset = (get_width() - frame.wh.x) / 2;
-    int y_offset = (get_height() - frame.wh.y) / 2;
+    const vec2 offset = (get_width_height() - frame.wh) / 2;
 
-    pix.overwrite(frame, x_offset, y_offset);
+    pix.overwrite(frame, offset);
 }
 
 const StateQuery Mp4Scene::populate_state_query() const {

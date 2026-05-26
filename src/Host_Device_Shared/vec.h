@@ -7,19 +7,27 @@
 
 SHARED_FILE_PREFIX
 
-struct vec4 {
-    float x, y, z, w;
-    HOST_DEVICE vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
-    HOST_DEVICE vec4(float v) : x(v), y(v), z(v), w(v) {}
-    HOST_DEVICE vec4() {}
-};
 struct ivec4 {
     int x, y, z, w;
     HOST_DEVICE ivec4(int x, int y, int z, int w) : x(x), y(y), z(z), w(w) {}
     HOST_DEVICE ivec4(int v) : x(v), y(v), z(v), w(v) {}
     HOST_DEVICE ivec4() {}
+};
+struct vec4 {
+    float x, y, z, w;
+    HOST_DEVICE vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
+    HOST_DEVICE vec4(float v) : x(v), y(v), z(v), w(v) {}
+    HOST_DEVICE vec4() {}
 
-    HOST_DEVICE ivec4(const vec4& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)), w(floorf(v.w)) {}
+    HOST_DEVICE vec4(const ivec4& v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
+};
+struct ivec3 {
+    int x, y, z;
+    HOST_DEVICE ivec3(int x, int y, int z) : x(x), y(y), z(z) {}
+    HOST_DEVICE ivec3(int v) : x(v), y(v), z(v) {}
+    HOST_DEVICE ivec3() {}
+
+    HOST_DEVICE ivec3(const ivec4& v) : x(v.x), y(v.y), z(v.z) {}
 };
 struct vec3 {
     float x, y, z;
@@ -28,15 +36,17 @@ struct vec3 {
     HOST_DEVICE vec3() {}
 
     HOST_DEVICE vec3(const vec4& v) : x(v.x), y(v.y), z(v.z) {}
-};
-struct ivec3 {
-    int x, y, z;
-    HOST_DEVICE ivec3(int x, int y, int z) : x(x), y(y), z(z) {}
-    HOST_DEVICE ivec3(int v) : x(v), y(v), z(v) {}
-    HOST_DEVICE ivec3() {}
 
-    HOST_DEVICE ivec3(const vec3& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)) {}
-    HOST_DEVICE ivec3(const ivec4& v) : x(v.x), y(v.y), z(v.z) {}
+    HOST_DEVICE vec3(const ivec3& v) : x(v.x), y(v.y), z(v.z) {}
+};
+struct ivec2 {
+    int x, y;
+    HOST_DEVICE ivec2(int x, int y) : x(x), y(y) {}
+    HOST_DEVICE ivec2(int v) : x(v), y(v) {}
+    HOST_DEVICE ivec2() {}
+
+    HOST_DEVICE ivec2(const ivec3& v) : x(v.x), y(v.y) {}
+    HOST_DEVICE ivec2(const ivec4& v) : x(v.x), y(v.y) {}
 };
 struct vec2 {
     float x, y;
@@ -46,16 +56,8 @@ struct vec2 {
 
     HOST_DEVICE vec2(const vec3& v) : x(v.x), y(v.y) {}
     HOST_DEVICE vec2(const vec4& v) : x(v.x), y(v.y) {}
-};
-struct ivec2 {
-    int x, y;
-    HOST_DEVICE ivec2(int x, int y) : x(x), y(y) {}
-    HOST_DEVICE ivec2(int v) : x(v), y(v) {}
-    HOST_DEVICE ivec2() {}
 
-    HOST_DEVICE ivec2(const vec2& v) : x(floorf(v.x)), y(floorf(v.y)) {}
-    HOST_DEVICE ivec2(const ivec3& v) : x(v.x), y(v.y) {}
-    HOST_DEVICE ivec2(const ivec4& v) : x(v.x), y(v.y) {}
+    HOST_DEVICE vec2(const ivec2& v) : x(v.x), y(v.y) {}
 };
 
 struct quat {
@@ -380,5 +382,9 @@ HOST_DEVICE inline vec4 transform(const mat4& m, const vec4& v) {
         dot(transposed.d, v)
     };
 }
+
+HOST_DEVICE inline ivec2 floor(const vec2& v) { return ivec2{ (int) floorf(v.x), (int) floorf(v.y) }; }
+HOST_DEVICE inline ivec3 floor(const vec3& v) { return ivec3{ (int) floorf(v.x), (int) floorf(v.y), (int) floorf(v.z) }; }
+HOST_DEVICE inline ivec4 floor(const vec4& v) { return ivec4{ (int) floorf(v.x), (int) floorf(v.y), (int) floorf(v.z), (int) floorf(v.w) }; }
 
 SHARED_FILE_SUFFIX

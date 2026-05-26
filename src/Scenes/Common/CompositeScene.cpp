@@ -37,19 +37,17 @@ void CompositeScene::draw() {
         Pixels* p = nullptr;
         std::shared_ptr<Scene> subscene = subscenes[name];
         subscene->query(p);
-        int x = w*state[name + ".x"];
-        int y = h*state[name + ".y"];
+        const vec2 xy(pix.wh * vec2(state[name + ".x"], state[name + ".y"]));
 
         // Angle in radians, clamped to [0, 2*pi)
         float angle = extended_mod(state[name + ".angle"], 2*M_PI);
 
-        float center_x = x - subscene->get_width ()/2;
-        float center_y = y - subscene->get_height()/2;
+        const vec2 center = xy - subscene->get_width_height()/2;
 
         if (angle > 0.0001 && angle < 2*M_PI - 0.0001) {
-            pix.overlay_gpu_with_rotation(*p, center_x, center_y, opa, angle);
+            pix.overlay_gpu_with_rotation(*p, center, opa, angle);
         } else {
-            pix.overlay_gpu(*p, center_x, center_y, opa);
+            pix.overlay_gpu(*p, center, opa);
         }
     }
 }

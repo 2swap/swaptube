@@ -162,7 +162,7 @@ void GeodesicScene::draw_manifold(
             nullptr,0,0 // No textures
         );
         pix.overlay_gpu(manifold_pix,
-            pix.wh.x - manifold_pix.wh.x, pix.wh.y - manifold_pix.wh.y,
+            pix.wh - manifold_pix.wh,
             state["manifold_opacity"]
         );
     }
@@ -190,7 +190,7 @@ void GeodesicScene::draw_manifold(
             state["geodesics_opacity"]
         );
         pix.overlay_gpu(geodesic_pix,
-            pix.wh.x - geodesic_pix.wh.x, pix.wh.y - geodesic_pix.wh.y,
+            pix.wh - geodesic_pix.wh,
             1.0f
         );
     }

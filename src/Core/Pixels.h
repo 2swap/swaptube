@@ -56,20 +56,20 @@ public:
 
     void scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const;
 
-    void crop(int x, int y, int cw, int ch, Pixels &cropped) const;
+    void crop(const ivec2&, const ivec2&, Pixels &cropped) const;
+    void crop_by_fractions(const vec2& crop_top_left, const vec2& crop_bottom_right, Pixels &cropped) const;
+    void crop_by_alpha(Pixels& cropped);
 
-    void crop_by_fractions(float crop_top, float crop_bottom, float crop_left, float crop_right, Pixels &cropped) const;
-
-    int get_pixel_bilinear(double x, double y) const;
+    int get_pixel_bilinear(const vec2& pos) const;
 
     bool is_empty() const;
 
-    void overlay_cpu(const Pixels& p, const ivec2& center, double overlay_opacity_multiplier = 1);
-    void overlay_gpu(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier = 1);
-    void overlay_cpu_with_rotation(const Pixels& p, const ivec2& offset, double overlay_opacity_multiplier, float angle_radians);
-    void overlay_gpu_with_rotation(const Pixels& p, int dx, int dy, double overlay_opacity_multiplier, float angle_radians);
+    void overlay_cpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier = 1);
+    void overlay_gpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier = 1);
+    void overlay_cpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians);
+    void overlay_gpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians);
 
-    void overwrite(const Pixels& p, int dx, int dy);
+    void overwrite(const Pixels& p, const vec2& top_left);
 
     void fill_rect(int x, int y, int rw, int rh, int col);
 
@@ -99,4 +99,3 @@ public:
 // Free functions
 Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensities);
 Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, int negative_intensity);
-Pixels crop_by_alpha(const Pixels& p);

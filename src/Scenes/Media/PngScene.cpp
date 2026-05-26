@@ -23,10 +23,8 @@ void PngScene::draw() {
 
     Pixels cropped;
     image.crop_by_fractions(
-        state["crop_top"],
-        state["crop_bottom"],
-        state["crop_left"],
-        state["crop_right"],
+        vec2(state["crop_top"], state["crop_left"]),
+        vec2(state["crop_bottom"], state["crop_right"]),
         cropped
     );
 
@@ -34,11 +32,10 @@ void PngScene::draw() {
     cropped.scale_to_bounding_box(get_width(), get_height(), scaled);
 
     // Calculate the position to center the image within the bounding box
-    int x_offset = (get_width() - scaled.wh.x) / 2;
-    int y_offset = (get_height() - scaled.wh.y) / 2;
+    const vec2 offset = (get_width_height() - scaled.wh) / 2;
 
     // Overwrite the scaled image onto the scene's pixel buffer
-    pix.overwrite(scaled, x_offset, y_offset);
+    pix.overwrite(scaled, offset);
 }
 
 const StateQuery PngScene::populate_state_query() const {

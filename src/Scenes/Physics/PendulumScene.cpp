@@ -3,7 +3,7 @@
 #include <algorithm>
 
 PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(dimensions), pend(s), start_state(s) {
-    path_background = Pixels(get_width_height());
+    path_background = Pixels(floor(get_width_height()));
     manager.set({{"tone", "1"},
                        {"volume", "0"},
                        {"path_opacity", "0"},

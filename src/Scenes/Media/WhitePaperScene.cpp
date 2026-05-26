@@ -29,10 +29,8 @@ void WhitePaperScene::draw() {
         pdf_page_to_pix(picture, prefix, page_number);
         Pixels cropped;
         picture.crop_by_fractions(
-            state["crop_top"],
-            state["crop_bottom"],
-            state["crop_left"],
-            state["crop_right"],
+            vec2(state["crop_top"], state["crop_left"]),
+            vec2(state["crop_bottom"], state["crop_right"]),
             cropped
         );
 
@@ -56,21 +54,20 @@ void WhitePaperScene::draw() {
 
         pages_centered *= page_focus_multiplier;
 
-        float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-completion))));
-        float y_center = (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05);
-        float x_offset = get_width() * x_center - scaled.wh.x * .5;
-        float y_offset = get_height() * y_center - scaled.wh.y * .5;
+        const vec2 center(.5 + pages_centered * (.08 + .08*(1-square(1-completion))),
+                           (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05));
+        const vec2 offset = get_width_height() * center - scaled.wh * .5;
 
         float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
 
-        pix.overlay_gpu_with_rotation(scaled, x_offset, y_offset, 1.0f, angle);
+        pix.overlay_gpu_with_rotation(scaled, offset, 1.0f, angle);
     }
 
     ScalingParams sp = ScalingParams(get_width(), get_height()/6);
     Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
-    int offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
+    float offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
     pix.overlay_gpu(text_pixels,
-                 (int)((get_width() - text_pixels.wh.x) / 2), offset_y,
+                 vec2(((get_width() - text_pixels.wh.x) / 2), offset_y),
                  1.0f
     );
 }

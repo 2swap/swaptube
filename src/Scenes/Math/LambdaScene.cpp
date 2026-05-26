@@ -8,11 +8,10 @@ using namespace std;
 LambdaScene::LambdaScene(const shared_ptr<const LambdaExpression> lambda, const vec2& dimensions) :
     Scene(dimensions), le(lambda->clone()) {
     le->set_positions();
-    manager.set({{"latex_opacity", "0"}, {"title_opacity", "0"}});
 }
 
 const StateQuery LambdaScene::populate_state_query() const {
-    return StateQuery{"microblock_fraction", "title_opacity", "latex_opacity"};
+    return StateQuery{"microblock_fraction"};
 }
 
 void LambdaScene::reduce(){
@@ -55,26 +54,15 @@ float LambdaScene::get_scale(shared_ptr<const LambdaExpression> expr) {
 void LambdaScene::draw() {
     if(last_le == nullptr){
         render_diagrams(); 
-        pix.overwrite(le_pix, (pix.wh.x-le_pix.wh.x)*.5, (pix.wh.y-le_pix.wh.y)*.5);
+        pix.overwrite(le_pix, (pix.wh-le_pix.wh)*.5);
     } else {
         float trans_frac = state["microblock_fraction"];
         pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> interpolated = get_interpolated(last_le, le, trans_frac);
         float scale = smoothlerp(get_scale(last_le), get_scale(le), trans_frac);
         Pixels p1 = interpolated.first->draw_lambda_diagram(scale);
         Pixels p2 = interpolated.second->draw_lambda_diagram(scale);
-        float pixw = smoothlerp(p1.wh.x, p2.wh.x, trans_frac);
-        float pixh = smoothlerp(p1.wh.y, p2.wh.y, trans_frac);
-        pix.overwrite  (p1, (pix.wh.x-pixw)*.5, (pix.wh.y-pixh)*.5);
-        pix.overlay_gpu(p2, (pix.wh.x-pixw)*.5, (pix.wh.y-pixh)*.5);
-    }
-    if(state["latex_opacity"] > 0.01){
-        ScalingParams sp(pix.wh.x, pix.wh.y / 4);
-        Pixels latex = latex_to_pix(le->get_latex(), sp);
-        pix.overlay_gpu(latex, (pix.wh.x-latex.wh.x)*.5, pix.wh.y*7/8-latex.wh.y, state["latex_opacity"]);
-    }
-    if(state["title_opacity"] > 0.01){
-        ScalingParams sp(pix.wh.x, pix.wh.y / 4);
-        Pixels latex = latex_to_pix("\\text{" + title + "}", sp);
-        pix.overlay_gpu(latex, (pix.wh.x-latex.wh.x)*.5, pix.wh.y*7/8-latex.wh.y, state["title_opacity"]);
+        vec2 pixwh(smoothlerp(p1.wh.x, p2.wh.x, trans_frac), smoothlerp(p1.wh.y, p2.wh.y, trans_frac));
+        pix.overwrite  (p1, (pix.wh-pixwh)*.5);
+        pix.overlay_gpu(p2, (pix.wh-pixwh)*.5);
     }
 }
