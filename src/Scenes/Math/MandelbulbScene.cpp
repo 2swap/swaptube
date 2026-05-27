@@ -5,7 +5,7 @@ extern "C" void render_raymarch(
     const vec3& pos, const quat& camera, float fov,
     const vec3& lightPos,
     const int max_raymarch_iterations, const int max_mandelbulb_iterations,
-    unsigned int* colors
+    uint32_t* colors
 );
 
 MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions), d_pixels(get_pixels_size()) {
@@ -13,7 +13,7 @@ MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions), d_
         {"x", "0"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "2"},
+        {"d", "3"},
         {"q1", "1"},
         {"qi", "0"},
         {"qj", "0"},
@@ -40,5 +40,7 @@ void MandelbulbScene::draw(){
         state["fov"], 
         vec3(state["light_x"], state["light_y"], state["light_z"]), 
         state["max_raymarch_iterations"], state["max_mandelbulb_iterations"],
-        pix.pixels.data());
+        d_pixels.get_ptr()
+    );
+    d_pixels.copy_to_host(pix.pixels.data(), pix.wh);
 }

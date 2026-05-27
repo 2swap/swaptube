@@ -1,9 +1,18 @@
 #include "RootFractalScene.h"
 #include <cmath>
 
-extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float brightness);
+extern "C" void draw_root_fractal(
+    uint32_t* d_pixels,
+    const ivec2& wh,
+    const std::complex<float>& c1,
+    const std::complex<float>& c2,
+    float terms,
+    const vec2& lx_ty,
+    const vec2& rx_by,
+    float radius, float opacity, float brightness
+);
 
-RootFractalScene::RootFractalScene(const vec2& dimensions) : CoordinateScene(dimensions) {
+RootFractalScene::RootFractalScene(const vec2& dimensions) : CoordinateScene(dimensions), d_pixels(get_pixels_size()) {
     manager.set({
         {"coefficient0_r", "-1"},
         {"coefficient0_i", "0"},
@@ -28,10 +37,10 @@ void RootFractalScene::draw() {
     float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(wh*10, .25) / 250;
     float opacity = 1-1/(2*wh+1);
     opacity *= square(state["visibility_multiplier"]);
-    draw_root_fractal(pix.pixels.data(), w, h,
+    draw_root_fractal(d_pixels.get_ptr(), pix.wh,
         c0, c1, n,
-        state["left_x"], state["top_y"],
-        state["right_x"], state["bottom_y"],
+        vec2(state["left_x"], state["top_y"]),
+        vec2(state["right_x"], state["bottom_y"]),
         radius, opacity, state["brightness"]
     );
 
@@ -46,10 +55,11 @@ void RootFractalScene::draw() {
         if(letter_opa > 0.01) {
             ScalingParams sp = ScalingParams(gm * vec2(16, 40));
             Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
-            pix.overlay_cpu(text_pixels, ivec2(pixel.x - text_pixels.wh.x / 2, pixel.y - text_pixels.wh.y / 2), letter_opa);
+            pix.overlay_cpu(text_pixels, floor(pixel - text_pixels.wh / 2), letter_opa);
         }
         i++;
     }
+    d_pixels.copy_to_host(pix.pixels.data(), pix.wh);
     CoordinateScene::draw();
 }
 

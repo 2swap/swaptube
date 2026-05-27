@@ -3,10 +3,10 @@
 #include <complex>
 #include <cmath>
 #include <cstdio>
-#include "../../Host_Device_Shared/vec.h"
-#include "../common_graphics.cuh"
-#include "../find_roots.cuh"
-#include "../../Host_Device_Shared/helpers.h"
+#include "../Host_Device_Shared/vec.h"
+#include "common_graphics.cuh"
+#include "find_roots.cuh"
+#include "../Host_Device_Shared/helpers.h"
 
 __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
     cuFloatComplex result = make_cuFloatComplex(1.0f, 0.0f);
@@ -17,9 +17,10 @@ __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
 }
 
 // Make a circular gradient on a pixel buffer
-__device__ void d_gradient_circle(float cx, float cy, float radius, float red, float green, float blue, float* d_alpha, float* d_red, float* d_green, float* d_blue, int width, int height, float opa=1.0f) {
+__device__ void d_gradient_circle(float cx, float cy, float radius, float red, float green, float blue,
+        float* d_alpha, float* d_red, float* d_green, float* d_blue, const Cuda::ivec2 wh, float opa=1.0f) {
     // breakout if any part of the circle is outside of screen
-    if (cx < 0 || cx >= width || cy < 0 || cy >= height)
+    if (cx < 0 || cx >= wh.x || cy < 0 || cy >= wh.y)
         return;
     float radius2 = radius * radius;
     for (int x = cx - radius; x < cx + radius; x++) {
@@ -29,18 +30,18 @@ __device__ void d_gradient_circle(float cx, float cy, float radius, float red, f
             float dist2 = (sdx + sdy) / radius2;
             if (dist2 < 1.0f) {
                 float final_opa = opa / (.025 + 160 * dist2 * dist2);
-                if (x >= 0 && x < width && y >= 0 && y < height) {
-                    atomicAdd(&d_alpha[y * width + x],         final_opa);
-                    atomicAdd(&d_red  [y * width + x], red   * final_opa);
-                    atomicAdd(&d_green[y * width + x], green * final_opa);
-                    atomicAdd(&d_blue [y * width + x], blue  * final_opa);
+                if (x >= 0 && x < wh.x && y >= 0 && y < wh.y) {
+                    atomicAdd(&d_alpha[y * wh.x + x],         final_opa);
+                    atomicAdd(&d_red  [y * wh.x + x], red   * final_opa);
+                    atomicAdd(&d_green[y * wh.x + x], green * final_opa);
+                    atomicAdd(&d_blue [y * wh.x + x], blue  * final_opa);
                 }
             }
         }
     }
 }
 
-__global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green, float* d_blue, int w, int h, cuFloatComplex c1, cuFloatComplex c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity) {
+__global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green, float* d_blue, const Cuda::ivec2 wh, cuFloatComplex c1, cuFloatComplex c2, float terms, const Cuda::vec2 lx_ty, const Cuda::vec2 rx_by, float radius, float opacity) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
     unsigned int ceil_terms = ceil(terms);
     unsigned int total = 1 << ceil_terms; // total number of polynomials
@@ -83,8 +84,8 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
     // Plot the roots
     for (int i = 0; i < degree; i++) {
         Cuda::vec2 point(cuCrealf(roots[i]), cuCimagf(roots[i]));
-        Cuda::vec2 pixel = point_to_pixel_in_screen(point, Cuda::vec2(lx, ty), Cuda::vec2(rx, by), Cuda::vec2(w, h));
-        d_gradient_circle(pixel.x, pixel.y, radius, red, green, blue, d_alpha, d_red, d_green, d_blue, w, h, opacity);
+        Cuda::vec2 pixel = point_to_pixel_in_screen(point, lx_ty, rx_by, wh);
+        d_gradient_circle(pixel.x, pixel.y, radius, red, green, blue, d_alpha, d_red, d_green, d_blue, wh, opacity);
     }
 }
 
@@ -92,9 +93,10 @@ __device__ float sigmoid(float x) {
     return 3*x*x-2*x*x*x;
 }
 
-__global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, float* d_red, float* d_green, float* d_blue, int w, int h, float brightness) {
+__global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, float* d_red, float* d_green, float* d_blue,
+        const Cuda::ivec2 wh, float brightness) {
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    unsigned int total = w * h;
+    unsigned int total = wh.x * wh.y;
 
     if (idx >= total) return;
 
@@ -117,23 +119,23 @@ __global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, fl
 }
 
 extern "C" void draw_root_fractal(
-    unsigned int* pixels,
-    int w,
-    int h,
-    std::complex<float> c1,
-    std::complex<float> c2,
+    uint32_t* d_pixels,
+    const Cuda::ivec2& wh,
+    const std::complex<float>& c1,
+    const std::complex<float>& c2,
     float terms,
-    float lx, float ty,
-    float rx, float by,
+    const Cuda::vec2& lx_ty,
+    const Cuda::vec2& rx_by,
     float radius, float opacity, float brightness
 ) {
     int total = 1 << int(ceil(terms));
 
     float *d_alpha, *d_red, *d_green, *d_blue;
-    cudaMalloc(&d_alpha, w * h * sizeof(float));
-    cudaMalloc(&d_red, w * h * sizeof(float));
-    cudaMalloc(&d_green, w * h * sizeof(float));
-    cudaMalloc(&d_blue, w * h * sizeof(float));
+    size_t alloc_size = wh.x * wh.y * sizeof(float);
+    cudaMalloc(&d_alpha, alloc_size);
+    cudaMalloc(&d_red, alloc_size);
+    cudaMalloc(&d_green, alloc_size);
+    cudaMalloc(&d_blue, alloc_size);
 
     cuFloatComplex dc1 = make_cuFloatComplex(c1.real(), c1.imag());
     cuFloatComplex dc2 = make_cuFloatComplex(c2.real(), c2.imag());
@@ -141,22 +143,16 @@ extern "C" void draw_root_fractal(
     int threadsPerBlock = 256;
     int blocks = (total + threadsPerBlock - 1) / threadsPerBlock;
 
-    root_fractal_kernel<<<blocks, threadsPerBlock>>>(d_alpha, d_red, d_green, d_blue, w, h, dc1, dc2, terms, lx, ty, rx, by, radius, opacity);
+    root_fractal_kernel<<<blocks, threadsPerBlock>>>(d_alpha, d_red, d_green, d_blue, wh, dc1, dc2, terms, lx_ty, rx_by, radius, opacity);
     cudaDeviceSynchronize();
 
-    unsigned int* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(unsigned int));
-
     int finalize_threadsPerBlock = 256;
-    int finalize_blocks = (w * h + finalize_threadsPerBlock - 1) / finalize_threadsPerBlock;
-    finalize_color_kernel<<<finalize_blocks, finalize_threadsPerBlock>>>(d_pixels, d_alpha, d_red, d_green, d_blue, w, h, brightness);
+    int finalize_blocks = (wh.x * wh.y + finalize_threadsPerBlock - 1) / finalize_threadsPerBlock;
+    finalize_color_kernel<<<finalize_blocks, finalize_threadsPerBlock>>>(d_pixels, d_alpha, d_red, d_green, d_blue, wh, brightness);
     cudaDeviceSynchronize();
 
     cudaFree(d_alpha);
     cudaFree(d_red);
     cudaFree(d_green);
     cudaFree(d_blue);
-
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-    cudaFree(d_pixels);
 }

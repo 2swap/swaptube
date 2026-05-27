@@ -7,10 +7,11 @@ typedef uint64_t Bitboard;
 
 class ConwayGrid : public DataObject {
 public:
-    int w_bitboards; int h_bitboards;
+    ivec2 grid_wh_bitboards;
     Bitboard* d_board;
     Bitboard* d_board_2;
-    ConwayGrid(const int width, const int height);
+    ConwayGrid(const ivec2& wh_bitboards);
     ~ConwayGrid();
     void tick(const StateReturn& state);
+    void iterate();
 };
