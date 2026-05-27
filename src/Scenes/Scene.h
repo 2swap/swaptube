@@ -43,15 +43,15 @@ public:
 
     void query(Pixels*& p);
 
+    double get_geom_mean_size();
+    int get_width();
+    int get_height();
+    vec2 get_width_height();
+    int get_pixels_size();
+
     void render_microblock();
 
     void update_state();
-
-    int get_width() const;
-
-    int get_height() const;
-
-    vec2 get_width_height() const;
 
     void export_frame(const string& filename, int scaledown = 1) const;
 
@@ -67,8 +67,6 @@ protected:
     Pixels pix;
     StateReturn state;
     bool has_ever_rendered = false;
-
-    double get_geom_mean_size() const;
 
     void add_data_object(DataObject* data_object);
 

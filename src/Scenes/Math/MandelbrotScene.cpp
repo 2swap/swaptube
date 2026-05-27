@@ -5,7 +5,7 @@
 using std::complex;
 
 extern "C" void mandelbrot_render(
-    const int width, const int height,
+    const ivec2 wh,
     const vec2 lx_ty,
     const vec2 rx_by,
     const complex<float> seed_z, const complex<float> seed_x, const complex<float> seed_c,
@@ -14,12 +14,12 @@ extern "C" void mandelbrot_render(
     float gradation,
     float phase_shift,
     unsigned int internal_color,
-    unsigned int* depths
+    unsigned int* d_colors
 );
 
-MandelbrotScene::MandelbrotScene(const vec2& dimensions) : CoordinateScene(dimensions) {
+MandelbrotScene::MandelbrotScene(const vec2& dimensions) : CoordinateScene(dimensions), d_pixels(get_pixels_size()) {
     manager.set({
-        {"max_iterations", "32"},
+        {"max_iterations", "200"},
         {"seed_z_r", "0"},
         {"seed_z_i", "0"},
         {"seed_x_r", "2"},
@@ -50,7 +50,7 @@ void MandelbrotScene::draw() {
     complex<float> seed_z(state["seed_z_r"], state["seed_z_i"]);
     complex<float> seed_x(state["seed_x_r"], state["seed_x_i"]);
     complex<float> seed_c(state["seed_c_r"], state["seed_c_i"]);
-    mandelbrot_render(pix.wh.x, pix.wh.y,
+    mandelbrot_render(pix.wh,
                       vec2(state["left_x"], state["top_y"]),
                       vec2(state["right_x"], state["bottom_y"]),
                       seed_z, seed_x, seed_c,
@@ -59,8 +59,9 @@ void MandelbrotScene::draw() {
                       state["gradation"],
                       state["phase_shift"],
                       OPAQUE_BLACK,
-                      pix.pixels.data()
+                      d_pixels.get_ptr()
     );
+    d_pixels.copy_to_host(pix.pixels.data(), pix.wh);
     if(state["point_path_length"] > 0) {
         // TODO convert to use CoordinateSceneWithTrail
         int startcol = 0xffff0000;

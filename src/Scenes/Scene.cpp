@@ -4,6 +4,9 @@
 #include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
 
+extern "C" uint32_t* cuda_alloc_pixels_on_device(int width, int height);
+extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int width, int height, uint32_t* d_pixels);
+
 int remaining_microblocks_in_macroblock = 0;
 int remaining_frames_in_macroblock = 0;
 int total_microblocks_in_macroblock = 0;
@@ -152,15 +155,34 @@ void Scene::update_state() {
     if(global_identifier.size() > 0) publish_global();
 }
 
-int Scene::get_width() const{
+int Scene::get_width() {
+    manager.evaluate_all();
     // TODO shouldn't this really be the container/parent size, not the video?
     // I have never dealt with doubly nested subscenes so I think this has never been an issue...
     return get_video_width_pixels() * manager.respond_to_query({"w"})["w"];
 }
 
-int Scene::get_height() const{
+int Scene::get_height() {
+    manager.evaluate_all();
     return get_video_height_pixels() * manager.respond_to_query({"h"})["h"];
 }
+
+vec2 Scene::get_width_height() {
+    manager.evaluate_all();
+    auto response = manager.respond_to_query({"w", "h"});
+    return vec2(get_video_width_pixels() * response["w"], get_video_height_pixels() * response["h"]);
+}
+
+int Scene::get_pixels_size() {
+    manager.evaluate_all();
+    auto response = manager.respond_to_query({"w", "h"});
+    int width = get_video_width_pixels() * response["w"];
+    int height = get_video_height_pixels() * response["h"];
+    cout << "Calculated pixel size: " << width << "x" << height << " = " << width * height << endl;
+    return width * height;
+}
+
+double Scene::get_geom_mean_size() { return geom_mean(get_width(),get_height()); }
 
 void Scene::export_frame(const string& filename, int scaledown) const {
     pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
@@ -175,13 +197,6 @@ void Scene::set_global_identifier(const string& id){
     // Update_state does this for us.
     update_state();
 }
-
-vec2 Scene::get_width_height() const{
-    auto response = manager.respond_to_query({"w", "h"});
-    return vec2(get_video_width_pixels() * response["w"], get_video_height_pixels() * response["h"]);
-}
-
-double Scene::get_geom_mean_size() const{ return geom_mean(get_width(),get_height()); }
 
 void Scene::publish_global() {
     const unordered_map<string, double>& s = stage_publish_to_global();
