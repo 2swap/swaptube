@@ -1,9 +1,9 @@
 #include "BeaverGridScene.h"
 
-extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* pixels, int w, int h, vec2 lx_ty, vec2 rx_by, int max_steps);
+extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* pixels, const ivec2& wh, const vec2& lx_ty, const vec2& rx_by, int max_steps);
 
 BeaverGridScene::BeaverGridScene(const int num_states, const int num_symbols, const vec2& dimension)
-: CoordinateScene(dimension) {
+: CoordinateScene(dimension), d_pixels(get_pixels_size()) {
     manager.set("max_steps", "0");
     manager.set("ticks_opacity", "1");
     manager.set("num_states", std::to_string(num_states));
@@ -13,11 +13,12 @@ BeaverGridScene::BeaverGridScene(const int num_states, const int num_symbols, co
 void BeaverGridScene::draw() {
     beaver_grid_cuda(
         state["num_states"], state["num_symbols"],
-        pix.pixels.data(), pix.wh.x, pix.wh.y,
+        d_pixels.get_ptr(), pix.wh,
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
         state["max_steps"]
     );
+    d_pixels.copy_to_host(pix.pixels.data(), pix.wh);
 
     CoordinateScene::draw();
 }

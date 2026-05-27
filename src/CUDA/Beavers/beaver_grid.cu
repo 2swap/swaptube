@@ -37,16 +37,16 @@ __device__ void decode_turing_machine_index(int x, int y, int grid_w, int grid_h
     }
 }
 
-__global__ void beaver_grid_kernel(int num_states, int num_symbols, unsigned int* pixels, int w, int h, int grid_w, int grid_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
+__global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pixels, const Cuda::ivec2& wh, int grid_w, int grid_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
 
-    int pixel_index = idy * w + idx;
-    if(idx >= w || idy >= h) {
+    int pixel_index = idy * wh.x + idx;
+    if(idx >= wh.x || idy >= wh.y) {
         return;
     }
 
-    Cuda::vec2 point_vec = Cuda::pixel_to_point_in_screen(Cuda::vec2(idx, idy), lx_ty, rx_by, Cuda::vec2(w, h));
+    Cuda::vec2 point_vec = Cuda::pixel_to_point_in_screen(Cuda::vec2(idx, idy), lx_ty, rx_by, wh);
     //point_vec *= Cuda::vec2(grid_w, grid_h);
     point_vec += Cuda::vec2(grid_w * .5, grid_h * .5); // Centering
 
@@ -91,8 +91,8 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, unsigned int
     pixels[pixel_index] = halted ? d_rainbow(atan_steps) : 0xff000000;
 }
 
-extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* pixels, int w, int h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
-    unsigned int* d_pixels;
+extern "C" void beaver_grid_cuda(int num_states, int num_symbols, uint32_t* pixels, const Cuda::ivec2& wh, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, int max_steps) {
+    uint32_t* d_pixels;
     int w_base = (num_states + 1);
     int h_base = 2 * num_symbols;
 // given by (2m(n+1))^(mn)
@@ -103,12 +103,12 @@ extern "C" void beaver_grid_cuda(int num_states, int num_symbols, unsigned int* 
         grid_w *= w_base;
         grid_h *= h_base;
     }
-    size_t size = w * h * sizeof(unsigned int);
+    size_t size = wh.x * wh.y * sizeof(uint32_t);
     cudaMalloc(&d_pixels, size);
     dim3 blockSize(16, 16);
-    dim3 gridSize((w + blockSize.x - 1) / blockSize.x, (h + blockSize.y - 1) / blockSize.y);
+    dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
 
-    beaver_grid_kernel<<<gridSize, blockSize>>>(num_states, num_symbols, d_pixels, w, h, grid_w, grid_h, lx_ty, rx_by, max_steps);
+    beaver_grid_kernel<<<gridSize, blockSize>>>(num_states, num_symbols, d_pixels, wh, grid_w, grid_h, lx_ty, rx_by, max_steps);
     cudaDeviceSynchronize();
     cudaMemcpy(pixels, d_pixels, size, cudaMemcpyDeviceToHost);
     cudaFree(d_pixels);
