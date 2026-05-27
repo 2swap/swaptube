@@ -3,9 +3,9 @@
 #include "ManifoldScene.h"
 
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const ivec2& wh,
     const ManifoldData* manifolds, const int num_manifolds,
-    const vec3 camera_pos, const quat camera_direction,
+    const vec3& camera_pos, const quat& camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
     const uint32_t* tex_pixels, const int tex_w, const int tex_h
@@ -97,9 +97,8 @@ void ManifoldScene::draw() {
     }
 
     cuda_render_manifold(
-        pix.pixels.data(),
-        pix.wh.x,
-        pix.wh.y,
+        d_pixels.get_ptr(),
+        pix.wh,
         manifolds,
         manifold_names.size(),
         camera_pos,
@@ -112,6 +111,7 @@ void ManifoldScene::draw() {
         texture_w,
         texture_h
     );
+
     ThreeDimensionScene::draw();
 }
 
