@@ -167,10 +167,10 @@ int Scene::get_height() {
     return get_video_height_pixels() * manager.respond_to_query({"h"})["h"];
 }
 
-vec2 Scene::get_width_height() {
+ivec2 Scene::get_width_height() {
     manager.evaluate_all();
     auto response = manager.respond_to_query({"w", "h"});
-    return vec2(get_video_width_pixels() * response["w"], get_video_height_pixels() * response["h"]);
+    return ivec2(get_video_width_pixels() * response["w"], get_video_height_pixels() * response["h"]);
 }
 
 int Scene::get_pixels_size() {

@@ -6,15 +6,13 @@
 
 __global__ void render_surface_kernel(
     // d_pixels is the array which we will plop a surface on. The surface is bounded by (x1,y1) on the top left and (x2,y2) on the top right.
-    unsigned int* d_pixels_dev,
+    uint32_t* d_pixels,
     int x1,
     int y1,
-    int plot_w,
-    int plot_h,
+    const Cuda::ivec2 plot_wh,
     int pixels_w,
-    unsigned int* d_surface,
-    int surface_w,
-    int surface_h,
+    uint32_t* d_surface,
+    const Cuda::ivec2 surface_wh,
     float opacity,
     Cuda::vec3 camera_pos,
     Cuda::quat camera_direction,
@@ -29,14 +27,10 @@ __global__ void render_surface_kernel(
     float halfheight,
     float over_w_fov) {
 
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int num_pixels_to_render = plot_w * plot_h;
+    int px = blockIdx.x * blockDim.x + threadIdx.x;
+    int py = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (idx >= num_pixels_to_render) return;
-
-    // Compute pixel coordinates in plot
-    int px = idx % plot_w + x1;
-    int py = idx / plot_w + y1;
+    if (px >= plot_wh.x || py >= plot_wh.y) return;
 
     // Compute the ray direction from the camera through the screen point
     Cuda::vec3 ray_dir((px - halfwidth) * over_w_fov, (py - halfheight) * over_w_fov, 1.0f);
@@ -58,24 +52,21 @@ __global__ void render_surface_kernel(
     // If this pixel does not intersect the surface, return
     if (surface_coords.x >= 1 || surface_coords.x < 0 || surface_coords.y >= 1 || surface_coords.y < 0)  return;
 
-    int surface_x = surface_coords.x * surface_w;
-    int surface_y = surface_coords.y * surface_h;
+    const Cuda::ivec2 surface_xy = Cuda::ivec2(surface_coords.x * surface_wh.x, surface_coords.y * surface_wh.y);
 
-    unsigned int color = d_surface[surface_x + surface_y * surface_w];
+    uint32_t color = d_surface[surface_xy.x + surface_xy.y * surface_wh.x];
 
-    d_pixels_dev[pixels_index] = d_color_combine(d_pixels_dev[pixels_index], color, opacity);
+    d_pixels[pixels_index] = d_color_combine(d_pixels[pixels_index], color, opacity);
 }
 
 extern "C" void cuda_render_surface(
-    vector<unsigned int>& pix,
+    uint32_t* d_pixels,
     int x1,
     int y1,
-    int plot_w,
-    int plot_h,
+    const Cuda::ivec2& plot_wh,
     int pixels_w,
-    unsigned int* d_surface,
-    int surface_w,
-    int surface_h,
+    uint32_t* h_surface,
+    const Cuda::ivec2& surface_wh,
     float opacity,
     Cuda::vec3 camera_pos,
     Cuda::quat camera_direction,
@@ -91,35 +82,24 @@ extern "C" void cuda_render_surface(
     
     float dotnormcam = Cuda::dot(surface_normal, (surface_center - camera_pos));
 
-    // Allocate memory on the device
-    size_t pixels_size = pix.size() * sizeof(int);
-    unsigned int* d_pixels_dev;
-    cudaMalloc(&d_pixels_dev, pixels_size);
-    cudaMemcpy(d_pixels_dev, pix.data(), pixels_size, cudaMemcpyHostToDevice);
-
-    size_t surface_size = surface_w * surface_h * sizeof(unsigned int);
-    unsigned int* d_surface_dev;
-    cudaMalloc(&d_surface_dev, surface_size);
+    size_t surface_size = surface_wh.x * surface_wh.y * sizeof(uint32_t);
+    uint32_t* d_surface;
+    cudaMalloc(&d_surface, surface_size);
 
     // Copy data to device
-    cudaMemcpy(d_surface_dev, d_surface, surface_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_surface, h_surface, surface_size, cudaMemcpyHostToDevice);
 
     // Define grid and block dimensions
-    int blockSize = 256;
-    int numBlocks = (plot_w * plot_h + blockSize - 1) / blockSize;
+    dim3 blockSize(16, 16);
+    int numBlocks = (plot_wh.x * plot_wh.y + blockSize.x - 1) / blockSize.x;
 
     // Launch the kernel
     render_surface_kernel<<<numBlocks, blockSize>>>(
-        d_pixels_dev, x1, y1, plot_w, plot_h, pixels_w,
-        d_surface_dev, surface_w, surface_h, opacity,
+        d_pixels, x1, y1, plot_wh, pixels_w,
+        d_surface, surface_wh, opacity,
         camera_pos, conjugate(camera_direction),
         dotnormcam, surface_normal, surface_center, surface_pos_x_dir, surface_pos_y_dir, surface_ilr2, surface_iur2, halfwidth, halfheight, over_w_fov
     );
 
-    // Copy results back to host
-    cudaMemcpy(pix.data(), d_pixels_dev, pixels_size, cudaMemcpyDeviceToHost);
-
-    // Free device memory
-    cudaFree(d_pixels_dev);
-    cudaFree(d_surface_dev);
+    cudaFree(d_surface);
 }

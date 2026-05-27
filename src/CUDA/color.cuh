@@ -75,10 +75,10 @@ __device__ __forceinline__ void d_naive_add_pixel(int x, int y, int col, float o
     pixels[idx] = blended;
 }
 
-__device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
-    if (x < 0 || x >= width || y < 0 || y >= height) return;
+__device__ __forceinline__ void d_atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, const Cuda::ivec2& wh) {
+    if (x < 0 || x >= wh.x || y < 0 || y >= wh.y) return;
     opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
-    int idx = y * width + x;
+    int idx = y * wh.x + x;
 
     unsigned int old_pixel = pixels[idx];
     int base = old_pixel;

@@ -47,8 +47,7 @@ __global__ void render_manifold_kernel(
         camera_pos,
         fov,
         geom_mean_size,
-        w,
-        h,
+        Cuda::ivec2(w,h),
         out
     );
     if(behind_camera) return; // Don't render points behind camera

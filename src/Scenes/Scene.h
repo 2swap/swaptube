@@ -46,7 +46,7 @@ public:
     double get_geom_mean_size();
     int get_width();
     int get_height();
-    vec2 get_width_height();
+    ivec2 get_width_height();
     int get_pixels_size();
 
     void render_microblock();

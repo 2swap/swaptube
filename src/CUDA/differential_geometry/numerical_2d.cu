@@ -212,8 +212,7 @@ __global__ void geodesics_2d_kernel(
         camera_pos,
         fov,
         geom_mean_size,
-        w,
-        h,
+        Cuda::ivec2(w, h),
         last_pixel
     );
     for(int i = 0; i < num_steps; ++i) {
@@ -229,8 +228,7 @@ __global__ void geodesics_2d_kernel(
             camera_pos,
             fov,
             geom_mean_size,
-            w,
-            h,
+            Cuda::ivec2(w, h),
             pixel
         );
 
@@ -239,7 +237,7 @@ __global__ void geodesics_2d_kernel(
                 last_pixel.x, last_pixel.y,
                 pixel.x, pixel.y,
                 0xffff0000, opacity, 2,
-                pixels, w, h, false
+                pixels, Cuda::ivec2(w, h), false
             );
         }
 

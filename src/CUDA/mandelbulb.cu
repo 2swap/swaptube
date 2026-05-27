@@ -76,7 +76,7 @@ __global__ void runRaymarch(const Cuda::ivec2 wh, const Cuda::vec3 pos, const Cu
 
     if (pixel_x >= wh.x || pixel_y >= wh.y) {return;}
 
-    Cuda::vec3 rd = Cuda::get_raymarch_vector(Cuda::vec2(pixel_x, pixel_y), wh, fov, camera_orientation);
+    Cuda::vec3 rd = Cuda::get_raymarch_vector(Cuda::ivec2(pixel_x, pixel_y), wh, fov, camera_orientation);
 
     // Raymarches each point
     const Cuda::vec4 rayEnd = raymarch(pos, rd, 5.0, max_raymarch_iters, max_mandelbulb_iters);

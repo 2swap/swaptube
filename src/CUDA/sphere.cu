@@ -10,7 +10,7 @@
 #include "common_graphics.cuh" // Contains fill_circle
 #include <png.h>
 
-extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix, int& out_width, int& out_height) {
+extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix, Cuda::ivec2& out_wh) {
     // Check if the filename already ends with ".png"
     string filename = filename_with_or_without_suffix;
     if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".png") {
@@ -54,8 +54,7 @@ extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix
     // Get image info
     int width = png_get_image_width(png, info);
     int height = png_get_image_height(png, info);
-    out_width = width;
-    out_height = height;
+    out_wh = Cuda::ivec2(width, height);
     png_byte color_type = png_get_color_type(png, info);
     png_byte bit_depth = png_get_bit_depth(png, info);
 
@@ -202,10 +201,10 @@ __device__ __forceinline__ uint32_t cubic_interpolate(uint32_t v0, uint32_t v1, 
     return (a << 24) | (r << 16) | (g << 8) | b;
 }
 
-__device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, int map_width, int map_height, float u, float v) {
+__device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, const Cuda::ivec2& map_wh, float u, float v) {
     // Convert to texture space
-    float x = u * (map_width - 1);
-    float y = v * (map_height - 1);
+    float x = u * (map_wh.x - 1);
+    float y = v * (map_wh.y - 1);
     int x0 = floorf(x);
     int y0 = floorf(y);
     float dx = x - x0;
@@ -214,9 +213,9 @@ __device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, int map_width,
     uint32_t samples[4][4];
     for (int j = -1; j <= 2; j++) {
         for (int i = -1; i <= 2; i++) {
-            int sx = min(max(x0 + i, 0), map_width - 1);
-            int sy = min(max(y0 + j, 0), map_height - 1);
-            samples[j + 1][i + 1] = map[sy * map_width + sx];
+            int sx = min(max(x0 + i, 0), map_wh.x - 1);
+            int sy = min(max(y0 + j, 0), map_wh.y - 1);
+            samples[j + 1][i + 1] = map[sy * map_wh.x + sx];
         }
     }
 
@@ -248,55 +247,49 @@ __device__ __forceinline__ uint32_t lat_long_line(float lat, float lon, float zo
 }
 
 __global__ void render_sphere_kernel(
-    uint32_t* pixels, int width, int height,
+    uint32_t* pixels, const Cuda::ivec2 wh,
     float geom_mean_size,
-    uint32_t* map, int map_width, int map_height,
+    uint32_t* map, const Cuda::ivec2 map_wh,
     const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, float opacity, float texture_latlong)
 {
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= width * height) return;
+    int px = blockIdx.x * blockDim.x + threadIdx.x;
+    int py = blockIdx.y * blockDim.y + threadIdx.y;
+    if (px >= wh.x || py >= wh.y) return;
 
-    int px = idx % width;
-    int py = idx / width;
+    const Cuda::ivec2 pixel(px, py);
 
-    Cuda::vec3 ray_dir = get_raymarch_vector(Cuda::vec2(px, py), Cuda::vec2(width, height), fov, camera_direction);
+    Cuda::vec3 ray_dir = get_raymarch_vector(pixel, wh, fov, conjugate(camera_direction));
     Cuda::vec3 hit_point;
     bool collision = ray_sphere_intersect(camera_pos, ray_dir, hit_point);
-    if(!collision) return;
+    if(!collision) {
+        pixels[pixel.x + wh.x * pixel.y] = 0xff000000;
+        return;
+    }
 
     float u = 0.5f + atan2f(hit_point.x, -hit_point.z) / (2.0f * M_PI);
     float v = 0.5f - asinf(hit_point.y) / M_PI;
     float dist_to_surface = length(camera_pos) - 1.0f;
     uint32_t latlong_color = lat_long_line(v, u, 12.f);
-    uint32_t map_color = bicubic_sample(map, map_width, map_height, u, v);
+    uint32_t map_color = bicubic_sample(map, map_wh, u, v);
     // TODO we copy the giant texture to the GPU even if we might not use it. We should only copy when texture_latlong > 0
     uint32_t color = d_colorlerp(map_color, latlong_color, texture_latlong);
-    pixels[idx] = (color & 0x00FFFFFF) | ((uint32_t)(opacity * 255) << 24);
+    pixels[pixel.x + wh.x * pixel.y] = (color & 0x00FFFFFF) | ((uint32_t)(opacity * 255) << 24);
 }
 
 extern "C" void cuda_render_sphere(
-    uint32_t* h_pixels, int width, int height,
+    uint32_t* d_pixels, const Cuda::ivec2& wh,
     float geom_mean_size,
-    uint32_t* d_map, int map_width, int map_height,
+    uint32_t* d_map, const Cuda::ivec2& map_wh,
     const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float opacity, float texture_latlong)
 {
-    uint32_t* d_pixels = nullptr;
-    size_t pix_sz = width * height * sizeof(uint32_t);
-
-    cudaMalloc((void**)&d_pixels, pix_sz);
-    cudaMemcpy(d_pixels, h_pixels, pix_sz, cudaMemcpyHostToDevice);
-
-    int blockSize = 256;
-    int numBlocks = (width * height + blockSize - 1) / blockSize;
-    render_sphere_kernel<<<numBlocks, blockSize>>>(
-        d_pixels, width, height,
+    dim3 blockSize(16, 16);
+    dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
+    render_sphere_kernel<<<gridSize, blockSize>>>(
+        d_pixels, wh,
         geom_mean_size,
-        d_map, map_width, map_height,
+        d_map, map_wh,
         camera_direction, camera_pos, fov, opacity, texture_latlong);
     cudaDeviceSynchronize();
-
-    cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
-    cudaFree(d_pixels);
 }
 
 extern "C" void cuda_free_map(uint32_t* d_map)

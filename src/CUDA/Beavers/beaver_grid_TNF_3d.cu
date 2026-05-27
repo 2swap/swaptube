@@ -400,9 +400,9 @@ __global__ void beaver_raytrace_kernel(unsigned int* pixels, int w, int h, Cuda:
     r.highlight = highlight - /*raypos*/ target;
     r.highlight_intensity = highlight_intensity;
 
-    Cuda::vec2 wh(w, h);
-    r.raydir = Cuda::get_raymarch_vector(Cuda::vec2(pos_x, pos_y), wh, fov, camera);
-    Cuda::vec3 turn = Cuda::get_raymarch_vector(Cuda::vec2(pos_x+1, pos_y), wh, fov, camera) - r.raydir;
+    Cuda::ivec2 wh(w, h);
+    r.raydir = Cuda::get_raymarch_vector(Cuda::ivec2(pos_x, pos_y), wh, fov, camera);
+    Cuda::vec3 turn = Cuda::get_raymarch_vector(Cuda::ivec2(pos_x+1, pos_y), wh, fov, camera) - r.raydir;
     r.ray_thickness = sqrtf(turn.x * turn.x + turn.y * turn.y + turn.z * turn.z);
     r.raycol = Cuda::vec4(0);
     r.cubcol = Cuda::vec4(0.1, 1, 1, 1);

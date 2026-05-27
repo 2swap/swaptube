@@ -10,7 +10,7 @@
 #include "common_graphics.cuh" // Contains fill_circle
 
 __global__ void render_points_kernel(
-    unsigned int* pixels, int width, int height,
+    unsigned int* pixels, const Cuda::ivec2 wh,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* points, int num_points,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
@@ -24,14 +24,14 @@ __global__ void render_points_kernel(
     d_coordinate_to_pixel(
         p.center, behind_camera,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, pixel);
+        geom_mean_size, wh, pixel);
     if (behind_camera) return;
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 140.0f;
-    Cuda::d_fill_circle(pixel.x, pixel.y, dot_size, p.color, pixels, width, height, points_opacity * p.opacity);
+    Cuda::d_fill_circle(pixel.x, pixel.y, dot_size, p.color, pixels, wh, points_opacity * p.opacity);
 }
 
 __global__ void render_lines_kernel(
-    unsigned int* pixels, int width, int height,
+    unsigned int* pixels, const Cuda::ivec2 wh,
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* lines, int num_lines,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
@@ -45,32 +45,27 @@ __global__ void render_lines_kernel(
     Cuda::d_coordinate_to_pixel(
         ln.start, behind_camera1,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, p1);
+        geom_mean_size, wh, p1);
     if (behind_camera1) return;
     Cuda::d_coordinate_to_pixel(
         ln.end,   behind_camera2,
         camera_direction, camera_pos, fov,
-        geom_mean_size, width, height, p2);
+        geom_mean_size, wh, p2);
     if (behind_camera2) return;
     Cuda::bresenham(
         p1.x, p1.y, p2.x, p2.y,
         ln.color, lines_opacity * ln.opacity, thickness,
-        pixels, width, height, ln.is_dashed);
+        pixels, wh, ln.is_dashed);
 }
 
 extern "C" void render_points_on_gpu(
-    unsigned int* h_pixels, int width, int height,
+    unsigned int* d_pixels, const Cuda::ivec2& wh,
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* h_points, int num_points,
-    Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov)
 {
-    unsigned int* d_pixels = nullptr;
     Cuda::Point*  d_points = nullptr;
-    size_t pix_sz = width * height * sizeof(unsigned int);
     size_t pt_sz  = num_points * sizeof(Cuda::Point);
-
-    cudaMalloc((void**)&d_pixels, pix_sz);
-    cudaMemcpy(d_pixels, h_pixels, pix_sz, cudaMemcpyHostToDevice);
 
     cudaMalloc((void**)&d_points, pt_sz);
     cudaMemcpy(d_points, h_points, pt_sz, cudaMemcpyHostToDevice);
@@ -78,30 +73,24 @@ extern "C" void render_points_on_gpu(
     int blockSize = 256;
     int numBlocks = (num_points + blockSize - 1) / blockSize;
     render_points_kernel<<<numBlocks, blockSize>>>(
-        d_pixels, width, height,
+        d_pixels, wh,
         geom_mean_size, points_opacity, points_radius_multiplier,
         d_points, num_points,
         camera_direction, camera_pos, fov);
     cudaDeviceSynchronize();
 
-    cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
-    cudaFree(d_pixels);
+    // TODO we don't really need to copy these back and forth every frame...
     cudaFree(d_points);
 }
 
 extern "C" void render_lines_on_gpu(
-    unsigned int* h_pixels, int width, int height,
+    unsigned int* d_pixels, const Cuda::ivec2& wh,
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* h_lines, int num_lines,
-    Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov)
 {
-    unsigned int* d_pixels = nullptr;
-    Cuda::Line*         d_lines  = nullptr;
-    size_t pix_sz = width * height * sizeof(unsigned int);
+    Cuda::Line* d_lines  = nullptr;
     size_t ln_sz  = num_lines * sizeof(Cuda::Line);
-
-    cudaMalloc((void**)&d_pixels, pix_sz);
-    cudaMemcpy(d_pixels, h_pixels, pix_sz, cudaMemcpyHostToDevice);
 
     cudaMalloc((void**)&d_lines, ln_sz);
     cudaMemcpy(d_lines, h_lines, ln_sz, cudaMemcpyHostToDevice);
@@ -109,13 +98,11 @@ extern "C" void render_lines_on_gpu(
     int blockSize = 256;
     int numBlocks = (num_lines + blockSize - 1) / blockSize;
     render_lines_kernel<<<numBlocks, blockSize>>>(
-        d_pixels, width, height,
+        d_pixels, wh,
         geom_mean_size, thickness, lines_opacity,
         d_lines, num_lines,
         camera_direction, camera_pos, fov);
     cudaDeviceSynchronize();
 
-    cudaMemcpy(h_pixels, d_pixels, pix_sz, cudaMemcpyDeviceToHost);
-    cudaFree(d_pixels);
     cudaFree(d_lines);
 }
