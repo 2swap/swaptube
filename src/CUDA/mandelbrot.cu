@@ -188,11 +188,11 @@ __global__ void mandelbrot_kernel(
 
 // Host function to launch the kernel
 extern "C" void mandelbrot_render(
-    const Cuda::ivec2 wh,
-    const Cuda::vec2 lx_ty,
-    const Cuda::vec2 rx_by,
-    const std::complex<float> seed_z, const std::complex<float> seed_x, const std::complex<float> seed_c,
-    const Cuda::vec3 pixel_parameter_multipliers,
+    const Cuda::ivec2& wh,
+    const Cuda::vec2& lx_ty,
+    const Cuda::vec2& rx_by,
+    const std::complex<float>& seed_z, const std::complex<float>& seed_x, const std::complex<float>& seed_c,
+    const Cuda::vec3& pixel_parameter_multipliers,
     int max_iterations,  // Pass max_iterations as a parameter
     float gradation,
     float phase_shift,

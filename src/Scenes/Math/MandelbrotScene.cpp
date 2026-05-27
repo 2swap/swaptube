@@ -5,11 +5,11 @@
 using std::complex;
 
 extern "C" void mandelbrot_render(
-    const ivec2 wh,
-    const vec2 lx_ty,
-    const vec2 rx_by,
-    const complex<float> seed_z, const complex<float> seed_x, const complex<float> seed_c,
-    const vec3 pixel_parameter_multipliers,
+    const ivec2& wh,
+    const vec2& lx_ty,
+    const vec2& rx_by,
+    const complex<float>& seed_z, const complex<float>& seed_x, const complex<float>& seed_c,
+    const vec3& pixel_parameter_multipliers,
     int max_iterations,
     float gradation,
     float phase_shift,

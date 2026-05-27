@@ -70,13 +70,13 @@ __device__ Cuda::vec3 getNormal(const Cuda::vec3& pos, int max_mandelbulb_iters)
     ));
 }
 
-__global__ void runRaymarch(const int width, const int height, const Cuda::vec3 pos, const Cuda::quat camera_orientation, float fov, const Cuda::vec3 lightPos, int max_raymarch_iters, int max_mandelbulb_iters, unsigned int* colors){
+__global__ void runRaymarch(const Cuda::ivec2 wh, const Cuda::vec3 pos, const Cuda::quat camera_orientation, float fov, const Cuda::vec3 lightPos, int max_raymarch_iters, int max_mandelbulb_iters, unsigned int* colors){
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
     int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
 
-    if (pixel_x >= width || pixel_y >= height) {return;}
+    if (pixel_x >= wh.x || pixel_y >= wh.y) {return;}
 
-    Cuda::vec3 rd = Cuda::get_raymarch_vector(Cuda::vec2(pixel_x, pixel_y), Cuda::vec2(width, height), fov, camera_orientation);
+    Cuda::vec3 rd = Cuda::get_raymarch_vector(Cuda::vec2(pixel_x, pixel_y), wh, fov, camera_orientation);
 
     // Raymarches each point
     const Cuda::vec4 rayEnd = raymarch(pos, rd, 5.0, max_raymarch_iters, max_mandelbulb_iters);
@@ -95,28 +95,19 @@ __global__ void runRaymarch(const int width, const int height, const Cuda::vec3 
     }
 
     // Writes color to image buffer array
-    colors[pixel_y * width + pixel_x] = color;
+    colors[pixel_y * wh.x + pixel_x] = color;
 }
 
 extern "C" void render_raymarch(
-    const int width, const int height,
+    const Cuda::ivec2& wh,
     const Cuda::vec3& pos, const Cuda::quat& camera, float fov,
     const Cuda::vec3& lightPos,
     const int max_raymarch_iters, const int max_mandelbulb_iters,
-    unsigned int* colors
+    uint32_t* d_colors
 ){
-    unsigned int* d_colors;
-
-    // Allocates device memory for color array (image buffer)
-    cudaMalloc(&d_colors, width * height * sizeof(unsigned int)); 
-
     // Defines thread and block sizes for kernel launch
     dim3 threads(16, 16);
-    dim3 block((width + threads.x - 1) / threads.x, (height + threads.y - 1) / threads.y);
+    dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    runRaymarch<<<block, threads>>>(width, height, pos, normalize(camera), fov, lightPos, max_raymarch_iters, max_mandelbulb_iters, d_colors);
-
-    cudaMemcpy(colors, d_colors, width * height * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-
-    cudaFree(d_colors);
+    runRaymarch<<<block, threads>>>(wh, pos, normalize(camera), fov, lightPos, max_raymarch_iters, max_mandelbulb_iters, d_colors);
 }

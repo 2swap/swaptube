@@ -1,14 +1,14 @@
 #include "MandelbulbScene.h"
 
 extern "C" void render_raymarch(
-    const int width, const int height,
+    const ivec2& wh,
     const vec3& pos, const quat& camera, float fov,
     const vec3& lightPos,
     const int max_raymarch_iterations, const int max_mandelbulb_iterations,
     unsigned int* colors
 );
 
-MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions){
+MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions), d_pixels(get_pixels_size()) {
     manager.set({
         {"x", "0"},
         {"y", "0"},
@@ -23,7 +23,7 @@ MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions){
         {"light_y", "4"}, 
         {"light_z", "-2"}, 
         {"max_raymarch_iterations", "127"},
-        {"max_mandelbulb_iterations", "5"}
+        {"max_mandelbulb_iterations", "10"}
     });
 };
 
@@ -35,7 +35,7 @@ void MandelbulbScene::draw(){
     const vec3 focus_position(state["x"], state["y"], state["z"]);
     const quat camera_quat = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
     const vec3 camera_pos = focus_position + rotate_vector(vec3(0,0,-state["d"]), camera_quat);
-    render_raymarch(pix.wh.x, pix.wh.y,
+    render_raymarch(pix.wh,
         camera_pos, camera_quat,
         state["fov"], 
         vec3(state["light_x"], state["light_y"], state["light_z"]), 

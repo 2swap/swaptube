@@ -77,7 +77,7 @@ __device__ __forceinline__ Cuda::vec3 get_raymarch_vector(
     rotated.x = (pixel.x - wh.x * 0.5f) * scale;
     rotated.y = -(pixel.y - wh.y * 0.5f) * scale;
     rotated.z = 1.0f;
-    return rotate_vector(rotated, conjugate(camera_orientation));
+    return rotate_vector(rotated, camera_orientation);
 }
 
 }
