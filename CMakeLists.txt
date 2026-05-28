@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXE_LINKER_FLAGS "-fuse-ld=lld")
 message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
 project(swaptube LANGUAGES CXX)
 message(STATUS "Project '${PROJECT_NAME}' initialized")
@@ -80,9 +81,6 @@ endif()
 add_compile_options(-fdiagnostics-color=always)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${ACTIVE_PROJECT_SOURCE} ${GPU_SOURCES})
-target_link_directories(${PROJECT_NAME} BEFORE PUBLIC
-    /usr/lib/gcc/x86_64-linux-gnu/15
-)
 message(STATUS "Executable target ${PROJECT_NAME} added")
 
 target_include_directories(${PROJECT_NAME} PRIVATE
