@@ -161,7 +161,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake -G Ninja .. -DUSE_HIP="${USE_HIP}"
+    CC=gcc-15 CXX=g++-15 cmake -G Ninja .. -DUSE_HIP="${USE_HIP}"
 
     echo "go.sh: Compiling..."
     # build the project
