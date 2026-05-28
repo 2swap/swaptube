@@ -80,6 +80,9 @@ endif()
 add_compile_options(-fdiagnostics-color=always)
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${ACTIVE_PROJECT_SOURCE} ${GPU_SOURCES})
+target_link_directories(${PROJECT_NAME} BEFORE PUBLIC
+    /usr/lib/gcc/x86_64-linux-gnu/15
+)
 message(STATUS "Executable target ${PROJECT_NAME} added")
 
 target_include_directories(${PROJECT_NAME} PRIVATE
