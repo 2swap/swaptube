@@ -37,6 +37,7 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
         {"dimensions", "3"},
         {"mirror_force", "0"},
         {"edge_weights_size", "0"},
+        {"node_labels_size", "1"},
         {"midpoint_multiplier", "1"},
         {"q1", "1 {t} 12 / sin <dimensions> 2 - lerp"},
         {"qi", "0"},
@@ -133,7 +134,7 @@ void GraphScene::draw(){
         if (nrd.label_size > 0.1 && nrd.label != "") {
             bool behind_camera = false;
             vec2 pos = coordinate_to_pixel(node.position, behind_camera) + label_offset * get_width_height();
-            vec2 dim = label_size * get_width_height() * nrd.label_size;
+            vec2 dim = label_size * get_width_height() * nrd.label_size * state["node_labels_size"];
             write_text(labels, latex_color(label_color, nrd.label), pos, dim, 1);
         }
 
@@ -197,6 +198,6 @@ void GraphScene::draw(){
 
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "mirror_force", "edge_weights_size", "midpoint_multiplier"});
+    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "mirror_force", "edge_weights_size", "midpoint_multiplier", "node_labels_size"});
     return s;
 }

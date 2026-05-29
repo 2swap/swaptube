@@ -258,6 +258,15 @@ void ThreeDimensionScene::draw() {
             camera_direction, camera_pos, fov, globe_opacity, state["texture_or_latlong"]
         );
     }
+    else {
+        // TODO hack, fix
+        cuda_render_sphere(
+            d_pixels.get_ptr(), pix.wh,
+            get_geom_mean_size(),
+            d_map, map_wh,
+            camera_direction, camera_pos, fov, 0, state["texture_or_latlong"]
+        );
+    }
 
     // Render surfaces via their CUDA integration.
     if (state["surfaces_opacity"] > 0.001) {

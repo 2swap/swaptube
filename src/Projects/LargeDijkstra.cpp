@@ -89,6 +89,7 @@ void render_video() {
         {"globe_opacity", "1"},
         {"d", ".07"},
         {"points_opacity", "0"},
+        {"points_radius_multiplier", "1.3"},
         {"lines_opacity", "0"},
     });
 
@@ -142,9 +143,9 @@ void render_video() {
 
     int chunk = 50;
     gs->manager.transition(MACRO, "d", ".004");
-    stage_macroblock(FileBlock("Dijkstra’s algorithm checks all the ten minute journeys,"), chunk * 2);
+    stage_macroblock(FileBlock("Dijkstra’s algorithm checks all the ten kilometer journeys,"), chunk * 2);
     double max_dist = 0;
-    double increment = 7 * 50. / chunk;
+    double increment = 9 * 50. / chunk;
     bool found_goal = false;
     for(int i = 0; i < chunk; i++) {
         if(rendering_on() && !found_goal) found_goal = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
@@ -156,7 +157,7 @@ void render_video() {
     }
 
     gs->manager.transition(MACRO, "d", ".007");
-    stage_macroblock(FileBlock("and then all the twenty minute journeys,"), chunk * 2);
+    stage_macroblock(FileBlock("and then all the twenty kilometer journeys,"), chunk * 2);
     for(int i = 0; i < chunk; i++) {
         if(rendering_on()) run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);
         max_dist += increment;
@@ -167,7 +168,7 @@ void render_video() {
     }
 
     bool goal = false;
-    stage_macroblock(FileBlock("and so on until it reaches all the forty minute journeys, including the Zoo."), chunk * 2);
+    stage_macroblock(FileBlock("and so on until it reaches all the 28 kilometer journeys, including the Zoo."), chunk * 2);
     gs->manager.transition(MACRO, "d", ".01");
     while(remaining_microblocks_in_macroblock) {
         if(rendering_on() && !goal) goal = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 0, edge_weights);

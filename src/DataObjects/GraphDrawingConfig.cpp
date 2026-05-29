@@ -281,7 +281,7 @@ void GraphDrawingConfig::tick(const StateReturn& state) {
         int framerate = get_video_framerate_fps();
         for(int i = 0; i < 120; i += framerate) { // Designed for 60fps
             config.splash_radius = sqrt(config.splash_radius*config.splash_radius + .07);
-            config.splash_opacity -= 0.015f;
+            config.splash_opacity -= 0.012f;
         }
     }
     for (auto& [hash, config] : edge_configs) {

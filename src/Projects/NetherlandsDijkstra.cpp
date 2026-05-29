@@ -22,7 +22,7 @@ unordered_map<string, vec2> netherlands_cities = {
     {"Groningen", vec2(53.2194, 6.5665)},
     {"Leeuwarden", vec2(53.2012, 5.7999)},
     {"'s-Hertogenbosch", vec2(51.6978, 5.3037)},
-    {"Tillburg", vec2(51.5555, 5.0913)},
+    {"Tilburg", vec2(51.5555, 5.0913)},
     {"Meppel", vec2(52.7917, 6.1789)},
     {"Veenendaal", vec2(52.0231, 5.3889)},
     {"Almere", vec2(52.3508, 5.2647)},
@@ -33,10 +33,10 @@ unordered_map<string, int> true_city_costs = {
     {"The Hague", 1},
     {"Amsterdam", 6},
     {"Breda", 2},
-    {"Tillburg", 5},
+    {"Tilburg", 5},
     {"Eindhoven", 6},
     {"'s-Hertogenbosch", 4},
-    {"Arnhem", 6},
+    {"Arnhem", 7},
     {"Zwolle", 11},
     {"Emmen", 13},
     {"Groningen", 18},
@@ -50,8 +50,8 @@ unordered_map<string, int> true_city_costs = {
 vector<tuple<string, string, int>> netherlands_edges = {
     {"Rotterdam", "Utrecht", 3},
     {"Rotterdam", "Breda", 2},
-    {"Breda", "Tillburg", 3},
-    {"Tillburg", "Eindhoven", 1},
+    {"Breda", "Tilburg", 3},
+    {"Tilburg", "Eindhoven", 1},
     {"Eindhoven", "'s-Hertogenbosch", 3},
     {"'s-Hertogenbosch", "Utrecht", 2},
     {"Arnhem", "Zwolle", 5},
@@ -62,11 +62,11 @@ vector<tuple<string, string, int>> netherlands_edges = {
     {"Amsterdam", "The Hague", 5},
     {"Amsterdam", "Utrecht", 3},
     {"The Hague", "Rotterdam", 1},
-    {"Tillburg", "'s-Hertogenbosch", 1},
+    {"Tilburg", "'s-Hertogenbosch", 1},
     {"Groningen", "Leeuwarden", 2},
     {"The Hague", "Utrecht", 4},
     {"Rotterdam", "'s-Hertogenbosch", 4},
-    {"'s-Hertogenbosch", "Arnhem", 2},
+    {"'s-Hertogenbosch", "Arnhem", 3},
     {"Almere", "Zwolle", 4},
     {"Amsterdam", "Almere", 1},
     {"Veenendaal", "Arnhem", 2},
@@ -74,7 +74,6 @@ vector<tuple<string, string, int>> netherlands_edges = {
 };
 
 int infinity_color = 0xffc08080;
-int visited_color = 0xff30c080;
 void restore_graph_colors(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, unordered_set<double> visited, unordered_map<double, int> costs) {
     gs->config->fade_all_edge_colors(MICRO, infinity_color);
     gs->config->fade_all_node_colors(MICRO, infinity_color);
@@ -229,6 +228,7 @@ void render_video() {
         {"physics_multiplier","0"},
         {"d", ".05"},
         {"midpoint_multiplier", "1.7"},
+        {"edge_weights_size", "1"},
     });
 
     double groningen_hash = HashableString("Groningen").get_hash();
@@ -252,10 +252,6 @@ void render_video() {
     gs->config->set_node_color(rotterdam_hash, 0xffff0000);
     gs->config->set_node_color(groningen_hash, 0xffff0000);
 
-    stage_macroblock(FileBlock("So let's add distances."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("We'll essentially weigh every link."), 1);
     for (auto& [city1, city2, dist] : netherlands_edges) {
         double hash1 = HashableString(city1).get_hash();
         double hash2 = HashableString(city2).get_hash();
@@ -263,105 +259,21 @@ void render_video() {
     }
     color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
     gs->config->transition_all_node_radii(MICRO, 1);
-    gs->render_microblock();
 
-    stage_macroblock(SilenceBlock(1), 2);
-    gs->manager.transition(MICRO, "edge_weights_size", "1");
-    gs->render_microblock();
     for(auto& [city, coords] : netherlands_cities) {
         double hash = HashableString(city).get_hash();
         gs->config->transition_node_label(MICRO, hash, "");
     }
+
+    stage_macroblock(SilenceBlock(1), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Now, given these edge weights,"), 2);
-    gs->render_microblock();
-    // For each edge
-    for (auto& [city1, city2, dist] : netherlands_edges) {
-        double hash1 = HashableString(city1).get_hash();
-        double hash2 = HashableString(city2).get_hash();
-        gs->config->splash_edge_label(MICRO, hash1, hash2);
-    }
+    stage_macroblock(FileBlock("His idea was this."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("the shortest path is much harder to figure out."), 1);
+    stage_macroblock(FileBlock("First, he wanted to keep track of the shortest distance from the source to each node."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Breadth-first search explores nodes starting with the closest to the source and moving out until it finds the target, and here, closest means the fewest number of edges."), 21);
-    int depth = 0;
-    unordered_set<double> bfsborder;
-    unordered_set<double> bfsvisited;
-    bfsborder.insert(rotterdam_hash);
-    bfsvisited.insert(rotterdam_hash);
-    bfs(g, gs, bfsborder, bfsvisited, depth++);
-    bfs(g, gs, bfsborder, bfsvisited, depth++);
-    bfs(g, gs, bfsborder, bfsvisited, depth++);
-    bfs(g, gs, bfsborder, bfsvisited, depth++);
-    bfs(g, gs, bfsborder, bfsvisited, depth++);
-    gs->render_microblock();
-
-    double leeuwarden_hash = HashableString("Leeuwarden").get_hash();
-    stage_macroblock(FileBlock("Dijkstra realized that it wasn't the number of edges to the source that mattered,"), 11);
-    gs->config->transition_all_node_radii(MICRO, 1);
-    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->config->set_edge_color(rotterdam_hash, HashableString("'s-Hertogenbosch").get_hash(), 0xffffffff);
-    gs->config->transition_node_color(MICRO, HashableString("'s-Hertogenbosch").get_hash(), 0xffffffff);
-    gs->render_microblock();
-    gs->config->set_edge_color(HashableString("'s-Hertogenbosch").get_hash(), HashableString("Arnhem").get_hash(), 0xffffffff);
-    gs->config->transition_node_color(MICRO, HashableString("Arnhem").get_hash(), 0xffffffff);
-    gs->render_microblock();
-    gs->config->set_edge_color(HashableString("Arnhem").get_hash(), HashableString("Zwolle").get_hash(), 0xffffffff);
-    gs->config->transition_node_color(MICRO, HashableString("Zwolle").get_hash(), 0xffffffff);
-    gs->render_microblock();
-    gs->config->set_edge_color(HashableString("Zwolle").get_hash(), HashableString("Meppel").get_hash(), 0xffffffff);
-    gs->config->transition_node_color(MICRO, HashableString("Meppel").get_hash(), 0xffffffff);
-    gs->render_microblock();
-    gs->config->set_edge_color(HashableString("Meppel").get_hash(), groningen_hash, 0xffffffff);
-    gs->config->transition_node_color(MICRO, groningen_hash, 0xffffffff);
-    gs->render_microblock();
-    gs->render_microblock();
-    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("it was the distance."), 6);
-    gs->config->splash_edge_label(MICRO, rotterdam_hash, HashableString("'s-Hertogenbosch").get_hash());
-    gs->config->transition_edge_color(MICRO, rotterdam_hash, HashableString("'s-Hertogenbosch").get_hash(), 0xfffffffe);
-    gs->render_microblock();
-    gs->config->splash_edge_label(MICRO, HashableString("'s-Hertogenbosch").get_hash(), HashableString("Arnhem").get_hash());
-    gs->config->transition_edge_color(MICRO, HashableString("'s-Hertogenbosch").get_hash(), HashableString("Arnhem").get_hash(), 0xfffffffe);
-    gs->render_microblock();
-    gs->config->splash_edge_label(MICRO, HashableString("Arnhem").get_hash(), HashableString("Zwolle").get_hash());
-    gs->config->transition_edge_color(MICRO, HashableString("Arnhem").get_hash(), HashableString("Zwolle").get_hash(), 0xfffffffe);
-    gs->render_microblock();
-    gs->config->splash_edge_label(MICRO, HashableString("Zwolle").get_hash(), HashableString("Meppel").get_hash());
-    gs->config->transition_edge_color(MICRO, HashableString("Zwolle").get_hash(), HashableString("Meppel").get_hash(), 0xfffffffe);
-    gs->render_microblock();
-    gs->config->splash_edge_label(MICRO, HashableString("Meppel").get_hash(), groningen_hash);
-    gs->config->transition_edge_color(MICRO, HashableString("Meppel").get_hash(), groningen_hash, 0xfffffffe);
-    gs->render_microblock();
-    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("He wanted to explore the closest node to the source by its distance, then the next closest node, and so on."), 13);
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    trace_path(gs, {"Rotterdam", "The Hague"}, 0xffff0000);
-    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
-    splash_edge_path(MICRO, gs, {"Rotterdam", "The Hague"});
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    splash_edge_path(MICRO, gs, {"Rotterdam", "Breda"});
-    trace_path(gs, {"Rotterdam", "Breda"}, 0xffff0000);
-    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
 
     unordered_map<string, int> removable_cities = true_city_costs;
     vector<string> cities_in_order;
@@ -380,8 +292,7 @@ void render_video() {
         removable_cities.erase(min_city_name);
         cities_in_order.push_back(min_city_name);
     }
-
-    stage_macroblock(FileBlock("So, he kept track of the shortest known distance to each node, called its cost."), 3);
+    stage_macroblock(FileBlock("This is also known as its cost."), 3);
     gs->render_microblock();
     gs->render_microblock();
     int index = 0;
@@ -394,48 +305,44 @@ void render_video() {
     }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("That way, he could always explore nodes"), 1);
+    double leeuwarden_hash = HashableString("Leeuwarden").get_hash();
+    stage_macroblock(FileBlock("His goal? If he could find the shortest path from the source to one node,"), 1);
     gs->render_microblock();
 
-    // in order of increasing cost
-
-    stage_macroblock(FileBlock("from lowest to highest cost,"), 5 + netherlands_cities.size());
-    for(int i = 0; i < cities_in_order.size() + 5; i++) {
-        if(i < cities_in_order.size())
-            gs->config->transition_node_radius(MICRO, HashableString(cities_in_order[i]).get_hash(), 3);
-        if(i-5 >= 0)
-            gs->config->transition_node_radius(MICRO, HashableString(cities_in_order[i-5]).get_hash(), 2.5);
-        gs->render_microblock();
-    }
-
-    stage_macroblock(FileBlock("or closest to furthest from the source."), 4);
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->config->splash_node(rotterdam_hash);
+    stage_macroblock(FileBlock("then he could build up other shortest paths starting from this new node."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("But until he actually explored the graph, he didn’t know the shortest distance to any node yet."), 5);
+    stage_macroblock(FileBlock("And then the next. And on and on."), 13);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
-    for(auto& [city, coords] : netherlands_cities) {
-        double hash = HashableString(city).get_hash();
-        gs->config->transition_node_label(MICRO, hash, "");
-        gs->config->transition_node_radius(MICRO, hash, 1);
-    }
+    trace_path(gs, {"Rotterdam", "The Hague"}, 0xffff0000);
+    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
+    splash_edge_path(MICRO, gs, {"Rotterdam", "The Hague"});
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    splash_edge_path(MICRO, gs, {"Rotterdam", "Breda"});
+    trace_path(gs, {"Rotterdam", "Breda"}, 0xffff0000);
+    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("So at the beginning, the source's cost was zero,"), 4);
-    gs->render_microblock();
+    stage_macroblock(FileBlock("The cost of the starting node was 0,"), 2);
     gs->render_microblock();
     gs->config->transition_node_radius(MICRO, rotterdam_hash, 3);
     gs->config->transition_node_label(MICRO, rotterdam_hash, "0");
     gs->render_microblock();
+
+    stage_macroblock(FileBlock("but since he hasn’t actually explored the rest of graph yet,"), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("and every other node was infinity."), 4);
+    stage_macroblock(FileBlock("he set all the other nodes to infinity."), 8);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
     for(auto& [city, coords] : netherlands_cities) {
@@ -452,9 +359,17 @@ void render_video() {
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Then, starting from the source, Dijkstra explored each of the neighboring nodes."), 3);
+    stage_macroblock(FileBlock("Then, just like breadth-first search,"), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("Dijkstra started from the source and explored"), 1);
+    // Zoom in on the source node
+    gs->manager.transition(MICRO, "d", "0.035");
+    set_camera_to_lat_long(gs, netherlands_cities["Rotterdam"], false, MICRO);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("each of its neighboring nodes."), 3);
     set_camera_to_lat_long(gs, (netherlands_cities["Rotterdam"] + netherlands_cities["The Hague"]) / 2, false, MICRO);
-    gs->manager.transition(MICRO, "d", "0.04");
     gs->render_microblock();
     int step = 0;
     for(auto& node : g->get_neighbors(rotterdam_hash)) {
@@ -467,28 +382,36 @@ void render_video() {
     }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("At every node, he'd ask: is the current path the shortest path so far?"), 3);
-    // Zoom in on the edge
-    gs->manager.transition(MICRO, "d", "0.02");
+    stage_macroblock(FileBlock("At every step, he’d ask:"), 1);
     gs->render_microblock();
+
+    stage_macroblock(FileBlock("is the current path to this node the shortest path so far?"), 3);
+    gs->manager.transition(MICRO, "d", "0.02");
     gs->config->transition_edge_color(MICRO, rotterdam_hash, HashableString("The Hague").get_hash(), 0xffff0000);
+    gs->render_microblock();
     gs->render_microblock();
     gs->config->fade_edge_color(MICRO, HashableString("The Hague").get_hash(), rotterdam_hash, 0xffffffff);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("For example, this edge only has a weight of 1 while the node's current cost is infinity."), 5);
-    // Zoom out and recenter
+    stage_macroblock(FileBlock("For example, this edge only has a weight of 1"), 3);
+    gs->render_microblock();
+    gs->render_microblock();
+    gs->config->splash_edge_label(MICRO, rotterdam_hash, HashableString("The Hague").get_hash());
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("while the node's current cost is infinity."), 5);
     gs->render_microblock();
     gs->config->transition_edge_color(MICRO, rotterdam_hash, HashableString("The Hague").get_hash(), 0xffff0000);
     gs->render_microblock();
-    gs->config->splash_edge_label(MICRO, rotterdam_hash, HashableString("The Hague").get_hash());
     gs->render_microblock();
     gs->render_microblock();
     gs->config->splash_node(HashableString("The Hague").get_hash());
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("This path is the shortest yet to that node [1 < inf], so Dijkstra updated its cost to 1."), 7);
+    stage_macroblock(FileBlock("So this path is the shortest yet to that node,"), 1);
     gs->render_microblock();
+
+    stage_macroblock(FileBlock("so Dijkstra updated its cost to 1."), 7);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -500,20 +423,37 @@ void render_video() {
     }
     costs[rotterdam_hash] = 0;
     attempt_relax_edge(gs, rotterdam_hash, HashableString("The Hague").get_hash(), costs);
+    gs->render_microblock();
 
-    stage_macroblock(FileBlock("After checking all of Rotterdam’s edges and updating the neighbors’ costs,"), 11);
-    gs->manager.transition(MACRO, "d", "0.04");
+    stage_macroblock(FileBlock("Likewise, these nodes were updated to"), 3);
+    gs->manager.transition(MICRO, "d", "0.03");
+    gs->render_microblock();
+    gs->config->splash_node(HashableString("Utrecht").get_hash());
+    gs->config->splash_node(HashableString("Breda").get_hash());
+    gs->config->splash_node(HashableString("'s-Hertogenbosch").get_hash());
     gs->render_microblock();
     gs->render_microblock();
+
+    stage_macroblock(FileBlock("3, 4 and 2."), 10);
     attempt_relax_edge(gs, rotterdam_hash, HashableString("Utrecht").get_hash(), costs);
     attempt_relax_edge(gs, rotterdam_hash, HashableString("Breda").get_hash(), costs);
     attempt_relax_edge(gs, rotterdam_hash, HashableString("'s-Hertogenbosch").get_hash(), costs);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("After checking all of Rotterdam's neighboring nodes,"), 2);
+    gs->manager.transition(MACRO, "d", "0.04");
+    gs->render_microblock();
+    gs->render_microblock();
 
     stage_macroblock(FileBlock("Dijkstra marked it as explored."), 1);
     put_in_visited_set(gs, rotterdam_hash, visited);
 
-    stage_macroblock(FileBlock("Since this node had the lowest cost out of all the unexplored nodes, Dijkstra explored it next."), 10);
+    stage_macroblock(FileBlock("Then, since this node had the lowest cost out of all the unexplored nodes,"), 1);
+    gs->render_microblock();
+    stage_macroblock(FileBlock("Dijkstra explored it next."), 10);
     gs->manager.transition(MACRO, "d", "0.03");
+    // Splash The Hague
+    gs->config->splash_node(HashableString("The Hague").get_hash());
     set_camera_to_lat_long(gs, (netherlands_cities["Rotterdam"] + netherlands_cities["The Hague"]) / 2, false, MACRO);
     gs->render_microblock();
     gs->config->splash_node(HashableString("The Hague").get_hash());
@@ -542,14 +482,17 @@ void render_video() {
     }
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("While Dijkstra could update this neighbor,"), 3);
+    stage_macroblock(FileBlock("Dijkstra could update this neighbor from infinity down to 6-"), 3);
     attempt_relax_edge(gs, hague_hash, HashableString("Amsterdam").get_hash(), costs);
 
-    stage_macroblock(FileBlock("he couldn’t update this one."), 3);
+    stage_macroblock(FileBlock("a total path length of 5+1."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("But he couldn’t update this one."), 3);
     double utrecht_hash = HashableString("Utrecht").get_hash();
     attempt_relax_edge(gs, hague_hash, utrecht_hash, costs);
 
-    stage_macroblock(FileBlock("This path has a cost of 5,"), 7);
+    stage_macroblock(FileBlock("The current path has a cost of 5,"), 7);
     gs->render_microblock();
     trace_path(gs, {"Rotterdam", "The Hague", "Utrecht"}, 0xffff0000);
     gs->render_microblock();
@@ -567,28 +510,31 @@ void render_video() {
     gs->config->splash_node(utrecht_hash);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("There was already a shorter path,"), 3);
+    stage_macroblock(FileBlock("That meant there was already a shorter path:"), 3);
     gs->render_microblock();
     gs->config->splash_edge_label(MICRO, rotterdam_hash, utrecht_hash);
     trace_path(gs, {"Rotterdam", "Utrecht"}, 0xffff0000);
     visited.insert(hague_hash);
     restore_graph_colors(g, gs, visited, costs);
 
-    stage_macroblock(FileBlock("so no need to update it."), 1);
+    stage_macroblock(FileBlock("this one directly from the source."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("This continued for the rest of the graph."), 1);
+    stage_macroblock(FileBlock("So there was no need to update the cost."), 2);
+    put_in_visited_set(gs, hague_hash, visited);
     gs->manager.transition(MACRO, "d", "0.047");
     set_camera_to_lat_long(gs, center, false, MACRO);
     gs->render_microblock();
 
-    stage_macroblock(SilenceBlock(4), 17);
-    put_in_visited_set(gs, hague_hash, visited);
+    stage_macroblock(FileBlock("The next node to explore is this one with a cost of 2,"), 1);
     gs->render_microblock();
+    stage_macroblock(FileBlock("which would update its neighbour to 5."), 5);
     attempt_relax_all_edges(g, gs, HashableString("Breda").get_hash(), costs, visited);
     gs->render_microblock();
+    stage_macroblock(FileBlock("Then this one with a cost of 3 would update its neighbours,"), 5);
     attempt_relax_all_edges(g, gs, HashableString("Utrecht").get_hash(), costs, visited);
     gs->render_microblock();
+    stage_macroblock(FileBlock("and so on."), 5);
     attempt_relax_all_edges(g, gs, HashableString("'s-Hertogenbosch").get_hash(), costs, visited);
     gs->render_microblock();
 
@@ -597,7 +543,13 @@ void render_video() {
     set_camera_to_lat_long(gs, netherlands_cities["'s-Hertogenbosch"], false, MICRO);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("For example, he first reached this node through this path with a cost of 7."), 7);
+    stage_macroblock(FileBlock("For example, he first reached this node"), 1);
+    gs->render_microblock();
+    stage_macroblock(FileBlock("through this path"), 1);
+    gs->render_microblock();
+    stage_macroblock(FileBlock("with edge weights 4 and 3"), 1);
+    gs->render_microblock();
+    stage_macroblock(FileBlock("for a total cost of 7."), 7);
     gs->render_microblock();
     gs->render_microblock();
     gs->config->splash_node(HashableString("Eindhoven").get_hash());
@@ -607,15 +559,17 @@ void render_video() {
     gs->render_microblock();
     restore_graph_colors(g, gs, visited, costs);
 
-    stage_macroblock(FileBlock("But later, he found a shorter path of cost 6 and updated the node's cost again."), 12);
-    splash_edge_path(MACRO, gs, {"Rotterdam", "Breda", "Tillburg", "Eindhoven"});
+    stage_macroblock(FileBlock("But later, he found this path with cost 6."), 1);
+    gs->render_microblock();
+    stage_macroblock(FileBlock("So he updated the node's cost again."), 12);
+    splash_edge_path(MACRO, gs, {"Rotterdam", "Breda", "Tilburg", "Eindhoven"});
     gs->manager.transition(MACRO, "d", "0.04");
     set_camera_to_lat_long(gs, netherlands_cities["Utrecht"], false, MACRO);
     gs->render_microblock();
-    trace_path(gs, {"Rotterdam", "Breda", "Tillburg", "Eindhoven"}, 0xffff0000);
+    trace_path(gs, {"Rotterdam", "Breda", "Tilburg", "Eindhoven"}, 0xffff0000);
     restore_graph_colors(g, gs, visited, costs);
     gs->render_microblock();
-    attempt_relax_all_edges(g, gs, HashableString("Tillburg").get_hash(), costs, visited);
+    attempt_relax_all_edges(g, gs, HashableString("Tilburg").get_hash(), costs, visited);
     gs->render_microblock();
     gs->render_microblock();
 
@@ -654,33 +608,28 @@ void render_video() {
     gs->config->splash_node(groningen_hash);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("But it didn’t have the lowest remaining cost."), 2);
+    stage_macroblock(FileBlock("But it didn’t have the lowest cost out of all the unexplored nodes."), 2);
     gs->config->transition_node_radius(MICRO, groningen_hash, 3);
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("It might get updated again,"), 1);
-    gs->manager.transition(MACRO, "d", "0.047");
-    set_camera_to_lat_long(gs, netherlands_cities["'s-Hertogenbosch"], false, MICRO);
+    stage_macroblock(FileBlock("There was still this node with a cost of 16"), 1);
     gs->render_microblock();
-
-    stage_macroblock(FileBlock("like we saw before."), 6);
-    gs->render_microblock();
-    trace_path(gs, {"Rotterdam", "Breda", "Tillburg", "Eindhoven"}, 0xffffffff);
+    stage_macroblock(FileBlock("which could be hiding a shorter path to our goal."), 1);
     gs->render_microblock();
 
     stage_macroblock(SilenceBlock(1), 1);
     gs->config->fade_node_color(MICRO, HashableString("Eindhoven").get_hash(), visited_color);
-    gs->config->fade_node_color(MICRO, HashableString("Tillburg").get_hash(), visited_color);
+    gs->config->fade_node_color(MICRO, HashableString("Tilburg").get_hash(), visited_color);
     gs->config->fade_node_color(MICRO, HashableString("Breda").get_hash(), visited_color);
     gs->config->fade_node_color(MICRO, rotterdam_hash, visited_color);
     gs->config->fade_edge_color(MICRO, rotterdam_hash, HashableString("Breda").get_hash(), visited_color);
-    gs->config->fade_edge_color(MICRO, HashableString("Breda").get_hash(), HashableString("Tillburg").get_hash(), visited_color);
-    gs->config->fade_edge_color(MICRO, HashableString("Tillburg").get_hash(), HashableString("Eindhoven").get_hash(), visited_color);
+    gs->config->fade_edge_color(MICRO, HashableString("Breda").get_hash(), HashableString("Tilburg").get_hash(), visited_color);
+    gs->config->fade_edge_color(MICRO, HashableString("Tilburg").get_hash(), HashableString("Eindhoven").get_hash(), visited_color);
     set_camera_to_lat_long(gs, center, false, MICRO);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("He continued exploring nodes in cost order,"), 8);
+    stage_macroblock(FileBlock("So he continued exploring nodes in cost order,"), 8);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -695,17 +644,22 @@ void render_video() {
     gs->render_microblock();
     restore_graph_colors(g, gs, visited, costs);
 
-    stage_macroblock(FileBlock("Now, Groningen had the lowest remaining cost."), 4);
+    stage_macroblock(FileBlock("Now, out of all the unexplored nodes,"), 1);
+    gs->render_microblock();
+    stage_macroblock(FileBlock("Groningen had the next lowest cost."), 4);
     gs->render_microblock();
     gs->config->splash_node(groningen_hash);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Dijkstra had found the shortest path. Here's why:"), 1);
+    stage_macroblock(FileBlock("So Dijkstra was confident he had found the shortest path."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("If the lowest cost remaining is 18,"), 6);
+    stage_macroblock(FileBlock("Here's why."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("If the lowest cost among the unexplored nodes is 18,"), 6);
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
@@ -719,7 +673,7 @@ void render_video() {
     color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("Dijkstra must have explored all the paths with cost"), 1);
+    stage_macroblock(FileBlock("then Dijkstra must have explored all the paths with cost"), 1);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("16, 14, 13,"), 22);
@@ -740,16 +694,13 @@ void render_video() {
     stage_macroblock(FileBlock("Every path less than 18."), 1);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("And none of them reached Groningen,"), 3);
+    stage_macroblock(FileBlock("And none of those paths reached Groningen,"), 3);
     gs->render_microblock();
     gs->render_microblock();
     gs->config->splash_node(groningen_hash);
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("otherwise he would’ve updated its cost to a value under 18 already."), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("It’s just like the levels of breadth-first search."), 1);
+    stage_macroblock(FileBlock("It’s just like breadth-first search searching every step away from the source."), 1);
     gs->render_microblock();
 
     stage_macroblock(FileBlock("By exploring from lowest to highest cost,"), true_city_costs.size() + 4);
@@ -777,102 +728,6 @@ void render_video() {
 
     stage_macroblock(FileBlock("Dijkstra’s algorithm guaranteed the shortest path to any target."), 1);
     // make nodes big again and relabel nodes
-    gs->render_microblock();
-
-    stage_macroblock(SilenceBlock(1), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("To get directions,"), 1);
-    gs->config->transition_all_node_radii(MICRO, 2.5);
-    color_all_darkblue_except_endpoints(gs, g, rotterdam_hash, groningen_hash);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("we'll also keep track of a predecessor list."), 4);
-    gs->render_microblock();
-    for(auto& [city, coords] : netherlands_cities) {
-        // For each node,
-        double hash = HashableString(city).get_hash();
-        // For each edge,
-        for (auto& [city1, city2, dist] : netherlands_edges) {
-            // Make city 1 source and city 2 target using true costs
-            if(true_city_costs[city1] > true_city_costs[city2]) swap(city1, city2);
-            if(city != city2) continue;
-            if(city1 == "Arnhem" && city2 == "Zwolle") continue; // skip this one since there are two paths with the same cost to Zwolle, one through Arnhem and one through Almere
-
-            if(true_city_costs[city1] + dist == true_city_costs[city2]) {
-                // If the edge weight + city 1's cost equals city 2's cost, then city 1 is a predecessor of city 2
-                gs->config->transition_edge_color(MICRO, HashableString(city2).get_hash(), HashableString(city1).get_hash(), 0xffc06060);
-                break; // Only one predecessor per node
-            }
-        }
-    }
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("During the search,"), 2);
-    set_camera_to_lat_long(gs, netherlands_cities["Meppel"], false, MICRO);
-    gs->manager.transition(MICRO, "d", "0.03");
-    gs->render_microblock();
-    gs->config->fade_edge_color(MICRO, groningen_hash, leeuwarden_hash, 0xffffffff);
-    gs->config->fade_edge_color(MICRO, groningen_hash, HashableString("Meppel").get_hash(), 0xffffffff);
-    gs->config->fade_edge_color(MICRO, leeuwarden_hash, HashableString("Meppel").get_hash(), 0xffffffff);
-    gs->config->fade_node_color(MICRO, leeuwarden_hash, 0xffffffff);
-    gs->config->fade_node_color(MICRO, groningen_hash, 0xffffffff);
-    gs->config->fade_node_color(MICRO, HashableString("Meppel").get_hash(), 0xffffffff);
-    gs->config->transition_node_radius(MICRO, HashableString("Meppel").get_hash(), 3);
-    gs->config->transition_node_radius(MICRO, leeuwarden_hash, 2.5);
-    gs->config->transition_node_radius(MICRO, groningen_hash, 2.5);
-    gs->config->transition_node_label(MICRO, leeuwarden_hash, "\\infty");
-    gs->config->transition_node_label(MICRO, groningen_hash, "\\infty");
-    costs[leeuwarden_hash] = 1000;
-    costs[groningen_hash] = 1000;
-    visited.erase(leeuwarden_hash);
-    visited.erase(groningen_hash);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("Whenever one node can update a neighbor,"), 7);
-    attempt_relax_edge(gs, HashableString("Meppel").get_hash(), groningen_hash, costs);
-    attempt_relax_edge(gs, HashableString("Meppel").get_hash(), leeuwarden_hash, costs);
-    gs->config->fade_node_color(MICRO, HashableString("Meppel").get_hash(), dark_blue);
-    gs->config->transition_node_radius(MICRO, HashableString("Meppel").get_hash(), 2.5);
-    visited.insert(HashableString("Meppel").get_hash());
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("we will mark it as the neighbor's predecessor."), 1);
-    gs->config->transition_edge_color(MICRO, groningen_hash, HashableString("Meppel").get_hash(), 0xffc06060);
-    gs->config->transition_edge_color(MICRO, leeuwarden_hash, HashableString("Meppel").get_hash(), 0xffc06060);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("Just like cost, this can change as we explore the graph."), 7);
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    attempt_relax_edge(gs, leeuwarden_hash, groningen_hash, costs);
-    gs->config->transition_edge_color(MICRO, HashableString("Meppel").get_hash(), groningen_hash, dark_blue);
-    gs->config->transition_edge_color(MICRO, groningen_hash, leeuwarden_hash, 0xffc06060);
-    gs->render_microblock();
-
-    stage_macroblock(SilenceBlock(.5), 1);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("Finally, we trace the predecessors backwards to get the shortest path."), 16);
-    set_camera_to_lat_long(gs, center, false, MACRO);
-    gs->manager.transition(MACRO, "d", "0.04");
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    gs->render_microblock();
-    // Add all true costs to the graph
-    for(auto& [city, coords] : netherlands_cities) {
-        double hash = HashableString(city).get_hash();
-        gs->config->transition_node_label(MICRO, hash, to_string(true_city_costs[city]));
-        gs->config->transition_node_radius(MICRO, hash, 2.5);
-    }
-    gs->render_microblock();
-    trace_path(gs, {"Groningen", "Leeuwarden", "Meppel", "Zwolle", "Almere", "Amsterdam", "The Hague", "Rotterdam"}, 0xff00ff00);
     gs->render_microblock();
 
     stage_macroblock(SilenceBlock(5), 1);

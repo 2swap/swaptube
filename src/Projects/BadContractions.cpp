@@ -162,12 +162,17 @@ void render_video() {
         // Add shortcut to d
         g->add_edge(HashableString(node_name).get_hash(), HashableString("d").get_hash());
         gs->config->add_edge_if_missing(HashableString(node_name).get_hash(), HashableString("d").get_hash());
+        gs->config->set_edge_color(HashableString(node_name).get_hash(), HashableString("e").get_hash(), 0x000080ff);
+        gs->config->transition_edge_color(MICRO, HashableString(node_name).get_hash(), HashableString("d").get_hash(), 0xff0080ff);
         gs->config->set_edge_dashed(HashableString(node_name).get_hash(), HashableString("d").get_hash(), true);
         gs->render_microblock();
     }
 
-    stage_macroblock(FileBlock("End to end, we only need to search two edges."), 12);
+    stage_macroblock(SilenceBlock(1), 1);
     gs->manager.transition(MACRO, undo);
+    gs->render_microblock();
+
+    stage_macroblock(FileBlock("End to end, we only need to search two edges."), 12);
     gs->render_microblock();
     gs->config->splash_node(HashableString("a").get_hash());
     gs->render_microblock();
@@ -192,7 +197,11 @@ void render_video() {
         gs->render_microblock();
     }
     gs->render_microblock();
-    gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
+    for(int i = 0; i < 9; i++) {
+        string node_name(1, 'a' + i);
+        if(node_name == "d" || node_name == "e" || node_name == "c") continue;
+        gs->config->fade_edge_color(MICRO, HashableString(node_name).get_hash(), HashableString("d").get_hash(), 0xff0080ff);
+    }
     gs->render_microblock();
 
     stage_macroblock(FileBlock("and in some sections we still have to check all the edges."), 9);
@@ -208,14 +217,12 @@ void render_video() {
     gs->render_microblock();
     trace_path(gs, {"e", "f", "g", "h", "i"}, 0xffff0000);
 
-    stage_macroblock(SilenceBlock(4), 5);
+    stage_macroblock(FileBlock("Manageable, but not very efficient."), 1);
+    gs->render_microblock();
+
+    stage_macroblock(SilenceBlock(5), 5);
     gs->render_microblock();
     gs->render_microblock();
-    gs->manager.transition(MICRO, {
-        {"d", "14"},
-        {"y", "0"},
-        {"x", "0"},
-    });
     gs->config->fade_all_node_colors(MICRO, 0xffffffff);
     gs->config->fade_all_edge_colors(MICRO, 0xffffffff);
     // Fade all shortcuts to transparent black
@@ -224,11 +231,17 @@ void render_video() {
         if(node_name == "d" || node_name == "e" || node_name == "c") continue;
         gs->config->fade_edge_color(MICRO, HashableString(node_name).get_hash(), HashableString("d").get_hash(), 0x00000000);
     }
+    gs->manager.transition(MICRO, {
+        {"d", "14"},
+        {"y", "0"},
+        {"x", "0"},
+    });
     gs->render_microblock();
     gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(FileBlock("In practice, the nested dissection method gets a decent node ordering and doesn't take too long."), 2);
+    stage_macroblock(FileBlock("In practice, the nested dissection method gets a decent node ordering and doesn't take too long."), 4);
+    gs->render_microblock();
     node_ranks = {
         {"a", 1},
         {"b", 2},
@@ -246,8 +259,21 @@ void render_video() {
         gs->transition_node_position(MICRO, HashableString(node_name).get_hash(), vec4(i-4, node_ranks[node_name]-5, 0, 0));
     }
     gs->render_microblock();
+    // Add shortcuts c-e and e-g
+    for(int i = 0; i < 9; i++) {
+        string node_name(1, 'a' + i);
+        if(node_name != "c" && node_name != "g") continue;
+        // Add shortcut to e
+        g->add_edge(HashableString(node_name).get_hash(), HashableString("e").get_hash());
+        gs->config->add_edge_if_missing(HashableString(node_name).get_hash(), HashableString("e").get_hash());
+        gs->config->set_edge_color(HashableString(node_name).get_hash(), HashableString("e").get_hash(), 0x000080ff);
+        gs->config->fade_edge_color(MICRO, HashableString(node_name).get_hash(), HashableString("e").get_hash(), 0xff0080ff);
+        gs->config->set_edge_dashed(HashableString(node_name).get_hash(), HashableString("e").get_hash(), true);
+    }
+
+    gs->render_microblock();
     gs->render_microblock();
 
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(2), 1);
     gs->render_microblock();
 }
