@@ -174,8 +174,7 @@ bool Graph::node_exists(double id) const {
 void Graph::remove_node(double id) {
     if (!node_exists(id)) return;
     Node& node = nodes.at(id);
-    for (const auto& neighbor_edge : node.neighbors) {
-        double neighbor_id = neighbor_edge.to;
+    for (const auto& neighbor_id : get_neighbors(id)) {
         nodes.at(neighbor_id).neighbors.erase(Edge(neighbor_id, id));
     }
     delete node.data;

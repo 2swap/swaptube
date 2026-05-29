@@ -17,7 +17,6 @@ int distance_to_target_km(vec2 node_pos, vec2 target_pos) {
 // For any node whose dot product with the airport is negative (when subtracted by the zoo),
 // fade it out over the next microblock, then delete it.
 void fade_funnel(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double zoo_hash, double airport_hash) {
-    cout << "B" << endl;
     unordered_set<double> to_delete;
     for(auto& [hash, node] : g->nodes) {
         vec4 node_pos = node.position;
@@ -32,13 +31,10 @@ void fade_funnel(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, double zoo_hash
             }
         }
     }
-    cout << "C" << endl;
     gs->render_microblock();
-    cout << "D" << endl;
     for(double hash : to_delete) {
         g->remove_node(hash);
     }
-    cout << "E" << endl;
 }
 double radiusy = 1000;
 void unfade_funnel(shared_ptr<Graph> g, shared_ptr<GraphScene> gs, vec2 newark_lat_long, double zoo_hash, double airport_hash) {
@@ -272,7 +268,6 @@ void render_video() {
         {"y", to_string(pos.y*1.0005)},
         {"z", to_string(pos.z*1.0005)},
     });
-    cout << "A" << endl;
     fade_funnel(g, gs, zoo_hash, newark_hash);
 
     stage_macroblock(FileBlock("The further a node is from the Zoo, the higher it is."), 1);
@@ -293,21 +288,8 @@ void render_video() {
     bool found = false;
     double increment = 16 * 100. / chunks;
     while(remaining_microblocks_in_macroblock) {
-        if(rendering_on() && !found) found = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, -200000, edge_weights);
-        max_dist += increment;
-        gs->render_microblock();
-    }
-
-    stage_macroblock(SilenceBlock(.5), 1);
-    gs->config->fade_all_edge_colors(MICRO, opaque_white);
-    gs->render_microblock();
-
-    stage_macroblock(FileBlock("instead of funnel down it."), chunks);
-    max_dist = 0;
-    found = false;
-    while(remaining_microblocks_in_macroblock) {
-        if(rendering_on() && !found) found = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, 150000, edge_weights);
-        max_dist += increment * .7;
+        if(rendering_on() && !found) found = run_large_dijkstra(g, gs, newark_hash, zoo_hash, max_dist, -150000, edge_weights);
+        max_dist += increment * 1.2;
         gs->render_microblock();
     }
 
@@ -336,7 +318,6 @@ void render_video() {
         gs->render_microblock();
     }
 
-    gs->config->chill = true;
     stage_macroblock(CompositeBlock(SilenceBlock(2), FileBlock("So while Dijkstra's search frontier")), 2);
     gs->manager.transition(MACRO, {
         {"d", ".005"},
@@ -349,6 +330,7 @@ void render_video() {
     gs->render_microblock();
     if(rendering_on()) unfade_funnel(g, gs, newark_lat_long, zoo_hash, newark_hash);
     gs->render_microblock();
+    gs->config->chill = true;
 
     stage_macroblock(FileBlock("spreads out in all directions,"), chunks);
     gs->manager.transition(MACRO, {
@@ -449,6 +431,6 @@ void render_video() {
         gs->render_microblock();
     }
 
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(2), 1);
     gs->render_microblock();
 }
