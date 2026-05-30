@@ -2,7 +2,7 @@
 #include "../../DataObjects/LambdaCalculus/LambdaExpression.h"
 #include "../../DataObjects/LambdaCalculus/LambdaUtils.h"
 #include "../Scene.h"
-#include "../../IO/VisualMedia.h"
+#include "../../IO/SVG.h"
 #include <memory>
 #include <string>
 #include <utility>

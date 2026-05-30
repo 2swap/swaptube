@@ -99,6 +99,7 @@ __global__ void render_manifold_kernel(
 // Externed entry point
 extern "C" void cuda_render_manifold(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
+    float* d_depth_buffer,
     const Cuda::ManifoldData* manifold, const int num_manifolds,
     const Cuda::vec3& camera_pos, const Cuda::quat& camera_direction,
     const float geom_mean_size, const float fov,
@@ -106,16 +107,7 @@ extern "C" void cuda_render_manifold(
     const uint32_t* d_tex_pixels, const int tex_w, const int tex_h
 ) {
     // Allocate zeroized depth buffer on device (initialize to large values from host)
-    float* d_depth_buffer;
-    cudaMalloc(&d_depth_buffer, wh.x * wh.y * sizeof(float));
     cudaMemset(d_depth_buffer, 0x7e, wh.x * wh.y * sizeof(float)); // lazy hack to populate "really big floats"
-
-    // Clear pixel buffer
-    // Note, this is not a normal swaptube pattern.
-    // Since this scene identifies a pixel per manifold point rather than rasterizing triangles,
-    // we need to manually clear the buffer so that the last frame isn't visible
-    // where the new frame doesn't draw any points.
-    cudaMemset(d_pixels, 0, wh.x * wh.y * sizeof(uint32_t));
 
     for(int m = 0; m < num_manifolds; ++m) {
         Cuda::ManifoldData d_manifold = deepcopy_manifold(manifold[m]);
@@ -137,9 +129,6 @@ extern "C" void cuda_render_manifold(
     }
 
     cuda_edge_detect(d_pixels, d_depth_buffer, wh, 0xff0000ff);
-
-    // Free device memory
-    cudaFree(d_depth_buffer);
 }
 
 extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const int tex_w, const int tex_h) {

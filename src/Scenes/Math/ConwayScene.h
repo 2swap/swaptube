@@ -3,12 +3,10 @@
 #include "../Common/CoordinateScene.h"
 #include "../../DataObjects/ConwayGrid.h"
 #include "../../Core/State/StateManager.h"
-#include "../../DataObjects/DevicePointer.h"
 
 class ConwayScene : public CoordinateScene {
 private:
-    ConwayGrid conway_grid;
-    DevicePointer d_pixels;
+    ConwayGrid* conway_grid;
 
 public:
     ConwayScene(const vec2& dimensions = vec2(1, 1));

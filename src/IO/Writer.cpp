@@ -31,13 +31,15 @@ Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framer
     video = new VideoWriter(format_context, video_path, video_width_pixels, video_height_pixels, video_framerate_fps);
 }
 
-Writer::~Writer() {
+void Writer::destroy() {
+    cout << "Destroying writer..." << endl;
     delete shtooka;
     delete subtitle;
 
     if (is_smoketest()) return;
     delete audio;
     delete video; // This also finalizes FORMAT_CONTEXT
+    cout << "Writer destroyed." << endl;
 }
 
 int Writer::get_video_width_pixels() const { return video_width_pixels; }

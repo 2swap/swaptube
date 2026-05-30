@@ -10,7 +10,6 @@
 #include <limits>
 #include "../../Host_Device_Shared/ThreeDimensionStructs.h"
 #include "../../Host_Device_Shared/vec.h"
-#include "../../DataObjects/DevicePointer.h"
 
 struct Surface {
     vec3 center;
@@ -38,7 +37,6 @@ struct Path {
 class ThreeDimensionScene : public SuperScene {
 public:
     ThreeDimensionScene(const vec2& dimensions = vec2(1, 1));
-    ~ThreeDimensionScene();
 
     vec2 coordinate_to_pixel(vec3 coordinate, bool& behind_camera);
 
@@ -99,8 +97,5 @@ protected:
     vector<Line> lines;
     vector<Surface> surfaces;
     map<string, Path> paths;
-    DevicePointer d_pixels;
-private:
-    uint32_t* d_map;
-    ivec2 map_wh;
+    DevicePointer* distance_buffer;
 };

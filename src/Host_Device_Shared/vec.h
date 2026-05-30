@@ -252,7 +252,7 @@ HOST_DEVICE inline vec3 normalize(const vec3& v) { float len = length(v); return
 HOST_DEVICE inline vec4 normalize(const vec4& v) { float len = length(v); return vec4{ v.x / len, v.y / len, v.z / len, v.w / len }; }
 HOST_DEVICE inline quat normalize(const quat& q) { float len = length(q); return quat{ q.u / len, q.i / len, q.j / len, q.k / len }; }
 
-HOST_DEVICE inline float dot(const vec2& a, const vec2& b) { return a.x * b.y + a.y * b.x; }
+HOST_DEVICE inline float dot(const vec2& a, const vec2& b) { return a.x * b.x + a.y * b.y; }
 HOST_DEVICE inline float dot(const vec3& a, const vec3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 HOST_DEVICE inline float dot(const vec4& a, const vec4& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 HOST_DEVICE inline float dot(const ivec2& a, const ivec2& b) { return a.x * b.y + a.y * b.x; }

@@ -17,7 +17,7 @@
 #include "../Core/Smoketest.h"
 #include "../IO/SFX.h"
 
-extern "C" void compute_repulsion_cuda(vec4* h_positions, vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations);
+extern "C" void compute_repulsion_cuda(vec4* h_positions, vec4* h_velocities, const int* h_adjacency_matrix, int num_nodes, int max_degree, float attract, float repel, const float decay, const float dimension, const int iterations);
 
 vector<int> tones = {0,4,7};
 int tone_incr = 0;
@@ -37,14 +37,10 @@ vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<f
     };
 }
 
-Node::Node(GenericBoard* t, double hash, vec4 position, vec4 velocity) :
-    data(t), hash(hash), velocity(velocity), position(position) {}
+Node::Node(double hash, vec4 position, vec4 velocity) :
+    hash(hash), velocity(velocity), position(position) {}
 
 Graph::Graph() : dist(0.0f, 1.0f), rng(0) {}
-
-Graph::~Graph() {
-    clear();
-}
 
 int Graph::size() const {
     return nodes.size();
@@ -67,8 +63,7 @@ void Graph::tick(const StateReturn& state) {
         state["repel"],
         state["attract"],
         state["decay"],
-        state["dimensions"],
-        state["mirror_force"]
+        state["dimensions"]
     );
     if(has_been_updated_since_last_scene_query()) {
         //graph_to_3d();
@@ -77,27 +72,16 @@ void Graph::tick(const StateReturn& state) {
     }
 }
 
-void Graph::clear() {
-    while (nodes.size()>0) {
-        auto i = nodes.begin();
-        delete i->second.data;
-        nodes.erase(i->first);
-    }
-}
-
-double Graph::add_node(GenericBoard* t){
-    double hash = t->get_hash();
+double Graph::add_node(double hash){
     if (node_exists(hash)) {
-        delete t;
         return hash;
     }
-    Node new_node(t, hash, random_unit_cube_vector(rng, dist), random_unit_cube_vector(rng, dist));
+    Node new_node(hash, random_unit_cube_vector(rng, dist), random_unit_cube_vector(rng, dist));
     nodes.emplace(hash, new_node);
     return hash;
 }
 
-void Graph::add_node_with_neighbors(GenericBoard* t, std::vector<double> neighbor_hashes) {
-    double hash = add_node(t);
+void Graph::add_node_with_neighbors(double hash, std::vector<double> neighbor_hashes) {
     if (neighbor_hashes.empty()) return;
     vec4 avg_position(0.0f);
     vec4 avg_velocity(0.0f);
@@ -177,7 +161,6 @@ void Graph::remove_node(double id) {
     for (const auto& neighbor_id : get_neighbors(id)) {
         nodes.at(neighbor_id).neighbors.erase(Edge(neighbor_id, id));
     }
-    delete node.data;
     nodes.erase(id);
     mark_updated();
 }
@@ -267,7 +250,7 @@ std::vector<int> Graph::make_adjacency_matrix(const std::vector<Node*>& node_vec
     return adjacency_matrix;
 }
 
-void Graph::iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension, const float mirror_force) {
+void Graph::iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension) {
     if(iterations <= 0) return;
 
     std::vector<Node*> node_vector;
@@ -286,29 +269,8 @@ void Graph::iterate_physics(const int iterations, const float repel, const float
     }
     int max_degree = 0;
     std::vector<int> adjacency_matrix = make_adjacency_matrix(node_vector, max_degree);
-    std::vector<int> mirrors(s, -1);
-    std::vector<int> mirror2s(s, -1);
 
-    for (int i = 0; i < s; ++i) {
-        const auto& node = node_vector[i];
-
-        {
-            double rev_hash = node->data->get_reverse_hash();
-            auto it_mirror = nodes.find(rev_hash);
-            if (it_mirror != nodes.end()) {
-                mirrors[i] = node_indices[rev_hash];
-            }
-        }
-        {
-            double rev_hash_2 = node->data->get_reverse_hash_2();
-            auto it_mirror_2 = nodes.find(rev_hash_2);
-            if (it_mirror_2 != nodes.end()) {
-                mirror2s[i] = node_indices[rev_hash_2];
-            }
-        }
-    }
-
-    compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), mirrors.data(), mirror2s.data(), s, max_degree, attract, repel, mirror_force, decay, dimension, iterations);
+    compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), s, max_degree, attract, repel, decay, dimension, iterations);
 
     // TODO we should just permanently store the graph on the GPU, unless it is modified often?
     for (int i = 0; i < s; ++i) {

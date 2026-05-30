@@ -99,9 +99,9 @@ void Pixels::get_average_color(int x_start, int y_start, int x_end, int y_end,
     }
 }
 
-void Pixels::scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const {
+void Pixels::scale_to_bounding_box(const vec2& box, Pixels &scaled) const {
     // Calculate the scaling factor based on the bounding box
-    float scale = min(static_cast<float>(box_w) / wh.x, static_cast<float>(box_h) / wh.y);
+    float scale = min(static_cast<float>(box.x) / wh.x, static_cast<float>(box.y) / wh.y);
 
     // Calculate the new dimensions
     int new_width = static_cast<int>(wh.x * scale);
@@ -210,6 +210,18 @@ void Pixels::overlay_cpu(const Pixels& p, const vec2& center, double overlay_opa
     }
 }
 
+void Pixels::scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const {
+    // Calculate the scaling factor based on the bounding box
+    float scale = min(static_cast<float>(box_w) / wh.x, static_cast<float>(box_h) / wh.y);
+
+    // Calculate the new dimensions
+    int new_width = static_cast<int>(wh.x * scale);
+    int new_height = static_cast<int>(wh.y * scale);
+
+    // Scale the image using bicubic interpolation
+    bicubic_scale(new_width, new_height, scaled);
+}
+
 // Use bilinear interpolation to sample from p with rotation, and overlay onto this.
 // dx and dy specify the center of the rotated p in this image.
 void Pixels::overlay_cpu_with_rotation(const Pixels& p, const vec2& offset, double overlay_opacity_multiplier, float angle_radians){
@@ -252,16 +264,6 @@ void Pixels::overlay_cpu_with_rotation(const Pixels& p, const vec2& offset, doub
             }
         }
     }
-}
-
-void Pixels::overlay_gpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier){
-    const uint32_t* p_data = p.pixels.data();
-    cuda_overlay(pixels.data(), wh.x, wh.y, p_data, p.wh.x, p.wh.y, center.x, center.y, overlay_opacity_multiplier);
-}
-
-void Pixels::overlay_gpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians){
-    const uint32_t* p_data = p.pixels.data();
-    cuda_overlay_with_rotation(pixels.data(), wh.x, wh.y, p_data, p.wh.x, p.wh.y, center.x, center.y, overlay_opacity_multiplier, angle_radians);
 }
 
 void Pixels::overwrite(const Pixels& p, const vec2& top_left){

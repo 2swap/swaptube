@@ -4,6 +4,11 @@
 #include <algorithm>
 #include <string>
 
+extern "C" void cuda_overlay(
+    uint32_t* background, const ivec2& b_wh,
+    const uint32_t* foreground, const ivec2& f_wh,
+    const vec2& center, const float opacity, const float angle);
+
 CompositeScene::CompositeScene(const vec2& dimensions) : SuperScene(dimensions) {}
 
 void CompositeScene::add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos, double opa, bool behind){
@@ -29,26 +34,22 @@ void CompositeScene::slide_subscene(const TransitionType tt, const std::string& 
 }
 
 void CompositeScene::draw() {
-    int w = get_width();
-    int h = get_height();
+    ivec2 wh = get_width_height();
     for (const std::string& name : render_order){
         double opa = state[name + ".opacity"];
         if(opa < 0.001) continue;
         Pixels* p = nullptr;
         std::shared_ptr<Scene> subscene = subscenes[name];
-        subscene->query(p);
-        const vec2 xy(pix.wh * vec2(state[name + ".x"], state[name + ".y"]));
-
-        // Angle in radians, clamped to [0, 2*pi)
-        float angle = extended_mod(state[name + ".angle"], 2*M_PI);
+        uint32_t* subscene_gpu_pix = subscene->query();
+        const vec2 xy(wh * vec2(state[name + ".x"], state[name + ".y"]));
 
         const vec2 center = xy - subscene->get_width_height()/2;
 
-        if (angle > 0.0001 && angle < 2*M_PI - 0.0001) {
-            pix.overlay_gpu_with_rotation(*p, center, opa, angle);
-        } else {
-            pix.overlay_gpu(*p, center, opa);
-        }
+        cuda_overlay(
+            gpu_pix->get_ptr(), wh,
+            subscene_gpu_pix, subscene->get_width_height(),
+            center, opa, state[name + ".angle"]
+        );
     }
 }
 

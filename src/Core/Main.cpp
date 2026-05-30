@@ -108,6 +108,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    get_writer().destroy();
+
     cout << "\033[1;32m" << endl << "====================" << endl;
     cout << "Completed successfully!" << endl;
     cout << "====================" << "\033[0m" << endl << endl;

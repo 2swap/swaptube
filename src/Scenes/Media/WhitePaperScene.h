@@ -1,5 +1,6 @@
 #pragma once
-#include "../../IO/VisualMedia.h"
+#include "../../IO/PNG.h"
+#include "../../IO/SVG.h"
 #include "../Scene.h"
 #include <vector>
 #include <string>

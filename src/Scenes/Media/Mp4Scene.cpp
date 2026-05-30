@@ -3,6 +3,14 @@
 
 using namespace std;
 
+extern "C" void cuda_overlay (
+    uint32_t* background, const ivec2& b_wh,
+    const uint32_t* foreground, const ivec2& f_wh,
+    const vec2& center, const float opacity, const float angle_rad);
+extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
+extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
+extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
+
 Mp4Scene::Mp4Scene(
     const vector<string>& mp4_filenames,
     const double playback_speed,
@@ -40,7 +48,13 @@ void Mp4Scene::draw() {
     // Calculate the offsets to center the frame in the output
     const vec2 offset = (get_width_height() - frame.wh) / 2;
 
-    pix.overwrite(frame, offset);
+    uint32_t* frame_ptr = cuda_alloc_pixels_on_device(frame.wh.x * frame.wh.y);
+    cuda_copy_pixels_to_device(frame.pixels.data(), frame.wh.x * frame.wh.y, frame_ptr);
+
+    // Overwrite the image onto the scene's pixel buffer
+    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), frame_ptr, frame.wh, offset, 1.0f, 0.0f);
+
+    cuda_free_pixels_on_device(frame_ptr);
 }
 
 const StateQuery Mp4Scene::populate_state_query() const {

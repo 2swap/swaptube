@@ -9,6 +9,8 @@ void render_video() {
         {"seed_c_r", ".4"},
         {"seed_c_i", ".1"},
     });
-    stage_macroblock(SilenceBlock(2), 1);
+    stage_macroblock(SilenceBlock(4), 2);
+    ms.render_microblock();
+    ms.manager.transition(MICRO, "zoom", "1");
     ms.render_microblock();
 }

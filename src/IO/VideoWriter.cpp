@@ -4,78 +4,49 @@
 
 #include <iostream>
 #include <string>
-#include <regex>
 #include <sstream>
 #include <cassert>
 #include <unistd.h>
+#include <chrono>
 #include "Writer.h"
 
 using namespace std;
-
-// Function to parse the debug output
-void parse_debug_output(const string& output) {
-    istringstream iss(output);
-    string line;
-    regex regex_pattern(R"(frame=\s*(\d+)\s*QP=(\d+\.\d+)\s+NAL=(\d+)\s+Slice:([IPBS])\s+Poc:(\d+)\s+I:(\d+)\s+P:(\d+)\s+SKIP:(\d+)\s+size=(\d+)\s+bytes)");
-    regex regex_pattern_empty_line(R"(\s*)");
-    while (getline(iss, line)) {
-        smatch match;
-
-        if (regex_search(line, match, regex_pattern) && match.size() == 10) {
-            double frame = stoi(match[1].str());
-            double qp    = stof(match[2].str());
-            double nal   = stoi(match[3].str());
-            string slice =      match[4].str();
-            double poc   = stoi(match[5].str());
-            double i     = stoi(match[6].str());
-            double p     = stoi(match[7].str());
-            double skip  = stoi(match[8].str());
-            double size  = stoi(match[9].str());
-            //ffmpeg_output_plot.add_datapoint(vector<double>{frame, qp, nal, poc, i, p, skip, size});
-        } else if(regex_search(line, match, regex_pattern_empty_line)) {
-            // do nothing, i guess?
-        } else {
-            // If the string did not match the expected format, dump it to stderr
-            cout << "Failed to parse cerr output from encoder: " << line << endl;
-            // This happens in nominal conditions, do not failout!
-        }
-    }
-}
-
-/*
- * Wrapper around avcodec_send_frame which captures its output to stderr.
- */
-int send_frame(AVCodecContext* vcc, AVFrame* frame){
-    int pipefd[2];
-    int original_stderr = redirect_stderr(pipefd);
-    int ret = avcodec_send_frame(vcc, frame);
-    restore_stderr(original_stderr);
-    string debug_output = read_from_fd(pipefd[0]);
-    close(pipefd[0]);
-    parse_debug_output(debug_output);
-    return ret;
-}
+extern "C" void preprocess_argb_to_p010(
+    const uint32_t* d_argb,
+    uint16_t* d_y_plane,
+    uint16_t* d_uv_plane,
+    int width,
+    int height,
+    int y_stride,
+    int uv_stride,
+    int bg
+);
+extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
 bool VideoWriter::encode_and_write_frame(AVFrame* frame){
-    int ret = send_frame(videoCodecContext, frame);
-    if (ret<0 && frame != NULL) throw runtime_error("Failed to encode video!");
+    int ret = avcodec_send_frame(videoCodecContext, frame);
+    //if (ret == AVERROR_EOF) return false;
+    if (ret < 0) {
+        char errbuf[256];
+        av_strerror(ret, errbuf, sizeof(errbuf));
+        throw runtime_error(string("avcodec_send_frame failed: ") + errbuf);
+    }
 
-    int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
-    if (ret2 == AVERROR(EAGAIN) || ret2 == AVERROR_EOF) return false;
-    else if (ret2!=0) throw runtime_error("Failed to receive video packet!");
-
-    // We set the packet PTS and DTS taking in the account our FPS (second argument),
-    // and the time base that our selected format uses (third argument).
-    av_packet_rescale_ts(&pkt, { 1, get_video_framerate_fps() }, videoStream->time_base);
-
-    pkt.stream_index = videoStream->index;
-
-    // Write the encoded frame to the mp4 file.
-    int pipefd[2];
-    int original_stderr = redirect_stderr(pipefd);
-    av_interleaved_write_frame(fc, &pkt);
-    restore_stderr(original_stderr);
-    close(pipefd[0]);
+    while (true) {
+        int ret2 = avcodec_receive_packet(videoCodecContext, &pkt);
+        if (ret2 == 0) {
+            av_packet_rescale_ts(&pkt, videoCodecContext->time_base, videoStream->time_base);
+            pkt.stream_index = videoStream->index;
+            av_interleaved_write_frame(fc, &pkt);
+            av_packet_unref(&pkt);
+        } else if (ret2 == AVERROR(EAGAIN)) {
+            return true;
+        } else if (ret2 == AVERROR_EOF) {
+            cout << "Encoder flushed, no more packets to receive." << endl;
+            return false;
+        } else
+            throw runtime_error("Failed to receive video packet!");
+    }
 
     return true;
 }
@@ -84,133 +55,154 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
     av_log_set_level(AV_LOG_DEBUG);
 
     // Setting up the codec.
-    const AVCodec* codec = avcodec_find_encoder_by_name("libx264");
+    const AVCodec* codec = avcodec_find_encoder_by_name("hevc_nvenc"); // TODO: compare with hevc_nvenc
     if (!codec) {
         throw runtime_error("Failed to find video codec");
     }
 
+    AVBufferRef* hw_device_ctx = nullptr;
+    int ret = av_hwdevice_ctx_create(&hw_device_ctx, AV_HWDEVICE_TYPE_CUDA, nullptr, nullptr, 0);
+    if (ret < 0) {
+        char errbuf[256];
+        av_strerror(ret, errbuf, sizeof(errbuf));
+        cout << "Failed to create CUDA device context: " << errbuf << endl;
+        throw runtime_error("Failed to create CUDA device context!");
+    }
+
     AVDictionary* opt = NULL;
-    av_dict_set(&opt, "preset", "medium", 0);
-    av_dict_set(&opt, "tune", "film", 0);
-    av_dict_set(&opt, "crf", "18", 0);
+    av_dict_set(&opt, "qp", "20", 0);
 
     videoStream = avformat_new_stream(fc, codec);
     if (!videoStream) {
+        av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed to create new videostream!");
     }
 
     videoCodecContext = avcodec_alloc_context3(codec);
     if (!videoCodecContext) {
+        av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed to allocate video codec context.");
     }
+    videoCodecContext->hw_device_ctx = av_buffer_ref(hw_device_ctx);
     videoCodecContext->width = video_width_pixels;
     videoCodecContext->height = video_height_pixels;
-    videoCodecContext->pix_fmt = AV_PIX_FMT_YUV420P10LE;
-    videoCodecContext->time_base = videoStream->time_base = { 1, video_framerate_fps };
-    videoCodecContext->color_range = AVCOL_RANGE_JPEG;
+    videoCodecContext->pix_fmt = AV_PIX_FMT_CUDA;
+    videoCodecContext->colorspace = AVCOL_SPC_BT709;
+    videoCodecContext->color_primaries = AVCOL_PRI_BT709;
+    videoCodecContext->color_trc = AVCOL_TRC_BT709;
+    videoCodecContext->time_base = { 1, video_framerate_fps };
+    videoCodecContext->framerate = { video_framerate_fps, 1 };
     videoCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
 
-    int ret = avcodec_open2(videoCodecContext, codec, &opt);
+    videoCodecContext->hw_frames_ctx = av_hwframe_ctx_alloc(videoCodecContext->hw_device_ctx);
+    if (!videoCodecContext->hw_frames_ctx) {
+        av_buffer_unref(&hw_device_ctx);
+        throw runtime_error("Failed to allocate hardware frame context!");
+    }
+
+    AVHWFramesContext* frames_ctx = reinterpret_cast<AVHWFramesContext*>(videoCodecContext->hw_frames_ctx->data);
+    frames_ctx->format = videoCodecContext->pix_fmt;
+    frames_ctx->sw_format = AV_PIX_FMT_P010LE;
+    frames_ctx->width = video_width_pixels;
+    frames_ctx->height = video_height_pixels;
+    frames_ctx->initial_pool_size = 4;
+
+    ret = av_hwframe_ctx_init(videoCodecContext->hw_frames_ctx);
     if (ret < 0) {
-        // Print the error message from FFmpeg to stderr for debugging
+        av_buffer_unref(&hw_device_ctx);
+        throw runtime_error("Failed to initialize hardware frame context!");
+    }
+
+    int ret2 = avcodec_open2(videoCodecContext, codec, &opt);
+    if (ret2 < 0) {
         char errbuf[256];
-        av_strerror(ret, errbuf, sizeof(errbuf));
+        av_strerror(ret2, errbuf, sizeof(errbuf));
         cout << "Failed to open video codec: " << errbuf << endl;
+        av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed avcodec_open2!");
     }
     av_dict_free(&opt);
 
     ret = avcodec_parameters_from_context(videoStream->codecpar, videoCodecContext);
     if (ret < 0) {
+        av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed avcodec_parameters_from_context!");
     }
 
     ret = avio_open(&fc->pb, video_path.c_str(), AVIO_FLAG_WRITE);
     if (ret < 0) {
+        av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed avio_open!");
     }
 
     ret = avformat_write_header(fc, &opt);
     if (ret < 0) {
         cout << "Failed to write header: " << ff_errstr(ret) << endl;
+        av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed to write header!");
     }
 
-    // Allocating memory for each YUV frame.
-    yuvpic = av_frame_alloc();
-    yuvpic->format = videoCodecContext->pix_fmt;
-    yuvpic->width = video_width_pixels;
-    yuvpic->height = video_height_pixels;
-    av_frame_get_buffer(yuvpic, 1);
-
-    sws_ctx = sws_getContext(
-        video_width_pixels, video_height_pixels, AV_PIX_FMT_BGRA,
-        video_width_pixels, video_height_pixels, videoCodecContext->pix_fmt,
-        SWS_BICUBIC,
-        nullptr, nullptr, nullptr);
-
-    if (!sws_ctx) {
-        throw std::runtime_error("Failed to create SwsContext for RGB->YUV conversion!");
-    }
+    av_buffer_unref(&hw_device_ctx);
 }
 
-void VideoWriter::add_frame(Pixels& p) {
+void VideoWriter::add_frame(uint32_t* device_pixels) {
     bool live = rendering_on();
-    if (live && (p.wh != get_video_dimensions_pixels()))
-        throw runtime_error("Frame dimensions were expected to be (" + to_string(get_video_width_pixels()) + ", " + to_string(get_video_height_pixels()) + "), but they were instead (" + to_string(p.wh.x) + ", " + to_string(p.wh.y) + ")!");
 
-    #ifdef USE_GPU
-    alpha_overlay_cuda(reinterpret_cast<unsigned int*>(p.pixels.data()), get_video_width_pixels(), get_video_height_pixels(), get_video_background_color());
-    #endif
+    static auto last_print_time = chrono::steady_clock::time_point::min();
+    auto now = chrono::steady_clock::now();
+    if(!live || last_print_time == chrono::steady_clock::time_point::min() || chrono::duration_cast<chrono::seconds>(now - last_print_time).count() >= 1) {
+        Pixels p(get_video_dimensions_pixels());
+        cuda_copy_pixels_to_host(p.pixels.data(), get_video_width_pixels() * get_video_height_pixels(), device_pixels);
+        p.print_to_terminal();
+        last_print_time = now;
+    }
 
-    bool fifth_frame = int(get_global_state("frame_number")) % 5 == 0;
-    if(!live || fifth_frame) p.print_to_terminal(); // Print every smoketest frame, and every 5th normal frame
+    if (!live) return; // Don't encode video in smoketest
 
-    if(!live) return; // Don't encode video in smoketest
+    AVFrame* gpu_frame = av_frame_alloc();
+    if (!gpu_frame) {
+        throw runtime_error("Failed to allocate frame!");
+    }
 
-    // Allocate a temporary RGB frame wrapper (no copy of pixel data)
-    AVFrame* rgb_frame = av_frame_alloc();
-    rgb_frame->format = AV_PIX_FMT_BGRA;
-    rgb_frame->width  = get_video_width_pixels();
-    rgb_frame->height = get_video_height_pixels();
+    gpu_frame->format = AV_PIX_FMT_CUDA;
+    gpu_frame->width  = get_video_width_pixels();
+    gpu_frame->height = get_video_height_pixels();
+    gpu_frame->hw_frames_ctx = av_buffer_ref(videoCodecContext->hw_frames_ctx);
 
-    // Point FFmpeg directly to your source data
-    rgb_frame->data[0] = reinterpret_cast<uint8_t*>(p.pixels.data());
-    rgb_frame->linesize[0] = get_video_width_pixels() * 4; // Assuming 4 bytes per pixel (BGRA)
+    int ret = av_hwframe_get_buffer(videoCodecContext->hw_frames_ctx, gpu_frame, 0);
+    if (ret < 0) {
+        av_frame_free(&gpu_frame);
+        throw runtime_error("Failed to allocate hardware frame buffer!");
+    }
 
-    // Convert RGB → YUV using swscale
-    sws_scale(sws_ctx,
-              rgb_frame->data,
-              rgb_frame->linesize,
-              0, get_video_height_pixels(),
-              yuvpic->data,
-              yuvpic->linesize);
+    preprocess_argb_to_p010(
+            device_pixels,
+            reinterpret_cast<uint16_t*>(gpu_frame->data[0]),
+            reinterpret_cast<uint16_t*>(gpu_frame->data[1]),
+            gpu_frame->width,
+            gpu_frame->height,
+            gpu_frame->linesize[0],
+            gpu_frame->linesize[1],
+            get_video_background_color()
+    );
 
-    rgb_frame->data[0] = nullptr;
-    av_frame_free(&rgb_frame);
+    gpu_frame->pts = outframe++;
 
-    // Assign PTS and encode
-    yuvpic->pts = outframe++;
-    encode_and_write_frame(yuvpic);
+    encode_and_write_frame(gpu_frame);
+
+    av_frame_free(&gpu_frame);
 }
 
 VideoWriter::~VideoWriter() {
     cout << "Cleaning up VideoWriter..." << endl;
 
-    // Writing the delayed video frames
     while(encode_and_write_frame(NULL));
 
-    // Free the video codec context.
     avcodec_free_context(&videoCodecContext);
-
-    // Freeing video specific resources
-    av_frame_free(&yuvpic);
 
     av_packet_unref(&pkt);
 
     av_write_trailer(fc);
     avio_closep(&fc->pb);
     avformat_free_context(fc);
-
-    if (sws_ctx) sws_freeContext(sws_ctx);
 }

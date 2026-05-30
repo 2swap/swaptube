@@ -282,10 +282,6 @@ extern "C" void cuda_render_sphere(
     uint32_t* d_map, const Cuda::ivec2& map_wh,
     const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float opacity, float texture_latlong)
 {
-    if(opacity == 0) {
-        cudaMemset(d_pixels, 0, wh.x * wh.y * sizeof(uint32_t));
-        return;
-    }
     dim3 blockSize(16, 16);
     dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
     render_sphere_kernel<<<gridSize, blockSize>>>(

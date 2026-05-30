@@ -231,74 +231,7 @@ __device__ float get_attraction_force (float dist_sq) {
     return (dist_6th - 1.0f) / (dist_6th + 1.0f) * .2f - .1f;
 };
 
-// Kernel to compute mirror forces
-__global__ void mirror_kernel(Cuda::vec4* positions, Cuda::vec4* velocities, const int* adjacency_matrix, const int* mirrors, const int* mirror2s, int num_nodes, float mirror_force, const float decay, const float dimension, const float attract, const int max_degree) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= num_nodes) return;
-
-    if (adjacency_matrix != nullptr && max_degree > 0) {
-        Cuda::vec4 pos_i = positions[i];
-        Cuda::vec4 delta(0.0f);
-
-        for (int k = 0; k < max_degree; ++k) {
-            int neighbor_idx = adjacency_matrix[i * max_degree + k];
-            if (neighbor_idx < 0 || neighbor_idx >= num_nodes) {
-                break;
-            }
-            Cuda::vec4 pos_j = positions[neighbor_idx];
-            Cuda::vec4 diff = pos_i - pos_j;
-            float dist_sq = dot(diff, diff) + 1.0f;
-
-            delta += diff * get_attraction_force(dist_sq);
-        }
-
-        velocities[i] -= attract * delta;
-    }
-
-    if (mirror_force > 0.0000001) {
-        Cuda::vec4 pos_i = positions[i];
-        Cuda::vec4 delta(0.0f);
-
-        {
-            int index = mirrors[i];
-            if(index >= 0 && index != i){
-                Cuda::vec4 mirror = positions[index];
-                mirror.x *= -1;
-                delta += mirror - pos_i;
-            }
-        }
-
-        {
-            int index = mirror2s[i];
-            if(index >= 0 && index != i){
-                Cuda::vec4 mirror = positions[index];
-                mirror.y *= -1;
-                delta.x = 0;
-                delta += mirror - pos_i;
-            }
-        }
-
-        delta.w = 0;
-        positions[i] += mirror_force * delta;
-    }
-
-    //if(hasnan(velocities[i])) { velocities[i] = Cuda::vec4(0, 0, 0, 0); }
-    //if(hasnan( positions[i])) {  positions[i] = Cuda::vec4(0, 0, 0, 0); }
-
-    float speedlimit = 20;
-    float magnitude = length(velocities[i]);
-    if (magnitude > speedlimit) {
-        float scale = speedlimit / magnitude;
-        velocities[i] *= scale;
-    }
-
-    velocities[i] *= decay;
-    positions[i] += velocities[i];
-    positions[i].z *= Cuda::clamp(dimension - 2, 0, 1);
-    positions[i].w *= Cuda::clamp(dimension - 3, 0, 1);
-}
-
-extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_velocities, const int* h_adjacency_matrix, const int* h_mirrors, const int* h_mirror2s, int num_nodes, int max_degree, float attract, float repel, float mirror_force, const float decay, const float dimension, const int iterations) {
+extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_velocities, const int* h_adjacency_matrix, int num_nodes, int max_degree, float attract, float repel, const float decay, const float dimension, const int iterations) {
     cout << "CUDA: " << num_nodes << " nodes, " << iterations << " iterations, " 
          << (h_adjacency_matrix != nullptr ? "with adjacency matrix, " : "without adjacency matrix, ")
          << (max_degree > 0 ? "max degree: " + to_string(max_degree) : "no max degree") 
@@ -316,15 +249,6 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
     int blockSize = 128;
     int gridSize = (num_nodes + blockSize - 1) / blockSize;
 
-    int* d_mirrors;
-    int* d_mirror2s;
-    size_t mirrors_size = num_nodes * sizeof(int);
-
-    cudaMalloc(&d_mirrors, mirrors_size);
-    cudaMalloc(&d_mirror2s, mirrors_size);
-    cudaMemcpy(d_mirrors, h_mirrors, mirrors_size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_mirror2s, h_mirror2s, mirrors_size, cudaMemcpyHostToDevice);
-
     int* d_adjacency_matrix = nullptr;
     size_t adjacency_size = num_nodes * max_degree * sizeof(int);
 
@@ -338,8 +262,6 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
             printf(".");
             fflush(stdout);
             compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, num_nodes, repel);
-            cudaDeviceSynchronize();
-            mirror_kernel<<<gridSize, blockSize>>>(d_positions, d_velocities, d_adjacency_matrix, d_mirrors, d_mirror2s, num_nodes, mirror_force, decay, dimension, attract, max_degree);
             cudaDeviceSynchronize();
         }
     } else {
@@ -428,8 +350,6 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
                                                                      d_bin_start_indices, d_sorted_indices, num_nodes, 
                                                                      h_min_bounds, h_bin_size, repel);
             cudaDeviceSynchronize();
-            mirror_kernel<<<gridSize, blockSize>>>(d_positions, d_velocities, d_adjacency_matrix, d_mirrors, d_mirror2s, num_nodes, mirror_force, decay, dimension, attract, max_degree);
-            cudaDeviceSynchronize();
             printf(",");
             fflush(stdout);
         }
@@ -445,8 +365,6 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         cudaFree(d_sorted_indices);
         cudaFree(d_bin_start_indices);
     }
-    cudaFree(d_mirror2s);
-    cudaFree(d_mirrors);
     if (d_adjacency_matrix) {
         cudaFree(d_adjacency_matrix);
     }

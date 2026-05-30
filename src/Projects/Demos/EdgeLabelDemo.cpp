@@ -1,4 +1,3 @@
-#include "../DataObjects/HashableString.h"
 #include "../Scenes/Common/CompositeScene.h"
 #include "../Scenes/Media/LatexScene.h"
 #include "../Scenes/Media/PngScene.h"
@@ -6,8 +5,7 @@
 #include "../Core/Smoketest.h"
 
 void render_video() {
-    shared_ptr<Graph> g = make_shared<Graph>();
-    shared_ptr<GraphScene> gs = make_shared<GraphScene>(g);
+    shared_ptr<GraphScene> gs = make_shared<GraphScene>();
 
     gs->manager.set({
         {"q1", "1"},
@@ -20,11 +18,11 @@ void render_video() {
     });
 
     stage_macroblock(SilenceBlock(5), 4);
-    double a_hash = g->add_node(new HashableString("a"));
-    g->move_node(a_hash, vec4(-1, 0, 0, 0));
-    double b_hash = g->add_node(new HashableString("b"));
-    g->move_node(b_hash, vec4(1, 0, 0, 0));
-    g->add_edge(a_hash, b_hash);
+    double a_hash = gs->graph->add_node(.1);
+    gs->graph->move_node(a_hash, vec4(-1, 0, 0, 0));
+    double b_hash = gs->graph->add_node(.2);
+    gs->graph->move_node(b_hash, vec4(1, 0, 0, 0));
+    gs->graph->add_edge(a_hash, b_hash);
     gs->config->transition_edge_label(MICRO, a_hash, b_hash, "abcdef");
     gs->render_microblock();
 

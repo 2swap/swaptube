@@ -17,7 +17,7 @@ public:
     ShtookaWriter* shtooka = nullptr;
 
     Writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& audio_hints, const bool& audio_sfx);
-    ~Writer();
+    void destroy();
 
     int get_video_width_pixels() const;
     int get_video_height_pixels() const;

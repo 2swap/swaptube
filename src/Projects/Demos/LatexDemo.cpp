@@ -26,126 +26,23 @@ void render_video(){
     latex.render_microblock();
     stage_macroblock(SilenceBlock(1), 1);
     latex.render_microblock();
+    return;
     */
 
-    /*
-    shared_ptr<LatexScene> latex = make_shared<LatexScene>("abc", 0.5);
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
+    vector<string> latex_strings = {"abc", "a^bc", "abbc", "abc", "a=\\frac{b}{c}", "abcdef", "deee", "ddde"};
+    //vector<string> latex_strings = {"x^2+6x+5=0", "x^2+6x=-5", "x^2+6x+9=4", "(x+3)^2=4", "x+3=\\pm2", "x=-3\\pm2", "x=-1,\\,-5"};
+    //vector<string> latex_strings = {"\\text{This is some English text.}", "\\text{This is some more English text.}", "\\text{This is even more English text.}"};
+    //vector<string> latex_strings = {"aaa", "a^aa", "a^{aa}", "a^{a^a}", "a^{a^{a^a}}", "a^{a^{a^{a^a}}}", "a^{a^{a^{a^{a^a}}}}", "a^{a^{a^{a^{a^{a^a}}}}}", "a^{a^{a^{a^{a^{a^{a^a}}}}}}", "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"};
 
-    latex->begin_latex_transition(MICRO, "a=bc");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
+    LatexScene latex(latex_strings[0], 0.6);
+    stage_macroblock(SilenceBlock(1), 1);
+    latex.render_microblock();
 
-    latex->begin_latex_transition(MICRO, "a=\\frac{b}{c}");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "abcdef");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->jump_latex("jumped");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    CompositeScene cs;
-    cs.add_scene(latex, "latex");
-
-    latex->jump_latex("jumped2");
-    stage_macroblock(SilenceBlock(2), 1);
-    cs.render_microblock();
-    latex->jump_latex("jumped3");
-    stage_macroblock(SilenceBlock(2), 1);
-    cs.render_microblock();
-    */
-
-    /*
-    shared_ptr<LatexScene> latex = make_shared<LatexScene>("\\frac{1}{x}=\\frac{x}{y}=\\frac{y}{2}", 0.5);
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    // Animate solution
-    latex->begin_latex_transition(MICRO, "1 \\cdot 2 = x \\cdot x");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "2 = x^2");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "x^2 = 2");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "x = \\sqrt{2}");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-    */
-
-    shared_ptr<LatexScene> latex = make_shared<LatexScene>("\\frac{1}{x}=\\frac{x}{y}=\\frac{y}{2}", 0.5);
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "\\frac{1}{x}=\\frac{x}{y} \\qquad \\frac{x}{y}=\\frac{y}{2}");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    // Animate solution
-    latex->begin_latex_transition(MICRO, "1 \\cdot y = x \\cdot x \\qquad \\frac{x}{y} = \\frac{y}{2}");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "y = x^2 \\qquad \\frac{x}{y} = \\frac{y}{2}");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "y = x^2 \\qquad 2 \\cdot x = y \\cdot y");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "y = x^2 \\qquad 2x = y^2");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "y = x^2 \\qquad y^2 = 2x");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "(x^2)^2 = 2x");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "x^4 = 2x");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "x^3 = 2");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
-
-    latex->begin_latex_transition(MICRO, "x = \\sqrt[3]{2}");
-    stage_macroblock(SilenceBlock(2), 2);
-    latex->render_microblock();
-    latex->render_microblock();
+    for (int i = 1; i < latex_strings.size(); i++){
+        const string& latex_str = latex_strings[i];
+        latex.begin_latex_transition(MICRO, latex_str);
+        stage_macroblock(SilenceBlock(1), 2);
+        latex.render_microblock();
+        latex.render_microblock();
+    }
 }

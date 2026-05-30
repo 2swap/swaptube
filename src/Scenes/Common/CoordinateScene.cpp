@@ -92,11 +92,12 @@ vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
 
 void CoordinateScene::draw_point(const vec2 point, int point_color, float point_opacity) {
     const vec2 pixel = point_to_pixel(point);
-    pix.fill_circle(ivec2(pixel.x, pixel.y), get_geom_mean_size()/100., point_color, point_opacity);
+    //pix.fill_circle(ivec2(pixel.x, pixel.y), get_geom_mean_size()/100., point_color, point_opacity);
 }
 
 // This is not used here, but it is used in some classes which inherit from CoordinateScene
 void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float trail_opacity) {
+/*
     if(trail.size() == 0) return;
     if(trail_opacity < 0.01) return;
     float line_width = get_geom_mean_size()/500.;
@@ -110,13 +111,15 @@ void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float
         last_pixel = point_to_pixel(p.first);
         i++;
     }
+*/
 }
 
 void CoordinateScene::draw() {
-    draw_one_axis(true);
-    draw_one_axis(false);
+    //draw_one_axis(true);
+    //draw_one_axis(false);
 }
 
+/*
 void CoordinateScene::draw_one_axis(bool ymode) {
     const float ticks_opacity = state["ticks_opacity"];
     if(ticks_opacity < 0.01) return;
@@ -159,6 +162,7 @@ void CoordinateScene::draw_one_axis(bool ymode) {
         fiveish = !fiveish;
     }
 }
+*/
 
 const StateQuery CoordinateScene::populate_state_query() const {
     StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity"};

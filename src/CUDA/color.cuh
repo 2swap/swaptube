@@ -52,10 +52,10 @@ __device__ __forceinline__ void d_set_pixel(int x, int y, int col, unsigned int*
     pixels[y * width + x] = col;
 }
 
-__device__ __forceinline__ void d_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, int width, int height) {
-    if (x < 0 || x >= width || y < 0 || y >= height) return;
+__device__ __forceinline__ void d_overlay_pixel(const Cuda::ivec2& pix, int col, float opacity, uint32_t* pixels, const Cuda::ivec2& wh) {
+    if (pix.x < 0 || pix.x >= wh.x || pix.y < 0 || pix.y >= wh.y) return;
     opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
-    int idx = y * width + x;
+    int idx = pix.y * wh.x + pix.x;
     int base = pixels[idx];
     int blended = d_color_combine(base, col, opacity);
     pixels[idx] = blended;

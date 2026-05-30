@@ -3,7 +3,6 @@
 #include <complex>
 #include <cmath>
 #include <cstdio>
-#include "../Host_Device_Shared/vec.h"
 #include "common_graphics.cuh"
 #include "find_roots.cuh"
 #include "../Host_Device_Shared/helpers.h"

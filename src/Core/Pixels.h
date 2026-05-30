@@ -15,17 +15,6 @@ inline constexpr int OPAQUE_WHITE = 0xFFFFFFFF;
 inline constexpr int TRANSPARENT_BLACK = 0x00000000;
 inline constexpr int TRANSPARENT_WHITE = 0x00FFFFFF;
 
-extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    const unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity);
-extern "C" void cuda_overlay_with_rotation(
-    unsigned int* h_background, const int bw, const int bh,
-    const unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity, const float angle_rad);
-
 class Pixels{
 public:
     ivec2 wh;
@@ -54,7 +43,7 @@ public:
     void get_average_color(int x_start, int y_start, int x_end, int y_end,
                            int &avgA, int &avgR, int &avgG, int &avgB);
 
-    void scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const;
+    void scale_to_bounding_box(const vec2& box, Pixels &scaled) const;
 
     void crop(const ivec2&, const ivec2&, Pixels &cropped) const;
     void crop_by_fractions(const vec2& crop_top_left, const vec2& crop_bottom_right, Pixels &cropped) const;
@@ -65,9 +54,9 @@ public:
     bool is_empty() const;
 
     void overlay_cpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier = 1);
-    void overlay_gpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier = 1);
     void overlay_cpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians);
-    void overlay_gpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians);
+
+    void scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const;
 
     void overwrite(const Pixels& p, const vec2& top_left);
 

@@ -5,7 +5,6 @@
 
 #include "../Common/ThreeDimensionScene.h"
 #include "../../Host_Device_Shared/ManifoldData.c"
-#include "../../DataObjects/DevicePointer.h"
 
 class ManifoldScene : public ThreeDimensionScene {
 private:

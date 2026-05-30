@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "../../IO/VisualMedia.h"
+#include "../../IO/SVG.h"
 #include "../Scene.h"
 
 using std::string;
