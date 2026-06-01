@@ -18,6 +18,22 @@
         "type": "github"
       }
     },
+    "microtex-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1722910131,
+        "narHash": "sha256-U6zqh+VqoLtlE0IwgfwjY9zt8e5/2R3cqf5fWXwoIi0=",
+        "owner": "NanoMichael",
+        "repo": "MicroTeX",
+        "rev": "0e3707f6dafebb121d98b53c64364d16fefe481d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NanoMichael",
+        "repo": "MicroTeX",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1779560665,
@@ -37,6 +53,7 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "microtex-src": "microtex-src",
         "nixpkgs": "nixpkgs"
       }
     },

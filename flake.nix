@@ -4,14 +4,51 @@
     inputs = {
         nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
         flake-utils.url = "github:numtide/flake-utils";
+        microtex-src = {
+            url = "github:NanoMichael/MicroTeX";
+            flake = false;
+        };
     };
 
-    outputs = { self, nixpkgs, flake-utils }:
+    outputs = { self, nixpkgs, flake-utils, microtex-src }:
         flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
             let
                 pkgs = import nixpkgs {
                     inherit system;
                     config = { allowUnfree = true; };
+                };
+
+                microtex = pkgs.stdenv.mkDerivation {
+                    name = "microtex";
+                    src = microtex-src;
+                    nativeBuildInputs = [
+                        pkgs.cmake
+                        pkgs.pkg-config
+                    ];
+
+                    buildInputs = [
+                        pkgs.tinyxml-2
+                        pkgs.fontconfig
+                        pkgs.gtkmm3
+                        pkgs.gtksourceview
+                        pkgs.gtksourceviewmm
+                    ];
+
+                    cmakeFlags = [
+                        "-DBUILD_SHARED_LIBS=ON"
+                    ];
+
+                    installPhase = ''
+                        mkdir -p $out/build
+                        cp LaTeX $out/build/
+                        cp libLaTeX.so $out/build/ 2>/dev/null || true
+                        cp -r $src/src $out/
+                        cp -r $src/res $out/
+                        cp $src/CMakeLists.txt $out/
+                    '';
+
+                    noAuditTmpdir = true;
+                    dontPatchELF = true;
                 };
 
                 basePackages = [
@@ -29,6 +66,7 @@
                     pkgs.glib.dev
                     pkgs.xz
                     pkgs.gdk-pixbuf
+                    microtex
                 ];
 
                 rocmMerged = pkgs.symlinkJoin {
@@ -42,11 +80,13 @@
                 };
 
                 welcomeHook = gpuType: ''
-                    echo "you need microtex to run swaptube, so run:"
-                    echo " git clone https://github.com/NanoMichael/MicroTeX.git ../MicroTeX-master"
-                    echo "and follow the build instructions at https://github.com/NanoMichael/MicroTeX/"
                     echo "[type ${gpuType}]"
                     export NIX_CFLAGS_COMPILE="-I${pkgs.gdk-pixbuf.dev}/include/gdk-pixbuf-2.0 -I${pkgs.cairo.dev}/include/cairo $NIX_CFLAGS_COMPILE";
+                    if [ ! -L "../MicroTeX-master" ] && [ ! -d "../MicroTeX-master" ]; then
+                        ln -s ${microtex} ../MicroTeX-master
+                    fi
+
+                    trap 'echo "cleaning up symlink"; rm -f ../MicroTeX-master' EXIT # shouldn't delete a cloned repo if it exists for some reason
                 '';
             in {
                 devShells = {

@@ -41,6 +41,19 @@ The following external dependencies are required for specific functionalities wi
 ## Docker Setup
 For easy deployment with all dependencies included, see the [docker/README.md](docker/README.md) for containerized setup instructions. This is optional and community-made for Docker users. I (2swap) personally don't use or maintain it.
 
+## NixOS Setup
+If you are using NixOS or the Nix package manager, you can use the provided flake.
+
+### CUDA
+```bash
+nix develop
+```
+
+### HIP
+```bash
+nix develop .#hip
+```
+
 # How to Run
 When you have created a project file `Projects/yourprojectname.cpp`, you can compile and run the whole project by executing:
 
