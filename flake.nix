@@ -53,7 +53,6 @@
                     default = pkgs.mkShell {
                         buildInputs = basePackages ++ [
                             pkgs.cudatoolkit
-                            pkgs.linuxPackages.nvidia_x11
                         ];
 
                         shellHook = ''
