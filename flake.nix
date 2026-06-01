@@ -7,28 +7,49 @@
     };
 
     outputs = { self, nixpkgs, flake-utils }:
-        flake-utils.lib.eachDefaultSystem (system:
+        flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
             let
-                pkgs = import nixpkgs { inherit system; };
-            in {
-                devShells.default = pkgs.mkShell {
-                    buildInputs = [
-                        pkgs.bashInteractive
-                        pkgs.cmake
-                        pkgs.ninja
-                        pkgs.ffmpeg
-                        pkgs.librsvg
-                        pkgs.glib
-                        pkgs.cairo
-                        pkgs.libpng
-                        pkgs.gnuplot
-                    ];
+                pkgs = import nixpkgs {
+                    inherit system;
+                    config = { allowUnfree = true; };
+                };
 
-                    shellHook = ''
-                        echo "you need microtex to run swaptube, so run:"
-                        echo " git clone https://github.com/NanoMichael/MicroTeX.git ../MicroTeX-master"
-                        echo "and follow the build instructions at https://github.com/NanoMichael/MicroTeX/"
-                    '';
+                basePackages = [
+                    pkgs.bashInteractive
+                    pkgs.cmake
+                    pkgs.ninja
+                    pkgs.ffmpeg
+                    pkgs.librsvg
+                    pkgs.glib
+                    pkgs.cairo
+                    pkgs.libpng
+                    pkgs.gnuplot
+                ];
+
+                welcomeHook = gpuType: ''
+                    echo "you need microtex to run swaptube, so run:"
+                    echo " git clone https://github.com/NanoMichael/MicroTeX.git ../MicroTeX-master"
+                    echo "and follow the build instructions at https://github.com/NanoMichael/MicroTeX/"
+                    echo "[type ${gpuType}]"
+                '';
+            in {
+                devShells = {
+                    default = pkgs.mkShell {
+                        buildInputs = basePackages ++ [
+                            pkgs.cudatoolkit
+                            pkgs.linuxPackages.nvidia_x11
+                        ];
+
+                        shellHook = welcomeHook "CUDA";
+                    };
+
+                    hip = pkgs.mkShell {
+                        buildInputs = basePackages ++ [
+                            pkgs.rocmPackages.clr
+                        ];
+
+                        shellHook = welcomeHook "HIP/ROCm";
+                    };
                 };
             });
 }
