@@ -16,7 +16,7 @@
                         pkgs.bashInteractive
                         pkgs.cmake
                         pkgs.ninja
-                        pkgs.ffmpeg_5
+                        pkgs.ffmpeg
                         pkgs.librsvg
                         pkgs.glib
                         pkgs.cairo
