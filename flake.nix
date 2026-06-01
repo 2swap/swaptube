@@ -34,10 +34,6 @@
                         pkgs.gtksourceviewmm
                     ];
 
-                    cmakeFlags = [
-                        "-DBUILD_SHARED_LIBS=ON"
-                    ];
-
                     installPhase = ''
                         mkdir -p $out/build
                         cp LaTeX $out/build/
