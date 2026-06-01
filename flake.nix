@@ -24,13 +24,29 @@
                     pkgs.cairo
                     pkgs.libpng
                     pkgs.gnuplot
+                    pkgs.pkg-config 
+                    pkgs.llvmPackages.lld
+                    pkgs.glib.dev
+                    pkgs.xz
+                    pkgs.gdk-pixbuf
                 ];
+
+                rocmMerged = pkgs.symlinkJoin {
+                    name = "rocm-merged";
+                    paths = [
+                        pkgs.rocmPackages.clr
+                        pkgs.rocmPackages.hipify
+                        pkgs.rocmPackages.rocprim
+                        pkgs.rocmPackages.rocthrust
+                    ];
+                };
 
                 welcomeHook = gpuType: ''
                     echo "you need microtex to run swaptube, so run:"
                     echo " git clone https://github.com/NanoMichael/MicroTeX.git ../MicroTeX-master"
                     echo "and follow the build instructions at https://github.com/NanoMichael/MicroTeX/"
                     echo "[type ${gpuType}]"
+                    export NIX_CFLAGS_COMPILE="-I${pkgs.gdk-pixbuf.dev}/include/gdk-pixbuf-2.0 -I${pkgs.cairo.dev}/include/cairo $NIX_CFLAGS_COMPILE";
                 '';
             in {
                 devShells = {
@@ -40,15 +56,23 @@
                             pkgs.linuxPackages.nvidia_x11
                         ];
 
-                        shellHook = welcomeHook "CUDA";
+                        shellHook = ''
+                            ${welcomeHook "CUDA"}
+                            export CUDA_PATH="${pkgs.cudatoolkit}"
+                        '';
                     };
 
                     hip = pkgs.mkShell {
                         buildInputs = basePackages ++ [
-                            pkgs.rocmPackages.clr
+                            rocmMerged
                         ];
 
-                        shellHook = welcomeHook "HIP/ROCm";
+                        shellHook = ''
+                            ${welcomeHook "HIP/ROCm"}
+                            export ROCM_PATH="${rocmMerged}"
+                            export HIP_PATH="${rocmMerged}"
+                            export NIX_CFLAGS_COMPILE="-I${rocmMerged}/include $NIX_CFLAGS_COMPILE";
+                        '';
                     };
                 };
             });
