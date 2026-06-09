@@ -9,7 +9,7 @@ void flood_fill(Pixels& ret, const Pixels& p, int start_x, int start_y, int colo
         auto [x, y] = stack.top();
         stack.pop();
 
-        if (p.out_of_range(x, y) || p.get_alpha(x, y) == 0 || ret.get_pixel_carelessly(x, y) != 0)
+        if (p.out_of_range(x, y) || p.get_alpha(x, y) < 128 || ret.get_pixel_carelessly(x, y) != 0)
             continue;
 
         ret.set_pixel_carelessly(x, y, color);
@@ -29,7 +29,7 @@ Pixels segment(const Pixels& p, uint32_t& id) {
     // Perform flood fill for each pixel in the input TranslatedPixels
     for (int y = 0; y < ret.wh.y; y++) {
         for (int x = 0; x < ret.wh.x; x++) {
-            if (p.get_alpha(x, y) != 0 && ret.get_pixel_carelessly(x, y) == 0) {
+            if (p.get_alpha(x, y) >= 128 && ret.get_pixel_carelessly(x, y) == 0) {
                 id++;
                 flood_fill(ret, p, x, y, id);
             }

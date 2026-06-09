@@ -419,6 +419,27 @@ extern "C" void free_interpolation(Cuda::Interpolation& interpolation)
 // Runtime interpolation
 // ------------------
 
+__device__ uint32_t sample_bilinear(const Cuda::Glyph& glyph, const Cuda::vec2 uv)
+{
+    float x = uv.x * (glyph.wh.x - 1);
+    float y = uv.y * (glyph.wh.y - 1);
+
+    int x0 = max(0, min(glyph.wh.x - 1, (int) floorf(x)));
+    int y0 = max(0, min(glyph.wh.y - 1, (int) floorf(y)));
+    int x1 = max(0, min(glyph.wh.x - 1, x0 + 1));
+    int y1 = max(0, min(glyph.wh.y - 1, y0 + 1));
+
+    float tx = x - x0;
+    float ty = y - y0;
+
+    uint32_t c00 = glyph.pix[y0 * glyph.wh.x + x0];
+    uint32_t c10 = glyph.pix[y0 * glyph.wh.x + x1];
+    uint32_t c01 = glyph.pix[y1 * glyph.wh.x + x0];
+    uint32_t c11 = glyph.pix[y1 * glyph.wh.x + x1];
+
+    return d_colorlerp(d_colorlerp(c00, c10, tx), d_colorlerp(c01, c11, tx), ty);
+}
+
 __global__ void interpolate_glyph_kernel(
     const Cuda::Glyph glyph1, const Cuda::Glyph glyph2,
     const float t,
@@ -430,15 +451,8 @@ __global__ void interpolate_glyph_kernel(
 
     Cuda::vec2 norm = grid_point / wh_final;
 
-    Cuda::vec2 p1 = norm * glyph1.wh;
-    int x1 = max(0, min(glyph1.wh.x - 1, (int) p1.x));
-    int y1 = max(0, min(glyph1.wh.y - 1, (int) p1.y));
-    uint32_t c1 = glyph1.pix[y1 * glyph1.wh.x + x1];
-
-    Cuda::vec2 p2 = norm * glyph2.wh;
-    int x2 = max(0, min(glyph2.wh.x - 1, (int) p2.x));
-    int y2 = max(0, min(glyph2.wh.y - 1, (int) p2.y));
-    uint32_t c2 = glyph2.pix[y2 * glyph2.wh.x + x2];
+    uint32_t c1 = sample_bilinear(glyph1, norm);
+    uint32_t c2 = sample_bilinear(glyph2, norm);
 
     Cuda::ivec2 final_pos(grid_point.x + tl_final.x, grid_point.y + tl_final.y);
     d_overlay_pixel(final_pos, d_colorlerp(c1, c2, t), 1.0, d_output_pix, output_wh);

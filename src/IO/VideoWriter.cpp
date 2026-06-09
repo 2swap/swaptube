@@ -55,7 +55,7 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
     av_log_set_level(AV_LOG_DEBUG);
 
     // Setting up the codec.
-    const AVCodec* codec = avcodec_find_encoder_by_name("hevc_nvenc"); // TODO: compare with hevc_nvenc
+    const AVCodec* codec = avcodec_find_encoder_by_name("hevc_nvenc");
     if (!codec) {
         throw runtime_error("Failed to find video codec");
     }
