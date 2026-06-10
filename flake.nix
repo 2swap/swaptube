@@ -44,7 +44,6 @@
                     '';
 
                     noAuditTmpdir = true;
-                    dontPatchELF = true;
                 };
 
                 basePackages = [
