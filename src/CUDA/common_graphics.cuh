@@ -14,7 +14,7 @@ __device__ __forceinline__ void d_fill_circle(float cx, float cy, float r, int c
         float sdx = dx*dx;
         for (float dy = -r; dy < r; dy++) {
             if (sdx + dy*dy < r2)
-                d_atomic_overlay_pixel(cx + dx, cy + dy, col, opa, pixels, wh);
+                atomic_overlay_pixel(cx + dx, cy + dy, col, opa, pixels, wh);
         }
     }
 }
@@ -30,12 +30,12 @@ __device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int co
 
     while (true) {
         if(!is_dashed || ((dash_counter / dash_counter_modulus) % 2 == 0)) {
-            d_atomic_overlay_pixel(x1, y1, col, opacity, pixels, wh);
+            atomic_overlay_pixel(x1, y1, col, opacity, pixels, wh);
             for (int i = 1; i < thickness; i++) {
-                d_atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, wh);
-                d_atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, wh);
-                d_atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, wh);
-                d_atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, wh);
+                atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, wh);
+                atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, wh);
+                atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, wh);
+                atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, wh);
             }
         }
         dash_counter++;

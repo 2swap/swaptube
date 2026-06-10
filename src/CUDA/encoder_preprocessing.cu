@@ -52,11 +52,11 @@ __global__ void argb_to_p010(
             if (ix >= width || iy >= height) continue;
 
             uint32_t pixel = argb[iy * width + ix];
-            pixel = d_color_combine(bg, pixel);
+            pixel = Cuda::color_combine(bg, pixel);
 
-            uint8_t r = d_getr(pixel);
-            uint8_t g = d_getg(pixel);
-            uint8_t b = d_getb(pixel);
+            uint8_t r = Cuda::getr(pixel);
+            uint8_t g = Cuda::getg(pixel);
+            uint8_t b = Cuda::getb(pixel);
 
             float yf, uf, vf;
             rgb_to_yuv(r, g, b, yf, uf, vf);

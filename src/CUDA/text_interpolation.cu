@@ -437,7 +437,7 @@ __device__ uint32_t sample_bilinear(const Cuda::Glyph& glyph, const Cuda::vec2 u
     uint32_t c01 = glyph.pix[y1 * glyph.wh.x + x0];
     uint32_t c11 = glyph.pix[y1 * glyph.wh.x + x1];
 
-    return d_colorlerp(d_colorlerp(c00, c10, tx), d_colorlerp(c01, c11, tx), ty);
+    return Cuda::colorlerp(Cuda::colorlerp(c00, c10, tx), Cuda::colorlerp(c01, c11, tx), ty);
 }
 
 __global__ void interpolate_glyph_kernel(
@@ -455,7 +455,7 @@ __global__ void interpolate_glyph_kernel(
     uint32_t c2 = sample_bilinear(glyph2, norm);
 
     Cuda::ivec2 final_pos(grid_point.x + tl_final.x, grid_point.y + tl_final.y);
-    d_overlay_pixel(final_pos, d_colorlerp(c1, c2, t), 1.0, d_output_pix, output_wh);
+    overlay_pixel(final_pos, Cuda::colorlerp(c1, c2, t), 1.0, d_output_pix, output_wh);
 }
 
 __global__ void fade_glyph_kernel(
@@ -469,7 +469,7 @@ __global__ void fade_glyph_kernel(
     uint32_t c = glyph.pix[grid_point.y * glyph.wh.x + grid_point.x];
 
     Cuda::ivec2 final_pos(grid_point.x + tl_final.x, grid_point.y + tl_final.y);
-    d_overlay_pixel(final_pos, c, opacity, d_output_pix, output_wh);
+    overlay_pixel(final_pos, c, opacity, d_output_pix, output_wh);
 }
 
 void interpolate_glyph(const Cuda::Interpolation& interpolation, const int g1, const int g2, const float t, uint32_t* d_output_pix, const Cuda::ivec2& output_wh)

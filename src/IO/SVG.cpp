@@ -15,6 +15,17 @@
 
 using namespace std;
 
+string latex_color(uint32_t color, string text) {
+    // Mask out the alpha channel
+    uint32_t rgb = color & 0x00FFFFFF;
+
+    // Convert to a hex string
+    stringstream ss;
+    ss << "\\textcolor{#" << hex << setw(6) << setfill('0') << rgb << "}{" << text << "}";
+
+    return ss.str();
+}
+
 static gboolean get_svg_intrinsic_size(RsvgHandle *handle, gdouble* width, gdouble* height) {
     #if LIBRSVG_CHECK_VERSION(2, 52, 0)
         return rsvg_handle_get_intrinsic_size_in_pixels(handle, width, height);

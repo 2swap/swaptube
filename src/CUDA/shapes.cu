@@ -10,7 +10,7 @@ __global__ void circle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda::v
 
     Cuda::vec2 delta = pos - center;
     if (dot(delta, delta) <= radius_squared) {
-        d_overlay_pixel(pos, color, 1.0f, pix, wh);
+        overlay_pixel(pos, color, 1.0f, pix, wh);
     }
 }
 
@@ -31,7 +31,7 @@ __global__ void triangle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda:
     float w2 = edge_function(p0, p1, p);
 
     if ((w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) || (w0 <= 0.0f && w1 <= 0.0f && w2 <= 0.0f)) {
-        d_overlay_pixel(pos, color, 1.0f, pix, wh);
+        overlay_pixel(pos, color, 1.0f, pix, wh);
     }
 }
 
@@ -76,7 +76,7 @@ __global__ void quad_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda::vec
     float w3 = edge_function(p3, p0, p);
 
     if ((w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f && w3 >= 0.0f) || (w0 <= 0.0f && w1 <= 0.0f && w2 <= 0.0f && w3 <= 0.0f)) {
-        d_overlay_pixel(pos, color, 1.0f, pix, wh);
+        overlay_pixel(pos, color, 1.0f, pix, wh);
     }
 }
 
@@ -100,7 +100,7 @@ __global__ void rectangle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda
     if (pos.x >= max_pos.x || pos.y >= max_pos.y || pos.x >= wh.x || pos.y >= wh.y) return;
 
     if (pos.x >= top_left.x && pos.x < bottom_right.x && pos.y >= top_left.y && pos.y < bottom_right.y) {
-        d_overlay_pixel(pos, color, 1.0f, pix, wh);
+        overlay_pixel(pos, color, 1.0f, pix, wh);
     }
 }
 

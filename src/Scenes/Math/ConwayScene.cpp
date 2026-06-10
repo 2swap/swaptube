@@ -8,12 +8,13 @@ extern "C" void draw_conway(
     const vec2& lx_ty, const vec2& rx_by, float transition
 );
 
-ConwayScene::ConwayScene(const vec2& dimensions) : CoordinateScene(dimensions) {
-    conway_grid = new ConwayGrid(ivec2(10000, 10000));
+ConwayScene::ConwayScene(const ivec2& size_bitboards, const vec2& dimensions) : CoordinateScene(dimensions) {
+    conway_grid = new ConwayGrid(size_bitboards);
     add_data_object(conway_grid);
 }
 
 void ConwayScene::draw() {
+        conway_grid->iterate();
     draw_conway(
         conway_grid->d_board_2,
         conway_grid->d_board,
@@ -36,5 +37,5 @@ const StateQuery ConwayScene::populate_state_query() const {
 
 void ConwayScene::on_end_transition_extra_behavior(const TransitionType tt){
     if(tt == MICRO)
-        conway_grid->iterate();
+        ;//conway_grid->iterate();
 }

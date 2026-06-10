@@ -8,8 +8,6 @@
 #include <unordered_set>
 #include <unordered_map>
 
-#include "../../Core/Color.h"
-#include "../../Core/Pixels.h"
 #include "../DataObject.h"
 #include "LambdaExpression.h"
 #include "LambdaAbstraction.h"

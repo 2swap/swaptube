@@ -10,7 +10,7 @@ __device__ unsigned int getLighting(const Cuda::vec3& pos, const Cuda::vec3& lig
     float light = max(dot(normal, normalize(lightPos - pos)), 0.0);
     light *= max(shadow, 0.1);
     float glow = min(iters / max_raymarch_iters, 1.0);
-    return d_OKLABtoRGB(255, min(light + shadow + glow, 1.0), glow * -0.4, light * -0.4);
+    return Cuda::OKLABtoRGB(255, min(light + shadow + glow, 1.0), glow * -0.4, light * -0.4);
 }
 
 // Gets the distance to the surface based on Signed Distance Function

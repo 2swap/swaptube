@@ -36,7 +36,7 @@ __global__ void render_real_valued_function(
     // The closer to equal, the whiter
     float whiteness = 1.0f - (positive_evals - negative_evals) / (float)(positive_evals + negative_evals);
 
-    uint32_t color = d_colorlerp(0xff000000, 0xffffffff, whiteness );
+    uint32_t color = Cuda::colorlerp(0xff000000, 0xffffffff, whiteness );
     pixels[pixel.y * wh.x + pixel.x] = 0xFF000000 | (color << 16) | (color << 8) | color;
 }
 

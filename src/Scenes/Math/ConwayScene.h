@@ -9,7 +9,7 @@ private:
     ConwayGrid* conway_grid;
 
 public:
-    ConwayScene(const vec2& dimensions = vec2(1, 1));
+    ConwayScene(const ivec2& size_bitboards, const vec2& dimensions = vec2(1, 1));
 
     void draw() override;
 

@@ -56,10 +56,10 @@ __global__ void bicubic_scale_kernel(
             uint32_t pixel = in_pixels[yi * in_w + xi];
             float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
 
-            pa += weight * d_geta(pixel);
-            pr += weight * d_getr(pixel);
-            pg += weight * d_getg(pixel);
-            pb += weight * d_getb(pixel);
+            pa += weight * Cuda::geta(pixel);
+            pr += weight * Cuda::getr(pixel);
+            pg += weight * Cuda::getg(pixel);
+            pb += weight * Cuda::getb(pixel);
         }
     }
 
@@ -73,7 +73,7 @@ __global__ void bicubic_scale_kernel(
     ig = min(255, max(0, ig));
     ib = min(255, max(0, ib));
 
-    out_pixels[y * out_w + x] = d_argb(ia, ir, ig, ib);
+    out_pixels[y * out_w + x] = Cuda::argb(ia, ir, ig, ib);
 }
 
 extern "C" int cuda_bicubic_scale(const uint32_t* input_pixels, int input_w, int input_h, uint32_t* output_pixels, int output_w, int output_h) {
@@ -118,7 +118,7 @@ __global__ void overlay_kernel(
 
     Cuda::ivec2 f_pos(idx % f_wh.x, idx / f_wh.x);
 
-    d_overlay_pixel(f_pos + floor(center), foreground[f_pos.y * f_wh.x + f_pos.x], opacity, background, b_wh);
+    overlay_pixel(f_pos + floor(center), foreground[f_pos.y * f_wh.x + f_pos.x], opacity, background, b_wh);
 }
 
 __global__ void overlay_rotation_kernel(
@@ -165,25 +165,25 @@ __global__ void overlay_rotation_kernel(
     uint32_t p01 = foreground[y1 * f_wh.x + x0];
     uint32_t p11 = foreground[y1 * f_wh.x + x1];
 
-    float a00 = static_cast<float>(d_geta(p00));
-    float r00 = static_cast<float>(d_getr(p00));
-    float g00 = static_cast<float>(d_getg(p00));
-    float b00 = static_cast<float>(d_getb(p00));
+    float a00 = static_cast<float>(Cuda::geta(p00));
+    float r00 = static_cast<float>(Cuda::getr(p00));
+    float g00 = static_cast<float>(Cuda::getg(p00));
+    float b00 = static_cast<float>(Cuda::getb(p00));
 
-    float a10 = static_cast<float>(d_geta(p10));
-    float r10 = static_cast<float>(d_getr(p10));
-    float g10 = static_cast<float>(d_getg(p10));
-    float b10 = static_cast<float>(d_getb(p10));
+    float a10 = static_cast<float>(Cuda::geta(p10));
+    float r10 = static_cast<float>(Cuda::getr(p10));
+    float g10 = static_cast<float>(Cuda::getg(p10));
+    float b10 = static_cast<float>(Cuda::getb(p10));
 
-    float a01 = static_cast<float>(d_geta(p01));
-    float r01 = static_cast<float>(d_getr(p01));
-    float g01 = static_cast<float>(d_getg(p01));
-    float b01 = static_cast<float>(d_getb(p01));
+    float a01 = static_cast<float>(Cuda::geta(p01));
+    float r01 = static_cast<float>(Cuda::getr(p01));
+    float g01 = static_cast<float>(Cuda::getg(p01));
+    float b01 = static_cast<float>(Cuda::getb(p01));
 
-    float a11 = static_cast<float>(d_geta(p11));
-    float r11 = static_cast<float>(d_getr(p11));
-    float g11 = static_cast<float>(d_getg(p11));
-    float b11 = static_cast<float>(d_getb(p11));
+    float a11 = static_cast<float>(Cuda::geta(p11));
+    float r11 = static_cast<float>(Cuda::getr(p11));
+    float g11 = static_cast<float>(Cuda::getg(p11));
+    float b11 = static_cast<float>(Cuda::getb(p11));
 
     // Interpolate along x
     float a0 = a00 * (1.0f - sx) + a10 * sx;
@@ -206,7 +206,7 @@ __global__ void overlay_rotation_kernel(
     float fg_alpha = (af / 255.0f) * opacity;
     if (fg_alpha <= 0.0f) return;
 
-    d_overlay_pixel(b_pos, d_argb(255, rf, gf, bf), fg_alpha, background, b_wh);
+    overlay_pixel(b_pos, Cuda::argb(255, rf, gf, bf), fg_alpha, background, b_wh);
 }
 
 extern "C" void cuda_overlay (

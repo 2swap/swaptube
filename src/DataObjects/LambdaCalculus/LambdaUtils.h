@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-#include "../../Core/Color.h"
+#include "../../Host_Device_Shared/Color.h"
 #include "../../Core/Pixels.h"
 #include "../DataObject.h"
 #include "LambdaExpression.h"

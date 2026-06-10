@@ -68,7 +68,7 @@ __global__ void render_manifold_kernel(
         float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 3, error);
         float i = evaluate_resolved_state_equation(d_manifold.i_size, d_manifold.i_eq, cuda_tags, 3, error);
 
-        color = d_complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
+        color = complex_to_srgb(thrust::complex<float>(r, i), ab_dilation, dot_radius);
     }
 
     out.x = (int)out.x; // Need these to be integers for comparison and indexing

@@ -272,7 +272,7 @@ __global__ void render_sphere_kernel(
     uint32_t latlong_color = lat_long_line(v, u, 12.f);
     uint32_t map_color = bicubic_sample(map, map_wh, u, v);
     // TODO we copy the giant texture to the GPU even if we might not use it. We should only copy when texture_latlong > 0
-    uint32_t color = d_colorlerp(map_color, latlong_color, texture_latlong);
+    uint32_t color = Cuda::colorlerp(map_color, latlong_color, texture_latlong);
     pixels[pixel.x + wh.x * pixel.y] = (color & 0x00FFFFFF) | ((uint32_t)(opacity * 255) << 24);
 }
 

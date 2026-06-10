@@ -6,7 +6,7 @@
 #include <limits>
 #include <iostream>
 #include "../Host_Device_Shared/helpers.h"
-#include "Color.h"
+#include "../Host_Device_Shared/Color.h"
 
 using namespace std;
 
