@@ -14,10 +14,8 @@ set(ENV{GLIBCXX_FORCE_NEW} 1)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(FFMPEG REQUIRED libswscale libavcodec libavformat libavdevice libavutil libavfilter)
-pkg_check_modules(GLIB REQUIRED glib-2.0)
-find_package(Cairo REQUIRED)
-find_package(RSVG REQUIRED)
+pkg_check_modules(FFMPEG REQUIRED IMPORTED_TARGET libswscale libavcodec libavformat libavdevice libavutil libavfilter)
+pkg_check_modules(RSVG REQUIRED IMPORTED_TARGET librsvg-2.0)
 find_package(PNG REQUIRED)
 
 set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
@@ -92,22 +90,13 @@ message(STATUS "Executable target ${PROJECT_NAME} added")
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJECT_NAME}
-    ${FFMPEG_INCLUDE_DIRS} ${RSVG_INCLUDE_DIRS} ${GLIB_INCLUDE_DIRS}
-    "/usr/include/gdk-pixbuf-2.0"
-    "/usr/include/cairo"
-    ${PNG_INCLUDE_DIR}
 )
 
 target_link_libraries(
     ${PROJECT_NAME}
-    ${GLIB_LIBRARIES}
-    ${FFMPEG_LIBRARIES}
-    ${RSVG_LIBRARIES}
-    ${FDKAAC_LIBRARIES}
-    cairo
-    gobject-2.0
-    lzma
-    ${PNG_LIBRARIES}
+    PkgConfig::FFMPEG
+    PkgConfig::RSVG
+    PNG::PNG
     ${GPU_LIBRARIES}
     ${X11_LIBRARIES}
 )
