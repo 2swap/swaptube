@@ -444,8 +444,10 @@ void Pixels::bicubic_scale(int new_width, int new_height, Pixels& result) const 
 }
 
 void Pixels::print_to_terminal() {
+    std::ostringstream ss;
+
     // Print an empty line first.
-    cout << endl;
+    ss << std::endl;
 
     // Get terminal dimensions.
     struct winsize wsz;
@@ -493,15 +495,17 @@ void Pixels::print_to_terminal() {
             //  - Set background to the average bottom color.
             // Then print the Unicode upper half block (▀), which renders the top half in
             // the foreground color and the bottom half in the background color.
-            cout << "\033[38;2;" << r_top << ";" << g_top << ";" << b_top << "m"
+            ss << "\033[38;2;" << r_top << ";" << g_top << ";" << b_top << "m"
                  << "\033[48;2;" << r_bot << ";" << g_bot << ";" << b_bot << "m"
-                 << "\u2580";
+                 << reinterpret_cast<const char*>(u8"\u2580");
         }
         // Reset colors at the end of each line.
-        cout << "\033[0m" << endl;
+        ss << "\033[0m" << std::endl;
     }
     // Reset at the end.
-    cout << "\033[0m" << endl;
+    ss << "\033[0m" << std::endl;
+
+    std::cout << ss.str();
 }
 
 // Free functions implementations
