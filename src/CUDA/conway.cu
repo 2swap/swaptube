@@ -299,6 +299,7 @@ extern "C" void reverse_conway_loop(
     const Cuda::ivec2& grid_wh_bitboards,
     int max_iters)
 {
+    // TODO this is not working yet
     dim3 blockSize(256);
     dim3 numBlocks(
         (grid_wh_bitboards.x * grid_wh_bitboards.y + blockSize.x - 1) / blockSize.x
@@ -598,27 +599,38 @@ extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, const Cuda::
     cudaDeviceSynchronize();
 }
 
-__global__ void initialize_boards(Bitboard* d_board, Bitboard* d_board_2, const Cuda::ivec2 grid_wh_bitboards) {
+__global__ void initialize_boards(Bitboard* d_board, const Cuda::ivec2 grid_wh_bitboards, const uint32_t* d_envelope, const Cuda::ivec2& envelope_wh) {
     Cuda::ivec2 idx(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
+
+    Cuda::ivec2 envelope_pos = idx * envelope_wh / grid_wh_bitboards;
+    envelope_pos.y = envelope_wh.y - 1 - envelope_pos.y;
+    if(envelope_pos.x >= envelope_wh.x || envelope_pos.y >= envelope_wh.y) return;
+
+    if(d_envelope[envelope_pos.y * envelope_wh.x + envelope_pos.x] == 0) return;
 
     Bitboard board_value = ((uint64_t)idx.y) << 32 | idx.x;
 
     int index = idx.y * grid_wh_bitboards.x + idx.x;
-    d_board[index] = d_board_2[index] = board_value;
+    d_board[index] = board_value;
 }
 
-extern "C" void allocate_conway_grid(Bitboard** d_board, Bitboard** d_board_2, const Cuda::ivec2& grid_wh_bitboards) {
+extern "C" void allocate_conway_grid(Bitboard** d_board, const Cuda::ivec2& grid_wh_bitboards, const uint32_t* envelope, const Cuda::ivec2& envelope_wh) {
     size_t board_sz = grid_wh_bitboards.x * grid_wh_bitboards.y * sizeof(Bitboard);
     cudaMalloc((void**)d_board, board_sz);
-    cudaMalloc((void**)d_board_2, board_sz);
+
+    uint32_t* d_envelope;
+    size_t envelope_sz = envelope_wh.x * envelope_wh.y * sizeof(uint32_t);
+    cudaMalloc((void**)&d_envelope, envelope_sz);
+    cudaMemcpy(d_envelope, envelope, envelope_sz, cudaMemcpyHostToDevice);
 
     // Use kernel to spawn initial board state from envelope texture.
     dim3 blockSize(16, 16);
     dim3 numBlocks((grid_wh_bitboards.x + blockSize.x - 1) / blockSize.x, (grid_wh_bitboards.y + blockSize.y - 1) / blockSize.y);
-    initialize_boards<<<numBlocks, blockSize>>>(*d_board, *d_board_2, grid_wh_bitboards);
+    initialize_boards<<<numBlocks, blockSize>>>(*d_board, grid_wh_bitboards, d_envelope, envelope_wh);
+
+    cudaFree(d_envelope);
 }
 
-extern "C" void free_conway_grid(Bitboard* d_board, Bitboard* d_board_2) {
+extern "C" void free_conway_grid(Bitboard* d_board) {
     cudaFree(d_board);
-    cudaFree(d_board_2);
 }

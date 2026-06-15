@@ -15,6 +15,8 @@ using std::list;
 using std::pair;
 using std::min;
 
+extern "C" void draw_coordinate_grid(uint32_t* d_pixels, const ivec2& pix_wh, const vec2& lx_ty, const vec2& rx_by);
+
 string float_to_pretty_string(const float value) {
     if(abs(value) < 0.0000001) return "0";
 
@@ -90,33 +92,8 @@ vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
     return pixel_to_point_in_screen(pix, lx_ty, rx_by, wh);
 }
 
-void CoordinateScene::draw_point(const vec2 point, int point_color, float point_opacity) {
-    const vec2 pixel = point_to_pixel(point);
-    //pix.fill_circle(ivec2(pixel.x, pixel.y), get_geom_mean_size()/100., point_color, point_opacity);
-}
-
-// This is not used here, but it is used in some classes which inherit from CoordinateScene
-void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float trail_opacity) {
-/*
-    if(trail.size() == 0) return;
-    if(trail_opacity < 0.01) return;
-    float line_width = get_geom_mean_size()/500.;
-    vec2 last_pixel{0,0};
-    int i = 0;
-    for(const pair<vec2, int>& p : trail) {
-        if(i != 0) {
-            const vec2 next_pixel(point_to_pixel(p.first));
-            pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, p.second, trail_opacity, line_width);
-        }
-        last_pixel = point_to_pixel(p.first);
-        i++;
-    }
-*/
-}
-
 void CoordinateScene::draw() {
-    //draw_one_axis(true);
-    //draw_one_axis(false);
+    draw_coordinate_grid(gpu_pix->get_ptr(), get_width_height(), vec2(state["left_x"], state["top_y"]), vec2(state["right_x"], state["bottom_y"]));
 }
 
 /*

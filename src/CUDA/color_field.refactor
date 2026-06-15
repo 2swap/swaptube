@@ -1,0 +1,15 @@
+// Using coherent noise, function returns a 2-vector (in OKLAB's A and B channels)
+// that can be used to create a color field.
+#include "../Host_Device_Shared/helpers.h"
+#include "../Host_Device_Shared/color.h"
+
+__device__ float perlin_noise(Cuda::vec3 pos) {
+}
+
+__device__ Cuda::vec2 color_field(Cuda::vec3 input) {
+    float noise_value = perlin_noise(input);
+    float a = noise_value * 0.5f;
+    float b = noise_value * 0.5f;
+    
+    return Cuda::vec2(a, b);
+}

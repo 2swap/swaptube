@@ -32,7 +32,7 @@
 
 const float ASPECT_RATIO_THRESHOLD = 0.2f;
 const float IOU_THRESHOLD = 0.85f;
-const bool ALLOW_MULTI_EDGES = true;
+const bool ALLOW_MULTI_EDGES = false;
 
 // Helper function to get the bounding box of a glyph with a given color
 __global__ void get_bounding_box_kernel(const uint32_t* pix, const Cuda::ivec2 wh, uint32_t color, Cuda::ivec2* d_top_left, Cuda::ivec2* d_bottom_right)
