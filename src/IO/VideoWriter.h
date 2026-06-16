@@ -10,9 +10,8 @@ extern "C"
     #include <libavformat/avformat.h>
     #include <libswscale/swscale.h>
     #include <libavutil/opt.h>
+    #include <libavutil/hwcontext_drm.h>
 }
-
-extern "C"
 
 class VideoWriter {
 private:
