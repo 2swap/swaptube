@@ -9,9 +9,9 @@
 
 SHARED_FILE_PREFIX
 
-HOST_DEVICE inline uint32_t argb(int a, int r, int g, int b){return (a<<24)+
-                                                   (r<<16)+
-                                                   (g<<8 )+
+HOST_DEVICE inline uint32_t argb(int a, int r, int g, int b){return (a<<24)|
+                                                   (r<<16)|
+                                                   (g<<8 )|
                                                    (b    );}
 HOST_DEVICE inline int geta(int col){return (col&0xff000000)>>24;}
 HOST_DEVICE inline int getr(int col){return (col&0x00ff0000)>>16;}
