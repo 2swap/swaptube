@@ -206,7 +206,7 @@ void VideoWriter::add_frame(uint32_t* device_pixels) {
     unsigned long long uv_offset = 0;
     
     int y_pitch = gpu_frame->linesize[0];
-    int uv_pitch =-gpu_frame->linesize[1];
+    int uv_pitch = gpu_frame->linesize[1];
 
     #ifdef USE_AMD
     AVFrame* drm_frame = av_frame_alloc();
