@@ -27,7 +27,7 @@ __device__ __forceinline__ uint32_t coordinate_line(float x, float y, float zoom
 
 __global__ void render_coordinate_grid_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh,
-    const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by)
+    const Cuda::vec2 lx_ty, const Cuda::vec2 rx_by)
 {
     Cuda::ivec2 pixel(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
     if (pixel.x >= wh.x || pixel.y >= wh.y) return;
