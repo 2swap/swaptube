@@ -1,7 +1,16 @@
 #include "RootFractalScene.h"
 #include <cmath>
 
-extern "C" void draw_root_fractal(unsigned int* pixels, int w, int h, complex<float> c1, complex<float> c2, float terms, float lx, float ty, float rx, float by, float radius, float opacity, float brightness);
+extern "C" void draw_root_fractal(
+    uint32_t* d_pixels,
+    const ivec2& wh,
+    const std::complex<float>& c1,
+    const std::complex<float>& c2,
+    float terms,
+    const vec2& lx_ty,
+    const vec2& rx_by,
+    float radius, float opacity, float brightness
+);
 
 RootFractalScene::RootFractalScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({
@@ -28,28 +37,30 @@ void RootFractalScene::draw() {
     float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(wh*10, .25) / 250;
     float opacity = 1-1/(2*wh+1);
     opacity *= square(state["visibility_multiplier"]);
-    draw_root_fractal(pix.pixels.data(), w, h,
+    draw_root_fractal(gpu_pix->get_ptr(), get_width_height(),
         c0, c1, n,
-        state["left_x"], state["top_y"],
-        state["right_x"], state["bottom_y"],
+        vec2(state["left_x"], state["top_y"]),
+        vec2(state["right_x"], state["bottom_y"]),
         radius, opacity, state["brightness"]
     );
 
     float gm = get_geom_mean_size() / 200;
 
     // Draw coefficients
+    /* TODO needs GPU refactor
     int i = 0;
     for(complex<float> coeff : {c0, c1}) {
         float letter_opa = 1;
         letter_opa *= state["coefficients_opacity"];
         const vec2 pixel(point_to_pixel(vec2(coeff.real(), coeff.imag())));
         if(letter_opa > 0.01) {
-            ScalingParams sp = ScalingParams(gm * 16, gm * 40);
+            ScalingParams sp = ScalingParams(gm * vec2(16, 40));
             Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
-            pix.overlay(text_pixels, pixel.x - text_pixels.w / 2, pixel.y - text_pixels.h / 2, letter_opa);
+            pix.overlay_cpu(text_pixels, floor(pixel - text_pixels.wh / 2), letter_opa);
         }
         i++;
     }
+    */
     CoordinateScene::draw();
 }
 

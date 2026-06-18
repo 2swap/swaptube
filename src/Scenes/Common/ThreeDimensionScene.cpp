@@ -1,30 +1,29 @@
 #include "ThreeDimensionScene.h"
 #include "../../IO/Writer.h"
 #include "../../Host_Device_Shared/vec.h"
+#include "../../Core/Smoketest.h"
 
 extern "C" {
     void render_points_on_gpu(
-        unsigned int* h_pixels, int width, int height,
+        uint32_t* d_pixels, const ivec2& wh,
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
-        quat camera_direction, vec3 camera_pos, float fov);
+        const quat& camera_direction, const vec3& camera_pos, float fov);
 
     void render_lines_on_gpu(
-        unsigned int* h_pixels, int width, int height,
+        uint32_t* d_pixels, const ivec2& wh,
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
-        quat camera_direction, vec3 camera_pos, float fov);
+        const quat& camera_direction, const vec3& camera_pos, float fov);
 
     void cuda_render_surface(
-        vector<unsigned int>& pix,
+        uint32_t* d_pixels,
         int x1,
         int y1,
-        int plot_w,
-        int plot_h,
+        const ivec2& plot_wh,
         int pixels_w,
-        unsigned int* d_surface,
-        int surface_w,
-        int surface_h,
+        uint32_t* d_surface,
+        const ivec2& surface_wh,
         float opacity,
         vec3 camera_pos,
         quat camera_direction,
@@ -56,7 +55,7 @@ Path::Path(const string& n, int clr, float op)
     : name(n), color(clr), opacity(op) { }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
-    : SuperScene(dimensions), use_state_for_center(false), auto_distance(-1), auto_camera(vec3(0,0,0)) {
+    : SuperScene(dimensions), auto_distance(-1), auto_camera(vec3(0,0,0)) {
     manager.set({
         {"fov", "1"},
         {"x", "0"},
@@ -70,8 +69,10 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_radius_multiplier", "1"},
-        {"points_opacity", "1"}
+        {"points_opacity", "1"},
     });
+    distance_buffer = new DevicePointer(get_pixels_size());
+    add_data_object(distance_buffer);
 }
 
 // TODO this is duplicate code from CUDA/common_graphics.h and we should unify them.
@@ -80,7 +81,7 @@ vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, bool& behind_came
     if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
 
     float scale = (get_geom_mean_size()*fov) / coordinate.z;
-    return scale * vec2(coordinate.x, coordinate.y) + get_width_height()*.5f;
+    return scale * vec2(coordinate.x, -coordinate.y) + get_width_height()*.5f;
 }
 
 bool ThreeDimensionScene::isOutsideScreen(const vec2& point) {
@@ -164,7 +165,6 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
     float this_surface_opacity = state[surface.name + ".opacity"] * state["surfaces_opacity"];
 
     vec3 surface_center = surface.center;
-    if(use_state_for_center) surface_center = vec3(state[surface.name + ".x"], state[surface.name + ".y"], state[surface.name + ".z"]);
     if(this_surface_opacity < .001) return;
 
     vector<vec2> corners(4);
@@ -194,15 +194,13 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
     int plot_w = x2 - x1 + 1;
     int plot_h = y2 - y1 + 1;
 
-    Pixels* queried = NULL;
-    subscenes[surface.name]->query(queried);
+    uint32_t* queried = subscenes[surface.name]->query();
 
     cuda_render_surface(
-        pix.pixels,
-        x1, y1, plot_w, plot_h, pix.w,
-        queried->pixels.data(),
-        subscenes[surface.name]->get_width(),
-        subscenes[surface.name]->get_height(),
+        gpu_pix->get_ptr(),
+        x1, y1, ivec2(plot_w, plot_h), get_width(),
+        queried,
+        subscenes[surface.name]->get_width_height(),
         this_surface_opacity,
         camera_pos,
         camera_direction,
@@ -219,9 +217,11 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
 }
 
 void ThreeDimensionScene::set_camera_direction() {
+    fov = state["fov"];
+    over_w_fov = 1/(get_geom_mean_size()*fov);
     camera_direction = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
-    vec3 camera_to_use = vec3(state["x"], state["y"], state["z"]);
-    camera_pos = camera_to_use + rotate_vector(vec3(0,0,-state["d"]), conjugate(camera_direction));
+    vec3 focus = vec3(state["x"], state["y"], state["z"]);
+    camera_pos = focus - rotate_vector(vec3(0,0,state["d"]), conjugate(camera_direction));
 }
 
 float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
@@ -230,9 +230,6 @@ float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
 }
 
 void ThreeDimensionScene::draw() {
-    fov = state["fov"];
-    over_w_fov = 1/(get_geom_mean_size()*fov);
-
     set_camera_direction();
 
     // Render surfaces via their CUDA integration.
@@ -243,9 +240,8 @@ void ThreeDimensionScene::draw() {
     if (!lines.empty() && state["lines_opacity"] > .001) {
         int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
-            pix.pixels.data(),
-            get_width(),
-            get_height(),
+            gpu_pix->get_ptr(),
+            get_width_height(),
             get_geom_mean_size(),
             thickness,
             state["lines_opacity"],
@@ -258,9 +254,8 @@ void ThreeDimensionScene::draw() {
     }
     if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
         render_points_on_gpu(
-            pix.pixels.data(),
-            get_width(),
-            get_height(),
+            gpu_pix->get_ptr(),
+            get_width_height(),
             get_geom_mean_size(),
             state["points_opacity"],
             state["points_radius_multiplier"],
@@ -276,16 +271,9 @@ void ThreeDimensionScene::draw() {
 const StateQuery ThreeDimensionScene::populate_state_query() const {
     StateQuery sq = SuperScene::populate_state_query();
     for(const string& x : {
-        "fov","x", "y", "z", "d", "q1", "qi", "qj",
-        "qk", "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
+        "fov","x", "y", "z", "d", "q1", "qi", "qj", "qk",
+        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
     }) sq.insert(x);
-    if(use_state_for_center) {
-        for(const Surface& surface : surfaces){
-            sq.insert(surface.name + ".x");
-            sq.insert(surface.name + ".y");
-            sq.insert(surface.name + ".z");
-        }
-    }
     for(const Surface& surface : surfaces){
         sq.insert(surface.name + ".opacity");
     }

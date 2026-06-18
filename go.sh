@@ -1,5 +1,6 @@
 #!/bin/bash
 
+clear
 check_command_available() {
     command -v "$1" > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -74,7 +75,7 @@ SKIP_SMOKETEST=0
 AUDIO_HINTS=0
 AUDIO_SFX=0
 INVALID_FLAG=0
-USE_HIP="FALSE"
+COMPUTE_LANG=""
 # Parse flags
 while getopts "snhxc:" flag; do
     case "$flag" in
@@ -93,10 +94,10 @@ while getopts "snhxc:" flag; do
         c)  
             case "$OPTARG" in
                 CUDA)
-                    USE_HIP="FALSE"
+                    COMPUTE_LANG="CUDA"
                     ;;
                 HIP)
-                    USE_HIP="TRUE"
+                    COMPUTE_LANG="HIP"
                     ;;
                 *)
                     echo "Invalid compute language specified: use CUDA or HIP"
@@ -160,7 +161,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     echo "go.sh: Running \`cmake ..\` from build directory"
 
     # Pass the variables to CMake as options
-    cmake -G Ninja .. -DUSE_HIP="${USE_HIP}"
+    cmake -G Ninja .. -DCOMPUTE_LANG="${COMPUTE_LANG}"
 
     echo "go.sh: Compiling..."
     # build the project

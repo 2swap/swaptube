@@ -16,14 +16,12 @@ public:
 
     const StateQuery populate_state_query() const override;
 
-    std::unordered_map<std::string, double> stage_publish_to_global() const override;
-
     void draw() override;
 
     void generate_tone();
     void generate_audio(double duration, std::vector<sample_t>& left, std::vector<sample_t>& right, double volume_mult = 1);
 
-    Pendulum pend;
+    Pendulum* pend;
 
 private:
     int tonegen = 0;

@@ -6,7 +6,7 @@
 #include <limits>
 #include <iostream>
 #include "../Host_Device_Shared/helpers.h"
-#include "Color.h"
+#include "../Host_Device_Shared/Color.h"
 
 using namespace std;
 
@@ -15,24 +15,12 @@ inline constexpr int OPAQUE_WHITE = 0xFFFFFFFF;
 inline constexpr int TRANSPARENT_BLACK = 0x00000000;
 inline constexpr int TRANSPARENT_WHITE = 0x00FFFFFF;
 
-extern "C" void cuda_overlay(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity);
-extern "C" void cuda_overlay_with_rotation(
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity, const float angle_rad);
-
 class Pixels{
 public:
-    int w;
-    int h;
+    ivec2 wh;
     vector<unsigned int> pixels;
     Pixels();
-    Pixels(int width, int height);
+    Pixels(const ivec2& dim);
 
     bool out_of_range(int x, int y) const;
 
@@ -55,29 +43,30 @@ public:
     void get_average_color(int x_start, int y_start, int x_end, int y_end,
                            int &avgA, int &avgR, int &avgG, int &avgB);
 
-    void scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const;
+    void scale_to_bounding_box(const vec2& box, Pixels &scaled) const;
 
-    void crop(int x, int y, int cw, int ch, Pixels &cropped) const;
+    void crop(const ivec2&, const ivec2&, Pixels &cropped) const;
+    void crop_by_fractions(const vec2& crop_top_left, const vec2& crop_bottom_right, Pixels &cropped) const;
+    void crop_by_alpha(Pixels& cropped);
 
-    void crop_by_fractions(float crop_top, float crop_bottom, float crop_left, float crop_right, Pixels &cropped) const;
-
-    int get_pixel_bilinear(double x, double y) const;
+    int get_pixel_bilinear(const vec2& pos) const;
 
     bool is_empty() const;
 
-    void add_border(int col, int thickness = 1);
+    void overlay_cpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier = 1);
+    void overlay_cpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians);
 
-    void overlay(Pixels p, int dx, int dy, double overlay_opacity_multiplier = 1);
+    void scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const;
 
-    void overwrite(Pixels p, int dx, int dy);
+    void overwrite(const Pixels& p, const vec2& top_left);
 
     void fill_rect(int x, int y, int rw, int rh, int col);
 
-    void fill_circle(double x, double y, double r, int col, double opa = 1);
+    void fill_circle(const ivec2& center, double r, int col, double opa = 1);
 
-    void fill_ring(double x, double y, double r_outer, double r_inner, int col, double opa = 1);
+    void fill_ring(const ivec2& center, double r_outer, double r_inner, int col, double opa = 1);
 
-    void fill_ellipse(double x, double y, double rw, double rh, int col, double opa = 1);
+    void fill_ellipse(const ivec2& center, double rw, double rh, int col, double opa = 1);
 
     void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness);
 
@@ -99,4 +88,3 @@ public:
 // Free functions
 Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensities);
 Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, int negative_intensity);
-Pixels crop_by_alpha(const Pixels& p);

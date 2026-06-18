@@ -7,6 +7,7 @@
 #include <cctype>
 
 #include "LambdaExpression.h"
+#include "../../IO/SVG.h"
 
 class LambdaAbstraction;
 

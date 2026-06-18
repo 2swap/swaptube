@@ -1,10 +1,12 @@
 #include "WhitePaperScene.h"
 
-extern "C" void cuda_overlay_with_rotation (
-    unsigned int* h_background, const int bw, const int bh,
-    unsigned int* h_foreground, const int fw, const int fh,
-    const int dx, const int dy,
-    const float opacity, const float angle);
+extern "C" void cuda_overlay (
+    uint32_t* background, const ivec2& b_wh,
+    const uint32_t* foreground, const ivec2& f_wh,
+    const vec2& center, const float opacity, const float angle_rad);
+extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
+extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
+extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
 
 WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, const vector<int>& page_numbers, const vec2& dimensions)
     : Scene(dimensions), prefix(prefix), author(author), page_numbers(page_numbers) {
@@ -13,9 +15,9 @@ WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, con
         {"which_page", "1"},
         {"page_focus", "0"},
         {"crop_top", "0"},
-        {"crop_bottom", "0"},
+        {"crop_bottom", "1"},
         {"crop_left", "0"},
-        {"crop_right", "0"},
+        {"crop_right", "1"},
     });
 }
 
@@ -35,10 +37,8 @@ void WhitePaperScene::draw() {
         pdf_page_to_pix(picture, prefix, page_number);
         Pixels cropped;
         picture.crop_by_fractions(
-            state["crop_top"],
-            state["crop_bottom"],
-            state["crop_left"],
-            state["crop_right"],
+            vec2(state["crop_top"], state["crop_left"]),
+            vec2(state["crop_bottom"], state["crop_right"]),
             cropped
         );
 
@@ -62,28 +62,29 @@ void WhitePaperScene::draw() {
 
         pages_centered *= page_focus_multiplier;
 
-        float x_center = (.5 + pages_centered * (.08 + .08*(1-square(1-completion))));
-        float y_center = (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05);
-        float x_offset = get_width() * x_center - scaled.w * .5;
-        float y_offset = get_height() * y_center - scaled.h * .5;
+        const vec2 center(.5 + pages_centered * (.08 + .08*(1-square(1-completion))),
+                           (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05));
+        const vec2 offset = get_width_height() * center - scaled.wh * .5;
 
         float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
 
-        cuda_overlay_with_rotation(pix.pixels.data(), pix.w, pix.h,
-                     scaled.pixels.data(), scaled.w, scaled.h,
-                     (int)x_offset, (int)y_offset,
-                     1.0f, angle
-        );
+        uint32_t* scaled_ptr = cuda_alloc_pixels_on_device(scaled.wh.x * scaled.wh.y);
+        cuda_copy_pixels_to_device(scaled.pixels.data(), scaled.wh.x * scaled.wh.y, scaled_ptr);
+
+        // Overwrite the scaled image onto the scene's pixel buffer
+        cuda_overlay(gpu_pix->get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
+
+        cuda_free_pixels_on_device(scaled_ptr);
     }
 
-    ScalingParams sp = ScalingParams(get_width(), get_height()/6);
+    ScalingParams sp = ScalingParams(get_width_height() * vec2(1, .13));
     Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
-    int offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
-    cuda_overlay(pix.pixels.data(), pix.w, pix.h,
-                 text_pixels.pixels.data(), text_pixels.w, text_pixels.h,
-                 (int)((get_width() - text_pixels.w) / 2), offset_y,
-                 1.0f
-    );
+    float offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
+    uint32_t* text_ptr = cuda_alloc_pixels_on_device(text_pixels.wh.x * text_pixels.wh.y);
+    cuda_copy_pixels_to_device(text_pixels.pixels.data(), text_pixels.wh.x * text_pixels.wh.y, text_ptr);
+    const vec2 text_offset((get_width() - text_pixels.wh.x) / 2, offset_y);
+    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), text_ptr, text_pixels.wh, text_offset, 1.0f, 0.0f);
+    cuda_free_pixels_on_device(text_ptr);
 }
 
 const StateQuery WhitePaperScene::populate_state_query() const {

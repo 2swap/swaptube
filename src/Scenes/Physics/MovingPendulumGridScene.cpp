@@ -11,6 +11,7 @@ MovingPendulumGridScene::MovingPendulumGridScene(const vec2& dimensions) : Coord
             {"theta2", "0"},
             {"p1", "0"},
             {"p2", "0"},
+            {"rk4_step_size", "0.01"},
             {"momentum_value_gradient", "1"}});
 }
 
@@ -45,6 +46,7 @@ void MovingPendulumGridScene::draw_grid() {
         state["top_y"   ] * (  tom) + state["p2"    ]
     );
     grid.tick(state);
+    Pixels pix(get_width_height());
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
             int i = x+y*w;

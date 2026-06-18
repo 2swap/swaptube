@@ -1,85 +1,46 @@
 #include "../Scenes/Math/ManifoldScene.h"
+#include "../IO/PNG.h"
 
 void render_video() {
     ManifoldScene ms;
 
     ms.add_manifold("",
-        "(a)", "0", "(b)",
+        "(a)", "(b) -1 *", "0",
         "(a)", "(b)",
-        "-1", "1", "3000",
-        "-1", "1", "3000"
+        "-1", "1", "5000",
+        "-1", "1", "5000"
     );
 
-    stage_macroblock(SilenceBlock(13), 12);
+    stage_macroblock(SilenceBlock(15), 6);
     ms.manager.set({
-        {"d", "10"},
+        {"d", "4"},
     });
-    ms.manager.transition(MICRO, {
-        {"qi", ".2"},
-        {"qj", "{t} 2 / sin"},
-        {"qk", ".1"},
-    });
-    ms.render_microblock();
-    ms.render_microblock();
 
-    ms.manager.set({
-        {"a_wave", "3"},
-        {"b_wave", "9"},
-        {"mult", "2"},
-    });
-    ms.manager.transition(MICRO, {
-        {"manifold_x", "(a) -.1 +"},
-        {"manifold_y", "(a) <a_wave> * sin (b) <b_wave> * sin + <mult> /"},
-        {"manifold_z", "(b)"},
-    });
-    ms.render_microblock();
-    ms.render_microblock();
-
-    // Plane in 3D space
-    ms.manager.transition(MICRO, {
-        {"manifold_x", "(a)"},
-        {"manifold_y", "0"},
-        {"manifold_z", "(b)"},
-    });
-    ms.render_microblock();
-    ms.render_microblock();
+    Pixels pix;
+    png_to_pix(pix, "../earth_tiny");
+    ms.set_texture(pix);
 
     //Parameterize a sphere with spherical coordinates
     ms.manager.transition(MICRO, {
         {"manifold_x", "(a) cos (b) sin *"},
-        {"manifold_y", "(a) sin (b) sin *"},
-        {"manifold_z", "(b) cos"},
-        {"manifold_a_min", "-1.57"},
-        {"manifold_a_max", "1.57"},
-        {"manifold_b_min", "-3.14"},
-        {"manifold_b_max", "3.14"},
+        {"manifold_y", "(b) cos"},
+        {"manifold_z", "(a) sin (b) sin *"},
+        {"manifold_a_min", "0"},
+        {"manifold_a_max", "pi 2 *"},
+        {"manifold_b_min", "0"},
+        {"manifold_b_max", "pi"},
     });
     ms.render_microblock();
     ms.render_microblock();
 
-    // Back to a plane
     ms.manager.transition(MICRO, {
-        {"manifold_x", "(a)"},
-        {"manifold_y", "0"},
-        {"manifold_z", "(b)"},
-        {"manifold_a_min", "-3.14"},
-        {"manifold_a_max", "3.14"},
-        {"manifold_b_min", "-3.14"},
-        {"manifold_b_max", "3.14"},
+        {"q1", "{t} 2 / sin"},
+        {"qi", "{t} 2 * sin .6 *"},
+        {"qj", "{t} 2 / cos"},
+        {"qk", "0"},
     });
     ms.render_microblock();
     ms.render_microblock();
-
-    // Torus
-    ms.manager.transition(MICRO, {
-        {"manifold_x", ".5 (a) cos * 2 + (b) cos *"},
-        {"manifold_y", ".5 (a) cos * 2 + (b) sin *"},
-        {"manifold_z", ".5 (a) sin *"},
-        {"manifold_a_min", "-3.14"},
-        {"manifold_a_max", "3.14"},
-        {"manifold_b_min", "-3.14"},
-        {"manifold_b_max", "3.14"},
-    });
     ms.render_microblock();
     ms.render_microblock();
 }

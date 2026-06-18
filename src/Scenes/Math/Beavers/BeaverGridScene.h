@@ -8,5 +8,4 @@ private:
     void draw() override;
 
     const StateQuery populate_state_query() const;
-
 };

@@ -3,9 +3,10 @@
 #include "ManifoldScene.h"
 
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const ivec2& wh,
+    uint32_t* distance_buffer,
     const ManifoldData* manifolds, const int num_manifolds,
-    const vec3 camera_pos, const quat camera_direction,
+    const vec3& camera_pos, const quat& camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
     const uint32_t* tex_pixels, const int tex_w, const int tex_h
@@ -97,9 +98,9 @@ void ManifoldScene::draw() {
     }
 
     cuda_render_manifold(
-        pix.pixels.data(),
-        pix.w,
-        pix.h,
+        gpu_pix->get_ptr(),
+        get_width_height(),
+        distance_buffer->get_ptr(),
         manifolds,
         manifold_names.size(),
         camera_pos,
@@ -112,6 +113,7 @@ void ManifoldScene::draw() {
         texture_w,
         texture_h
     );
+
     ThreeDimensionScene::draw();
 }
 
@@ -141,9 +143,9 @@ void ManifoldScene::set_texture(const Pixels& new_texture) {
     if(d_texture_data) {
         cuda_free_texture(d_texture_data);
     }
-    d_texture_data = cuda_copy_texture_to_device(new_texture.pixels.data(), new_texture.w, new_texture.h);
-    texture_w = new_texture.w;
-    texture_h = new_texture.h;
+    d_texture_data = cuda_copy_texture_to_device(new_texture.pixels.data(), new_texture.wh.x, new_texture.wh.y);
+    texture_w = new_texture.wh.x;
+    texture_h = new_texture.wh.y;
 }
 
 ManifoldScene::~ManifoldScene() {

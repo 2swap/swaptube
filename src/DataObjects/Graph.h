@@ -10,15 +10,12 @@
 #include <string>
 #include <utility>
 #include "DataObject.h"
-#include "GenericBoard.h"
 
 class Edge {
 public:
-    Edge(double f, double t, double opa = 1, uint32_t col = 0xffffffff) : from(f), to(t), opacity(opa), color(col) {}
+    Edge(double f, double t) : from(f), to(t) {}
     double from;
     double to;
-    double opacity;
-    uint32_t color;
 
     bool operator==(const Edge& other) const {
         return (this->to == other.to && this->from == other.from);
@@ -37,29 +34,17 @@ vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<f
 
 class Node {
 public:
-    Node(GenericBoard* t, double hash, vec4 position, vec4 velocity);
+    Node(double hash, vec4 position, vec4 velocity);
 
-    GenericBoard* data;
     double hash = 0;
-    int index = -1;
-    std::unordered_set<double> expected_children_hashes;
     EdgeSet neighbors;
-    double opacity = 1;
-    int color = 0xffffffff;
-    float size = 1;
-    double age = 0;
     vec4 velocity;
     vec4 position;
-    float weight() const;
-    double radius() const;
-    double splash_opacity() const;
-    double splash_radius() const;
 };
 
 class Graph : public DataObject {
 public:
     Graph();
-    ~Graph();
 
     int size() const;
 
@@ -70,13 +55,13 @@ public:
     void clear_queue();
     void clear();
 
-    double add_node(GenericBoard* t);
-    double add_node_without_edges(GenericBoard* t);
+    double add_node(double hash);
+    double add_node_without_edges(double hash);
 
     int expand(int n = -1);
 
-    void add_node_with_neighbors(GenericBoard* t, std::vector<double> neighbor_hashes);
-    void move_node(double hash, float x, float y, float z, float w = 0);
+    void add_node_with_neighbors(double hash, std::vector<double> neighbor_hashes);
+    void move_node(double hash, vec4 pos);
 
     void add_edge(double from, double to, double opacity = 1);
     void remove_edge(double from, double to);
@@ -94,13 +79,7 @@ public:
 
     std::vector<int> make_adjacency_matrix(const std::vector<Node*>& node_vector, int &max_degree);
 
-    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const float centering_strength, const double dimension, const float mirror_force, const bool flip_by_symmetry);
-
-    vec4 center_of_mass() const;
-
-    float autofocus_dist() const;
-
-    void render_json(std::string json_out_filename);
+    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension);
 
     std::unordered_set<double> get_neighborhood(double hash, int dist);
     std::unordered_set<double> get_neighbors(double hash);

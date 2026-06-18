@@ -1,19 +1,25 @@
 #include "LambdaScene.h"
 #include <algorithm>
-#include "../../DataObjects/LambdaCalculus/LambdaUtils.h"
 #include <cmath>
 #include <string>
 
 using namespace std;
 
+extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
+extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
+extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
+extern "C" void cuda_overlay(
+    uint32_t* background, const ivec2& b_wh,
+    const uint32_t* foreground, const ivec2& f_wh,
+    const vec2& center, const float opacity, const float angle);
+
 LambdaScene::LambdaScene(const shared_ptr<const LambdaExpression> lambda, const vec2& dimensions) :
     Scene(dimensions), le(lambda->clone()) {
     le->set_positions();
-    manager.set({{"latex_opacity", "0"}, {"title_opacity", "0"}});
 }
 
 const StateQuery LambdaScene::populate_state_query() const {
-    return StateQuery{"microblock_fraction", "title_opacity", "latex_opacity"};
+    return StateQuery{"microblock_fraction"};
 }
 
 void LambdaScene::reduce(){
@@ -28,8 +34,8 @@ void LambdaScene::reduce(){
 void LambdaScene::set_expression(shared_ptr<LambdaExpression> lambda) {
     last_le = le->clone();
     le = lambda->clone();
-    last_le_w = le_pix.w;
-    last_le_h = le_pix.h;
+    last_le_w = le_pix.wh.x;
+    last_le_h = le_pix.wh.y;
     le->set_positions();
 }
 
@@ -54,28 +60,35 @@ float LambdaScene::get_scale(shared_ptr<const LambdaExpression> expr) {
 }
 
 void LambdaScene::draw() {
+    // TODO I am lazy and have not refactored this to be on the GPU. This is really dumb:
+    // it draws on the CPU, copies to GPU, and overwrites the pixel buffer on GPU.
+    const vec2 wh(get_width_height());
     if(last_le == nullptr){
         render_diagrams(); 
-        pix.overwrite(le_pix, (pix.w-le_pix.w)*.5, (pix.h-le_pix.h)*.5);
+        uint32_t* d_pix = cuda_alloc_pixels_on_device(le_pix.wh.x * le_pix.wh.y);
+        cuda_copy_pixels_to_device(le_pix.pixels.data(), le_pix.wh.x * le_pix.wh.y, d_pix);
+        const ivec2 draw_pos = floor((wh - vec2(le_pix.wh)) * .5);
+        cuda_overlay(gpu_pix->get_ptr(), get_width_height(), d_pix, le_pix.wh, draw_pos, 1, 0);
+        cuda_free_pixels_on_device(d_pix);
     } else {
         float trans_frac = state["microblock_fraction"];
         pair<shared_ptr<LambdaExpression>, shared_ptr<LambdaExpression>> interpolated = get_interpolated(last_le, le, trans_frac);
         float scale = smoothlerp(get_scale(last_le), get_scale(le), trans_frac);
         Pixels p1 = interpolated.first->draw_lambda_diagram(scale);
         Pixels p2 = interpolated.second->draw_lambda_diagram(scale);
-        float pixw = smoothlerp(p1.w, p2.w, trans_frac);
-        float pixh = smoothlerp(p1.h, p2.h, trans_frac);
-        pix.overwrite(p1, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
-        pix.overlay  (p2, (pix.w-pixw)*.5, (pix.h-pixh)*.5);
-    }
-    if(state["latex_opacity"] > 0.01){
-        ScalingParams sp(pix.w, pix.h / 4);
-        Pixels latex = latex_to_pix(le->get_latex(), sp);
-        pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["latex_opacity"]);
-    }
-    if(state["title_opacity"] > 0.01){
-        ScalingParams sp(pix.w, pix.h / 4);
-        Pixels latex = latex_to_pix("\\text{" + title + "}", sp);
-        pix.overlay(latex, (pix.w-latex.w)*.5, pix.h*7/8-latex.h, state["title_opacity"]);
+
+        // Copy p1 and p2 to gpu
+        uint32_t* d_p1 = cuda_alloc_pixels_on_device(p1.wh.x * p1.wh.y);
+        uint32_t* d_p2 = cuda_alloc_pixels_on_device(p2.wh.x * p2.wh.y);
+        cuda_copy_pixels_to_device(p1.pixels.data(), p1.wh.x * p1.wh.y, d_p1);
+        cuda_copy_pixels_to_device(p2.pixels.data(), p2.wh.x * p2.wh.y, d_p2);
+
+        vec2 pixwh(smoothlerp(p1.wh.x, p2.wh.x, trans_frac), smoothlerp(p1.wh.y, p2.wh.y, trans_frac));
+        const ivec2 draw_pos = floor((wh - pixwh) * .5);
+        cuda_overlay(gpu_pix->get_ptr(), get_width_height(), d_p1, p1.wh, draw_pos, 1, 0);
+        cuda_overlay(gpu_pix->get_ptr(), get_width_height(), d_p2, p2.wh, draw_pos, 1, 0);
+
+        cuda_free_pixels_on_device(d_p1);
+        cuda_free_pixels_on_device(d_p2);
     }
 }

@@ -358,7 +358,8 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     if (px >= w || py >= h) return;
     d_pixels[py * w + px] = 0xff0000ff; // default to blue
 
-    Cuda::vec3 dir_world(Cuda::get_raymarch_vector(px, py, w, h, fov, camera_orientation));
+    Cuda::vec3 dir_world(Cuda::get_raymarch_vector(Cuda::ivec2(px, py), Cuda::ivec2(w, h), fov, camera_orientation));
+
 
     // Initialize state in parameter-space (we treat param-space coords directly)
     float Y[6];
@@ -416,7 +417,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     }
 
     // fade to black based on steps
-    else d_pixels[py * w + px] = d_colorlerp(out, 0xff000000, dist_traveled / max_dist );
+    else d_pixels[py * w + px] = Cuda::colorlerp(out, 0xff000000, dist_traveled / max_dist );
 }
 
 // Host-facing launcher

@@ -7,50 +7,57 @@
 
 SHARED_FILE_PREFIX
 
+struct ivec4 {
+    int x, y, z, w;
+    HOST_DEVICE ivec4(int x, int y, int z, int w) : x(x), y(y), z(z), w(w) {}
+    HOST_DEVICE ivec4(int v) : x(v), y(v), z(v), w(v) {}
+    HOST_DEVICE ivec4() {}
+};
 struct vec4 {
     float x, y, z, w;
     HOST_DEVICE vec4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
     HOST_DEVICE vec4(float v) : x(v), y(v), z(v), w(v) {}
     HOST_DEVICE vec4() {}
+
+    HOST_DEVICE vec4(const ivec4& v) : x(v.x), y(v.y), z(v.z), w(v.w) {}
 };
-struct ivec4 {
-    int x, y, z, w;
-    HOST_DEVICE ivec4(int x, int y, int z, int w) : x(x), y(y), z(z), w(w) {}
-    HOST_DEVICE ivec4(int v) : x(v), y(v), z(v), w(v) {}
-    HOST_DEVICE ivec4(const vec4& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)), w(floorf(v.w)) {}
-    HOST_DEVICE ivec4() {}
+struct ivec3 {
+    int x, y, z;
+    HOST_DEVICE ivec3(int x, int y, int z) : x(x), y(y), z(z) {}
+    HOST_DEVICE ivec3(int v) : x(v), y(v), z(v) {}
+    HOST_DEVICE ivec3() {}
+
+    HOST_DEVICE ivec3(const ivec4& v) : x(v.x), y(v.y), z(v.z) {}
 };
 struct vec3 {
     float x, y, z;
     HOST_DEVICE vec3(float x, float y, float z) : x(x), y(y), z(z) {}
     HOST_DEVICE vec3(float v) : x(v), y(v), z(v) {}
     HOST_DEVICE vec3() {}
+
     HOST_DEVICE vec3(const vec4& v) : x(v.x), y(v.y), z(v.z) {}
+
+    HOST_DEVICE vec3(const ivec3& v) : x(v.x), y(v.y), z(v.z) {}
 };
-struct ivec3 {
-    int x, y, z;
-    HOST_DEVICE ivec3(int x, int y, int z) : x(x), y(y), z(z) {}
-    HOST_DEVICE ivec3(int v) : x(v), y(v), z(v) {}
-    HOST_DEVICE ivec3(const vec3& v) : x(floorf(v.x)), y(floorf(v.y)), z(floorf(v.z)) {}
-    HOST_DEVICE ivec3() {}
-    HOST_DEVICE ivec3(const ivec4& v) : x(v.x), y(v.y), z(v.z) {}
+struct ivec2 {
+    int x, y;
+    HOST_DEVICE ivec2(int x, int y) : x(x), y(y) {}
+    HOST_DEVICE ivec2(int v) : x(v), y(v) {}
+    HOST_DEVICE ivec2() {}
+
+    HOST_DEVICE ivec2(const ivec3& v) : x(v.x), y(v.y) {}
+    HOST_DEVICE ivec2(const ivec4& v) : x(v.x), y(v.y) {}
 };
 struct vec2 {
     float x, y;
     HOST_DEVICE vec2(float x, float y) : x(x), y(y) {}
     HOST_DEVICE vec2(float v) : x(v), y(v) {}
     HOST_DEVICE vec2() {}
+
     HOST_DEVICE vec2(const vec3& v) : x(v.x), y(v.y) {}
     HOST_DEVICE vec2(const vec4& v) : x(v.x), y(v.y) {}
-};
-struct ivec2 {
-    int x, y;
-    HOST_DEVICE ivec2(int x, int y) : x(x), y(y) {}
-    HOST_DEVICE ivec2(int v) : x(v), y(v) {}
-    HOST_DEVICE ivec2(const vec2& v) : x(floorf(v.x)), y(floorf(v.y)) {}
-    HOST_DEVICE ivec2() {}
-    HOST_DEVICE ivec2(const ivec3& v) : x(v.x), y(v.y) {}
-    HOST_DEVICE ivec2(const ivec4& v) : x(v.x), y(v.y) {}
+
+    HOST_DEVICE vec2(const ivec2& v) : x(v.x), y(v.y) {}
 };
 
 struct quat {
@@ -79,6 +86,28 @@ struct mat4 {
 };
 
 // Common operators
+HOST_DEVICE inline bool operator==(const vec2& a, const vec2& b) { return a.x == b.x && a.y == b.y; }
+HOST_DEVICE inline bool operator==(const vec3& a, const vec3& b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
+HOST_DEVICE inline bool operator==(const vec4& a, const vec4& b) { return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w; }
+HOST_DEVICE inline bool operator==(const ivec2& a, const ivec2& b) { return a.x == b.x && a.y == b.y; }
+HOST_DEVICE inline bool operator==(const ivec3& a, const ivec3& b) { return a.x == b.x && a.y == b.y && a.z == b.z; }
+HOST_DEVICE inline bool operator==(const ivec4& a, const ivec4& b) { return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w; }
+HOST_DEVICE inline bool operator==(const quat& a, const quat& b) { return a.u == b.u && a.i == b.i && a.j == b.j && a.k == b.k; }
+HOST_DEVICE inline bool operator==(const mat2& a, const mat2& b) { return a.a == b.a && a.b == b.b; }
+HOST_DEVICE inline bool operator==(const mat3& a, const mat3& b) { return a.a == b.a && a.b == b.b && a.c == b.c; }
+HOST_DEVICE inline bool operator==(const mat4& a, const mat4& b) { return a.a == b.a && a.b == b.b && a.c == b.c && a.d == b.d; }
+
+HOST_DEVICE inline bool operator!=(const vec2& a, const vec2& b) { return a.x != b.x || a.y != b.y; }
+HOST_DEVICE inline bool operator!=(const vec3& a, const vec3& b) { return a.x != b.x || a.y != b.y || a.z != b.z; }
+HOST_DEVICE inline bool operator!=(const vec4& a, const vec4& b) { return a.x != b.x || a.y != b.y || a.z != b.z || a.w != b.w; }
+HOST_DEVICE inline bool operator!=(const ivec2& a, const ivec2& b) { return a.x != b.x || a.y != b.y; }
+HOST_DEVICE inline bool operator!=(const ivec3& a, const ivec3& b) { return a.x != b.x || a.y != b.y || a.z != b.z; }
+HOST_DEVICE inline bool operator!=(const ivec4& a, const ivec4& b) { return a.x != b.x || a.y != b.y || a.z != b.z || a.w != b.w; }
+HOST_DEVICE inline bool operator!=(const quat& a, const quat& b) { return a.u != b.u || a.i != b.i || a.j != b.j || a.k != b.k; }
+HOST_DEVICE inline bool operator!=(const mat2& a, const mat2& b) { return a.a != b.a || a.b != b.b; }
+HOST_DEVICE inline bool operator!=(const mat3& a, const mat3& b) { return a.a != b.a || a.b != b.b || a.c != b.c; }
+HOST_DEVICE inline bool operator!=(const mat4& a, const mat4& b) { return a.a != b.a || a.b != b.b || a.c != b.c || a.d != b.d; }
+
 HOST_DEVICE inline vec2 operator+(const vec2& a, const vec2& b) { return vec2{ a.x + b.x, a.y + b.y }; }
 HOST_DEVICE inline vec3 operator+(const vec3& a, const vec3& b) { return vec3{ a.x + b.x, a.y + b.y, a.z + b.z }; }
 HOST_DEVICE inline vec4 operator+(const vec4& a, const vec4& b) { return vec4{ a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w }; }
@@ -137,9 +166,9 @@ HOST_DEVICE inline mat4& operator-=(mat4& a, const mat4& b) { a.a -= b.a; a.b -=
 HOST_DEVICE inline vec2 operator*(const vec2& a, float scalar) { return vec2{ a.x * scalar, a.y * scalar }; }
 HOST_DEVICE inline vec3 operator*(const vec3& a, float scalar) { return vec3{ a.x * scalar, a.y * scalar, a.z * scalar }; }
 HOST_DEVICE inline vec4 operator*(const vec4& a, float scalar) { return vec4{ a.x * scalar, a.y * scalar, a.z * scalar, a.w * scalar }; }
-HOST_DEVICE inline ivec2 operator*(const ivec2& a, int scalar) { return ivec2{ a.x * scalar, a.y * scalar }; }
-HOST_DEVICE inline ivec3 operator*(const ivec3& a, int scalar) { return ivec3{ a.x * scalar, a.y * scalar, a.z * scalar }; }
-HOST_DEVICE inline ivec4 operator*(const ivec4& a, int scalar) { return ivec4{ a.x * scalar, a.y * scalar, a.z * scalar, a.w * scalar }; }
+HOST_DEVICE inline ivec2 operator*(const ivec2& a, float scalar) { return ivec2{ (int)(a.x * scalar), (int)(a.y * scalar) }; }
+HOST_DEVICE inline ivec3 operator*(const ivec3& a, float scalar) { return ivec3{ (int)(a.x * scalar), (int)(a.y * scalar), (int)(a.z * scalar) }; }
+HOST_DEVICE inline ivec4 operator*(const ivec4& a, float scalar) { return ivec4{ (int)(a.x * scalar), (int)(a.y * scalar), (int)(a.z * scalar), (int)(a.w * scalar) }; }
 HOST_DEVICE inline quat operator*(const quat& a, float scalar) { return quat{ a.u * scalar, a.i * scalar, a.j * scalar, a.k * scalar }; }
 
 HOST_DEVICE inline vec2& operator*=(vec2& a, float scalar) { a.x *= scalar; a.y *= scalar; return a; }
@@ -223,20 +252,12 @@ HOST_DEVICE inline vec3 normalize(const vec3& v) { float len = length(v); return
 HOST_DEVICE inline vec4 normalize(const vec4& v) { float len = length(v); return vec4{ v.x / len, v.y / len, v.z / len, v.w / len }; }
 HOST_DEVICE inline quat normalize(const quat& q) { float len = length(q); return quat{ q.u / len, q.i / len, q.j / len, q.k / len }; }
 
-HOST_DEVICE inline float dot(const vec2& a, const vec2& b) { return a.x * b.y + a.y * b.x; }
+HOST_DEVICE inline float dot(const vec2& a, const vec2& b) { return a.x * b.x + a.y * b.y; }
 HOST_DEVICE inline float dot(const vec3& a, const vec3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 HOST_DEVICE inline float dot(const vec4& a, const vec4& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
 HOST_DEVICE inline float dot(const ivec2& a, const ivec2& b) { return a.x * b.y + a.y * b.x; }
 HOST_DEVICE inline float dot(const ivec3& a, const ivec3& b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
 HOST_DEVICE inline float dot(const ivec4& a, const ivec4& b) { return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w; }
-
-HOST_DEVICE inline bool hasnan(const vec2& v) { return std::isnan(v.x) || std::isnan(v.y); }
-HOST_DEVICE inline bool hasnan(const vec3& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z); }
-HOST_DEVICE inline bool hasnan(const vec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
-HOST_DEVICE inline bool hasnan(const ivec2& v) { return std::isnan(v.x) || std::isnan(v.y); }
-HOST_DEVICE inline bool hasnan(const ivec3& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z); }
-HOST_DEVICE inline bool hasnan(const ivec4& v) { return std::isnan(v.x) || std::isnan(v.y) || std::isnan(v.z) || std::isnan(v.w); }
-HOST_DEVICE inline bool hasnan(const quat& q) { return std::isnan(q.u) || std::isnan(q.i) || std::isnan(q.j) || std::isnan(q.k); }
 
 HOST_DEVICE inline vec3 integerize(const vec3& v) { return vec3{ floorf(v.x), floorf(v.y), floorf(v.z) }; }
 
@@ -361,5 +382,9 @@ HOST_DEVICE inline vec4 transform(const mat4& m, const vec4& v) {
         dot(transposed.d, v)
     };
 }
+
+HOST_DEVICE inline ivec2 floor(const vec2& v) { return ivec2{ (int) floorf(v.x), (int) floorf(v.y) }; }
+HOST_DEVICE inline ivec3 floor(const vec3& v) { return ivec3{ (int) floorf(v.x), (int) floorf(v.y), (int) floorf(v.z) }; }
+HOST_DEVICE inline ivec4 floor(const vec4& v) { return ivec4{ (int) floorf(v.x), (int) floorf(v.y), (int) floorf(v.z), (int) floorf(v.w) }; }
 
 SHARED_FILE_SUFFIX

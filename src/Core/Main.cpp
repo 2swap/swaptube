@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
     signal(SIGINT, signal_handler);
     try {
         setup_output_subfolders();
-        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000022, AUDIO_HINTS, AUDIO_SFX);
+        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, AUDIO_HINTS, AUDIO_SFX);
         cout << "Rendering video... " << endl;
         render_video();
     } catch(std::exception& e) {
@@ -107,6 +107,8 @@ int main(int argc, char* argv[]) {
         cout << "\033[0m" << endl;
         return 1;
     }
+
+    get_writer().destroy();
 
     cout << "\033[1;32m" << endl << "====================" << endl;
     cout << "Completed successfully!" << endl;

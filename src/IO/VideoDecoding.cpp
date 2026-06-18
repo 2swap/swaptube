@@ -68,7 +68,7 @@ bool MP4FrameReader::get_frame(int frame_index, int target_width, int target_hei
                               frameRGBA->linesize);
 
                     // Copy into Pixels
-                    pix = Pixels(scaled_width, scaled_height);
+                    pix = Pixels(ivec2(scaled_width, scaled_height));
                     for (int y = 0; y < scaled_height; y++) {
                         for (int x = 0; x < scaled_width; x++) {
                             int offset = y * frameRGBA->linesize[0] + x * 4;

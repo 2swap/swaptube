@@ -10,12 +10,12 @@ void render_video() {
     shared_ptr<StateSliderScene> mic_n = make_shared<StateSliderScene>("{microblock_number}"  , "\\text{micro number}"  , 0, 10 , sz);
     shared_ptr<StateSliderScene> frame = make_shared<StateSliderScene>("{frame_number}"       , "\\text{frame number}"  , 0, 100, sz);
     shared_ptr<StateSliderScene> timer = make_shared<StateSliderScene>("{t}"                  , "\\text{t}"             , 0, 10 , sz);
-    cs.add_scene(mac_f, "mac_f", 0.25, 0.1);
-    cs.add_scene(mic_f, "mic_f", 0.25, 0.2);
-    cs.add_scene(mac_n, "mac_n", 0.75, 0.1);
-    cs.add_scene(mic_n, "mic_n", 0.75, 0.2);
-    cs.add_scene(frame, "frame", 0.5, 0.1);
-    cs.add_scene(timer, "timer", 0.5, 0.2);
+    cs.add_scene(mac_f, "mac_f", vec2(0.25, 0.1));
+    cs.add_scene(mic_f, "mic_f", vec2(0.25, 0.2));
+    cs.add_scene(mac_n, "mac_n", vec2(0.75, 0.1));
+    cs.add_scene(mic_n, "mic_n", vec2(0.75, 0.2));
+    cs.add_scene(frame, "frame", vec2(0.5, 0.1));
+    cs.add_scene(timer, "timer", vec2(0.5, 0.2));
     stage_macroblock(CompositeBlock(SilenceBlock(1), SilenceBlock(1)), 5);
     for(int i = 0; i < 5; i++) cs.render_microblock();
     stage_macroblock(SilenceBlock(1), 5);

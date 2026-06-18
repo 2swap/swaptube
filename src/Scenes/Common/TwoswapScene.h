@@ -3,7 +3,8 @@
 #include <array>
 #include <memory>
 #include <string>
-#include "../../IO/VisualMedia.h"
+#include "../../IO/SVG.h"
+#include "../../IO/PNG.h"
 #include "../Math/MandelbrotScene.h"
 #include "../../Core/State/StateManager.h"
 

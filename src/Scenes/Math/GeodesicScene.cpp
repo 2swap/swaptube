@@ -21,12 +21,13 @@ extern "C" void launch_cuda_surface_raymarch(
 );
 
 extern "C" void cuda_render_manifold(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const ivec2& wh,
+    uint32_t* distance_buffer,
     const ManifoldData* manifolds, const int num_manifolds,
-    const vec3 camera_pos, const quat camera_direction,
+    const vec3& camera_pos, const quat& camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
-    uint32_t* tex_pixels, const int tex_w, const int tex_h
+    const uint32_t* tex_pixels, const int tex_w, const int tex_h
 );
 
 extern "C" void cuda_render_geodesics_2d(
@@ -73,6 +74,8 @@ GeodesicScene::GeodesicScene(const vec2& dimensions)
         {"geodesics_spread_angle", "pi 2 /"},
         {"geodesics_opacity", "1.0"},
     });
+    distance_buffer = new DevicePointer(get_pixels_size());
+    add_data_object(distance_buffer);
 }
 
 void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
@@ -94,7 +97,7 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
     if(x_y_z_flat && w_flat) special_case_code = 2;
     vec3 sphere_center(state["sphere_x"], state["sphere_y"], state["sphere_z"]);
 
-    launch_cuda_surface_raymarch(pix.pixels.data(), get_width(), get_height(),
+    launch_cuda_surface_raymarch(gpu_pix->get_ptr(), get_width(), get_height(),
                                  x_eq.size(), x_eq.data(),
                                  y_eq.size(), y_eq.data(),
                                  z_eq.size(), z_eq.data(),
@@ -113,7 +116,7 @@ void GeodesicScene::draw_manifold(
                        const quat& fov_quat)
 {
 
-    float steps_mult = geom_mean(pix.w, pix.h) / 1500.0f;
+    float steps_mult = geom_mean(get_width(), get_height()) / 1500.0f;
 
     quat yaw = normalize(quat(fov_quat.u, 0, fov_quat.j, 0));
     double pitch_angle = 20 * M_PI / 180.0;
@@ -145,27 +148,20 @@ void GeodesicScene::draw_manifold(
     float mult_factor = state["subscreen_size"];
 
     if(state["manifold_opacity"] >= 0.01f) {
-        Pixels manifold_pix(pix.w * mult_factor, pix.h * mult_factor);
         ManifoldData manifolds[] = { manifold1 };
         cuda_render_manifold(
-            manifold_pix.pixels.data(),
-            manifold_pix.w,
-            manifold_pix.h,
+            gpu_pix->get_ptr(),
+            get_width_height(),
+            distance_buffer->get_ptr(),
             manifolds,
             1,
             camera_position,
             camera_direction,
-            geom_mean(manifold_pix.w, manifold_pix.h),
+            geom_mean(get_width(), get_height()),
             state["manifold_fov"],
             1,
             1,
             nullptr,0,0 // No textures
-        );
-        cuda_overlay(
-            pix.pixels.data(), pix.w, pix.h,
-            manifold_pix.pixels.data(), manifold_pix.w, manifold_pix.h,
-            pix.w - manifold_pix.w, pix.h - manifold_pix.h,
-            state["manifold_opacity"]
         );
     }
 
@@ -173,29 +169,22 @@ void GeodesicScene::draw_manifold(
     int geodesic_steps = (int)state["geodesics_steps"];
     double geodesics_opacity = state["geodesics_opacity"];
     if(num_geodesics > 0 && geodesic_steps > 0 && geodesics_opacity >= 0.01f) {
-        Pixels geodesic_pix(pix.w * mult_factor, pix.h * mult_factor);
         vec2 start_position = vec2(state["pov_x"], state["pov_z"]);
         vec3 camera_dir_3d = rotate_vector(vec3(0, 0, 1), conjugate(camera_direction));
         vec2 start_velocity = vec2(camera_dir_3d.x, camera_dir_3d.z);
         start_velocity = 0.005 * normalize(start_velocity);
         cuda_render_geodesics_2d(
-            geodesic_pix.pixels.data(),
-            geodesic_pix.w, geodesic_pix.h,
+            gpu_pix->get_ptr(),
+            get_width(), get_height(),
             manifold1,
             start_position, start_velocity,
             num_geodesics, geodesic_steps,
             state["geodesics_spread_angle"],
             camera_position,
             camera_direction,
-            geom_mean(geodesic_pix.w, geodesic_pix.h),
+            geom_mean(get_width(), get_height()),
             state["manifold_fov"],
             state["geodesics_opacity"]
-        );
-        cuda_overlay(
-            pix.pixels.data(), pix.w, pix.h,
-            geodesic_pix.pixels.data(), geodesic_pix.w, geodesic_pix.h,
-            pix.w - geodesic_pix.w, pix.h - geodesic_pix.h,
-            1.0f
         );
     }
 }

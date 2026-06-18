@@ -1,7 +1,7 @@
 #include "Fractal2DScene.h"
 
 extern "C" void fractal_2D_render(
-    const int width, const int height,
+    const ivec2& wh,
     float o[28], // origin parameters
     float x[28], // x coordinate parameter multipliers
     float y[28], // y coordinate parameter multipliers
@@ -147,12 +147,12 @@ void Fractal2DScene::populateAllArrays() {
 
 void Fractal2DScene::draw(){
     populateAllArrays();
-    fractal_2D_render(pix.w, pix.h,
+    fractal_2D_render(get_width_height(),
         origin_params,
         x_params,
         y_params,
         state["burning"], state["conj"],
         state["fractal_mode"],
         state["max_iterations"],
-        pix.pixels.data());
+        gpu_pix->get_ptr());
 }

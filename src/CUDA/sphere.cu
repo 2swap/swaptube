@@ -1,0 +1,298 @@
+#include "../Host_Device_Shared/vec.h"
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <utility>
+#include "../Host_Device_Shared/ThreeDimensionStructs.h"
+#include "color.cuh" // Contains overlay_pixel and set_pixel
+#include "common_graphics.cuh" // Contains fill_circle
+#include <png.h>
+
+extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix, Cuda::ivec2& out_wh) {
+    // Check if the filename already ends with ".png"
+    string filename = filename_with_or_without_suffix;
+    if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".png") {
+        filename += ".png";  // Append the ".png" suffix if it's not present
+    }
+
+    string fullpath = "io_in/" + filename;
+
+    // Open the PNG file
+    FILE* fp = fopen(fullpath.c_str(), "rb");
+    if (!fp) {
+        throw runtime_error("Failed to open PNG file " + fullpath);
+    }
+
+    // Create and initialize the png_struct
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr);
+    if (!png) {
+        fclose(fp);
+        throw runtime_error("Failed to create png read struct.");
+    }
+
+    // Create and initialize the png_info
+    png_infop info = png_create_info_struct(png);
+    if (!info) {
+        png_destroy_read_struct(&png, nullptr, nullptr);
+        fclose(fp);
+        throw runtime_error("Failed to create png info struct.");
+    }
+
+    // Set up error handling (required without using the default error handlers)
+    if (setjmp(png_jmpbuf(png))) {
+        png_destroy_read_struct(&png, &info, nullptr);
+        fclose(fp);
+        throw runtime_error("Error during PNG creation.");
+    }
+
+    // Initialize input/output for libpng
+    png_init_io(png, fp);
+    png_read_info(png, info);
+
+    // Get image info
+    int width = png_get_image_width(png, info);
+    int height = png_get_image_height(png, info);
+    out_wh = Cuda::ivec2(width, height);
+    png_byte color_type = png_get_color_type(png, info);
+    png_byte bit_depth = png_get_bit_depth(png, info);
+
+    // Read any color_type into 8bit depth, RGBA format.
+    if (bit_depth == 16) {
+        png_set_strip_16(png);
+    }
+    if (color_type == PNG_COLOR_TYPE_PALETTE) {
+        png_set_palette_to_rgb(png);
+    }
+    if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) {
+        png_set_expand_gray_1_2_4_to_8(png);
+    }
+    if (png_get_valid(png, info, PNG_INFO_tRNS)) {
+        png_set_tRNS_to_alpha(png);
+    }
+    if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_PALETTE) {
+        png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
+    }
+    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA) {
+        png_set_gray_to_rgb(png);
+    }
+
+    png_read_update_info(png, info);
+
+    // Prepare to read row by row and copy each row to the device without allocating the full image on the host
+    png_size_t rowbytes = png_get_rowbytes(png, info);
+    png_bytep row = (png_byte*)malloc(rowbytes);
+    if (!row) {
+        png_destroy_read_struct(&png, &info, nullptr);
+        fclose(fp);
+        throw runtime_error("Failed to allocate row buffer.");
+    }
+
+    uint32_t* d_map = nullptr;
+    size_t map_sz = (size_t)width * (size_t)height * sizeof(uint32_t);
+    cout << "Loading texture from " << fullpath << " with dimensions " << width << "x" << height << endl;
+    cudaError_t cerr = cudaMalloc((void**)&d_map, map_sz);
+    cout << "Attempting to allocate " << map_sz / (1024.0 * 1024.0 * 1024.0) << " GB for texture on GPU." << endl;
+    if (cerr != cudaSuccess) {
+        free(row);
+        png_destroy_read_struct(&png, &info, nullptr);
+        fclose(fp);
+        throw runtime_error("cudaMalloc failed for PNG device buffer.");
+    }
+
+    size_t line_buf_sz = (size_t)width * sizeof(uint32_t);
+    uint32_t* line_buf = (uint32_t*)malloc(line_buf_sz);
+    if (!line_buf) {
+        free(row);
+        cudaFree(d_map);
+        png_destroy_read_struct(&png, &info, nullptr);
+        fclose(fp);
+        throw runtime_error("Failed to allocate temporary line buffer.");
+    }
+
+    for (int y = 0; y < height; y++) {
+        png_read_row(png, row, nullptr);
+        for (int x = 0; x < width; x++) {
+            png_bytep px = &(row[x * 4]);
+            uint8_t r = px[0];
+            uint8_t g = px[1];
+            uint8_t b = px[2];
+            uint8_t a = px[3];
+            line_buf[x] = ((uint32_t)a << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b;
+        }
+        cerr = cudaMemcpy(d_map + (y * width), line_buf, line_buf_sz, cudaMemcpyHostToDevice);
+        if (cerr != cudaSuccess) {
+            free(line_buf);
+            free(row);
+            cudaFree(d_map);
+            png_destroy_read_struct(&png, &info, nullptr);
+            fclose(fp);
+            throw runtime_error("cudaMemcpy failed while copying PNG row to device.");
+        }
+    }
+
+    free(line_buf);
+    free(row);
+    png_destroy_read_struct(&png, &info, nullptr);
+    fclose(fp);
+
+    return d_map;
+}
+
+__device__ __forceinline__ bool ray_sphere_intersect(const Cuda::vec3& ray_origin, const Cuda::vec3& ray_dir, Cuda::vec3& out_hit_point) {
+    Cuda::vec3 oc = ray_origin;
+    float a = dot(ray_dir, ray_dir);
+    float b = 2.0f * dot(oc, ray_dir);
+    float c = dot(oc, oc) - 1;
+    float discriminant = b * b - 4 * a * c;
+
+    if (discriminant < 0) {
+        return false;
+    } else {
+        float sqrt_disc = sqrtf(discriminant);
+        float inv_2a = 0.5f / a;
+        float t1 = (-b - sqrt_disc) * inv_2a;
+        float t2 = (-b + sqrt_disc) * inv_2a;
+        float t = (t1 > 0) ? t1 : t2; // Choose the closest positive intersection
+        if (t > 0) {
+            out_hit_point = ray_origin + ray_dir * t;
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+__device__ __forceinline__ uint32_t cubic_interpolate(uint32_t v0, uint32_t v1, uint32_t v2, uint32_t v3, float t) {
+    // Extract RGBA components
+    uint8_t a0 = (v0 >> 24) & 0xFF;
+    uint8_t r0 = (v0 >> 16) & 0xFF;
+    uint8_t g0 = (v0 >> 8) & 0xFF;
+    uint8_t b0 = v0 & 0xFF;
+
+    uint8_t a1 = (v1 >> 24) & 0xFF;
+    uint8_t r1 = (v1 >> 16) & 0xFF;
+    uint8_t g1 = (v1 >> 8) & 0xFF;
+    uint8_t b1 = v1 & 0xFF;
+
+    uint8_t a2 = (v2 >> 24) & 0xFF;
+    uint8_t r2 = (v2 >> 16) & 0xFF;
+    uint8_t g2 = (v2 >> 8) & 0xFF;
+    uint8_t b2 = v2 & 0xFF;
+
+    uint8_t a3 = (v3 >> 24) & 0xFF;
+    uint8_t r3 = (v3 >> 16) & 0xFF;
+    uint8_t g3 = (v3 >> 8) & 0xFF;
+    uint8_t b3 = v3 & 0xFF;
+
+    // Cubic interpolation formula
+    auto cubic_interp = [](uint8_t c0, uint8_t c1, uint8_t c2, uint8_t c3, float t) {
+        return static_cast<uint8_t>(
+            c1 + 0.5f * t * (c2 - c0 + t * (2.0f * c0 - 5.0f * c1 + 4.0f * c2 - c3 + t * (3.0f * (c1 - c2) + c3 - c0)))
+        );
+    };
+
+    // Interpolate each channel
+    uint8_t r = cubic_interp(r0, r1, r2, r3, t);
+    uint8_t g = cubic_interp(g0, g1, g2, g3, t);
+    uint8_t b = cubic_interp(b0, b1, b2, b3, t);
+    uint8_t a = cubic_interp(a0, a1, a2, a3, t);
+    return (a << 24) | (r << 16) | (g << 8) | b;
+}
+
+__device__ __forceinline__ uint32_t bicubic_sample(uint32_t* map, const Cuda::ivec2& map_wh, float u, float v) {
+    // Convert to texture space
+    float x = u * (map_wh.x - 1);
+    float y = v * (map_wh.y - 1);
+    int x0 = floorf(x);
+    int y0 = floorf(y);
+    float dx = x - x0;
+    float dy = y - y0;
+
+    uint32_t samples[4][4];
+    for (int j = -1; j <= 2; j++) {
+        for (int i = -1; i <= 2; i++) {
+            int sx = min(max(x0 + i, 0), map_wh.x - 1);
+            int sy = min(max(y0 + j, 0), map_wh.y - 1);
+            samples[j + 1][i + 1] = map[sy * map_wh.x + sx];
+        }
+    }
+
+    // Cubic interpolation in x direction
+    uint32_t col[4];
+    for (int j = 0; j < 4; j++) {
+        col[j] = cubic_interpolate(samples[j][0], samples[j][1], samples[j][2], samples[j][3], dx);
+    }
+    // Cubic interpolation in y direction
+    return cubic_interpolate(col[0], col[1], col[2], col[3], dy);
+}
+
+__device__ __forceinline__ bool is_near_integer(float val) {
+    return fabsf(val - roundf(val)) < 0.01;
+}
+
+__device__ __forceinline__ uint32_t lat_long_line(float lat, float lon, float zoom) {
+    int floor_zoom = floorf(zoom);
+    int exp_zoom = 1 << floor_zoom;
+    float frac_part = zoom - floor_zoom;
+    if (is_near_integer(lat * exp_zoom) || is_near_integer(lon * exp_zoom)) {
+        return 0xFFFFFFFF; // White color
+    }
+    int opacity = (int)(frac_part * 255);
+    if (is_near_integer(lat * exp_zoom + 0.5) || is_near_integer(lon * exp_zoom + 0.5)) {
+        return 0xff000000 | (opacity << 16) | (opacity << 8) | opacity; // Faint white
+    }
+    return 0;
+}
+
+__global__ void render_sphere_kernel(
+    uint32_t* pixels, const Cuda::ivec2 wh,
+    float geom_mean_size,
+    uint32_t* map, const Cuda::ivec2 map_wh,
+    const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, float opacity, float texture_latlong)
+{
+    int px = blockIdx.x * blockDim.x + threadIdx.x;
+    int py = blockIdx.y * blockDim.y + threadIdx.y;
+    if (px >= wh.x || py >= wh.y) return;
+
+    const Cuda::ivec2 pixel(px, py);
+
+    Cuda::vec3 ray_dir = get_raymarch_vector(pixel, wh, fov, conjugate(camera_direction));
+    Cuda::vec3 hit_point;
+    bool collision = ray_sphere_intersect(camera_pos, ray_dir, hit_point);
+    if(!collision) {
+        pixels[pixel.x + wh.x * pixel.y] = 0x00000000;
+        return;
+    }
+
+    float u = 0.5f + atan2f(hit_point.x, -hit_point.z) / (2.0f * M_PI);
+    float v = 0.5f - asinf(hit_point.y) / M_PI;
+    float dist_to_surface = length(camera_pos) - 1.0f;
+    uint32_t latlong_color = lat_long_line(v, u, 12.f);
+    uint32_t map_color = bicubic_sample(map, map_wh, u, v);
+    // TODO we copy the giant texture to the GPU even if we might not use it. We should only copy when texture_latlong > 0
+    uint32_t color = Cuda::colorlerp(map_color, latlong_color, texture_latlong);
+    pixels[pixel.x + wh.x * pixel.y] = (color & 0x00FFFFFF) | ((uint32_t)(opacity * 255) << 24);
+}
+
+extern "C" void cuda_render_sphere(
+    uint32_t* d_pixels, const Cuda::ivec2& wh,
+    float geom_mean_size,
+    uint32_t* d_map, const Cuda::ivec2& map_wh,
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float opacity, float texture_latlong)
+{
+    dim3 blockSize(16, 16);
+    dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
+    render_sphere_kernel<<<gridSize, blockSize>>>(
+        d_pixels, wh,
+        geom_mean_size,
+        d_map, map_wh,
+        camera_direction, camera_pos, fov, opacity, texture_latlong);
+    cudaDeviceSynchronize();
+}
+
+extern "C" void cuda_free_map(uint32_t* d_map)
+{
+    cudaFree(d_map);
+}

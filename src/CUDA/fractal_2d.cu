@@ -116,7 +116,7 @@ __device__ unsigned int get_mandelbrot_color(int iterations, int max_iterations,
 }
 
 __global__ void go(
-    const int width, const int height,
+    const Cuda::ivec2 wh,
     // Origin parameters
     const float zrO, const float ziO,
     const float a1rO, const float a1iO, const float ac1rO, const float ac1iO, const float x1rO, const float x1iO, 
@@ -146,11 +146,11 @@ __global__ void go(
 ) {
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
     int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
-    if (pixel_x >= width || pixel_y >= height) return;
+    if (pixel_x >= wh.x || pixel_y >= wh.y) return;
 
     // Scaled so squares are square
-    float ndc_x = ((pixel_x + 0.5f) / fminf(width, height)) * 2.0f - (width / fminf(width, height));
-    float ndc_y = ((pixel_y + 0.5f) / fminf(width, height)) * 2.0f - (height / fminf(width, height));
+    float ndc_x = ((pixel_x + 0.5f) / fminf(wh.x, wh.y)) * 2.0f - (wh.x / fminf(wh.x, wh.y));
+    float ndc_y = ((pixel_y + 0.5f) / fminf(wh.x, wh.y)) * 2.0f - (wh.y / fminf(wh.x, wh.y));
 
     float log_real_part_exp, sq_radius = 0;
     float bailout_radius_sq = 256.0 * 256.0;
@@ -182,11 +182,11 @@ __global__ void go(
     
     bool bailed_out = iterations < max_iterations;
 
-    colors[pixel_y * width + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, sq_radius, log_real_part_exp);
+    colors[pixel_y * wh.x + pixel_x] = get_mandelbrot_color(iterations, max_iterations, bailed_out, sq_radius, log_real_part_exp);
 }
 
 extern "C" void fractal_2D_render(
-    const int width, const int height,
+    const Cuda::ivec2& wh,
     float o[28], // origin parameters
     float x[28], // x coordinate parameter multipliers
     float y[28], // y coordinate parameter multipliers
@@ -195,19 +195,14 @@ extern "C" void fractal_2D_render(
     const int max_iterations,
     unsigned int* colors
 ) {
-    unsigned int* d_colors;
-
-    // Allocate memory on the device for the depth buffer
-    cudaMalloc(&d_colors, width * height * sizeof(unsigned int));
-
     // Define grid and block dimensions
     dim3 threadsPerBlock(16, 16);  // 2D block of 16x16 threads
-    dim3 numBlocks((width + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                   (height + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 numBlocks((wh.x + threadsPerBlock.x - 1) / threadsPerBlock.x,
+                   (wh.y + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // Launch the kernel
     go<<<numBlocks, threadsPerBlock>>>(
-        width, height,
+        wh,
         o[0 ], o[1 ], 
         o[2 ], o[3 ], o[4 ], o[5 ], o[6 ], o[7 ],
         o[8 ], o[9 ], o[10], o[11], o[12], o[13],
@@ -228,12 +223,6 @@ extern "C" void fractal_2D_render(
         y[26], y[27],
         burning, conj, param_mode,
         max_iterations,
-        d_colors
+        colors
     );
-
-    // Copy results back from device to host
-    cudaMemcpy(colors, d_colors, width * height * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-
-    // Free the device memory
-    cudaFree(d_colors);
 }

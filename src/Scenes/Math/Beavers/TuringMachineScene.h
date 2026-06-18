@@ -9,7 +9,16 @@ public:
 
 private:
     int last_iter;
-    TuringMachine tm;
+    const TuringMachine tm;
+
+    const int tape_length;
+    vector<uint32_t> grid;
+
+    int steps = 0;
+
+    vector<uint32_t> tape;
+    int head_position;
+    uint32_t current_state = 0;
 
     void draw() override;
 

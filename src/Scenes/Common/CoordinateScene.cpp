@@ -15,6 +15,8 @@ using std::list;
 using std::pair;
 using std::min;
 
+extern "C" void draw_coordinate_grid(uint32_t* d_pixels, const ivec2& pix_wh, const vec2& lx_ty, const vec2& rx_by);
+
 string float_to_pretty_string(const float value) {
     if(abs(value) < 0.0000001) return "0";
 
@@ -66,9 +68,7 @@ CoordinateScene::CoordinateScene(const vec2& dimensions)
         {"right_x"  , "<center_x> .5 <window_width> / +"},
         {"top_y"    , "<center_y> .5 <window_height> / -"},
         {"bottom_y" , "<center_y> .5 <window_height> / +"},
-        {"construction_opacity", "1"},
         {"ticks_opacity", "0"},
-        {"zero_crosshair_opacity", "0"},
         {"center_x", "0"},
         {"center_y", "0"},
         {"zoom", "0"},
@@ -92,109 +92,11 @@ vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
     return pixel_to_point_in_screen(pix, lx_ty, rx_by, wh);
 }
 
-// This is not used here, but it is used in some classes which inherit from CoordinateScene
-void CoordinateScene::draw_trail(const list<pair<vec2, int>>& trail, const float trail_opacity) {
-    if(trail.size() == 0) return;
-    if(trail_opacity < 0.01) return;
-    float line_width = get_geom_mean_size()/500.;
-    vec2 last_pixel{0,0};
-    int i = 0;
-    for(const pair<vec2, int>& p : trail) {
-        if(i != 0) {
-            const vec2 next_pixel(point_to_pixel(p.first));
-            pix.bresenham(last_pixel.x, last_pixel.y, next_pixel.x, next_pixel.y, p.second, trail_opacity, line_width);
-        }
-        last_pixel = point_to_pixel(p.first);
-        i++;
-    }
-}
-
-void CoordinateScene::draw_point(const vec2 point, int point_color, float point_opacity) {
-    const vec2 pixel = point_to_pixel(point);
-    pix.fill_circle(pixel.x, pixel.y, get_geom_mean_size()/100., point_color, point_opacity);
-}
-
 void CoordinateScene::draw() {
-    draw_axes();
-    draw_zero_crosshair();
-    draw_construction();
+    draw_coordinate_grid(gpu_pix->get_ptr(), get_width_height(), vec2(state["left_x"], state["top_y"]), vec2(state["right_x"], state["bottom_y"]));
 }
 
-void CoordinateScene::draw_construction() {
-    if(construction.size() == 0) return;
-    const float construction_opacity = state["construction_opacity"];
-    if(construction_opacity < 0.01) return;
-
-    double gm = get_geom_mean_size();
-    double line_thickness = gm/200.;
-    int point_color = 0xffffffff;
-    int line_color = 0xff6666ff;
-    int text_color = 0xffffffff;
-    float microblock_fraction = 0.5;
-    if(state.contains("microblock_fraction_passthrough")) microblock_fraction = state["microblock_fraction_passthrough"];
-
-    float bounce = 1 - square(square(microblock_fraction - 1));
-    float interp = smoother2(microblock_fraction);
-
-    Pixels geometry(pix.w, pix.h);
-
-    for(const GeometricLine& l : construction.lines) {
-        if(!l.draw_shape) continue;
-        vec2 start_point = l.start;
-        vec2 end_point = l.end;
-        if(l.use_state) {
-            start_point = vec2(state["line_"+l.identifier+"_start_x"], state["line_"+l.identifier+"_start_y"]);
-            end_point = vec2(state["line_"+l.identifier+"_end_x"], state["line_"+l.identifier+"_end_y"]);
-        }
-        vec2 start_pixel = point_to_pixel(start_point);
-        vec2 end_pixel = point_to_pixel(end_point);
-        const vec2 mid_pixel = (start_pixel + end_pixel) / 2.f;
-        if(!l.old) {
-            // Multiply line length by bounce
-            start_pixel = mid_pixel + (start_pixel - mid_pixel) * bounce;
-            end_pixel = mid_pixel + (end_pixel - mid_pixel) * bounce;
-        }
-        geometry.bresenham(start_pixel.x, start_pixel.y, end_pixel.x, end_pixel.y, line_color, 1, line_thickness*.75);
-    }
-    for(const GeometricPoint& p : construction.points) {
-        vec2 position = p.position;
-        if(p.use_state) position = vec2(state["point_"+p.identifier+"_x"], state["point_"+p.identifier+"_y"]);
-        const vec2 position_pixel = point_to_pixel(position);
-        double radius = line_thickness * p.width_multiplier * 2;
-        if(p.draw_shape){
-            if(!p.old) {
-                double radius_pop = line_thickness * p.width_multiplier * 8 * bounce;
-                radius = min(radius, radius_pop);
-                geometry.fill_circle(position_pixel.x, position_pixel.y, radius_pop, point_color, (1-interp)*.8);
-            }
-            geometry.fill_circle(position_pixel.x, position_pixel.y, radius, point_color, 1);
-        }
-        if(p.label != "" && p.width_multiplier > .4) {
-            ScalingParams sp(line_thickness * 160 * p.width_multiplier, line_thickness * 16 * p.width_multiplier);
-            Pixels latex = latex_to_pix(latex_color(text_color, p.label), sp);
-            geometry.overlay(latex, position_pixel.x - latex.w/2, position_pixel.y - line_thickness * 6 - latex.h/2, p.old ? 1 : interp);
-        }
-    }
-
-    pix.overlay(geometry, 0, 0, construction_opacity);
-}
-
-void CoordinateScene::draw_zero_crosshair() {
-    const float zc_opacity = state["zero_crosshair_opacity"];
-    if(zc_opacity < 0.01) return;
-    const int w = get_width();
-    const int h = get_height();
-    const float gmsz = get_geom_mean_size();
-    const vec2 zero = point_to_pixel(vec2(0,0));
-    pix.bresenham(zero.x, 0, zero.x, h-1.f, OPAQUE_WHITE, zc_opacity, gmsz/400.);
-    pix.bresenham(0, zero.y, w-1.f, zero.y, OPAQUE_WHITE, zc_opacity, gmsz/400.);
-}
-
-void CoordinateScene::draw_axes() {
-    draw_one_axis(true);
-    draw_one_axis(false);
-}
-
+/*
 void CoordinateScene::draw_one_axis(bool ymode) {
     const float ticks_opacity = state["ticks_opacity"];
     if(ticks_opacity < 0.01) return;
@@ -226,50 +128,20 @@ void CoordinateScene::draw_one_axis(bool ymode) {
             if(ymode) pix.bresenham(0, coordinate, tick_length, coordinate, OPAQUE_WHITE, number_opacity, 1);
             else      pix.bresenham(coordinate, h-1, coordinate, h-1-tick_length, OPAQUE_WHITE, number_opacity, 1);
             if(number_opacity > 0){
-                ScalingParams sp(gmsz/9., gmsz/18.);
+                ScalingParams sp(gmsz * vec2(1/9., 1/18.));
                 Pixels latex = latex_to_pix(truncated, sp);
                 //if(ymode) latex = latex.rotate_90();
-                if(ymode) pix.overlay(latex, tick_length * .8/*1.5*/, coordinate - latex.h*1.1/*.5*/, number_opacity);
-                if(!ymode)pix.overlay(latex, coordinate - latex.w/2, h-1-tick_length * 1.5 - latex.h, number_opacity);
+                if(ymode) pix.overlay_cpu(latex, ivec2(tick_length * .8      , coordinate - latex.wh.y*1.1       ), number_opacity);
+                if(!ymode)pix.overlay_cpu(latex, ivec2(coordinate - latex.wh.x/2, h-1-tick_length * 1.5 - latex.wh.y), number_opacity);
             }
         }
         if(fiveish) order_mag--;
         fiveish = !fiveish;
     }
 }
+*/
 
 const StateQuery CoordinateScene::populate_state_query() const {
-    StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity", "construction_opacity", "zero_crosshair_opacity"};
-    for(const GeometricPoint& p : construction.points) {
-        if(!p.old) {
-            sq.insert("microblock_fraction_passthrough");
-            break;
-        }
-    }
-    for(const GeometricLine& l : construction.lines) {
-        if(!l.old) {
-            sq.insert("microblock_fraction_passthrough");
-            break;
-        }
-    }
-    for (const GeometricPoint& p : construction.points) {
-        if(p.use_state) {
-            sq.insert("point_"+p.identifier+"_x");
-            sq.insert("point_"+p.identifier+"_y");
-        }
-    }
-    for (const GeometricLine& l : construction.lines) {
-        if(l.use_state) {
-            sq.insert("line_"+l.identifier+"_start_x");
-            sq.insert("line_"+l.identifier+"_start_y");
-            sq.insert("line_"+l.identifier+"_end_x");
-            sq.insert("line_"+l.identifier+"_end_y");
-        }
-    }
+    StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity"};
     return sq;
-}
-
-void CoordinateScene::on_end_transition_extra_behavior(const TransitionType tt) {
-    // TODO make this micro or macroblock based
-    construction.set_all_old();
 }
