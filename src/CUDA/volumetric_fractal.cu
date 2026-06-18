@@ -16,11 +16,13 @@ __device__ unsigned int sumRay(const Cuda::vec3& ro, const Cuda::vec3& rd, float
     float sq_radius = 0;
 
     float weight = stepSize / maxDist;
+    Cuda::vec3 z = Cuda::vec3(0, 0, 0);
+    
     for(float t = 0; t < maxDist; t += stepSize){
         r = ro + t * rd;
         //cuComplex c = make_cuComplex(r.x, r.y);
         //cuComplex z = make_cuComplex(r.z, 0);
-        Cuda::vec3 z = Cuda::vec3(0, 0, 0);
+        
         float iters = cuCFunc::mandelbulb_iterations(z, p, r, MAXITERS, 65536, sq_radius);
         if(iters == MAXITERS){
             break;
@@ -37,8 +39,7 @@ __device__ unsigned int sumRay(const Cuda::vec3& ro, const Cuda::vec3& rd, float
     total *= 64 * p * 256;
 
     total = fminf(total, 255);
-
-    return 0xff000000 + ((int) fmaxf(total - 80, 0) << 16) + ((int) fmaxf(total - 40, 0) << 8) + ((int) total);
+    return 0xff000000 | ((int) fmaxf(total - 80, 0) << 16) | ((int) fmaxf(total - 40, 0) << 8) | ((int) total);
 }
 
 __global__ void volumeRay(const int width, const int height, const Cuda::vec3 pos, const Cuda::quat camera_orientation, float fov, const Cuda::vec3 lightPos, int max_raymarch_iters, int max_mandelbulb_iters, float p, unsigned int* colors){

@@ -1,3 +1,4 @@
+#pragma once
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 #include "../Host_Device_Shared/vec.h"
@@ -10,6 +11,7 @@ __device__ cuComplex cuCpow(cuComplex base, cuComplex exponent) {
     float b = cuCimagf(base);
     float c = cuCrealf(exponent);
     float d = cuCimagf(exponent);
+
     if (a == 0.0 && b == 0.0)
         return make_cuComplex(0.0, 0.0);  // Zero raised to positive power is zero
     
@@ -46,7 +48,7 @@ __device__ cuComplex cuCpow(cuComplex base, float exponent) {
 }
 
 //  Complex 3D to real power (z ^ n) (for mandelbulbs)
-__device__ Cuda::vec3 cuCMpow(Cuda::vec3 base, float exponent) {
+__device__ Cuda::vec3 cuCMpow(Cuda::vec3& base, float exponent) {
     float x = base.x;
     float y = base.y;
     float z = base.z;
@@ -66,19 +68,26 @@ __device__ Cuda::vec3 cuCMpow(Cuda::vec3 base, float exponent) {
     sincosf(new_theta, &new_sin_theta, &new_cos_theta);
     sincosf(new_phi, &new_sin_phi, &new_cos_phi);
 
-    return new_r * Cuda::vec3(new_cos_theta * new_cos_phi, -new_sin_phi, new_sin_theta * new_cos_phi);
+    new_cos_phi *= new_r;
+
+    return Cuda::vec3(new_cos_theta * new_cos_phi, new_r * -new_sin_phi, new_sin_theta * new_cos_phi);
 }
 
 // These functions take references to real and imaginary componenets separately to avoid conversion to and from cuComplex
 // __forceinline__ is probably best so the compiler can (directly?) replace function calls with the underlying statements
 
+__device__ __forceinline__ void cuMult(float& zr, float& zi, const float ar, const float ai){
+    float zr_new = zr * ar - zi * ai; // Real part of z * a
+    zi = zr * ai + zi * ar; // Imaginary part of z * a
+
+    zr = zr_new;
+}
+
 // Complex to complex power (z ^ z)
 __device__ __forceinline__ void cuCpow(float& zr, float& zi, const float xr, const float xi){
-    if (zr == 0.0 && zi == 0.0){ // Zero raised to positive power is zero
-        zr = 0;
-        zi = 0;
+    if (zr == 0.0 && zi == 0.0) // Zero raised to positive power is zero
         return;
-    }
+    
     float r = sqrtf(zr * zr + zi * zi);  // Magnitude of the base
     float theta = atan2f(zi, zr);        // Argument of the base
 
@@ -94,11 +103,9 @@ __device__ __forceinline__ void cuCpow(float& zr, float& zi, const float xr, con
 
 // Complex to real power (z ^ n)
 __device__ __forceinline__ void cuCpow(float& zr, float& zi, const float exponent){
-    if (zr == 0.0 && zi == 0.0){ // Zero raised to positive power is zero
-        zr = 0;
-        zi = 0;
+    if (zr == 0.0 && zi == 0.0) // Zero raised to positive power is zero
         return;
-    }
+    
     float r = sqrtf(zr * zr + zi * zi);  // Magnitude of the base
     float theta = atan2f(zi, zr);        // Argument of the base
 
@@ -110,6 +117,201 @@ __device__ __forceinline__ void cuCpow(float& zr, float& zi, const float exponen
 
     zr = new_r * new_cos;
     zi = new_r * new_sin;
+}
+
+// Simple complex polynomial a1 * z ^ x1 + a2 * z ^ x2 + a3 * z ^ x3 + a4 * z ^ x4 + c, for real a and x
+__device__ __forceinline__ void cuCPoly(float& zr, float& zi, 
+    const float a1, const float x1, 
+    const float a2, const float x2, 
+    const float a3, const float x3, 
+    const float a4, const float x4,
+    const float cr, const float ci,
+    const char burning = 0, const char conj = 0
+){
+    float zr1 = (burning & 0b10000000) >> 7 ? fabsf(zr) : zr, zi1 = (burning & 0b01000000) >> 6 ? fabsf(zi) : zi;
+    if(conj & 0b10000000){
+        zr1 = -zr1;
+    }
+    if(conj & 0b01000000){
+        zi1 = -zi1;
+    }
+    cuCpow(zr1, zi1, x1);
+    zr1 *= a1;
+    zi1 *= a1;
+
+    float zr2 = (burning & 0b00100000) >> 5 ? fabsf(zr) : zr, zi2 = (burning & 0b00010000) >> 4 ? fabsf(zi) : zi;
+    if(conj & 0b00100000){
+        zr2 = -zr2;
+    }
+    if(conj & 0b00010000){
+        zi2 = -zi2;
+    }
+    cuCpow(zr2, zi2, x2);
+    zr2 *= a2;
+    zi2 *= a2;
+
+    float zr3 = (burning & 0b00001000) >> 3 ? fabsf(zr) : zr, zi3 = (burning & 0b00000100) >> 2 ? fabsf(zi) : zi;
+    if(conj & 0b00001000){
+        zr3 = -zr3;
+    }
+    if(conj & 0b00000100){
+        zi3 = -zi3;
+    }
+    cuCpow(zr3, zi3, x3);
+    zr3 *= a3;
+    zi3 *= a3;
+
+    float zr4 = (burning & 0b00000010) >> 1 ? fabsf(zr) : zr, zi4 = (burning & 0b00000001) ? fabsf(zi) : zi;
+    if(conj & 0b00000010){
+        zr4 = -zr4;
+    }
+    if(conj & 0b00000001){
+        zi4 = -zi4;
+    }
+    cuCpow(zr4, zi4, x4);
+    zr4 *= a4;
+    zi4 *= a4;
+
+    zr = zr1 + zr2 + zr3 + zr4 + cr;
+    zi = zi1 + zi2 + zi3 + zi4 + ci;    
+}
+
+// Complex complex polynomial a1 * z ^ x1 + a2 * z ^ x2 + a3 * z ^ x3 + a4 * z ^ x4 + c, for complex a and x
+__device__ __forceinline__ void cuCPoly(float& zr, float& zi, 
+    const float a1r, const float a1i, const float x1r, const float x1i, 
+    const float a2r, const float a2i, const float x2r, const float x2i, 
+    const float a3r, const float a3i, const float x3r, const float x3i, 
+    const float a4r, const float a4i, const float x4r, const float x4i,
+    const float cr, const float ci,
+    const char burning = 0, const char conj = 0
+){
+    float zr1 = (burning & 0b10000000) >> 7 ? fabsf(zr) : zr, zi1 = (burning & 0b01000000) >> 6 ? fabsf(zi) : zi;
+    if(conj & 0b10000000){
+        zr1 = -zr1;
+    }
+    if(conj & 0b01000000){
+        zi1 = -zi1;
+    }
+    cuCpow(zr1, zi1, x1r, x1i);
+    cuMult(zr1, zi1, a1r, a1i);
+
+    float zr2 = (burning & 0b00100000) >> 5 ? fabsf(zr) : zr, zi2 = (burning & 0b00010000) >> 4 ? fabsf(zi) : zi;
+    if(conj & 0b00100000){
+        zr2 = -zr2;
+    }
+    if(conj & 0b00010000){
+        zi2 = -zi2;
+    }
+    cuCpow(zr2, zi2, x2r, x2i);
+    cuMult(zr2, zi2, a2r, a2i);
+
+    float zr3 = (burning & 0b00001000) >> 3 ? fabsf(zr) : zr, zi3 = (burning & 0b00000100) >> 2 ? fabsf(zi) : zi;
+    if(conj & 0b00001000){
+        zr3 = -zr3;
+    }
+    if(conj & 0b00000100){
+        zi3 = -zi3;
+    }
+    cuCpow(zr3, zi3, x3r, x3i);
+    cuMult(zr3, zi3, a3r, a3i);
+
+    float zr4 = (burning & 0b00000010) >> 1 ? fabsf(zr) : zr, zi4 = (burning & 0b00000001) ? fabsf(zi) : zi;
+    if(conj & 0b00000010){
+        zr4 = -zr4;
+    }
+    if(conj & 0b00000001){
+        zi4 = -zi4;
+    }
+    cuCpow(zr4, zi4, x4r, x4i);
+    cuMult(zr4, zi4, a4r, a4i);
+
+    zr = zr1 + zr2 + zr3 + zr4 + cr;
+    zi = zi1 + zi2 + zi3 + zi4 + ci;
+}
+
+// Complex complex polynomial with c (a1 + ac1 * c) * z ^ x1 + (a2 + ac2 * c) * z ^ x2 + (a3 + ac3 * c) * z ^ x3 + (a4 + ac4 * c) * z ^ x4 + c, for complex a, ac, and x
+__device__ __forceinline__ void cuCPolyC(float& zr, float& zi, 
+    const float a1r, const float a1i, const float ac1r, const float ac1i, const float x1r, const float x1i, 
+    const float a2r, const float a2i, const float ac2r, const float ac2i, const float x2r, const float x2i, 
+    const float a3r, const float a3i, const float ac3r, const float ac3i, const float x3r, const float x3i, 
+    const float a4r, const float a4i, const float ac4r, const float ac4i, const float x4r, const float x4i, 
+    const float cr, const float ci,
+    const char burning = 0, const char conj = 0
+){
+    float zr1 = (burning & 0b10000000) >> 7 ? fabsf(zr) : zr, zi1 = (burning & 0b01000000) >> 6 ? fabsf(zi) : zi;
+    if(conj & 0b10000000){
+        zr1 = -zr1;
+    }
+    if(conj & 0b01000000){
+        zi1 = -zi1;
+    }
+    float ac1r_new = ac1r, ac1i_new = ac1i;
+    cuMult(ac1r_new, ac1i_new, cr, ci);
+    cuCpow(zr1, zi1, x1r, x1i);
+    cuMult(zr1, zi1, a1r + ac1r_new, a1i + ac1i_new);
+
+    float zr2 = (burning & 0b00100000) >> 4 ? fabsf(zr) : zr, zi2 = (burning & 0b00010000) >> 4 ? fabsf(zi) : zi;
+    if(conj & 0b00100000){
+        zr2 = -zr2;
+    }
+    if(conj & 0b00010000){
+        zi2 = -zi2;
+    }
+    float ac2r_new = ac2r, ac2i_new = ac2i;
+    cuMult(ac2r_new, ac2i_new, cr, ci);
+    cuCpow(zr2, zi2, x2r, x2i);
+    cuMult(zr2, zi2, a2r + ac2r_new, a2i + ac2i_new);
+
+    float zr3 = (burning & 0b00001000) >> 3 ? fabsf(zr) : zr, zi3 = (burning & 0b00000100) >> 2 ? fabsf(zi) : zi;
+    if(conj & 0b00001000){
+        zr3 = -zr3;
+    }
+    if(conj & 0b00000100){
+        zi3 = -zi3;
+    }
+    float ac3r_new = ac3r, ac3i_new = ac3i;
+    cuMult(ac3r_new, ac3i_new, cr, ci);
+    cuCpow(zr3, zi3, x3r, x3i);
+    cuMult(zr3, zi3, a3r + ac3r_new, a3i + ac3i_new);
+
+    float zr4 = (burning & 0b00000010) >> 1 ? fabsf(zr) : zr, zi4 = (burning & 0b00000001) ? fabsf(zi) : zi;
+    if(conj & 0b00000010){
+        zr4 = -zr4;
+    }
+    if(conj & 0b00000001){
+        zi4 = -zi4;
+    }
+    float ac4r_new = ac4r, ac4i_new = ac4i;
+    cuMult(ac4r_new, ac4i_new, cr, ci);
+    cuCpow(zr4, zi4, x4r, x4i);
+    cuMult(zr4, zi4, a4r + ac4r_new, a4i + ac4i_new);
+
+    zr = zr1 + zr2 + zr3 + zr4 + cr;
+    zi = zi1 + zi2 + zi3 + zi4 + ci;
+}
+
+//  Complex 3D to real power (z ^ n) (for mandelbulbs)
+__device__ __forceinline__ void cuCMpow(float& zx, float& zy, float& zz, float exponent) {
+    if (zx == 0.0 && zy == 0.0 && zz == 0) // Zero raised to positive power is zero
+        return;  
+
+    float r = sqrtf(zx * zx + zy * zy + zz * zz);  // Magnitude of the base
+    float theta = atan2f(zz, zx);              // Angle around z-axis
+    float phi = asinf(zy / r);                // Angle from north pole
+
+    float new_r = powf(r, exponent);
+    float new_theta = exponent * theta;
+    float new_phi = exponent * phi;
+
+    float new_cos_theta, new_sin_theta, new_cos_phi, new_sin_phi;
+    sincosf(new_theta, &new_sin_theta, &new_cos_theta);
+    sincosf(new_phi, &new_sin_phi, &new_cos_phi);
+
+    float scaled_cos_phi = new_cos_phi * new_r;
+
+    zx = new_cos_theta * scaled_cos_phi;
+    zy = new_r * -new_sin_phi;
+    zz = new_sin_theta * scaled_cos_phi;
 }
 
 __device__ __forceinline__ void squareZ(float& zr, float& zi){
@@ -126,22 +328,115 @@ __device__ __forceinline__ void cubeZ(float& zr, float& zi){
     zr = zr_new;
 }
 
-// Iterate z^x + c until bailout radius
-__device__ int mandelbrot_iterations(
-    cuComplex& z, const cuComplex& x, const cuComplex& c,
-    int max_iterations, float bailout_radius_sq, float& sq_radius
+// Iterate complex polynomial until bailout radius
+__device__ int mandelRealPoly_iterations(
+    const float zr0, const float zi0,
+    const float a1, const float x1, 
+    const float a2, const float x2, 
+    const float a3, const float x3, 
+    const float a4, const float x4, 
+    const float cr, const float ci,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius,
+    const char burning = 0, const char conj = 0
+) {
+    int iterations = 0;
+    sq_radius = 0;
+
+    float zr = zr0;
+    float zi = zi0;
+
+    for (; iterations < max_iterations; iterations++) {
+        // Update z with polynomial formula
+        cuCPoly(zr, zi, a1, x1, a2, x2, a3, x3, a4, x4, cr, ci, burning, conj);
+
+        sq_radius = zr * zr + zi * zi;
+
+        if (sq_radius > bailout_radius_sq) return iterations;
+    }
+    
+    return max_iterations; // No bailout, maximum iterations reached
+}
+
+// Iterate complex polynomial with complex coefficients and exponents until bailout radius
+__device__ int mandelPoly_iterations(
+    const float zr0, const float zi0,
+    const float a1r, const float a1i, const float x1r, const float x1i, 
+    const float a2r, const float a2i, const float x2r, const float x2i, 
+    const float a3r, const float a3i, const float x3r, const float x3i, 
+    const float a4r, const float a4i, const float x4r, const float x4i,
+    const float cr, const float ci,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius,
+    const char burning = 0, const char conj = 0
 ) {
     int iterations = 0;
     sq_radius = 0;
     
-    float zr = cuCrealf(z);
-    float zi = cuCimagf(z);
-    const float xr = cuCrealf(x);
-    const float xi = cuCimagf(x);
-    const float cr = cuCrealf(c);
-    const float ci = cuCimagf(c);
+    float zr = zr0;
+    float zi = zi0;
 
     for (; iterations < max_iterations; iterations++) {
+        // Update z with polynomial formula
+        cuCPoly(zr, zi, a1r, a1i, x1r, x1i, a2r, a2i, x2r, x2i, a3r, a3i, x3r, x3i, a4r, a4i, x4r, x4i, cr, ci, burning, conj);
+
+        sq_radius = zr * zr + zi * zi;
+
+        if (sq_radius > bailout_radius_sq) return iterations;
+    }
+    
+    return max_iterations; // No bailout, maximum iterations reached
+}
+
+__device__ int mandelPolyC_iterations(
+    const float zr0, const float zi0,
+    const float a1r, const float a1i, const float ac1r, const float ac1i, const float x1r, const float x1i, 
+    const float a2r, const float a2i, const float ac2r, const float ac2i, const float x2r, const float x2i, 
+    const float a3r, const float a3i, const float ac3r, const float ac3i, const float x3r, const float x3i, 
+    const float a4r, const float a4i, const float ac4r, const float ac4i, const float x4r, const float x4i,
+    const float cr, const float ci,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius,
+    const char burning = 0, const char conj = 0
+) {
+    int iterations = 0;
+    sq_radius = 0;
+    
+    float zr = zr0;
+    float zi = zi0;
+
+    for (; iterations < max_iterations; iterations++) {
+        // Update z with polynomial formula
+        cuCPolyC(zr, zi, a1r, a1i, ac1r, ac1i, x1r, x1i, a2r, a2i, ac2r, ac2i, x2r, x2i, a3r, a3i, ac3r, ac3i, x3r, x3i, a4r, a4i, ac4r, ac4i, x4r, x4i, cr, ci, burning, conj);
+
+        sq_radius = zr * zr + zi * zi;
+
+        if (sq_radius > bailout_radius_sq) return iterations;
+    }
+    
+    return max_iterations; // No bailout, maximum iterations reached
+}
+
+// Iterate z^x + c until bailout radius
+__device__ int mandelbrot_iterations(
+    const float zr0, const float zi0, const float xr, const float xi, const float cr, const float ci,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius,
+    const char burning = 0, const char conj = 0
+) {
+    int iterations = 0;
+    sq_radius = 0;
+    
+    float zr = zr0;
+    float zi = zi0;
+
+    for (; iterations < max_iterations; iterations++) {
+        // Absolute values for burning ship stuff
+        zr = (burning & 0b10) >> 1 ? fabsf(zr) : zr;
+        zi = (burning & 0b01) ? fabsf(zi) : zi;
+        if(conj & 0b10){
+            zr = -zr;
+        }
+        if(conj & 0b01){
+            zi = -zi;
+        }
+
         // Update z with z^x + c formula
         cuCpow(zr, zi, xr, xi);
 
@@ -158,18 +453,27 @@ __device__ int mandelbrot_iterations(
 
 // Iterate z^n + c until bailout radius (real exponent)
 __device__ int mandelbrot_iterations(
-    cuComplex& z, const float exponent, const cuComplex& c,
-    int max_iterations, float bailout_radius_sq, float& sq_radius
+    const float zr0, const float zi0, const float exponent, const float cr, const float ci,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius,
+    const char burning = 0, const char conj = 0
 ) {
     int iterations = 0;
     sq_radius = 0;
     
-    float zr = cuCrealf(z);
-    float zi = cuCimagf(z);
-    const float cr = cuCrealf(c);
-    const float ci = cuCimagf(c);
+    float zr = zr0;
+    float zi = zi0;
 
     for (; iterations < max_iterations; iterations++) {
+        // Absolute values for burning ship stuff
+        zr = (burning & 0b10) >> 1 ? fabsf(zr) : zr;
+        zi = (burning & 0b01) ? fabsf(zi) : zi;
+        if(conj & 0b10){
+            zr = -zr;
+        }
+        if(conj & 0b01){
+            zi = -zi;
+        }
+
         // Update z with z^n + c formula
         cuCpow(zr, zi, exponent);
 
@@ -185,19 +489,28 @@ __device__ int mandelbrot_iterations(
 }
 
 __device__ int mandelbrot_iterations_2(
-    cuComplex& z, const cuComplex& c,
-    int max_iterations, float bailout_radius_sq, float& sq_radius
+    const float zr0, const float zi0, const float cr, const float ci,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius,
+    const char burning = 0, const char conj = 0
 ) {
     int iterations = 0;
     sq_radius = 0;
 
     // Extract real and imaginary parts of z and c
-    float zr = cuCrealf(z);
-    float zi = cuCimagf(z);
-    const float cr = cuCrealf(c);
-    const float ci = cuCimagf(c);
+    float zr = zr0;
+    float zi = zi0;
 
     for (; iterations < max_iterations; iterations++) {
+        // Absolute values for burning ship stuff
+        zr = (burning & 0b10) >> 1 ? fabsf(zr) : zr;
+        zi = (burning & 0b01) ? fabsf(zi) : zi;
+        if(conj & 0b10){
+            zr = -zr;
+        }
+        if(conj & 0b01){
+            zi = -zi;
+        }
+
         // Update z with z^2 + c formula
         squareZ(zr, zi);
 
@@ -213,19 +526,28 @@ __device__ int mandelbrot_iterations_2(
 }
 
 __device__ int mandelbrot_iterations_3(
-    cuComplex& z, const cuComplex& c,
-    int max_iterations, float bailout_radius_sq, float& sq_radius
+    const float zr0, const float zi0, const float cr, const float ci,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius,
+    const char burning = 0, const char conj = 0
 ) {
     int iterations = 0;
     sq_radius = 0;
 
     // Extract real and imaginary parts of z and c
-    float zr = cuCrealf(z);
-    float zi = cuCimagf(z);
-    const float cr = cuCrealf(c);
-    const float ci = cuCimagf(c);
+    float zr = zr0;
+    float zi = zi0;
 
     for (; iterations < max_iterations; iterations++) {
+        // Absolute values for burning ship stuff
+        zr = burning & 0b10 >> 1 ? fabsf(zr) : zr;
+        zi = burning & 0b01 ? fabsf(zi) : zi;
+        if(conj & 0b10){
+            zr = -zr;
+        }
+        if(conj & 0b01){
+            zi = -zi;
+        }
+
         // Update z with z^3 + c formula
         cubeZ(zr, zi);
 
@@ -243,7 +565,7 @@ __device__ int mandelbrot_iterations_3(
 // Iterate z^n + c until bailout radius (real exponent)
 __device__ int mandelbulb_iterations(
     const Cuda::vec3& z, const float exponent, const Cuda::vec3& c,
-    int max_iterations, float bailout_radius_sq, float& sq_radius
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius
 ) {
     int iterations = 0;
     sq_radius = 0;
@@ -254,15 +576,16 @@ __device__ int mandelbulb_iterations(
     const float cx = c.x;
     const float cy = c.y;
     const float cz = c.z;
-    Cuda::vec3 z_new = z;
 
     for (; iterations < max_iterations; iterations++) {
         // Update z with z^n + c formula
-        z_new = cuCMpow(z_new, exponent);
+        cuCMpow(zx, zy, zz, exponent);
 
-        z_new += c;
+        zx += cx;
+        zy += cy;
+        zz += cz;
 
-        sq_radius = z_new.x * z_new.x + z_new.y * z_new.y + z_new.z * z_new.z;
+        sq_radius = zx * zx + zy * zy + zz * zz;
 
         if (sq_radius > bailout_radius_sq) return iterations;
     }
