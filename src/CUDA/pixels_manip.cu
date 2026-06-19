@@ -113,12 +113,13 @@ __global__ void overlay_kernel(
     const uint32_t* foreground, const Cuda::ivec2 f_wh,
     const Cuda::vec2 center, const float opacity)
 {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= f_wh.x * f_wh.y) return;
+    Cuda::ivec2 b_pos(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
+    if (b_pos.x >= b_wh.x || b_pos.y >= b_wh.y) return;
 
-    Cuda::ivec2 f_pos(idx % f_wh.x, idx / f_wh.x);
+    Cuda::ivec2 f_pos(b_pos - floor(center));
+    if (f_pos.x < 0 || f_pos.x >= f_wh.x || f_pos.y < 0 || f_pos.y >= f_wh.y) return;
 
-    overlay_pixel(f_pos + floor(center), foreground[f_pos.y * f_wh.x + f_pos.x], opacity, background, b_wh);
+    overlay_pixel(b_pos, foreground[f_pos.y * f_wh.x + f_pos.x], opacity, background, b_wh);
 }
 
 __global__ void overlay_rotation_kernel(
@@ -126,10 +127,8 @@ __global__ void overlay_rotation_kernel(
     const uint32_t* foreground, const Cuda::ivec2 f_wh,
     const Cuda::vec2 center, const float opacity, const float angle_rad)
 {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= b_wh.x * b_wh.y) return;
-
-    Cuda::ivec2 b_pos(idx % b_wh.x, idx / b_wh.x);
+    Cuda::ivec2 b_pos(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
+    if (b_pos.x >= b_wh.x || b_pos.y >= b_wh.y) return;
 
     // Compute position relative to overlay top-left
     Cuda::vec2 rel_pos = b_pos - center;
@@ -220,8 +219,8 @@ extern "C" void cuda_overlay (
     float angle_mod = Cuda::extended_mod(angle_rad, 2.0f * M_PI);
 
     // TODO instead use the envelope surrounding the rotation INTERSECT the background itself
-    int blockSize = 256;
-    int numBlocks = (b_wh.x * b_wh.y + blockSize - 1) / blockSize;
+    dim3 blockSize(16, 16);
+    dim3 numBlocks((b_wh.x + blockSize.x - 1) / blockSize.x, (b_wh.y + blockSize.y - 1) / blockSize.y);
     const float epsilon = 0.001f;
     if (angle_mod < epsilon || angle_mod > (2.0f * M_PI - epsilon)) {
         // If angle is effectively 0, skip rotation math and just do normal overlay
