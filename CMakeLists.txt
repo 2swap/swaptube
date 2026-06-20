@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-set(CMAKE_CUDA_COMPILER /opt/cuda/bin/nvcc CACHE FILEPATH "" FORCE)
-set(CMAKE_CUDA_HOST_COMPILER /usr/bin/g++-15 CACHE FILEPATH "" FORCE)
-set(CMAKE_CXX_COMPILER /usr/bin/g++-15 CACHE FILEPATH "" FORCE)
+include(local.cmake OPTIONAL)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message(STATUS "C++ standard set to ${CMAKE_CXX_STANDARD}")
