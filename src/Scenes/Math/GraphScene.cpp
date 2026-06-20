@@ -23,8 +23,8 @@ string to_string_with_precision(const double a_value, const int n){
     return s;
 }
 
-GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
-    : ThreeDimensionScene(dimensions), graph(g) {
+GraphScene::GraphScene(const vec2& dimensions)
+    : ThreeDimensionScene(dimensions) {
     curr_hash = 0;
     next_hash = 0;
     color_scheme = {0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};
@@ -45,9 +45,10 @@ GraphScene::GraphScene(shared_ptr<Graph> g, const vec2& dimensions)
         {"qk", "0"},
     });
 
-    config = make_shared<GraphDrawingConfig>();
-    add_data_object(&(*config));
-    add_data_object(&(*graph));
+    config = new GraphDrawingConfig;
+    graph = new Graph;
+    add_data_object(config);
+    add_data_object(graph);
 }
 
 void GraphScene::transition_node_position(const TransitionType tt, const double hash, const vec4& new_position){
@@ -114,7 +115,7 @@ void GraphScene::draw(){
 
     float midpoint_thickness = .35 * state["midpoint_multiplier"];
 
-    Pixels labels(pix.wh);
+    //Pixels labels(pix.wh);
 
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     // I can't think of a good pattern though.
@@ -135,7 +136,7 @@ void GraphScene::draw(){
             bool behind_camera = false;
             vec2 pos = coordinate_to_pixel(node.position, behind_camera) + label_offset * get_width_height();
             vec2 dim = label_size * get_width_height() * nrd.label_size * state["node_labels_size"];
-            write_text(labels, latex_color(label_color, nrd.label), pos, dim, 1);
+            //write_text(labels, latex_color(label_color, nrd.label), pos, dim, 1);
         }
 
         for(const Edge& neighbor_edge : node.neighbors){
@@ -176,7 +177,7 @@ void GraphScene::draw(){
                 if (erd.label.size() <= 2) { // Simple edge weights (2 digit numbers) dont need rotation
                     text_rotation_angle = 0;
                 }
-                write_text(labels, erd.label, pos, dim, 1, text_rotation_angle);
+                //write_text(labels, erd.label, pos, dim, 1, text_rotation_angle);
             }
         }
     }
@@ -193,7 +194,7 @@ void GraphScene::draw(){
 
     ThreeDimensionScene::draw();
 
-    pix.overlay_gpu(labels, vec2(0,0), 1);
+    //pix.overlay_gpu(labels, vec2(0,0), 1);
 }
 
 const StateQuery GraphScene::populate_state_query() const {

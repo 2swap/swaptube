@@ -126,12 +126,12 @@ __global__ void beaver_TNF_kernel(unsigned int* pixels, int w, int h, Cuda::vec2
 
     //int col = 0xff000000 | (0x3f << ((head_position - 2 * half_tape_length + 2) * 4));
     //int col = 0xff000000 | (0x3f << (current_state * 8));
-    //pixels[pixel_index] = halted ? d_rainbow((float) head_position / 42) : 0xff000000;
+    //pixels[pixel_index] = halted ? Cuda::rainbow((float) head_position / 42) : 0xff000000;
     //float atan_steps = atanf(steps / 4.) / 1.57079632679f; // Normalize to [0, 1]
-    //pixels[pixel_index] = halted ? d_rainbow(atan_steps) : 0xff000000;
+    //pixels[pixel_index] = halted ? Cuda::rainbow(atan_steps) : 0xff000000;
     //pixels[pixel_index] = 0xff000000 + 0x00111111 * min(depth, 15);
     depth += 2;
-    pixels[pixel_index] = d_rainbow(atanf(depth*depth / 200.) / 1.57079632679f);
+    pixels[pixel_index] = Cuda::rainbow(atanf(depth*depth / 200.) / 1.57079632679f);
 }
 
 extern "C" void beaver_grid_TNF_cuda(unsigned int* pixels, int w, int h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {

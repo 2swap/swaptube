@@ -86,9 +86,9 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pi
 
     //int col = 0xff000000 | (0x3f << ((head_position - 498) * 4));
     //int col = 0xff000000 | (0x3f << (current_state * 8));
-    //pixels[pixel_index] = halted ? d_rainbow((float) head_position / 42) : 0xff000000;
+    //pixels[pixel_index] = halted ? Cuda::rainbow((float) head_position / 42) : 0xff000000;
     float atan_steps = atanf(steps / 4.) / 1.57079632679f; // Normalize to [0, 1]
-    pixels[pixel_index] = halted ? d_rainbow(atan_steps) : 0xff000000;
+    pixels[pixel_index] = halted ? Cuda::rainbow(atan_steps) : 0xff000000;
 }
 
 extern "C" void beaver_grid_cuda(int num_states, int num_symbols, uint32_t* pixels, const Cuda::ivec2& wh, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, int max_steps) {

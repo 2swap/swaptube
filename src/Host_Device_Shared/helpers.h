@@ -23,6 +23,7 @@ HOST_DEVICE inline float smoother1(float x){return 3*x*x-2*x*x*x;} // We used to
 HOST_DEVICE inline float smoother2(float x){return x<.5 ? square(x)*2 : 1-square(1-x)*2;}
 HOST_DEVICE inline float lerp(float a, float b, float w){return a*(1-w)+b*w;}
 HOST_DEVICE inline float float_lerp(float a, float b, float w){return a*(1-w)+b*w;}
+HOST_DEVICE inline vec2 veclerp(vec2 a, vec2 b, float w){return a*(1-w)+b*w;}
 HOST_DEVICE inline vec3 veclerp(vec3 a, vec3 b, float w){return a*(1-w)+b*w;}
 HOST_DEVICE inline vec4 veclerp(vec4 a, vec4 b, float w){return a*(1-w)+b*w;}
 HOST_DEVICE inline float smoothlerp(float a, float b, float w){float v = smoother2(w);return a*(1-v)+b*v;}

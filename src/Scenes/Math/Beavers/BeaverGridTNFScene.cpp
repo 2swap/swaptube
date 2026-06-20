@@ -10,7 +10,7 @@ BeaverGridTNFScene::BeaverGridTNFScene(const vec2& dimension)
 
 void BeaverGridTNFScene::draw() {
     beaver_grid_TNF_cuda(
-        pix.pixels.data(), pix.wh.x, pix.wh.y,
+        gpu_pix->get_ptr(), get_width(), get_height(),
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
         state["max_steps"]

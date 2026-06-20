@@ -12,16 +12,11 @@ https://discord.gg/a786NZXYQ3
 
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
+Furthermore, a CUDA-compatible NVIDIA GPU or a [HIP](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html)-compatible AMD GPU is required.
+
+Note that the HIP folder is generated on HIP-compatible machines by translating the CUDA folder with hipify. Do not modify any of the contents in HIP/, instead treat the CUDA folder as the source of truth and modify that. It will be re-translated via CMake.
 
 There is an experimental Windows/MSVC build available in a fork: [meghanto/swaptube](https://github.com/meghanto/swaptube). It is not officially supported here, may lag behind `master`, and comes with no guarantee of ongoing maintenance.
-
-SwapTube was originally designed to work only with CUDA, requiring an NVIDIA GPU. It should now be possible to run on AMD using HIP. This feature is new and may have errors. AMD ROCm is required if HIP is used in place of CUDA. Follow [this guide](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html) to install ROCm and HIP.
-
-Note that the HIP folder is generated on HIP-compatible machines by translating the CUDA folder with hipify. Do not modify any of the contents in HIP/, instead treat the CUDA folder as the source of truth and modify that. It will be re-translated in CMake.
-
-If you don't have an NVIDIA or AMD GPU capable of CUDA or HIP, respectively, (i.e. integrated graphics or Intel Arc), you will be unable to run projects that use CUDA. CUDAFreePendulumDemo may work without hardware support.
-
-If neither CUDA nor HIP is properly installed (for example, if the CUDA version is incompatible with the hardware present,) projects such as MandelbrotDemo will look entirely black or grey if run on a machine without support. 
 
 ## Setup
 ### External Dependencies
@@ -51,7 +46,7 @@ When you have created a project file `Projects/yourprojectname.cpp`, you can com
 Some example code and demos can be found in `src/Projects/Demos/`. How to run a demo (code run from project root):
 
 ```bash
-./go.sh LoopingLambdaDemo 640 360 30
+./go.sh LambdaDemo 640 360 30
 ```
 
 This indicates a 640x360 landscape resolution at 30FPS. Swaptube defaults to an audio sample rate of 48000 Hz- If you need to change that for whatever reason, they are specified in `go.sh` and `record_audios.py`.

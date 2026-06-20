@@ -10,12 +10,8 @@ extern "C"
     #include <libavformat/avformat.h>
     #include <libswscale/swscale.h>
     #include <libavutil/opt.h>
+    #include <libavutil/hwcontext_drm.h>
 }
-
-extern "C"
-void alpha_overlay_cuda(unsigned int* src_host,
-                        int width, int height,
-                        unsigned int bg_color);
 
 class VideoWriter {
 private:
@@ -33,6 +29,6 @@ private:
 
 public:
     VideoWriter(AVFormatContext *fc_, const std::string& video_path, int video_width_pixels, int video_height_pixels, int video_framerate_fps);
-    void add_frame(Pixels& p);
+    void add_frame(uint32_t* device_argb_pixels);
     ~VideoWriter();
 };

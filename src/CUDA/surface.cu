@@ -56,7 +56,7 @@ __global__ void render_surface_kernel(
 
     uint32_t color = d_surface[surface_xy.x + surface_xy.y * surface_wh.x];
 
-    d_pixels[pixels_index] = d_color_combine(d_pixels[pixels_index], color, opacity);
+    d_pixels[pixels_index] = Cuda::color_combine(d_pixels[pixels_index], color, opacity);
 }
 
 extern "C" void cuda_render_surface(

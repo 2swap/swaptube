@@ -17,7 +17,7 @@ public:
     double curr_hash;
     double next_hash;
     std::vector<unsigned int> color_scheme;
-    GraphScene(std::shared_ptr<Graph> g, const vec2& dimensions = vec2(1, 1));
+    GraphScene(const vec2& dimensions = vec2(1, 1));
 
     void draw() override;
 
@@ -25,8 +25,8 @@ public:
 
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 
-    std::shared_ptr<Graph> graph;
-    std::shared_ptr<GraphDrawingConfig> config;
+    Graph* graph;
+    GraphDrawingConfig* config;
 
     void transition_node_position(const TransitionType tt, const double hash, const vec4& shift);
 

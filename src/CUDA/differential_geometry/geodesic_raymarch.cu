@@ -417,7 +417,7 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     }
 
     // fade to black based on steps
-    else d_pixels[py * w + px] = d_colorlerp(out, 0xff000000, dist_traveled / max_dist );
+    else d_pixels[py * w + px] = Cuda::colorlerp(out, 0xff000000, dist_traveled / max_dist );
 }
 
 // Host-facing launcher

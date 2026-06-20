@@ -8,21 +8,22 @@ extern "C" void draw_conway(
     const vec2& lx_ty, const vec2& rx_by, float transition
 );
 
-ConwayScene::ConwayScene(const vec2& dimensions) : CoordinateScene(dimensions), conway_grid(ivec2(10000, 10000)), d_pixels(get_pixels_size()) {
-    add_data_object(&conway_grid);
+ConwayScene::ConwayScene(const ivec2& size_bitboards, const Pixels& env, const vec2& dimensions) : CoordinateScene(dimensions) {
+    conway_grid = new ConwayGrid(size_bitboards, env);
+    add_data_object(conway_grid);
 }
 
 void ConwayScene::draw() {
+    conway_grid->iterate();
     draw_conway(
-        conway_grid.d_board_2,
-        conway_grid.d_board,
-        conway_grid.grid_wh_bitboards,
-        d_pixels.get_ptr(), pix.wh,
+        conway_grid->d_board_2,
+        conway_grid->d_board,
+        conway_grid->grid_wh_bitboards,
+        gpu_pix->get_ptr(), get_width_height(),
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
         state["microblock_fraction_passthrough"]
     );
-    d_pixels.copy_to_host(pix.pixels.data(), pix.wh);
     CoordinateScene::draw();
 }
 
@@ -36,5 +37,5 @@ const StateQuery ConwayScene::populate_state_query() const {
 
 void ConwayScene::on_end_transition_extra_behavior(const TransitionType tt){
     if(tt == MICRO)
-        conway_grid.iterate();
+        ;//conway_grid->iterate();
 }

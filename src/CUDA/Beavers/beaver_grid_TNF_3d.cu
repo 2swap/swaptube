@@ -309,7 +309,7 @@ __device__ void loop3(RayState& r) {
         r.cplen--;
         r.looppart = 1;
     } else {
-        r.haltcol[r.pathlen] = d_rainbow(atan(steps / 4.0) / 1.57079632679f) - 0xd0000000;
+        r.haltcol[r.pathlen] = Cuda::rainbow(atan(steps / 4.0) / 1.57079632679f) - 0xd0000000;
         r.haltcol[r.pathlen] += (int)(r.skip) * (0x00ffffff - r.haltcol[r.pathlen] + ((int)(floor(r.highlight_intensity * 255.99)) << 24));
         //r.cubcol = Cuda::vec4(((r.haltcol[r.pathlen] >> 24) & 0x000000ff) / 255.0f, ((r.haltcol[r.pathlen] >> 16) & 0x000000ff) / 255.0f, ((r.haltcol[r.pathlen] >> 8) & 0x000000ff) / 255.0f, (r.haltcol[r.pathlen] & 0x000000ff) / 255.0f);
         r.action[r.pathlen] = action_index + (int)(r.skip)*(CODON_MEM_LIMIT - action_index - 1);

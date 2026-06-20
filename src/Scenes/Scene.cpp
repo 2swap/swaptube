@@ -1,11 +1,11 @@
 #include "Scene.h"
 #include "../Core/Smoketest.h"
+#include "../IO/PNG.h"
 #include "../IO/Writer.h"
 #include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
 
-extern "C" uint32_t* cuda_alloc_pixels_on_device(int width, int height);
-extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int width, int height, uint32_t* d_pixels);
+extern "C" void cuda_zeroize_pixels(uint32_t* d_pixels, const ivec2& wh);
 
 int remaining_microblocks_in_macroblock = 0;
 int remaining_frames_in_macroblock = 0;
@@ -66,6 +66,15 @@ Scene::Scene(const vec2& dimensions)
         {"w", to_string(dimensions.x)},
         {"h", to_string(dimensions.y)}
     });
+    gpu_pix = new DevicePointer(get_pixels_size());
+    add_data_object(gpu_pix);
+}
+
+Scene::~Scene() {
+    // Clean up data objects
+    for(DataObject* obj : data_objects) {
+        delete obj;
+    }
 }
 
 void Scene::on_end_transition(const TransitionType tt) {
@@ -95,24 +104,25 @@ bool Scene::check_if_state_changed() const {
     return state != last_state;
 }
 
-void Scene::query(Pixels*& p) {
+uint32_t* Scene::query() {
     cout << "(" << flush;
     if(!has_updated_since_last_query) update();
 
     // The only time we skip render entirely is when the project flags to skip a section.
     if(needs_redraw() && is_for_real()) {
         has_ever_rendered = true;
-        pix = Pixels(floor(get_width_height()));
+        cuda_zeroize_pixels(gpu_pix->get_ptr(), get_width_height());
         cout << "|" << flush;
         draw();
     }
     mark_data_unchanged();
     has_updated_since_last_query = false;
-    p=&pix;
     cout << ")" << flush;
+    return gpu_pix->get_ptr();
 }
 
 void Scene::render_microblock(){
+    cout << "{" << flush;
     if (remaining_microblocks_in_macroblock == 0) {
         throw runtime_error("ERROR: Attempted to render video, without having added audio first!\nYou probably forgot to stage_macroblock()!\nOr perhaps you staged too few microblocks- " + to_string(total_microblocks_in_macroblock) + " were staged, but there should have been more.");
     }
@@ -144,6 +154,7 @@ void Scene::render_microblock(){
     }
     on_end_transition(MICRO);
     if(done_macroblock) on_end_transition(MACRO);
+    cout << "} " << flush;
 }
 
 void Scene::update_state() {
@@ -184,7 +195,9 @@ int Scene::get_pixels_size() {
 
 double Scene::get_geom_mean_size() { return geom_mean(get_width(),get_height()); }
 
-void Scene::export_frame(const string& filename, int scaledown) const {
+void Scene::export_frame(const string& filename, int scaledown) {
+    Pixels pix(get_width_height());
+    gpu_pix->copy_to_host(pix.pixels.data(), get_width_height());
     pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
 }
 
@@ -213,10 +226,8 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("microblock_fraction", static_cast<double>(microblock_frame_number) / scene_duration_frames);
     set_global_state("voice", sample_to_float(sample));
 
-    Pixels* p = nullptr;
-    query(p);
-
-    get_writer().video->add_frame(*p);
+    query();
+    get_writer().video->add_frame(gpu_pix->get_ptr());
 
     remaining_frames_in_macroblock--;
     set_global_state("frame_number", get_global_state("frame_number") + 1);

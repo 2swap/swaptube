@@ -43,7 +43,7 @@ void BeaverGridTNF3DScene::draw() {
     float dist = state["camera_distance"];
     //vec3 pos = target + dist * rotate_vector(vec3(0, 0, -1), camera);
     beaver_grid_TNF_3D_cuda(
-        pix.pixels.data(), pix.wh.x, pix.wh.y, vec2(state["center_x"], state["center_y"]),
+        gpu_pix->get_ptr(), get_width(), get_height(), vec2(state["center_x"], state["center_y"]),
         dist, camera, state["fov"], target,
         /*vec3(state["x"], state["y"], state["z"]),
         quat(state["q1"], state["qi"], state["qj"], state["qk"]), state["fov"],

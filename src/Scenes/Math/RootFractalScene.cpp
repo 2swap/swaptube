@@ -12,7 +12,7 @@ extern "C" void draw_root_fractal(
     float radius, float opacity, float brightness
 );
 
-RootFractalScene::RootFractalScene(const vec2& dimensions) : CoordinateScene(dimensions), d_pixels(get_pixels_size()) {
+RootFractalScene::RootFractalScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({
         {"coefficient0_r", "-1"},
         {"coefficient0_i", "0"},
@@ -37,7 +37,7 @@ void RootFractalScene::draw() {
     float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(wh*10, .25) / 250;
     float opacity = 1-1/(2*wh+1);
     opacity *= square(state["visibility_multiplier"]);
-    draw_root_fractal(d_pixels.get_ptr(), pix.wh,
+    draw_root_fractal(gpu_pix->get_ptr(), get_width_height(),
         c0, c1, n,
         vec2(state["left_x"], state["top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
@@ -47,6 +47,7 @@ void RootFractalScene::draw() {
     float gm = get_geom_mean_size() / 200;
 
     // Draw coefficients
+    /* TODO needs GPU refactor
     int i = 0;
     for(complex<float> coeff : {c0, c1}) {
         float letter_opa = 1;
@@ -59,7 +60,7 @@ void RootFractalScene::draw() {
         }
         i++;
     }
-    d_pixels.copy_to_host(pix.pixels.data(), pix.wh);
+    */
     CoordinateScene::draw();
 }
 

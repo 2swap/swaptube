@@ -6,8 +6,8 @@
 #include "../Core/State/StateManager.h"
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
-#include "../IO/VisualMedia.h"
 #include "../DataObjects/DataObject.h"
+#include "../DataObjects/DevicePointer.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -28,6 +28,7 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 class Scene {
 public:
     Scene(const vec2& dimensions = vec2(1, 1));
+    ~Scene();
 
     virtual const StateQuery populate_state_query() const = 0;
     virtual void draw() = 0;
@@ -41,7 +42,7 @@ public:
 
     bool check_if_state_changed() const;
 
-    void query(Pixels*& p);
+    uint32_t* query();
 
     double get_geom_mean_size();
     int get_width();
@@ -53,7 +54,7 @@ public:
 
     void update_state();
 
-    void export_frame(const string& filename, int scaledown = 1) const;
+    void export_frame(const string& filename, int scaledown = 1);
 
     StateManager manager;
 
@@ -64,7 +65,7 @@ public:
     virtual void change_data();
 
 protected:
-    Pixels pix;
+    DevicePointer* gpu_pix;
     StateReturn state;
     bool has_ever_rendered = false;
 

@@ -3,7 +3,6 @@
 #include <complex>
 #include <cmath>
 #include <cstdio>
-#include "../Host_Device_Shared/vec.h"
 #include "common_graphics.cuh"
 #include "find_roots.cuh"
 #include "../Host_Device_Shared/helpers.h"
@@ -115,7 +114,7 @@ __global__ void finalize_color_kernel(unsigned int* d_pixels, float* d_alpha, fl
     unsigned int g = Cuda::clamp(g_mod + brightness, 0.0f, 255.9f);
     unsigned int b = Cuda::clamp(b_mod + brightness, 0.0f, 255.9f);
 
-    d_pixels[idx] = d_argb(a, r, g, b);
+    d_pixels[idx] = Cuda::argb(a, r, g, b);
 }
 
 extern "C" void draw_root_fractal(

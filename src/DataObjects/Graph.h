@@ -10,7 +10,6 @@
 #include <string>
 #include <utility>
 #include "DataObject.h"
-#include "GenericBoard.h"
 
 class Edge {
 public:
@@ -35,9 +34,8 @@ vec4 random_unit_cube_vector(std::mt19937& rng, std::uniform_real_distribution<f
 
 class Node {
 public:
-    Node(GenericBoard* t, double hash, vec4 position, vec4 velocity);
+    Node(double hash, vec4 position, vec4 velocity);
 
-    GenericBoard* data;
     double hash = 0;
     EdgeSet neighbors;
     vec4 velocity;
@@ -47,7 +45,6 @@ public:
 class Graph : public DataObject {
 public:
     Graph();
-    ~Graph();
 
     int size() const;
 
@@ -58,12 +55,12 @@ public:
     void clear_queue();
     void clear();
 
-    double add_node(GenericBoard* t);
-    double add_node_without_edges(GenericBoard* t);
+    double add_node(double hash);
+    double add_node_without_edges(double hash);
 
     int expand(int n = -1);
 
-    void add_node_with_neighbors(GenericBoard* t, std::vector<double> neighbor_hashes);
+    void add_node_with_neighbors(double hash, std::vector<double> neighbor_hashes);
     void move_node(double hash, vec4 pos);
 
     void add_edge(double from, double to, double opacity = 1);
@@ -82,7 +79,7 @@ public:
 
     std::vector<int> make_adjacency_matrix(const std::vector<Node*>& node_vector, int &max_degree);
 
-    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension, const float mirror_force);
+    void iterate_physics(const int iterations, const float repel, const float attract, const float decay, const double dimension);
 
     std::unordered_set<double> get_neighborhood(double hash, int dist);
     std::unordered_set<double> get_neighbors(double hash);

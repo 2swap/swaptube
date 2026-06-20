@@ -1,5 +1,4 @@
 #include "../../Common/CoordinateScene.h"
-#include "../../../DataObjects/DevicePointer.h"
 
 class BeaverGridScene : public CoordinateScene {
 public:
@@ -9,6 +8,4 @@ private:
     void draw() override;
 
     const StateQuery populate_state_query() const;
-
-    DevicePointer d_pixels;
 };

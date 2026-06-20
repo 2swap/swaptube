@@ -272,7 +272,7 @@ __global__ void render_sphere_kernel(
     uint32_t latlong_color = lat_long_line(v, u, 12.f);
     uint32_t map_color = bicubic_sample(map, map_wh, u, v);
     // TODO we copy the giant texture to the GPU even if we might not use it. We should only copy when texture_latlong > 0
-    uint32_t color = d_colorlerp(map_color, latlong_color, texture_latlong);
+    uint32_t color = Cuda::colorlerp(map_color, latlong_color, texture_latlong);
     pixels[pixel.x + wh.x * pixel.y] = (color & 0x00FFFFFF) | ((uint32_t)(opacity * 255) << 24);
 }
 
@@ -282,10 +282,6 @@ extern "C" void cuda_render_sphere(
     uint32_t* d_map, const Cuda::ivec2& map_wh,
     const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float opacity, float texture_latlong)
 {
-    if(opacity == 0) {
-        cudaMemset(d_pixels, 0, wh.x * wh.y * sizeof(uint32_t));
-        return;
-    }
     dim3 blockSize(16, 16);
     dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
     render_sphere_kernel<<<gridSize, blockSize>>>(

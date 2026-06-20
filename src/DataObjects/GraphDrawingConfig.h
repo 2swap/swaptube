@@ -2,7 +2,7 @@
 #include <string>
 #include <stdint.h>
 #include "DataObject.h"
-#include "../Core/Color.h"
+#include "../Host_Device_Shared/Color.h"
 #include "../IO/Writer.h"
 
 struct NodeConfig {

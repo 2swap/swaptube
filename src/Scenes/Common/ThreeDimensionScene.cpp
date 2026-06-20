@@ -37,13 +37,6 @@ extern "C" {
         float halfheight,
         float over_w_fov);
 }
-extern "C" void cuda_render_sphere(
-    uint32_t* d_pixels, const ivec2& wh,
-    float geom_mean_size,
-    uint32_t* d_map, const ivec2& map_wh,
-    const quat& camera_direction, const vec3& camera_pos, float fov, float globe_opacity, float texture_latlong);
-extern "C" uint32_t* cuda_copy_map(const string& filename_with_or_without_suffix, ivec2& map_wh);
-extern "C" void cuda_free_map(uint32_t* d_map);
 
 Surface::Surface(const vec3& c, const vec3& l, const vec3& u, const string& n)
     : center(c),
@@ -62,7 +55,7 @@ Path::Path(const string& n, int clr, float op)
     : name(n), color(clr), opacity(op) { }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
-    : SuperScene(dimensions), auto_distance(-1), auto_camera(vec3(0,0,0)), d_pixels(get_pixels_size()), d_map(nullptr) {
+    : SuperScene(dimensions), auto_distance(-1), auto_camera(vec3(0,0,0)) {
     manager.set({
         {"fov", "1"},
         {"x", "0"},
@@ -77,13 +70,9 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"lines_opacity", "1"},
         {"points_radius_multiplier", "1"},
         {"points_opacity", "1"},
-        {"globe_opacity", "0"},
-        {"texture_or_latlong", "0"}
     });
-}
-
-ThreeDimensionScene::~ThreeDimensionScene() {
-    if(d_map != nullptr) cuda_free_map(d_map);
+    distance_buffer = new DevicePointer(get_pixels_size());
+    add_data_object(distance_buffer);
 }
 
 // TODO this is duplicate code from CUDA/common_graphics.h and we should unify them.
@@ -205,13 +194,12 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
     int plot_w = x2 - x1 + 1;
     int plot_h = y2 - y1 + 1;
 
-    Pixels* queried = NULL;
-    subscenes[surface.name]->query(queried);
+    uint32_t* queried = subscenes[surface.name]->query();
 
     cuda_render_surface(
-        d_pixels.get_ptr(),
-        x1, y1, ivec2(plot_w, plot_h), pix.wh.x,
-        queried->pixels.data(),
+        gpu_pix->get_ptr(),
+        x1, y1, ivec2(plot_w, plot_h), get_width(),
+        queried,
         subscenes[surface.name]->get_width_height(),
         this_surface_opacity,
         camera_pos,
@@ -244,30 +232,6 @@ float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
 void ThreeDimensionScene::draw() {
     set_camera_direction();
 
-    float globe_opacity = state["globe_opacity"];
-    if(globe_opacity > 0.001) {
-        string map_filename = "../earth_half";
-        int width = get_width();
-        if(!rendering_on()) map_filename = "../earth_tiny";
-        else if(width <= 2000) map_filename = "../earth_small";
-        if(d_map == nullptr) d_map = cuda_copy_map(map_filename, map_wh);
-        cuda_render_sphere(
-            d_pixels.get_ptr(), pix.wh,
-            get_geom_mean_size(),
-            d_map, map_wh,
-            camera_direction, camera_pos, fov, globe_opacity, state["texture_or_latlong"]
-        );
-    }
-    else {
-        // TODO hack, fix
-        cuda_render_sphere(
-            d_pixels.get_ptr(), pix.wh,
-            get_geom_mean_size(),
-            d_map, map_wh,
-            camera_direction, camera_pos, fov, 0, state["texture_or_latlong"]
-        );
-    }
-
     // Render surfaces via their CUDA integration.
     if (state["surfaces_opacity"] > 0.001) {
         for (const Surface& surface : surfaces) render_surface(surface);
@@ -276,8 +240,8 @@ void ThreeDimensionScene::draw() {
     if (!lines.empty() && state["lines_opacity"] > .001) {
         int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
-            d_pixels.get_ptr(),
-            pix.wh,
+            gpu_pix->get_ptr(),
+            get_width_height(),
             get_geom_mean_size(),
             thickness,
             state["lines_opacity"],
@@ -290,8 +254,8 @@ void ThreeDimensionScene::draw() {
     }
     if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
         render_points_on_gpu(
-            d_pixels.get_ptr(),
-            pix.wh,
+            gpu_pix->get_ptr(),
+            get_width_height(),
             get_geom_mean_size(),
             state["points_opacity"],
             state["points_radius_multiplier"],
@@ -302,14 +266,13 @@ void ThreeDimensionScene::draw() {
             fov
         );
     }
-    d_pixels.copy_to_host(pix.pixels.data(), pix.wh);
 }
 
 const StateQuery ThreeDimensionScene::populate_state_query() const {
     StateQuery sq = SuperScene::populate_state_query();
     for(const string& x : {
         "fov","x", "y", "z", "d", "q1", "qi", "qj", "qk",
-        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier", "globe_opacity", "texture_or_latlong"
+        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
     }) sq.insert(x);
     for(const Surface& surface : surfaces){
         sq.insert(surface.name + ".opacity");

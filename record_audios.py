@@ -5,6 +5,35 @@ import re
 import shutil
 import argparse
 
+def get_mic_channels(device):
+    """
+    Return the number of channels reported by ffprobe for an ALSA device.
+    Raises RuntimeError if the channel count cannot be determined.
+    """
+    cmd = [
+        "ffprobe",
+        "-v", "error",
+        "-f", "alsa",
+        "-show_entries", "stream=channels",
+        "-of", "default=noprint_wrappers=1:nokey=1",
+        device,
+    ]
+
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    try:
+        return int(result.stdout.strip())
+    except ValueError:
+        raise RuntimeError(
+            f"Could not determine channel count for {device!r}. "
+            f"ffprobe output was: {result.stdout!r}"
+        )
+
 def delete_temp_recordings(temp_recordings_dir):
     if os.path.exists(temp_recordings_dir):
         shutil.rmtree(temp_recordings_dir)
@@ -114,6 +143,14 @@ def main():
 
     # Process each entry
     successes = 0
+
+    channels = get_mic_channels(selected_device)
+    if channels not in [1, 2]:
+        print(f"Error: Unsupported number of channels ({channels}) for device {selected_device}. Only mono (1) or stereo (2) are supported.")
+        exit(1)
+
+    af = ['-af', 'pan=stereo|c0=c0|c1=c0'] if channels == 1 else []
+
     for index in range(len(entries)):
         current_filename, current_text = entries[index]
         os.system('clear')
@@ -136,7 +173,8 @@ def main():
                 'ffmpeg',
                 '-f', 'alsa',
                 '-ar', '48000',
-                '-ac', '2',
+                '-ac', str(channels)
+                ] + af + [
                 '-i', selected_device, 
                 '-c:a', 'pcm_s32le',
                 '-sample_fmt', 's32',

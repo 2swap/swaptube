@@ -3,6 +3,8 @@
 #include "../../../IO/SFX.h"
 #include <vector>
 
+extern "C" void draw_grid(uint32_t* pix, const ivec2& wh, const vec2& lx_ty, const vec2& rx_by, const uint32_t* grid, const ivec2& grid_wh, const vec2& grid_start);
+
 void beep(int state, int symbol, int num_states){
     int tone_number = state + symbol * num_states;
     vector<double> notes{12, 5, 17, 22, 21, 15, 9, 29, 25, 27, 19};
@@ -34,33 +36,13 @@ void parse_tm_from_string(char* s, int num_states, int num_symbols, TuringMachin
 }
 
 TuringMachineScene::TuringMachineScene(const TuringMachine& tm, const vec2& dimension)
-: CoordinateScene(dimension), tm(tm) {
+: CoordinateScene(dimension), tm(tm), tape_length(301), tape(tape_length, 0), head_position(tape_length/2) {
     manager.set("iterations", "0");
     manager.set("ticks_opacity", "1");
     manager.set("zoom", "-1.5");
 }
 
 void TuringMachineScene::draw() {
-    const int tape_length = 301;//iterations * 2 + 1;
-    int iter_diffs = (int)state["iterations"] - last_iter;
-    last_iter = state["iterations"];
-    int tape[tape_length] = {0};
-    int head_position = tape_length/2;
-    int current_state = 0;
-    int steps = -1;
-    bool halted = false;
-    int lowest_touched_index = head_position;
-    int highest_touched_index = head_position;
-
-    /*vec2 point0(head_position-tape_length/2. - .05, steps + .05);
-    vec2 pix0 = point_to_pixel(point0);
-    vec2 wh0 = point_to_pixel(point0 + vec2(1.1,-1.1)) - pix0;
-    pix.fill_rect(pix0.x, pix0.y, wh0.x, wh0.y, 0xc0000000);*/
-    vec2 point(head_position-tape_length/2. + .25, steps - .25);
-    vec2 pix1 = point_to_pixel(point);
-    vec2 wh = point_to_pixel(point + vec2(.5,-.5)) - pix1;
-    pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xff7f00ff);
-    steps++;
     while (steps < state["iterations"]) {
         //int action_index = current_state * num_symbols + tape[head_position];
         int ls = tape[head_position];
@@ -71,36 +53,26 @@ void TuringMachineScene::draw() {
             break;
         }
 
-        /*if (iter_diffs > 0 && steps >= state["iterations"] - 1)
-	    beep(current_state, tape[head_position], tm.num_states);*/
+	    beep(current_state, tape[head_position], tm.num_states);
 
         tape[head_position] = tm.write_symbol[action_index];
         head_position += tm.left_right[action_index] ? 1 : -1;
         current_state = tm.next_state[action_index];
-        lowest_touched_index = min(lowest_touched_index, head_position);
-        highest_touched_index = max(highest_touched_index, head_position);
 
-        if(current_state == -1) {
-            halted = true;
-            break;
-        }
-        for (int i = lowest_touched_index; i <= highest_touched_index; i++) {
-	    /*vec2 point0(i-tape_length/2. - .05, steps + .05);
-            vec2 pix0 = point_to_pixel(point0);
-            vec2 wh0 = point_to_pixel(point0 + vec2(1.1,-1.1)) - pix0;
-            pix.fill_rect(pix0.x, pix0.y, wh0.x, wh0.y, 0xc0000000);*/
-            if(!tape[i]) continue;
-            vec2 point(i-tape_length/2. + .1, steps-.1);
-            vec2 pix1 = point_to_pixel(point);
-            vec2 wh = point_to_pixel(point + vec2(.8,-.8)) - pix1;
-            pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xffffffff);
-        }
-        vec2 point(head_position-tape_length/2. + .25, steps - .25);
-        vec2 pix1 = point_to_pixel(point);
-        vec2 wh = point_to_pixel(point + vec2(.5,-.5)) - pix1;
-        pix.fill_rect(pix1.x, pix1.y, wh.x, wh.y, 0xff7f00ff);
+        if(current_state == -1) break; // halt
         steps++;
+
+        grid.resize(tape_length + grid.size());
+        for(int i = 0; i < tape_length; i++) {
+            grid[grid.size() - tape_length + i] = tape[i] ? 0xffffffff : 0x00000000;
+        }
+        grid[grid.size() - tape_length + head_position] ^= 0x80ff0000;
     }
+
+    const vec2 lx_ty(state["left_x"], state["top_y"]);
+    const vec2 rx_by(state["right_x"], state["bottom_y"]);
+    const vec2 grid_start(-tape_length/2., 0);
+    draw_grid(gpu_pix->get_ptr(), get_width_height(), lx_ty, rx_by, grid.data(), ivec2(tape_length, (int)state["iterations"]), grid_start);
 
     CoordinateScene::draw();
 }
