@@ -6,27 +6,33 @@
 
 
 
-// __device__ float smallerness(float s, float brightness){
-//     return 1/(1+log(abs(s)+1)*0.5/brightness);
-// }
+__device__ float smallerness(float s, float brightness){
+    return 1/(1+log(abs(s)+1)/brightness);
+}
 
-__device__ float smallness(float s, float brightness){
-    return 1/(1+s*s*s*s/brightness);
+__device__ float smallness(float s){
+    // return 1/(1+0.02*s*s*abs(s));
+    // return 1/(1+0.0001*s*s*s*s/brightness);
+    return 1/(1+s*s*s*s);
 }
 
 
 __device__ Cuda::vec3 four_d_accum(Cuda::vec4 a, float brightness) {
 
-    float real_smallness = 4;
+    // float real_smallness = 4;
+    // float real_smallness = 0.01;
+    // float real_smallness = 0.006;
+    // float real_smallness = 0.01;
+
     // float real_smallness = (0.8+0.2*smallness(a.x,brightness))*5;
     // float real_smallness = 0.4*smallness(a.x,brightness);
     // real_smallness = real_smallness*real_smallness*real_smallness;
     // float b = smallness(a.y*a.w*a.z*100,brightness);
     Cuda::vec3 accum(
         //  b, b, b
-        real_smallness*smallness(a.y,brightness),
-        real_smallness*smallness(a.z,brightness),
-        real_smallness*smallness(a.w,brightness)
+        smallness(a.y/brightness),
+        smallness(a.z/brightness),
+        smallness(a.w/brightness)
     );
     return accum;
 
@@ -41,16 +47,23 @@ __device__ Cuda::vec3 four_d_accum(Cuda::vec4 a, float brightness) {
 }
 
 __device__ uint32_t accum_to_color(Cuda::vec3 a) {
-    // return Cuda::OKLABtoRGB(
-    //     255,
-    //     min(1.0,length(a)/255),
-    //     atan2(a.y,a.x)/1.572,
-    //     atan2(a.z,a.x)/1.572
-    // );
-    return 255 << 24 |
-    (uint32_t) min(a.x,255.0) << 16 |
-    (uint32_t) min(a.y,255.0) << 8 |
-    (uint32_t) min(a.z,255.0);
+
+    // return 255 << 24 |
+    // (uint32_t) min(a.x,255.0) << 16 |
+    // (uint32_t) min(a.y,255.0) << 8 |
+    // (uint32_t) min(a.z,255.0);
+
+    float b = 0.007;
+    float ax = min(1.0,b*a.x);
+    float ay = min(1.0,b*a.y);
+    float az = min(1.0,b*a.z);
+
+    return Cuda::OKLABtoRGB(
+        255,
+        min(1.0,(ax+ay+az)*0.5),
+        (ax-ay)*0.866,
+        (ax+ay)*0.5-az
+    );
 }
 
 
