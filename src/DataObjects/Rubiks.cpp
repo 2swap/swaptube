@@ -1,4 +1,4 @@
-#include "RubiksScene.h"
+
 #include <vector>
 #include <iostream>
 #include <algorithm>
@@ -355,7 +355,7 @@ class Cube{
 
 };
 
-int main(){
+void rubiks_test(){
     Cube cube(3);
     
     // change up face stickers
@@ -370,7 +370,7 @@ int main(){
     // cube.B.stickers[2][2] = '9';
     
 
-    std::cout << "Avant rotation:\n";
+    std::cout << "Before rotation:\n";
     cube.print();
 
     cube.rotateR(0);
@@ -378,7 +378,7 @@ int main(){
     cube.rotateR(0);
     cube.rotateL(0);
 
-    std::cout << "\nAprès rotation:\n";
+    std::cout << "\n After rotation:\n";
     cube.print();
 }
 
