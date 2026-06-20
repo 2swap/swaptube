@@ -3,6 +3,7 @@ out
 media
 src/Projects/.active_project.cpp
 src/HIP
+local.cmake
 
 # vim temp files
 *~
