@@ -5,37 +5,34 @@ import re
 import shutil
 import argparse
 
-def get_mic_channels(device):
-    """
-    Return the number of channels reported by ffprobe for an ALSA device.
-    Raises RuntimeError if the channel count cannot be determined.
-    """
-    cmd = [
-        "arecord", "-D", device, "--dump-hw-params", "-d", "0",
-    ]
-
+def ensure_two_channels(file_path):
     try:
-        print(f"Running command to get channel count: {' '.join(cmd)}")
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
-    except subprocess.CalledProcessError as e:
-        result = e
+        # Use ffprobe to get the number of channels
+        ffprobe_cmd = [
+            'ffprobe',
+            '-v', 'error',
+            '-select_streams', 'a:0',
+            '-show_entries', 'stream=channels',
+            '-of', 'default=noprint_wrappers=1:nokey=1',
+            file_path
+        ]
+        output = subprocess.check_output(ffprobe_cmd).decode().strip()
+        num_channels = int(output)
 
-    print("Command output:")
-    match = re.search(r"CHANNELS:\s*(.+)", result.stderr)
-    if match:
-        print(f"Raw CHANNELS output: '{match.group(1)}'")
-        channels_str = match.group(1).strip()
-        if channels_str.startswith("[") and channels_str.endswith("]"):
-            channels_list = re.findall(r"\d+", channels_str)
-            if "2" in channels_list:
-                return 2
-            if "1" in channels_list:
-                return 1
-            if channels_list:
-                return int(channels_list[0])
-        else:
-            return int(channels_str)
-    raise RuntimeError(f"Could not determine channel count for device {device}")
+        print(f"{file_path} has {num_channels} channels.")
+        if num_channels != 2:
+            print(f"Converting {file_path} to 2 channels...")
+            temp_file = file_path + "_temp.wav"
+            ffmpeg_cmd = [
+                'ffmpeg',
+                '-i', file_path,
+                '-ac', '2',
+                temp_file
+            ]
+            subprocess.run(ffmpeg_cmd, check=True)
+            os.replace(temp_file, file_path)
+    except Exception as e:
+        print(f"Error ensuring two channels for {file_path}: {e}")
 
 def delete_temp_recordings(temp_recordings_dir):
     if os.path.exists(temp_recordings_dir):
@@ -147,14 +144,6 @@ def main():
     # Process each entry
     successes = 0
 
-    channels = get_mic_channels(selected_device)
-    print(f"Selected device {selected_device} has {channels} channel(s).")
-    if channels not in [1, 2]:
-        print(f"Error: Unsupported number of channels ({channels}) for device {selected_device}. Only mono (1) or stereo (2) are supported.")
-        exit(1)
-
-    af = ['-af', 'pan=stereo|c0=c0|c1=c0'] if channels == 1 else []
-
     for index in range(len(entries)):
         current_filename, current_text = entries[index]
         os.system('clear')
@@ -177,8 +166,6 @@ def main():
                 'ffmpeg',
                 '-f', 'alsa',
                 '-ar', '48000',
-                '-ac', str(channels)
-                ] + af + [
                 '-i', selected_device,
                 '-c:a', 'pcm_s32le',
                 '-sample_fmt', 's32',
@@ -192,7 +179,10 @@ def main():
 
             # Stop the recording by terminating the ffmpeg process
             ffmpeg_process.terminate()
-            ffmpeg_process.wait()
+            stdout, stderr = ffmpeg_process.communicate()
+
+            # Read the file using ffprobe, and make it two channels if it is not
+            ensure_two_channels(temp_path)
 
             print("Press enter to continue or 'u' to undo the last recording...")
             user_input = input()
