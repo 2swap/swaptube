@@ -11,35 +11,31 @@ def get_mic_channels(device):
     Raises RuntimeError if the channel count cannot be determined.
     """
     cmd = [
-        "ffprobe",
-        "-v", "error",
-        "-f", "alsa",
-        "-show_entries",
-        "stream=channels",
-        "-of",
-        "default=noprint_wrappers=1:nokey=1",
-        device,
+        "arecord", "-D", device, "--dump-hw-params", "-d", "0",
     ]
 
     try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        print(f"Running command to get channel count: {' '.join(cmd)}")
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=True)
     except subprocess.CalledProcessError as e:
-        if e.stderr:
-            print(e.stderr, end="" if e.stderr.endswith("\n") else "\n")
-        exit(1)
+        result = e
 
-    try:
-        return int(result.stdout.strip())
-    except ValueError:
-        raise RuntimeError(
-            f"Could not determine channel count for {device!r}. "
-            f"ffprobe output was: {result.stdout!r}"
-        )
+    print("Command output:")
+    match = re.search(r"CHANNELS:\s*(.+)", result.stderr)
+    if match:
+        print(f"Raw CHANNELS output: '{match.group(1)}'")
+        channels_str = match.group(1).strip()
+        if channels_str.startswith("[") and channels_str.endswith("]"):
+            channels_list = re.findall(r"\d+", channels_str)
+            if "2" in channels_list:
+                return 2
+            if "1" in channels_list:
+                return 1
+            if channels_list:
+                return int(channels_list[0])
+        else:
+            return int(channels_str)
+    raise RuntimeError(f"Could not determine channel count for device {device}")
 
 def delete_temp_recordings(temp_recordings_dir):
     if os.path.exists(temp_recordings_dir):
@@ -123,9 +119,9 @@ def main():
         print("Error listing audio devices:", e)
         return
 
-    blue_devices = [device for device in available_devices if ('blue' in device.lower() or 'yeti' in device.lower())]
-    if len(blue_devices) == 1:
-        selected_line = blue_devices[0]
+    yeti_devices = [device for device in available_devices if ('yeti' in device.lower())]
+    if len(yeti_devices) == 1:
+        selected_line = yeti_devices[0]
         print(f"Automatically selected microphone: {selected_line}")
     else:
         for idx, device in enumerate(available_devices):
@@ -152,6 +148,7 @@ def main():
     successes = 0
 
     channels = get_mic_channels(selected_device)
+    print(f"Selected device {selected_device} has {channels} channel(s).")
     if channels not in [1, 2]:
         print(f"Error: Unsupported number of channels ({channels}) for device {selected_device}. Only mono (1) or stereo (2) are supported.")
         exit(1)
