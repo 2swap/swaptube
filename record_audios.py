@@ -14,17 +14,24 @@ def get_mic_channels(device):
         "ffprobe",
         "-v", "error",
         "-f", "alsa",
-        "-show_entries", "stream=channels",
-        "-of", "default=noprint_wrappers=1:nokey=1",
+        "-show_entries",
+        "stream=channels",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
         device,
     ]
 
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        if e.stderr:
+            print(e.stderr, end="" if e.stderr.endswith("\n") else "\n")
+        exit(1)
 
     try:
         return int(result.stdout.strip())
@@ -175,7 +182,7 @@ def main():
                 '-ar', '48000',
                 '-ac', str(channels)
                 ] + af + [
-                '-i', selected_device, 
+                '-i', selected_device,
                 '-c:a', 'pcm_s32le',
                 '-sample_fmt', 's32',
                 temp_path
