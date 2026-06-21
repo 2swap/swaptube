@@ -322,30 +322,31 @@ class Cube{
 
 };
 
-int main(){
-    Cube cube(4);
+// DO NOT uncomment this and push, it will break things !
+// int main(){
+//     Cube cube(4);
     
-    // some testing for rotateclockwise
-    // cube.B.stickers[0][0] = '1';
-    // cube.B.stickers[0][1] = '2';
-    // cube.B.stickers[0][2] = '3';
-    // cube.B.stickers[1][0] = '4';
-    // cube.B.stickers[1][1] = '5';
-    // cube.B.stickers[1][2] = '6';
-    // cube.B.stickers[2][0] = '7';
-    // cube.B.stickers[2][1] = '8';
-    // cube.B.stickers[2][2] = '9';
+//     // some testing for rotateclockwise
+//     // cube.B.stickers[0][0] = '1';
+//     // cube.B.stickers[0][1] = '2';
+//     // cube.B.stickers[0][2] = '3';
+//     // cube.B.stickers[1][0] = '4';
+//     // cube.B.stickers[1][1] = '5';
+//     // cube.B.stickers[1][2] = '6';
+//     // cube.B.stickers[2][0] = '7';
+//     // cube.B.stickers[2][1] = '8';
+//     // cube.B.stickers[2][2] = '9';
     
 
-    std::cout << "Before alg:\n";
-    cube.print();
+//     std::cout << "Before alg:\n";
+//     cube.print();
 
-    cube.exec(" R U R' U' R' F R2 U' R' U' R U R' F'"); // yay T-perm
+//     cube.exec(" R U R' U' R' F R2 U' R' U' R U R' F'"); // yay T-perm
 
-    std::cout << "\n After alg:\n";
-    cube.print();
-    return 0;
-}
+//     std::cout << "\n After alg:\n";
+//     cube.print();
+//     return 0;
+// }
 
 
 
