@@ -4,6 +4,7 @@ media
 src/Projects/.active_project.cpp
 src/HIP
 local.cmake
+.vscode/
 
 # vim temp files
 *~
