@@ -5,35 +5,6 @@ import re
 import shutil
 import argparse
 
-def ensure_two_channels(file_path):
-    try:
-        # Use ffprobe to get the number of channels
-        ffprobe_cmd = [
-            'ffprobe',
-            '-v', 'error',
-            '-select_streams', 'a:0',
-            '-show_entries', 'stream=channels',
-            '-of', 'default=noprint_wrappers=1:nokey=1',
-            file_path
-        ]
-        output = subprocess.check_output(ffprobe_cmd).decode().strip()
-        num_channels = int(output)
-
-        print(f"{file_path} has {num_channels} channels.")
-        if num_channels != 2:
-            print(f"Converting {file_path} to 2 channels...")
-            temp_file = file_path + "_temp.wav"
-            ffmpeg_cmd = [
-                'ffmpeg',
-                '-i', file_path,
-                '-ac', '2',
-                temp_file
-            ]
-            subprocess.run(ffmpeg_cmd, check=True)
-            os.replace(temp_file, file_path)
-    except Exception as e:
-        print(f"Error ensuring two channels for {file_path}: {e}")
-
 def delete_temp_recordings(temp_recordings_dir):
     if os.path.exists(temp_recordings_dir):
         shutil.rmtree(temp_recordings_dir)
@@ -75,7 +46,10 @@ def prompt_user_to_archive_recordings(project_dir):
 def main():
     parser = argparse.ArgumentParser(description="Record audio files based on record_list.tsv")
     parser.add_argument('project_name', help="Name of the project")
+    parser.add_argument('--mono', action='store_true', help="Record in mono instead of stereo")
+
     args = parser.parse_args()
+    mono = args.mono
 
     PROJECT_NAME = args.project_name
     PROJECT_DIR = f"media/{PROJECT_NAME}"
@@ -161,12 +135,14 @@ def main():
 
             # Start recording with ffmpeg in the background
             print("Recording... Press Enter to stop.")
-            ffmpeg_log = os.path.join(PROJECT_DIR, "ffmpeg.log")
+            mono_filter = ['-af', 'pan=mono|c0=c0'] if mono else []
             ffmpeg_cmd = [
                 'ffmpeg',
+                '-ac', '1' if mono else '2',
                 '-f', 'alsa',
                 '-ar', '48000',
                 '-i', selected_device,
+            ] + mono_filter + [
                 '-c:a', 'pcm_s32le',
                 '-sample_fmt', 's32',
                 temp_path
@@ -181,8 +157,20 @@ def main():
             ffmpeg_process.terminate()
             stdout, stderr = ffmpeg_process.communicate()
 
-            # Read the file using ffprobe, and make it two channels if it is not
-            ensure_two_channels(temp_path)
+            # Check that there is a file and that it is not empty
+            if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+                print("Recording failed or was empty. This is likely due to an ffmpeg error.")
+                print("=======")
+                print("Stderr:")
+                print("=======")
+                print(stderr.decode())
+                print("=======")
+                print("Stdout:")
+                print("=======")
+                print(stdout.decode())
+                print("=======")
+                print("Please check your microphone and try again. Remember to use --mono if your microphone does not support stereo.")
+                exit(1)
 
             print("Press enter to continue or 'u' to undo the last recording...")
             user_input = input()
