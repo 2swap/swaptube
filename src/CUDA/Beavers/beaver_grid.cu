@@ -37,7 +37,7 @@ __device__ void decode_turing_machine_index(int x, int y, int grid_w, int grid_h
     }
 }
 
-__global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pixels, const Cuda::ivec2& wh, int grid_w, int grid_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
+__global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pixels, const Cuda::ivec2 wh, int grid_w, int grid_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
 
