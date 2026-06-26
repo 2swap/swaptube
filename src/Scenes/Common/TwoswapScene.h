@@ -11,6 +11,12 @@
 void stripey_effect(Pixels& in, Pixels& out, const float amount);
 
 class TwoswapScene : public MandelbrotScene {
+    uint32_t* twoswap = nullptr;
+    uint32_t* seef = nullptr;
+    uint32_t* swaptube = nullptr;
+
+    ivec2 twoswap_wh, seef_wh, swaptube_wh;
+
 public:
     TwoswapScene(const vec2& dimensions = vec2(1, 1));
 
