@@ -3,6 +3,8 @@
 // #include "../Scenes/Math/RealFunctionScene.h"
 #include "../Scenes/Media/LatexScene.h"
 #include "../Scenes/Common/CompositeScene.h"
+#include "../Core/Smoketest.h"
+#include "../IO/Writer.h"
 
 /*
 EQUATION MAP:
@@ -14,121 +16,157 @@ EQUATION MAP:
 
 void render_video() {
     CompositeScene cs;
-    shared_ptr<LatexScene> latex = make_shared<LatexScene>(" ", 0.15);
+    shared_ptr<LatexScene> latex = make_shared<LatexScene>("+0", 0.1);
     shared_ptr<FourDAlgebraScene> fd = make_shared<FourDAlgebraScene>();
     shared_ptr<TwoDAlgebraScene> td = make_shared<TwoDAlgebraScene>();
     // shared_ptr<RealFunctionScene> td = make_shared<RealFunctionScene>();
 
 
     cs.add_scene(fd, "fd");
+    // cs.add_scene(td, "td");
     cs.add_scene(latex, "latex");
 
+    // cs.add_scene(td, "td");
+    // td->manager.set("x_equation", "(a) ");
+    // td->manager.set("y_equation", "(b) ");
+    // td->manager.set("dragger_x", "1");
 
-
-    cs.add_scene(td, "td");
-    td->manager.set("x_equation", "(a) ");
-    td->manager.set("y_equation", "(b) ");
-
-    stage_macroblock(FileBlock("2D Algebra Test"), 1);
+    // stage_macroblock(FileBlock("2D Algebra Test"), 1);
   
-    td->manager.transition(MICRO, {
-        {"x_equation", "(a) 2.5 *"},
-        {"x_adjustment", "2.5"},
-        {"y_equation", "(b) 2 *"},
-        {"y_adjustment", "2"},
-        {"dragger_x", "1"}
+    // td->manager.transition(MICRO, {
+    //     {"x_equation", "(a) 0.5 *"},
+    //     {"x_adjustment", "2"},
+    //     {"y_equation", "(b) 0.5 *"},
+    //     {"y_adjustment", "2"},
+    //     {"dragger_x", "2"},
+    //     {"dragger_y", "0"}
+    // });
+    // cs.render_microblock();
+
+    // double resolution = get_video_aspect_ratio();
+
+
+    // cs.manager.set({
+    //     {"drag_x", "0"},
+    //     {"drag_y", "0"},
+    //     {"latex.x", "0.5 <drag_x> 0.12 * +"},
+    //     {"latex.y", "0.5 <drag_y> 0.12 " + to_string(resolution) + " * * -"}
+    // });
+
+    // td->manager.set({
+    //     {"x_equation", "(a) "},
+    //     {"y_equation", "(b) "},
+    //     {"dragger_x", "[drag_x]"},
+    //     {"dragger_y", "[drag_y]"}
+    // });
+
+
+    // stage_macroblock(FileBlock("2D Algebra Test"), 1);
+  
+    // cs.manager.transition(MICRO, "drag_x", "2");
+    // cs.manager.transition(MICRO, "drag_y", "1");
+
+    // td->manager.transition(MICRO, {
+    //     {"x_equation", "(a) 2 -"}
+    // });
+    // // latex->begin_latex_transition(MICRO,
+    // //     "+0"
+    // // );
+
+    // cs.render_microblock();
+
+
+
+    // cs.remove_subscene("td");
+
+    fd->manager.set("equation", "0");
+    fd->manager.set("scale", "9.4");
+    fd->manager.set("brightness", "2.0");
+    fd->manager.set("slider", "-0.1");
+    fd->manager.set("pov_xz", "0.3");
+    fd->manager.set("offset_1", "0.53");
+    stage_macroblock(FileBlock("This graph shows how exponents change as we move through the 4th dimension."), 3);
+
+   fd->manager.transition(MICRO, {
+        {"rotation_jk", "-1.36"},
+        {"scale", "8.4"},
+        {"brightness", "3.0"}
+    });
+    cs.render_microblock();
+   fd->manager.transition(MICRO, {
+        {"rotation_ik", "1.29"},
+        {"scale", "12.4"},
+        {"brightness", "1.3"}
+    });
+    cs.render_microblock();
+   fd->manager.transition(MICRO, {
+        {"rotation_1k", "0.73"},
+        {"brightness", "1.3"}
     });
     cs.render_microblock();
 
 
-//     fd->manager.set("equation", "0");
-//     fd->manager.set("scale", "9.4");
-//     fd->manager.set("brightness", "2.0");
-//     fd->manager.set("slider", "-0.1");
-//     fd->manager.set("pov_xz", "0.3");
-//     fd->manager.set("offset_1", "0.53");
-//     stage_macroblock(FileBlock("This graph shows how exponents change as we move through the 4th dimension."), 3);
-
-//    fd->manager.transition(MICRO, {
-//         {"rotation_jk", "-1.36"},
-//         {"scale", "8.4"},
-//         {"brightness", "3.0"}
-//     });
-//     cs.render_microblock();
-//    fd->manager.transition(MICRO, {
-//         {"rotation_ik", "1.29"},
-//         {"scale", "12.4"},
-//         {"brightness", "1.3"}
-//     });
-//     cs.render_microblock();
-//    fd->manager.transition(MICRO, {
-//         {"rotation_1k", "0.73"},
-//         {"brightness", "1.3"}
-//     });
-//     cs.render_microblock();
 
 
+    stage_macroblock(FileBlock("and this graph shows how exponents change as we move through the 4th dimension."), 4);
 
-
-//     stage_macroblock(FileBlock("and this graph shows how exponents change as we move through the 4th dimension."), 4);
-
-//    fd->manager.transition(MICRO, {
-//         {"slider", "1.1"},
-//         {"brightness", "1.2"}
-//     });
-//     cs.render_microblock();
-//    fd->manager.transition(MICRO, {
-//         {"rotation_1k", "0.1"},
-//         {"brightness", "1.4"}
-//     });
-//     cs.render_microblock();
-//    fd->manager.transition(MICRO, {
-//         {"rotation_ik", "0.03"},
-//         {"brightness", "3.7"}
-//     });
-//     cs.render_microblock();
-//    fd->manager.transition(MICRO, {
-//         {"rotation_jk", "-0.19"},
-//         {"brightness", "2.7"}
-//     });
-//     cs.render_microblock();
+   fd->manager.transition(MICRO, {
+        {"slider", "1.1"},
+        {"brightness", "1.2"}
+    });
+    cs.render_microblock();
+   fd->manager.transition(MICRO, {
+        {"rotation_1k", "0.1"},
+        {"brightness", "1.4"}
+    });
+    cs.render_microblock();
+   fd->manager.transition(MICRO, {
+        {"rotation_ik", "0.03"},
+        {"brightness", "3.7"}
+    });
+    cs.render_microblock();
+   fd->manager.transition(MICRO, {
+        {"rotation_jk", "-0.19"},
+        {"brightness", "2.7"}
+    });
+    cs.render_microblock();
 
 
 
 
-//     stage_macroblock(FileBlock("Both sides show the same thing."), 1);
+    stage_macroblock(FileBlock("Both sides show the same thing."), 1);
 
-//     fd->manager.transition(MICRO, {
-//         {"scale", "9.4"},
-//         {"slider", "0.5"},
-//         {"brightness", "2.0"}
-//         // {"brightness", "0.14"}
-//     });
-//     cs.render_microblock();
-
-
-
-//     stage_macroblock(FileBlock("It's the same function on the same inputs,"), 1);
-
-//     fd->manager.transition(MICRO, {
-//         {"pov_xz", "1.8"},
-//         {"brightness", "2.5"}
-//     });
-//     cs.render_microblock();;
+    fd->manager.transition(MICRO, {
+        {"scale", "9.4"},
+        {"slider", "0.5"},
+        {"brightness", "2.0"}
+        // {"brightness", "0.14"}
+    });
+    cs.render_microblock();
 
 
 
-//     stage_macroblock(FileBlock("but the rules are different."), 1);
+    stage_macroblock(FileBlock("It's the same function on the same inputs,"), 1);
 
-//     fd->manager.transition(MICRO, {
-//         {"rotation_jk", "1.29"},
-//         {"rotation_ik", "-0.43"},
-//         {"rotation_1k", "0.57"},
-//         {"brightness", "2.9"}
-//     });
-//     cs.render_microblock();
+    fd->manager.transition(MICRO, {
+        {"pov_xz", "1.8"},
+        {"brightness", "2.5"}
+    });
+    cs.render_microblock();;
 
 
+
+    stage_macroblock(FileBlock("but the rules are different."), 1);
+
+    fd->manager.transition(MICRO, {
+        {"rotation_jk", "1.29"},
+        {"rotation_ik", "-0.43"},
+        {"rotation_1k", "0.57"},
+        {"brightness", "2.9"}
+    });
+    cs.render_microblock();
+
+    // set_for_real(false);
     // stage_macroblock(FileBlock("Check out the sine function."), 1);
 
     // fd->manager.set("offset_1", "0.43");
@@ -179,6 +217,7 @@ void render_video() {
     // cs.render_microblock();
 
 
+    // set_for_real(true);
     // stage_macroblock(FileBlock("Each side is using a 4D algebra - a framework for doing math in 4D space."), 2);
     // fd->manager.transition(MICRO, {
     //     {"slider", "0.5"},

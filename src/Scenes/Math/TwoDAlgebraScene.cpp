@@ -61,10 +61,6 @@ void TwoDAlgebraScene::draw() {
     vector<ResolvedStateEquationComponent> y_eq = manager.get_resolved_equation("y_equation");
     // vector<ResolvedStateEquationComponent> r = manager.get_resolved_equation("x_equation");
 
-    // float **M = rotationMatrix(4,4,0,1,state["rotation_1"]);
-    // float **M2 = rotationMatrix(4,4,1,3,state["rotation_2"]);
-    // float **M3 = rotationMatrix(4,4,0,3,state["rotation_3"]);
-    // float **M = matrixMult(matrixMult(M1,M2,4,4,4),M3,4,4,4);
 
     two_d_algebra(
         gpu_pix->get_ptr(), get_width_height(),

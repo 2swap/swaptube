@@ -33,14 +33,14 @@ __global__ void two_render_real_valued_function(
     float y_dist = (point.y - dragger_y);
     float dragger_dist = x_dist*x_dist + y_dist*y_dist;
 
-    if (dragger_dist < 0.06){
+    if (dragger_dist < 0.04){
         pixels[pixel.y * wh.x + pixel.x] = 0xff000000;
         return;
-    } else if (dragger_dist < 0.11){
-        pixels[pixel.y * wh.x + pixel.x] = Cuda::colorlerp(0xff000000, 0xffffffff, (dragger_dist-0.06)*20);
+    } else if (dragger_dist < 0.09){
+        pixels[pixel.y * wh.x + pixel.x] = Cuda::colorlerp(0xff000000, 0xffffffff, (dragger_dist-0.04)*20);
         return;
-    } else if (dragger_dist < 0.15){
-        dragger_lerp = (0.15-dragger_dist)*25;
+    } else if (dragger_dist < 0.13){
+        dragger_lerp = (0.13-dragger_dist)*25;
     }
 
 
@@ -60,7 +60,7 @@ __global__ void two_render_real_valued_function(
 
 
     float whiteness = max(0.0, 1.0f - distAccum*16.0);
-    uint32_t color = Cuda::colorlerp(0xff000000, Cuda::OKLABtoRGB(255,1,x_eval*0.2/x_adjustment,y_eval*0.2/y_adjustment), whiteness);
+    uint32_t color = Cuda::colorlerp(0xff000000, Cuda::OKLABtoRGB(255,1,x_eval*0.1/x_adjustment,y_eval*0.1/y_adjustment), whiteness);
     // uint32_t color = Cuda::OKLABtoRGB(255,whiteness,x_eval*0.2,y_eval*0.2);
     pixels[pixel.y * wh.x + pixel.x] =  Cuda::colorlerp(color,0xffffffff,dragger_lerp);
     // pixels[pixel.y * wh.x + pixel.x] = 0xff000000 | (color << 16) | (color << 8) | color;
