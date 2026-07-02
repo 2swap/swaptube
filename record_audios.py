@@ -135,7 +135,7 @@ def main():
 
             # Start recording with ffmpeg in the background
             print("Recording... Press Enter to stop.")
-            mono_filter = ['-af', 'pan=mono|c0=c0'] if mono else []
+            mono_filter = ['-af', 'pan=stereo|c0=c0|c1=c0'] if mono else []
             ffmpeg_cmd = [
                 'ffmpeg',
                 '-ac', '1' if mono else '2',
