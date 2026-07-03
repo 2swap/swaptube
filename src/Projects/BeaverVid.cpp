@@ -11,6 +11,7 @@
 #include "../Scenes/Math/Beavers/BeaverGridScene.h"
 #include "../Scenes/Math/Beavers/BeaverGridTNFScene.h"
 #include "../Scenes/Math/Beavers/BeaverGridTNF3DScene.h"
+#include "../Scenes/Math/Beavers/BeaverTNF3DScene.h"
 
 
 struct Path {
@@ -43,28 +44,6 @@ vec3 target_tm(TuringMachine& tm, Path& p, float shell_border, float core_border
     return 0.5 * (lower + upper);
 }
 
-void TNF3Dtest() {
-    BeaverGridTNF3DScene bs;
-    bs.manager.set("max_steps", "200");
-    quat camera = get_quat(vec3(0.6, 0, 0.8), vec3(0, 1, 0));
-    bs.manager.set("q1", std::to_string(camera.u));
-    bs.manager.set("qi", std::to_string(camera.i));
-    bs.manager.set("qj", std::to_string(camera.j));
-    bs.manager.set("qk", std::to_string(camera.k));
-    bs.manager.set("target_x", "0.619541");
-    bs.manager.set("target_y", "0.696079");
-    bs.manager.set("target_z", "0.607755");
-    bs.manager.set("zoom", "-1");
-    bs.manager.set("camera_distance", "e <zoom> -1 * ^");
-    bs.manager.set("ancestor_offset", "<zoom> 1.5 * 2 -");
-    bs.manager.set("scale_x", "e <zoom> 0.55 * ^");
-    bs.manager.set("scale_y", "e <zoom> 0.33 * ^");
-    bs.manager.set("scale_z", "1");
-    stage_macroblock(SilenceBlock(5), 1);
-    bs.manager.transition(MICRO, "zoom", "7.35");
-    bs.render_microblock();
-}
-
 
 
 void set_transition(TuringMachine& tm, int state, int symbol, int ws, bool lr, int ns) {
@@ -89,6 +68,54 @@ void parse_tmstring(char* s, int num_states, int num_symbols, TuringMachine& tm)
         }
     }
 }
+
+
+
+void TNF3Dtest() {
+    BeaverTNF3DScene bs;
+    bs.manager.set("max_steps", "50");
+    bs.manager.set("core_border", "0");
+    bs.manager.set("shell_border", "0");
+
+    char bigfoot[30] = "1RB2RA1LC_2LC1RB2RB_1R-2LA1LA";
+    TuringMachine tm;
+    Path pbf = {8, {0, 1, 6, 7, 8, 5, 3, 2}};
+    parse_tmstring(bigfoot, 3, 3, tm);
+    vec3 center = target_tm(tm, pbf, 0, 0);
+    printf("\n(%f,%f,%f)", center.x, center.y, center.z);
+    // 0.580285,  0.992403,  0.649414
+
+    quat camera = get_quat(vec3(0, 0, -1), vec3(0, 1, 0));
+    printf("\n%f+%fi+%fj+%fk\n", camera.u, camera.i, camera.j, camera.k);
+    bs.manager.set("q1", std::to_string(camera.u));
+    bs.manager.set("qi", std::to_string(camera.i));
+    bs.manager.set("qj", std::to_string(camera.j));
+    bs.manager.set("qk", std::to_string(camera.k));
+    //bs.manager.set("target_x", /*"0.593"*/ "0.616");
+    //bs.manager.set("target_y", "0.4");
+    //bs.manager.set("target_z", /*"0.61"*/ "0.59");
+    bs.manager.set("target_x", std::to_string(center.x));
+    bs.manager.set("target_y", std::to_string(center.y));
+    bs.manager.set("target_z", std::to_string(center.z));
+    bs.manager.set("zoom", "0.3");
+    bs.manager.set("camera_distance", "e <zoom> -1 * ^");
+    //bs.manager.set("ancestor_offset", "<zoom> 1.5 * 2 -");
+    bs.manager.set("scale_x", "e 9 0.55 * ^");
+    bs.manager.set("scale_y", "e 9 0.55 * ^");
+    bs.manager.set("scale_z", "1");
+    bs.manager.set("brightness_offset", "<zoom> -0.06 *");
+    //bs.manager.set("brightness_offset", "0.3 <zoom> 3 ^ 125 / -");
+    stage_macroblock(SilenceBlock(6), 1);
+    bs.manager.transition(MICRO, "zoom", "1");
+    //bs.manager.transition(MICRO, "q1", "0.15");
+    //bs.manager.set("q1", "0.15");
+    //bs.manager.transition(MICRO, "target_z", "0.605");
+    bs.render_microblock();
+}
+
+
+
+
 
 /*
 ###  ###   #### ##### #   # ##### ###    ###
@@ -356,6 +383,6 @@ void preintro(CompositeScene& cs) {
 
 void render_video() {
     CompositeScene cs;
-    //TNF3Dtest();
-    preintro(cs);
+    TNF3Dtest();
+    //preintro(cs);
 }
