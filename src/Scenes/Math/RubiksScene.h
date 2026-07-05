@@ -6,8 +6,12 @@ class RubiksScene : public ThreeDimensionScene {
 public:
     RubiksScene(const vec2& dimensions = vec2(1, 1));
     void draw() override;
-    Rubiks* m_data;
     const StateQuery populate_state_query() const override;
+    void exec_move_from_slice(const char move, const int depth);
+private:
+    quat rotation_quat;
+    Cut cut;
+    Rubiks* the_cube;
 };
 
 
