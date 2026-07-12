@@ -10,3 +10,7 @@ local.cmake
 *~
 *.swp
 *.swo
+
+src/Projects/FourDAlgebra.cpp
+src/Projects/Demos/FourDVerse.cpp
+.gitignore
