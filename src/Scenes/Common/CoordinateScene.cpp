@@ -93,6 +93,7 @@ vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
 }
 
 void CoordinateScene::draw() {
+    if(state["ticks_opacity"] < 0.01) return;
     draw_coordinate_grid(gpu_pix->get_ptr(), get_width_height(), vec2(state["left_x"], state["top_y"]), vec2(state["right_x"], state["bottom_y"]));
 }
 
