@@ -13,4 +13,3 @@ local.cmake
 
 src/Projects/FourDAlgebra.cpp
 src/Projects/Demos/FourDVerse.cpp
-.gitignore
