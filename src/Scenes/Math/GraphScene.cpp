@@ -33,9 +33,8 @@ GraphScene::GraphScene(const vec2& dimensions)
         {"repel", "1"},
         {"attract", "1"},
         {"decay", ".95"},
-        {"physics_multiplier", "0"},
+        {"physics_multiplier", "1"},
         {"dimensions", "3"},
-        {"mirror_force", "0"},
         {"edge_weights_size", "0"},
         {"node_labels_size", "1"},
         {"midpoint_multiplier", "1"},
@@ -199,6 +198,6 @@ void GraphScene::draw(){
 
 const StateQuery GraphScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "mirror_force", "edge_weights_size", "midpoint_multiplier", "node_labels_size"});
+    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "edge_weights_size", "midpoint_multiplier", "node_labels_size"});
     return s;
 }

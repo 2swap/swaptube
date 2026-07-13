@@ -263,7 +263,7 @@ void Graph::iterate_physics(const int iterations, const float repel, const float
     std::vector<vec4> velocities(s);
 
     for (int i = 0; i < s; ++i) {
-         positions[i] = node_vector[i]->position;
+        positions[i] = node_vector[i]->position;
         velocities[i] = node_vector[i]->velocity;
         node_indices[node_vector[i]->hash] = i;
     }

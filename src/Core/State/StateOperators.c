@@ -34,8 +34,6 @@ enum StateOperator {
     OP_LOGISTIC,
     OP_MIN,
     OP_MAX,
-    OP_BALLOON_B,
-    OP_BALLOON_Z,
     OP_SQUARE,
 };
 
@@ -69,8 +67,6 @@ HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
         case OP_LOGISTIC:   return 1;
         case OP_MIN:        return 2;
         case OP_MAX:        return 2;
-        case OP_BALLOON_B:  return 3;
-        case OP_BALLOON_Z:  return 3;
         case OP_SQUARE:     return 1;
         default:            return -1;
     }
@@ -106,8 +102,6 @@ HOST_DEVICE inline static float evaluate_operator(StateOperator op, float *a) {
         case OP_LOGISTIC:   return 1.0f / (1.0f + expf(-a[0]));
         case OP_MIN:        return fminf(a[0], a[1]);
         case OP_MAX:        return fmaxf(a[0], a[1]);
-        case OP_BALLOON_B:  {float sqr = (a[0]*a[0] + a[1]*a[1] + a[2]*a[2]); return -2 * sqr / (sqr * sqr + 1.0f);}
-        case OP_BALLOON_Z:  {float sqrp1=(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]) + 1.0f; return -.5 / (sqrp1 * sqrp1);}
         case OP_SQUARE:     return a[0] * a[0];
                             // Should not reach here, return NaN
         default:            return nanf("");
@@ -144,8 +138,6 @@ HOST_DEVICE const inline char* state_operator_to_string(StateOperator op){
         case OP_LOGISTIC: return "logistic";
         case OP_MIN: return "min";
         case OP_MAX: return "max";
-        case OP_BALLOON_B: return "balloon_b";
-        case OP_BALLOON_Z: return "balloon_z";
         case OP_SQUARE: return "^2";
         default: return "UNKNOWN_OPERATOR";
     }
@@ -180,8 +172,6 @@ StateOperator inline parse_state_operator(const char* in){
     if(strcmp(in, "logistic") == 0) return OP_LOGISTIC;
     if(strcmp(in, "min") == 0) return OP_MIN;
     if(strcmp(in, "max") == 0) return OP_MAX;
-    if(strcmp(in, "balloon_b") == 0) return OP_BALLOON_B;
-    if(strcmp(in, "balloon_z") == 0) return OP_BALLOON_Z;
     if(strcmp(in, "^2") == 0) return OP_SQUARE;
     throw runtime_error("Unknown state operator: " + string(in));
     return OP_ADD;
