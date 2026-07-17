@@ -1,4 +1,3 @@
-/*
 
 #include "FourDPlaneScene.h"
 #include "../../Host_Device_Shared/vec.h"
@@ -114,4 +113,3 @@ void FourDPlaneScene::draw() {
 
     CoordinateScene::draw();
 }
-*/

@@ -1,4 +1,5 @@
 #include "FourDAlgebraScene.h"
+#include "FourDPlaneScene.h"
 #include "../../Host_Device_Shared/vec.h"
 #include <complex>
 
@@ -59,7 +60,7 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
 //     }
 //     return M;
 // }
-
+/*
 float **rotationMatrix(int rows, int cols, int axis1, int axis2, float angle){
     float **M = new float *[rows];
 
@@ -100,7 +101,7 @@ float **matrixMult(float **A,float **B, int rows, int cols, int shared){
 
 	return AB;
 }
-
+*/
 const StateQuery FourDAlgebraScene::populate_state_query() const {
     return {
     
@@ -121,11 +122,12 @@ void FourDAlgebraScene::draw() {
     // quat camera_direction = normalize(quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
 
 
-    // const quat camera_direction_0 = normalize(quat(cos(state["pov_xz"]), 0, sin(state["pov_xz"]), 0));
-    // const quat camera_direction = camera_direction_0*normalize(quat(cos(state["pov_y"]), sin(state["pov_y"])*sin(state["pov_xz"]), 0, sin(state["pov_y"])*cos(state["pov_xz"])));
+    const quat camera_direction_0 = normalize(quat(cos(state["pov_xz"]), 0, sin(state["pov_xz"]), 0));
+    const quat camera_direction = camera_direction_0*normalize(quat(cos(state["pov_y"]), sin(state["pov_y"])*sin(state["pov_xz"]), 0, sin(state["pov_y"])*cos(state["pov_xz"])));
 
+    // const quat camera_direction = normalize(quat(cos(state["pov_xz"]), sin(state["pov_xz"]), 0, 0));
 
-    const quat camera_direction = normalize(quat(cos(state["pov_xz"]), sin(state["pov_xz"]), 0, 0));
+    
     const vec3 camera_pos = rotate_vector(vec3(0,0,-state["pov_max_dist"]*0.5), camera_direction);
     
 

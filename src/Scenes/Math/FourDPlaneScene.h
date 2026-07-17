@@ -9,3 +9,8 @@ public:
     const StateQuery populate_state_query() const override;
     void draw() override;
 };
+
+
+float **rotationMatrix(int rows, int cols, int axis1, int axis2, float angle);
+
+float **matrixMult(float **A,float **B, int rows, int cols, int shared);

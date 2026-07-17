@@ -3,7 +3,7 @@
 #include <vector>
 #include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
-// #include "four_d_algebra.cu"
+#include "four_d_shared.cuh"
 
 __device__ unsigned int four_d_color(Cuda::vec4 a, float brightness) {
 

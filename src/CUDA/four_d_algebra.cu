@@ -3,32 +3,11 @@
 #include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
 #include "common_graphics.cuh"
-
-
-
-__device__ float smallerness(float s, float brightness){
-    return 1/(1+log(abs(s)+1)/brightness);
-}
-
-__device__ float smallness(float s, float brightness){
-    // return 1/(1+0.02*s*s*abs(s));
-    float s_sq = s*s;
-    return 1/(1+s_sq*s_sq/brightness);
-    // return 1/(1+s*s*s*s);
-}
+#include "four_d_shared.cuh"
 
 
 __device__ Cuda::vec3 four_d_accum(Cuda::vec4 a, float brightness) {
 
-    // float real_smallness = 4;
-    // float real_smallness = 0.01;
-    // float real_smallness = 0.006;
-    // float real_smallness = 0.01;
-
-    // float real_smallness = (0.8+0.2*smallness(a.x,brightness))*5;
-    // float real_smallness = 0.4*smallness(a.x,brightness);
-    // real_smallness = real_smallness*real_smallness*real_smallness;
-    // float b = smallness(a.y*a.w*a.z*100,brightness);
     Cuda::vec3 accum(
         //  b, b, b
         smallness(a.y,brightness),
@@ -36,15 +15,6 @@ __device__ Cuda::vec3 four_d_accum(Cuda::vec4 a, float brightness) {
         smallness(a.w,brightness)
     );
     return accum;
-
-    // float real_smallness = 0.00002;//0.8+0.2*smallness(a.x,brightness);
-    // Cuda::vec3 accum(
-    //     //  b, b, b
-    //     real_smallness*a.y*brightness,
-    //     real_smallness*a.z*brightness,
-    //     real_smallness*a.w*brightness
-    // );
-    // return accum;
 }
 
 __device__ uint32_t accum_to_color(Cuda::vec3 a, float fade) {
@@ -65,76 +35,6 @@ __device__ uint32_t accum_to_color(Cuda::vec3 a, float fade) {
         (ax+ay)*0.5-az
     );
 }
-
-
-__device__ Cuda::vec4 four_d_mult(Cuda::vec4 a, Cuda::vec4 b, float lerp) { // bool commute) {
-
-    Cuda::vec4 vec_out;
-    // quaternion
-    if (lerp == 1.0){
-
-        // bicomplex
-
-        // vec_out = Cuda::vec4( 
-        //     a.x*b.x - a.y*b.y - a.z*b.z + a.w*b.w,
-        //     a.x*b.y + a.y*b.x - a.z*b.w - a.w*b.z,
-        //     a.x*b.z + a.z*b.x - a.w*b.y - a.y*b.w,
-        //     a.x*b.w + a.w*b.x + a.y*b.z + a.z*b.y
-        // );
-
-
-        // vec_out = Cuda::vec4( 
-        //     a.x*b.x + a.y*b.y + 0.8*a.z*b.z - 0.8*a.w*b.w,
-        //     a.x*b.y + a.y*b.x - 0.8*a.z*b.w + 0.8*a.w*b.z,
-        //     a.x*b.z + a.z*b.x - a.w*b.y + a.y*b.w,
-        //     a.x*b.w + a.w*b.x + a.y*b.z - a.z*b.y
-        // );
-
-        // vec_out = Cuda::vec4( 
-        //     a.x*b.x + a.y*b.y,
-        //     a.x*b.y + a.y*b.x,
-        //     a.x*b.z + a.z*b.x - a.w*b.y + a.y*b.w,
-        //     a.x*b.w + a.w*b.x + a.y*b.z - a.z*b.y
-        // );
-
-
-        // vec_out = Cuda::vec4( 
-        //     a.x*b.x - a.y*b.w - a.z*b.z - a.w*b.y,
-        //     a.x*b.y + a.y*b.x - a.z*b.w - a.w*b.z,
-        //     a.x*b.z + a.y*b.y + a.z*b.x - a.w*b.w,
-        //     a.x*b.w + a.y*b.z + a.z*b.y + a.w*b.x
-        // );
-
-        vec_out = Cuda::vec4( 
-            a.x*b.x + a.y*b.w + a.z*b.z + a.w*b.y,
-            a.x*b.y + a.y*b.x + a.z*b.w + a.w*b.z,
-            a.x*b.z + a.y*b.y + a.z*b.x + a.w*b.w,
-            a.x*b.w + a.y*b.z + a.z*b.y + a.w*b.x
-        );
-
-
-    } else if (lerp == 0.0){
-
-        vec_out = Cuda::vec4( 
-            a.x*b.x - a.y*b.y - a.z*b.z - a.w*b.w,
-            a.x*b.y + a.y*b.x + a.z*b.w - a.w*b.z,
-            a.x*b.z + a.z*b.x + a.w*b.y - a.y*b.w,
-            a.x*b.w + a.w*b.x + a.y*b.z - a.z*b.y
-        );
-    } else {
-        return four_d_mult(a,b,0.0)*(1-lerp) + four_d_mult(a,b,1.0)*lerp;
-    }
-
-
-    return vec_out;
-}
-
-__device__ Cuda::vec4 four_d_real(float r){
-   Cuda::vec4 vec_out(r,0,0,0);
-   return vec_out;
-}
-
-
 
 __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float commute, bool to_print) {
 
