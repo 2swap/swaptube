@@ -27,11 +27,6 @@ LatexScene::LatexScene(const string& l, double box_scale, const vec2& dimensions
 }
 
 void LatexScene::begin_latex_transition(const TransitionType tt, const string& l) {
-    if (scale_factor*get_width()*get_height() < 600000){
-        printf("######## LATEX IS TOO SMALL, CANCELLING TRANSITION #########"); // TODO
-        jump_latex(l);
-        return;
-    }
     cout << "LatexScene: begin_latex_transition called with TransitionType: " << tt << " and latex: " << l << endl;
     if(transitioning) {
         throw runtime_error("LatexScene: Already transitioning. Cannot begin a new transition until the current one finishes.");
