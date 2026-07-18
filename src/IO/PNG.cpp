@@ -16,13 +16,13 @@
 
 using namespace std;
 
-void pix_to_png(const Pixels& pix, const string& filename) {
+void pix_to_png(const Pixels& pix, const string& full_filename) {
     if(pix.wh.x * pix.wh.y == 0) return; // cowardly exit.
 
     // Open the file for writing (binary mode)
-    FILE* fp = fopen(("io_out/" + filename + ".png").c_str(), "wb");
+    FILE* fp = fopen(full_filename.c_str(), "wb");
     if (!fp) {
-        throw runtime_error("Failed to open png file for writing: " + filename);
+        throw runtime_error("Failed to open png file for writing: " + full_filename);
     }
 
     // Initialize write structure
@@ -106,6 +106,22 @@ void png_to_pix(Pixels& pix, const string& filename_with_or_without_suffix) {
     if (it != png_cache.end()) {
         pix = it->second;
         return;
+    }
+
+    bool png_exists = false;
+    struct stat buffer;
+    if (stat(fullpath.c_str(), &buffer) == 0) {
+        png_exists = true;
+    }
+    if (!png_exists) {
+        Pixels p(ivec2(100,100));
+        for (int x = 0; x < 10; x++) {
+            for (int y = 0; y < 10; y++) {
+                int col = ((x+y)%2) ? 0xff666666 : 0xffaaaaaa;
+                p.fill_rect(x*10, y*10, 10, 10, col);
+            }
+        }
+        pix_to_png(p, fullpath);
     }
 
     // Open the PNG file

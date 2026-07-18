@@ -198,7 +198,7 @@ double Scene::get_geom_mean_size() { return geom_mean(get_width(),get_height());
 void Scene::export_frame(const string& filename, int scaledown) {
     Pixels pix(get_width_height());
     gpu_pix->copy_to_host(pix.pixels.data(), get_width_height());
-    pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
+    pix_to_png(pix.naive_scale_down(scaledown), "io_out/frames/frame_"+filename+".png");
 }
 
 void Scene::set_global_identifier(const string& id){
