@@ -141,7 +141,7 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
     if (ret2 < 0) {
         char errbuf[256];
         av_strerror(ret2, errbuf, sizeof(errbuf));
-        cout << "Failed to open video codec: " << errbuf << endl;
+        cout << "Failed to open video codec " << CODEC_NAME << ": " << errbuf << endl;
         av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed avcodec_open2!");
     }
