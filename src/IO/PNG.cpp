@@ -253,6 +253,12 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
     const string png_filename = resolved_filename_without_suffix + "-" + (page_number < 10 ? "0" : "") + to_string(page_number) + ".png";
 
     struct stat buffer;
+
+    if (stat(resolved_filename_with_suffix.c_str(), &buffer) != 0) {
+        png_to_pix(pix, png_filename.substr(6));
+        return;
+    }
+
     bool png_file_exists = false;
     if (stat(png_filename.c_str(), &buffer) == 0) {
         png_file_exists = true;
