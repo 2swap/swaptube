@@ -35,6 +35,8 @@ const float IOU_THRESHOLD = 0.85f;
 const bool ALLOW_MULTI_EDGES = false;
 
 // Helper function to get the bounding box of a glyph with a given color
+// NOTE: Due to max operation on matching pixels, d_bottom_right is inclusive (not exclusive)
+//       Add 1 to d_bottom_right after calling if needed
 __global__ void get_bounding_box_kernel(const uint32_t* pix, const Cuda::ivec2 wh, uint32_t color, Cuda::ivec2* d_top_left, Cuda::ivec2* d_bottom_right)
 {
     Cuda::ivec2 grid_point = Cuda::ivec2(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
@@ -357,6 +359,7 @@ extern "C" Cuda::Interpolation stage_interpolation(
         cudaDeviceSynchronize();
         cudaMemcpy(&top_left, d_top_left, sizeof(Cuda::ivec2), cudaMemcpyDeviceToHost);
         cudaMemcpy(&bottom_right, d_bottom_right, sizeof(Cuda::ivec2), cudaMemcpyDeviceToHost);
+        bottom_right += Cuda::ivec2(1, 1);
         interpolation.glyphs_1[i].top_left = top_left;
         interpolation.glyphs_1[i].wh = bottom_right - top_left;
         cudaMalloc(&interpolation.glyphs_1[i].pix, interpolation.glyphs_1[i].wh.x * interpolation.glyphs_1[i].wh.y * sizeof(uint32_t));
@@ -376,6 +379,7 @@ extern "C" Cuda::Interpolation stage_interpolation(
         cudaDeviceSynchronize();
         cudaMemcpy(&top_left, d_top_left, sizeof(Cuda::ivec2), cudaMemcpyDeviceToHost);
         cudaMemcpy(&bottom_right, d_bottom_right, sizeof(Cuda::ivec2), cudaMemcpyDeviceToHost);
+        bottom_right += Cuda::ivec2(1, 1);
         interpolation.glyphs_2[i].top_left = top_left;
         interpolation.glyphs_2[i].wh = bottom_right - top_left;
         cudaMalloc(&interpolation.glyphs_2[i].pix, interpolation.glyphs_2[i].wh.x * interpolation.glyphs_2[i].wh.y * sizeof(uint32_t));
