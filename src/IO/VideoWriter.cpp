@@ -80,7 +80,7 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
     #ifdef USE_AMD
     setenv("AMD_DEBUG", "notiling", 1);
     #endif
-    av_log_set_level(AV_LOG_DEBUG);
+    av_log_set_level(AV_LOG_ERROR);
 
     // Setting up the codec.
     const AVCodec* codec = avcodec_find_encoder_by_name(CODEC_NAME);

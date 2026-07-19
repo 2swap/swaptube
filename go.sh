@@ -191,15 +191,12 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     unlink io_in 2>/dev/null
     ln -s "../${INPUT_DIR}" io_in
 
-    # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
-    # Swaptube errors are printed to stdout.
-
     # Smoketest
     if [ $SKIP_SMOKETEST -eq 0 ]; then
         if [ $DEBUGGER -eq 1 ]; then
             gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX
         else
-            ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX 2>/dev/null
+            ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX
         fi
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in smoketest."
@@ -214,7 +211,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
         if [ $DEBUGGER -eq 1 ]; then
             gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX
         else
-            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX 2>/dev/null
+            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX
         fi
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
