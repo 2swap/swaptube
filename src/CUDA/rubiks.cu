@@ -12,7 +12,7 @@
 // TODO maybe when the pixel is transparent, we can check next intersection with the cube and draw the next sticker behind it, to give a more realistic look to the cube
 
 
-const int CUBE_SIZE = 5; // TODO synchronize this with rubiksscene.cpp or the place where we create the cube, ideally in commutators.cpp 
+const float CUBE_SIZE = 3; // TODO synchronize this with rubiksscene.cpp or the place where we create the cube, ideally in commutators.cpp 
 
 
 __device__ __forceinline__ Cuda::vec3 rotate_vector(const Cuda::quat& q, const Cuda::vec3& v) {
@@ -245,7 +245,7 @@ __global__ void render_cube_kernel(
 
     uint32_t color = 0xFF000000;
     switch (face_name) {
-        case 'R': color = 0xFFC21D1D; break;
+        case 'R': color = 0xFFC21D1D; break;//face ID[sticker id]
         case 'F': color = 0xFF1DC249; break;
         case 'B': color = 0xFF251BB3; break;
         case 'U': color = 0xFFFFFFFF; break;

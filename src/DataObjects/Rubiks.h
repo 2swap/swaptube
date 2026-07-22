@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include "DataObject.h"
 
-
+const int MAX_CUBE_SIZE = 10; // maximum size of the cube, this is used to define the size of the pattern array in CubeStickerPattern
 int test_rubiks();
 
 enum FaceName { 
@@ -20,22 +20,24 @@ enum FaceName {
 };
 
 struct CubeStickerPattern{
-    std::vector<std::vector<std::vector<char>>> pattern;
+    int pattern[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE]; // 6 faces, each face can be up to 10x10 stickers
     CubeStickerPattern();
 
     CubeStickerPattern(int size) {
         char colors[6] = {'W', 'Y', 'G', 'B', 'O', 'R'};
         
-        pattern.reserve(6);
-        for (int i = 0; i < 6; ++i) {
-            pattern.push_back(std::vector<std::vector<char>>(size, std::vector<char>(size, colors[i])));
+        for (int f = 0; f < 6; ++f) {
+            for (int i = 0; i < MAX_CUBE_SIZE; ++i) {
+                for (int j = 0; j < MAX_CUBE_SIZE; ++j) {
+                    pattern[f][i][j] = colors[f];
+                }
+            }
         }
     }
 
     void transposeFace(int faceIdx) {
-        int n = pattern[faceIdx].size();
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
+        for (int i = 0; i < MAX_CUBE_SIZE; i++) {
+            for (int j = i + 1; j < MAX_CUBE_SIZE; j++) {
                 std::swap(pattern[faceIdx][i][j], pattern[faceIdx][j][i]);
             }
         }
@@ -43,9 +45,8 @@ struct CubeStickerPattern{
 
     void rotateFaceClockwise(int faceIdx) {
         transposeFace(faceIdx);
-        int n = pattern[faceIdx].size();
-        for (int i = 0; i < n; i++) {
-            std::reverse(pattern[faceIdx][i].begin(), pattern[faceIdx][i].end());
+        for (int i = 0; i < MAX_CUBE_SIZE; i++) {
+            std::reverse(pattern[faceIdx][i], pattern[faceIdx][i+1]);
         }
     }
 };

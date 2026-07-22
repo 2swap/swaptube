@@ -7,9 +7,9 @@ void render_video() {
     stage_macroblock(SilenceBlock(1), 1);
 
     rs.manager.transition(MACRO, {
-        {"q1", "2"},
-        {"qi", "1"},
-        {"qj", "1"},
+        {"q1", "{t}"},
+        {"qi", "{t} sin"},
+        {"qj", "{t} cos"},
         {"qk", "0"},
         {"d", "4"},
     });

@@ -3,6 +3,9 @@
 //#include "ManifoldScene.h"
 
 
+void RubiksScene::on_end_transition_extra_behavior(const TransitionType tt) {
+    
+}
 
 extern "C" void cuda_render_cube(
     uint32_t* d_pixels, const ivec2& wh,
@@ -14,7 +17,7 @@ cut(vec3(0, 0, 0), 0) {
     manager.set({
         {"turn_fraction", "{microblock_fraction}"},
     });
-    the_cube = new Rubiks(5); // cube created here
+    the_cube = new Rubiks(7); // cube created here
     add_data_object(the_cube);
 }
 

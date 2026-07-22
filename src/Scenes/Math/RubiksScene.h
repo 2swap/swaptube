@@ -8,6 +8,10 @@ public:
     void draw() override;
     const StateQuery populate_state_query() const override;
     void exec_move_from_slice(const char move, const int depth);
+
+protected:
+    void on_end_transition_extra_behavior(const TransitionType tt) override;
+    
 private:
     quat rotation_quat;
     Cut cut;
