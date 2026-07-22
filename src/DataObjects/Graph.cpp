@@ -272,7 +272,6 @@ void Graph::iterate_physics(const int iterations, const float repel, const float
 
     compute_repulsion_cuda(positions.data(), velocities.data(), adjacency_matrix.data(), s, max_degree, attract, repel, decay, dimension, iterations);
 
-    // TODO we should just permanently store the graph on the GPU, unless it is modified often?
     for (int i = 0; i < s; ++i) {
         node_vector[i]->position = positions[i];
         node_vector[i]->velocity = velocities[i];

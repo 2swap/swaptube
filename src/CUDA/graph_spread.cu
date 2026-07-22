@@ -21,20 +21,37 @@ __device__ Cuda::vec4 compute_force(Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
     return result;
 }
 
-__global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda::vec4* velocities, Cuda::vec4* end_positions, int num_nodes, float repel, float attract) {
+__device__ Cuda::vec4 get_attraction_force (Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
+    Cuda::vec4 diff = pos_i - pos_j;
+    float dist_sq = dot(diff, diff);
+    float dist_6th = dist_sq * dist_sq * dist_sq * .05f;
+    float multiplier = (dist_6th - 1.0f) / (dist_6th + 1.0f) * .2f - .1f;
+    return normalize(diff) * multiplier;
+};
+
+__global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda::vec4* velocities, Cuda::vec4* end_positions, int num_nodes, float repel, float attract, float decay, const int max_degree, const int* adjacency_matrix) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= num_nodes) return;
 
     Cuda::vec4 pos_i = positions[i];
-    Cuda::vec4 delta(0.0f);
+    Cuda::vec4 delta_repel(0.0f);
+    Cuda::vec4 delta_attract(0.0f);
 
     for (int j = 0; j < num_nodes; ++j) {
         if (i == j) continue;
-        delta += compute_force(pos_i, positions[j]);
+        delta_repel += compute_force(pos_i, positions[j]);
     }
 
-    velocities[i] += delta * repel;
-    end_positions[i] += velocities[i];
+    // Iterate over the adjacency matrix rows to find all neighbors
+    for (int col = 0; col < max_degree; col++) {
+        int node = adjacency_matrix[i*max_degree+col];
+        if (node == -1) break; // sentinel
+        delta_attract += get_attraction_force(pos_i, positions[node]);
+    }
+
+    velocities[i] += delta_repel * repel - delta_attract * attract;
+    velocities[i] *= decay;
+    end_positions[i] = positions[i] + velocities[i];
 }
 
 
@@ -227,13 +244,6 @@ void compute_node_bins(const Cuda::vec4* positions, int* node_bins, int num_node
     }
 }
 
-// Compute attraction force helper function on device
-// Return float attraction scalar
-__device__ float get_attraction_force (float dist_sq) {
-    float dist_6th = dist_sq * dist_sq * dist_sq * .05f;
-    return (dist_6th - 1.0f) / (dist_6th + 1.0f) * .2f - .1f;
-};
-
 extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_velocities, const int* h_adjacency_matrix, int num_nodes, int max_degree, float attract, float repel, const float decay, const float dimension, const int iterations) {
     if(num_nodes < 0) return;
 
@@ -251,9 +261,8 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
     int gridSize = (num_nodes + blockSize - 1) / blockSize;
 
     int* d_adjacency_matrix = nullptr;
-    size_t adjacency_size = num_nodes * max_degree * sizeof(int);
-
     if (h_adjacency_matrix != nullptr && max_degree > 0) {
+        size_t adjacency_size = num_nodes * max_degree * sizeof(int);
         cudaMalloc(&d_adjacency_matrix, adjacency_size);
         cudaMemcpy(d_adjacency_matrix, h_adjacency_matrix, adjacency_size, cudaMemcpyHostToDevice);
     }
@@ -262,8 +271,11 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         for(int i = 0; i < iterations; i++){
             printf(".");
             fflush(stdout);
-            compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, d_end_positions, num_nodes, repel, repel);
+            compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, d_end_positions, num_nodes, repel, attract, decay, max_degree, d_adjacency_matrix);
             cudaDeviceSynchronize();
+            Cuda::vec4* temp = d_end_positions;
+            d_end_positions = d_positions;
+            d_positions = temp;
         }
     } else {
         // Host data for bounds and bin size
@@ -372,7 +384,7 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
 
     // Copy final velocity deltas back to host
     cudaMemcpy(h_velocities, d_velocities, vec4_size, cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_positions, d_end_positions, vec4_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_positions, d_positions, vec4_size, cudaMemcpyDeviceToHost);
 
     // Cleanup
     cudaFree(d_velocities);

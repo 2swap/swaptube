@@ -8,11 +8,6 @@ void render_video() {
     GraphScene gs;
 
     gs.manager.set({
-        {"q1", "1"},
-        {"qi", "0"},
-        {"qj", "0"},
-        {"qk", "0"},
-        {"d", "9"},
         {"physics_multiplier", "1"},
     });
 

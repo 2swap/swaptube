@@ -13,7 +13,6 @@ LivePlayer::LivePlayer(const ivec2& dim) : dimensions(dim) {
 }
 
 void LivePlayer::accept_frame(uint32_t* device_pixels, bool print) {
-cout << "B" << endl;
     Pixels pix(dimensions);
     cuda_copy_pixels_to_host(pix.pixels.data(), pix.pixels.size(), device_pixels);
     if(print) pix.print_to_terminal();
@@ -22,5 +21,4 @@ cout << "B" << endl;
         pix.pixels.size(),
         pipe);
     fflush(pipe);
-cout << "C" << endl;
 }
