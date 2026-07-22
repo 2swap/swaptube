@@ -7,29 +7,29 @@
 #include <unordered_map>
 #include "DataObject.h"
 
-const int MAX_CUBE_SIZE = 10; // maximum size of the cube, this is used to define the size of the pattern array in CubeStickerPattern
+const int MAX_CUBE_SIZE = 11; // maximum size of the cube, this is used to define the size of the pattern array in CubeStickerPattern
 int test_rubiks();
 
 enum FaceName { 
     IDX_U = 0, 
-    IDX_D = 1, 
+    IDX_L = 1, 
     IDX_F = 2, 
-    IDX_B = 3, 
-    IDX_L = 4, 
-    IDX_R = 5 
+    IDX_R = 3, 
+    IDX_B = 4, 
+    IDX_D = 5 
 };
 
 struct CubeStickerPattern{
-    int pattern[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE]; // 6 faces, each face can be up to 10x10 stickers
+    char pattern[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE]; // 6 faces, each face can be up to 10x10 stickers
     CubeStickerPattern();
 
     CubeStickerPattern(int size) {
-        char colors[6] = {'W', 'Y', 'G', 'B', 'O', 'R'};
+        char colors[6] = {'W', 'O', 'G', 'R', 'B', 'Y'};
         
         for (int f = 0; f < 6; ++f) {
             for (int i = 0; i < MAX_CUBE_SIZE; ++i) {
                 for (int j = 0; j < MAX_CUBE_SIZE; ++j) {
-                    pattern[f][i][j] = colors[f];
+                    pattern[f][i][j] = colors[f]; // testing
                 }
             }
         }
@@ -88,7 +88,6 @@ class Rubiks : public DataObject {
                 cut_map['L'].push_back(Cut(vec3(-1, 0,  0), distance));
                 cut_map['R'].push_back(Cut(vec3(1,  0,  0), distance));
             }
-
         }
 
         // Here I had to define each face rotation individually, 
@@ -106,6 +105,8 @@ class Rubiks : public DataObject {
         void rotateL(int depth);
 
         Move parseMove(const std::string& token);
+
+        void print();
         
         // Write alg with the form : dFn, where d is the depth+1, F is the face, and n is either ' or 2, d and n are optionnal.
         // This does not know moves like M, S, E, r, f etc..., support for those might be added in the future.

@@ -12,7 +12,6 @@
 // TODO maybe when the pixel is transparent, we can check next intersection with the cube and draw the next sticker behind it, to give a more realistic look to the cube
 
 
-const float CUBE_SIZE = 3; // TODO synchronize this with rubiksscene.cpp or the place where we create the cube, ideally in commutators.cpp 
 
 
 __device__ __forceinline__ Cuda::vec3 rotate_vector(const Cuda::quat& q, const Cuda::vec3& v) {
@@ -24,23 +23,21 @@ __device__ __forceinline__ Cuda::vec3 rotate_vector(const Cuda::quat& q, const C
 
 
 
-
-
 __device__ __forceinline__ bool ray_cube_intersect(
     const Cuda::vec3& ray_origin, const Cuda::vec3& ray_dir, Cuda::vec2& uv_coords, Cuda::vec3& hit_point, char& face_name) {
 
     Cuda::vec3 oc = ray_origin;
-    const char faces[6] = {'R', 'L', 'D', 'U', 'B', 'F'}; // this should probably be outside of the function for efficiency
+    const char faces[6] = {'L', 'R', 'D', 'U', 'B', 'F'}; // this should probably be outside of the function for efficiency
     // we will probably need to change the order of the faces to match the definition in Rubiks.cpp
 
     // normal vector for each face of the cube
     Cuda::vec3 normals[6] = {
-        Cuda::vec3(1, 0, 0), // left
         Cuda::vec3(-1, 0, 0),  // right
+        Cuda::vec3(1, 0, 0), // left
         Cuda::vec3(0, -1, 0), // down
         Cuda::vec3(0, 1, 0),  // up
         Cuda::vec3(0, 0, 1), // back
-        Cuda::vec3(0, 0, -1)   // front
+        Cuda::vec3(0, 0, -1),   // front
     };
 
     // distance of each face from the origin
@@ -149,7 +146,7 @@ __global__ void render_cube_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh,
     float geom_mean_size,
     const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, 
-    int cube_size, float turn_fraction, Cuda::quat rotation_quat, const Cuda::vec3 slice_axis, float slice_dist)
+    int cube_size, float turn_fraction, Cuda::quat rotation_quat, const Cuda::vec3 slice_axis, float slice_dist, char d_stickers[6][11][11])
 {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
@@ -157,7 +154,7 @@ __global__ void render_cube_kernel(
 
     const Cuda::ivec2 pixel(px, py);
 
-    rotation_quat = Cuda::quat(1.0f, 0.0f, 0.0f, 0.0f) * (1-turn_fraction) + rotation_quat * turn_fraction;
+    rotation_quat = normalize(Cuda::quat(1.0f, 0.0f, 0.0f, 0.0f) * (1-turn_fraction) + rotation_quat * turn_fraction);
 
 
     Cuda::vec3 ray_dir = get_raymarch_vector(pixel, wh, fov, conjugate(camera_direction));
@@ -212,8 +209,25 @@ __global__ void render_cube_kernel(
         return;
     }
 
-    col = (int)(uv.x * cube_size);
-    row = (int)(uv.y * cube_size);
+    
+
+    switch (face_name) {
+        case 'U': row = cube_size - 1 - (int)(uv.y * cube_size); col = cube_size - 1 - (int)(uv.x * cube_size); break;
+        case 'L': row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
+        case 'F': row = (int)(uv.y * cube_size); col = cube_size - 1 - (int)(uv.x * cube_size); break;
+        case 'R': row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
+        case 'B': row = (int)(uv.y * cube_size); col = cube_size - 1 - (int)(uv.x * cube_size); break;
+        case 'D': row = cube_size - 1 - (int)(uv.y * cube_size); col = cube_size - 1 - (int)(uv.x * cube_size); break;
+        case '?': row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
+        default: return; // should not happen;
+    }
+
+    // change row and col, interpolating to make it work with all sizes under 11
+    float temp_row = row * 10. / (cube_size - 1);
+    float temp_col = col * 10. / (cube_size - 1);
+    // round to nearest integer
+    row = (int)(temp_row + 0.5f);
+    col = (int)(temp_col + 0.5f);
     
 
 
@@ -226,13 +240,13 @@ __global__ void render_cube_kernel(
     float y = local_v * 2.0f - 1.0f;
 
     // scale factor to slightly enlarge the coordinates, making the stickers appear smaller and more distinct
-    float scale = 1.15f; 
+    float scale = 1.1f; 
     x *= scale;
     y *= scale;
 
 
     uint32_t default_color = 0xFF000000; // default color
-    uint32_t plastic_color = 0x00000000; // transparent plastic color
+    uint32_t plastic_color = 0xFF000000; // transparent plastic color
 
     // Calculate the 8-norm of the coordinates to determine if the pixel is within the sticker's bounds
     float x2 = x * x; float x4 = x2 * x2; float x8 = x4 * x4;
@@ -244,15 +258,28 @@ __global__ void render_cube_kernel(
     }
 
     uint32_t color = 0xFF000000;
+
+    int i;
+
     switch (face_name) {
-        case 'R': color = 0xFFC21D1D; break;//face ID[sticker id]
-        case 'F': color = 0xFF1DC249; break;
-        case 'B': color = 0xFF251BB3; break;
-        case 'U': color = 0xFFFFFFFF; break;
-        case 'D': color = 0xFFDED82A; break;
-        case 'L': color = 0xFFF7A31B; break;
-        default:  color = 0x00FFFFFF; break;
+        case 'U': i = 0; break;
+        case 'L': i = 1; break;
+        case 'F': i = 2; break;
+        case 'R': i = 3; break;
+        case 'B': i = 4; break;
+        case 'D': i = 5; break;
+        
+        default:  color = 0xFFC92AAC; break;
     }
+
+    switch (d_stickers[i][row][col]) {
+            case 'R': color = 0xFFC21D1D; break;
+            case 'G': color = 0xFF1DC249; break;
+            case 'B': color = 0xFF251BB3; break;
+            case 'W': color = 0xFFFFFFFF; break;
+            case 'Y': color = 0xFFDED82A; break;
+            case 'O': color = 0xFFF7A31B; break;
+        }
 
     pixels[pixel.x + wh.x * pixel.y] = color;
 }
@@ -260,15 +287,26 @@ __global__ void render_cube_kernel(
 extern "C" void cuda_render_cube(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
     float geom_mean_size,
-    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float turn_fraction, Cuda::quat rotation_quat, Cuda::vec3 slice_plane, float slice_dist)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float turn_fraction, Cuda::quat rotation_quat, Cuda::vec3 slice_plane, float slice_dist, char (*d_stickers)[6][11][11], int cube_size)
 {
     dim3 blockSize(16, 16);
     dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
     render_cube_kernel<<<gridSize, blockSize>>>(
         d_pixels, wh,
         geom_mean_size,
-        camera_direction, camera_pos, fov, CUBE_SIZE, turn_fraction, rotation_quat, slice_plane, slice_dist);
+        camera_direction, camera_pos, fov, cube_size, turn_fraction, rotation_quat, slice_plane, slice_dist, *d_stickers);
     cudaDeviceSynchronize();
+}
+
+extern "C" void allocate_stickers(char (*d_stickers)[6][11][11], int num_stickers) {
+    char* temp;
+    cudaMalloc(&temp, num_stickers*sizeof(char));
+    d_stickers = (char (*)[6][11][11])temp;
+}
+
+
+extern "C" void copy_stickers(char (*d_stickers)[6][11][11], char* h_stickers, int num_stickers) {
+    cudaMemcpy(d_stickers, h_stickers, num_stickers*sizeof(char), cudaMemcpyHostToDevice);
 }
 
 
