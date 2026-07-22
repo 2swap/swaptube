@@ -168,12 +168,13 @@ __global__ void render_cube_kernel(
 
 
     // static hit
-    Cuda::vec2 uv_s; Cuda::vec3 hp_s; char face_s = '?';
+    Cuda::vec2 uv_s; Cuda::vec3 hp_s; char face_s = '?'; bool some_collision = false;
     bool hit_s = ray_cube_intersect(camera_pos, ray_dir, uv_s, hp_s, face_s);
     if (hit_s) {
         float axis_pos = Cuda::dot(hp_s, slice_axis);
         if (axis_pos <= slice_dist) {
             Cuda::vec3 d = hp_s - camera_pos;
+            some_collision = true;
             float dist = Cuda::dot(d, d);
             if (dist < best_dist) { // so the slice doesn't clip through the cube
                 best_dist = dist;
@@ -195,6 +196,7 @@ __global__ void render_cube_kernel(
         float axis_pos_local = Cuda::dot(hp_m, slice_axis);
         if (axis_pos_local > slice_dist) {
             Cuda::vec3 d = hp_m - rotated_origin;
+            some_collision = true;
             float dist = Cuda::dot(d, d);
             if (dist < best_dist) {
                 best_dist = dist;
@@ -205,9 +207,10 @@ __global__ void render_cube_kernel(
     }
 
     if (!have_hit) {
-        pixels[pixel.x + wh.x * pixel.y] = 0x00000000;
+        pixels[pixel.x + wh.x * pixel.y] = some_collision ? 0xFF000000 : 0x00000000;
         return;
     }
+
 
     
 
@@ -218,8 +221,7 @@ __global__ void render_cube_kernel(
         case 'R': row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
         case 'B': row = (int)(uv.y * cube_size); col = cube_size - 1 - (int)(uv.x * cube_size); break;
         case 'D': row = cube_size - 1 - (int)(uv.y * cube_size); col = cube_size - 1 - (int)(uv.x * cube_size); break;
-        case '?': row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
-        default: return; // should not happen;
+        default: row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
     }
 
     // change row and col, interpolating to make it work with all sizes under 11
@@ -246,7 +248,7 @@ __global__ void render_cube_kernel(
 
 
     uint32_t default_color = 0xFF000000; // default color
-    uint32_t plastic_color = 0xFF000000; // transparent plastic color
+    uint32_t plastic_color = 0xFF000000; // plastic color
 
     // Calculate the 8-norm of the coordinates to determine if the pixel is within the sticker's bounds
     float x2 = x * x; float x4 = x2 * x2; float x8 = x4 * x4;
@@ -257,7 +259,7 @@ __global__ void render_cube_kernel(
         return;
     }
 
-    uint32_t color = 0xFF000000;
+    uint32_t color = default_color;
 
     int i;
 
@@ -273,13 +275,13 @@ __global__ void render_cube_kernel(
     }
 
     switch (d_stickers[i][row][col]) {
-            case 'R': color = 0xFFC21D1D; break;
-            case 'G': color = 0xFF1DC249; break;
-            case 'B': color = 0xFF251BB3; break;
-            case 'W': color = 0xFFFFFFFF; break;
-            case 'Y': color = 0xFFDED82A; break;
-            case 'O': color = 0xFFF7A31B; break;
-        }
+        case 'R': color = 0xFFC21D1D; break;
+        case 'G': color = 0xFF1DC249; break;
+        case 'B': color = 0xFF251BB3; break;
+        case 'W': color = 0xFFFFFFFF; break;
+        case 'Y': color = 0xFFDED82A; break;
+        case 'O': color = 0xFFF7A31B; break;
+    }
 
     pixels[pixel.x + wh.x * pixel.y] = color;
 }

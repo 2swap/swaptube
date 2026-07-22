@@ -1,4 +1,5 @@
 #include "Rubiks.h"
+#include <cmath>
 #include <unordered_map>
 #include "../Host_Device_Shared/vec.h"
 
@@ -19,7 +20,38 @@ Cut::Cut() : axis(vec3(0, 0, 0)), dist(0) {}
 void Rubiks::tick(const StateReturn& state) {}
 
 
-
+double Rubiks::get_hash() {
+    double hash = 0.0;
+    double c = 0.0;
+    for (int f = 0; f < 6; ++f) {
+        for (int i = 0; i < MAX_CUBE_SIZE; ++i) {
+            for (int j = 0; j < MAX_CUBE_SIZE; ++j) {
+                c+= 1.14159*j+25*i-27*f;
+                switch (pattern.pattern[f][i][j]) {
+                    case 'W': {
+                        hash += extended_mod(135.41*c, 13*i-142*j+2*f+123.12);
+                    };
+                    case 'O': {
+                        hash += extended_mod(147.425*c, 474*f+2*j-8*i-5.15);
+                    };
+                    case 'G': {
+                        hash += extended_mod(20.1331*c, 501*i-25*f-4*j+12.12);
+                    };
+                    case 'R': {
+                        hash += extended_mod(0.14157*c, 3*j+7*i-2*f-48.56);
+                    };
+                    case 'B': {
+                        hash += extended_mod(3.141*c, 45*f-78*j+36*i+7.00125);
+                    };
+                    case 'Y': {
+                        hash += extended_mod(70.31*c, 3*i+2*j-f+45.36);
+                    };
+                }
+            }
+        }
+    }
+    return hash;
+}
 
 
 // Here I had to define each face rotation individually, 
@@ -43,8 +75,9 @@ void Rubiks::rotateU(int depth){
         }
 
     }
-    print();
+    //print();
 }
+
 
 
 void Rubiks::rotateD(int depth) {
@@ -63,7 +96,7 @@ void Rubiks::rotateD(int depth) {
         }
     }
 
-    print();
+    //print();
 }
 
 
@@ -97,7 +130,7 @@ void Rubiks::rotateF(int depth) {
     pattern.transposeFace(1);
     pattern.transposeFace(3);
 
-    print();
+    //print();
 }
 
 void Rubiks::rotateB(int depth) {
@@ -127,7 +160,7 @@ void Rubiks::rotateB(int depth) {
     pattern.transposeFace(1);
     pattern.transposeFace(3);
 
-    print();
+    //print();
 }
 
 void Rubiks::rotateR(int depth) {
@@ -160,7 +193,7 @@ void Rubiks::rotateR(int depth) {
     pattern.transposeFace(4);
     pattern.transposeFace(5);
 
-    print();
+    //print();
 }
 
 void Rubiks::rotateL(int depth) {
@@ -194,7 +227,7 @@ void Rubiks::rotateL(int depth) {
     pattern.transposeFace(4);
     pattern.transposeFace(5);
 
-    print();
+    //print();
 }
 
 void Rubiks::print() {

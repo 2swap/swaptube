@@ -20,12 +20,13 @@ void RubiksScene::on_end_transition_extra_behavior(const TransitionType tt) {
 
 
 
-RubiksScene::RubiksScene(const vec2& dimensions) : ThreeDimensionScene(dimensions), rotation_quat(1, 0, 0, 0),cut(vec3(0, 0, 0), 0) {
+RubiksScene::RubiksScene(const string&prealg, const vec2& dimensions) : ThreeDimensionScene(dimensions), rotation_quat(1, 0, 0, 0),cut(vec3(0, 0, 0), 0) {
     manager.set({
         {"turn_fraction", "{microblock_fraction}"},
         {"cube_size", "3"},
     });
     the_cube = new Rubiks(3); // cube created here
+    the_cube->exec(prealg);
     add_data_object(the_cube);
     allocate_stickers(&d_stickers, 6 * MAX_CUBE_SIZE * MAX_CUBE_SIZE);
     copy_stickers(d_stickers, the_cube->pattern.pattern, 6 * MAX_CUBE_SIZE * MAX_CUBE_SIZE);
