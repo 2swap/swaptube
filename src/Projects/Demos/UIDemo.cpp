@@ -13,8 +13,7 @@ void render_video() {
     });
     stage_macroblock(SilenceBlock(4), 2);
     ms.render_microblock();
-    if(!is_smoketest())
-        open_ui(ms);
+    open_ui(ms);
     ms.manager.transition(MICRO, "zoom", "1");
     ms.render_microblock();
 }

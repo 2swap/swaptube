@@ -11,8 +11,7 @@
 #include <cstdio>
 #include "../../Host_Device_Shared/vec.h"
 #include "../Pixels.h"
-
-extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
+#include "../../IO/LivePlayer.h"
 
 void parse_command(const string& command, string& state_value, string& operation)
 {
@@ -34,11 +33,7 @@ void open_ui(Scene& scene) {
     cout << "Type 'print_state' to print the entire local state of the scene." << endl;
 
     ivec2 dimensions = scene.get_width_height();
-    string ffplay_cmd_str = "ffplay -f rawvideo -pixel_format argb -video_size " + to_string(dimensions.x) + "x" + to_string(dimensions.y) + " -";
-    cout << "Running command: " << ffplay_cmd_str << endl;
-    const char* ffplay_cmd = ffplay_cmd_str.c_str();
-
-    FILE* pipe = popen(ffplay_cmd, "w");
+    LivePlayer lp(dimensions);
 
     string input;
     bool skip_render = false;
@@ -46,17 +41,7 @@ void open_ui(Scene& scene) {
     {
         if (!skip_render) {
             uint32_t* gpu_ptr = scene.query();
-            Pixels pix(dimensions);
-            cuda_copy_pixels_to_host(pix.pixels.data(), pix.pixels.size(), gpu_ptr);
-
-            pix.print_to_terminal();
-
-            fwrite(pix.pixels.data(),
-                sizeof(int32_t),
-                pix.pixels.size(),
-                pipe);
-
-            fflush(pipe);
+            lp.accept_frame(gpu_ptr, true);
         }
         skip_render = false;
 
@@ -72,8 +57,6 @@ void open_ui(Scene& scene) {
             string state_value, operation;
             parse_command(input, state_value, operation);
 
-            // Here you would apply the operation to the state_value
-            // For demonstration purposes, we'll just print them out
             cout << "State Value: " << state_value << ", Operation: " << operation << endl;
 
             scene.manager.set(state_value, operation);

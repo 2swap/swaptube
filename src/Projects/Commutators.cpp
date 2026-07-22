@@ -2,6 +2,8 @@
 #include "../Scenes/Math/RubiksScene.h"
 
 void render_video() {
+    stage_macroblock(FileBlock("What does a rubik's cube, parallel parking, solving quintic polynomials, orienting a broken satellite, and hanging a painting all have in common?"), 1);
+    rs.render_microblock();
 
     RubiksScene rs;
     stage_macroblock(SilenceBlock(1), 1);
@@ -35,8 +37,3 @@ void render_video() {
     rs.exec_move_from_slice('B', 0);
     rs.render_microblock();
 }
-
-
-    
-    
-    
