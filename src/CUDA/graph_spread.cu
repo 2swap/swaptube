@@ -258,7 +258,7 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         cudaMemcpy(d_adjacency_matrix, h_adjacency_matrix, adjacency_size, cudaMemcpyHostToDevice);
     }
 
-    if (num_nodes < 4000) {
+    if (true || num_nodes < 4000) {
         for(int i = 0; i < iterations; i++){
             printf(".");
             fflush(stdout);

@@ -3,6 +3,7 @@
 #include <string>
 #include "../Core/Pixels.h"
 #include "IoHelpers.h"
+#include "LivePlayer.h"
 
 extern "C"
 {
@@ -26,6 +27,7 @@ private:
     SwsContext* sws_ctx = nullptr;
 
     bool encode_and_write_frame(AVFrame* frame);
+    LivePlayer* lp;
 
 public:
     VideoWriter(AVFormatContext *fc_, const std::string& video_path, int video_width_pixels, int video_height_pixels, int video_framerate_fps);
