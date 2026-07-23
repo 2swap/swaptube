@@ -44,7 +44,6 @@ RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
 }
 
 void RubiksGraphScene::add_children() {
-    cout << "A" << endl;
     Graph* g = gs->graph;
     auto nodes = g->nodes; // true copy
     for(auto& pair : nodes) {
@@ -66,15 +65,14 @@ void RubiksGraphScene::add_children() {
 }
 
 void RubiksGraphScene::add_cube(const string& alg) {
-    /*shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(alg, vec2(.1, .1));
-    string key = "rs" + to_string(hash);
-    CompositeScene::add_scene_fade_in(MICRO, rs, key, vec2(-1, -1), .5, true);
-    cubes[hash] = rs;
-    */
-    cout << "ADD" << endl;
     Rubiks cube(3);
     cube.exec(alg);
     double hash = cube.get_hash();
+
+    shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(alg, vec2(.1, .1));
+    string key = "rs" + to_string(hash);
+    CompositeScene::add_scene_fade_in(MICRO, rs, key, vec2(-1, -1), .5, true);
+    cubes[hash] = rs;
 
     Graph* g = gs->graph;
     g->add_node(hash);
@@ -92,9 +90,18 @@ void RubiksGraphScene::add_cube(const string& alg) {
 
 void RubiksGraphScene::draw() {
     Graph* g = gs->graph;
+    vec2 wh = get_width_height();
     for(auto& pair : g->nodes){
-        double d = pair.first;
-        // TODO position it
+        double hash = pair.first;
+        string key = "rs" + to_string(hash);
+        vec3 position = pair.second.position;
+        bool behind;
+        vec2 pixel = gs->coordinate_to_pixel(position, behind);
+        vec2 fraction = pixel / wh;
+        manager.set({
+            {key+".x", to_string(fraction.x)},
+            {key+".y", to_string(fraction.y)}
+        });
     }
     CompositeScene::draw();
 }

@@ -17,8 +17,7 @@ __device__ Cuda::vec4 compute_force(Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
     Cuda::vec4 diff = pos_i - pos_j;
     float dist_sq = dot(diff, diff) + 1.0f;
     Cuda::vec4 norm = normalize(diff);
-    Cuda::vec4 result = norm / (dist_sq * 10.0f + 2.0f);
-    return result;
+    return norm / (dist_sq * 10.0f + 2.0f);
 }
 
 __device__ Cuda::vec4 get_attraction_force (Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
@@ -54,9 +53,9 @@ __global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda
 
     int dim_int_part = dimension;
     float dim_float_part = dimension - dim_int_part;
-    Cuda::vec4 mult(1, 1, 1, 1);
-    if(dim_int_part < 4) {mult.w = dim_float_part;}
-    if(dim_int_part < 3) {mult.z = dim_float_part; mult.w = 0;}
+    Cuda::vec4 mult(1, 1, 0, 0);
+    //if(dim_int_part < 4) {mult.w = dim_float_part;}
+    //if(dim_int_part < 3) {mult.z = dim_float_part; mult.w = 0;}
 
     end_positions[i] = mult * (positions[i] + velocities[i]);
 }
