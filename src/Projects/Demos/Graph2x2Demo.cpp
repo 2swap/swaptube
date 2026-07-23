@@ -27,4 +27,8 @@ void render_video() {
     stage_macroblock(SilenceBlock(2), 1);
     rgs.add_children();
     rgs.render_microblock();
+
+    stage_macroblock(SilenceBlock(2), 1);
+    rgs.add_children();
+    rgs.render_microblock();
 }
