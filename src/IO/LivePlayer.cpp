@@ -6,7 +6,7 @@
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
 LivePlayer::LivePlayer(const ivec2& dim) : dimensions(dim) {
-    string ffplay_cmd_str = "ffplay -f rawvideo -pixel_format argb -video_size " + to_string(dimensions.x) + "x" + to_string(dimensions.y) + " -";
+    string ffplay_cmd_str = "ffplay -f rawvideo -pixel_format bgra -video_size " + to_string(dimensions.x) + "x" + to_string(dimensions.y) + " -";
     cout << "Running command: " << ffplay_cmd_str << endl;
     const char* ffplay_cmd = ffplay_cmd_str.c_str();
     pipe = popen(ffplay_cmd, "w");
