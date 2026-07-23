@@ -150,11 +150,11 @@ void Rubiks::rotateB(int depth) {
         for (int i = 0; i < MAX_CUBE_SIZE; ++i) {
             pattern.pattern[0][d][i] = pattern.pattern[3][n - 1 - d][i];
             pattern.pattern[3][n - 1 - d][i] = pattern.pattern[5][n - 1 - d][i];
-            pattern.pattern[5][n - 1 - d][i] = pattern.pattern[2][d][i];
-            pattern.pattern[2][d][i] = temp[i];
+            pattern.pattern[5][n - 1 - d][i] = pattern.pattern[1][d][i];
+            pattern.pattern[1][d][i] = temp[i];
         }
 
-        std::reverse(pattern.pattern[2][d], pattern.pattern[2][d+1]);
+        std::reverse(pattern.pattern[1][d], pattern.pattern[1][d+1]);
     }
 
     pattern.transposeFace(1);

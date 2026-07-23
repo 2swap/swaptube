@@ -26,33 +26,39 @@ void t_perm(){
     rs.render_microblock();
 
 
-    stage_macroblock(SilenceBlock(5), 8);
+    stage_macroblock(SilenceBlock(5), 3);
     // rs.manager.transition(MACRO, {
     //     {"cube_size", "11"},
     // });
-    rs.exec_move_from_slice("R");
+    rs.exec_move_from_slice("B");
     rs.render_microblock();
 
-    rs.exec_move_from_slice("U");
+    rs.exec_move_from_slice("B'");
     rs.render_microblock();
 
-    rs.exec_move_from_slice("R'");
+    rs.exec_move_from_slice("B2");
     rs.render_microblock();
 
-    rs.exec_move_from_slice("D");
-    rs.render_microblock();
+    // rs.exec_move_from_slice("U");
+    // rs.render_microblock();
 
-    rs.exec_move_from_slice("R");
-    rs.render_microblock();
+    // rs.exec_move_from_slice("R'");
+    // rs.render_microblock();
 
-    rs.exec_move_from_slice("U'");
-    rs.render_microblock();
+    // rs.exec_move_from_slice("D");
+    // rs.render_microblock();
 
-    rs.exec_move_from_slice("R'");
-    rs.render_microblock();
+    // rs.exec_move_from_slice("R");
+    // rs.render_microblock();
 
-    rs.exec_move_from_slice("D'");
-    rs.render_microblock();
+    // rs.exec_move_from_slice("U'");
+    // rs.render_microblock();
+
+    // rs.exec_move_from_slice("R'");
+    // rs.render_microblock();
+
+    // rs.exec_move_from_slice("D'");
+    // rs.render_microblock();
 
     // get the hash of the cube after the T perm and print it
     double hash = rs.the_cube->get_hash();
