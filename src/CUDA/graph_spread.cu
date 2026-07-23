@@ -29,7 +29,7 @@ __device__ Cuda::vec4 get_attraction_force (Cuda::vec4 pos_i, Cuda::vec4 pos_j) 
     return normalize(diff) * multiplier;
 };
 
-__global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda::vec4* velocities, Cuda::vec4* end_positions, int num_nodes, float repel, float attract, float decay, const int max_degree, const int* adjacency_matrix) {
+__global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda::vec4* velocities, Cuda::vec4* end_positions, int num_nodes, float repel, float attract, float decay, const int max_degree, const int* adjacency_matrix, const float dimension) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= num_nodes) return;
 
@@ -51,9 +51,15 @@ __global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda
 
     velocities[i] += delta_repel * repel - delta_attract * attract;
     velocities[i] *= decay;
-    end_positions[i] = positions[i] + velocities[i];
-}
 
+    int dim_int_part = dimension;
+    float dim_float_part = dimension - dim_int_part;
+    Cuda::vec4 mult(1, 1, 1, 1);
+    if(dim_int_part < 4) {mult.w = dim_float_part;}
+    if(dim_int_part < 3) {mult.z = dim_float_part; mult.w = 0;}
+
+    end_positions[i] = mult * (positions[i] + velocities[i]);
+}
 
 void sort_positions_by_bins_with_indices(const Cuda::vec4* positions, Cuda::vec4* sorted_positions, 
                                          const int* node_bins, int* sorted_indices, int num_nodes, int* bin_counts) {
@@ -271,7 +277,7 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         for(int i = 0; i < iterations; i++){
             printf(".");
             fflush(stdout);
-            compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, d_end_positions, num_nodes, repel, attract, decay, max_degree, d_adjacency_matrix);
+            compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, d_end_positions, num_nodes, repel, attract, decay, max_degree, d_adjacency_matrix, dimension);
             cudaDeviceSynchronize();
             Cuda::vec4* temp = d_end_positions;
             d_end_positions = d_positions;
