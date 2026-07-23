@@ -303,6 +303,7 @@ extern "C" void cuda_render_cube(
 extern "C" void allocate_stickers(char (*d_stickers)[6][11][11], int num_stickers) {
     char* temp;
     cudaMalloc(&temp, num_stickers*sizeof(char));
+// TODO I think this is bugged (@balthazar): we are setting the value but not writing to the data under the pointer
     d_stickers = (char (*)[6][11][11])temp;
 }
 
