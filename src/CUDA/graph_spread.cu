@@ -13,14 +13,14 @@ struct Bin {
     Cuda::vec4 center_of_mass;
 };
 
-__device__ Cuda::vec4 compute_force(Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
+__device__ Cuda::vec4 get_repulsion_force(Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
     Cuda::vec4 diff = pos_i - pos_j;
     float dist_sq = dot(diff, diff) + 1.0f;
     Cuda::vec4 norm = normalize(diff);
     return norm / (dist_sq * 10.0f + 2.0f);
 }
 
-__device__ Cuda::vec4 get_attraction_force (Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
+__device__ Cuda::vec4 get_attraction_force(Cuda::vec4 pos_i, Cuda::vec4 pos_j) {
     Cuda::vec4 diff = pos_i - pos_j;
     float dist_sq = dot(diff, diff);
     float dist_6th = dist_sq * dist_sq * dist_sq * .05f;
@@ -28,36 +28,41 @@ __device__ Cuda::vec4 get_attraction_force (Cuda::vec4 pos_i, Cuda::vec4 pos_j) 
     return normalize(diff) * multiplier;
 };
 
-__global__ void compute_repulsion_kernel_naive(const Cuda::vec4* positions, Cuda::vec4* velocities, Cuda::vec4* end_positions, int num_nodes, float repel, float attract, float decay, const int max_degree, const int* adjacency_matrix, const float dimension) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= num_nodes) return;
-
-    Cuda::vec4 pos_i = positions[i];
-    Cuda::vec4 delta_repel(0.0f);
-    Cuda::vec4 delta_attract(0.0f);
-
-    for (int j = 0; j < num_nodes; ++j) {
-        if (i == j) continue;
-        delta_repel += compute_force(pos_i, positions[j]);
-    }
-
+__device__ void attract_and_finalize(const Cuda::vec4* positions, Cuda::vec4* velocities, Cuda::vec4* end_positions, const int num_nodes, const float attract, const float decay, const int max_degree, const int* adjacency_matrix, const float dimension, const int i){
+    const Cuda::vec4& pos_i = positions[i];
     // Iterate over the adjacency matrix rows to find all neighbors
+    Cuda::vec4 delta_attract(0.0f);
     for (int col = 0; col < max_degree; col++) {
         int node = adjacency_matrix[i*max_degree+col];
         if (node == -1) break; // sentinel
         delta_attract += get_attraction_force(pos_i, positions[node]);
     }
+    velocities[i] -= delta_attract * attract;
 
-    velocities[i] += delta_repel * repel - delta_attract * attract;
     velocities[i] *= decay;
-
     int dim_int_part = dimension;
     float dim_float_part = dimension - dim_int_part;
-    Cuda::vec4 mult(1, 1, 0, 0);
-    //if(dim_int_part < 4) {mult.w = dim_float_part;}
-    //if(dim_int_part < 3) {mult.z = dim_float_part; mult.w = 0;}
+    Cuda::vec4 mult(1, 1, 1, 1);
+    if(dim_int_part < 4) {mult.w = dim_float_part;}
+    if(dim_int_part < 3) {mult.z = dim_float_part; mult.w = 0;}
 
     end_positions[i] = mult * (positions[i] + velocities[i]);
+}
+
+__global__ void spread_kernel_naive(const Cuda::vec4* positions, Cuda::vec4* velocities, Cuda::vec4* end_positions, const int num_nodes, const float repel, const float attract, const float decay, const int max_degree, const int* adjacency_matrix, const float dimension) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= num_nodes) return;
+
+    Cuda::vec4 pos_i = positions[i];
+    Cuda::vec4 delta_repel(0.0f);
+
+    for (int j = 0; j < num_nodes; ++j) {
+        if (i == j) continue;
+        delta_repel += get_repulsion_force(pos_i, positions[j]);
+    }
+
+    velocities[i] += delta_repel * repel;
+    attract_and_finalize(positions, velocities, end_positions, num_nodes, attract, decay, max_degree, adjacency_matrix, dimension, i);
 }
 
 void sort_positions_by_bins_with_indices(const Cuda::vec4* positions, Cuda::vec4* sorted_positions, 
@@ -85,14 +90,18 @@ void sort_positions_by_bins_with_indices(const Cuda::vec4* positions, Cuda::vec4
     delete[] bin_offsets;
 }
 
-__global__ void compute_repulsion_kernel_binned(const Cuda::vec4* sorted_positions, Cuda::vec4* velocities,
-                                                Cuda::vec4* end_positions,
-                                                const Bin* bins, const int* bin_start_indices, 
-                                                const int* sorted_indices, int num_nodes, 
-                                                Cuda::vec4 min_bounds, Cuda::vec4 bin_size, float repel) {
+__global__ void spread_kernel_binned(const Cuda::vec4* positions, const Cuda::vec4* sorted_positions, Cuda::vec4* velocities,
+                                     Cuda::vec4* end_positions,
+                                     const Bin* bins, const int* bin_start_indices, 
+                                     const int* sorted_indices, int num_nodes, 
+                                     Cuda::vec4 min_bounds, Cuda::vec4 bin_size,
+                                     const float repel, const float attract, const int max_degree,
+                                     const int* adjacency_matrix, const float decay,
+                                     const float dimension) {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= num_nodes) return;
 
+    const int si = sorted_indices[i];
     Cuda::vec4 pos_i = sorted_positions[i];
     Cuda::vec4 delta = Cuda::vec4(0.0f);
 
@@ -118,9 +127,9 @@ __global__ void compute_repulsion_kernel_binned(const Cuda::vec4* sorted_positio
                 int end_idx = start_idx + bins[neighbor_bin_flat_idx].count;
 
                 for (int j = start_idx; j < end_idx; ++j) {
-                    if (sorted_indices[i] == sorted_indices[j]) continue; // Skip self-interaction
+                    if (i == j) continue; // Skip self-interaction
 
-                    delta += compute_force(pos_i, sorted_positions[j]);
+                    delta += get_repulsion_force(pos_i, sorted_positions[j]);
                 }
             }
         }
@@ -144,13 +153,14 @@ __global__ void compute_repulsion_kernel_binned(const Cuda::vec4* sorted_positio
 
                 if (bin.count == 0) continue; // Skip empty bins
 
-                delta += (float)bin.count * compute_force(pos_i, bin.center_of_mass);
+                delta += (float)bin.count * get_repulsion_force(pos_i, bin.center_of_mass);
             }
         }
     }
 
     velocities[sorted_indices[i]] += delta * repel;
-    end_positions[sorted_indices[i]] = sorted_positions[i] + velocities[sorted_indices[i]];
+
+    attract_and_finalize(positions, velocities, end_positions, num_nodes, attract, decay, max_degree, adjacency_matrix, dimension, si);
 }
 
 __device__ float atomicMin_float(float* address, float val) {
@@ -272,11 +282,11 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
         cudaMemcpy(d_adjacency_matrix, h_adjacency_matrix, adjacency_size, cudaMemcpyHostToDevice);
     }
 
-    if (true || num_nodes < 4000) {
+    if (num_nodes < 4000) {
         for(int i = 0; i < iterations; i++){
             printf(".");
             fflush(stdout);
-            compute_repulsion_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, d_end_positions, num_nodes, repel, attract, decay, max_degree, d_adjacency_matrix, dimension);
+            spread_kernel_naive<<<gridSize, blockSize>>>(d_positions, d_velocities, d_end_positions, num_nodes, repel, attract, decay, max_degree, d_adjacency_matrix, dimension);
             cudaDeviceSynchronize();
             Cuda::vec4* temp = d_end_positions;
             d_end_positions = d_positions;
@@ -364,10 +374,15 @@ extern "C" void compute_repulsion_cuda(Cuda::vec4* h_positions, Cuda::vec4* h_ve
 
         // Step 5: Compute repulsion forces
         for(int i = 0; i < iterations; i++){
-            compute_repulsion_kernel_binned<<<gridSize, blockSize>>>(d_sorted_positions, d_velocities, d_end_positions, d_bins,
-                                                                     d_bin_start_indices, d_sorted_indices, num_nodes, 
-                                                                     h_min_bounds, h_bin_size, repel);
+            spread_kernel_binned<<<gridSize, blockSize>>>(
+                d_positions, d_sorted_positions, d_velocities, d_end_positions, d_bins,
+                d_bin_start_indices, d_sorted_indices, num_nodes, 
+                h_min_bounds, h_bin_size, repel, attract, max_degree,
+                d_adjacency_matrix, decay, dimension);
             cudaDeviceSynchronize();
+            Cuda::vec4* temp = d_end_positions;
+            d_end_positions = d_positions;
+            d_positions = temp;
             printf(",");
             fflush(stdout);
         }
