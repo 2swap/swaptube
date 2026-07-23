@@ -75,7 +75,6 @@ void Rubiks::rotateU(int depth){
         }
 
     }
-    //print();
 }
 
 
@@ -95,8 +94,6 @@ void Rubiks::rotateD(int depth) {
             pattern.pattern[3][MAX_CUBE_SIZE - 1 - d][i] = temp[i];
         }
     }
-
-    //print();
 }
 
 
@@ -122,15 +119,10 @@ void Rubiks::rotateF(int depth) {
             pattern.pattern[5][d][i] = pattern.pattern[3][d][i];
             pattern.pattern[3][d][i] = temp[i];
         }
-        
-        // std::reverse(pattern.pattern[4][n - 1 - d], pattern.pattern[4][n - 1 - d+1]);
-        // std::reverse(pattern.pattern[5][d], pattern.pattern[5][d+1]);
     }
 
     pattern.transposeFace(1);
     pattern.transposeFace(3);
-
-    //print();
 }
 
 void Rubiks::rotateB(int depth) {
@@ -159,8 +151,6 @@ void Rubiks::rotateB(int depth) {
 
     pattern.transposeFace(1);
     pattern.transposeFace(3);
-
-    //print();
 }
 
 void Rubiks::rotateR(int depth) {
@@ -192,8 +182,6 @@ void Rubiks::rotateR(int depth) {
     pattern.transposeFace(2);
     pattern.transposeFace(4);
     pattern.transposeFace(5);
-
-    //print();
 }
 
 void Rubiks::rotateL(int depth) {
@@ -226,8 +214,6 @@ void Rubiks::rotateL(int depth) {
     pattern.transposeFace(2);
     pattern.transposeFace(4);
     pattern.transposeFace(5);
-
-    //print();
 }
 
 void Rubiks::print() {
@@ -253,7 +239,7 @@ Move Rubiks::parseMove(const std::string& token){
 
     while (pos < token.size() && std::isdigit(token[pos]))
     {
-        layer = layer * 10 + (token[pos] - '0'); // dunno why I substracted 0 here
+        layer = layer * 10 + (token[pos] - '0');
         pos++;
     }
 

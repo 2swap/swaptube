@@ -4,7 +4,8 @@
 
 class RubiksScene : public ThreeDimensionScene {
 public:
-    RubiksScene(const string& prealg="", const vec2& dimensions = vec2(1, 1));
+    RubiksScene(const CubeStickerPattern& pattern, const vec2& dimensions = vec2(1, 1));
+    RubiksScene(const vec2& dimensions = vec2(1, 1));
     void draw() override;
     const StateQuery populate_state_query() const override;
     void exec_move_from_slice(const std::string& token);
@@ -16,7 +17,7 @@ protected:
 private:
     quat rotation_quat;
     Cut cut;
-    char d_stickers[6][11][11];
+    char d_stickers[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE];
 };
 
 

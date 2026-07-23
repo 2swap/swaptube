@@ -17,7 +17,7 @@ void render_video() {
     });
 
     stage_macroblock(SilenceBlock(2), 1);
-    rgs.add_cube("");
+    rgs.add_cube("", true);
     rgs.render_microblock();
 
     // print the size of the graph

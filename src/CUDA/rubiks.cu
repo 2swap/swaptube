@@ -6,11 +6,9 @@
 #include <stdlib.h>
 #include <valarray>
 #include "../Host_Device_Shared/ThreeDimensionStructs.h"
+#include "../Host_Device_Shared/rubiks_config.h"
 #include "color.cuh" // Contains overlay_pixel and set_pixel
 #include "common_graphics.cuh" // Contains get_raymarch_vector
-
-
-
 
 __device__ __forceinline__ Cuda::vec3 rotate_vector(const Cuda::quat& q, const Cuda::vec3& v) {
     Cuda::vec3 q_vec(q.i, q.j, q.k);
@@ -170,7 +168,7 @@ __global__ void render_cube_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh,
     float geom_mean_size,
     const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, 
-    int cube_size, float turn_fraction, Cuda::quat rotation_quat, const Cuda::vec3 slice_axis, float slice_dist, char d_stickers[6][11][11])
+    int cube_size, float turn_fraction, Cuda::quat rotation_quat, const Cuda::vec3 slice_axis, float slice_dist, char d_stickers[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE])
 {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
@@ -279,9 +277,9 @@ __global__ void render_cube_kernel(
         default: row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
     }
 
-    // interpolate for cubes of size < 11
-    float temp_row = row * 10.f / (cube_size - 1);
-    float temp_col = col * 10.f / (cube_size - 1);
+    // interpolate for cubes of size < MAX_CUBE_SIZE
+    float temp_row = row * (MAX_CUBE_SIZE-1) / (cube_size - 1);
+    float temp_col = col * (MAX_CUBE_SIZE-1) / (cube_size - 1);
     row = (int)(temp_row + 0.5f);
     col = (int)(temp_col + 0.5f);
 
@@ -331,7 +329,7 @@ __global__ void render_cube_kernel(
 extern "C" void cuda_render_cube(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
     float geom_mean_size,
-    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float turn_fraction, Cuda::quat rotation_quat, Cuda::vec3 slice_plane, float slice_dist, char (*d_stickers)[6][11][11], int cube_size)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float turn_fraction, Cuda::quat rotation_quat, Cuda::vec3 slice_plane, float slice_dist, char (*d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], int cube_size)
 {
     dim3 blockSize(16, 16);
     dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
@@ -342,14 +340,14 @@ extern "C" void cuda_render_cube(
     cudaDeviceSynchronize();
 }
 
-extern "C" void allocate_stickers(char (*&d_stickers)[6][11][11], int num_stickers) {
+extern "C" void allocate_stickers(char (*&d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], int num_stickers) {
     char* temp = nullptr;
     cudaMalloc(&temp, num_stickers * sizeof(char));
-    d_stickers = (char (*)[6][11][11])temp;
+    d_stickers = (char (*)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE])temp;
 }
 
 
-extern "C" void copy_stickers(char (*d_stickers)[6][11][11], char* h_stickers, int num_stickers) {
+extern "C" void copy_stickers(char (*d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], char* h_stickers, int num_stickers) {
     cudaMemcpy(d_stickers, h_stickers, num_stickers*sizeof(char), cudaMemcpyHostToDevice);
 }
 

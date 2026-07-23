@@ -6,8 +6,8 @@
 #include "../Host_Device_Shared/vec.h"
 #include <unordered_map>
 #include "DataObject.h"
+#include "../Host_Device_Shared/rubiks_config.h"
 
-const int MAX_CUBE_SIZE = 11; // maximum size of the cube, this is used to define the size of the pattern array in CubeStickerPattern
 int test_rubiks();
 
 enum FaceName { 
@@ -21,9 +21,8 @@ enum FaceName {
 
 struct CubeStickerPattern{
     char pattern[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE]; // 6 faces, each face can be up to 10x10 stickers
-    CubeStickerPattern();
 
-    CubeStickerPattern(int size) {
+    CubeStickerPattern(){
         char colors[6] = {'W', 'O', 'G', 'R', 'B', 'Y'};
         
         for (int f = 0; f < 6; ++f) {
@@ -58,14 +57,11 @@ struct Cut{
     Cut();
 };
 
-
-
-
 struct Move {
-            char face;
-            int depth;
-            int turns;
-        };
+    char face;
+    int depth;
+    int turns;
+};
 
 
 
@@ -77,18 +73,8 @@ class Rubiks : public DataObject {
 
         void tick(const StateReturn& state);
 
-        Rubiks(int size) : pattern(size) {
-            for (int i = 1; i < size; ++i) {
-                float distance = -1.0f + (2.0f * static_cast<float>(size - i)) / static_cast<float>(size);
-                
-                cut_map['U'].push_back(Cut(vec3(0,  1,  0), distance));
-                cut_map['D'].push_back(Cut(vec3(0, -1,  0), distance));
-                cut_map['F'].push_back(Cut(vec3(0,  0, -1), distance));
-                cut_map['B'].push_back(Cut(vec3(0,  0,  1), distance));
-                cut_map['L'].push_back(Cut(vec3(-1, 0,  0), distance));
-                cut_map['R'].push_back(Cut(vec3(1,  0,  0), distance));
-            }
-        }
+        Rubiks(const CubeStickerPattern& pattern) : pattern(pattern) { }
+        Rubiks() : pattern() { }
 
         // Here I had to define each face rotation individually, 
         // this is due to the fact that matrices defining faces have different orientations

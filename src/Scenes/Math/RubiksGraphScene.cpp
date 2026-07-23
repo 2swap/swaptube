@@ -55,27 +55,31 @@ void RubiksGraphScene::add_children() {
     auto nodes = g->nodes; // true copy
     for(auto& pair : nodes) {
         double hash = pair.first;
-        string alg = algs[hash];
         for(string s : {"U", "R", "L", "B", "F", "D"}) {
-            Rubiks child(3);
-            string child_alg = (alg.size() != 0?alg+" ":"") + s + "2"; // the 2 is for doing only double moves for now
-            child.exec(child_alg);
+            Rubiks child(patterns[hash]);
+            child.exec(s+"2");
             double child_hash = child.get_hash();
             if (!g->node_exists(child_hash)){
-                algs[child_hash] = child_alg;
-                add_cube(algs[child_hash]);
+                patterns[child_hash] = child.pattern;
+                add_cube(child.pattern, false);
+                cout << "+" << flush;
             }
         }
     }
 }
 
 void RubiksGraphScene::add_cube(const string& alg, bool cube_or_not) {
-    Rubiks cube(3);
+    Rubiks cube;
     cube.exec(alg);
+    add_cube(cube.pattern, cube_or_not);
+}
+
+void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_not) {
+    Rubiks cube(pattern);
     double hash = cube.get_hash();
 
     if (cube_or_not){
-        shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(alg, vec2(0.001, 0.001));
+        shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(pattern, vec2(0.001, 0.001));
         rs->manager.set({
             {"w", "[rubiks_scene_size]"},
             {"h", "[rubiks_scene_size]"},
@@ -93,9 +97,8 @@ void RubiksGraphScene::add_cube(const string& alg, bool cube_or_not) {
     g->add_node(hash);
     gs->config->set_node_label(hash, to_string(hash));
     for(string s : {"U", "R", "L", "B", "F", "D"}) {
-        Rubiks child(3);
-        string child_alg = (alg.size() != 0?alg+" ":"") + s + "2";
-        child.exec(child_alg);
+        Rubiks child(pattern);
+        child.exec(s+"2");
         double child_hash = child.get_hash();
         if (g->node_exists(child_hash)){
             g->add_edge(hash, child_hash);
@@ -104,19 +107,23 @@ void RubiksGraphScene::add_cube(const string& alg, bool cube_or_not) {
 }
 
 void RubiksGraphScene::draw() {
-    Graph* g = gs->graph;
-    vec2 wh = get_width_height();
-    for(auto& pair : g->nodes){
-        double hash = pair.first;
-        string key = "rs" + to_string(hash);
-        vec3 position = pair.second.position;
-        bool behind;
-        vec2 pixel = gs->coordinate_to_pixel(position, behind);
-        vec2 fraction = pixel / wh;
-        manager.set({
-            {key+".x", to_string(fraction.x)},
-            {key+".y", to_string(fraction.y)}
-        });
+    if(false) {
+        Graph* g = gs->graph;
+        vec2 wh = get_width_height();
+        for(auto& pair : g->nodes){
+            double hash = pair.first;
+            string key = "rs" + to_string(hash);
+            vec3 position = pair.second.position;
+            bool behind;
+            vec2 pixel = gs->coordinate_to_pixel(position, behind);
+            vec2 fraction = pixel / wh;
+            manager.set({
+                {key+".x", to_string(fraction.x)},
+                {key+".y", to_string(fraction.y)}
+            });
+        }
     }
+    cout << "A" << endl;
     CompositeScene::draw();
+    cout << "B" << endl;
 }
