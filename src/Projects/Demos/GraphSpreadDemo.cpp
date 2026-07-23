@@ -12,15 +12,19 @@ void render_video() {
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"},
-        {"d", "9"},
-        {"physics_multiplier", "1"},
+        {"d", "900"},
+        {"physics_multiplier", "40"},
     });
 
     stage_macroblock(SilenceBlock(10), 2);
-    for(int i = 0; i < 9; i++) {
-        gs.graph->add_node(i);
-        if(i%3>0) gs.graph->add_edge(i, i-1);
-        if(i>2) gs.graph->add_edge(i, i-3);
+    int graph_size = 50;
+    for(int i = 0; i < graph_size; i++) {
+        for(int j = 0; j < graph_size; j++) {
+            int hash = i+j*graph_size;
+            gs.graph->add_node(hash);
+            if(i>0) gs.graph->add_edge(hash, hash-1);
+            if(j>0) gs.graph->add_edge(hash, hash-graph_size);
+        }
     }
     gs.render_microblock();
     gs.render_microblock();

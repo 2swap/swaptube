@@ -9,8 +9,6 @@
 #include "color.cuh" // Contains overlay_pixel and set_pixel
 #include "common_graphics.cuh" // Contains get_raymarch_vector
 
-// TODO maybe when the pixel is transparent, we can check next intersection with the cube and draw the next sticker behind it, to give a more realistic look to the cube
-
 
 
 
@@ -20,6 +18,32 @@ __device__ __forceinline__ Cuda::vec3 rotate_vector(const Cuda::quat& q, const C
     return v + t * q.u + Cuda::cross(q_vec, t);
 }
 
+
+__device__ __forceinline__ bool ray_slice_plane_intersect(
+    const Cuda::vec3& ray_origin, 
+    const Cuda::vec3& ray_dir, 
+    const Cuda::vec3& plane_normal, 
+    float plane_dist, 
+    float& out_t) 
+{
+    float denom = Cuda::dot(ray_dir, plane_normal);
+    // Si le rayon n'est pas parallèle au plan de coupe
+    if (fabsf(denom) > 1e-6f) {
+        float t = (plane_dist - Cuda::dot(ray_origin, plane_normal)) / denom;
+        if (t > 0.0f) {
+            Cuda::vec3 hit = ray_origin + t * ray_dir;
+            const float eps = 1e-3f;
+            // On vérifie que l'impact se trouve BIEN à l'intérieur des limites du cube
+            if (fabsf(hit.x) <= 1.0f + eps && 
+                fabsf(hit.y) <= 1.0f + eps && 
+                fabsf(hit.z) <= 1.0f + eps) {
+                out_t = t;
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 
 
@@ -156,13 +180,13 @@ __global__ void render_cube_kernel(
 
     rotation_quat = normalize(Cuda::quat(1.0f, 0.0f, 0.0f, 0.0f) * (1-turn_fraction) + rotation_quat * turn_fraction);
 
-
     Cuda::vec3 ray_dir = get_raymarch_vector(pixel, wh, fov, conjugate(camera_direction));
 
     Cuda::vec2 uv;
     Cuda::vec3 hit_point;
     char face_name = '?';
     bool have_hit = false;
+    bool is_internal_plastic = false; // Indique si on touche la découpe interne
     int col = -1, row = -1;
     float best_dist = 1e30f;
 
@@ -180,10 +204,23 @@ __global__ void render_cube_kernel(
                 best_dist = dist;
                 uv = uv_s; hit_point = hp_s; face_name = face_s;
                 have_hit = true;
+                is_internal_plastic = false;
             }
         }
     }
 
+    
+    float t_plane_s;
+    if (ray_slice_plane_intersect(camera_pos, ray_dir, slice_axis, slice_dist, t_plane_s)) {
+        Cuda::vec3 d = t_plane_s * ray_dir;
+        float dist = Cuda::dot(d, d);
+        some_collision = true;
+        if (dist < best_dist) {
+            best_dist = dist;
+            have_hit = true;
+            is_internal_plastic = true; // On a touché la face plastique de coupe
+        }
+    }
 
     // moving hit
     Cuda::quat inv_rot = conjugate(rotation_quat);
@@ -202,7 +239,20 @@ __global__ void render_cube_kernel(
                 best_dist = dist;
                 uv = uv_m; hit_point = hp_m; face_name = face_m;
                 have_hit = true;
+                is_internal_plastic = false;
             }
+        }
+    }
+
+    float t_plane_m;
+    if (ray_slice_plane_intersect(rotated_origin, rotated_dir, slice_axis, slice_dist, t_plane_m)) {
+        Cuda::vec3 d = t_plane_m * rotated_dir;
+        float dist = Cuda::dot(d, d);
+        some_collision = true;
+        if (dist < best_dist) {
+            best_dist = dist;
+            have_hit = true;
+            is_internal_plastic = true;
         }
     }
 
@@ -211,6 +261,11 @@ __global__ void render_cube_kernel(
         return;
     }
 
+    uint32_t plastic_color = 0xFF000000;
+    if (is_internal_plastic) {
+        pixels[pixel.x + wh.x * pixel.y] = plastic_color;
+        return;
+    }
 
     
 
@@ -224,44 +279,32 @@ __global__ void render_cube_kernel(
         default: row = (int)(uv.y * cube_size); col = (int)(uv.x * cube_size); break;
     }
 
-    // change row and col, interpolating to make it work with all sizes under 11
-    float temp_row = row * 10. / (cube_size - 1);
-    float temp_col = col * 10. / (cube_size - 1);
-    // round to nearest integer
+    // interpolate for cubes of size < 11
+    float temp_row = row * 10.f / (cube_size - 1);
+    float temp_col = col * 10.f / (cube_size - 1);
     row = (int)(temp_row + 0.5f);
     col = (int)(temp_col + 0.5f);
-    
 
-
-    // coordinates inside the sticker, normalized to [0, 1]
     float local_u = fmodf(uv.x * cube_size, 1.0f);
     float local_v = fmodf(uv.y * cube_size, 1.0f);
 
-    // normalize to [-1, 1] for the purpose of calculating the 8-norm
     float x = local_u * 2.0f - 1.0f;
     float y = local_v * 2.0f - 1.0f;
 
-    // scale factor to slightly enlarge the coordinates, making the stickers appear smaller and more distinct
     float scale = 1.1f; 
     x *= scale;
     y *= scale;
 
-
-    uint32_t default_color = 0xFF000000; // default color
-    uint32_t plastic_color = 0xFF000000; // plastic color
-
-    // Calculate the 8-norm of the coordinates to determine if the pixel is within the sticker's bounds
     float x2 = x * x; float x4 = x2 * x2; float x8 = x4 * x4;
     float y2 = y * y; float y4 = y2 * y2; float y8 = y4 * y4;
 
     if (x8 + y8 >= 1.0f) {
-        pixels[pixel.x + wh.x * pixel.y] = plastic_color; // transparent plastic
+        pixels[pixel.x + wh.x * pixel.y] = plastic_color;
         return;
     }
 
-    uint32_t color = default_color;
-
-    int i;
+    uint32_t color = 0xFF000000;
+    int i = 0;
 
     switch (face_name) {
         case 'U': i = 0; break;
@@ -270,7 +313,6 @@ __global__ void render_cube_kernel(
         case 'R': i = 3; break;
         case 'B': i = 4; break;
         case 'D': i = 5; break;
-        
         default:  color = 0xFFC92AAC; break;
     }
 
@@ -300,10 +342,9 @@ extern "C" void cuda_render_cube(
     cudaDeviceSynchronize();
 }
 
-extern "C" void allocate_stickers(char (*d_stickers)[6][11][11], int num_stickers) {
-    char* temp;
-    cudaMalloc(&temp, num_stickers*sizeof(char));
-// TODO I think this is bugged (@balthazar): we are setting the value but not writing to the data under the pointer
+extern "C" void allocate_stickers(char (*&d_stickers)[6][11][11], int num_stickers) {
+    char* temp = nullptr;
+    cudaMalloc(&temp, num_stickers * sizeof(char));
     d_stickers = (char (*)[6][11][11])temp;
 }
 

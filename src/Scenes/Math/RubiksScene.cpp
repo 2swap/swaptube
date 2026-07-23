@@ -24,6 +24,10 @@ RubiksScene::RubiksScene(const string&prealg, const vec2& dimensions) : ThreeDim
     manager.set({
         {"turn_fraction", "{microblock_fraction}"},
         {"cube_size", "3"},
+        {"d", "9"},
+        {"qi", "-0.25"},
+        {"qj", "0.25"},
+        {"fov", "2"},
     });
     the_cube = new Rubiks(3); // cube created here
     the_cube->exec(prealg);

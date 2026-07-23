@@ -19,6 +19,7 @@ RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
         {"edge_weights_size", "0"},
         {"node_labels_size", "1"},
         {"midpoint_multiplier", "1"},
+        {"rubiks_scene_size", "0.1"}
     });
 
     gs = make_shared<GraphScene>();
@@ -43,6 +44,12 @@ RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
     CompositeScene::add_scene(gs, "gs");
 }
 
+const StateQuery RubiksGraphScene::populate_state_query() const{
+    StateQuery ret = CompositeScene::populate_state_query();
+    ret.insert("rubiks_scene_size");
+    return ret;
+}
+
 void RubiksGraphScene::add_children() {
     Graph* g = gs->graph;
     auto nodes = g->nodes; // true copy
@@ -51,10 +58,8 @@ void RubiksGraphScene::add_children() {
         string alg = algs[hash];
         for(string s : {"U", "R", "L", "B", "F", "D"}) {
             Rubiks child(3);
-            string child_alg = (alg.size() != 0?alg+" ":"") + s + "2";
+            string child_alg = (alg.size() != 0?alg+" ":"") + s + "2"; // the 2 is for doing only double moves for now
             child.exec(child_alg);
-            if(alg == "F2" && s == "B") {cout << "F2 B2" << endl; child.print();}
-            if(alg == "B2" && s == "F") {cout << "B2 F2" << endl; child.print();}
             double child_hash = child.get_hash();
             if (!g->node_exists(child_hash)){
                 algs[child_hash] = child_alg;
@@ -64,15 +69,25 @@ void RubiksGraphScene::add_children() {
     }
 }
 
-void RubiksGraphScene::add_cube(const string& alg) {
+void RubiksGraphScene::add_cube(const string& alg, bool cube_or_not) {
     Rubiks cube(3);
     cube.exec(alg);
     double hash = cube.get_hash();
 
-    shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(alg, vec2(.1, .1));
-    string key = "rs" + to_string(hash);
-    CompositeScene::add_scene_fade_in(MICRO, rs, key, vec2(-1, -1), .5, true);
-    cubes[hash] = rs;
+    if (cube_or_not){
+        shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(alg, vec2(0.001, 0.001));
+        rs->manager.set({
+            {"w", "[rubiks_scene_size]"},
+            {"h", "[rubiks_scene_size]"},
+            {"q1", "[q1]"},
+            {"qi", "[qi] 0.25 +"},
+            {"qj", "[qj] 0.25 -"},
+            {"qk", "[qk]"},
+        });
+        string key = "rs" + to_string(hash);
+        CompositeScene::add_scene(rs, key);
+        cubes[hash] = rs;
+    }
 
     Graph* g = gs->graph;
     g->add_node(hash);
