@@ -107,11 +107,12 @@ Pixels svg_to_pix(const string& filename_with_or_without_suffix, ScalingParams& 
 
     // Render SVG
     if (!rsvg_handle_render_document(handle, cr, &viewport, &error)) {
+        auto e = runtime_error("Failed to render SVG file " + filename + ": " + error->message);
         g_error_free(error);
         cairo_destroy(cr);
         cairo_surface_destroy(surface);
         g_object_unref(handle);
-        throw runtime_error("Failed to render SVG file " + filename + ": " + error->message);
+        throw e;
     }
 
     // Copy pixels into Pixels object

@@ -9,6 +9,8 @@ extern "C" void cuda_overlay(
     uint32_t* background, const ivec2& b_wh,
     const uint32_t* foreground, const ivec2& f_wh,
     const vec2& center, const float opacity, const float angle);
+extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
+extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
 TwoswapScene::TwoswapScene(const vec2& dimensions) : MandelbrotScene(dimensions) {
     manager.set({
@@ -53,54 +55,78 @@ void TwoswapScene::draw(){
     const ivec2 wh = get_width_height();
 
     if (twoswapness > 0.01) { // 2swap logo effect
-        Pixels foreground_pix(floor(wh * vec2(1, .3)));
+        if (!twoswap) {
+            twoswap_wh = floor(wh * vec2(1, .3));
 
-        ScalingParams sp(wh * vec2(.6, .4));
-        Pixels twoswap_pix = latex_to_pix("\\text{2swap}", sp);
-        foreground_pix.fill_circle(ivec2(get_width()/3, foreground_pix.wh.y/2), get_width()/23, OPAQUE_WHITE);
-        double yval = (foreground_pix.wh.y-twoswap_pix.wh.y)/2+get_width()/96;
-        foreground_pix.overwrite(twoswap_pix, ivec2(get_width()/3+get_width()/23+get_width()/96, yval));
+            Pixels foreground_pix(twoswap_wh);
+
+            ScalingParams sp(wh * vec2(.6, .4));
+            Pixels twoswap_pix = latex_to_pix("\\text{2swap}", sp);
+            foreground_pix.fill_circle(ivec2(get_width()/3, foreground_pix.wh.y/2), get_width()/23, OPAQUE_WHITE);
+            double yval = (foreground_pix.wh.y-twoswap_pix.wh.y)/2+get_width()/96;
+            foreground_pix.overwrite(twoswap_pix, ivec2(get_width()/3+get_width()/23+get_width()/96, yval));
+
+            int foreground_size = foreground_pix.wh.x * foreground_pix.wh.y;
+            twoswap = cuda_alloc_pixels_on_device(foreground_size);
+            cuda_copy_pixels_to_device(foreground_pix.pixels.data(), foreground_size, twoswap);
+        }
 
         cuda_overlay(gpu_pix->get_ptr(), wh,
-            foreground_pix.pixels.data(), foreground_pix.wh,
-            (wh-foreground_pix.wh)/2 - wh*.04 + whole_shift,
+            twoswap, twoswap_wh,
+            (wh-twoswap_wh)/2 - wh*.04 + whole_shift,
             twoswapness * .6, -.2
         );
     }
 
     if (seefness > 0.01) { // 6884 logo effect
-        Pixels foreground_pix(floor(get_width() * vec2(1, .2)));
+        if (!seef) {
+            seef_wh = floor(get_width() * vec2(1, .2));
 
-        Pixels image;
-        png_to_pix(image, "../musicnote");
+            Pixels foreground_pix(seef_wh);
 
-        Pixels scaled;
-        image.scale_to_bounding_box(wh * vec2(1, .135), scaled);
+            Pixels image;
+            png_to_pix(image, "../musicnote");
 
-        foreground_pix.overlay_cpu(scaled, vec2(get_width()*.44, (foreground_pix.wh.y)/2 + scaled.wh.y*.05), 1.0f);
+            Pixels scaled;
+            image.scale_to_bounding_box(wh * vec2(1, .135), scaled);
 
-        ScalingParams sp(wh * .25);
-        Pixels seef_pix = latex_to_pix("\\text{6884}", sp);
-        double yval = (foreground_pix.wh.y-seef_pix.wh.y)/2;
-        foreground_pix.overwrite(seef_pix, ivec2(get_width()*.4 + scaled.wh.x+get_width()/96, yval));
+            foreground_pix.overlay_cpu(scaled, vec2(get_width()*.44, (foreground_pix.wh.y)/2 + scaled.wh.y*.05), 1.0f);
+
+            ScalingParams sp(wh * .25);
+            Pixels seef_pix = latex_to_pix("\\text{6884}", sp);
+            double yval = (foreground_pix.wh.y-seef_pix.wh.y)/2;
+            foreground_pix.overwrite(seef_pix, ivec2(get_width()*.4 + scaled.wh.x+get_width()/96, yval));
+
+            int foreground_size = foreground_pix.wh.x * foreground_pix.wh.y;
+            seef = cuda_alloc_pixels_on_device(foreground_size);
+            cuda_copy_pixels_to_device(foreground_pix.pixels.data(), foreground_size, seef);
+        }
 
         cuda_overlay(gpu_pix->get_ptr(), wh,
-            foreground_pix.pixels.data(), foreground_pix.wh,
-            (get_width()-foreground_pix.wh)/2 - wh*vec2(.029, .285) + whole_shift,
+            seef, seef_wh,
+            (get_width()-seef_wh)/2 - wh*vec2(.029, .285) + whole_shift,
             seefness * .6, -.2
         );
     }
 
     if (swaptubeness > 0.01) { // SwapTube logo effect
-        vec2 size = wh * vec2(1, .14);
-        ScalingParams sp2(wh * vec2(.32, .14));
-        Pixels swaptube_pix_small_box = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{\\quad Commit Hash: " + swaptube_commit_hash() + "}", sp2);
-        Pixels swaptube_pix = Pixels(wh);
-        swaptube_pix.overwrite(swaptube_pix_small_box, (size - swaptube_pix_small_box.wh)/2);
+        if (!swaptube) {
+            swaptube_wh = wh;
+
+            vec2 size = wh * vec2(1, .14);
+            ScalingParams sp2(wh * vec2(.32, .14));
+            Pixels swaptube_pix_small_box = latex_to_pix("\\normalsize\\textbf{Made with love, using SwapTube}\\\\\\\\\\ \\text{\\quad Commit Hash: " + swaptube_commit_hash() + "}", sp2);
+            Pixels swaptube_pix = Pixels(wh);
+            swaptube_pix.overwrite(swaptube_pix_small_box, (size - swaptube_pix_small_box.wh)/2);
+
+            int foreground_size = swaptube_pix.wh.x * swaptube_pix.wh.y;
+            swaptube = cuda_alloc_pixels_on_device(foreground_size);
+            cuda_copy_pixels_to_device(swaptube_pix.pixels.data(), foreground_size, swaptube);
+        }
 
         cuda_overlay(gpu_pix->get_ptr(), wh,
-            swaptube_pix.pixels.data(), swaptube_pix.wh,
-            (wh-swaptube_pix.wh)/2 + get_width_height()*vec2(.08, .28) + whole_shift,
+            swaptube, swaptube_wh,
+            (wh-swaptube_wh)/2 + get_width_height()*vec2(.08, .28) + whole_shift,
             swaptubeness * .6, -.2
         );
     }
