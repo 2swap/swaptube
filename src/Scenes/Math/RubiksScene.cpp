@@ -60,7 +60,7 @@ void RubiksScene::exec_move_from_slice(const std::string& token) {
     the_cube->exec(token);
     Move m = the_cube->parseMove(token);
     float size = state["cube_size"];
-    float distance = -1.0f + (2.0f * static_cast<float>(size - m.depth)) / static_cast<float>(size);
+    float distance = -1.0f + (2.0f * static_cast<float>(size - m.depth - 1)) / static_cast<float>(size);
     if(m.face == 'U') cut = Cut(vec3(0,  1,  0), distance);
     if(m.face == 'D') cut = Cut(vec3(0, -1,  0), distance);
     if(m.face == 'F') cut = Cut(vec3(0,  0, -1), distance);

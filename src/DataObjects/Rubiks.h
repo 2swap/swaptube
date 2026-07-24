@@ -94,7 +94,7 @@ class Rubiks : public DataObject {
 
         void print();
 
-        double get_hash();
+        double get_hash(int cube_size);
         
         // Write alg with the form : dFn, where d is the depth+1, F is the face, and n is either ' or 2, d and n are optionnal.
         // This does not know moves like M, S, E, r, f etc..., support for those might be added in the future.

@@ -19,14 +19,20 @@ Cut::Cut() : axis(vec3(0, 0, 0)), dist(0) {}
 
 void Rubiks::tick(const StateReturn& state) {}
 
+int interpolate(int i, int cube_size) {
+        return (i * (MAX_CUBE_SIZE-1)) / (cube_size - 1);
+    }
 
-double Rubiks::get_hash() {
+double Rubiks::get_hash(int cube_size) { //TODO make the hash not differentiate between cubes that are the same but rotated
     double hash = 0.0;
     double c = 0.0;
+    
     for (int f = 0; f < 6; ++f) {
-        for (int i = 0; i < MAX_CUBE_SIZE; ++i) {
-            for (int j = 0; j < MAX_CUBE_SIZE; ++j) {
-                c+= 1.14159*j+25*i-27*f;
+        for (int x = 0; x < cube_size; ++x) {
+            int i = interpolate(x, cube_size);
+            for (int y = 0; y < cube_size; ++y) {
+                int j = interpolate(y, cube_size);
+                c+= 1.14159*x+25*y-27*f;
                 switch (pattern.pattern[f][i][j]) {
                     case 'W': {
                         hash += extended_mod(135.41*c, 13*i-142*j+2*f+123.12);
