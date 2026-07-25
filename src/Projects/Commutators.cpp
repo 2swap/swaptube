@@ -5,6 +5,7 @@
 #include "../Scenes/Common/CompositeScene.h"
 #include <memory>
 #include "../Scenes/Math/RubiksGraphScene.h"
+#include "../Scenes/Physics/RopeScene.h"
 
 
 
@@ -139,10 +140,15 @@ void graph_one(){
     
 }
 
+void test_rope(){
+    RopeScene rs;
+    stage_macroblock(SilenceBlock(10), 1);
+    
+    rs.render_microblock();
+}
 
 void render_video() {
     // CompositeScene cs;
     // intro(cs);
-
-    graph_one();
+    test_rope();
 }

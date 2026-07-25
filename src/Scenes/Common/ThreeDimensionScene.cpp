@@ -76,11 +76,12 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
 }
 
 // TODO this is duplicate code from CUDA/common_graphics.h and we should unify them.
-vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, bool& behind_camera) {
+vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, float& distance) {
     coordinate = rotate_vector(coordinate - camera_pos, camera_direction);
-    if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
+    distance = coordinate.z;
+    if(distance <= 0) return {-1000, -1000};
 
-    float scale = (get_geom_mean_size()*fov) / coordinate.z;
+    float scale = (get_geom_mean_size()*fov) / distance;
     return scale * vec2(coordinate.x, -coordinate.y) + get_width_height()*.5f;
 }
 
@@ -168,12 +169,12 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
     if(this_surface_opacity < .001) return;
 
     vector<vec2> corners(4);
-    bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
-    corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
-    corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
-    corners[2] = coordinate_to_pixel(surface_center - surface.pos_x_dir - surface.pos_y_dir, behind_camera_3);
-    corners[3] = coordinate_to_pixel(surface_center + surface.pos_x_dir - surface.pos_y_dir, behind_camera_4);
-    if(behind_camera_1 && behind_camera_2 && behind_camera_3 && behind_camera_4) return;
+    float distance_1, distance_2, distance_3, distance_4;
+    corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, distance_1);
+    corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, distance_2);
+    corners[2] = coordinate_to_pixel(surface_center - surface.pos_x_dir - surface.pos_y_dir, distance_3);
+    corners[3] = coordinate_to_pixel(surface_center + surface.pos_x_dir - surface.pos_y_dir, distance_4);
+    if(distance_1 <=0 && distance_2 <=0 && distance_3 <=0 && distance_4 <=0) return;
     if(!should_render_surface(corners)) return;
 
     int x1 = numeric_limits<int>::max();

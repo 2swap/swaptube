@@ -5,7 +5,7 @@
 const unordered_set<string> move_set = {"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"};
 
 RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
-    : CompositeScene(dimensions), cube_size(3) {
+    : CompositeScene(dimensions), cube_size(2) {
     manager.set({
         {"q1", "1"},
         {"qi", "0"},
@@ -113,16 +113,54 @@ void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_
 
 void RubiksGraphScene::draw() {
     Graph* g = gs->graph;
+    std::map<float, string> distance_map;
+
+    for (const pair<double, shared_ptr<RubiksScene>>& pair : cubes) {
+        double hash = pair.first;
+        string key = "rs" + to_string(hash);
+        vec3 position = g->nodes.find(hash)->second.position;
+        float distance;
+        vec2 pixel = gs->coordinate_to_pixel(position, distance);
+        distance_map[distance] = key;
+    }
+
+    render_order.clear();
+    
+
+    std::list<string> ordered_keys;
+    for (const auto& pair : distance_map) {
+        render_order.push_front(pair.second);
+    }
+
+    render_order.push_front("gs");
+
+
+
+
+    
+
+
+
+
+    // TODO put that in a if(cube_or_not)
     vec2 wh = get_width_height();
     for(auto& pair : g->nodes){
         double hash = pair.first;
         string key = "rs" + to_string(hash);
         vec3 position = pair.second.position;
-        bool behind;
-        vec2 pixel = gs->coordinate_to_pixel(position, behind);
+        float distance;
+        vec2 pixel = gs->coordinate_to_pixel(position, distance);
         vec2 fraction = pixel / wh;
         state.set(key+".x", (fraction.x));
         state.set(key+".y", (fraction.y));
     }
+    
+    
+
+
     CompositeScene::draw();
+    
+
+    // print the size of the graph
+    cout << "Graph size: " << gs->graph->size() << " nodes";
 }

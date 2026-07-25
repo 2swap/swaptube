@@ -132,8 +132,8 @@ void GraphScene::draw(){
             }
         }
         if (nrd.label_size > 0.1 && nrd.label != "") {
-            bool behind_camera = false;
-            vec2 pos = coordinate_to_pixel(node.position, behind_camera) + label_offset * get_width_height();
+            float distance;
+            vec2 pos = coordinate_to_pixel(node.position, distance) + label_offset * get_width_height();
             vec2 dim = label_size * get_width_height() * nrd.label_size * state["node_labels_size"];
             //write_text(labels, latex_color(label_color, nrd.label), pos, dim, 1);
         }
@@ -159,10 +159,10 @@ void GraphScene::draw(){
             }
 
             if(erd.label != "" && erd.label_size > 0.1) {
-                bool behind_camera = false;
-                vec2 node_screen_pos = coordinate_to_pixel(node_pos, behind_camera);
-                vec2 neighbor_screen_pos = coordinate_to_pixel(neighbor_pos, behind_camera);
-                if(behind_camera) continue;
+                float distance;
+                vec2 node_screen_pos = coordinate_to_pixel(node_pos, distance);
+                vec2 neighbor_screen_pos = coordinate_to_pixel(neighbor_pos, distance);
+                if(distance <= 0) continue;
                 float angle = atan2(neighbor_screen_pos.y - node_screen_pos.y, neighbor_screen_pos.x - node_screen_pos.x);
                 // Make the angle fit into -pi/2, pi/2.
                 float text_rotation_angle = angle;

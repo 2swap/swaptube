@@ -38,7 +38,7 @@ class ThreeDimensionScene : public SuperScene {
 public:
     ThreeDimensionScene(const vec2& dimensions = vec2(1, 1));
 
-    vec2 coordinate_to_pixel(vec3 coordinate, bool& behind_camera);
+    vec2 coordinate_to_pixel(vec3 coordinate, float& distance);
 
     bool isOutsideScreen(const vec2& point);
 

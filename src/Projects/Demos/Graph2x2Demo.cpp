@@ -18,16 +18,19 @@ void render_video() {
     });
 
     stage_macroblock(SilenceBlock(2), 1);
-    rgs.add_cube("", false);
+    rgs.add_cube("", true);
     rgs.render_microblock();
 
-    for(int i = 0; i < 5; i++) {
-        stage_macroblock(SilenceBlock(2), 1);
+    for(int i = 0; i < 3; i++) {
+        stage_macroblock(SilenceBlock(1), 1);
         rgs.manager.transition(MICRO, "d", to_string(d));
-        d*=4;
-        rgs.add_children();
+        d*=1.5;
+        rgs.add_children({"R", "U", "R'", "U'"}, true);
         rgs.render_microblock();
-        // print the size of the graph
-        cout << "Graph size: " << rgs.gs->graph->size() << " nodes";
     }
+
+    stage_macroblock(SilenceBlock(5), 1);
+    rgs.render_microblock();
+
+    cout << "Graph size: " << rgs.gs->graph->size() << " nodes";
 }
