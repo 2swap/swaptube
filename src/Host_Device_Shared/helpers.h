@@ -43,6 +43,20 @@ HOST_DEVICE inline float extended_mod(float a, float b) {
     return result;
 }
 
+HOST_DEVICE inline vec2 bezier(vec2 point1, vec2 point2, vec2 point3, vec2 point4, float t) {
+    float u = 1.0f - t;
+    float tt = t * t;
+    float uu = u * u;
+    float uuu = uu * u;
+    float ttt = tt * t;
+
+    vec2 p;
+    p.x = uuu * point1.x + 3.0f * uu * t * point2.x + 3.0f * u * tt * point3.x + ttt * point4.x;
+    p.y = uuu * point1.y + 3.0f * uu * t * point2.y + 3.0f * u * tt * point3.y + ttt * point4.y;
+
+    return p;
+}
+
 HOST_DEVICE inline vec2 pixel_to_point_in_screen(const vec2& pixel, const vec2& lx_ty, const vec2& rx_by, const vec2& wh) {
     const vec2 flip(pixel.x, wh.y-1-pixel.y);
     return flip * (rx_by - lx_ty) / wh + lx_ty;
