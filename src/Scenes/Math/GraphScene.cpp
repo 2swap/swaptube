@@ -114,8 +114,6 @@ void GraphScene::draw(){
 
     float midpoint_thickness = .35 * state["midpoint_multiplier"];
 
-    //Pixels labels(pix.wh);
-
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     // I can't think of a good pattern though.
     for(pair<double, Node> p : graph->nodes){
@@ -135,7 +133,7 @@ void GraphScene::draw(){
             float distance;
             vec2 pos = coordinate_to_pixel(node.position, distance) + label_offset * get_width_height();
             vec2 dim = label_size * get_width_height() * nrd.label_size * state["node_labels_size"];
-            //write_text(labels, latex_color(label_color, nrd.label), pos, dim, 1);
+            write_text(gpu_pix->get_ptr(), gpu_pix->get_wh(), latex_color(label_color, nrd.label), pos, dim, 1, 0);
         }
 
         for(const Edge& neighbor_edge : node.neighbors){
@@ -176,7 +174,7 @@ void GraphScene::draw(){
                 if (erd.label.size() <= 2) { // Simple edge weights (2 digit numbers) dont need rotation
                     text_rotation_angle = 0;
                 }
-                //write_text(labels, erd.label, pos, dim, 1, text_rotation_angle);
+                write_text(gpu_pix->get_ptr(), gpu_pix->get_wh(), erd.label, pos, dim, 1, text_rotation_angle);
             }
         }
     }
@@ -192,8 +190,6 @@ void GraphScene::draw(){
     }
 
     ThreeDimensionScene::draw();
-
-    //pix.overlay_gpu(labels, vec2(0,0), 1);
 }
 
 const StateQuery GraphScene::populate_state_query() const {

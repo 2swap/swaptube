@@ -18,8 +18,8 @@ public:
     void draw() override;
 
 private:
-    Pixels last_pixels;
-    Pixels next_pixels;
+    DevicePointer last_pixels;
+    DevicePointer next_pixels;
     unsigned int last_num_glyphs;
     unsigned int next_num_glyphs;
     Interpolation interp;

@@ -19,6 +19,8 @@ WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, con
         {"crop_left", "0"},
         {"crop_right", "1"},
     });
+    ScalingParams sp = ScalingParams(get_width_height() * vec2(1, .13));
+    author_pixels = latex_to_gpu_pix("\\text{" + author + "}", sp);
 }
 
 void WhitePaperScene::draw() {
@@ -77,14 +79,9 @@ void WhitePaperScene::draw() {
         cuda_free_pixels_on_device(scaled_ptr);
     }
 
-    ScalingParams sp = ScalingParams(get_width_height() * vec2(1, .13));
-    Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
     float offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
-    uint32_t* text_ptr = cuda_alloc_pixels_on_device(text_pixels.wh.x * text_pixels.wh.y);
-    cuda_copy_pixels_to_device(text_pixels.pixels.data(), text_pixels.wh.x * text_pixels.wh.y, text_ptr);
-    const vec2 text_offset((get_width() - text_pixels.wh.x) / 2, offset_y);
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), text_ptr, text_pixels.wh, text_offset, 1.0f, 0.0f);
-    cuda_free_pixels_on_device(text_ptr);
+    const vec2 author_offset((get_width() - author_pixels.get_wh().x) / 2, offset_y);
+    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), author_pixels.get_ptr(), author_pixels.get_wh(), author_offset, 1.0f, 0.0f);
 }
 
 const StateQuery WhitePaperScene::populate_state_query() const {

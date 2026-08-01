@@ -26,7 +26,7 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
     cout << "Set remaining microblocks in macroblock to " << to_string(remaining_microblocks_in_macroblock) << endl;
     macroblock.write_shtooka();
 
-    get_writer().audio->encode_buffers();
+    //get_writer().audio->encode_buffers();
 
     total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
     if (!rendering_on()) total_frames_in_macroblock = min(10, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
@@ -197,7 +197,7 @@ double Scene::get_geom_mean_size() { return geom_mean(get_width(),get_height());
 
 void Scene::export_frame(const string& filename, int scaledown) {
     Pixels pix(get_width_height());
-    gpu_pix->copy_to_host(pix.pixels.data(), get_width_height());
+    gpu_pix->copy_to_host(pix.pixels.data());
     pix_to_png(pix.naive_scale_down(scaledown), "io_out/frames/frame_"+filename+".png");
 }
 

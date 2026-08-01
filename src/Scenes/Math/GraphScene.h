@@ -4,6 +4,7 @@
 #include "../Common/ThreeDimensionScene.h"
 #include "../../DataObjects/Graph.h"
 #include "../../DataObjects/GraphDrawingConfig.h"
+#include "../../IO/Latex.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>

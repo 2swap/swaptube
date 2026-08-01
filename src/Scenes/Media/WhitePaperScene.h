@@ -1,6 +1,6 @@
 #pragma once
 #include "../../IO/PNG.h"
-#include "../../IO/SVG.h"
+#include "../../IO/Latex.h"
 #include "../Scene.h"
 #include <vector>
 #include <string>
@@ -14,6 +14,7 @@ public:
     const StateQuery populate_state_query() const override;
 
 private:
+    DevicePointer author_pixels;
     const string prefix;
     const string author;
     const vector<int> page_numbers;

@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include "../../Core/Smoketest.h"
 #include "../../Core/Convolution.h"
-#include "../../IO/SVG.h"
+#include "../../IO/Latex.h"
 
 extern "C" Interpolation stage_interpolation(
     const uint32_t* h_pix_1, const ivec2 wh_1, const int num_glyphs_1,
@@ -11,7 +11,7 @@ extern "C" Interpolation stage_interpolation(
 extern "C" void interpolate(
     const Interpolation& interpolation, const float t,
     uint32_t* d_output_pix, const ivec2 output_wh);
-extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
+extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
 extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
 extern "C" void cuda_overlay (
@@ -22,7 +22,7 @@ extern "C" void cuda_overlay (
 LatexScene::LatexScene(const string& l, double box_scale, const vec2& dimensions)
 : Scene(dimensions), box_scale(box_scale) {
     ScalingParams sp(get_width_height() * box_scale);
-    last_pixels = next_pixels = latex_to_pix(l, sp);
+    last_pixels = next_pixels = latex_to_gpu_pix(l, sp);
     scale_factor = sp.scale_factor;
 }
 
@@ -38,12 +38,18 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
     transitioning = true;
     transition_type = tt;
     last_pixels = next_pixels;
-    next_pixels = latex_to_pix(l, sp);
-    Pixels last_segmented = segment(last_pixels, last_num_glyphs);
-    Pixels next_segmented = segment(next_pixels, next_num_glyphs);
+    next_pixels = latex_to_gpu_pix(l, sp);
+    Pixels last_pixels_cpu(last_pixels.get_wh());
+    Pixels next_pixels_cpu(next_pixels.get_wh());
+    ivec2 last_wh = last_pixels_cpu.wh;
+    ivec2 next_wh = next_pixels_cpu.wh;
+    cuda_copy_pixels_to_host(last_pixels_cpu.pixels.data(), last_wh.x*last_wh.y, last_pixels.get_ptr());
+    cuda_copy_pixels_to_host(next_pixels_cpu.pixels.data(), next_wh.x*next_wh.y, next_pixels.get_ptr());
+    Pixels last_segmented = segment(last_pixels_cpu, last_num_glyphs);
+    Pixels next_segmented = segment(next_pixels_cpu, next_num_glyphs);
     interp = stage_interpolation(
-        last_segmented.pixels.data(), last_pixels.wh, last_num_glyphs,
-        next_segmented.pixels.data(), next_pixels.wh, next_num_glyphs
+        last_segmented.pixels.data(), last_pixels_cpu.wh, last_num_glyphs,
+        next_segmented.pixels.data(), next_pixels_cpu.wh, next_num_glyphs
     );
     cout << "LatexScene: Transition started with scale factor: " << sp.scale_factor << endl;
 }
@@ -55,11 +61,9 @@ void LatexScene::draw() {
             gpu_pix->get_ptr(), get_width_height()
         );
     } else {
-        vec2 offset = (get_width_height() - last_pixels.wh) / 2.0f;
-        uint32_t* frame_ptr = cuda_alloc_pixels_on_device(last_pixels.wh.x * last_pixels.wh.y);
-        cuda_copy_pixels_to_device(last_pixels.pixels.data(), last_pixels.wh.x * last_pixels.wh.y, frame_ptr);
-        cuda_overlay(gpu_pix->get_ptr(), get_width_height(), frame_ptr, last_pixels.wh, offset, 1.0f, 0.0f);
-        cuda_free_pixels_on_device(frame_ptr);
+        vec2 offset = (get_width_height() - last_pixels.get_wh()) / 2.0f;
+        cuda_overlay(gpu_pix->get_ptr(), get_width_height(),
+            last_pixels.get_ptr(), last_pixels.get_wh(), offset, 1.0f, 0.0f);
     }
 }
 
@@ -72,7 +76,7 @@ void LatexScene::on_end_transition_extra_behavior(const TransitionType tt) {
 
 void LatexScene::jump_latex(string l) {
     ScalingParams sp(scale_factor);
-    next_pixels = last_pixels = latex_to_pix(l, sp);
+    next_pixels = last_pixels = latex_to_gpu_pix(l, sp);
     transitioning = false;
 }
 

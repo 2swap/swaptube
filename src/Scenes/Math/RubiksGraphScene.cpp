@@ -136,12 +136,6 @@ void RubiksGraphScene::draw() {
 
 
 
-
-    
-
-
-
-
     // TODO put that in a if(cube_or_not)
     vec2 wh = get_width_height();
     for(auto& pair : g->nodes){
@@ -154,12 +148,7 @@ void RubiksGraphScene::draw() {
         state.set(key+".x", (fraction.x));
         state.set(key+".y", (fraction.y));
     }
-    
-    
-
-
     CompositeScene::draw();
-    
 
     // print the size of the graph
     cout << "Graph size: " << gs->graph->size() << " nodes";
