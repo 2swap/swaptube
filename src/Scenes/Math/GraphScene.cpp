@@ -170,7 +170,7 @@ void GraphScene::draw(){
                 vec2 offset = edge_label_offset * vec2(cos(angle), sin(angle)) * get_geom_mean_size();
                 vec2 midpoint = (node_screen_pos + neighbor_screen_pos) / 2;
                 vec2 pos = midpoint + offset;
-                vec2 dim = vec2(0.4, 0.06) * get_width_height() * erd.label_size;
+                vec2 dim = vec2(0.8, 0.12) * get_width_height() * erd.label_size;
                 if (erd.label.size() <= 2) { // Simple edge weights (2 digit numbers) dont need rotation
                     text_rotation_angle = 0;
                 }

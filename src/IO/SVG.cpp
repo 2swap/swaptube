@@ -29,7 +29,7 @@ static gboolean get_svg_intrinsic_size(RsvgHandle *handle, gdouble* width, gdoub
     #endif
 }
 
-DevicePointer svg_to_gpu_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
+shared_ptr<DevicePointer> svg_to_gpu_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
     // Check if the filename already ends with ".svg"
     string filename = "io_in/" + filename_with_or_without_suffix;
     if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".svg") {
@@ -126,8 +126,8 @@ DevicePointer svg_to_gpu_pix(const string& filename_with_or_without_suffix, Scal
     Pixels ret;
     copy.crop_by_alpha(ret);
 
-    DevicePointer dp(ret.wh);
-    dp.copy_to_device(ret.pixels.data());
+    shared_ptr<DevicePointer> dp = make_shared<DevicePointer>(ret.wh);
+    dp->copy_to_device(ret.pixels.data());
 
     return dp;
 }

@@ -39,12 +39,12 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
     transition_type = tt;
     last_pixels = next_pixels;
     next_pixels = latex_to_gpu_pix(l, sp);
-    Pixels last_pixels_cpu(last_pixels.get_wh());
-    Pixels next_pixels_cpu(next_pixels.get_wh());
+    Pixels last_pixels_cpu(last_pixels->get_wh());
+    Pixels next_pixels_cpu(next_pixels->get_wh());
     ivec2 last_wh = last_pixels_cpu.wh;
     ivec2 next_wh = next_pixels_cpu.wh;
-    cuda_copy_pixels_to_host(last_pixels_cpu.pixels.data(), last_wh.x*last_wh.y, last_pixels.get_ptr());
-    cuda_copy_pixels_to_host(next_pixels_cpu.pixels.data(), next_wh.x*next_wh.y, next_pixels.get_ptr());
+    cuda_copy_pixels_to_host(last_pixels_cpu.pixels.data(), last_wh.x*last_wh.y, last_pixels->get_ptr());
+    cuda_copy_pixels_to_host(next_pixels_cpu.pixels.data(), next_wh.x*next_wh.y, next_pixels->get_ptr());
     Pixels last_segmented = segment(last_pixels_cpu, last_num_glyphs);
     Pixels next_segmented = segment(next_pixels_cpu, next_num_glyphs);
     interp = stage_interpolation(
@@ -61,9 +61,9 @@ void LatexScene::draw() {
             gpu_pix->get_ptr(), get_width_height()
         );
     } else {
-        vec2 offset = (get_width_height() - last_pixels.get_wh()) / 2.0f;
+        vec2 offset = (get_width_height() - last_pixels->get_wh()) / 2.0f;
         cuda_overlay(gpu_pix->get_ptr(), get_width_height(),
-            last_pixels.get_ptr(), last_pixels.get_wh(), offset, 1.0f, 0.0f);
+            last_pixels->get_ptr(), last_pixels->get_wh(), offset, 1.0f, 0.0f);
     }
 }
 

@@ -80,8 +80,8 @@ void WhitePaperScene::draw() {
     }
 
     float offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
-    const vec2 author_offset((get_width() - author_pixels.get_wh().x) / 2, offset_y);
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), author_pixels.get_ptr(), author_pixels.get_wh(), author_offset, 1.0f, 0.0f);
+    const vec2 author_offset((get_width() - author_pixels->get_wh().x) / 2, offset_y);
+    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), author_pixels->get_ptr(), author_pixels->get_wh(), author_offset, 1.0f, 0.0f);
 }
 
 const StateQuery WhitePaperScene::populate_state_query() const {

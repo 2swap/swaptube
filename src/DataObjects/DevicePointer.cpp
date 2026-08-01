@@ -15,6 +15,7 @@ DevicePointer::DevicePointer(const ivec2& wh) : wh(wh) {
 DevicePointer::DevicePointer() : wh(ivec2(0,0)) { }
 
 DevicePointer::~DevicePointer() {
+    cout << "Freeing device pointer of size " << wh.x << " by " << wh.y << endl;
     mark_updated();
     cuda_free_pixels_on_device(device_ptr);
 }
@@ -42,7 +43,7 @@ void DevicePointer::copy_to_host(uint32_t* host_ptr) {
 }
 
 void DevicePointer::copy_to_device(uint32_t* host_ptr) {
-    cuda_copy_pixels_to_host(host_ptr, wh.x * wh.y, device_ptr);
+    cuda_copy_pixels_to_device(host_ptr, wh.x * wh.y, device_ptr);
 }
 
 ivec2 DevicePointer::get_wh() const {

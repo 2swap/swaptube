@@ -14,7 +14,7 @@ public:
     const StateQuery populate_state_query() const override;
 
 private:
-    DevicePointer author_pixels;
+    shared_ptr<DevicePointer> author_pixels;
     const string prefix;
     const string author;
     const vector<int> page_numbers;

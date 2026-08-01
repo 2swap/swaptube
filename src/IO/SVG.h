@@ -6,4 +6,4 @@
 #include "ScalingParams.h"
 #include <cstdint>
 
-DevicePointer svg_to_gpu_pix(const std::string& filename_with_or_without_suffix, ScalingParams& scaling_params);
+shared_ptr<DevicePointer> svg_to_gpu_pix(const std::string& filename_with_or_without_suffix, ScalingParams& scaling_params);

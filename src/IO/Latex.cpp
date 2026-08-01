@@ -47,7 +47,7 @@ struct StringIntPairEq {
 };
 
 // Create an unordered_map to store the cached results
-unordered_map<string, pair<DevicePointer, double>> latex_cache;
+unordered_map<string, pair<shared_ptr<DevicePointer>, double>> latex_cache;
 
 static string generate_cache_key(const string& text, const ScalingParams& scaling_params) {
     hash<string> hasher;
@@ -61,7 +61,7 @@ static string generate_cache_key(const string& text, const ScalingParams& scalin
 /*
  * We use MicroTEX to convert LaTeX equations into svg files.
  */
-DevicePointer latex_to_gpu_pix(const string& latex, ScalingParams& scaling_params) {
+shared_ptr<DevicePointer> latex_to_gpu_pix(const string& latex, ScalingParams& scaling_params) {
     // Generate a cache key based on the equation and scaling parameters
     string cache_key = generate_cache_key(latex, scaling_params);
 
@@ -91,14 +91,14 @@ DevicePointer latex_to_gpu_pix(const string& latex, ScalingParams& scaling_param
     }
 
     // System call successful, return the generated SVG
-    DevicePointer dp = svg_to_gpu_pix("latex/" + name_without_folder, scaling_params);
-    latex_cache[cache_key] = make_pair(dp, scaling_params.scale_factor); // Cache the result before returning
-    return dp;
+    shared_ptr<DevicePointer> text = svg_to_gpu_pix("latex/" + name_without_folder, scaling_params);
+    latex_cache[cache_key] = make_pair(text, scaling_params.scale_factor); // Cache the result before returning
+    return text;
 }
 
 void write_text(uint32_t* gpu_pix, const ivec2& canvas_wh, const std::string& latex, const vec2& center, const vec2& text_envelope, const double opacity, const float angle_rad) {
     ScalingParams scaling_params(text_envelope);
 
-    DevicePointer text = latex_to_gpu_pix(latex, scaling_params);
-    cuda_overlay(gpu_pix, canvas_wh, text.get_ptr(), text.get_wh(), center, opacity, angle_rad);
+    shared_ptr<DevicePointer> text = latex_to_gpu_pix(latex, scaling_params);
+    cuda_overlay(gpu_pix, canvas_wh, text->get_ptr(), text->get_wh(), center, opacity, angle_rad);
 }

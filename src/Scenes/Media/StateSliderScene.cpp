@@ -52,9 +52,9 @@ void StateSliderScene::draw() {
     draw_slider();
     if(display_name != "") {
         string eqn_str = display_name + " = " + double_to_string(state["value"]);
-        DevicePointer equation_pixels(latex_to_gpu_pix(eqn_str, sp));
-        vec2 text_pos(0, (wh.y-equation_pixels.get_wh().y)/2.);
-        cuda_overlay(gpu_pix->get_ptr(), wh, equation_pixels.get_ptr(), equation_pixels.get_wh(), text_pos, 1.0, 0.0);
+        shared_ptr<DevicePointer> equation_pixels(latex_to_gpu_pix(eqn_str, sp));
+        vec2 text_pos(0, (wh.y-equation_pixels->get_wh().y)/2.);
+        cuda_overlay(gpu_pix->get_ptr(), wh, equation_pixels->get_ptr(), equation_pixels->get_wh(), text_pos, 1.0, 0.0);
     }
 }
 

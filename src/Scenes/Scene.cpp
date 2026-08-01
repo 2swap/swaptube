@@ -149,9 +149,10 @@ void Scene::render_microblock(){
             int roundedFrameNumber = round(get_global_state("frame_number"));
             ostringstream stream;
             stream << setw(6) << setfill('0') << roundedFrameNumber;
-            export_frame(stream.str(), 1);
+            //export_frame(stream.str(), 1);
         }
     }
+    
     on_end_transition(MICRO);
     if(done_macroblock) on_end_transition(MACRO);
     cout << "} " << flush;
