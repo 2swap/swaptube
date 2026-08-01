@@ -42,7 +42,7 @@ extern "C" void preprocess_argb_to_p010(
 );
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
-const bool USE_LIVE = true;
+const bool USE_LIVE = false;
 bool VideoWriter::encode_and_write_frame(AVFrame* frame){
     int ret = avcodec_send_frame(videoCodecContext, frame);
     //if (ret == AVERROR_EOF) return false;

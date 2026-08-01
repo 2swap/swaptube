@@ -26,7 +26,7 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
     cout << "Set remaining microblocks in macroblock to " << to_string(remaining_microblocks_in_macroblock) << endl;
     macroblock.write_shtooka();
 
-    //get_writer().audio->encode_buffers();
+    get_writer().audio->encode_buffers();
 
     total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
     if (!rendering_on()) total_frames_in_macroblock = min(10, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
