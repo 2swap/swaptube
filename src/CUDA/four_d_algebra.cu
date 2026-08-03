@@ -29,8 +29,8 @@ __device__ uint32_t accum_to_color(Cuda::vec3 a, float fade) {
     float az = min(1.0,fade*a.z);
 
     return Cuda::OKLABtoRGB(
-        255,
-        min(1.0,(ax+ay+az)*0.5),
+        min(1.0,(ax+ay+az)*0.5)*255,
+        1.0,
         (ax-ay)*0.866,
         (ax+ay)*0.5-az
     );

@@ -98,7 +98,6 @@ __global__ void two_render_real_valued_function(
     }
 
     if (dragger_type > 0){
-
         Cuda::vec2 dragger_delta = point - dragger_pos;
         float dragger_dist = dragger_delta.x*dragger_delta.x + dragger_delta.y*dragger_delta.y;
 
@@ -106,11 +105,9 @@ __global__ void two_render_real_valued_function(
             pixels[pixel.y * wh.x + pixel.x] = brightness+dragger_fill;
             return;
         } else if (dragger_dist < 0.05){
-            pixels[pixel.y * wh.x + pixel.x] = brightness+Cuda::colorlerp(dragger_fill, dragger_border, (dragger_dist-0.03)*50);
+            pixels[pixel.y * wh.x + pixel.x] = brightness+dragger_border;
             return;
-        } else if (dragger_dist < 0.07){
-            dragger_lerp = (0.07-dragger_dist)*50;
-        }
+        } 
     }
 
 
@@ -131,24 +128,25 @@ __global__ void two_render_real_valued_function(
     float x_size = abs(op_output.x);
     float y_size = abs(op_output.y);
 
+    float pixel_color = brightness+Cuda::OKLABtoRGB(0,1,op_output.x*0.1,op_output.y*0.1);
+    bool fill_pixel = false;
+
     if (x_size < 10 && y_size < 10){
-
-        if (!number_line ){
-            minDist = min(minDist, x_dist);
+        if (!number_line){
+            fill_pixel = x_dist < 0.02;
         }
-
         if (!number_line || y_size < 0.5){
-            minDist = min(minDist, y_dist);
-            minDist = min(minDist, (y_dist*y_dist + x_dist*x_dist)*2.5);
+            fill_pixel = fill_pixel || y_dist < 0.02 || y_dist*y_dist + x_dist*x_dist < 0.01;
         }
     }
-    distAccum += minDist;
 
+    if (fill_pixel){
+        pixels[pixel.y * wh.x + pixel.x] =  brightness+Cuda::OKLABtoRGB(0,1,op_output.x*0.1,op_output.y*0.1);
+    }
 
-    float whiteness = max(0.0, 1.0f - distAccum*16.0);
-    uint32_t color = Cuda::colorlerp(0x00000000, Cuda::OKLABtoRGB(0,1,op_output.x*0.1,op_output.y*0.1), whiteness);
-    // uint32_t color = Cuda::OKLABtoRGB(255,whiteness,x_eval*0.2,y_eval*0.2);
-    pixels[pixel.y * wh.x + pixel.x] =  brightness+Cuda::colorlerp(color,dragger_border,dragger_lerp);
+    // float whiteness = max(0.0, 1.0f - distAccum*16.0);
+    // uint32_t color = Cuda::colorlerp(0x00000000, Cuda::OKLABtoRGB(0,1,op_output.x*0.1,op_output.y*0.1), whiteness);
+    // pixels[pixel.y * wh.x + pixel.x] =  brightness+Cuda::colorlerp(color,dragger_border,dragger_lerp);
     // pixels[pixel.y * wh.x + pixel.x] = 0xff000000 | (color << 16) | (color << 8) | color;
 }
 
