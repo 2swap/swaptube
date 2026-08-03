@@ -150,7 +150,7 @@ void graph_one(){
 }
 
 void test_rope(){
-    RopeScene rs;
+    RopeScene rs("io_in/loop_example_0", vec2(1, 1));
     stage_macroblock(SilenceBlock(10), 1);
     
     rs.render_microblock();
@@ -159,6 +159,6 @@ void test_rope(){
 void render_video() {
     // CompositeScene cs;
     // intro(cs);
-    // test_rope();
-    cube_corner_in_center();
+    test_rope();
+    // cube_corner_in_center();
 }

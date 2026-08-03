@@ -9,7 +9,8 @@ extern "C" void copy_stickers(char d_stickers[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], 
 extern "C" void cuda_render_cube(
     uint32_t* d_pixels, const ivec2& wh,
     float geom_mean_size,
-    const quat& camera_direction, const vec3& camera_pos, float fov, float turn_fraction, quat rotation_quat, vec3 axis, float dist, char (*d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], int cube_size);
+    const quat& camera_direction, const vec3& camera_pos, const float fov, const float turn_fraction, const quat& rotation_quat,const vec3& axis, 
+    const float& dist, char (*d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], const int cube_size, const float internal_plastic_opacity);
 
 void RubiksScene::on_end_transition_extra_behavior(const TransitionType tt) {
 
@@ -28,6 +29,7 @@ RubiksScene::RubiksScene(const vec2& dimensions) : ThreeDimensionScene(dimension
         {"qi", "-0.25"},
         {"qj", "0.25"},
         {"fov", "2"},
+        {"internal_plastic_opacity", "1"},
     });
     the_cube = new Rubiks; // cube created here
     add_data_object(the_cube);
@@ -43,6 +45,7 @@ RubiksScene::RubiksScene(const CubeStickerPattern& pattern, const vec2& dimensio
         {"qi", "-0.25"},
         {"qj", "0.25"},
         {"fov", "2"},
+        {"internal_plastic_opacity", "1"},
     });
     the_cube = new Rubiks(pattern); // cube created here
     add_data_object(the_cube);
@@ -87,13 +90,14 @@ void RubiksScene::exec_move_from_slice(const std::string& token) {
 void RubiksScene::draw() {
     set_camera_direction();
     cuda_render_cube(gpu_pix->get_ptr(), get_width_height(), get_geom_mean_size(), camera_direction, 
-    camera_pos, fov, smoother2(state["turn_fraction"]) , rotation_quat, cut.axis, cut.dist, &d_stickers, state["cube_size"]);
+    camera_pos, fov, smoother2(state["turn_fraction"]) , rotation_quat, cut.axis, cut.dist, &d_stickers, 
+    state["cube_size"], state["internal_plastic_opacity"]);
     //ThreeDimensionScene::draw();
 }
 
 const StateQuery RubiksScene::populate_state_query() const {
     StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"turn_fraction", "cube_size"});
+    state_query_insert_multiple(s, {"turn_fraction", "cube_size", "internal_plastic_opacity"});
     return s;
 }
 

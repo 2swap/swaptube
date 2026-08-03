@@ -15,7 +15,7 @@ DevicePointer::DevicePointer(const ivec2& wh) : wh(wh) {
 DevicePointer::DevicePointer() : wh(ivec2(0,0)) { }
 
 DevicePointer::~DevicePointer() {
-    cout << "Freeing device pointer of size " << wh.x << " by " << wh.y << endl;
+    //cout << "Freeing device pointer of size " << wh.x << " by " << wh.y << endl;
     mark_updated();
     cuda_free_pixels_on_device(device_ptr);
 }

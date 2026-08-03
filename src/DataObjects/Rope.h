@@ -2,6 +2,7 @@
 
 #include <array>
 #include <string>
+#include <vector>
 #include "../Host_Device_Shared/vec.h"
 #include "../DataObjects/DataObject.h"
 
@@ -11,9 +12,13 @@ class Rope : public DataObject {
         vec2* d_nodes; //this is the first node's position actually
         vec2* d_pins;
 
-        void tick(const StateReturn& state);
+        vector<vec2> h_pins;
 
-        Rope(std::string file_name);
+        void tick(const StateReturn& state);
+        void add_pin(const vec2& pos);
+        void remove_pin(int pin_index);
+
+        Rope(const std::string& file_name);
 
 
 };

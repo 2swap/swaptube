@@ -166,9 +166,10 @@ __device__ __forceinline__ bool ray_cube_intersect(
 
 __global__ void render_cube_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh,
-    float geom_mean_size,
-    const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, float fov, 
-    int cube_size, float turn_fraction, Cuda::quat rotation_quat, const Cuda::vec3 slice_axis, float slice_dist, char d_stickers[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE])
+    const float geom_mean_size,
+    const Cuda::quat camera_direction, const Cuda::vec3 camera_pos, const float fov, 
+    const int cube_size, const float turn_fraction, Cuda::quat rotation_quat, const Cuda::vec3 slice_axis, const float slice_dist, 
+    char d_stickers[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], const bool internal_plastic_opacity)
 {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
@@ -184,7 +185,7 @@ __global__ void render_cube_kernel(
     Cuda::vec3 hit_point;
     char face_name = '?';
     bool have_hit = false;
-    bool is_internal_plastic = false; // Indique si on touche la découpe interne
+    bool is_internal_plastic = false;
     int col = -1, row = -1;
     float best_dist = 1e30f;
 
@@ -260,7 +261,7 @@ __global__ void render_cube_kernel(
     }
 
     uint32_t plastic_color = 0xFF000000;
-    if (is_internal_plastic) {
+    if (is_internal_plastic && internal_plastic_opacity==1) {
         pixels[pixel.x + wh.x * pixel.y] = plastic_color;
         return;
     }
@@ -329,14 +330,16 @@ __global__ void render_cube_kernel(
 extern "C" void cuda_render_cube(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
     float geom_mean_size,
-    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov, float turn_fraction, Cuda::quat rotation_quat, Cuda::vec3 slice_plane, float slice_dist, char (*d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], int cube_size)
+    const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, const float fov, const float turn_fraction, const Cuda::quat& rotation_quat, 
+    const Cuda::vec3& axis, 
+    const float& dist, char (*d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], const int cube_size, const float internal_plastic_opacity)
 {
     dim3 blockSize(16, 16);
     dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
     render_cube_kernel<<<gridSize, blockSize>>>(
         d_pixels, wh,
         geom_mean_size,
-        camera_direction, camera_pos, fov, cube_size, turn_fraction, rotation_quat, slice_plane, slice_dist, *d_stickers);
+        camera_direction, camera_pos, fov, cube_size, turn_fraction, rotation_quat, axis, dist, *d_stickers, internal_plastic_opacity);
     cudaDeviceSynchronize();
 }
 

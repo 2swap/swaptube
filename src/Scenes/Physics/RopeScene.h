@@ -10,11 +10,13 @@ class RopeScene : public CoordinateScene {
         
 
 
-        RopeScene(const vec2& dimensions = vec2(1, 1));
+        RopeScene(const string file_name, const vec2& dimensions = vec2(1, 1));
 
         void draw() override;
 
         const StateQuery populate_state_query() const override;
+        void add_pin(vec2 pos);
+        void remove_pin(int pin_index);
 
 
     private:

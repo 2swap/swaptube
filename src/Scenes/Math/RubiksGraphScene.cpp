@@ -54,7 +54,8 @@ const StateQuery RubiksGraphScene::populate_state_query() const{
     return ret;
 }
 
-void RubiksGraphScene::add_children(unordered_set<string> move_set, bool cube_or_not) {
+void RubiksGraphScene::add_children(unordered_set<string> move_set, bool cube_or_not, 
+    bool edge_label_or_not, bool cube_label_or_not) {
     Graph* g = gs->graph;
     auto nodes = g->nodes; // true copy
     for(auto& pair : nodes) {
@@ -65,20 +66,35 @@ void RubiksGraphScene::add_children(unordered_set<string> move_set, bool cube_or
             double child_hash = child.get_hash(cube_size);
             if (!g->node_exists(child_hash)){
                 patterns[child_hash] = child.pattern;
-                add_cube(child.pattern, cube_or_not);
+                add_cube(child.pattern, cube_or_not, cube_label_or_not);
                 cout << "+" << flush;
+            }
+        }
+    }
+    if (edge_label_or_not) {
+        // label the edges with the move that connects them
+        for(auto& pair : g->nodes) {
+            double hash = pair.first;
+            for(string s : move_set) {
+                Rubiks child(patterns[hash]);
+                child.exec(s);
+                double child_hash = child.get_hash(cube_size);
+                if (g->node_exists(child_hash)){
+                    //g->add_edge(hash, child_hash);
+                    gs->config->set_edge_label(hash, child_hash, s);
+                }
             }
         }
     }
 }
 
-void RubiksGraphScene::add_cube(const string& alg, bool cube_or_not) {
+void RubiksGraphScene::add_cube(const string& alg, bool cube_or_not, bool label_or_not) {
     Rubiks cube;
     cube.exec(alg);
-    add_cube(cube.pattern, cube_or_not);
+    add_cube(cube.pattern, cube_or_not, label_or_not);
 }
 
-void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_not) {
+void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_not, bool label_or_not) {
     Rubiks cube(pattern);
     double hash = cube.get_hash(cube_size);
 
@@ -100,7 +116,9 @@ void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_
 
     Graph* g = gs->graph;
     g->add_node(hash);
-    gs->config->set_node_label(hash, to_string(hash));
+    if (label_or_not){
+        gs->config->set_node_label(hash, to_string(hash));
+    }
     for(string s : move_set) {
         Rubiks child(pattern);
         child.exec(s);

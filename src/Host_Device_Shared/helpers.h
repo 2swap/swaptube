@@ -43,7 +43,7 @@ HOST_DEVICE inline float extended_mod(float a, float b) {
     return result;
 }
 
-HOST_DEVICE inline vec2 bezier(vec2 point1, vec2 point2, vec2 point3, vec2 point4, float t) {
+HOST_DEVICE inline vec2 bezier(const vec2& point1, const vec2& point2, const vec2& point3, const vec2& point4, float t) {
     float u = 1.0f - t;
     float tt = t * t;
     float uu = u * u;
