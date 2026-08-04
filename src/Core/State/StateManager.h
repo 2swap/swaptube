@@ -24,16 +24,16 @@ void state_query_insert_multiple(StateQuery& sq, const StateQuery& additions);
  * used to facilitate frame-by-frame manipulation of state.
  * It is composed of a number of equations which express how to update
  * certain variables in terms of others. Cyclical computations are not
- * permitted, such as "y=x+1" and "x=y", hence the DAG of computational
+ * permitted, such as "y=x+1; x=y", hence the DAG of computational
  * direction. Similarly, if there are equations such as "x=y" and "y=3",
  * StateManager will intentionally run the second equation first.
  */
 
 /* Parenthetical notation hints:
- * <w> : local state variable, such as scene width as fraction of screen
+ * <thing_opacity> : local state variable, such as scene width as fraction of screen
  * [defer_to_parent] : parent state variable, when sharing state between child scenes
- * {t} : global variable, such as time in seconds
- * (u) : A passthrough tag to be interpreted in CUDA, such as manifold colors
+ * {microblock_fraction} : global variable, such as time in seconds
+ * (a) : A passthrough tag to be interpreted in CUDA, such as manifold colors
  */
 
 struct VariableContents {
@@ -88,8 +88,8 @@ public:
     void remove(const string& variable);
     void remove(const unordered_set<string>& equations);
 
-    StateSet transition(TransitionType tt, const string& variable, const string& equation, bool smooth = true);
-    StateSet transition(TransitionType tt, const StateSet& equations, bool smooth = true);
+    StateSet transition(TransitionType tt, const string& variable, const string& equation, const bool smooth = true);
+    StateSet transition(TransitionType tt, const StateSet& equations, const bool smooth = true);
     void close_transitions(TransitionType tt);
 
     void set_parent(StateManager* p, const string& name);

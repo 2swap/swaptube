@@ -103,7 +103,7 @@ void PermutationScene::draw() {
         vec2 cp1 = control_points[1] + (control_points[2] - control_points[0]) * tension;
         vec2 cp2 = control_points[2] + (control_points[1] - control_points[3]) * tension;
 
-        vec2 center = point_to_pixel(bezier(
+        vec2 center = point_to_pixel(bezier_2d(
             control_points[1],
             cp1,
             cp2,

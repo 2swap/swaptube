@@ -125,19 +125,10 @@ __global__ void bezier_kernel(
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i >= 1000) return;
 
-    Cuda::vec2 point1 = point_to_pixel_in_screen(bezier(
-            p1,
-            p2,
-            p3,
-            p4,
-            i/1000.0f), lx_ty, rx_by, wh);
-    Cuda::vec2 point2 = point_to_pixel_in_screen(bezier(
-            p1,
-            p2,
-            p3,
-            p4,
-            (i+1)/1000.0f), lx_ty, rx_by, wh);
-
+    Cuda::vec2 point1 = point_to_pixel_in_screen(bezier_2d(
+            p1, p2, p3, p4, i/1000.0f), lx_ty, rx_by, wh);
+    Cuda::vec2 point2 = point_to_pixel_in_screen(bezier_2d(
+            p1, p2, p3, p4, (i+1)/1000.0f), lx_ty, rx_by, wh);
 
     bresenham(point1.x, point1.y, point2.x, point2.y, 0xFFFFFFFF, 1.0f, 2, pix, wh, false);
 }

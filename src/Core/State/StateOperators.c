@@ -31,6 +31,7 @@ enum StateOperator {
     OP_NEQ,
     OP_SMOOTHLERP,
     OP_LERP,
+    OP_BEZIER,
     OP_LOGISTIC,
     OP_MIN,
     OP_MAX,
@@ -64,6 +65,7 @@ HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
         case OP_NEQ:        return 2;
         case OP_SMOOTHLERP: return 3;
         case OP_LERP:       return 3;
+        case OP_BEZIER:     return 5;
         case OP_LOGISTIC:   return 1;
         case OP_MIN:        return 2;
         case OP_MAX:        return 2;
@@ -99,6 +101,7 @@ HOST_DEVICE inline static float evaluate_operator(StateOperator op, float *a) {
         case OP_NEQ:        return fabsf(a[0] - a[1]) >= 1e-9 ? 1.0f : 0.0f;
         case OP_SMOOTHLERP: return smoothlerp(a[0], a[1], a[2]);
         case OP_LERP:       return a[0] + a[2] * (a[1] - a[0]);
+        case OP_BEZIER:     return bezier(a[0], a[1], a[2], a[3], a[4]);
         case OP_LOGISTIC:   return 1.0f / (1.0f + expf(-a[0]));
         case OP_MIN:        return fminf(a[0], a[1]);
         case OP_MAX:        return fmaxf(a[0], a[1]);
@@ -135,6 +138,7 @@ HOST_DEVICE const inline char* state_operator_to_string(StateOperator op){
         case OP_NEQ: return "!==";
         case OP_SMOOTHLERP: return "smoothlerp";
         case OP_LERP: return "lerp";
+        case OP_BEZIER: return "bezier";
         case OP_LOGISTIC: return "logistic";
         case OP_MIN: return "min";
         case OP_MAX: return "max";
@@ -169,6 +173,7 @@ StateOperator inline parse_state_operator(const char* in){
     if(strcmp(in, "!==") == 0) return OP_NEQ;
     if(strcmp(in, "smoothlerp") == 0) return OP_SMOOTHLERP;
     if(strcmp(in, "lerp") == 0) return OP_LERP;
+    if(strcmp(in, "bezier") == 0) return OP_BEZIER;
     if(strcmp(in, "logistic") == 0) return OP_LOGISTIC;
     if(strcmp(in, "min") == 0) return OP_MIN;
     if(strcmp(in, "max") == 0) return OP_MAX;

@@ -157,7 +157,7 @@ StateSet StateManager::transition(const TransitionType tt, const string& variabl
 
     // No point in doing a noop transition
     if(eq1 != equation) {
-        string lerp_both = eq1 + " " + equation + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} " + (smooth?"smooth":"") + "lerp";
+        string lerp_both = eq1 + " " + equation + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} " + (smooth ? "smoothlerp":"lerp");
         set(variable+".post_transition", equation);
         set(variable, lerp_both);
              if(tt == MICRO) in_microblock_transition.insert(variable);
@@ -166,7 +166,7 @@ StateSet StateManager::transition(const TransitionType tt, const string& variabl
 
     return { {variable, eq1} };
 }
-StateSet StateManager::transition(const TransitionType tt, const StateSet& equations, bool smooth) {
+StateSet StateManager::transition(const TransitionType tt, const StateSet& equations, const bool smooth) {
     StateSet ret = {};
     for(auto it = equations.begin(); it != equations.end(); it++){
         StateSet prev = transition(tt, it->first, it->second, smooth);
