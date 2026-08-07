@@ -1,3 +1,5 @@
+#pragma once
+
 const int CODON_MEM_LIMIT = 400;
 
 struct TuringMachine {
