@@ -61,7 +61,7 @@ void LatexScene::draw() {
             gpu_pix->get_ptr(), get_width_height()
         );
     } else {
-        vec2 offset = (get_width_height() - last_pixels->get_wh()) / 2.0f;
+        vec2 offset = get_width_height() / 2.0f;
         cuda_overlay(gpu_pix->get_ptr(), get_width_height(),
             last_pixels->get_ptr(), last_pixels->get_wh(), offset, 1.0f, 0.0f);
     }

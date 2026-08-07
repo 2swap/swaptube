@@ -41,9 +41,7 @@ void CompositeScene::draw() {
         Pixels* p = nullptr;
         std::shared_ptr<Scene> subscene = subscenes[name];
         uint32_t* subscene_gpu_pix = subscene->query();
-        const vec2 xy(wh * vec2(state[name + ".x"], state[name + ".y"]));
-
-        const vec2 center = xy - subscene->get_width_height()/2;
+        const vec2 center(wh * vec2(state[name + ".x"], state[name + ".y"]));
 
         cuda_overlay(
             gpu_pix->get_ptr(), wh,

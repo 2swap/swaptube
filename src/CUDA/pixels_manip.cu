@@ -116,7 +116,8 @@ __global__ void overlay_kernel(
     Cuda::ivec2 b_pos(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
     if (b_pos.x >= b_wh.x || b_pos.y >= b_wh.y) return;
 
-    Cuda::ivec2 f_pos(b_pos - floor(center));
+    Cuda::ivec2 top_left = floor(center - (f_wh * 0.5f));
+    Cuda::ivec2 f_pos(b_pos - top_left);
     if (f_pos.x < 0 || f_pos.x >= f_wh.x || f_pos.y < 0 || f_pos.y >= f_wh.y) return;
 
     overlay_pixel(b_pos, foreground[f_pos.y * f_wh.x + f_pos.x], opacity, background, b_wh);
@@ -130,7 +131,7 @@ __global__ void overlay_rotation_kernel(
     Cuda::ivec2 b_pos(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
     if (b_pos.x >= b_wh.x || b_pos.y >= b_wh.y) return;
 
-    // Compute position relative to overlay top-left
+    // Compute position relative to overlay center
     Cuda::vec2 rel_pos = b_pos - center;
 
     // Center of the foreground

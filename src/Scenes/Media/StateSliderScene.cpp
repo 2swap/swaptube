@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include "../../IO/Latex.h"
 
 using std::string;
 using std::ostringstream;
@@ -10,10 +11,6 @@ using std::fixed;
 using std::setprecision;
 
 extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
-extern "C" void cuda_overlay (
-    uint32_t* background, const ivec2& b_wh,
-    const uint32_t* foreground, const ivec2& f_wh,
-    const vec2& center, const float opacity, const float angle_rad);
 extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
 extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
@@ -47,14 +44,12 @@ StateSliderScene::StateSliderScene(const string& vn, const string& dn, double mi
 }
 
 void StateSliderScene::draw() {
-    const ivec2 wh(get_width_height());
-    ScalingParams sp(wh * vec2(1, .6));
     draw_slider();
     if(display_name != "") {
+        const ivec2 wh = get_width_height();
+        ScalingParams sp(wh * vec2(1, .6));
         string eqn_str = display_name + " = " + double_to_string(state["value"]);
-        shared_ptr<DevicePointer> equation_pixels(latex_to_gpu_pix(eqn_str, sp));
-        vec2 text_pos(0, (wh.y-equation_pixels->get_wh().y)/2.);
-        cuda_overlay(gpu_pix->get_ptr(), wh, equation_pixels->get_ptr(), equation_pixels->get_wh(), text_pos, 1.0, 0.0);
+        write_text(gpu_pix->get_ptr(), wh, eqn_str, wh/2, wh, 1.0, 0.0);
     }
 }
 

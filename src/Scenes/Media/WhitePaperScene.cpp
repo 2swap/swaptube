@@ -66,7 +66,6 @@ void WhitePaperScene::draw() {
 
         const vec2 center(.5 + pages_centered * (.08 + .08*(1-square(1-completion))),
                            (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05));
-        const vec2 offset = get_width_height() * center - scaled.wh * .5;
 
         float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
 
@@ -74,13 +73,13 @@ void WhitePaperScene::draw() {
         cuda_copy_pixels_to_device(scaled.pixels.data(), scaled.wh.x * scaled.wh.y, scaled_ptr);
 
         // Overwrite the scaled image onto the scene's pixel buffer
+        const vec2 offset = get_width_height() * center;
         cuda_overlay(gpu_pix->get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
 
         cuda_free_pixels_on_device(scaled_ptr);
     }
 
-    float offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
-    const vec2 author_offset((get_width() - author_pixels->get_wh().x) / 2, offset_y);
+    const vec2 author_offset = get_width_height() * vec2(.5, smoothlerp(-.1, .07, state["completion"]));
     cuda_overlay(gpu_pix->get_ptr(), get_width_height(), author_pixels->get_ptr(), author_pixels->get_wh(), author_offset, 1.0f, 0.0f);
 }
 
