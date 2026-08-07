@@ -1,5 +1,4 @@
 #include "../Scenes/Common/CompositeScene.h"
-#include "../Scenes/Common/TwoswapScene.h"
 #include "../Scenes/Physics/MovingPendulumGridScene.h"
 #include "../Scenes/Math/LambdaScene.h"
 #include "../Scenes/Math/RootFractalScene.h"
@@ -8,20 +7,8 @@
 void render_video() {
     CompositeScene cs;
 
-    shared_ptr<TwoswapScene> ts = make_shared<TwoswapScene>();
-    cs.add_scene(ts, "ts");
-    stage_macroblock(SilenceBlock(2), 4);
-    cs.render_microblock();
-    ts->manager.transition(MICRO, {
-        {"2swap_effect_completion", "1"}
-    });
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-
     shared_ptr<Scene> ms = make_shared<MovingPendulumGridScene>();
-    cs.fade_subscene(MICRO, "ts", 0);
-    cs.add_scene_fade_in(MICRO, ms, "ms");
+    cs.add_scene(ms, "ms");
     stage_macroblock(SilenceBlock(2.5), 5);
     ms->manager.set({
         {"mode", "3"},

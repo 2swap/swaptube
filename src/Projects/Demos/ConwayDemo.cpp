@@ -1,9 +1,13 @@
 #include "../Scenes/Math/ConwayScene.h"
-#include "../IO/SVG.h"
+#include "../IO/Latex.h"
+
+extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
 void render_video() {
     ScalingParams sp(ivec2(1000, 1000));
-    Pixels env = latex_to_pix("\\text{I really} \\\\\\\\ \\text{loved your} \\\\\\\\ \\text{crochet talk!}", sp);
+    shared_ptr<DevicePointer> ourdemo = latex_to_gpu_pix("\\text{I really} \\\\\\\\ \\text{loved your} \\\\\\\\ \\text{crochet talk!}", sp);
+    Pixels env(ivec2(1000, 1000));
+    cuda_copy_pixels_to_host(env.pixels.data(), env.wh.x * env.wh.y, ourdemo->get_ptr());
     ConwayScene cs(ivec2(20000,20000), env);
 
     cs.manager.set("zoom", "-2");
