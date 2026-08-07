@@ -44,9 +44,9 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
         {"yy_y", "0"},
 
         {"diagram_opacity", "0"},
-        {"diagram_xx", "0"},
-        {"diagram_xy", "0"},
-        {"diagram_yy", "0"},
+        {"xx_opacity", "0"},
+        {"xy_opacity", "0"},
+        {"yy_opacity", "0"},
         
     });
 }
@@ -57,9 +57,32 @@ const StateQuery TwoDAlgebraScene::populate_state_query() const {
         "dragger_x", "dragger_y", "dragger_type","dragger_brightness","algebra",
         "number_line","brightness",
         "xx_x", "xx_y","xy_x", "xy_y","yx_x", "yx_y","yy_x", "yy_y",
-        "diagram_opacity","diagram_xx","diagram_xy","diagram_yy"
+        "diagram_opacity","xx_opacity","xy_opacity","yy_opacity"
     });
     return sq;
+}
+
+
+const int get_diagram_unit(ivec2 wh, float top_y, float bottom_y, int diagram_opacity){
+    
+    if (diagram_opacity == 255){
+        return wh.y*0.1;
+    } else if (diagram_opacity == 0) {
+        return wh.y/(bottom_y-top_y);
+    } else {
+        return int(get_diagram_unit(wh, top_y, bottom_y, 0)*(1.0-diagram_opacity/255.0) + get_diagram_unit(wh, top_y, bottom_y, 255)*diagram_opacity/255.0);
+    }
+}
+
+const ivec2 get_diagram_origin(ivec2 wh, int diagram_opacity, int diagram_unit){
+    
+    if (diagram_opacity == 255){
+        return ivec2(diagram_unit*1.6,diagram_unit*1.6);
+    } else if (diagram_opacity == 0) {
+        return ivec2(wh*0.5);
+    } else {
+        return ivec2(get_diagram_origin(wh, 0, diagram_unit)*(1-diagram_opacity/255.0) + get_diagram_origin(wh, 255, diagram_unit)*diagram_opacity/255.0);
+    }
 }
 
 
@@ -101,16 +124,15 @@ void TwoDAlgebraScene::draw() {
 
         vec2(state["left_x"], state["top_y"]),
         vec2(state["right_x"], state["bottom_y"])
-
         
     );
+    
 
-
-    vec2 wh = get_width_height();
-    int diagram_unit = wh.y*0.1;
+    ivec2 wh = get_width_height();
+    int diagram_unit = get_diagram_unit(wh,state["top_y"],state["bottom_y"],state["diagram_opacity"]);
     int axis_width = wh.y*0.004;
-    float point_radius = diagram_unit*0.18;
-    ivec2 diagram_origin = ivec2(diagram_unit*1.6,diagram_unit*1.6);
+    float point_radius = diagram_unit*0.2;
+    ivec2 diagram_origin = get_diagram_origin(wh, state["diagram_opacity"], diagram_unit);
 
     int opacity = ((int) state["diagram_opacity"]) << 24;
 
@@ -123,13 +145,17 @@ void TwoDAlgebraScene::draw() {
     const vec2 xx_pos = vec2(state["xx_x"], -state["xx_y"])*diagram_unit+diagram_origin;
     const vec2 yy_pos = vec2(state["yy_x"], -state["yy_y"])*diagram_unit+diagram_origin;
     const vec2 xy_pos = vec2(state["xy_x"], -state["xy_y"])*diagram_unit+diagram_origin;
-    draw_circle(gpu_pix->get_ptr(), get_width_height(), xx_pos, point_radius, opacity + 0x00dd44dd);
-    draw_circle(gpu_pix->get_ptr(), get_width_height(), yy_pos, point_radius, opacity + 0x00dddd44);
-    draw_circle(gpu_pix->get_ptr(), get_width_height(), xy_pos, point_radius, opacity + 0x00ccccee);
+    const int xx_opacity = ((int) state["xx_opacity"]) << 24;
+    const int xy_opacity = ((int) state["xy_opacity"]) << 24;
+    const int yy_opacity = ((int) state["yy_opacity"]) << 24;
+    draw_circle(gpu_pix->get_ptr(), get_width_height(), xx_pos, point_radius, xx_opacity + 0x00dd44dd);
+    draw_circle(gpu_pix->get_ptr(), get_width_height(), yy_pos, point_radius, xy_opacity + 0x00dddd44);
+    draw_circle(gpu_pix->get_ptr(), get_width_height(), xy_pos, point_radius, yy_opacity + 0x00ccccee);
 
-    const vec2 textbox_size(point_radius * 6);
-    write_text(gpu_pix->get_ptr(), get_width_height(), "xx", xx_pos, textbox_size, 1, 0);
-    write_text(gpu_pix->get_ptr(), get_width_height(), "yy", yy_pos, textbox_size, 1, 0);
-    write_text(gpu_pix->get_ptr(), get_width_height(), "xy", xy_pos, textbox_size, 1, 0);
+    const vec2 textbox_size(point_radius * 3);
+    const vec2 textbox_offset = vec2(0,point_radius*0.2);
+    write_text(gpu_pix->get_ptr(), get_width_height(), latex_color(xx_opacity, "xx"), xx_pos+textbox_offset*0.5, textbox_size, 1, 0);
+    write_text(gpu_pix->get_ptr(), get_width_height(), latex_color(xy_opacity, "yy"), yy_pos+textbox_offset, textbox_size, 1, 0);
+    write_text(gpu_pix->get_ptr(), get_width_height(), latex_color(yy_opacity, "xy"), xy_pos+textbox_offset, textbox_size, 1, 0);
 }
 
