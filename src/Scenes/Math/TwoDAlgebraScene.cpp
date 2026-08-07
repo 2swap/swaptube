@@ -1,6 +1,7 @@
 
 #include "TwoDAlgebraScene.h"
 #include "../../Host_Device_Shared/vec.h"
+#include "../../IO/Latex.h"
 #include <complex>
 
 #include <vector>
@@ -118,12 +119,17 @@ void TwoDAlgebraScene::draw() {
     draw_rectangle(gpu_pix->get_ptr(), get_width_height(), diagram_origin-ivec2(diagram_unit,axis_width), diagram_origin+ivec2(diagram_unit,axis_width), opacity + 0x005588cc);
     draw_rectangle(gpu_pix->get_ptr(), get_width_height(), ivec2(diagram_origin.x*2-axis_width,0), diagram_origin*2+axis_width, opacity + 0x005588cc);
     draw_rectangle(gpu_pix->get_ptr(), get_width_height(), ivec2(0,diagram_origin.y*2-axis_width), diagram_origin*2+axis_width, opacity + 0x005588cc);
-    
-    draw_circle(gpu_pix->get_ptr(), get_width_height(), vec2(state["xx_x"], -state["xx_y"])*diagram_unit+diagram_origin, point_radius, opacity + 0x00dd44dd);
-    draw_circle(gpu_pix->get_ptr(), get_width_height(), vec2(state["yy_x"], -state["yy_y"])*diagram_unit+diagram_origin, point_radius, opacity + 0x00dddd44);
-    draw_circle(gpu_pix->get_ptr(), get_width_height(), vec2(state["xy_x"], -state["xy_y"])*diagram_unit+diagram_origin, point_radius, opacity + 0x00ccccee);
 
+    const vec2 xx_pos = vec2(state["xx_x"], -state["xx_y"])*diagram_unit+diagram_origin;
+    const vec2 yy_pos = vec2(state["yy_x"], -state["yy_y"])*diagram_unit+diagram_origin;
+    const vec2 xy_pos = vec2(state["xy_x"], -state["xy_y"])*diagram_unit+diagram_origin;
+    draw_circle(gpu_pix->get_ptr(), get_width_height(), xx_pos, point_radius, opacity + 0x00dd44dd);
+    draw_circle(gpu_pix->get_ptr(), get_width_height(), yy_pos, point_radius, opacity + 0x00dddd44);
+    draw_circle(gpu_pix->get_ptr(), get_width_height(), xy_pos, point_radius, opacity + 0x00ccccee);
 
+    const vec2 textbox_size(point_radius * 6);
+    write_text(gpu_pix->get_ptr(), get_width_height(), "xx", xx_pos, textbox_size, 1, 0);
+    write_text(gpu_pix->get_ptr(), get_width_height(), "yy", yy_pos, textbox_size, 1, 0);
+    write_text(gpu_pix->get_ptr(), get_width_height(), "xy", xy_pos, textbox_size, 1, 0);
 }
-
 
