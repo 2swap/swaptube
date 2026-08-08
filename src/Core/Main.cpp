@@ -8,15 +8,17 @@ using namespace std;
 #include "Timer.h"
 #include "Smoketest.h"
 #include "../IO/Writer.h"
+#include "../IO/MidiWriter.h"
 #include "State/GlobalState.h"
 
 void render_video(); // Forward declaration, provided by the user in their project file
 
-void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& audio_hints, bool& audio_sfx) {
+void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& audio_hints, bool& audio_sfx, MidiOptions& midi_options) {
     cout << "Parsing command line arguments... " << endl;
 
-    if (argc != 8) {
-        throw runtime_error("Expected 7 arguments: width height framerate samplerate output_dir smoketest/render audio_hints audio_sfx");
+    // The midi spec is optional so that a launcher which predates it still works.
+    if (argc != 8 && argc != 9) {
+        throw runtime_error("Expected 7 or 8 arguments: width height framerate samplerate smoketest/render audio_hints audio_sfx [midi_options]");
     }
 
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
@@ -67,7 +69,10 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
         throw runtime_error("Invalid audio sfx argument: " + string(argv[7]) );
     }
     audio_sfx = (audio_sfx_i != 0);
-    cout << "Audio SFX: " << (audio_sfx ? "true" : "false") << endl << endl;
+    cout << "Audio SFX: " << (audio_sfx ? "true" : "false") << ", " << flush;
+
+    midi_options = MidiOptions::parse(argc == 9 ? argv[8] : "-");
+    cout << "Midi: " << midi_options.blurb() << endl << endl;
 }
 
 inline void signal_handler(int signal) {
@@ -83,14 +88,15 @@ void setup_output_subfolders() {
 int main(int argc, char* argv[]) {
     int VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE;
     bool AUDIO_HINTS, AUDIO_SFX;
-    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, AUDIO_HINTS, AUDIO_SFX);
+    MidiOptions MIDI_OPTIONS;
+    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, AUDIO_HINTS, AUDIO_SFX, MIDI_OPTIONS);
     Timer timer;
 
     // Main Render Loop
     signal(SIGINT, signal_handler);
     try {
         setup_output_subfolders();
-        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, AUDIO_HINTS, AUDIO_SFX);
+        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, AUDIO_HINTS, AUDIO_SFX, MIDI_OPTIONS);
         cout << "Rendering video... " << endl;
         render_video();
     } catch(std::exception& e) {

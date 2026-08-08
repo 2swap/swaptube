@@ -1,7 +1,9 @@
+#include "SFX.h"
 #include "Writer.h"
 #include "AudioWriter.h"
+#include "MidiWriter.h"
 
-void sfx_boink(double time, double freq, double halflife_seconds, double volume){
+void sfx_boink(double time, double freq, double halflife_seconds, double volume, const std::string& voice){
     double halflife_samples = halflife_seconds * get_audio_samplerate_hz();
 
     int num_samples = halflife_samples * 5;
@@ -17,9 +19,10 @@ void sfx_boink(double time, double freq, double halflife_seconds, double volume)
     }
 
     get_writer().audio->add_sfx(left, left, time);
+    get_writer().midi->add_note(voice, time, freq, halflife_seconds * 5, volume);
 }
 
-void sfx_clap(double time, double halflife_seconds, double volume){
+void sfx_clap(double time, double halflife_seconds, double volume, const std::string& voice){
     double halflife_samples = halflife_seconds * get_audio_samplerate_hz();
 
     int num_samples = halflife_samples * 5;
@@ -33,4 +36,6 @@ void sfx_clap(double time, double halflife_seconds, double volume){
     }
 
     get_writer().audio->add_sfx(left, left, time);
+    // No pitch on clap
+    get_writer().midi->add_note(voice, time, 0, halflife_seconds * 5, volume);
 }

@@ -74,10 +74,15 @@ SKIP_RENDER=0
 SKIP_SMOKETEST=0
 AUDIO_HINTS=0
 AUDIO_SFX=0
+MIDI=0
+MIDI_PITCH=0
+MIDI_VELOCITY=0
+MIDI_TRACKS=0
+MIDI_BEND_RANGE=""
 INVALID_FLAG=0
 COMPUTE_LANG=""
 # Parse flags
-while getopts "snhxc:" flag; do
+while getopts "snhxmpvtb:c:" flag; do
     case "$flag" in
         s) 
             SKIP_RENDER=1
@@ -90,6 +95,25 @@ while getopts "snhxc:" flag; do
             ;;
         x) 
             AUDIO_SFX=1
+            ;;
+        m)
+            MIDI=1
+            ;;
+        p)
+            MIDI_PITCH=1
+            ;;
+        v)
+            MIDI_VELOCITY=1
+            ;;
+        t)
+            MIDI_TRACKS=1
+            ;;
+        b)
+            if ! [[ "$OPTARG" =~ ^[0-9]+$ ]]; then
+                echo "go.sh: Error - -b takes the pitch bend range in semitones, e.g. -b 24."
+                exit 1
+            fi
+            MIDI_BEND_RANGE="$OPTARG"
             ;;
         c)  
             case "$OPTARG" in
@@ -118,8 +142,24 @@ if [ $INVALID_FLAG -eq 1 ]; then
     echo "-n means to only run the render"
     echo "-h means to include audio hints."
     echo "-x means to include sound effects."
+    echo "-m means to export a MIDI track of every sound effect, for a DAW."
+    echo "-p means to carry each effect's pitch into the MIDI (implies -m)."
+    echo "-v means to carry each effect's volume into MIDI velocity (implies -m)."
+    echo "-t means to give each effect its own MIDI track (implies -m)."
+    echo "   The midi flags cluster, so -mpvt turns all of them on at once."
+    echo "-b sets the pitch bend range in semitones (default 24). Your instrument"
+    echo "   must be set to the same number, or glides will play out of tune."
     echo "-c means to specify compute language (takes arguments \"CUDA\" or \"HIP\")"
     exit 1
+fi
+
+MIDI_OPTIONS="-"
+if [ $MIDI -eq 1 ] || [ $MIDI_PITCH -eq 1 ] || [ $MIDI_VELOCITY -eq 1 ] || [ $MIDI_TRACKS -eq 1 ] || [ -n "$MIDI_BEND_RANGE" ]; then
+    MIDI_OPTIONS="m"
+    if [ $MIDI_PITCH    -eq 1 ]; then MIDI_OPTIONS="${MIDI_OPTIONS}p"; fi
+    if [ $MIDI_VELOCITY -eq 1 ]; then MIDI_OPTIONS="${MIDI_OPTIONS}v"; fi
+    if [ $MIDI_TRACKS   -eq 1 ]; then MIDI_OPTIONS="${MIDI_OPTIONS}t"; fi
+    MIDI_OPTIONS="${MIDI_OPTIONS}${MIDI_BEND_RANGE}"
 fi
 
 # Find the project file in any subdirectory under src/Projects
@@ -190,7 +230,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
 
     # Smoketest
     if [ $SKIP_SMOKETEST -eq 0 ]; then
-        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $AUDIO_HINTS $AUDIO_SFX 2>/dev/null
+        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $AUDIO_HINTS $AUDIO_SFX $MIDI_OPTIONS 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in smoketest."
             exit 2
@@ -201,7 +241,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     if [ $SKIP_RENDER -eq 0 ]; then
         # Clear all files from the smoketest
         rm io_out/* -rf
-        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $AUDIO_HINTS $AUDIO_SFX 2>/dev/null
+        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $AUDIO_HINTS $AUDIO_SFX $MIDI_OPTIONS 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
             exit 2
