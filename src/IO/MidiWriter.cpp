@@ -105,10 +105,7 @@ vector<uint8_t> build_track(const string& name, bool include_tempo, vector<MidiE
 
     if (include_tempo) {
         push_varlen(body, 0);
-        push_bytes(body, {0xff, 0x51, 0x03,
-                          static_cast<uint8_t>(microseconds_per_quarter_note >> 16),
-                          static_cast<uint8_t>((microseconds_per_quarter_note >> 8) & 0xff),
-                          static_cast<uint8_t>(microseconds_per_quarter_note & 0xff)});
+        push_bytes(body, {0xff, 0x51, 0x03, static_cast<uint8_t>(microseconds_per_quarter_note >> 16), static_cast<uint8_t>((microseconds_per_quarter_note >> 8) & 0xff), static_cast<uint8_t>(microseconds_per_quarter_note & 0xff)});
     }
 
     long long previous_tick = 0;
@@ -141,9 +138,7 @@ double cents_interval(double from_hz, double to_hz) {
 }
 
 MidiEvent control_change_event(long long tick, int channel, uint8_t controller, int value, int order = order_controller) {
-    return MidiEvent{tick, order, {static_cast<uint8_t>(0xb0 | channel),
-                                   controller,
-                                   static_cast<uint8_t>(value)}};
+    return MidiEvent{tick, order, {static_cast<uint8_t>(0xb0 | channel), controller, static_cast<uint8_t>(value)}};
 }
 
 // 14 bits, centred on 8192, spanning the announced range.
@@ -155,9 +150,7 @@ int pitch_bend_value(double cents, double bend_range_cents) {
 }
 
 MidiEvent pitch_bend_event(long long tick, int channel, int value) {
-    return MidiEvent{tick, order_controller, {static_cast<uint8_t>(0xe0 | channel),
-                                              static_cast<uint8_t>(value & 0x7f),
-                                              static_cast<uint8_t>((value >> 7) & 0x7f)}};
+    return MidiEvent{tick, order_controller, {static_cast<uint8_t>(0xe0 | channel), static_cast<uint8_t>(value & 0x7f), static_cast<uint8_t>((value >> 7) & 0x7f)}};
 }
 
 // RPN 0 is pitch-bend sensitivity. Instruments which ignore it must be set by hand.
@@ -347,12 +340,8 @@ void MidiWriter::write_midi_file() const {
         }
 
         vector<MidiEvent>& events = events_per_voice[note.voice_index];
-        events.push_back(MidiEvent{start_tick, order_note_on, {static_cast<uint8_t>(0x90 | channel),
-                                                               static_cast<uint8_t>(note_number),
-                                                               static_cast<uint8_t>(velocity)}});
-        events.push_back(MidiEvent{end_tick, order_note_off, {static_cast<uint8_t>(0x80 | channel),
-                                                              static_cast<uint8_t>(note_number),
-                                                              0}});
+        events.push_back(MidiEvent{start_tick, order_note_on, {static_cast<uint8_t>(0x90 | channel), static_cast<uint8_t>(note_number), static_cast<uint8_t>(velocity)}});
+        events.push_back(MidiEvent{end_tick, order_note_off, {static_cast<uint8_t>(0x80 | channel), static_cast<uint8_t>(note_number), 0}});
         pending_note_offs[key] = make_pair(note.voice_index, events.size() - 1);
     }
 
@@ -388,36 +377,27 @@ void MidiWriter::write_midi_file() const {
         // bend anchors at the middle instead, buying twice the span.
         double anchor_frequency = first_slice.frequency_hz;
         if (lowest > 0 && first_slice.frequency_hz > 0) {
-            const double reach_cents = max(fabs(cents_interval(first_slice.frequency_hz, highest)),
-                                           fabs(cents_interval(first_slice.frequency_hz, lowest)));
+            const double reach_cents = max(fabs(cents_interval(first_slice.frequency_hz, highest)), fabs(cents_interval(first_slice.frequency_hz, lowest)));
             if (reach_cents > bend_range_cents) anchor_frequency = sqrt(lowest * highest);
         }
 
         double unused_cents = 0;
-        int base_note = note_number_for(Note{first_slice.t_seconds, first_slice.duration_seconds,
-                                             anchor_frequency, first_slice.volume,
-                                             first_slice.voice_index}, unused_cents);
+        int base_note = note_number_for(Note{first_slice.t_seconds, first_slice.duration_seconds, anchor_frequency, first_slice.volume, first_slice.voice_index}, unused_cents);
 
         // Velocity stands for the whole run, so it takes the peak rather than the
         // fade-in, which is near silence. Expression below traces the shape as a
         // fraction of that peak, so the two together reproduce the envelope.
-        const int run_velocity = velocity_for(Note{first_slice.t_seconds, first_slice.duration_seconds,
-                                                   first_slice.frequency_hz, peak_volume,
-                                                   first_slice.voice_index});
+        const int run_velocity = velocity_for(Note{first_slice.t_seconds, first_slice.duration_seconds, first_slice.frequency_hz, peak_volume, first_slice.voice_index});
 
         int last_bend_value = -1;   // -1 means nothing emitted yet
         int last_expression = -1;
         long long run_end_tick = llround(first_slice.t_seconds * ticks_per_second);
 
         auto open_note = [&](long long tick, int note_number, int velocity) {
-            events.push_back(MidiEvent{tick, order_note_on, {static_cast<uint8_t>(0x90 | channel),
-                                                             static_cast<uint8_t>(note_number),
-                                                             static_cast<uint8_t>(velocity)}});
+            events.push_back(MidiEvent{tick, order_note_on, {static_cast<uint8_t>(0x90 | channel), static_cast<uint8_t>(note_number), static_cast<uint8_t>(velocity)}});
         };
         auto close_note = [&](long long tick, int note_number) {
-            events.push_back(MidiEvent{tick, order_note_off, {static_cast<uint8_t>(0x80 | channel),
-                                                              static_cast<uint8_t>(note_number),
-                                                              0}});
+            events.push_back(MidiEvent{tick, order_note_off, {static_cast<uint8_t>(0x80 | channel), static_cast<uint8_t>(note_number), 0}});
         };
         auto emit_bend = [&](long long tick, double cents) {
             const int value = pitch_bend_value(cents, bend_range_cents);
@@ -435,8 +415,7 @@ void MidiWriter::write_midi_file() const {
 
         for (size_t i = 0; i < run.slices.size(); i++) {
             const ToneSlice& slice = run.slices[i];
-            const Note as_note{slice.t_seconds, slice.duration_seconds, slice.frequency_hz,
-                               slice.volume, slice.voice_index};
+            const Note as_note{slice.t_seconds, slice.duration_seconds, slice.frequency_hz, slice.volume, slice.voice_index};
             const long long tick = llround(slice.t_seconds * ticks_per_second);
             run_end_tick = llround((slice.t_seconds + slice.duration_seconds) * ticks_per_second);
 
@@ -551,9 +530,7 @@ void MidiWriter::write_csv_file() const {
         for (const ToneSlice& slice : run.slices) peak_volume = max(peak_volume, slice.volume);
 
         const ToneSlice& first_slice = run.slices.front();
-        const int run_velocity = velocity_for(Note{first_slice.t_seconds, first_slice.duration_seconds,
-                                                   first_slice.frequency_hz, peak_volume,
-                                                   first_slice.voice_index});
+        const int run_velocity = velocity_for(Note{first_slice.t_seconds, first_slice.duration_seconds, first_slice.frequency_hz, peak_volume, first_slice.voice_index});
 
         for (const ToneSlice& slice : run.slices) {
             const double fraction = peak_volume > 0 ? slice.volume / peak_volume : 0;
