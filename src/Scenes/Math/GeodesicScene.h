@@ -22,6 +22,8 @@ public:
 
     void draw() override;
 
+    void change_data();
+
 private:
-    DevicePointer* distance_buffer;
+    DevicePointer distance_buffer;
 };

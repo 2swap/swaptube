@@ -19,8 +19,6 @@ WhitePaperScene::WhitePaperScene(const string& prefix, const string& author, con
         {"crop_left", "0"},
         {"crop_right", "1"},
     });
-    ScalingParams sp = ScalingParams(get_width_height() * vec2(1, .13));
-    author_pixels = latex_to_gpu_pix("\\text{" + author + "}", sp);
 }
 
 void WhitePaperScene::draw() {
@@ -74,11 +72,11 @@ void WhitePaperScene::draw() {
 
         // Overwrite the scaled image onto the scene's pixel buffer
         const vec2 offset = get_width_height() * center;
-        cuda_overlay(gpu_pix->get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
+        cuda_overlay(gpu_pix.get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
 
         cuda_free_pixels_on_device(scaled_ptr);
     }
 
     const vec2 author_offset = get_width_height() * vec2(.5, smoothlerp(-.1, .07, state["completion"]));
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), author_pixels->get_ptr(), author_pixels->get_wh(), author_offset, 1.0f, 0.0f);
+    write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), "\\text{" + author + "}", author_offset, vec2(1, .13)*get_width_height(), 1.0f, 0.0f);
 }

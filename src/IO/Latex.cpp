@@ -12,6 +12,7 @@
 #include <cairo.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -47,7 +48,7 @@ struct StringIntPairEq {
 };
 
 // Create an unordered_map to store the cached results
-unordered_map<string, pair<shared_ptr<DevicePointer>, double>> latex_cache;
+unordered_map<string, shared_ptr<DevicePointer>> latex_cache;
 
 static string generate_cache_key(const string& text, const ScalingParams& scaling_params) {
     hash<string> hasher;
@@ -68,8 +69,7 @@ shared_ptr<DevicePointer> latex_to_gpu_pix(const string& latex, ScalingParams& s
     // Check if the result is already in the cache
     auto it = latex_cache.find(cache_key);
     if (it != latex_cache.end()) {
-        scaling_params.scale_factor = it->second.second;
-        return it->second.first; // Return the cached Pixels object
+        return it->second; // Return the cached result
     }
 
     cout << "Generating LaTeX for: " << latex << endl;
@@ -92,7 +92,8 @@ shared_ptr<DevicePointer> latex_to_gpu_pix(const string& latex, ScalingParams& s
 
     // System call successful, return the generated SVG
     shared_ptr<DevicePointer> text = svg_to_gpu_pix("latex/" + name_without_folder, scaling_params);
-    latex_cache[cache_key] = make_pair(text, scaling_params.scale_factor); // Cache the result before returning
+                cout << "Dimensions = " << text->get_wh().x << " x " << text->get_wh().y << endl;
+    latex_cache[cache_key] = text; // Cache the result before returning
     return text;
 }
 

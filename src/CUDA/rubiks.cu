@@ -343,7 +343,7 @@ extern "C" void cuda_render_cube(
     cudaDeviceSynchronize();
 }
 
-extern "C" void allocate_stickers(char (*&d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], int num_stickers) {
+extern "C" void allocate_stickers(char (*d_stickers)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE], int num_stickers) {
     char* temp = nullptr;
     cudaMalloc(&temp, num_stickers * sizeof(char));
     d_stickers = (char (*)[6][MAX_CUBE_SIZE][MAX_CUBE_SIZE])temp;

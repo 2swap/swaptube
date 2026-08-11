@@ -102,7 +102,7 @@ void FourDPlaneScene::draw() {
                     //   vec4(8,8,8,8),
                       state["brightness"], 
                       OPAQUE_BLACK,
-                      gpu_pix->get_ptr()
+                      gpu_pix.get_ptr()
     );
 
     CoordinateScene::draw();

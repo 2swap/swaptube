@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Common/CoordinateScene.h"
-#include "../../DataObjects/DevicePointer.h"
 
 class TwoDAlgebraScene: public CoordinateScene {
 public:

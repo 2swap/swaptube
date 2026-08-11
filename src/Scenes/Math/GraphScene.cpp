@@ -43,15 +43,10 @@ GraphScene::GraphScene(const vec2& dimensions)
         {"qj", "{t} 12 / cos <dimensions> 2 - *"},
         {"qk", "0"},
     });
-
-    config = new GraphDrawingConfig;
-    graph = new Graph;
-    add_data_object(config);
-    add_data_object(graph);
 }
 
 void GraphScene::transition_node_position(const TransitionType tt, const double hash, const vec4& new_position){
-    vec4 old_position = graph->nodes.find(hash)->second.position;
+    vec4 old_position = graph.nodes.find(hash)->second.position;
     pair<vec4, vec4> transition_pair = make_pair(old_position, new_position);
     if(tt == TransitionType::MICRO) nodes_in_micro_transition[hash] = transition_pair;
     else                            nodes_in_macro_transition[hash] = transition_pair;
@@ -62,15 +57,15 @@ void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
         for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
             double hash = p.first;
             vec4 end = p.second.second;
-            graph->move_node(hash, end);
+            graph.move_node(hash, end);
         }
         nodes_in_macro_transition.clear();
     }
-    config->step_transition(tt);
+    config.step_transition(tt);
     for(pair<double, pair<vec4, vec4>> p : nodes_in_micro_transition){
         double hash = p.first;
         vec4 end = p.second.second;
-        graph->move_node(hash, end);
+        graph.move_node(hash, end);
     }
     nodes_in_micro_transition.clear();
     curr_hash = next_hash;
@@ -78,7 +73,6 @@ void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
 
 void GraphScene::draw(){
     set_camera_direction();
-    // TODO we only need to do this if data changed, not if state changed.
     float micro = state["microblock_fraction"];
     float macro = state["macroblock_fraction"];
     for(pair<double, pair<vec4, vec4>> p : nodes_in_micro_transition){
@@ -86,21 +80,21 @@ void GraphScene::draw(){
         vec4 start = p.second.first;
         vec4 end = p.second.second;
         vec4 interp_pos = veclerp(start, end, smoother2(micro));
-        graph->move_node(hash, interp_pos);
+        graph.move_node(hash, interp_pos);
     }
     for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
         double hash = p.first;
         vec4 start = p.second.first;
         vec4 end = p.second.second;
         vec4 interp_pos = veclerp(start, end, smoother2(macro));
-        graph->move_node(hash, interp_pos);
+        graph.move_node(hash, interp_pos);
     }
 
-    for(pair<double, Node> p : graph->nodes){
-        config->add_node_if_missing(p.first);
+    for(pair<double, Node> p : graph.nodes){
+        config.add_node_if_missing(p.first);
         for(const Edge& neighbor_edge : p.second.neighbors){
             double neighbor_id = neighbor_edge.to;
-            config->add_edge_if_missing(p.first, neighbor_id);
+            config.add_edge_if_missing(p.first, neighbor_id);
         }
     }
 
@@ -116,11 +110,11 @@ void GraphScene::draw(){
 
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
     // I can't think of a good pattern though.
-    for(pair<double, Node> p : graph->nodes){
+    for(pair<double, Node> p : graph.nodes){
         double hash = p.first;
         Node node = p.second;
         vec3 node_pos(node.position);
-        const NodeRenderData nrd = config->get_node_render_data(hash, macro, micro);
+        const NodeRenderData nrd = config.get_node_render_data(hash, macro, micro);
         if(hash == curr_hash) { curr_pos = node_pos; curr_found = true; }
         if(hash == next_hash) { next_pos = node_pos; next_found = true; }
         if (nrd.radius > 0) {
@@ -133,15 +127,15 @@ void GraphScene::draw(){
             float distance;
             vec2 pos = coordinate_to_pixel(node.position, distance) + label_offset * get_width_height();
             vec2 dim = label_size * get_width_height() * nrd.label_size * state["node_labels_size"];
-            write_text(gpu_pix->get_ptr(), gpu_pix->get_wh(), latex_color(label_color, nrd.label), pos, dim, 1, 0);
+            write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), latex_color(label_color, nrd.label), pos, dim, 1, 0);
         }
 
         for(const Edge& neighbor_edge : node.neighbors){
             // Don't duplicate edges
             if (hash > neighbor_edge.to) continue;
             double neighbor_id = neighbor_edge.to;
-            Node neighbor = graph->nodes.find(neighbor_id)->second;
-            const EdgeRenderData erd = config->get_edge_render_data(hash, neighbor_id, macro, micro);
+            Node neighbor = graph.nodes.find(neighbor_id)->second;
+            const EdgeRenderData erd = config.get_edge_render_data(hash, neighbor_id, macro, micro);
             vec3 neighbor_pos(neighbor.position.x, neighbor.position.y, neighbor.position.z);
             if(erd.post_color == erd.pre_color){ // Fade or no-change
                 add_line(Line(node_pos, neighbor_pos, erd.post_color, 1, erd.is_dashed));
@@ -174,7 +168,7 @@ void GraphScene::draw(){
                 if (erd.label.size() <= 2) { // Simple edge weights (2 digit numbers) dont need rotation
                     text_rotation_angle = 0;
                 }
-                write_text(gpu_pix->get_ptr(), gpu_pix->get_wh(), erd.label, pos, dim, 1, text_rotation_angle);
+                write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), erd.label, pos, dim, 1, text_rotation_angle);
             }
         }
     }
@@ -190,4 +184,9 @@ void GraphScene::draw(){
     }
 
     ThreeDimensionScene::draw();
+}
+
+void GraphScene::change_data() {
+    graph.tick(state);
+    ThreeDimensionScene::change_data();
 }

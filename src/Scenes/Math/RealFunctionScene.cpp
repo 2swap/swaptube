@@ -17,7 +17,7 @@ void RealFunctionScene::draw() {
     vector<ResolvedStateEquationComponent> r = manager.get_resolved_equation("function");
 
     cuda_render_real_valued_function(
-        gpu_pix->get_ptr(), get_width_height(),
+        gpu_pix.get_ptr(), get_width_height(),
         r.data(), r.size(),
         vec2(state["left_x"], state["top_y"]),
         vec2(state["right_x"], state["bottom_y"])

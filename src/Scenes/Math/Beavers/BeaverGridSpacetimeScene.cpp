@@ -23,7 +23,7 @@ void BeaverGridSpacetimeScene::draw() {
     ivec2 spacetime_wh(11,11);
     float tm_border = 0.1;
     beaver_grid_spacetime(
-        gpu_pix->get_ptr(), get_width_height(), lx_ty, rx_by,
+        gpu_pix.get_ptr(), get_width_height(), lx_ty, rx_by,
         grid_wh, spacetime_wh, tm_border, state["iterations"]
     );
 }

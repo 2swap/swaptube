@@ -44,7 +44,7 @@ void CompositeScene::draw() {
         const vec2 center(wh * vec2(state[name + ".x"], state[name + ".y"]));
 
         cuda_overlay(
-            gpu_pix->get_ptr(), wh,
+            gpu_pix.get_ptr(), wh,
             subscene_gpu_pix, subscene->get_width_height(),
             center, opa, state[name + ".angle"]
         );

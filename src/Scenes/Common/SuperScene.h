@@ -26,6 +26,8 @@ public:
 
     std::shared_ptr<Scene> get_subscene_pointer(const std::string& name);
 
+    void change_data() override;
+
 protected:
     SuperScene(const vec2& dimensions = vec2(1, 1))
         : Scene(dimensions) {}
@@ -37,6 +39,4 @@ protected:
     std::list<std::string> render_order;
     std::unordered_map<std::string, std::shared_ptr<Scene>> subscenes;
 
-private:
-    void change_data() override;
 };

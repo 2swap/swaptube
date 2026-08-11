@@ -7,7 +7,7 @@
 
 class ConwayScene : public CoordinateScene {
 private:
-    ConwayGrid* conway_grid;
+    ConwayGrid conway_grid;
 
 public:
     ConwayScene(const ivec2& size_bitboards, const Pixels& env, const vec2& dimensions = vec2(1, 1));

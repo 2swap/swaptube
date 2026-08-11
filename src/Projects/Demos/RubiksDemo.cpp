@@ -69,7 +69,7 @@ void render_video(){
     rs.render_microblock();
 
     // get the hash of the cube after the T perm and print it
-    double hash = rs.the_cube->get_hash(3);
+    double hash = rs.the_cube.get_hash(3);
     std::cout << "Hash of the cube after T perm: " << setprecision(10)<< hash << std::endl;
 
 

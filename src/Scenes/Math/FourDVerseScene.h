@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Scene.h"
-#include "../../DataObjects/DevicePointer.h"
 
 class FourDVerseScene: public Scene {
 public:

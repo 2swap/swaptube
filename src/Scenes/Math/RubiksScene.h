@@ -8,7 +8,7 @@ public:
     RubiksScene(const vec2& dimensions = vec2(1, 1));
     void draw() override;
     void exec_move_from_slice(const std::string& token);
-    Rubiks* the_cube;
+    Rubiks the_cube;
 
 protected:
     void on_end_transition_extra_behavior(const TransitionType tt) override;

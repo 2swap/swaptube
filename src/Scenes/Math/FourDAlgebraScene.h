@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Scene.h"
-#include "../../DataObjects/DevicePointer.h"
 
 class FourDAlgebraScene: public Scene {
 public:

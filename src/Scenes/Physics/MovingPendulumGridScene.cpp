@@ -39,7 +39,7 @@ void MovingPendulumGridScene::draw_grid() {
         state["bottom_y"] * (  tom) + state["p2"    ],
         state["top_y"   ] * (  tom) + state["p2"    ]
     );
-    grid.tick(state);
+    grid.tick(state["physics_multiplier"], state["rk4_step_size"]);
     Pixels pix(get_width_height());
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {

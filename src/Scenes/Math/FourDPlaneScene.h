@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Common/CoordinateScene.h"
-#include "../../DataObjects/DevicePointer.h"
 
 class FourDPlaneScene: public CoordinateScene {
 public:

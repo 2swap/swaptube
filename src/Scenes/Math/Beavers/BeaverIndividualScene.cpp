@@ -21,7 +21,7 @@ void boop(int state, int symbol, int num_states){
 }
 
 BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* icons, ivec2& icons_wh, int& icons_len, const vec2& dimension)
-: Scene(dimension), tm(tm), tape_length(31), tape(tape_length, 0), head_position(tape_length/2), icons(icons), icons_wh(icons_wh), icons_len(icons_len) {
+: Scene(dimension), tm(tm), tape_length(31), icons(icons), icons_wh(icons_wh), icons_len(icons_len), tape(tape_length, 0), head_position(tape_length/2) {
     head_position_history.push_back(head_position);
     manager.set({
         // general simulation params
@@ -108,7 +108,7 @@ void BeaverIndividualScene::draw() {
     uint32_t used_transitions = used_transition_history[min(int(iterations)+1, grid_wh.y)];
 
     draw_individual_beaver(
-        gpu_pix->get_ptr(), wh, lx_ty, rx_by,
+        gpu_pix.get_ptr(), wh, lx_ty, rx_by,
         grid.data(), ivec2(tape_length, grid.size() / tape_length),
         icons, icons_wh, icons_len,
         tm, iterations,

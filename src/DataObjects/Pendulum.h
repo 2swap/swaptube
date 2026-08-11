@@ -3,18 +3,17 @@
 using namespace std;
 
 #include <vector>
-#include "DataObject.h"
 #include "../Host_Device_Shared/PendulumHelpers.h"
 #include "../Host_Device_Shared/helpers.h"
 
-class Pendulum : public DataObject {
+class Pendulum {
 public:
     PendulumState state;
     Pendulum(const PendulumState& s);
-    void tick(const StateReturn& s);
+    void tick(const float, const float);
 };
 
-class PendulumGrid : public DataObject {
+class PendulumGrid {
 public:
     int w; int h;
     pendulum_type delta;
@@ -41,5 +40,5 @@ public:
         const pendulum_type p1_min, const pendulum_type p1_max,
         const pendulum_type p2_min, const pendulum_type p2_max
     );
-    void tick(const StateReturn& state);
+    void tick(float multiplier, float step_size);
 };

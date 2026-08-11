@@ -13,7 +13,7 @@ BeaverGridScene::BeaverGridScene(const int num_states, const int num_symbols, co
 void BeaverGridScene::draw() {
     beaver_grid_cuda(
         state["num_states"], state["num_symbols"],
-        gpu_pix->get_ptr(), get_width_height(),
+        gpu_pix.get_ptr(), get_width_height(),
         vec2(state[ "left_x"], state[   "top_y"]),
         vec2(state["right_x"], state["bottom_y"]),
         state["max_steps"]

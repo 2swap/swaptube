@@ -35,6 +35,7 @@ RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
         {"dimensions", "[dimensions]"},
         {"edge_weights_size", "[edge_weights_size]"},
         {"node_labels_size", "[node_labels_size]"},
+        {"points_opacity", "0"},
         {"midpoint_multiplier", "[midpoint_multiplier]"},
         {"q1", "[q1]"},
         {"qi", "[qi]"},
@@ -50,15 +51,15 @@ RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
 
 void RubiksGraphScene::add_children(unordered_set<string> move_set, bool cube_or_not, 
     bool edge_label_or_not, bool cube_label_or_not) {
-    Graph* g = gs->graph;
-    auto nodes = g->nodes; // true copy
+    Graph& g = gs->graph;
+    auto nodes = g.nodes; // true copy
     for(auto& pair : nodes) {
         double hash = pair.first;
         for(string s : move_set) {
             Rubiks child(patterns[hash]);
             child.exec(s);
             double child_hash = child.get_hash(cube_size);
-            if (!g->node_exists(child_hash)){
+            if (!g.node_exists(child_hash)){
                 patterns[child_hash] = child.pattern;
                 add_cube(child.pattern, cube_or_not, cube_label_or_not);
                 cout << "+" << flush;
@@ -67,15 +68,14 @@ void RubiksGraphScene::add_children(unordered_set<string> move_set, bool cube_or
     }
     if (edge_label_or_not) {
         // label the edges with the move that connects them
-        for(auto& pair : g->nodes) {
+        for(auto& pair : g.nodes) {
             double hash = pair.first;
             for(string s : move_set) {
                 Rubiks child(patterns[hash]);
                 child.exec(s);
                 double child_hash = child.get_hash(cube_size);
-                if (g->node_exists(child_hash)){
-                    //g->add_edge(hash, child_hash);
-                    gs->config->set_edge_label(hash, child_hash, s);
+                if (g.node_exists(child_hash)){
+                    gs->config.set_edge_label(hash, child_hash, s);
                 }
             }
         }
@@ -93,7 +93,7 @@ void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_
     double hash = cube.get_hash(cube_size);
 
     if (cube_or_not){
-        shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(pattern, vec2(0.001, 0.001));
+        shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(pattern, vec2(0.0001, 0.0001));
         rs->manager.set({
             {"w", "[rubiks_scene_size]"},
             {"h", "[rubiks_scene_size]"},
@@ -108,29 +108,29 @@ void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_
         cubes[hash] = rs;
     }
 
-    Graph* g = gs->graph;
-    g->add_node(hash);
+    Graph& g = gs->graph;
+    g.add_node(hash);
     if (label_or_not){
-        gs->config->set_node_label(hash, to_string(hash));
+        gs->config.set_node_label(hash, to_string(hash));
     }
     for(string s : move_set) {
         Rubiks child(pattern);
         child.exec(s);
         double child_hash = child.get_hash(cube_size);
-        if (g->node_exists(child_hash)){
-            g->add_edge(hash, child_hash);
+        if (g.node_exists(child_hash)){
+            g.add_edge(hash, child_hash);
         }
     }
 }
 
 void RubiksGraphScene::draw() {
-    Graph* g = gs->graph;
+    Graph& g = gs->graph;
     std::map<float, string> distance_map;
 
     for (const pair<double, shared_ptr<RubiksScene>>& pair : cubes) {
         double hash = pair.first;
         string key = "rs" + to_string(hash);
-        vec3 position = g->nodes.find(hash)->second.position;
+        vec3 position = g.nodes.find(hash)->second.position;
         float distance;
         vec2 pixel = gs->coordinate_to_pixel(position, distance);
         distance_map[distance] = key;
@@ -150,7 +150,7 @@ void RubiksGraphScene::draw() {
 
     // TODO put that in a if(cube_or_not)
     vec2 wh = get_width_height();
-    for(auto& pair : g->nodes){
+    for(auto& pair : g.nodes){
         double hash = pair.first;
         string key = "rs" + to_string(hash);
         vec3 position = pair.second.position;
@@ -163,5 +163,5 @@ void RubiksGraphScene::draw() {
     CompositeScene::draw();
 
     // print the size of the graph
-    cout << "Graph size: " << gs->graph->size() << " nodes";
+    cout << "Graph size: " << gs->graph.size() << " nodes";
 }

@@ -7,7 +7,7 @@ void render_video(){
     //vector<string> latex_strings = {"\\text{This is some English text.}", "\\text{This is some more English text.}", "\\text{This is even more English text.}"};
     //vector<string> latex_strings = {"aaa", "a^aa", "a^{aa}", "a^{a^a}", "a^{a^{a^a}}", "a^{a^{a^{a^a}}}", "a^{a^{a^{a^{a^a}}}}", "a^{a^{a^{a^{a^{a^a}}}}}", "a^{a^{a^{a^{a^{a^{a^a}}}}}}", "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"};
 
-    LatexScene latex(latex_strings[0], .6);
+    LatexScene latex(latex_strings[0]);
     stage_macroblock(SilenceBlock(1), 1);
     latex.render_microblock();
 

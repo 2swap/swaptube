@@ -6,7 +6,6 @@
 #include "../Core/State/StateManager.h"
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
-#include "../DataObjects/DataObject.h"
 #include "../DataObjects/DevicePointer.h"
 #include <string>
 #include <iostream>
@@ -28,7 +27,6 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 class Scene {
 public:
     Scene(const vec2& dimensions = vec2(1, 1));
-    ~Scene();
 
     virtual void draw() = 0;
 
@@ -58,14 +56,10 @@ public:
     virtual void change_data();
 
 protected:
-    DevicePointer* gpu_pix;
+    DevicePointer gpu_pix;
     StateReturn state;
 
-    void add_data_object(DataObject* data_object);
-
 private:
-    vector<DataObject*> data_objects;
-
     string global_identifier = ""; // This is prefixed before the published global state elements
                                    // to uniquely identify this scene if necessary.
                                    // Empty by default, meaning no state is published.

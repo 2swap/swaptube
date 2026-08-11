@@ -37,7 +37,7 @@ void RootFractalScene::draw() {
     float radius = sqrt(state["visibility_multiplier"]) * get_geom_mean_size() * pow(wh*10, .25) / 250;
     float opacity = 1-1/(2*wh+1);
     opacity *= square(state["visibility_multiplier"]);
-    draw_root_fractal(gpu_pix->get_ptr(), get_width_height(),
+    draw_root_fractal(gpu_pix.get_ptr(), get_width_height(),
         c0, c1, n,
         vec2(state["left_x"], state["top_y"]),
         vec2(state["right_x"], state["bottom_y"]),

@@ -98,9 +98,9 @@ void ManifoldScene::draw() {
     }
 
     cuda_render_manifold(
-        gpu_pix->get_ptr(),
+        gpu_pix.get_ptr(),
         get_width_height(),
-        distance_buffer->get_ptr(),
+        distance_buffer.get_ptr(),
         manifolds,
         manifold_names.size(),
         camera_pos,
@@ -115,6 +115,8 @@ void ManifoldScene::draw() {
     );
 
     ThreeDimensionScene::draw();
+
+    delete[] manifolds;
 }
 
 void ManifoldScene::set_texture(const Pixels& new_texture) {

@@ -1,4 +1,5 @@
 #include "StateManager.h"
+#include "GlobalState.h"
 #include <cstdint>
 
 using namespace std;
@@ -295,6 +296,10 @@ const StateReturn StateManager::get_state() const {
             throw runtime_error("ERROR: Attempted to read stale variable " + variable_name + "!\nState has been printed above.");
         }
         result.set(variable_name, vc.value);
+    }
+    for (const auto& global_var : global_state) {
+        const string& variable_name = global_var.first;
+        result.set(variable_name, get_global_state(variable_name));
     }
     return result;
 }

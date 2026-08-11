@@ -4,6 +4,7 @@
 #include "SVG.h"
 #include "../Host_Device_Shared/vec.h"
 #include "ScalingParams.h"
+#include <memory>
 #include <cstdint>
 
 string latex_color(uint32_t color, string text);

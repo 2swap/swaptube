@@ -60,21 +60,11 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
     } // Audio hints
 }
 
-Scene::Scene(const vec2& dimensions)
-    : state() {
+Scene::Scene(const vec2& dimensions) : gpu_pix(floor(get_video_dimensions_pixels() * dimensions)) {
     manager.set({
         {"w", to_string(dimensions.x)},
         {"h", to_string(dimensions.y)}
     });
-    gpu_pix = new DevicePointer(get_width_height());
-    add_data_object(gpu_pix);
-}
-
-Scene::~Scene() {
-    // Clean up data objects
-    for(DataObject* obj : data_objects) {
-        delete obj;
-    }
 }
 
 void Scene::on_end_transition(const TransitionType tt) {
@@ -98,13 +88,13 @@ uint32_t* Scene::query() {
 
     // The only time we skip render entirely is when the project flags to skip a section.
     if(is_for_real()) {
-        cuda_zeroize_pixels(gpu_pix->get_ptr(), get_width_height());
+        cuda_zeroize_pixels(gpu_pix.get_ptr(), get_width_height());
         cout << "|" << flush;
         draw();
     }
     has_updated_since_last_query = false;
     cout << ")" << flush;
-    return gpu_pix->get_ptr();
+    return gpu_pix.get_ptr();
 }
 
 void Scene::render_microblock(){
@@ -181,7 +171,7 @@ double Scene::get_geom_mean_size() { return geom_mean(get_width(),get_height());
 
 void Scene::export_frame(const string& filename, int scaledown) {
     Pixels pix(get_width_height());
-    gpu_pix->copy_to_host(pix.pixels.data());
+    gpu_pix.copy_to_host(pix.pixels.data());
     pix_to_png(pix.naive_scale_down(scaledown), "io_out/frames/frame_"+filename+".png");
 }
 
@@ -211,7 +201,7 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("voice", sample_to_float(sample));
 
     query();
-    get_writer().video->add_frame(gpu_pix->get_ptr());
+    get_writer().video->add_frame(gpu_pix.get_ptr());
 
     remaining_frames_in_macroblock--;
     set_global_state("frame_number", get_global_state("frame_number") + 1);
@@ -219,12 +209,6 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     cout << "]" << flush;
 }
 
-void Scene::add_data_object(DataObject* obj) {
-    data_objects.push_back(obj);
-}
-
 void Scene::change_data() {
-    for(DataObject* obj : data_objects) {
-        obj->tick(state);
-    }
+    gpu_pix.tick(get_width_height());
 }

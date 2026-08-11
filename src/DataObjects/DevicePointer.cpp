@@ -16,25 +16,20 @@ DevicePointer::DevicePointer() : wh(ivec2(0,0)) { }
 
 DevicePointer::~DevicePointer() {
     //cout << "Freeing device pointer of size " << wh.x << " by " << wh.y << endl;
-    mark_updated();
     cuda_free_pixels_on_device(device_ptr);
 }
 
 void DevicePointer::resize(const ivec2& new_wh) {
-    mark_updated();
     cuda_free_pixels_on_device(device_ptr);
     device_ptr = cuda_alloc_pixels_on_device(new_wh.x * new_wh.y);
     wh = new_wh;
 }
 
-void DevicePointer::tick(const StateReturn& state) {
-    mark_updated();
+void DevicePointer::tick(const ivec2& scale) {
     // Reallocate only if size is too small
-    int width = state["w"] * get_video_width_pixels();
-    int height = state["h"] * get_video_height_pixels();
     // TODO this does not handle nested scenes, assuming all scenes are children of the whole video's frame size
-    if (wh.x * wh.y < width * height) {
-        resize(ivec2(width, height));
+    if (wh.x * wh.y < scale.x * scale.y) {
+        resize(scale);
     }
 }
 

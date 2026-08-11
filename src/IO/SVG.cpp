@@ -127,6 +127,7 @@ shared_ptr<DevicePointer> svg_to_gpu_pix(const string& filename_with_or_without_
     copy.crop_by_alpha(ret);
 
     shared_ptr<DevicePointer> dp = make_shared<DevicePointer>(ret.wh);
+    cout << "SVG: " << filename << " -> " << ret.wh.x << "x" << ret.wh.y << endl;
     dp->copy_to_device(ret.pixels.data());
 
     return dp;

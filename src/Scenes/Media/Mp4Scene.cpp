@@ -50,7 +50,7 @@ void Mp4Scene::draw() {
 
     // Overwrite the image onto the scene's pixel buffer
     const vec2 offset = get_width_height() / 2;
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), frame_ptr, frame.wh, offset, 1.0f, 0.0f);
+    cuda_overlay(gpu_pix.get_ptr(), get_width_height(), frame_ptr, frame.wh, offset, 1.0f, 0.0f);
 
     cuda_free_pixels_on_device(frame_ptr);
 }

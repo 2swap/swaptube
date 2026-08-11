@@ -151,7 +151,7 @@ void FourDVerseScene::draw() {
         state["fade"], 
         state["slider"], 
         state["equation"],
-        gpu_pix->get_ptr()
+        gpu_pix.get_ptr()
     );
 
 }

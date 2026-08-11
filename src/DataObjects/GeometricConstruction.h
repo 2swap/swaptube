@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include "../Host_Device_Shared/vec.h"
-#include "DataObject.h"
 using namespace std;
 
 class GeometricItem {
@@ -30,7 +29,7 @@ public:
     GeometricLine(vec2 s, vec2 e, string id = "", bool u_s = false, string l = "") : GeometricItem(id, l==""?id:l, u_s), start(s), end(e) {}
 };
 
-class GeometricConstruction : public DataObject {
+class GeometricConstruction {
 public:
     void add(const GeometricPoint& p);
     void add(const GeometricLine& l);
@@ -44,6 +43,4 @@ public:
 
     vector<GeometricPoint> points;
     vector<GeometricLine> lines;
-
-    void tick(const StateReturn& state);
 };

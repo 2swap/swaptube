@@ -36,6 +36,6 @@ void MandelbulbScene::draw(){
         state["fov"], 
         vec3(state["light_x"], state["light_y"], state["light_z"]), 
         state["max_raymarch_iterations"], state["max_mandelbulb_iterations"],
-        gpu_pix->get_ptr()
+        gpu_pix.get_ptr()
     );
 }

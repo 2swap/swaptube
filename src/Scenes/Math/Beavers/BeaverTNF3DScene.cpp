@@ -114,7 +114,7 @@ void BeaverTNF3DScene::draw() {
     }
     printf("\nCuboid: ((%f,%f,%f),(%f,%f,%f))\n", lower.x, lower.y, lower.z, upper.x, upper.y, upper.z);*/
     beaver_TNF_3D_cuda(
-        gpu_pix->get_ptr(), get_width(), get_height(), vec2(state["center_x"], state["center_y"]),
+        gpu_pix.get_ptr(), get_width(), get_height(), vec2(state["center_x"], state["center_y"]),
         camera, state["fov"],
         lower*scale, upper*scale,
         action, tm,

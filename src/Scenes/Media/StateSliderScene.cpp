@@ -49,7 +49,7 @@ void StateSliderScene::draw() {
         const ivec2 wh = get_width_height();
         ScalingParams sp(wh * vec2(1, .6));
         string eqn_str = display_name + " = " + double_to_string(state["value"]);
-        write_text(gpu_pix->get_ptr(), wh, eqn_str, wh/2, wh, 1.0, 0.0);
+        write_text(gpu_pix.get_ptr(), wh, eqn_str, wh/2, wh, 1.0, 0.0);
     }
 }
 
@@ -65,11 +65,11 @@ void StateSliderScene::draw_slider() {
 
     ivec2 tl(wh.y * .5, wh.y * .4 + 1);
     ivec2 br(wh.x - wh.y * .5, wh.y * .6 + 1);
-    draw_rectangle(gpu_pix->get_ptr(), wh, tl, br, bar_color);
+    draw_rectangle(gpu_pix.get_ptr(), wh, tl, br, bar_color);
 
-    draw_circle(gpu_pix->get_ptr(), wh, ivec2(wh.y * .5, wh.y * .5), wh.y * .1, bar_color);
-    draw_circle(gpu_pix->get_ptr(), wh, ivec2(wh.x-wh.y*.5,wh.y*.5), wh.y * .1, bar_color);
+    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.y * .5, wh.y * .5), wh.y * .1, bar_color);
+    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.x-wh.y*.5,wh.y*.5), wh.y * .1, bar_color);
 
     vec2 center(wh.y * .5 + normalized_value * (wh.x - wh.y), wh.y/2.);
-    draw_circle(gpu_pix->get_ptr(), wh, center, wh.y * .5, knob_color);
+    draw_circle(gpu_pix.get_ptr(), wh, center, wh.y * .5, knob_color);
 }

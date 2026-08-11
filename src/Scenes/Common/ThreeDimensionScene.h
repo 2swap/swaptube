@@ -76,6 +76,8 @@ public:
 
     void add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa=1);
 
+    void change_data();
+
     void remove_surface(const string& name);
     void enable_globe();
     void enable_globe(const string& which);
@@ -95,5 +97,5 @@ protected:
     vector<Line> lines;
     vector<Surface> surfaces;
     map<string, Path> paths;
-    DevicePointer* distance_buffer;
+    DevicePointer distance_buffer;
 };

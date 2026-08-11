@@ -65,11 +65,6 @@ void Graph::tick(const StateReturn& state) {
         state["decay"],
         state["dimensions"]
     );
-    if(has_been_updated_since_last_scene_query()) {
-        //graph_to_3d();
-        //clear_surfaces();
-        //update_surfaces();
-    }
 }
 
 double Graph::add_node(double hash){
@@ -104,7 +99,6 @@ void Graph::move_node(double hash, vec4 pos) {
     if (it == nodes.end()) return;
     Node& node = it->second;
     node.position = pos;
-    mark_updated();
 }
 
 void Graph::add_edge(double from, double to, double opacity) {
@@ -112,7 +106,6 @@ void Graph::add_edge(double from, double to, double opacity) {
     if (does_edge_exist(from, to)) return;
     nodes.at(from).neighbors.insert(Edge(from, to));
     nodes.at(to  ).neighbors.insert(Edge(to, from));
-    mark_updated();
 }
 
 void Graph::remove_edge(double from, double to) {
@@ -123,8 +116,6 @@ void Graph::remove_edge(double from, double to) {
     
     from_node.neighbors.erase(Edge(from, to));
     to_node.neighbors.erase(Edge(to, from));
-
-    mark_updated();
 }
 
 const Edge* Graph::get_edge(double from, double to) {
@@ -163,7 +154,6 @@ void Graph::remove_node(double id) {
         nodes.at(neighbor_id).neighbors.erase(Edge(neighbor_id, id));
     }
     nodes.erase(id);
-    mark_updated();
 }
 
 int Graph::measure_distance(double start, double end) {
@@ -277,8 +267,6 @@ void Graph::iterate_physics(const int iterations, const float repel, const float
         node_vector[i]->position = positions[i];
         node_vector[i]->velocity = velocities[i];
     }
-
-    mark_updated();
 }
 
 std::unordered_set<double> Graph::get_neighborhood(double hash, int dist) {

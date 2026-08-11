@@ -32,5 +32,5 @@ void render_video() {
     stage_macroblock(SilenceBlock(5), 1);
     rgs.render_microblock();
 
-    cout << "Graph size: " << rgs.gs->graph->size() << " nodes";
+    cout << "Graph size: " << rgs.gs->graph.size() << " nodes";
 }

@@ -50,7 +50,7 @@ void ThreeDAlgebraScene::draw() {
     
 
         state["brightness"], 
-        gpu_pix->get_ptr()
+        gpu_pix.get_ptr()
     );
 
 }

@@ -50,7 +50,7 @@ void MandelbrotScene::draw() {
                       state["gradation"],
                       state["phase_shift"],
                       OPAQUE_BLACK,
-                      gpu_pix->get_ptr()
+                      gpu_pix.get_ptr()
     );
     CoordinateScene::draw();
 }
