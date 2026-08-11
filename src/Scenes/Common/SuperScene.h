@@ -38,7 +38,5 @@ protected:
     std::unordered_map<std::string, std::shared_ptr<Scene>> subscenes;
 
 private:
-    bool check_if_data_changed() const override;
-    void mark_data_unchanged() override;
     void change_data() override;
 };

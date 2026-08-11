@@ -57,7 +57,3 @@ void BeaverGridTNF3DScene::draw() {
         state["max_steps"]
     );
 }
-
-void BeaverGridTNF3DScene::mark_data_unchanged() { }
-void BeaverGridTNF3DScene::change_data() { }
-bool BeaverGridTNF3DScene::check_if_data_changed() const { return false; }

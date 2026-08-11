@@ -117,7 +117,3 @@ void BeaverIndividualScene::draw() {
         vec2(state["table_col_w"], state["table_row_h"]), vec2(state["table_w0"], state["table_h0"]), state["table_cell_margin"], state["table_icon_border"], state["table_border"], state["table_line_glow"], (state["show_all_transitions"] == 0 ? used_transitions : transitions_to_show) | -(state["show_all_transitions"] == 2), new_transition
     );
 }
-
-void BeaverIndividualScene::mark_data_unchanged() { }
-void BeaverIndividualScene::change_data() { }
-bool BeaverIndividualScene::check_if_data_changed() const { return false; }

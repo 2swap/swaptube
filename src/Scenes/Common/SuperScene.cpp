@@ -81,23 +81,8 @@ void SuperScene::change_data() {
     }
 }
 
-bool SuperScene::check_if_data_changed() const {
-    if (Scene::check_if_data_changed()) return true;
-    for(const auto& kv : subscenes){
-        if(kv.second->check_if_data_changed()) return true;
-    }
-    return false;
-}
-
 void SuperScene::on_end_transition_extra_behavior(const TransitionType tt) {
     for(const auto& kv : subscenes){
         kv.second->on_end_transition(tt);
-    }
-}
-
-void SuperScene::mark_data_unchanged() {
-    Scene::mark_data_unchanged();
-    for(const auto& kv : subscenes){
-        kv.second->mark_data_unchanged();
     }
 }

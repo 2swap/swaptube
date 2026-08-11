@@ -55,8 +55,6 @@ public:
 
     void set_global_identifier(const string& id);
 
-    virtual bool check_if_data_changed() const;
-    virtual void mark_data_unchanged();
     virtual void change_data();
 
 protected:

@@ -124,7 +124,3 @@ void BeaverTNF3DScene::draw() {
         state["max_steps"]
     );
 }
-
-void BeaverTNF3DScene::mark_data_unchanged() { }
-void BeaverTNF3DScene::change_data() { }
-bool BeaverTNF3DScene::check_if_data_changed() const { return false; }

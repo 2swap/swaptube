@@ -102,7 +102,6 @@ uint32_t* Scene::query() {
         cout << "|" << flush;
         draw();
     }
-    mark_data_unchanged();
     has_updated_since_last_query = false;
     cout << ")" << flush;
     return gpu_pix->get_ptr();
@@ -224,23 +223,8 @@ void Scene::add_data_object(DataObject* obj) {
     data_objects.push_back(obj);
 }
 
-bool Scene::check_if_data_changed() const {
-    for(const DataObject* obj : data_objects) {
-        if(obj->has_been_updated_since_last_scene_query()) {
-            return true;
-        }
-    }
-    return false;
-}
-void Scene::mark_data_unchanged() {
-    for(DataObject* obj : data_objects) {
-        obj->mark_unchanged();
-    }
-}
 void Scene::change_data() {
     for(DataObject* obj : data_objects) {
         obj->tick(state);
-        obj->mark_updated();
     }
 }
-

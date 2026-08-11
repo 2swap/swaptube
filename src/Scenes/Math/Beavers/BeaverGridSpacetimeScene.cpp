@@ -27,7 +27,3 @@ void BeaverGridSpacetimeScene::draw() {
         grid_wh, spacetime_wh, tm_border, state["iterations"]
     );
 }
-
-void BeaverGridSpacetimeScene::mark_data_unchanged() { }
-void BeaverGridSpacetimeScene::change_data() { }
-bool BeaverGridSpacetimeScene::check_if_data_changed() const { return false; }
