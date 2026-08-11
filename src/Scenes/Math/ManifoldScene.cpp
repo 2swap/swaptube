@@ -117,28 +117,6 @@ void ManifoldScene::draw() {
     ThreeDimensionScene::draw();
 }
 
-const StateQuery ManifoldScene::populate_state_query() const {
-    StateQuery s = ThreeDimensionScene::populate_state_query();
-    for(const std::string& name : manifold_names) {
-        const std::string tag = "manifold" + name + "_";
-        state_query_insert_multiple(s, {
-            tag + "x",
-            tag + "y",
-            tag + "z",
-            tag + "r",
-            tag + "i",
-            tag + "a_min",
-            tag + "a_max",
-            tag + "a_steps",
-            tag + "b_min",
-            tag + "b_max",
-            tag + "b_steps"
-        });
-    }
-    state_query_insert_multiple(s, {"ab_dilation", "dot_radius"});
-    return s;
-}
-
 void ManifoldScene::set_texture(const Pixels& new_texture) {
     if(d_texture_data) {
         cuda_free_texture(d_texture_data);

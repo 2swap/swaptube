@@ -53,10 +53,6 @@ void StateSliderScene::draw() {
     }
 }
 
-const StateQuery StateSliderScene::populate_state_query() const {
-    return StateQuery{"value"};
-}
-
 void StateSliderScene::draw_slider() {
     const ivec2 wh(get_width_height());
 

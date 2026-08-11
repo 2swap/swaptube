@@ -16,9 +16,7 @@
 #include "ResolvedStateEquationComponent.c"
 
 typedef std::vector<ResolvedStateEquationComponent> ResolvedStateEquation;
-using StateQuery = unordered_set<string>;
 using StateSet = unordered_map<string, string>;
-void state_query_insert_multiple(StateQuery& sq, const StateQuery& additions);
 
 /* StateManager is a DAG (Directed Acyclic Graph) of state assignments
  * used to facilitate frame-by-frame manipulation of state.
@@ -102,7 +100,7 @@ public:
     const void set_subjugated(bool b);
     const void begin_timer(const string& timer_name);
 
-    const StateReturn respond_to_query(const StateQuery& query) const;
+    const StateReturn get_state() const;
     const ResolvedStateEquation get_resolved_equation(const string& variable) const;
 
 private:

@@ -94,12 +94,3 @@ void RubiksScene::draw() {
     state["cube_size"], state["internal_plastic_opacity"]);
     //ThreeDimensionScene::draw();
 }
-
-const StateQuery RubiksScene::populate_state_query() const {
-    StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"turn_fraction", "cube_size", "internal_plastic_opacity"});
-    return s;
-}
-
-
-

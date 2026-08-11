@@ -50,13 +50,3 @@ void CompositeScene::draw() {
         );
     }
 }
-
-const StateQuery CompositeScene::populate_state_query() const {
-    StateQuery ret = SuperScene::populate_state_query();
-    for (auto& subscene : subscenes){
-        ret.insert(subscene.first + ".x");
-        ret.insert(subscene.first + ".y");
-        ret.insert(subscene.first + ".angle");
-    };
-    return ret;
-}

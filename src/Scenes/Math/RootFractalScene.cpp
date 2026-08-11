@@ -63,9 +63,3 @@ void RootFractalScene::draw() {
     */
     CoordinateScene::draw();
 }
-
-const StateQuery RootFractalScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, {"coefficient0_r", "coefficient0_i", "coefficient1_r", "coefficient1_i", "terms", "window_height", "degree_fixed", "left_x", "top_y", "right_x", "bottom_y", "coefficients_opacity", "visibility_multiplier", "brightness"});
-    return sq;
-}

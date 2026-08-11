@@ -191,9 +191,3 @@ void GraphScene::draw(){
 
     ThreeDimensionScene::draw();
 }
-
-const StateQuery GraphScene::populate_state_query() const {
-    StateQuery s = ThreeDimensionScene::populate_state_query();
-    state_query_insert_multiple(s, {"physics_multiplier", "repel", "attract", "decay", "microblock_fraction", "macroblock_fraction", "dimensions", "edge_weights_size", "midpoint_multiplier", "node_labels_size"});
-    return s;
-}

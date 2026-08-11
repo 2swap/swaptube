@@ -11,8 +11,6 @@ public:
 
     void jump_latex(string l);
 
-    const StateQuery populate_state_query() const;
-
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 
     void draw() override;

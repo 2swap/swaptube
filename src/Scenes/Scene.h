@@ -30,7 +30,6 @@ public:
     Scene(const vec2& dimensions = vec2(1, 1));
     ~Scene();
 
-    virtual const StateQuery populate_state_query() const = 0;
     virtual void draw() = 0;
 
     virtual void on_end_transition_extra_behavior(const TransitionType tt){};

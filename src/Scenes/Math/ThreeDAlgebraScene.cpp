@@ -31,15 +31,6 @@ ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : Scene(dimension
     });
 }
 
-const StateQuery ThreeDAlgebraScene::populate_state_query() const {
-    return {
-    
-        "scale", "brightness",
-        "pov_xz", "pov_y",// "pov_z",
-        "pov_fov", "pov_max_dist"
-    };
-}
-
 void ThreeDAlgebraScene::draw() {
 
     const quat camera_direction_0 = normalize(quat(cos(state["pov_xz"]), 0, sin(state["pov_xz"]), 0));

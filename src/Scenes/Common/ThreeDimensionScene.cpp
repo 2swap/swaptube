@@ -269,18 +269,6 @@ void ThreeDimensionScene::draw() {
     }
 }
 
-const StateQuery ThreeDimensionScene::populate_state_query() const {
-    StateQuery sq = SuperScene::populate_state_query();
-    for(const string& x : {
-        "fov","x", "y", "z", "d", "q1", "qi", "qj", "qk",
-        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
-    }) sq.insert(x);
-    for(const Surface& surface : surfaces){
-        sq.insert(surface.name + ".opacity");
-    }
-    return sq;
-}
-
 void ThreeDimensionScene::add_point(const Point& p) {
     points.push_back(p);
 }

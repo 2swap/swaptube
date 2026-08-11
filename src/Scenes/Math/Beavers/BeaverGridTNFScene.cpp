@@ -18,9 +18,3 @@ void BeaverGridTNFScene::draw() {
 
     CoordinateScene::draw();
 }
-
-const StateQuery BeaverGridTNFScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    sq.insert("max_steps");
-    return sq;
-}

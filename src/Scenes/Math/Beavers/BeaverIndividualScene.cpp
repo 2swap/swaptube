@@ -118,17 +118,6 @@ void BeaverIndividualScene::draw() {
     );
 }
 
-const StateQuery BeaverIndividualScene::populate_state_query() const {
-    StateQuery sq = {
-	"iterations",
-        "state_icon_scale", "vertical_step", "opacity_min", "opacity_dropoff",
-        "dir_icon_scale", "current_tape_opacity", "sleep",
-        "table_col_w", "table_row_h", "table_w0", "table_h0", "table_cell_margin", "table_icon_border", "table_border", "table_line_glow", "show_all_transitions",
-        "zoom", "center_x", "center_y"
-    };
-    return sq;
-}
-
 void BeaverIndividualScene::mark_data_unchanged() { }
 void BeaverIndividualScene::change_data() { }
 bool BeaverIndividualScene::check_if_data_changed() const { return false; }

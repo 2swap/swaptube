@@ -15,6 +15,4 @@ public:
     void slide_subscene(const TransitionType tt, const std::string& name, const vec2& delta);
 
     void draw() override;
-
-    const StateQuery populate_state_query() const override;
 };

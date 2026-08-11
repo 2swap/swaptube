@@ -51,18 +51,6 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
     });
 }
 
-const StateQuery TwoDAlgebraScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, {
-        "dragger_x", "dragger_y", "dragger_type","dragger_brightness","algebra",
-        "number_line","brightness",
-        "xx_x", "xx_y","xy_x", "xy_y","yx_x", "yx_y","yy_x", "yy_y",
-        "diagram_opacity","xx_opacity","xy_opacity","yy_opacity"
-    });
-    return sq;
-}
-
-
 const int get_diagram_unit(ivec2 wh, float top_y, float bottom_y, int diagram_opacity){
     
     if (diagram_opacity == 255){

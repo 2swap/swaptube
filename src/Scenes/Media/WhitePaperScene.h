@@ -11,8 +11,6 @@ public:
 
     void draw() override;
 
-    const StateQuery populate_state_query() const override;
-
 private:
     shared_ptr<DevicePointer> author_pixels;
     const string prefix;

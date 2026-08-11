@@ -101,11 +101,3 @@ void SuperScene::mark_data_unchanged() {
         kv.second->mark_data_unchanged();
     }
 }
-
-const StateQuery SuperScene::populate_state_query() const {
-    StateQuery ret;
-    for (const auto& name : render_order){
-        ret.insert(name + ".opacity");
-    };
-    return ret;
-}

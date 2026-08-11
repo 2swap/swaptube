@@ -11,12 +11,6 @@ VariableContents::VariableContents(string eq,
                      bool fr
                     ) : value(val), fresh(fr), equation(eq), local_dependencies(equation.get_local_dependencies()) {}
 
-void state_query_insert_multiple(StateQuery& sq, const StateQuery& additions){
-    for(const string& s : additions){
-        sq.insert(s);
-    }
-}
-
 StateReturn::StateReturn() {}
 StateReturn::StateReturn(const unordered_map<string, double>& m) : map(m) {}
 
@@ -286,22 +280,21 @@ const void StateManager::begin_timer(const string& timer_name) {
     set(timer_name, "{t} " + to_string(get_global_state("t")) + " -");
 }
 
-const StateReturn StateManager::respond_to_query(const StateQuery& query) const {
+const StateReturn StateManager::get_state() const {
     if(subjugated){
         if (parent == nullptr)
             throw runtime_error("A StateManager was queried while marked as subjugated despite not having a parent.");
-        return parent->respond_to_query(query);
+        return parent->get_state();
     }
     StateReturn result;
-    for (const auto& varname : query) {
-        if(contains(varname)){
-            result.set(varname, get_local_value(varname));
-        } else if (global_state_exists(varname)) {
-            result.set(varname, get_global_state(varname));
-        } else {
+    for (const auto& variable : variables) {
+        const string& variable_name = variable.first;
+        const VariableContents& vc = variable.second;
+        if(!vc.fresh){
             print_state();
-            throw runtime_error("ERROR: Attempted to get state for queried variable " + varname + " but it does not exist locally or globally!\nState has been printed above.");
+            throw runtime_error("ERROR: Attempted to read stale variable " + variable_name + "!\nState has been printed above.");
         }
+        result.set(variable_name, vc.value);
     }
     return result;
 }

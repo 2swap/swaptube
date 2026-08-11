@@ -113,14 +113,3 @@ void PermutationScene::draw() {
         draw_circle(gpu_pix->get_ptr(), get_width_height(), center, 5.0f, color);
     }
 }
-
-const StateQuery PermutationScene::populate_state_query() const{
-    
-
-    StateQuery s = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(s, { "m"});
-    for (const auto& [place_name, point] : the_perm->places) {
-        state_query_insert_multiple(s, { place_name + ".x", place_name + ".y"});
-    }
-    return s;
-}

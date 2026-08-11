@@ -54,7 +54,3 @@ void Mp4Scene::draw() {
 
     cuda_free_pixels_on_device(frame_ptr);
 }
-
-const StateQuery Mp4Scene::populate_state_query() const {
-    return StateQuery{"current_frame"};
-}

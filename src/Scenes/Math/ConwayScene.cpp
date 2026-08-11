@@ -27,14 +27,6 @@ void ConwayScene::draw() {
     CoordinateScene::draw();
 }
 
-const StateQuery ConwayScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, {
-        "microblock_fraction_passthrough"
-    });
-    return sq;
-}
-
 void ConwayScene::on_end_transition_extra_behavior(const TransitionType tt){
     if(tt == MICRO)
         ;//conway_grid->iterate();

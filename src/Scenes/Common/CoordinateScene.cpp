@@ -141,8 +141,3 @@ void CoordinateScene::draw_one_axis(bool ymode) {
     }
 }
 */
-
-const StateQuery CoordinateScene::populate_state_query() const {
-    StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity"};
-    return sq;
-}

@@ -14,8 +14,6 @@ public:
 
     int alpha_subtract = 2;
 
-    const StateQuery populate_state_query() const override;
-
     void draw() override;
 
     void generate_tone();

@@ -76,38 +76,6 @@ void GeometryScene::draw() {
     pix.overlay_gpu(geometry, vec2(), construction_opacity);
 }
 
-const StateQuery GeometryScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    sq.insert("construction_opacity");
-    for(const GeometricPoint& p : construction.points) {
-        if(!p.old) {
-            sq.insert("microblock_fraction_passthrough");
-            break;
-        }
-    }
-    for(const GeometricLine& l : construction.lines) {
-        if(!l.old) {
-            sq.insert("microblock_fraction_passthrough");
-            break;
-        }
-    }
-    for (const GeometricPoint& p : construction.points) {
-        if(p.use_state) {
-            sq.insert("point_"+p.identifier+"_x");
-            sq.insert("point_"+p.identifier+"_y");
-        }
-    }
-    for (const GeometricLine& l : construction.lines) {
-        if(l.use_state) {
-            sq.insert("line_"+l.identifier+"_start_x");
-            sq.insert("line_"+l.identifier+"_start_y");
-            sq.insert("line_"+l.identifier+"_end_x");
-            sq.insert("line_"+l.identifier+"_end_y");
-        }
-    }
-    return sq;
-}
-
 void GeometryScene::on_end_transition_extra_behavior(const TransitionType tt) {
     // TODO make this micro or macroblock based
     construction.set_all_old();

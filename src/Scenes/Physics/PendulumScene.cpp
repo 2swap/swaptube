@@ -17,10 +17,6 @@ PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(di
 extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
 extern "C" void draw_quadrilateral(uint32_t* pix, const ivec2& wh, const vec2& p0, const vec2& p1, const vec2& p2, const vec2& p3, const uint32_t color);
 
-const StateQuery PendulumScene::populate_state_query() const {
-    return StateQuery{"volume", "rainbow", "tone", "path_opacity", "physics_multiplier", "rk4_step_size"};
-}
-
 void PendulumScene::draw() {
     double w = get_width(); double h = get_height();
     double line_thickness = h/40;

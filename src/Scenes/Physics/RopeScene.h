@@ -14,7 +14,6 @@ class RopeScene : public CoordinateScene {
 
         void draw() override;
 
-        const StateQuery populate_state_query() const override;
         void add_pin(vec2 pos);
         void remove_pin(int pin_index);
 

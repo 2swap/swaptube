@@ -194,21 +194,3 @@ void GeodesicScene::draw() {
 
     draw_manifold(x_eq, y_eq, z_eq, w_eq, camera_direction);
 }
-
-const StateQuery GeodesicScene::populate_state_query() const {
-    StateQuery sq = {
-        "space_x", "space_y", "space_z", "space_w",
-
-        "subscreen_size",
-
-        "pov_x", "pov_y", "pov_z",
-        "pov_q1", "pov_qi", "pov_qj", "pov_qk",
-        "pov_fov", "pov_max_dist",
-
-        "manifold_d", "manifold_fov",
-        "manifold_opacity",
-
-        "geodesics_count", "geodesics_steps", "geodesics_spread_angle", "geodesics_opacity",
-    };
-    return sq;
-}

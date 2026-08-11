@@ -147,10 +147,7 @@ void Scene::render_microblock(){
 
 void Scene::update_state() {
     manager.evaluate_all();
-    StateQuery sq = populate_state_query();
-    sq.insert("w");
-    sq.insert("h");
-    state = manager.respond_to_query(sq);
+    state = manager.get_state();
     if(global_identifier.size() > 0) publish_global();
 }
 
@@ -158,23 +155,23 @@ int Scene::get_width() {
     manager.evaluate_all();
     // TODO shouldn't this really be the container/parent size, not the video?
     // I have never dealt with doubly nested subscenes so I think this has never been an issue...
-    return get_video_width_pixels() * manager.respond_to_query({"w"})["w"];
+    return get_video_width_pixels() * manager.get_state()["w"];
 }
 
 int Scene::get_height() {
     manager.evaluate_all();
-    return get_video_height_pixels() * manager.respond_to_query({"h"})["h"];
+    return get_video_height_pixels() * manager.get_state()["h"];
 }
 
 ivec2 Scene::get_width_height() {
     manager.evaluate_all();
-    auto response = manager.respond_to_query({"w", "h"});
+    auto response = manager.get_state();
     return ivec2(get_video_width_pixels() * response["w"], get_video_height_pixels() * response["h"]);
 }
 
 int Scene::get_pixels_size() {
     manager.evaluate_all();
-    auto response = manager.respond_to_query({"w", "h"});
+    auto response = manager.get_state();
     int width = get_video_width_pixels() * response["w"];
     int height = get_video_height_pixels() * response["h"];
     cout << "Calculated pixel size: " << width << "x" << height << " = " << width * height << endl;

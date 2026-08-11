@@ -48,12 +48,6 @@ RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
     CompositeScene::add_scene(gs, "gs");
 }
 
-const StateQuery RubiksGraphScene::populate_state_query() const{
-    StateQuery ret = CompositeScene::populate_state_query();
-    ret.insert("rubiks_scene_size");
-    return ret;
-}
-
 void RubiksGraphScene::add_children(unordered_set<string> move_set, bool cube_or_not, 
     bool edge_label_or_not, bool cube_label_or_not) {
     Graph* g = gs->graph;

@@ -125,11 +125,6 @@ void BeaverTNF3DScene::draw() {
     );
 }
 
-const StateQuery BeaverTNF3DScene::populate_state_query() const {
-    StateQuery sq = {"fov", "q1", "qi", "qj", "qk", "camera_distance", "center_x", "center_y", "max_steps", "max_tnf_depth", "target_x", "target_y", "target_z", "scale_x", "scale_y", "scale_z", "ancestor_offset", "highlight_x", "highlight_y", "highlight_z", "highlight_intensity", "brightness_offset", "color_source_depth"};
-    return sq;
-}
-
 void BeaverTNF3DScene::mark_data_unchanged() { }
 void BeaverTNF3DScene::change_data() { }
 bool BeaverTNF3DScene::check_if_data_changed() const { return false; }

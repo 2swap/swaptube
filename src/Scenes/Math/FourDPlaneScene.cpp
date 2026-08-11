@@ -76,12 +76,6 @@ float **matrixMult(float **A,float **B, int rows, int cols, int shared){
 	return AB;
 }
 
-const StateQuery FourDPlaneScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, {"rotation_1", "rotation_2", "rotation_3", "scale", "brightness"});
-    return sq;
-}
-
 void FourDPlaneScene::draw() {
 
     float **M = rotationMatrix(4,4,0,1,state["rotation_1"]);

@@ -82,8 +82,3 @@ void WhitePaperScene::draw() {
     const vec2 author_offset = get_width_height() * vec2(.5, smoothlerp(-.1, .07, state["completion"]));
     cuda_overlay(gpu_pix->get_ptr(), get_width_height(), author_pixels->get_ptr(), author_pixels->get_wh(), author_offset, 1.0f, 0.0f);
 }
-
-const StateQuery WhitePaperScene::populate_state_query() const {
-    return StateQuery{"completion", "which_page", "page_focus",
-                      "crop_top", "crop_bottom", "crop_left", "crop_right"};
-}

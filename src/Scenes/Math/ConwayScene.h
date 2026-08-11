@@ -14,6 +14,5 @@ public:
 
     void draw() override;
 
-    const StateQuery populate_state_query() const override;
     void on_end_transition_extra_behavior(const TransitionType tt);
 };

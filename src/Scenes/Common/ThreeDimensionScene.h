@@ -68,8 +68,6 @@ public:
 
     void draw() override;
 
-    const StateQuery populate_state_query() const override;
-
     void add_point(const Point& p);
 
     void add_line(const Line& l);

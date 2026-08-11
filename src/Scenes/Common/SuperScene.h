@@ -34,8 +34,6 @@ protected:
 
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 
-    const StateQuery populate_state_query() const override;
-
     std::list<std::string> render_order;
     std::unordered_map<std::string, std::shared_ptr<Scene>> subscenes;
 

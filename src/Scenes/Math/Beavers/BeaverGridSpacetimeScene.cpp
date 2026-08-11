@@ -28,13 +28,6 @@ void BeaverGridSpacetimeScene::draw() {
     );
 }
 
-const StateQuery BeaverGridSpacetimeScene::populate_state_query() const {
-    StateQuery sq = {
-        "iterations", "center_x", "center_y", "zoom"
-    };
-    return sq;
-}
-
 void BeaverGridSpacetimeScene::mark_data_unchanged() { }
 void BeaverGridSpacetimeScene::change_data() { }
 bool BeaverGridSpacetimeScene::check_if_data_changed() const { return false; }

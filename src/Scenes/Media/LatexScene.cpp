@@ -79,7 +79,3 @@ void LatexScene::jump_latex(string l) {
     next_pixels = last_pixels = latex_to_gpu_pix(l, sp);
     transitioning = false;
 }
-
-const StateQuery LatexScene::populate_state_query() const {
-    return StateQuery{"microblock_fraction"};
-}

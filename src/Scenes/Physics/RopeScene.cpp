@@ -39,12 +39,5 @@ void RopeScene::draw(){
     // cout << "RopeScene::draw() finished" << endl;
 }
 
-
-const StateQuery RopeScene::populate_state_query() const{
-    return CoordinateScene::populate_state_query();
-}
-
-
-
 void RopeScene::set_pins(vec2 pos, uint32_t color, float size){
 }

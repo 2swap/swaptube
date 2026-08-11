@@ -21,9 +21,3 @@ void BeaverGridScene::draw() {
 
     CoordinateScene::draw();
 }
-
-const StateQuery BeaverGridScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, { "max_steps", "num_states", "num_symbols" });
-    return sq;
-}

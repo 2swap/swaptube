@@ -76,9 +76,3 @@ void TuringMachineScene::draw() {
 
     CoordinateScene::draw();
 }
-
-const StateQuery TuringMachineScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, { "iterations" });
-    return sq;
-}

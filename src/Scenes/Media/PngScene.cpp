@@ -48,7 +48,3 @@ void PngScene::draw() {
 
     cuda_free_pixels_on_device(scaled_ptr);
 }
-
-const StateQuery PngScene::populate_state_query() const {
-    return StateQuery{"crop_top", "crop_bottom", "crop_left", "crop_right"};
-}
