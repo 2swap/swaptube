@@ -38,10 +38,6 @@ public:
 
     void update();
 
-    virtual bool needs_redraw() const;
-
-    bool check_if_state_changed() const;
-
     uint32_t* query();
 
     double get_geom_mean_size();
@@ -67,7 +63,6 @@ public:
 protected:
     DevicePointer* gpu_pix;
     StateReturn state;
-    bool has_ever_rendered = false;
 
     void add_data_object(DataObject* data_object);
 
@@ -78,7 +73,6 @@ private:
                                    // to uniquely identify this scene if necessary.
                                    // Empty by default, meaning no state is published.
 
-    StateReturn last_state;
     bool has_updated_since_last_query = false;
 
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }

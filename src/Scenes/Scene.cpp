@@ -87,21 +87,9 @@ void Scene::update() {
     has_updated_since_last_query = true;
 
     // Data and state can be co-dependent, so update state before and after since state changes are idempotent.
-    last_state = state;
     update_state();
     change_data();
     update_state();
-}
-
-bool Scene::needs_redraw() const {
-    bool state_change = check_if_state_changed();
-    bool data_change = check_if_data_changed();
-    cout << (state_change ? "S" : ".") << (data_change ? "D" : ".") << flush;
-    return !has_ever_rendered || state_change || data_change;
-}
-
-bool Scene::check_if_state_changed() const {
-    return state != last_state;
 }
 
 uint32_t* Scene::query() {
@@ -109,8 +97,7 @@ uint32_t* Scene::query() {
     if(!has_updated_since_last_query) update();
 
     // The only time we skip render entirely is when the project flags to skip a section.
-    if(needs_redraw() && is_for_real()) {
-        has_ever_rendered = true;
+    if(is_for_real()) {
         cuda_zeroize_pixels(gpu_pix->get_ptr(), get_width_height());
         cout << "|" << flush;
         draw();

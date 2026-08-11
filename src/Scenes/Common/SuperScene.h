@@ -30,13 +30,9 @@ protected:
     SuperScene(const vec2& dimensions = vec2(1, 1))
         : Scene(dimensions) {}
 
-    bool needs_redraw() const override;
-
     void add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind = false);
 
     void on_end_transition_extra_behavior(const TransitionType tt) override;
-
-    bool subscene_needs_redraw() const;
 
     const StateQuery populate_state_query() const override;
 
