@@ -66,7 +66,7 @@ Scene::Scene(const vec2& dimensions)
         {"w", to_string(dimensions.x)},
         {"h", to_string(dimensions.y)}
     });
-    gpu_pix = new DevicePointer(get_pixels_size());
+    gpu_pix = new DevicePointer(get_width_height());
     add_data_object(gpu_pix);
 }
 
