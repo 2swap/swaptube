@@ -102,18 +102,6 @@ float **matrixMult(float **A,float **B, int rows, int cols, int shared){
 	return AB;
 }
 */
-const StateQuery FourDAlgebraScene::populate_state_query() const {
-    return {
-    
-        "rotation_1k", "rotation_ik", "rotation_jk", 
-        "scale", "brightness","fade","slider",
-        "equation","offset1","offset2",
-        "rotater",
-        "pov_xz", "pov_y",// "pov_z",
-        "pov_q1", "pov_qi", "pov_qj", "pov_qk",
-        "pov_fov", "pov_max_dist"
-    };
-}
 
 void FourDAlgebraScene::draw() {
 
@@ -183,7 +171,7 @@ void FourDAlgebraScene::draw() {
         state["fade"], 
         state["slider"], 
         state["equation"],
-        gpu_pix->get_ptr()
+        gpu_pix.get_ptr()
     );
 
 }

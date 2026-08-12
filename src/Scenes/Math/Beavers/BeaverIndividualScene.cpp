@@ -21,7 +21,7 @@ void boop(int state, int symbol, int num_states){
 }
 
 BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* icons, ivec2& icons_wh, int& icons_len, const vec2& dimension)
-: Scene(dimension), tm(tm), tape_length(31), tape(tape_length, 0), head_position(tape_length/2), icons(icons), icons_wh(icons_wh), icons_len(icons_len) {
+: Scene(dimension), tm(tm), tape_length(31), icons(icons), icons_wh(icons_wh), icons_len(icons_len), tape(tape_length, 0), head_position(tape_length/2) {
     head_position_history.push_back(head_position);
     manager.set({
         // general simulation params
@@ -108,7 +108,7 @@ void BeaverIndividualScene::draw() {
     uint32_t used_transitions = used_transition_history[min(int(iterations)+1, grid_wh.y)];
 
     draw_individual_beaver(
-        gpu_pix->get_ptr(), wh, lx_ty, rx_by,
+        gpu_pix.get_ptr(), wh, lx_ty, rx_by,
         grid.data(), ivec2(tape_length, grid.size() / tape_length),
         icons, icons_wh, icons_len,
         tm, iterations,
@@ -117,18 +117,3 @@ void BeaverIndividualScene::draw() {
         vec2(state["table_col_w"], state["table_row_h"]), vec2(state["table_w0"], state["table_h0"]), state["table_cell_margin"], state["table_icon_border"], state["table_border"], state["table_line_glow"], (state["show_all_transitions"] == 0 ? used_transitions : transitions_to_show) | -(state["show_all_transitions"] == 2), new_transition
     );
 }
-
-const StateQuery BeaverIndividualScene::populate_state_query() const {
-    StateQuery sq = {
-	"iterations",
-        "state_icon_scale", "vertical_step", "opacity_min", "opacity_dropoff",
-        "dir_icon_scale", "current_tape_opacity", "sleep",
-        "table_col_w", "table_row_h", "table_w0", "table_h0", "table_cell_margin", "table_icon_border", "table_border", "table_line_glow", "show_all_transitions",
-        "zoom", "center_x", "center_y"
-    };
-    return sq;
-}
-
-void BeaverIndividualScene::mark_data_unchanged() { }
-void BeaverIndividualScene::change_data() { }
-bool BeaverIndividualScene::check_if_data_changed() const { return false; }

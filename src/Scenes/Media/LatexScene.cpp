@@ -19,11 +19,10 @@ extern "C" void cuda_overlay (
     const uint32_t* foreground, const ivec2& f_wh,
     const vec2& center, const float opacity, const float angle_rad);
 
-LatexScene::LatexScene(const string& l, double box_scale, const vec2& dimensions)
-: Scene(dimensions), box_scale(box_scale) {
-    ScalingParams sp(get_width_height() * box_scale);
+LatexScene::LatexScene(const string& l, const vec2& dimensions)
+: Scene(dimensions) {
+    ScalingParams sp(get_width_height());
     last_pixels = next_pixels = latex_to_gpu_pix(l, sp);
-    scale_factor = sp.scale_factor;
 }
 
 void LatexScene::begin_latex_transition(const TransitionType tt, const string& l) {
@@ -31,10 +30,7 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
     if(transitioning) {
         throw runtime_error("LatexScene: Already transitioning. Cannot begin a new transition until the current one finishes.");
     }
-    if(scale_factor == 0) {
-        throw runtime_error("LatexScene: scale_factor is not set before begin_latex_transition.");
-    }
-    ScalingParams sp(scale_factor);
+    ScalingParams sp(get_width_height());
     transitioning = true;
     transition_type = tt;
     last_pixels = next_pixels;
@@ -51,18 +47,17 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
         last_segmented.pixels.data(), last_pixels_cpu.wh, last_num_glyphs,
         next_segmented.pixels.data(), next_pixels_cpu.wh, next_num_glyphs
     );
-    cout << "LatexScene: Transition started with scale factor: " << sp.scale_factor << endl;
 }
 
 void LatexScene::draw() {
     if (transitioning) {
         interpolate(
             interp, smoother2(state["microblock_fraction"]),
-            gpu_pix->get_ptr(), get_width_height()
+            gpu_pix.get_ptr(), get_width_height()
         );
     } else {
         vec2 offset = get_width_height() / 2.0f;
-        cuda_overlay(gpu_pix->get_ptr(), get_width_height(),
+        cuda_overlay(gpu_pix.get_ptr(), get_width_height(),
             last_pixels->get_ptr(), last_pixels->get_wh(), offset, 1.0f, 0.0f);
     }
 }
@@ -75,11 +70,7 @@ void LatexScene::on_end_transition_extra_behavior(const TransitionType tt) {
 }
 
 void LatexScene::jump_latex(string l) {
-    ScalingParams sp(scale_factor);
+    ScalingParams sp(get_width_height());
     next_pixels = last_pixels = latex_to_gpu_pix(l, sp);
     transitioning = false;
-}
-
-const StateQuery LatexScene::populate_state_query() const {
-    return StateQuery{"microblock_fraction"};
 }

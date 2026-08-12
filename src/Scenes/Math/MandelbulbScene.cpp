@@ -27,10 +27,6 @@ MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions) {
     });
 };
 
-const StateQuery MandelbulbScene::populate_state_query() const {
-    return {"x", "y", "z", "d", "q1", "qi", "qj", "qk", "fov", "light_x", "light_y", "light_z", "max_mandelbulb_iterations", "max_raymarch_iterations"};
-}
-
 void MandelbulbScene::draw(){
     const vec3 focus_position(state["x"], state["y"], state["z"]);
     const quat camera_quat = normalize(quat(state["q1"], state["qi"], state["qj"], state["qk"]));
@@ -40,6 +36,6 @@ void MandelbulbScene::draw(){
         state["fov"], 
         vec3(state["light_x"], state["light_y"], state["light_z"]), 
         state["max_raymarch_iterations"], state["max_mandelbulb_iterations"],
-        gpu_pix->get_ptr()
+        gpu_pix.get_ptr()
     );
 }

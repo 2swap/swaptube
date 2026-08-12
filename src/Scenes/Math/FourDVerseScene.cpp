@@ -68,21 +68,6 @@ FourDVerseScene::FourDVerseScene(const vec2& dimensions) : Scene(dimensions){
 // }
 
 
-const StateQuery FourDVerseScene::populate_state_query() const {
-    return {    
-    
-        "rotation_1k", "rotation_ik", "rotation_jk", 
-        "scale", "brightness","fade","slider",
-        "equation","offset1","offset2",
-        "l_commute","l_i_sq","l_j_sq",
-        "r_commute","r_i_sq","r_j_sq",
-    
-        "pov_xz", "pov_y",// "pov_z",
-        "pov_q1", "pov_qi", "pov_qj", "pov_qk",
-        "pov_fov", "pov_max_dist"
-    };
-}
-
 float **rotationMatrixV(int rows, int cols, int axis1, int axis2, float angle){
     float **M = new float *[rows];
 
@@ -166,7 +151,7 @@ void FourDVerseScene::draw() {
         state["fade"], 
         state["slider"], 
         state["equation"],
-        gpu_pix->get_ptr()
+        gpu_pix.get_ptr()
     );
 
 }

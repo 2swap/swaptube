@@ -1,6 +1,5 @@
 #include "../Scenes/Common/CompositeScene.h"
 //#include "../Scenes/Common/PauseScene.h"
-#include "../Scenes/Common/TwoswapScene.h"
 
 #include "../Scenes/Media/LatexScene.h"
 //#include "../Scenes/Media/PngScene.h"
@@ -8,9 +7,6 @@
 //#include "../Scenes/Media/WhitePaperScene.h"
 
 #include "../Scenes/Math/Beavers/TuringMachineScene.h"
-#include "../Scenes/Math/Beavers/BeaverGridScene.h"
-#include "../Scenes/Math/Beavers/BeaverGridTNFScene.h"
-#include "../Scenes/Math/Beavers/BeaverGridTNF3DScene.h"
 #include "../Scenes/Math/Beavers/BeaverGridSpacetimeScene.h"
 #include "../Scenes/Math/Beavers/BeaverTNF3DScene.h"
 #include "../Scenes/Math/Beavers/BeaverIndividualScene.h"
@@ -678,8 +674,8 @@ void render_video() {
     icons = init_icons(pngnames, icons_wh);
     icons_len = pngnames.size();*/
 
-    grid_test();
-    //preintro(cs);
+    //grid_test();
+    preintro(cs);
     //intro(cs);
 
     //cuda_free_pixels_on_device(icons);

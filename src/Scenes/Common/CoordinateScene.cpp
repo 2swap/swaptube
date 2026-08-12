@@ -61,8 +61,7 @@ string truncate_tick(const float value, const bool append_i) {
     return str;
 }
 
-CoordinateScene::CoordinateScene(const vec2& dimensions)
-    : Scene(dimensions) {
+CoordinateScene::CoordinateScene(const vec2& dimensions) : Scene(dimensions) {
     manager.set({
         {"left_x"   , "<center_x> .5 <window_width> / -"},
         {"right_x"  , "<center_x> .5 <window_width> / +"},
@@ -94,7 +93,7 @@ vec2 CoordinateScene::pixel_to_point(const vec2& pix) {
 
 void CoordinateScene::draw() {
     if(state["ticks_opacity"] < 0.01) return;
-    draw_coordinate_grid(gpu_pix->get_ptr(), get_width_height(), vec2(state["left_x"], state["top_y"]), vec2(state["right_x"], state["bottom_y"]));
+    draw_coordinate_grid(gpu_pix.get_ptr(), get_width_height(), vec2(state["left_x"], state["top_y"]), vec2(state["right_x"], state["bottom_y"]));
 }
 
 /*
@@ -141,8 +140,3 @@ void CoordinateScene::draw_one_axis(bool ymode) {
     }
 }
 */
-
-const StateQuery CoordinateScene::populate_state_query() const {
-    StateQuery sq = {"left_x", "right_x", "window_height", "window_width", "top_y", "bottom_y", "ticks_opacity"};
-    return sq;
-}

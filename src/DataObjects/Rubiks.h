@@ -5,8 +5,8 @@
 #include <sstream> // used in alg tokenisation
 #include "../Host_Device_Shared/vec.h"
 #include <unordered_map>
-#include "DataObject.h"
 #include "../Host_Device_Shared/rubiks_config.h"
+#include "../Host_Device_Shared/helpers.h"
 
 int test_rubiks();
 
@@ -65,13 +65,11 @@ struct Move {
 
 
 
-class Rubiks : public DataObject {
+class Rubiks {
     public:
         std::unordered_map<char, std::vector<Cut>> cut_map;
 
         CubeStickerPattern pattern;
-
-        void tick(const StateReturn& state);
 
         Rubiks(const CubeStickerPattern& pattern) : pattern(pattern) { }
         Rubiks() : pattern() { }

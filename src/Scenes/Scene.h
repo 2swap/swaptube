@@ -6,7 +6,6 @@
 #include "../Core/State/StateManager.h"
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
-#include "../DataObjects/DataObject.h"
 #include "../DataObjects/DevicePointer.h"
 #include <string>
 #include <iostream>
@@ -28,19 +27,13 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 class Scene {
 public:
     Scene(const vec2& dimensions = vec2(1, 1));
-    ~Scene();
 
-    virtual const StateQuery populate_state_query() const = 0;
     virtual void draw() = 0;
 
     virtual void on_end_transition_extra_behavior(const TransitionType tt){};
     void on_end_transition(const TransitionType tt);
 
     void update();
-
-    virtual bool needs_redraw() const;
-
-    bool check_if_state_changed() const;
 
     uint32_t* query();
 
@@ -60,25 +53,17 @@ public:
 
     void set_global_identifier(const string& id);
 
-    virtual bool check_if_data_changed() const;
-    virtual void mark_data_unchanged();
     virtual void change_data();
 
 protected:
-    DevicePointer* gpu_pix;
+    DevicePointer gpu_pix;
     StateReturn state;
-    bool has_ever_rendered = false;
-
-    void add_data_object(DataObject* data_object);
 
 private:
-    vector<DataObject*> data_objects;
-
     string global_identifier = ""; // This is prefixed before the published global state elements
                                    // to uniquely identify this scene if necessary.
                                    // Empty by default, meaning no state is published.
 
-    StateReturn last_state;
     bool has_updated_since_last_query = false;
 
     virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }

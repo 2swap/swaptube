@@ -23,18 +23,7 @@ void BeaverGridSpacetimeScene::draw() {
     ivec2 spacetime_wh(11,11);
     float tm_border = 0.1;
     beaver_grid_spacetime(
-        gpu_pix->get_ptr(), get_width_height(), lx_ty, rx_by,
+        gpu_pix.get_ptr(), get_width_height(), lx_ty, rx_by,
         grid_wh, spacetime_wh, tm_border, state["iterations"]
     );
 }
-
-const StateQuery BeaverGridSpacetimeScene::populate_state_query() const {
-    StateQuery sq = {
-        "iterations", "center_x", "center_y", "zoom"
-    };
-    return sq;
-}
-
-void BeaverGridSpacetimeScene::mark_data_unchanged() { }
-void BeaverGridSpacetimeScene::change_data() { }
-bool BeaverGridSpacetimeScene::check_if_data_changed() const { return false; }

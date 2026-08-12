@@ -21,9 +21,9 @@ void render_video() {
     for(int i = 0; i < graph_size; i++) {
         for(int j = 0; j < graph_size; j++) {
             int hash = i+j*graph_size;
-            gs.graph->add_node(hash);
-            if(i>0) gs.graph->add_edge(hash, hash-1);
-            if(j>0) gs.graph->add_edge(hash, hash-graph_size);
+            gs.graph.add_node(hash);
+            if(i>0) gs.graph.add_edge(hash, hash-1);
+            if(j>0) gs.graph.add_edge(hash, hash-graph_size);
         }
     }
     gs.render_microblock();

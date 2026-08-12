@@ -5,11 +5,8 @@ extern "C" void simulate_pendulum_pair(PendulumState* states, PendulumState* pai
 
 Pendulum::Pendulum(const PendulumState& s) : state(s) {}
 
-void Pendulum::tick(const StateReturn& s) {
-    float multiplier = s["physics_multiplier"];
-    float step_size = s["rk4_step_size"];
-    for (int step = 0; step < multiplier; ++step) state = rk4Step(state, step_size);
-    mark_updated();
+void Pendulum::tick(const float physics_multiplier, const float rk4_step_size) {
+    for (int step = 0; step < physics_multiplier; ++step) state = rk4Step(state, rk4_step_size);
 }
 
 PendulumGrid::PendulumGrid(const int width, const int height, const pendulum_type d,
@@ -43,11 +40,8 @@ PendulumGrid::PendulumGrid(const int width, const int height, const pendulum_typ
     }
 }
 
-void PendulumGrid::tick(const StateReturn& state) {
-    float multiplier = state["physics_multiplier"];
-    float step_size = state["rk4_step_size"];
+void PendulumGrid::tick(float multiplier, float step_size) {
     if(multiplier == 0) return;
     simulate_pendulum_pair(pendulum_states.data(), pendulum_pairs.data(), diff_sums.data(), pendulum_states.size(), multiplier, step_size);
     samples += multiplier;
-    mark_updated();
 }

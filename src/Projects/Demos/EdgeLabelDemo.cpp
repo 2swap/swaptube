@@ -18,12 +18,12 @@ void render_video() {
     });
 
     stage_macroblock(SilenceBlock(5), 4);
-    double a_hash = gs.graph->add_node(.1);
-    gs.graph->move_node(a_hash, vec4(-1, 0, 0, 0));
-    double b_hash = gs.graph->add_node(.2);
-    gs.graph->move_node(b_hash, vec4(1, 0, 0, 0));
-    gs.graph->add_edge(a_hash, b_hash);
-    gs.config->transition_edge_label(MICRO, a_hash, b_hash, "abcdef");
+    double a_hash = gs.graph.add_node(.1);
+    gs.graph.move_node(a_hash, vec4(-1, 0, 0, 0));
+    double b_hash = gs.graph.add_node(.2);
+    gs.graph.move_node(b_hash, vec4(1, 0, 0, 0));
+    gs.graph.add_edge(a_hash, b_hash);
+    gs.config.transition_edge_label(MICRO, a_hash, b_hash, "abcdef");
     gs.render_microblock();
 
     gs.transition_node_position(MICRO, a_hash, vec4(0, 1, 0, 0));

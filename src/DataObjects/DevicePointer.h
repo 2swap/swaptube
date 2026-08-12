@@ -1,14 +1,15 @@
 #pragma once
 
 #include <cstdint>
-#include "DataObject.h"
+#include "../Host_Device_Shared/vec.h"
+#include "../Core/State/StateManager.h"
 
-class DevicePointer : public DataObject {
+class DevicePointer {
 public:
     DevicePointer(const ivec2& wh);
     DevicePointer();
     ~DevicePointer();
-    void tick(const StateReturn& state);
+    void tick(const ivec2&);
     uint32_t* get_ptr();
     void copy_to_host(uint32_t* host_ptr);
     void copy_to_device(uint32_t* host_ptr);

@@ -14,14 +14,13 @@ public:
 
     int alpha_subtract = 2;
 
-    const StateQuery populate_state_query() const override;
-
     void draw() override;
 
+    void change_data();
     void generate_tone();
     void generate_audio(double duration, std::vector<sample_t>& left, std::vector<sample_t>& right, double volume_mult = 1);
 
-    Pendulum* pend;
+    Pendulum pend;
 
 private:
     int tonegen = 0;

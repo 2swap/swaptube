@@ -5,7 +5,7 @@ extern "C" void allocate_rope_and_pins(vec2** rope_pointer, vec2** pins_pointer)
 extern "C" void physics(vec2* rope, const int rope_length, const vec2* pins, const int pins_length);
 extern "C" void copy_pins(const vec2* h_pins, vec2* d_pins, const int pins_length);
 
-void Rope::tick(const StateReturn& state) {
+void Rope::tick() {
     for (int i = 0; i < 3; ++i) {
         physics(d_nodes, 1000, d_pins, h_pins.size());
     }

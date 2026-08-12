@@ -44,11 +44,7 @@ void PngScene::draw() {
 
     // Overwrite the scaled image onto the scene's pixel buffer
     const vec2 offset = get_width_height() * 0.5f;
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
+    cuda_overlay(gpu_pix.get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
 
     cuda_free_pixels_on_device(scaled_ptr);
-}
-
-const StateQuery PngScene::populate_state_query() const {
-    return StateQuery{"crop_top", "crop_bottom", "crop_left", "crop_right"};
 }

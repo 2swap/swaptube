@@ -237,9 +237,6 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
     if (page_number < 1) {
         throw runtime_error("PDF page number is 1-indexed and should be positive.");
     }
-    if (page_number >= 100) {
-        throw runtime_error("PDF page number too large; pdf_page_to_pix only supports up to 99 pages. (TODO)");
-    }
 
     // HOW TO MAKE PAGES:
     // pdftocairo -png -f 1 -l 3 -r 300 paper.pdf prefix
@@ -250,7 +247,9 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
     }
     const string resolved_filename_with_suffix = resolved_filename_without_suffix + ".pdf";
 
-    const string png_filename = resolved_filename_without_suffix + "-" + (page_number < 10 ? "0" : "") + to_string(page_number) + ".png";
+    const string page_number_str = to_string(page_number);
+    const string png_filename_without_suffix = resolved_filename_without_suffix + "-" + page_number_str;
+    const string png_filename = png_filename_without_suffix + ".png";
 
     struct stat buffer;
 
@@ -267,8 +266,7 @@ void pdf_page_to_pix(Pixels& pix, const string& pdf_filename_without_suffix, con
     // Execute pdftocairo command to convert the specified page to PNG
     if (!png_file_exists) {
         cout << "Converting PDF page " << page_number << " to PNG..." << endl;
-        const string page_number_str = to_string(page_number);
-        const string command = "pdftocairo -png -f " + page_number_str + " -l " + page_number_str + " -r 300 " + resolved_filename_with_suffix + " " + resolved_filename_without_suffix;
+        const string command = "pdftocairo -png -f " + page_number_str + " -singlefile -r 300 " + resolved_filename_with_suffix + " " + png_filename_without_suffix;
         int result = system(command.c_str());
         if (result != 0) {
             throw runtime_error("Failed to convert PDF page to PNG using pdftocairo. Command executed:\n" + command);

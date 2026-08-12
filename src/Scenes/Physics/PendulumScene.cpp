@@ -2,7 +2,7 @@
 #include <cmath>
 #include <algorithm>
 
-PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(dimensions), start_state(s) {
+PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(dimensions), pend(s), start_state(s) {
     path_background = Pixels(floor(get_width_height()));
     manager.set({{"tone", "1"},
                        {"volume", "0"},
@@ -10,23 +10,17 @@ PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(di
                        {"physics_multiplier", "30"},
                        {"rk4_step_size", "1 30 / <physics_multiplier> 0.01 + /"},
                        {"rainbow", "1"}});
-    pend = new Pendulum(s);
-    add_data_object(pend);
 }
 
 extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
 extern "C" void draw_quadrilateral(uint32_t* pix, const ivec2& wh, const vec2& p0, const vec2& p1, const vec2& p2, const vec2& p3, const uint32_t color);
 
-const StateQuery PendulumScene::populate_state_query() const {
-    return StateQuery{"volume", "rainbow", "tone", "path_opacity", "physics_multiplier", "rk4_step_size"};
-}
-
 void PendulumScene::draw() {
     double w = get_width(); double h = get_height();
     double line_thickness = h/40;
     vec2 pos = get_width_height()*.5;
-    std::vector<double> thetas = {pend->state.theta1, pend->state.theta2};
-    int color = pendulum_color(thetas[0], thetas[1], pend->state.p1, pend->state.p2);
+    std::vector<double> thetas = {pend.state.theta1, pend.state.theta2};
+    int color = pendulum_color(thetas[0], thetas[1], pend.state.p1, pend.state.p2);
     //if(state["path_opacity"] > 0.01)
     //    pix.overlay_gpu(path_background, 0, 0);
 
@@ -38,16 +32,16 @@ void PendulumScene::draw() {
         double sin_theta = sin(theta);
         double cos_theta = cos(theta);
         vec2 delta = length * vec2(sin_theta, cos_theta);
-        draw_circle(gpu_pix->get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color);
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color);
         vec2 lateral = vec2(cos_theta, -sin_theta)*line_thickness/2;
         vec2 p0 = pos + lateral;
         vec2 p1 = pos - lateral;
         pos += delta;
         vec2 p2 = pos - lateral;
         vec2 p3 = pos + lateral;
-        draw_quadrilateral(gpu_pix->get_ptr(), get_width_height(), p0, p1, p2, p3, pendulum_color);
+        draw_quadrilateral(gpu_pix.get_ptr(), get_width_height(), p0, p1, p2, p3, pendulum_color);
     }
-    draw_circle(gpu_pix->get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color);
+    draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color);
 }
 
 void PendulumScene::generate_tone(){
@@ -80,4 +74,9 @@ void PendulumScene::generate_audio(double duration, std::vector<sample_t>& left,
         left.push_back(float_to_sample(.05*volume_mult*sin(ps.theta1)));
         right.push_back(float_to_sample(.05*volume_mult*sin(ps.theta2)));
     }
+}
+
+void PendulumScene::change_data() {
+    Scene::change_data();
+    pend.tick(state["physics_multiplier"], state["rk4_step_size"]);
 }

@@ -1,7 +1,6 @@
 #include <unordered_map>
 #include <string>
 #include <stdint.h>
-#include "DataObject.h"
 #include "../Host_Device_Shared/Color.h"
 #include "../IO/Writer.h"
 
@@ -66,7 +65,7 @@ struct NodeRenderData {
     float splash_opacity;
 };
 
-class GraphDrawingConfig : public DataObject {
+class GraphDrawingConfig {
 private:
     std::unordered_map<double, NodeConfig> node_configs;
     std::unordered_map<double, EdgeConfig> edge_configs;
@@ -84,7 +83,7 @@ public:
     void add_node_if_missing(double node_id);
     void add_edge_if_missing(double from, double to);
 
-    void tick(const StateReturn& state);
+    void tick();
     void transition_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void       fade_node_color(const TransitionType tt, const double hash, const uint32_t new_color);
     void        set_node_color(const double hash, const uint32_t new_color);

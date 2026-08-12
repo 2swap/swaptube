@@ -15,10 +15,6 @@
 Cut::Cut(const vec3& axis, float dist) : axis(axis), dist(dist) {};
 Cut::Cut() : axis(vec3(0, 0, 0)), dist(0) {}
 
-
-
-void Rubiks::tick(const StateReturn& state) {}
-
 int interpolate(int i, int cube_size) {
         return (i * (MAX_CUBE_SIZE-1)) / (cube_size - 1);
     }

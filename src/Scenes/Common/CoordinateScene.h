@@ -23,6 +23,4 @@ public:
     void draw() override;
 
     void draw_one_axis(bool ymode);
-
-    const StateQuery populate_state_query() const override;
 };
