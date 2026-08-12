@@ -4,6 +4,8 @@
 const vector<double> scale = {220.00, 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00};
 
 void render_video() {
+    configure_midi(true);
+
     MidiSoundScene scene;
 
     stage_macroblock(SilenceBlock(1), 1);
@@ -16,6 +18,7 @@ void render_video() {
         const double when = t + 0.35 * i;
         const double volume = 0.2 + 0.8 * i / (scale.size() - 1.0);
         scene.play_note(when, scale[i], volume);
+        scene.trigger("beat", when);
     }
     scene.render_microblock();
 

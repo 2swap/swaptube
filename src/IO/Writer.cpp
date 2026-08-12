@@ -12,7 +12,7 @@
 
 using namespace std;
 
-Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& audio_hints, const bool& audio_sfx, const MidiOptions& midi_options) :
+Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio) :
     video_width_pixels(video_width_pixels),
     video_height_pixels(video_height_pixels),
     video_framerate_fps(video_framerate_fps),
@@ -22,7 +22,7 @@ Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framer
     shtooka = new ShtookaWriter();
     subtitle = new SubtitleWriter();
     // Built even for a smoketest, so the sfx call sites never have to check.
-    midi = new MidiWriter(midi_options);
+    midi = new MidiWriter();
 
     if (is_smoketest()) return;
     const std::string video_path = "io_out/Video.mkv";
@@ -30,7 +30,7 @@ Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framer
     if (ret < 0) throw std::runtime_error("Failed to allocate output format context");
     if (format_context == nullptr) throw std::runtime_error("Failed to allocate output format context");
 
-    audio = new AudioWriter(format_context, audio_samplerate_hz, audio_hints, audio_sfx);
+    audio = new AudioWriter(format_context, audio_samplerate_hz, include_audio);
     video = new VideoWriter(format_context, video_path, video_width_pixels, video_height_pixels, video_framerate_fps);
 }
 
@@ -55,12 +55,12 @@ uint32_t Writer::get_video_background_color() const { return video_background_co
 
 static std::unique_ptr<Writer> writer;
 
-void init_writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& audio_hints, const bool& audio_sfx, const MidiOptions& midi_options) {
+void init_writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio) {
     cout << "Initializing writer for " << video_width_pixels << "x" << video_height_pixels << " at " << video_framerate_fps << " fps." << endl;
     if (writer)
         throw std::runtime_error("Writer already initialized");
 
-    writer = std::make_unique<Writer>(video_width_pixels, video_height_pixels, video_framerate_fps, audio_samplerate_hz, video_background_color, audio_hints, audio_sfx, midi_options);
+    writer = std::make_unique<Writer>(video_width_pixels, video_height_pixels, video_framerate_fps, audio_samplerate_hz, video_background_color, include_audio);
 }
 
 Writer& get_writer() {

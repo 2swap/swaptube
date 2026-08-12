@@ -62,6 +62,7 @@ void PendulumScene::generate_tone(){
         right.push_back(val);
     }
     get_writer().audio->add_sfx(left, right, tonegen_save);
+    get_writer().midi->add_continuous("pendulum", state["t"], total_samples / static_cast<double>(get_audio_samplerate_hz()));
     energy = energy_slew;
 }
 

@@ -4,6 +4,7 @@
 #include "../IO/Writer.h"
 #include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
+#include <limits>
 
 extern "C" void cuda_zeroize_pixels(uint32_t* d_pixels, const ivec2& wh);
 
@@ -37,27 +38,13 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 
     double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
-    if (rendering_on() && get_writer().audio->audio_hints) { // Add hints for audio synchronization
-        double time = get_global_state("t");
-        double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
-        int macroblock_length_samples = round(macroblock_length_seconds * get_audio_samplerate_hz());
-        int microblock_length_samples = round(microblock_length_seconds * get_audio_samplerate_hz());
-        get_writer().audio->add_blip(
-            round(time * get_audio_samplerate_hz()),
-            MACRO,
-            macroblock_length_samples,
-            microblock_length_samples
-        );
-
-        for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
-            get_writer().audio->add_blip(
-                round((time + i * microblock_length_seconds) * get_audio_samplerate_hz()),
-                MICRO,
-                macroblock_length_samples,
-                microblock_length_samples
-            );
-        }
-    } // Audio hints
+    // Mark macroblock/microblock boundaries as their own MIDI tracks, for external tooling.
+    double time = get_global_state("t");
+    double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
+    get_writer().midi->add_note("macroblock", time, 0);
+    for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
+        get_writer().midi->add_note("microblock", time + i * microblock_length_seconds, 0);
+    }
 }
 
 Scene::Scene(const vec2& dimensions) : gpu_pix(floor(get_video_dimensions_pixels() * dimensions)) {
@@ -192,6 +179,26 @@ void Scene::publish_global() {
     }
 }
 
+void Scene::trigger(const string& track_name, double t_seconds, double duration_seconds) {
+    get_writer().midi->add_note(track_name, t_seconds, duration_seconds);
+}
+
+void Scene::link_cc(const string& variable_name) {
+    linked_cc_last_values.emplace(variable_name, numeric_limits<double>::quiet_NaN());
+}
+
+void Scene::capture_cc_links() {
+    if (linked_cc_last_values.empty()) return;
+    const double t = get_global_state("t");
+    for (auto& [name, last_value] : linked_cc_last_values) {
+        if (!state.contains(name)) continue;
+        const double value = state[name];
+        if (!isnan(last_value) && value == last_value) continue;
+        get_writer().midi->add_cc(name, t, value);
+        last_value = value;
+    }
+}
+
 void Scene::render_one_frame(int microblock_frame_number, int scene_duration_frames) {
     cout << "[" << flush;
 
@@ -201,6 +208,7 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("voice", sample_to_float(sample));
 
     query();
+    capture_cc_links();
     get_writer().video->add_frame(gpu_pix.get_ptr());
 
     remaining_frames_in_macroblock--;

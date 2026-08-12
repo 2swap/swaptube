@@ -3,47 +3,42 @@
 #include <string>
 #include <vector>
 
-// Export a MIDI file given flags passed to go.sh
+// MIDI export configuration, set via configure_midi(). MIDI export itself is always on;
+// this just controls whether the CSV sidecar also gets written.
 struct MidiOptions {
-    bool enabled = false;      // 'm': write the MIDI file at all
-    bool pitch = false;        // 'p': map each effect's frequency onto a note number
-    bool velocity = false;     // 'v': map each effect's volume onto a note velocity
-    bool split_tracks = false; // 't': give every named effect its own MIDI track
-
-    int bend_range_semitones = 24;
-
-    static MidiOptions parse(const std::string& spec);
-    std::string blurb() const;
+    bool csv = false; // also write the io_out/Video.sfx.csv sidecar
 };
+
+// Called once, typically at the top of render_video(), to configure MIDI export detail.
+void configure_midi(bool csv = false);
 
 class MidiWriter {
 public:
-    MidiWriter(const MidiOptions& options);
+    MidiWriter();
     ~MidiWriter();
 
-    // Records one sound effect.
-    void add_note(const std::string& voice, double t_seconds, double frequency_hz, double duration_seconds, double volume);
+    void configure(bool csv);
 
-    // Records one slice of a continuously sounding tone
-    void add_continuous(const std::string& voice, double t_seconds, double duration_seconds, double frequency_hz, double volume);
+    // Records one discrete event on its own named track.
+    void add_note(const std::string& voice, double t_seconds, double duration_seconds);
 
-    bool is_enabled() const;
+    // Records one slice of an ongoing event; adjacent slices merge into one held note.
+    void add_continuous(const std::string& voice, double t_seconds, double duration_seconds);
+
+    // Records one sample of a state variable's value, for a standalone CC automation track.
+    void add_cc(const std::string& track_name, double t_seconds, double value);
 
 private:
     struct Note {
         double t_seconds;
         double duration_seconds;
-        double frequency_hz;
-        double volume;
         int voice_index;
     };
 
-    // One frame's worth of a sustained tone.
+    // One frame's worth of an ongoing event.
     struct ToneSlice {
         double t_seconds;
         double duration_seconds;
-        double frequency_hz;
-        double volume;
         int voice_index;
     };
 
@@ -53,15 +48,24 @@ private:
         std::vector<ToneSlice> slices;
     };
 
-    const MidiOptions options;
+    struct CCSample {
+        double t_seconds;
+        double value;
+        int track_index;
+    };
+
+    MidiOptions options;
     std::vector<Note> notes;
     std::vector<ToneSlice> tone_slices;
     std::vector<std::string> voice_names; // Indexed by voice_index, in first-seen order
 
+    std::vector<std::string> cc_track_names; // Separate namespace from voice_names
+    std::vector<CCSample> cc_samples;
+    int cc_track_index_for(const std::string& track_name);
+
     int voice_index_for(const std::string& voice);
-    int channel_for(int voice_index) const;
-    int note_number_for(const Note& note, double& cents_offset) const;
-    int velocity_for(const Note& note) const;
+    int channel_for(int index) const;
+    int note_number_for(int voice_index) const;
     std::vector<Note> notes_in_time_order() const;
     std::vector<ToneRun> tone_runs() const;
 

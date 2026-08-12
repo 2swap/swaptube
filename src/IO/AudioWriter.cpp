@@ -13,7 +13,6 @@
 #include "Writer.h"
 #include "IoHelpers.h"
 #include "../Core/Smoketest.h"
-#include "../Core/State/TransitionType.h"
 
 extern "C"
 {
@@ -40,15 +39,13 @@ using namespace std;
 const AVCodecID output_codec = AV_CODEC_ID_PCM_S32LE;
 const AVSampleFormat output_sample_format = AV_SAMPLE_FMT_S32;
 
-AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& audio_hints, const bool& audio_sfx) :
-    audio_hints(audio_hints), audio_sfx(audio_sfx),
-    num_audio_streams(1 + (audio_sfx?2:0) + (audio_hints?2:0)),
+AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& include_audio) :
+    include_audio(include_audio),
+    num_audio_streams(include_audio ? 1 : 0),
     outputCodecContexts(std::vector<AVCodecContext*>(num_audio_streams, nullptr)),
     audioStreams(std::vector<AVStream*>(num_audio_streams, nullptr)),
-    fc(fc_), sample_buffer(), sfx_buffer(), blips_buffer(), total_samples_processed(0),
-    max_sample_per_frame(), current_max_sample(0), current_sample_index_in_frame(0),
-    current_macroblock_length_samples(0), current_microblock_length_samples(0), macroblock_linear_step(0), microblock_linear_step(0),
-    macroblock_line(0), microblock_line(0)
+    fc(fc_), sample_buffer(), sfx_buffer(), total_samples_processed(0),
+    max_sample_per_frame(), current_max_sample(0), current_sample_index_in_frame(0)
 {
     for(int i = 0; i < num_audio_streams; i++) {
         const AVCodec* audioOutputCodec = avcodec_find_encoder(output_codec);
@@ -136,6 +133,7 @@ void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<samp
     }
 
     if (!rendering_on()) return; // Don't write in smoketest
+    if (!include_audio) return;
 
     int numSamples = left_buffer.size(); // number of frames
     int sample_copy_start_frames = t_samples - total_samples_processed;
@@ -157,28 +155,6 @@ void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<samp
     }
 }
 
-void AudioWriter::add_blip(const int t, const TransitionType tt, const int upcoming_macroblock_length_samples, const int upcoming_microblock_length_samples) {
-    if (!rendering_on() || !audio_hints)
-        throw runtime_error("Blips should not be added when rendering is off or audio hints are disabled.");
-
-    current_macroblock_length_samples = upcoming_macroblock_length_samples;
-    current_microblock_length_samples = upcoming_microblock_length_samples;
-
-    int sample_idx = t - total_samples_processed;
-
-    if(sample_idx < 0)
-        throw runtime_error("Blip copy start was negative: " + to_string(sample_idx) + ". " + to_string(t) + " " + to_string(total_samples_processed));
-
-    // Ensure blips_buffer has enough capacity and add samples (convert floats to int32)
-    int new_size = (sample_idx + 1) * audio_channels;
-    if (blips_buffer.size() < new_size) {
-        blips_buffer.resize(new_size); // Extend with silence
-    }
-
-    if(tt == MACRO) blips_buffer[sample_idx * 2    ] += 10000000; // Left
-    else            blips_buffer[sample_idx * 2 + 1] += 10000000; // Right
-}
-
 void AudioWriter::reset_framewise_tracking() {
     current_max_sample = 0;
     current_sample_index_in_frame = 0;
@@ -196,9 +172,11 @@ int AudioWriter::add_generated_audio(const vector<sample_t>& left_buffer, const 
     if (!rendering_on()) return 0; // Don't write in smoketest
 
     int num_samples = left_buffer.size();
-    for(int i = 0; i < num_samples; i++){
-        sample_buffer.push_back( left_buffer[i]);
-        sample_buffer.push_back(right_buffer[i]);
+    if (include_audio) {
+        for(int i = 0; i < num_samples; i++){
+            sample_buffer.push_back( left_buffer[i]);
+            sample_buffer.push_back(right_buffer[i]);
+        }
     }
 
     reset_framewise_tracking();
@@ -208,8 +186,10 @@ int AudioWriter::add_generated_audio(const vector<sample_t>& left_buffer, const 
 
 int AudioWriter::add_silence(int duration_frames) {
     if (!rendering_on()) return 0; // Don't write in smoketest
-    int num_samples = duration_frames * get_samples_per_frame();
-    sample_buffer.resize(sample_buffer.size() + num_samples * audio_channels, 0);
+    if (include_audio) {
+        int num_samples = duration_frames * get_samples_per_frame();
+        sample_buffer.resize(sample_buffer.size() + num_samples * audio_channels, 0);
+    }
     reset_framewise_tracking();
     return duration_frames;
 }
@@ -330,9 +310,11 @@ int AudioWriter::add_audio_from_file(const string& filename) {
 
                 int num_samples = frame->nb_samples;
 
-                for (int i = 0; i < num_samples; ++i) {
-                    sample_buffer.push_back(reinterpret_cast<sample_t*>(frame->data[0])[i*2]); // Left
-                    sample_buffer.push_back(reinterpret_cast<sample_t*>(frame->data[0])[i*2+1]); // Right
+                if (include_audio) {
+                    for (int i = 0; i < num_samples; ++i) {
+                        sample_buffer.push_back(reinterpret_cast<sample_t*>(frame->data[0])[i*2]); // Left
+                        sample_buffer.push_back(reinterpret_cast<sample_t*>(frame->data[0])[i*2+1]); // Right
+                    }
                 }
 
                 length_in_samples += num_samples;
@@ -348,8 +330,10 @@ int AudioWriter::add_audio_from_file(const string& filename) {
     // Add silence to align to a frame boundary
     int samples_per_frame = get_samples_per_frame();
     while (length_in_samples % samples_per_frame != 0) {
-        sample_buffer.push_back(0);
-        sample_buffer.push_back(0);
+        if (include_audio) {
+            sample_buffer.push_back(0);
+            sample_buffer.push_back(0);
+        }
         length_in_samples++;
     }
 
@@ -363,6 +347,7 @@ int AudioWriter::add_audio_from_file(const string& filename) {
 
 void AudioWriter::encode_buffers() {
     if(!rendering_on()) return; // Don't write in smoketest
+    if(!include_audio) return; // num_audio_streams is 0; outputCodecContexts[0] below would be out of bounds
 
     while(true){
         int frameSize = outputCodecContexts[0]->frame_size;
@@ -374,8 +359,7 @@ void AudioWriter::encode_buffers() {
 
         for (int ch = 0; ch < audio_channels; ++ch) {
             // Extend channel with silence (interleaved)
-            if (  sfx_buffer.size() < sample_buffer.size())   sfx_buffer.resize(sample_buffer.size(), 0);
-            if (blips_buffer.size() < sample_buffer.size()) blips_buffer.resize(sample_buffer.size(), 0);
+            if (sfx_buffer.size() < sample_buffer.size()) sfx_buffer.resize(sample_buffer.size(), 0);
         }
 
         vector<AVFrame*> frames = vector<AVFrame*>(num_audio_streams, nullptr);
@@ -418,61 +402,16 @@ void AudioWriter::encode_buffers() {
             sample_t voice_right = sample_buffer[idxR];
             sample_t sfx_left = sfx_buffer[idxL];
             sample_t sfx_right = sfx_buffer[idxR];
-            sample_t blips_left = blips_buffer[idxL];
-            sample_t blips_right = blips_buffer[idxR];
 
-            int track_number = 0;
+            dst[0][idxL] = voice_left + sfx_left;
+            dst[0][idxR] = voice_right + sfx_right;
 
-            if(audio_sfx){
-                // Voice-only track
-                dst[track_number][idxL] = voice_left;
-                dst[track_number][idxR] = voice_right;
-                track_number++;
-
-                // Sfx-only track
-                dst[track_number][idxL] = sfx_left;
-                dst[track_number][idxR] = sfx_right;
-                track_number++;
-            }
-
-            // Merged audio track
-            dst[track_number][idxL] = voice_left + sfx_left;
-            dst[track_number][idxR] = voice_right+ sfx_right;
-            track_number++;
-
-            {
-                current_max_sample = max(current_max_sample, voice_left);
-                current_sample_index_in_frame++;
-                if(current_sample_index_in_frame == get_samples_per_frame()){
-                    max_sample_per_frame.push_back(current_max_sample);
-                    current_max_sample = 0;
-                    current_sample_index_in_frame = 0;
-                }
-            }
-
-
-            if(audio_hints){
-                // Blips-only track
-                dst[track_number][idxL] = blips_left;
-                dst[track_number][idxR] = blips_right;
-                track_number++;
-
-                if(blips_left != 0){ // All microblocks are same length, so only reset on macroblock
-                    macroblock_linear_step = line_max / current_macroblock_length_samples;
-                    microblock_linear_step = line_max / current_microblock_length_samples;
-                    macroblock_line = 0;
-                }
-                if(blips_right != 0){ // Right is microblock
-                    microblock_line = 0;
-                }
-
-                // Transition Lines
-                dst[track_number][idxL] = macroblock_line;
-                dst[track_number][idxR] = microblock_line;
-                track_number++;
-
-                macroblock_line += macroblock_linear_step;
-                microblock_line += microblock_linear_step;
+            current_max_sample = max(current_max_sample, voice_left);
+            current_sample_index_in_frame++;
+            if(current_sample_index_in_frame == get_samples_per_frame()){
+                max_sample_per_frame.push_back(current_max_sample);
+                current_max_sample = 0;
+                current_sample_index_in_frame = 0;
             }
         }
 
@@ -488,7 +427,6 @@ void AudioWriter::encode_buffers() {
         // Erase the samples used in this frame (interleaved count)
         sample_buffer.erase(sample_buffer.begin(), sample_buffer.begin() + frameSize * audio_channels);
            sfx_buffer.erase(   sfx_buffer.begin(),    sfx_buffer.begin() + frameSize * audio_channels);
-         blips_buffer.erase( blips_buffer.begin(),  blips_buffer.begin() + frameSize * audio_channels);
         total_samples_processed += frameSize;
     }
 }

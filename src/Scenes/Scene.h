@@ -7,6 +7,7 @@
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
 #include "../DataObjects/DevicePointer.h"
+#include "../IO/MidiWriter.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -55,6 +56,15 @@ public:
 
     virtual void change_data();
 
+    // Records a discrete MIDI event on a track named track_name (e.g. a beat, a state
+    // transition). MIDI-only; pairs naturally with sfx_boink/sfx_clap (IO/SFX.h) when an
+    // audible effect is also wanted.
+    void trigger(const string& track_name, double t_seconds, double duration_seconds = 0);
+
+    // Links a StateManager variable (declared via manager.set(...)) to its own MIDI CC
+    // automation track, named after the variable. Idempotent.
+    void link_cc(const string& variable_name);
+
 protected:
     DevicePointer gpu_pix;
     StateReturn state;
@@ -70,4 +80,7 @@ private:
     void publish_global();
 
     void render_one_frame(int microblock_frame_number, int scene_duration_frames);
+
+    unordered_map<string, double> linked_cc_last_values;
+    void capture_cc_links();
 };

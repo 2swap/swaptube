@@ -19,7 +19,7 @@ void sfx_boink(double time, double freq, double halflife_seconds, double volume,
     }
 
     get_writer().audio->add_sfx(left, left, time);
-    get_writer().midi->add_note(voice, time, freq, halflife_seconds * 5, volume);
+    get_writer().midi->add_note(voice, time, halflife_seconds * 5);
 }
 
 void sfx_clap(double time, double halflife_seconds, double volume, const std::string& voice){
@@ -36,6 +36,5 @@ void sfx_clap(double time, double halflife_seconds, double volume, const std::st
     }
 
     get_writer().audio->add_sfx(left, left, time);
-    // No pitch on clap
-    get_writer().midi->add_note(voice, time, 0, halflife_seconds * 5, volume);
+    get_writer().midi->add_note(voice, time, halflife_seconds * 5);
 }

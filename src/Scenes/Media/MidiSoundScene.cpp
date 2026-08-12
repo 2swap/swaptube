@@ -34,10 +34,8 @@ double pitch_fraction(double frequency_hz) {
 
 MidiSoundScene::MidiSoundScene(const vec2& dimensions) : Scene(dimensions) {
     manager.set({{"drone_frequency", "220"}, {"drone_volume", "0"}});
-}
-
-const StateQuery MidiSoundScene::populate_state_query() const {
-    return StateQuery{"drone_frequency", "drone_volume"};
+    link_cc("drone_frequency");
+    link_cc("drone_volume");
 }
 
 void MidiSoundScene::play_note(double t_seconds, double frequency_hz, double volume, const std::string& voice) {
@@ -72,7 +70,7 @@ void MidiSoundScene::emit_drone() {
     drone_phase = fmod(drone_phase, two_pi); // Keep precision from drifting over a long render
 
     get_writer().audio->add_sfx(channel, channel, t);
-    get_writer().midi->add_continuous("drone", t, samples / static_cast<double>(samplerate), frequency, volume);
+    get_writer().midi->add_continuous("drone", t, samples / static_cast<double>(samplerate));
 
     drone_trace.push_back(Mark{t, frequency, volume});
 }
@@ -96,13 +94,13 @@ void MidiSoundScene::draw() {
     // Octave guide lines, so the pitch axis means something to the eye.
     for (double frequency = lowest_plotted_hz; frequency <= highest_plotted_hz + 1; frequency *= 2) {
         const int y = static_cast<int>(y_of(frequency));
-        draw_rectangle(gpu_pix->get_ptr(), wh, ivec2(0, y), ivec2(w, y + 1), argb(70, 255, 255, 255));
+        draw_rectangle(gpu_pix.get_ptr(), wh, ivec2(0, y), ivec2(w, y + 1), argb(70, 255, 255, 255));
     }
 
     // pitch as height, volume as thickness, colour by pitch.
     for (const Mark& point : drone_trace) {
         const float radius = 1.5f + 9.0f * static_cast<float>(clamp(point.volume, 0.0, 1.0)) * h / 540.0f;
-        draw_circle(gpu_pix->get_ptr(), wh, vec2(x_of(point.t_seconds), y_of(point.frequency_hz)), radius, rainbow(pitch_fraction(point.frequency_hz)));
+        draw_circle(gpu_pix.get_ptr(), wh, vec2(x_of(point.t_seconds), y_of(point.frequency_hz)), radius, rainbow(pitch_fraction(point.frequency_hz)));
     }
 
     for (const Mark& mark : note_marks) {
@@ -114,14 +112,14 @@ void MidiSoundScene::draw() {
 
         if (age < note_bloom_seconds) {
             const double bloom = age / note_bloom_seconds;
-            draw_circle(gpu_pix->get_ptr(), wh, center,
+            draw_circle(gpu_pix.get_ptr(), wh, center,
                         static_cast<float>((5.0 + 45.0 * bloom) * h / 540.0),
                         argb(static_cast<int>(200 * (1.0 - bloom) * loudness), 255, 255, 255));
         }
 
-        draw_circle(gpu_pix->get_ptr(), wh, center, (3.0f + 8.0f * loudness) * h / 540.0f, OPAQUE_WHITE);
+        draw_circle(gpu_pix.get_ptr(), wh, center, (3.0f + 8.0f * loudness) * h / 540.0f, OPAQUE_WHITE);
     }
 
     // Playhead at the right edge, where the newest sound lands.
-    draw_rectangle(gpu_pix->get_ptr(), wh, ivec2(w - 2, 0), ivec2(w, h), argb(120, 255, 255, 255));
+    draw_rectangle(gpu_pix.get_ptr(), wh, ivec2(w - 2, 0), ivec2(w, h), argb(120, 255, 255, 255));
 }
