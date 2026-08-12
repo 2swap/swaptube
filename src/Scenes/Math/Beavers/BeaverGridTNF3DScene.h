@@ -1,9 +1,0 @@
-#include "../../Scene.h"
-
-class BeaverGridTNF3DScene : public Scene {
-public:
-    BeaverGridTNF3DScene(const vec2& dimension = vec2(1, 1));
-
-private:
-    void draw() override;
-};

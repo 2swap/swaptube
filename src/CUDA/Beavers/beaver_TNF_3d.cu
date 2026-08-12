@@ -276,7 +276,7 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlig
 }
 
 extern "C" void beaver_TNF_3D_cuda(
-    unsigned int* pixels, int w, int h, Cuda::vec2 center,
+    unsigned int* d_pixels, uint32_t* d_highlight, float* d_depth_buffer, int w, int h, Cuda::vec2 center,
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
     std::vector<int> action, TuringMachine tm,
@@ -284,14 +284,9 @@ extern "C" void beaver_TNF_3D_cuda(
     Cuda::vec3 highlight, float highlight_intensity,
     int max_steps
 ) {
-    unsigned int* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(unsigned int));
-    unsigned int* d_highlight;
-    cudaMalloc(&d_highlight, w * h * sizeof(unsigned int));
-    float* d_depth_buffer;
-    cudaMalloc(&d_depth_buffer, w * h * sizeof(float));
     int* d_action_path;
     cudaMalloc(&d_action_path, action.size() * sizeof(int));
+    cout << "Action path size: " << action.size() << endl;
 
     int action_path[action.size()];
     for (int i=0; i<action.size(); i++) action_path[i] = action[i];
@@ -304,12 +299,7 @@ extern "C" void beaver_TNF_3D_cuda(
     cuda_edge_detect(d_pixels, d_depth_buffer, Cuda::ivec2(w, h), 0xff000000);
 
     Cuda::ivec2 wh(w, h);
-    cuda_overlay(d_pixels, wh, d_highlight, wh, Cuda::vec2(0,0), 1, 0);
+    cuda_overlay(d_pixels, wh, d_highlight, wh, wh/2, 1, 0);
 
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-
-    cudaFree(d_pixels);
-    cudaFree(d_highlight);
-    cudaFree(d_depth_buffer);
     cudaFree(d_action_path);
 }

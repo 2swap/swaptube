@@ -2,7 +2,7 @@
 #include "../../../Host_Device_Shared/TuringMachine.h"
 #include <vector>
 
-extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, int w, int h, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, std::vector<int> action, TuringMachine tm, float brightness_offset, float color_source_depth, /*float ancestor_offset,*/ vec3 highlight, float highlight_intensity, int max_steps);
+extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, uint32_t*, uint32_t*, int w, int h, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, std::vector<int> action, TuringMachine tm, float brightness_offset, float color_source_depth, /*float ancestor_offset,*/ vec3 highlight, float highlight_intensity, int max_steps);
 
 BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     manager.set({
@@ -114,7 +114,7 @@ void BeaverTNF3DScene::draw() {
     }
     printf("\nCuboid: ((%f,%f,%f),(%f,%f,%f))\n", lower.x, lower.y, lower.z, upper.x, upper.y, upper.z);*/
     beaver_TNF_3D_cuda(
-        gpu_pix.get_ptr(), get_width(), get_height(), vec2(state["center_x"], state["center_y"]),
+        gpu_pix.get_ptr(), highlight_pix.get_ptr(), depth_buffer.get_ptr(), get_width(), get_height(), vec2(state["center_x"], state["center_y"]),
         camera, state["fov"],
         lower*scale, upper*scale,
         action, tm,
@@ -123,4 +123,10 @@ void BeaverTNF3DScene::draw() {
         highlight*scale, state["highlight_intensity"],
         state["max_steps"]
     );
+}
+
+void BeaverTNF3DScene::change_data() {
+    Scene::change_data();
+    highlight_pix.tick(get_width_height());
+    depth_buffer.tick(get_width_height());
 }
