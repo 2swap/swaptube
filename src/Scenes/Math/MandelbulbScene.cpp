@@ -5,32 +5,33 @@ extern "C" void render_raymarch(
     const vec3& pos, const quat& camera, float fov,
     const vec3& lightPos,
     const int max_raymarch_iterations, const int max_mandelbulb_iterations,
-    const int sdfID,
+    const int sdfID, const float sdflerp,
     uint32_t* colors
 );
 
 MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions) {
     manager.set({
-        {"x", "0"},
+        {"x", "-1.75"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "3"},
-        {"q1", "1"},
+        {"d", "1"},
+        {"q1", "-1"},
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"},
-        {"fov", "1.5"}, 
+        {"fov", "0.5"}, 
         {"light_x", "2"}, 
         {"light_y", "4"}, 
         {"light_z", "-2"}, 
-        {"max_raymarch_iterations", "127"},
-        {"max_mandelbulb_iterations", "5"},
-        {"sdfID", "1"}
+        {"max_raymarch_iterations", "256"},
+        {"max_mandelbulb_iterations", "200"},
+        {"sdfID", "1"},
+        {"sdflerp", "0"}
     });
 };
 
 const StateQuery MandelbulbScene::populate_state_query() const {
-    return {"x", "y", "z", "d", "q1", "qi", "qj", "qk", "fov", "light_x", "light_y", "light_z", "max_mandelbulb_iterations", "max_raymarch_iterations", "sdfID"};
+    return {"x", "y", "z", "d", "q1", "qi", "qj", "qk", "fov", "light_x", "light_y", "light_z", "max_mandelbulb_iterations", "max_raymarch_iterations", "sdfID", "sdflerp"};
 }
 
 void MandelbulbScene::draw(){
@@ -42,7 +43,7 @@ void MandelbulbScene::draw(){
         state["fov"], 
         vec3(state["light_x"], state["light_y"], state["light_z"]), 
         state["max_raymarch_iterations"], state["max_mandelbulb_iterations"],
-        state["sdfID"],
+        state["sdfID"], state["sdflerp"],
         gpu_pix->get_ptr()
     );
 }

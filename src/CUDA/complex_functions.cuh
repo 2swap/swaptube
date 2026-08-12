@@ -2,9 +2,11 @@
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 #include "../Host_Device_Shared/vec.h"
-
-namespace cuCFunc{
     
+__device__ __forceinline__ float smooth_iterations(float iters, float sq_radius){
+    return 0;
+}
+
 // Complex to complex power (z ^ z)
 __device__ cuComplex cuCpow(cuComplex base, cuComplex exponent) {
     float a = cuCrealf(base);
@@ -292,7 +294,7 @@ __device__ __forceinline__ void cuCPolyC(float& zr, float& zi,
 
 //  Complex 3D to real power (z ^ n) (for mandelbulbs)
 __device__ __forceinline__ void cuCMpow(float& zx, float& zy, float& zz, float exponent) {
-    if (zx == 0.0 && zy == 0.0 && zz == 0) // Zero raised to positive power is zero
+    if (zx == 0.0 && zy == 0.0 && zz == 0.0) // Zero raised to positive power is zero
         return;  
 
     float r = sqrtf(zx * zx + zy * zy + zz * zz);  // Magnitude of the base
@@ -568,7 +570,7 @@ __device__ int mandelbulb_iterations(
     const int max_iterations, const float bailout_radius_sq, float& sq_radius
 ) {
     int iterations = 0;
-    sq_radius = 0;
+    sq_radius = 0.0f;
     
     float zx = z.x;
     float zy = z.y;
@@ -578,6 +580,10 @@ __device__ int mandelbulb_iterations(
     const float cz = c.z;
 
     for (; iterations < max_iterations; iterations++) {
+        zx=(zx);
+        zy=(zy);
+        zz=(zz);
+
         // Update z with z^n + c formula
         cuCMpow(zx, zy, zz, exponent);
 
@@ -593,4 +599,31 @@ __device__ int mandelbulb_iterations(
     return max_iterations; // No bailout, maximum iterations reached
 }
 
+__device__ Cuda::vec3 jacobiMult(Cuda::vec3& a, Cuda::vec3& b){
+    return Cuda::vec3(
+        a.x * b.x - a.y * b.z + a.z * b.y,
+        a.x * b.y + a.y * b.x - a.z * b.z,
+        a.x * b.z + a.y * b.y + a.z * b.x
+    );
+}
+
+__device__ int jacobibrot2_iterations(
+    const Cuda::vec3& z, const Cuda::vec3& c,
+    const int max_iterations, const float bailout_radius_sq, float& sq_radius
+) {
+    int iterations = 0;
+    sq_radius = 0;
+    
+    Cuda::vec3 current_z = z;
+
+    for(; iterations < max_iterations; iterations++){
+        current_z = jacobiMult(current_z, current_z);
+        current_z += c;
+
+        sq_radius = current_z.x * current_z.x + current_z.y * current_z.y + current_z.z * current_z.z;
+
+        if(sq_radius > bailout_radius_sq) return iterations;
+    }
+
+    return max_iterations; // No bailout, maximum iterations reached
 }

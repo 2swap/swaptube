@@ -23,6 +23,8 @@ class Fractal2DScene : public Scene {
         void draw() override;
     private:
         float origin_params[28];
+        float X_params[28];
+        float Y_params[28];
         float x_params[28];
         float y_params[28];
         void populateParamArray(float*, const string&);

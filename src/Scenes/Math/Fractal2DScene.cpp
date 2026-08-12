@@ -3,8 +3,11 @@
 extern "C" void fractal_2D_render(
     const ivec2& wh,
     float o[28], // origin parameters
-    float x[28], // x coordinate parameter multipliers
-    float y[28], // y coordinate parameter multipliers
+    float X[28], // x coordinate macro parameter multipliers
+    float Y[28], // y coordinate macro parameter multipliers
+    float x[28], // x coordinate micro parameter multipliers
+    float y[28], // y coordinate micro parameter multipliers
+    const float sub_dimensions_x, const float sub_dimensions_y,
     const char burning, const char conj,
     const int param_mode,
     const int max_iterations,
@@ -24,13 +27,26 @@ Fractal2DScene::Fractal2DScene(const vec2& dimensions) : Scene(dimensions){
         {"a2rX", "0"}, {"a2iX", "0"}, {"ac2rX", "0"}, {"ac2iX", "0"}, {"x2rX", "0"}, {"x2iX", "0"},
         {"a3rX", "0"}, {"a3iX", "0"}, {"ac3rX", "0"}, {"ac3iX", "0"}, {"x3rX", "0"}, {"x3iX", "0"},
         {"a4rX", "0"}, {"a4iX", "0"}, {"ac4rX", "0"}, {"ac4iX", "0"}, {"x4rX", "0"}, {"x4iX", "0"},
-        {"crX", "1"}, {"ciX", "0"},
+        {"crX", "2"}, {"ciX", "0"},
         {"zrY", "0"}, {"ziY", "0"},
         {"a1rY", "0"}, {"a1iY", "0"}, {"ac1rY", "0"}, {"ac1iY", "0"}, {"x1rY", "0"}, {"x1iY", "0"},
         {"a2rY", "0"}, {"a2iY", "0"}, {"ac2rY", "0"}, {"ac2iY", "0"}, {"x2rY", "0"}, {"x2iY", "0"},
         {"a3rY", "0"}, {"a3iY", "0"}, {"ac3rY", "0"}, {"ac3iY", "0"}, {"x3rY", "0"}, {"x3iY", "0"},
         {"a4rY", "0"}, {"a4iY", "0"}, {"ac4rY", "0"}, {"ac4iY", "0"}, {"x4rY", "0"}, {"x4iY", "0"},
-        {"crY", "0"}, {"ciY", "1"},
+        {"crY", "0"}, {"ciY", "2"},
+        {"zrx", "0"}, {"zix", "0"},
+        {"a1rx", "0"}, {"a1ix", "0"}, {"ac1rx", "0"}, {"ac1ix", "0"}, {"x1rx", "0"}, {"x1ix", "0"},
+        {"a2rx", "0"}, {"a2ix", "0"}, {"ac2rx", "0"}, {"ac2ix", "0"}, {"x2rx", "0"}, {"x2ix", "0"},
+        {"a3rx", "0"}, {"a3ix", "0"}, {"ac3rx", "0"}, {"ac3ix", "0"}, {"x3rx", "0"}, {"x3ix", "0"},
+        {"a4rx", "0"}, {"a4ix", "0"}, {"ac4rx", "0"}, {"ac4ix", "0"}, {"x4rx", "0"}, {"x4ix", "0"},
+        {"crx", "2"}, {"cix", "0"},
+        {"zry", "0"}, {"ziy", "0"},
+        {"a1ry", "0"}, {"a1iy", "0"}, {"ac1ry", "0"}, {"ac1iy", "0"}, {"x1ry", "0"}, {"x1iy", "0"},
+        {"a2ry", "0"}, {"a2iy", "0"}, {"ac2ry", "0"}, {"ac2iy", "0"}, {"x2ry", "0"}, {"x2iy", "0"},
+        {"a3ry", "0"}, {"a3iy", "0"}, {"ac3ry", "0"}, {"ac3iy", "0"}, {"x3ry", "0"}, {"x3iy", "0"},
+        {"a4ry", "0"}, {"a4iy", "0"}, {"ac4ry", "0"}, {"ac4iy", "0"}, {"x4ry", "0"}, {"x4iy", "0"},
+        {"cry", "0"}, {"ciy", "2"},
+        {"sub_dimensions_x", "1"}, {"sub_dimensions_y", "1"},
         {"burning", "0"},
         {"conj", "0"},
         {"fractal_mode", to_string(MANDELBROT_2)},
@@ -119,6 +135,19 @@ const StateQuery Fractal2DScene::populate_state_query() const {
         "a3rY", "a3iY", "ac3rY", "ac3iY", "x3rY", "x3iY",
         "a4rY", "a4iY", "ac4rY", "ac4iY", "x4rY", "x4iY",
         "crY", "ciY",
+        "zrx", "zix",
+        "a1rx", "a1ix", "ac1rx", "ac1ix", "x1rx", "x1ix",
+        "a2rx", "a2ix", "ac2rx", "ac2ix", "x2rx", "x2ix",
+        "a3rx", "a3ix", "ac3rx", "ac3ix", "x3rx", "x3ix",
+        "a4rx", "a4ix", "ac4rx", "ac4ix", "x4rx", "x4ix",
+        "crx", "cix",
+        "zry", "ziy",
+        "a1ry", "a1iy", "ac1ry", "ac1iy", "x1ry", "x1iy",
+        "a2ry", "a2iy", "ac2ry", "ac2iy", "x2ry", "x2iy",
+        "a3ry", "a3iy", "ac3ry", "ac3iy", "x3ry", "x3iy",
+        "a4ry", "a4iy", "ac4ry", "ac4iy", "x4ry", "x4iy",
+        "cry", "ciy",
+        "sub_dimensions_x", "sub_dimensions_y",
         "burning", "conj",
         "fractal_mode",
         "max_iterations"};
@@ -141,16 +170,21 @@ void Fractal2DScene::populateParamArray(float* params, const string& identifier)
 
 void Fractal2DScene::populateAllArrays() {
     populateParamArray(origin_params, "O");
-    populateParamArray(x_params, "X");
-    populateParamArray(y_params, "Y");
+    populateParamArray(X_params, "X");
+    populateParamArray(Y_params, "Y");
+    populateParamArray(x_params, "x");
+    populateParamArray(y_params, "y");
 }
 
 void Fractal2DScene::draw(){
     populateAllArrays();
     fractal_2D_render(get_width_height(),
         origin_params,
+        X_params,
+        Y_params,
         x_params,
         y_params,
+        state["sub_dimensions_x"], state["sub_dimensions_y"],
         state["burning"], state["conj"],
         state["fractal_mode"],
         state["max_iterations"],

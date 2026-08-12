@@ -8,7 +8,6 @@
 
 const float bailout_radius = 256;
 const float bailout_radius_sq = bailout_radius*bailout_radius;
-using namespace cuCFunc;
 // Function to linearly interpolate between two colors
 __device__ unsigned int cuda_color_lerp(unsigned int c1, unsigned int c2, float t) {
     return ((unsigned int)((1 - t) * ((c1 >> 24) & 0xff) + t * ((c2 >> 24) & 0xff)) << 24) |
