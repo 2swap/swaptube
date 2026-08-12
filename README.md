@@ -96,7 +96,6 @@ In order to ensure that BOTH your time control is defined correctly (the appropr
 
 Things that happen during smoketesting:
 - One frame per microblock is staged and rendered
-- DataObjects are modified as normal
 - State transitions are performed as normal to test validity of state equation definitions
 - The record_list.tsv file is re-populated, so you can record your audio script after smoketesting without performing a full render.
 - Subtitles will be generated with incorrect timestamps reflecting one-frame-per-microblock timing.
@@ -104,63 +103,10 @@ Things that happen during smoketesting:
 Things that do NOT happen during smoketesting:
 - No video or audio is encoded or rendered
 - Since nothing is rendered, occasional frames are not drawn to stdout
-- Video width, height, and framerate are ignored entirely except insofar as they affect State equations and DataObject modifications.
 
 You can run `./go.sh MyProjectName 640 360 -s`, using the -s flag to indicate "smoketest only". Using this flag merely skips the full render after the smoketest.
 
 In addition to smoketesting, there is an additional exposed boolean variable `FOR_REAL` which can be toggled to true or false in the project file, effectively enabling smoketest mode for sections of a true render. This allows you to, say, work on the last section of a video without having to re-render the beginning each time.
 
-### Scenes, State, and Data
-The data structure that a single frame is rendered as a function of has three parts, roughly split up to differences in their nature:
-- **Scene**: The Scene is the object which is constructed by the user in the project file. It fundamentally defines **what** is rendered. For example, a MandelbrotScene is responsible for rendering Mandelbrot Sets.
-- **State**: State can be thought of as any numerical information used by the Scene to render a particular frame. This controls things such as the opacity of certain objects, or, following the Mandelbrot example, the zoom level of the Mandelbrot set. All scenes have a StateManager, and when the user whishes to modify the scene's state, they can do so by calling functions on the StateManager. Usually these will be `set` and `transition` function calls. Since State uniquely contains numerical information, swaptube will handle all the clean transitions of state.
-- **Data**: Data is the non-numerical stateful information which is remembered by the Scene. A good example is the LambdaScene, which draws a Tromp Lambda Diagram, and stores as data that particular lambda expression. Similarly, a GraphScene needs to statefully track a Graph (of nodes and edges). This type of information is non-numerical, and cannot be naively interpolated as a transition, so it must be kept in a DataObject with an interface defined between the Scene and DataObject.
-
-### MIDI export
-
-Sound effects are queued from inside scenes (`sfx_boink`, `sfx_clap`), which can queue effects at specific points in the scene. The `-m` flag exports `Video.mid` next to the video which is a Standard MIDI File carrying one note per queued effect, at exactly the time it was queued. This file can be imported dirtectly to a digital audio workstation, and eases the workflow for more complicated sound design without hand-syncing.
-
-Sub-flags refine what the notes carry. They cluster, so `-mpvt` turns all of them on at once, and each implies `-m` on its own:
-
-| Flag | Effect |
-| ---- | ------ |
-| `-m` | Export MIDI file `Video.mid`. One track, one channel per effect, fixed pitch and velocity. |
-| `-p` | Carry each effect's frequency into the note, rounded to the nearest semitone. |
-| `-v` | Carry each effect's volume into the note's velocity. |
-| `-t` | Give each effect its own named MIDI track, so each can take its own instrument. |
-| `-b N` | Pitch bend range in semitones for continuous tones (default 24). Takes a value, so it does not cluster. |
-
-The file is written at 120 BPM with 960 ticks per quarter note, which puts every frame boundary on an exact tick at any framerate swaptube accepts. Rounding to a semitone does lose the exact pitch, so a `Video.sfx.csv` sidecar is written alongside it with the true time, frequency, duration and volume of every effect.
-
-Scenes that want their own instrument can name their sound: the last argument of `sfx_boink` and `sfx_clap` is a voice label (`"boink"` and `"clap"` by default) that becomes the track name under `-t`, and the channel otherwise.
-
-#### Continuous tones
-
-A scene that synthesises audio frame by frame rather than firing off discrete effects calls `midi->add_continuous(voice, t, duration, frequency, volume)` once per frame. Slices that meet end to end are joined into **one sustained note**, whose pitch and volume are then traced by a pitch-bend curve and an expression curve (CC11) — so a DAW shows a held note that glides and swells. A gap, meaning the tone fell silent, starts a new note.
-
-`-p` and `-v` select the curves: `-p` gives the pitch contour, `-v` the volume contour. Without them you still get a sustained note marking when the tone sounded.
-
-#### Set your instrument's pitch bend range to 24
-
-Pitch bend is meaningless without a range, and instruments disagree about the default. Swaptube writes bends against **24 semitones** and announces that via RPN 0, but most DAWs ignore the announcement, so **set the instrument's pitch bend range to 24** (`-b` changes the number if your instrument caps lower, e.g. `./go.sh MyProject 1920 1080 30 -mpvt -b 12`).
-
-If this is mismatched, pitch bends will be out of tune.
-
-Each note is anchored on the pitch its tone **begins** at, so it sits in the piano roll at the pitch you actually hear when it starts, and still sounds right in an instrument whose bend range was never touched. Only a glide too wide for the bend to reach re-centres its anchor mid-run.
-
-#### Volume of a continuous tone
-
-A sustained note has one velocity but a changing loudness, so the two split the job: **velocity carries the run's peak**, and the expression curve traces the shape as a fraction of that peak. Velocity times expression reproduces the rendered envelope.
-
-#### Trying it out
-
-`MidiDemo` exercises all of the possible configurations of this setup:
-
-```bash
-./go.sh MidiDemo 1920 1080 30 -mpvt
-```
-
-`MidiSoundScene` is worth reading if you want a scene of your own to drive the
-continuous export: it synthesises its drone in `draw()`, and forces
-`needs_redraw()` true so that audio is produced on every frame even when the
-picture would not otherwise change.
+### State
+**State**: The "State Manager" tracks a list of definitions of variables, arranged in a dependency graph of definitions, eventually decided from upstate "global state" sensors, such as the current microblock completion fraction `{microblock_fraction}` or the number of seconds elapsed in the video `{t}`. It is best used for any numerical or boolean information used by the Scene to render a particular frame: opacities, angles, camera positions, real-valued parameters, etc. All scenes have a StateManager, and when the user whishes to modify the scene's state, they can do so by calling functions on the StateManager. Usually these will be `set` and `transition` function calls. Since State uniquely contains numerical information, swaptube will handle all the clean transitions of state.
