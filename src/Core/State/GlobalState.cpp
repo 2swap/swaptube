@@ -35,3 +35,6 @@ void set_global_state(const string& key, double value){
 bool global_state_exists(const string& key){
     return global_state.find(key) != global_state.end();
 }
+const unordered_map<string, double>& get_all_global_state(){
+    return global_state;
+}

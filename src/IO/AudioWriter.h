@@ -28,6 +28,7 @@ inline float sample_to_float(sample_t s) {
 class AudioWriter {
 public:
     const bool include_audio;
+    const bool audio_sfx;
 
 private:
     const int num_audio_streams;
@@ -55,7 +56,7 @@ private:
     void encode_and_write_audio(AVCodecContext* codecCtx, AVStream* stream);
 
 public:
-    AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& include_audio);
+    AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& include_audio, const bool& audio_sfx);
     void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const double t);
 
     int add_generated_audio(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer);

@@ -4,7 +4,6 @@
 #include "../IO/Writer.h"
 #include "../Host_Device_Shared/vec.h"
 #include "../Host_Device_Shared/helpers.h"
-#include <limits>
 
 extern "C" void cuda_zeroize_pixels(uint32_t* d_pixels, const ivec2& wh);
 
@@ -124,7 +123,8 @@ void Scene::render_microblock(){
 void Scene::update_state() {
     manager.evaluate_all();
     state = manager.get_state();
-    if(global_identifier.size() > 0) publish_global();
+    // Since global_identifier was removed, now we just check the list for publishing
+    if(!stage_publish_to_global.empty()) publish_global();
 }
 
 int Scene::get_width() {
@@ -162,40 +162,11 @@ void Scene::export_frame(const string& filename, int scaledown) {
     pix_to_png(pix.naive_scale_down(scaledown), "io_out/frames/frame_"+filename+".png");
 }
 
-void Scene::set_global_identifier(const string& id){
-    // What we are actually here to do
-    global_identifier = id;
-
-    // We also need to publish it immediately, or else it may not be present on the first frame
-    // of something trying to read from global, since global ordering is not guaranteed.
-    // Update_state does this for us.
-    update_state();
-}
-
+// No more global identifier, so check the list
 void Scene::publish_global() {
-    const unordered_map<string, double>& s = stage_publish_to_global();
-    for(const auto& p : s) {
-        set_global_state(global_identifier + "." + p.first, p.second);
-    }
-}
-
-void Scene::trigger(const string& track_name, double t_seconds, double duration_seconds) {
-    get_writer().midi->add_note(track_name, t_seconds, duration_seconds);
-}
-
-void Scene::link_cc(const string& variable_name) {
-    linked_cc_last_values.emplace(variable_name, numeric_limits<double>::quiet_NaN());
-}
-
-void Scene::capture_cc_links() {
-    if (linked_cc_last_values.empty()) return;
-    const double t = get_global_state("t");
-    for (auto& [name, last_value] : linked_cc_last_values) {
-        if (!state.contains(name)) continue;
-        const double value = state[name];
-        if (!isnan(last_value) && value == last_value) continue;
-        get_writer().midi->add_cc(name, t, value);
-        last_value = value;
+    for (const auto& [scene_var, global_var] : stage_publish_to_global) {
+        if (!state.contains(scene_var)) continue;
+        set_global_state(global_var, state[scene_var]);
     }
 }
 
@@ -208,12 +179,13 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("voice", sample_to_float(sample));
 
     query();
-    capture_cc_links();
     get_writer().video->add_frame(gpu_pix.get_ptr());
 
     remaining_frames_in_macroblock--;
     set_global_state("frame_number", get_global_state("frame_number") + 1);
     set_global_state("t", get_global_state("frame_number") / get_video_framerate_fps());
+    // Capture MIDI state from global vars
+    get_writer().midi->capture_global_state();
     cout << "]" << flush;
 }
 

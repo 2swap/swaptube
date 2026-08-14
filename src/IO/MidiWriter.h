@@ -28,6 +28,9 @@ public:
     // Records one sample of a state variable's value, for a standalone CC automation track.
     void add_cc(const std::string& track_name, double t_seconds, double value);
 
+    // Records one CC sample per entry currently in global state, at the current time.
+    void capture_global_state();
+
 private:
     struct Note {
         double t_seconds;

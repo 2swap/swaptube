@@ -1,4 +1,5 @@
 #include "../Scenes/Media/MidiSoundScene.h"
+#include "../IO/Writer.h"
 
 // Pentatonic
 const vector<double> scale = {220.00, 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00};
@@ -7,6 +8,8 @@ void render_video() {
     configure_midi(true);
 
     MidiSoundScene scene;
+    // This is now the syntax to export MIDI
+    scene.stage_publish_to_global = {{"drone_frequency", "drone_frequency"}, {"drone_volume", "drone_volume"}};
 
     stage_macroblock(SilenceBlock(1), 1);
     scene.render_microblock();
@@ -18,7 +21,8 @@ void render_video() {
         const double when = t + 0.35 * i;
         const double volume = 0.2 + 0.8 * i / (scale.size() - 1.0);
         scene.play_note(when, scale[i], volume);
-        scene.trigger("beat", when);
+        // This is the syntax to add a discrete MIDI note
+        get_writer().midi->add_note("beat", when, 0);
     }
     scene.render_microblock();
 

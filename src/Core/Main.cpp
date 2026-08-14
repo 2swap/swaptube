@@ -12,11 +12,11 @@ using namespace std;
 
 void render_video(); // Forward declaration, provided by the user in their project file
 
-void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio) {
+void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio, bool& audio_sfx) {
     cout << "Parsing command line arguments... " << endl;
 
-    if (argc != 7) {
-        throw runtime_error("Expected 6 arguments: width height framerate samplerate smoketest/render include_audio");
+    if (argc != 8) {
+        throw runtime_error("Expected 7 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx");
     }
 
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
@@ -60,7 +60,14 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
         throw runtime_error("Invalid include audio argument: " + string(argv[6]) );
     }
     include_audio = (include_audio_i != 0);
-    cout << "Include Audio: " << (include_audio ? "true" : "false") << endl << endl;
+    cout << "Include Audio: " << (include_audio ? "true" : "false") << ", " << flush;
+
+    int audio_sfx_i;
+    if (sscanf(argv[7], "%d", &audio_sfx_i) != 1 || (audio_sfx_i != 0 && audio_sfx_i != 1)) {
+        throw runtime_error("Invalid audio sfx argument: " + string(argv[7]) );
+    }
+    audio_sfx = (audio_sfx_i != 0);
+    cout << "Audio SFX: " << (audio_sfx ? "true" : "false") << endl << endl;
 }
 
 inline void signal_handler(int signal) {
@@ -75,15 +82,15 @@ void setup_output_subfolders() {
 
 int main(int argc, char* argv[]) {
     int VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE;
-    bool INCLUDE_AUDIO;
-    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, INCLUDE_AUDIO);
+    bool INCLUDE_AUDIO, AUDIO_SFX;
+    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, INCLUDE_AUDIO, AUDIO_SFX);
     Timer timer;
 
     // Main Render Loop
     signal(SIGINT, signal_handler);
     try {
         setup_output_subfolders();
-        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, INCLUDE_AUDIO);
+        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, INCLUDE_AUDIO, AUDIO_SFX);
         cout << "Rendering video... " << endl;
         render_video();
     } catch(std::exception& e) {

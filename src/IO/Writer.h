@@ -18,7 +18,7 @@ public:
     ShtookaWriter* shtooka = nullptr;
     MidiWriter* midi = nullptr;
 
-    Writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio);
+    Writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio, const bool& audio_sfx);
     void destroy();
 
     int get_video_width_pixels() const;
@@ -35,7 +35,7 @@ private:
     const uint32_t video_background_color = 0x00000000;
 };
 
-void init_writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio);
+void init_writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio, const bool& audio_sfx);
 Writer& get_writer();
 
 int get_video_width_pixels();

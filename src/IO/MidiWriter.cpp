@@ -12,6 +12,7 @@
 #include <stdexcept>
 #include <utility>
 #include "../Core/Smoketest.h"
+#include "../Core/State/GlobalState.h"
 #include "Writer.h"
 
 using namespace std;
@@ -183,6 +184,16 @@ void MidiWriter::add_cc(const string& track_name, double t_seconds, double value
         throw runtime_error("Midi cc time was negative: " + to_string(t_seconds) + " seconds.");
 
     cc_samples.push_back(CCSample{t_seconds, value, cc_track_index_for(track_name)});
+}
+
+// Capture everything from the global state and write all ccs
+void MidiWriter::capture_global_state() {
+    if (!rendering_on()) return;
+
+    const double t = get_global_state("t");
+    for (const auto& [name, value] : get_all_global_state()) {
+        add_cc(name, t, value);
+    }
 }
 
 vector<MidiWriter::ToneRun> MidiWriter::tone_runs() const {

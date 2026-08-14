@@ -52,35 +52,19 @@ public:
 
     StateManager manager;
 
-    void set_global_identifier(const string& id);
-
     virtual void change_data();
 
-    // Records a discrete MIDI event on a track named track_name (e.g. a beat, a state
-    // transition). MIDI-only; pairs naturally with sfx_boink/sfx_clap (IO/SFX.h) when an
-    // audible effect is also wanted.
-    void trigger(const string& track_name, double t_seconds, double duration_seconds = 0);
-
-    // Links a StateManager variable (declared via manager.set(...)) to its own MIDI CC
-    // automation track, named after the variable. Idempotent.
-    void link_cc(const string& variable_name);
+    // Changed this to a simple variable instead of a function.
+    unordered_map<string, string> stage_publish_to_global;
 
 protected:
     DevicePointer gpu_pix;
     StateReturn state;
 
 private:
-    string global_identifier = ""; // This is prefixed before the published global state elements
-                                   // to uniquely identify this scene if necessary.
-                                   // Empty by default, meaning no state is published.
-
     bool has_updated_since_last_query = false;
 
-    virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
     void publish_global();
 
     void render_one_frame(int microblock_frame_number, int scene_duration_frames);
-
-    unordered_map<string, double> linked_cc_last_values;
-    void capture_cc_links();
 };

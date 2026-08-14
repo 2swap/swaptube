@@ -39,9 +39,10 @@ using namespace std;
 const AVCodecID output_codec = AV_CODEC_ID_PCM_S32LE;
 const AVSampleFormat output_sample_format = AV_SAMPLE_FMT_S32;
 
-AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& include_audio) :
+AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& include_audio, const bool& audio_sfx) :
     include_audio(include_audio),
-    num_audio_streams(include_audio ? 1 : 0),
+    audio_sfx(audio_sfx),
+    num_audio_streams(include_audio ? (1 + (audio_sfx ? 2 : 0)) : 0),
     outputCodecContexts(std::vector<AVCodecContext*>(num_audio_streams, nullptr)),
     audioStreams(std::vector<AVStream*>(num_audio_streams, nullptr)),
     fc(fc_), sample_buffer(), sfx_buffer(), total_samples_processed(0),
@@ -403,8 +404,23 @@ void AudioWriter::encode_buffers() {
             sample_t sfx_left = sfx_buffer[idxL];
             sample_t sfx_right = sfx_buffer[idxR];
 
-            dst[0][idxL] = voice_left + sfx_left;
-            dst[0][idxR] = voice_right + sfx_right;
+            int track_number = 0;
+
+            if (audio_sfx) {
+                // Voice-only track
+                dst[track_number][idxL] = voice_left;
+                dst[track_number][idxR] = voice_right;
+                track_number++;
+
+                // Sfx-only track
+                dst[track_number][idxL] = sfx_left;
+                dst[track_number][idxR] = sfx_right;
+                track_number++;
+            }
+
+            // Merged audio track
+            dst[track_number][idxL] = voice_left + sfx_left;
+            dst[track_number][idxR] = voice_right + sfx_right;
 
             current_max_sample = max(current_max_sample, voice_left);
             current_sample_index_in_frame++;

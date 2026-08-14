@@ -34,8 +34,6 @@ double pitch_fraction(double frequency_hz) {
 
 MidiSoundScene::MidiSoundScene(const vec2& dimensions) : Scene(dimensions) {
     manager.set({{"drone_frequency", "220"}, {"drone_volume", "0"}});
-    link_cc("drone_frequency");
-    link_cc("drone_volume");
 }
 
 void MidiSoundScene::play_note(double t_seconds, double frequency_hz, double volume, const std::string& voice) {
