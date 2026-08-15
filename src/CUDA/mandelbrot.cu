@@ -4,16 +4,33 @@
 #include <complex>
 #include "../Host_Device_Shared/helpers.h"
 #include <cuComplex.h>  // Use cuComplex for complex numbers in CUDA
-#include "complex_functions.cuh"
 
 const float bailout_radius = 256;
 const float bailout_radius_sq = bailout_radius*bailout_radius;
+
 // Function to linearly interpolate between two colors
 __device__ unsigned int cuda_color_lerp(unsigned int c1, unsigned int c2, float t) {
     return ((unsigned int)((1 - t) * ((c1 >> 24) & 0xff) + t * ((c2 >> 24) & 0xff)) << 24) |
            ((unsigned int)((1 - t) * ((c1 >> 16) & 0xff) + t * ((c2 >> 16) & 0xff)) << 16) |
            ((unsigned int)((1 - t) * ((c1 >> 8 ) & 0xff) + t * ((c2 >> 8 ) & 0xff)) << 8 ) |
            ((unsigned int)((1 - t) * ( c1        & 0xff) + t * ( c2        & 0xff))      ) ;
+}
+
+__device__ cuComplex cuCpow(cuComplex base, cuComplex exponent) {
+    float a = cuCrealf(base);
+    float b = cuCimagf(base);
+    float c = cuCrealf(exponent);
+    float d = cuCimagf(exponent);
+    if (a == 0.0 && b == 0.0)
+        return make_cuComplex(0.0, 0.0);  // Zero raised to positive power is zero
+    
+    float r = sqrt(a * a + b * b);  // Magnitude of the base
+    float theta = atan2(b, a);      // Argument of the base
+
+    float new_r = pow(r, c) * exp(-d * theta);
+    float new_theta = c * theta + d * log(r);
+
+    return make_cuComplex(new_r * cos(new_theta), new_r * sin(new_theta));
 }
 
 // Color interpolation function (shared)
@@ -69,6 +86,68 @@ __device__ void compute_z_x_c(
     log_real_part_exp = log(cuCrealf(x));
 }
 
+__device__ int mandelbrot_iterations(
+    cuComplex &z, const cuComplex &x, const cuComplex &c,
+    int max_iterations, float bailout_radius_sq, float &sq_radius
+) {
+    int iterations = 0;
+    sq_radius = 0;
+    
+    for (; iterations < max_iterations; iterations++) {
+        z = cuCaddf(cuCpow(z, x), c);
+        float r = cuCrealf(z);
+        float i = cuCimagf(z);
+        sq_radius = r * r + i * i;
+        if (sq_radius > bailout_radius_sq) {
+            return iterations; // Returns immediately if bailout occurs
+        }
+    }
+    
+    return max_iterations; // No bailout, maximum iterations reached
+}
+
+__device__ int mandelbrot_iterations_2or3(
+    cuComplex &z, int exponent, const cuComplex &c,
+    int max_iterations, float bailout_radius_sq, float &sq_radius
+) {
+    int iterations = 0;
+    sq_radius = 0;
+
+    // Extract real and imaginary parts of z and c
+    float zr = cuCrealf(z);
+    float zi = cuCimagf(z);
+    float cr = cuCrealf(c);
+    float ci = cuCimagf(c);
+
+    if(exponent == 2){
+        for (; iterations < max_iterations; iterations++) {
+            float zr_new = zr * zr - zi * zi + cr;  // Real part of z^2 + c
+            float zi_new = 2.0 * zr * zi + ci;      // Imaginary part of z^2 + c
+
+            // Update z and square radius for next iteration
+            zr = zr_new;
+            zi = zi_new;
+            sq_radius = zr * zr + zi * zi;
+
+            if (sq_radius > bailout_radius_sq) return iterations;
+        }
+    } else {
+        for (; iterations < max_iterations; iterations++) {
+            float zr_new = zr * zr * zr - 3.0 * zr * zi * zi + cr;  // Real part of z^3 + c
+            float zi_new = 3.0 * zr * zr * zi - zi * zi * zi + ci;  // Imaginary part of z^3 + c
+
+            // Update z and square radius for next iteration
+            zr = zr_new;
+            zi = zi_new;
+            sq_radius = zr * zr + zi * zi;
+
+            if (sq_radius > bailout_radius_sq) return iterations;
+        }
+    }
+
+    return max_iterations; // No bailout, maximum iterations reached
+}
+
 __global__ void mandelbrot_kernel(
     const Cuda::ivec2 wh,
     const Cuda::vec2 lx_ty,
@@ -96,20 +175,10 @@ __global__ void mandelbrot_kernel(
     int intx = cuCrealf(x);
 
     int iterations;
-    if (x_is_real) {
-        switch(intx){
-            case 2:
-                iterations = mandelbrot_iterations_2(cuCrealf(z), cuCimagf(z), cuCrealf(c), cuCimagf(c), max_iterations, bailout_radius_sq, sq_radius);
-                break;
-            case 3:
-                iterations = mandelbrot_iterations_3(cuCrealf(z), cuCimagf(z), cuCrealf(c), cuCimagf(c), max_iterations, bailout_radius_sq, sq_radius);
-                break;
-            default:
-                iterations = mandelbrot_iterations(cuCrealf(z), cuCimagf(z), cuCrealf(x), cuCrealf(c), cuCimagf(c), max_iterations, bailout_radius_sq, sq_radius);
-        }
+    if (x_is_real && (intx == 2 || intx == 3)) {
+        iterations = mandelbrot_iterations_2or3(z, intx, c, max_iterations, bailout_radius_sq, sq_radius);
     } else {
-        iterations = 
-        mandelbrot_iterations(cuCrealf(z), cuCimagf(z), cuCrealf(x), cuCimagf(x), cuCrealf(c), cuCimagf(c), max_iterations, bailout_radius_sq, sq_radius);
+        iterations = mandelbrot_iterations(z, x, c, max_iterations, bailout_radius_sq, sq_radius);
     }
     
     bool bailed_out = iterations < max_iterations;
