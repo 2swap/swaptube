@@ -123,8 +123,7 @@ void Scene::render_microblock(){
 void Scene::update_state() {
     manager.evaluate_all();
     state = manager.get_state();
-    // Since global_identifier was removed, now we just check the list for publishing
-    if(!stage_publish_to_global.empty()) publish_global();
+    publish_global();
 }
 
 int Scene::get_width() {
@@ -162,7 +161,6 @@ void Scene::export_frame(const string& filename, int scaledown) {
     pix_to_png(pix.naive_scale_down(scaledown), "io_out/frames/frame_"+filename+".png");
 }
 
-// No more global identifier, so check the list
 void Scene::publish_global() {
     for (const auto& [scene_var, global_var] : stage_publish_to_global) {
         if (!state.contains(scene_var)) continue;

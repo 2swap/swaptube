@@ -5,10 +5,8 @@
 #include <cstdint>
 #include <fstream>
 #include <initializer_list>
-#include <iomanip>
 #include <iostream>
 #include <map>
-#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include "../Core/Smoketest.h"
@@ -19,8 +17,8 @@ using namespace std;
 
 namespace {
 
-// 120 BPM at 960 ticks per quarter note, so a tick is 1/1920 of a second - every
-// framerate swaptube accepts divides that evenly, keeping frames on exact ticks.
+// 120 BPM at 960 ticks per quarter note, so a tick is 1/1920 of a second. Small
+// enough resolution that rounding frame times to the nearest tick is imperceptible.
 const int ticks_per_quarter_note = 960;
 const int microseconds_per_quarter_note = 500000;
 const double ticks_per_second = ticks_per_quarter_note * 1000000.0 / microseconds_per_quarter_note;
@@ -126,26 +124,7 @@ MidiEvent control_change_event(long long tick, int channel, uint8_t controller, 
     return MidiEvent{tick, order, {static_cast<uint8_t>(0xb0 | channel), controller, static_cast<uint8_t>(value)}};
 }
 
-string csv_quote(const string& text) {
-    string quoted = "\"";
-    for (char c : text) {
-        if (c == '"') quoted += '"';
-        quoted += c;
-    }
-    return quoted + "\"";
-}
-
 } // namespace
-
-MidiWriter::MidiWriter() : options() {}
-
-void MidiWriter::configure(bool csv) {
-    options.csv = csv;
-}
-
-void configure_midi(bool csv) {
-    get_writer().midi->configure(csv);
-}
 
 void MidiWriter::add_note(const string& voice, double t_seconds, double duration_seconds) {
     if (!rendering_on()) return; // Match add_sfx: a smoketest emits nothing
@@ -325,7 +304,7 @@ void MidiWriter::write_midi_file() const {
             const int scaled = range > 0 ? clamp_to_midi_range(lround((sample.value - track_min[i]) / range * 127.0)) : 64;
             if (scaled == last_value[i]) continue;
             const long long tick = llround(sample.t_seconds * ticks_per_second);
-            events_per_cc_track[i].push_back(control_change_event(tick, channel_for(i), cc_mod_wheel, scaled));
+            events_per_cc_track[i].push_back(control_change_event(tick, channel_for(static_cast<int>(voice_names.size()) + i), cc_mod_wheel, scaled));
             last_value[i] = scaled;
         }
     }
@@ -361,67 +340,6 @@ void MidiWriter::write_midi_file() const {
          << tracks.size() << " track(s) to " << midi_path << "." << endl;
 }
 
-void MidiWriter::write_csv_file() const {
-    const string csv_path = "io_out/Video.sfx.csv";
-
-    ofstream csv_file(csv_path);
-    if (!csv_file.is_open()) throw runtime_error("Failed to open file: " + csv_path);
-
-    csv_file << "t_seconds,kind,voice,duration_seconds,midi_track,midi_channel,midi_note,cc_value\n";
-
-    // Notes, tone slices, and cc samples, interleaved in time order.
-    vector<pair<double, string>> rows;
-
-    for (const Note& note : notes) {
-        ostringstream row;
-        row << fixed
-            << setprecision(6) << note.t_seconds << ",note,"
-            << csv_quote(voice_names[note.voice_index]) << ","
-            << setprecision(6) << note.duration_seconds << ","
-            // Numbered as a DAW displays them: tracks after the tempo track,
-            // channels from one.
-            << note.voice_index + 1 << ","
-            << channel_for(note.voice_index) + 1 << ","
-            << note_number_for(note.voice_index) << ","; // No cc value; a note carries no curve
-        rows.push_back(make_pair(note.t_seconds, row.str()));
-    }
-
-    for (const ToneRun& run : tone_runs()) {
-        const int note_number = note_number_for(run.voice_index);
-        for (const ToneSlice& slice : run.slices) {
-            ostringstream row;
-            row << fixed
-                << setprecision(6) << slice.t_seconds << ",tone,"
-                << csv_quote(voice_names[slice.voice_index]) << ","
-                << setprecision(6) << slice.duration_seconds << ","
-                << slice.voice_index + 1 << ","
-                << channel_for(slice.voice_index) + 1 << ","
-                << note_number << ","; // No cc value; a tone carries no linked variable
-            rows.push_back(make_pair(slice.t_seconds, row.str()));
-        }
-    }
-
-    for (const CCSample& sample : cc_samples) {
-        ostringstream row;
-        row << fixed << setprecision(6) << sample.t_seconds << ",cc,"
-            << csv_quote(cc_track_names[sample.track_index]) << ",,"
-            << (voice_names.size() + 1 + sample.track_index) << ","
-            << channel_for(sample.track_index) + 1 << ",,"
-            << setprecision(6) << sample.value;
-        rows.push_back(make_pair(sample.t_seconds, row.str()));
-    }
-
-    stable_sort(rows.begin(), rows.end(), [](const pair<double, string>& a, const pair<double, string>& b) {
-        return a.first < b.first;
-    });
-
-    for (const pair<double, string>& row : rows) csv_file << row.second << "\n";
-
-    csv_file.close();
-
-    cout << "MidiWriter: wrote " << rows.size() << " event(s) to " << csv_path << "." << endl;
-}
-
 MidiWriter::~MidiWriter() {
     if (is_smoketest()) return; // A smoketest queues no effects
 
@@ -431,5 +349,4 @@ MidiWriter::~MidiWriter() {
     }
 
     write_midi_file();
-    if (options.csv) write_csv_file();
 }

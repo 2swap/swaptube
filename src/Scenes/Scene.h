@@ -54,7 +54,6 @@ public:
 
     virtual void change_data();
 
-    // Changed this to a simple variable instead of a function.
     unordered_map<string, string> stage_publish_to_global;
 
 protected:

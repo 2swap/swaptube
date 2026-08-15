@@ -3,21 +3,9 @@
 #include <string>
 #include <vector>
 
-// MIDI export configuration, set via configure_midi(). MIDI export itself is always on;
-// this just controls whether the CSV sidecar also gets written.
-struct MidiOptions {
-    bool csv = false; // also write the io_out/Video.sfx.csv sidecar
-};
-
-// Called once, typically at the top of render_video(), to configure MIDI export detail.
-void configure_midi(bool csv = false);
-
 class MidiWriter {
 public:
-    MidiWriter();
     ~MidiWriter();
-
-    void configure(bool csv);
 
     // Records one discrete event on its own named track.
     void add_note(const std::string& voice, double t_seconds, double duration_seconds);
@@ -57,7 +45,6 @@ private:
         int track_index;
     };
 
-    MidiOptions options;
     std::vector<Note> notes;
     std::vector<ToneSlice> tone_slices;
     std::vector<std::string> voice_names; // Indexed by voice_index, in first-seen order
@@ -73,5 +60,4 @@ private:
     std::vector<ToneRun> tone_runs() const;
 
     void write_midi_file() const;
-    void write_csv_file() const;
 };

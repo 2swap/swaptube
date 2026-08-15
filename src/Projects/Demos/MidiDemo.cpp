@@ -5,8 +5,6 @@
 const vector<double> scale = {220.00, 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00};
 
 void render_video() {
-    configure_midi(true);
-
     MidiSoundScene scene;
     // This is now the syntax to export MIDI
     scene.stage_publish_to_global = {{"drone_frequency", "drone_frequency"}, {"drone_volume", "drone_volume"}};
