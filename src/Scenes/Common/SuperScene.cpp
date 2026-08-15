@@ -64,11 +64,6 @@ std::shared_ptr<Scene> SuperScene::get_subscene_pointer(const std::string& name)
         throw std::runtime_error("Error: Attempted to get pointer to non-existent subscene: " + name);
 }
 
-bool SuperScene::needs_redraw() const {
-    bool subscene_change = subscene_needs_redraw();
-    return subscene_change || Scene::needs_redraw();
-}
-
 void SuperScene::add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind) {
     if(!scene) throw std::runtime_error("Error: Attempted to add a null subscene to superscene: " + name);
     if(subscenes.find(name) != subscenes.end()) throw std::runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
@@ -86,38 +81,8 @@ void SuperScene::change_data() {
     }
 }
 
-bool SuperScene::check_if_data_changed() const {
-    if (Scene::check_if_data_changed()) return true;
-    for(const auto& kv : subscenes){
-        if(kv.second->check_if_data_changed()) return true;
-    }
-    return false;
-}
-
 void SuperScene::on_end_transition_extra_behavior(const TransitionType tt) {
     for(const auto& kv : subscenes){
         kv.second->on_end_transition(tt);
     }
-}
-
-bool SuperScene::subscene_needs_redraw() const {
-    for (const auto& name : render_order){
-        if(state[name + ".opacity"] > 0.01 && subscenes.at(name)->needs_redraw()) return true;
-    }
-    return false;
-}
-
-void SuperScene::mark_data_unchanged() {
-    Scene::mark_data_unchanged();
-    for(const auto& kv : subscenes){
-        kv.second->mark_data_unchanged();
-    }
-}
-
-const StateQuery SuperScene::populate_state_query() const {
-    StateQuery ret;
-    for (const auto& name : render_order){
-        ret.insert(name + ".opacity");
-    };
-    return ret;
 }

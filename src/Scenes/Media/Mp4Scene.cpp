@@ -45,18 +45,12 @@ void Mp4Scene::draw() {
         current_video_reader.get_frame(0, get_width(), get_height(), frame);
     }
 
-    // Calculate the offsets to center the frame in the output
-    const vec2 offset = (get_width_height() - frame.wh) / 2;
-
     uint32_t* frame_ptr = cuda_alloc_pixels_on_device(frame.wh.x * frame.wh.y);
     cuda_copy_pixels_to_device(frame.pixels.data(), frame.wh.x * frame.wh.y, frame_ptr);
 
     // Overwrite the image onto the scene's pixel buffer
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), frame_ptr, frame.wh, offset, 1.0f, 0.0f);
+    const vec2 offset = get_width_height() / 2;
+    cuda_overlay(gpu_pix.get_ptr(), get_width_height(), frame_ptr, frame.wh, offset, 1.0f, 0.0f);
 
     cuda_free_pixels_on_device(frame_ptr);
-}
-
-const StateQuery Mp4Scene::populate_state_query() const {
-    return StateQuery{"current_frame"};
 }

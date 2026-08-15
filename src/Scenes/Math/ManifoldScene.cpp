@@ -98,9 +98,9 @@ void ManifoldScene::draw() {
     }
 
     cuda_render_manifold(
-        gpu_pix->get_ptr(),
+        gpu_pix.get_ptr(),
         get_width_height(),
-        distance_buffer->get_ptr(),
+        distance_buffer.get_ptr(),
         manifolds,
         manifold_names.size(),
         camera_pos,
@@ -115,28 +115,8 @@ void ManifoldScene::draw() {
     );
 
     ThreeDimensionScene::draw();
-}
 
-const StateQuery ManifoldScene::populate_state_query() const {
-    StateQuery s = ThreeDimensionScene::populate_state_query();
-    for(const std::string& name : manifold_names) {
-        const std::string tag = "manifold" + name + "_";
-        state_query_insert_multiple(s, {
-            tag + "x",
-            tag + "y",
-            tag + "z",
-            tag + "r",
-            tag + "i",
-            tag + "a_min",
-            tag + "a_max",
-            tag + "a_steps",
-            tag + "b_min",
-            tag + "b_max",
-            tag + "b_steps"
-        });
-    }
-    state_query_insert_multiple(s, {"ab_dilation", "dot_radius"});
-    return s;
+    delete[] manifolds;
 }
 
 void ManifoldScene::set_texture(const Pixels& new_texture) {

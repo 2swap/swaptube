@@ -25,8 +25,6 @@ public:
 
     void draw() override;
 
-    const StateQuery populate_state_query() const override;
-
     void set_texture(const Pixels& new_texture);
 
     ~ManifoldScene();

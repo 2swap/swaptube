@@ -17,7 +17,7 @@ extern "C" void launch_cuda_surface_raymarch(
     int w_size, ResolvedStateEquationComponent* w_eq,
     int is_special,
     const quat& camera_orientation, const vec3& camera_position,
-    float fov_rad, float max_dist, float sphere_radius, const vec3& sphere_center
+    float fov_rad, float max_dist
 );
 
 extern "C" void cuda_render_manifold(
@@ -39,7 +39,7 @@ extern "C" void cuda_render_geodesics_2d(
     const float geom_mean_size, const float fov, const float opacity);
 
 GeodesicScene::GeodesicScene(const vec2& dimensions)
-    : Scene(dimensions) {
+    : Scene(dimensions), distance_buffer(get_width_height()) {
     manager.set(unordered_map<string, string>{
         {"space_x", "(a)"},
         {"space_y", "(b)"},
@@ -56,13 +56,8 @@ GeodesicScene::GeodesicScene(const vec2& dimensions)
         {"pov_qi", "0"},
         {"pov_qj", "0"},
         {"pov_qk", "0"},
-        {"pov_fov", "2"},
+        {"pov_fov", ".5"},
         {"pov_max_dist", "9"},
-
-        {"sphere_x", "0"},
-        {"sphere_y", "0"},
-        {"sphere_z", "5"},
-        {"sphere_radius", ".5"},
 
 //Manifold Stuff
         {"manifold_d", "20.0"},
@@ -74,8 +69,6 @@ GeodesicScene::GeodesicScene(const vec2& dimensions)
         {"geodesics_spread_angle", "pi 2 /"},
         {"geodesics_opacity", "1.0"},
     });
-    distance_buffer = new DevicePointer(get_pixels_size());
-    add_data_object(distance_buffer);
 }
 
 void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
@@ -95,17 +88,15 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
     int special_case_code = 0;
     if(x_y_z_flat) special_case_code = 1;
     if(x_y_z_flat && w_flat) special_case_code = 2;
-    vec3 sphere_center(state["sphere_x"], state["sphere_y"], state["sphere_z"]);
 
-    launch_cuda_surface_raymarch(gpu_pix->get_ptr(), get_width(), get_height(),
+    launch_cuda_surface_raymarch(gpu_pix.get_ptr(), get_width(), get_height(),
                                  x_eq.size(), x_eq.data(),
                                  y_eq.size(), y_eq.data(),
                                  z_eq.size(), z_eq.data(),
                                  w_eq.size(), w_eq.data(),
                                  special_case_code,
                                  camera_direction, camera_pos,
-                                 state["pov_fov"], state["pov_max_dist"],
-                                 state["sphere_radius"], sphere_center);
+                                 state["pov_fov"], state["pov_max_dist"]);
 }
 
 void GeodesicScene::draw_manifold(
@@ -150,13 +141,13 @@ void GeodesicScene::draw_manifold(
     if(state["manifold_opacity"] >= 0.01f) {
         ManifoldData manifolds[] = { manifold1 };
         cuda_render_manifold(
-            gpu_pix->get_ptr(),
+            gpu_pix.get_ptr(),
             get_width_height(),
-            distance_buffer->get_ptr(),
+            distance_buffer.get_ptr(),
             manifolds,
             1,
             camera_position,
-            camera_direction,
+            conjugate(camera_direction),
             geom_mean(get_width(), get_height()),
             state["manifold_fov"],
             1,
@@ -174,7 +165,7 @@ void GeodesicScene::draw_manifold(
         vec2 start_velocity = vec2(camera_dir_3d.x, camera_dir_3d.z);
         start_velocity = 0.005 * normalize(start_velocity);
         cuda_render_geodesics_2d(
-            gpu_pix->get_ptr(),
+            gpu_pix.get_ptr(),
             get_width(), get_height(),
             manifold1,
             start_position, start_velocity,
@@ -202,21 +193,7 @@ void GeodesicScene::draw() {
     draw_manifold(x_eq, y_eq, z_eq, w_eq, camera_direction);
 }
 
-const StateQuery GeodesicScene::populate_state_query() const {
-    StateQuery sq = {
-        "space_x", "space_y", "space_z", "space_w",
-
-        "subscreen_size",
-
-        "pov_x", "pov_y", "pov_z",
-        "pov_q1", "pov_qi", "pov_qj", "pov_qk",
-        "pov_fov", "pov_max_dist",
-        "sphere_x", "sphere_y", "sphere_z", "sphere_radius",
-
-        "manifold_d", "manifold_fov",
-        "manifold_opacity",
-
-        "geodesics_count", "geodesics_steps", "geodesics_spread_angle", "geodesics_opacity",
-    };
-    return sq;
+void GeodesicScene::change_data() {
+    Scene::change_data();
+    distance_buffer.tick(get_width_height());
 }

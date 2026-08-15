@@ -42,6 +42,7 @@ extern "C" void preprocess_argb_to_p010(
 );
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
+const bool USE_LIVE = false;
 bool VideoWriter::encode_and_write_frame(AVFrame* frame){
     int ret = avcodec_send_frame(videoCodecContext, frame);
     //if (ret == AVERROR_EOF) return false;
@@ -71,6 +72,11 @@ bool VideoWriter::encode_and_write_frame(AVFrame* frame){
 }
 
 VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int video_width_pixels, int video_height_pixels, int video_framerate_fps) : fc(fc_) {
+    if(USE_LIVE) {
+        lp = new LivePlayer(ivec2(video_width_pixels, video_height_pixels));
+        return;
+    }
+
     #ifdef USE_AMD
     setenv("AMD_DEBUG", "notiling", 1);
     #endif
@@ -141,7 +147,7 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
     if (ret2 < 0) {
         char errbuf[256];
         av_strerror(ret2, errbuf, sizeof(errbuf));
-        cout << "Failed to open video codec: " << errbuf << endl;
+        cout << "Failed to open video codec " << CODEC_NAME << ": " << errbuf << endl;
         av_buffer_unref(&hw_device_ctx);
         throw runtime_error("Failed avcodec_open2!");
     }
@@ -182,6 +188,11 @@ void VideoWriter::add_frame(uint32_t* device_pixels) {
     }
 
     if (!live) return; // Don't encode video in smoketest
+
+    if(USE_LIVE) {
+        lp->accept_frame(device_pixels, false);
+        return;
+    }
 
     AVFrame* gpu_frame = av_frame_alloc();
     if (!gpu_frame) {
@@ -262,6 +273,11 @@ void VideoWriter::add_frame(uint32_t* device_pixels) {
 }
 
 VideoWriter::~VideoWriter() {
+    if(USE_LIVE) {
+        delete lp;
+        return;
+    }
+
     cout << "Cleaning up VideoWriter..." << endl;
 
     while(encode_and_write_frame(NULL));

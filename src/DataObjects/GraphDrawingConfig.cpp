@@ -271,7 +271,7 @@ void GraphDrawingConfig::step_transition(const TransitionType tt) {
     }
 }
 
-void GraphDrawingConfig::tick(const StateReturn& state) {
+void GraphDrawingConfig::tick() {
     for (auto& [hash, config] : node_configs) {
         if(config.target_color != config.color && !config.color_fade) {
             config.splash_radius = 0.0f;

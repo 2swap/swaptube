@@ -64,7 +64,6 @@ void WhitePaperScene::draw() {
 
         const vec2 center(.5 + pages_centered * (.08 + .08*(1-square(1-completion))),
                            (.25/sin(this_c*3.1415/2) + .3 + pages_centered*.05));
-        const vec2 offset = get_width_height() * center - scaled.wh * .5;
 
         float angle = pages_centered * .1f * this_page_not_focused; // .1f radians per page
 
@@ -72,22 +71,12 @@ void WhitePaperScene::draw() {
         cuda_copy_pixels_to_device(scaled.pixels.data(), scaled.wh.x * scaled.wh.y, scaled_ptr);
 
         // Overwrite the scaled image onto the scene's pixel buffer
-        cuda_overlay(gpu_pix->get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
+        const vec2 offset = get_width_height() * center;
+        cuda_overlay(gpu_pix.get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
 
         cuda_free_pixels_on_device(scaled_ptr);
     }
 
-    ScalingParams sp = ScalingParams(get_width_height() * vec2(1, .13));
-    Pixels text_pixels = latex_to_pix("\\text{" + author + "}", sp);
-    float offset_y = get_height() * smoothlerp(-1/6., .05, state["completion"]);
-    uint32_t* text_ptr = cuda_alloc_pixels_on_device(text_pixels.wh.x * text_pixels.wh.y);
-    cuda_copy_pixels_to_device(text_pixels.pixels.data(), text_pixels.wh.x * text_pixels.wh.y, text_ptr);
-    const vec2 text_offset((get_width() - text_pixels.wh.x) / 2, offset_y);
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), text_ptr, text_pixels.wh, text_offset, 1.0f, 0.0f);
-    cuda_free_pixels_on_device(text_ptr);
-}
-
-const StateQuery WhitePaperScene::populate_state_query() const {
-    return StateQuery{"completion", "which_page", "page_focus",
-                      "crop_top", "crop_bottom", "crop_left", "crop_right"};
+    const vec2 author_offset = get_width_height() * vec2(.5, smoothlerp(-.1, .07, state["completion"]));
+    write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), "\\text{" + author + "}", author_offset, vec2(1, .13)*get_width_height(), 1.0f, 0.0f);
 }

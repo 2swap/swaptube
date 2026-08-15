@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include "../../IO/Latex.h"
 
 using std::string;
 using std::ostringstream;
@@ -10,10 +11,6 @@ using std::fixed;
 using std::setprecision;
 
 extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
-extern "C" void cuda_overlay (
-    uint32_t* background, const ivec2& b_wh,
-    const uint32_t* foreground, const ivec2& f_wh,
-    const vec2& center, const float opacity, const float angle_rad);
 extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
 extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
@@ -47,22 +44,13 @@ StateSliderScene::StateSliderScene(const string& vn, const string& dn, double mi
 }
 
 void StateSliderScene::draw() {
-    const ivec2 wh(get_width_height());
-    ScalingParams sp(wh * vec2(1, .6));
     draw_slider();
     if(display_name != "") {
+        const ivec2 wh = get_width_height();
+        ScalingParams sp(wh * vec2(1, .6));
         string eqn_str = display_name + " = " + double_to_string(state["value"]);
-        Pixels equation_pixels = latex_to_pix(eqn_str, sp);
-        vec2 text_pos(0, (wh.y-equation_pixels.wh.y)/2.);
-        uint32_t* d_equation_pixels = cuda_alloc_pixels_on_device(equation_pixels.wh.x * equation_pixels.wh.y);
-        cuda_copy_pixels_to_device(equation_pixels.pixels.data(), equation_pixels.wh.x * equation_pixels.wh.y, d_equation_pixels);
-        cuda_overlay(gpu_pix->get_ptr(), wh, d_equation_pixels, equation_pixels.wh, text_pos, 1.0, 0.0);
-        cuda_free_pixels_on_device(d_equation_pixels);
+        write_text(gpu_pix.get_ptr(), wh, eqn_str, wh/2, wh, 1.0, 0.0);
     }
-}
-
-const StateQuery StateSliderScene::populate_state_query() const {
-    return StateQuery{"value"};
 }
 
 void StateSliderScene::draw_slider() {
@@ -77,11 +65,11 @@ void StateSliderScene::draw_slider() {
 
     ivec2 tl(wh.y * .5, wh.y * .4 + 1);
     ivec2 br(wh.x - wh.y * .5, wh.y * .6 + 1);
-    draw_rectangle(gpu_pix->get_ptr(), wh, tl, br, bar_color);
+    draw_rectangle(gpu_pix.get_ptr(), wh, tl, br, bar_color);
 
-    draw_circle(gpu_pix->get_ptr(), wh, ivec2(wh.y * .5, wh.y * .5), wh.y * .1, bar_color);
-    draw_circle(gpu_pix->get_ptr(), wh, ivec2(wh.x-wh.y*.5,wh.y*.5), wh.y * .1, bar_color);
+    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.y * .5, wh.y * .5), wh.y * .1, bar_color);
+    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.x-wh.y*.5,wh.y*.5), wh.y * .1, bar_color);
 
     vec2 center(wh.y * .5 + normalized_value * (wh.x - wh.y), wh.y/2.);
-    draw_circle(gpu_pix->get_ptr(), wh, center, wh.y * .5, knob_color);
+    draw_circle(gpu_pix.get_ptr(), wh, center, wh.y * .5, knob_color);
 }

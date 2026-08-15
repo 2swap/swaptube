@@ -39,18 +39,12 @@ void PngScene::draw() {
     Pixels scaled;
     cropped.scale_to_bounding_box(get_width(), get_height(), scaled);
 
-    // Calculate the position to center the image within the bounding box
-    const vec2 offset = (get_width_height() - scaled.wh) * 0.5f;
-
     uint32_t* scaled_ptr = cuda_alloc_pixels_on_device(scaled.wh.x * scaled.wh.y);
     cuda_copy_pixels_to_device(scaled.pixels.data(), scaled.wh.x * scaled.wh.y, scaled_ptr);
 
     // Overwrite the scaled image onto the scene's pixel buffer
-    cuda_overlay(gpu_pix->get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
+    const vec2 offset = get_width_height() * 0.5f;
+    cuda_overlay(gpu_pix.get_ptr(), get_width_height(), scaled_ptr, scaled.wh, offset, 1.0f, 0.0f);
 
     cuda_free_pixels_on_device(scaled_ptr);
-}
-
-const StateQuery PngScene::populate_state_query() const {
-    return StateQuery{"crop_top", "crop_bottom", "crop_left", "crop_right"};
 }

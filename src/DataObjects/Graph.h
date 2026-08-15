@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Host_Device_Shared/vec.h"
+#include "../Core/State/StateManager.h"
 #include <unordered_set>
 #include <unordered_map>
 #include <deque>
@@ -9,7 +10,6 @@
 #include <random>
 #include <string>
 #include <utility>
-#include "DataObject.h"
 
 class Edge {
 public:
@@ -42,7 +42,7 @@ public:
     vec4 position;
 };
 
-class Graph : public DataObject {
+class Graph {
 public:
     Graph();
 

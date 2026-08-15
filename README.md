@@ -96,7 +96,6 @@ In order to ensure that BOTH your time control is defined correctly (the appropr
 
 Things that happen during smoketesting:
 - One frame per microblock is staged and rendered
-- DataObjects are modified as normal
 - State transitions are performed as normal to test validity of state equation definitions
 - The record_list.tsv file is re-populated, so you can record your audio script after smoketesting without performing a full render.
 - Subtitles will be generated with incorrect timestamps reflecting one-frame-per-microblock timing.
@@ -104,14 +103,10 @@ Things that happen during smoketesting:
 Things that do NOT happen during smoketesting:
 - No video or audio is encoded or rendered
 - Since nothing is rendered, occasional frames are not drawn to stdout
-- Video width, height, and framerate are ignored entirely except insofar as they affect State equations and DataObject modifications.
 
 You can run `./go.sh MyProjectName 640 360 -s`, using the -s flag to indicate "smoketest only". Using this flag merely skips the full render after the smoketest.
 
 In addition to smoketesting, there is an additional exposed boolean variable `FOR_REAL` which can be toggled to true or false in the project file, effectively enabling smoketest mode for sections of a true render. This allows you to, say, work on the last section of a video without having to re-render the beginning each time.
 
-### Scenes, State, and Data
-The data structure that a single frame is rendered as a function of has three parts, roughly split up to differences in their nature:
-- **Scene**: The Scene is the object which is constructed by the user in the project file. It fundamentally defines **what** is rendered. For example, a MandelbrotScene is responsible for rendering Mandelbrot Sets.
-- **State**: State can be thought of as any numerical information used by the Scene to render a particular frame. This controls things such as the opacity of certain objects, or, following the Mandelbrot example, the zoom level of the Mandelbrot set. All scenes have a StateManager, and when the user whishes to modify the scene's state, they can do so by calling functions on the StateManager. Usually these will be `set` and `transition` function calls. Since State uniquely contains numerical information, swaptube will handle all the clean transitions of state.
-- **Data**: Data is the non-numerical stateful information which is remembered by the Scene. A good example is the LambdaScene, which draws a Tromp Lambda Diagram, and stores as data that particular lambda expression. Similarly, a GraphScene needs to statefully track a Graph (of nodes and edges). This type of information is non-numerical, and cannot be naively interpolated as a transition, so it must be kept in a DataObject with an interface defined between the Scene and DataObject.
+### State
+**State**: The "State Manager" tracks a list of definitions of variables, arranged in a dependency graph of definitions, eventually decided from upstate "global state" sensors, such as the current microblock completion fraction `{microblock_fraction}` or the number of seconds elapsed in the video `{t}`. It is best used for any numerical or boolean information used by the Scene to render a particular frame: opacities, angles, camera positions, real-valued parameters, etc. All scenes have a StateManager, and when the user whishes to modify the scene's state, they can do so by calling functions on the StateManager. Usually these will be `set` and `transition` function calls. Since State uniquely contains numerical information, swaptube will handle all the clean transitions of state.

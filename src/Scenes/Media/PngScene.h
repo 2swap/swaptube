@@ -11,8 +11,6 @@ public:
 
     void draw() override;
 
-    const StateQuery populate_state_query() const override;
-
 private:
     string picture_name;
 };

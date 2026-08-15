@@ -36,12 +36,6 @@ MandelbrotScene::MandelbrotScene(const vec2& dimensions) : CoordinateScene(dimen
     });
 }
 
-const StateQuery MandelbrotScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, {"max_iterations", "seed_z_r", "seed_z_i", "seed_x_r", "seed_x_i", "seed_c_r", "seed_c_i", "pixel_param_z", "pixel_param_x", "pixel_param_c", "gradation", "phase_shift"});
-    return sq;
-}
-
 void MandelbrotScene::draw() {
     vec3 pixel_params = normalize(vec3(state["pixel_param_z"], state["pixel_param_x"], state["pixel_param_c"]));
     complex<float> seed_z(state["seed_z_r"], state["seed_z_i"]);
@@ -56,7 +50,7 @@ void MandelbrotScene::draw() {
                       state["gradation"],
                       state["phase_shift"],
                       OPAQUE_BLACK,
-                      gpu_pix->get_ptr()
+                      gpu_pix.get_ptr()
     );
     CoordinateScene::draw();
 }

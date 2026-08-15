@@ -3,8 +3,14 @@ out
 media
 src/Projects/.active_project.cpp
 src/HIP
+local.cmake
+local_override.cmake
+.vscode/
 
 # vim temp files
 *~
 *.swp
 *.swo
+
+src/Projects/FourDAlgebra.cpp
+src/Projects/Demos/FourDVerse.cpp

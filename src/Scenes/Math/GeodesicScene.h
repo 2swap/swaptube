@@ -22,7 +22,8 @@ public:
 
     void draw() override;
 
-    const StateQuery populate_state_query() const override;
+    void change_data();
+
 private:
-    DevicePointer* distance_buffer;
+    DevicePointer distance_buffer;
 };

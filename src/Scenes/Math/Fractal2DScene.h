@@ -19,7 +19,6 @@ class Fractal2DScene : public Scene {
     public:
         Fractal2DScene(const vec2& dimensions = vec2(1,1));
         StateSet makeFractalStateSet(vector<float> params, const string& identifier, const int mode);
-        const StateQuery populate_state_query() const override;
         void draw() override;
     private:
         float origin_params[28];

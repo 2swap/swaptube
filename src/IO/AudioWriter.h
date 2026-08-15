@@ -3,7 +3,6 @@
 #include <vector>
 #include <string>
 #include <cstdint>
-#include "../Core/State/TransitionType.h"
 #include "IoHelpers.h"
 
 struct AVCodecContext;
@@ -28,7 +27,7 @@ inline float sample_to_float(sample_t s) {
 
 class AudioWriter {
 public:
-    const bool audio_hints;
+    const bool include_audio;
     const bool audio_sfx;
 
 private:
@@ -42,7 +41,6 @@ private:
     // Interleaved buffers: layout [L0, R0, L1, R1, ...]
     std::vector<sample_t> sample_buffer; // Audio defined in macroblocks (usually voice)
     std::vector<sample_t> sfx_buffer; // Per-scene sound effects
-    std::vector<sample_t> blips_buffer; // Single-sample blips for audio cues
 
     int total_samples_processed;
 
@@ -58,23 +56,13 @@ private:
     void encode_and_write_audio(AVCodecContext* codecCtx, AVStream* stream);
 
 public:
-    AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& audio_hints, const bool& audio_sfx);
+    AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& include_audio, const bool& audio_sfx);
     void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const double t);
 
-    // These are used for 6884's transition curve hints
-    int current_macroblock_length_samples;
-    int current_microblock_length_samples;
-    int macroblock_linear_step;
-    int microblock_linear_step;
-
-    void add_blip(const int t, const TransitionType tt, const int upcoming_macroblock_length_samples, const int upcoming_microblock_length_samples);
     int add_generated_audio(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer);
     int add_silence(int duration_frames);
     int add_audio_from_file(const std::string& filename);
     sample_t get_max_sample_for_frame(int frame_index);
-
-    int macroblock_line;
-    int microblock_line;
 
     void encode_buffers();
 

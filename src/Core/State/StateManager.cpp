@@ -1,4 +1,5 @@
 #include "StateManager.h"
+#include "GlobalState.h"
 #include <cstdint>
 
 using namespace std;
@@ -10,12 +11,6 @@ VariableContents::VariableContents(string eq,
                      double val,
                      bool fr
                     ) : value(val), fresh(fr), equation(eq), local_dependencies(equation.get_local_dependencies()) {}
-
-void state_query_insert_multiple(StateQuery& sq, const StateQuery& additions){
-    for(const string& s : additions){
-        sq.insert(s);
-    }
-}
 
 StateReturn::StateReturn() {}
 StateReturn::StateReturn(const unordered_map<string, double>& m) : map(m) {}
@@ -157,7 +152,7 @@ StateSet StateManager::transition(const TransitionType tt, const string& variabl
 
     // No point in doing a noop transition
     if(eq1 != equation) {
-        string lerp_both = eq1 + " " + equation + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} " + (smooth?"smooth":"") + "lerp";
+        string lerp_both = eq1 + " " + equation + " {" + (tt==MICRO?"micro":"macro") + "block_fraction} " + (smooth ? "smoothlerp":"lerp");
         set(variable+".post_transition", equation);
         set(variable, lerp_both);
              if(tt == MICRO) in_microblock_transition.insert(variable);
@@ -166,7 +161,7 @@ StateSet StateManager::transition(const TransitionType tt, const string& variabl
 
     return { {variable, eq1} };
 }
-StateSet StateManager::transition(const TransitionType tt, const StateSet& equations, bool smooth) {
+StateSet StateManager::transition(const TransitionType tt, const StateSet& equations, const bool smooth) {
     StateSet ret = {};
     for(auto it = equations.begin(); it != equations.end(); it++){
         StateSet prev = transition(tt, it->first, it->second, smooth);
@@ -286,22 +281,25 @@ const void StateManager::begin_timer(const string& timer_name) {
     set(timer_name, "{t} " + to_string(get_global_state("t")) + " -");
 }
 
-const StateReturn StateManager::respond_to_query(const StateQuery& query) const {
+const StateReturn StateManager::get_state() const {
     if(subjugated){
         if (parent == nullptr)
             throw runtime_error("A StateManager was queried while marked as subjugated despite not having a parent.");
-        return parent->respond_to_query(query);
+        return parent->get_state();
     }
     StateReturn result;
-    for (const auto& varname : query) {
-        if(contains(varname)){
-            result.set(varname, get_local_value(varname));
-        } else if (global_state_exists(varname)) {
-            result.set(varname, get_global_state(varname));
-        } else {
+    for (const auto& variable : variables) {
+        const string& variable_name = variable.first;
+        const VariableContents& vc = variable.second;
+        if(!vc.fresh){
             print_state();
-            throw runtime_error("ERROR: Attempted to get state for queried variable " + varname + " but it does not exist locally or globally!\nState has been printed above.");
+            throw runtime_error("ERROR: Attempted to read stale variable " + variable_name + "!\nState has been printed above.");
         }
+        result.set(variable_name, vc.value);
+    }
+    for (const auto& global_var : global_state) {
+        const string& variable_name = global_var.first;
+        result.set(variable_name, get_global_state(variable_name));
     }
     return result;
 }

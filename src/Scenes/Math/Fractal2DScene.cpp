@@ -115,44 +115,6 @@ StateSet Fractal2DScene::makeFractalStateSet(vector<float> params, const string&
     return {{}};
 }
 
-const StateQuery Fractal2DScene::populate_state_query() const {
-    return {
-        "zrO", "ziO",
-        "a1rO", "a1iO", "ac1rO", "ac1iO", "x1rO", "x1iO",
-        "a2rO", "a2iO", "ac2rO", "ac2iO", "x2rO", "x2iO",
-        "a3rO", "a3iO", "ac3rO", "ac3iO", "x3rO", "x3iO",
-        "a4rO", "a4iO", "ac4rO", "ac4iO", "x4rO", "x4iO",
-        "crO", "ciO",
-        "zrX", "ziX",
-        "a1rX", "a1iX", "ac1rX", "ac1iX", "x1rX", "x1iX",
-        "a2rX", "a2iX", "ac2rX", "ac2iX", "x2rX", "x2iX",
-        "a3rX", "a3iX", "ac3rX", "ac3iX", "x3rX", "x3iX",
-        "a4rX", "a4iX", "ac4rX", "ac4iX", "x4rX", "x4iX",
-        "crX", "ciX",
-        "zrY", "ziY",
-        "a1rY", "a1iY", "ac1rY", "ac1iY", "x1rY", "x1iY",
-        "a2rY", "a2iY", "ac2rY", "ac2iY", "x2rY", "x2iY",
-        "a3rY", "a3iY", "ac3rY", "ac3iY", "x3rY", "x3iY",
-        "a4rY", "a4iY", "ac4rY", "ac4iY", "x4rY", "x4iY",
-        "crY", "ciY",
-        "zrx", "zix",
-        "a1rx", "a1ix", "ac1rx", "ac1ix", "x1rx", "x1ix",
-        "a2rx", "a2ix", "ac2rx", "ac2ix", "x2rx", "x2ix",
-        "a3rx", "a3ix", "ac3rx", "ac3ix", "x3rx", "x3ix",
-        "a4rx", "a4ix", "ac4rx", "ac4ix", "x4rx", "x4ix",
-        "crx", "cix",
-        "zry", "ziy",
-        "a1ry", "a1iy", "ac1ry", "ac1iy", "x1ry", "x1iy",
-        "a2ry", "a2iy", "ac2ry", "ac2iy", "x2ry", "x2iy",
-        "a3ry", "a3iy", "ac3ry", "ac3iy", "x3ry", "x3iy",
-        "a4ry", "a4iy", "ac4ry", "ac4iy", "x4ry", "x4iy",
-        "cry", "ciy",
-        "sub_dimensions_x", "sub_dimensions_y",
-        "burning", "conj",
-        "fractal_mode",
-        "max_iterations"};
-}
-
 void Fractal2DScene::populateParamArray(float* params, const string& identifier) {
     params[0] = state["zr" + identifier];
     params[1] = state["zi" + identifier];
@@ -188,5 +150,5 @@ void Fractal2DScene::draw(){
         state["burning"], state["conj"],
         state["fractal_mode"],
         state["max_iterations"],
-        gpu_pix->get_ptr());
+        gpu_pix.get_ptr());
 }

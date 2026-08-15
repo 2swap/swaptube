@@ -55,7 +55,7 @@ Path::Path(const string& n, int clr, float op)
     : name(n), color(clr), opacity(op) { }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
-    : SuperScene(dimensions), auto_distance(-1), auto_camera(vec3(0,0,0)) {
+    : SuperScene(dimensions), auto_distance(-1), auto_camera(vec3(0,0,0)), distance_buffer(get_width_height()) {
     manager.set({
         {"fov", "1"},
         {"x", "0"},
@@ -71,16 +71,15 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"points_radius_multiplier", "1"},
         {"points_opacity", "1"},
     });
-    distance_buffer = new DevicePointer(get_pixels_size());
-    add_data_object(distance_buffer);
 }
 
 // TODO this is duplicate code from CUDA/common_graphics.h and we should unify them.
-vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, bool& behind_camera) {
+vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, float& distance) {
     coordinate = rotate_vector(coordinate - camera_pos, camera_direction);
-    if(coordinate.z <= 0) {behind_camera = true; return {-1000, -1000};}
+    distance = coordinate.z;
+    if(distance <= 0) return {-1000, -1000};
 
-    float scale = (get_geom_mean_size()*fov) / coordinate.z;
+    float scale = (get_geom_mean_size()*fov) / distance;
     return scale * vec2(coordinate.x, -coordinate.y) + get_width_height()*.5f;
 }
 
@@ -168,12 +167,12 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
     if(this_surface_opacity < .001) return;
 
     vector<vec2> corners(4);
-    bool behind_camera_1 = false, behind_camera_2 = false, behind_camera_3 = false, behind_camera_4 = false;
-    corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, behind_camera_1);
-    corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, behind_camera_2);
-    corners[2] = coordinate_to_pixel(surface_center - surface.pos_x_dir - surface.pos_y_dir, behind_camera_3);
-    corners[3] = coordinate_to_pixel(surface_center + surface.pos_x_dir - surface.pos_y_dir, behind_camera_4);
-    if(behind_camera_1 && behind_camera_2 && behind_camera_3 && behind_camera_4) return;
+    float distance_1, distance_2, distance_3, distance_4;
+    corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, distance_1);
+    corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, distance_2);
+    corners[2] = coordinate_to_pixel(surface_center - surface.pos_x_dir - surface.pos_y_dir, distance_3);
+    corners[3] = coordinate_to_pixel(surface_center + surface.pos_x_dir - surface.pos_y_dir, distance_4);
+    if(distance_1 <=0 && distance_2 <=0 && distance_3 <=0 && distance_4 <=0) return;
     if(!should_render_surface(corners)) return;
 
     int x1 = numeric_limits<int>::max();
@@ -197,7 +196,7 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
     uint32_t* queried = subscenes[surface.name]->query();
 
     cuda_render_surface(
-        gpu_pix->get_ptr(),
+        gpu_pix.get_ptr(),
         x1, y1, ivec2(plot_w, plot_h), get_width(),
         queried,
         subscenes[surface.name]->get_width_height(),
@@ -240,7 +239,7 @@ void ThreeDimensionScene::draw() {
     if (!lines.empty() && state["lines_opacity"] > .001) {
         int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
-            gpu_pix->get_ptr(),
+            gpu_pix.get_ptr(),
             get_width_height(),
             get_geom_mean_size(),
             thickness,
@@ -254,7 +253,7 @@ void ThreeDimensionScene::draw() {
     }
     if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
         render_points_on_gpu(
-            gpu_pix->get_ptr(),
+            gpu_pix.get_ptr(),
             get_width_height(),
             get_geom_mean_size(),
             state["points_opacity"],
@@ -266,18 +265,6 @@ void ThreeDimensionScene::draw() {
             fov
         );
     }
-}
-
-const StateQuery ThreeDimensionScene::populate_state_query() const {
-    StateQuery sq = SuperScene::populate_state_query();
-    for(const string& x : {
-        "fov","x", "y", "z", "d", "q1", "qi", "qj", "qk",
-        "surfaces_opacity", "lines_opacity", "points_opacity", "points_radius_multiplier"
-    }) sq.insert(x);
-    for(const Surface& surface : surfaces){
-        sq.insert(surface.name + ".opacity");
-    }
-    return sq;
 }
 
 void ThreeDimensionScene::add_point(const Point& p) {
@@ -316,4 +303,9 @@ void ThreeDimensionScene::clear_points(){ points.clear(); }
 void ThreeDimensionScene::clear_surfaces(){
     remove_all_subscenes();
     surfaces.clear();
+}
+
+void ThreeDimensionScene::change_data() {
+    Scene::change_data();
+    distance_buffer.tick(get_width_height());
 }

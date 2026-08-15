@@ -19,12 +19,6 @@ PendulumGridScene::PendulumGridScene(const vector<PendulumGrid>& pgv, const vec2
                        {"momentum_value_gradient", "1"}});
 }
 
-const StateQuery PendulumGridScene::populate_state_query() const {
-    StateQuery s = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(s, {"physics_multiplier", "rk4_step_size", "mode", "center_x", "center_y", "contrast", "trail_opacity", "trail_length", "trail_start_x", "trail_start_y", "energy_min", "energy_max", "momentum_value_gradient"});
-    return s;
-}
-
 void PendulumGridScene::draw_grid() {
     int w = get_width();
     int h = get_height();

@@ -37,44 +37,20 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 
     double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
-    if (rendering_on() && get_writer().audio->audio_hints) { // Add hints for audio synchronization
-        double time = get_global_state("t");
-        double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
-        int macroblock_length_samples = round(macroblock_length_seconds * get_audio_samplerate_hz());
-        int microblock_length_samples = round(microblock_length_seconds * get_audio_samplerate_hz());
-        get_writer().audio->add_blip(
-            round(time * get_audio_samplerate_hz()),
-            MACRO,
-            macroblock_length_samples,
-            microblock_length_samples
-        );
-
-        for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
-            get_writer().audio->add_blip(
-                round((time + i * microblock_length_seconds) * get_audio_samplerate_hz()),
-                MICRO,
-                macroblock_length_samples,
-                microblock_length_samples
-            );
-        }
-    } // Audio hints
+    // Mark macroblock/microblock boundaries as their own MIDI tracks, for external tooling.
+    double time = get_global_state("t");
+    double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
+    get_writer().midi->add_note("macroblock", time, 0);
+    for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
+        get_writer().midi->add_note("microblock", time + i * microblock_length_seconds, 0);
+    }
 }
 
-Scene::Scene(const vec2& dimensions)
-    : state() {
+Scene::Scene(const vec2& dimensions) : gpu_pix(floor(get_video_dimensions_pixels() * dimensions)) {
     manager.set({
         {"w", to_string(dimensions.x)},
         {"h", to_string(dimensions.y)}
     });
-    gpu_pix = new DevicePointer(get_pixels_size());
-    add_data_object(gpu_pix);
-}
-
-Scene::~Scene() {
-    // Clean up data objects
-    for(DataObject* obj : data_objects) {
-        delete obj;
-    }
 }
 
 void Scene::on_end_transition(const TransitionType tt) {
@@ -87,21 +63,9 @@ void Scene::update() {
     has_updated_since_last_query = true;
 
     // Data and state can be co-dependent, so update state before and after since state changes are idempotent.
-    last_state = state;
     update_state();
     change_data();
     update_state();
-}
-
-bool Scene::needs_redraw() const {
-    bool state_change = check_if_state_changed();
-    bool data_change = check_if_data_changed();
-    cout << (state_change ? "S" : ".") << (data_change ? "D" : ".") << flush;
-    return !has_ever_rendered || state_change || data_change;
-}
-
-bool Scene::check_if_state_changed() const {
-    return state != last_state;
 }
 
 uint32_t* Scene::query() {
@@ -109,16 +73,14 @@ uint32_t* Scene::query() {
     if(!has_updated_since_last_query) update();
 
     // The only time we skip render entirely is when the project flags to skip a section.
-    if(needs_redraw() && is_for_real()) {
-        has_ever_rendered = true;
-        cuda_zeroize_pixels(gpu_pix->get_ptr(), get_width_height());
+    if(is_for_real()) {
+        cuda_zeroize_pixels(gpu_pix.get_ptr(), get_width_height());
         cout << "|" << flush;
         draw();
     }
-    mark_data_unchanged();
     has_updated_since_last_query = false;
     cout << ")" << flush;
-    return gpu_pix->get_ptr();
+    return gpu_pix.get_ptr();
 }
 
 void Scene::render_microblock(){
@@ -149,9 +111,10 @@ void Scene::render_microblock(){
             int roundedFrameNumber = round(get_global_state("frame_number"));
             ostringstream stream;
             stream << setw(6) << setfill('0') << roundedFrameNumber;
-            export_frame(stream.str(), 1);
+            //export_frame(stream.str(), 1);
         }
     }
+    
     on_end_transition(MICRO);
     if(done_macroblock) on_end_transition(MACRO);
     cout << "} " << flush;
@@ -159,34 +122,31 @@ void Scene::render_microblock(){
 
 void Scene::update_state() {
     manager.evaluate_all();
-    StateQuery sq = populate_state_query();
-    sq.insert("w");
-    sq.insert("h");
-    state = manager.respond_to_query(sq);
-    if(global_identifier.size() > 0) publish_global();
+    state = manager.get_state();
+    publish_global();
 }
 
 int Scene::get_width() {
     manager.evaluate_all();
     // TODO shouldn't this really be the container/parent size, not the video?
     // I have never dealt with doubly nested subscenes so I think this has never been an issue...
-    return get_video_width_pixels() * manager.respond_to_query({"w"})["w"];
+    return get_video_width_pixels() * manager.get_state()["w"];
 }
 
 int Scene::get_height() {
     manager.evaluate_all();
-    return get_video_height_pixels() * manager.respond_to_query({"h"})["h"];
+    return get_video_height_pixels() * manager.get_state()["h"];
 }
 
 ivec2 Scene::get_width_height() {
     manager.evaluate_all();
-    auto response = manager.respond_to_query({"w", "h"});
+    auto response = manager.get_state();
     return ivec2(get_video_width_pixels() * response["w"], get_video_height_pixels() * response["h"]);
 }
 
 int Scene::get_pixels_size() {
     manager.evaluate_all();
-    auto response = manager.respond_to_query({"w", "h"});
+    auto response = manager.get_state();
     int width = get_video_width_pixels() * response["w"];
     int height = get_video_height_pixels() * response["h"];
     cout << "Calculated pixel size: " << width << "x" << height << " = " << width * height << endl;
@@ -197,24 +157,14 @@ double Scene::get_geom_mean_size() { return geom_mean(get_width(),get_height());
 
 void Scene::export_frame(const string& filename, int scaledown) {
     Pixels pix(get_width_height());
-    gpu_pix->copy_to_host(pix.pixels.data(), get_width_height());
-    pix_to_png(pix.naive_scale_down(scaledown), "frames/frame_"+filename);
-}
-
-void Scene::set_global_identifier(const string& id){
-    // What we are actually here to do
-    global_identifier = id;
-
-    // We also need to publish it immediately, or else it may not be present on the first frame
-    // of something trying to read from global, since global ordering is not guaranteed.
-    // Update_state does this for us.
-    update_state();
+    gpu_pix.copy_to_host(pix.pixels.data());
+    pix_to_png(pix.naive_scale_down(scaledown), "io_out/frames/frame_"+filename+".png");
 }
 
 void Scene::publish_global() {
-    const unordered_map<string, double>& s = stage_publish_to_global();
-    for(const auto& p : s) {
-        set_global_state(global_identifier + "." + p.first, p.second);
+    for (const auto& [scene_var, global_var] : stage_publish_to_global) {
+        if (!state.contains(scene_var)) continue;
+        set_global_state(global_var, state[scene_var]);
     }
 }
 
@@ -227,35 +177,16 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("voice", sample_to_float(sample));
 
     query();
-    get_writer().video->add_frame(gpu_pix->get_ptr());
+    get_writer().video->add_frame(gpu_pix.get_ptr());
 
     remaining_frames_in_macroblock--;
     set_global_state("frame_number", get_global_state("frame_number") + 1);
     set_global_state("t", get_global_state("frame_number") / get_video_framerate_fps());
+    // Capture MIDI state from global vars
+    get_writer().midi->capture_global_state();
     cout << "]" << flush;
 }
 
-void Scene::add_data_object(DataObject* obj) {
-    data_objects.push_back(obj);
-}
-
-bool Scene::check_if_data_changed() const {
-    for(const DataObject* obj : data_objects) {
-        if(obj->has_been_updated_since_last_scene_query()) {
-            return true;
-        }
-    }
-    return false;
-}
-void Scene::mark_data_unchanged() {
-    for(DataObject* obj : data_objects) {
-        obj->mark_unchanged();
-    }
-}
 void Scene::change_data() {
-    for(DataObject* obj : data_objects) {
-        obj->tick(state);
-        obj->mark_updated();
-    }
+    gpu_pix.tick(get_width_height());
 }
-

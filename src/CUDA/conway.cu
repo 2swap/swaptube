@@ -599,7 +599,7 @@ extern "C" void draw_conway(Bitboard* d_board, Bitboard* d_board_2, const Cuda::
     cudaDeviceSynchronize();
 }
 
-__global__ void initialize_boards(Bitboard* d_board, const Cuda::ivec2 grid_wh_bitboards, const uint32_t* d_envelope, const Cuda::ivec2& envelope_wh) {
+__global__ void initialize_boards(Bitboard* d_board, const Cuda::ivec2 grid_wh_bitboards, const uint32_t* d_envelope, const Cuda::ivec2 envelope_wh) {
     Cuda::ivec2 idx(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
 
     Cuda::ivec2 envelope_pos = idx * envelope_wh / grid_wh_bitboards;

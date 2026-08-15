@@ -351,8 +351,7 @@ static __device__ bool collision_cube(float Y[6], uint32_t& color, float& dist) 
 __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
                                              Cuda::quat camera_orientation,
                                              Cuda::vec3 camera_position,
-                                             float fov, float max_dist,
-                                             float sphere_radius, Cuda::vec3 sphere_center) {
+                                             float fov, float max_dist) {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
     if (px >= w || py >= h) return;
@@ -395,12 +394,10 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
             }
         }
 
-        float cube_dist, sphere_dist;
+        float cube_dist;
         bool collided = collision_cube(Y2, out, cube_dist);
-        if(sphere_radius > 0)
-            collided |= collision_sphere(Y2, out, sphere_dist, sphere_radius, sphere_center);
         if(collided) break;
-        last_dist = min(cube_dist, sphere_dist);
+        last_dist = cube_dist;
 
         dist_traveled += dt;
 
@@ -428,8 +425,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
                                              int w_size, Cuda::ResolvedStateEquationComponent* w_eq,
                                              int special,
                                              const Cuda::quat& camera_orientation, const Cuda::vec3& camera_position,
-                                             float fov_rad, float max_dist,
-                                             float sphere_radius, const Cuda::vec3& sphere_center) {
+                                             float fov_rad, float max_dist) {
 
     // Write equations to constant memory
     cudaMemcpyToSymbol(d_x_eq, x_eq, sizeof(Cuda::ResolvedStateEquationComponent) * x_size);
@@ -450,7 +446,7 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
     dim3 grid( (w + block.x - 1) / block.x, (h + block.y - 1) / block.y );
     cuda_surface_raymarch_kernel<<<grid, block>>>(
         d_pixels, w, h, camera_orientation, camera_position,
-        fov_rad, max_dist, sphere_radius, sphere_center
+        fov_rad, max_dist
     );
     cudaDeviceSynchronize();
 

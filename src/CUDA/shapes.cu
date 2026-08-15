@@ -1,6 +1,7 @@
 // Draws simple geometric shapes
 #include <cuda_runtime.h>
 #include "color.cuh"
+#include "common_graphics.cuh"
 
 __global__ void circle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda::vec2 center, const float radius_squared, const uint32_t color, const Cuda::ivec2 min_pos)
 {
@@ -115,4 +116,30 @@ extern "C" void draw_rectangle(uint32_t* pix, const Cuda::ivec2& wh, const Cuda:
     dim3 blockSize(16, 16);
     dim3 gridSize((size.x + blockSize.x - 1) / blockSize.x, (size.y + blockSize.y - 1) / blockSize.y);
     rectangle_kernel<<<gridSize, blockSize>>>(pix, wh, min_pos, max_pos, color, min_pos, max_pos);
+}
+
+__global__ void bezier_kernel(
+    uint32_t* pix, const Cuda::ivec2 wh, const Cuda::vec2 p1, const Cuda::vec2 p2, const Cuda::vec2 p3, const Cuda::vec2 p4, 
+    Cuda::vec2 lx_ty, Cuda::vec2 rx_by)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= 1000) return;
+
+    Cuda::vec2 point1 = point_to_pixel_in_screen(bezier_2d(
+            p1, p2, p3, p4, i/1000.0f), lx_ty, rx_by, wh);
+    Cuda::vec2 point2 = point_to_pixel_in_screen(bezier_2d(
+            p1, p2, p3, p4, (i+1)/1000.0f), lx_ty, rx_by, wh);
+
+    bresenham(point1.x, point1.y, point2.x, point2.y, 0xFFFFFFFF, 1.0f, 2, pix, wh, false);
+}
+
+
+extern "C" void cuda_draw_bezier(
+    uint32_t* pix, const Cuda::ivec2& wh, const Cuda::vec2& p1, const Cuda::vec2& p2, const Cuda::vec2& p3, 
+    const Cuda::vec2& p4, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by)
+{
+    int blockSize = 256;
+    int gridSize = (1000 + blockSize - 1) / blockSize;
+    bezier_kernel<<<gridSize, blockSize>>>(pix, wh, p1, p2, p3, p4, lx_ty, rx_by);
+    cudaDeviceSynchronize();
 }

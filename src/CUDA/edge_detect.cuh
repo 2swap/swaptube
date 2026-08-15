@@ -5,7 +5,7 @@
 // Kernel over all pixels.
 // If the depth difference between a pixel and any of its 4-connected neighbors
 // is greater than .1, color the pixel with edge_color.
-__global__ void cuda_edge_detect_kernel(
+__global__ __forceinline__ void cuda_edge_detect_kernel(
     uint32_t* d_pixels, float* d_depth_buffer, const Cuda::ivec2 wh, uint32_t edge_color
 ) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -39,7 +39,7 @@ __global__ void cuda_edge_detect_kernel(
     d_pixels[idx] = Cuda::color_combine(d_pixels[idx], edge_color, fmin(max_depth_diff * 6.0f, 1.0f));
 }
 
-void cuda_edge_detect(
+__forceinline__ void cuda_edge_detect(
     uint32_t* d_pixels, float* d_depth_buffer, const Cuda::ivec2& wh, uint32_t edge_color
 ) {
     dim3 blockSize(16, 16);

@@ -1,20 +1,8 @@
 #include "GlobalState.h"
 #include <stdexcept>
 #include <iostream>
-#include <unordered_map>
 #include <string>
 
-using namespace std;
-
-static unordered_map<string, double> global_state{
-    {"frame_number", 0},
-    {"t", 0},
-    {"macroblock_number", 0},
-    {"microblock_number", 0},
-    {"macroblock_fraction", 0},
-    {"microblock_fraction", 0},
-    {"voice", 0}, // How loud the voice is right now (max L-channel sample as float for this frame)
-};
 void print_global_state(){
     cout << endl << endl << "=====GLOBAL STATE=====" << endl;
     for(const auto& pair : global_state){
@@ -46,4 +34,7 @@ void set_global_state(const string& key, double value){
 }
 bool global_state_exists(const string& key){
     return global_state.find(key) != global_state.end();
+}
+const unordered_map<string, double>& get_all_global_state(){
+    return global_state;
 }

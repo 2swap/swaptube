@@ -7,8 +7,6 @@ class MovingPendulumGridScene : public CoordinateScene {
 public:
     MovingPendulumGridScene(const vec2& dimensions = vec2(1, 1));
 
-    const StateQuery populate_state_query() const override;
-
     void draw_grid();
     void draw() override;
 };

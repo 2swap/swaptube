@@ -38,7 +38,7 @@ class ThreeDimensionScene : public SuperScene {
 public:
     ThreeDimensionScene(const vec2& dimensions = vec2(1, 1));
 
-    vec2 coordinate_to_pixel(vec3 coordinate, bool& behind_camera);
+    vec2 coordinate_to_pixel(vec3 coordinate, float& distance);
 
     bool isOutsideScreen(const vec2& point);
 
@@ -68,8 +68,6 @@ public:
 
     void draw() override;
 
-    const StateQuery populate_state_query() const override;
-
     void add_point(const Point& p);
 
     void add_line(const Line& l);
@@ -77,6 +75,8 @@ public:
     void add_surface(const Surface& s, shared_ptr<Scene> sc);
 
     void add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa=1);
+
+    void change_data();
 
     void remove_surface(const string& name);
     void enable_globe();
@@ -97,5 +97,5 @@ protected:
     vector<Line> lines;
     vector<Surface> surfaces;
     map<string, Path> paths;
-    DevicePointer* distance_buffer;
+    DevicePointer distance_buffer;
 };

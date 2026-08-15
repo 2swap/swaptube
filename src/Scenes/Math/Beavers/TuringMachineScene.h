@@ -21,6 +21,4 @@ private:
     uint32_t current_state = 0;
 
     void draw() override;
-
-    const StateQuery populate_state_query() const;
 };

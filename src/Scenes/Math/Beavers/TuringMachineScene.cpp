@@ -72,13 +72,7 @@ void TuringMachineScene::draw() {
     const vec2 lx_ty(state["left_x"], state["top_y"]);
     const vec2 rx_by(state["right_x"], state["bottom_y"]);
     const vec2 grid_start(-tape_length/2., 0);
-    draw_grid(gpu_pix->get_ptr(), get_width_height(), lx_ty, rx_by, grid.data(), ivec2(tape_length, (int)state["iterations"]), grid_start);
+    draw_grid(gpu_pix.get_ptr(), get_width_height(), lx_ty, rx_by, grid.data(), ivec2(tape_length, (int)state["iterations"]), grid_start);
 
     CoordinateScene::draw();
-}
-
-const StateQuery TuringMachineScene::populate_state_query() const {
-    StateQuery sq = CoordinateScene::populate_state_query();
-    state_query_insert_multiple(sq, { "iterations" });
-    return sq;
 }

@@ -26,25 +26,17 @@ public:
 
     std::shared_ptr<Scene> get_subscene_pointer(const std::string& name);
 
+    void change_data() override;
+
 protected:
     SuperScene(const vec2& dimensions = vec2(1, 1))
         : Scene(dimensions) {}
-
-    bool needs_redraw() const override;
 
     void add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind = false);
 
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 
-    bool subscene_needs_redraw() const;
-
-    const StateQuery populate_state_query() const override;
-
     std::list<std::string> render_order;
     std::unordered_map<std::string, std::shared_ptr<Scene>> subscenes;
 
-private:
-    bool check_if_data_changed() const override;
-    void mark_data_unchanged() override;
-    void change_data() override;
 };

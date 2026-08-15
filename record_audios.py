@@ -46,7 +46,10 @@ def prompt_user_to_archive_recordings(project_dir):
 def main():
     parser = argparse.ArgumentParser(description="Record audio files based on record_list.tsv")
     parser.add_argument('project_name', help="Name of the project")
+    parser.add_argument('--mono', action='store_true', help="Record in mono instead of stereo")
+
     args = parser.parse_args()
+    mono = args.mono
 
     PROJECT_NAME = args.project_name
     PROJECT_DIR = f"media/{PROJECT_NAME}"
@@ -87,9 +90,9 @@ def main():
         print("Error listing audio devices:", e)
         return
 
-    blue_devices = [device for device in available_devices if ('blue' in device.lower() or 'yeti' in device.lower())]
-    if len(blue_devices) == 1:
-        selected_line = blue_devices[0]
+    yeti_devices = [device for device in available_devices if ('yeti' in device.lower())]
+    if len(yeti_devices) == 1:
+        selected_line = yeti_devices[0]
         print(f"Automatically selected microphone: {selected_line}")
     else:
         for idx, device in enumerate(available_devices):
@@ -114,6 +117,7 @@ def main():
 
     # Process each entry
     successes = 0
+
     for index in range(len(entries)):
         current_filename, current_text = entries[index]
         os.system('clear')
@@ -131,13 +135,14 @@ def main():
 
             # Start recording with ffmpeg in the background
             print("Recording... Press Enter to stop.")
-            ffmpeg_log = os.path.join(PROJECT_DIR, "ffmpeg.log")
+            mono_filter = ['-af', 'pan=stereo|c0=c0|c1=c0'] if mono else []
             ffmpeg_cmd = [
                 'ffmpeg',
+                '-ac', '1' if mono else '2',
                 '-f', 'alsa',
                 '-ar', '48000',
-                '-ac', '2',
-                '-i', selected_device, 
+                '-i', selected_device,
+            ] + mono_filter + [
                 '-c:a', 'pcm_s32le',
                 '-sample_fmt', 's32',
                 temp_path
@@ -150,7 +155,22 @@ def main():
 
             # Stop the recording by terminating the ffmpeg process
             ffmpeg_process.terminate()
-            ffmpeg_process.wait()
+            stdout, stderr = ffmpeg_process.communicate()
+
+            # Check that there is a file and that it is not empty
+            if not os.path.exists(temp_path) or os.path.getsize(temp_path) == 0:
+                print("Recording failed or was empty. This is likely due to an ffmpeg error.")
+                print("=======")
+                print("Stderr:")
+                print("=======")
+                print(stderr.decode())
+                print("=======")
+                print("Stdout:")
+                print("=======")
+                print(stdout.decode())
+                print("=======")
+                print("Please check your microphone and try again. Remember to use --mono if your microphone does not support stereo.")
+                exit(1)
 
             print("Press enter to continue or 'u' to undo the last recording...")
             user_input = input()
