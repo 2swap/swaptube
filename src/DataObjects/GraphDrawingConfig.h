@@ -2,6 +2,7 @@
 #include <string>
 #include <stdint.h>
 #include "../Host_Device_Shared/Color.h"
+#include "../Core/State/TransitionType.h"
 #include "../IO/Writer.h"
 
 struct NodeConfig {

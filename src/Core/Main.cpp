@@ -12,11 +12,11 @@ using namespace std;
 
 void render_video(); // Forward declaration, provided by the user in their project file
 
-void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& audio_hints, bool& audio_sfx) {
+void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio, bool& audio_sfx) {
     cout << "Parsing command line arguments... " << endl;
 
     if (argc != 8) {
-        throw runtime_error("Expected 7 arguments: width height framerate samplerate output_dir smoketest/render audio_hints audio_sfx");
+        throw runtime_error("Expected 7 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx");
     }
 
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
@@ -55,12 +55,12 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
         throw runtime_error("Video framerate must be divisible by audio sample rate.");
     }
 
-    int audio_hints_i;
-    if (sscanf(argv[6], "%d", &audio_hints_i) != 1 || (audio_hints_i != 0 && audio_hints_i != 1)) {
-        throw runtime_error("Invalid audio hints argument: " + string(argv[6]) );
+    int include_audio_i;
+    if (sscanf(argv[6], "%d", &include_audio_i) != 1 || (include_audio_i != 0 && include_audio_i != 1)) {
+        throw runtime_error("Invalid include audio argument: " + string(argv[6]) );
     }
-    audio_hints = (audio_hints_i != 0);
-    cout << "Audio Hints: " << (audio_hints ? "true" : "false") << ", " << flush;
+    include_audio = (include_audio_i != 0);
+    cout << "Include Audio: " << (include_audio ? "true" : "false") << ", " << flush;
 
     int audio_sfx_i;
     if (sscanf(argv[7], "%d", &audio_sfx_i) != 1 || (audio_sfx_i != 0 && audio_sfx_i != 1)) {
@@ -82,15 +82,15 @@ void setup_output_subfolders() {
 
 int main(int argc, char* argv[]) {
     int VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE;
-    bool AUDIO_HINTS, AUDIO_SFX;
-    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, AUDIO_HINTS, AUDIO_SFX);
+    bool INCLUDE_AUDIO, AUDIO_SFX;
+    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, INCLUDE_AUDIO, AUDIO_SFX);
     Timer timer;
 
     // Main Render Loop
     signal(SIGINT, signal_handler);
     try {
         setup_output_subfolders();
-        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, AUDIO_HINTS, AUDIO_SFX);
+        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, INCLUDE_AUDIO, AUDIO_SFX);
         cout << "Rendering video... " << endl;
         render_video();
     } catch(std::exception& e) {

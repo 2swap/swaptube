@@ -54,7 +54,7 @@ fi
 if [ $# -lt 4 ]; then
     echo "go.sh: Suppose that in the Projects/ directory you have made a project called myproject.cpp."
     echo "go.sh: Usage: $0 <ProjectName> <VideoWidth> <VideoHeight> <Framerate> [optional extra flags]"
-    echo "go.sh: Example: $0 myproject 640 360 30 -hx"
+    echo "go.sh: Example: $0 myproject 640 360 30 -x"
     exit 1
 fi
 
@@ -72,26 +72,26 @@ SAMPLERATE=48000
 
 SKIP_RENDER=0
 SKIP_SMOKETEST=0
-AUDIO_HINTS=0
+INCLUDE_AUDIO=1
 AUDIO_SFX=0
 INVALID_FLAG=0
 COMPUTE_LANG=""
 # Parse flags
-while getopts "snhxc:" flag; do
+while getopts "snaxc:" flag; do
     case "$flag" in
-        s) 
+        s)
             SKIP_RENDER=1
             ;;
-        n) 
+        n)
             SKIP_SMOKETEST=1
             ;;
-        h) 
-            AUDIO_HINTS=1
+        a)
+            INCLUDE_AUDIO=0
             ;;
-        x) 
+        x)
             AUDIO_SFX=1
             ;;
-        c)  
+        c)
             case "$OPTARG" in
                 CUDA)
                     COMPUTE_LANG="CUDA"
@@ -116,8 +116,10 @@ if [ $INVALID_FLAG -eq 1 ]; then
     echo "go.sh: Error - Invalid flag:"
     echo "-s means to only run the smoketest."
     echo "-n means to only run the render"
-    echo "-h means to include audio hints."
-    echo "-x means to include sound effects."
+    echo "-a means to exclude all audio (voice narration and sound effects) from the"
+    echo "   rendered video. Default is to include audio."
+    echo "-x means to also emit sound effects and voice narration as their own separate"
+    echo "   tracks, in addition to the merged track."
     echo "-c means to specify compute language (takes arguments \"CUDA\" or \"HIP\")"
     exit 1
 fi
@@ -190,7 +192,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
 
     # Smoketest
     if [ $SKIP_SMOKETEST -eq 0 ]; then
-        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $AUDIO_HINTS $AUDIO_SFX 2>/dev/null
+        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in smoketest."
             exit 2
@@ -201,7 +203,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     if [ $SKIP_RENDER -eq 0 ]; then
         # Clear all files from the smoketest
         rm io_out/* -rf
-        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $AUDIO_HINTS $AUDIO_SFX 2>/dev/null
+        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
             exit 2

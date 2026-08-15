@@ -7,6 +7,7 @@
 #include "../Core/Pixels.h"
 #include "../Core/Macroblock.h"
 #include "../DataObjects/DevicePointer.h"
+#include "../IO/MidiWriter.h"
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -51,22 +52,17 @@ public:
 
     StateManager manager;
 
-    void set_global_identifier(const string& id);
-
     virtual void change_data();
+
+    unordered_map<string, string> stage_publish_to_global;
 
 protected:
     DevicePointer gpu_pix;
     StateReturn state;
 
 private:
-    string global_identifier = ""; // This is prefixed before the published global state elements
-                                   // to uniquely identify this scene if necessary.
-                                   // Empty by default, meaning no state is published.
-
     bool has_updated_since_last_query = false;
 
-    virtual unordered_map<string, double> stage_publish_to_global() const { return unordered_map<string, double>(); }
     void publish_global();
 
     void render_one_frame(int microblock_frame_number, int scene_duration_frames);

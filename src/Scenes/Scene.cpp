@@ -37,27 +37,13 @@ void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_
 
     double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
-    if (rendering_on() && get_writer().audio->audio_hints) { // Add hints for audio synchronization
-        double time = get_global_state("t");
-        double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
-        int macroblock_length_samples = round(macroblock_length_seconds * get_audio_samplerate_hz());
-        int microblock_length_samples = round(microblock_length_seconds * get_audio_samplerate_hz());
-        get_writer().audio->add_blip(
-            round(time * get_audio_samplerate_hz()),
-            MACRO,
-            macroblock_length_samples,
-            microblock_length_samples
-        );
-
-        for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
-            get_writer().audio->add_blip(
-                round((time + i * microblock_length_seconds) * get_audio_samplerate_hz()),
-                MICRO,
-                macroblock_length_samples,
-                microblock_length_samples
-            );
-        }
-    } // Audio hints
+    // Mark macroblock/microblock boundaries as their own MIDI tracks, for external tooling.
+    double time = get_global_state("t");
+    double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
+    get_writer().midi->add_note("macroblock", time, 0);
+    for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
+        get_writer().midi->add_note("microblock", time + i * microblock_length_seconds, 0);
+    }
 }
 
 Scene::Scene(const vec2& dimensions) : gpu_pix(floor(get_video_dimensions_pixels() * dimensions)) {
@@ -137,7 +123,7 @@ void Scene::render_microblock(){
 void Scene::update_state() {
     manager.evaluate_all();
     state = manager.get_state();
-    if(global_identifier.size() > 0) publish_global();
+    publish_global();
 }
 
 int Scene::get_width() {
@@ -175,20 +161,10 @@ void Scene::export_frame(const string& filename, int scaledown) {
     pix_to_png(pix.naive_scale_down(scaledown), "io_out/frames/frame_"+filename+".png");
 }
 
-void Scene::set_global_identifier(const string& id){
-    // What we are actually here to do
-    global_identifier = id;
-
-    // We also need to publish it immediately, or else it may not be present on the first frame
-    // of something trying to read from global, since global ordering is not guaranteed.
-    // Update_state does this for us.
-    update_state();
-}
-
 void Scene::publish_global() {
-    const unordered_map<string, double>& s = stage_publish_to_global();
-    for(const auto& p : s) {
-        set_global_state(global_identifier + "." + p.first, p.second);
+    for (const auto& [scene_var, global_var] : stage_publish_to_global) {
+        if (!state.contains(scene_var)) continue;
+        set_global_state(global_var, state[scene_var]);
     }
 }
 
@@ -206,6 +182,8 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     remaining_frames_in_macroblock--;
     set_global_state("frame_number", get_global_state("frame_number") + 1);
     set_global_state("t", get_global_state("frame_number") / get_video_framerate_fps());
+    // Capture MIDI state from global vars
+    get_writer().midi->capture_global_state();
     cout << "]" << flush;
 }
 
