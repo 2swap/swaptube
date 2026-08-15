@@ -2,9 +2,11 @@
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 #include "../Host_Device_Shared/vec.h"
-    
-__device__ __forceinline__ float smooth_iterations(float iters, float sq_radius){
-    return 0;
+
+// TODO: maybe get rid of cu prefix, esp. for things that take compontents instead of cuComplex
+
+__device__ __forceinline__ float smooth_iterations(float iters, float power, float sq_radius, float bailout_radius_sq) {
+    return iters - (logf(logf(sq_radius) / logf(bailout_radius_sq)) / logf(power));
 }
 
 // Complex to complex power (z ^ z)
@@ -414,6 +416,15 @@ __device__ int mandelPolyC_iterations(
     }
     
     return max_iterations; // No bailout, maximum iterations reached
+}
+
+__device__ float potential(float sq_radius, float power, int iterations){
+    return 0.5 * logf(sq_radius) / powf(power, iterations);
+}
+
+__device__ __forceinline__ void boettcher(float& zr, float& zi, float k, int n){
+    float p = powf(k, -n);
+    cuCpow(zr, zi, p);
 }
 
 // Iterate z^x + c until bailout radius

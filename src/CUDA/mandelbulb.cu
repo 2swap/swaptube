@@ -4,7 +4,7 @@
 #include "common_graphics.cuh"
 #include "fractal_sdf.cuh"
 
-const float EPSILON = 1e-5f;
+const float EPSILON = 1e-4f;
 
 __device__ unsigned int getLighting(const Cuda::vec3& pos, const Cuda::vec3& lightPos, const Cuda::vec3& normal, float shadow, float iters, float max_raymarch_iters){
     float light = fmaxf(dot(normal, normalize(lightPos - pos)), 0.25);
@@ -18,10 +18,13 @@ __device__ float distMap(const Cuda::vec3& pos, int max_sdf_iters, const int sdf
     float dist;
     switch(sdfID){
         case 1:
-            //dist = sdf::quatJulia2(Cuda::quat(pos.x, pos.y, pos.z, 0.1), Cuda::quat(-2,6,15,-6)/22.0, max_sdf_iters);
+            //dist = sdf::quatJulia2(Cuda::quat(pos.x, pos.y, pos.z, 0.1), Cuda::quat(-8, 16, 2, 0.81)/22.0, max_sdf_iters);
+            //dist = sdf::quatJulia2(Cuda::quat(0, 0, 0, 0), Cuda::quat(0, pos.x, pos.y, pos.z), max_sdf_iters);
             //dist = (sdf::quatJulia2(Cuda::quat(pos.x, pos.y, pos.z, 0.1), Cuda::quat(-2,6,15,-6)/22.0, max_sdf_iters) * (1.0 - sdflerp) + sdf::mandelbulb8(pos, max_sdf_iters) * sdflerp);
-            //dist = sdf::mandelbulb(pos, 2.0f + sdflerp * 6.0f, max_sdf_iters);
-            dist = sdf::burningbulb2(pos, max_sdf_iters);
+            //dist = sdf::mandelbulb(pos, 2.0, max_sdf_iters);
+            dist = sdf::mandelbulb8(pos, max_sdf_iters);
+            //dist = sdf::burningbulb2(pos, max_sdf_iters);
+            //dist = sdf::juliabulb(pos, Cuda::vec3(0.6, 0.5, 0.8), 8.0, max_sdf_iters);
             //dist = sdf::mandeljulia(pos.z, 0, pos.x, pos.y, max_sdf_iters);
             break;
         default:

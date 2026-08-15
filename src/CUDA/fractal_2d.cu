@@ -141,6 +141,35 @@ __device__ uint32_t vec3_to_argb(float alpha, const Cuda::vec3& rgb){
     return ((int) (alpha * 255.0) << 24) | ((int) (rgb.x * 255.0) << 16) | ((int) (rgb.y * 255.0) << 8) | ((int) (rgb.z * 255.0));
 }
 
+__device__ uint32_t complex_to_color(float zr, float zi){
+    float magnitude = sqrtf(zr * zr + zi * zi);
+    float angle = atan2f(zi, zr);
+
+    // Normalize magnitude and angle to [0, 1]
+    float normalized_angle = (angle + M_PI) / (2.0f * M_PI); // Map angle from [-pi, pi] to [0, 1]
+
+    // checkerboard pattern for saturation
+    float sat = ((int)(floorf(normalized_angle * 6 * 10.0f) + floorf(magnitude * 10.0f)) % 2 == 0) ? 1.0f : 0.5f;
+
+    return Cuda::HSVtoRGB(0.6, sat, 1.0f);
+}
+
+//
+__device__ uint32_t equipotential_lines(float potential){
+    // Normalize potential to [0, 1]
+    float normalized_potential = fmodf(potential, 1.0f);
+
+    // Create a checkerboard pattern for equipotential lines
+    float line_width = 0.001f; // Width of the lines
+    float line_pattern = fmodf(normalized_potential / line_width, 2.0f);
+
+    if (line_pattern < 1.0f) {
+        return 0xFFFFFFFF; // White color for lines
+    } else {
+        return 0xFF000000; // Black color for background
+    }
+}
+
 __global__ void go(
     const Cuda::ivec2 wh,
     // Origin parameters
@@ -257,11 +286,13 @@ __global__ void go(
     );
     
     bool bailed_out = iterations < max_iterations;
-    if(iterations == 50){
+    if(iterations == max_iterations){
          colors[pixel_y * wh.x + pixel_x] = 0xff000000;
     }
     else{
-        colors[pixel_y * wh.x + pixel_x] = 0xffffffff;//vec3_to_argb(1.0, bezier_gradient(Cuda::vec3(0.0, 0.0, 1.0), sqrtf(iterations / 50.0)));
+        float zr = micro_ndc_x * 2;
+        float zi = micro_ndc_y * 2;
+        colors[pixel_y * wh.x + pixel_x] = vec3_to_argb(1.0, bezier_gradient(Cuda::vec3(0.0, 0.0, 1.0), sqrtf(smooth_iterations(iterations, 2.0, sq_radius, bailout_radius_sq) / 50.0)));
     }
 }
 

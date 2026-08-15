@@ -11,10 +11,10 @@ extern "C" void render_raymarch(
 
 MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions) {
     manager.set({
-        {"x", "-1.75"},
+        {"x", "0"},
         {"y", "0"},
         {"z", "0"},
-        {"d", "1"},
+        {"d", "2"},
         {"q1", "-1"},
         {"qi", "0"},
         {"qj", "0"},
@@ -23,8 +23,8 @@ MandelbulbScene::MandelbulbScene(const vec2& dimensions) : Scene(dimensions) {
         {"light_x", "2"}, 
         {"light_y", "4"}, 
         {"light_z", "-2"}, 
-        {"max_raymarch_iterations", "256"},
-        {"max_mandelbulb_iterations", "200"},
+        {"max_raymarch_iterations", "200"},
+        {"max_mandelbulb_iterations", "50"},
         {"sdfID", "1"},
         {"sdflerp", "0"}
     });

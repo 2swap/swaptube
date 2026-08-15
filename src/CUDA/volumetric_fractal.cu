@@ -35,7 +35,7 @@ __device__ uint32_t sumRay(const Cuda::vec3& ro, const Cuda::vec3& rd, float min
 
     float opacity = 0;
     Cuda::vec3 z(0, 0, 0);
-    
+
     float iters = 0;
     float weight = 0;
 
@@ -68,9 +68,9 @@ __device__ uint32_t sumRay(const Cuda::vec3& ro, const Cuda::vec3& rd, float min
 
         float c = iters / MAXITERS;
 
-        weight = fmaxf( /*(1 - opacity) */ (fminf(iteration_band_normalize(iters, p, 4, 20, 5), 40 / step) * step * opacityMult * 0.005), minOpacity);
+        weight = fmaxf( /*(1 - opacity) */ (fminf(iteration_band_normalize(iters, p, 256, 20, 5), 20 / step) * step * opacityMult * 0.002), minOpacity);
         
-        color_accum += weight * argb_to_vec3(Cuda::black_to_blue_to_white(c));//argb_to_vec3(0xffffffff);
+        color_accum += weight * argb_to_vec3(Cuda::rainbow(c));//argb_to_vec3(0xffffffff);
 
         opacity += weight;        
     }
@@ -112,7 +112,7 @@ __global__ void volumeRay(
     far_dist = fminf(far_dist, max_dist);
 
     // Raymarches each point
-    const uint32_t color = sumRay(pos, rd, close_dist, far_dist, 1 / (sqrtf(wh.x * wh.y) * fov), 0.5, 0.92, 1.0, 1.0, p);
+    const uint32_t color = sumRay(pos, rd, close_dist, far_dist, 1 / (sqrtf(wh.x * wh.y) * fov), 0.5, 0.92, 1.0, 0, p);
 
     // Writes color to image buffer array
     colors[pixel_y * wh.x + pixel_x] = color;
@@ -130,5 +130,5 @@ extern "C" void render_volume(
     dim3 threads(16, 16);
     dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    volumeRay<<<block, threads>>>(wh, pos, normalize(camera), fov, Cuda::vec3(-1, -1, -1), Cuda::vec3(1, 1, 1), 0.002, 8, lightPos, max_raymarch_iters, max_mandelbulb_iters, p, colors);
+    volumeRay<<<block, threads>>>(wh, pos, normalize(camera), fov, Cuda::vec3(-2, -2, -2), Cuda::vec3(2, 2, 2), 0.002, 8, lightPos, max_raymarch_iters, max_mandelbulb_iters, p, colors);
 }

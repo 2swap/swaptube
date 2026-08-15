@@ -28,7 +28,7 @@ namespace sdf{
             sincosf(a, &sinfa, &cosfa);
             sincosf(b, &sinfb, &cosfb);
 
-            w = fabsf(rp) * Cuda::vec3(fabsf(cosfb * cosfa), fabsf(-sinfb), fabsf(cosfb * sinfa)) + pos;
+            w = fabsf(rp) * Cuda::vec3(cosfb * cosfa, -sinfb, cosfb * sinfa) + pos;
 
             m = dot(w, w);
             if(m > 256.0f) break;
@@ -119,7 +119,7 @@ namespace sdf{
             sincosf(a, &sinfa, &cosfa);
             sincosf(b, &sinfb, &cosfb);
 
-            w = fabsf(rp) * Cuda::vec3(fabsf(cosfb * cosfa), fabsf(-sinfb), fabsf(cosfb * sinfa)) + c;
+            w = rp * Cuda::vec3(cosfb * cosfa, -sinfb, cosfb * sinfa) + c;
 
             m = dot(w, w);
             if(m > 256.0f) break;
