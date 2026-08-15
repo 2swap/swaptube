@@ -39,7 +39,7 @@ endif()
 
 # Check HIP compiler first, as it's the more specific option
 # More likely to have a CUDA compiler with only HIP compute capability than vice versa
-if(CMAKE_HIP_COMPILER AND NOT ${COMPUTE_LANG} OR ${COMPUTE_LANG} STREQUAL "HIP")
+if(CMAKE_HIP_COMPILER AND NOT COMPUTE_LANG OR COMPUTE_LANG STREQUAL "HIP")
     message(STATUS "HIP compiler detected.")
     enable_language(HIP)
     add_compile_definitions(USE_AMD)
@@ -71,7 +71,7 @@ if(CMAKE_HIP_COMPILER AND NOT ${COMPUTE_LANG} OR ${COMPUTE_LANG} STREQUAL "HIP")
     set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
     # TODO: Check error ouput on CUDA/HIP function calls so we don't have to suppress warnings
     add_compile_options("-Wno-unused-value")
-elseif(CMAKE_CUDA_COMPILER AND NOT ${COMPUTE_LANG} OR ${COMPUTE_LANG} STREQUAL "CUDA")
+elseif(CMAKE_CUDA_COMPILER AND NOT COMPUTE_LANG OR COMPUTE_LANG STREQUAL "CUDA")
     message(STATUS "CUDA compiler detected.")
     enable_language(CUDA)
     add_compile_definitions(USE_NVIDIA)
