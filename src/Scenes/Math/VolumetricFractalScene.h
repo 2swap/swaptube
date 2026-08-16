@@ -1,0 +1,11 @@
+#pragma once
+
+#include "../Scene.h"
+#include "../../Host_Device_Shared/vec.h"
+#include <complex>
+
+class VolumetricScene : public Scene {
+public:
+    VolumetricScene(const vec2& dimensions = vec2(1,1));
+    void draw() override;
+};
