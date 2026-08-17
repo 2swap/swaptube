@@ -26,8 +26,8 @@ ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : Scene(dimension
 // Raymarching Stuff
         {"pov_xz", "0"},
         {"pov_y", "0"},
-        {"pov_fov", "3"},
-        {"pov_max_dist", "10"}
+        {"pov_fov", "5"},
+        {"pov_max_dist", "40"}
     });
 }
 
@@ -36,7 +36,7 @@ void ThreeDAlgebraScene::draw() {
     const quat camera_direction_0 = normalize(quat(cos(state["pov_xz"]), 0, sin(state["pov_xz"]), 0));
     const quat camera_direction = camera_direction_0*normalize(quat(cos(state["pov_y"]), sin(state["pov_y"])*sin(state["pov_xz"]), 0, sin(state["pov_y"])*cos(state["pov_xz"])));
 
-    const vec3 camera_pos = rotate_vector(vec3(0,0,-state["pov_max_dist"]*0.5*state["scale"]), camera_direction);
+    const vec3 camera_pos = rotate_vector(vec3(0,0,-state["pov_max_dist"]*0.4*state["scale"]), camera_direction);
     
 
 
@@ -45,8 +45,8 @@ void ThreeDAlgebraScene::draw() {
 
         camera_direction, 
         camera_pos,
-        state["pov_fov"], 
-        state["pov_max_dist"],
+        state["pov_fov"]*state["scale"], 
+        state["pov_max_dist"]*state["scale"],
     
 
         state["brightness"], 

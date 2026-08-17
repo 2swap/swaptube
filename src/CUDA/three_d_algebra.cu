@@ -37,12 +37,12 @@ __global__ void three_d_raymarch_kernel(
 
         float max_position = max(abs(current_position.x),max(abs(current_position.y),abs(current_position.z)));
 
-        if (max_position > 10){
+        if (max_position > 3.2){
             continue;
         }
-        int x_small = (abs(current_position.x - round(current_position.x)) < 0.01) ? 1 : 0;
-        int y_small = (abs(current_position.y - round(current_position.y)) < 0.01) ? 1 : 0;
-        int z_small = (abs(current_position.z - round(current_position.z)) < 0.01) ? 1 : 0;
+        int x_small = (abs(current_position.x - round(current_position.x)) < 0.02) ? 1 : 0;
+        int y_small = (abs(current_position.y - round(current_position.y)) < 0.02) ? 1 : 0;
+        int z_small = (abs(current_position.z - round(current_position.z)) < 0.02) ? 1 : 0;
         
         if ((x_small + y_small + z_small) > 1){
             colors[pixel_y * wh.x + pixel_x] = 0xffffffff; 
