@@ -203,7 +203,7 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     if [ $SKIP_RENDER -eq 0 ]; then
         # Clear all files from the smoketest
         rm io_out/* -rf
-        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX # 2>/dev/null
+        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX 2>/dev/null
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
             exit 2
