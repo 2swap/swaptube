@@ -10,6 +10,7 @@ public:
 
 private:
     void draw_cue_stick();
-    void draw_ball();
+    void draw_ball(const vector<vec2>& verts);
+    void draw_trail(const vector<vec2>& verts);
     void draw_trail();
 };
