@@ -8,7 +8,7 @@ Permutation::Permutation(std::string file_name) {
     std::ifstream file(file_name);
     
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open permutation file: " + file_name);
+        std::cerr << "Could not open permutation file: " + file_name;
         return;
     }
 
