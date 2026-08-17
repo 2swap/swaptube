@@ -101,27 +101,3 @@ extern "C" void free_memory(Cuda::vec2* rope_pointer, Cuda::vec2* pins_pointer){
 }
 
 
-__global__ void render_rope_kernel(
-    uint32_t* pixels, const Cuda::ivec2 wh, const Cuda::vec2* rope, const int rope_length, Cuda::vec2 lx_ty, Cuda::vec2 rx_by)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= rope_length) return;
-
-
-    Cuda::vec2 pixel_1 = point_to_pixel_in_screen(rope[i], lx_ty, rx_by, wh);
-    Cuda::vec2 pixel_2 = point_to_pixel_in_screen(rope[(i+1)%rope_length], lx_ty, rx_by, wh);
-
-    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, 0xFFFFFFFF, 1.0f, 2, pixels, wh, false);
-}
-
-
-
-
-extern "C" void cuda_render_rope(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* d_rope, const int rope_length,
-    const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by)
-{
-    int blockSize = 256;
-    int gridSize = (rope_length + blockSize - 1) / blockSize;
-    render_rope_kernel<<<gridSize, blockSize>>>(d_pixels, wh, d_rope, rope_length, lx_ty, rx_by);
-    cudaDeviceSynchronize();
-}

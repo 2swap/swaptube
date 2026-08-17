@@ -51,14 +51,14 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
 
 void LatexScene::draw() {
     if (transitioning) {
+        float fraction = state[transition_type == MACRO ? "macroblock_fraction" : "microblock_fraction"];
         interpolate(
-            interp, smoother2(state["microblock_fraction"]),
+            interp, smoother2(fraction),
             gpu_pix.get_ptr(), get_width_height()
         );
     } else {
         vec2 offset = get_width_height() / 2.0f;
-        cuda_overlay(gpu_pix.get_ptr(), get_width_height(),
-            last_pixels->get_ptr(), last_pixels->get_wh(), offset, 1.0f, 0.0f);
+        cuda_overlay(gpu_pix.get_ptr(), get_width_height(), last_pixels->get_ptr(), last_pixels->get_wh(), offset, 1.0f, 0.0f);
     }
 }
 

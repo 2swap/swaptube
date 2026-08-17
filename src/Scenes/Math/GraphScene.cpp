@@ -38,9 +38,9 @@ GraphScene::GraphScene(const vec2& dimensions)
         {"edge_weights_size", "0"},
         {"node_labels_size", "1"},
         {"midpoint_multiplier", "1"},
-        {"q1", "1 {t} 12 / sin <dimensions> 2 - lerp"},
+        {"q1", "1"},
         {"qi", "0"},
-        {"qj", "{t} 12 / cos <dimensions> 2 - *"},
+        {"qj", "0"},
         {"qk", "0"},
     });
 }
