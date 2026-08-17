@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # List of demo projects
 mapfile -t DEMOS < <(find src/Projects/Demos -type f -name '*.cpp' -printf '%f\n' | sed 's/\.cpp$//')
