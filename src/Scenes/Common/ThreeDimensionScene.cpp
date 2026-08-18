@@ -190,6 +190,7 @@ void ThreeDimensionScene::render_surface(const Surface& surface) {
     y1 = max(y1, 0);
     x2 = min(x2, get_width()-1);
     y2 = min(y2, get_height()-1);
+    if (x2 < x1 || y2 < y1) return;
     int plot_w = x2 - x1 + 1;
     int plot_h = y2 - y1 + 1;
 
