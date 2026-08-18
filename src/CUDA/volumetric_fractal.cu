@@ -16,7 +16,7 @@ __device__ Cuda::vec3 argb_to_vec3(uint32_t argb){
     return Cuda::vec3(((argb & 0x00ff0000) >> 16) / 255.0, ((argb & 0x0000ff00) >> 8) / 255.0, ((argb & 0x000000ff)) / 255.0);
 }
 
-__device__ uint32_t vec3_to_argb(float alpha, const Cuda::vec3& rgb){
+__device__ __forceinline__ uint32_t vec3_to_argb(float alpha, const Cuda::vec3& rgb){
     return ((int) (alpha * 255.0) << 24) | ((int) (rgb.x * 255.0) << 16) | ((int) (rgb.y * 255.0) << 8) | ((int) (rgb.z * 255.0));
 }
 

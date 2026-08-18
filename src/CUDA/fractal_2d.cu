@@ -131,13 +131,13 @@ __device__ unsigned int get_mandelbrot_color(int iterations, int max_iterations,
     return 0xff000000 | (c << 16) | (c << 8) | c; // grayscale color
 }
 
-__device__ Cuda::vec3 bezier_gradient(Cuda::vec3 mid, float t){
+static __device__ Cuda::vec3 bezier_gradient(Cuda::vec3 mid, float t){
     Cuda::vec3 a = t * mid;
     Cuda::vec3 b = (1.0f - t) * mid + t * Cuda::vec3(1.0, 1.0, 1.0);
     return (1.0f - t) * a + t * b;
 }
 
-__device__ uint32_t vec3_to_argb(float alpha, const Cuda::vec3& rgb){
+__forceinline__ __device__ uint32_t vec3_to_argb(float alpha, const Cuda::vec3& rgb){
     return ((int) (alpha * 255.0) << 24) | ((int) (rgb.x * 255.0) << 16) | ((int) (rgb.y * 255.0) << 8) | ((int) (rgb.z * 255.0));
 }
 

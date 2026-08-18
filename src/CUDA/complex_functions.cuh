@@ -3,11 +3,13 @@
 #include <cuComplex.h>
 #include "../Host_Device_Shared/vec.h"
 
-// TODO: maybe get rid of cu prefix, esp. for things that take compontents instead of cuComplex
+namespace {
 
-__device__ __forceinline__ float smooth_iterations(float iters, float power, float sq_radius, float bailout_radius_sq) {
-    return iters - (logf(logf(sq_radius) / logf(bailout_radius_sq)) / logf(power));
-}
+// General prefix naming patterns:
+// cuC : cuComplex
+// c : separate variable complex
+// m3 : mandelbulb triplex numbers
+// q : quaternion (unfinished))
 
 // Complex to complex power (z ^ z)
 __device__ cuComplex cuCpow(cuComplex base, cuComplex exponent) {
@@ -52,7 +54,7 @@ __device__ cuComplex cuCpow(cuComplex base, float exponent) {
 }
 
 //  Complex 3D to real power (z ^ n) (for mandelbulbs)
-__device__ Cuda::vec3 cuCMpow(Cuda::vec3& base, float exponent) {
+__device__ Cuda::vec3 m3pow(Cuda::vec3& base, float exponent) {
     float x = base.x;
     float y = base.y;
     float z = base.z;
@@ -80,7 +82,7 @@ __device__ Cuda::vec3 cuCMpow(Cuda::vec3& base, float exponent) {
 // These functions take references to real and imaginary componenets separately to avoid conversion to and from cuComplex
 // __forceinline__ is probably best so the compiler can (directly?) replace function calls with the underlying statements
 
-__device__ __forceinline__ void cuMult(float& zr, float& zi, const float ar, const float ai){
+__device__ __forceinline__ void cmult(float& zr, float& zi, const float ar, const float ai){
     float zr_new = zr * ar - zi * ai; // Real part of z * a
     zi = zr * ai + zi * ar; // Imaginary part of z * a
 
@@ -88,7 +90,7 @@ __device__ __forceinline__ void cuMult(float& zr, float& zi, const float ar, con
 }
 
 // Complex to complex power (z ^ z)
-__device__ __forceinline__ void cuCpow(float& zr, float& zi, const float xr, const float xi){
+__device__ __forceinline__ void cpow(float& zr, float& zi, const float xr, const float xi){
     if (zr == 0.0 && zi == 0.0) // Zero raised to positive power is zero
         return;
     
@@ -106,7 +108,7 @@ __device__ __forceinline__ void cuCpow(float& zr, float& zi, const float xr, con
 }
 
 // Complex to real power (z ^ n)
-__device__ __forceinline__ void cuCpow(float& zr, float& zi, const float exponent){
+__device__ __forceinline__ void cpow(float& zr, float& zi, const float exponent){
     if (zr == 0.0 && zi == 0.0) // Zero raised to positive power is zero
         return;
     
@@ -124,7 +126,7 @@ __device__ __forceinline__ void cuCpow(float& zr, float& zi, const float exponen
 }
 
 // Simple complex polynomial a1 * z ^ x1 + a2 * z ^ x2 + a3 * z ^ x3 + a4 * z ^ x4 + c, for real a and x
-__device__ __forceinline__ void cuCPoly(float& zr, float& zi, 
+__device__ __forceinline__ void cPoly(float& zr, float& zi, 
     const float a1, const float x1, 
     const float a2, const float x2, 
     const float a3, const float x3, 
@@ -139,7 +141,7 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b01000000){
         zi1 = -zi1;
     }
-    cuCpow(zr1, zi1, x1);
+    cpow(zr1, zi1, x1);
     zr1 *= a1;
     zi1 *= a1;
 
@@ -150,7 +152,7 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b00010000){
         zi2 = -zi2;
     }
-    cuCpow(zr2, zi2, x2);
+    cpow(zr2, zi2, x2);
     zr2 *= a2;
     zi2 *= a2;
 
@@ -161,7 +163,7 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b00000100){
         zi3 = -zi3;
     }
-    cuCpow(zr3, zi3, x3);
+    cpow(zr3, zi3, x3);
     zr3 *= a3;
     zi3 *= a3;
 
@@ -172,7 +174,7 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b00000001){
         zi4 = -zi4;
     }
-    cuCpow(zr4, zi4, x4);
+    cpow(zr4, zi4, x4);
     zr4 *= a4;
     zi4 *= a4;
 
@@ -181,7 +183,7 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
 }
 
 // Complex complex polynomial a1 * z ^ x1 + a2 * z ^ x2 + a3 * z ^ x3 + a4 * z ^ x4 + c, for complex a and x
-__device__ __forceinline__ void cuCPoly(float& zr, float& zi, 
+__device__ __forceinline__ void cPoly(float& zr, float& zi, 
     const float a1r, const float a1i, const float x1r, const float x1i, 
     const float a2r, const float a2i, const float x2r, const float x2i, 
     const float a3r, const float a3i, const float x3r, const float x3i, 
@@ -196,8 +198,8 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b01000000){
         zi1 = -zi1;
     }
-    cuCpow(zr1, zi1, x1r, x1i);
-    cuMult(zr1, zi1, a1r, a1i);
+    cpow(zr1, zi1, x1r, x1i);
+    cmult(zr1, zi1, a1r, a1i);
 
     float zr2 = (burning & 0b00100000) >> 5 ? fabsf(zr) : zr, zi2 = (burning & 0b00010000) >> 4 ? fabsf(zi) : zi;
     if(conj & 0b00100000){
@@ -206,8 +208,8 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b00010000){
         zi2 = -zi2;
     }
-    cuCpow(zr2, zi2, x2r, x2i);
-    cuMult(zr2, zi2, a2r, a2i);
+    cpow(zr2, zi2, x2r, x2i);
+    cmult(zr2, zi2, a2r, a2i);
 
     float zr3 = (burning & 0b00001000) >> 3 ? fabsf(zr) : zr, zi3 = (burning & 0b00000100) >> 2 ? fabsf(zi) : zi;
     if(conj & 0b00001000){
@@ -216,8 +218,8 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b00000100){
         zi3 = -zi3;
     }
-    cuCpow(zr3, zi3, x3r, x3i);
-    cuMult(zr3, zi3, a3r, a3i);
+    cpow(zr3, zi3, x3r, x3i);
+    cmult(zr3, zi3, a3r, a3i);
 
     float zr4 = (burning & 0b00000010) >> 1 ? fabsf(zr) : zr, zi4 = (burning & 0b00000001) ? fabsf(zi) : zi;
     if(conj & 0b00000010){
@@ -226,15 +228,15 @@ __device__ __forceinline__ void cuCPoly(float& zr, float& zi,
     if(conj & 0b00000001){
         zi4 = -zi4;
     }
-    cuCpow(zr4, zi4, x4r, x4i);
-    cuMult(zr4, zi4, a4r, a4i);
+    cpow(zr4, zi4, x4r, x4i);
+    cmult(zr4, zi4, a4r, a4i);
 
     zr = zr1 + zr2 + zr3 + zr4 + cr;
     zi = zi1 + zi2 + zi3 + zi4 + ci;
 }
 
 // Complex complex polynomial with c (a1 + ac1 * c) * z ^ x1 + (a2 + ac2 * c) * z ^ x2 + (a3 + ac3 * c) * z ^ x3 + (a4 + ac4 * c) * z ^ x4 + c, for complex a, ac, and x
-__device__ __forceinline__ void cuCPolyC(float& zr, float& zi, 
+__device__ __forceinline__ void cPolyC(float& zr, float& zi, 
     const float a1r, const float a1i, const float ac1r, const float ac1i, const float x1r, const float x1i, 
     const float a2r, const float a2i, const float ac2r, const float ac2i, const float x2r, const float x2i, 
     const float a3r, const float a3i, const float ac3r, const float ac3i, const float x3r, const float x3i, 
@@ -250,9 +252,9 @@ __device__ __forceinline__ void cuCPolyC(float& zr, float& zi,
         zi1 = -zi1;
     }
     float ac1r_new = ac1r, ac1i_new = ac1i;
-    cuMult(ac1r_new, ac1i_new, cr, ci);
-    cuCpow(zr1, zi1, x1r, x1i);
-    cuMult(zr1, zi1, a1r + ac1r_new, a1i + ac1i_new);
+    cmult(ac1r_new, ac1i_new, cr, ci);
+    cpow(zr1, zi1, x1r, x1i);
+    cmult(zr1, zi1, a1r + ac1r_new, a1i + ac1i_new);
 
     float zr2 = (burning & 0b00100000) >> 4 ? fabsf(zr) : zr, zi2 = (burning & 0b00010000) >> 4 ? fabsf(zi) : zi;
     if(conj & 0b00100000){
@@ -262,9 +264,9 @@ __device__ __forceinline__ void cuCPolyC(float& zr, float& zi,
         zi2 = -zi2;
     }
     float ac2r_new = ac2r, ac2i_new = ac2i;
-    cuMult(ac2r_new, ac2i_new, cr, ci);
-    cuCpow(zr2, zi2, x2r, x2i);
-    cuMult(zr2, zi2, a2r + ac2r_new, a2i + ac2i_new);
+    cmult(ac2r_new, ac2i_new, cr, ci);
+    cpow(zr2, zi2, x2r, x2i);
+    cmult(zr2, zi2, a2r + ac2r_new, a2i + ac2i_new);
 
     float zr3 = (burning & 0b00001000) >> 3 ? fabsf(zr) : zr, zi3 = (burning & 0b00000100) >> 2 ? fabsf(zi) : zi;
     if(conj & 0b00001000){
@@ -274,9 +276,9 @@ __device__ __forceinline__ void cuCPolyC(float& zr, float& zi,
         zi3 = -zi3;
     }
     float ac3r_new = ac3r, ac3i_new = ac3i;
-    cuMult(ac3r_new, ac3i_new, cr, ci);
-    cuCpow(zr3, zi3, x3r, x3i);
-    cuMult(zr3, zi3, a3r + ac3r_new, a3i + ac3i_new);
+    cmult(ac3r_new, ac3i_new, cr, ci);
+    cpow(zr3, zi3, x3r, x3i);
+    cmult(zr3, zi3, a3r + ac3r_new, a3i + ac3i_new);
 
     float zr4 = (burning & 0b00000010) >> 1 ? fabsf(zr) : zr, zi4 = (burning & 0b00000001) ? fabsf(zi) : zi;
     if(conj & 0b00000010){
@@ -286,16 +288,16 @@ __device__ __forceinline__ void cuCPolyC(float& zr, float& zi,
         zi4 = -zi4;
     }
     float ac4r_new = ac4r, ac4i_new = ac4i;
-    cuMult(ac4r_new, ac4i_new, cr, ci);
-    cuCpow(zr4, zi4, x4r, x4i);
-    cuMult(zr4, zi4, a4r + ac4r_new, a4i + ac4i_new);
+    cmult(ac4r_new, ac4i_new, cr, ci);
+    cpow(zr4, zi4, x4r, x4i);
+    cmult(zr4, zi4, a4r + ac4r_new, a4i + ac4i_new);
 
     zr = zr1 + zr2 + zr3 + zr4 + cr;
     zi = zi1 + zi2 + zi3 + zi4 + ci;
 }
 
 //  Complex 3D to real power (z ^ n) (for mandelbulbs)
-__device__ __forceinline__ void cuCMpow(float& zx, float& zy, float& zz, float exponent) {
+__device__ __forceinline__ void m3pow(float& zx, float& zy, float& zz, float exponent) {
     if (zx == 0.0 && zy == 0.0 && zz == 0.0) // Zero raised to positive power is zero
         return;  
 
@@ -351,7 +353,7 @@ __device__ int mandelRealPoly_iterations(
 
     for (; iterations < max_iterations; iterations++) {
         // Update z with polynomial formula
-        cuCPoly(zr, zi, a1, x1, a2, x2, a3, x3, a4, x4, cr, ci, burning, conj);
+        cPoly(zr, zi, a1, x1, a2, x2, a3, x3, a4, x4, cr, ci, burning, conj);
 
         sq_radius = zr * zr + zi * zi;
 
@@ -380,7 +382,7 @@ __device__ int mandelPoly_iterations(
 
     for (; iterations < max_iterations; iterations++) {
         // Update z with polynomial formula
-        cuCPoly(zr, zi, a1r, a1i, x1r, x1i, a2r, a2i, x2r, x2i, a3r, a3i, x3r, x3i, a4r, a4i, x4r, x4i, cr, ci, burning, conj);
+        cPoly(zr, zi, a1r, a1i, x1r, x1i, a2r, a2i, x2r, x2i, a3r, a3i, x3r, x3i, a4r, a4i, x4r, x4i, cr, ci, burning, conj);
 
         sq_radius = zr * zr + zi * zi;
 
@@ -408,7 +410,7 @@ __device__ int mandelPolyC_iterations(
 
     for (; iterations < max_iterations; iterations++) {
         // Update z with polynomial formula
-        cuCPolyC(zr, zi, a1r, a1i, ac1r, ac1i, x1r, x1i, a2r, a2i, ac2r, ac2i, x2r, x2i, a3r, a3i, ac3r, ac3i, x3r, x3i, a4r, a4i, ac4r, ac4i, x4r, x4i, cr, ci, burning, conj);
+        cPolyC(zr, zi, a1r, a1i, ac1r, ac1i, x1r, x1i, a2r, a2i, ac2r, ac2i, x2r, x2i, a3r, a3i, ac3r, ac3i, x3r, x3i, a4r, a4i, ac4r, ac4i, x4r, x4i, cr, ci, burning, conj);
 
         sq_radius = zr * zr + zi * zi;
 
@@ -418,13 +420,17 @@ __device__ int mandelPolyC_iterations(
     return max_iterations; // No bailout, maximum iterations reached
 }
 
+__device__ __forceinline__ float smooth_iterations(float iters, float power, float sq_radius, float bailout_radius_sq) {
+    return iters - (logf(logf(sq_radius) / logf(bailout_radius_sq)) / logf(power));
+}
+
 __device__ float potential(float sq_radius, float power, int iterations){
     return 0.5 * logf(sq_radius) / powf(power, iterations);
 }
 
 __device__ __forceinline__ void boettcher(float& zr, float& zi, float k, int n){
     float p = powf(k, -n);
-    cuCpow(zr, zi, p);
+    cpow(zr, zi, p);
 }
 
 // Iterate z^x + c until bailout radius
@@ -451,7 +457,7 @@ __device__ int mandelbrot_iterations(
         }
 
         // Update z with z^x + c formula
-        cuCpow(zr, zi, xr, xi);
+        cpow(zr, zi, xr, xi);
 
         zr += cr;
         zi += ci;
@@ -488,7 +494,7 @@ __device__ int mandelbrot_iterations(
         }
 
         // Update z with z^n + c formula
-        cuCpow(zr, zi, exponent);
+        cpow(zr, zi, exponent);
 
         zr += cr;
         zi += ci;
@@ -596,7 +602,7 @@ __device__ int mandelbulb_iterations(
         zz=(zz);
 
         // Update z with z^n + c formula
-        cuCMpow(zx, zy, zz, exponent);
+        m3pow(zx, zy, zz, exponent);
 
         zx += cx;
         zy += cy;
@@ -637,4 +643,6 @@ __device__ int jacobibrot2_iterations(
     }
 
     return max_iterations; // No bailout, maximum iterations reached
+}
+
 }

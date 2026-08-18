@@ -71,6 +71,9 @@ if(CMAKE_HIP_COMPILER AND NOT ${COMPUTE_LANG} OR ${COMPUTE_LANG} STREQUAL "HIP")
     set(CMAKE_CONFIGURE_DEPENDS ${GPU_SOURCES})
     # TODO: Check error ouput on CUDA/HIP function calls so we don't have to suppress warnings
     add_compile_options("-Wno-unused-value")
+    # for parity with CUDA default behavior
+    add_compile_options($<$<COMPILE_LANGUAGE:HIP>:-fgpu-rdc>)
+    add_link_options($<$<COMPILE_LANGUAGE:HIP>:-fgpu-rdc>)
 elseif(CMAKE_CUDA_COMPILER AND NOT ${COMPUTE_LANG} OR ${COMPUTE_LANG} STREQUAL "CUDA")
     message(STATUS "CUDA compiler detected.")
     enable_language(CUDA)
