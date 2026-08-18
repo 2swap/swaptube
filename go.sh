@@ -76,8 +76,9 @@ INCLUDE_AUDIO=1
 AUDIO_SFX=0
 INVALID_FLAG=0
 COMPUTE_LANG=""
+DEBUGGER=0
 # Parse flags
-while getopts "snaxc:" flag; do
+while getopts "snaxc:g" flag; do
     case "$flag" in
         s)
             SKIP_RENDER=1
@@ -104,6 +105,9 @@ while getopts "snaxc:" flag; do
                     exit 1
                     ;;
             esac
+            ;;
+        g)
+            DEBUGGER=1
             ;;
         *)
             INVALID_FLAG=1
@@ -187,12 +191,13 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     unlink io_in 2>/dev/null
     ln -s "../${INPUT_DIR}" io_in
 
-    # We redirect stderr to null since FFMPEG's encoder libraries tend to dump all sorts of junk there.
-    # Swaptube errors are printed to stdout.
-
     # Smoketest
     if [ $SKIP_SMOKETEST -eq 0 ]; then
-        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX 2>/dev/null
+        if [ $DEBUGGER -eq 1 ]; then
+            gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX
+        else
+            ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX
+        fi
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in smoketest."
             exit 2
@@ -203,7 +208,11 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     if [ $SKIP_RENDER -eq 0 ]; then
         # Clear all files from the smoketest
         rm io_out/* -rf
-        ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX 2>/dev/null
+        if [ $DEBUGGER -eq 1 ]; then
+            gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX
+        else
+            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX
+        fi
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
             exit 2

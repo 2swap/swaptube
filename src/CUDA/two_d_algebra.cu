@@ -50,7 +50,6 @@ __global__ void two_render_real_valued_function(
 
 
     // float distAccum = 0.0;
-    // float dragger_lerp = 0.0;
     Cuda::vec2 point = pixel_to_point_in_screen(pixel, lx_ty, rx_by, wh);
     uint32_t dragger_color = 0;
 
@@ -64,9 +63,9 @@ __global__ void two_render_real_valued_function(
 
         float max_dist = max(abs(dragger_delta.x),abs(dragger_delta.y));
         float min_dist = min(abs(dragger_delta.x),abs(dragger_delta.y));
-        // float dragger_dist = dragger_delta.x*dragger_delta.x + dragger_delta.y*dragger_delta.y;
 
         if (max_dist < 0.24 && min_dist < 0.06){
+            dragger_color = 0xffffffff;
             dragger_color = brightness+0x00ffffff;
             dragger_lerp = dragger_brightness;
 
@@ -87,7 +86,6 @@ __global__ void two_render_real_valued_function(
     //     printf("%f %f",op_output.x,op_output.y);
     // }
     
-    // float minDist = 0.5;
     float x_dist = abs(op_output.x - round(op_output.x));
     float y_dist = abs(op_output.y - round(op_output.y));
     float x_size = abs(op_output.x);
@@ -112,10 +110,6 @@ __global__ void two_render_real_valued_function(
         pixels[pixel.y * wh.x + pixel.x] =  Cuda::colorlerp(0, dragger_color, dragger_lerp);
     }
 
-    // float whiteness = max(0.0, 1.0f - distAccum*16.0);
-    // uint32_t color = Cuda::colorlerp(0x00000000, Cuda::OKLABtoRGB(0,1,op_output.x*0.1,op_output.y*0.1), whiteness);
-    // pixels[pixel.y * wh.x + pixel.x] =  brightness+Cuda::colorlerp(color,dragger_border,dragger_lerp);
-    // pixels[pixel.y * wh.x + pixel.x] = 0xff000000 | (color << 16) | (color << 8) | color;
 }
 
 extern "C" void two_d_algebra(

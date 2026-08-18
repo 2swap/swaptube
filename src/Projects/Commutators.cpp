@@ -75,7 +75,7 @@ void cube_corner_in_center(){
     // rs.render_microblock();
 
     // get the hash of the cube after the T perm and print it
-    double hash = rs.the_cube->get_hash(3);
+    double hash = rs.the_cube.get_hash(3);
     std::cout << "Hash of the cube after T perm: " << setprecision(10)<< hash << std::endl;
 
 
@@ -132,19 +132,19 @@ void graph_one(){
     });
 
     stage_macroblock(FileBlock("Now let's do the same with a 3x3 !"), 1);
-    rgs.add_cube("", true);
+    rgs.add_cube("", true, false);
     rgs.render_microblock();
 
     stage_macroblock(FileBlock("let's make a random turn, we are now on one of those twelve nodes"), 1);
-    rgs.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true);
+    rgs.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true, false, false);
     rgs.render_microblock();
 
     stage_macroblock(FileBlock("now a second turn"), 1);
-    rgs.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true);
+    rgs.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true, false, false);
     rgs.render_microblock();
 
     stage_macroblock(FileBlock("and a third"), 1);
-    rgs.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true);
+    rgs.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true, false, false);
     rgs.render_microblock();
     
 }
@@ -156,9 +156,59 @@ void test_rope(){
     rs.render_microblock();
 }
 
+void t_perm(){
+    RubiksScene rs;
+    stage_macroblock(SilenceBlock(1), 1);
+    rs.render_microblock();
+
+    stage_macroblock(SilenceBlock(10), 14);
+    rs.exec_move_from_slice("R");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("U");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("R'");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("U'");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("R'");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("F");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("R2");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("U'");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("R'");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("U'");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("R");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("U");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("R'");
+    rs.render_microblock();
+
+    rs.exec_move_from_slice("F'");
+    rs.render_microblock();
+}
+
 void render_video() {
     // CompositeScene cs;
     // intro(cs);
-    test_rope();
+    // test_rope();
     // cube_corner_in_center();
+    t_perm();
 }

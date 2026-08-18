@@ -11,7 +11,7 @@
 
 class Permutation {
     public:
-        Permutation(std::string file_name);
+        Permutation(const std::string file_name = "");
         vec2 get_point(const std::string begin, const std::string end, std::string orbit_name, float t);
         std::unordered_map<std::string, vec2> places;
         std::unordered_map<std::string, uint32_t> pieces;

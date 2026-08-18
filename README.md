@@ -36,6 +36,46 @@ The following external dependencies are required for specific functionalities wi
 ## Docker Setup
 For easy deployment with all dependencies included, see the [docker/README.md](docker/README.md) for containerized setup instructions. This is optional and community-made for Docker users. I (2swap) personally don't use or maintain it.
 
+## WSL Setup (Windows machines)
+
+Windows users run swaptube inside WSL2, GPU included.
+
+1. **Install WSL2 and Ubuntu** from an elevated PowerShell, then reboot:
+
+   ```powershell
+   wsl --install -d Ubuntu
+   ```
+
+2. **Install the dependencies** from the Ubuntu shell:
+
+   ```bash
+   sudo apt update && sudo apt install -y \
+       cmake ninja-build gnuplot ffmpeg pkg-config g++ \
+       libswscale-dev libavcodec-dev libavformat-dev libavdevice-dev \
+       libavutil-dev libavfilter-dev libswresample-dev \
+       librsvg2-dev libglib2.0-dev libcairo2-dev libpng-dev libgdk-pixbuf-2.0-dev \
+       nvidia-cuda-toolkit mpv
+   ```
+
+   Install only the CUDA *toolkit*. WSL gets the GPU from the Windows NVIDIA driver by way of `/usr/lib/wsl/lib`; installing a Linux driver package inside the distro breaks that. Confirm with `nvidia-smi`.
+
+3. **Clone into the Linux filesystem, not `/mnt/c`.** Small-file I/O across the Windows boundary is roughly 75x slower, and a render writes one PNG per frame.
+
+   ```bash
+   git clone https://github.com/2swap/swaptube.git ~/swaptube
+   cd ~/swaptube
+   ```
+
+4. **Build MicroTeX.** The first `./go.sh` offers to clone and build it into `../MicroTeX-master` for you. Accept, and follow the hint it prints if a package is missing.
+
+5. **Run it.**
+
+   ```bash
+   ./go.sh MandelbrotDemo 1920 1080 30
+   ```
+
+Two things behave differently than on a native Linux. WSL2 defaults to half your RAM, so a large render may need a `C:\Users\<you>\.wslconfig` containing `[wsl2]` and a higher memory allocation. Additionally, CUDA kernel launches cross a paravirtualization boundary, which costs a fixed couple of milliseconds per frame.
+
 # How to Run
 When you have created a project file `Projects/yourprojectname.cpp`, you can compile and run the whole project by executing:
 

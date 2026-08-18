@@ -387,4 +387,16 @@ HOST_DEVICE inline ivec2 floor(const vec2& v) { return ivec2{ (int) floorf(v.x),
 HOST_DEVICE inline ivec3 floor(const vec3& v) { return ivec3{ (int) floorf(v.x), (int) floorf(v.y), (int) floorf(v.z) }; }
 HOST_DEVICE inline ivec4 floor(const vec4& v) { return ivec4{ (int) floorf(v.x), (int) floorf(v.y), (int) floorf(v.z), (int) floorf(v.w) }; }
 
+
+#ifdef __CUDA_ARCH__
+#define IS_NAN(x) isnan(x)
+#else
+#define IS_NAN(x) std::isnan(x)
+#endif
+
+HOST_DEVICE inline bool hasnan(const vec2& v) { return IS_NAN(v.x) || IS_NAN(v.y); }
+HOST_DEVICE inline bool hasnan(const vec3& v) { return IS_NAN(v.x) || IS_NAN(v.y) || IS_NAN(v.z); }
+HOST_DEVICE inline bool hasnan(const vec4& v) { return IS_NAN(v.x) || IS_NAN(v.y) || IS_NAN(v.z) || IS_NAN(v.w); }
+HOST_DEVICE inline bool hasnan(const quat& q) { return IS_NAN(q.u) || IS_NAN(q.i) || IS_NAN(q.j) || IS_NAN(q.k); }
+
 SHARED_FILE_SUFFIX
