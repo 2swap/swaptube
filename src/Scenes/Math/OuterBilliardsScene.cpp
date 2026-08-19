@@ -30,9 +30,6 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
     });
 }
 
-static const float ISLAND_BOUNDARY_DEPTH = 3.0f;
-static const int   MAX_ISLAND_DEPTH = 2000;
-
 float OuterBilliardsScene::world_per_pixel() {
     const int height = get_height();
     if (height <= 0) return 1.0f;
@@ -113,7 +110,6 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
 
     params.island_opacity = wants_islands ? island_opacity : 0.0f;
     params.max_period     = max_period;
-    params.island_depth   = std::min((int)std::ceil(depth * ISLAND_BOUNDARY_DEPTH), MAX_ISLAND_DEPTH);
 
     outer_billiards_singularity_render(gpu_pix.get_ptr(), gpu_pix.get_wh(), params);
 }

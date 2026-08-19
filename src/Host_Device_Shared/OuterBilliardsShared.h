@@ -149,7 +149,6 @@ struct SingularityGraphParams {
     uint32_t line_color;
     float    island_opacity;
     int      max_period;
-    int      island_depth;
 };
 
 SHARED_FILE_SUFFIX

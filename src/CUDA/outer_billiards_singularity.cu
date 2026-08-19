@@ -16,7 +16,7 @@ static constexpr float SINGULARITY_PERIOD_OCTAVES = 3.0f;
 __global__ void singularity_graph_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh,
     const Cuda::SingularityGraphParams params,
-    const int steps, const int web_steps, const int island_steps)
+    const int steps, const int web_steps)
 {
     const int px = blockIdx.x * blockDim.x + threadIdx.x;
     const int py = blockIdx.y * blockDim.y + threadIdx.y;
@@ -40,8 +40,6 @@ __global__ void singularity_graph_kernel(
 
     float web_intensity = 0.0f;
 
-    float nearest = 1e30f;
-
     // curved_closeness is (d/2)^2 for small gaps, so this is a half pixel return.
     const float return_tol = 0.5f * wpp / fmaxf(to_screen, 1e-20f);
     const float return_tol_sq = 0.25f * return_tol * return_tol;
@@ -49,22 +47,19 @@ __global__ void singularity_graph_kernel(
 
     Cuda::vec2 p = start;
     for (int k = 0; k < steps; k++) {
-        if (k < web_steps || k < island_steps) {
+        if (k < web_steps) {
             const float d = Cuda::outer_billiards_singular_distance(params.rays, params.ray_count, p, params.curvature) * to_screen;
-            if (d < nearest) nearest = d;
 
-            if (k < web_steps) {
-                const float weight = Cuda::clamp(params.depth - (float)k, 0.0f, 1.0f);
+            const float weight = Cuda::clamp(params.depth - (float)k, 0.0f, 1.0f);
 
-                if (weight > 0.0f) {
-                    float intensity = line_coverage(d, half_width, wpp);
-                    if (want_glow) {
-                        const float soft = SINGULARITY_GLOW * __expf(-d / halo);
-                        intensity = 1.0f - (1.0f - intensity) * (1.0f - soft);
-                    }
-                    intensity *= weight;
-                    if (intensity > web_intensity) web_intensity = intensity;
+            if (weight > 0.0f) {
+                float intensity = line_coverage(d, half_width, wpp);
+                if (want_glow) {
+                    const float soft = SINGULARITY_GLOW * __expf(-d / halo);
+                    intensity = 1.0f - (1.0f - intensity) * (1.0f - soft);
                 }
+                intensity *= weight;
+                if (intensity > web_intensity) web_intensity = intensity;
             }
         }
         p = Cuda::outer_billiards_hop(params.verts, params.n, p, params.curvature);
@@ -77,12 +72,10 @@ __global__ void singularity_graph_kernel(
 
     const int index = py * wh.x + px;
     uint32_t out = pixels[index];
+    // Cell boundaries belong to the web, which draws over this.
     if (return_hop > 0) {
-        const float fill = 1.0f - line_coverage(nearest, half_width, wpp);
-        if (fill > 0.0f) {
-            out = Cuda::color_combine(out, Cuda::rainbow(__log2f((float)return_hop) / SINGULARITY_PERIOD_OCTAVES),
-                                      fill * params.island_opacity);
-        }
+        out = Cuda::color_combine(out, Cuda::rainbow(__log2f((float)return_hop) / SINGULARITY_PERIOD_OCTAVES),
+                                  params.island_opacity);
     }
     if (web_intensity > 0.0f) {
         out = Cuda::color_combine(out, params.line_color, Cuda::clamp(web_intensity * params.web_opacity, 0.0f, 1.0f));
@@ -101,14 +94,12 @@ extern "C" void outer_billiards_singularity_render(
     if (!want_web && !want_islands) return;
 
     const int web_steps    = want_web ? (int)ceilf(params.depth) : 0;
-    const int island_steps = want_islands ? params.island_depth : 0;
     int steps = web_steps;
-    if (island_steps > steps) steps = island_steps;
     if (want_islands && params.max_period > steps) steps = params.max_period;
     if (steps <= 0) return;
 
     dim3 block(16, 16);
     dim3 grid((wh.x + block.x - 1) / block.x, (wh.y + block.y - 1) / block.y);
-    singularity_graph_kernel<<<grid, block>>>(d_pixels, wh, params, steps, web_steps, island_steps);
+    singularity_graph_kernel<<<grid, block>>>(d_pixels, wh, params, steps, web_steps);
     cudaDeviceSynchronize();
 }
