@@ -9,6 +9,94 @@ __device__ __forceinline__ float line_coverage(float distance, float half_width,
     return Cuda::clamp((half_width + 0.5f * world_per_pixel - distance) / world_per_pixel, 0.0f, 1.0f);
 }
 
+// Everything below is only ever evaluated per-pixel inside this kernel, so it
+// lives here rather than in OuterBilliardsShared.h alongside the host-visible
+// pivot/reflect functions.
+
+__device__ __forceinline__ float curved_arcsinh(float x, float curvature) {
+    const float k = -curvature;
+    if (k < 1e-9f) return x;
+    const float bend = sqrtf(k);
+    return asinhf(bend * x) / bend;
+}
+
+__device__ __forceinline__ float curved_screen_scale(const Cuda::vec2& q, float curvature) {
+    const float n = Cuda::curved_norm(q, curvature);
+    if (n <= 0.0f) return 0.0f;
+    return powf(n, 0.75f);
+}
+
+__device__ __forceinline__ float curved_closeness(const Cuda::vec2& a, const Cuda::vec2& b, float a_norm, float curvature) {
+    const Cuda::vec2 delta = a - b;
+    const float flat = dot(delta, delta);
+    if (curvature == 0.0f) return flat * 0.25f;
+
+    const float nb = Cuda::curved_norm(b, curvature);
+    if (a_norm <= 0.0f || nb <= 0.0f) return 1e30f;
+
+    const float cross = a.x * b.y - a.y * b.x;
+    const float inner = 1.0f + curvature * dot(a, b);
+    const float geo   = sqrtf(a_norm * nb);
+    const float denom = 2.0f * geo * (inner + geo);
+    if (denom <= 1e-30f) return 1e30f;
+    return (flat + curvature * cross * cross) / denom;
+}
+
+__device__ __forceinline__ float curved_distance(const Cuda::vec2& a, const Cuda::vec2& b, float curvature) {
+    const float half_sq = curved_closeness(a, b, Cuda::curved_norm(a, curvature), curvature);
+    if (half_sq >= 1e29f) return 1e30f;
+    return 2.0f * curved_arcsinh(sqrtf(half_sq > 0.0f ? half_sq : 0.0f), curvature);
+}
+
+struct SingularRay {
+    Cuda::vec3 line;
+    Cuda::vec3 cap;
+    Cuda::vec2 origin;
+};
+
+__device__ __forceinline__ SingularRay outer_billiards_build_ray(const Cuda::vec2* verts, int n, int i, float curvature) {
+    SingularRay ray;
+    const Cuda::vec2 v = verts[i];             // where the ray starts
+    const Cuda::vec2 u = verts[(i + 1) % n];   // the far end of the side it extends
+    ray.origin = v;
+
+    const Cuda::vec3 m(v.y - u.y, u.x - v.x, v.x * u.y - v.y * u.x);
+
+    float scale = m.x * m.x + m.y * m.y + curvature * m.z * m.z;
+    scale = (scale > 1e-20f) ? 1.0f / sqrtf(scale) : 0.0f;
+    ray.line = Cuda::vec3(m.x * scale, m.y * scale, m.z * scale);
+
+    const Cuda::vec3 w(m.x, m.y, curvature * m.z);
+    ray.cap = Cuda::vec3(v.y * w.z - w.y,
+                          w.x - v.x * w.z,
+                          v.x * w.y - v.y * w.x);
+    return ray;
+}
+
+__device__ __forceinline__ float outer_billiards_ray_distance(const SingularRay& ray, const Cuda::vec2& q,
+                                                              float norm_q, float curvature) {
+    if (ray.cap.x * q.x + ray.cap.y * q.y + ray.cap.z >= 0.0f) {
+        const float height = ray.line.x * q.x + ray.line.y * q.y + ray.line.z;
+        return curved_arcsinh(fabsf(height) / sqrtf(norm_q), curvature);
+    }
+    return curved_distance(q, ray.origin, curvature);
+}
+
+// A point is singular exactly where the tangent-vertex choice is tied between
+// two candidates, i.e. where it sits on the boundary ray between the current
+// pivot's wedge and one of its two neighbors. So instead of checking a point
+// against every edge's ray, build only the two rays that bound the wedge the
+// already-known pivot lives in and take the closer one.
+__device__ __forceinline__ float outer_billiards_pivot_distance(const Cuda::vec2* verts, int n, int pivot,
+                                                                const Cuda::vec2& q, float norm_q, float curvature) {
+    const int prev = (pivot - 1 + n) % n;
+    const SingularRay left  = outer_billiards_build_ray(verts, n, prev,  curvature);
+    const SingularRay right = outer_billiards_build_ray(verts, n, pivot, curvature);
+    const float dl = outer_billiards_ray_distance(left,  q, norm_q, curvature);
+    const float dr = outer_billiards_ray_distance(right, q, norm_q, curvature);
+    return fminf(dl, dr);
+}
+
 static constexpr float SINGULARITY_LINE_WIDTH   = 1.2f;
 static constexpr float SINGULARITY_GLOW         = 0.0f;
 static constexpr float SINGULARITY_PERIOD_OCTAVES = 3.0f;
@@ -33,7 +121,7 @@ __global__ void singularity_graph_kernel(
     const float halo       = fmaxf(4.0f * half_width, 1e-20f);
     const bool  want_glow  = SINGULARITY_GLOW > 0.001f;
 
-    const float to_screen = Cuda::curved_screen_scale(start, params.curvature);
+    const float to_screen = curved_screen_scale(start, params.curvature);
 
     const bool want_islands = params.island_opacity > 0.01 && params.max_period > 1;
     const float start_norm = Cuda::curved_norm(start, params.curvature);
@@ -47,8 +135,13 @@ __global__ void singularity_graph_kernel(
 
     Cuda::vec2 p = start;
     for (int k = 0; k < steps; k++) {
+        const int pivot = Cuda::outer_billiards_tangent_vertex(params.verts, params.n, p);
+
         if (k < web_steps || k < island_steps) {
-            const float d = Cuda::outer_billiards_singular_distance(params.rays, params.ray_count, p, params.curvature) * to_screen;
+            const float norm_p = Cuda::curved_norm(p, params.curvature);
+            const float d = (norm_p > 0.0f
+                ? outer_billiards_pivot_distance(params.verts, params.n, pivot, p, norm_p, params.curvature)
+                : 1e30f) * to_screen;
             if (d < nearest) nearest = d;
 
             if (k < web_steps) {
@@ -65,9 +158,9 @@ __global__ void singularity_graph_kernel(
                 }
             }
         }
-        p = Cuda::outer_billiards_hop(params.verts, params.n, p, params.curvature);
+        p = Cuda::outer_billiards_reflect(params.verts[pivot], p, params.curvature);
         if (want_islands && k < params.max_period) {
-            const float back = Cuda::curved_closeness(start, p, start_norm, params.curvature);
+            const float back = curved_closeness(start, p, start_norm, params.curvature);
             if (back < closest_return) { closest_return = back; return_hop = k + 1; }
         }
     }
@@ -75,11 +168,7 @@ __global__ void singularity_graph_kernel(
     const int index = py * wh.x + px;
     uint32_t out = pixels[index];
     if (return_hop > 0) {
-        const float fill = 1.0f - line_coverage(nearest, half_width, wpp);
-        if (fill > 0.0f) {
-            out = Cuda::color_combine(out, Cuda::rainbow(__log2f((float)return_hop) / SINGULARITY_PERIOD_OCTAVES),
-                                      fill * params.island_opacity);
-        }
+        out = Cuda::color_combine(out, Cuda::rainbow(__log2f((float)return_hop) / SINGULARITY_PERIOD_OCTAVES), params.island_opacity);
     }
     if (web_intensity > 0.0f) {
         out = Cuda::color_combine(out, params.line_color, Cuda::clamp(web_intensity * params.web_opacity, 0.0f, 1.0f));
@@ -91,7 +180,7 @@ extern "C" void outer_billiards_singularity_render(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
     const Cuda::SingularityGraphParams& params)
 {
-    if (params.n < 3 || params.ray_count < 3 || wh.x <= 0 || wh.y <= 0) return;
+    if (params.n < 3 || wh.x <= 0 || wh.y <= 0) return;
 
     const bool want_web = params.web_opacity > 0.01 && params.depth > 0.0f;
     const bool want_islands = params.island_opacity > 0.01 && params.max_period > 1 && params.depth > 0.0f;
