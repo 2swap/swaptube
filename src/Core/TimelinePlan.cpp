@@ -1,4 +1,4 @@
-#include "MicroblockPlan.h"
+#include "TimelinePlan.h"
 
 #include <fstream>
 #include <iostream>
@@ -41,12 +41,12 @@ void finish_recording_entry() {
 }
 }
 
-void initialize_microblock_plan(const string& path, const bool record) {
+void initialize_timeline_plan(const string& path, const bool record) {
     plan_input.close();
     plan_input.clear();
     plan_output.close();
     plan_output.clear();
-    if (path.empty()) throw invalid_argument("Microblock plan path cannot be empty");
+    if (path.empty()) throw invalid_argument("Timeline plan path cannot be empty");
 
     plan_path = path;
     next_entry = 0;
@@ -57,10 +57,10 @@ void initialize_microblock_plan(const string& path, const bool record) {
 
     if (recording) {
         plan_output.open(plan_path, ios::trunc);
-        if (!plan_output) throw runtime_error("Could not create microblock plan: " + plan_path);
+        if (!plan_output) throw runtime_error("Could not create timeline plan output file: " + plan_path);
     } else {
         plan_input.open(plan_path);
-        if (!plan_input) throw runtime_error("Could not open microblock plan: " + plan_path);
+        if (!plan_input) throw runtime_error("Could not open microblock plan input file: " + plan_path);
     }
 }
 
@@ -108,7 +108,7 @@ void record_planned_microblock() {
     (*open_count)++;
 }
 
-void finalize_microblock_plan() {
+void finalize_timeline_plan() {
     if (recording) {
         finish_recording_entry();
         plan_output.close();

@@ -1,5 +1,5 @@
 #include "Scene.h"
-#include "../Core/MicroblockPlan.h"
+#include "../Core/TimelinePlan.h"
 #include "../Core/Smoketest.h"
 #include "../IO/PNG.h"
 #include "../IO/Writer.h"
@@ -102,7 +102,7 @@ void finalize_macroblock_sequence() {
             + to_string(total_microblocks_in_macroblock) + " microblocks, but render_microblock() was only called "
             + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
     }
-    finalize_microblock_plan();
+    finalize_timeline_plan();
 }
 
 Scene::Scene(const vec2& dimensions) : gpu_pix(floor(get_video_dimensions_pixels() * dimensions)) {
