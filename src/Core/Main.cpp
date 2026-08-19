@@ -6,17 +6,19 @@
 using namespace std;
 
 #include "Timer.h"
+#include "MicroblockPlan.h"
 #include "Smoketest.h"
 #include "../IO/Writer.h"
+#include "../Scenes/Scene.h"
 #include "State/GlobalState.h"
 
 void render_video(); // Forward declaration, provided by the user in their project file
 
-void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio, bool& audio_sfx) {
+void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio, bool& audio_sfx, string& microblock_plan_path, bool& record_microblock_plan) {
     cout << "Parsing command line arguments... " << endl;
 
-    if (argc != 8) {
-        throw runtime_error("Expected 7 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx");
+    if (argc != 9) {
+        throw runtime_error("Expected 8 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx microblock_plan_path");
     }
 
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
@@ -44,8 +46,10 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
     string smoketest_arg = argv[5];
     if (smoketest_arg == "smoketest") {
         set_smoketest(true);
+        record_microblock_plan = true;
     } else if (smoketest_arg == "render") {
         set_smoketest(false);
+        record_microblock_plan = false;
     } else {
         throw runtime_error("Invalid smoketest flag argument: " + smoketest_arg);
     }
@@ -67,7 +71,13 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
         throw runtime_error("Invalid audio sfx argument: " + string(argv[7]) );
     }
     audio_sfx = (audio_sfx_i != 0);
-    cout << "Audio SFX: " << (audio_sfx ? "true" : "false") << endl << endl;
+    cout << "Audio SFX: " << (audio_sfx ? "true" : "false") << ", " << flush;
+
+    microblock_plan_path = argv[8];
+    if (microblock_plan_path.empty()) {
+        throw runtime_error("Microblock plan path cannot be empty");
+    }
+    cout << "Microblock Counts: " << microblock_plan_path << endl << endl;
 }
 
 inline void signal_handler(int signal) {
@@ -83,7 +93,9 @@ void setup_output_subfolders() {
 int main(int argc, char* argv[]) {
     int VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE;
     bool INCLUDE_AUDIO, AUDIO_SFX;
-    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, INCLUDE_AUDIO, AUDIO_SFX);
+    bool record_microblock_plan;
+    string microblock_plan_path;
+    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, INCLUDE_AUDIO, AUDIO_SFX, microblock_plan_path, record_microblock_plan);
     Timer timer;
 
     // Main Render Loop
@@ -91,8 +103,14 @@ int main(int argc, char* argv[]) {
     try {
         setup_output_subfolders();
         init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, INCLUDE_AUDIO, AUDIO_SFX);
-        cout << "Rendering video... " << endl;
+        initialize_microblock_plan(microblock_plan_path, record_microblock_plan);
+        if (is_smoketest()) {
+            cout << "Smoketesting video... " << endl;
+        } else {
+            cout << "Rendering video... " << endl;
+        }
         render_video();
+        finalize_macroblock_sequence();
     } catch(std::exception& e) {
         // Change to red text
         cout << "\033[1;31m";

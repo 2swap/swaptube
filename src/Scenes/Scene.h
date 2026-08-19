@@ -14,6 +14,7 @@
 #include <iomanip>
 #include <cmath>
 #include <algorithm>
+#include <optional>
 #include <stdexcept>
 
 using namespace std;
@@ -23,11 +24,14 @@ extern int remaining_frames_in_macroblock;
 extern int total_microblocks_in_macroblock;
 extern int total_frames_in_macroblock;
 
-void stage_macroblock(const Macroblock& macroblock, int expected_microblocks_in_macroblock);
+void stage_macroblock(const Macroblock& macroblock);
+void stage_macroblock(const Macroblock& macroblock, int declared_microblocks_in_macroblock);
+void finalize_macroblock_sequence();
 
 class Scene {
 public:
     Scene(const vec2& dimensions = vec2(1, 1));
+    virtual ~Scene();
 
     virtual void draw() = 0;
 
