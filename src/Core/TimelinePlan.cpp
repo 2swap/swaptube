@@ -64,10 +64,6 @@ void initialize_timeline_plan(const string& path, const bool record) {
     }
 }
 
-bool is_recording_microblock_plan() {
-    return recording;
-}
-
 int begin_macroblock_plan_entry(const string& blurb, const optional<int> declared) {
     if (recording) {
         finish_recording_entry();

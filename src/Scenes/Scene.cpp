@@ -33,7 +33,7 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
             + to_string(*declared_microblocks_in_macroblock) + " microblocks)");
     }
 
-    if (is_recording_microblock_plan()) {
+    if (is_smoketest()) {
         finish_deferred_macroblock();
         const string macroblock_blurb = macroblock.blurb();
         begin_macroblock_plan_entry(macroblock_blurb, declared_microblocks_in_macroblock);
@@ -95,7 +95,7 @@ void stage_macroblock(const Macroblock& macroblock, const int declared_microbloc
 }
 
 void finalize_macroblock_sequence() {
-    if (is_recording_microblock_plan()) {
+    if (is_smoketest()) {
         finish_deferred_macroblock();
     } else if (remaining_microblocks_in_macroblock != 0) {
         throw runtime_error("ERROR: Project ended before finishing its final macroblock. This macroblock had "
@@ -147,7 +147,7 @@ uint32_t* Scene::query() {
 }
 
 void Scene::render_microblock(){
-    if (is_recording_microblock_plan()) {
+    if (is_smoketest()) {
         record_planned_microblock();
         render_one_frame(0, 1);
         remaining_frames_in_macroblock = max(0, remaining_frames_in_macroblock);
