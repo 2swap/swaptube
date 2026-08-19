@@ -216,7 +216,7 @@ void render_video() {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Here's the pattern."));
-    //obs->manager.transition(MACRO, "island_opacity", ".5");
+    obs->manager.transition(MACRO, "island_opacity", "1");
     obs->manager.transition(MACRO, "singularity_depth", "100");
     cs.render_microblock();
 

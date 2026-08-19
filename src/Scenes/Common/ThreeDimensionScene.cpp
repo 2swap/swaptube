@@ -69,6 +69,7 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_radius_multiplier", "1"},
+        {"lines_thickness_multiplier", "1"},
         {"points_opacity", "1"},
     });
 }
@@ -238,7 +239,7 @@ void ThreeDimensionScene::draw() {
     }
 
     if (!lines.empty() && state["lines_opacity"] > .001) {
-        int thickness = static_cast<int>(get_geom_mean_size() / 640.0);
+        int thickness = static_cast<int>(state["lines_thickness_multiplier"] * get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
             gpu_pix.get_ptr(),
             get_width_height(),

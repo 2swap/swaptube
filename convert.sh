@@ -72,3 +72,7 @@ fi
 
 echo "convert.sh: Wrote ${TARGET_VIDEO} ($(du -h "$TARGET_VIDEO" | cut -f1))"
 echo "convert.sh: Note - Discord only auto-embeds attachments under its per-upload size limit (10 MB on non-boosted servers). Lower -crf's value or add -b:v to cap bitrate if you need a smaller file."
+
+if command -v nautilus > /dev/null 2>&1; then
+    nautilus "${LATEST}" >/dev/null 2>&1 &
+fi
