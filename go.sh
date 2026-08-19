@@ -71,20 +71,16 @@ fi
 SAMPLERATE=48000
 
 SKIP_RENDER=0
-SKIP_SMOKETEST=0
 INCLUDE_AUDIO=1
 AUDIO_SFX=0
 INVALID_FLAG=0
 COMPUTE_LANG=""
 DEBUGGER=0
 # Parse flags
-while getopts "snaxc:g" flag; do
+while getopts "saxc:g" flag; do
     case "$flag" in
         s)
             SKIP_RENDER=1
-            ;;
-        n)
-            SKIP_SMOKETEST=1
             ;;
         a)
             INCLUDE_AUDIO=0
@@ -119,7 +115,6 @@ done
 if [ $INVALID_FLAG -eq 1 ]; then
     echo "go.sh: Error - Invalid flag:"
     echo "-s means to only run the smoketest."
-    echo "-n means to only run the render"
     echo "-a means to exclude all audio (voice narration and sound effects) from the"
     echo "   rendered video. Default is to include audio."
     echo "-x means to also emit sound effects and voice narration as their own separate"
@@ -191,27 +186,27 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     unlink io_in 2>/dev/null
     ln -s "../${INPUT_DIR}" io_in
 
-    # Smoketest
-    if [ $SKIP_SMOKETEST -eq 0 ]; then
-        if [ $DEBUGGER -eq 1 ]; then
-            gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX
-        else
-            ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX
-        fi
-        if [ $? -ne 0 ]; then
-            echo "go.sh: Execution failed in smoketest."
-            exit 2
-        fi
+    # Smoketesting is mandatory and publishes the microblock counts used by render.
+    MICROBLOCK_COUNTS_PATH="$(pwd)/io_out/microblock_counts.txt"
+
+    if [ $DEBUGGER -eq 1 ]; then
+        gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
+    else
+        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
+    fi
+    if [ $? -ne 0 ]; then
+        echo "go.sh: Execution failed in smoketest."
+        exit 2
     fi
 
     # True render
     if [ $SKIP_RENDER -eq 0 ]; then
-        # Clear all files from the smoketest
-        rm io_out/* -rf
+        # Clear all files from the smoketest, keeping the recorded microblock counts.
+        find io_out/ -mindepth 1 -maxdepth 1 ! -name microblock_counts.txt -exec rm -rf {} +
         if [ $DEBUGGER -eq 1 ]; then
-            gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX
+            gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
         else
-            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX
+            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
         fi
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."
