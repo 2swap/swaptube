@@ -15,7 +15,6 @@ public:
 private:
     std::vector<vec2> read_vertices();
     std::vector<vec2> orbit(const vec2& start, int steps, const std::vector<vec2>& verts, float curvature);
-    std::vector<SingularRay> singular_ray_data(const std::vector<vec2>& verts, float curvature);
 
     float world_per_pixel();
     void draw_singularity_graph(const std::vector<vec2>& verts);

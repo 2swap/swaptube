@@ -61,20 +61,6 @@ std::vector<vec2> OuterBilliardsScene::orbit(const vec2& start, int steps, const
     return path;
 }
 
-std::vector<SingularRay> OuterBilliardsScene::singular_ray_data(const std::vector<vec2>& verts, float curvature) {
-    std::vector<SingularRay> rays;
-    const int n = (int)verts.size();
-    if (n < 3) return rays;
-
-    rays.reserve(n);
-    for (int i = 0; i < n; i++) {
-        const vec2 side = verts[i] - verts[(i + 1) % n];
-        if (dot(side, side) < 1e-18f) continue;   // coincident vertices carry no ray
-        rays.push_back(outer_billiards_build_ray(verts.data(), n, i, curvature));
-    }
-    return rays;
-}
-
 void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts) {
     const float web_opacity    = (float)state["singularity_opacity"];
     const float island_opacity = (float)state["island_opacity"];
@@ -87,18 +73,14 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
     if (!wants_web && !wants_islands) return;
 
     const float curvature = (float)state["curvature"];
-    const std::vector<SingularRay> rays = singular_ray_data(verts, curvature);
     const int n = (int)verts.size();
-    const int ray_count = (int)rays.size();
-    if (n < 3 || n > MAX_BILLIARD_VERTICES || ray_count < 3) return;
+    if (n < 3 || n > MAX_BILLIARD_VERTICES) return;
 
     const float wpp = world_per_pixel();
 
     SingularityGraphParams params;
     for (int i = 0; i < n; i++) params.verts[i] = verts[i];
-    for (int i = 0; i < ray_count; i++) params.rays[i] = rays[i];
     params.n = n;
-    params.ray_count = ray_count;
     params.curvature = curvature;
     params.lx_ty = vec2(state["left_x"], state["top_y"]);
     params.rx_by = vec2(state["right_x"], state["bottom_y"]);

@@ -47,8 +47,9 @@ __global__ void singularity_graph_kernel(
 
     Cuda::vec2 p = start;
     for (int k = 0; k < steps; k++) {
+        const int hop_pivot = Cuda::outer_billiards_tangent_vertex(params.verts, params.n, p);
         if (k < web_steps) {
-            const float d = Cuda::outer_billiards_singular_distance(params.rays, params.ray_count, p, params.curvature) * to_screen;
+            const float d = Cuda::outer_billiards_singular_distance(params.verts, params.n, hop_pivot, p, params.curvature) * to_screen;
 
             const float weight = Cuda::clamp(params.depth - (float)k, 0.0f, 1.0f);
 
@@ -62,7 +63,7 @@ __global__ void singularity_graph_kernel(
                 if (intensity > web_intensity) web_intensity = intensity;
             }
         }
-        p = Cuda::outer_billiards_hop(params.verts, params.n, p, params.curvature);
+        p = Cuda::outer_billiards_reflect(params.verts[hop_pivot], p, params.curvature);
         // The first return is the period; later multiples of it are not.
         if (want_islands && return_hop == 0 && k < params.max_period) {
             const float back = Cuda::curved_closeness(start, p, start_norm, params.curvature);
@@ -89,7 +90,7 @@ extern "C" void outer_billiards_singularity_render(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
     const Cuda::SingularityGraphParams& params)
 {
-    if (params.n < 3 || params.ray_count < 3 || wh.x <= 0 || wh.y <= 0) return;
+    if (params.n < 3 || wh.x <= 0 || wh.y <= 0) return;
 
     const bool want_web = params.web_opacity > 0.01 && params.depth > 0.0f;
     const bool want_islands = params.island_opacity > 0.01 && params.max_period > 1 && params.depth > 0.0f;

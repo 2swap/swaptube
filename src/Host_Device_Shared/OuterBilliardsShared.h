@@ -45,12 +45,6 @@ HOST_DEVICE inline float curved_closeness(const vec2& a, const vec2& b, float a_
     return (flat + curvature * cross * cross) / denom;
 }
 
-HOST_DEVICE inline float curved_distance(const vec2& a, const vec2& b, float curvature) {
-    const float half_sq = curved_closeness(a, b, curved_norm(a, curvature), curvature);
-    if (half_sq >= 1e29f) return 1e30f;
-    return 2.0f * curved_arcsinh(sqrtf(half_sq > 0.0f ? half_sq : 0.0f), curvature);
-}
-
 // Positive when b is counterclockwise of a.
 HOST_DEVICE inline float billiards_cross(const vec2& a, const vec2& b) { return a.x * b.y - a.y * b.x; }
 
@@ -84,53 +78,27 @@ HOST_DEVICE inline vec2 outer_billiards_reflect(const vec2& pivot, const vec2& p
     return (pivot * a - p) / denom;
 }
 
-HOST_DEVICE inline vec2 outer_billiards_hop(const vec2* verts, int n, const vec2& p, float curvature) {
-    return outer_billiards_reflect(verts[outer_billiards_tangent_vertex(verts, n, p)], p, curvature);
-}
-
-HOST_DEVICE inline vec2 outer_billiards_ray_origin(const vec2* verts, int n, int i) { return verts[i]; }
-
-struct SingularRay {
-    vec3 line;
-    vec3 cap;
-    vec2 origin;
-};
-
-HOST_DEVICE inline SingularRay outer_billiards_build_ray(const vec2* verts, int n, int i, float curvature) {
-    SingularRay ray;
-    const vec2 v = outer_billiards_ray_origin(verts, n, i);   // where the ray starts
-    const vec2 u = verts[(i + 1) % n];                        // the far end of the side it extends
-    ray.origin = v;
-
-    const vec3 m(v.y - u.y, u.x - v.x, v.x * u.y - v.y * u.x);
-
-    float scale = m.x * m.x + m.y * m.y + curvature * m.z * m.z;
-    scale = (scale > 1e-20f) ? 1.0f / sqrtf(scale) : 0.0f;
-    ray.line = vec3(m.x * scale, m.y * scale, m.z * scale);
-
-    const vec3 w(m.x, m.y, curvature * m.z);
-    ray.cap = vec3(v.y * w.z - w.y,
-                   w.x - v.x * w.z,
-                   v.x * w.y - v.y * w.x);
-    return ray;
-}
-
-HOST_DEVICE inline float outer_billiards_ray_distance(const SingularRay& ray, const vec2& q,
-                                                      float norm_q, float curvature) {
-    if (ray.cap.x * q.x + ray.cap.y * q.y + ray.cap.z >= 0.0f) {
-        const float height = ray.line.x * q.x + ray.line.y * q.y + ray.line.z;
-        return curved_arcsinh(fabsf(height) / sqrtf(norm_q), curvature);
-    }
-    return curved_distance(q, ray.origin, curvature);
-}
-
-HOST_DEVICE inline float outer_billiards_singular_distance(const SingularRay* rays, int count, const vec2& q,
-                                                           float curvature) {
-    const float norm_q = curved_norm(q, curvature);
-    if (norm_q <= 0.0f) return 1e30f;
+HOST_DEVICE inline float outer_billiards_singular_distance(const vec2* verts, int n, int pivot,
+                                                           const vec2& p, float curvature) {
+    const float norm_p = curved_norm(p, curvature);
+    if (norm_p <= 0.0f) return 1e30f;
+    const vec2 v = verts[pivot];
     float best = 1e30f;
-    for (int i = 0; i < count; i++) {
-        const float d = outer_billiards_ray_distance(rays[i], q, norm_q, curvature);
+    for (int i = 0; i < n; i++) {
+        if (i == pivot) continue;
+        const vec2 u = verts[i];
+
+        const vec3 m(v.y - u.y, u.x - v.x, v.x * u.y - v.y * u.x);
+        const float scale = m.x * m.x + m.y * m.y + curvature * m.z * m.z;
+        if (scale <= 1e-20f) continue;   // coincident vertices span no line
+
+        const vec3 w(m.x, m.y, curvature * m.z);
+        const float past_v = (v.y * w.z - w.y) * p.x + (w.x - v.x * w.z) * p.y + (v.x * w.y - v.y * w.x);
+        const float past_u = (u.y * w.z - w.y) * p.x + (w.x - u.x * w.z) * p.y + (u.x * w.y - u.y * w.x);
+        if (past_v < 0.0f && past_u > 0.0f) continue;
+
+        const float height = (m.x * p.x + m.y * p.y + m.z) / sqrtf(scale);
+        const float d = curved_arcsinh(fabsf(height) / sqrtf(norm_p), curvature);
         if (d < best) best = d;
     }
     return best;
@@ -138,9 +106,7 @@ HOST_DEVICE inline float outer_billiards_singular_distance(const SingularRay* ra
 
 struct SingularityGraphParams {
     vec2        verts[MAX_BILLIARD_VERTICES];   // counterclockwise and convex
-    SingularRay rays[MAX_BILLIARD_VERTICES];
     int         n;
-    int         ray_count;
     float       curvature;   // 0=euclidean, negative=hyperbolic
     vec2  lx_ty, rx_by;
     float world_per_pixel;
