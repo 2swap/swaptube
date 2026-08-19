@@ -68,6 +68,8 @@ __global__ void singularity_graph_kernel(
             const float back = Cuda::curved_closeness(start, p, start_norm, params.curvature);
             if (back < return_tol_sq) return_hop = k + 1;
         }
+        // Nothing left for either layer to accumulate.
+        if (k + 1 >= web_steps && (!want_islands || return_hop != 0)) break;
     }
 
     const int index = py * wh.x + px;
