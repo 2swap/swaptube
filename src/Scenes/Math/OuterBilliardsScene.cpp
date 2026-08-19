@@ -83,7 +83,7 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
     const float island_opacity = (float)state["island_opacity"];
     const float depth          = (float)state["singularity_depth"];
 
-    const int max_period = 100;
+    const int max_period = 300;
 
     const bool wants_web     = web_opacity    > 0.01 && depth > 0.0f;
     const bool wants_islands = island_opacity > 0.01 && max_period > 1 && depth > 0.0f;

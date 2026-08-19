@@ -42,7 +42,9 @@ __global__ void singularity_graph_kernel(
 
     float nearest = 1e30f;
 
-    float closest_return = 1e30f;
+    // curved_closeness is (d/2)^2 for small gaps, so this is a half pixel return.
+    const float return_tol = 0.5f * wpp / fmaxf(to_screen, 1e-20f);
+    const float return_tol_sq = 0.25f * return_tol * return_tol;
     int   return_hop     = 0;
 
     Cuda::vec2 p = start;
@@ -66,9 +68,10 @@ __global__ void singularity_graph_kernel(
             }
         }
         p = Cuda::outer_billiards_hop(params.verts, params.n, p, params.curvature);
-        if (want_islands && k < params.max_period) {
+        // The first return is the period; later multiples of it are not.
+        if (want_islands && return_hop == 0 && k < params.max_period) {
             const float back = Cuda::curved_closeness(start, p, start_norm, params.curvature);
-            if (back < closest_return) { closest_return = back; return_hop = k + 1; }
+            if (back < return_tol_sq) return_hop = k + 1;
         }
     }
 
