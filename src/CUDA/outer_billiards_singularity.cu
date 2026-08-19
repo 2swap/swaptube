@@ -9,6 +9,10 @@ __device__ __forceinline__ float line_coverage(float distance, float half_width,
     return Cuda::clamp((half_width + 0.5f * world_per_pixel - distance) / world_per_pixel, 0.0f, 1.0f);
 }
 
+static constexpr float SINGULARITY_LINE_WIDTH   = 1.2f;
+static constexpr float SINGULARITY_GLOW         = 0.0f;
+static constexpr float SINGULARITY_PERIOD_OCTAVES = 3.0f;
+
 __global__ void singularity_graph_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh,
     const Cuda::SingularityGraphParams params,
@@ -25,9 +29,9 @@ __global__ void singularity_graph_kernel(
     if (pivot < 0) return;
 
     const float wpp        = params.world_per_pixel;
-    const float half_width = fmaxf(params.line_width, 0.0f) * 0.5f * wpp;
+    const float half_width = SINGULARITY_LINE_WIDTH * 0.5f * wpp;
     const float halo       = fmaxf(4.0f * half_width, 1e-20f);
-    const bool  want_glow  = params.glow > 0.001f;
+    const bool  want_glow  = SINGULARITY_GLOW > 0.001f;
 
     const float to_screen = Cuda::curved_screen_scale(start, params.curvature);
 
@@ -53,7 +57,7 @@ __global__ void singularity_graph_kernel(
                 if (weight > 0.0f) {
                     float intensity = line_coverage(d, half_width, wpp);
                     if (want_glow) {
-                        const float soft = params.glow * __expf(-d / halo);
+                        const float soft = SINGULARITY_GLOW * __expf(-d / halo);
                         intensity = 1.0f - (1.0f - intensity) * (1.0f - soft);
                     }
                     intensity *= weight;
@@ -73,7 +77,7 @@ __global__ void singularity_graph_kernel(
     if (return_hop > 0) {
         const float fill = 1.0f - line_coverage(nearest, half_width, wpp);
         if (fill > 0.0f) {
-            out = Cuda::color_combine(out, Cuda::rainbow(__log2f((float)return_hop) / params.period_octaves),
+            out = Cuda::color_combine(out, Cuda::rainbow(__log2f((float)return_hop) / SINGULARITY_PERIOD_OCTAVES),
                                       fill * params.island_opacity);
         }
     }

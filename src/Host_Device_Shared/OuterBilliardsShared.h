@@ -146,16 +146,10 @@ struct SingularityGraphParams {
     float world_per_pixel;
     float    web_opacity;
     float    depth;
-    float    line_width;
-    float    glow;
-    float    fade;
-    float    rainbow;
-    float    rainbow_period;
     uint32_t line_color;
     float    island_opacity;
     int      max_period;
     int      island_depth;
-    float    period_octaves;
 };
 
 SHARED_FILE_SUFFIX

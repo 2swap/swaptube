@@ -23,22 +23,10 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
         {"path_opacity", "1"},
         {"ball_distance","0"},
         {"ball_opacity", "1"},
-        {"flow_opacity",    "0"},
-        {"flow_iterations", "0"},
-        {"flow_scale",      "0"},
-        {"flow_continuous", "1"},
-        {"flow_samples",    "1"},
-        {"flow_shade_by_distance", "1"},
         {"curvature",        "0"},
         {"singularity_opacity",       "0"},
         {"singularity_depth",         "0"},
-        {"singularity_width",         "1.2"},
-        {"singularity_glow",          "0"},
-        {"singularity_fade",          "0"},
-        {"singularity_rainbow",       "0"},
-        {"singularity_rainbow_period","24"},
         {"island_opacity",      "0"},
-        {"island_period_scale", "3"},
     });
 }
 
@@ -121,17 +109,11 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
 
     params.web_opacity    = wants_web ? web_opacity : 0.0f;
     params.depth          = depth;
-    params.line_width     = (float)state["singularity_width"];
-    params.glow           = (float)state["singularity_glow"];
-    params.fade           = (float)state["singularity_fade"];
-    params.rainbow        = (float)state["singularity_rainbow"];
-    params.rainbow_period = std::fmax((float)state["singularity_rainbow_period"], 1e-3f);
     params.line_color     = 0xffffffff;
 
     params.island_opacity = wants_islands ? island_opacity : 0.0f;
     params.max_period     = max_period;
     params.island_depth   = std::min((int)std::ceil(depth * ISLAND_BOUNDARY_DEPTH), MAX_ISLAND_DEPTH);
-    params.period_octaves = std::fmax((float)state["island_period_scale"], 1e-3f);
 
     outer_billiards_singularity_render(gpu_pix.get_ptr(), gpu_pix.get_wh(), params);
 }
