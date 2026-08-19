@@ -12,7 +12,7 @@
 using std::complex;
 
 HOST_DEVICE inline uint32_t OKLABtoRGB(int alpha, float L, float a, float b);
-extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
+extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
 extern "C" void draw_rectangle(uint32_t* pix, const ivec2& wh, const ivec2& top_left, const ivec2& bottom_right, const uint32_t color);
 extern "C" void draw_quadrilateral(uint32_t* pix, const ivec2& wh, const vec2& p0, const vec2& p1, const vec2& p2, const vec2& p3, const uint32_t color);
 extern "C" void draw_triangle(uint32_t* pix, const ivec2& wh, const vec2& p0, const vec2& p1, const vec2& p2, const uint32_t color);
@@ -213,35 +213,35 @@ void TwoDAlgebraScene::draw() {
     const int xx_opacity = ((int) state["xx_opacity"]) << 24;
     if (xx_opacity != 0){
         const vec2 xx_pos = vec2(state["xx_x"], -state["xx_y"])*diagram_unit+diagram_origin;
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), xx_pos, point_radius, xx_opacity + 0x00dd44dd);
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), xx_pos, point_radius, xx_opacity + 0x00dd44dd, 1.0f);
         write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(xx_opacity, get_label(state["label_type"],0)), xx_pos+textbox_offset*0.5, textbox_size, 1, 0);
     }
 
     const int yy_opacity = ((int) state["yy_opacity"]) << 24;
     if (yy_opacity != 0){
         const vec2 yy_pos = vec2(state["yy_x"], -state["yy_y"])*diagram_unit+diagram_origin;
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), yy_pos, point_radius, yy_opacity + 0x00dddd44);
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), yy_pos, point_radius, yy_opacity + 0x00dddd44, 1.0f);
         write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(yy_opacity, get_label(state["label_type"],2)), yy_pos+textbox_offset, textbox_size, 1, 0);
     }
 
     const int xy_opacity = ((int) state["xy_opacity"]) << 24;
     if (xy_opacity != 0){
         const vec2 xy_pos = vec2(state["xy_x"], -state["xy_y"])*diagram_unit+diagram_origin;
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), xy_pos, point_radius, xy_opacity + 0x00ccccee);
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), xy_pos, point_radius, xy_opacity + 0x00ccccee, 1.0f);
         write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(xy_opacity, get_label(state["label_type"],1)), xy_pos+textbox_offset, textbox_size, 1, 0);
     }
     
     const int xdrag_opacity = ((int) state["xdrag_opacity"]) << 24;
     if (xdrag_opacity != 0){
         const vec2 xdrag_pos = drag_times_x*vec2(1,-1)*diagram_unit+diagram_origin;
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), xdrag_pos, point_radius, xdrag_opacity+colorlerp(0x00ccccee,0x00dd44dd,state["xdrag_color"]));
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), xdrag_pos, point_radius, xdrag_opacity+colorlerp(0x00ccccee,0x00dd44dd,state["xdrag_color"]), 1.0f);
         write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(xdrag_opacity, get_label(state["label_type"],3)), xdrag_pos+textbox_offset*0.5, textbox_size, 1, 0);
     }
 
     const int ydrag_opacity = ((int) state["ydrag_opacity"]) << 24;
     if (ydrag_opacity != 0){
         const vec2 ydrag_pos = drag_times_y*vec2(1,-1)*diagram_unit+diagram_origin;
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), ydrag_pos, point_radius, ydrag_opacity+colorlerp(0x00ccccee,0x00dddd44,state["ydrag_color"]));
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), ydrag_pos, point_radius, ydrag_opacity+colorlerp(0x00ccccee,0x00dddd44,state["ydrag_color"]), 1.0f);
         write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(ydrag_opacity, get_label(state["label_type"],4)), ydrag_pos+textbox_offset*0.5, textbox_size, 1, 0);
     }
 

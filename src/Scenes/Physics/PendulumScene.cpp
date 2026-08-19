@@ -12,7 +12,7 @@ PendulumScene::PendulumScene(PendulumState s, const vec2& dimensions) : Scene(di
                        {"rainbow", "1"}});
 }
 
-extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
+extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
 extern "C" void draw_quadrilateral(uint32_t* pix, const ivec2& wh, const vec2& p0, const vec2& p1, const vec2& p2, const vec2& p3, const uint32_t color);
 
 void PendulumScene::draw() {
@@ -32,7 +32,7 @@ void PendulumScene::draw() {
         double sin_theta = sin(theta);
         double cos_theta = cos(theta);
         vec2 delta = length * vec2(sin_theta, cos_theta);
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color);
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color, 1.0f);
         vec2 lateral = vec2(cos_theta, -sin_theta)*line_thickness/2;
         vec2 p0 = pos + lateral;
         vec2 p1 = pos - lateral;
@@ -41,7 +41,7 @@ void PendulumScene::draw() {
         vec2 p3 = pos + lateral;
         draw_quadrilateral(gpu_pix.get_ptr(), get_width_height(), p0, p1, p2, p3, pendulum_color);
     }
-    draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color);
+    draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, line_thickness*1.3, pendulum_color, 1.0f);
 }
 
 void PendulumScene::generate_tone(){

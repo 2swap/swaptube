@@ -10,7 +10,7 @@ using std::ostringstream;
 using std::fixed;
 using std::setprecision;
 
-extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
+extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
 extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
 extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
@@ -67,9 +67,9 @@ void StateSliderScene::draw_slider() {
     ivec2 br(wh.x - wh.y * .5, wh.y * .6 + 1);
     draw_rectangle(gpu_pix.get_ptr(), wh, tl, br, bar_color);
 
-    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.y * .5, wh.y * .5), wh.y * .1, bar_color);
-    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.x-wh.y*.5,wh.y*.5), wh.y * .1, bar_color);
+    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.y * .5, wh.y * .5), wh.y * .1, bar_color, 1.0f);
+    draw_circle(gpu_pix.get_ptr(), wh, ivec2(wh.x-wh.y*.5,wh.y*.5), wh.y * .1, bar_color, 1.0f);
 
     vec2 center(wh.y * .5 + normalized_value * (wh.x - wh.y), wh.y/2.);
-    draw_circle(gpu_pix.get_ptr(), wh, center, wh.y * .5, knob_color);
+    draw_circle(gpu_pix.get_ptr(), wh, center, wh.y * .5, knob_color, 1.0f);
 }

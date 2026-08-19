@@ -4,7 +4,7 @@
 extern "C" void cuda_render_path(uint32_t* pixels, const ivec2& wh, const vec2* rope, const int rope_length,
      const vec2& lx_ty, const vec2& rx_by, const uint32_t color, const float opacity, const float thickness, const bool closed);
 extern "C" void copy_pins(const vec2* h_pins, vec2* d_pins, const int pins_length);
-extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
+extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
 
 
 
@@ -30,7 +30,7 @@ void RopeScene::draw(){
         vec2(state["right_x"], state["bottom_y"]),
         0xFFFFFFFF, 1.0f, 2.0f, true);
     for (const auto& pin : rope.h_pins) {
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(pin), 5, 0xFFFF0000);
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(pin), 5, 0xFFFF0000, 1.0f);
     }
 }
 

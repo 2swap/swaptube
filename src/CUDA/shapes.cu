@@ -3,7 +3,7 @@
 #include "color.cuh"
 #include "common_graphics.cuh"
 
-__global__ void circle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda::vec2 center, const float radius_squared, const uint32_t color, const Cuda::ivec2 min_pos)
+__global__ void circle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda::vec2 center, const float radius_squared, const uint32_t color, const float opacity, const Cuda::ivec2 min_pos)
 {
     Cuda::ivec2 pos = min_pos + Cuda::ivec2(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
 
@@ -11,7 +11,7 @@ __global__ void circle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda::v
 
     Cuda::vec2 delta = pos - center;
     if (dot(delta, delta) <= radius_squared) {
-        overlay_pixel(pos, color, 1.0f, pix, wh);
+        overlay_pixel(pos, color, opacity, pix, wh);
     }
 }
 
@@ -36,8 +36,9 @@ __global__ void triangle_kernel(uint32_t* pix, const Cuda::ivec2 wh, const Cuda:
     }
 }
 
-extern "C" void draw_circle(uint32_t* pix, const Cuda::ivec2& wh, const Cuda::vec2& center, const float radius, const uint32_t color)
+extern "C" void draw_circle(uint32_t* pix, const Cuda::ivec2& wh, const Cuda::vec2& center, const float radius, const uint32_t color, const float opacity)
 {
+    if (opacity <= 0.0f) return;
     const Cuda::ivec2 min_pos(max(0, (int)floorf(center.x - radius)), max(0, (int)floorf(center.y - radius)));
     const Cuda::ivec2 max_pos(min(wh.x, (int)ceilf(center.x + radius)), min(wh.y, (int)ceilf(center.y + radius)));
 
@@ -47,7 +48,7 @@ extern "C" void draw_circle(uint32_t* pix, const Cuda::ivec2& wh, const Cuda::ve
     dim3 blockSize(16, 16);
     dim3 gridSize((size.x + blockSize.x - 1) / blockSize.x, (size.y + blockSize.y - 1) / blockSize.y);
     const float radius_squared = radius * radius;
-    circle_kernel<<<gridSize, blockSize>>>(pix, wh, center, radius_squared, color, min_pos);
+    circle_kernel<<<gridSize, blockSize>>>(pix, wh, center, radius_squared, color, opacity, min_pos);
 }
 
 extern "C" void draw_triangle(uint32_t* pix, const Cuda::ivec2& wh, const Cuda::vec2& p0, const Cuda::vec2& p1, const Cuda::vec2& p2, const uint32_t color)

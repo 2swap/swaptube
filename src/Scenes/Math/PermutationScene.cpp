@@ -5,7 +5,7 @@
 #include <vector>
 // #include <vector>
 
-extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
+extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
 extern "C" void cuda_draw_bezier(
     uint32_t* pix, const ivec2& wh, const vec2& p1, const vec2& p2, const vec2& p3, 
     const vec2& p4, const vec2& lx_ty, const vec2& rx_by);
@@ -78,7 +78,7 @@ void PermutationScene::draw() {
             current_piece_index++;
         }
         if (current_piece_index >= orbit.size()) {
-            draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, 5.0f, color);
+            draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, 5.0f, color, 1.0f);
             continue;
         }
         // print the piece index
@@ -107,6 +107,6 @@ void PermutationScene::draw() {
             control_points[2],
             state["m"]));
         //cout << "Drawing piece " << name << " at pixel position " << center.x << ", " << center.y << " with color " << std::hex << color << std::dec << endl;
-        draw_circle(gpu_pix.get_ptr(), get_width_height(), center, 5.0f, color);
+        draw_circle(gpu_pix.get_ptr(), get_width_height(), center, 5.0f, color, 1.0f);
     }
 }

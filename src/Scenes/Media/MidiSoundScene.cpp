@@ -8,7 +8,7 @@
 #include "../../IO/SFX.h"
 #include "../../IO/Writer.h"
 
-extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color);
+extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
 extern "C" void draw_rectangle(uint32_t* pix, const ivec2& wh, const ivec2& top_left, const ivec2& bottom_right, const uint32_t color);
 
 namespace {
@@ -98,7 +98,7 @@ void MidiSoundScene::draw() {
     // pitch as height, volume as thickness, colour by pitch.
     for (const Mark& point : drone_trace) {
         const float radius = 1.5f + 9.0f * static_cast<float>(clamp(point.volume, 0.0, 1.0)) * h / 540.0f;
-        draw_circle(gpu_pix.get_ptr(), wh, vec2(x_of(point.t_seconds), y_of(point.frequency_hz)), radius, rainbow(pitch_fraction(point.frequency_hz)));
+        draw_circle(gpu_pix.get_ptr(), wh, vec2(x_of(point.t_seconds), y_of(point.frequency_hz)), radius, rainbow(pitch_fraction(point.frequency_hz)), 1.0f);
     }
 
     for (const Mark& mark : note_marks) {
@@ -112,10 +112,10 @@ void MidiSoundScene::draw() {
             const double bloom = age / note_bloom_seconds;
             draw_circle(gpu_pix.get_ptr(), wh, center,
                         static_cast<float>((5.0 + 45.0 * bloom) * h / 540.0),
-                        argb(static_cast<int>(200 * (1.0 - bloom) * loudness), 255, 255, 255));
+                        argb(static_cast<int>(200 * (1.0 - bloom) * loudness), 255, 255, 255), 1.0f);
         }
 
-        draw_circle(gpu_pix.get_ptr(), wh, center, (3.0f + 8.0f * loudness) * h / 540.0f, OPAQUE_WHITE);
+        draw_circle(gpu_pix.get_ptr(), wh, center, (3.0f + 8.0f * loudness) * h / 540.0f, OPAQUE_WHITE, 1.0f);
     }
 
     // Playhead at the right edge, where the newest sound lands.
