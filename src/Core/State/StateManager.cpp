@@ -72,12 +72,16 @@ bool StateManager::contains(const string& varname) const {
 
 void StateManager::print_state() const {
     /* Print out all variable names alphabetically along with their current value and their computation status. */
-    // TODO alphabeticalize
     cout << "Variables:" << endl;
     cout << "-----------------------" << endl;
+    vector<string> keys;
     for (const auto& variable : variables) {
-        const VariableContents& vc = variable.second;
-        cout << left << setw(32) << variable.first
+        keys.push_back(variable.first);
+    }
+    sort(keys.begin(), keys.end());
+    for (const string& key : keys) {
+        const VariableContents& vc = variables.at(key);
+        cout << left << setw(32) << key
              << setw(38) << vc.equation.to_string()
              << " : " << setw(10) << vc.value
              << (vc.fresh ? " (Fresh)" : " (Stale)")
