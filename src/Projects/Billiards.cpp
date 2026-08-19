@@ -64,7 +64,13 @@ void render_video() {
     cs.render_microblock();
     // Regular hexagon
     ibs->manager.transition(MICRO, {{"center_y", "0"}, {"zoom", "-.5"}});
-    ibs->manager.transition(MICRO, {{"v0.x", "-2"}, {"v0.y", "-1"}, {"v1.x", "0"}, {"v1.y", "-2.2"}, {"v2.x", "2"}, {"v2.y", "-1"}, {"v3.x", "2"}, {"v3.y", "1"}, {"v4.x", "0"}, {"v4.y", "2.2"}, {"v5.x", "-2"}, {"v5.y", "1"}});
+    StateSet regular_hexagon;
+    for (int i = 0; i < 6; i++) {
+        double theta = (double)i * (2.0 * M_PI / 6.0);
+        regular_hexagon["v" + to_string(i) + ".x"] = to_string(1.7 * cos(theta));
+        regular_hexagon["v" + to_string(i) + ".y"] = to_string(1.7 * sin(theta));
+    }
+    ibs->manager.transition(MICRO, regular_hexagon);
     cs.render_microblock();
 
     stage_macroblock(FileBlock("When you remove the pockets,"), 1);
@@ -72,7 +78,7 @@ void render_video() {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("this system is known to mathematicians as _inner_ Billiards."), 1);
-    ibs->manager.transition(MICRO, {{"v2.x", "1.8"}, {"v2.y", "-1.5"}});
+    ibs->manager.transition(MICRO, "ball_angle", "0.6");
     //shared_ptr<LatexScene> ls = make_shared<LatexScene>("\\text{Inner Billiards}", vec2(1, .2));
     //cs.add_scene_fade_in(MICRO, ls, "ls", vec2(.5, .1));
     cs.render_microblock();
@@ -89,7 +95,7 @@ void render_video() {
     stage_macroblock(SilenceBlock(1), 1);
     shared_ptr<OuterBilliardsScene> obs = make_shared<OuterBilliardsScene>();
     obs->manager.set(simple_table);
-    obs->manager.set({{"zoom", "-.5"}, {"ball_start_x", to_string(bsx)}, {"ball_start_y", to_string(bsy)}});
+    obs->manager.set({{"ball_start_x", to_string(bsx)}, {"ball_start_y", to_string(bsy)}});
     //cs.fade_subscene(MICRO, "ls", 0);
     cs.fade_subscene(MICRO, "ibs", 0);
     cs.add_scene(obs, "obs", vec2(.5, .5), true);
@@ -185,11 +191,12 @@ void render_video() {
     obs->manager.transition(MICRO, "table_opacity", "1");
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(1), 2);
     obs->manager.set("ball_distance", "0");
     obs->manager.set("path_length", "8");
-    cs.fade_subscene(MICRO, "gs", 0);
     obs->manager.transition(MICRO, "ball_opacity", "1");
+    cs.render_microblock();
+    cs.fade_subscene(MICRO, "gs", 0);
     cs.render_microblock();
     cs.remove_subscene("gs");
 
