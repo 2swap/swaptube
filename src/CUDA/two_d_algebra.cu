@@ -5,6 +5,7 @@
 #include "../Core/State/ResolvedStateEquationComponent.c"
 #include "../Host_Device_Shared/vec.h"
 #include "color.cuh"
+#include "four_d_shared.cuh"
 
 
 
@@ -33,9 +34,114 @@ __device__ Cuda::vec2 two_d_operation(
 
 }
 
+__device__ uint32_t two_d_to_color(Cuda::vec2 a, Cuda::vec2 channels,int brightness) {
+
+    // float ax = min(1.0,fade*a.x);
+    // float ay = min(1.0,fade*a.y);
+    // float az = min(1.0,fade*a.z);
+
+    float ax = min(1.0,smallness(a.y,2.0))*channels.y;
+    float ay = 0.0;
+    float az = min(1.0,smallness(a.x,2.0))*channels.x;
+
+    return Cuda::OKLABtoRGB(
+        min(1.0,(ax+ay+az)*0.5)*brightness,
+        1.0,
+        (ax-ay)*0.866,
+        (ax+ay)*0.5-az
+    );
+}
+
+__device__ Cuda::vec2 two_d_mult(Cuda::vec2 a, Cuda::vec2 b,  Cuda::vec2 xx, Cuda::vec2 xy, Cuda::vec2 yy){
+    return a.x*b.x*xx + (a.x*b.y + a.y*b.x)*xy + a.y*b.y*yy;
+}
+
+__device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, Cuda::vec2 xx, Cuda::vec2 xy, Cuda::vec2 yy) {
 
 
-__global__ void two_render_real_valued_function(
+    if (equation == 1){
+
+        Cuda::vec2 sinv = v;
+        Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
+        Cuda::vec2 v_pow = v;
+
+        for (int t = 3; t < 60; t+=2){
+            v_pow = two_d_mult(v_pow, v2,xx,xy,yy)/((1.0-t)*t);
+            sinv += v_pow;  
+            if (abs(v_pow.x) > 100000000){
+                return Cuda::vec2(100000000,100000000) ;
+            }
+        }
+        // if (to_print){
+        //     printf("%f %f %f %f\n",sinv.x,sinv.y,sinv.z,sinv.w);
+        // }
+        return sinv;
+
+    } else if (equation == 2){
+
+        Cuda::vec2 cosv(1,0);
+        Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
+        Cuda::vec2 v_pow = v;
+
+        for (int t = 2; t < 41; t+=2){
+            v_pow = two_d_mult(v_pow, v2,xx,xy,yy)/((1.0-t)*t);
+            cosv = cosv + v_pow;
+        }
+        return cosv;
+
+    }
+
+    Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
+    Cuda::vec2 v3 = two_d_mult(v,v2,xx,xy,yy);
+    Cuda::vec2 v4 = two_d_mult(v2,v2,xx,xy,yy);
+
+    Cuda::vec2 v5 = two_d_mult(v3,v2,xx,xy,yy);
+    Cuda::vec2 v6 = two_d_mult(v4,v2,xx,xy,yy);
+    Cuda::vec2 v7 = two_d_mult(v5,v2,xx,xy,yy);
+    Cuda::vec2 v8 = two_d_mult(v6,v2,xx,xy,yy);
+    Cuda::vec2 v9 = two_d_mult(v7,v2,xx,xy,yy);
+    Cuda::vec2 v10 = two_d_mult(v5,v5,xx,xy,yy);
+    Cuda::vec2 v12 = two_d_mult(v7,v5,xx,xy,yy);
+
+
+
+    if (equation == 3){
+        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320;
+
+    } else if (equation == 3){
+        // return v - v2 - v5 + v10;
+        return v2 - v4 - v6 + v12;
+        // return -2 + v*6 - v2*2 - v3*3 + v6;
+        // return 1 + v + v2 + v3 + v4;
+        // return 1 - v + v3 - v4 + v5 - v7 + v8;
+        // return 1 - v + v2 - v3 + v4;
+
+    }
+    
+    return v;
+
+}
+
+__global__ void two_d_smallness_graph(
+    uint32_t* pixels, const Cuda::ivec2 wh,
+    int mode, Cuda::vec2 channels,
+    Cuda::vec2 xx, Cuda::vec2 xy, Cuda::vec2 yy, 
+     int brightness,
+    const Cuda::vec2 lx_ty, const Cuda::vec2 rx_by
+) {
+
+    Cuda::ivec2 pixel(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
+    if (pixel.x >= wh.x || pixel.y >= wh.y) return;
+
+    Cuda::vec2 point = pixel_to_point_in_screen(pixel, lx_ty, rx_by, wh);
+
+    Cuda::vec2 op_output = two_d_function(point*3, mode, xx, xy, yy);
+
+    pixels[pixel.y * wh.x + pixel.x] =  two_d_to_color(op_output,channels,brightness);
+
+}
+
+__global__ void two_d_algebra_grid(
     uint32_t* pixels, const Cuda::ivec2 wh,
     Cuda::vec2 dragger_pos, 
     float dragger_type, float dragger_brightness, 
@@ -116,8 +222,10 @@ extern "C" void two_d_algebra(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
     Cuda::vec2 dragger_pos, 
     float dragger_type, float dragger_brightness, 
-    // float algebra,
     Cuda::vec4 dragger_inverse,
+    int mode,
+    Cuda::vec2 channels, 
+    Cuda::vec2 xx,  Cuda::vec2 xy,  Cuda::vec2 yy, 
     float number_line,
     int brightness,
     const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by
@@ -126,14 +234,22 @@ extern "C" void two_d_algebra(
 
     dim3 block_size(16, 16);
     dim3 grid_size((wh.x + block_size.x - 1) / block_size.x, (wh.y + block_size.y - 1) / block_size.y);
-    two_render_real_valued_function<<<grid_size, block_size>>>( d_pixels, wh, 
 
-        dragger_pos, 
-        dragger_type, dragger_brightness, 
-        dragger_inverse,
-        number_line,
-        brightness,
-        lx_ty, rx_by );
+    if (mode == 0){
+        two_d_algebra_grid<<<grid_size, block_size>>>( d_pixels, wh, 
+
+            dragger_pos, 
+            dragger_type, dragger_brightness, 
+            dragger_inverse,
+            number_line,
+            brightness << 24,
+            lx_ty, rx_by );
+    } else {
+        two_d_smallness_graph<<<grid_size, block_size>>>( d_pixels, wh, 
+            mode, channels, xx, xy, yy, brightness,
+            lx_ty, rx_by );
+
+    }
 
 }
 
