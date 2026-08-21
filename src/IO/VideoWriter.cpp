@@ -176,7 +176,7 @@ void VideoWriter::add_frame(uint32_t* device_pixels) {
 
     static auto last_print_time = chrono::steady_clock::time_point::min();
     auto now = chrono::steady_clock::now();
-    if(is_smoketest() || last_print_time == chrono::steady_clock::time_point::min() || chrono::duration_cast<chrono::seconds>(now - last_print_time).count() >= 1) {
+    if(last_print_time == chrono::steady_clock::time_point::min() || chrono::duration_cast<chrono::seconds>(now - last_print_time).count() >= 1) {
         Pixels p(get_video_dimensions_pixels());
         cuda_copy_pixels_to_host(p.pixels.data(), get_video_width_pixels() * get_video_height_pixels(), device_pixels);
         p.print_to_terminal();
