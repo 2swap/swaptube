@@ -42,7 +42,6 @@ extern "C" void preprocess_argb_to_p010(
 );
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
-const bool USE_LIVE = false;
 bool VideoWriter::encode_and_write_frame(AVFrame* frame){
     int ret = avcodec_send_frame(videoCodecContext, frame);
     //if (ret == AVERROR_EOF) return false;
@@ -72,11 +71,6 @@ bool VideoWriter::encode_and_write_frame(AVFrame* frame){
 }
 
 VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int video_width_pixels, int video_height_pixels, int video_framerate_fps) : fc(fc_) {
-    if(USE_LIVE) {
-        lp = new LivePlayer(ivec2(video_width_pixels, video_height_pixels));
-        return;
-    }
-
     #ifdef USE_AMD
     setenv("AMD_DEBUG", "notiling", 1);
     #endif
@@ -178,23 +172,18 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
 }
 
 void VideoWriter::add_frame(uint32_t* device_pixels) {
-    bool live = rendering_on();
+    if (!is_for_real()) return; // Don't do anything in dev mode
 
     static auto last_print_time = chrono::steady_clock::time_point::min();
     auto now = chrono::steady_clock::now();
-    if(!live || last_print_time == chrono::steady_clock::time_point::min() || chrono::duration_cast<chrono::seconds>(now - last_print_time).count() >= 1) {
+    if(is_smoketest() || last_print_time == chrono::steady_clock::time_point::min() || chrono::duration_cast<chrono::seconds>(now - last_print_time).count() >= 1) {
         Pixels p(get_video_dimensions_pixels());
         cuda_copy_pixels_to_host(p.pixels.data(), get_video_width_pixels() * get_video_height_pixels(), device_pixels);
         p.print_to_terminal();
         last_print_time = now;
     }
 
-    if (!live) return; // Don't encode video in smoketest
-
-    if(USE_LIVE) {
-        lp->accept_frame(device_pixels, false);
-        return;
-    }
+    if (is_smoketest()) return; // Don't encode video in smoketest
 
     AVFrame* gpu_frame = av_frame_alloc();
     if (!gpu_frame) {
@@ -275,11 +264,6 @@ void VideoWriter::add_frame(uint32_t* device_pixels) {
 }
 
 VideoWriter::~VideoWriter() {
-    if(USE_LIVE) {
-        delete lp;
-        return;
-    }
-
     cout << "Cleaning up VideoWriter..." << endl;
 
     while(encode_and_write_frame(NULL));
