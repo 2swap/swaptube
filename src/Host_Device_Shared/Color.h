@@ -9,19 +9,11 @@
 
 SHARED_FILE_PREFIX
 
-HOST_DEVICE inline uint32_t argb(int a, int r, int g, int b){return (a<<24)|
-                                                   (r<<16)|
-                                                   (g<<8 )|
-                                                   (b    );}
+HOST_DEVICE inline uint32_t argb(int a, int r, int g, int b){return (a<<24) | (r<<16) | (g<<8) | b;}
 HOST_DEVICE inline int geta(int col){return (col&0xff000000)>>24;}
 HOST_DEVICE inline int getr(int col){return (col&0x00ff0000)>>16;}
 HOST_DEVICE inline int getg(int col){return (col&0x0000ff00)>>8 ;}
 HOST_DEVICE inline int getb(int col){return (col&0x000000ff)    ;}
-
-HOST_DEVICE inline uint32_t rainbow(float x){return argb(255,
-                                            sin((x+1/3.)*M_PI*2)*128.+128,
-                                            sin((x+2/3.)*M_PI*2)*128.+128,
-                                            sin((x     )*M_PI*2)*128.+128);}
 
 HOST_DEVICE inline uint32_t colorlerp(int col1, int col2, float w){return argb(round(lerp(geta(col1), geta(col2), w)),
                                                                       round(lerp(getr(col1), getr(col2), w)),
@@ -88,7 +80,6 @@ HOST_DEVICE inline uint32_t pendulum_color(double angle1, double angle2, double 
 }
 
 HOST_DEVICE inline float linear_srgb_to_srgb(float x) {
-    return x;
     if (x >= 0.0031308)
         return 1.055*pow(x, 1.0/2.4) - 0.055;
     return 12.92 * x;
@@ -110,6 +101,11 @@ HOST_DEVICE inline uint32_t OKLABtoRGB(int alpha, float L, float a, float b)
         clamp(static_cast<int>(round(255*linear_srgb_to_srgb(-1.2684380046f * l + 2.6097574011f * m - 0.3413193965f * s))), 0, 255),
         clamp(static_cast<int>(round(255*linear_srgb_to_srgb(-0.0041960863f * l - 0.7034186147f * m + 1.7076147010f * s))), 0, 255)
     );
+}
+
+HOST_DEVICE inline uint32_t rainbow(float x, int alpha = 255, float lightness = 0.8, float saturation = 0.25){
+    float angle = x * 6.2831853071796;
+    return OKLABtoRGB(alpha, lightness, saturation*sin(angle), saturation*cos(angle));
 }
 
 SHARED_FILE_SUFFIX

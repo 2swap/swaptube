@@ -26,6 +26,7 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
         {"curvature",        "0"},
         {"singularity_opacity",       "0"},
         {"singularity_depth",         "0"},
+        {"singularity_rainbow",       "0"},
         {"island_opacity",      "0"},
     });
 }
@@ -92,6 +93,7 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
     params.web_opacity    = wants_web ? web_opacity : 0.0f;
     params.depth          = depth;
     params.line_color     = 0xffffffff;
+    params.singularity_rainbow = (float)state["singularity_rainbow"];
 
     params.island_opacity = wants_islands ? island_opacity : 0.0f;
     params.max_period     = max_period;

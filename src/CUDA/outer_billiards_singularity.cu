@@ -9,10 +9,6 @@ __device__ __forceinline__ float line_coverage(float distance, float half_width,
     return Cuda::clamp((half_width + 0.5f * world_per_pixel - distance) / world_per_pixel, 0.0f, 1.0f);
 }
 
-// Everything below is only ever evaluated per-pixel inside this kernel, so it
-// lives here rather than in OuterBilliardsShared.h alongside the host-visible
-// pivot/reflect functions.
-
 __device__ __forceinline__ float curved_arcsinh(float x, float curvature) {
     const float k = -curvature;
     if (k < 1e-9f) return x;
@@ -82,11 +78,6 @@ __device__ __forceinline__ float outer_billiards_ray_distance(const SingularRay&
     return curved_distance(q, ray.origin, curvature);
 }
 
-// A point is singular exactly where the tangent-vertex choice is tied between
-// two candidates, i.e. where it sits on the boundary ray between the current
-// pivot's wedge and one of its two neighbors. So instead of checking a point
-// against every edge's ray, build only the two rays that bound the wedge the
-// already-known pivot lives in and take the closer one.
 __device__ __forceinline__ float outer_billiards_pivot_distance(const Cuda::vec2* verts, int n, int pivot,
                                                                 const Cuda::vec2& q, float norm_q, float curvature) {
     const int prev = (pivot - 1 + n) % n;
@@ -97,9 +88,7 @@ __device__ __forceinline__ float outer_billiards_pivot_distance(const Cuda::vec2
     return fminf(dl, dr);
 }
 
-static constexpr float SINGULARITY_LINE_WIDTH   = 1.2f;
-static constexpr float SINGULARITY_GLOW         = 0.0f;
-static constexpr float SINGULARITY_PERIOD_OCTAVES = 3.0f;
+static constexpr float SINGULARITY_GLOW         = 2.f;
 
 __global__ void singularity_graph_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh,
@@ -117,7 +106,7 @@ __global__ void singularity_graph_kernel(
     if (pivot < 0) return;
 
     const float wpp        = params.world_per_pixel;
-    const float half_width = SINGULARITY_LINE_WIDTH * 0.5f * wpp;
+    const float half_width = 0.6f * wpp;
     const float halo       = fmaxf(4.0f * half_width, 1e-20f);
     const bool  want_glow  = SINGULARITY_GLOW > 0.001f;
 
@@ -127,6 +116,7 @@ __global__ void singularity_graph_kernel(
     const float start_norm = Cuda::curved_norm(start, params.curvature);
 
     float web_intensity = 0.0f;
+    int   web_hop        = 0;
 
     float nearest = 1e30f;
 
@@ -154,7 +144,7 @@ __global__ void singularity_graph_kernel(
                         intensity = 1.0f - (1.0f - intensity) * (1.0f - soft);
                     }
                     intensity *= weight;
-                    if (intensity > web_intensity) web_intensity = intensity;
+                    if (intensity > web_intensity) { web_intensity = intensity; web_hop = k; }
                 }
             }
         }
@@ -166,12 +156,17 @@ __global__ void singularity_graph_kernel(
     }
 
     const int index = py * wh.x + px;
-    uint32_t out = pixels[index];
+    uint32_t out = 0x00000000;
     if (return_hop > 0) {
-        out = Cuda::color_combine(out, Cuda::rainbow(__log2f((float)return_hop) / SINGULARITY_PERIOD_OCTAVES), params.island_opacity);
+        out = Cuda::rainbow(return_hop*.03, 255 * params.island_opacity);
     }
     if (web_intensity > 0.0f) {
-        out = Cuda::color_combine(out, params.line_color, Cuda::clamp(web_intensity * params.web_opacity, 0.0f, 1.0f));
+        uint32_t web_color = params.line_color;
+        if (params.singularity_rainbow > 0.001f) {
+            const uint32_t rainbow_color = Cuda::rainbow(web_hop*.05, 255);
+            web_color = Cuda::colorlerp(params.line_color, rainbow_color, params.singularity_rainbow);
+        }
+        out = Cuda::color_combine(out, web_color, Cuda::clamp(web_intensity * params.web_opacity, 0.0f, 1.0f));
     }
     pixels[index] = out;
 }

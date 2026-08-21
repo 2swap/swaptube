@@ -56,6 +56,7 @@ struct SingularityGraphParams {
     float    web_opacity;
     float    depth;
     uint32_t line_color;
+    float    singularity_rainbow;
     float    island_opacity;
     int      max_period;
     int      island_depth;

@@ -3,8 +3,10 @@
 #include "../Scenes/Math/GraphScene.h"
 #include "../Scenes/Common/CompositeScene.h"
 #include "../Scenes/Media/LatexScene.h"
+#include "../Core/Smoketest.h"
 
 void render_video() {
+    set_for_real(false);
     CompositeScene cs;
 
     shared_ptr<InnerBilliardsScene> ibs = make_shared<InnerBilliardsScene>();
@@ -314,6 +316,7 @@ void render_video() {
         {"v2.x",  "1"}, {"v2.y", "-1"},
         {"v3.x",  "1"}, {"v3.y",  "1"},
     });
+    obs->manager.transition(MICRO, "island_opacity", ".4");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("What happens when a ball is right on the edge of two regions?"));
@@ -333,18 +336,19 @@ void render_video() {
     obs->manager.transition(MICRO, {{"ball_start_y", "-2"}, {"ball_start_x", "3"}});
     cs.render_microblock();
 
+    set_for_real(true);
+
     stage_macroblock(FileBlock("After one iteration, it looks very normal..."));
-    obs->manager.set("path_length", "<ball_distance>");
-    obs->manager.transition(MICRO, "ball_distance", "1");
+    obs->manager.set("ball_distance", "<path_length>");
+    obs->manager.transition(MICRO, "path_length", "1");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("But after two, we have this..."));
-    obs->manager.transition(MICRO, "ball_distance", "2");
+    obs->manager.transition(MICRO, "path_length", "1.4");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("The ball traces along the edge of the table."));
     StateSet undo = obs->manager.transition(MICRO, {{"zoom", "0"}, {"center_x", "-.5"}});
-    obs->manager.transition(MICRO, "ball_distance", "1.4");
     cs.render_microblock();
     cs.render_microblock();
     obs->manager.transition(MICRO, undo);
@@ -356,57 +360,83 @@ void render_video() {
         cs.render_microblock();
         cs.render_microblock();
     for(int i = 0; i < 2; i++) {
-        obs->manager.transition(MICRO, "ball_distance", "1.5");
+        obs->manager.transition(MICRO, "path_length", "1.5");
         cs.render_microblock();
         cs.render_microblock();
-        obs->manager.transition(MICRO, "ball_distance", "1.3");
+        obs->manager.transition(MICRO, "path_length", "1.3");
         cs.render_microblock();
         cs.render_microblock();
     }
 
     stage_macroblock(FileBlock("It's undefined- we call it a singularity."));
+    obs->manager.transition(MICRO, "path_length", "1.4");
     cs.render_microblock();
+    cs.render_microblock();
+    obs->manager.transition(MICRO, "path_opacity", "0");
+    cs.render_microblock();
+    obs->manager.set("path_length", "0");
 
     stage_macroblock(FileBlock("Notice how this starting point is an immediate singularity,"));
-    obs->manager.transition(MICRO, {{"ball_start_x", "4"}, {"ball_start_y", ".999"}, {"ball_distance", "1"}});
+    obs->manager.set({{"ball_start_x", "4"}, {"ball_start_y", "1"}, {"path_length", "0"}});
+    obs->manager.transition(MICRO, "path_opacity", "1");
+    cs.render_microblock();
+    obs->manager.transition(MICRO, "path_length", ".4");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("as is any point on one of these 4 lines."));
-    obs->manager.transition(MICRO, {{"singularity_opacity", "1"}, {"island_opacity", "0.2"}});
+    obs->manager.transition(MICRO, {{"singularity_opacity", "1"}, {"island_opacity", "0.2"}, {"path_opacity", "0"}});
     obs->manager.set("singularity_depth", "1");
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("Our original starting point became indeterminate on the second iteration,"));
-    obs->manager.transition(MICRO, {{"ball_start_y", "-2"}, {"ball_start_x", "3"}});
+    stage_macroblock(FileBlock("A starting point like this becomes indeterminate on the second iteration,"));
+    obs->manager.set({{"ball_start_y", "-6"}, {"ball_start_x", "3"}});
+    obs->manager.set("path_length", "0");
+    obs->manager.transition(MICRO, "path_opacity", "1");
     cs.render_microblock();
-    obs->manager.transition(MICRO, "ball_distance", "2");
+    obs->manager.transition(MICRO, "path_length", "1.45");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("like these points here."));
+    obs->manager.transition(MICRO, "path_opacity", "0");
     obs->manager.transition(MICRO, "singularity_depth", "2");
     cs.render_microblock();
-    obs->manager.set("ball_distance", "<singularity_depth>");
 
     stage_macroblock(FileBlock("Here are the depth 3 singularities,"));
-    obs->manager.transition(MICRO, {{"ball_start_y", "-2"}, {"ball_start_x", "5"}, {"singularity_depth", "3"}});
+    obs->manager.set({{"ball_start_y", "-2"}, {"ball_start_x", "5"}});
+    obs->manager.transition(MICRO, "singularity_depth", "3");
     cs.render_microblock();
+    obs->manager.set("path_length", "0");
+    obs->manager.transition(MICRO, "path_opacity", "1");
+    cs.render_microblock();
+    obs->manager.transition(MICRO, "path_length", "2.4");
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1));
+    obs->manager.transition(MICRO, "path_opacity", "0");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("depth 4 singularities,"));
-    obs->manager.transition(MICRO, {{"ball_start_y", "-4"}, {"ball_start_x", "7"}, {"singularity_depth", "4"}});
+    obs->manager.set({{"ball_start_y", "-4"}, {"ball_start_x", "7"}});
+    obs->manager.transition(MICRO, "singularity_depth", "4");
     cs.render_microblock();
+    obs->manager.set("path_length", "0");
+    obs->manager.transition(MICRO, "path_opacity", "1");
     cs.render_microblock();
-    obs->manager.set("ball_distance", "4");
+    obs->manager.transition(MICRO, "path_length", "3.45");
+    cs.render_microblock();
 
-    // TODO rainbow color the lines by depth
+    obs->manager.transition(MICRO, "singularity_rainbow", "1");
+
     stage_macroblock(FileBlock("and so on."));
     obs->manager.transition(MICRO, "path_opacity", "0");
+    obs->manager.transition(MICRO, "island_opacity", "0");
     obs->manager.transition(MICRO, "singularity_depth", "15");
     cs.render_microblock();
-    obs->manager.set("ball_distance", "0");
+    obs->manager.set("path_length", "0");
     obs->manager.transition(MICRO, "singularity_depth", "100");
     cs.render_microblock();
+    return;
 
     // Start to morph the table a bit
     stage_macroblock(SilenceBlock(1));
