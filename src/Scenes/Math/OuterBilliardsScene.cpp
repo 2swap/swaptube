@@ -19,10 +19,10 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
         {"table_opacity", "1"},
         {"ball_start_x", "0"},
         {"ball_start_y", "0"},
-        {"path_length",  "0"},
-        {"path_opacity", "1"},
         {"ball_distance","0"},
         {"ball_opacity", "1"},
+        {"path_length",  "0"},
+        {"path_opacity", "1"},
         {"curvature",        "0"},
         {"singularity_opacity",       "0"},
         {"singularity_depth",         "0"},
@@ -147,6 +147,16 @@ void OuterBilliardsScene::draw_orbit(float thickness) {
     const vec2 ball_pos = build_orbit_path((double)state["ball_distance"]).back();
     const float radius_px = (float)get_geom_mean_size() / 120.0f;
     draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(ball_pos), radius_px, 0xffffffff, ball_opacity);
+}
+
+void OuterBilliardsScene::add_dummy_point() {
+    const int n = (int)read_vertices().size();
+
+    const std::string v0 = "v0";
+    const std::string vn = "v" + std::to_string(n-1);
+
+    manager.set("v" + std::to_string(n) + ".x", "<" + v0 + ".x> <" + vn + ".x> + 2 /");
+    manager.set("v" + std::to_string(n) + ".y", "<" + v0 + ".y> <" + vn + ".y> + 2 /");
 }
 
 void OuterBilliardsScene::draw() {

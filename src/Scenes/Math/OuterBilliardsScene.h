@@ -9,6 +9,7 @@ class OuterBilliardsScene : public CoordinateScene {
 public:
     OuterBilliardsScene(const vec2& dimensions = vec2(1, 1));
     std::vector<vec2> build_orbit_path(double count);
+    void add_dummy_point();
 
     void draw() override;
 

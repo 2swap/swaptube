@@ -5,6 +5,16 @@
 #include "../Scenes/Media/LatexScene.h"
 #include "../Core/Smoketest.h"
 
+StateSet regular_ngon(int n, double radius, double phase) {
+    StateSet result;
+    for (int i = 0; i < n; i++) {
+        double theta = phase + (double)i * (2.0 * M_PI / (double)n);
+        result["v" + to_string(i) + ".x"] = to_string(radius * cos(theta));
+        result["v" + to_string(i) + ".y"] = to_string(radius * sin(theta));
+    }
+    return result;
+}
+
 void render_video() {
     set_for_real(false);
     CompositeScene cs;
@@ -64,14 +74,8 @@ void render_video() {
     cs.render_microblock();
     ibs->manager.transition(MICRO, {{"ball_start_x", "-0.4"}, {"ball_start_y", "-0.4"}});
     cs.render_microblock();
-    // Regular hexagon
     ibs->manager.transition(MICRO, "center_y", "0");
-    StateSet regular_hexagon;
-    for (int i = 0; i < 6; i++) {
-        double theta = 3.5 + (double)i * (2.0 * M_PI / 6.0);
-        regular_hexagon["v" + to_string(i) + ".x"] = to_string(1.7 * cos(theta));
-        regular_hexagon["v" + to_string(i) + ".y"] = to_string(1.7 * sin(theta));
-    }
+    StateSet regular_hexagon = regular_ngon(6, 1.7, 3.5);
     ibs->manager.transition(MICRO, regular_hexagon);
     cs.render_microblock();
 
@@ -216,7 +220,7 @@ void render_video() {
 
     stage_macroblock(FileBlock("Here's the pattern."));
     obs->manager.transition(MACRO, "island_opacity", "1");
-    obs->manager.transition(MACRO, "singularity_depth", "100");
+    obs->manager.transition(MACRO, "singularity_depth", "200");
     cs.render_microblock();
 
     stage_macroblock(CompositeBlock(FileBlock("From these green sections, it takes 4 iterations."), SilenceBlock(.3)), 3);
@@ -256,6 +260,7 @@ void render_video() {
     cs.render_microblock();
     obs->manager.transition(MICRO, "flow_depth", "63");
     cs.render_microblock();
+    obs->manager.set("flow_depth", "4095");
 
     stage_macroblock(CompositeBlock(FileBlock("The regions all match the shape of the table,"), SilenceBlock(1)));
     obs->manager.transition(MICRO, {
@@ -423,8 +428,6 @@ void render_video() {
     obs->manager.transition(MICRO, "path_opacity", "0");
     cs.render_microblock();
 
-    set_for_real(true);
-
     stage_macroblock(FileBlock("and here are depth 3 singularities,"));
     obs->manager.set({{"ball_start_y", "-2"}, {"ball_start_x", "5"}});
     obs->manager.transition(MICRO, "singularity_depth", "3");
@@ -448,44 +451,148 @@ void render_video() {
     cs.render_microblock();
 
     stage_macroblock(CompositeBlock(FileBlock("and so on."), SilenceBlock(2)));
-    obs->manager.transition(MACRO, "zoom", "-3");
+    obs->manager.transition(MACRO, "zoom", "-3.5");
     obs->manager.transition(MICRO, "path_opacity", "0");
     obs->manager.transition(MICRO, "island_opacity", "0");
     obs->manager.transition(MICRO, "singularity_depth", "15");
     cs.render_microblock();
     obs->manager.set("path_length", "0");
-    obs->manager.transition(MICRO, "singularity_depth", "100");
+    obs->manager.transition(MICRO, "singularity_depth", "500");
     cs.render_microblock();
     cs.render_microblock();
     cs.render_microblock();
 
     // Start to morph the table a bit
-    stage_macroblock(SilenceBlock(2));
+    stage_macroblock(SilenceBlock(4));
     obs->manager.transition(MICRO, {{"zoom", "-1.5"}, {"singularity_rainbow", "0"}, {"island_opacity", "1"}});
     cs.render_microblock();
     obs->manager.transition(MICRO, {{"v0.x", "-1.5"}, {"v0.y", "-2.6"}});
     cs.render_microblock();
 
     // Transition to a regular pentagon
-    stage_macroblock(SilenceBlock(1));
-    // Dummy point to match v0
-    obs->manager.set({{"v4.x", "-1.5"}, {"v4.y", "-2.6"}});
-    StateSet pentagon;
-    for (int i = 0; i < 5; i++) {
-        double theta = (double)i * (2.0 * M_PI / 5.0) + 3.1415 * 1.25;
-        pentagon["v" + to_string(i) + ".x"] = to_string(2.0 * cos(theta));
-        pentagon["v" + to_string(i) + ".y"] = to_string(2.0 * sin(theta));
-    }
-    obs->manager.transition(MACRO, pentagon);
+    stage_macroblock(SilenceBlock(2));
+    obs->add_dummy_point();
+    StateSet pentagon = regular_ngon(5, 2.0, 3.1415 * 1.25);
+    obs->manager.transition(MICRO, pentagon);
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(10));
-    obs->manager.transition(MICRO, "curvature", "-.01");
+    obs->manager.transition(MICRO, "singularity_depth", "2000");
+    obs->manager.begin_timer("spin");
+    undo = obs->manager.transition(MICRO, {{"center_x", "<spin> .21 * sin 2.6 *"},
+                                           {"center_y", "<spin> .21 * cos 2.6 *"}, {"zoom", "0.8"}});
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    obs->manager.transition(MICRO, "singularity_depth", "10000");
+    obs->manager.transition(MICRO, {{"center_x", "<spin> .01 * 1.53 + sin 2.3 *"},
+                                    {"center_y", "<spin> .01 * 1.53 + cos 2.3 *"}, {"zoom", "3"}});
+    cs.render_microblock();
     cs.render_microblock();
 
+    stage_macroblock(SilenceBlock(2));
+    obs->manager.transition(MACRO, "singularity_depth", "200");
+    obs->manager.transition(MICRO, undo);
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(8));
+    undo = obs->manager.transition(MICRO, {{"zoom", "-3"}, {"center_x", "4 {t} .1 * sin *"},
+                                                           {"center_y", "4 {t} .1 * cos *"}});
+    cs.render_microblock();
+    obs->manager.transition(MICRO, undo);
+    cs.render_microblock();
+
+    StateSet warpy_pentagon;
+    for (int i = 0; i < 5; i++) {
+        double theta = (double)i * (2.0 * M_PI / 5.0) + 3.1415 * 1.25;
+        string y_warp =  + " {t} " + to_string((i%3+5) * .1) + " * sin .3 * +";
+        string x_warp =  + " {t} " + to_string((i  +5) * .1) + " * cos .3 * +";
+        warpy_pentagon["v" + to_string(i) + ".x"] = to_string(2.0 * cos(theta)) + x_warp;
+        warpy_pentagon["v" + to_string(i) + ".y"] = to_string(2.0 * sin(theta)) + y_warp;
+    }
+    stage_macroblock(SilenceBlock(10));
+    obs->manager.transition(MACRO, warpy_pentagon);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("For these irregular board shapes, the singularities are quite dense."));
+    StateSet almost_square;
+    for (int i = 0; i < 5; i++) {
+        double theta = (double)i * (2.0 * M_PI / 4.2) + 3.1415 * 1.25;
+        almost_square["v" + to_string(i) + ".x"] = to_string(2.0 * cos(theta));
+        almost_square["v" + to_string(i) + ".y"] = to_string(2.0 * sin(theta));
+    }
+    obs->manager.transition(MICRO, almost_square);
+    obs->manager.transition(MICRO, {{"center_x", "-2"}, {"center_y", "1"}});
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Increasing the depth of our search for singularities, they fill increasingly more of the plane,"));
+    obs->manager.set("singularity_depth", "<singularity_depth_log> exp");
+    obs->manager.set("singularity_depth_log", "200 log");
+    undo = obs->manager.transition(MICRO, {{"zoom", "3"}, {"singularity_depth_log", "50000 log"}});
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1));
+    obs->manager.transition(MICRO, undo);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("but some regions stay uninterrupted, no matter how deep we go."));
+    obs->manager.transition(MICRO, {{"center_x", "-7"}, {"center_y", "-.3"}});
+    cs.render_microblock();
+    obs->manager.transition(MICRO, "zoom", "0");
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(4));
+    cs.render_microblock();
+    for(int i = 0; i < 2; i++) {
+        obs->manager.transition(MICRO, "singularity_depth_log", "50000 log");
+        cs.render_microblock();
+        obs->manager.transition(MICRO, "singularity_depth_log", "500 log");
+        cs.render_microblock();
+    }
+
+    stage_macroblock(FileBlock("Ok. This is very cool. But what about the areas which are _not_ singularities?"));
+    obs->manager.transition(MACRO, undo);
+    obs->manager.transition(MACRO, pentagon);
+    cs.render_microblock();
+    obs->manager.transition(MICRO, "singularity_depth", "100");
+    obs->manager.transition(MICRO, {{"center_x", "0"}, {"center_y", "0"}});
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("This is the only shape known to diverge."));
+    // Penrose kite has angles 72, 72, 72, 144 degrees.
+    StateSet penrose_kite({{"v0.x", "-2"           }, {"v0.y", "0"},
+                           {"v1.x", "1.2360679776" }, {"v1.y", "-2.3511410092"},
+                           {"v2.x", "2"            }, {"v2.y", "0"},
+                           {"v3.x", "1.2360679776" }, {"v3.y", "2.3511410092"},
+                           {"v4.x", "<v3.x> <v0.x> + 2 /"}, {"v4.y", "<v3.y> <v0.y> + 2 /"}});
+    obs->manager.transition(MACRO, penrose_kite);
+    cs.render_microblock();
+    obs->manager.remove(unordered_set<string>{"v4.x", "v4.y"});
+
+    set_for_real(true);
+    stage_macroblock(FileBlock("I still think my favorite shapes are regular polygons."));
+    cs.render_microblock();
+    obs->manager.transition(MICRO, regular_ngon(3, 2.0, 3.1415 * 1.25));
+    obs->manager.transition(MICRO, {{"v3.x", "<v0.x> <v2.x> + 2 /"}, {"v3.y", "<v0.y> <v2.y> + 2 /"}});
+    cs.render_microblock();
+    obs->manager.remove(unordered_set<string>{"v3.x", "v3.y"});
+    cs.render_microblock();
+    cs.render_microblock();
+    set_for_real(false);
+
+    stage_macroblock(SilenceBlock(20));
+    for(int i = 4; i <= 13; i++) {
+        obs->add_dummy_point();
+        obs->manager.transition(MICRO, regular_ngon(i, 2.0, 3.1415 * 1.25));
+        cs.render_microblock();
+        cs.render_microblock();
+    }
     return;
-    stage_macroblock(FileBlock("Ok. This is very cool. But what about the areas which are not caught in the singularity?"));
-    stage_macroblock(FileBlock("Let's take this section as a case study."));
+
+    stage_macroblock(FileBlock("Taking this section as a case study,"));
     stage_macroblock(FileBlock("Placing a lot of balls in it,"));
     stage_macroblock(FileBlock("we can see that they all fall right into the next section over."));
     stage_macroblock(FileBlock("This makes some intuitive sense when we look back at our cycle graph:"));
@@ -496,4 +603,8 @@ void render_video() {
     stage_macroblock(FileBlock(""));
     stage_macroblock(FileBlock("One last treat: what happens if, instead of playing in euclidean space,"));
     stage_macroblock(FileBlock("we play it in hyperbolic geometry?"));
+    stage_macroblock(SilenceBlock(10));
+    obs->manager.transition(MICRO, "curvature", "-.01");
+    cs.render_microblock();
+
 }

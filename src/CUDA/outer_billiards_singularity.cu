@@ -106,9 +106,8 @@ __global__ void singularity_graph_kernel(
     if (pivot < 0) return;
 
     const float wpp        = params.world_per_pixel;
-    const float half_width = 0.6f * wpp;
-    const float halo       = fmaxf(4.0f * half_width, 1e-20f);
-    const bool  want_glow  = SINGULARITY_GLOW > 0.001f;
+    const float half_width = 0.4f * wpp;
+    const float halo       = 4.0f * half_width;
 
     const float to_screen = curved_screen_scale(start, params.curvature);
 
@@ -144,10 +143,8 @@ __global__ void singularity_graph_kernel(
 
                 if (weight > 0.0f) {
                     float intensity = line_coverage(d, half_width, wpp);
-                    if (want_glow) {
-                        const float soft = SINGULARITY_GLOW * __expf(-d / halo);
-                        intensity = 1.0f - (1.0f - intensity) * (1.0f - soft);
-                    }
+                    const float soft = SINGULARITY_GLOW * __expf(-d / halo);
+                    intensity = 1.0f - (1.0f - intensity) * (1.0f - soft);
                     intensity *= weight;
                     if (intensity > web_intensity) { web_intensity = intensity; web_hop = k; }
                 }

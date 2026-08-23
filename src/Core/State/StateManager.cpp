@@ -131,6 +131,15 @@ void StateManager::remove(const string& variable) {
      */
     last_compute_order.clear();
     variables.erase(variable);
+    // If in each transition set, remove it from that transition set and remove the post_transition variable if it exists
+    if(in_microblock_transition.find(variable) != in_microblock_transition.end()){
+        in_microblock_transition.erase(variable);
+        variables.erase(variable + ".post_transition");
+    }
+    if(in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
+        in_macroblock_transition.erase(variable);
+        variables.erase(variable + ".post_transition");
+    }
 }
 void StateManager::remove(const unordered_set<string>& equations) {
     for(const string& varname : equations){
