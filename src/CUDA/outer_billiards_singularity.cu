@@ -123,15 +123,20 @@ __global__ void singularity_graph_kernel(
     float closest_return = 1e30f;
     int   return_hop     = 0;
 
+    const int flow_floor = (int)floorf(params.flow_depth);
+    const int flow_ceil  = (int)ceilf(params.flow_depth);
+    const float flow_frac = params.flow_depth - (float)flow_floor;
+    Cuda::vec2 flow_p_floor = start;
+    Cuda::vec2 flow_p_ceil  = start;
+
     Cuda::vec2 p = start;
     for (int k = 0; k < steps; k++) {
         const int pivot = Cuda::outer_billiards_tangent_vertex(params.verts, params.n, p);
 
         if (k < web_steps || k < island_steps) {
             const float norm_p = Cuda::curved_norm(p, params.curvature);
-            const float d = (norm_p > 0.0f
-                ? outer_billiards_pivot_distance(params.verts, params.n, pivot, p, norm_p, params.curvature)
-                : 1e30f) * to_screen;
+            const float pivot_distance = outer_billiards_pivot_distance(params.verts, params.n, pivot, p, norm_p, params.curvature);
+            const float d = (norm_p > 0.0f ? pivot_distance : 1e30f) * to_screen;
             if (d < nearest) nearest = d;
 
             if (k < web_steps) {
@@ -149,6 +154,9 @@ __global__ void singularity_graph_kernel(
             }
         }
         p = Cuda::outer_billiards_reflect(params.verts[pivot], p, params.curvature);
+        const int n_reflects = k + 1;
+        if (n_reflects == flow_floor) flow_p_floor = p;
+        if (n_reflects == flow_ceil)  flow_p_ceil  = p;
         if (want_islands && k < params.max_period) {
             const float back = curved_closeness(start, p, start_norm, params.curvature);
             if (back < closest_return) { closest_return = back; return_hop = k + 1; }
@@ -157,13 +165,36 @@ __global__ void singularity_graph_kernel(
 
     const int index = py * wh.x + px;
     uint32_t out = 0x00000000;
-    if (return_hop > 0) {
-        out = Cuda::rainbow(return_hop*.03, 255 * params.island_opacity);
-    }
+    const uint32_t periodicity_color = (return_hop > 0)
+        ? Cuda::rainbow(return_hop*.03, 255 * params.island_opacity)
+        : 0x00000000;
+
+    // Custom interpolation: interpolate between angle (going CCW) and length
+    const float flow_length_floor = length(flow_p_floor);
+    const float flow_length_ceil  = length(flow_p_ceil);
+    const float flow_angle_floor  = atan2(flow_p_floor.y, flow_p_floor.x);
+          float flow_angle_ceil   = atan2(flow_p_ceil.y, flow_p_ceil.x);
+    if (flow_angle_ceil < flow_angle_floor) flow_angle_ceil += 2.0f * 3.1415f;
+    const float flow_length_interp= Cuda::lerp(flow_length_floor, flow_length_ceil, flow_frac);
+          float flow_angle_interp = Cuda::lerp(flow_angle_floor, flow_angle_ceil, flow_frac);
+    const float flow_angle_mod = fmodf(flow_angle_interp, 2.0f * 3.1415f);
+    const Cuda::vec2 flow_p(flow_length_interp * cos(flow_angle_mod), flow_length_interp * sin(flow_angle_mod));
+
+    float magnitude = length(flow_p);
+    float atan_length = atan(magnitude / 3.0f) / (3.1415f / 2.0f);
+    float angle = atan2(flow_p.y, flow_p.x);
+    float flow_l = 0.8f / (1.0f + .01*magnitude*magnitude);
+    float bounds_mult = 0.3f;
+    float flow_a = atan_length * sin(angle) * bounds_mult;
+    float flow_b = atan_length * cos(angle) * bounds_mult;
+
+    const uint32_t flow_color = Cuda::OKLABtoRGB(255 * params.island_opacity, flow_l, flow_a, flow_b);
+    out = Cuda::colorlerp(periodicity_color, flow_color, params.periodicity_or_flow);
+
     if (web_intensity > 0.0f) {
         uint32_t web_color = params.line_color;
         if (params.singularity_rainbow > 0.001f) {
-            const uint32_t rainbow_color = Cuda::rainbow(web_hop*.05, 255);
+            const uint32_t rainbow_color = Cuda::rainbow(web_hop*.05, 255, 0.6);
             web_color = Cuda::colorlerp(params.line_color, rainbow_color, params.singularity_rainbow);
         }
         out = Cuda::color_combine(out, web_color, Cuda::clamp(web_intensity * params.web_opacity, 0.0f, 1.0f));
@@ -186,6 +217,8 @@ extern "C" void outer_billiards_singularity_render(
     int steps = web_steps;
     if (island_steps > steps) steps = island_steps;
     if (want_islands && params.max_period > steps) steps = params.max_period;
+    const int flow_steps = (int)ceilf(params.flow_depth);
+    if (flow_steps > steps) steps = flow_steps;
     if (steps <= 0) return;
 
     dim3 block(16, 16);

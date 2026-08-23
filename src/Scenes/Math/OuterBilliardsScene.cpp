@@ -28,6 +28,8 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
         {"singularity_depth",         "0"},
         {"singularity_rainbow",       "0"},
         {"island_opacity",      "0"},
+        {"periodicity_or_flow", "0"},
+        {"flow_depth",            "0"},
     });
 }
 
@@ -98,6 +100,8 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
     params.island_opacity = wants_islands ? island_opacity : 0.0f;
     params.max_period     = max_period;
     params.island_depth   = std::min((int)std::ceil(depth * ISLAND_BOUNDARY_DEPTH), MAX_ISLAND_DEPTH);
+    params.periodicity_or_flow = (float)state["periodicity_or_flow"];
+    params.flow_depth          = (float)state["flow_depth"];
 
     outer_billiards_singularity_render(gpu_pix.get_ptr(), gpu_pix.get_wh(), params);
 }
@@ -129,6 +133,11 @@ void OuterBilliardsScene::draw_orbit(float thickness) {
                                        vec2(state["left_x"], state["top_y"]),
                                        vec2(state["right_x"], state["bottom_y"]),
                                        0xffffffff, opacity, thickness, false);
+            cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
+                                       path.data(), (int)path.size(),
+                                       vec2(state["left_x"], state["top_y"]),
+                                       vec2(state["right_x"], state["bottom_y"]),
+                                       0xffffffff, opacity*.2, thickness+1, false);
         }
     }
 
