@@ -17,8 +17,8 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
     : CoordinateScene(dimensions) {
     manager.set({
         {"table_opacity", "1"},
-        {"ball_start_x", "0"},
-        {"ball_start_y", "0"},
+        {"ball0_start_x", "0"},
+        {"ball0_start_y", "0"},
         {"ball_distance","0"},
         {"ball_opacity", "1"},
         {"path_length",  "0"},
@@ -106,9 +106,7 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
     outer_billiards_singularity_render(gpu_pix.get_ptr(), gpu_pix.get_wh(), params);
 }
 
-std::vector<vec2> OuterBilliardsScene::build_orbit_path(double count) {
-    const vec2 start(state["ball_start_x"], state["ball_start_y"]);
-
+std::vector<vec2> OuterBilliardsScene::build_orbit_path_from(const vec2& start, double count) {
     if (!(count > 0.0)) return {start};
 
     const int whole = (int)std::floor(count);
@@ -123,30 +121,41 @@ std::vector<vec2> OuterBilliardsScene::build_orbit_path(double count) {
     return path;
 }
 
+std::vector<vec2> OuterBilliardsScene::build_orbit_path(double count) {
+    return build_orbit_path_from(vec2(state["ball0_start_x"], state["ball0_start_y"]), count);
+}
+
 void OuterBilliardsScene::draw_orbit(float thickness) {
-    const float opacity = (float)state["path_opacity"];
-    if (opacity >= 0.01) {
-        const std::vector<vec2> path = build_orbit_path((double)state["path_length"]);
-        if (path.size() >= 2) {
-            cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
-                                       path.data(), (int)path.size(),
-                                       vec2(state["left_x"], state["top_y"]),
-                                       vec2(state["right_x"], state["bottom_y"]),
-                                       0xffffffff, opacity, thickness, false);
-            cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
-                                       path.data(), (int)path.size(),
-                                       vec2(state["left_x"], state["top_y"]),
-                                       vec2(state["right_x"], state["bottom_y"]),
-                                       0xffffffff, opacity*.2, thickness+1, false);
+    const float path_opacity  = (float)state["path_opacity"];
+    const float path_length   = (float)state["path_length"];
+    const float ball_opacity  = (float)state["ball_opacity"];
+    const float ball_distance = (float)state["ball_distance"];
+    const float radius_px = (float)get_geom_mean_size() / 120.0f;
+
+    for (int i = 0; manager.contains("ball" + std::to_string(i) + "_start_x"); i++) {
+        const vec2 start(state["ball" + std::to_string(i) + "_start_x"], state["ball" + std::to_string(i) + "_start_y"]);
+
+        if (path_opacity >= 0.01) {
+            const std::vector<vec2> path = build_orbit_path_from(start, (double)path_length);
+            if (path.size() >= 2) {
+                cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
+                                           path.data(), (int)path.size(),
+                                           vec2(state["left_x"], state["top_y"]),
+                                           vec2(state["right_x"], state["bottom_y"]),
+                                           0xffffffff, path_opacity, thickness, false);
+                cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
+                                           path.data(), (int)path.size(),
+                                           vec2(state["left_x"], state["top_y"]),
+                                           vec2(state["right_x"], state["bottom_y"]),
+                                           0xffffffff, path_opacity*.2, thickness+1, false);
+            }
+        }
+
+        if (ball_opacity >= 0.01) {
+            const vec2 ball_pos = build_orbit_path_from(start, (double)ball_distance).back();
+            draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(ball_pos), radius_px, 0xffffffff, ball_opacity);
         }
     }
-
-    const float ball_opacity = (float)state["ball_opacity"];
-    if (ball_opacity < 0.01) return;
-
-    const vec2 ball_pos = build_orbit_path((double)state["ball_distance"]).back();
-    const float radius_px = (float)get_geom_mean_size() / 120.0f;
-    draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(ball_pos), radius_px, 0xffffffff, ball_opacity);
 }
 
 void OuterBilliardsScene::add_dummy_point() {

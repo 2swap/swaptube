@@ -6,7 +6,7 @@
 
 SHARED_FILE_PREFIX
 
-const int MAX_BILLIARD_VERTICES = 13;
+const int MAX_BILLIARD_VERTICES = 14;
 
 HOST_DEVICE inline float curved_norm(const vec2& q, float curvature) {
     return 1.0f + curvature * dot(q, q);
