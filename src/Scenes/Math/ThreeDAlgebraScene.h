@@ -9,7 +9,13 @@ public:
     void draw() override;
 
 private:
-    vec3 multiply(const vec3& p, const vec3& q,
-                  const vec3& xx, const vec3& xy, const vec3& xz,
-                  const vec3& yy, const vec3& yz, const vec3& zz) const;
+    // vec4 multiply(const vec4& p, const vec4& q,
+    //               const vec4& xx, const vec4& xy, const vec4& xz,
+    //               const vec4& yy, const vec4& yz, const vec4& zz) const;
+    vec4 multiply(const vec4& p, const vec4& q,
+                  const vec4& xx, const vec4& xy, const vec4& xz,
+                  const vec4& yy, const vec4& yz, const vec4& zz) const;
+
+    vec3 project(const vec4& p) const;
 };
+
