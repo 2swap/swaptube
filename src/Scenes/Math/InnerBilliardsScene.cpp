@@ -174,12 +174,12 @@ void InnerBilliardsScene::draw_trail(const vector<vec2>& verts) {
                                path.data(), path.size(),
                                vec2(state["left_x"], state["top_y"]),
                                vec2(state["right_x"], state["bottom_y"]),
-                               0xffffffff, opacity, thickness, false);
+                               0xffcccccc, opacity, thickness, false);
     cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
                                path.data(), path.size(),
                                vec2(state["left_x"], state["top_y"]),
                                vec2(state["right_x"], state["bottom_y"]),
-                               0xffffffff, opacity, thickness+1, false);
+                               0xffcccccc, opacity, thickness+1, false);
 
     if (landed_pocket) {
         const uint32_t POCKET_RED = 0xffff0000;
