@@ -2,10 +2,12 @@
 #include "../Scenes/Common/CompositeScene.h"
 
 void render_video(){
-    vector<string> latex_strings = {"abc", "a^bc", "abbc", "abc", "a=\\frac{b}{c}", "abcdef", "deee", "ddde"};
+    //vector<string> latex_strings = {"abc", "a^bc", "abbc", "abc", "a=\\frac{b}{c}", "abcdef", "deee", "ddde"};
     //vector<string> latex_strings = {"x^2+6x+5=0", "x^2+6x=-5", "x^2+6x+9=4", "(x+3)^2=4", "x+3=\\pm2", "x=-3\\pm2", "x=-1,\\,-5"};
     //vector<string> latex_strings = {"\\text{This is some English text.}", "\\text{This is some more English text.}", "\\text{This is even more English text.}"};
     //vector<string> latex_strings = {"aaa", "a^aa", "a^{aa}", "a^{a^a}", "a^{a^{a^a}}", "a^{a^{a^{a^a}}}", "a^{a^{a^{a^{a^a}}}}", "a^{a^{a^{a^{a^{a^a}}}}}", "a^{a^{a^{a^{a^{a^{a^a}}}}}}", "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"};
+
+    vector<string> latex_strings = {"ax^2 + bx + c = 0", "x^2 + \\frac{b}{a}x + \\frac{c}{a} = 0"};
 
     LatexScene latex(latex_strings[0]);
     stage_macroblock(SilenceBlock(1), 1);

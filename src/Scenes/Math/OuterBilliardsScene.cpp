@@ -44,6 +44,7 @@ float OuterBilliardsScene::world_per_pixel() {
 
 std::vector<vec2> OuterBilliardsScene::read_vertices() {
     std::vector<vec2> verts;
+    update_state();
     for (int i = 0; i < MAX_BILLIARD_VERTICES; i++) {
         const std::string x_key = "v" + std::to_string(i) + ".x";
         if (!manager.contains(x_key)) break;
