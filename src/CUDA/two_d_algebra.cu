@@ -34,22 +34,32 @@ __device__ Cuda::vec2 two_d_operation(
 
 }
 
+__device__ __forceinline__ float smallness_2d(float s, float brightness){
+    // return 1/(1+0.02*s*s*abs(s));
+    float s_sq = s*s;
+    return 1/(1+s_sq/brightness);
+    // return 1/(1+s*s*s*s);
+}
+
+
+
 __device__ uint32_t two_d_to_color(Cuda::vec2 a, Cuda::vec2 channels,int brightness) {
 
     // float ax = min(1.0,fade*a.x);
     // float ay = min(1.0,fade*a.y);
     // float az = min(1.0,fade*a.z);
 
-    float ax = min(1.0,smallness(a.y,2.0))*channels.y;
-    float ay = 0.0;
-    float az = min(1.0,smallness(a.x,2.0))*channels.x;
+    float ax = min(1.0,smallness_2d(a.y,8.0))*channels.y;
+    float ay = min(1.0,smallness_2d(a.x,8.0))*channels.x;
+    float az = 0.1;
 
     return Cuda::OKLABtoRGB(
         min(1.0,(ax+ay+az)*0.5)*brightness,
         1.0,
-        (ax-ay)*0.866,
-        (ax+ay)*0.5-az
+        (ax-ay)*0.92,
+        (ax+ay)*0.4-az
     );
+    
 }
 
 __device__ Cuda::vec2 two_d_mult(Cuda::vec2 a, Cuda::vec2 b,  Cuda::vec2 xx, Cuda::vec2 xy, Cuda::vec2 yy){
