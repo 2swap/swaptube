@@ -160,10 +160,19 @@ __global__ void singularity_graph_kernel(
         }
     }
 
+    float highlight_mult = 1.0f;
+    if (return_hop > 0) {
+        const float dist = fabsf(params.cycle_highlight - (float)return_hop);
+        const float period_boost = Cuda::clamp(1.0f - dist, 0.0f, 1.0f);
+        const float highlighted = 0.2f + 0.8f * period_boost;
+        const float enable = Cuda::clamp(params.cycle_highlight_enable, 0.0f, 1.0f);
+        highlight_mult = Cuda::lerp(1.0f, highlighted, enable);
+    }
+
     const int index = py * wh.x + px;
     uint32_t out = 0x00000000;
     const uint32_t periodicity_color = (return_hop > 0)
-        ? Cuda::rainbow(return_hop*.03, 255 * params.island_opacity)
+        ? Cuda::rainbow(return_hop*.03, 255 * params.island_opacity * highlight_mult)
         : 0x00000000;
 
     // Custom interpolation: interpolate between angle (going CCW) and length
@@ -185,7 +194,7 @@ __global__ void singularity_graph_kernel(
     float flow_a = atan_length * sin(angle) * bounds_mult;
     float flow_b = atan_length * cos(angle) * bounds_mult;
 
-    const uint32_t flow_color = Cuda::OKLABtoRGB(255 * params.island_opacity, flow_l, flow_a, flow_b);
+    const uint32_t flow_color = Cuda::OKLABtoRGB(255 * params.island_opacity * highlight_mult, flow_l, flow_a, flow_b);
     out = Cuda::colorlerp(periodicity_color, flow_color, params.periodicity_or_flow);
 
     if (web_intensity > 0.0f) {

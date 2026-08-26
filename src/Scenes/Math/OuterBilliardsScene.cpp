@@ -30,6 +30,8 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
         {"island_opacity",      "0"},
         {"periodicity_or_flow", "0"},
         {"flow_depth",            "0"},
+        {"cycle_highlight",       "0"},
+        {"cycle_highlight_enable","0"},
     });
 }
 
@@ -103,6 +105,8 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
     params.island_depth   = std::min((int)std::ceil(depth * ISLAND_BOUNDARY_DEPTH), MAX_ISLAND_DEPTH);
     params.periodicity_or_flow = (float)state["periodicity_or_flow"];
     params.flow_depth          = (float)state["flow_depth"];
+    params.cycle_highlight     = (float)state["cycle_highlight"];
+    params.cycle_highlight_enable = (float)state["cycle_highlight_enable"];
 
     outer_billiards_singularity_render(gpu_pix.get_ptr(), gpu_pix.get_wh(), params);
 }

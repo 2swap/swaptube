@@ -62,6 +62,8 @@ struct SingularityGraphParams {
     int      island_depth;
     float    periodicity_or_flow;   // 0=periodicity (island coloring), >0.5=flow (color by final position)
     float    flow_depth;            // iteration count (possibly fractional) at which to sample flow position
+    float    cycle_highlight;       // period(s) near this value are highlighted, others dimmed
+    float    cycle_highlight_enable; // 0=feature disabled (all periods full opacity), 1=fully enabled; interpolates between
 };
 
 SHARED_FILE_SUFFIX
