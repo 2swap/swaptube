@@ -13,4 +13,5 @@ public:
 
 private:
     string picture_name;
+    unique_ptr<DevicePointer> cached_image;
 };

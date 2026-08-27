@@ -46,7 +46,6 @@ public:
     void scale_to_bounding_box(const vec2& box, Pixels &scaled) const;
 
     void crop(const ivec2&, const ivec2&, Pixels &cropped) const;
-    void crop_by_fractions(const vec2& crop_top_left, const vec2& crop_bottom_right, Pixels &cropped) const;
     void crop_by_alpha(Pixels& cropped);
 
     int get_pixel_bilinear(const vec2& pos) const;

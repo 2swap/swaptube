@@ -122,12 +122,6 @@ void Pixels::crop(const ivec2& top_left, const ivec2& bottom_right, Pixels &crop
     }
 }
 
-void Pixels::crop_by_fractions(const vec2& crop_top_left, const vec2& crop_bottom_right, Pixels &cropped) const {
-    const ivec2 top_left = floor(wh * crop_top_left);
-    const ivec2 bottom_right = floor(wh * crop_bottom_right);
-    crop(top_left, bottom_right, cropped);
-}
-
 void Pixels::crop_by_alpha(Pixels& cropped) {
     int min_x = wh.x;
     int min_y = wh.y;

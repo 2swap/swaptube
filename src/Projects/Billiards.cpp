@@ -3,6 +3,9 @@
 #include "../Scenes/Math/GraphScene.h"
 #include "../Scenes/Common/CompositeScene.h"
 #include "../Scenes/Media/LatexScene.h"
+#include "../Scenes/Media/PngScene.h"
+#include "../Scenes/Media/WhitePaperScene.h"
+#include "../Core/State/BezierStateCurve.h"
 #include "../Core/Smoketest.h"
 
 StateSet regular_ngon(int n, double radius, double phase) {
@@ -37,43 +40,96 @@ void render_video() {
         {"v3.x", "-2"}, {"v3.y",  "1"},
     });
     ibs->manager.set(simple_table_hex);
-    ibs->manager.set("center_y", "-.5");
+    ibs->manager.set("center_y", "-.3");
 
     ibs->manager.set({{"ball_start_x", "-0.4"}, {"ball_start_y", "-0.5"}});
     ibs->manager.set("ball_angle", "0.78539");
     ibs->manager.set("ball_distance", "-3");
 
-    stage_macroblock(SilenceBlock(1));
+    stage_macroblock(SilenceBlock(.5));
     cs.render_microblock();
+
+    vector<StateSet> waypoints;
+    waypoints.push_back({
+        {"center_x", "0"},
+        {"center_y", "-.3"},
+    });
+    waypoints.push_back({
+        {"center_x", ".8"},
+        {"center_y", "0.2"},
+    });
+    waypoints.push_back({
+        {"center_x", ".8"},
+        {"center_y", "-.5"},
+    });
+    waypoints.push_back({
+        {"center_x", "-.3"},
+        {"center_y", "0.2"},
+    });
+    waypoints.push_back({
+        {"center_x", "-.7"},
+        {"center_y", "-.2"},
+    });
+    waypoints.push_back({
+        {"center_x", "-.6"},
+        {"center_y", "-.5"},
+    });
+    waypoints.push_back({
+        {"center_x", "-.2"},
+        {"center_y", "-.3"},
+    });
+    waypoints.push_back({
+        {"center_x", "-.2"},
+        {"center_y", "-.3"},
+    });
+    BezierStateCurve bsc(waypoints);
 
     stage_macroblock(CompositeBlock(FileBlock("Hit a billiards ball,"), SilenceBlock(2)));
     ibs->manager.transition(MACRO, "ball_distance", "11.3137");
     cs.render_microblock();
+    cs.render_microblock();
+    ibs->manager.transition(MICRO, "zoom", ".5");
+    cs.render_microblock();
+    ibs->manager.set(bsc.pop_next_state_set());
     ibs->manager.transition(MICRO, "cue_opacity", "0");
     cs.render_microblock();
+    ibs->manager.set(bsc.pop_next_state_set());
     cs.render_microblock();
+    ibs->manager.set(bsc.pop_next_state_set());
+    cs.render_microblock();
+    ibs->manager.set(bsc.pop_next_state_set());
+    cs.render_microblock();
+    ibs->manager.set(bsc.pop_next_state_set());
+    cs.render_microblock();
+    ibs->manager.set(bsc.pop_next_state_set());
+    cs.render_microblock();
+    ibs->manager.set(bsc.pop_next_state_set());
+    cs.render_microblock();
+    ibs->manager.set({{"center_x", "-.2"}, {"center_y", "-.3"}});
 
     stage_macroblock(FileBlock("and it reflects off the walls until landing in a pocket."));
     ibs->manager.set("ball_distance", "-2");
     ibs->manager.set("ball_angle", "0.8");
-    ibs->manager.transition(MICRO, "path_length", "55");
+    ibs->manager.transition(MACRO, "path_length", "55");
+    ibs->manager.transition(MICRO, "zoom", "0");
+    cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(SilenceBlock(2), FileBlock("Its path is hard to predict,")));
-    ibs->manager.transition(MICRO, "path_length", "200");
+    stage_macroblock(SilenceBlock(4));
+    ibs->manager.transition(MICRO, "path_length", "100");
     ibs->manager.transition(MICRO, "cue_opacity", ".4");
     ibs->manager.transition(MICRO, {{"ball_start_x", "-0.8"}, {"ball_start_y", "-0.2"}});
     cs.render_microblock();
     ibs->manager.transition(MICRO, "ball_angle", ".9");
     cs.render_microblock();
-    ibs->manager.transition(MICRO, "ball_angle", ".8");
+    ibs->manager.transition(MICRO, "ball_angle", ".67");
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(FileBlock("Especially with a non-rectangular table."), SilenceBlock(4.5)));
-    ibs->manager.transition(MICRO, {{"v0.x", "-2.2"}, {"v0.y", "-.8"}, {"v1.x", ".67"}, {"v1.y", "-1.2"}, {"v5.x", "-2.2"}, {"v5.y", ".9"}});
+    stage_macroblock(CompositeBlock(FileBlock("With a non-rectangular table, its path is hard to predict."), SilenceBlock(2.5)));
+    ibs->manager.transition(MICRO, {{"v0.x", "-2.5"}, {"v0.y", "-.8"}, {"v1.x", ".67"}, {"v1.y", "-1.2"}, {"v3.x", "1.7"}, {"v3.y", ".9"}, {"v5.x", "-1.9"}, {"v5.y", ".6"}});
     cs.render_microblock();
-    ibs->manager.transition(MICRO, {{"ball_start_x", "-0.4"}, {"ball_start_y", "-0.4"}});
+    ibs->manager.transition(MICRO, {{"ball_start_x", "0.15"}, {"ball_start_y", "-0.2"}});
     cs.render_microblock();
     ibs->manager.transition(MICRO, "center_y", "0");
     StateSet regular_hexagon = regular_ngon(6, 1.7, 3.5);
@@ -81,10 +137,12 @@ void render_video() {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("When you remove the pockets,"));
+    cs.render_microblock();
     ibs->manager.transition(MICRO, "pocket_size", "0");
     cs.render_microblock();
+    cs.render_microblock();
 
-    stage_macroblock(FileBlock("this system is known to mathematicians as _inner_ Billiards."));
+    stage_macroblock(CompositeBlock(FileBlock("this system is known to mathematicians as _inner_ Billiards."), SilenceBlock(2.5)));
     ibs->manager.transition(MICRO, "ball_angle", "0.3");
     //shared_ptr<LatexScene> ls = make_shared<LatexScene>("\\text{Inner Billiards}", vec2(1, .2));
     //cs.add_scene_fade_in(MICRO, ls, "ls", vec2(.5, .1));
@@ -148,7 +206,8 @@ void render_video() {
     gs->config.transition_edge_label(MICRO, 0, 1, "");
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("Hit it again, past the next available corner of the table."));
+    stage_macroblock(FileBlock("That's the fundamental operation: hit the ball twice the way past the next available corner."));
+    cs.render_microblock();
     {
         const vec2 p2 = obs->build_orbit_path((double)2).back();
         gs->graph.add_node(2);
@@ -158,8 +217,9 @@ void render_video() {
         gs->transition_node_position(MICRO, 2, vec4(p2.x, p2.y, 0, 0));
     }
     cs.render_microblock();
+    cs.render_microblock();
 
-    stage_macroblock(FileBlock("Keep doing this, and we get a nice pattern."));
+    stage_macroblock(CompositeBlock(FileBlock("Keep doing this, and we get a nice pattern."), SilenceBlock(1)));
     obs->manager.transition(MACRO, "ball_opacity", "0");
     for (int i = 3; i < 9; i++) {
         const vec2 p_pre = obs->build_orbit_path((double)i-1).back();
@@ -173,6 +233,8 @@ void render_video() {
         gs->transition_node_position(MICRO, i, vec4(p_post.x, p_post.y, 0, 0));
         cs.render_microblock();
     }
+    cs.render_microblock();
+    cs.render_microblock();
 
     gs->graph.remove_node(8);
     gs->graph.add_edge(7, 0);
@@ -204,7 +266,7 @@ void render_video() {
     cs.render_microblock();
     cs.remove_subscene("gs");
 
-    stage_macroblock(FileBlock("Move the starting point, and we get a cycle of length 4."));
+    stage_macroblock(FileBlock("For this starting point, we get a cycle of length 4."));
     obs->manager.set("angley", ".8");
     obs->manager.transition(MICRO, {{"ball0_start_x", "<angley> 2 * sin 4 *"}, {"ball0_start_y", "<angley> 2 * cos 2 *"}});
     cs.render_microblock();
@@ -214,13 +276,13 @@ void render_video() {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("What decides the length of the cycle?"));
-    obs->manager.transition(MICRO, "angley", "4");
+    obs->manager.transition(MICRO, "angley", "5");
     obs->manager.transition(MICRO, "zoom", "-1.5");
     obs->manager.set("path_length", "24");
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(1));
-    obs->manager.transition(MICRO, "angley", "2.5");
+    obs->manager.transition(MICRO, "angley", "4");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Here's the pattern."));
@@ -228,7 +290,7 @@ void render_video() {
     obs->manager.transition(MACRO, "singularity_depth", "200");
     cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(FileBlock("Starting from these 4 regions, it takes 4 iterations."), SilenceBlock(.3)));
+    stage_macroblock(CompositeBlock(FileBlock("These 4 regions are stuck in a 4-iteration cycle."), SilenceBlock(.3)));
     obs->manager.set("cycle_highlight", "4");
     obs->manager.transition(MICRO, {{"ball0_start_x", "{t} 3 * sin .5 * 4 +"}, {"ball0_start_y", "{t} 2 * cos .5 *"}});
     obs->manager.transition(MICRO, "cycle_highlight_enable", "1");
@@ -237,7 +299,7 @@ void render_video() {
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(FileBlock("From these 8, it takes 8."), SilenceBlock(.3)));
+    stage_macroblock(CompositeBlock(FileBlock("These 8 are a little more complicated."), SilenceBlock(.3)));
     obs->manager.transition(MICRO, "cycle_highlight", "8");
     obs->manager.transition(MICRO, "cycle_highlight_enable", "1");
     obs->manager.transition(MICRO, {{"ball0_start_x", "{t} 3 * sin .5 * 4 +"}, {"ball0_start_y", "{t} 2 * cos .5 * 2 +"}});
@@ -246,7 +308,7 @@ void render_video() {
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(FileBlock("Move further away for 12 blocks of period 12."), SilenceBlock(.3)));
+    stage_macroblock(CompositeBlock(FileBlock("Starting here, we have 12 blocks of period 12."), SilenceBlock(.3)));
     obs->manager.transition(MICRO, "cycle_highlight", "12");
     obs->manager.transition(MICRO, {{"ball0_start_x", "{t} 3 * sin .5 * 4 +"}, {"ball0_start_y", "{t} 2 * cos .5 * 4 +"}});
     cs.render_microblock();
@@ -267,24 +329,39 @@ void render_video() {
     obs->manager.transition(MICRO, "path_length", "12");
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("We can ask where it ends up after some arbitrary number of iterations."));
-    obs->manager.transition(MICRO, "path_length", "5");
+    int num_iterations = 12;
+    stage_macroblock(FileBlock("We can ask where it ends up after, say, " + to_string(num_iterations) + " iterations."));
+    obs->manager.transition(MICRO, "path_length", to_string(num_iterations));
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Here, I gave every point a unique color."));
     obs->manager.transition(MICRO, "path_opacity", "0");
-    obs->manager.transition(MICRO, "periodicity_or_flow", "1");
+    obs->manager.transition(MACRO, "periodicity_or_flow", "1");
+    cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("After 1 iteration, we get this:"));
+    stage_macroblock(FileBlock("This is where every point lands after one iteration,"));
     obs->manager.transition(MICRO, "flow_depth", "1");
     cs.render_microblock();
-
-    stage_macroblock(CompositeBlock(FileBlock("Let's keep hitting the ball."), SilenceBlock(5)));
     cs.render_microblock();
+
+    stage_macroblock(FileBlock("two iterations,"));
+    obs->manager.transition(MICRO, "flow_depth", "2");
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("four iterations,"));
+    obs->manager.transition(MICRO, "flow_depth", "4");
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(CompositeBlock(FileBlock("and so on, up to 12"), SilenceBlock(3)));
     obs->manager.transition(MICRO, "flow_depth", "12");
     cs.render_microblock();
-    obs->manager.set("flow_depth", "198");
+
+    stage_macroblock(SilenceBlock(1));
+    cs.render_microblock();
+    obs->manager.set("flow_depth", to_string(num_iterations));
 
     stage_macroblock(CompositeBlock(FileBlock("The regions all match the shape of the table,"), SilenceBlock(1)));
     obs->manager.transition(MICRO, {
@@ -368,10 +445,10 @@ void render_video() {
     cs.render_microblock();
 
     stage_macroblock(FileBlock("What happens when a ball is right on the edge of two regions?"));
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 7; i++) {
         cs.render_microblock();
     }
-    for(int i = 0; i < 3; i++) {
+    for(int i = 0; i < 2; i++) {
         obs->manager.transition(MICRO, "singularity_opacity", ".2");
         cs.render_microblock();
         obs->manager.transition(MICRO, "singularity_opacity", "0");
@@ -485,8 +562,9 @@ void render_video() {
     obs->manager.transition(MACRO, "zoom", "-2.5 <zoom_out_timer> .15 * -");
     obs->manager.transition(MICRO, "path_opacity", "0");
     obs->manager.transition(MICRO, "island_opacity", "0");
-    obs->manager.transition(MICRO, "singularity_depth", "200");
+    obs->manager.transition(MICRO, "singularity_depth", "100");
     cs.render_microblock();
+    obs->manager.transition(MICRO, "singularity_depth", "200");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("Let's check out the singularities of some unusual board shapes."));
@@ -529,9 +607,10 @@ void render_video() {
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(2));
+    stage_macroblock(SilenceBlock(4));
+    obs->manager.begin_timer("zoom_out_timer");
     obs->manager.transition(MACRO, "singularity_depth", "200");
-    obs->manager.transition(MACRO, "zoom", "-3");
+    obs->manager.transition(MICRO, "zoom", "-2.5 <zoom_out_timer> .15 * -");
     cs.render_microblock();
     obs->manager.transition(MICRO, {{"center_x", "0"}, {"center_y", "0"}});
     cs.render_microblock();
@@ -555,7 +634,7 @@ void render_video() {
     cs.render_microblock();
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("For these irregular board shapes, the singularities are quite dense."));
+    stage_macroblock(FileBlock("For these irregular board shapes, the singularities are tightly packed."));
     StateSet almost_square;
     for (int i = 0; i < 5; i++) {
         double theta = (double)i * (2.0 * M_PI / 4.2) + 3.1415 * 1.25;
@@ -568,8 +647,8 @@ void render_video() {
 
     stage_macroblock(FileBlock("Increasing the depth of our search for singularities, they fill increasingly more of the plane,"));
     obs->manager.set("singularity_depth", "<singularity_depth_log> exp");
-    obs->manager.set("singularity_depth_log", "500 log");
-    undo = obs->manager.transition(MICRO, {{"zoom", "3"}, {"singularity_depth_log", "50000 log"}, {"island_opacity", "0"}});
+    obs->manager.set("singularity_depth_log", "200 log");
+    undo = obs->manager.transition(MICRO, {{"zoom", "3"}, {"singularity_depth_log", "30000 log"}, {"island_opacity", "0"}});
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(.3));
@@ -589,14 +668,14 @@ void render_video() {
 
     stage_macroblock(SilenceBlock(4));
     for(int i = 0; i < 2; i++) {
-        obs->manager.transition(MICRO, "singularity_depth_log", "50000 log");
+        obs->manager.transition(MICRO, "singularity_depth_log", "30000 log");
         cs.render_microblock();
         obs->manager.transition(MICRO, "singularity_depth_log", "500 log");
         cs.render_microblock();
     }
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("Ok. This is very cool. But what about the areas which are _not_ singularities?"));
+    stage_macroblock(CompositeBlock(SilenceBlock(1), FileBlock("But what about the areas which are _not_ singularities?")));
     undo["zoom"] = "-1";
     obs->manager.transition(MACRO, undo);
     obs->manager.transition(MACRO, pentagon);
@@ -646,11 +725,11 @@ void render_video() {
     }
     obs->manager.set({{"ball0_start_x", "6.6"}, {"ball0_start_y", "1.2"}, {"path_length", "0"}});
 
-    stage_macroblock(FileBlock("This means each island in a periodic cycle are the same shape."));
+    stage_macroblock(FileBlock("This means each island in a periodic cycle has the same shape."));
+    obs->manager.transition(MICRO, {{"ball_opacity", "0"}, {"path_opacity", "0"}, {"zoom", "-.6"}});
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(1));
-    obs->manager.transition(MICRO, {{"ball_opacity", "0"}, {"path_opacity", "0"}, {"zoom", "-.6"}});
     cs.render_microblock();
     obs->manager.set({{"ball0_start_x", "2.03"}, {"ball0_start_y", "-.02"}, {"path_length", "0"}});
     obs->manager.set("cycle_highlight", "70");
@@ -660,11 +739,15 @@ void render_video() {
 
     stage_macroblock(CompositeBlock(FileBlock("This periodic cycle has 35 tiny little decagons."), SilenceBlock(5)));
     obs->manager.transition(MICRO, "path_length", "35", false);
+    undo = obs->manager.transition(MICRO, {{"table_opacity", ".3"}, {"island_opacity", ".3"}});
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(2));
+    stage_macroblock(FileBlock("But does every starting point even end up in a cycle to begin with?"));
+    obs->manager.transition(MICRO, undo);
     obs->manager.transition(MICRO, "zoom", "-1");
     cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1));
     obs->manager.transition(MICRO, "cycle_highlight_enable", "0");
     obs->manager.transition(MICRO, {{"singularity_opacity", "0"}, {"path_opacity", "0"}, {"ball_opacity", "0"}});
     cs.render_microblock();
@@ -684,31 +767,65 @@ void render_video() {
     cs.render_microblock();
     obs->manager.remove(unordered_set<string>{"v4.x", "v4.y"});
 
-    stage_macroblock(SilenceBlock(1));
+    stage_macroblock(SilenceBlock(2));
     obs->manager.set({{"ball0_start_x", "7.416407865"}, {"ball0_start_y", "2.3511410092"}, {"path_length", "0"}});
     obs->manager.transition(MICRO, {{"ball_opacity", "1"}, {"path_opacity", "1"}, {"zoom", "-.8"}});
     obs->manager.transition(MICRO, "singularity_opacity", "0");
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(2));
+    stage_macroblock(SilenceBlock(4));
     obs->manager.transition(MICRO, "path_length", "<path_length_log> exp");
     obs->manager.set("path_length_log", "3 log");
     obs->manager.transition(MICRO, "ball_opacity", "0");
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(7));
+    set_for_real(true);
+    stage_macroblock(SilenceBlock(12));
     obs->manager.transition(MACRO, "path_length_log", "20000 log");
-    obs->manager.transition(MACRO, "zoom", "-5.1");
+    obs->manager.transition(MACRO, "zoom", "-5.18");
     obs->manager.set("path_opacity_log", "1 log");
     obs->manager.set("path_opacity", "<path_opacity_log> exp");
     obs->manager.transition(MACRO, "path_opacity_log", ".011 log");
     cs.render_microblock();
 
+    stage_macroblock(FileBlock("Its unbounded orbit was first discovered by Richard Schwartz in 2006."));
+    string title = "\\qquad \\qquad Schwartz, R. (2006) \\\\\\\\ \\tiny{Outer Billiards on the Penrose Kite: Compactification and Renormalization}";
+    shared_ptr<WhitePaperScene> wps = make_shared<WhitePaperScene>("schwartz", title, vector<int>{1, 2, 3, 32});
+    cs.add_scene_fade_in(MICRO, wps, "wps");
+    wps->manager.set("which_page", "32");
+    wps->manager.set("page_focus", "1");
+    wps->manager.set("completion", "1");
+    wps->manager.set({
+        {"crop_top", ".28"},
+        {"crop_bottom", ".7"},
+        {"crop_left", ".23"},
+        {"crop_right", ".75"},
+    });
+    cs.render_microblock();
+
     stage_macroblock(SilenceBlock(3));
+    wps->manager.transition(MICRO, {
+        {"crop_top", "0"},
+        {"crop_bottom", "1"},
+        {"crop_left", "0"},
+        {"crop_right", "1"},
+    });
+    cs.render_microblock();
+    wps->manager.transition(MICRO, "page_focus", "0");
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1));
+    wps->manager.transition(MICRO, "completion", "0");
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(4));
     obs->manager.transition(MACRO, "path_length_log", "0");
     cs.render_microblock();
-    obs->manager.transition(MICRO, "singularity_opacity", "1");
+    cs.remove_subscene("wps");
     obs->manager.transition(MICRO, "zoom", "-1");
+    obs->manager.transition(MICRO, "singularity_opacity", "1");
+    cs.render_microblock();
     obs->manager.transition(MICRO, {{"path_opacity", "0"}, {"ball_opacity", "0"}});
     cs.render_microblock();
 
@@ -720,10 +837,22 @@ void render_video() {
     obs->manager.set("path_length", "0");
     obs->manager.remove(unordered_set<string>{"path_length_log", "path_opacity_log", "singularity_depth_log"});
 
-    stage_macroblock(CompositeBlock(FileBlock("I still think my favorite shapes are the regular polygons."), SilenceBlock(2)));
+    stage_macroblock(FileBlock("This shape is the Penrose Kite, which is used in penrose tilings."));
+    shared_ptr<PngScene> ps = make_shared<PngScene>("penrose");
+    cs.add_scene_fade_in(MICRO, ps, "ps");
+    undo = obs->manager.transition(MICRO, {{"island_opacity", "0"}, {"singularity_opacity", "0"}});
     cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(CompositeBlock(FileBlock("But I still think my favorite shapes are the regular polygons."), SilenceBlock(2)));
+    cs.fade_subscene(MICRO, "ps", 0);
+    obs->manager.transition(MICRO, undo);
+    cs.render_microblock();
+    cs.remove_subscene("ps");
     obs->manager.transition(MICRO, regular_ngon(4, 2.0, 3.1415 * 1.25));
     cs.render_microblock();
+
+    set_for_real(false);
 
     obs->manager.set(regular_ngon(8, 2.0, 3.1415 * 1.25));
     // Set odd index vertices to the midpoint of their neighbors, making a square.
@@ -862,7 +991,6 @@ void render_video() {
     obs->manager.transition(MICRO, {{"zoom", "-1"}, {"singularity_depth", "100"}, {"singularity_rainbow", "0"}, {"island_opacity", "1"}});
     cs.render_microblock();
 
-    set_for_real(true);
     //stage_macroblock(FileBlock("One last treat: what happens if, instead of playing in euclidean space,"));
     //stage_macroblock(FileBlock("we play it in hyperbolic geometry?"));
     stage_macroblock(SilenceBlock(10));

@@ -131,19 +131,19 @@ __global__ void overlay_rotation_kernel(
     Cuda::ivec2 b_pos(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
     if (b_pos.x >= b_wh.x || b_pos.y >= b_wh.y) return;
 
-    // Compute position relative to overlay center
+    // Position relative to the overlay center - zero exactly where the foreground's
+    // own center should be sampled from, so this is already the vector to rotate.
     Cuda::vec2 rel_pos = b_pos - center;
 
     // Center of the foreground
     Cuda::vec2 fg_center = (f_wh - Cuda::ivec2(1, 1)) * 0.5f;
 
-    // Translate to center, apply inverse rotation, translate back
-    Cuda::vec2 f = rel_pos - fg_center;
+    // Apply inverse rotation, then re-express relative to the foreground's top-left corner.
     float cosA = cosf(angle_rad);
     float sinA = sinf(angle_rad);
     // inverse rotation by -angle -> use cos, -sin
-    float srcx =  cosA * f.x + sinA * f.y + fg_center.x;
-    float srcy = -sinA * f.x + cosA * f.y + fg_center.y;
+    float srcx =  cosA * rel_pos.x + sinA * rel_pos.y + fg_center.x;
+    float srcy = -sinA * rel_pos.x + cosA * rel_pos.y + fg_center.y;
 
     if (srcx < 0.0f || srcx >= static_cast<float>(f_wh.x - 1) ||
         srcy < 0.0f || srcy >= static_cast<float>(f_wh.y - 1)) {
@@ -240,4 +240,80 @@ extern "C" void cuda_overlay (
 
 extern "C" void cuda_zeroize_pixels(uint32_t* d_pixels, const Cuda::ivec2& wh) {
     cudaMemset(d_pixels, 0, wh.x * wh.y * sizeof(uint32_t));
+}
+
+__global__ void crop_scale_darken_kernel(
+    const uint32_t* in_pixels, const Cuda::ivec2 in_wh,
+    uint32_t* out_pixels, const Cuda::ivec2 out_wh,
+    const Cuda::vec2 crop_tl, const Cuda::vec2 crop_br,
+    const float darken_factor)
+{
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= out_wh.x * out_wh.y) return;
+
+    int x = idx % out_wh.x;
+    int y = idx / out_wh.x;
+
+    float u = (x + 0.5f) / out_wh.x;
+    float v = (y + 0.5f) / out_wh.y;
+
+    float gx = (crop_tl.x + u * (crop_br.x - crop_tl.x)) * in_wh.x - 0.5f;
+    float gy = (crop_tl.y + v * (crop_br.y - crop_tl.y)) * in_wh.y - 0.5f;
+
+    int gxi = static_cast<int>(floorf(gx));
+    int gyi = static_cast<int>(floorf(gy));
+
+    float dx = gx - gxi;
+    float dy = gy - gyi;
+
+    float pa = 0.0f;
+    float pr = 0.0f;
+    float pg = 0.0f;
+    float pb = 0.0f;
+
+    // Iterate over the surrounding 4x4 block of pixels
+    for (int m = -1; m <= 2; m++) {
+        for (int n = -1; n <= 2; n++) {
+            int xi = Cuda::clamp(gxi + m, 0, in_wh.x - 1);
+            int yi = Cuda::clamp(gyi + n, 0, in_wh.y - 1);
+
+            uint32_t pixel = in_pixels[yi * in_wh.x + xi];
+            float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
+
+            pa += weight * Cuda::geta(pixel);
+            pr += weight * Cuda::getr(pixel);
+            pg += weight * Cuda::getg(pixel);
+            pb += weight * Cuda::getb(pixel);
+        }
+    }
+
+    pr *= darken_factor;
+    pg *= darken_factor;
+    pb *= darken_factor;
+
+    int ia = static_cast<int>(roundf(pa));
+    int ir = static_cast<int>(roundf(pr));
+    int ig = static_cast<int>(roundf(pg));
+    int ib = static_cast<int>(roundf(pb));
+
+    ia = min(255, max(0, ia));
+    ir = min(255, max(0, ir));
+    ig = min(255, max(0, ig));
+    ib = min(255, max(0, ib));
+
+    out_pixels[y * out_wh.x + x] = Cuda::argb(ia, ir, ig, ib);
+}
+
+extern "C" void cuda_crop_scale_darken_device(
+    const uint32_t* d_input, const Cuda::ivec2& in_wh,
+    uint32_t* d_output, const Cuda::ivec2& out_wh,
+    const Cuda::vec2& crop_tl, const Cuda::vec2& crop_br,
+    const float darken_factor)
+{
+    int numPixels = out_wh.x * out_wh.y;
+    int blockSize = 256;
+    int numBlocks = (numPixels + blockSize - 1) / blockSize;
+    crop_scale_darken_kernel<<<numBlocks, blockSize>>>(
+        d_input, in_wh, d_output, out_wh, crop_tl, crop_br, darken_factor);
+    cudaDeviceSynchronize();
 }

@@ -13,6 +13,7 @@ public:
 
 private:
     shared_ptr<DevicePointer> author_pixels;
+    vector<unique_ptr<DevicePointer>> page_gpu;
     const string prefix;
     const string author;
     const vector<int> page_numbers;
