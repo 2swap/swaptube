@@ -1,6 +1,7 @@
 #include <cuda_runtime.h>
 #include "color.cuh"
 #include "../Host_Device_Shared/vec.h"
+#include "../Host_Device_Shared/CameraProjection.h"
 
 namespace Cuda {
 
@@ -44,25 +45,6 @@ __device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int co
         if (e2 > -dy) { err -= dy; x1 += sx; }
         if (e2 <  dx) { err += dx; y1 += sy; }
     }
-}
-
-__device__ __forceinline__ void d_coordinate_to_pixel(
-    const vec3& coordinate,
-    bool &behind_camera,
-    const quat& camera_direction,
-    const vec3& camera_pos,
-    const float fov,
-    const float geom_mean_size,
-    const Cuda::ivec2& wh,
-    vec3& pixel)
-{
-    behind_camera = false;
-    vec3 rotated = rotate_vector(coordinate - camera_pos, camera_direction);
-    if (rotated.z <= 0) { behind_camera = true; return; }
-    float scale = (geom_mean_size * fov) / rotated.z;
-    pixel.x = scale * rotated.x + wh.x * 0.5f;
-    pixel.y = -scale * rotated.y + wh.y * 0.5f;
-    pixel.z = rotated.z;
 }
 
 __device__ __forceinline__ Cuda::vec3 get_raymarch_vector(

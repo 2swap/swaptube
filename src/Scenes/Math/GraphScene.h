@@ -15,8 +15,6 @@ string to_string_with_precision(const double a_value, const int n);
 
 class GraphScene : public ThreeDimensionScene {
 public:
-    double curr_hash;
-    double next_hash;
     std::vector<unsigned int> color_scheme;
     GraphScene(const vec2& dimensions = vec2(1, 1));
 
@@ -36,7 +34,6 @@ public:
     double edge_label_offset = 0.03;
 
 private:
-    int last_node_count;
     std::unordered_map<double, std::pair<vec4, vec4>> nodes_in_micro_transition;
     std::unordered_map<double, std::pair<vec4, vec4>> nodes_in_macro_transition;
 };

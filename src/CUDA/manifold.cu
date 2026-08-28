@@ -38,19 +38,9 @@ __global__ void render_manifold_kernel(
     float z = evaluate_resolved_state_equation(d_manifold.z_size, d_manifold.z_eq, cuda_tags, 3, error);
 
     // Project 3D point to 2D screen space
-    bool behind_camera = false;
-    Cuda::vec3 out;
-    d_coordinate_to_pixel(
-        {x, y, z},
-        behind_camera,
-        camera_direction,
-        camera_pos,
-        fov,
-        geom_mean_size,
-        wh,
-        out
-    );
-    if(behind_camera) return; // Don't render points behind camera
+    Cuda::vec3 out = Cuda::coordinate_to_pixel(
+        {x, y, z}, camera_direction, camera_pos, fov, geom_mean_size, wh);
+    if(out.z <= 0) return; // Don't render points behind camera
 
     uint32_t color = 0;
 

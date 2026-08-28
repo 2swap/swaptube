@@ -203,36 +203,18 @@ __global__ void geodesics_2d_kernel(
     state[3] = rotated_start_velocity.y;
 
     // Iterate geodesic curve
-    bool last_behind_camera = false;
-    Cuda::vec3 last_pixel;
-    d_coordinate_to_pixel(
+    Cuda::vec3 last_pixel = Cuda::coordinate_to_pixel(
         surface_2d(Cuda::vec2(state[0], state[1])),
-        last_behind_camera,
-        camera_direction,
-        camera_pos,
-        fov,
-        geom_mean_size,
-        Cuda::ivec2(w, h),
-        last_pixel
-    );
+        camera_direction, camera_pos, fov, geom_mean_size, Cuda::ivec2(w, h));
     for(int i = 0; i < num_steps; ++i) {
         if (!rk4_step_geodesic(state, 1)) return;
         if (state[0] < u_min || state[0] > u_max || state[1] < v_min || state[1] > v_max) return;
 
-        bool behind_camera = false;
-        Cuda::vec3 pixel;
-        d_coordinate_to_pixel(
+        const Cuda::vec3 pixel = Cuda::coordinate_to_pixel(
             surface_2d(Cuda::vec2(state[0], state[1])),
-            behind_camera,
-            camera_direction,
-            camera_pos,
-            fov,
-            geom_mean_size,
-            Cuda::ivec2(w, h),
-            pixel
-        );
+            camera_direction, camera_pos, fov, geom_mean_size, Cuda::ivec2(w, h));
 
-        if (!behind_camera && !last_behind_camera && pixel.x >= 0 && pixel.x < w && pixel.y >= 0 && pixel.y < h) {
+        if (pixel.z > 0 && last_pixel.z > 0 && pixel.x >= 0 && pixel.x < w && pixel.y >= 0 && pixel.y < h) {
             Cuda::bresenham(
                 last_pixel.x, last_pixel.y,
                 pixel.x, pixel.y,
@@ -242,7 +224,6 @@ __global__ void geodesics_2d_kernel(
         }
 
         last_pixel = pixel;
-        last_behind_camera = behind_camera;
     }
 }
 

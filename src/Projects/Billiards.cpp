@@ -779,7 +779,7 @@ void render_video() {
     obs->manager.transition(MICRO, "ball_opacity", "0");
     cs.render_microblock();
 
-    set_for_real(true);
+    //set_for_real(true);
     stage_macroblock(SilenceBlock(12));
     obs->manager.transition(MACRO, "path_length_log", "20000 log");
     obs->manager.transition(MACRO, "zoom", "-5.18");
@@ -852,7 +852,7 @@ void render_video() {
     obs->manager.transition(MICRO, regular_ngon(4, 2.0, 3.1415 * 1.25));
     cs.render_microblock();
 
-    set_for_real(false);
+    //set_for_real(false);
 
     obs->manager.set(regular_ngon(8, 2.0, 3.1415 * 1.25));
     // Set odd index vertices to the midpoint of their neighbors, making a square.

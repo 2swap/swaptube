@@ -19,13 +19,9 @@ __global__ void render_points_kernel(
     if (idx >= num_points) return;
     Cuda::Point p = points[idx];
     if (p.opacity == 0) return;
-    bool behind_camera = false;
-    Cuda::vec3 pixel;
-    d_coordinate_to_pixel(
-        p.center, behind_camera,
-        camera_direction, camera_pos, fov,
-        geom_mean_size, wh, pixel);
-    if (behind_camera) return;
+    const Cuda::vec3 pixel = Cuda::coordinate_to_pixel(
+        p.center, camera_direction, camera_pos, fov, geom_mean_size, wh);
+    if (pixel.z <= 0) return; // behind the camera
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 140.0f;
     Cuda::d_fill_circle(pixel.x, pixel.y, dot_size, p.color, pixels, wh, points_opacity * p.opacity);
 }
@@ -40,18 +36,12 @@ __global__ void render_lines_kernel(
     if (idx >= num_lines) return;
     Cuda::Line ln = lines[idx];
     if (ln.opacity == 0) return;
-    bool behind_camera1 = false, behind_camera2 = false;
-    Cuda::vec3 p1, p2;
-    Cuda::d_coordinate_to_pixel(
-        ln.start, behind_camera1,
-        camera_direction, camera_pos, fov,
-        geom_mean_size, wh, p1);
-    if (behind_camera1) return;
-    Cuda::d_coordinate_to_pixel(
-        ln.end,   behind_camera2,
-        camera_direction, camera_pos, fov,
-        geom_mean_size, wh, p2);
-    if (behind_camera2) return;
+    const Cuda::vec3 p1 = Cuda::coordinate_to_pixel(
+        ln.start, camera_direction, camera_pos, fov, geom_mean_size, wh);
+    if (p1.z <= 0) return; // an endpoint behind the camera drops the whole line
+    const Cuda::vec3 p2 = Cuda::coordinate_to_pixel(
+        ln.end, camera_direction, camera_pos, fov, geom_mean_size, wh);
+    if (p2.z <= 0) return;
     Cuda::bresenham(
         p1.x, p1.y, p2.x, p2.y,
         ln.color, lines_opacity * ln.opacity, thickness,

@@ -14,7 +14,7 @@ extern "C" void cuda_render_manifold(
 extern "C" void cuda_free_texture(uint32_t* d_tex_pixels);
 extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const int tex_w, const int tex_h);
 
-ManifoldScene::ManifoldScene(const vec2& dimensions) : ThreeDimensionScene(dimensions), d_texture_data(nullptr), texture_w(0), texture_h(0) {
+ManifoldScene::ManifoldScene(const vec2& dimensions) : ThreeDimensionScene(dimensions), d_texture_data(nullptr), texture_w(0), texture_h(0), distance_buffer(get_width_height()) {
     manager.set({
         {"ab_dilation", ".8"},
         {"dot_radius", "1"},
@@ -117,6 +117,11 @@ void ManifoldScene::draw() {
     ThreeDimensionScene::draw();
 
     delete[] manifolds;
+}
+
+void ManifoldScene::change_data() {
+    ThreeDimensionScene::change_data();
+    distance_buffer.tick(get_width_height());
 }
 
 void ManifoldScene::set_texture(const Pixels& new_texture) {

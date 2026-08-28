@@ -4,6 +4,7 @@
 #include <unordered_set>
 
 #include "../Common/ThreeDimensionScene.h"
+#include "../../DataObjects/DevicePointer.h"
 #include "../../Host_Device_Shared/ManifoldData.c"
 
 class ManifoldScene : public ThreeDimensionScene {
@@ -12,6 +13,7 @@ private:
     uint32_t* d_texture_data;
     int texture_w;
     int texture_h;
+    DevicePointer distance_buffer; // depth buffer for the manifold raymarch pass
 
 public:
     ManifoldScene(const vec2& dimensions = vec2(1, 1));
@@ -24,6 +26,8 @@ public:
     void remove_manifold(const std::string& name);
 
     void draw() override;
+
+    void change_data() override;
 
     void set_texture(const Pixels& new_texture);
 

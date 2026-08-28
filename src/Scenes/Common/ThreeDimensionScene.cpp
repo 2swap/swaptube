@@ -1,6 +1,8 @@
 #include "ThreeDimensionScene.h"
 #include "../../IO/Writer.h"
+#include "../../IO/Latex.h"
 #include "../../Host_Device_Shared/vec.h"
+#include "../../Host_Device_Shared/CameraProjection.h"
 #include "../../Core/Smoketest.h"
 
 extern "C" {
@@ -15,47 +17,10 @@ extern "C" {
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
         const quat& camera_direction, const vec3& camera_pos, float fov);
-
-    void cuda_render_surface(
-        uint32_t* d_pixels,
-        int x1,
-        int y1,
-        const ivec2& plot_wh,
-        int pixels_w,
-        uint32_t* d_surface,
-        const ivec2& surface_wh,
-        float opacity,
-        vec3 camera_pos,
-        quat camera_direction,
-        const vec3& surface_normal,
-        const vec3& surface_center,
-        const vec3& surface_pos_x_dir,
-        const vec3& surface_pos_y_dir,
-        const float surface_ilr2,
-        const float surface_iur2,
-        float halfwidth,
-        float halfheight,
-        float over_w_fov);
 }
-
-Surface::Surface(const vec3& c, const vec3& l, const vec3& u, const string& n)
-    : center(c),
-      pos_x_dir(l * static_cast<float>(geom_mean(get_video_width_pixels(), get_video_height_pixels()) / get_video_height_pixels())),
-      pos_y_dir(u * static_cast<float>(geom_mean(get_video_width_pixels(), get_video_height_pixels()) / get_video_width_pixels())),
-      name(n) {
-    ilr2 = 0.5f / (square(pos_x_dir.x) + square(pos_x_dir.y) + square(pos_x_dir.z));
-    iur2 = 0.5f / (square(pos_y_dir.x) + square(pos_y_dir.y) + square(pos_y_dir.z));
-    normal = cross(pos_x_dir, pos_y_dir);
-}
-
-// constructor to make the surface fill the screen.
-Surface::Surface(const string& n) : Surface(vec3(0, 0, 0), vec3(.5, 0, 0), vec3(0, .5, 0), n) {}
-
-Path::Path(const string& n, int clr, float op)
-    : name(n), color(clr), opacity(op) { }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
-    : SuperScene(dimensions), auto_distance(-1), auto_camera(vec3(0,0,0)), distance_buffer(get_width_height()) {
+    : SuperScene(dimensions) {
     manager.set({
         {"fov", "1"},
         {"x", "0"},
@@ -66,155 +31,19 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"qi", "0"},
         {"qj", "0"},
         {"qk", "0"},
-        {"surfaces_opacity", "1"},
         {"lines_opacity", "1"},
         {"points_radius_multiplier", "1"},
         {"lines_thickness_multiplier", "1"},
         {"points_opacity", "1"},
+        {"point_labels_size", "1"},
     });
 }
 
-// TODO this is duplicate code from CUDA/common_graphics.h and we should unify them.
 vec2 ThreeDimensionScene::coordinate_to_pixel(vec3 coordinate, float& distance) {
-    coordinate = rotate_vector(coordinate - camera_pos, camera_direction);
-    distance = coordinate.z;
-    if(distance <= 0) return {-1000, -1000};
-
-    float scale = (get_geom_mean_size()*fov) / distance;
-    return scale * vec2(coordinate.x, -coordinate.y) + get_width_height()*.5f;
-}
-
-bool ThreeDimensionScene::isOutsideScreen(const vec2& point) {
-    return point.x < 0 || point.x >= get_width() || point.y < 0 || point.y >= get_height();
-}
-
-// Utility function to find the orientation of the ordered triplet (p, q, r).
-// The function returns:
-// 1 --> Clockwise
-// 2 --> Counterclockwise
-int ThreeDimensionScene::orientation(const vec2& p, const vec2& q, const vec2& r) {
-    int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-    return (val > 0) ? 1 : 2; // clockwise or counterclockwise
-}
-
-// Function to check if a point is on the left side of a directed line segment.
-bool ThreeDimensionScene::isLeft(const vec2& a, const vec2& b, const vec2& c) {
-    return ((b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)) > 0;
-}
-
-bool ThreeDimensionScene::isInsideConvexPolygon(const vec2& point, const vector<vec2>& polygon) {
-    if (polygon.size() < 3) return false; // Not a polygon
-
-    // Extend the point to the right infinitely
-    vec2 extreme{100000, point.y};
-    for (int i = 0; i < polygon.size(); i++) {
-        int next = (i + 1) % polygon.size();
-        if (lineSegmentsIntersect(polygon[i], polygon[next], point, extreme)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool ThreeDimensionScene::lineSegmentsIntersect(const vec2& p1, const vec2& q1, const vec2& p2, const vec2& q2) {
-    // Find the four orientations needed for the general and special cases
-    int o1 = orientation(p1, q1, p2);
-    int o2 = orientation(p1, q1, q2);
-    int o3 = orientation(p2, q2, p1);
-    int o4 = orientation(p2, q2, q1);
-    if (o1 != o2 && o3 != o4)
-        return true; // General case
-    return false; // Doesn't fall in any of the above cases
-}
-
-// Given three colinear points p, q, r, the function checks if point q lies on line segment 'pr'
-bool ThreeDimensionScene::onSegment(const vec2& p, const vec2& q, const vec2& r) {
-    if (q.x <= max(p.x, r.x) && q.x >= min(p.x, r.x) &&
-        q.y <= max(p.y, r.y) && q.y >= min(p.y, r.y))
-        return true;
-    return false;
-}
-
-bool ThreeDimensionScene::should_render_surface(vector<vec2> corners){
-    // We identify that polygons A and B share some amount of area, if and only if any one of these 3 conditions are met:
-    // 1. A corner of A is inside B
-    // 2. A corner of B is inside A
-    // 3. There is an edge a in A and an edge b in B such that a and b intersect.
-
-    // Check if any corner of the quadrilateral is inside the screen
-    for (const auto& corner : corners)
-        if (!isOutsideScreen(corner))
-            return true;
-
-    int w = get_width();
-    int h = get_height();
-    vector<vec2> screenCorners = {vec2(0, 0), vec2(w, 0), vec2(w, h), vec2(0, h)};
-    for (const auto& corner : screenCorners)
-        if (isInsideConvexPolygon(corner, corners))
-            return true;
-
-    // Check if any edge of the quadrilateral intersects with the screen edges
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 4; j++)
-            if (lineSegmentsIntersect(corners[i], corners[(i + 1) % 4], screenCorners[j], screenCorners[(j + 1) % 4]))
-                return true;
-    return false;
-}
-
-void ThreeDimensionScene::render_surface(const Surface& surface) {
-    float this_surface_opacity = state[surface.name + ".opacity"] * state["surfaces_opacity"];
-
-    vec3 surface_center = surface.center;
-    if(this_surface_opacity < .001) return;
-
-    vector<vec2> corners(4);
-    float distance_1, distance_2, distance_3, distance_4;
-    corners[0] = coordinate_to_pixel(surface_center + surface.pos_x_dir + surface.pos_y_dir, distance_1);
-    corners[1] = coordinate_to_pixel(surface_center - surface.pos_x_dir + surface.pos_y_dir, distance_2);
-    corners[2] = coordinate_to_pixel(surface_center - surface.pos_x_dir - surface.pos_y_dir, distance_3);
-    corners[3] = coordinate_to_pixel(surface_center + surface.pos_x_dir - surface.pos_y_dir, distance_4);
-    if(distance_1 <=0 && distance_2 <=0 && distance_3 <=0 && distance_4 <=0) return;
-    if(!should_render_surface(corners)) return;
-
-    int x1 = numeric_limits<int>::max();
-    int y1 = numeric_limits<int>::max();
-    int x2 = numeric_limits<int>::min();
-    int y2 = numeric_limits<int>::min();
-
-    for(const auto& corner : corners){
-        x1 = min(x1, int(corner.x));
-        y1 = min(y1, int(corner.y));
-        x2 = max(x2, int(corner.x));
-        y2 = max(y2, int(corner.y));
-    }
-    x1 = max(x1, 0);
-    y1 = max(y1, 0);
-    x2 = min(x2, get_width()-1);
-    y2 = min(y2, get_height()-1);
-    if (x2 < x1 || y2 < y1) return;
-    int plot_w = x2 - x1 + 1;
-    int plot_h = y2 - y1 + 1;
-
-    uint32_t* queried = subscenes[surface.name]->query();
-
-    cuda_render_surface(
-        gpu_pix.get_ptr(),
-        x1, y1, ivec2(plot_w, plot_h), get_width(),
-        queried,
-        subscenes[surface.name]->get_width_height(),
-        this_surface_opacity,
-        camera_pos,
-        camera_direction,
-        surface.normal,
-        surface_center,
-        surface.pos_x_dir,
-        surface.pos_y_dir,
-        surface.ilr2,
-        surface.iur2,
-        get_width()*0.5f,
-        get_height()*0.5f,
-        over_w_fov
-    );
+    const vec3 p = ::coordinate_to_pixel(coordinate, camera_direction, camera_pos,
+                                         fov, get_geom_mean_size(), get_width_height());
+    distance = p.z;
+    return vec2(p.x, p.y);
 }
 
 void ThreeDimensionScene::set_camera_direction() {
@@ -225,18 +54,18 @@ void ThreeDimensionScene::set_camera_direction() {
     camera_pos = focus - rotate_vector(vec3(0,0,state["d"]), conjugate(camera_direction));
 }
 
-float ThreeDimensionScene::squaredDistance(const vec3& a, const vec3& b) {
-    vec3 diff = a - b;
-    return dot(diff, diff);
+vector<Point> ThreeDimensionScene::read_state_points() const {
+    vector<Point> pts;
+    for (int i = 0; state.contains("point" + to_string(i) + ".x"); i++) {
+        const string base = "point" + to_string(i) + ".";
+        pts.push_back(Point(vec3(state[base + "x"], state[base + "y"], state[base + "z"]),
+                            0xff808080, 1, 1));
+    }
+    return pts;
 }
 
 void ThreeDimensionScene::draw() {
     set_camera_direction();
-
-    // Render surfaces via their CUDA integration.
-    if (state["surfaces_opacity"] > 0.001) {
-        for (const Surface& surface : surfaces) render_surface(surface);
-    }
 
     if (!lines.empty() && state["lines_opacity"] > .001) {
         int thickness = static_cast<int>(state["lines_thickness_multiplier"] * get_geom_mean_size() / 640.0);
@@ -253,19 +82,39 @@ void ThreeDimensionScene::draw() {
             fov
         );
     }
-    if (!points.empty() && state["points_opacity"] > .001 && state["points_radius_multiplier"] > 0.001) {
+
+    auto render_point_set = [&](Point* data, int n) {
+        if (n <= 0 || state["points_opacity"] <= .001 || state["points_radius_multiplier"] <= 0.001) return;
         render_points_on_gpu(
             gpu_pix.get_ptr(),
             get_width_height(),
             get_geom_mean_size(),
             state["points_opacity"],
             state["points_radius_multiplier"],
-            points.data(),
-            static_cast<int>(points.size()),
+            data,
+            n,
             camera_direction,
             camera_pos,
             fov
         );
+    };
+
+    render_point_set(points.data(), static_cast<int>(points.size()));
+
+    vector<Point> state_points = read_state_points();
+    render_point_set(state_points.data(), static_cast<int>(state_points.size()));
+
+    const float labels_size = state["point_labels_size"];
+    if (labels_size > 0.001) {
+        for (const auto& [id, name] : point_names) {
+            const string base = "point" + to_string(id) + ".";
+            if (name.empty() || !state.contains(base + "x")) continue;
+            float distance;
+            const vec2 pos = coordinate_to_pixel(vec3(state[base + "x"], state[base + "y"], state[base + "z"]), distance);
+            if (distance <= 0) continue;
+            const vec2 dim = vec2(0.2, 0.1) * get_width_height() * labels_size;
+            write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), latex_color(0xffffffff, name), pos, dim, 1, 0);
+        }
     }
 }
 
@@ -277,37 +126,5 @@ void ThreeDimensionScene::add_line(const Line& l) {
     lines.push_back(l);
 }
 
-void ThreeDimensionScene::add_surface(const Surface& s, shared_ptr<Scene> sc) {
-    surfaces.push_back(s);
-    add_subscene_check_dupe(s.name, sc);
-    manager.set(s.name + ".opacity", "1");
-}
-
-void ThreeDimensionScene::add_surface_fade_in(const TransitionType tt, const Surface& s, shared_ptr<Scene> sc, double opa){
-    add_surface(s, sc);
-    manager.set(s.name + ".opacity", "0");
-    fade_subscene(tt, s.name, opa);
-}
-
-void ThreeDimensionScene::remove_surface(const string& name) {
-    remove_subscene(name);
-    for (auto it = surfaces.begin(); it != surfaces.end(); ){
-        if (it->name == name){
-            it = surfaces.erase(it);
-        }
-        else ++it;
-    }
-    manager.remove(name + ".opacity");
-}
-
 void ThreeDimensionScene::clear_lines(){ lines.clear(); }
 void ThreeDimensionScene::clear_points(){ points.clear(); }
-void ThreeDimensionScene::clear_surfaces(){
-    remove_all_subscenes();
-    surfaces.clear();
-}
-
-void ThreeDimensionScene::change_data() {
-    Scene::change_data();
-    distance_buffer.tick(get_width_height());
-}

@@ -25,8 +25,6 @@ string to_string_with_precision(const double a_value, const int n){
 
 GraphScene::GraphScene(const vec2& dimensions)
     : ThreeDimensionScene(dimensions) {
-    curr_hash = 0;
-    next_hash = 0;
     color_scheme = {0xff0079ff, 0xff00dfa2, 0xfff6fa70, 0xffff0060};
     manager.begin_timer("time_since_graph_init");
     manager.set({
@@ -68,7 +66,6 @@ void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
         graph.move_node(hash, end);
     }
     nodes_in_micro_transition.clear();
-    curr_hash = next_hash;
 }
 
 void GraphScene::draw(){
@@ -101,11 +98,6 @@ void GraphScene::draw(){
     clear_lines();
     clear_points();
 
-    vec3 curr_pos;
-    vec3 next_pos;
-    bool curr_found = false;
-    bool next_found = false;
-
     float midpoint_thickness = .35 * state["midpoint_multiplier"];
 
     // TODO Perhaps we should merge the graph and TDS point/line datatypes so that this translation becomes unnecessary
@@ -115,8 +107,6 @@ void GraphScene::draw(){
         Node node = p.second;
         vec3 node_pos(node.position);
         const NodeRenderData nrd = config.get_node_render_data(hash, macro, micro);
-        if(hash == curr_hash) { curr_pos = node_pos; curr_found = true; }
-        if(hash == next_hash) { next_pos = node_pos; next_found = true; }
         if (nrd.radius > 0) {
             add_point(Point(node_pos, nrd.color, 1, nrd.radius));
             if (nrd.splash_opacity > 0 && nrd.splash_radius > 0) {
@@ -171,16 +161,6 @@ void GraphScene::draw(){
                 write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), erd.label, pos, dim, 1, text_rotation_angle);
             }
         }
-    }
-
-    float opa = 0;
-    vec3 pos_to_render(0,0,0);
-    if(curr_found || next_found){
-        double smooth_interp = smoother2(micro);
-        if     (!curr_found) pos_to_render = next_pos;
-        else if(!next_found) pos_to_render = curr_pos;
-        else                 pos_to_render = veclerp(curr_pos, next_pos, smooth_interp);
-        opa = lerp(curr_found?1:0, next_found?1:0, smooth_interp);
     }
 
     ThreeDimensionScene::draw();
