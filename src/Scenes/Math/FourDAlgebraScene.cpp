@@ -19,7 +19,11 @@ extern "C" void four_d_render(
     vec4 rotater,
     vec4 rotaterInv,
 
+    vec4 jj,
+    vec4 ijj,
+
     const float brightness,
+    const vec3 channels,
     const float fade,
     const float slider,
     const int equation,
@@ -33,7 +37,12 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
         {"rotation_ik", "0"},
         {"rotation_jk", "0"},
         {"scale", "1.0"},
+
         {"brightness", "1.0"},
+        {"r_channel", "1.0"},
+        {"g_channel", "1.0"},
+        {"b_channel", "1.0"},
+
         {"fade", "0.006"},
         {"slider", "1.1"},
         {"equation", "0"},
@@ -49,77 +58,24 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
         {"pov_qj", "0"},
         {"pov_qk", "0"},
         {"pov_fov", "3"},
-        {"pov_max_dist", "10"}
+        {"pov_max_dist", "10"},
+
+
+        {"jj_1", "-1"},
+        {"jj_i", "0"},
+        {"jj_j", "0"},
+        {"jj_ij", "0"},
     });
 }
 
-// float **newMatrix(int rows, int cols){
-//     float **M = new float *[rows];
-//     for (int r = 0; r < rows; r++){
-//         M[r] = new float[cols]{0.0};
-//     }
-//     return M;
-// }
-/*
-float **rotationMatrix(int rows, int cols, int axis1, int axis2, float angle){
-    float **M = new float *[rows];
-
-    for (int r = 0; r < rows; r++){
-        M[r] = new float[cols]{0.0};
-
-        for (int c = 0; c < cols; c++){
-            if ((r == axis1 && c == axis2)){
-                M[r][c] = sin(angle);
-            } else if (r == axis1 && c == axis2){
-                M[r][c] = -sin(angle);
-            } else if (r != c){
-                M[r][c] = 0.0;
-            } else if (c == axis1 || r == axis2){
-                M[r][c] = cos(angle);
-            } else {
-                M[r][c] = 1.0;
-            }
-        }
-    }
-    return M;
-}
-
-
-float **matrixMult(float **A,float **B, int rows, int cols, int shared){
-
-    float **AB = new float *[rows];
-
-    for (int r = 0; r < rows; r++){
-        AB[r] = new float[cols]{0.0};
-
-        for (int c = 0; c < cols; c++){
-            for (int s = 0; s < shared; s++){
-                AB[r][c] += A[r][s]*B[s][c];
-            }
-        }
-    }
-
-	return AB;
-}
-*/
 
 void FourDAlgebraScene::draw() {
-
-    // vec3 camera_pos = vec3(sin(state["pov_xz"])*4, cos(state["pov_xz"])*4, state["pov_y"]);
-    // vec3 camera_pos = vec3(0,-5,0);
-    // quat camera_direction = normalize(quat(state["pov_q1"], state["pov_qi"], state["pov_qj"], state["pov_qk"]));
-
 
     const quat camera_direction_0 = normalize(quat(cos(state["pov_xz"]), 0, sin(state["pov_xz"]), 0));
     const quat camera_direction = camera_direction_0*normalize(quat(cos(state["pov_y"]), sin(state["pov_y"])*sin(state["pov_xz"]), 0, sin(state["pov_y"])*cos(state["pov_xz"])));
 
-    // const quat camera_direction = normalize(quat(cos(state["pov_xz"]), sin(state["pov_xz"]), 0, 0));
-
-    
     const vec3 camera_pos = rotate_vector(vec3(0,0,-state["pov_max_dist"]*0.5), camera_direction);
     
-
-
     
     // M = matrixMult( M, rotationMatrix(4,4,0,1,state["offset"]), 4, 4, 4);
     float **M = rotationMatrix(4,4,0,1,state["offset1"]);
@@ -133,18 +89,6 @@ void FourDAlgebraScene::draw() {
     M = matrixMult( M, rotationMatrix(4,4,0,3,state["rotation_1k"]), 4, 4, 4);
 
 
-
-    // float **M = rotationMatrix(4,4,2,3,state["rotation_1"]);
-    // M = matrixMult( M, rotationMatrix(4,4,2,3,state["rotation_2"]), 4, 4, 4);
-    // M = matrixMult( M, rotationMatrix(4,4,1,2,state["rotation_3"]), 4, 4, 4);
-    // M = matrixMult( M, rotationMatrix(4,4,0,3,state["rotation_1"]), 4, 4, 4);
-    // M = matrixMult( M, rotationMatrix(4,4,0,2,state["rotation_2"]), 4, 4, 4);
-    // M = matrixMult( M, rotationMatrix(4,4,1,3,state["rotation_3"]), 4, 4, 4);
-    // float **M3 = rotationMatrix(4,4,0,2,state["rotation_3"]);
-    // float **M3 = rotationMatrix(4,4,1,2,state["rotation_1"]);
-    // float **M2 = rotationMatrix(4,4,1,3,state["rotation_2"]);
-    // float **M3 = rotationMatrix(4,4,0,3,state["rotation_3"]);
-    // float **M = matrixMult(matrixMult(M1,M2,4,4,4),M3,4,4,4);
 
     four_d_render(get_width_height(),
 
@@ -164,10 +108,12 @@ void FourDAlgebraScene::draw() {
         vec4(cos(state["rotater"]), 0, sin(state["rotater"])*sin(0.4), sin(state["rotater"])*cos(0.4)),
         vec4(cos(state["rotater"]), 0,-sin(state["rotater"])*sin(0.4), -sin(state["rotater"])*cos(0.4)),
 
-        // vec4(M[3][0],M[3][1],M[3][2],M[3][3])*state["scale"],
-        //   vec4(8,8,8,8),
-        //   vec4(8,8,8,8),
+        vec4(state["jj_1"], state["jj_i"], state["jj_j"], state["jj_ij"]),
+        vec4(-state["jj_i"], state["jj_1"], -state["jj_ij"], state["jj_j"]),
+
         state["brightness"], 
+        vec3(state["r_channel"], state["g_channel"], state["b_channel"]),
+
         state["fade"], 
         state["slider"], 
         state["equation"],

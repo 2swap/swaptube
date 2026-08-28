@@ -1,6 +1,18 @@
 
 
-__device__ __forceinline__ Cuda::vec4 four_d_mult(Cuda::vec4 a, Cuda::vec4 b, float lerp) { // bool commute) {
+__device__ __forceinline__ Cuda::vec4 four_d_mult(Cuda::vec4 a, Cuda::vec4 b, float lerp, Cuda::vec4 jj, Cuda::vec4 ijj) { // bool commute) {
+
+
+    return Cuda::vec4( 
+        a.x*b.x - a.y*b.y,
+        a.x*b.y + a.y*b.x,
+        a.x*b.z + a.z*b.x - lerp*a.w*b.y - a.y*b.w,
+        a.x*b.w + a.w*b.x + a.y*b.z + lerp*a.z*b.y
+    )
+    + (a.z*b.z - lerp*a.w*b.w)*jj
+    + (a.w*b.z + lerp*a.z*b.w)*ijj
+    ;
+
 
     Cuda::vec4 vec_out;
     // quaternion
@@ -55,7 +67,7 @@ __device__ __forceinline__ Cuda::vec4 four_d_mult(Cuda::vec4 a, Cuda::vec4 b, fl
             a.x*b.w + a.w*b.x + a.y*b.z - a.z*b.y
         );
     } else {
-        return four_d_mult(a,b,0.0)*(1-lerp) + four_d_mult(a,b,1.0)*lerp;
+        return four_d_mult(a,b,0.0,jj,ijj)*(1-lerp) + four_d_mult(a,b,1.0,jj,ijj)*lerp;
     }
 
 
