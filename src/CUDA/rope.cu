@@ -50,7 +50,6 @@ extern "C" void physics(Cuda::vec2* rope, const int rope_length, Cuda::vec2* pin
 }
 
 extern "C" void allocate_rope_and_pins(Cuda::vec2** rope_pointer, Cuda::vec2** pins_pointer){
-    //use cudamalloc here
     cudaMalloc(rope_pointer, 1000 * sizeof(Cuda::vec2));
     cudaMalloc(pins_pointer, 20 * sizeof(Cuda::vec2));
 }

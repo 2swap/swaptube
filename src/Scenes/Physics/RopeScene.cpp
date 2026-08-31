@@ -24,11 +24,29 @@ void RopeScene::remove_pin(int pin_index){
     rope.remove_pin(pin_index);
 }
 
-void RopeScene::draw(){
-    cuda_render_path(gpu_pix.get_ptr(), get_width_height(), rope.d_nodes, 1000,
-        vec2(state[ "left_x"], state[   "top_y"]),
-        vec2(state["right_x"], state["bottom_y"]),
-        0xFFFFFFFF, 1.0f, 2.0f, true);
+void RopeScene::change_data() {
+    CoordinateScene::change_data();
+    rope.tick();
+
+    if (progress < 1.0f) {
+        progress += draw_speed;
+        if (progress > 1.0f) progress = 1.0f;
+    }
+}
+
+void RopeScene::draw() {
+    const int total_nodes = 1000;
+    int visible_nodes = static_cast<int>(total_nodes * progress);
+
+    if (visible_nodes > 1) {
+        bool is_closed = (progress >= 1.0f); 
+
+        cuda_render_path(gpu_pix.get_ptr(), get_width_height(), rope.d_nodes, visible_nodes,
+            vec2(state["left_x"], state["top_y"]),
+            vec2(state["right_x"], state["bottom_y"]),
+            0xFFFFFFFF, 1.0f, 2.0f, is_closed);
+    }
+
     for (const auto& pin : rope.h_pins) {
         draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(pin), 5, 0xFFFF0000, 1.0f);
     }
@@ -37,7 +55,3 @@ void RopeScene::draw(){
 void RopeScene::set_pins(vec2 pos, uint32_t color, float size){
 }
 
-void RopeScene::change_data() {
-    CoordinateScene::change_data();
-    rope.tick();
-}

@@ -7,6 +7,9 @@
 class RopeScene : public CoordinateScene {
 public:
     Rope rope;
+
+    float progress = 0.0f;
+    float draw_speed = 0.005f;
     
     RopeScene(const string file_name, const vec2& dimensions = vec2(1, 1));
 

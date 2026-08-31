@@ -8,7 +8,160 @@
 #include "../Scenes/Physics/RopeScene.h"
 #include "../Core/State/StateTester.h"
 
+/* SCRIPT
+What does a rubik's cube, parallel parking, and rotating a broken sattalite have in common ?
+They all make use of a special kind or sequence of moves, called a commutator.
 
+
+Picture this : you are trying to hang a painting, but you want to make it hard for yourself,
+you want it to be so that if you remove one of those two pins, the painting immediatly falls down.
+You think it's easy ? Alright, try with three pins now, the painting should fall if either of the pins is removed.
+Do you think it's possible with 4 pins ? With 5 ? Any number ?
+Indeed it is, and the general solution involves nesting commutators !
+
+
+
+*cube statespace graph*
+Here is the solved cube,
+let's make one random turn on it, we are now on one those twelve nodes,
+now a second turn,
+a third,
+and one more...
+At a depth of 10(change that to be correct) moves, we got the entire statespace of a 2x2 rubik's cube.
+It has 3.674.160 nodes !
+Now let's try the same thing with a 3x3.
+Here is the solved cube.
+Now one move deep,
+two,
+three,
+TODO QTM vs HTM
+as you can see, this graph grows MUCH faster than the 2x2 one, and it is in fact, wayyyy too big to completely render at once.
+It actually has more than 43 quintillion nodes, that more than 10 to the power of 19 (huuuuh not sure, need to check)
+The general formula for computing the number of nodes of the statespace graph of an nxn rubik's cube is the following (kindly provided by covoisinage :sunglasses:)
+And as you can see, it has the growth rate of an exponential.
+Even without having the full graph at hand, we can still see some interesting pattenrs ans symetries.
+There are also a lot of loops, like this one (sexy move), this one (some random loop), or this trivial one (U4 from any state).
+In fact, loops are extremely common, and there is a reason for that. The formal explanation is beyong the scope of this video, but it comes from group theory, and Lagrange's theorem states that : since there is a finite number of nodes in this graph, then, starting at any node, and reaping any sequence of move enough times will inevitably lead back to your starting point.
+
+//At some point, take like 30 seconds to just travel through the graph and show interesting places, and patterns//
+
+
+*subgroup inclusion, 2x2 into 3x3*
+
+-----------------------------------------------------------------------------------
+Graph state space
+Graph state space where only shortest paths to the root are included
+
+loops in the graphs, talk about the order of a sequence
+
+U' R U R' F' U F U' sledge (3 comms in a row)
+sune, and diagramm commutative thing
+Abelianized group of 3x3 (maybe to hard)
+
+Cube itself
+Ring diagram
+2-gen subgroup, color lattice points based on group element?
+^ draw commutators on that subgroup
+Interpolating between puzzles
+15 puzzle
+Big grid of permutable items
+
+Other things with commutators
+painting puzzle
+parallel parking
+quintic proof
+
+corner and edge graphs (homomorphism with 2x2)
+Bandage cube graph?
+Animating elements of rubiks cube group as permutations which rip pieces out and put them back in
+Group actions "rolling" graph along an automorphism in 3-space
+(use moves to apply them on the whole graph, making it land on itself but symmetrically)
+6d matrix of move distances
+drawing shortest path to origin
+v it would probably look like some sort of random walk in the below space
+
+Make points on graph closer to each other if they have more pieces in the same spots
+^ that neatly maps onto drawing commutators in a "geometric" way
+^we could also tie that into the commutator on a lattice idea
+Algorithms in each step of the cube and what their graphs/groups look like
+
+
+Story:
+Why not just draw a state space graph of the cube?
+It's too big, but...
+The cube has symmetry!
+Bandage cube?
+Symmetry means that we don't have to concern ourselves with all of the specifics
+can abstract out general patterns
+Visualize that symmetry somehow
+Symmetric, but not abelian
+What are the consequences?
+r u r' u' doesn't come back to solved!!! (not abelian)
+this means we can make commutators
+what do those do??
+
+
+use big formula to show that space state is too big
+state space graph :
+separate into edges orientation/perm, same for corners, show them all at the same time with a muving cube
+for the 2x2, probably full graph (3.6 million nodes)
+*/
+
+/*Intro
+Let's play a game.
+Here's a rope, the goal is to tie it around one pin, 
+in a way that if you remove the pin, the rope immediatly falls down.
+Trivial, you'd say...
+Ok now let's try with two pins, the rope should fall if either of the pins is removed.
+The same solution doesn't work, so let's try something else...
+This doesn't work either, let's try something else again...
+Here's a solution, we first go around the first pin, then the second, then we go back around the first pin in the opposite direction, and finally we go back around the second pin in the opposite direction.
+This is called a commutator, and with this path, if you remove either of the pins, the rope completely unties itself and falls down.
+*/
+
+void intro_rope(){
+    RopeScene rs("io_in/loop_trivial", vec2(1, 1));
+    RopeScene rs2("io_in/loop_trivial", vec2(1, 1));
+    RopeScene rs3("io_in/loop_comm", vec2(1, 1));
+    RopeScene rs4("io_in/loop_comm", vec2(1, 1));
+    stage_macroblock(SilenceBlock(10), 6);
+    
+    rs.render_microblock();
+
+    rs.add_pin(vec2(0.5,0.4));
+    rs.render_microblock();
+
+    rs.remove_pin(0);
+    rs.render_microblock();
+
+    rs2.add_pin(vec2(0.4,0.4));
+    rs2.add_pin(vec2(0.6,0.4));
+    rs2.render_microblock();
+
+    rs2.remove_pin(0);
+    rs2.render_microblock();
+
+    rs2.add_pin(vec2(0.4,0.4));
+    rs2.remove_pin(0);
+    rs2.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(10), 4);
+    
+    rs3.add_pin(vec2(0.25, 0.3));
+    rs3.add_pin(vec2(0.75, 0.3));
+    rs3.render_microblock();
+
+    rs3.remove_pin(0);
+    rs3.render_microblock();
+
+    rs4.add_pin(vec2(0.25, 0.3));
+    rs4.add_pin(vec2(0.75, 0.3));
+    rs4.render_microblock();
+
+    rs4.remove_pin(1);
+    rs4.render_microblock();
+}
 
 void test_latex(){
     string latex_formula = "\\frac{7!\\times 3^6\\times 24!^{\\frac{n^2-2n-3\\times (n\\, mod\\, 2)}{4}}\\times (24\\times 12!\\times 2^{10})^{n\\, mod \\, 2}}{4!^{6\\times\\frac{(n-2)^2-n\\, mod\\, 2}{4}}}";
@@ -42,19 +195,19 @@ void cube_corner_in_center(){
     // open_ui(rs);
 
 
-    // stage_macroblock(SilenceBlock(5), 3);
+    stage_macroblock(SilenceBlock(5), 3);
     
-    // rs.exec_move_from_slice("R");
-    // rs.render_microblock();
+    rs.exec_move_from_slice("R");
+    rs.render_microblock();
 
-    // rs.exec_move_from_slice("B'");
-    // rs.render_microblock();
+    rs.exec_move_from_slice("B'");
+    rs.render_microblock();
 
     // rs.exec_move_from_slice("B2");
     // rs.render_microblock();
 
-    // rs.exec_move_from_slice("U");
-    // rs.render_microblock();
+    rs.exec_move_from_slice("U");
+    rs.render_microblock();
 
     // rs.exec_move_from_slice("R'");
     // rs.render_microblock();
@@ -83,8 +236,8 @@ void cube_corner_in_center(){
 
 
 
-    stage_macroblock(SilenceBlock(10), 1);
-    rs.render_microblock();
+    // stage_macroblock(SilenceBlock(10), 1);
+    // rs.render_microblock();
 }
 
 void test_voice(){
@@ -205,10 +358,13 @@ void t_perm(){
     rs.render_microblock();
 }
 
+
+
 void render_video() {
     // CompositeScene cs;
     // intro(cs);
     // test_rope();
     // cube_corner_in_center();
-    t_perm();
+    // t_perm();
+    intro_rope();
 }
