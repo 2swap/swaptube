@@ -5,25 +5,40 @@
 
 using std::complex;
 
-extern "C" void four_d_render(
+extern "C" void four_d_plane_render(
     const ivec2& wh,
     const vec2& lx_ty,
     const vec2& rx_by,
     vec4 x_unit,
     vec4 y_unit,
+
+    vec4 jj,
+    vec4 ijj,
     const float brightness,
+    const vec3 channels,
     unsigned int internal_color,
     unsigned int* d_colors
 );
 
 FourDPlaneScene::FourDPlaneScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({
-        {"rotation_1", "0"},
-        {"rotation_2", "0"},
-        {"rotation_3", "0"},
+        {"rotation_1k", "0"},
+        {"rotation_ik", "0"},
+        {"rotation_jk", "0"},
         {"scale", "1.0"},
-        {"brightness", "1.0"}
+
+        {"offset1", "0.0"},
+        {"offset2", "0.0"},
+
+        {"brightness", "1.0"},
+        {"r_channel", "1.0"},
+        {"g_channel", "1.0"},
+        {"b_channel", "1.0"},
         
+        {"jj_1", "-1"},
+        {"jj_i", "0"},
+        {"jj_j", "0"},
+        {"jj_ij", "0"},
     });
 }
 
@@ -78,31 +93,34 @@ float **matrixMult(float **A,float **B, int rows, int cols, int shared){
 
 void FourDPlaneScene::draw() {
 
-    float **M = rotationMatrix(4,4,0,1,state["rotation_1"]);
-    M = matrixMult( M, rotationMatrix(4,4,2,3,state["rotation_2"]), 4, 4, 4);
-    M = matrixMult( M, rotationMatrix(4,4,1,2,state["rotation_3"]), 4, 4, 4);
-    M = matrixMult( M, rotationMatrix(4,4,0,3,state["rotation_1"]), 4, 4, 4);
-    // M = matrixMult( M, rotationMatrix(4,4,0,2,state["rotation_2"]), 4, 4, 4);
-    // M = matrixMult( M, rotationMatrix(4,4,1,3,state["rotation_3"]), 4, 4, 4);
-    // float **M3 = rotationMatrix(4,4,0,2,state["rotation_3"]);
-    // float **M3 = rotationMatrix(4,4,1,2,state["rotation_1"]);
-    // float **M2 = rotationMatrix(4,4,1,3,state["rotation_2"]);
-    // float **M3 = rotationMatrix(4,4,0,3,state["rotation_3"]);
-    // float **M = matrixMult(matrixMult(M1,M2,4,4,4),M3,4,4,4);
+    
+    // M = matrixMult( M, rotationMatrix(4,4,0,1,state["offset"]), 4, 4, 4);
+    float **M = rotationMatrix(4,4,0,1,state["offset1"]);
+    M = matrixMult( M, rotationMatrix(4,4,2,3,state["offset1"]), 4, 4, 4);
+    M = matrixMult( M, rotationMatrix(4,4,0,3,state["offset2"]), 4, 4, 4);
+    M = matrixMult( M, rotationMatrix(4,4,1,2,state["offset2"]), 4, 4, 4);
 
-    four_d_render(get_width_height(),
-                      vec2(state["left_x"], state["top_y"]),
-                      vec2(state["right_x"], state["bottom_y"]),
-                      
-                      vec4(M[0][0],M[0][3],M[0][2],M[0][3])*state["scale"],
-                      vec4(M[1][0],M[1][1],M[1][2],M[1][3])*state["scale"],
-                    //   vec4(M[2][0],M[2][3],M[2][2],M[2][3])*state["scale"],
-                    //   vec4(M[3][0],M[3][1],M[3][2],M[3][3])*state["scale"],
-                    //   vec4(8,8,8,8),
-                    //   vec4(8,8,8,8),
-                      state["brightness"], 
-                      OPAQUE_BLACK,
-                      gpu_pix.get_ptr()
+    // float **M = rotationMatrix(4,4,0,3,state["rotation_1k"]);
+    M = matrixMult( M, rotationMatrix(4,4,2,3,state["rotation_jk"]), 4, 4, 4);
+    M = matrixMult( M, rotationMatrix(4,4,1,3,state["rotation_ik"]), 4, 4, 4);
+    M = matrixMult( M, rotationMatrix(4,4,0,3,state["rotation_1k"]), 4, 4, 4);
+
+    four_d_plane_render(get_width_height(),
+
+        vec2(state["left_x"], state["top_y"]),
+        vec2(state["right_x"], state["bottom_y"]), 
+            
+        vec4(M[2][0],M[2][3],M[2][2],M[2][3])*state["scale"],
+        vec4(M[1][0],M[1][1],M[1][2],M[1][3])*state["scale"],
+
+        vec4(state["jj_1"], state["jj_i"], state["jj_j"], state["jj_ij"]),
+        vec4(-state["jj_i"], state["jj_1"], -state["jj_ij"], state["jj_j"]),
+
+        state["brightness"], 
+        vec3(state["r_channel"], state["g_channel"], state["b_channel"]),
+
+        OPAQUE_BLACK,
+        gpu_pix.get_ptr()
     );
 
     CoordinateScene::draw();

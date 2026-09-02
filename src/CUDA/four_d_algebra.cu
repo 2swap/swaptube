@@ -6,35 +6,6 @@
 #include "four_d_shared.cuh"
 
 
-__device__ Cuda::vec3 four_d_accum(Cuda::vec4 a, float brightness) {
-
-    Cuda::vec3 accum(
-        //  b, b, b
-        smallness(a.y,brightness),
-        smallness(a.z,brightness),
-        smallness(a.w,brightness)
-    );
-    return accum;
-}
-
-__device__ uint32_t accum_to_color(Cuda::vec3 a, float fade) {
-
-    // return 255 << 24 |
-    // (uint32_t) min(a.x,255.0) << 16 |
-    // (uint32_t) min(a.y,255.0) << 8 |
-    // (uint32_t) min(a.z,255.0);
-
-    float ax = min(1.0,fade*a.x);
-    float ay = min(1.0,fade*a.y);
-    float az = min(1.0,fade*a.z);
-
-    return Cuda::OKLABtoRGB(
-        min(1.0,(ax+ay+az)*0.5)*255,
-        1.0,
-        (ax-ay)*0.866,
-        (ax+ay)*0.5-az
-    );
-}
 
 __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float commute, Cuda::vec4 jj, Cuda::vec4 ijj) {
 
@@ -72,6 +43,8 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
         }
         return cosv;
 
+    } else if (equation == 4){
+        return four_d_mult(v,v,commute,jj,ijj);
     }
 
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
@@ -89,15 +62,16 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
 
 
     if (equation == 0){
-        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320;
+        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320 + v9/362880 + v10/3628800;
 
     } else if (equation == 3){
         // return v - v2 - v5 + v10;
-        return v2 - v4 - v6 + v12;
+        // return v2 - v4 - v6 + v12;
         // return -2 + v*6 - v2*2 - v3*3 + v6;
         // return 1 + v + v2 + v3 + v4;
         // return 1 - v + v3 - v4 + v5 - v7 + v8;
         // return 1 - v + v2 - v3 + v4;
+        return v3;
 
     }
     
@@ -123,6 +97,38 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
     // return v18*0.01 - v7 + v6*2.7 +  v5*8.0 - v3*60.0 -50.0;
     // return sinv*0.8 + cosv*1.6;
     // return sinv;
+}
+
+
+
+__device__ Cuda::vec3 four_d_accum(Cuda::vec4 a, float brightness) {
+
+    Cuda::vec3 accum(
+        //  b, b, b
+        smallness(a.y,brightness),
+        smallness(a.z,brightness),
+        smallness(a.w,brightness)
+    );
+    return accum;
+}
+
+__device__ uint32_t accum_to_color(Cuda::vec3 a, float fade) {
+
+    // return 255 << 24 |
+    // (uint32_t) min(a.x,255.0) << 16 |
+    // (uint32_t) min(a.y,255.0) << 8 |
+    // (uint32_t) min(a.z,255.0);
+
+    float ax = min(1.0,fade*a.x);
+    float ay = min(1.0,fade*a.y);
+    float az = min(1.0,fade*a.z);
+
+    return Cuda::OKLABtoRGB(
+        min(1.0,(ax+ay+az)*0.5)*255,
+        1.0,
+        (ax-ay)*0.866,
+        (ax+ay)*0.5-az
+    );
 }
 
 __global__ void four_d_raymarch_kernel(
