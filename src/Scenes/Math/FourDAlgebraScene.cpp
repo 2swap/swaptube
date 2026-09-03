@@ -16,8 +16,6 @@ extern "C" void four_d_render(
     vec4 x_unit,
     vec4 y_unit,
     vec4 z_unit,
-    vec4 rotater,
-    vec4 rotaterInv,
 
     vec4 jj,
     vec4 ijj,
@@ -31,12 +29,39 @@ extern "C" void four_d_render(
     unsigned int* d_colors
 );
 
+extern "C" void four_d_rotation_render(
+    const ivec2& wh,
+    
+    const quat& camera_orientation, 
+    const vec3& camera_position,
+    float fov_rad, 
+    float max_dist,
+
+    vec4 x_unit,
+    vec4 y_unit,
+    vec4 z_unit,
+    vec4 rotater,
+    vec4 rotaterInv,
+
+    vec4 jj,
+    vec4 ijj,
+    const float slider,
+
+    unsigned int* d_colors
+);
+
 FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions){
     manager.set({
         {"rotation_1k", "0"},
         {"rotation_ik", "0"},
         {"rotation_jk", "0"},
         {"scale", "1.0"},
+
+        {"rotate", "0"},
+        {"rot_1", "1"},
+        {"rot_i", "0"},
+        {"rot_j", "0"},
+        {"rot_k", "0"},
 
         {"brightness", "1.0"},
         {"r_channel", "1.0"},
@@ -48,7 +73,6 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
         {"equation", "0"},
         {"offset1", "0.17"},
         {"offset2", "0.29"},
-        {"rotater", "0"},
         
 // Raymarching Stuff
         {"pov_xz", "0"},
@@ -89,35 +113,62 @@ void FourDAlgebraScene::draw() {
     M = matrixMult( M, rotationMatrix(4,4,0,3,state["rotation_1k"]), 4, 4, 4);
 
 
+    if (state["rotate"] != 0){
 
-    four_d_render(get_width_height(),
 
-        camera_direction, 
-        camera_pos,
-        state["pov_fov"], 
-        state["pov_max_dist"],
-            
-        vec4(M[0][0],M[0][3],M[0][2],M[0][3])*state["scale"],
-        vec4(M[1][0],M[1][1],M[1][2],M[1][3])*state["scale"],
-        vec4(M[2][0],M[2][3],M[2][2],M[2][3])*state["scale"],
+        const float rot_size = pow(
+            state["rot_1"]*state["rot_1"] 
+            + state["rot_i"]*state["rot_i"] 
+            + state["rot_j"]*state["rot_j"] 
+            + state["rot_k"]*state["rot_k"]
+            ,0.5);
 
-        // vec4(0,1,0,0),
-        // vec4(0,0,1,0),
-        // vec4(0,0,0,1),
+        four_d_rotation_render(get_width_height(),
 
-        vec4(cos(state["rotater"]), 0, sin(state["rotater"])*sin(0.4), sin(state["rotater"])*cos(0.4)),
-        vec4(cos(state["rotater"]), 0,-sin(state["rotater"])*sin(0.4), -sin(state["rotater"])*cos(0.4)),
+            camera_direction, 
+            camera_pos,
+            state["pov_fov"], 
+            state["pov_max_dist"],
+                
+            vec4(0,1,0,0)*state["scale"],
+            vec4(0,0,1,0)*state["scale"],
+            vec4(0,0,0,1)*state["scale"],
 
-        vec4(state["jj_1"], state["jj_i"], state["jj_j"], state["jj_ij"]),
-        vec4(-state["jj_i"], state["jj_1"], -state["jj_ij"], state["jj_j"]),
+            vec4(state["rot_1"], state["rot_i"], state["rot_j"], state["rot_k"])/rot_size,
+            vec4(state["rot_1"], -state["rot_i"], -state["rot_j"], -state["rot_k"])/rot_size,
 
-        state["brightness"], 
-        vec3(state["r_channel"], state["g_channel"], state["b_channel"]),
+            vec4(state["jj_1"], state["jj_i"], state["jj_j"], state["jj_ij"]),
+            vec4(-state["jj_i"], state["jj_1"], -state["jj_ij"], state["jj_j"]),
 
-        state["fade"], 
-        state["slider"], 
-        state["equation"],
-        gpu_pix.get_ptr()
-    );
+            state["slider"], 
+            gpu_pix.get_ptr()
+        );
+
+    } else {
+
+        four_d_render(get_width_height(),
+
+            camera_direction, 
+            camera_pos,
+            state["pov_fov"], 
+            state["pov_max_dist"],
+                
+            vec4(M[0][0],M[0][3],M[0][2],M[0][3])*state["scale"],
+            vec4(M[1][0],M[1][1],M[1][2],M[1][3])*state["scale"],
+            vec4(M[2][0],M[2][3],M[2][2],M[2][3])*state["scale"],
+
+            vec4(state["jj_1"], state["jj_i"], state["jj_j"], state["jj_ij"]),
+            vec4(-state["jj_i"], state["jj_1"], -state["jj_ij"], state["jj_j"]),
+
+            state["brightness"], 
+            vec3(state["r_channel"], state["g_channel"], state["b_channel"]),
+
+            state["fade"], 
+            state["slider"], 
+            state["equation"],
+            gpu_pix.get_ptr()
+        );
+
+    }
 
 }

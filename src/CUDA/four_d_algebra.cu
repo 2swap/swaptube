@@ -141,8 +141,6 @@ __global__ void four_d_raymarch_kernel(
     const Cuda::vec4 x_unit,
     const Cuda::vec4 y_unit,
     const Cuda::vec4 z_unit,
-    const Cuda::vec4 rotater,
-    const Cuda::vec4 rotaterInv,
     const Cuda::vec4 jj,
     const Cuda::vec4 ijj,
     const float brightness,
@@ -165,63 +163,23 @@ __global__ void four_d_raymarch_kernel(
     float dt = 0.01f;
     
     Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, camera_orientation))*dt;
-    // Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, Cuda::quat(1,0,0,0)))*dt;
-    // Cuda::vec3 dir_world(0,-0.01,-0.01);
 
     Cuda::vec3 current_position = camera_position + dir_world;
     // Cuda::vec3 current_position(0,0,-10);
-    
-    // Cuda::vec4 q(camera_orientation.u, camera_orientation.i, camera_orientation.j, camera_orientation.k);
-    // Cuda::vec4 qInv(camera_orientation.u, -camera_orientation.i, -camera_orientation.j, -camera_orientation.k);
 
     const float commute = min(max((float(pixel_x)/float(wh.x)-slider)*40.0,-1.0),1.0);
     // Cuda::vec4 trans(0.0,1.0,-1.0,2.0);
 
-
-    Cuda::vec4 last_position(0,0,0,0);
     while (dist_traveled < max_dist) {
         dist_traveled += dt;
         current_position += dir_world;
 
-
-        // Cuda::vec4 pos_rotated = four_d_mult(rotater,four_d_mult(x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z,rotaterInv,commute),commute);
-
-        // if (abs(pos_rotated.y) < 1 && abs(pos_rotated.z) < 1 && abs(pos_rotated.w) < 1 && abs(pos_rotated.x) < 1){
-        //     if (abs(last_position.y) > 1){
-        //         if (last_position.y > 0){
-        //             colors[pixel_y * wh.x + pixel_x] = 0xffaa0000; 
-        //             return;
-        //         }
-        //         colors[pixel_y * wh.x + pixel_x] = 0xffaa7700; 
-        //         return;
-        //     } else if (abs(last_position.z) > 1){
-        //         if (last_position.z > 0){
-        //             colors[pixel_y * wh.x + pixel_x] = 0xffcccc00; 
-        //             return;
-        //         }
-        //         colors[pixel_y * wh.x + pixel_x] = 0xffcccccc; 
-        //         return;
-        //     } else if (abs(last_position.w) > 1){
-        //         if (last_position.w > 0){
-        //             colors[pixel_y * wh.x + pixel_x] = 0xff00cc55; 
-        //             return;
-        //         }
-        //         colors[pixel_y * wh.x + pixel_x] = 0xff5533dd; 
-        //         return;
-        //     }
-        //     colors[pixel_y * wh.x + pixel_x] = 0xff555566; 
-        //     return;
-        // }
-        
-        // last_position = pos_rotated;
-    
 
         Cuda::vec4 four_d_output = four_d_function(x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z, equation, commute, jj, ijj);
 
         out += four_d_accum(four_d_output,brightness); 
     }
 
-    // colors[pixel_y * wh.x + pixel_x] = 0xff000000; 
     colors[pixel_y * wh.x + pixel_x] = accum_to_color(out*channels,fade); 
 
 }
@@ -238,8 +196,6 @@ extern "C" void four_d_render(
     const Cuda::vec4 x_unit,
     const Cuda::vec4 y_unit,
     const Cuda::vec4 z_unit,
-    const Cuda::vec4 rotater,
-    const Cuda::vec4 rotaterInv,
 
     const Cuda::vec4 jj,
     const Cuda::vec4 ijj,
@@ -263,8 +219,6 @@ extern "C" void four_d_render(
         camera_orientation, camera_position,
         fov_rad, max_dist,
         x_unit, y_unit,z_unit,
-        rotater,
-        rotaterInv,
         jj,
         ijj,
         brightness, 
