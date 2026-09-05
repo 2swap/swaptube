@@ -1,4 +1,5 @@
 #include "InnerBilliardsScene.h"
+#include "../../Core/State/GlobalState.h"
 #include <cmath>
 
 extern "C" void draw_convex_polygon(uint32_t* d_pixels, const ivec2& wh,
@@ -195,6 +196,9 @@ void InnerBilliardsScene::draw_ball(const vector<vec2>& verts) {
 
     const vec2 start(state["ball_start_x"], state["ball_start_y"]);
     const vec2 ball_pos = build_ball_path(start, state["ball_angle"], state["ball_distance"], verts, pocket_radius_world()).back();
+
+    set_global_state("billiards_ball_x", ball_pos.x);
+    set_global_state("billiards_ball_y", ball_pos.y);
 
     const float radius_px = get_geom_mean_size() / 120.0;
     draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(ball_pos), radius_px, 0xffffffff, opacity);

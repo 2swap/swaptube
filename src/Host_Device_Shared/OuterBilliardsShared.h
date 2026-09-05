@@ -19,7 +19,6 @@ HOST_DEVICE inline bool curved_in_plane(const vec2& q, float curvature) {
 // Positive when b is counterclockwise of a.
 HOST_DEVICE inline float billiards_cross(const vec2& a, const vec2& b) { return a.x * b.y - a.y * b.x; }
 
-// Caller guarantees p is outside the (convex, counterclockwise) table
 HOST_DEVICE inline int outer_billiards_tangent_vertex(const vec2* verts, int n, const vec2& p) {
     int best = 0;
     for (int i = 1; i < n; i++) {
@@ -60,10 +59,20 @@ struct SingularityGraphParams {
     float    island_opacity;
     int      max_period;
     int      island_depth;
-    float    periodicity_or_flow;   // 0=periodicity (island coloring), >0.5=flow (color by final position)
-    float    flow_depth;            // iteration count (possibly fractional) at which to sample flow position
-    float    cycle_highlight;       // period(s) near this value are highlighted, others dimmed
-    float    cycle_highlight_enable; // 0=feature disabled (all periods full opacity), 1=fully enabled; interpolates between
+    float    periodicity_or_flow;
+    float    flow_depth;
+    float    cycle_highlight;
+    float    cycle_highlight_enable;
+};
+
+struct VertexFlowParams {
+    vec2  fixed_verts[MAX_BILLIARD_VERTICES];
+    int   n_fixed;
+    vec2  ball_start;
+    float curvature;
+    vec2  lx_ty, rx_by;
+    float flow_opacity;
+    float flow_depth;
 };
 
 SHARED_FILE_SUFFIX
