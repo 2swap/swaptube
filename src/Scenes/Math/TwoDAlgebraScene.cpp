@@ -58,8 +58,8 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
         {"xx_opacity", "0"},
         {"xy_opacity", "0"},
         {"yy_opacity", "0"},
-        {"xy_label", "1"},
-        {"1i_label", "0"},
+        {"x_label", "1"},
+        {"y_label", "1"},
         {"re_channel", "1"},
         {"im_channel", "1"},
         {"point_opacity", "0"},
@@ -273,8 +273,8 @@ void TwoDAlgebraScene::draw() {
         const vec2 xx_pos = vec2(state["xx_x"], -state["xx_y"])*diagram_unit+diagram_origin;
         draw_circle(gpu_pix.get_ptr(), get_width_height(), xx_pos, point_radius*1.2, xx_opacity + 0x00000044,1.0);
         draw_circle(gpu_pix.get_ptr(), get_width_height(), xx_pos, point_radius, xx_opacity + 0x00dd44dd,1.0);
-        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "xx"), xx_pos+textbox_offset*0.5, textbox_size, state["xx_opacity"]/255*state["xy_label"], 0);
-        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "1"), xx_pos+textbox_offset*0.5, textbox_size, state["xx_opacity"]/255*state["1i_label"], 0);
+        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "xx"), xx_pos+textbox_offset*0.5, textbox_size, state["xx_opacity"]/255*state["x_label"], 0);
+        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "1"), xx_pos+textbox_offset*0.5, textbox_size, state["xx_opacity"]/255*(1-state["x_label"]), 0);
     }
 
     const int xy_opacity = ((int) state["xy_opacity"]) << 24;
@@ -282,7 +282,8 @@ void TwoDAlgebraScene::draw() {
         const vec2 xy_pos = vec2(state["xy_x"], -state["xy_y"])*diagram_unit+diagram_origin;
         draw_circle(gpu_pix.get_ptr(), get_width_height(), xy_pos, point_radius*1.2, xy_opacity + 0x00000044,1.0);
         draw_circle(gpu_pix.get_ptr(), get_width_height(), xy_pos, point_radius, xy_opacity + 0x00ccccee,1.0);
-        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "xy"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*state["xy_label"], 0);
+        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "xy"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*state["x_label"], 0);
+        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "y"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*(1-state["x_label"]), 0);
     }
     
     
@@ -291,8 +292,8 @@ void TwoDAlgebraScene::draw() {
         const vec2 yy_pos = vec2(state["yy_x"], -state["yy_y"])*diagram_unit+diagram_origin;
         draw_circle(gpu_pix.get_ptr(), get_width_height(), yy_pos, point_radius*1.2, yy_opacity + 0x00000044,1.0);
         draw_circle(gpu_pix.get_ptr(), get_width_height(), yy_pos, point_radius, yy_opacity + 0x00dddd44,1.0);
-        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "yy"), yy_pos+textbox_offset, textbox_size, state["yy_opacity"]/255*state["xy_label"], 0);
-        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "i^2"), yy_pos, textbox_size*0.9, state["yy_opacity"]/255*state["1i_label"], 0);
+        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "yy"), yy_pos+textbox_offset, textbox_size, state["yy_opacity"]/255*state["y_label"], 0);
+        write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(0xff000044, "i^2"), yy_pos, textbox_size*0.9, state["yy_opacity"]/255*(1-state["y_label"]), 0);
     }
 
     const int point_opacity = ((int) state["point_opacity"]) << 24;
