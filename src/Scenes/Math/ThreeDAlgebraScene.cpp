@@ -11,7 +11,7 @@ ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : ThreeDimensionS
         {"zz_x", "0"}, {"zz_y", "1"}, {"zz_z", "0"}, {"zz_w", "0"},
         {"a_x", "0"}, {"a_y", "1"}, {"a_z", "0"}, {"a_w", "0"},
         {"b_x", "0"}, {"b_y", "0"}, {"b_z", "1"}, {"b_w", "0"},
-        {"lines_thickness_multiplier", "2"},
+        {"lines_thickness_multiplier", "3"},
         {"w_slider", "0"},
     });
 }
@@ -52,15 +52,15 @@ void ThreeDAlgebraScene::draw() {
     const float w = state["w_slider"];
 
 
-    const int reach = 2;
+    const int reach = 3;
     const int width = 2 * reach + 1;
     vector<vec3> transformed(width * width * width * 2);
     auto index = [&](int ix, int iy, int iz, int iw) {
         return ((iw*width + ix + reach) * width + (iy + reach)) * width + (iz + reach);
     };
-    for (int ix = -reach; ix <= reach; ix++)
-        for (int iy = -reach; iy <= reach; iy++)
-            for (int iz = -reach; iz <= reach; iz++) {
+    for (int ix = -reach; ix <= reach; ix+=2)
+        for (int iy = -reach; iy <= reach; iy+=2)
+            for (int iz = -reach; iz <= reach; iz+=2) {
                 const vec4 e(ix, iy, iz, 0);
                 const vec3 left  = project(multiply(multiply(e, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz));
                 const vec3 right = project(multiply(e, ab, xx, xy, xz, yy, yz, zz));
@@ -73,22 +73,22 @@ void ThreeDAlgebraScene::draw() {
                     transformed[index(ix, iy, iz, 1)] = leftw * (1 - associativity) + rightw * associativity;
                 }
             }
-
+    
     const uint32_t grid_color = 0xffffffff;
-    for (int ix = -reach; ix <= reach; ix++)
-        for (int iy = -reach; iy <= reach; iy++)
-            for (int iz = -reach; iz <= reach; iz++) {
+    for (int ix = -reach; ix <= reach; ix+=2)
+        for (int iy = -reach; iy <= reach; iy+=2)
+            for (int iz = -reach; iz <= reach; iz+=2) {
                 const vec3& p = transformed[index(ix, iy, iz, 0)];
-                if (ix < reach) add_line(Line(p, transformed[index(ix + 1, iy, iz, 0)], grid_color, 1, false));
-                if (iy < reach) add_line(Line(p, transformed[index(ix, iy + 1, iz, 0)], grid_color, 1, false));
-                if (iz < reach) add_line(Line(p, transformed[index(ix, iy, iz + 1, 0)], grid_color, 1, false));
+                if (ix < reach) add_line(Line(p, transformed[index(ix + 2, iy, iz, 0)], grid_color, 1, false));
+                if (iy < reach) add_line(Line(p, transformed[index(ix, iy + 2, iz, 0)], grid_color, 1, false));
+                if (iz < reach) add_line(Line(p, transformed[index(ix, iy, iz + 2, 0)], grid_color, 1, false));
 
 
                 if (w > 0){
                     const vec3& q = transformed[index(ix, iy, iz, 1)];
-                    if (ix < reach) add_line(Line(q, transformed[index(ix + 1, iy, iz, 1)], grid_color, 1, false));
-                    if (iy < reach) add_line(Line(q, transformed[index(ix, iy + 1, iz, 1)], grid_color, 1, false));
-                    if (iz < reach) add_line(Line(q, transformed[index(ix, iy, iz + 1, 1)], grid_color, 1, false));
+                    if (ix < reach) add_line(Line(q, transformed[index(ix + 2, iy, iz, 1)], grid_color, 1, false));
+                    if (iy < reach) add_line(Line(q, transformed[index(ix, iy + 2, iz, 1)], grid_color, 1, false));
+                    if (iz < reach) add_line(Line(q, transformed[index(ix, iy, iz + 2, 1)], grid_color, 1, false));
                     add_line(Line(q, p, grid_color, 1, false));
                 }
             }
