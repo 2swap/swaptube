@@ -186,7 +186,7 @@ void OuterBilliardsScene::draw() {
     pixel_verts.reserve(verts.size());
     for (const vec2& v : verts) pixel_verts.push_back(point_to_pixel(v));
 
-    draw_convex_polygon(gpu_pix.get_ptr(), gpu_pix.get_wh(), pixel_verts.data(), (int)pixel_verts.size(), 0xff1a6b3a, (float)state["table_opacity"]);
+    draw_convex_polygon(gpu_pix.get_ptr(), gpu_pix.get_wh(), pixel_verts.data(), (int)pixel_verts.size(), 0xff1a8b3a, (float)state["table_opacity"]);
 
     draw_orbit(thickness);
 

@@ -22,6 +22,13 @@ __global__ void vertex_flow_kernel(
     const int n = params.n_fixed + 1;
     verts[params.n_fixed] = free_vertex;
 
+    // The ball is occluded whenever this free vertex extends the table's convex
+    // hull to swallow it; paint those pixels black.
+    if (Cuda::point_in_convex_hull(verts, n, params.ball_start)) {
+        pixels[py * wh.x + px] = 0xff000000;
+        return;
+    }
+
     Cuda::vec2 p = params.ball_start;
 
     const int flow_floor = (int)floorf(params.flow_depth);

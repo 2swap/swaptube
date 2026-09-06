@@ -273,7 +273,7 @@ void InnerBilliardsScene::draw_table(const vector<vec2>& verts) {
         draw_circle(gpu_pix.get_ptr(), get_width_height(), v, corner_radius, BROWN, opacity);
 
     // (3) The green playing surface itself
-    draw_convex_polygon(gpu_pix.get_ptr(), gpu_pix.get_wh(), pixel_verts.data(), pixel_verts.size(), 0xff1a6b3a, opacity);
+    draw_convex_polygon(gpu_pix.get_ptr(), gpu_pix.get_wh(), pixel_verts.data(), pixel_verts.size(), 0xff1a8b3a, opacity);
 
     // (4) Pockets
     const float pocket_r = pocket_radius_px();

@@ -19,6 +19,20 @@ HOST_DEVICE inline bool curved_in_plane(const vec2& q, float curvature) {
 // Positive when b is counterclockwise of a.
 HOST_DEVICE inline float billiards_cross(const vec2& a, const vec2& b) { return a.x * b.y - a.y * b.x; }
 
+// True when q lies inside (or on) the convex hull of pts[0..n).
+HOST_DEVICE inline bool point_in_convex_hull(const vec2* pts, int n, const vec2& q) {
+    for (int i = 0; i < n; i++)
+        for (int j = 0; j < n; j++) {
+            if (i == j) continue;
+            const vec2 e = pts[j] - pts[i];
+            bool hull_edge = true;
+            for (int k = 0; k < n; k++)
+                if (billiards_cross(e, pts[k] - pts[i]) < -1e-6f) { hull_edge = false; break; }
+            if (hull_edge && billiards_cross(e, q - pts[i]) < -1e-6f) return false;
+        }
+    return true;
+}
+
 HOST_DEVICE inline int outer_billiards_tangent_vertex(const vec2* verts, int n, const vec2& p) {
     int best = 0;
     for (int i = 1; i < n; i++) {
