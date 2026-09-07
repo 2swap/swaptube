@@ -38,6 +38,7 @@ vec3 ThreeDAlgebraScene::project(const vec4& p) const {
 void ThreeDAlgebraScene::draw() {
     set_camera_direction();
     clear_lines();
+    clear_points();
 
     const vec4 xx(state["xx_x"], state["xx_y"], state["xx_z"], 0);
     const vec4 xy(state["xy_x"], state["xy_y"], state["xy_z"], 0);
@@ -65,7 +66,7 @@ void ThreeDAlgebraScene::draw() {
                 const vec3 left  = project(multiply(multiply(e, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz));
                 const vec3 right = project(multiply(e, ab, xx, xy, xz, yy, yz, zz));
                 transformed[index(ix, iy, iz, 0)] = left * (1 - associativity) + right * associativity;
-
+                
                 if (w > 0){
                     const vec4 ew(ix, iy, iz, w);
                     const vec3 leftw  = project(multiply(multiply(ew, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz));
@@ -79,6 +80,7 @@ void ThreeDAlgebraScene::draw() {
         for (int iy = -reach; iy <= reach; iy+=2)
             for (int iz = -reach; iz <= reach; iz+=2) {
                 const vec3& p = transformed[index(ix, iy, iz, 0)];
+                add_point(Point(p,grid_color,1,1.6));
                 if (ix < reach) add_line(Line(p, transformed[index(ix + 2, iy, iz, 0)], grid_color, 1, false));
                 if (iy < reach) add_line(Line(p, transformed[index(ix, iy + 2, iz, 0)], grid_color, 1, false));
                 if (iz < reach) add_line(Line(p, transformed[index(ix, iy, iz + 2, 0)], grid_color, 1, false));
