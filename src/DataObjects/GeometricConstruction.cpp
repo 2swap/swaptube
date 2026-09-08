@@ -31,3 +31,16 @@ void GeometricConstruction::remove_line(const string& id) {
         return l.identifier == id;
     }), lines.end());
 }
+
+void GeometricConstruction::fade_point(const string& id) {
+    for (auto& p : points) if (p.identifier == id) p.dying = true;
+}
+
+void GeometricConstruction::fade_line(const string& id) {
+    for (auto& l : lines) if (l.identifier == id) l.dying = true;
+}
+
+void GeometricConstruction::prune_dead() {
+    points.erase(std::remove_if(points.begin(), points.end(), [](const GeometricPoint& p){ return p.dying; }), points.end());
+    lines.erase(std::remove_if(lines.begin(), lines.end(), [](const GeometricLine& l){ return l.dying; }), lines.end());
+}

@@ -16,21 +16,51 @@ HOST_DEVICE inline bool curved_in_plane(const vec2& q, float curvature) {
     return curved_norm(q, curvature) > 1e-7f;
 }
 
+// Klein (straight-chord) <-> Poincare (conformal disk) coordinates for the same
+// hyperbolic plane. The billiard dynamics all live in Klein coordinates, where
+// geodesics are straight; these maps are used only to render that field on a
+// Poincare disk. Both are the identity to first order at the origin and reduce
+// to the identity at curvature 0, so animating curvature through 0 stays smooth.
+HOST_DEVICE inline vec2 klein_to_poincare(const vec2& k, float curvature) {
+    const float s = sqrtf(1.0f + curvature * dot(k, k));
+    return k * (2.0f / (1.0f + s));
+}
+HOST_DEVICE inline vec2 poincare_to_klein(const vec2& p, float curvature) {
+    return p / (1.0f - 0.25f * curvature * dot(p, p));
+}
+
+// The Poincare disk holds the whole hyperbolic plane; its exterior is not part
+// of the model. (poincare_to_klein would fold exterior points back inside via a
+// circle inversion, so callers must reject them first.) Always true at
+// curvature 0, where the model is the entire Euclidean plane.
+HOST_DEVICE inline bool in_poincare_disk(const vec2& p, float curvature) {
+    return 1.0f + 0.25f * curvature * dot(p, p) > 0.0f;
+}
+
 // Positive when b is counterclockwise of a.
 HOST_DEVICE inline float billiards_cross(const vec2& a, const vec2& b) { return a.x * b.y - a.y * b.x; }
 
-// True when q lies inside (or on) the convex hull of pts[0..n).
+HOST_DEVICE inline bool point_in_triangle(const vec2& a, const vec2& b, const vec2& c, const vec2& q) {
+    const float d0 = billiards_cross(b - a, q - a);
+    const float d1 = billiards_cross(c - b, q - b);
+    const float d2 = billiards_cross(a - c, q - c);
+    const bool has_neg = d0 < 0.0f || d1 < 0.0f || d2 < 0.0f;
+    const bool has_pos = d0 > 0.0f || d1 > 0.0f || d2 > 0.0f;
+    return !(has_neg && has_pos);
+}
+
 HOST_DEVICE inline bool point_in_convex_hull(const vec2* pts, int n, const vec2& q) {
-    for (int i = 0; i < n; i++)
-        for (int j = 0; j < n; j++) {
-            if (i == j) continue;
-            const vec2 e = pts[j] - pts[i];
-            bool hull_edge = true;
-            for (int k = 0; k < n; k++)
-                if (billiards_cross(e, pts[k] - pts[i]) < -1e-6f) { hull_edge = false; break; }
-            if (hull_edge && billiards_cross(e, q - pts[i]) < -1e-6f) return false;
-        }
-    return true;
+    const int m = n - 1;
+    const vec2 extra = pts[m];
+
+    bool inside_polygon = true;
+    for (int i = 0; i < m; i++)
+        if (billiards_cross(pts[(i + 1) % m] - pts[i], q - pts[i]) < 0.0f) { inside_polygon = false; break; }
+    if (inside_polygon) return true;
+
+    for (int i = 0; i < m; i++)
+        if (point_in_triangle(extra, pts[i], pts[(i + 1) % m], q)) return true;
+    return false;
 }
 
 HOST_DEVICE inline int outer_billiards_tangent_vertex(const vec2* verts, int n, const vec2& p) {
@@ -87,6 +117,7 @@ struct VertexFlowParams {
     vec2  lx_ty, rx_by;
     float flow_opacity;
     float flow_depth;
+    float black_stripes;
 };
 
 SHARED_FILE_SUFFIX

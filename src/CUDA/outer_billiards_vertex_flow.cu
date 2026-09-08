@@ -1,7 +1,7 @@
 #include <cuda_runtime.h>
 #include <cstdint>
 #include "../Host_Device_Shared/vec.h"
-#include "../Host_Device_Shared/helpers.h"
+#include "../Host_Device_Shared/Color.h"
 #include "../Host_Device_Shared/OuterBilliardsShared.h"
 #include "color.cuh"
 
@@ -22,10 +22,10 @@ __global__ void vertex_flow_kernel(
     const int n = params.n_fixed + 1;
     verts[params.n_fixed] = free_vertex;
 
-    // The ball is occluded whenever this free vertex extends the table's convex
-    // hull to swallow it; paint those pixels black.
     if (Cuda::point_in_convex_hull(verts, n, params.ball_start)) {
-        pixels[py * wh.x + px] = 0xff000000;
+        const int stripe_width = wh.x / 100;
+        bool on_stripe = (px + py) % (stripe_width*2) < stripe_width;
+        pixels[py * wh.x + px] = Cuda::colorlerp(0xff000000, 0xff888888, params.black_stripes * on_stripe);
         return;
     }
 

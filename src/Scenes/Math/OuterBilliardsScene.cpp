@@ -2,21 +2,20 @@
 #include <algorithm>
 #include <cmath>
 
-extern "C" void draw_convex_polygon(uint32_t* d_pixels, const ivec2& wh,
-                                    const vec2* h_verts, int n,
-                                    uint32_t color, float opacity);
+extern "C" void outer_billiards_table_render(uint32_t* d_pixels, const ivec2& wh,
+                                             const vec2* h_verts, int n,
+                                             float curvature, const vec2& lx_ty, const vec2& rx_by,
+                                             uint32_t table_color, float table_opacity, uint32_t exterior_color);
 extern "C" void cuda_render_path_from_host(uint32_t* d_pixels, const ivec2& wh,
                                            const vec2* h_path, int path_length,
                                            const vec2& lx_ty, const vec2& rx_by,
                                            uint32_t color, float opacity, float thickness, bool closed);
 extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
 extern "C" void outer_billiards_singularity_render(uint32_t* d_pixels, const ivec2& wh, const SingularityGraphParams& params);
-extern "C" void cuda_fill_pixels(uint32_t* d_pixels, const ivec2& wh, uint32_t color);
 
 OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
     : CoordinateScene(dimensions) {
     manager.set({
-        {"table_opacity", "1"},
         {"ball0_start_x", "0"},
         {"ball0_start_y", "0"},
         {"ball_distance","0"},
@@ -24,6 +23,7 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
         {"path_length",  "0"},
         {"path_opacity", "1"},
         {"curvature",        "0"},
+        {"table_opacity",    "1"},
         {"singularity_opacity",       "0"},
         {"singularity_depth",         "0"},
         {"singularity_rainbow",       "0"},
@@ -37,6 +37,21 @@ OuterBilliardsScene::OuterBilliardsScene(const vec2& dimensions)
 
 static const float ISLAND_BOUNDARY_DEPTH = 3.0f;
 static const int   MAX_ISLAND_DEPTH = 2000;
+
+// Orbit hops are straight in Klein coordinates; on the Poincare disk each hop
+// bows into a circular arc, so we resample every segment before drawing it.
+static const int POINCARE_ARC_SUBDIV = 12;
+
+static std::vector<vec2> klein_path_to_poincare(const std::vector<vec2>& klein, float curvature) {
+    std::vector<vec2> out;
+    if (klein.empty()) return out;
+    out.reserve((klein.size() - 1) * POINCARE_ARC_SUBDIV + 1);
+    out.push_back(klein_to_poincare(klein.front(), curvature));
+    for (size_t i = 1; i < klein.size(); i++)
+        for (int s = 1; s <= POINCARE_ARC_SUBDIV; s++)
+            out.push_back(klein_to_poincare(veclerp(klein[i - 1], klein[i], (float)s / POINCARE_ARC_SUBDIV), curvature));
+    return out;
+}
 
 float OuterBilliardsScene::world_per_pixel() {
     const int height = get_height();
@@ -141,7 +156,8 @@ void OuterBilliardsScene::draw_orbit(float thickness) {
         const vec2 start(state["ball" + std::to_string(i) + "_start_x"], state["ball" + std::to_string(i) + "_start_y"]);
 
         if (path_opacity >= 0.01) {
-            const std::vector<vec2> path = build_orbit_path_from(start, (double)path_length);
+            const std::vector<vec2> path = klein_path_to_poincare(
+                build_orbit_path_from(start, (double)path_length), (float)state["curvature"]);
             if (path.size() >= 2) {
                 cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
                                            path.data(), (int)path.size(),
@@ -157,7 +173,8 @@ void OuterBilliardsScene::draw_orbit(float thickness) {
         }
 
         if (ball_opacity >= 0.01) {
-            const vec2 ball_pos = build_orbit_path_from(start, (double)ball_distance).back();
+            const vec2 ball_pos = klein_to_poincare(
+                build_orbit_path_from(start, (double)ball_distance).back(), (float)state["curvature"]);
             draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(ball_pos), radius_px, 0xffffffff, ball_opacity);
         }
     }
@@ -182,11 +199,15 @@ void OuterBilliardsScene::draw() {
 
     if (verts.size() < 3) throw runtime_error("OuterBilliardsScene::draw() table has fewer than 3 vertices");
 
-    std::vector<vec2> pixel_verts;
-    pixel_verts.reserve(verts.size());
-    for (const vec2& v : verts) pixel_verts.push_back(point_to_pixel(v));
-
-    draw_convex_polygon(gpu_pix.get_ptr(), gpu_pix.get_wh(), pixel_verts.data(), (int)pixel_verts.size(), 0xff1a8b3a, (float)state["table_opacity"]);
+    // The table has straight Klein edges, so on the Poincare disk it is bounded
+    // by circular arcs; classify pixels against the Klein convex hull instead of
+    // rasterizing a polygon. The same pass blacks out everything beyond the disk,
+    // which is not part of the hyperbolic plane.
+    outer_billiards_table_render(gpu_pix.get_ptr(), gpu_pix.get_wh(),
+                                 verts.data(), (int)verts.size(), (float)state["curvature"],
+                                 vec2(state["left_x"], state["top_y"]),
+                                 vec2(state["right_x"], state["bottom_y"]),
+                                 0xff1a8b3a, std::clamp((float)state["table_opacity"], 0.0f, 1.0f), 0xff000000);
 
     draw_orbit(thickness);
 

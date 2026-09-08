@@ -99,8 +99,11 @@ __global__ void singularity_graph_kernel(
     const int py = blockIdx.y * blockDim.y + threadIdx.y;
     if (px >= wh.x || py >= wh.y) return;
 
-    const Cuda::vec2 start = Cuda::pixel_to_point_in_screen(
+    // Pixels address the Poincare disk; the dynamics runs in Klein coordinates.
+    const Cuda::vec2 start_poincare = Cuda::pixel_to_point_in_screen(
         Cuda::vec2(px, py), params.lx_ty, params.rx_by, Cuda::vec2(wh.x, wh.y));
+    if (!Cuda::in_poincare_disk(start_poincare, params.curvature)) return;
+    const Cuda::vec2 start = Cuda::poincare_to_klein(start_poincare, params.curvature);
 
     const int pivot = Cuda::outer_billiards_pivot(params.verts, params.n, start, params.curvature);
     if (pivot < 0) return;
@@ -206,6 +209,56 @@ __global__ void singularity_graph_kernel(
         out = Cuda::color_combine(out, web_color, Cuda::clamp(web_intensity * params.web_opacity, 0.0f, 1.0f));
     }
     pixels[index] = out;
+}
+
+// One always-on pass that establishes the Poincare disk: pixels outside the disk
+// get the exterior color (the disk exterior is not part of the model); pixels
+// inside get the table where they fall in its Klein convex hull. The table is a
+// Klein polygon, so on the disk its straight sides bow into circular arcs -- we
+// don't tessellate that outline, we just reuse the convex-hull test the flow
+// kernels already rely on.
+__global__ void outer_billiards_table_kernel(
+    uint32_t* pixels, const Cuda::ivec2 wh,
+    const Cuda::vec2* verts, const int n,
+    const float curvature, const Cuda::vec2 lx_ty, const Cuda::vec2 rx_by,
+    const uint32_t table_color, const float table_opacity, const uint32_t exterior_color)
+{
+    const int px = blockIdx.x * blockDim.x + threadIdx.x;
+    const int py = blockIdx.y * blockDim.y + threadIdx.y;
+    if (px >= wh.x || py >= wh.y) return;
+
+    const int index = py * wh.x + px;
+    const Cuda::vec2 poincare = Cuda::pixel_to_point_in_screen(
+        Cuda::vec2(px, py), lx_ty, rx_by, Cuda::vec2(wh.x, wh.y));
+
+    if (!Cuda::in_poincare_disk(poincare, curvature)) {
+        pixels[index] = Cuda::color_combine(pixels[index], exterior_color);
+        return;
+    }
+
+    const Cuda::vec2 klein = Cuda::poincare_to_klein(poincare, curvature);
+    if (Cuda::point_in_convex_hull(verts, n, klein))
+        pixels[index] = Cuda::color_combine(pixels[index], table_color, Cuda::clamp(table_opacity, 0.0f, 1.0f));
+}
+
+extern "C" void outer_billiards_table_render(
+    uint32_t* d_pixels, const Cuda::ivec2& wh,
+    const Cuda::vec2* h_verts, int n,
+    float curvature, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by,
+    uint32_t table_color, float table_opacity, uint32_t exterior_color)
+{
+    if (n < 3 || n > Cuda::MAX_BILLIARD_VERTICES || wh.x <= 0 || wh.y <= 0) return;
+
+    Cuda::vec2* d_verts = nullptr;
+    cudaMalloc(&d_verts, n * sizeof(Cuda::vec2));
+    cudaMemcpy(d_verts, h_verts, n * sizeof(Cuda::vec2), cudaMemcpyHostToDevice);
+
+    dim3 block(16, 16);
+    dim3 grid((wh.x + block.x - 1) / block.x, (wh.y + block.y - 1) / block.y);
+    outer_billiards_table_kernel<<<grid, block>>>(d_pixels, wh, d_verts, n, curvature, lx_ty, rx_by, table_color, table_opacity, exterior_color);
+    cudaDeviceSynchronize();
+
+    cudaFree(d_verts);
 }
 
 extern "C" void outer_billiards_singularity_render(

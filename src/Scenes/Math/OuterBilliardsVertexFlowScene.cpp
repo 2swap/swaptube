@@ -18,6 +18,7 @@ OuterBilliardsVertexFlowScene::OuterBilliardsVertexFlowScene(const vec2& dimensi
         {"curvature",    "0"},
         {"flow_opacity", "1"},
         {"flow_depth",   "0"},
+        {"black_stripes", "0"},
     });
 }
 
@@ -42,13 +43,14 @@ void OuterBilliardsVertexFlowScene::draw_flow_field(const std::vector<vec2>& ver
 
     VertexFlowParams params;
     for (int i = 0; i < n_fixed; i++) params.fixed_verts[i] = verts[i];
-    params.n_fixed     = n_fixed;
-    params.ball_start  = vec2(state["ball_start_x"], state["ball_start_y"]);
-    params.curvature   = (float)state["curvature"];
-    params.lx_ty       = vec2(state["left_x"], state["top_y"]);
-    params.rx_by       = vec2(state["right_x"], state["bottom_y"]);
-    params.flow_opacity= flow_opacity;
-    params.flow_depth  = flow_depth;
+    params.n_fixed       = n_fixed;
+    params.ball_start    = vec2(state["ball_start_x"], state["ball_start_y"]);
+    params.curvature     = (float)state["curvature"];
+    params.lx_ty         = vec2(state["left_x"], state["top_y"]);
+    params.rx_by         = vec2(state["right_x"], state["bottom_y"]);
+    params.flow_opacity  = flow_opacity;
+    params.flow_depth    = flow_depth;
+    params.black_stripes = (float)state["black_stripes"];
 
     outer_billiards_vertex_flow_render(gpu_pix.get_ptr(), gpu_pix.get_wh(), params);
 }
