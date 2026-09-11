@@ -36,12 +36,16 @@ void render_video() {
     basis->manager.set(parentcontrol);
     basis->manager.begin_timer("tx");
     basis->manager.set({
+        {"point_r", "32"},  {"point_g", "32"},  {"point_b", "128"},
+        {"point_size", "1.6"},
+        {"point_labels_size", "2"},
         {"point0.x", "1"},  {"point0.y", "0"},  {"point0.z", "0"},   // xx
         {"point1.x", "0"},  {"point1.y", "1"},  {"point1.z", "0"},   // xy
         {"point2.x", "0"},  {"point2.y", "0"},  {"point2.z", "1"},   // xz
         {"point3.x", "-1"}, {"point3.y", "0"},  {"point3.z", "0"},   // yy
         {"point4.x", "<yz_x>"}, {"point4.y", "<yz_y>"}, {"point4.z", "<yz_z>"},   // yz
         {"point5.x", "<zz_x>"}, {"point5.y", "<zz_y>"}, {"point5.z", "<zz_z>"},   // zz
+        {"point0.a", "1"},{"point1.a", "1"},{"point2.a", "1"},{"point3.a", "1"},{"point4.a", "0"},{"point5.a", "1"},
         {"points_radius_multiplier", "2"},
         {"slow", "<tx> .2 *"},
         {"d", "4"}, {"q1", "<slow> sin"}, {"qi", "<slow> sin .2 *"}, {"qj", "<slow> cos"},

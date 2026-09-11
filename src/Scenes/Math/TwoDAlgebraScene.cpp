@@ -65,6 +65,10 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
         {"point_opacity", "0"},
         {"point_x", "0"},
         {"point_y", "0"},
+
+        {"bg_1_r", "0"},
+        {"bg_1_g", "0"},
+        {"bg_1_b", "68"},
         
     });
 }
@@ -255,16 +259,18 @@ void TwoDAlgebraScene::draw() {
     const int opacity = max(0,(int) state["diagram_opacity"]*2-255) << 24;
     if (opacity != 0){
 
+        const int bg_color = ((int) state["bg_1_r"]) << 16 | ((int) state["bg_1_g"]) << 8 | (int) state["bg_1_b"];
+        const int axis_color = ((int) (state["bg_1_r"]*1.5+40)) << 16 | ((int) (state["bg_1_g"]*1.5+40)) << 8 | (int) (state["bg_1_b"]*1.5+40);
         int axis_width = wh.y*0.004;
-        // gpu_pix.fill_rect(0,0,diagram_origin.x*2,diagram_origin.y*2,0,1);
-        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(0,0), diagram_origin*2, opacity + 0x00000044);
-        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), diagram_origin-ivec2(axis_width,diagram_unit), diagram_origin+ivec2(axis_width,diagram_unit), opacity + 0x003377cc);
-        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), diagram_origin-ivec2(diagram_unit,axis_width), diagram_origin+ivec2(diagram_unit,axis_width), opacity + 0x003377cc);
+
+        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(0,0), diagram_origin*2, opacity + bg_color);
+        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), diagram_origin-ivec2(axis_width,diagram_unit), diagram_origin+ivec2(axis_width,diagram_unit), opacity + axis_color);
+        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), diagram_origin-ivec2(diagram_unit,axis_width), diagram_origin+ivec2(diagram_unit,axis_width), opacity + axis_color);
         
         
         const int border_opacity = max(0,(int) state["diagram_opacity"]*11-2550) << 24;
-        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(diagram_origin.x*2-axis_width,0), diagram_origin*2+axis_width, border_opacity + 0x003377cc);
-        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(0,diagram_origin.y*2-axis_width), diagram_origin*2+axis_width, border_opacity + 0x003377cc);
+        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(diagram_origin.x*2-axis_width,0), diagram_origin*2+axis_width, border_opacity + axis_color);
+        draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(0,diagram_origin.y*2-axis_width), diagram_origin*2+axis_width, border_opacity + axis_color);
     }
 
 
