@@ -31,7 +31,7 @@ public:
     uint32_t label_color;
     vec2 label_size = vec2(0.4,0.08);
     vec2 label_offset = vec2(0, 0);
-    double edge_label_offset = 0.03;
+    double edge_label_offset = 0.045;
 
 private:
     std::unordered_map<double, std::pair<vec4, vec4>> nodes_in_micro_transition;
