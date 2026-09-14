@@ -19,86 +19,120 @@ __device__ float bicubic_weight(float t) {
     }
 };
 
-__global__ void bicubic_scale_kernel(
-    const uint32_t* in_pixels, const int in_w, const int in_h,
-    uint32_t* out_pixels, const int out_w, const int out_h,
-    const float x_ratio, const float y_ratio)
+// Sample in_pixels at the source-texel coordinate (gx, gy) with a Catmull-Rom
+// bicubic kernel whose support is stretched by (support_x, support_y). Pass
+// support == 1 for plain interpolation (magnify / 1:1); pass the minification
+// factor (source texels spanned per output texel) when downscaling so the
+// kernel also low-pass filters and the result doesn't alias. Returns the
+// weight-normalized channels as floats in [0, 255], packed as (a, r, g, b).
+__device__ Cuda::vec4 sample_bicubic(
+    const uint32_t* in_pixels, const Cuda::ivec2 in_wh,
+    const float gx, const float gy,
+    const float support_x, const float support_y)
 {
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= out_w * out_h) return;
+    const int gxi = static_cast<int>(floorf(gx));
+    const int gyi = static_cast<int>(floorf(gy));
+    const float dx = gx - gxi;
+    const float dy = gy - gyi;
 
-    int x = idx % out_w;
-    int y = idx / out_w;
+    const int rx = static_cast<int>(ceilf(2.0f * support_x));
+    const int ry = static_cast<int>(ceilf(2.0f * support_y));
 
-    float gx = x * x_ratio;
-    float gy = y * y_ratio;
+    float pa = 0.0f, pr = 0.0f, pg = 0.0f, pb = 0.0f, wsum = 0.0f;
+    for (int n = -ry; n <= ry + 1; n++) {
+        const float wy = bicubic_weight((n - dy) / support_y);
+        const int yi = Cuda::clamp(gyi + n, 0, in_wh.y - 1);
+        for (int m = -rx; m <= rx + 1; m++) {
+            const float wx = bicubic_weight((m - dx) / support_x);
+            const int xi = Cuda::clamp(gxi + m, 0, in_wh.x - 1);
 
-    int gxi = static_cast<int>(floorf(gx));
-    int gyi = static_cast<int>(floorf(gy));
-
-    float dx = gx - gxi;
-    float dy = gy - gyi;
-
-    float pa = 0.0f;
-    float pr = 0.0f;
-    float pg = 0.0f;
-    float pb = 0.0f;
-
-    // Iterate over the surrounding 4x4 block of pixels
-    for (int m = -1; m <= 2; m++) {
-        for (int n = -1; n <= 2; n++) {
-            int xi = gxi + m;
-            int yi = gyi + n;
-
-            xi = Cuda::clamp(xi, 0, in_w - 1);
-            yi = Cuda::clamp(yi, 0, in_h - 1);
-
-            uint32_t pixel = in_pixels[yi * in_w + xi];
-            float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
-
-            pa += weight * Cuda::geta(pixel);
-            pr += weight * Cuda::getr(pixel);
-            pg += weight * Cuda::getg(pixel);
-            pb += weight * Cuda::getb(pixel);
+            const uint32_t p = in_pixels[yi * in_wh.x + xi];
+            const float w = wx * wy;
+            pa += w * Cuda::geta(p);
+            pr += w * Cuda::getr(p);
+            pg += w * Cuda::getg(p);
+            pb += w * Cuda::getb(p);
+            wsum += w;
         }
     }
 
-    int ia = static_cast<int>(roundf(pa));
-    int ir = static_cast<int>(roundf(pr));
-    int ig = static_cast<int>(roundf(pg));
-    int ib = static_cast<int>(roundf(pb));
-
-    ia = min(255, max(0, ia));
-    ir = min(255, max(0, ir));
-    ig = min(255, max(0, ig));
-    ib = min(255, max(0, ib));
-
-    out_pixels[y * out_w + x] = Cuda::argb(ia, ir, ig, ib);
+    const float inv = wsum > 0.0f ? 1.0f / wsum : 0.0f;
+    return Cuda::vec4(pa * inv, pr * inv, pg * inv, pb * inv);
 }
 
+__device__ __forceinline__ uint32_t pack_argb_saturate(const Cuda::vec4& c) {
+    return Cuda::argb(
+        min(255, max(0, static_cast<int>(roundf(c.x)))),
+        min(255, max(0, static_cast<int>(roundf(c.y)))),
+        min(255, max(0, static_cast<int>(roundf(c.z)))),
+        min(255, max(0, static_cast<int>(roundf(c.w)))));
+}
+
+// Crop the normalized [crop_tl, crop_br] sub-rectangle of the source, resample
+// it (anti-aliased bicubic) to fill out_wh, and multiply RGB by darken_factor.
+// With crop_tl=(0,0), crop_br=(1,1), darken_factor=1 this is a plain resize.
+__global__ void crop_scale_darken_kernel(
+    const uint32_t* in_pixels, const Cuda::ivec2 in_wh,
+    uint32_t* out_pixels, const Cuda::ivec2 out_wh,
+    const Cuda::vec2 crop_tl, const Cuda::vec2 crop_br,
+    const float darken_factor)
+{
+    const int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx >= out_wh.x * out_wh.y) return;
+
+    const int x = idx % out_wh.x;
+    const int y = idx / out_wh.x;
+
+    const float u = (x + 0.5f) / out_wh.x;
+    const float v = (y + 0.5f) / out_wh.y;
+
+    // Output texel center -> source texel space.
+    const float gx = (crop_tl.x + u * (crop_br.x - crop_tl.x)) * in_wh.x - 0.5f;
+    const float gy = (crop_tl.y + v * (crop_br.y - crop_tl.y)) * in_wh.y - 0.5f;
+
+    // Source texels spanned per output texel; > 1 only when minifying.
+    const float support_x = fmaxf(1.0f, (crop_br.x - crop_tl.x) * in_wh.x / out_wh.x);
+    const float support_y = fmaxf(1.0f, (crop_br.y - crop_tl.y) * in_wh.y / out_wh.y);
+
+    Cuda::vec4 c = sample_bicubic(in_pixels, in_wh, gx, gy, support_x, support_y);
+    c.y *= darken_factor;
+    c.z *= darken_factor;
+    c.w *= darken_factor;
+
+    out_pixels[y * out_wh.x + x] = pack_argb_saturate(c);
+}
+
+extern "C" void cuda_crop_scale_darken_device(
+    const uint32_t* d_input, const Cuda::ivec2& in_wh,
+    uint32_t* d_output, const Cuda::ivec2& out_wh,
+    const Cuda::vec2& crop_tl, const Cuda::vec2& crop_br,
+    const float darken_factor)
+{
+    const int numPixels = out_wh.x * out_wh.y;
+    const int blockSize = 256;
+    const int numBlocks = (numPixels + blockSize - 1) / blockSize;
+    crop_scale_darken_kernel<<<numBlocks, blockSize>>>(
+        d_input, in_wh, d_output, out_wh, crop_tl, crop_br, darken_factor);
+    cudaDeviceSynchronize();
+}
+
+// Plain host-to-host resize: a full-frame crop with no darkening. Handles the
+// device round trip for callers that hold their pixels on the host.
 extern "C" int cuda_bicubic_scale(const uint32_t* input_pixels, int input_w, int input_h, uint32_t* output_pixels, int output_w, int output_h) {
     uint32_t* d_input = nullptr;
     uint32_t* d_output = nullptr;
 
-    size_t in_size = input_w * input_h * sizeof(uint32_t);
-    size_t out_size = output_w * output_h * sizeof(uint32_t);
+    const size_t in_size = static_cast<size_t>(input_w) * input_h * sizeof(uint32_t);
+    const size_t out_size = static_cast<size_t>(output_w) * output_h * sizeof(uint32_t);
 
     cudaMalloc((void**)&d_input, in_size);
     cudaMemcpy(d_input, input_pixels, in_size, cudaMemcpyHostToDevice);
-
     cudaMalloc((void**)&d_output, out_size);
 
-    float x_ratio = static_cast<float>(input_w) / output_w;
-    float y_ratio = static_cast<float>(input_h) / output_h;
-
-    int numPixels = output_w * output_h;
-    int blockSize = 256;
-    int numBlocks = (numPixels + blockSize - 1) / blockSize;
-    bicubic_scale_kernel<<<numBlocks, blockSize>>>(
-        d_input, input_w, input_h,
-        d_output, output_w, output_h,
-        x_ratio, y_ratio);
-    cudaDeviceSynchronize();
+    cuda_crop_scale_darken_device(
+        d_input, Cuda::ivec2(input_w, input_h),
+        d_output, Cuda::ivec2(output_w, output_h),
+        Cuda::vec2(0.0f, 0.0f), Cuda::vec2(1.0f, 1.0f), 1.0f);
 
     cudaMemcpy(output_pixels, d_output, out_size, cudaMemcpyDeviceToHost);
 
@@ -240,80 +274,4 @@ extern "C" void cuda_overlay (
 
 extern "C" void cuda_zeroize_pixels(uint32_t* d_pixels, const Cuda::ivec2& wh) {
     cudaMemset(d_pixels, 0, wh.x * wh.y * sizeof(uint32_t));
-}
-
-__global__ void crop_scale_darken_kernel(
-    const uint32_t* in_pixels, const Cuda::ivec2 in_wh,
-    uint32_t* out_pixels, const Cuda::ivec2 out_wh,
-    const Cuda::vec2 crop_tl, const Cuda::vec2 crop_br,
-    const float darken_factor)
-{
-    int idx = blockDim.x * blockIdx.x + threadIdx.x;
-    if (idx >= out_wh.x * out_wh.y) return;
-
-    int x = idx % out_wh.x;
-    int y = idx / out_wh.x;
-
-    float u = (x + 0.5f) / out_wh.x;
-    float v = (y + 0.5f) / out_wh.y;
-
-    float gx = (crop_tl.x + u * (crop_br.x - crop_tl.x)) * in_wh.x - 0.5f;
-    float gy = (crop_tl.y + v * (crop_br.y - crop_tl.y)) * in_wh.y - 0.5f;
-
-    int gxi = static_cast<int>(floorf(gx));
-    int gyi = static_cast<int>(floorf(gy));
-
-    float dx = gx - gxi;
-    float dy = gy - gyi;
-
-    float pa = 0.0f;
-    float pr = 0.0f;
-    float pg = 0.0f;
-    float pb = 0.0f;
-
-    // Iterate over the surrounding 4x4 block of pixels
-    for (int m = -1; m <= 2; m++) {
-        for (int n = -1; n <= 2; n++) {
-            int xi = Cuda::clamp(gxi + m, 0, in_wh.x - 1);
-            int yi = Cuda::clamp(gyi + n, 0, in_wh.y - 1);
-
-            uint32_t pixel = in_pixels[yi * in_wh.x + xi];
-            float weight = bicubic_weight(dx - m) * bicubic_weight(dy - n);
-
-            pa += weight * Cuda::geta(pixel);
-            pr += weight * Cuda::getr(pixel);
-            pg += weight * Cuda::getg(pixel);
-            pb += weight * Cuda::getb(pixel);
-        }
-    }
-
-    pr *= darken_factor;
-    pg *= darken_factor;
-    pb *= darken_factor;
-
-    int ia = static_cast<int>(roundf(pa));
-    int ir = static_cast<int>(roundf(pr));
-    int ig = static_cast<int>(roundf(pg));
-    int ib = static_cast<int>(roundf(pb));
-
-    ia = min(255, max(0, ia));
-    ir = min(255, max(0, ir));
-    ig = min(255, max(0, ig));
-    ib = min(255, max(0, ib));
-
-    out_pixels[y * out_wh.x + x] = Cuda::argb(ia, ir, ig, ib);
-}
-
-extern "C" void cuda_crop_scale_darken_device(
-    const uint32_t* d_input, const Cuda::ivec2& in_wh,
-    uint32_t* d_output, const Cuda::ivec2& out_wh,
-    const Cuda::vec2& crop_tl, const Cuda::vec2& crop_br,
-    const float darken_factor)
-{
-    int numPixels = out_wh.x * out_wh.y;
-    int blockSize = 256;
-    int numBlocks = (numPixels + blockSize - 1) / blockSize;
-    crop_scale_darken_kernel<<<numBlocks, blockSize>>>(
-        d_input, in_wh, d_output, out_wh, crop_tl, crop_br, darken_factor);
-    cudaDeviceSynchronize();
 }

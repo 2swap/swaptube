@@ -171,10 +171,9 @@ void InnerBilliardsScene::draw_trail(const vector<vec2>& verts) {
     vector<float> cumdist(path.size(), 0.0f);
     for (size_t i = 1; i < path.size(); i++)
         cumdist[i] = cumdist[i - 1] + length(path[i] - path[i - 1]);
-    const float total_dist = cumdist.back();
 
     for (size_t i = 0; i + 1 < path.size(); i++) {
-        const float fade = total_dist > 1e-6f ? 1.0f - cumdist[i] / total_dist : 1.0f;
+        const float fade = std::clamp(1.0f - cumdist[i] / 81.0f, 0.0f, 1.0f);
         const float seg_opacity = opacity * fade;
         if (seg_opacity < 0.005f) continue;
         const vec2 seg[2] = { path[i], path[i + 1] };
