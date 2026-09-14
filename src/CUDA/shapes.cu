@@ -247,6 +247,46 @@ extern "C" void cuda_render_path_from_host(uint32_t* d_pixels, const Cuda::ivec2
     cudaFree(d_path);
 }
 
+
+__global__ void render_many_lines_kernel(
+    uint32_t* pixels, const Cuda::ivec2 wh, const Cuda::vec2* d_line_list, const int line_count, Cuda::vec2 lx_ty, Cuda::vec2 rx_by,
+    const uint32_t* colors, const float opacity, const int thickness)
+{
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= line_count) return;
+
+    Cuda::vec2 pixel_1 = point_to_pixel_in_screen(d_line_list[i*2], lx_ty, rx_by, wh);
+    Cuda::vec2 pixel_2 = point_to_pixel_in_screen(d_line_list[i*2+1], lx_ty, rx_by, wh);
+
+    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, colors[i], opacity, thickness, pixels, wh, false);
+}
+
+extern "C" void cuda_render_many_lines(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* d_line_list, const int line_count,
+    const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, const uint32_t* colors, const float opacity, const float thickness)
+{
+    if (line_count <= 0) return;
+
+    int blockSize = 256;
+    int gridSize = (line_count + blockSize - 1) / blockSize;
+    render_many_lines_kernel<<<gridSize, blockSize>>>(d_pixels, wh, d_line_list, line_count, lx_ty, rx_by, colors, opacity, (int)thickness);
+    cudaDeviceSynchronize();
+}
+
+extern "C" void cuda_render_many_lines_from_host(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* h_line_list, const int line_count,
+    const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, const uint32_t* colors, const float opacity, const float thickness)
+{
+    if (line_count <= 0) return;
+
+    Cuda::vec2* d_line_list = nullptr;
+    const size_t bytes = (size_t)line_count * 2 * sizeof(Cuda::vec2);
+    cudaMalloc(&d_line_list, bytes);
+    cudaMemcpy(d_line_list, h_line_list, bytes, cudaMemcpyHostToDevice);
+
+    cuda_render_many_lines(d_pixels, wh, d_line_list, line_count, lx_ty, rx_by, colors, opacity, thickness);
+
+    cudaFree(d_line_list);
+}
+
 __global__ void segments_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh, const Cuda::vec2* endpoints, const int segment_count,
     Cuda::vec2 lx_ty, Cuda::vec2 rx_by, const uint32_t color, const float opacity, const int thickness)
