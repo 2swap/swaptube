@@ -17,5 +17,9 @@ private:
                   const vec4& yy, const vec4& yz, const vec4& zz) const;
 
     vec3 project(const vec4& p) const;
+
+    uint32_t three_d_color(vec4 point);
+
+    void lerp_lines(const vec3& p, const vec3& q, const float step, const vec4& p_in, const vec4& p_move);
 };
 

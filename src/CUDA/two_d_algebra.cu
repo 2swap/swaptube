@@ -119,21 +119,26 @@ __device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, const flo
 
 
 
-    if (equation == 6){
-        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320;
-
-    } else if (equation == 4){
+   if (equation == 4){
         // return v - v2 - v5 + v10;
-        return v5/32 - 1;
+        return v5/256 - 4;
         // return -2 + v*6 - v2*2 - v3*3 + v6;
         // return 1 + v + v2 + v3 + v4;
         // return 1 - v + v3 - v4 + v5 - v7 + v8;
         // return 1 - v + v2 - v3 + v4;
 
     } else if (equation == 5){
-        return v6/50 - 2;
+        return v7/2048 - 3;
+
+    } else if (equation == 6){
+        return two_d_function(v2*0.06, 2, 0, xx, xy, yy) + two_d_function(v*0.4, 3, 0, xx, xy, yy)*2;
+
+    } else if (equation == 7){
+        return two_d_function(v3*0.02, 3, 0, xx, xy, yy) - v2*0.04;
 
     }
+    
+    
     
     return v;
 
