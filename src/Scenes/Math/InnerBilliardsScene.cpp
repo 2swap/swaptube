@@ -189,6 +189,10 @@ void InnerBilliardsScene::draw_trail(const vector<vec2>& verts) {
                                    0xffcccccc, seg_opacity, thickness+1, false);
     }
 
+    // Put the final ball position in the global state for 6884
+    set_global_state("inner_billiards_path_end_x", path.back().x);
+    set_global_state("inner_billiards_path_end_y", path.back().y);
+
     if (landed_pocket) {
         const uint32_t POCKET_RED = 0xffff0000;
         draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(pocket_center), pocket_radius_px(), POCKET_RED, opacity);

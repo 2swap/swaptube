@@ -34,6 +34,7 @@ HOST_DEVICE inline void print_vec4(vec4 v){printf("vec4(%.3f, %.3f, %.3f, %.3f)\
 HOST_DEVICE inline float geom_mean(float x, float y) { return sqrt(x*y); }
 HOST_DEVICE inline int signum(float x) { return (x > 0) - (x < 0); }
 
+// Returns a non-negative remainder of a divided by b, even if a is negative.
 HOST_DEVICE inline float extended_mod(float a, float b) {
     b = fabs(b);
     float result = fmod(a, b);
