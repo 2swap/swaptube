@@ -36,6 +36,7 @@ enum StateOperator {
     OP_MIN,
     OP_MAX,
     OP_SQUARE,
+    OP_MOD,
 };
 
 HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
@@ -70,6 +71,7 @@ HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
         case OP_MIN:        return 2;
         case OP_MAX:        return 2;
         case OP_SQUARE:     return 1;
+        case OP_MOD:        return 2;
         default:            return -1;
     }
 }
@@ -106,6 +108,7 @@ HOST_DEVICE inline static float evaluate_operator(StateOperator op, float *a) {
         case OP_MIN:        return fminf(a[0], a[1]);
         case OP_MAX:        return fmaxf(a[0], a[1]);
         case OP_SQUARE:     return a[0] * a[0];
+        case OP_MOD:        return extended_mod(a[0], a[1]);
                             // Should not reach here, return NaN
         default:            return nanf("");
     }
@@ -143,6 +146,7 @@ HOST_DEVICE const inline char* state_operator_to_string(StateOperator op){
         case OP_MIN: return "min";
         case OP_MAX: return "max";
         case OP_SQUARE: return "^2";
+        case OP_MOD: return "%";
         default: return "UNKNOWN_OPERATOR";
     }
 }
@@ -178,6 +182,7 @@ StateOperator inline parse_state_operator(const char* in){
     if(strcmp(in, "min") == 0) return OP_MIN;
     if(strcmp(in, "max") == 0) return OP_MAX;
     if(strcmp(in, "^2") == 0) return OP_SQUARE;
+    if(strcmp(in, "%") == 0) return OP_MOD;
     throw runtime_error("Unknown state operator: " + string(in));
     return OP_ADD;
 }

@@ -42,6 +42,7 @@ static const int   MAX_ISLAND_DEPTH = 2000;
 // bows into a circular arc, so we resample every segment before drawing it.
 static const int POINCARE_ARC_SUBDIV = 12;
 
+// TODO have not tested this with curvature != 0, decided not to use that in the video
 static std::vector<vec2> klein_path_to_poincare(const std::vector<vec2>& klein, float curvature) {
     std::vector<vec2> out;
     if (klein.empty()) return out;
@@ -199,10 +200,6 @@ void OuterBilliardsScene::draw() {
 
     if (verts.size() < 3) throw runtime_error("OuterBilliardsScene::draw() table has fewer than 3 vertices");
 
-    // The table has straight Klein edges, so on the Poincare disk it is bounded
-    // by circular arcs; classify pixels against the Klein convex hull instead of
-    // rasterizing a polygon. The same pass blacks out everything beyond the disk,
-    // which is not part of the hyperbolic plane.
     outer_billiards_table_render(gpu_pix.get_ptr(), gpu_pix.get_wh(),
                                  verts.data(), (int)verts.size(), (float)state["curvature"],
                                  vec2(state["left_x"], state["top_y"]),
