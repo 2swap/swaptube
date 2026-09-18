@@ -16,6 +16,7 @@ ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : ThreeDimensionS
         {"b_x", "0"}, {"b_y", "0"}, {"b_z", "1"}, {"b_w", "0"},
         {"lines_thickness_multiplier", "3"},
         {"w_slider", "0"},
+        {"reach", "3"},
     });
 }
 
@@ -78,7 +79,7 @@ void ThreeDAlgebraScene::draw() {
     const float w = state["w_slider"];
 
 
-    const int reach = 3;
+    const int reach = state["reach"];
     const int width = 2 * reach + 1;
     vector<vec3> transformed(width * width * width * 2);
     auto index = [&](int ix, int iy, int iz, int iw) {

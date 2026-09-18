@@ -30,7 +30,7 @@ __global__ void four_d_rotation_raymarch(
     Cuda::ivec2 pixel(pixel_x, pixel_y);
 
     float dist_traveled = 0.0f;
-    float dt = 0.01f;
+    float dt = 0.002f;
     
     Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, camera_orientation))*dt;
     Cuda::vec3 current_position = camera_position + dir_world;
@@ -75,7 +75,7 @@ __global__ void four_d_rotation_raymarch(
                 colors[pixel_y * wh.x + pixel_x] = 0xff5533dd; 
                 return;
             }
-            colors[pixel_y * wh.x + pixel_x] = 0xff555566; 
+            colors[pixel_y * wh.x + pixel_x] = 0xffee55cc; 
             return;
         }
         
