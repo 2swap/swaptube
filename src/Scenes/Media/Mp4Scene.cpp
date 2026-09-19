@@ -25,7 +25,7 @@ Mp4Scene::Mp4Scene(
     end_behavior(behavior)
 {
     manager.begin_timer("MP4_Frame");
-    manager.set("current_frame", "<MP4_Frame> " + to_string(playback_speed * get_video_framerate_fps()) + " * .5 + floor");
+    manager.set("current_frame", "<MP4_Frame> " + to_string(playback_speed * get_video_framerate_fps()) + " * floor");
 }
 
 void Mp4Scene::draw() {

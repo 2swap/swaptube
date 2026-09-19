@@ -109,7 +109,7 @@ __global__ void singularity_graph_kernel(
     if (pivot < 0) return;
 
     const float wpp        = params.world_per_pixel;
-    const float half_width = 0.4f * wpp;
+    const float half_width = 0.4f * wpp * params.line_width_scale;
     const float halo       = 4.0f * half_width;
 
     const float to_screen = curved_screen_scale(start, params.curvature);

@@ -7,6 +7,7 @@
 #include "../Scenes/Media/LatexScene.h"
 #include "../Scenes/Media/PngScene.h"
 #include "../Scenes/Media/WhitePaperScene.h"
+#include "../Scenes/Media/Mp4Scene.h"
 #include "../Core/State/BezierStateCurve.h"
 #include "../Core/Smoketest.h"
 
@@ -32,7 +33,6 @@ StateSet regular_ngon(int n, double radius, double phase, bool rotation = false)
 }
 
 void render_video() {
-    set_for_real(false);
     CompositeScene cs;
 
     shared_ptr<InnerBilliardsScene> ibs = make_shared<InnerBilliardsScene>();
@@ -126,13 +126,13 @@ void render_video() {
 
     stage_macroblock(SilenceBlock(1));
     shared_ptr<OuterBilliardsScene> obs = make_shared<OuterBilliardsScene>();
-    StateSet seef = {{"ball0_start_x", "ball0_start_x"}, {"ball0_start_y", "ball0_start_y"}, {"v0.x", "v0.x"}, {"v0.y", "v0.y"}, {"v1.x", "v1.x"}, {"v1.y", "v1.y"}, {"v2.x", "v2.x"}, {"v2.y", "v2.y"}, {"zoom", "zoom"}, {"center_x", "center_x"}, {"center_y", "center_y"}, {"ball_distance", "ball_distance"}, {"path_length", "path_length"}, {"cycle_highlight", "cycle_highlight"}, {"cycle_highlight_enable", "cycle_highlight_enable"}, {"island_opacity", "island_opacity"}, {"ball_opacity", "ball_opacity"}, {"path_opacity", "path_opacity"}, {"flow_depth", "flow_depth"}, {"singularity_depth", "singularity_depth"}, {"singularity_opacity", "singularity_opacity"}, {"singularity_rainbow", "singularity_rainbow"}, {"curvature", "curvature"}, {"inner_billiards_path_end_x", "inner_billiards_path_end_x"}, {"inner_billiards_path_end_y", "inner_billiards_path_end_y"}};
+    StateSet seef = {{"ball0_start_x", "ball0_start_x"}, {"ball0_start_y", "ball0_start_y"}, {"v0.x", "v0.x"}, {"v0.y", "v0.y"}, {"v1.x", "v1.x"}, {"v1.y", "v1.y"}, {"v2.x", "v2.x"}, {"v2.y", "v2.y"}, {"zoom", "zoom"}, {"center_x", "center_x"}, {"center_y", "center_y"}, {"ball_distance", "ball_distance"}, {"path_length", "path_length"}, {"cycle_highlight", "cycle_highlight"}, {"cycle_highlight_enable", "cycle_highlight_enable"}, {"island_opacity", "island_opacity"}, {"ball_opacity", "ball_opacity"}, {"path_opacity", "path_opacity"}, {"flow_depth", "flow_depth"}, {"singularity_depth", "singularity_depth"}, {"singularity_opacity", "singularity_opacity"}, {"singularity_rainbow", "singularity_rainbow"}, {"curvature", "curvature"}};
     unordered_set<string> big_values = {"path_length", "singularity_depth"};
     for (const string& key : big_values) {
         obs->manager.set(key + ".log", "<" + key + "> log");
-        obs->manager.set(key + ".mod128", "<" + key + ".log> 128 %");
-        obs->manager.set(key + ".div128mod128", "<" + key + ".log> 128 / 128 %");
-        obs->manager.set(key + ".div16384", "<" + key + ".log> 16384 /");
+        obs->manager.set(key + ".mod128", "<" + key + "> 128 %");
+        obs->manager.set(key + ".div128mod128", "<" + key + "> 128 / 128 %");
+        obs->manager.set(key + ".div16384", "<" + key + "> 16384 /");
         seef[key + ".log"] = key + ".log";
         seef[key + ".mod128"] = key + ".mod128";
         seef[key + ".div128mod128"] = key + ".div128mod128";
@@ -196,6 +196,7 @@ void render_video() {
         gs->graph.add_edge(1, 2);
         gs->config.set_edge_label(1, 2, "");
         gs->config.transition_edge_label(MICRO, 1, 2, "b");
+        cs.render_microblock();
         cs.render_microblock();
         gs->transition_node_position(MICRO, 2, vec4(p2.x, p2.y, 0, 0));
         gs->config.transition_edge_label(MICRO, 1, 2, "2b");
@@ -350,7 +351,7 @@ void render_video() {
     stage_macroblock(SilenceBlock(1));
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(3));
+    stage_macroblock(SilenceBlock(5));
     obs->manager.transition(MICRO, {
         {"v0.x", "-1.5"}, {"v0.y", "-2.6"},
         {"v1.x",  "1.5"}, {"v1.y", "-2.6"},
@@ -372,8 +373,15 @@ void render_video() {
         {"v3.x", "-1"}, {"v3.y",  "1"},
     });
     cs.render_microblock();
+    obs->manager.transition(MICRO, {
+        {"v0.x", "-1.3"}, {"v0.y", "-2.1"},
+        {"v1.x",  "1.3"}, {"v1.y", "-2.1"},
+        {"v2.x",  "1.3"}, {"v2.y",  "2.1"},
+        {"v3.x", "-1.3"}, {"v3.y",  "2.1"},
+    });
+    cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(FileBlock("A parallelogram table tiles the plane just like a rectangle."), SilenceBlock(1)));
+    stage_macroblock(CompositeBlock(SilenceBlock(3), CompositeBlock(FileBlock("A parallelogram table tiles the plane just like a rectangle."), SilenceBlock(3))));
     obs->manager.transition(MICRO, { // Parallelogram
         {"v0.x","-.3"}, {"v0.y", "-4"},
         {"v1.x", ".8"}, {"v1.y", "-1"},
@@ -389,6 +397,20 @@ void render_video() {
     });
     cs.render_microblock();
     obs->manager.transition(MICRO, { // Parallelogram
+        {"v0.x", "-1"}, {"v0.y", "-1.5"},
+        {"v1.x", ".8"}, {"v1.y", "-1"},
+        {"v2.x",  "1"}, {"v2.y",  "1.5"},
+        {"v3.x","-.8"}, {"v3.y",  "1"},
+    });
+    cs.render_microblock();
+    obs->manager.transition(MICRO, { // Parallelogram
+        {"v0.x","-.6"}, {"v0.y", "-1"},
+        {"v1.x",  "1"}, {"v1.y","-.9"},
+        {"v2.x", ".6"}, {"v2.y",  "1"},
+        {"v3.x", "-1"}, {"v3.y", ".9"},
+    });
+    cs.render_microblock();
+    obs->manager.transition(MICRO, { // Parallelogram
         {"v0.x", "-1"}, {"v0.y", "-2"},
         {"v1.x",  "1"}, {"v1.y",  "0"},
         {"v2.x",  "1"}, {"v2.y",  "2"},
@@ -396,7 +418,7 @@ void render_video() {
     });
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(.3));
+    stage_macroblock(SilenceBlock(.5));
     cs.render_microblock();
 
     stage_macroblock(CompositeBlock(FileBlock("Let's try other shapes!"), SilenceBlock(3)));
@@ -1134,7 +1156,7 @@ void render_video() {
     obs->manager.remove(unordered_set<string>{"v7.x", "v7.y", "v8.x", "v8.y"});
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(1));
+    stage_macroblock(SilenceBlock(5));
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(1));
@@ -1255,7 +1277,7 @@ void render_video() {
     cs.render_microblock();
     cs.remove_subscene("obs_ring");
 
-    stage_macroblock(SilenceBlock(.7));
+    stage_macroblock(SilenceBlock(2));
     obvfs->manager.transition(MICRO, {{"v3.x", "0"}, {"v3.y", ".707106"}});
     cs.render_microblock();
 
@@ -1327,15 +1349,15 @@ void render_video() {
     cs.render_microblock();
     obs->manager.remove(unordered_set<string>{"v5.x", "v5.y"});
 
-    stage_macroblock(CompositeBlock(FileBlock("...to tile the hyperbolic plane?"), SilenceBlock(4)));
+    stage_macroblock(CompositeBlock(FileBlock("...to tile the hyperbolic plane?"), CompositeBlock(SilenceBlock(1), FileBlock("In this space, the pentagon has all 90 degree angles, just like the square does in Euclidean space."))));
     obs->manager.transition(MICRO, "curvature", "-0.472135955"); // Pentagonal tiling of hyperbolic space
     obs->manager.transition(MICRO, "zoom", ".3");
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(.6));
+    stage_macroblock(SilenceBlock(1));
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("In space of this curvature, the pentagon has all 90 degree angles, just like the square does in Euclidean space."));
+    stage_macroblock(SilenceBlock(3));
     obs->manager.transition(MACRO, regular_ngon(5, 3.0, 3.1415 * 1.25));
     obs->manager.set("curvature", "<curvature_log> exp -1 *");
     obs->manager.set("curvature_log", "0.472135955 log");
@@ -1350,7 +1372,7 @@ void render_video() {
     obs->manager.transition(MICRO, "island_opacity", "1");
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(20));
+    stage_macroblock(SilenceBlock(30));
     StateSet hack_3gon = regular_ngon(3, 3.0, 3.1415 * 1.25);
     hack_3gon["v4.x"] = hack_3gon["v2.x"];
     hack_3gon["v4.y"] = hack_3gon["v2.y"];
@@ -1370,37 +1392,14 @@ void render_video() {
     obs->manager.transition(MICRO, "curvature", "-0.01348004"); // Trioctagonal tiling (3,8,3,8) with circumradius 3: curvature = -(3*sqrt(2)-4)/2/9 ~= -0.01348004
     cs.render_microblock();
 
-    /*
-    stage_macroblock(SilenceBlock(5));
-    obs->manager.transition(MICRO, "curvature", "-0.00845160165"); // Triheptagonal tiling (3,7,3,7), triangle circumradius 3: -(2cos(2pi/7)-1)/(2+2cos(2pi/7))/9
-    cs.render_microblock();
-    */
-
-    stage_macroblock(SilenceBlock(.5));
+    stage_macroblock(SilenceBlock(1));
     cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(FileBlock("hyperbolic outer billiards are still largely shrouded in mystery."), SilenceBlock(20)));
-    obs->manager.set({{"v3.x", "<v2.x>"}, {"v3.y", "<v2.y>"}});
+    stage_macroblock(CompositeBlock(FileBlock("hyperbolic outer billiards are still largely shrouded in mystery."), SilenceBlock(30)));
+    obs->manager.set({{"v3.x", "<v2.x> .00001 -"}, {"v3.y", "<v2.y>"}});
     StateSet wobbly_square = regular_ngon(4, 3.0, 3.1415 * 1.25);
-    /*
-    for(int i = 0; i < 4; i++) {
-        string s_i = to_string(i);
-        string speed1 = to_string(.1 * (2.  + 0.3 * i));
-        string speed2 = to_string(.1 * (1.6 + 0.4 * i));
-        wobbly_square["v" + s_i + ".x"] += " {t} " + speed1 + " * cos .6 * +";
-        wobbly_square["v" + s_i + ".y"] += " {t} " + speed2 + " * sin .6 * +";
-    }
-    */
-    obs->manager.transition(MICRO, wobbly_square);
+    obs->manager.transition(MACRO, wobbly_square);
     cs.render_microblock();
-
-    /*
-    stage_macroblock(SilenceBlock(6));
-    obs->manager.transition(MACRO, regular_ngon(4, 3.0, 3.1415 * 1.25));
-    cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
-    */
 
     stage_macroblock(SilenceBlock(4));
     obs->manager.transition(MACRO, "curvature", "-.05");
@@ -1424,11 +1423,32 @@ void render_video() {
     cs.manager.transition(MACRO, "quadratic", ".8");
     cs.manager.transition(MACRO, "ls.opacity", "<quadratic>");
     cs.render_microblock();
+    // Function to get the current git commit hash
+    // TODO commit
+    auto get_git_hash = []() -> string {
+        string hash;
+        FILE* pipe = popen("git rev-parse HEAD", "r");
+        if (!pipe) return "unknown";
+        char buffer[128];
+        while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+            hash += buffer;
+        }
+        pclose(pipe);
+        // Remove any trailing newline characters
+        hash.erase(hash.find_last_not_of("\n\r") + 1);
 
-    set_for_real(true);
+        // Truncate to 16 characters for brevity
+        return hash.substr(0, 20);
+    };
+    // Run git command to get the current commit hash
+    shared_ptr<LatexScene> ls_hash = make_shared<LatexScene>("\\text{Animated with love, using Swaptube!} \\\\\\\\ \\text{Commit Hash: " + get_git_hash() + "}", vec2(.4, .1));
+    // Fade in on top right
+    cs.add_scene_fade_in(MICRO, ls_hash, "ls_hash", vec2(.18, .05));
+    cs.render_microblock();
+
     stage_macroblock(FileBlock("with music by 6884. Go check out his bandcamp, linked in the description!"));
     shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("\\text{Music by 6884}", vec2(.4, .4));
-    cs.add_scene_fade_in(MICRO, ls2, "ls2", vec2(.55, .7));
+    cs.add_scene_fade_in(MACRO, ls2, "ls2", vec2(.56, .7));
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(1));
@@ -1438,7 +1458,9 @@ void render_video() {
     cool_pattern->manager.begin_timer("spin");
     cool_pattern->manager.transition(MICRO, {{"center_x", "<spin> 2.82 - .02 * sin 14.4 *"}, {"center_y", "<spin> 2.82 - .02 * cos 14.4 *"}});
     cs.render_microblock();
-    set_for_real(false);
+
+    stage_macroblock(SilenceBlock(1));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("This video was made possible by David J. Romano, a Chemistry PhD candidate at Brown University."));
     cs.render_microblock();
@@ -1449,39 +1471,60 @@ void render_video() {
     stage_macroblock(FileBlock("He introduced me to this problem, and wrote much of the simulation code I used here."));
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("A further thanks to Professor Richard Schwartz, the author of the Penrose Kite paper, who generously reviewed this video!"));
+    stage_macroblock(FileBlock("I'd also like to thank the expert reviewers of this video:"));
     cs.render_microblock();
 
-    // Read patreon supporters from members.txt media file
-    vector<string> patreon_supporters;
-    ifstream members_file("io_in/members.txt");
-    for(string line; getline(members_file, line); ) {
-        patreon_supporters.push_back(line);
-    }
-
-    // Latex table containing supporters with n columns
-    string patreon_table = "\\begin{tabular}{";
-    int num_columns = 4;
-    for(int i = 0; i < num_columns; i++) {
-        patreon_table += "c";
-    }
-    patreon_table += "}\n";
-    for(int i = 0; i < patreon_supporters.size(); i++) {
-        patreon_table += "\\text{" + patreon_supporters[i] + "}";
-        if((i + 1) % num_columns == 0) {
-            patreon_table += " \\\\\\\\\ ";
-        } else {
-            patreon_table += " & ";
-        }
-    }
-    patreon_table += "\\end{tabular}";
-
-    shared_ptr<LatexScene> patreon_scene = make_shared<LatexScene>(patreon_table);
-    stage_macroblock(FileBlock("Finally, a huge thanks to my patreon supporters and viewers of my channel!"));
-    cs.add_scene_fade_in(MICRO, patreon_scene, "patreon_scene");
+    stage_macroblock(FileBlock("Professor Richard Schwartz, the author of the Penrose Kite paper shown earlier,"));
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("Without you, this would be neither possible nor fun."));
+    stage_macroblock(FileBlock("and Dr. Lael Edwards-Costa, who not only published on the topic, but also wrote some web apps to play with Outer Billiards. Those are linked below."));
+    shared_ptr<Mp4Scene> mp4 = make_shared<Mp4Scene>(vector<string>{"edwards_costa"}, 1.75, Stop, vec2(.9, .9));
     cs.render_microblock();
-    return;
+    cs.render_microblock();
+    cs.add_scene_fade_in(MICRO, mp4, "mp4");
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(2));
+    cs.fade_subscene(MICRO, "mp4", 0);
+    cs.render_microblock();
+    cs.remove_subscene("mp4");
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Outer billiards is a classic example of how simple systems yield unpredictable outcomes."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("If you prefer keeping your online connection predictable and secure, check out today's sponsor, NordVPN!"));
+    cs.render_microblock();
+    cs.render_microblock();
+    shared_ptr<Mp4Scene> advert = make_shared<Mp4Scene>(vector<string>{"nord"}, 1, Stop);
+    cs.add_scene_fade_in(MICRO, advert, "advert");
+    cs.render_microblock();
+    stage_macroblock(FileBlock("If you travel outside your home country or find yourself sitting in airport terminals or cafes, you’ll find yourself on sketchy public Wi-Fi networks, or locked out of services you rely on back home."));
+    cs.remove_all_subscenes_except("advert");
+    cs.render_microblock();
+    stage_macroblock(FileBlock("NordVPN handles this by encrypting your traffic, and routing it through servers across the world."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("So when you're on the move, it secures your connection and lets you switch your virtual location to anywhere in the world with just a click."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("It’s also an all-in-one digital security app thanks to its built-in antivirus."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("Some antivirus software is reactive, waiting until it finds a suspicious file on your drive."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("But NordVPN works at the network boundary: scanning incoming downloads for malware, flagging fake online shops, and blocking known phishing links before you accidentally use them."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("It even blocks aggressive ads, so you can watch my videos in peace!"));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("Best of all, you don't need to manage separate security setups for every device you own."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("A single account covers up to ten devices simultaneously, so you can lock down your phone, laptop, and desktop under one setup."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("Upgrade your online protection with an all-in-one security app! Get an exclusive NordVPN deal with 4 months extra at nordvpn.com/twoswap."));
+    cs.render_microblock();
+    stage_macroblock(FileBlock("Itʼs risk free with NordVPNʼs 30-day money-back guarantee!"));
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1));
+    cs.fade_subscene(MICRO, "advert", 0);
+    cs.render_microblock();
 }

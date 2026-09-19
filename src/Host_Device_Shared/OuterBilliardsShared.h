@@ -96,6 +96,7 @@ struct SingularityGraphParams {
     float       curvature;   // 0=euclidean, negative=hyperbolic
     vec2  lx_ty, rx_by;
     float world_per_pixel;
+    float    line_width_scale;   // relative to the 1080p resolution the glow width was tuned at
     float    web_opacity;
     float    depth;
     uint32_t line_color;

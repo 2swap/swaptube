@@ -110,6 +110,7 @@ void OuterBilliardsScene::draw_singularity_graph(const std::vector<vec2>& verts)
     params.lx_ty = vec2(state["left_x"], state["top_y"]);
     params.rx_by = vec2(state["right_x"], state["bottom_y"]);
     params.world_per_pixel = wpp;
+    params.line_width_scale = (float)get_height() / 1080.0f;
 
     params.web_opacity    = wants_web ? web_opacity : 0.0f;
     params.depth          = depth;
@@ -171,6 +172,8 @@ void OuterBilliardsScene::draw_orbit(float thickness) {
                                            vec2(state["right_x"], state["bottom_y"]),
                                            0xffffffff, path_opacity*.2, thickness+1, false);
             }
+            set_global_state("outer_billiards_path_end_x", path.back().x);
+            set_global_state("outer_billiards_path_end_y", path.back().y);
         }
 
         if (ball_opacity >= 0.01) {

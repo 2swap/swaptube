@@ -15,7 +15,8 @@ extern "C" {
 MP4FrameReader::MP4FrameReader(const std::string &vn)
     : video_name(vn), fmtCtx(nullptr), codecCtx(nullptr), swsCtx(nullptr),
       packet(nullptr), frame(nullptr), frameRGBA(nullptr),
-      buffer(nullptr), buffer_size(0), currentFrame(-1), videoStreamIdx(-1)
+      buffer(nullptr), buffer_size(0), currentFrame(-1), videoStreamIdx(-1),
+      lastTargetWidth(-1), lastTargetHeight(-1)
 {
     open_file();
 }
@@ -31,7 +32,13 @@ void MP4FrameReader::change_video(const std::string &vn) {
 }
 
 bool MP4FrameReader::get_frame(int frame_index, int target_width, int target_height, Pixels& pix) {
-    if (frame_index <= currentFrame) {
+    // Repeating the same frame (e.g. while paused) needs no decoding work at all.
+    if (frame_index == currentFrame && target_width == lastTargetWidth && target_height == lastTargetHeight) {
+        pix = lastPixels;
+        return false;
+    }
+
+    if (frame_index < currentFrame) {
         // Requested an earlier frame -> reset decoding.
         reset();
         open_file();
@@ -79,6 +86,10 @@ bool MP4FrameReader::get_frame(int frame_index, int target_width, int target_hei
                             pix.set_pixel_carelessly(x, y, argb(a, r, g, b));
                         }
                     }
+
+                    lastPixels = pix;
+                    lastTargetWidth = target_width;
+                    lastTargetHeight = target_height;
 
                     av_packet_unref(packet);
                     return false;
@@ -181,6 +192,8 @@ void MP4FrameReader::reset() {
     buffer_size = 0;
     currentFrame = -1;
     videoStreamIdx = -1;
+    lastTargetWidth = -1;
+    lastTargetHeight = -1;
 }
 
 void MP4FrameReader::cleanup() {
