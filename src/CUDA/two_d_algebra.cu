@@ -103,6 +103,27 @@ __device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, const flo
         }
         return cosv;
 
+    } else if (equation == 100){
+
+        Cuda::vec2 m(1,0);
+
+        for (int i = 0; i < 30; i++){
+            Cuda::vec2 m2 = two_d_mult(m,m,xx,xy,yy);
+            Cuda::vec2 m3 = two_d_mult(m2,m,xx,xy,yy);
+            Cuda::vec2 m4 = two_d_mult(m3,m,xx,xy,yy);
+            Cuda::vec2 m5 = two_d_mult(m4,m,xx,xy,yy);
+            Cuda::vec2 m6 = two_d_mult(m5,m,xx,xy,yy);
+            Cuda::vec2 m7 = two_d_mult(m6,m,xx,xy,yy);
+            Cuda::vec2 m8 = two_d_mult(m7,m,xx,xy,yy);
+            m = m6 - m5 + m4 - m3 + m2 - m + v;
+            // m = m8 - m7 + m5 - m4 + m3 - m + v;
+            // m = m2 + two_d_mult(m,v,xx,xy,yy);
+            if (abs(m.x) > 1000 || abs(m.y) > 1000){
+                return Cuda::vec2(100000000,100000000) ;
+            }
+        }
+        return m;
+
     }
 
     Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);

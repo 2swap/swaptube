@@ -9,6 +9,9 @@
 
 __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float commute, Cuda::vec4 jj, Cuda::vec4 ijj) {
 
+    if (abs(v.x) > 10){
+        return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+    }
 
     if (equation == 1){
 
@@ -20,7 +23,7 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
             v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
             sinv += v_pow;  
             if (abs(v_pow.x) > 100000000){
-                return sinv;
+                return Cuda::vec4(100000000,100000000,100000000,100000000) ;
             }
         }
         // if (to_print){
@@ -38,7 +41,7 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
             v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
             cosv = cosv + v_pow;
             if (abs(v_pow.x) > 100000000){
-                return cosv;//Cuda::vec4(100000000,100000000,100000000,100000000) ;
+                return Cuda::vec4(100000000,100000000,100000000,100000000) ;
             }
         }
         return cosv;
@@ -46,6 +49,7 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
     } else if (equation == 4){
         return four_d_mult(v,v,commute,jj,ijj);
     }
+    
 
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
     Cuda::vec4 v3 = four_d_mult(v,v2,commute,jj,ijj);
@@ -62,7 +66,7 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
 
 
     if (equation == 0){
-        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320 + v9/362880 + v10/3628800;
+        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040;// + v8/40320 + v9/362880 + v10/3628800;
 
     } else if (equation == 3){
         // return v - v2 - v5 + v10;
@@ -71,8 +75,28 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
         // return 1 + v + v2 + v3 + v4;
         // return 1 - v + v3 - v4 + v5 - v7 + v8;
         // return 1 - v + v2 - v3 + v4;
-        return v3;
+        return v2+1;
 
+    } else if (equation == 5){
+        return v3+1;
+
+    } else if (equation == 6){
+        return v4+1;
+
+    } else if (equation == 7){
+        // return four_d_function(v4-v2+1, 1, commute, jj, ijj);// - 8*four_d_function(v2+v+1, 2, commute, jj, ijj);
+
+        // return four_d_function(1+v4, 1, commute, jj, ijj);// - 8*four_d_function(v2+v+1, 2, commute, jj, ijj);
+
+        return four_d_function(four_d_function(v, 1, commute, jj, ijj), 1, commute, jj, ijj);
+
+        // return four_d_function(four_d_function(v, 1, commute, jj, ijj), 0, commute, jj, ijj);
+        // return four_d_function(v2, 0, commute, jj, ijj);
+
+        // Cuda::vec4 cos_dude = four_d_function(v, 1, commute, jj, ijj);
+        // return four_d_mult(cos_dude,cos_dude,commute,jj,ijj);
+
+        // return four_d_function(four_d_function(v, 1, commute, jj, ijj)*10, 0, commute, jj, ijj);
     }
     
     return v;

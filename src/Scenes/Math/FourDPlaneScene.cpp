@@ -16,6 +16,8 @@ extern "C" void four_d_plane_render(
     vec4 ijj,
     const float brightness,
     const vec3 channels,
+    const float slider,
+    const int equation,
     unsigned int internal_color,
     unsigned int* d_colors
 );
@@ -26,6 +28,9 @@ FourDPlaneScene::FourDPlaneScene(const vec2& dimensions) : CoordinateScene(dimen
         {"rotation_ik", "0"},
         {"rotation_jk", "0"},
         {"scale", "1.0"},
+
+        {"equation", "0"},
+        {"slider", "1.1"},
 
         {"offset1", "0.0"},
         {"offset2", "0.0"},
@@ -118,6 +123,9 @@ void FourDPlaneScene::draw() {
 
         state["brightness"], 
         vec3(state["r_channel"], state["g_channel"], state["b_channel"]),
+
+        state["slider"], 
+        state["equation"],
 
         OPAQUE_BLACK,
         gpu_pix.get_ptr()
