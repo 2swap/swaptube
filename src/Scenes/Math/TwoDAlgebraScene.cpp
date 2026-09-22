@@ -22,15 +22,10 @@ extern "C" void draw_quadrilateral(uint32_t* pix, const ivec2& wh, const vec2& p
 extern "C" void draw_triangle(uint32_t* pix, const ivec2& wh, const vec2& p0, const vec2& p1, const vec2& p2, const uint32_t color);
 extern "C" void two_d_algebra(
     uint32_t* d_pixels, const ivec2& wh,
-    // vec2 dragger, 
-    // vec2 dragger_pos, 
-    // float dragger_type, float dragger_brightness, 
-    // vec4 dragger_inverse,
     int equation,
     float equation_lerp,
     vec2 channels,
     vec2 xx,  vec2 xy,  vec2 yy, 
-    // float number_line, 
     int brightness,
     const vec2& lx_ty, const vec2& rx_by
 );
@@ -40,8 +35,10 @@ extern "C" void two_d_algebra(
 TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dimensions) {
     manager.set({
         {"dragger_x", "0"},{"dragger_y", "0"},
+        {"operator_x", "0"},{"operator_y", "0"},
         {"dragger_type", "0"},
         {"dragger_shown", "0"},
+        {"dragger_active", "1"},
         {"algebra", "2"},
         {"number_line", "0"},
         {"brightness", "255"},
@@ -104,7 +101,7 @@ const vec2 two_d_transform(vec2 input_point, vec2 drag_type, vec2 drag_pos, vec2
 }
 
 const int two_d_color(float x_color, float y_color, int opacity){
-    return opacity + OKLABtoRGB(0,1,x_color*0.08,y_color*0.08);
+    return opacity + OKLABtoRGB(0,1,x_color*0.06,y_color*0.06);
 }
 
 
@@ -117,40 +114,36 @@ void TwoDAlgebraScene::draw() {
     const int bg_color = ((int) state["bg_1_r"]) << 16 | ((int) state["bg_1_g"]) << 8 | (int) state["bg_1_b"];
 
 
-    vec4 dragger_inverse;
     vec2 drag_times_x;
     vec2 drag_times_y;
-    const vec2 drag_pos(state["dragger_x"], state["dragger_y"]);
+    vec2 drag_pos(get_global_state("dragger_x_6"),get_global_state("dragger_y_6"));
+
+    if (state["dragger_active"] != 0){
+        set_global_state("dragger_x_6", get_global_state("dragger_x_5"));
+        set_global_state("dragger_y_6", get_global_state("dragger_y_5"));
+        set_global_state("dragger_x_5", get_global_state("dragger_x_4"));
+        set_global_state("dragger_y_5", get_global_state("dragger_y_4"));
+        set_global_state("dragger_x_4", get_global_state("dragger_x_3"));
+        set_global_state("dragger_y_4", get_global_state("dragger_y_3"));
+        set_global_state("dragger_x_3", get_global_state("dragger_x_2"));
+        set_global_state("dragger_y_3", get_global_state("dragger_y_2"));
+        set_global_state("dragger_x_2", get_global_state("dragger_x_1"));
+        set_global_state("dragger_y_2", get_global_state("dragger_y_1"));
+        set_global_state("dragger_x_1", state["dragger_x"]);
+        set_global_state("dragger_y_1", state["dragger_y"]);
+    } else {
+        drag_pos = vec2(state["dragger_x"],state["dragger_y"]);
+    }
+
 
     if (state["force_complex"] == 0){
-        drag_times_x = vec2(state["dragger_x"]*state["xx_x"]+state["dragger_y"]*state["xy_x"],state["dragger_x"]*state["xx_y"]+state["dragger_y"]*state["xy_y"]);
-        drag_times_y = vec2(state["dragger_x"]*state["xy_x"]+state["dragger_y"]*state["yy_x"],state["dragger_x"]*state["xy_y"]+state["dragger_y"]*state["yy_y"]);
+        drag_times_x = vec2(drag_pos.x*state["xx_x"]+drag_pos.y*state["xy_x"],drag_pos.x*state["xx_y"]+drag_pos.y*state["xy_y"]);
+        drag_times_y = vec2(drag_pos.x*state["xy_x"]+drag_pos.y*state["yy_x"],drag_pos.x*state["xy_y"]+drag_pos.y*state["yy_y"]);
     } else {
-        drag_times_x = vec2(state["dragger_x"],state["dragger_y"]);
-        drag_times_y = vec2(-state["dragger_y"],state["dragger_x"]);
+        drag_times_x = vec2(drag_pos.x,drag_pos.y);
+        drag_times_y = vec2(-drag_pos.y,drag_pos.x);
     }
         
-
-
-
-    if (state["number_line"] > 0){
-        dragger_inverse = vec4(1/state["dragger_x"],0,0,1);
-
-    } else {
-       
-        vec4 dragger_calc = vec4(0,0,0,0);
-     
-        float determinant = drag_times_x.x*drag_times_y.y-drag_times_x.y*drag_times_y.x;
-        while (determinant == 0){
-            drag_times_x.y += 0.000001;
-            drag_times_y.x += 0.000001;
-            drag_times_y.y += 0.000001;
-            determinant = drag_times_x.x*drag_times_y.y-drag_times_x.y*drag_times_y.x;
-        }
-
-        dragger_inverse = vec4(drag_times_y.y, -drag_times_y.x, -drag_times_x.y, drag_times_x.x)/determinant;
-    }
-
 
     // vec2 origin = wh*0.5;
     // float scalar = wh.y/(state["bottom_y"]-state["top_y"]);
@@ -190,7 +183,7 @@ void TwoDAlgebraScene::draw() {
         vector<vec2> point_list;
         vector<uint32_t> color_list;
 
-        const int grid_size_x = 8;
+        const int grid_size_x = 9;
         const int grid_size_y = (state["number_line"]==0) ? grid_size_x : 0;
         const int grid_opacity = ((int) state["brightness"]) << 24;
         const float line_thickness = screen_unit*0.03*state["grid_scale"];
@@ -265,10 +258,6 @@ void TwoDAlgebraScene::draw() {
         float equation_lerp = state["mode"]-equation;
         two_d_algebra(
             gpu_pix.get_ptr(), wh,
-            //dragger_calc, 
-            // vec2(state["dragger_x"], state["dragger_y"]), 
-            // state["dragger_type"], state["dragger_brightness"], 
-            // dragger_inverse,
 
             equation,
             equation_lerp,
@@ -277,7 +266,6 @@ void TwoDAlgebraScene::draw() {
             vec2(state["xy_x"], state["xy_y"]),
             vec2(state["yy_x"], state["yy_y"]),
 
-            // state["number_line"],
             int(state["brightness"]),
 
             vec2(state["left_x"], state["top_y"]),
@@ -290,7 +278,7 @@ void TwoDAlgebraScene::draw() {
 
 
     const int dragger_opacity = 0xff000000;//((int) (state["dragger_brightness"]*255)) << 24;
-    const ivec2 drag_pixel = ivec2((int) (drag_pos.x*screen_unit),(int) (-drag_pos.y*screen_unit))+origin;
+    const ivec2 drag_pixel = ivec2((int) (state["dragger_x"]*screen_unit),(int) (-state["dragger_y"]*screen_unit))+origin;
     const float dragger_size = screen_unit*0.35*sin(state["dragger_shown"]*1.98);
 
     if (state["dragger_type"] == 1 && state["dragger_shown"] != 0){
@@ -327,6 +315,9 @@ void TwoDAlgebraScene::draw() {
             drag_pixel-pos_diff_0, drag_pixel-pos_diff_1, drag_pixel+pos_diff_0, drag_pixel+pos_diff_1, 
             dragger_opacity + 0x00ffffff);
     }
+
+
+
 
 
 
