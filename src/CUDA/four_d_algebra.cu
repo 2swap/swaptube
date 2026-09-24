@@ -6,6 +6,125 @@
 #include "four_d_shared.cuh"
 
 
+
+__device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float commute, Cuda::vec4 jj, Cuda::vec4 ijj) {
+
+    if (abs(v.x) > 10){
+        return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+    }
+
+    if (equation == 1){
+
+        Cuda::vec4 sinv = v;
+        Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
+        Cuda::vec4 v_pow = v;
+
+        for (int t = 3; t < 60; t+=2){
+            v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
+            sinv += v_pow;  
+            if (abs(v_pow.x) > 100000000){
+                return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+            }
+        }
+        // if (to_print){
+        //     printf("%f %f %f %f\n",sinv.x,sinv.y,sinv.z,sinv.w);
+        // }
+        return sinv;
+
+    } else if (equation == 2){
+
+        Cuda::vec4 cosv(1,0,0,0);
+        Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
+        Cuda::vec4 v_pow = v;
+
+        for (int t = 2; t < 60; t+=2){
+            v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
+            cosv = cosv + v_pow;
+            if (abs(v_pow.x) > 100000000){
+                return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+            }
+        }
+        return cosv;
+
+    } else if (equation == 4){
+        return four_d_mult(v,v,commute,jj,ijj);
+    }
+    
+
+    Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
+    Cuda::vec4 v3 = four_d_mult(v,v2,commute,jj,ijj);
+    Cuda::vec4 v4 = four_d_mult(v2,v2,commute,jj,ijj);
+
+    Cuda::vec4 v5 = four_d_mult(v3,v2,commute,jj,ijj);
+    Cuda::vec4 v6 = four_d_mult(v4,v2,commute,jj,ijj);
+    Cuda::vec4 v7 = four_d_mult(v5,v2,commute,jj,ijj);
+    Cuda::vec4 v8 = four_d_mult(v6,v2,commute,jj,ijj);
+    Cuda::vec4 v9 = four_d_mult(v7,v2,commute,jj,ijj);
+    Cuda::vec4 v10 = four_d_mult(v5,v5,commute,jj,ijj);
+    Cuda::vec4 v12 = four_d_mult(v7,v5,commute,jj,ijj);
+
+
+
+    if (equation == 0){
+        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040;// + v8/40320 + v9/362880 + v10/3628800;
+
+    } else if (equation == 3){
+        // return v - v2 - v5 + v10;
+        // return v2 - v4 - v6 + v12;
+        // return -2 + v*6 - v2*2 - v3*3 + v6;
+        // return 1 + v + v2 + v3 + v4;
+        // return 1 - v + v3 - v4 + v5 - v7 + v8;
+        // return 1 - v + v2 - v3 + v4;
+        return v2+1;
+
+    } else if (equation == 5){
+        return v3+1;
+
+    } else if (equation == 6){
+        return v4+1;
+
+    } else if (equation == 7){
+        // return four_d_function(v4-v2+1, 1, commute, jj, ijj);// - 8*four_d_function(v2+v+1, 2, commute, jj, ijj);
+
+        // return four_d_function(1+v4, 1, commute, jj, ijj);// - 8*four_d_function(v2+v+1, 2, commute, jj, ijj);
+
+        return four_d_function(four_d_function(v, 1, commute, jj, ijj), 1, commute, jj, ijj);
+
+        // return four_d_function(four_d_function(v, 1, commute, jj, ijj), 0, commute, jj, ijj);
+        // return four_d_function(v2, 0, commute, jj, ijj);
+
+        // Cuda::vec4 cos_dude = four_d_function(v, 1, commute, jj, ijj);
+        // return four_d_mult(cos_dude,cos_dude,commute,jj,ijj);
+
+        // return four_d_function(four_d_function(v, 1, commute, jj, ijj)*10, 0, commute, jj, ijj);
+    }
+    
+    return v;
+
+    // Cuda::vec4 v11 = four_d_mult(v9,v2);
+    // Cuda::vec4 v15 = four_d_mult(v9,v6);
+
+
+    // Cuda::vec4 m1 = v4+four_d_real(3);
+    // m1 = four_d_mult( m1, v2-four_d_real(4),commute,jj,ijj);
+    // m1 = four_d_mult( m1, v3+four_d_real(3),commute,jj,ijj);
+    // return m1;
+
+    // return v4;
+
+
+    // Cuda::vec4 coeff(0.2,1.0,0.2,-1.4);
+    // Cuda::vec4 cv4 = four_d_mult(coeff,cv4);
+    // return v7+4.0*v6-10*v5+20*v-16.0;
+    // return v15-7.0*v5-5.0*v7+four_d_real(35.0);
+    // return v6-v4+10.0*v3+1.0;
+    // return v18*0.01 - v7 + v6*2.7 +  v5*8.0 - v3*60.0 -50.0;
+    // return sinv*0.8 + cosv*1.6;
+    // return sinv;
+}
+
+
+
 __device__ Cuda::vec3 four_d_accum(Cuda::vec4 a, float brightness) {
 
     Cuda::vec3 accum(
@@ -36,95 +155,6 @@ __device__ uint32_t accum_to_color(Cuda::vec3 a, float fade) {
     );
 }
 
-__device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float commute, Cuda::vec4 jj, Cuda::vec4 ijj) {
-
-
-    if (equation == 1){
-
-        Cuda::vec4 sinv = v;
-        Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
-        Cuda::vec4 v_pow = v;
-
-        for (int t = 3; t < 60; t+=2){
-            v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
-            sinv += v_pow;  
-            if (abs(v_pow.x) > 100000000){
-                return sinv;
-            }
-        }
-        // if (to_print){
-        //     printf("%f %f %f %f\n",sinv.x,sinv.y,sinv.z,sinv.w);
-        // }
-        return sinv;
-
-    } else if (equation == 2){
-
-        Cuda::vec4 cosv(1,0,0,0);
-        Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
-        Cuda::vec4 v_pow = v;
-
-        for (int t = 2; t < 60; t+=2){
-            v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
-            cosv = cosv + v_pow;
-            if (abs(v_pow.x) > 100000000){
-                return cosv;//Cuda::vec4(100000000,100000000,100000000,100000000) ;
-            }
-        }
-        return cosv;
-
-    }
-
-    Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
-    Cuda::vec4 v3 = four_d_mult(v,v2,commute,jj,ijj);
-    Cuda::vec4 v4 = four_d_mult(v2,v2,commute,jj,ijj);
-
-    Cuda::vec4 v5 = four_d_mult(v3,v2,commute,jj,ijj);
-    Cuda::vec4 v6 = four_d_mult(v4,v2,commute,jj,ijj);
-    Cuda::vec4 v7 = four_d_mult(v5,v2,commute,jj,ijj);
-    Cuda::vec4 v8 = four_d_mult(v6,v2,commute,jj,ijj);
-    Cuda::vec4 v9 = four_d_mult(v7,v2,commute,jj,ijj);
-    Cuda::vec4 v10 = four_d_mult(v5,v5,commute,jj,ijj);
-    Cuda::vec4 v12 = four_d_mult(v7,v5,commute,jj,ijj);
-
-
-
-    if (equation == 0){
-        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320;
-
-    } else if (equation == 3){
-        // return v - v2 - v5 + v10;
-        return v2 - v4 - v6 + v12;
-        // return -2 + v*6 - v2*2 - v3*3 + v6;
-        // return 1 + v + v2 + v3 + v4;
-        // return 1 - v + v3 - v4 + v5 - v7 + v8;
-        // return 1 - v + v2 - v3 + v4;
-
-    }
-    
-    return v;
-
-    // Cuda::vec4 v11 = four_d_mult(v9,v2);
-    // Cuda::vec4 v15 = four_d_mult(v9,v6);
-
-
-    // Cuda::vec4 m1 = v4+four_d_real(3);
-    // m1 = four_d_mult( m1, v2-four_d_real(4),commute,jj,ijj);
-    // m1 = four_d_mult( m1, v3+four_d_real(3),commute,jj,ijj);
-    // return m1;
-
-    // return v4;
-
-
-    // Cuda::vec4 coeff(0.2,1.0,0.2,-1.4);
-    // Cuda::vec4 cv4 = four_d_mult(coeff,cv4);
-    // return v7+4.0*v6-10*v5+20*v-16.0;
-    // return v15-7.0*v5-5.0*v7+four_d_real(35.0);
-    // return v6-v4+10.0*v3+1.0;
-    // return v18*0.01 - v7 + v6*2.7 +  v5*8.0 - v3*60.0 -50.0;
-    // return sinv*0.8 + cosv*1.6;
-    // return sinv;
-}
-
 __global__ void four_d_raymarch_kernel(
     const Cuda::ivec2 wh,
 
@@ -135,8 +165,6 @@ __global__ void four_d_raymarch_kernel(
     const Cuda::vec4 x_unit,
     const Cuda::vec4 y_unit,
     const Cuda::vec4 z_unit,
-    const Cuda::vec4 rotater,
-    const Cuda::vec4 rotaterInv,
     const Cuda::vec4 jj,
     const Cuda::vec4 ijj,
     const float brightness,
@@ -159,63 +187,23 @@ __global__ void four_d_raymarch_kernel(
     float dt = 0.01f;
     
     Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, camera_orientation))*dt;
-    // Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, Cuda::quat(1,0,0,0)))*dt;
-    // Cuda::vec3 dir_world(0,-0.01,-0.01);
 
     Cuda::vec3 current_position = camera_position + dir_world;
     // Cuda::vec3 current_position(0,0,-10);
-    
-    // Cuda::vec4 q(camera_orientation.u, camera_orientation.i, camera_orientation.j, camera_orientation.k);
-    // Cuda::vec4 qInv(camera_orientation.u, -camera_orientation.i, -camera_orientation.j, -camera_orientation.k);
 
     const float commute = min(max((float(pixel_x)/float(wh.x)-slider)*40.0,-1.0),1.0);
     // Cuda::vec4 trans(0.0,1.0,-1.0,2.0);
 
-
-    Cuda::vec4 last_position(0,0,0,0);
     while (dist_traveled < max_dist) {
         dist_traveled += dt;
         current_position += dir_world;
 
-
-        // Cuda::vec4 pos_rotated = four_d_mult(rotater,four_d_mult(x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z,rotaterInv,commute),commute);
-
-        // if (abs(pos_rotated.y) < 1 && abs(pos_rotated.z) < 1 && abs(pos_rotated.w) < 1 && abs(pos_rotated.x) < 1){
-        //     if (abs(last_position.y) > 1){
-        //         if (last_position.y > 0){
-        //             colors[pixel_y * wh.x + pixel_x] = 0xffaa0000; 
-        //             return;
-        //         }
-        //         colors[pixel_y * wh.x + pixel_x] = 0xffaa7700; 
-        //         return;
-        //     } else if (abs(last_position.z) > 1){
-        //         if (last_position.z > 0){
-        //             colors[pixel_y * wh.x + pixel_x] = 0xffcccc00; 
-        //             return;
-        //         }
-        //         colors[pixel_y * wh.x + pixel_x] = 0xffcccccc; 
-        //         return;
-        //     } else if (abs(last_position.w) > 1){
-        //         if (last_position.w > 0){
-        //             colors[pixel_y * wh.x + pixel_x] = 0xff00cc55; 
-        //             return;
-        //         }
-        //         colors[pixel_y * wh.x + pixel_x] = 0xff5533dd; 
-        //         return;
-        //     }
-        //     colors[pixel_y * wh.x + pixel_x] = 0xff555566; 
-        //     return;
-        // }
-        
-        // last_position = pos_rotated;
-    
 
         Cuda::vec4 four_d_output = four_d_function(x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z, equation, commute, jj, ijj);
 
         out += four_d_accum(four_d_output,brightness); 
     }
 
-    // colors[pixel_y * wh.x + pixel_x] = 0xff000000; 
     colors[pixel_y * wh.x + pixel_x] = accum_to_color(out*channels,fade); 
 
 }
@@ -232,8 +220,6 @@ extern "C" void four_d_render(
     const Cuda::vec4 x_unit,
     const Cuda::vec4 y_unit,
     const Cuda::vec4 z_unit,
-    const Cuda::vec4 rotater,
-    const Cuda::vec4 rotaterInv,
 
     const Cuda::vec4 jj,
     const Cuda::vec4 ijj,
@@ -257,8 +243,6 @@ extern "C" void four_d_render(
         camera_orientation, camera_position,
         fov_rad, max_dist,
         x_unit, y_unit,z_unit,
-        rotater,
-        rotaterInv,
         jj,
         ijj,
         brightness, 

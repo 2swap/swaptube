@@ -1,4 +1,5 @@
 #include "InnerBilliardsScene.h"
+#include "../../Core/State/GlobalState.h"
 #include <cmath>
 
 extern "C" void draw_convex_polygon(uint32_t* d_pixels, const ivec2& wh,
@@ -143,18 +144,13 @@ InnerBilliardsScene::InnerBilliardsScene(const vec2& dimensions)
         {"ball_opacity", "1"},
         {"cue_opacity",  "1"},
         {"table_opacity","1"},
-        {"pocket_size",  "1"},
+        {"pocket_size",  ".08"},
     });
 }
 
 float InnerBilliardsScene::pocket_radius_px() {
-    const float rail_thickness = get_geom_mean_size() / 80.0f;
-    return rail_thickness * (float)state["pocket_size"];
-}
-
-float InnerBilliardsScene::pocket_radius_world() {
-    const float world_per_pixel = (float)(state["right_x"] - state["left_x"]) / (float)get_width();
-    return pocket_radius_px() * world_per_pixel;
+    const float pixels_per_world = (float)get_width() / (float)(state["right_x"] - state["left_x"]);
+    return (float)state["pocket_size"] * pixels_per_world;
 }
 
 void InnerBilliardsScene::draw_trail(const vector<vec2>& verts) {
@@ -166,20 +162,36 @@ void InnerBilliardsScene::draw_trail(const vector<vec2>& verts) {
     const vec2 start(state["ball_start_x"], state["ball_start_y"]);
     bool landed_pocket = false; vec2 pocket_center;
     const vector<vec2> path = build_ball_path(start, state["ball_angle"], state["path_length"], verts,
-                                              pocket_radius_world(), &landed_pocket, &pocket_center);
+                                              state["pocket_size"], &landed_pocket, &pocket_center);
     if (path.size() < 2) return;
 
     const float thickness = get_geom_mean_size() / 800.0f;
-    cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
-                               path.data(), path.size(),
-                               vec2(state["left_x"], state["top_y"]),
-                               vec2(state["right_x"], state["bottom_y"]),
-                               0xffcccccc, opacity, thickness, false);
-    cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
-                               path.data(), path.size(),
-                               vec2(state["left_x"], state["top_y"]),
-                               vec2(state["right_x"], state["bottom_y"]),
-                               0xffcccccc, opacity, thickness+1, false);
+
+    // Distance travelled by the ball at the start of each path vertex, used for fading ball path.
+    vector<float> cumdist(path.size(), 0.0f);
+    for (size_t i = 1; i < path.size(); i++)
+        cumdist[i] = cumdist[i - 1] + length(path[i] - path[i - 1]);
+
+    for (size_t i = 0; i + 1 < path.size(); i++) {
+        const float fade = std::clamp(1.0f - cumdist[i] / 81.0f, 0.0f, 1.0f);
+        const float seg_opacity = opacity * fade;
+        if (seg_opacity < 0.005f) continue;
+        const vec2 seg[2] = { path[i], path[i + 1] };
+        cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
+                                   seg, 2,
+                                   vec2(state["left_x"], state["top_y"]),
+                                   vec2(state["right_x"], state["bottom_y"]),
+                                   0xffcccccc, seg_opacity, thickness, false);
+        cuda_render_path_from_host(gpu_pix.get_ptr(), get_width_height(),
+                                   seg, 2,
+                                   vec2(state["left_x"], state["top_y"]),
+                                   vec2(state["right_x"], state["bottom_y"]),
+                                   0xffcccccc, seg_opacity, thickness+1, false);
+    }
+
+    // Put the final ball position in the global state for 6884
+    set_global_state("inner_billiards_path_end_x", path.back().x);
+    set_global_state("inner_billiards_path_end_y", path.back().y);
 
     if (landed_pocket) {
         const uint32_t POCKET_RED = 0xffff0000;
@@ -194,7 +206,10 @@ void InnerBilliardsScene::draw_ball(const vector<vec2>& verts) {
     if (opacity < 0.01) return;
 
     const vec2 start(state["ball_start_x"], state["ball_start_y"]);
-    const vec2 ball_pos = build_ball_path(start, state["ball_angle"], state["ball_distance"], verts, pocket_radius_world()).back();
+    const vec2 ball_pos = build_ball_path(start, state["ball_angle"], state["ball_distance"], verts, state["pocket_size"]).back();
+
+    set_global_state("billiards_ball_x", ball_pos.x);
+    set_global_state("billiards_ball_y", ball_pos.y);
 
     const float radius_px = get_geom_mean_size() / 120.0;
     draw_circle(gpu_pix.get_ptr(), get_width_height(), point_to_pixel(ball_pos), radius_px, 0xffffffff, opacity);
@@ -269,7 +284,7 @@ void InnerBilliardsScene::draw_table(const vector<vec2>& verts) {
         draw_circle(gpu_pix.get_ptr(), get_width_height(), v, corner_radius, BROWN, opacity);
 
     // (3) The green playing surface itself
-    draw_convex_polygon(gpu_pix.get_ptr(), gpu_pix.get_wh(), pixel_verts.data(), pixel_verts.size(), 0xff1a6b3a, opacity);
+    draw_convex_polygon(gpu_pix.get_ptr(), gpu_pix.get_wh(), pixel_verts.data(), pixel_verts.size(), 0xff1a8b3a, opacity);
 
     // (4) Pockets
     const float pocket_r = pocket_radius_px();

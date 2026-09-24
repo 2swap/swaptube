@@ -74,15 +74,32 @@ __device__ __forceinline__ Cuda::vec4 four_d_mult(Cuda::vec4 a, Cuda::vec4 b, fl
     return vec_out;
 }
 
-// __device__ __forceinline__ float smallerness(float s, float brightness){
-//     return 1/(1+log(abs(s)+1)/brightness);
-// }
+
+
+
+
+__device__ __forceinline__ float smallishness(float s, float brightness){
+    return 1/(1+s*s/brightness);
+}
+
 
 __device__ __forceinline__ float smallness(float s, float brightness){
     // return 1/(1+0.02*s*s*abs(s));
     float s_sq = s*s;
     return 1/(1+s_sq*s_sq/brightness);
     // return 1/(1+s*s*s*s);
+}
+
+__device__ __forceinline__ float discrete_smallness(float s, float brightness){
+    
+    int l = (int) (log(s*s+0.99)/16)*256;
+    float sq = pow(2.718,l)-0.35;
+
+    // float s_sq = s*s;
+    return 1/(1+sq*sq/brightness);
+    // return 1/(1+s*s*s*s);
+
+
 }
 
 

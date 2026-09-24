@@ -34,6 +34,9 @@ private:
     int buffer_size;
     int currentFrame;
     int videoStreamIdx;
+    Pixels lastPixels;
+    int lastTargetWidth;
+    int lastTargetHeight;
 
     void open_file();
     void ensure_scaler(int width, int height, int &scaled_width, int &scaled_height);

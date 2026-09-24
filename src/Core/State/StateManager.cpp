@@ -98,10 +98,10 @@ StateSet StateManager::set(const string& variable, const string& equation) {
         throw runtime_error("Error adding equation to state manager: Variable name '" + variable + "' contains invalid characters.");
     }
 
-    // Check that the variable is not undergoing a transition
-    if(in_microblock_transition.find(variable) != in_microblock_transition.end() ||
-       in_macroblock_transition.find(variable) != in_macroblock_transition.end()){
-        throw runtime_error("Attempted to set variable " + variable + " while it is undergoing a transition!");
+    // A set() on a variable mid-transition simply overrides it, rather than erroring:
+    // the equation is about to be replaced outright, so the pending transition is moot.
+    if (in_microblock_transition.erase(variable) || in_macroblock_transition.erase(variable)) {
+        variables.erase(variable + ".post_transition");
     }
 
     StateSet ret = {};

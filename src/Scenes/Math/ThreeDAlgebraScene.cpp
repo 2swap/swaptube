@@ -1,5 +1,8 @@
 #include "ThreeDAlgebraScene.h"
 
+HOST_DEVICE inline uint32_t OKLABtoRGB(int alpha, float L, float a, float b);
+
+
 ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : ThreeDimensionScene(dimensions) {
     manager.set({
         {"associativity", "0"}, // 0 = left-associated (e*a)*b, 1 = right-associated e*(a*b)
@@ -11,8 +14,9 @@ ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : ThreeDimensionS
         {"zz_x", "0"}, {"zz_y", "1"}, {"zz_z", "0"}, {"zz_w", "0"},
         {"a_x", "0"}, {"a_y", "1"}, {"a_z", "0"}, {"a_w", "0"},
         {"b_x", "0"}, {"b_y", "0"}, {"b_z", "1"}, {"b_w", "0"},
-        {"lines_thickness_multiplier", "2"},
+        {"lines_thickness_multiplier", "3"},
         {"w_slider", "0"},
+        {"reach", "3"},
     });
 }
 
@@ -32,12 +36,35 @@ vec4 ThreeDAlgebraScene::multiply(const vec4& p, const vec4& q,
 }
 
 vec3 ThreeDAlgebraScene::project(const vec4& p) const {
-    return vec3(p.x+p.w*0.4, p.y+p.w*0.3, p.z+p.w*0.2);
+    return vec3(p.x+p.w*0.5, p.y+p.w*0.2, p.z-p.w*0.4); 
+}
+
+
+uint32_t ThreeDAlgebraScene::three_d_color(vec4 point) {
+    return OKLABtoRGB(255,1,point.x*0.1,point.y*0.08 + point.z*0.01);
+    // return 0xffffffff;
+}
+
+
+void ThreeDAlgebraScene::lerp_lines(const vec3& p, const vec3& q, const float step, const vec4& p_in, const vec4& p_move) {
+
+    vec3 line_diff = (q-p)*step;
+    vec3 line_start = p;
+
+    for (float l = 0; l < 1; l+=step){
+        uint32_t line_color = three_d_color(p_in + p_move*l);
+
+        add_line(Line(line_start, line_start+line_diff, line_color, 1, false));
+
+        line_start = line_start+line_diff;
+    }
+    
 }
 
 void ThreeDAlgebraScene::draw() {
     set_camera_direction();
     clear_lines();
+    clear_points();
 
     const vec4 xx(state["xx_x"], state["xx_y"], state["xx_z"], 0);
     const vec4 xy(state["xy_x"], state["xy_y"], state["xy_z"], 0);
@@ -52,44 +79,58 @@ void ThreeDAlgebraScene::draw() {
     const float w = state["w_slider"];
 
 
-    const int reach = 2;
+    const int reach = state["reach"];
     const int width = 2 * reach + 1;
     vector<vec3> transformed(width * width * width * 2);
     auto index = [&](int ix, int iy, int iz, int iw) {
         return ((iw*width + ix + reach) * width + (iy + reach)) * width + (iz + reach);
     };
-    for (int ix = -reach; ix <= reach; ix++)
-        for (int iy = -reach; iy <= reach; iy++)
-            for (int iz = -reach; iz <= reach; iz++) {
+    for (int ix = -reach; ix <= reach; ix+=2)
+        for (int iy = -reach; iy <= reach; iy+=2)
+            for (int iz = -reach; iz <= reach; iz+=2) {
                 const vec4 e(ix, iy, iz, 0);
                 const vec3 left  = project(multiply(multiply(e, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz));
                 const vec3 right = project(multiply(e, ab, xx, xy, xz, yy, yz, zz));
                 transformed[index(ix, iy, iz, 0)] = left * (1 - associativity) + right * associativity;
-
+                
                 if (w > 0){
-                    const vec4 ew(ix, iy, iz, w);
+                    const vec4 ew(ix, iy, iz, w*2);
                     const vec3 leftw  = project(multiply(multiply(ew, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz));
                     const vec3 rightw = project(multiply(ew, ab, xx, xy, xz, yy, yz, zz));
                     transformed[index(ix, iy, iz, 1)] = leftw * (1 - associativity) + rightw * associativity;
                 }
             }
-
+    
     const uint32_t grid_color = 0xffffffff;
-    for (int ix = -reach; ix <= reach; ix++)
-        for (int iy = -reach; iy <= reach; iy++)
-            for (int iz = -reach; iz <= reach; iz++) {
+    for (int ix = -reach; ix <= reach; ix+=2)
+        for (int iy = -reach; iy <= reach; iy+=2)
+            for (int iz = -reach; iz <= reach; iz+=2) {
                 const vec3& p = transformed[index(ix, iy, iz, 0)];
-                if (ix < reach) add_line(Line(p, transformed[index(ix + 1, iy, iz, 0)], grid_color, 1, false));
-                if (iy < reach) add_line(Line(p, transformed[index(ix, iy + 1, iz, 0)], grid_color, 1, false));
-                if (iz < reach) add_line(Line(p, transformed[index(ix, iy, iz + 1, 0)], grid_color, 1, false));
+                const vec4& p_in = vec4(ix,iy,iz,0);
+                const uint32_t p_color = three_d_color(p_in);
+                add_point(Point(p,p_color,1,1.6));
+                if (ix < reach) lerp_lines(p, transformed[index(ix + 2, iy, iz, 0)], 0.1, p_in, vec4(2,0,0,0));
+                if (iy < reach) lerp_lines(p, transformed[index(ix, iy + 2, iz, 0)], 0.1, p_in, vec4(0,2,0,0));
+                if (iz < reach) lerp_lines(p, transformed[index(ix, iy, iz + 2, 0)], 0.1, p_in, vec4(0,0,2,0));
 
+                // if (ix < reach) add_line(Line(p, transformed[index(ix + 2, iy, iz, 0)], grid_color, 1, false));
+                // if (iy < reach) add_line(Line(p, transformed[index(ix, iy + 2, iz, 0)], grid_color, 1, false));
+                // if (iz < reach) add_line(Line(p, transformed[index(ix, iy, iz + 2, 0)], grid_color, 1, false));
 
+                
                 if (w > 0){
                     const vec3& q = transformed[index(ix, iy, iz, 1)];
-                    if (ix < reach) add_line(Line(q, transformed[index(ix + 1, iy, iz, 1)], grid_color, 1, false));
-                    if (iy < reach) add_line(Line(q, transformed[index(ix, iy + 1, iz, 1)], grid_color, 1, false));
-                    if (iz < reach) add_line(Line(q, transformed[index(ix, iy, iz + 1, 1)], grid_color, 1, false));
-                    add_line(Line(q, p, grid_color, 1, false));
+                    add_point(Point(q,p_color,1,1.6));
+                    add_line(Line(q, p, p_color, 1, false));
+
+                    if (ix < reach) lerp_lines(q, transformed[index(ix + 2, iy, iz, 1)], 0.1, p_in, vec4(2,0,0,0));
+                    if (iy < reach) lerp_lines(q, transformed[index(ix, iy + 2, iz, 1)], 0.1, p_in, vec4(0,2,0,0));
+                    if (iz < reach) lerp_lines(q, transformed[index(ix, iy, iz + 2, 1)], 0.1, p_in, vec4(0,0,2,0));
+                    
+
+                    // if (ix < reach) add_line(Line(q, transformed[index(ix + 2, iy, iz, 1)], grid_color, 1, false));
+                    // if (iy < reach) add_line(Line(q, transformed[index(ix, iy + 2, iz, 1)], grid_color, 1, false));
+                    // if (iz < reach) add_line(Line(q, transformed[index(ix, iy, iz + 2, 1)], grid_color, 1, false));
                 }
             }
 

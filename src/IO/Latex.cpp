@@ -72,7 +72,7 @@ shared_ptr<DevicePointer> latex_to_gpu_pix(const string& latex, ScalingParams& s
         return it->second; // Return the cached result
     }
 
-    cout << "Generating LaTeX for: " << latex << endl;
+    // cout << "Generating LaTeX for: " << latex << endl;
 
     hash<string> hasher;
     char full_directory_path[PATH_MAX];
@@ -92,7 +92,7 @@ shared_ptr<DevicePointer> latex_to_gpu_pix(const string& latex, ScalingParams& s
 
     // System call successful, return the generated SVG
     shared_ptr<DevicePointer> text = svg_to_gpu_pix("latex/" + name_without_folder, scaling_params);
-                cout << "Dimensions = " << text->get_wh().x << " x " << text->get_wh().y << endl;
+                // cout << "Dimensions = " << text->get_wh().x << " x " << text->get_wh().y << endl;
     latex_cache[cache_key] = text; // Cache the result before returning
     return text;
 }

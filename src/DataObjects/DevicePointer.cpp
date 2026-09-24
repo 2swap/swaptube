@@ -8,7 +8,7 @@ extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t*
 extern "C" void cuda_copy_pixels_to_device(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
 DevicePointer::DevicePointer(const ivec2& wh) : wh(wh) {
-    cout << "Allocating device pointer of size " << wh.x << " by " << wh.y << endl;
+    // cout << "Allocating device pointer of size " << wh.x << " by " << wh.y << endl;
     device_ptr = cuda_alloc_pixels_on_device(wh.x*wh.y);
 }
 

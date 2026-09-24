@@ -10,7 +10,6 @@ public:
 
 private:
     float pocket_radius_px();
-    float pocket_radius_world();
     void draw_table(const vector<vec2>& verts);
     void draw_cue_stick();
     void draw_ball(const vector<vec2>& verts);
