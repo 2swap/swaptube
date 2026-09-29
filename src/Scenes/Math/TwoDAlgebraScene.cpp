@@ -38,7 +38,7 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
         {"operator_x", "0"},{"operator_y", "0"},
         {"dragger_type", "0"},
         {"dragger_shown", "0"},
-        {"dragger_active", "1"},
+        {"update_active", "1"},
         {"algebra", "2"},
         {"number_line", "0"},
         {"brightness", "255"},
@@ -49,11 +49,12 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
         {"mode", "0"}, // 0 for grid, other for equation
 
         {"diagram_opacity", "0"},{"diagram_label", "0"},
-        {"x_label", "1"},{"y_label", "1"},
+        {"x_label", "1"},{"xy_label", "1"},{"y_label", "1"},
         {"re_channel", "1"},
         {"im_channel", "1"},
         {"point_count", "0"},{"point_label", "0"},{"point_opacity", "255"},{"point_size", "1"},
         {"point_x", "0"},{"point_y", "0"},
+        {"div_scene", "0"},
         {"force_complex", "0"},
 
         {"bg_1_r", "0"},{"bg_1_g", "0"},{"bg_1_b", "68"},
@@ -118,7 +119,7 @@ void TwoDAlgebraScene::draw() {
     vec2 drag_times_y;
     vec2 drag_pos(get_global_state("dragger_x_6"),get_global_state("dragger_y_6"));
 
-    if (state["dragger_active"] != 0){
+    if (state["update_active"] != 0){
         set_global_state("dragger_x_6", get_global_state("dragger_x_5"));
         set_global_state("dragger_y_6", get_global_state("dragger_y_5"));
         set_global_state("dragger_x_5", get_global_state("dragger_x_4"));
@@ -177,6 +178,17 @@ void TwoDAlgebraScene::draw() {
     //     }
     // }
 
+    float number_line = get_global_state("number_line_6");
+    if (state["update_active"] != 0){
+        set_global_state("number_line_6", get_global_state("number_line_5"));
+        set_global_state("number_line_5", get_global_state("number_line_4"));
+        set_global_state("number_line_4", get_global_state("number_line_3"));
+        set_global_state("number_line_3", get_global_state("number_line_2"));
+        set_global_state("number_line_2", get_global_state("number_line_1"));
+        set_global_state("number_line_1", state["number_line"]);
+    } else {
+        number_line = state["number_line"];
+    }
 
     if (state["mode"] == 0){
 
@@ -184,13 +196,13 @@ void TwoDAlgebraScene::draw() {
         vector<uint32_t> color_list;
 
         const int grid_size_x = 9;
-        const int grid_size_y = (state["number_line"]==0) ? grid_size_x : 0;
+        const int grid_size_y = (number_line==0) ? grid_size_x : 0;
         const int grid_opacity = ((int) state["brightness"]) << 24;
         const float line_thickness = screen_unit*0.03*state["grid_scale"];
         const float point_size = screen_unit*0.12*state["grid_scale"];
         const float lerp_step = 0.005;
 
-        const vec2 drag_type = vec2(state["dragger_type"],state["number_line"]);
+        const vec2 drag_type = vec2(state["dragger_type"],number_line);
 
 
         for (int y = -grid_size_y; y <= grid_size_y; y++){
@@ -212,7 +224,7 @@ void TwoDAlgebraScene::draw() {
             }
         }
 
-        if (state["number_line"]==0){
+        if (number_line==0){
             for (int x = -grid_size_x; x <= grid_size_x; x++){
                 vec2 current_pos = two_d_transform(vec2(x,-grid_size_y), 
                     drag_type, drag_pos, drag_times_x, drag_times_y);
@@ -371,8 +383,8 @@ void TwoDAlgebraScene::draw() {
         draw_circle(gpu_pix.get_ptr(), wh, xy_pos, point_radius, xy_opacity + 0x00ccccee,1.0);
         set_global_state("xy_pos_x", xy_pos.x/wh.x);
         set_global_state("xy_pos_y", xy_pos.y/wh.y);
-        write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "xy"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*state["x_label"], 0);
-        write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "y"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*(1-state["x_label"]), 0);
+        write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "xy"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*state["xy_label"], 0);
+        write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "y"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*(1-state["xy_label"]), 0);
     }
     
     
@@ -393,7 +405,12 @@ void TwoDAlgebraScene::draw() {
 
 
 
-    const ivec2 point_dist(state["point_x"]*screen_unit,-state["point_y"]*screen_unit);
+    vec2 point_dist(state["point_x"]*screen_unit,-state["point_y"]*screen_unit);
+    if (state["div_scene"] == 2){
+        point_dist = -point_dist.y*drag_times_x + point_dist.x*drag_times_y*vec2(-1,1);
+    } else if (state["div_scene"] == 1){
+        point_dist = point_dist.x*drag_times_x + point_dist.y*drag_times_y;
+    } 
     for  (int p = 0; p < state["point_count"]; p++){
 
         const float point_lerp = min(state["point_count"]-p,1.0);
@@ -406,8 +423,20 @@ void TwoDAlgebraScene::draw() {
         draw_circle(gpu_pix.get_ptr(), wh, point_loc, point_size, point_opacity+point_stroke,1.0);
         draw_circle(gpu_pix.get_ptr(), wh, point_loc, point_size*0.85, point_opacity+bg_color,1.0);
         if (state["point_label"] != 0 && point_size > 1){
-            const string suffix = (p == 3) ? "^t^h" : "";
-            write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,to_string(p+1)+suffix), point_loc, point_size*2, state["point_opacity"]/255, 0);
+            const string point_text = (state["div_scene"] == 1) ? "x" : to_string(p+1);//+ (p == 3) ? "^t^h" : "");
+            write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,point_text), point_loc, point_size*2, state["point_opacity"]/255, 0);
+        }
+
+        if (state["div_scene"] != 0 && point_size > 1 && p == 0){ 
+            vec2 y_loc;
+            if (state["div_scene"] == 2){
+                y_loc = origin + vec2(-point_dist.y, -point_dist.x);
+            } else {
+                y_loc = origin + screen_unit*drag_times_y*vec2(-1,1);
+            } 
+            draw_circle(gpu_pix.get_ptr(), wh, y_loc, point_size, point_opacity+point_stroke,1.0);
+            draw_circle(gpu_pix.get_ptr(), wh, y_loc, point_size*0.85, point_opacity+bg_color,1.0);
+            write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,"y"), y_loc, point_size*2, state["point_opacity"]/255, 0);
         }
 
     }

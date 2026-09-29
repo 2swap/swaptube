@@ -20,64 +20,109 @@ MultiplicationTableScene::MultiplicationTableScene(const vec2& dimensions) : Sce
         {"bg_1_g", "0"},
         {"bg_1_b", "68"},
 
-        {"show_0", "1"},
-        {"show_1", "1"},
-        {"show_2", "1"},
-        {"show_3", "1"},
-        {"show_4", "1"},
+        {"show_r_0", "1"},
+        {"show_r_1", "1"},
+        {"show_r_2", "1"},
+        {"show_r_3", "1"},
+        {"show_r_4", "1"},
+
+        {"show_c_0", "1"},
+        {"show_c_1", "1"},
+        {"show_c_2", "1"},
+        {"show_c_3", "1"},
+        {"show_c_4", "1"},
+
+        {"triangle", "0"},
+        {"three_d", "0"},
+
+        {"1j", "1"},
+
+        {"table_size", "4"},
     });
 }
 
 
 void MultiplicationTableScene::draw() {
 
-    vector<string> units = {"","1","i","j","ij"};
-    vector<string> signs = {"","-"};
-    vector<uint> unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cccc33};
-    
-    vector<int> table_units = {
-        0,1,2,3,4,
-        1,1,2,3,4,
-        2,2,1,4,3,
-        3,3,4,1,2,
-        4,4,3,2,1,
-    };
     vector<int> table_signs;
+    vector<int> table_units;
+    vector<string> units;
+    vector<uint> unit_colors; 
+    vector<string> signs = {"","-"};
 
-    if (state["commutative"] == 1){
-        table_signs = {
-            0,0,0,0,0,
-            0,0,0,0,0,
-            0,0,1,0,1,
-            0,0,0,1,1,
-            0,0,1,1,0,
+
+    if (state["three_d"] == 0){
+        units = {"","1","i","j","ij"};
+        unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cccc33};
+        
+        table_units = {
+            0,1,2,3,4,
+            1,1,2,3,4,
+            2,2,1,4,3,
+            3,3,4,1,2,
+            4,4,3,2,1,
         };
+
+        if (state["commutative"] == 1){
+            table_signs = {
+                0,0,0,0,0,
+                0,0,0,0,0,
+                0,0,1,0,1,
+                0,0,0,1,1,
+                0,0,1,1,0,
+            };
+        } else {
+            table_signs = {
+                0,0,0,0,0,
+                0,0,0,0,0,
+                0,0,1,0,1,
+                0,0,1,1,0,
+                0,0,0,1,1,
+            };
+        }
+
     } else {
+
+        units = {"","1","i","j",(state["1j"] == 0) ? "j" : "ij","ij","j^2"};
+        unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cc33cc,0x00cccc33,0x0033cc33};
+        
+        table_units = {
+            0,1,2,3,0,
+            1,1,2,4,0,
+            2,0,1,5,0,
+            3,0,0,6,0,
+            0,0,0,0,0,
+        };
         table_signs = {
             0,0,0,0,0,
             0,0,0,0,0,
-            0,0,1,0,1,
-            0,0,1,1,0,
-            0,0,0,1,1,
+            0,0,1,0,0,
+            0,0,0,0,0,
+            0,0,0,0,0,
         };
     }
 
     ivec2 wh = get_width_height();
-    const int square_size = min(wh.x,wh.y)*0.8;
+    const float table_limit = state["table_size"]+1;
+    const int cell_size = min(wh.x,wh.y)*0.16;
+    const int cell_gap = cell_size*0.05;
+    const int square_size = cell_size*table_limit;
     const ivec2 offset = (wh-ivec2(square_size,square_size))*0.5;
-    const int cell_gap = square_size*0.01;
-    const int cell_size = square_size*0.2;
     const ivec2 cell_radius = (ivec2(cell_size,cell_size)-cell_gap)/2;
 
     const uint bg_color = 0xff000000 | ((int) state["bg_1_r"]) << 16 | ((int) state["bg_1_g"]) << 8 | (int) state["bg_1_b"];
 
-    for (int r = 0; r < 5; r++){
-        for (int c = 0; c < 5; c++){
-            int i = r*5 + c;
-            float cell_opacity = min(state["show_" + to_string(c)],state["show_" + to_string(r)]);
-            uint32_t cell_alpha = (int) (255*cell_opacity) << 24;
+    for (int r = 0; r < table_limit; r++){
+        for (int c = 0; c < table_limit; c++){
 
-            ivec2 cell_center = offset + ivec2(cell_size*(r+0.5), cell_size*(c+0.5));
+            if (state["triangle"]!=0 && c < r && c != 0){continue;}
+
+            int i = r*5 + c;
+            float cell_opacity = min(state["show_c_" + to_string(c)],state["show_r_" + to_string(r)]);
+
+            uint32_t cell_alpha = (int) (255*cell_opacity*min(1.0f,table_limit-max(r,c))) << 24;
+
+            ivec2 cell_center = offset + ivec2(cell_size*(c+0.5), cell_size*(r+0.5));
             if (r > 0 && c > 0){
                 draw_rectangle(gpu_pix.get_ptr(), get_width_height(), 
                     cell_center-cell_radius, cell_center+cell_radius, 
@@ -92,10 +137,12 @@ void MultiplicationTableScene::draw() {
                 );
 
             } else {
-                draw_rectangle(gpu_pix.get_ptr(), get_width_height(), 
-                    cell_center-cell_radius*0.9, cell_center+cell_radius*0.9, 
-                    bg_color
-                );
+                if (r > 0 && c > 0){
+                    draw_rectangle(gpu_pix.get_ptr(), get_width_height(), 
+                        cell_center-cell_radius*0.9, cell_center+cell_radius*0.9, 
+                        bg_color
+                    );
+                }
                 write_text(gpu_pix.get_ptr(), get_width_height(), 
                     latex_color(unit_colors[table_units[i]], signs[table_signs[i]]+units[table_units[i]]), 
                     cell_center, cell_radius*2, cell_opacity, 0
