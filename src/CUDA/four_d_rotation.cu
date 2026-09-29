@@ -21,6 +21,7 @@ __global__ void four_d_rotation_raymarch(
     const Cuda::vec4 jj,
     const Cuda::vec4 ijj,
     const float slider,
+    const float conjugate,
     uint32_t* colors
 ) {
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -30,6 +31,7 @@ __global__ void four_d_rotation_raymarch(
     Cuda::ivec2 pixel(pixel_x, pixel_y);
 
     float dist_traveled = 0.0f;
+    // float dt = 0.02f;
     float dt = 0.002f;
     
     Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, camera_orientation))*dt;
@@ -44,13 +46,14 @@ __global__ void four_d_rotation_raymarch(
 
 
         Cuda::vec4 pos_rotated = four_d_mult(
-            rotaterInv,
-            four_d_mult(
-                x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z,
-                rotater,
-                commute,jj,ijj),
-            commute,jj,ijj
+            x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z,
+            rotater,commute,jj,ijj
         );
+
+        if (conjugate != 0){
+            pos_rotated =  four_d_mult(rotaterInv,pos_rotated,commute,jj,ijj);
+        }
+
 
         if (abs(pos_rotated.y) < 1 && abs(pos_rotated.z) < 1 && abs(pos_rotated.w) < 1 && abs(pos_rotated.x) < 1){
             if (abs(last_position.y) > 1){
@@ -106,6 +109,7 @@ extern "C" void four_d_rotation_render(
     const Cuda::vec4 ijj,
 
     const float slider,
+    const float conjugate,
 
     uint32_t* d_colors
 ) {
@@ -126,6 +130,7 @@ extern "C" void four_d_rotation_render(
         jj,
         ijj,
         slider,
+        conjugate,
         
         d_colors
     );

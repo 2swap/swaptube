@@ -93,6 +93,12 @@ __device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, const flo
 
     } else if (equation == 2){
 
+        // Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
+        // Cuda::vec2 v3 = two_d_mult(v,v2,xx,xy,yy);
+        // Cuda::vec2 v5 = two_d_mult(v3,v2,xx,xy,yy);
+
+        // return v2-3*v;
+
         Cuda::vec2 cosv(1,0);
         Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
         Cuda::vec2 v_pow = v;
@@ -103,27 +109,16 @@ __device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, const flo
         }
         return cosv;
 
-    } else if (equation == 100){
-
-        Cuda::vec2 m(1,0);
-
-        for (int i = 0; i < 30; i++){
-            Cuda::vec2 m2 = two_d_mult(m,m,xx,xy,yy);
-            Cuda::vec2 m3 = two_d_mult(m2,m,xx,xy,yy);
-            Cuda::vec2 m4 = two_d_mult(m3,m,xx,xy,yy);
-            Cuda::vec2 m5 = two_d_mult(m4,m,xx,xy,yy);
-            Cuda::vec2 m6 = two_d_mult(m5,m,xx,xy,yy);
-            Cuda::vec2 m7 = two_d_mult(m6,m,xx,xy,yy);
-            Cuda::vec2 m8 = two_d_mult(m7,m,xx,xy,yy);
-            m = m6 - m5 + m4 - m3 + m2 - m + v;
-            // m = m8 - m7 + m5 - m4 + m3 - m + v;
-            // m = m2 + two_d_mult(m,v,xx,xy,yy);
-            if (abs(m.x) > 1000 || abs(m.y) > 1000){
-                return Cuda::vec2(100000000,100000000) ;
-            }
-        }
-        return m;
-
+    } else if (equation == 101){
+        return v;
+    } else if (equation == 102){
+        return two_d_mult(v,v,xx,xy,yy);
+    } else if (equation == 103){
+        Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
+        return two_d_mult(v,v2,xx,xy,yy);
+    } else if (equation == 104){
+        Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
+        return two_d_mult(v2,v2,xx,xy,yy);
     }
 
     Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
@@ -140,7 +135,21 @@ __device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, const flo
 
 
 
-   if (equation == 4){
+    if (equation == 105){
+        // return v - v2 - v5 + v10;
+        // return v5/256 - 4;
+        // return -2 + v*6 - v2*2 - v3*3 + v6;
+        // return 1 + v + v2 + v3 + v4;
+        // return 1 - v + v3 - v4 + v5 - v7 + v8;
+        return v - v2 + v3 - v4 + v5;
+
+    } else if (equation == 106){
+        return v - v3/6 + v5/120 - v7/5040 + v9/362880;
+
+    } else if (equation == 107){
+        return Cuda::vec2(1,0) - v2/2 + v4/24 - v6/720 + v8/40320;
+
+    } else if (equation == 4){
         // return v - v2 - v5 + v10;
         return v5/256 - 4;
         // return -2 + v*6 - v2*2 - v3*3 + v6;

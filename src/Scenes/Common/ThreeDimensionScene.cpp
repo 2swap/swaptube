@@ -35,7 +35,7 @@ ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
         {"points_radius_multiplier", "1"},
         {"lines_thickness_multiplier", "1"},
         {"points_opacity", "1"},
-        {"point_labels_size", "1"},
+        {"point_labels_size", "0"},
     });
 }
 
@@ -58,8 +58,7 @@ vector<Point> ThreeDimensionScene::read_state_points() const {
     vector<Point> pts;
     for (int i = 0; state.contains("point" + to_string(i) + ".x"); i++) {
         const string base = "point" + to_string(i) + ".";
-        pts.push_back(Point(vec3(state[base + "x"], state[base + "y"], state[base + "z"]),
-                            argb(0xff,state["point_r"],state["point_g"],state["point_b"]), state[base + "a"], state["point_size"]));
+        pts.push_back(Point(vec3(state[base + "x"], state[base + "y"], state[base + "z"]), 0xffffffff, state[base + "a"], state["point_size"]));
     }
     return pts;
 }
@@ -104,8 +103,11 @@ void ThreeDimensionScene::draw() {
     vector<Point> state_points = read_state_points();
     render_point_set(state_points.data(), static_cast<int>(state_points.size()));
 
+
+
     const float labels_size = state["point_labels_size"];
     if (labels_size > 0.001) {
+        int label_color = argb(0xff,state["point_r"],state["point_g"],state["point_b"]);
         for (const auto& [id, name] : point_names) {
             const string base = "point" + to_string(id) + ".";
             if (name.empty() || !state.contains(base + "x")) continue;
@@ -113,7 +115,7 @@ void ThreeDimensionScene::draw() {
             const vec2 pos = coordinate_to_pixel(vec3(state[base + "x"], state[base + "y"], state[base + "z"]), distance);
             if (distance <= 0) continue;
             const vec2 dim = vec2(0.2, 0.1) * get_width_height() * labels_size;
-            write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), latex_color(0xffffffff, name), pos, dim, state[base + "a"], 0);
+            write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), latex_color(label_color, name), pos, dim, state[base + "a"], 0);
         }
     }
 }

@@ -7,9 +7,13 @@
 
 
 
-__device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float commute, Cuda::vec4 jj, Cuda::vec4 ijj) {
+__device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, const float equation_lerp, float commute, Cuda::vec4 jj, Cuda::vec4 ijj) {
 
-    if (abs(v.x) > 10){
+    if (equation_lerp > 0){
+        return four_d_function(v, equation, 0, commute, jj, ijj)*(1-equation_lerp) +  four_d_function(v, equation+1, 0, commute, jj, ijj)*equation_lerp;
+    }
+
+    if (abs(v.x) > 30){
         return Cuda::vec4(100000000,100000000,100000000,100000000) ;
     }
 
@@ -22,7 +26,7 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
         for (int t = 3; t < 60; t+=2){
             v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
             sinv += v_pow;  
-            if (abs(v_pow.x) > 100000000){
+            if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
                 return Cuda::vec4(100000000,100000000,100000000,100000000) ;
             }
         }
@@ -31,7 +35,7 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
         // }
         return sinv;
 
-    } else if (equation == 2){
+    } else if (equation == 10){
 
         Cuda::vec4 cosv(1,0,0,0);
         Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
@@ -40,7 +44,7 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
         for (int t = 2; t < 60; t+=2){
             v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
             cosv = cosv + v_pow;
-            if (abs(v_pow.x) > 100000000){
+            if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
                 return Cuda::vec4(100000000,100000000,100000000,100000000) ;
             }
         }
@@ -48,12 +52,37 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
 
     } else if (equation == 4){
         return four_d_mult(v,v,commute,jj,ijj);
-    }
+        
+    } 
     
 
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
     Cuda::vec4 v3 = four_d_mult(v,v2,commute,jj,ijj);
     Cuda::vec4 v4 = four_d_mult(v2,v2,commute,jj,ijj);
+    
+    
+    if (equation == 2){
+        return four_d_function(v4*0.001-v2*0.1+1, 1, 0, commute, jj, ijj);
+    } else if (equation == 3){
+        // Cuda::vec4 l1 = v2*0.04 - v*0.2;
+        // Cuda::vec4 l2 = four_d_mult(l1,l1,commute,jj,ijj) - v*0.2;
+        // Cuda::vec4 l3 = four_d_mult(l2,l2,commute,jj,ijj) - v*0.2;
+        // Cuda::vec4 l4 = four_d_mult(l3,l3,commute,jj,ijj) - v*0.2;
+        // return l4;
+        return four_d_function(four_d_function(v*0.15, 1,0, commute, jj, ijj)*5,100,0, commute, jj, ijj);
+
+    } else if (equation == 101){
+        // return four_d_function(v2*0.2,100,0, commute, jj, ijj);
+        return four_d_function(v4*0.008-v*0.08+0.6, 10,0, commute, jj, ijj);
+        // Cuda::vec4 cos_dude = four_d_function(v2*0.1, 10,0, commute, jj, ijj);
+        // return cos_dude+v4*0.05-v2*0.08;
+    }
+    
+    
+    
+    
+
+    
 
     Cuda::vec4 v5 = four_d_mult(v3,v2,commute,jj,ijj);
     Cuda::vec4 v6 = four_d_mult(v4,v2,commute,jj,ijj);
@@ -64,11 +93,13 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
     Cuda::vec4 v12 = four_d_mult(v7,v5,commute,jj,ijj);
 
 
+    if (equation == 100){
+        if (abs(v4.x) + abs(v4.y) + abs(v4.z) + abs(v4.w) > 1000000){
+            return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+        }
+        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320 ;//+ v9/362880 + v10/3628800;
 
-    if (equation == 0){
-        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040;// + v8/40320 + v9/362880 + v10/3628800;
-
-    } else if (equation == 3){
+    } else if (equation == 30){
         // return v - v2 - v5 + v10;
         // return v2 - v4 - v6 + v12;
         // return -2 + v*6 - v2*2 - v3*3 + v6;
@@ -84,19 +115,13 @@ __device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, float co
         return v4+1;
 
     } else if (equation == 7){
-        // return four_d_function(v4-v2+1, 1, commute, jj, ijj);// - 8*four_d_function(v2+v+1, 2, commute, jj, ijj);
+        // return four_d_function(v4-v2+1, 1, 0, commute, jj, ijj)- 8*four_d_function(v2+v+1, 2, commute, jj, ijj);
 
-        // return four_d_function(1+v4, 1, commute, jj, ijj);// - 8*four_d_function(v2+v+1, 2, commute, jj, ijj);
-
-        return four_d_function(four_d_function(v, 1, commute, jj, ijj), 1, commute, jj, ijj);
 
         // return four_d_function(four_d_function(v, 1, commute, jj, ijj), 0, commute, jj, ijj);
-        // return four_d_function(v2, 0, commute, jj, ijj);
+        return four_d_function(v2, 0,0, commute, jj, ijj);
 
-        // Cuda::vec4 cos_dude = four_d_function(v, 1, commute, jj, ijj);
-        // return four_d_mult(cos_dude,cos_dude,commute,jj,ijj);
 
-        // return four_d_function(four_d_function(v, 1, commute, jj, ijj)*10, 0, commute, jj, ijj);
     }
     
     return v;
@@ -172,6 +197,7 @@ __global__ void four_d_raymarch_kernel(
     const float fade,
     const float slider,
     const int equation,
+    const float equation_lerp,
 
     uint32_t* colors
 ) {
@@ -199,7 +225,7 @@ __global__ void four_d_raymarch_kernel(
         current_position += dir_world;
 
 
-        Cuda::vec4 four_d_output = four_d_function(x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z, equation, commute, jj, ijj);
+        Cuda::vec4 four_d_output = four_d_function(x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z, equation, equation_lerp, commute, jj, ijj);
 
         out += four_d_accum(four_d_output,brightness); 
     }
@@ -229,7 +255,7 @@ extern "C" void four_d_render(
     const float fade,
     const float slider,
     const int equation,
-
+    const float equation_lerp,
     uint32_t* d_colors
 ) {
     // Define grid and block dimensions
@@ -250,6 +276,7 @@ extern "C" void four_d_render(
         fade,
         slider,
         equation,
+        equation_lerp,
 
         d_colors
     );

@@ -25,6 +25,7 @@ extern "C" void four_d_render(
     const float fade,
     const float slider,
     const int equation,
+    const float equation_lerp,
 
     unsigned int* d_colors
 );
@@ -46,6 +47,7 @@ extern "C" void four_d_rotation_render(
     vec4 jj,
     vec4 ijj,
     const float slider,
+    const float conjugate,
 
     unsigned int* d_colors
 );
@@ -89,6 +91,8 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
         {"jj_i", "0"},
         {"jj_j", "0"},
         {"jj_ij", "0"},
+
+        {"conjugate", "1"},
     });
 }
 
@@ -141,11 +145,14 @@ void FourDAlgebraScene::draw() {
             vec4(-state["jj_i"], state["jj_1"], -state["jj_ij"], state["jj_j"]),
 
             state["slider"], 
+            state["conjugate"], 
             gpu_pix.get_ptr()
         );
 
     } else {
 
+        int equation = (int) state["equation"];
+        float equation_lerp = state["equation"]-equation;
         four_d_render(get_width_height(),
 
             camera_direction, 
@@ -165,7 +172,8 @@ void FourDAlgebraScene::draw() {
 
             state["fade"], 
             state["slider"], 
-            state["equation"],
+            equation,
+            equation_lerp,
             gpu_pix.get_ptr()
         );
 
