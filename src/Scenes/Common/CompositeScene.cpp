@@ -12,18 +12,18 @@ extern "C" void cuda_overlay(
 CompositeScene::CompositeScene(const vec2& dimensions) : SuperScene(dimensions) {}
 
 void CompositeScene::add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos, double opa, bool behind, int insert_position){
-    add_scene(sc, state_name, pos, behind);
+    add_scene(sc, state_name, pos, behind, insert_position);
     manager.set(state_name + ".opacity", "0");
     fade_subscene(tt, state_name, opa);
 }
 
-void CompositeScene::add_scene(std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos, bool behind){
+void CompositeScene::add_scene(std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos, bool behind, int insert_position){
     manager.set({
         {state_name + ".x", std::to_string(pos.x)},
         {state_name + ".y", std::to_string(pos.y)},
         {state_name + ".angle", "0"},
     });
-    add_subscene_check_dupe(state_name, sc, behind);
+    add_subscene_check_dupe(state_name, sc, behind, insert_position);
 }
 
 void CompositeScene::slide_subscene(const TransitionType tt, const std::string& name, const vec2& delta){
