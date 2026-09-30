@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <string>
+#include <list>
 
 void SuperScene::remove_subscene(const std::string& name) {
     auto it = subscenes.find(name);
@@ -64,12 +65,17 @@ std::shared_ptr<Scene> SuperScene::get_subscene_pointer(const std::string& name)
         throw std::runtime_error("Error: Attempted to get pointer to non-existent subscene: " + name);
 }
 
-void SuperScene::add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind) {
+void SuperScene::add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind, int position) {
     if(!scene) throw std::runtime_error("Error: Attempted to add a null subscene to superscene: " + name);
     if(subscenes.find(name) != subscenes.end()) throw std::runtime_error("Error: Added two subscenes of the same name to superscene: " + name);
     scene->manager.set_parent(&manager, name);
     subscenes[name] = scene;
-    if(behind) render_order.push_front(name);
+    if(position != -1){
+        list<std::string>::iterator it = render_order.begin();
+        advance(it,position);
+        render_order.insert(it,name);
+    } 
+    else if(behind) render_order.push_front(name);
     else       render_order.push_back(name);
     manager.set(name + ".opacity", "1");
 }
