@@ -59,7 +59,7 @@ extern "C" void copy_pins(const Cuda::vec2* h_pins, Cuda::vec2* d_pins, const in
 }
 
 extern "C" void initialize_nodes_from_file(const std::string& file_name, Cuda::vec2* d_rope) {
-    // 1. Lecture du fichier texte sur le CPU
+    // Lecture du fichier texte sur le CPU
     std::ifstream file(file_name);
     if (!file.is_open()) {
         std::cerr << "Erreur: Impossible d'ouvrir le fichier " << file_name << std::endl;

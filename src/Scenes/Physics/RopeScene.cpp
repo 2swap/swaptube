@@ -26,11 +26,12 @@ void RopeScene::remove_pin(int pin_index){
 
 void RopeScene::change_data() {
     CoordinateScene::change_data();
-    rope.tick();
 
     if (progress < 1.0f) {
         progress += draw_speed;
         if (progress > 1.0f) progress = 1.0f;
+    } else {
+        rope.tick(); // start physics simulation after the rope is fully drawn
     }
 }
 
