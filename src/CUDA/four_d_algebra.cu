@@ -7,84 +7,109 @@
 
 
 
-__device__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const int equation, const float equation_lerp, const float commute, const Cuda::vec4& jj, const Cuda::vec4& ijj) {
+__device__ Cuda::vec4 four_d_sin(const Cuda::vec4& v, const float commute, const Cuda::vec4& jj, const Cuda::vec4& ijj) {
 
-    if (equation_lerp > 0){
-        return lerp(four_d_function(v, equation  , 0, commute, jj, ijj),
-                    four_d_function(v, equation+1, 0, commute, jj, ijj), equation_lerp);
+    if (abs(v.x) > 30){
+    return Cuda::vec4(100000000,100000000,100000000,100000000) ;
     }
+
+    Cuda::vec4 sinv = v;
+    Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
+    Cuda::vec4 v_pow = v;
+
+    for (int t = 3; t < 60; t+=2){
+        v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
+        sinv += v_pow;  
+        if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
+            return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+        }
+    }
+    // if (to_print){
+    //     printf("%f %f %f %f\n",sinv.x,sinv.y,sinv.z,sinv.w);
+    // }
+    return sinv;
+}
+
+__device__ Cuda::vec4 four_d_cos(const Cuda::vec4& v, const float commute, const Cuda::vec4& jj, const Cuda::vec4& ijj) {
+
+    if (abs(v.x) > 30){
+    return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+    }
+
+    Cuda::vec4 cosv(1,0,0,0);
+    Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
+    Cuda::vec4 v_pow = v;
+
+    for (int t = 2; t < 60; t+=2){
+        v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
+        cosv = cosv + v_pow;
+        if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
+            return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+        }
+    }
+    return cosv;
+}
+
+__device__ Cuda::vec4 four_d_exp(const Cuda::vec4& v, const float commute, const Cuda::vec4& jj, const Cuda::vec4& ijj) {
+
+    if (abs(v.x) > 30){
+        return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+    }
+
+    Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
+    Cuda::vec4 v3 = four_d_mult(v,v2,commute,jj,ijj);
+    Cuda::vec4 v4 = four_d_mult(v2,v2,commute,jj,ijj);
+    if (abs(v4.x) + abs(v4.y) + abs(v4.z) + abs(v4.w) > 1000000){
+        return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+    }
+    Cuda::vec4 v5 = four_d_mult(v3,v2,commute,jj,ijj);
+    Cuda::vec4 v6 = four_d_mult(v4,v2,commute,jj,ijj);
+    Cuda::vec4 v7 = four_d_mult(v5,v2,commute,jj,ijj);
+    Cuda::vec4 v8 = four_d_mult(v6,v2,commute,jj,ijj);
+    return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320 ;//+ v9/362880 + v10/3628800;
+}
+
+__device__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const int equation, const float commute, const Cuda::vec4& jj, const Cuda::vec4& ijj) {
 
     if (abs(v.x) > 30){
         return Cuda::vec4(100000000,100000000,100000000,100000000) ;
     }
 
     if (equation == 1){
-
-        Cuda::vec4 sinv = v;
-        Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
-        Cuda::vec4 v_pow = v;
-
-        for (int t = 3; t < 60; t+=2){
-            v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
-            sinv += v_pow;  
-            if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
-                return Cuda::vec4(100000000,100000000,100000000,100000000) ;
-            }
-        }
-        // if (to_print){
-        //     printf("%f %f %f %f\n",sinv.x,sinv.y,sinv.z,sinv.w);
-        // }
-        return sinv;
+        return four_d_sin(v, commute, jj, ijj);
 
     } else if (equation == 10){
+        return four_d_cos(v, commute, jj, ijj);
 
-        Cuda::vec4 cosv(1,0,0,0);
-        Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
-        Cuda::vec4 v_pow = v;
-
-        for (int t = 2; t < 60; t+=2){
-            v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
-            cosv = cosv + v_pow;
-            if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
-                return Cuda::vec4(100000000,100000000,100000000,100000000) ;
-            }
-        }
-        return cosv;
+    } else if (equation == 100){
+        return four_d_exp(v, commute, jj, ijj);
 
     } else if (equation == 4){
         return four_d_mult(v,v,commute,jj,ijj);
         
     } 
     
-
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
     Cuda::vec4 v3 = four_d_mult(v,v2,commute,jj,ijj);
     Cuda::vec4 v4 = four_d_mult(v2,v2,commute,jj,ijj);
     
-    
     if (equation == 2){
-        return four_d_function(v4*0.001-v2*0.1+1, 1, 0, commute, jj, ijj);
+        return four_d_sin(v4*0.001-v2*0.1+1, commute, jj, ijj);
     } else if (equation == 3){
         // Cuda::vec4 l1 = v2*0.04 - v*0.2;
         // Cuda::vec4 l2 = four_d_mult(l1,l1,commute,jj,ijj) - v*0.2;
         // Cuda::vec4 l3 = four_d_mult(l2,l2,commute,jj,ijj) - v*0.2;
         // Cuda::vec4 l4 = four_d_mult(l3,l3,commute,jj,ijj) - v*0.2;
         // return l4;
-        return four_d_function(four_d_function(v*0.15, 1,0, commute, jj, ijj)*5,100,0, commute, jj, ijj);
+        return four_d_exp(four_d_sin(v*0.15, commute, jj, ijj)*5, commute, jj, ijj);
 
     } else if (equation == 101){
         // return four_d_function(v2*0.2,100,0, commute, jj, ijj);
-        return four_d_function(v4*0.008-v*0.08+0.6, 10,0, commute, jj, ijj);
+        return four_d_cos(v4*0.008-v*0.08+0.6, commute, jj, ijj);
         // Cuda::vec4 cos_dude = four_d_function(v2*0.1, 10,0, commute, jj, ijj);
         // return cos_dude+v4*0.05-v2*0.08;
     }
     
-    
-    
-    
-
-    
-
     Cuda::vec4 v5 = four_d_mult(v3,v2,commute,jj,ijj);
     Cuda::vec4 v6 = four_d_mult(v4,v2,commute,jj,ijj);
     Cuda::vec4 v7 = four_d_mult(v5,v2,commute,jj,ijj);
@@ -93,14 +118,7 @@ __device__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const int equation, c
     Cuda::vec4 v10 = four_d_mult(v5,v5,commute,jj,ijj);
     Cuda::vec4 v12 = four_d_mult(v7,v5,commute,jj,ijj);
 
-
-    if (equation == 100){
-        if (abs(v4.x) + abs(v4.y) + abs(v4.z) + abs(v4.w) > 1000000){
-            return Cuda::vec4(100000000,100000000,100000000,100000000) ;
-        }
-        return 1 + v + v2/2 + v3/6 + v4/24 + v5/120 + v6/720 + v7/5040 + v8/40320 ;//+ v9/362880 + v10/3628800;
-
-    } else if (equation == 30){
+    if (equation == 30){
         // return v - v2 - v5 + v10;
         // return v2 - v4 - v6 + v12;
         // return -2 + v*6 - v2*2 - v3*3 + v6;
@@ -120,7 +138,11 @@ __device__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const int equation, c
 
 
         // return four_d_function(four_d_function(v, 1, commute, jj, ijj), 0, commute, jj, ijj);
-        return four_d_function(v2, 0,0, commute, jj, ijj);
+        // Equation 0 is the identity, behind the same escape check.
+        if (abs(v2.x) > 30){
+            return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+        }
+        return v2;
 
 
     }
@@ -213,8 +235,8 @@ __global__ void four_d_raymarch_kernel(
     // Cuda::vec3 current_position(0,0,-10);
 
     const float x_dir = float(pixel_x)/float(wh.x);
-    const float exp = exp((x_dir-slider) * slider_width);
-    const float _commute = exp/(1.0+exp);
+    const float e = exp((x_dir-slider) * slider_width);
+    const float _commute = e/(1.0+e);
     const float commute = _commute * 2 - 1;
     // Cuda::vec4 trans(0.0,1.0,-1.0,2.0);
 
@@ -223,7 +245,11 @@ __global__ void four_d_raymarch_kernel(
         current_position += dir_world;
 
 
-        Cuda::vec4 four_d_output = four_d_function(x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z, equation, equation_lerp, commute, jj, ijj);
+        Cuda::vec4 point = x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z;
+        Cuda::vec4 four_d_output = four_d_function(point, equation, commute, jj, ijj);
+        if (equation_lerp > 0){
+            four_d_output = veclerp(four_d_output, four_d_function(point, equation+1, commute, jj, ijj), equation_lerp);
+        }
 
         out += four_d_accum(four_d_output,brightness); 
     }
