@@ -7,10 +7,11 @@
 
 
 
-__device__ Cuda::vec4 four_d_function(Cuda::vec4 v, const int equation, const float equation_lerp, float commute, Cuda::vec4 jj, Cuda::vec4 ijj) {
+__device__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const int equation, const float equation_lerp, const float commute, const Cuda::vec4& jj, const Cuda::vec4& ijj) {
 
     if (equation_lerp > 0){
-        return four_d_function(v, equation, 0, commute, jj, ijj)*(1-equation_lerp) +  four_d_function(v, equation+1, 0, commute, jj, ijj)*equation_lerp;
+        return lerp(four_d_function(v, equation  , 0, commute, jj, ijj),
+                    four_d_function(v, equation+1, 0, commute, jj, ijj), equation_lerp);
     }
 
     if (abs(v.x) > 30){
@@ -211,7 +212,10 @@ __global__ void four_d_raymarch_kernel(
     Cuda::vec3 current_position = camera_position + dir_world;
     // Cuda::vec3 current_position(0,0,-10);
 
-    const float commute = min(max((float(pixel_x)/float(wh.x)-slider)*slider_width,-1.0),1.0);
+    const float x_dir = float(pixel_x)/float(wh.x);
+    const float exp = exp((x_dir-slider) * slider_width);
+    const float _commute = exp/(1.0+exp);
+    const float commute = _commute * 2 - 1;
     // Cuda::vec4 trans(0.0,1.0,-1.0,2.0);
 
     while (dist_traveled < max_dist) {
