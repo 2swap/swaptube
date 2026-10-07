@@ -32,7 +32,7 @@ protected:
     SuperScene(const vec2& dimensions = vec2(1, 1))
         : Scene(dimensions) {}
 
-    void add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind = false);
+    void add_subscene_check_dupe(const std::string& name, std::shared_ptr<Scene> scene, bool behind = false, int insert_position = -1);
 
     void on_end_transition_extra_behavior(const TransitionType tt) override;
 

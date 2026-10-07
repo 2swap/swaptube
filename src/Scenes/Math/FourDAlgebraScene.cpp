@@ -24,6 +24,7 @@ extern "C" void four_d_render(
     const vec3 channels,
     const float fade,
     const float slider,
+    const float slider_width,
     const int equation,
     const float equation_lerp,
 
@@ -72,6 +73,8 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
 
         {"fade", "0.006"},
         {"slider", "1.1"},
+        {"slider_width", "0.02"},
+
         {"equation", "0"},
         {"offset1", "0.17"},
         {"offset2", "0.29"},
@@ -172,6 +175,7 @@ void FourDAlgebraScene::draw() {
 
             state["fade"], 
             state["slider"], 
+            1/state["slider_width"], 
             equation,
             equation_lerp,
             gpu_pix.get_ptr()

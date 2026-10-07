@@ -8,9 +8,9 @@ public:
     CompositeScene(const vec2& dimensions = vec2(1, 1));
 
     // TODO glm vec2s for the positions for easier type checking in the arg list
-    void add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos = vec2(.5,.5), double opa=1, bool behind = false);
+    void add_scene_fade_in(const TransitionType tt, std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos = vec2(.5,.5), double opa=1, bool behind = false, int insert_position = -1);
 
-    void add_scene(std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos = vec2(.5,.5), bool behind = false);
+    void add_scene(std::shared_ptr<Scene> sc, const std::string& state_name, const vec2& pos = vec2(.5,.5), bool behind = false, int insert_position = -1);
 
     void slide_subscene(const TransitionType tt, const std::string& name, const vec2& delta);
 

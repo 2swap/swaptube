@@ -187,17 +187,11 @@ __global__ void four_d_raymarch_kernel(
     Cuda::vec3 camera_position,
     float fov, float max_dist,
 
-    const Cuda::vec4 x_unit,
-    const Cuda::vec4 y_unit,
-    const Cuda::vec4 z_unit,
-    const Cuda::vec4 jj,
-    const Cuda::vec4 ijj,
-    const float brightness,
-    const Cuda::vec3 channels,
-    const float fade,
-    const float slider,
-    const int equation,
-    const float equation_lerp,
+    const Cuda::vec4 x_unit, const Cuda::vec4 y_unit, const Cuda::vec4 z_unit,
+    const Cuda::vec4 jj, const Cuda::vec4 ijj,
+    const float brightness, const Cuda::vec3 channels,  const float fade,
+    const float slider, const float slider_width,
+    const int equation, const float equation_lerp,
 
     uint32_t* colors
 ) {
@@ -217,7 +211,7 @@ __global__ void four_d_raymarch_kernel(
     Cuda::vec3 current_position = camera_position + dir_world;
     // Cuda::vec3 current_position(0,0,-10);
 
-    const float commute = min(max((float(pixel_x)/float(wh.x)-slider)*40.0,-1.0),1.0);
+    const float commute = min(max((float(pixel_x)/float(wh.x)-slider)*slider_width,-1.0),1.0);
     // Cuda::vec4 trans(0.0,1.0,-1.0,2.0);
 
     while (dist_traveled < max_dist) {
@@ -243,19 +237,12 @@ extern "C" void four_d_render(
     float fov_rad, 
     float max_dist,
 
-    const Cuda::vec4 x_unit,
-    const Cuda::vec4 y_unit,
-    const Cuda::vec4 z_unit,
+    const Cuda::vec4 x_unit, const Cuda::vec4 y_unit, const Cuda::vec4 z_unit,
+    const Cuda::vec4 jj, const Cuda::vec4 ijj,
 
-    const Cuda::vec4 jj,
-    const Cuda::vec4 ijj,
-
-    const float brightness,
-    const Cuda::vec3 channels,
-    const float fade,
-    const float slider,
-    const int equation,
-    const float equation_lerp,
+    const float brightness, const Cuda::vec3 channels, const float fade,
+    const float slider, const float slider_width,
+    const int equation, const float equation_lerp,
     uint32_t* d_colors
 ) {
     // Define grid and block dimensions
@@ -268,15 +255,11 @@ extern "C" void four_d_render(
         wh,
         camera_orientation, camera_position,
         fov_rad, max_dist,
-        x_unit, y_unit,z_unit,
-        jj,
-        ijj,
-        brightness, 
-        channels,
-        fade,
-        slider,
-        equation,
-        equation_lerp,
+        x_unit, y_unit, z_unit,
+        jj,ijj,
+        brightness, channels,fade,
+        slider, slider_width,
+        equation, equation_lerp,
 
         d_colors
     );
