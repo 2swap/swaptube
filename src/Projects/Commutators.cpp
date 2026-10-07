@@ -5,6 +5,7 @@
 #include "../Scenes/Common/CompositeScene.h"
 #include <memory>
 #include "../Scenes/Math/RubiksGraphScene.h"
+#include "../Scenes/Math/PermutationScene.h"
 #include "../Scenes/Physics/RopeScene.h"
 #include "../Core/State/StateTester.h"
 
@@ -292,7 +293,114 @@ void loop_4(){
     rs.add_pin(vec2(0.25, 0.7));
     rs.add_pin(vec2(0.75, 0.7));
     rs.render_microblock();
+}
 
+void twobytwocube(){
+    RubiksScene rs;
+    rs.manager.set({
+        {"cube_size", "2"},
+    });
+    stage_macroblock(FileBlock("This is a 2x2 rubik's cube."));
+    rs.render_microblock();
+
+    stage_macroblock(FileBlock("Each face can be turned in either direction."));
+    rs.exec_move_from_slice("R");
+    rs.render_microblock();
+    rs.exec_move_from_slice("R'");
+    rs.render_microblock();
+    rs.exec_move_from_slice("U");
+    rs.render_microblock();
+    rs.exec_move_from_slice("U'");
+    rs.render_microblock();
+    rs.exec_move_from_slice("F");
+    rs.render_microblock();
+    rs.exec_move_from_slice("L");
+    rs.render_microblock();
+    rs.exec_move_from_slice("D");
+    rs.render_microblock();
+    rs.exec_move_from_slice("B'");
+    rs.render_microblock();
+
+    stage_macroblock(FileBlock("and as you probably know, it can be very hard to figure out how to solve it without any exterior help"));
+    rs.exec_move_from_slice("R'"); // solve the cube
+    rs.render_microblock();
+    rs.exec_move_from_slice("U");
+    rs.render_microblock();
+    rs.exec_move_from_slice("U'");
+    rs.render_microblock();
+    rs.exec_move_from_slice("F");
+    rs.render_microblock();
+    rs.exec_move_from_slice("L");
+    rs.render_microblock();
+    rs.exec_move_from_slice("D");
+    rs.render_microblock();
+    rs.exec_move_from_slice("B'");
+    rs.render_microblock();
+
+    stage_macroblock(FileBlock("Let's put this solved cube in a graph"));
+    RubiksGraphScene rgs;
+    rgs.manager.set({
+        {"repel", "50"},
+        {"physics_multiplier", "40"},
+        {"decay", ".8"},
+        {"dimensions", "3"},
+        {"cube_size", "2"},
+    });
+    rgs.add_cube("", true, false);
+    rgs.render_microblock();
+
+    stage_macroblock(FileBlock("We will link cubes that are one move away with an edge, for instance, if we turn the right face, we'll get to this cube"));
+    rgs.add_children({"R"}, true, false, false);
+    rgs.render_microblock();
+
+    stage_macroblock(SilenceBlock(3));
+    rgs.add_cube("R U", true, false);
+    Rubiks cube1; cube1.exec("R");
+    Rubiks cube2; cube2.exec("R U");
+    double hash1 = cube1.get_hash(2);
+    double hash2 = cube2.get_hash(2);
+    rgs.gs->graph.add_edge(hash1, hash2);
+    rgs.render_microblock();
+    rgs.render_microblock();
+    rgs.render_microblock();
+
+    RubiksGraphScene rgs2;
+    rgs2.manager.set({
+        {"repel", "50"},
+        {"physics_multiplier", "40"},
+        {"decay", ".8"},
+        {"dimensions", "3"},
+        {"cube_size", "2"},
+    });
+    stage_macroblock(FileBlock("So from the solved cube, with one move available, we land on one of those 12 nodes"));
+    rgs2.add_cube("", true, false);
+    rgs2.render_microblock();
+    rgs2.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true, false, false);
+    rgs2.render_microblock();
+
+    stage_macroblock(FileBlock("Then if we make another move, we can either land back on the starting position, or we can land on one of these new nodes"));
+    rgs2.add_children({"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"}, true, false, false);
+    rgs2.render_microblock();
+
+
+}
+
+void perm_U_R(){
+    const std::string file_path = "io_in/permutation_2gen_3x3";
+    PermutationScene ps(file_path);
+    stage_macroblock(SilenceBlock(10));
+    ps.render_microblock();
+    // ps.move("up");
+    ps.move("up_crown", 3);
+    ps.move("up",2);
+    ps.render_microblock();
+    ps.render_microblock();
+    ps.move("right", 2);
+    ps.render_microblock();
+    ps.render_microblock();
+    ps.move("right", 3);
+    ps.render_microblock();
+    ps.render_microblock();
 
 }
 
@@ -499,5 +607,7 @@ void render_video() {
     // cube_corner_in_center();
     // t_perm();
     // intro_rope();
-    loop_4();
+    // loop_4();
+    // twobytwocube();
+    perm_U_R();
 }

@@ -11,8 +11,8 @@ class PermutationScene : public CoordinateScene {
         void draw() override;
         Permutation the_perm;
         void on_end_transition_extra_behavior(const TransitionType tt) override;
-        void move(const std::string orbit_name);
+        void move(const std::string orbit_name, int multiplier=1);
         vec2 get_place_position_from_state(const string& place_name);
     private:
-        std::string moving_orbit_name;
+        std::unordered_map<std::string, int> moving_orbits;
 };
