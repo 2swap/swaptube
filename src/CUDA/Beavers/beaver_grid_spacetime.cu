@@ -5,6 +5,22 @@
 #include "../color.cuh"
 #include "../common_graphics.cuh"
 
+/*__device__ void get_TM_from_pos(Cuda::ivec2 cell_pos, TuringMachine& tm) {
+    tm.num_states = 2;
+    tm.num_symbols = 2;
+    int transitions[12] = {
+        1, 1, 1,
+        (cell_pos.x & 4) == 4, 0, (cell_pos.x & 2) == 2,
+        (2 - (cell_pos.x & 2)) * (cell_pos.y & 2) == 4, (2 - (cell_pos.x & 2)) * (cell_pos.y & 1) == 2, (1 - ((cell_pos.x & 2) == 2)) * (1 + (cell_pos.x & 1)) - 1,
+        (cell_pos.x & 2) * (cell_pos.y & 2) == 4, (cell_pos.x & 2) * (cell_pos.y & 1) == 2, ((cell_pos.x & 2) == 2) * (1 + (cell_pos.y & 1)) - 1,
+    };
+    for (int i=0; i<4; i++) {
+        tm.write_symbol[i] = transitions[3*i];
+        tm.left_right[i] = transitions[3*i+1];
+        tm.next_state[i] = transitions[3*i+2];
+    }
+}*/
+
 __device__ void get_TM_from_pos(Cuda::ivec2 cell_pos, TuringMachine& tm) {
     tm.num_states = 2;
     tm.num_symbols = 2;
@@ -18,7 +34,7 @@ __device__ void get_TM_from_pos(Cuda::ivec2 cell_pos, TuringMachine& tm) {
     }
 }
 
-__device__ uint32_t get_color_at_cell(Cuda::ivec2 grid_cell_pos, Cuda::ivec2 spacetime_cell_pos, Cuda::ivec2 grid_wh, Cuda::ivec2 spacetime_wh, int iterations) {
+__device__ uint32_t get_color_at_cell(Cuda::ivec2 grid_cell_pos, Cuda::ivec2 spacetime_cell_pos, Cuda::vec2 grid_wh, Cuda::vec2 spacetime_wh, int iterations) {
     bool inside_grid = grid_cell_pos.x >= 0 && grid_cell_pos.y >= 0 && grid_cell_pos.x < grid_wh.x && grid_cell_pos.y < grid_wh.y;
     bool inside_spacetime = spacetime_cell_pos.x >= 0 && spacetime_cell_pos.y >= 0 && spacetime_cell_pos.x < spacetime_wh.x && spacetime_cell_pos.y < spacetime_wh.y;
 
@@ -68,52 +84,64 @@ __device__ uint32_t get_color_at_cell(Cuda::ivec2 grid_cell_pos, Cuda::ivec2 spa
     return cell_color + (halted && !inside_spacetime) * 0x0000ff00;
 }
 
+/*__device__ Cuda::ivec2 clamp(Cuda::ivec2 v, Cuda::ivec2 l, Cuda::ivec2 u) {
+    return Cuda::ivec2(min(u.x, max(l.x, v.x)), min(u.y, max(l.y, v.y)));
+}*/
+
 __global__ void grid_spacetime_kernel(
     uint32_t* pixels, Cuda::ivec2 wh, Cuda::vec2 lx_ty, Cuda::vec2 rx_by,
-    Cuda::ivec2 grid_wh, Cuda::ivec2 spacetime_wh, float tm_border, int iterations
+    Cuda::vec2 grid_wh, Cuda::vec2 spacetime_wh, float tm_border, int iterations
 ) {
     Cuda::ivec2 pos(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
-    if (pos.x >= wh.x || pos.y >= wh.y) {
+    if (pos.x >= wh.x || pos.y >= wh.y /*|| (pos.x & 7) != 0 || (pos.y & 7) != 0*/) {
         return;
     }
     int pixel_index = pos.y * wh.x + pos.x;
 
     Cuda::vec2 point_vec_tl = pos * (rx_by - lx_ty) / wh + lx_ty;
-    Cuda::ivec2 grid_cell_pos_tl = floor(point_vec_tl * grid_wh);
+    Cuda::ivec2 grid_cell_pos_tl = -floor(-clamp(floor(point_vec_tl * grid_wh), Cuda::ivec2(-1), grid_wh));
     Cuda::vec2 grid_pos_decimal_tl = point_vec_tl * grid_wh - grid_cell_pos_tl;
     Cuda::vec2 spacetime_pos_tl = (grid_pos_decimal_tl - 0.5f) / (1 - tm_border) + 0.5f;
-    Cuda::ivec2 spacetime_cell_pos_tl = floor(spacetime_pos_tl * spacetime_wh);
+    Cuda::ivec2 spacetime_cell_pos_tl = -floor(-clamp(floor(spacetime_pos_tl * spacetime_wh), Cuda::ivec2(-1), spacetime_wh));
     Cuda::vec2 spacetime_pos_decimal_tl = spacetime_pos_tl * spacetime_wh - spacetime_cell_pos_tl;
 
-    Cuda::vec2 point_vec_br = (pos + 1) * (rx_by - lx_ty) / wh + lx_ty;
-    Cuda::ivec2 grid_cell_pos_br = floor(point_vec_br * grid_wh);
+    /*Cuda::vec2 point_vec_br = (pos + 1) * (rx_by - lx_ty) / wh + lx_ty;
+    Cuda::ivec2 grid_cell_pos_br = ceil(clamp(floor(point_vec_br * grid_wh), Cuda::ivec2(-1), grid_wh));
     Cuda::vec2 grid_pos_decimal_br = point_vec_br * grid_wh - grid_cell_pos_br;
     Cuda::vec2 spacetime_pos_br = (grid_pos_decimal_br - 0.5f) / (1 - tm_border) + 0.5f;
-    Cuda::ivec2 spacetime_cell_pos_br = floor(spacetime_pos_br * spacetime_wh);
+    Cuda::ivec2 spacetime_cell_pos_br = ceil(clamp(floor(spacetime_pos_br * spacetime_wh), Cuda::ivec2(-1), spacetime_wh));
     Cuda::vec2 spacetime_pos_decimal_br = spacetime_pos_br * spacetime_wh - spacetime_cell_pos_br;
 
     Cuda::ivec2 x(1,0);
     Cuda::ivec2 y(0,1);
-    float w_x = (1 - spacetime_pos_decimal_tl.x) / (1 - spacetime_pos_decimal_tl.x + spacetime_pos_decimal_br.x);
-    float w_y = (1 - spacetime_pos_decimal_tl.y) / (1 - spacetime_pos_decimal_tl.y + spacetime_pos_decimal_br.y);
-    pixels[pixel_index] = Cuda::colorlerp(
-        Cuda::colorlerp(
-            get_color_at_cell(grid_cell_pos_tl, spacetime_cell_pos_tl, grid_wh, spacetime_wh, iterations),
-            get_color_at_cell(grid_cell_pos_tl*x+grid_cell_pos_br*y, spacetime_cell_pos_tl*x+spacetime_cell_pos_br*y, grid_wh, spacetime_wh, iterations),
-            w_y
-        ),
-        Cuda::colorlerp(
-            get_color_at_cell(grid_cell_pos_tl*y+grid_cell_pos_br*x, spacetime_cell_pos_tl*y+spacetime_cell_pos_br*x, grid_wh, spacetime_wh, iterations),
-            get_color_at_cell(grid_cell_pos_br, spacetime_cell_pos_br, grid_wh, spacetime_wh, iterations),
-            w_y
-        ),
-        w_x
-    );
+    float d_l = (spacetime_cell_pos_tl.x < spacetime_wh.x) * (1 - spacetime_pos_decimal_tl.x + max(0, -1 - spacetime_cell_pos_tl.x)) + (spacetime_cell_pos_tl.x >= spacetime_wh.x) * (1 - grid_pos_decimal_tl.x) / (1 - tm_border) * spacetime_wh.x;
+    float d_r = (spacetime_cell_pos_br.x >= 0) * (spacetime_pos_decimal_br.x + max(0, spacetime_cell_pos_tl.x - spacetime_wh.x)) + (spacetime_cell_pos_tl.x < 0) * grid_pos_decimal_br.x / (1 - tm_border) * spacetime_wh.x;
+    float d_t = (spacetime_cell_pos_tl.y < spacetime_wh.y) * (1 - spacetime_pos_decimal_tl.y + max(0, -1 - spacetime_cell_pos_tl.y)) + (spacetime_cell_pos_tl.y >= spacetime_wh.y) * (1 - grid_pos_decimal_tl.y) / (1 - tm_border) * spacetime_wh.y;
+    float d_b = (spacetime_cell_pos_br.y >= 0) * (spacetime_pos_decimal_br.y + max(0, spacetime_cell_pos_tl.y - spacetime_wh.y)) + (spacetime_cell_pos_tl.y < 0) * grid_pos_decimal_br.y / (1 - tm_border) * spacetime_wh.y;
+    float w_x = d_l / (d_l + d_r);
+    float w_y = d_t / (d_t + d_b);*/
+
+    uint32_t col_tl = get_color_at_cell(grid_cell_pos_tl, spacetime_cell_pos_tl, grid_wh, spacetime_wh, iterations);
+    /*uint32_t col_bl = get_color_at_cell(grid_cell_pos_tl*x+grid_cell_pos_br*y, spacetime_cell_pos_tl*x+spacetime_cell_pos_br*y, grid_wh, spacetime_wh, iterations);
+    uint32_t col_tr = get_color_at_cell(grid_cell_pos_tl*y+grid_cell_pos_br*x, spacetime_cell_pos_tl*y+spacetime_cell_pos_br*x, grid_wh, spacetime_wh, iterations);
+    uint32_t col_br = get_color_at_cell(grid_cell_pos_br, spacetime_cell_pos_br, grid_wh, spacetime_wh, iterations);
+    uint32_t col = Cuda::colorlerp(
+        Cuda::colorlerp(col_tl, col_bl, 1-w_y),
+        Cuda::colorlerp(col_tr, col_br, 1-w_y),
+        1-w_x
+    );*/
+
+    pixels[pixel_index] = col_tl;
+
+    //if (pos.y == 
+    /*if (pos.y == 67 && pos.x == 80) {
+        printf("\n%f  %f  %f  %f  %f  (%d,%d,%d,%d)", point_vec_tl.y * grid_wh.y, spacetime_pos_tl.y * spacetime_wh.y, spacetime_pos_decimal_tl.y, spacetime_pos_decimal_br.y, w_y, col>>24, (col>>16)&255, (col>>8)&255, col&255);
+    }*/
 }
 
 extern "C" void beaver_grid_spacetime(
     uint32_t* pixels, Cuda::ivec2 wh, Cuda::vec2 lx_ty, Cuda::vec2 rx_by,
-    Cuda::ivec2 grid_wh, Cuda::ivec2 spacetime_wh, float tm_border, float iterations
+    Cuda::vec2 grid_wh, Cuda::vec2 spacetime_wh, float tm_border, float iterations
 ) {
     dim3 blockSize(16, 16);
     dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);

@@ -6,11 +6,12 @@
 extern "C" void draw_individual_beaver(
     uint32_t* pixels, ivec2 wh, vec2 lx_ty, vec2 rx_by,
     uint32_t* grid, ivec2 grid_wh,
-    uint32_t* icons, ivec2 icons_wh, int icons_len,
+    uint32_t* icons, ivec4 icons_whnm, int icons_len,
     TuringMachine tm, float iterations,
     float state_icon_scale, float vertical_step, float opacity_min, float opacity_dropoff,
     float dir_icon_scale, float current_tape_opacity, int rest,
-    vec2 table_wh, vec2 table_wh0, float table_margin, float icon_border, float table_border, float table_glow, uint32_t shown_transitions, int new_transition
+    vec2 table_wh, vec2 table_wh0, float table_margin, float icon_border, float table_border, float table_glow, uint32_t shown_transitions, int new_transition,
+    uint32_t debug
 );
 
 void boop(int state, int symbol, int num_states){
@@ -20,10 +21,11 @@ void boop(int state, int symbol, int num_states){
     sfx_boink(get_global_state("t"), tone * 440, .05, 1);
 }
 
-BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* icons, ivec2& icons_wh, int& icons_len, const vec2& dimension)
-: Scene(dimension), tm(tm), tape_length(31), icons(icons), icons_wh(icons_wh), icons_len(icons_len), tape(tape_length, 0), head_position(tape_length/2) {
+BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* icons, ivec4& icons_whnm, int& icons_len, const vec2& dimension)
+: Scene(dimension), tm(tm), tape_length(241), icons(icons), icons_whnm(icons_whnm), icons_len(icons_len), tape(tape_length, 0), head_position(tape_length/2) {
     head_position_history.push_back(head_position);
-    manager.set({
+    default_everything();
+    /*manager.set({
         // general simulation params
        	{"iterations", "0"},
 
@@ -53,16 +55,77 @@ BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* 
         {"zoom", "0"},
         {"center_x", "0"},
         {"center_y", "0"},
+    });*/
+}
+
+void BeaverIndividualScene::reset(std::vector<uint32_t> start_tape = {}, uint32_t start_state = 0, int start_pos = -1) {
+    grid = {};
+    steps = 0;
+    head_position = tape_length/2;
+    std::fill(tape.begin(), tape.end(), 0);
+    if (start_pos != -1) {
+        head_position = start_pos;
+        tape = start_tape;
+        tape_length = tape.size();
+    }
+    current_state = start_state;
+    head_position_history = {head_position};
+    used_transition_history = {0};
+}
+
+void BeaverIndividualScene::set_tm(TuringMachine new_tm) {
+    tm = new_tm;
+    reset();
+}
+
+void BeaverIndividualScene::default_everything(bool cur_tape, bool spacetime, bool table, bool sleep_cycle, bool unbind_parent_controls) {
+    manager.set({
+        // spacetime diagram params
+        {"state_icon_scale", "0.85"},
+        //{"vertical_step", "1"},
+        {"opacity_min", std::to_string(0.4 * spacetime)},
+        {"opacity_dropoff", "1.4"},
+
+        // current tape params
+        {"dir_icon_scale", "1"},
+        {"current_tape_opacity", std::to_string(1 * cur_tape)},
+        {"sleep", "0"},
+
+        // table params
+        {"table_col_w", std::to_string(0.1 * table)},
+        {"table_row_h", std::to_string(0.1 * table)},
+	{"table_w0", "0.5625"},
+	{"table_h0", "1"},
+        {"table_cell_margin", "0"},
+        {"table_icon_border", "0"},
+        {"table_border", "0.06"},
+        {"table_line_glow", "0.1"},
+        {"show_all_transitions", "0"},
+
+        // camera/positioning params
+        {"center_y", "<vertical_step> <spacetime_focus_y> * 0.5 +"},
+    });
+    if (unbind_parent_controls) manager.set({
+        {"iterations", "0"},
+        {"vertical_step", "1"},
+        {"zoom", "-2"},
+        {"center_x", "0"},
+        {"spacetime_focus_y", "<iterations>"},
+    });
+    if (sleep_cycle) manager.set({
+        {"beav_time", "0.6"},
+        {"iterations", "<beav_time> 2.5 / floor <beav_time> <beav_time> 2.5 / floor 2.5 * - 1.5 - 0 max +"},
+        {"sleep", "1 <iterations> ceil <iterations> floor - - <beav_time> <beav_time> 2.5 / floor 2.5 * - 0.75 < 2 * 1 - *"},
     });
 }
 
 void BeaverIndividualScene::draw() {
     if (grid.size() == 0) {
-        grid.resize(tape_length + grid.size());
+        grid.resize(tape_length);
         for (int i = 0; i < tape_length; i++) {
-            grid[grid.size() - tape_length + i] = tape[i] << 16 | 0x0000ffff;
+            grid[i] = tape[i] << 16 | 0x0000ffff;
         }
-        grid[grid.size() - tape_length + head_position] &= 0xffff0000 | current_state;
+        grid[head_position] &= 0xffff0000 | current_state;
     }
     while (steps <= state["iterations"] && current_state != -1) {
         int ls = tape[head_position];
@@ -110,10 +173,11 @@ void BeaverIndividualScene::draw() {
     draw_individual_beaver(
         gpu_pix.get_ptr(), wh, lx_ty, rx_by,
         grid.data(), ivec2(tape_length, grid.size() / tape_length),
-        icons, icons_wh, icons_len,
+        icons, icons_whnm, icons_len,
         tm, iterations,
         state["state_icon_scale"], state["vertical_step"], state["opacity_min"], state["opacity_dropoff"],
-        state["dir_icon_scale"], state["current_tape_opacity"], (iterations > grid_wh.y-1 || state["sleep"] < 0) ? last_state - 3 : state["sleep"] > 0,
-        vec2(state["table_col_w"], state["table_row_h"]), vec2(state["table_w0"], state["table_h0"]), state["table_cell_margin"], state["table_icon_border"], state["table_border"], state["table_line_glow"], (state["show_all_transitions"] == 0 ? used_transitions : transitions_to_show) | -(state["show_all_transitions"] == 2), new_transition
+        state["dir_icon_scale"], state["current_tape_opacity"], (iterations > grid_wh.y-1 || state["sleep"] < 0) ? last_state - (icons_whnm.z + 1) : state["sleep"] > 0,
+        vec2(state["table_col_w"], state["table_row_h"]), vec2(state["table_w0"], state["table_h0"]), state["table_cell_margin"], state["table_icon_border"], state["table_border"], state["table_line_glow"], (state["show_all_transitions"] == 0 ? used_transitions : transitions_to_show) | -(state["show_all_transitions"] == 2), new_transition,
+        0
     );
 }

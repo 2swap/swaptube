@@ -16,11 +16,12 @@ __device__ Cuda::vec2 scaleify(Cuda::vec2 thing) {
 __global__ void individual_beaver_kernel(
     uint32_t* pixels, Cuda::ivec2 wh, Cuda::vec2 lx_ty, Cuda::vec2 rx_by,
     uint32_t* grid, Cuda::ivec2 grid_wh,
-    uint32_t* icons, Cuda::ivec2 icons_wh, int icons_len,
+    uint32_t* icons, Cuda::ivec4 icons_whnm, int icons_len,
     TuringMachine tm, float iterations,
     float state_icon_scale, float vertical_step, float opacity_min, float opacity_dropoff,
     float dir_icon_scale, float current_tape_opacity, int rest,
-    Cuda::vec2 table_wh, Cuda::vec2 table_wh0, float table_margin, float icon_border, float table_border, float table_glow, uint32_t shown_transitions, int new_transition
+    Cuda::vec2 table_wh, Cuda::vec2 table_wh0, float table_margin, float icon_border, float table_border, float table_glow, uint32_t shown_transitions, int new_transition,
+    uint32_t debug
 ) {
     Cuda::ivec2 pos(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
     if (pos.x >= wh.x || pos.y >= wh.y) {
@@ -28,6 +29,9 @@ __global__ void individual_beaver_kernel(
     }
     int pixel_index = pos.y * wh.x + pos.x;
     pixels[pixel_index] = 0x00000000;
+
+    int icons_num_symbols = icons_whnm.w;
+    int icons_num_states = icons_whnm.z;
 
     float capped_iterations = fminf(grid_wh.y-1, iterations);
     float step_progress = capped_iterations - min(grid_wh.y-2, int(iterations));
@@ -39,29 +43,29 @@ __global__ void individual_beaver_kernel(
 
     Cuda::vec2 point_vec = pos * (rx_by - lx_ty) / wh + lx_ty;
     Cuda::vec2 grid_pos = point_vec + Cuda::vec2(grid_wh.x / 2.0f, 0);
-    Cuda::ivec2 spacetime_topmost_cell_pos = Cuda::ivec2(int(grid_pos.x), int(fminf(grid_wh.y, grid_pos.y / vertical_step)));
+    Cuda::ivec2 spacetime_topmost_cell_pos = Cuda::ivec2(floor(grid_pos.x), floor(fminf(capped_iterations, grid_pos.y / vertical_step)));
 
     for (int t=int(fminf(grid_wh.y, fmaxf(0, (grid_pos.y-1) / vertical_step + 1))); t<=spacetime_topmost_cell_pos.y; t++) {
         float opacity = opacity_dropoff < 1 ? fmaxf(opacity_min, pow(opacity_dropoff, capped_iterations - t)) : fminf(1, opacity_min * pow(opacity_dropoff, capped_iterations - t));
         Cuda::ivec2 cell_pos = Cuda::ivec2(spacetime_topmost_cell_pos.x, t);
-        Cuda::vec2 grid_pos_decimal = grid_pos - cell_pos * Cuda::vec2(1, vertical_step);
+        Cuda::vec2 grid_pos_decimal = clamp(grid_pos - cell_pos * Cuda::vec2(1, vertical_step), Cuda::vec2(0), Cuda::vec2(1));
 
         if (cell_pos.x >= 0 && cell_pos.y >= 0 && cell_pos.x < grid_wh.x && cell_pos.y < grid_wh.y - 1) {
             uint32_t cell = grid[cell_pos.y * grid_wh.x + cell_pos.x];
 
             int symbol_icon = cell >> 16;
-            Cuda::ivec2 symbol_pos = Cuda::ivec2(int(grid_pos_decimal.x * icons_wh.x), int(grid_pos_decimal.y * icons_wh.y));
-            if (symbol_icon < icons_len && symbol_pos.y < icons_wh.y) {
-                uint32_t symbol_pixel = icons[(symbol_icon * icons_wh.y + symbol_pos.y) * icons_wh.x + symbol_pos.x];
+            Cuda::ivec2 symbol_pos = Cuda::ivec2(floor(grid_pos_decimal.x * icons_whnm.x), floor(grid_pos_decimal.y * icons_whnm.y));
+            if (symbol_icon < icons_len && symbol_pos.y < icons_whnm.y) {
+                uint32_t symbol_pixel = icons[(symbol_icon * icons_whnm.y + symbol_pos.y) * icons_whnm.x + symbol_pos.x];
                 pixels[pixel_index] = Cuda::color_combine(pixels[pixel_index], opacity_multiply(symbol_pixel, opacity));
             }
 
-            int state_icon = (cell & 0x0000ffff) + tm.num_symbols;
+            int state_icon = (cell & 0x0000ffff) + icons_num_symbols;
             if (state_icon < icons_len && state_icon_scale > 0) {
                 float t = 1 / state_icon_scale;
-                Cuda::ivec2 state_pos = Cuda::ivec2(int(floor((grid_pos_decimal.x * t + 0.5f * (1 - t)) * icons_wh.x)), int(floor((grid_pos_decimal.y * t + 0.5f * (1 - t)) * icons_wh.y)));
-                if (state_pos.x >= 0 && state_pos.y >= 0 && state_pos.x < icons_wh.x && state_pos.y < icons_wh.y) {
-                    uint32_t state_pixel = icons[(state_icon * icons_wh.y + state_pos.y) * icons_wh.x + state_pos.x];
+                Cuda::ivec2 state_pos = Cuda::ivec2(floor((grid_pos_decimal.x * t + 0.5f * (1 - t)) * icons_whnm.x), floor((grid_pos_decimal.y * t + 0.5f * (1 - t)) * icons_whnm.y));
+                if (state_pos.x >= 0 && state_pos.y >= 0 && state_pos.x < icons_whnm.x && state_pos.y < icons_whnm.y) {
+                    uint32_t state_pixel = icons[(state_icon * icons_whnm.y + state_pos.y) * icons_whnm.x + state_pos.x];
                     pixels[pixel_index] = Cuda::color_combine(pixels[pixel_index], opacity_multiply(state_pixel, opacity));
                 }
             }
@@ -83,12 +87,12 @@ __global__ void individual_beaver_kernel(
 
         int symbol_icon0 = cell0 >> 16;
         int symbol_icon1 = cell1 >> 16;
-        Cuda::ivec2 symbol_pos = Cuda::ivec2(int(grid_pos_decimal.x * icons_wh.x), int(cur_tape_pos.y * icons_wh.y));
+        Cuda::ivec2 symbol_pos = Cuda::ivec2(floor(grid_pos_decimal.x * icons_whnm.x), floor(cur_tape_pos.y * icons_whnm.y));
         if (symbol_icon0 >= icons_len) symbol_icon0 = symbol_icon1;
         if (symbol_icon1 >= icons_len) symbol_icon1 = symbol_icon0;
-        if (symbol_icon0 < icons_len && symbol_pos.x >= 0 && symbol_pos.y >= 0 && symbol_pos.x < icons_wh.x && symbol_pos.y < icons_wh.y) {
-            uint32_t symbol_pixel0 = icons[(symbol_icon0 * icons_wh.y + symbol_pos.y) * icons_wh.x + symbol_pos.x];
-            uint32_t symbol_pixel1 = icons[(symbol_icon1 * icons_wh.y + symbol_pos.y) * icons_wh.x + symbol_pos.x];
+        if (symbol_icon0 < icons_len && symbol_pos.x >= 0 && symbol_pos.y >= 0 && symbol_pos.x < icons_whnm.x && symbol_pos.y < icons_whnm.y) {
+            uint32_t symbol_pixel0 = icons[(symbol_icon0 * icons_whnm.y + symbol_pos.y) * icons_whnm.x + symbol_pos.x];
+            uint32_t symbol_pixel1 = icons[(symbol_icon1 * icons_whnm.y + symbol_pos.y) * icons_whnm.x + symbol_pos.x];
             uint32_t symbol_pixel = Cuda::colorlerp(symbol_pixel0, symbol_pixel1, step_progress);
             pixels[pixel_index] = Cuda::color_combine(pixels[pixel_index], opacity_multiply(symbol_pixel, current_tape_opacity));
         }
@@ -97,17 +101,17 @@ __global__ void individual_beaver_kernel(
             uint32_t cell2 = grid[max(0, min(grid_wh.y-1, lower_y+1)-((cell0 & 0x0000ffff) == 0x0000ffff)) * grid_wh.x + max(0,cell_pos.x-1)];
             uint32_t cell3 = grid[max(0, min(grid_wh.y-1, lower_y+1)-((cell0 & 0x0000ffff) == 0x0000ffff)) * grid_wh.x + min(grid_wh.x-1,cell_pos.x+1)];
             int dir_sign = (((cell2 & 0x0000ffff) == 0x0000ffff) - ((cell3 & 0x0000ffff) == 0x0000ffff)) * (1 - 2 * ((cell0 & 0x0000ffff) == 0x0000ffff));
-            int dir_icon = ((dir_sign+1)/2) + tm.num_states + tm.num_symbols;
-            dir_icon += (rest != 0) * (tm.num_states + tm.num_symbols + rest + 1 - dir_icon);
+            int dir_icon = ((dir_sign+1)/2) + icons_num_states + icons_num_symbols;
+            dir_icon += (rest != 0) * (icons_num_states + icons_num_symbols + rest + 1 - dir_icon);
 
             Cuda::vec2 dir_pos_raw = grid_pos - Cuda::vec2(cell_pos.x - (((cell0 & 0x0000ffff) == 0x0000ffff) - Cuda::smoother2(step_progress)) * dir_sign, capped_iterations * vertical_step);
             if (dir_pos_raw.x >= 0 && dir_pos_raw.x < 1) {
                 float t = 1 / dir_icon_scale;
-                Cuda::ivec2 dir_pos = Cuda::ivec2(int(floor((dir_pos_raw.x * t + 0.5f * (1 - t)) * icons_wh.x)), int(floor((cur_tape_pos.y * t + 0.5f * (1 - t)) * icons_wh.y)));
-                if (dir_pos.x >= 0 && dir_pos.y >= 0 && dir_pos.x < icons_wh.x && dir_pos.y < icons_wh.y) {
-                    uint32_t dir_pixel = dir_icon < icons_len ? icons[(dir_icon * icons_wh.y + dir_pos.y) * icons_wh.x + dir_pos.x] : 0x00000000;
-                    int halt_icon = tm.num_symbols + tm.num_states + 3;
-                    uint32_t halt_pixel = halt_icon < icons_len ? icons[(halt_icon * icons_wh.y + dir_pos.y) * icons_wh.x + dir_pos.x] : 0x00000000;
+                Cuda::ivec2 dir_pos = Cuda::ivec2(floor((dir_pos_raw.x * t + 0.5f * (1 - t)) * icons_whnm.x), floor((cur_tape_pos.y * t + 0.5f * (1 - t)) * icons_whnm.y));
+                if (dir_pos.x >= 0 && dir_pos.y >= 0 && dir_pos.x < icons_whnm.x && dir_pos.y < icons_whnm.y) {
+                    uint32_t dir_pixel = dir_icon < icons_len ? icons[(dir_icon * icons_whnm.y + dir_pos.y) * icons_whnm.x + dir_pos.x] : 0x00000000;
+                    int halt_icon = icons_num_symbols + icons_num_states + 3;
+                    uint32_t halt_pixel = halt_icon < icons_len ? icons[(halt_icon * icons_whnm.y + dir_pos.y) * icons_whnm.x + dir_pos.x] : 0x00000000;
                     uint32_t beav_pixel = Cuda::colorlerp(dir_pixel, halt_pixel, (iterations > capped_iterations) * state_change_progress);
                     pixels[pixel_index] = Cuda::color_combine(pixels[pixel_index], opacity_multiply(beav_pixel, current_tape_opacity));
                 }
@@ -150,22 +154,23 @@ __global__ void individual_beaver_kernel(
             int action_layer = max(cell_pos.x, cell_pos.y) - 1;
             int action_side = cell_pos.x > cell_pos.y;
             int action_index = max(0, action_layer * action_layer + 2 * (cell_pos.x + cell_pos.y) + action_side - 1);
-            int transition[3] = {tm.write_symbol[action_index], tm.left_right[action_index] + tm.num_symbols + tm.num_states, tm.next_state[action_index] + tm.num_symbols};
-            bool is_defined_transition = is_transition && transition[2] != tm.num_symbols - 1;
+            int transition[3] = {tm.write_symbol[action_index], tm.left_right[action_index] + icons_num_symbols + icons_num_states, tm.next_state[action_index] + icons_num_symbols};
+            bool is_defined_transition = is_transition && transition[2] != icons_num_symbols - 1;
+            transition[2] += (!is_defined_transition) * (icons_num_states + 4);
 
             Cuda::vec2 margin_pos = (table_pos_decimal - table_margin) / (1 - 2 * table_margin);
             float content_aspect_ratio = 1 + is_defined_transition * 2 * (1 + icon_border);
             Cuda::vec2 content_pos = 0.5f + scaleify(Cuda::vec2(1, content_aspect_ratio) * scale * table_cell_size) * (margin_pos - 0.5f);
-            int icon_cell = int(content_pos.x * content_aspect_ratio / (1 + icon_border));
-            Cuda::ivec2 icon_pos(floor((content_pos * Cuda::vec2(content_aspect_ratio, 1) - Cuda::vec2(icon_cell * (1 + icon_border), 0)) * icons_wh));
-            if (content_pos.x >= 0 && content_pos.y >= 0 && content_pos.x < 1 && content_pos.y < 1 && icon_pos.x >= 0 && icon_pos.y >= 0 && icon_pos.x < icons_wh.x && icon_pos.y < icons_wh.y) {
-                int action_layer = max(cell_pos.x, cell_pos.y) - 1;
+            int icon_cell = floor(content_pos.x * content_aspect_ratio / (1 + icon_border));
+            Cuda::ivec2 icon_pos(floor((content_pos * Cuda::vec2(content_aspect_ratio, 1) - Cuda::vec2(icon_cell * (1 + icon_border), 0)) * Cuda::ivec2(icons_whnm.x, icons_whnm.y)));
+            if (content_pos.x >= 0 && content_pos.y >= 0 && content_pos.x < 1 && content_pos.y < 1 && icon_pos.x >= 0 && icon_pos.y >= 0 && icon_pos.x < icons_whnm.x && icon_pos.y < icons_whnm.y) {
+                /*int action_layer = max(cell_pos.x, cell_pos.y) - 1;
                 int action_side = cell_pos.x > cell_pos.y;
                 int action_index = max(0, action_layer * action_layer + 2 * (cell_pos.x + cell_pos.y) + action_side - 1);
                 int transition[3] = {tm.write_symbol[action_index], tm.left_right[action_index] + tm.num_symbols + tm.num_states, tm.next_state[action_index] + tm.num_symbols};
-                transition[2] += (transition[2] == tm.num_symbols - 1) * (tm.num_states + 4);
-                int icon = is_defined_transition * transition[icon_cell] + (is_transition && !is_defined_transition) * (tm.num_symbols + tm.num_states + 3) + (!is_transition) * ((cell_pos.y == -1) * cell_pos.x + (cell_pos.x == -1) * (cell_pos.y + tm.num_symbols));
-                int icon_pixel = (icon >= 0 && icon < icons_len) ? icons[(icon * icons_wh.y + icon_pos.y) * icons_wh.x + icon_pos.x] : 0x00000000;
+                transition[2] += (transition[2] == tm.num_symbols - 1) * (tm.num_states + 4);*/
+                int icon = is_defined_transition * transition[icon_cell] + (is_transition && !is_defined_transition) * (icons_num_symbols + icons_num_states + 3) + (!is_transition) * ((cell_pos.y == -1) * cell_pos.x + (cell_pos.x == -1) * (cell_pos.y + icons_num_symbols));
+                int icon_pixel = (icon >= 0 && icon < icons_len) ? icons[(icon * icons_whnm.y + icon_pos.y) * icons_whnm.x + icon_pos.x] : 0x00000000;
                 float icon_opacity = (is_transition && action_index == new_transition) * state_change_progress + (!is_transition || (action_index != new_transition && ((shown_transitions >> ((is_transition && action_index < 32) * action_index)) & 1)));
                 pixels[pixel_index] = Cuda::color_combine(pixels[pixel_index], opacity_multiply(icon_pixel, icon_opacity));
             }
@@ -176,11 +181,12 @@ __global__ void individual_beaver_kernel(
 extern "C" void draw_individual_beaver(
     uint32_t* pixels, Cuda::ivec2 wh, Cuda::vec2 lx_ty, Cuda::vec2 rx_by,
     uint32_t* grid, Cuda::ivec2 grid_wh,
-    uint32_t* icons, Cuda::ivec2 icons_wh, int icons_len,
+    uint32_t* icons, Cuda::ivec4 icons_whnm, int icons_len,
     TuringMachine tm, float iterations,
     float state_icon_scale, float vertical_step, float opacity_min, float opacity_dropoff,
     float dir_icon_scale, float current_tape_opacity, int rest,
-    Cuda::vec2 table_wh, Cuda::vec2 table_wh0, float table_margin, float icon_border, float table_border, float table_glow, uint32_t shown_transitions, int new_transition
+    Cuda::vec2 table_wh, Cuda::vec2 table_wh0, float table_margin, float icon_border, float table_border, float table_glow, uint32_t shown_transitions, int new_transition,
+    uint32_t debug
 ) {
     uint32_t* d_grid;
     size_t grid_size = grid_wh.x * grid_wh.y * sizeof(uint32_t);
@@ -192,11 +198,12 @@ extern "C" void draw_individual_beaver(
     individual_beaver_kernel<<<gridSize, blockSize>>>(
         pixels, wh, lx_ty, rx_by,
         d_grid, grid_wh,
-        icons, icons_wh, icons_len,
+        icons, icons_whnm, icons_len,
         tm, iterations,
         state_icon_scale, vertical_step, opacity_min, opacity_dropoff,
         dir_icon_scale, current_tape_opacity, rest,
-        table_wh, table_wh0, table_margin, icon_border, table_border, table_glow, shown_transitions, new_transition
+        table_wh, table_wh0, table_margin, icon_border, table_border, table_glow, shown_transitions, new_transition,
+        debug
     );
 
     cudaFree(d_grid);

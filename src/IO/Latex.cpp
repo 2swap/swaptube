@@ -21,6 +21,11 @@ extern "C" void cuda_overlay (
     const uint32_t* foreground, const ivec2& f_wh,
     const vec2& center, const float opacity, const float angle_rad);
 
+extern "C" void cuda_overlay_linear (
+    uint32_t* background, const ivec2& b_wh,
+    const uint32_t* foreground, const ivec2& f_wh,
+    const vec2& center, const float opacity, const vec4& inv_matrix);
+
 string latex_color(uint32_t color, string text) {
     // Mask out the alpha channel
     uint32_t rgb = color & 0x00FFFFFF;
@@ -102,4 +107,11 @@ void write_text(uint32_t* gpu_pix, const ivec2& canvas_wh, const std::string& la
 
     shared_ptr<DevicePointer> text = latex_to_gpu_pix(latex, scaling_params);
     cuda_overlay(gpu_pix, canvas_wh, text->get_ptr(), text->get_wh(), center, opacity, angle_rad);
+}
+
+void write_text_linear(uint32_t* gpu_pix, const ivec2& canvas_wh, const std::string& latex, const vec2& center, const vec2& text_envelope, const double opacity, const vec4& inv_matrix) {
+    ScalingParams scaling_params(text_envelope);
+
+    shared_ptr<DevicePointer> text = latex_to_gpu_pix(latex, scaling_params);
+    cuda_overlay_linear(gpu_pix, canvas_wh, text->get_ptr(), text->get_wh(), center, opacity, inv_matrix);
 }

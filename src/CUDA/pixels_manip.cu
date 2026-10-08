@@ -157,10 +157,10 @@ __global__ void overlay_kernel(
     overlay_pixel(b_pos, foreground[f_pos.y * f_wh.x + f_pos.x], opacity, background, b_wh);
 }
 
-__global__ void overlay_rotation_kernel(
+__global__ void overlay_linear_kernel(
     uint32_t* background, const Cuda::ivec2 b_wh,
     const uint32_t* foreground, const Cuda::ivec2 f_wh,
-    const Cuda::vec2 center, const float opacity, const float angle_rad)
+    const Cuda::vec2 center, const float opacity, const Cuda::vec4 inv_matrix)
 {
     Cuda::ivec2 b_pos(blockDim.x * blockIdx.x + threadIdx.x, blockDim.y * blockIdx.y + threadIdx.y);
     if (b_pos.x >= b_wh.x || b_pos.y >= b_wh.y) return;
@@ -172,12 +172,9 @@ __global__ void overlay_rotation_kernel(
     // Center of the foreground
     Cuda::vec2 fg_center = (f_wh - Cuda::ivec2(1, 1)) * 0.5f;
 
-    // Apply inverse rotation, then re-express relative to the foreground's top-left corner.
-    float cosA = cosf(angle_rad);
-    float sinA = sinf(angle_rad);
-    // inverse rotation by -angle -> use cos, -sin
-    float srcx =  cosA * rel_pos.x + sinA * rel_pos.y + fg_center.x;
-    float srcy = -sinA * rel_pos.x + cosA * rel_pos.y + fg_center.y;
+    // Apply inverse linear transformation, then re-express relative to the foreground's top-left corner.
+    float srcx = inv_matrix.x * rel_pos.x + inv_matrix.y * rel_pos.y + fg_center.x;
+    float srcy = inv_matrix.z * rel_pos.x + inv_matrix.w * rel_pos.y + fg_center.y;
 
     if (srcx < 0.0f || srcx >= static_cast<float>(f_wh.x - 1) ||
         srcy < 0.0f || srcy >= static_cast<float>(f_wh.y - 1)) {
@@ -264,11 +261,41 @@ extern "C" void cuda_overlay (
             foreground, f_wh,
             center, opacity);
     } else {
-        overlay_rotation_kernel<<<numBlocks, blockSize>>>(
+        float cosA = cosf(angle_rad);
+        float sinA = sinf(angle_rad);
+        // inverse rotation by -angle -> use cos, -sin
+        overlay_linear_kernel<<<numBlocks, blockSize>>>(
             background, b_wh,
             foreground, f_wh,
-            center, opacity, angle_rad);
+            center, opacity, Cuda::vec4(cosA, sinA, -sinA, cosA));
     }
+    cudaDeviceSynchronize();
+}
+
+extern "C" void cuda_overlay_linear (
+    uint32_t* background, const Cuda::ivec2& b_wh,
+    const uint32_t* foreground, const Cuda::ivec2& f_wh,
+    const Cuda::vec2& center, const float opacity, const Cuda::vec4& inv_matrix)
+{
+    // Functionally equivalent to cuda_overlay, but the foreground is linearly transformed
+    // by the inverse of the specified matrix before being overlaid onto the background.
+    if (opacity == 0.0f) return;
+
+    dim3 blockSize(16, 16);
+    dim3 numBlocks((b_wh.x + blockSize.x - 1) / blockSize.x, (b_wh.y + blockSize.y - 1) / blockSize.y);
+    /*const float epsilon = 0.001f;
+    if (abs(inv_matrix.x-1) < epsilon && abs(inv_matrix.y) < epsilon && abs(inv_matrix.z) < epsilon && abs(inv_matrix.w-1) < epsilon) {
+        // If matrix is effectively identity, skip matrix math and just do normal overlay
+        overlay_kernel<<<numBlocks, blockSize>>>(
+            background, b_wh,
+            foreground, f_wh,
+            center, opacity);
+    } else {*/
+        overlay_linear_kernel<<<numBlocks, blockSize>>>(
+            background, b_wh,
+            foreground, f_wh,
+            center, opacity, inv_matrix);
+    //} (actually i think we should either always use the linear one, or implement multisampling for overlay_kernel)
     cudaDeviceSynchronize();
 }
 
