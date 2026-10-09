@@ -6,11 +6,10 @@
 #include "four_d_shared.cuh"
 
 
-
 __device__ Cuda::vec4 four_d_sin(const Cuda::vec4& v, const float commute, const Cuda::vec4& jj, const Cuda::vec4& ijj) {
 
     if (abs(v.x) > 30){
-    return Cuda::vec4(100000000,100000000,100000000,100000000) ;
+        return Cuda::vec4(100000000,100000000,100000000,100000000) ;
     }
 
     Cuda::vec4 sinv = v;

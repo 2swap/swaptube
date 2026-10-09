@@ -105,6 +105,36 @@ const int two_d_color(float x_color, float y_color, int opacity){
 
 
 
+ivec2 TwoDAlgebraScene::get_drag_pixel() {
+    const ivec2 wh = get_width_height();
+    const float screen_unit = wh.y/(state["bottom_y"]-state["top_y"]);
+    const ivec2 origin = wh*0.5;
+    return ivec2((int) (state["dragger_x"]*screen_unit),(int) (-state["dragger_y"]*screen_unit))+origin;
+}
+
+vec2 TwoDAlgebraScene::get_diagram_point_pos(const string& name) {
+    const ivec2 wh = get_width_height();
+    const int diagram_unit = get_diagram_unit(wh,state["top_y"],state["bottom_y"],state["diagram_opacity"]);
+    const ivec2 diagram_origin = get_diagram_origin(wh, state["diagram_opacity"], diagram_unit);
+    const ivec2 diagram_label(0,diagram_unit*0.7*state["diagram_label"]);
+    return vec2(state[name + "_x"], -state[name + "_y"])*diagram_unit+diagram_origin+diagram_label;
+}
+
+void TwoDAlgebraScene::change_data() {
+    CoordinateScene::change_data();
+    const ivec2 wh = get_width_height();
+    const ivec2 drag_pixel = get_drag_pixel();
+    set_global_state("drag_x", ((float) drag_pixel.x)/wh.x);
+    set_global_state("drag_y", ((float) drag_pixel.y)/wh.y);
+
+    for (const string name : {"xx", "xy", "yy"}) {
+        if (((int) state[name + "_opacity"]) == 0) continue;
+        const vec2 pos = get_diagram_point_pos(name);
+        set_global_state(name + "_pos_x", pos.x/wh.x);
+        set_global_state(name + "_pos_y", pos.y/wh.y);
+    }
+}
+
 void TwoDAlgebraScene::draw() {
 
     const ivec2 wh = get_width_height();
@@ -258,10 +288,8 @@ void TwoDAlgebraScene::draw() {
 
 
     const int dragger_opacity = 0xff000000;//((int) (state["dragger_brightness"]*255)) << 24;
-    const ivec2 drag_pixel = ivec2((int) (state["dragger_x"]*screen_unit),(int) (-state["dragger_y"]*screen_unit))+origin;
+    const ivec2 drag_pixel = get_drag_pixel();
     const float dragger_size = screen_unit*0.35*sin(state["dragger_shown"]*1.98);
-    set_global_state("drag_x", ((float) drag_pixel.x)/wh.x);
-    set_global_state("drag_y", ((float) drag_pixel.y)/wh.y);
 
     if (state["dragger_type"] == 1 && state["dragger_shown"] != 0){
         ivec2 pos_diff((int) (dragger_size),(int) (dragger_size*0.4));
@@ -333,15 +361,13 @@ void TwoDAlgebraScene::draw() {
     }
 
 
-
+    // 2DO I generally get the feeling that you made your life a lot harder by not breaking this into multiple scenes
 
     const int xx_opacity = ((int) state["xx_opacity"]) << 24;
     if (xx_opacity != 0){
-        const vec2 xx_pos = vec2(state["xx_x"], -state["xx_y"])*diagram_unit+diagram_origin+diagram_label;
+        const vec2 xx_pos = get_diagram_point_pos("xx");
         draw_circle(gpu_pix.get_ptr(), wh, xx_pos, point_radius*1.1, xx_opacity + bg_color,1.0);
         draw_circle(gpu_pix.get_ptr(), wh, xx_pos, point_radius, xx_opacity + 0x00dd44dd,1.0);
-        set_global_state("xx_pos_x", xx_pos.x/wh.x);
-        set_global_state("xx_pos_y", xx_pos.y/wh.y);
         write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "x^2"), xx_pos+textbox_offset*0.5, textbox_size, state["xx_opacity"]/255*state["x_label"], 0);
         write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "1"), xx_pos+textbox_offset*0.5, textbox_size, state["xx_opacity"]/255*(1-state["x_label"]), 0);
     }
@@ -349,11 +375,9 @@ void TwoDAlgebraScene::draw() {
     const int xy_opacity = ((int) state["xy_opacity"]) << 24;
     const vec2 y_transition(0,point_radius*2);
     if (xy_opacity != 0){
-        const vec2 xy_pos = vec2(state["xy_x"], -state["xy_y"])*diagram_unit+diagram_origin+diagram_label;
+        const vec2 xy_pos = get_diagram_point_pos("xy");
         draw_circle(gpu_pix.get_ptr(), wh, xy_pos, point_radius*1.1, xy_opacity + bg_color,1.0);
         draw_circle(gpu_pix.get_ptr(), wh, xy_pos, point_radius, xy_opacity + 0x00ccccee,1.0);
-        set_global_state("xy_pos_x", xy_pos.x/wh.x);
-        set_global_state("xy_pos_y", xy_pos.y/wh.y);
         write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "xy"), xy_pos+textbox_offset, textbox_size, state["xy_opacity"]/255*state["xy_label"], 0);
         write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "y"), xy_pos+textbox_offset+y_transition*(1-state["y_label"]), 
             textbox_size, state["xy_opacity"]/255*(1-state["xy_label"])*state["y_label"], 0);
@@ -364,11 +388,9 @@ void TwoDAlgebraScene::draw() {
     
     const int yy_opacity = ((int) state["yy_opacity"]) << 24;
     if (yy_opacity != 0){
-        const vec2 yy_pos = vec2(state["yy_x"], -state["yy_y"])*diagram_unit+diagram_origin+diagram_label;
+        const vec2 yy_pos = get_diagram_point_pos("yy");
         draw_circle(gpu_pix.get_ptr(), wh, yy_pos, point_radius*1.1, yy_opacity + bg_color,1.0);
         draw_circle(gpu_pix.get_ptr(), wh, yy_pos, point_radius, yy_opacity + 0x00dddd44,1.0);
-        set_global_state("yy_pos_x", yy_pos.x/wh.x);
-        set_global_state("yy_pos_y", yy_pos.y/wh.y);
         write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "y^2"), yy_pos+textbox_offset+y_transition*(1-state["y_label"]), 
             textbox_size, state["yy_opacity"]/255*state["y_label"], 0);
         write_text(gpu_pix.get_ptr(), wh, latex_color(bg_color, "i^2"), yy_pos-y_transition*state["y_label"], 

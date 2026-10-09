@@ -3,6 +3,13 @@
 BezierStateCurve::BezierStateCurve(vector<StateSet> waypoints) {
     if(waypoints.size() < 2) throw runtime_error("Bezier waypoint list too small");
 
+    // Duplicate the first and last waypoints
+
+    waypoints.insert(waypoints.begin(), waypoints[0]);
+    waypoints.push_back(waypoints.back());
+
+    _waypoints = waypoints;
+
     unordered_set<string> keyset;
     for(const pair<string, string>& p : waypoints[0]) {
         keyset.insert(p.first);
@@ -48,4 +55,15 @@ StateSet BezierStateCurve::pop_next_state_set() {
 
 int BezierStateCurve::size() const {
     return entries.size();
+}
+
+void BezierStateCurve::run_curve(Scene& s) {
+    s.manager.set(_waypoints[0]);
+    s.manager.transition(MICRO, pop_next_state_set());
+    for(int i = 0; i < _waypoints.size()-2; i++) {
+        s.render_microblock();
+        s.manager.set(pop_next_state_set());
+    }
+    s.manager.transition(MICRO, _waypoints[_waypoints.size()-1]);
+    s.render_microblock();
 }

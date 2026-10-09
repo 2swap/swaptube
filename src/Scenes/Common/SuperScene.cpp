@@ -82,8 +82,8 @@ void SuperScene::add_subscene_check_dupe(const std::string& name, std::shared_pt
 
 void SuperScene::change_data() {
     Scene::change_data();
-    for(const auto& kv : subscenes) {
-        kv.second->update();
+    for(const std::string& name : render_order) {
+        subscenes[name]->update();
     }
 }
 
