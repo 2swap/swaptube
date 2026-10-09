@@ -235,9 +235,8 @@ __global__ void four_d_raymarch_kernel(
     // Cuda::vec3 current_position(0,0,-10);
 
     const float x_dir = float(pixel_x)/float(wh.x);
-    const float e = exp((x_dir-slider) * slider_width);
-    const float _commute = e/(1.0+e);
-    const float commute = _commute * 2 - 1;
+    // 2*sigmoid(z)-1 == tanh(z/2); tanh avoids exp() overflowing to inf (inf/inf = NaN)
+    const float commute = tanhf((x_dir-slider) * slider_width * 0.5f);
     // Cuda::vec4 trans(0.0,1.0,-1.0,2.0);
 
     while (dist_traveled < max_dist) {

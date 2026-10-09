@@ -21,7 +21,7 @@ void CursorScene::draw() {
     const int stroke_color = 0xff000000 | ((int) state["stroke_r"]) << 16 | ((int) state["stroke_g"]) << 8 | (int) state["stroke_b"];
 
     const float cursor_size = state["cursor_size"]*wh.y;
-    const ivec2 cursor_pos = ivec2((int) (state["cursor_x"]*wh.x+cursor_size*0.2),(int) (state["cursor_y"]*wh.y+cursor_size*0.4));
+    const ivec2 cursor_pos = ivec2((int) (state["cursor_x"]*wh.x+cursor_size*0.3),(int) (state["cursor_y"]*wh.y+cursor_size*0.6));
 
 
     draw_triangle(gpu_pix.get_ptr(), wh, 
@@ -60,5 +60,3 @@ void CursorScene::draw() {
         fill_color);
 
 }
-
-
