@@ -16,11 +16,11 @@ extern "C" void background_render(
 BackgroundScene::BackgroundScene(const vec2& dimensions) : Scene(dimensions){
     manager.set({
         {"bg_0_r", "0"},
-        {"bg_0_g", "65"},
-        {"bg_0_b", "65"},
+        {"bg_0_g", "0"},
+        {"bg_0_b", "68"},
 
-        {"bg_1_r", "2"},
-        {"bg_1_g", "65"},
+        {"bg_1_r", "0"},
+        {"bg_1_g", "0"},
         {"bg_1_b", "68"},
 
         {"slider", "0"},

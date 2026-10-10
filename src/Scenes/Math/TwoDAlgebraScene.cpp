@@ -195,7 +195,7 @@ void TwoDAlgebraScene::draw() {
 
         const int grid_size_x = state["grid_size"];
         const int grid_size_y = (number_line==0) ? grid_size_x : 0;
-        const int grid_opacity = ((int) state["brightness"]) << 24;
+        const int grid_opacity = 255 << 24;
         const float line_thickness = screen_unit*0.03*state["grid_scale"];
         const float point_size = screen_unit*0.12*state["grid_scale"];
         const float lerp_step = 0.005;
@@ -246,8 +246,7 @@ void TwoDAlgebraScene::draw() {
         cuda_render_many_lines_from_host(gpu_pix.get_ptr(), wh, 
             point_list.data(), point_list.size()/2,
             vec2(state["left_x"],state["top_y"]), vec2(state["right_x"],state["bottom_y"]), 
-            // 0xffffffff, 1.0,
-            color_list.data(), state["brightness"]/255,
+            color_list.data(), 1.0,
             line_thickness
         );
 
@@ -261,6 +260,10 @@ void TwoDAlgebraScene::draw() {
         }
 
 
+        if (state["brightness"] < 255){
+            const int fade = ((int) (255 - state["brightness"])) << 24 | ((int) state["bg_0_r"]) << 16 | ((int) state["bg_0_g"]) << 8 | ((int) state["bg_0_b"]);
+            draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(0,0), get_width_height(), fade);
+        }
 
     } else {
 
@@ -285,9 +288,7 @@ void TwoDAlgebraScene::draw() {
     }
 
 
-
-
-    const int dragger_opacity = 0xff000000;//((int) (state["dragger_brightness"]*255)) << 24;
+    const int dragger_opacity = 0xff000000;
     const ivec2 drag_pixel = get_drag_pixel();
     const float dragger_size = screen_unit*0.35*sin(state["dragger_shown"]*1.98);
 
