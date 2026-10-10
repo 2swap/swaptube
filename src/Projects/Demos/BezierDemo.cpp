@@ -20,5 +20,5 @@ void render_video() {
     BezierStateCurve bsc(waypoints);
     stage_macroblock(SilenceBlock(5));
 
-    bsc.run_curve(ms);
+    bsc.run_curve(ms,ms);
 }

@@ -57,13 +57,13 @@ int BezierStateCurve::size() const {
     return entries.size();
 }
 
-void BezierStateCurve::run_curve(Scene& s) {
-    s.manager.set(_waypoints[0]);
-    s.manager.transition(MICRO, pop_next_state_set());
+void BezierStateCurve::run_curve(Scene& transitionScene, Scene& renderScene) {
+    transitionScene.manager.set(_waypoints[0]);
+    transitionScene.manager.transition(MICRO, pop_next_state_set());
     for(int i = 0; i < _waypoints.size()-2; i++) {
-        s.render_microblock();
-        s.manager.set(pop_next_state_set());
+        renderScene.render_microblock();
+        transitionScene.manager.set(pop_next_state_set());
     }
-    s.manager.transition(MICRO, _waypoints[_waypoints.size()-1]);
-    s.render_microblock();
+    transitionScene.manager.transition(MICRO, _waypoints[_waypoints.size()-1]);
+    renderScene.render_microblock();
 }

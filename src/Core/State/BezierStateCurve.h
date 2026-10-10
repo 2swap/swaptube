@@ -9,7 +9,7 @@ public:
     BezierStateCurve(vector<StateSet>);
     StateSet pop_next_state_set();
     int size() const;
-    void run_curve(Scene&);
+    void run_curve(Scene&,Scene&);
 private:
     vector<StateSet> _waypoints;
     list<StateSet> entries;
