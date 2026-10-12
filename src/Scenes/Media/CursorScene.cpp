@@ -8,17 +8,23 @@ extern "C" void draw_triangle(uint32_t* pix, const ivec2& wh, const vec2& p0, co
 CursorScene::CursorScene(const vec2& dimensions) : Scene(dimensions) {
     manager.set({
         {"cursor_x", "0.5"},{"cursor_y", "0.5"},{"cursor_size", "0.1"},
-        {"fill_r", "255"},{"fill_g", "255"},{"fill_b", "255"},
+        {"fill_r", "255"},{"fill_g", "255"},{"fill_b", "255"},{"fill_a", "255"},
         {"stroke_r", "0"},{"stroke_g", "0"},{"stroke_b", "68"},
-    });
+    });     
 }
 
 void CursorScene::draw() {
 
     const ivec2 wh = get_width_height();
 
-    const int fill_color = 0xff000000 | ((int) state["fill_r"]) << 16 | ((int) state["fill_g"]) << 8 | (int) state["fill_b"];
-    const int stroke_color = 0xff000000 | ((int) state["stroke_r"]) << 16 | ((int) state["stroke_g"]) << 8 | (int) state["stroke_b"];
+    const float fill_lerp = state["fill_a"]/255;
+    const int stroke_color = 0xff000000  | ((int) state["stroke_r"]) << 16 | ((int) state["stroke_g"]) << 8 | (int) state["stroke_b"];
+
+    const int fill_color = 0xff000000  | 
+       ((int) lerp(state["stroke_r"],state["fill_r"],fill_lerp)) << 16 |
+       ((int) lerp(state["stroke_g"],state["fill_g"],fill_lerp)) << 8 |
+       ((int) lerp(state["stroke_b"],state["fill_b"],fill_lerp));
+
 
     const float cursor_size = state["cursor_size"]*wh.y;
     const ivec2 cursor_pos = ivec2((int) (state["cursor_x"]*wh.x+cursor_size*0.3),(int) (state["cursor_y"]*wh.y+cursor_size*0.6));

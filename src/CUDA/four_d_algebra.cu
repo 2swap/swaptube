@@ -16,7 +16,7 @@ __device__ Cuda::vec4 four_d_sin(const Cuda::vec4& v, const float commute, const
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
     Cuda::vec4 v_pow = v;
 
-    for (int t = 3; t < 60; t+=2){
+    for (int t = 3; t < 25; t+=2){
         v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
         sinv += v_pow;  
         if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
@@ -39,7 +39,7 @@ __device__ Cuda::vec4 four_d_cos(const Cuda::vec4& v, const float commute, const
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
     Cuda::vec4 v_pow = v;
 
-    for (int t = 2; t < 60; t+=2){
+    for (int t = 2; t < 25; t+=2){
         v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
         cosv = cosv + v_pow;
         if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){

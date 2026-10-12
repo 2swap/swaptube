@@ -167,9 +167,9 @@ void print_adjacency_matrix(const Cuda::GraphAdjacencyMatrix& matrix)
             if (status == Cuda::EdgeStatus::UNDECIDED_EDGE) c = 'U';
             else if (status == Cuda::EdgeStatus::KEEP_EDGE) c = 'K';
             else if (status == Cuda::EdgeStatus::NO_EDGE) c = '.';
-            printf("%c ", c);
+            // printf("%c ", c);
         }
-        printf("\n");
+        // printf("\n");
     }
 }
 
@@ -283,7 +283,7 @@ bool add_highest_score_edge(Cuda::Interpolation& interpolation)
             if (matrix.adj_matrix[i * matrix.num_components_2 + j].status == Cuda::EdgeStatus::UNDECIDED_EDGE) {
                 undecided_count++;
                 float score = score_edge(interpolation, i, j);
-                printf("Score for edge (%u, %u): %f\n", i, j, score);
+                // printf("Score for edge (%u, %u): %f\n", i, j, score);
                 if (score > best_score) {
                     best_score = score;
                     best_i = i;
