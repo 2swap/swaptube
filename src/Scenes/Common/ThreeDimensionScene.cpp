@@ -115,7 +115,7 @@ void ThreeDimensionScene::draw() {
             const vec2 pos = coordinate_to_pixel(vec3(state[base + "x"], state[base + "y"], state[base + "z"]), distance);
             if (distance <= 0) continue;
             const vec2 dim = vec2(0.2, 0.1) * get_width_height() * labels_size;
-            write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), latex_color(label_color, name), pos, dim, state[base + "a"], 0);
+            write_text(gpu_pix.get_ptr(), gpu_pix.get_wh(), latex_color(label_color, name), pos, dim, 1.0, 0);
         }
     }
 }

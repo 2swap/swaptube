@@ -16,7 +16,7 @@ private:
                   const vec4& xx, const vec4& xy, const vec4& xz,
                   const vec4& yy, const vec4& yz, const vec4& zz) const;
 
-    vec3 project(const vec4& p) const;
+    vec3 project(const vec4& p, const float ws) const;
 
     uint32_t three_d_color(vec4 point);
 

@@ -9,31 +9,6 @@
 
 
 
-
-// __device__ Cuda::vec2 two_d_operation(
-//     Cuda::vec2 point, Cuda::vec2 dragger_pos, float dragger_type, Cuda::vec4 dragger_inverse,
-//     float number_line
-//     // Cuda::vec2 xx, Cuda::vec2 xy, Cuda::vec2 yx, Cuda::vec2 yy
-// ){
-
-//     if (dragger_type == 0){
-//         return point;
-
-//     } else if (dragger_type == 1){
-//         if (number_line == 1){
-//             return Cuda::vec2(point.x-dragger_pos.x, point.y);
-//         }
-//         return point - dragger_pos;
-
-//     } else {
-//         return Cuda::vec2(
-//             point.x*dragger_inverse.x+point.y*dragger_inverse.y,
-//             point.x*dragger_inverse.z+point.y*dragger_inverse.w
-//         );
-//     }
-
-// }
-
 __device__ __forceinline__ float smallness_2d(float s, float brightness){
     // return 1/(1+0.02*s*s*abs(s));
     float s_sq = s*s;
@@ -103,7 +78,7 @@ __device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, const flo
         Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
         Cuda::vec2 v_pow = v;
 
-        for (int t = 2; t < 41; t+=2){
+        for (int t = 2; t < 60; t+=2){
             v_pow = two_d_mult(v_pow, v2,xx,xy,yy)/((1.0-t)*t);
             cosv = cosv + v_pow;
         }
@@ -149,24 +124,40 @@ __device__ Cuda::vec2 two_d_function(Cuda::vec2 v, const int equation, const flo
     } else if (equation == 107){
         return Cuda::vec2(1,0) - v2/2 + v4/24 - v6/720 + v8/40320;
 
+
     } else if (equation == 4){
         // return v - v2 - v5 + v10;
-        return v5/256 - 4;
+        return v5/512 - 4;
         // return -2 + v*6 - v2*2 - v3*3 + v6;
         // return 1 + v + v2 + v3 + v4;
         // return 1 - v + v3 - v4 + v5 - v7 + v8;
         // return 1 - v + v2 - v3 + v4;
 
     } else if (equation == 5){
-        return v7/2048 - 3;
+        // return v7/2048 - 3;
+        return v9/1600000 - 4 - v3/32;
 
     } else if (equation == 6){
+        // return two_d_function(v3*0.02, 3, 0, xx, xy, yy) - v2*0.04;
+        // return two_d_function(v3*0.02, 3, 0, xx, xy, yy)*0.3 - 2;
+        Cuda::vec2 vr = two_d_mult(v,Cuda::vec2(0.8,0.6),xx,xy,yy)+Cuda::vec2(2,2.6);
+        return two_d_function(v, 3, 0, xx, xy, yy)*0.5 + two_d_function(vr, 3, 0, xx, xy, yy)*0.4;
+        // Cuda::vec2 s = two_d_function(v4*0.0002, 3, 0, xx, xy, yy);
+        // return two_d_mult(s,s,xx,xy,yy);
+
+    }  else if (equation == 8){
         return two_d_function(v2*0.06, 2, 0, xx, xy, yy) + two_d_function(v*0.4, 3, 0, xx, xy, yy)*2;
+        // return two_d_function(v2*0.05, 2, 0, xx, xy, yy) + two_d_function(v*0.4, 3, 0, xx, xy, yy)*2;
+        // Cuda::vec2 v2 = two_d_mult(v,v,xx,xy,yy);
+        // Cuda::vec2 v3 = two_d_mult(v,v2,xx,xy,yy);
+        // Cuda::vec2 v2z = two_d_mult(Cuda::vec2(0.02,0.001),v3,xx,xy,yy);
+        // return two_d_function(v2z, 2, 0, xx, xy, yy)*2;
+    }   else if (equation == 7){
 
-    } else if (equation == 7){
-        return two_d_function(v3*0.02, 3, 0, xx, xy, yy) - v2*0.04;
-
-    }
+        Cuda::vec2 vr = two_d_mult(v,Cuda::vec2(-0.4,0.8),xx,xy,yy);
+        return two_d_function(v2*0.1, 3, 0, xx, xy, yy)*0.5 + two_d_function(vr*0.6, 2, 0, xx, xy, yy)*0.4;
+  
+    } 
     
     
     
@@ -195,83 +186,6 @@ __global__ void two_d_smallness_graph(
 }
 
 
-// __global__ void two_d_algebra_grid(
-//     uint32_t* pixels, const Cuda::ivec2 wh,
-//     Cuda::vec2 dragger_pos, 
-//     float dragger_type, float dragger_brightness, 
-//     // float algebra,
-//     Cuda::vec4 dragger_inverse,
-//     float number_line, int brightness,
-//     const Cuda::vec2 lx_ty, const Cuda::vec2 rx_by
-// ) {
-//     Cuda::ivec2 pixel(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
-//     if (pixel.x >= wh.x || pixel.y >= wh.y) return;
-
-
-
-//     // float distAccum = 0.0;
-//     Cuda::vec2 point = pixel_to_point_in_screen(pixel, lx_ty, rx_by, wh);
-//     uint32_t dragger_color = 0;
-
-//     float dragger_lerp = 0.0;
-//     if (dragger_type > 0){
-//         Cuda::vec2 dragger_delta = point - dragger_pos;
-
-//         if (dragger_type == 2){
-//             dragger_delta =  Cuda::vec2(dragger_delta.x*0.71-dragger_delta.y*0.71,dragger_delta.x*0.71+dragger_delta.y*0.71);
-//         }
-
-//         float max_dist = max(abs(dragger_delta.x),abs(dragger_delta.y));
-//         float min_dist = min(abs(dragger_delta.x),abs(dragger_delta.y));
-
-//         if (max_dist < 0.24 && min_dist < 0.06){
-//             dragger_color = 0xffffffff;
-//             dragger_color = brightness+0x00ffffff;
-//             dragger_lerp = dragger_brightness;
-
-//         } else if (max_dist < 0.3 && min_dist < 0.12){
-//             dragger_lerp = dragger_brightness;
-//         }
-
-//         if (dragger_lerp == 1){
-//             pixels[pixel.y * wh.x + pixel.x] = dragger_color;
-//             return;
-//         }
-//     }
-
-
-//     Cuda::vec2 op_output = two_d_operation(point, dragger_pos, dragger_type, dragger_inverse, number_line);
-
-//     // if (pixel.x==pixel.y && pixel.y==0){
-//     //     printf("%f %f",op_output.x,op_output.y);
-//     // }
-    
-//     float x_dist = abs(op_output.x - round(op_output.x));
-//     float y_dist = abs(op_output.y - round(op_output.y));
-//     float x_size = abs(op_output.x);
-//     float y_size = abs(op_output.y);
-
-//     float pixel_color = brightness+Cuda::OKLABtoRGB(0,1,op_output.x*0.1,op_output.y*0.1);
-//     bool fill_pixel = false;
-
-//     if (x_size < 10 && y_size < 10){
-//         if (!number_line){
-//             fill_pixel = x_dist < 0.02;
-//         }
-//         if (!number_line || y_size < 0.5){
-//             fill_pixel = fill_pixel || y_dist < 0.02 || y_dist*y_dist + x_dist*x_dist < 0.01;
-//         }
-//     }
-
-//     if (fill_pixel){
-//         uint32_t fill_color = brightness+Cuda::OKLABtoRGB(0,1,op_output.x*0.08,op_output.y*0.08);
-//         pixels[pixel.y * wh.x + pixel.x] =  Cuda::colorlerp(fill_color, dragger_color, dragger_lerp);
-//     } else {
-//         pixels[pixel.y * wh.x + pixel.x] =  Cuda::colorlerp(0, dragger_color, dragger_lerp);
-//     }
-
-// }
-
 extern "C" void two_d_algebra(
     uint32_t* d_pixels, const Cuda::ivec2& wh,
     // Cuda::vec2 dragger_pos, 
@@ -289,23 +203,11 @@ extern "C" void two_d_algebra(
     dim3 block_size(16, 16);
     dim3 grid_size((wh.x + block_size.x - 1) / block_size.x, (wh.y + block_size.y - 1) / block_size.y);
 
-    // if (mode == 0){
-    //     two_d_algebra_grid<<<grid_size, block_size>>>( d_pixels, wh, 
-
-    //         dragger_pos, 
-    //         dragger_type, dragger_brightness, 
-    //         dragger_inverse,
-    //         number_line,
-    //         brightness << 24,
-    //         lx_ty, rx_by );
-    // } else {
-
     two_d_smallness_graph<<<grid_size, block_size>>>( d_pixels, wh, 
         equation, equation_lerp,
         channels, xx, xy, yy, brightness,
         lx_ty, rx_by );
 
-    // }
 
 }
 

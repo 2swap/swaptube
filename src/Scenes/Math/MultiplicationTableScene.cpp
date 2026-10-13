@@ -27,24 +27,17 @@ MultiplicationTableScene::MultiplicationTableScene(const vec2& dimensions) : Sce
         {"bg_1_g", "0"},
         {"bg_1_b", "68"},
 
-        {"show_r_0", "1"},
-        {"show_r_1", "1"},
-        {"show_r_2", "1"},
-        {"show_r_3", "1"},
-        {"show_r_4", "1"},
-
-        {"show_c_0", "1"},
-        {"show_c_1", "1"},
-        {"show_c_2", "1"},
-        {"show_c_3", "1"},
-        {"show_c_4", "1"},
-
-        {"triangle", "0"},
-        {"three_d", "0"},
+        {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},{"opacity_24", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
 
         {"1j", "1"},
-
+        {"triangle", "1"},
         {"table_size", "4"},
+        
+        {"three_d", "0"},
     });
 }
 
@@ -96,7 +89,7 @@ void MultiplicationTableScene::draw() {
         table_units = {
             0,1,2,3,0,
             1,1,2,4,0,
-            2,0,1,5,0,
+            2,2,1,5,0,
             3,0,0,6,0,
             0,0,0,0,0,
         };
@@ -122,12 +115,21 @@ void MultiplicationTableScene::draw() {
     for (int r = 0; r < table_limit; r++){
         for (int c = 0; c < table_limit; c++){
 
-            if (state["triangle"]!=0 && c < r && c != 0){continue;}
+            float cell_opacity = state["opacity_" + to_string(r) + to_string(c)]*min(1.0f,table_limit-max(r,c));
+
+            if (c < r && c != 0){
+                if (state["triangle"]==1.0){
+                    continue;
+                } else {
+                    cell_opacity *= (1.0-state["triangle"]);
+                }
+            }
+
+
 
             int i = r*5 + c;
-            float cell_opacity = min(state["show_c_" + to_string(c)],state["show_r_" + to_string(r)]);
 
-            uint32_t cell_alpha = (int) (255*cell_opacity*min(1.0f,table_limit-max(r,c))) << 24;
+            uint32_t cell_alpha = ((int) (255*cell_opacity)) << 24;
 
             ivec2 cell_center = offset + ivec2(cell_size*(c+0.5), cell_size*(r+0.5));
             if (r > 0 && c > 0){

@@ -15,7 +15,7 @@ ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : ThreeDimensionS
         {"a_x", "0"}, {"a_y", "1"}, {"a_z", "0"}, {"a_w", "0"},
         {"b_x", "0"}, {"b_y", "0"}, {"b_z", "1"}, {"b_w", "0"},
         {"lines_thickness_multiplier", "3"},
-        {"w_slider", "0"},
+        {"w_slider", "0"},{"w_scale", "0"},
         {"reach", "3"},
     });
 }
@@ -35,8 +35,13 @@ vec4 ThreeDAlgebraScene::multiply(const vec4& p, const vec4& q,
             + vec4(-yzz.y, yzz.x,- p.y * q.w - p.w * q.y -yzz.w, yzz.z);
 }
 
-vec3 ThreeDAlgebraScene::project(const vec4& p) const {
-    return vec3(p.x+p.w*0.5, p.y+p.w*0.2, p.z-p.w*0.4); 
+vec3 ThreeDAlgebraScene::project(const vec4& p, const float ws) const {
+    if (ws == 1){
+        const float w_mult = 1.0+p.w*0.3;
+        return vec3(p.x*w_mult, p.y*w_mult, p.z*w_mult); 
+    } else {
+        return vec3(p.x+p.w*0.5, p.y+p.w*0.2, p.z-p.w*0.4);
+    } 
 }
 
 
@@ -77,6 +82,7 @@ void ThreeDAlgebraScene::draw() {
     const float associativity = state["associativity"];
     const vec4 ab = multiply(a, b, xx, xy, xz, yy, yz, zz);
     const float w = state["w_slider"];
+    const float w_scale = state["w_scale"];
 
 
     const int reach = state["reach"];
@@ -89,14 +95,14 @@ void ThreeDAlgebraScene::draw() {
         for (int iy = -reach; iy <= reach; iy+=2)
             for (int iz = -reach; iz <= reach; iz+=2) {
                 const vec4 e(ix, iy, iz, 0);
-                const vec3 left  = project(multiply(multiply(e, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz));
-                const vec3 right = project(multiply(e, ab, xx, xy, xz, yy, yz, zz));
+                const vec3 left  = project(multiply(multiply(e, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz),w_scale);
+                const vec3 right = project(multiply(e, ab, xx, xy, xz, yy, yz, zz),w_scale);
                 transformed[index(ix, iy, iz, 0)] = left * (1 - associativity) + right * associativity;
                 
                 if (w > 0){
                     const vec4 ew(ix, iy, iz, w*2);
-                    const vec3 leftw  = project(multiply(multiply(ew, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz));
-                    const vec3 rightw = project(multiply(ew, ab, xx, xy, xz, yy, yz, zz));
+                    const vec3 leftw  = project(multiply(multiply(ew, a, xx, xy, xz, yy, yz, zz), b, xx, xy, xz, yy, yz, zz),w_scale);
+                    const vec3 rightw = project(multiply(ew, ab, xx, xy, xz, yy, yz, zz),w_scale);
                     transformed[index(ix, iy, iz, 1)] = leftw * (1 - associativity) + rightw * associativity;
                 }
             }

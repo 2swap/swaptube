@@ -192,6 +192,8 @@ void TwoDAlgebraScene::draw() {
 
         vector<vec2> point_list;
         vector<uint32_t> color_list;
+        vector<vec2> final_point_list;
+        vector<uint32_t> final_color_list;
 
         const int grid_size_x = state["grid_size"];
         const int grid_size_y = (number_line==0) ? grid_size_x : 0;
@@ -211,12 +213,18 @@ void TwoDAlgebraScene::draw() {
                 drag_type, drag_pos, drag_times_x, drag_times_y);
 
             vec2 vec_diff = (end_pos-current_pos)*lerp_step;
-
+            
             for (float l = 0; l <= 1; l += lerp_step){
 
-                point_list.push_back(current_pos);
-                point_list.push_back(current_pos+vec_diff);
-                color_list.push_back(two_d_color(lerp(-grid_size_x,grid_size_x,l),y,grid_opacity));
+                if (y == -grid_size_y){
+                    final_point_list.push_back(current_pos);
+                    final_point_list.push_back(current_pos+vec_diff);
+                    final_color_list.push_back(two_d_color(lerp(-grid_size_x,grid_size_x,l),y,grid_opacity));
+                } else {
+                    point_list.push_back(current_pos);
+                    point_list.push_back(current_pos+vec_diff);
+                    color_list.push_back(two_d_color(lerp(-grid_size_x,grid_size_x,l),y,grid_opacity));
+                }
             
                 current_pos = current_pos+vec_diff;
             }
@@ -234,10 +242,17 @@ void TwoDAlgebraScene::draw() {
 
                 for (float l = 0; l <= 1; l += lerp_step){
             
-                    point_list.push_back(current_pos);
-                    point_list.push_back(current_pos+vec_diff);
-                    color_list.push_back(two_d_color(x,lerp(-grid_size_y,grid_size_y,l),grid_opacity));
                 
+                    if (x == grid_size_x){
+                        final_point_list.push_back(current_pos);
+                        final_point_list.push_back(current_pos+vec_diff);
+                        final_color_list.push_back(two_d_color(x,lerp(-grid_size_y,grid_size_y,l),grid_opacity));
+                    } else {
+                        point_list.push_back(current_pos);
+                        point_list.push_back(current_pos+vec_diff);
+                        color_list.push_back(two_d_color(x,lerp(-grid_size_y,grid_size_y,l),grid_opacity));
+                    }
+
                     current_pos = current_pos+vec_diff;
                 }
             }
@@ -250,6 +265,12 @@ void TwoDAlgebraScene::draw() {
             line_thickness
         );
 
+        cuda_render_many_lines_from_host(gpu_pix.get_ptr(), wh, 
+            final_point_list.data(), final_point_list.size()/2,
+            vec2(state["left_x"],state["top_y"]), vec2(state["right_x"],state["bottom_y"]), 
+            final_color_list.data(), 1.0,
+            line_thickness
+        );
 
         for (int x = -grid_size_x; x <= grid_size_x; x++){
             for (int y = -grid_size_y; y <= grid_size_y; y++){
