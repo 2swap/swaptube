@@ -57,6 +57,10 @@ int BezierStateCurve::size() const {
     return entries.size();
 }
 
+vector<StateSet> BezierStateCurve::get_waypoints() const {
+    return _waypoints;
+}
+
 void BezierStateCurve::run_curve(Scene& transitionScene, Scene& renderScene) {
     transitionScene.manager.set(_waypoints[0]);
     transitionScene.manager.transition(MICRO, pop_next_state_set());
