@@ -1426,8 +1426,14 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     stage_macroblock(FileBlock("This algebra doesn't have a 1. yuck."));
     cs.render_microblock(); 
 
-    // TODO cursor moves to x, backspaces and types 1
     stage_macroblock(CompositeBlock(FileBlock("Let's define x to act as 1."),SilenceBlock(0.6)));
+    // (dx*xx_x + dy*xy_x, dx*xx_y + dy*xy_y) = (0, -0.1*-1 + -1.1*0.4) = (0, -0.34),
+    cursor->manager.transition(MICRO,{{"cursor_x", ".5"},{"cursor_y", ".5 .34 5 / +"},});
+    cs.render_microblock(); 
+    td->manager.set({
+        {"x_label", "0"},
+    });
+    cs.render_microblock(); 
     cs.render_microblock(); 
 
 
@@ -1441,7 +1447,6 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     td->manager.transition(MICRO, {
         {"xx_x", "1"},
         {"xx_y", "0"},
-        {"x_label", "0"},
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "48"},{"bg_1_g", "0"},{"bg_1_b", "32"},});
     cs.render_microblock();
@@ -2069,44 +2074,45 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
     // TODO fix grid flicker
 
-    shared_ptr<ThreeDimensionScene> basis = make_shared<ThreeDimensionScene>(vec2(.4, .5));
-    basis->manager.set(parentcontrol);
-    basis->manager.set(bg);
-    basis->manager.begin_timer("tx");
-    basis->manager.set({
-        {"point_r", "<bg_1_r>"},  {"point_g", "<bg_1_g>"},  {"point_b", "<bg_1_b>"},
-        // {"point_r", "<bg_1_r> 1.5 * 40 +"},  {"point_g", "<bg_1_g> 1.5 * 40 +"},  {"point_b", "<bg_1_b> 1.5 * 40 +"},
-        {"point_size", "3.2"},
-        {"point_labels_size", "1.4"},
-
-        {"point0.x", "1"},  {"point0.y", "0"},  {"point0.z", "0"},   // xx
-        {"point1.x", "0"},  {"point1.y", "1"},  {"point1.z", "0"},   // xy
-        // {"point2.x", "<xz_x>"},  {"point2.y", "<xz_y>"},  {"point2.z", "<xz_z>"},   // xz
-        {"point2.x", "0"},  {"point2.y", "0"},  {"point2.z", "1"},   // xz
-        {"point3.x", "-1"}, {"point3.y", "0"},  {"point3.z", "0"},   // yy
-        {"point4.x", "<yz_w> 0.5 * <yz_x> +"}, {"point4.y", "<yz_w> 0.5 * <yz_y> +"}, {"point4.z", "<yz_w> 0.5 * <yz_z> +"},   // yz
-        {"point5.x", "<zz_w> 0.5 * <zz_x> +"}, {"point5.y", "<zz_w> 0.5 * <zz_y> +"}, {"point5.z", "<zz_w> 0.5 * <zz_z> +"},   // zz
-
-        {"point0.a", "0.4"},{"point1.a", "0.4"},{"point2.a", "0.4"},{"point3.a", "0.4"},{"point4.a", "1"},{"point5.a", "1"},
-
-        {"points_radius_multiplier", "1.8"},
-        {"lines_thickness_multiplier", "4"},
-
-        {"slow", "<tx> .08 * 0.2 +"},
-        {"d", "4"}, {"q1", "<slow> sin"}, {"qi", "<slow> sin .2 *"}, {"qj", "<slow> cos"},
-    });
-    basis->point_names = {
-        {0, "1"}, {1, "i"}, {2, "j"}, {3, "i^2"}, {4, "ij"}, {5, "j^2"},
-    };
-
     float line_distance = 0.9;
-    basis->add_line(Line(vec3(-line_distance, 0, 0), vec3(line_distance, 0, 0), 0xffff7777, 1.0f, false)); // x-axis
-    basis->add_line(Line(vec3(0, -line_distance, 0), vec3(0, line_distance, 0), 0xff77ff77, 1.0f, false)); // y-axis
-    basis->add_line(Line(vec3(0, 0, -line_distance), vec3(0, 0, line_distance), 0xff7777ff, 1.0f, false)); // z-axis
+    // Builds the basis scene. Called again later to make an identical copy for fading in the w axis.
+    auto make_basis = [&]() {
+        shared_ptr<ThreeDimensionScene> b = make_shared<ThreeDimensionScene>(vec2(.4, .5));
+        b->manager.set(parentcontrol);
+        b->manager.set(bg);
+        b->manager.begin_timer("tx");
+        b->manager.set({
+            {"point_r", "<bg_1_r>"},  {"point_g", "<bg_1_g>"},  {"point_b", "<bg_1_b>"},
+            // {"point_r", "<bg_1_r> 1.5 * 40 +"},  {"point_g", "<bg_1_g> 1.5 * 40 +"},  {"point_b", "<bg_1_b> 1.5 * 40 +"},
+            {"point_size", "3.2"},
+            {"point_labels_size", "1.4"},
 
+            {"point0.x", "1"},  {"point0.y", "0"},  {"point0.z", "0"},   // xx
+            {"point1.x", "0"},  {"point1.y", "1"},  {"point1.z", "0"},   // xy
+            // {"point2.x", "<xz_x>"},  {"point2.y", "<xz_y>"},  {"point2.z", "<xz_z>"},   // xz
+            {"point2.x", "0"},  {"point2.y", "0"},  {"point2.z", "1"},   // xz
+            {"point3.x", "-1"}, {"point3.y", "0"},  {"point3.z", "0"},   // yy
+            {"point4.x", "<yz_w> 0.5 * <yz_x> +"}, {"point4.y", "<yz_w> 0.5 * <yz_y> +"}, {"point4.z", "<yz_w> 0.5 * <yz_z> +"},   // yz
+            {"point5.x", "<zz_w> 0.5 * <zz_x> +"}, {"point5.y", "<zz_w> 0.5 * <zz_y> +"}, {"point5.z", "<zz_w> 0.5 * <zz_z> +"},   // zz
 
-    // TODO make the wiggling look better
+            {"point0.a", "0.4"},{"point1.a", "0.4"},{"point2.a", "0.4"},{"point3.a", "0.4"},{"point4.a", "1"},{"point5.a", "1"},
 
+            {"points_radius_multiplier", "1.8"},
+            {"lines_thickness_multiplier", "4"},
+
+            {"slow", "<tx> .08 * 0.2 +"},
+            {"d", "4"}, {"q1", "<slow> .7 * sin"}, {"qi", "<slow> sin"}, {"qj", "<slow> 1.3 * cos"},
+        });
+        b->point_names = {
+            {0, "1"}, {1, "i"}, {2, "j"}, {3, "i^2"}, {4, "ij"}, {5, "j^2"},
+        };
+
+        b->add_line(Line(vec3(-line_distance, 0, 0), vec3(line_distance, 0, 0), 0xffff7777, 1.0f, false)); // x-axis
+        b->add_line(Line(vec3(0, -line_distance, 0), vec3(0, line_distance, 0), 0xff77ff77, 1.0f, false)); // y-axis
+        b->add_line(Line(vec3(0, 0, -line_distance), vec3(0, 0, line_distance), 0xff7777ff, 1.0f, false)); // z-axis
+        return b;
+    };
+    shared_ptr<ThreeDimensionScene> basis = make_basis();
 
     // TODO I think the wiggley points should go inside of the same corner box as before to make it clear that it's the same thing
     shared_ptr<ThreeDAlgebraScene> abAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
@@ -2256,14 +2262,25 @@ void three_dim(CompositeScene& cs, StateSet& bg){
         {"yz_w", "1"},
     });
 
-    // TODO new dimension line shouldn't pop in suddenly.
-    basis->add_line(Line(vec3(-line_distance*0.6), vec3(line_distance*0.6), 0xffcccccc, 1.0f, false)); 
+    // fade in an identical copy of basis that has the w axis, sharing its timer and position so they line up exactly
+    const Line w_axis(vec3(-line_distance*0.6), vec3(line_distance*0.6), 0xffcccccc, 1.0f, false);
+    shared_ptr<ThreeDimensionScene> basis_w = make_basis();
+    basis_w->manager.set("tx", basis->manager.get_equation_string("tx"));
+    basis_w->add_line(w_axis);
+    cs.add_scene_fade_in(MICRO, basis_w, "basis_w");
+    cs.manager.set({
+        {"basis_w.x", cs.manager.get_equation_string("basis.x")},
+        {"basis_w.y", cs.manager.get_equation_string("basis.y")},
+    });
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "52"},{"bg_1_b", "0"},});
     cs.manager.transition(MICRO, {
-        {"w_slider", "1"}, 
+        {"w_slider", "1"},
     });
     cs.render_microblock();
 
+    // give originl basis a w axis too and yeet the duplicate
+    basis->add_line(w_axis);
+    cs.remove_subscene("basis_w");
     cs.render_microblock();
 
 
@@ -3259,8 +3276,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(CompositeBlock(FileBlock("But the third makes weird flips."),SilenceBlock(0.3)));
-    // TODO the edge of the cube scene is visible here when it should align with the edge of the screen
-
+    rot1->manager.transition(MICRO, {{"w", "1.1"},{"h", "1.1"},});
     rot1->manager.transition(MICRO, {{"rot_1", "0"},{"rot_i", "0"},{"rot_j", "0"},{"rot_k", "1"},});
     cs.render_microblock();
     rot1->manager.transition(MICRO, {{"rot_1", "1"},{"rot_i", "0"},{"rot_j", "0"},{"rot_k", "0"},});
