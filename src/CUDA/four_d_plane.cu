@@ -159,7 +159,7 @@ __global__ void four_d_plane_kernel(
 
     const float commute = min(max((float(pixel_x)/float(wh.x)-slider)*40.0,-1.0),1.0);
 
-    Cuda::vec4 four_d_ouput = four_d_plane_function((point_vec.x*x_unit+point_vec.y*y_unit),equation,commute,jj,ijj); 
+    Cuda::vec4 four_d_ouput = four_d_function((point_vec.x*x_unit+point_vec.y*y_unit),equation,commute,jj,ijj); 
 
     colors[pixel_y * wh.x + pixel_x] = four_d_color(four_d_ouput,brightness,channels); 
 

@@ -13,13 +13,6 @@ extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, 
 extern "C" void draw_rectangle(uint32_t* pix, const ivec2& wh, const ivec2& top_left, const ivec2& bottom_right, const uint32_t color);
 
 
-// #####################################################################################
-// #####################################################################################
-//      TODO: make separate state for opacity of each individual cell
-// #####################################################################################
-// #####################################################################################
-
-
 MultiplicationTableScene::MultiplicationTableScene(const vec2& dimensions) : Scene(dimensions){
     manager.set({
         {"commutative", "1"},
@@ -86,7 +79,7 @@ void MultiplicationTableScene::draw() {
     } else {
 
         units = {"","1","i","j","j","ij","j^2"};
-        unit_q = {0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"]};
+        unit_q = {0,0,0,0,0,0,0,};//{0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"]};
         unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cc33cc,0x00cccc33,0x0033cc33};
         
         table_units = {

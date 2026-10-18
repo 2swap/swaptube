@@ -65,6 +65,7 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
         {"rot_i", "0"},
         {"rot_j", "0"},
         {"rot_k", "0"},
+        {"matrices", "0"},
 
         {"brightness", "1.0"},
         {"r_channel", "1.0"},
@@ -122,13 +123,28 @@ void FourDAlgebraScene::draw() {
 
     if (state["rotate"] != 0){
 
+        // const float rot_size = pow(
+        //         state["rot_1"]*state["rot_1"] 
+        //         + state["rot_i"]*state["rot_i"] 
+        //         + state["rot_j"]*state["rot_j"] 
+        //         + state["rot_k"]*state["rot_k"]
+        //         ,0.5);
+        vec4 rotq;
+        if (state["matrices"] == 0){
+            const float rot_size = pow(
+                state["rot_1"]*state["rot_1"] 
+                + state["rot_i"]*state["rot_i"] 
+                + state["rot_j"]*state["rot_j"] 
+                + state["rot_k"]*state["rot_k"]
+                ,0.5);
+            rotq = vec4(state["rot_1"], state["rot_i"], state["rot_j"], state["rot_k"])/rot_size;
+        } else {
+            const quat roti = quat(cos(state["rot_i"]), sin(state["rot_i"]), 0, 0);
+            const quat rotj = roti*quat(cos(state["rot_j"]), 0, sin(state["rot_j"]), 0);
+            const quat rotk = rotj*quat(cos(state["rot_k"]), 0, 0, sin(state["rot_k"]));
+            rotq = vec4(rotk.u,rotk.i,rotk.j,rotk.k);
+        }
 
-        const float rot_size = pow(
-            state["rot_1"]*state["rot_1"] 
-            + state["rot_i"]*state["rot_i"] 
-            + state["rot_j"]*state["rot_j"] 
-            + state["rot_k"]*state["rot_k"]
-            ,0.5);
 
         four_d_rotation_render(get_width_height(),
 
@@ -141,8 +157,10 @@ void FourDAlgebraScene::draw() {
             vec4(0,0,1,0)*state["scale"],
             vec4(0,0,0,1)*state["scale"],
 
-            vec4(state["rot_1"], state["rot_i"], state["rot_j"], state["rot_k"])/rot_size,
-            vec4(state["rot_1"], -state["rot_i"], -state["rot_j"], -state["rot_k"])/rot_size,
+            // vec4(state["rot_1"], state["rot_i"], state["rot_j"], state["rot_k"])/rot_size,
+            // vec4(state["rot_1"], -state["rot_i"], -state["rot_j"], -state["rot_k"])/rot_size,
+            rotq,
+            vec4(rotq.x,-rotq.y,-rotq.z,-rotq.w),
 
             vec4(state["jj_1"], state["jj_i"], state["jj_j"], state["jj_ij"]),
             vec4(-state["jj_i"], state["jj_1"], -state["jj_ij"], state["jj_j"]),
