@@ -53,7 +53,7 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
         {"re_channel", "1"},{"im_channel", "1"},
         {"point_count", "0"},{"point_label", "0"},{"point_opacity", "255"},{"point_size", "1"},
         {"point_x", "0"},{"point_y", "0"},
-        {"div_scene", "0"},
+        {"div_scene", "0"},{"unit_targets", "0"},
         
         {"bg_1_r", "0"},{"bg_1_g", "8"},{"bg_1_b", "80"},
         
@@ -426,8 +426,21 @@ void TwoDAlgebraScene::draw() {
     if (state["div_scene"] == 2){
         point_dist = -point_dist.y*drag_times_x + point_dist.x*drag_times_y*vec2(-1,1);
     } else if (state["div_scene"] == 1){
-        point_dist = point_dist.x*drag_times_x + point_dist.y*drag_times_y;
+        point_dist = (state["point_x"]*drag_times_x + state["point_y"]*drag_times_y)*vec2(1,-1)*screen_unit;
     } 
+    // Hollow markers at the original x and y positions, for comparing against the point labels
+    const float unit_targets = state["unit_targets"];
+    if (unit_targets > 0){
+        const float target_size = point_radius*0.85*state["point_size"];
+        const vec2 target_locs[2] = {origin + vec2(screen_unit, 0), origin + vec2(0, -screen_unit)};
+        const string target_texts[2] = {"x", "y"};
+        for (int i = 0; i < 2; i++){
+            draw_circle(gpu_pix.get_ptr(), wh, target_locs[i], target_size, 0xffffffff, unit_targets);
+            draw_circle(gpu_pix.get_ptr(), wh, target_locs[i], target_size*0.85, 0xff000000 | bg_color, unit_targets);
+            write_text(gpu_pix.get_ptr(), wh, latex_color(0xffffffff, target_texts[i]), target_locs[i], target_size*2, unit_targets, 0);
+        }
+    }
+
     for  (int p = 0; p < state["point_count"]; p++){
 
         const float point_lerp = min(state["point_count"]-p,1.0);
@@ -449,7 +462,7 @@ void TwoDAlgebraScene::draw() {
             if (state["div_scene"] == 2){
                 y_loc = origin + vec2(-point_dist.y, -point_dist.x);
             } else {
-                y_loc = origin + screen_unit*drag_times_y*vec2(-1,1);
+                y_loc = origin + screen_unit*drag_times_y*vec2(1,-1);
             } 
             draw_circle(gpu_pix.get_ptr(), wh, y_loc, point_size, point_opacity+point_stroke,1.0);
             draw_circle(gpu_pix.get_ptr(), wh, y_loc, point_size*0.85, point_opacity+bg_color,1.0);
