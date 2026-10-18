@@ -11,5 +11,3 @@ local_override.cmake
 *~
 *.swp
 *.swo
-
-src/Projects/FourDAlgebra.cpp

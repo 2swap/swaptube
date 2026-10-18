@@ -10,6 +10,7 @@ public:
     StateSet pop_next_state_set();
     int size() const;
     void run_curve(Scene&,Scene&);
+    vector<StateSet> get_waypoints() const;
 private:
     vector<StateSet> _waypoints;
     list<StateSet> entries;

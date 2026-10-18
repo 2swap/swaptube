@@ -13,13 +13,6 @@ extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, 
 extern "C" void draw_rectangle(uint32_t* pix, const ivec2& wh, const ivec2& top_left, const ivec2& bottom_right, const uint32_t color);
 
 
-// #####################################################################################
-// #####################################################################################
-//      TODO: make separate state for opacity of each individual cell
-// #####################################################################################
-// #####################################################################################
-
-
 MultiplicationTableScene::MultiplicationTableScene(const vec2& dimensions) : Scene(dimensions){
     manager.set({
         {"commutative", "1"},
@@ -33,7 +26,7 @@ MultiplicationTableScene::MultiplicationTableScene(const vec2& dimensions) : Sce
         {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
         {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
 
-        {"1j", "1"},
+        {"q_1j", "0"},{"q_ij", "0"},{"q_jj", "0"},
         {"triangle", "1"},
         {"table_size", "4"},
         
@@ -47,12 +40,14 @@ void MultiplicationTableScene::draw() {
     vector<int> table_signs;
     vector<int> table_units;
     vector<string> units;
+    vector<float> unit_q; // crossfade weight from the unit's label to a question mark
     vector<uint> unit_colors; 
     vector<string> signs = {"","-"};
 
 
     if (state["three_d"] == 0){
         units = {"","1","i","j","ij"};
+        unit_q = {0,0,0,0,0};
         unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cccc33};
         
         table_units = {
@@ -83,7 +78,8 @@ void MultiplicationTableScene::draw() {
 
     } else {
 
-        units = {"","1","i","j",(state["1j"] == 0) ? "j" : "1j","ij","j^2"};
+        units = {"","1","i","j","j","ij","j^2"};
+        unit_q = {0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"]};
         unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cc33cc,0x00cccc33,0x0033cc33};
         
         table_units = {
@@ -139,11 +135,15 @@ void MultiplicationTableScene::draw() {
                 );
             }
 
+            const string label = signs[table_signs[i]]+units[table_units[i]];
+            const float q = unit_q[table_units[i]];
+            auto write_label = [&](uint32_t color, float opacity){
+                if (q < 1) write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(color, label), cell_center, cell_radius*2, opacity*(1-q), 0);
+                if (q > 0) write_text(gpu_pix.get_ptr(), get_width_height(), latex_color(color, "?"), cell_center, cell_radius*2, opacity*q, 0);
+            };
+
             if (table_signs[i] == 1){
-                write_text(gpu_pix.get_ptr(), get_width_height(), 
-                    latex_color(bg_color, signs[table_signs[i]]+units[table_units[i]]), 
-                    cell_center, cell_radius*2, 1, 0
-                );
+                write_label(bg_color, 1);
 
             } else {
                 if (r > 0 && c > 0){
@@ -152,10 +152,7 @@ void MultiplicationTableScene::draw() {
                         bg_color
                     );
                 }
-                write_text(gpu_pix.get_ptr(), get_width_height(), 
-                    latex_color(unit_colors[table_units[i]], signs[table_signs[i]]+units[table_units[i]]), 
-                    cell_center, cell_radius*2, cell_opacity, 0
-                );
+                write_label(unit_colors[table_units[i]], cell_opacity);
             }
 
         }

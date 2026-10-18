@@ -16,7 +16,8 @@ extern "C" {
         uint32_t* d_pixels, const ivec2& wh,
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
-        const quat& camera_direction, const vec3& camera_pos, float fov);
+        const quat& camera_direction, const vec3& camera_pos, float fov,
+        bool brightest_wins); // TEMP HACK. REVERT ASAP
 }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
@@ -78,7 +79,8 @@ void ThreeDimensionScene::draw() {
             static_cast<int>(lines.size()),
             camera_direction,
             camera_pos,
-            fov
+            fov,
+            brightest_lines
         );
     }
 
