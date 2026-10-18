@@ -20,7 +20,7 @@ __device__ __forceinline__ void d_fill_circle(float cx, float cy, float r, int c
     }
 }
 
-__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, const Cuda::ivec2& wh, bool is_dashed) {
+__device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness, unsigned int* pixels, const Cuda::ivec2& wh, bool is_dashed, bool brightest_wins = false) { // HACK. brightest_wins, revert this
     int dx = abs(x2 - x1), dy = abs(y2 - y1);
     if (dx > 10000 || dy > 10000) return;
     int sx = (x1 < x2) ? 1 : -1;
@@ -28,15 +28,19 @@ __device__ __forceinline__ void bresenham(int x1, int y1, int x2, int y2, int co
     int err = dx - dy;
     int dash_counter = 0;
     int dash_counter_modulus = (wh.x + wh.y) >> 7; // Naive average
+    auto plot = [&](int x, int y) {
+        if (brightest_wins) atomic_overlay_pixel_brightest(x, y, col, opacity, pixels, wh);
+        else                atomic_overlay_pixel(x, y, col, opacity, pixels, wh);
+    };
 
     while (true) {
         if(!is_dashed || ((dash_counter / dash_counter_modulus) % 2 == 0)) {
-            atomic_overlay_pixel(x1, y1, col, opacity, pixels, wh);
+            plot(x1, y1);
             for (int i = 1; i < thickness; i++) {
-                atomic_overlay_pixel(x1 + i, y1, col, opacity, pixels, wh);
-                atomic_overlay_pixel(x1 - i, y1, col, opacity, pixels, wh);
-                atomic_overlay_pixel(x1, y1 + i, col, opacity, pixels, wh);
-                atomic_overlay_pixel(x1, y1 - i, col, opacity, pixels, wh);
+                plot(x1 + i, y1);
+                plot(x1 - i, y1);
+                plot(x1, y1 + i);
+                plot(x1, y1 - i);
             }
         }
         dash_counter++;

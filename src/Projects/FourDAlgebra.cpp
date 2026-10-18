@@ -2072,8 +2072,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
         {"d", "[d]"},{"w_slider", "[w_slider]"},
     };
 
-    // TODO fix grid flicker
-
     float line_distance = 0.9;
     // Builds the basis scene. Called again later to make an identical copy for fading in the w axis.
     auto make_basis = [&]() {
@@ -2116,6 +2114,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
     // TODO I think the wiggley points should go inside of the same corner box as before to make it clear that it's the same thing
     shared_ptr<ThreeDAlgebraScene> abAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
+    abAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     abAssoc->manager.set({
         {"associativity", "1"},{"a_x", "0"},{"a_y", "1"},{"b_x", "0"},{"b_z", "1"},
         {"reach", "3"},
@@ -2185,6 +2184,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
     shared_ptr<ThreeDAlgebraScene> eaAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
+    eaAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     eaAssoc->manager.set({
         {"associativity", "0"},
         {"a_x", "1"}, {"a_y", "0"}, {"a_1", "0"},
@@ -2967,9 +2967,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.fade_subscene(MICRO,"table",0);
     cs.fade_subscene(MICRO,"flippy_png",0);
-    cs.render_microblock();
-
-
     vec2 leftshift = vec2(-0.2,0);
 	cs.slide_subscene(MICRO,"latex_2",leftshift);
 	cs.slide_subscene(MICRO,"latex__10",leftshift);
@@ -2991,13 +2988,14 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.slide_subscene(MICRO,"latex_12",leftshift);
 	cs.slide_subscene(MICRO,"latex__16",leftshift);
 	cs.slide_subscene(MICRO,"latex_15",leftshift);
+    cs.render_microblock();
 
 
     stage_macroblock(FileBlock("How about this step, where i and j swap sides?"));
 
 
 	shared_ptr<LatexScene> latex_a = make_shared<LatexScene>("\\downarrow",vec2(0.046,0.107));
-	cs.add_scene(latex_a , "latex_a",vec2(0.698,0.42));
+	cs.add_scene(latex_a , "latex_a",vec2(0.498,0.42));
 	cs.manager.set({{"latex_a.opacity","0"}});
 	
 	
@@ -3047,7 +3045,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     // TODO arrows don't overlap
 	shared_ptr<LatexScene> latex_a2 = make_shared<LatexScene>("\\downarrow",vec2(0.093,0.216));
-	cs.add_scene(latex_a2 , "latex_a2",vec2(0.698,0.42));
+	cs.add_scene(latex_a2 , "latex_a2",vec2(0.498,0.42));
 
 	cs.manager.transition(MICRO,{{"latex_i4.opacity","0.2"}});
 	cs.manager.transition(MICRO,{{"latex_j5.opacity","0.2"}});
@@ -3085,7 +3083,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	
 
 	shared_ptr<LatexScene> latex__25 = make_shared<LatexScene>("\\neq",vec2(0.125,0.2));
-	cs.add_scene_fade_in(MICRO, latex__25 , "latex__25",vec2(0.7,0.419));
+	cs.add_scene_fade_in(MICRO, latex__25 , "latex__25",vec2(0.5,0.419));
 	cs.slide_subscene(MICRO,"latex__25",vec2(-0.01,-0.01));
 	
 	cs.fade_subscene(MICRO,"latex_a2",0);
@@ -3167,19 +3165,19 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 	latex_j4->manager.transition(MICRO,{{"w","0.1"},{"h","0.28"}});
 	latex_j4->begin_latex_transition(MICRO, "\\Leftarrow");
-	cs.slide_subscene(MICRO,"latex_j4",vec2(-0.08,-0.24));
+	cs.slide_subscene(MICRO,"latex_j4",vec2(0.12,-0.24));
 	latex_i5->manager.transition(MICRO,{{"w","0.1"},{"h","0.28"}});
 	latex_i5->begin_latex_transition(MICRO, "\\Uparrow");
-	cs.slide_subscene(MICRO,"latex_i5",vec2(-0.05,-0.24));
+	cs.slide_subscene(MICRO,"latex_i5",vec2(0.15,-0.24));
 	latex_j2->manager.transition(MICRO,{{"w","0.1"},{"h","0.28"}});
 	latex_j2->begin_latex_transition(MICRO, "\\Leftarrow");
-	cs.slide_subscene(MICRO,"latex_j2",vec2(-0.3,-0.24));
+	cs.slide_subscene(MICRO,"latex_j2",vec2(-0.1,-0.24));
 	latex_i3->manager.transition(MICRO,{{"w","0.1"},{"h","0.28"}});
 	latex_i3->begin_latex_transition(MICRO, "\\Uparrow");
-	cs.slide_subscene(MICRO,"latex_i3",vec2(-0.33,-0.24));
+	cs.slide_subscene(MICRO,"latex_i3",vec2(-0.13,-0.24));
 	latex__25->manager.transition(MICRO,{{"w","0.1"},{"h","0.28"}});
 	latex__25->begin_latex_transition(MICRO, "\\neq");
-	cs.slide_subscene(MICRO,"latex__25",vec2(-0.19,-0.24));
+	cs.slide_subscene(MICRO,"latex__25",vec2(0.01,-0.24));
 
 
 

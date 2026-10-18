@@ -79,7 +79,7 @@ void MultiplicationTableScene::draw() {
     } else {
 
         units = {"","1","i","j","j","ij","j^2"};
-        unit_q = {0,0,0,0,0,0,0,};//{0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"]};
+        unit_q = {0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"]};
         unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cc33cc,0x00cccc33,0x0033cc33};
         
         table_units = {
