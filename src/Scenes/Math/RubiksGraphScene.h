@@ -7,11 +7,12 @@
 
 class RubiksGraphScene : public CompositeScene {
 public:
-    RubiksGraphScene(const vec2& dimensions = vec2(1, 1));
+    RubiksGraphScene(const vec2& dimensions = vec2(1, 1), const int size_of_cubes = 2);
 
     void add_cube(const string& alg, bool cube_or_not, bool label_or_not);
     void add_cube(const CubeStickerPattern& pattern, bool cube_or_not, bool label_or_not);
     void add_children(unordered_set<string> move_set, bool cube_or_not, bool edge_label_or_not, bool cube_label_or_not);
+    double add_specific_child(double parent_hash, const string& move, bool cube_or_not, bool edge_label_or_not, bool cube_label_or_not);
     void draw() override;
     shared_ptr<GraphScene> gs;
 private:

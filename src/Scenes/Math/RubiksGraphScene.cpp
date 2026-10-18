@@ -4,8 +4,8 @@
 
 const unordered_set<string> move_set = {"R", "U", "F", "R'", "U'", "F'", "L", "D", "B", "L'", "D'", "B'"};
 
-RubiksGraphScene::RubiksGraphScene(const vec2& dimensions)
-    : CompositeScene(dimensions), cube_size(2) {
+RubiksGraphScene::RubiksGraphScene(const vec2& dimensions, const int size_of_cubes)
+    : CompositeScene(dimensions), cube_size(size_of_cubes) {
     manager.set({
         {"q1", "1"},
         {"qi", "0"},
@@ -82,6 +82,34 @@ void RubiksGraphScene::add_children(unordered_set<string> move_set, bool cube_or
     }
 }
 
+double RubiksGraphScene::add_specific_child(double parent_hash, const string& move, bool cube_or_not, 
+    bool edge_label_or_not, bool cube_label_or_not) {
+    Graph& g = gs->graph;
+
+    if (!g.node_exists(parent_hash) || patterns.find(parent_hash) == patterns.end()) {
+        cout << "Error : parent node doesn't exist." << endl;
+        return -1.0; 
+    }
+
+    Rubiks child(patterns[parent_hash]);
+    child.exec(move);
+    double child_hash = child.get_hash(cube_size);
+
+    if (!g.node_exists(child_hash)) {
+        patterns[child_hash] = child.pattern;
+        add_cube(child.pattern, cube_or_not, cube_label_or_not);
+        cout << "+" << flush;
+    }
+
+    g.add_edge(parent_hash, child_hash);
+
+    if (edge_label_or_not) {
+        gs->config.set_edge_label(parent_hash, child_hash, move);
+    }
+
+    return child_hash; 
+}
+
 void RubiksGraphScene::add_cube(const string& alg, bool cube_or_not, bool label_or_not) {
     Rubiks cube;
     cube.exec(alg);
@@ -92,14 +120,16 @@ void RubiksGraphScene::add_cube(const CubeStickerPattern& pattern, bool cube_or_
     Rubiks cube(pattern);
     double hash = cube.get_hash(cube_size);
 
+    patterns[hash] = pattern;
+
     if (cube_or_not){
         shared_ptr<RubiksScene> rs = make_shared<RubiksScene>(pattern, vec2(0.0001, 0.0001));
         rs->manager.set({
             {"w", "[rubiks_scene_size]"},
             {"h", "[rubiks_scene_size]"},
             {"q1", "[q1]"},
-            {"qi", "[qi] 0.25 +"},
-            {"qj", "[qj] 0.25 -"},
+            {"qi", "-0.25 "},
+            {"qj", "0.25"},
             {"qk", "[qk]"},
             {"cube_size", to_string(cube_size)},
         });

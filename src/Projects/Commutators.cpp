@@ -391,16 +391,15 @@ void perm_U_R(){
     stage_macroblock(SilenceBlock(10));
     ps.render_microblock();
     // ps.move("up");
+    ps.move("right_crown", 3);
+    ps.move("right", 2);
+    ps.render_microblock();
+    ps.render_microblock();
     ps.move("up_crown", 3);
     ps.move("up",2);
     ps.render_microblock();
     ps.render_microblock();
-    ps.move("right", 2);
-    ps.render_microblock();
-    ps.render_microblock();
-    ps.move("right", 3);
-    ps.render_microblock();
-    ps.render_microblock();
+    
 
 }
 
@@ -599,6 +598,115 @@ void t_perm(){
     rs.render_microblock();
 }
 
+void non_commutativity(){
+    CompositeScene cs;
+    stage_macroblock(SilenceBlock(5));
+    shared_ptr<LatexScene> ls = make_shared<LatexScene>(" ", vec2(0.5, 1));
+    cs.add_scene(ls, "ls");
+
+    cs.render_microblock();
+
+    ls->begin_latex_transition(MICRO, "2*3=3*2");
+    cs.render_microblock();
+
+    ls->manager.transition(MICRO, "w", ".5");
+    cs.manager.transition(MICRO, "ls.x", ".25");
+    cs.render_microblock();
+
+    shared_ptr<LatexScene> ls2 = make_shared<LatexScene>("R\\, U\\neq U\\, R", vec2(0.5, 1));
+    cs.add_scene(ls2, "ls2");
+    ls2->manager.set("w", ".5");
+    cs.manager.set("ls2.x", ".75");
+    cs.render_microblock();
+
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(5));
+    CompositeScene cs2;
+    shared_ptr<RubiksScene> rsl = make_shared<RubiksScene>();
+    shared_ptr<RubiksScene> rsr = make_shared<RubiksScene>();
+    cs2.add_scene(rsl, "rsl");
+    cs2.add_scene(rsr, "rsr");
+    rsl->manager.set({
+        {"cube_size", "3"},
+        {"w", ".5"},
+    });
+    rsr->manager.set({
+        {"cube_size", "3"},
+        {"w", ".5"},
+    });
+    cs2.manager.set({
+        {"rsl.x", ".25"},
+        {"rsr.x", ".75"},
+    });
+    cs2.render_microblock();
+
+    stage_macroblock(SilenceBlock(2));
+    shared_ptr<LatexScene> ls3 = make_shared<LatexScene>("R\\, U", vec2(0.5, 0.3));
+    shared_ptr<LatexScene> ls4 = make_shared<LatexScene>("U\\, R", vec2(0.5, 0.3));
+    cs2.add_scene(ls3, "ls3");
+    cs2.add_scene(ls4, "ls4");
+    ls3->manager.set("w", ".5");
+    ls4->manager.set("w", ".5");
+    cs2.manager.set({{"ls3.x", ".25"},
+        {"ls3.y", ".1"},
+    {"ls4.x", ".75"},
+    {"ls4.y", ".1"}});
+    cs2.render_microblock();
+    cs2.render_microblock();
+
+    stage_macroblock(SilenceBlock(3));
+    rsl->exec_move_from_slice("R");
+    rsr->exec_move_from_slice("U");
+    cs2.render_microblock();
+    rsl->exec_move_from_slice("U");
+    rsr->exec_move_from_slice("R");
+    cs2.render_microblock();
+}
+
+void sexy_move(){
+    CompositeScene cs;
+    stage_macroblock(SilenceBlock(10));
+    
+    shared_ptr<RubiksScene> rs = make_shared<RubiksScene>();
+    shared_ptr<RubiksGraphScene> rgs = make_shared<RubiksGraphScene>(vec2(1, 1), 3);
+    
+    cs.add_scene(rs, "rs");
+    cs.add_scene(rgs, "rgs");
+    
+    rs->manager.set({ {"w", ".5"} });
+    rgs->manager.set({ {"cube_size", "3"},
+        {"w", "1"},
+        {"dimensions", "3"},
+        {"qi", "0.25"},
+        {"qj", "-0.4"},
+        {"physics_multiplier", "1.5"},
+    {"repel", "2"},
+ });
+    cs.manager.set({{"rgs.x", ".5"} });
+
+    Rubiks initial_cube;
+    double parent_hash = initial_cube.get_hash(3);
+
+   rgs->add_cube(initial_cube.pattern, true, false);
+    cs.render_microblock();
+
+   vector<string> moves = {"R", "U", "R'", "U'"};
+    int repetitions = 6;
+
+    for (int rep = 0; rep < repetitions; ++rep) {
+        for (const string& m : moves) {
+            rs->exec_move_from_slice(m);
+            bool start_of_sexy_move = (m == "R");
+            parent_hash = rgs->add_specific_child(parent_hash, m, start_of_sexy_move || true, false, false);
+            cs.render_microblock();
+        }
+    }
+
+    stage_macroblock(SilenceBlock(5));
+    cs.render_microblock();
+}
+
 
 void render_video() {
     // CompositeScene cs;
@@ -609,5 +717,7 @@ void render_video() {
     // intro_rope();
     // loop_4();
     // twobytwocube();
-    perm_U_R();
+    // perm_U_R();
+    // non_commutativity();
+    sexy_move();
 }
