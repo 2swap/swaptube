@@ -493,6 +493,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     td->manager.transition(MICRO, {
         {"dragger_x", "1.6"},
+        {"dragger_y", "1.6"},
     });
     cs.render_microblock();
     
@@ -775,13 +776,13 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
         {"xy_y", "1"},{"yy_x", "-1"},{"yy_y", "0"},
     });
     cs.render_microblock();
+    cs.render_microblock();
     shared_ptr<PngScene> spinny_png = make_shared<PngScene>("spinny",vec2(0.18,0.09));
     cs.add_scene(spinny_png, "spinny_png",vec2(0.09,-0.05)); 
     cs.slide_subscene(MICRO, "spinny_png",vec2(0,0.1)); 
     td->manager.transition(MICRO, {
         {"diagram_label", "1"},
     });
-    cs.render_microblock();
     cs.render_microblock();
 
 
@@ -929,7 +930,6 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 
     td->manager.set({{"grid_size", "9"},});
     td->manager.transition(MICRO, {
-        {"diagram_label", "0"},
         {"xy_x", "0"},
         {"xy_y", "1"},
         {"grid_scale", "1"},
@@ -946,7 +946,6 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "flippy_png",vec2(0,0.11)); 
 
     td->manager.transition(MICRO, {
-        {"diagram_label", "1"},
         {"yy_x", "1"},
         {"yy_y", "0"},
     });
@@ -1394,27 +1393,41 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(CompositeBlock(FileBlock("We can't get x and y to their original positions."),SilenceBlock(5)));
 
-    // Blink the original positions of x and y
-    td->manager.transition(MICRO, {{"unit_targets", "1"},});
     cs.render_microblock(); 
-    td->manager.transition(MICRO, {{"unit_targets", "0"},});
+    td->manager.set("spinny", "3.14 .3 *");
+    td->manager.transition(MACRO, "spinny", "3.14 1.45 *");
+    td->manager.transition(MICRO, {
+        {"dragger_x", "<spinny> cos 1.3 *"},
+        {"dragger_y", "<spinny> sin 1.3 *"},
+    });
     cs.render_microblock(); 
-    td->manager.transition(MICRO, {{"unit_targets", "1"},});
     cs.render_microblock(); 
-    td->manager.transition(MICRO, {{"unit_targets", "0"},});
+    cs.render_microblock(); 
+    cs.render_microblock(); 
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "1");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "0");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "1");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "0");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "1");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "0");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "1");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "0");
+    cs.render_microblock(); 
+    cs.render_microblock(); 
+    cs.render_microblock(); 
+    cs.render_microblock(); 
+    cs.render_microblock(); 
     cs.render_microblock(); 
     cs.render_microblock(); 
 
-    td->manager.transition(MICRO, {
-        {"dragger_x", "-0.4"},
-        {"dragger_y", "0.6"},
-    });
-    cs.render_microblock(); 
-    td->manager.transition(MICRO, {
-        {"dragger_x", "-2.2"},
-        {"dragger_y", "-0.5"},
-    });
-    cs.render_microblock(); 
     td->manager.transition(MICRO, {
         {"dragger_x", "-0.1"},
         {"dragger_y", "-1.1"},
@@ -1431,7 +1444,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cursor->manager.transition(MICRO,{{"cursor_x", ".5"},{"cursor_y", ".5 .34 5 / +"},});
     cs.render_microblock(); 
     td->manager.set({
-        {"x_label", "0"},
+        {"xpoint_label", "0"},
     });
     cs.render_microblock(); 
     cs.render_microblock(); 
@@ -1475,29 +1488,20 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     stage_macroblock(FileBlock("Now y squared is the only free definition.")); 
     cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
     cs.render_microblock();
-    td->manager.transition(MICRO, {
-        {"yy_x", "-0.9"},
-        {"yy_y", "0.4"},
-    });
-    cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "24"},{"bg_1_b", "60"},});
-    cs.render_microblock();
-
-
-    stage_macroblock(SilenceBlock(4));
-    td->manager.transition(MICRO, {
-        {"yy_x", "-0.2"},
-        {"yy_y", "0.9"},
-    });
-    cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "48"},{"bg_1_b", "32"},});
-    cs.render_microblock();
-    td->manager.transition(MICRO, {
-        {"yy_x", "0.3"},
-        {"yy_y", "0.1"},
-    });
-    cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "32"},{"bg_1_b", "60"},});
-    cs.render_microblock();
+    td->manager.set("siney", "[siney]");
+    cs.manager.set("siney", "0");
     td->manager.transition(MICRO, {
         {"yy_x", "0.6"},
+        {"yy_y", "<siney> sin"},
+    });
+    cs.manager.transition(MACRO, "siney", "3.14 1.2 *");
+    cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "<siney> 1.2 / sin 50 *"},{"bg_1_b", "68 <siney> 1.2 / sin 38 * -"},});
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(4));
+    cs.render_microblock();
+    cs.render_microblock();
+    td->manager.transition(MICRO, {
         {"yy_y", "-0.7"},
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "24"},{"bg_1_g", "0"},{"bg_1_b", "68"},});
@@ -1964,7 +1968,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(FileBlock("These 3 cells are our 3 definitions from before."));
     table->manager.transition(MICRO,{
-        {"opacity_10", "0.2"},{"opacity_02", "0.2"},
+        {"opacity_10", "0.1"},{"opacity_02", "0.1"},
         {"opacity_11", "1"},{"opacity_12", "1"},{"opacity_22", "1"},
     });
     cs.render_microblock();

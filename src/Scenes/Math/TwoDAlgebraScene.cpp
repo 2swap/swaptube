@@ -51,7 +51,7 @@ TwoDAlgebraScene::TwoDAlgebraScene(const vec2& dimensions) : CoordinateScene(dim
         {"diagram_opacity", "0"},{"diagram_label", "0"},
         {"x_label", "1"},{"xy_label", "1"},{"y_label", "1"},
         {"re_channel", "1"},{"im_channel", "1"},
-        {"point_count", "0"},{"point_label", "0"},{"point_opacity", "255"},{"point_size", "1"},
+        {"point_count", "0"},{"point_label", "0"},{"xpoint_label", "1"},{"point_opacity", "255"},{"point_size", "1"},
         {"point_x", "0"},{"point_y", "0"},
         {"div_scene", "0"},{"unit_targets", "0"},
         
@@ -453,8 +453,13 @@ void TwoDAlgebraScene::draw() {
         draw_circle(gpu_pix.get_ptr(), wh, point_loc, point_size, point_opacity+point_stroke,1.0);
         draw_circle(gpu_pix.get_ptr(), wh, point_loc, point_size*0.8, point_opacity+bg_color,1.0);
         if (state["point_label"] != 0 && point_size > 1){
-            const string point_text = (state["div_scene"] == 1) ? "x" : to_string(p+1);//+ (p == 3) ? "^t^h" : "");
-            write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,point_text), point_loc, point_size*2, state["point_opacity"]/255, 0);
+            if (state["div_scene"] == 1){
+                // xpoint_label fades the x point's label between "x" (1) and "1" (0)
+                write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,"x"), point_loc, point_size*2, state["point_opacity"]/255*state["xpoint_label"], 0);
+                write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,"1"), point_loc, point_size*2, state["point_opacity"]/255*(1-state["xpoint_label"]), 0);
+            } else {
+                write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,to_string(p+1)), point_loc, point_size*2, state["point_opacity"]/255, 0);
+            }
         }
 
         if (state["div_scene"] != 0 && point_size > 1 && p == 0){ 
