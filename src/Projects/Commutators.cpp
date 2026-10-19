@@ -677,13 +677,14 @@ void sexy_move(){
     rs->manager.set({ {"w", ".5"} });
     rgs->manager.set({ {"cube_size", "3"},
         {"w", "1"},
+        {"d", "30"},
         {"dimensions", "3"},
         {"qi", "0.25"},
         {"qj", "-0.4"},
         {"physics_multiplier", "1.5"},
     {"repel", "2"},
  });
-    cs.manager.set({{"rgs.x", ".5"} });
+    cs.manager.set({{"rgs.x", ".5"}, {"rgs.y", ".5"} });
 
     Rubiks initial_cube;
     double parent_hash = initial_cube.get_hash(3);
@@ -707,6 +708,63 @@ void sexy_move(){
     cs.render_microblock();
 }
 
+void U_cycle(){
+    CompositeScene cs;
+    stage_macroblock(SilenceBlock(10));
+    
+    shared_ptr<RubiksScene> rs = make_shared<RubiksScene>();
+    shared_ptr<RubiksGraphScene> rgs = make_shared<RubiksGraphScene>(vec2(1, 1), 3);
+    
+    cs.add_scene(rs, "rs");
+    cs.add_scene(rgs, "rgs");
+    
+    rs->manager.set({ {"w", ".5"} });
+    rgs->manager.set({ {"cube_size", "3"},
+        {"w", "1"},
+        {"d", "15"},
+        {"dimensions", "3"},
+        {"qi", "0.25"},
+        {"qj", "-0.4"},
+        {"physics_multiplier", "1"},
+        {"repel", "2"},
+        {"attract", "0.5"},
+    });
+    cs.manager.set({{"rgs.x", ".5"}, {"rgs.y", ".5"} });
+
+    Rubiks initial_cube;
+    double parent_hash = initial_cube.get_hash(3);
+
+   rgs->add_cube(initial_cube.pattern, true, false);
+    cs.render_microblock();
+
+   vector<string> moves = {"U"};
+    int repetitions = 4;
+
+    for (int rep = 0; rep < repetitions; ++rep) {
+        for (const string& m : moves) {
+            rs->exec_move_from_slice(m);
+            parent_hash = rgs->add_specific_child(parent_hash, m, true, false, false);
+            cs.render_microblock();
+        }
+    }
+
+    stage_macroblock(SilenceBlock(5));
+    cs.render_microblock();
+
+    vector<string> moves_2 = {"R"};
+
+    for (int rep = 0; rep < repetitions; ++rep) {
+        for (const string& m : moves_2) {
+            rs->exec_move_from_slice(m);
+            parent_hash = rgs->add_specific_child(parent_hash, m, true, false, false);
+            cs.render_microblock();
+        }
+    }
+
+    stage_macroblock(SilenceBlock(5));
+    cs.render_microblock();
+}
+
 
 void render_video() {
     // CompositeScene cs;
@@ -719,5 +777,6 @@ void render_video() {
     // twobytwocube();
     // perm_U_R();
     // non_commutativity();
-    sexy_move();
+    // sexy_move();
+    U_cycle();
 }

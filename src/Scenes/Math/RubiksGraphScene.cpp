@@ -35,7 +35,7 @@ RubiksGraphScene::RubiksGraphScene(const vec2& dimensions, const int size_of_cub
         {"dimensions", "[dimensions]"},
         {"edge_weights_size", "[edge_weights_size]"},
         {"node_labels_size", "[node_labels_size]"},
-        {"points_opacity", "0"},
+        {"points_opacity", "1"},
         {"midpoint_multiplier", "[midpoint_multiplier]"},
         {"q1", "[q1]"},
         {"qi", "[qi]"},
