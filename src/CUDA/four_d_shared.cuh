@@ -87,7 +87,7 @@ __device__ __forceinline__ Cuda::vec4 four_d_sin(const Cuda::vec4& v, const floa
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
     Cuda::vec4 v_pow = v;
 
-    for (int t = 3; t < 21; t+=2){
+    for (int t = 3; t < 20; t+=2){
         v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
         sinv += v_pow;  
         if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
@@ -110,7 +110,7 @@ __device__ __forceinline__ Cuda::vec4 four_d_cos(const Cuda::vec4& v, const floa
     Cuda::vec4 v2 = four_d_mult(v,v,commute,jj,ijj);
     Cuda::vec4 v_pow = v;
 
-    for (int t = 2; t < 21; t+=2){
+    for (int t = 2; t < 20; t+=2){
         v_pow = four_d_mult(v_pow, v2,commute,jj,ijj)/((1.0-t)*t);
         cosv = cosv + v_pow;
         if (abs(v_pow.x) + abs(v_pow.y) + abs(v_pow.z) + abs(v_pow.w)> 1000000){
@@ -254,7 +254,7 @@ __device__ __forceinline__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const
 
         return four_d_exp(four_d_sin(v*0.3, commute, jj, ijj)*5, commute, jj, ijj)-2;
 
-    } else if (equation == 103){
+    } else if (equation == 102){
         // return four_d_cos(v2*0.06, commute, jj, ijj) + four_d_sin(v*0.4, commute, jj, ijj)*2;
 
         // Cuda::vec4 root5 = v5/512 - Cuda::vec4(0,3,0,0);
@@ -274,16 +274,16 @@ __device__ __forceinline__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const
         // p = four_d_mult(p,v - Cuda::vec4(0,0,0,-d),commute,jj,ijj);
         // p = four_d_mult(p,v - Cuda::vec4(d,0,0,0),commute,jj,ijj);
         // p = four_d_mult(p,v - Cuda::vec4(-d,0,0,0),commute,jj,ijj);
+        Cuda::vec4 va = v*0.2;
 
-
-        Cuda::vec4 p = v - Cuda::vec4(0,1,0,0)*0.06;
-        p = four_d_mult(p,v - Cuda::vec4(0,-1,0.3,0),commute,jj,ijj);
-        p = four_d_mult(p,v - Cuda::vec4(0.5,0,0,0.5),commute,jj,ijj);
-        p = four_d_mult(p,v - Cuda::vec4(0,-2,0,0),commute,jj,ijj);
-        p = four_d_mult(p,v - Cuda::vec4(0,0,1,3),commute,jj,ijj);
-        p = four_d_mult(p,v - Cuda::vec4(0.5,0.5,-0.5,0.4),commute,jj,ijj);
-        p = four_d_mult(p,v - Cuda::vec4(3,0,0,0),commute,jj,ijj);
-        p = four_d_mult(p,v - Cuda::vec4(0.2,0,-1,0),commute,jj,ijj);
+        Cuda::vec4 p = va - Cuda::vec4(0,1,0,0)*0.06;
+        p = four_d_mult(p,va - Cuda::vec4(0,-1,0.3,0),commute,jj,ijj);
+        p = four_d_mult(p,va - Cuda::vec4(0.5,0,0,0.5),commute,jj,ijj);
+        p = four_d_mult(p,va - Cuda::vec4(0,-2,0,0),commute,jj,ijj);
+        p = four_d_mult(p,va - Cuda::vec4(0,0,1,3),commute,jj,ijj);
+        p = four_d_mult(p,va - Cuda::vec4(0.5,0.5,-0.5,0.4),commute,jj,ijj);
+        p = four_d_mult(p,va - Cuda::vec4(3,0,0,0),commute,jj,ijj);
+        p = four_d_mult(p,va - Cuda::vec4(0.2,0,-1,0),commute,jj,ijj);
 
 
 
