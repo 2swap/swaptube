@@ -29,6 +29,8 @@ MultiplicationTableScene::MultiplicationTableScene(const vec2& dimensions) : Sce
         {"q_1j", "0"},{"q_ij", "0"},{"q_jj", "0"},
         {"triangle", "1"},
         {"table_size", "4"},
+
+        {"tilted", "0"},
         
         {"three_d", "0"},
     });
@@ -46,7 +48,8 @@ void MultiplicationTableScene::draw() {
 
 
     if (state["three_d"] == 0){
-        units = {"","1","i","j","ij"};
+        const string iunit = (state["tilted"]==0)?"i":"\\frac{2i+2j+ij}{3}";
+        units = {"","1",iunit,"j","ij"};
         unit_q = {0,0,0,0,0};
         unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cccc33};
         

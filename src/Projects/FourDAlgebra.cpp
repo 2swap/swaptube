@@ -3222,7 +3222,10 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
+
     // TODO normalize when not conjugating
+
+    set_for_real(true);
 
     stage_macroblock(FileBlock("The double spinny algebra can spin the cube along 2 dimensions,"));
 
@@ -3272,9 +3275,9 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-
+    //TODO we can see the top of the scene
     stage_macroblock(CompositeBlock(FileBlock("But the third makes weird flips."),SilenceBlock(0.3)));
-    rot1->manager.transition(MICRO, {{"w", "1.1"},{"h", "1.1"},});
+
     rot1->manager.transition(MICRO, {{"rot_1", "0"},{"rot_i", "0"},{"rot_j", "0"},{"rot_k", "1"},});
     cs.render_microblock();
     rot1->manager.transition(MICRO, {{"rot_1", "1"},{"rot_i", "0"},{"rot_j", "0"},{"rot_k", "0"},});
@@ -3310,7 +3313,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     table->manager.transition(MICRO,{
         {"opacity_01", "1"},{"opacity_10", "1"},
-        {"opacity_11", "1"},{"opacity_14", "1"},{"opacity_44", "1"},
+        {"opacity_11", "1"},{"opacity_14", "1"},{"opacity_44", "1"},{"opacity_41", "1"},
     });
     cs.render_microblock();
 
@@ -3342,11 +3345,11 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(FileBlock("This rule helps us fill in the rest of the table, to get the triple spinny algebra."));
     table->manager.transition(MICRO,{
-        {"opacity_02", "1"},{"opacity_03", "1"},
-        {"opacity_12", "1"},{"opacity_13", "1"},
-        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},
-        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},
-        {"opacity_42", "1"},{"opacity_43", "1"},
+        {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},{"opacity_24", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
     });
     cs.render_microblock();
 
@@ -3362,8 +3365,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-
-    stage_macroblock(FileBlock("It lets us spin in all 3 dimensions."));
+    stage_macroblock(FileBlock("It can spin the cube along all 3 dimensions."));
 
     shared_ptr<FourDAlgebraScene> rotFull = make_shared<FourDAlgebraScene>();
     cs.add_scene_fade_in(MICRO, rotFull, "rotFull", vec2(0.5,0.55));
@@ -3400,35 +3402,247 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    stage_macroblock(FileBlock("And actually, we can spin in any direction."));
+    stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
+
+
+
+    stage_macroblock(FileBlock("This algebra models 3D rotation!"));
     rotFull->manager.transition(MICRO, {{"rot_1", "0.66666"},{"rot_i", "0.333333"},{"rot_j", "0"},{"rot_k", "-0.33333"},});
     cs.render_microblock();
-    rotFull->manager.transition(MICRO, {{"rot_1", "0.1"},{"rot_i", "-0.1"},{"rot_j", "-0.7"},{"rot_k", "0.7"},});
+    rotFull->manager.transition(MICRO, {{"rot_1", "1"},{"rot_i", "0"},{"rot_j", "0"},{"rot_k", "0"},});
     cs.render_microblock();
 
 
-    stage_macroblock(SilenceBlock(1));
-    rotFull->manager.transition(MICRO, {{"rot_1", "-0.8"},{"rot_i", "0.2"},{"rot_j", "0.4"},{"rot_k", "0.4"},});
+
+    // TODO make logo for matrices
+
+    stage_macroblock(FileBlock("TGC: Who cares? We can already do that with matrices.")); 
+    cs.render_microblock();
+    shared_ptr<FourDAlgebraScene> matrices = make_shared<FourDAlgebraScene>();
+    cs.add_scene_fade_in(MICRO, matrices, "matrices", vec2(1,0.55));
+    cs.slide_subscene(MICRO, "rotFull",vec2(-0.2,0)); 
+    cs.slide_subscene(MICRO, "quat_png",vec2(-0.2,0)); 
+    cs.slide_subscene(MICRO, "matrices",vec2(-0.3,0)); 
+
+    matrices->manager.set({
+        {"offset_1", "0.0"},
+        {"offset_2", "0.0"},
+        {"slider", "1.1"},
+        {"rotate", "1"},
+        {"scale", "5.0"},
+        {"pov_xz", "-0.1"},
+        {"pov_y", "0.2"},
+        {"matrices", "1"},
+    });
     cs.render_microblock();
 
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+
+
+    stage_macroblock(FileBlock("Yes, matrices spin nicely about the three axes,")); 
+    matrices->manager.transition(MICRO, {
+        {"rot_i", "1.5707"},
+    });
+    cs.render_microblock();
+    matrices->manager.transition(MICRO, {
+        {"rot_j", "1.5707"},
+    });
+    cs.render_microblock();
+    matrices->manager.transition(MICRO, {
+        {"rot_k", "1.5707"},
+    });
+    cs.render_microblock();
+
+
+    stage_macroblock(FileBlock("but tilted axes can get overcomplicated.")); 
+    cs.render_microblock();
+    matrices->manager.transition(MICRO, {
+        {"rot_i", "-1.25"},
+        {"rot_j", "0.95"},
+        {"rot_k", "0.4"},
+    });
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+
+
+    stage_macroblock(FileBlock("Our algebra can do it more naturally.")); 
+    cs.render_microblock();
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "0.4695"},
+        {"rot_i", "-0.4086"},
+        {"rot_j", "0.4512"},
+        {"rot_k", "-0.6396"},
+    });
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+    
+    stage_macroblock(SilenceBlock(5));
+
+    matrices->manager.transition(MICRO, {
+        {"rot_i", "0.2"},
+        {"rot_j", "1.3"},
+        {"rot_k", "-0.7"},
+    });
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "0.3238"},
+        {"rot_i", "-0.5677"},
+        {"rot_j", "0.7565"},
+        {"rot_k", "-0.0225"},
+    });
+    cs.render_microblock();
+
+    matrices->manager.transition(MICRO, {
+        {"rot_i", "0.8"},
+        {"rot_j", "0.1"},
+        {"rot_k", "-1.2"},
+    });
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "0.3179"},
+        {"rot_i", "0.1938"},
+        {"rot_j", "0.6905"},
+        {"rot_k", "-0.6202"},
+    });
+    cs.render_microblock();
+
+
+    matrices->manager.transition(MICRO, {
+        {"rot_i", "-0.3"},
+        {"rot_j", "-0.6"},
+        {"rot_k", "-0.2"},
+    });
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "0.8059"},
+        {"rot_i", "-0.1319"},
+        {"rot_j", "-0.5771"},
+        {"rot_k", "0.0069"},
+    });
+    cs.render_microblock();
+
+    matrices->manager.transition(MICRO, {
+        {"rot_i", "0"},
+        {"rot_j", "0"},
+        {"rot_k", "0"},
+    });
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "1"},
+        {"rot_i", "0"},
+        {"rot_j", "0"},
+        {"rot_k", "0"},
+    });
+    cs.render_microblock();
+
+
+
+    stage_macroblock(SilenceBlock(0.4));
+    cs.render_microblock();
+
+
+
+    cs.fade_subscene(MICRO,"quat_png",0.1);
+    cs.fade_subscene(MICRO,"matrices",0);
+    stage_macroblock(FileBlock("Any tilted slice makes its own spinny subalgebra.")); 
+    rotFull->manager.transition(MICRO, {
+        {"plane", "1"},
+    });
+    cs.render_microblock();
+    cs.remove_subscene("matrices");
+
+
+    shared_ptr<MultiplicationTableScene> slice = make_shared<MultiplicationTableScene>();
+    cs.add_scene_fade_in(MICRO, slice, "slice", vec2(1,0.52));
+    cs.slide_subscene(MICRO, "slice", vec2(-0.3,0));
+    slice->manager.set(bg);
+    slice->manager.set({
+        {"table_size", "2"},
+        {"tilted", "1"},
+        {"triangle", "0"},
+    });
+
+    shared_ptr<PngScene> spinny_png = make_shared<PngScene>("spinny",vec2(0.25,0.12));
+    cs.add_scene(spinny_png, "spinny_png",vec2(1.04,0.22)); 
+    cs.slide_subscene(MICRO, "spinny_png", vec2(-0.3,0));
+
+
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "0"},
+        {"rot_i", "-0.6666"},
+        {"rot_j", "-0.6666"},
+        {"rot_k", "0.3333"},
+    });
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(1.6));
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "-1"},
+        {"rot_i", "0"},
+        {"rot_j", "0"},
+        {"rot_k", "0"},
+    });
+    cs.render_microblock();
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "0.2"},
+        {"rot_i", "-0.6666"},
+        {"rot_j", "-0.6666"},
+        {"rot_k", "0.3333"},
+    });
+    cs.render_microblock();
+
+    // TODO  eat 3 grapes in under 2 minutes
+    stage_macroblock(FileBlock("TGC: So this algebra isn't just triple spinny...")); 
+    rotFull->manager.transition(MICRO, {
+        {"rot_1", "1"},
+        {"rot_i", "0"},
+        {"rot_j", "0"},
+        {"rot_k", "0"},
+    });
+    cs.render_microblock();
+
+    rotFull->manager.transition(MICRO, {
+        {"plane", "0"},
+    });
+    cs.fade_subscene(MICRO,"quat_png",1);
+    cs.fade_subscene(MICRO,"slice",0);
+    cs.fade_subscene(MICRO,"spinny_png",0);
+    cs.slide_subscene(MICRO, "quat_png", vec2(0.2,0.03));
+    cs.slide_subscene(MICRO, "rotFull", vec2(0.2,0.03));
+    cs.render_microblock();
+    cs.remove_subscene("slice");
+    cs.remove_subscene("spinny_png");
+
+
+
+    stage_macroblock(FileBlock("TGC: it's infinny spinny!")); 
 
     shared_ptr<PngScene> infinny_png = make_shared<PngScene>("infinny",vec2(0.3,0.15));
     cs.add_scene(infinny_png, "infinny_png",vec2(0.5,-0.06)); 
 
-    cs.slide_subscene(MICRO, "infinny_png",vec2(0,0.2)); 
-    cs.slide_subscene(MICRO, "quat_png",vec2(0,-0.2)); 
+    cs.slide_subscene(MICRO, "infinny_png",vec2(0,0.23)); 
+    cs.slide_subscene(MICRO, "quat_png",vec2(0,-0.25)); 
+    cs.render_microblock();
+    rotFull->manager.transition(MICRO, {{"rot_1", "-0.8"},{"rot_i", "0.2"},{"rot_j", "0.4"},{"rot_k", "0.4"},});
+    cs.render_microblock();
 
-    stage_macroblock(FileBlock("It's infinny spinny!"));
-
+    stage_macroblock(SilenceBlock(2.5));
     rotFull->manager.transition(MICRO, {{"rot_1", "0.333333"},{"rot_i", "0.0"},{"rot_j", "0.6666"},{"rot_k", "-0.33333"},});
     cs.render_microblock();
-
-
-
-    stage_macroblock(SilenceBlock(1));
     rotFull->manager.transition(MICRO, {{"rot_1", "1"},{"rot_i", "0"},{"rot_j", "0"},{"rot_k", "0"},});
     cs.render_microblock();
+    cs.render_microblock();
+
 
 
 }
@@ -3438,32 +3652,306 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
-    shared_ptr<FourDAlgebraScene> fd = make_shared<FourDAlgebraScene>();
-    cs.add_scene_fade_in(MICRO, fd, "fd");
+
+    shared_ptr<MultiplicationTableScene> table = make_shared<MultiplicationTableScene>(vec2(1,1));
+    cs.add_scene_fade_in(MICRO, table, "table",vec2(0.48,1.08));
+    cs.slide_subscene(MICRO, "table", vec2(0,-0.6));
+
+
+    table->manager.set(bg);
+    table->manager.set({
+        {"triangle", "0"},
+        {"commutative", "0"},
+        {"table_size", "1.5"},
+
+        {"opacity_00", "0"},{"opacity_01", "0"},{"opacity_02", "0"},{"opacity_03", "0"},{"opacity_04", "0"},
+        {"opacity_10", "0"},{"opacity_11", "0"},{"opacity_12", "0"},{"opacity_13", "0"},{"opacity_14", "0"},
+        {"opacity_20", "0"},{"opacity_21", "0"},{"opacity_22", "0"},{"opacity_23", "0"},{"opacity_24", "0"},
+        {"opacity_30", "0"},{"opacity_31", "0"},{"opacity_32", "0"},{"opacity_33", "0"},{"opacity_34", "0"},
+        {"opacity_40", "0"},{"opacity_41", "0"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "0"},
+    });
+
+
+    stage_macroblock(FileBlock("To construct it, we began with 1,"));
 
     cs.fade_subscene(MICRO,"rotFull",0);
     cs.fade_subscene(MICRO,"infinny_png",0);
+    cs.slide_subscene(MICRO, "rotFull", vec2(0,-0.6));
+    cs.slide_subscene(MICRO, "infinny_png", vec2(0,-0.6));
 
-    cs.manager.set({{"bg_0_r", "48"},{"bg_0_g", "0"},{"bg_0_b", "60"},});
-    fd->manager.set(bg);
+    cs.render_microblock();
+
+    
+    table->manager.transition(MICRO, {
+        {"opacity_01", "1"},{"opacity_10", "1"},{"opacity_11", "1"},
+    });
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("which makes these neutral multiplications."));
+    table->manager.transition(MICRO, {
+        {"table_size", "4"},
+        {"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+
+    stage_macroblock(FileBlock("Then we found that i should square to -1."));
+    table->manager.transition(MICRO, {
+        {"table_size", "2.5"},
+        {"opacity_01", "0.1"},{"opacity_10", "0.1"},
+        {"opacity_03", "0"},{"opacity_04", "0"},
+        {"opacity_11", "0.1"},{"opacity_12", "0.1"},{"opacity_13", "0"},{"opacity_14", "0"},
+        {"opacity_21", "0.1"},
+        {"opacity_30", "0"},{"opacity_31", "0"},
+        {"opacity_40", "0"},{"opacity_41", "0"},
+    });
+    cs.render_microblock();
+    table->manager.transition(MICRO, {
+        {"opacity_22", "1"},
+    });
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("A different choice would make this subalgebra flippy."));
+    table->manager.transition(MICRO, {
+        {"opacity_01", "1"},{"opacity_10", "1"},
+        {"opacity_11", "1"},{"opacity_12", "1"},
+        {"opacity_21", "1"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+
+
+    stage_macroblock(CompositeBlock(FileBlock("TGC: And that's bad!"),SilenceBlock(0.4)));
+    cs.render_microblock();
+
+
+
+
+    stage_macroblock(FileBlock("Similarly, j should square to -1 in its subalgebra."));
+    table->manager.transition(MICRO, {
+        {"table_size", "3"},
+        {"opacity_01", "0.1"},{"opacity_10", "0.1"},{"opacity_11", "0.1"},
+        {"opacity_02", "0.1"},{"opacity_20", "0.1"},
+        {"opacity_12", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},
+        {"opacity_03", "1"},{"opacity_30", "1"},
+        {"opacity_33", "1"},
+    });
+    cs.render_microblock();
+    table->manager.transition(MICRO, {
+        {"opacity_01", "1"},{"opacity_10", "1"},{"opacity_11", "1"},
+        {"opacity_13", "1"},{"opacity_31", "1"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(1.5));
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("We tried combining i and j to make a 3D algebra, but it was not associative."));
+    table->manager.transition(MICRO, {
+        {"opacity_02", "1"},{"opacity_20", "1"},
+        {"opacity_12", "1"},{"opacity_21", "1"},{"opacity_22", "1"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+
+    stage_macroblock(FileBlock("i times j must be in a 4th dimension."));
+    table->manager.transition(MICRO, {
+        {"opacity_01", "0.1"},{"opacity_10", "0.1"},{"opacity_11", "0.1"},
+        {"opacity_02", "0.1"},{"opacity_20", "1"},
+        {"opacity_12", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},
+        {"opacity_03", "1"},{"opacity_30", "0.1"},
+        {"opacity_13", "0.1"},{"opacity_31", "0.1"},{"opacity_33", "0.1"},
+        {"opacity_23", "1"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+    table->manager.transition(MICRO, {
+        {"table_size", "4"},
+        {"opacity_04", "1"},{"opacity_40", "1"},
+    });
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+
+
+    stage_macroblock(FileBlock("And here's where the algebra splits."));
+    table->manager.transition(MICRO, {
+        {"opacity_20", "0.1"},{"opacity_03", "0.1"},{"opacity_23", "0.1"},
+    });
+    cs.render_microblock();
+
+    shared_ptr<MultiplicationTableScene> bitable = make_shared<MultiplicationTableScene>(vec2(1,1));
+    cs.add_scene(bitable, "bitable",vec2(0.48,0.48));
+    cs.manager.set({{"slider","0.5"},{"bg_0_r","0"},{"bg_0_g","8"},{"bg_0_b","80"}});
+
+    bitable->manager.set({
+        {"triangle", "0"},
+        {"commutative", "1"},
+
+        {"opacity_00", "0.1"},{"opacity_01", "0.1"},{"opacity_02", "0.1"},{"opacity_03", "0.1"},{"opacity_04", "1"},
+        {"opacity_10", "0.1"},{"opacity_11", "0.1"},{"opacity_12", "0.1"},{"opacity_13", "0.1"},{"opacity_14", "0"},
+        {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0"},
+        {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0"},{"opacity_33", "0.1"},{"opacity_34", "0"},
+        {"opacity_40", "1"},{"opacity_41", "0"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "0"},
+        {"bg_1_r","0"},{"bg_1_g","8"},{"bg_1_b","80"},
+    });
+    cs.slide_subscene(MICRO, "table", vec2(-0.25,0));
+    cs.slide_subscene(MICRO, "bitable", vec2(0.25,0));
+    cs.manager.transition(MICRO, {
+        {"bg_0_r","48"},{"bg_0_g","0"},{"bg_0_b","60"},
+    });
+    table->manager.transition(MICRO, {
+        {"w", "0.7"},{"h", "0.7"},
+    });
+    bitable->manager.transition(MICRO, {
+        {"w", "0.7"},{"h", "0.7"},
+        {"bg_1_r","48"},{"bg_1_g","0"},{"bg_1_b","60"},
+    });
+
+    cs.render_microblock();
+
+
+
+
+    
+    stage_macroblock(FileBlock("We can fill the rest of the table with some straightforward calculations,"));
+    cs.fade_subscene(MICRO,"table",0.1);
+    cs.slide_subscene(MICRO, "table", vec2(-0.05,0));
+    cs.slide_subscene(MICRO, "bitable", vec2(-0.05,0));
+    cs.manager.transition(MICRO,{{"slider","0.42"}});
+    table->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.65"},});
+    bitable->manager.transition(MICRO, {{"w", "0.75"},{"h", "0.75"},});
+
+    bitable->manager.transition(MICRO, {
+        {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},{"opacity_24", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
+    });
+    cs.render_microblock();
+
+	shared_ptr<LatexScene> latex_bi = make_shared<LatexScene>("ij=ji",vec2(0.3,0.15));
+	cs.add_scene(latex_bi , "latex_bi",vec2(0.71,-0.06));
+    cs.slide_subscene(MICRO, "latex_bi", vec2(0,0.2));
+    cs.slide_subscene(MICRO, "bitable", vec2(0,0.08));
+    cs.render_microblock();
+
+
+    stage_macroblock(CompositeBlock(FileBlock("but that makes it flippy."),SilenceBlock(0.4)));
+    bitable->manager.transition(MICRO, {
+        {"opacity_00", "0.1"},{"opacity_01", "1"},{"opacity_02", "0.1"},{"opacity_03", "0.1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "0.1"},{"opacity_13", "0.1"},{"opacity_14", "1"},
+        {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0.1"},
+        {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0.1"},{"opacity_33", "0.1"},{"opacity_34", "0.1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "0.1"},{"opacity_43", "0.1"},{"opacity_44", "1"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+
+
+
+
+    stage_macroblock(FileBlock("Alternatively, we can make the fourth dimension spinny,"));
+    cs.slide_subscene(MICRO, "table", vec2(0.1,0));
+    cs.slide_subscene(MICRO, "bitable", vec2(0.1,0));
+    cs.slide_subscene(MICRO, "latex_bi", vec2(0.1,0));
+    cs.manager.transition(MICRO,{{"slider","0.58"}});
+    table->manager.transition(MICRO, {{"w", "0.75"},{"h", "0.75"},});
+    bitable->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.65"},});
+    cs.fade_subscene(MICRO,"table",1);
+    cs.fade_subscene(MICRO,"bitable",0.1);
+    cs.fade_subscene(MICRO,"latex_bi",0.1);
+
+    table->manager.transition(MICRO,{
+        {"opacity_00", "0.1"},{"opacity_01", "1"},{"opacity_02", "0.1"},{"opacity_03", "0.1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "0.1"},{"opacity_13", "0.1"},{"opacity_14", "1"},
+        {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0"},
+        {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0"},{"opacity_33", "0.1"},{"opacity_34", "0"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "0"},
+    });
+
+    cs.render_microblock();
+    table->manager.transition(MICRO,{
+        {"opacity_44", "1"},
+    });
+    cs.render_microblock();
+
+
+
+    stage_macroblock(FileBlock("if we accept the tricky rule that completes the table."));
+	shared_ptr<LatexScene> latex_qu = make_shared<LatexScene>("ij=-ji",vec2(0.3,0.15));
+	cs.add_scene(latex_qu , "latex_qu",vec2(0.3,-0.06));
+    cs.slide_subscene(MICRO, "latex_qu", vec2(0,0.2));
+    cs.slide_subscene(MICRO, "table", vec2(0,0.08));
+    cs.render_microblock();
+
+    table->manager.transition(MICRO,{
+        {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},{"opacity_24", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
+    });
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+
+
+
+    shared_ptr<FourDAlgebraScene> fd = make_shared<FourDAlgebraScene>(vec2(1.5,1));
+    cs.add_scene_fade_in(MICRO, fd, "fd",vec2(0.75,0.5), 1, false, 1);
+
     fd->manager.set({
         {"offset_1", "-0.13"},
         {"offset_2", "0.093"},
-        {"scale", "12.0"},
-        {"brightness", "40.0"},
+        {"scale", "16.0"},
+        {"brightness", "100.0"},
         {"equation", "100"},
-        {"pov_xz", "0.18"},
+        {"pov_xz", "0.5"},
         {"pov_y", "0"},
         {"rotation_jk", "0.0"},
         {"rotation_ik", "-0.28"},
         {"rotation_1k", "-0.121"},
+        {"slider", "0.33333"},
     });
 
     
-    stage_macroblock(FileBlock("Here's the infinny exponential."));
+    stage_macroblock(FileBlock("This algebra makes circular graphs."));
+    cs.slide_subscene(MICRO, "bitable", vec2(0.4,0));
+    cs.slide_subscene(MICRO, "latex_bi", vec2(0.4,0));
+    cs.slide_subscene(MICRO, "table", vec2(-0.1,0));
+    table->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.65"},});
+    cs.slide_subscene(MICRO, "latex_qu", vec2(-0.1,0.05));
+    cs.manager.transition(MICRO,{{"slider","1.1"}});
+    fd->manager.transition(MICRO,{{"slider","0.73333"}});
+
+
     cs.render_microblock();
-    cs.remove_subscene("rotFull");
-    cs.remove_subscene("infinny_png");
     
     fd->manager.transition(MICRO, {
         {"rotation_1k", "0.78"},
@@ -3472,61 +3960,160 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(SilenceBlock(1));
+
+    stage_macroblock(SilenceBlock(1.8));
     fd->manager.transition(MICRO, {
         {"rotation_ik", "1.54"},
-        // {"pov_xz", "0.83"},
     });
     cs.render_microblock();
-
-
-    stage_macroblock(FileBlock("This algebra is smooth and uniform,"));
     
     fd->manager.transition(MICRO, {
         {"rotation_jk", "-0.73"},
         {"rotation_1k", "0.3"},
     });
     cs.render_microblock();
+
+
+
+    stage_macroblock(FileBlock("It consists of symmetrically spinny systems."));
+
+    table->manager.transition(MICRO,{
+        {"opacity_00", "0.1"},{"opacity_01", "0.1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "0.1"},{"opacity_11", "0.1"},{"opacity_12", "0.1"},{"opacity_13", "0.1"},{"opacity_14", "0.1"},
+        {"opacity_20", "1"},{"opacity_21", "0.1"},{"opacity_22", "1"},{"opacity_23", "0.1"},{"opacity_24", "0.1"},
+        {"opacity_30", "1"},{"opacity_31", "0.1"},{"opacity_32", "0.1"},{"opacity_33", "1"},{"opacity_34", "0.1"},
+        {"opacity_40", "1"},{"opacity_41", "0.1"},{"opacity_42", "0.1"},{"opacity_43", "0.1"},{"opacity_44", "1"},
+    });
+    fd->manager.transition(MICRO, {
+        {"rotation_1k", "0.25"},
+    });
+    cs.render_microblock();
+
+
     fd->manager.transition(MICRO, {
         {"rotation_1k", "-0.6"},
-        // {"pov_xz", "1.52"},
     });
     cs.render_microblock();
 
 
-    stage_macroblock(FileBlock("while the double spinnny splits linearly along separate dimensions."));
-    cs.manager.transition(MICRO, {
-        {"slider", "-0.1"},
+
+
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
+
+
+
+    stage_macroblock(FileBlock("Its evil twin looks linear."));
+
+    cs.slide_subscene(MICRO, "table", vec2(-0.4,0));
+    cs.slide_subscene(MICRO, "latex_qu", vec2(-0.4,0));
+    cs.slide_subscene(MICRO, "bitable", vec2(-0.4,0));
+    cs.slide_subscene(MICRO, "latex_bi", vec2(-0.4,0.05));
+    cs.fade_subscene(MICRO,"bitable",1);
+    cs.fade_subscene(MICRO,"latex_bi",1);
+
+    cs.slide_subscene(MICRO, "fd", vec2(-0.5,0));
+    cs.manager.transition(MICRO,{{"slider","-0.1"}});
+    fd->manager.transition(MICRO,{{"slider","0.26666"}});
+    
+    bitable->manager.transition(MICRO,{
+        {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},{"opacity_24", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
     });
     fd->manager.transition(MICRO, {
-        {"scale", "10.0"},
+        {"scale", "12.0"},
     });
+
     cs.render_microblock();
+
     fd->manager.transition(MICRO, {
         {"rotation_jk", "0"},
         {"pov_xz", "-0.1"},
     });
     cs.render_microblock();
+
+
+
+    stage_macroblock(SilenceBlock(0.6));
     fd->manager.transition(MICRO, {
         {"rotation_ik", "0.6"},
     });
     cs.render_microblock();
 
 
-    stage_macroblock(SilenceBlock(2));
-    cs.manager.transition(MICRO, {
-        {"slider", "0.5"},
+
+
+
+    stage_macroblock(FileBlock("The two spinny dimensions are independent."));
+
+    bitable->manager.transition(MICRO,{
+        {"opacity_00", "0.1"},{"opacity_01", "0.1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "0.1"},
+        {"opacity_10", "0.1"},{"opacity_11", "0.1"},{"opacity_12", "0.1"},{"opacity_13", "0.1"},{"opacity_14", "0.1"},
+        {"opacity_20", "1"},{"opacity_21", "0.1"},{"opacity_22", "1"},{"opacity_23", "0.1"},{"opacity_24", "0.1"},
+        {"opacity_30", "1"},{"opacity_31", "0.1"},{"opacity_32", "0.1"},{"opacity_33", "1"},{"opacity_34", "0.1"},
+        {"opacity_40", "0.1"},{"opacity_41", "0.1"},{"opacity_42", "0.1"},{"opacity_43", "0.1"},{"opacity_44", "0.1"},
+    });
+    fd->manager.transition(MICRO, {
+        {"pov_xz", "0.1"},
     });
     cs.render_microblock();
+
+    fd->manager.transition(MICRO, {
+        {"pov_xz", "1.0"},
+    });
+    cs.render_microblock();
+
+
+
+
+    stage_macroblock(SilenceBlock(1.4));
+
+    cs.slide_subscene(MICRO, "fd", vec2(0.25,0));
+    cs.manager.transition(MICRO,{{"slider","0.5"}});
+    fd->manager.transition(MICRO,{{"slider","0.5"}});
+
+
+    cs.slide_subscene(MICRO, "table", vec2(0.35,-0.3));
+    cs.slide_subscene(MICRO, "latex_qu", vec2(0.35,-0.13));
+    cs.slide_subscene(MICRO, "bitable", vec2(0.08,-0.3));
+    cs.slide_subscene(MICRO, "latex_bi", vec2(0.08,-0.13));
+    table->manager.transition(MICRO, {{"w", "0.4"},{"h", "0.4"},});
+    latex_qu->manager.transition(MICRO, {{"w", "0.2"},{"h", "0.06"},});
+    bitable->manager.transition(MICRO, {{"w", "0.4"},{"h", "0.4"},});
+    latex_bi->manager.transition(MICRO, {{"w", "0.2"},{"h", "0.06"},});
+	latex_qu->begin_latex_transition(MICRO, "ij=-ji");
+	latex_bi->begin_latex_transition(MICRO, "ij=ji");
+
+    table->manager.transition(MICRO,{
+        {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},{"opacity_24", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
+    });
+    bitable->manager.transition(MICRO,{
+        {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"opacity_20", "1"},{"opacity_21", "1"},{"opacity_22", "1"},{"opacity_23", "1"},{"opacity_24", "1"},
+        {"opacity_30", "1"},{"opacity_31", "1"},{"opacity_32", "1"},{"opacity_33", "1"},{"opacity_34", "1"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
+    });
+    cs.render_microblock();
+
     fd->manager.transition(MICRO, {
         {"equation", "101"},
-        {"brightness", "80.0"},
-        // {"pov_xz", "1.52"},
+        {"brightness", "200.0"},
     });
     cs.render_microblock();
 
 
-    stage_macroblock(SilenceBlock(3));
+
+
+
+    stage_macroblock(SilenceBlock(5));
     fd->manager.transition(MICRO, {
         {"offset_1", "0.01"},
         {"rotation_ik", "1.3"},
@@ -3534,7 +4121,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     fd->manager.transition(MICRO, {
         {"rotation_jk", "0.78"},
-        {"pov_xz", "-0.72"},
+        {"pov_xz", "0.3"},
     });
     cs.render_microblock();
     fd->manager.transition(MICRO, {
@@ -3545,12 +4132,13 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
+
+
     stage_macroblock(SilenceBlock(1));
     cs.render_microblock();
 
-
-    cs.remove_subscene("fd");
 }
+
 
 
 
@@ -3635,6 +4223,8 @@ void render_video() {
     cursor->manager.set(cursor_control);
 
 
+
+    set_for_real(false);
 
     four_d_intro(cs, bg_control);
     one_dim_algebra(cs);

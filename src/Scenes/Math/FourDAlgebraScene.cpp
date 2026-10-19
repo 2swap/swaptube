@@ -49,6 +49,7 @@ extern "C" void four_d_rotation_render(
     vec4 ijj,
     const float slider,
     const float conjugate,
+    const float plane,
 
     unsigned int* d_colors
 );
@@ -97,6 +98,7 @@ FourDAlgebraScene::FourDAlgebraScene(const vec2& dimensions) : Scene(dimensions)
         {"jj_ij", "0"},
 
         {"conjugate", "1"},
+        {"plane", "0"},
     });
 }
 
@@ -167,6 +169,7 @@ void FourDAlgebraScene::draw() {
 
             state["slider"], 
             state["conjugate"], 
+            state["plane"],
             gpu_pix.get_ptr()
         );
 

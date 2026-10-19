@@ -206,7 +206,7 @@ __device__ __forceinline__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const
         // return l4;
         return four_d_exp(four_d_sin(v*0.15, commute, jj, ijj)*5, commute, jj, ijj);
 
-    } else if (equation == 101){
+    } else if (equation == 201){
         // return four_d_function(v2*0.2,100,0, commute, jj, ijj);
         return four_d_cos(v4*0.008-v*0.08+0.6, commute, jj, ijj);
         // Cuda::vec4 cos_dude = four_d_function(v2*0.1, 10,0, commute, jj, ijj);
@@ -249,10 +249,10 @@ __device__ __forceinline__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const
         return v2;
 
 
-    } else if (equation == 102){
+    } else if (equation == 101){
         // return four_d_cos(v2*0.06, commute, jj, ijj) + four_d_sin(v*0.4, commute, jj, ijj)*2;
 
-        return four_d_exp(four_d_sin(v*0.15, commute, jj, ijj)*5, commute, jj, ijj)-2;
+        return four_d_exp(four_d_sin(v*0.3, commute, jj, ijj)*5, commute, jj, ijj)-2;
 
     } else if (equation == 103){
         // return four_d_cos(v2*0.06, commute, jj, ijj) + four_d_sin(v*0.4, commute, jj, ijj)*2;

@@ -4,6 +4,7 @@
 #include "../Host_Device_Shared/helpers.h"
 #include "common_graphics.cuh"
 #include "four_d_shared.cuh"
+#include "color.cuh"
 
 
 __global__ void four_d_rotation_raymarch(
@@ -22,6 +23,7 @@ __global__ void four_d_rotation_raymarch(
     const Cuda::vec4 ijj,
     const float slider,
     const float conjugate,
+    const float plane,
     uint32_t* colors
 ) {
     int pixel_x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -40,10 +42,14 @@ __global__ void four_d_rotation_raymarch(
     const float commute = min(max((float(pixel_x)/float(wh.x)-slider)*40.0,-1.0),1.0);
 
     Cuda::vec4 last_position(0,0,0,0);
+    float last_dot = -current_position.x*0.66666 - current_position.y*0.6666 + current_position.z*0.33333;
+    bool hit_plane = false;
+
+    int pixel_index = pixel_y * wh.x + pixel_x;
+    colors[pixel_index] = 0x00000000; 
     while (dist_traveled < max_dist) {
         dist_traveled += dt;
         current_position += dir_world;
-
 
         Cuda::vec4 pos_rotated = four_d_mult(
             x_unit*current_position.x+y_unit*current_position.y + z_unit*current_position.z,
@@ -58,35 +64,49 @@ __global__ void four_d_rotation_raymarch(
         if (abs(pos_rotated.y) < 1 && abs(pos_rotated.z) < 1 && abs(pos_rotated.w) < 1 && abs(pos_rotated.x) < 1){
             if (abs(last_position.y) > 1){
                 if (last_position.y > 0){
-                    colors[pixel_y * wh.x + pixel_x] = 0xffaa0000; 
-                    return;
+                    colors[pixel_index] = 0xffaa0000; 
+                    break;
                 }
-                colors[pixel_y * wh.x + pixel_x] = 0xffaa7700; 
-                return;
+                colors[pixel_index] = 0xffaa7700; 
+                break;
             } else if (abs(last_position.z) > 1){
                 if (last_position.z > 0){
-                    colors[pixel_y * wh.x + pixel_x] = 0xffcccc00; 
-                    return;
+                    colors[pixel_index] = 0xffcccc00; 
+                    break;
                 }
-                colors[pixel_y * wh.x + pixel_x] = 0xffcccccc; 
-                return;
+                colors[pixel_index] = 0xffcccccc; 
+                break;
             } else if (abs(last_position.w) > 1){
                 if (last_position.w > 0){
-                    colors[pixel_y * wh.x + pixel_x] = 0xff00cc55; 
-                    return;
+                    colors[pixel_index] = 0xff00cc55; 
+                    break;
                 }
-                colors[pixel_y * wh.x + pixel_x] = 0xff5533dd; 
-                return;
+                colors[pixel_index] = 0xff5533dd; 
+                break;
             }
-            colors[pixel_y * wh.x + pixel_x] = 0xffee55cc; 
-            return;
+            colors[pixel_index] = 0xffee55cc; 
+            break;
         }
         
         last_position = pos_rotated;
-    
+
+        if (hit_plane || plane==0) continue;
+
+        float this_dot = -current_position.x*0.66666 - current_position.y*0.6666 + current_position.z*0.33333;
+        if (this_dot == 0 || last_dot / this_dot < 0){
+            float a_dot = -current_position.x*0.7071 + current_position.y*0.7071;
+            float b_dot = -current_position.x*0.2357 - current_position.y*0.2357 - current_position.z*0.9428;
+
+            if (abs(a_dot) < 0.35 && abs(b_dot) < 0.35){
+                hit_plane = true;
+            }
+        }
+        last_dot = this_dot;
     }
 
-    colors[pixel_y * wh.x + pixel_x] = 0x00000000; 
+    if (hit_plane){
+        colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0xffbbddff,0.5*plane);
+    }
 
 }
 
@@ -110,6 +130,7 @@ extern "C" void four_d_rotation_render(
 
     const float slider,
     const float conjugate,
+    const float plane,
 
     uint32_t* d_colors
 ) {
@@ -131,7 +152,7 @@ extern "C" void four_d_rotation_render(
         ijj,
         slider,
         conjugate,
-        
+        plane,
         d_colors
     );
     cudaDeviceSynchronize();

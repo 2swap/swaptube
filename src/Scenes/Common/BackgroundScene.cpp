@@ -30,7 +30,7 @@ BackgroundScene::BackgroundScene(const vec2& dimensions) : Scene(dimensions){
 
 void BackgroundScene::draw() {
 
-    const int opacity = 255 << 24;
+    const int opacity = 0xff000000;
         
     if (state["slider"] >= 1){
         const int bg_1 = ((int) state["bg_1_r"]) << 16 | ((int) state["bg_1_g"]) << 8 | (int) state["bg_1_b"];
