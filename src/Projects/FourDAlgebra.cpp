@@ -2969,7 +2969,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.remove_subscene("latex_i6");
     cs.render_microblock();
 
-
     
     stage_macroblock(FileBlock("So to prevent flipping, we must prevent this algebra."));
     cs.render_microblock();
@@ -3002,9 +3001,9 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     stage_macroblock(FileBlock("How about this step, where i and j swap sides?"));
 
 
-	shared_ptr<LatexScene> latex_a = make_shared<LatexScene>("\\downarrow",vec2(0.046,0.107));
+	shared_ptr<LatexScene> latex_a = make_shared<LatexScene>("\\longrightarrow",vec2(0.157,0.076));
 	cs.add_scene(latex_a , "latex_a",vec2(0.498,0.42));
-	cs.manager.set({{"latex_a.opacity","0"}});
+	cs.manager.set({{"latex_a.opacity","0"},{"latex_a.angle","1.5708"}});
 	
 	
 	cs.slide_subscene(MICRO,"latex_2",vec2(0,-0.033));
@@ -3037,8 +3036,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.manager.transition(MICRO,{{"latex__16.opacity","0.2"}});
 	cs.slide_subscene(MICRO,"latex_15",vec2(0,0.033));
 	cs.manager.transition(MICRO,{{"latex_15.opacity","0.2"}});
-	latex_a->manager.transition(MICRO,{{"w","0.093"},{"h","0.216"}});
-	latex_a->begin_latex_transition(MICRO, "\\downarrow");
+	latex_a->manager.transition(MICRO,{{"w","0.216"},{"h","0.093"}});
+	latex_a->begin_latex_transition(MICRO, "\\longrightarrow");
 	cs.manager.transition(MICRO,{{"latex_a.opacity","1"}});
 	cs.fade_subscene(MICRO,"latex_14",0);
 	cs.fade_subscene(MICRO,"latex_13",0);
@@ -3051,17 +3050,17 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.remove_subscene("latex_13");
 	
 
-    // TODO arrows don't overlap
-	shared_ptr<LatexScene> latex_a2 = make_shared<LatexScene>("\\downarrow",vec2(0.093,0.216));
+	shared_ptr<LatexScene> latex_a2 = make_shared<LatexScene>("\\longrightarrow",vec2(0.216,0.093));
 	cs.add_scene(latex_a2 , "latex_a2",vec2(0.498,0.42));
+	cs.manager.set({{"latex_a2.angle","1.5708"}});
 
 	cs.manager.transition(MICRO,{{"latex_i4.opacity","0.2"}});
 	cs.manager.transition(MICRO,{{"latex_j5.opacity","0.2"}});
 	cs.manager.transition(MICRO,{{"latex_i2.opacity","0.2"}});
 	cs.manager.transition(MICRO,{{"latex_j3.opacity","0.2"}});
 
-	cs.manager.transition(MICRO,{{"latex_a.angle","0.5"}});
-	cs.manager.transition(MICRO,{{"latex_a2.angle","-0.5"}});
+	cs.manager.transition(MICRO,{{"latex_a.angle","1.9708"}});
+	cs.manager.transition(MICRO,{{"latex_a2.angle","1.1708"}});
     cs.render_microblock();
 
 
@@ -3085,7 +3084,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	latex_i3->begin_latex_transition(MICRO, "i");
 	cs.slide_subscene(MICRO,"latex_i3",vec2(-0.073,-0.11));
 
-	cs.manager.transition(MICRO,{{"latex_a2.angle","0.5"}});
+	cs.manager.transition(MICRO,{{"latex_a2.angle","1.9708"},{"latex_a.angle","1.9708"}});
 	cs.slide_subscene(MICRO,"latex_a2",vec2(-0.01,-0.01));
 	cs.slide_subscene(MICRO,"latex_a",vec2(-0.01,-0.01));
 	
@@ -3172,7 +3171,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.fade_subscene(MICRO,"latex_j2",0.3);
     cs.fade_subscene(MICRO,"latex_j4",0.3);
     cs.fade_subscene(MICRO,"latex_i5",0.3);
-
 
 
 
