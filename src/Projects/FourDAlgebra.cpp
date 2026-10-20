@@ -3168,12 +3168,15 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     });
 
 
-
     cs.fade_subscene(MICRO,"latex_i3",0.3);
     cs.fade_subscene(MICRO,"latex_j2",0.3);
     cs.fade_subscene(MICRO,"latex_j4",0.3);
     cs.fade_subscene(MICRO,"latex_i5",0.3);
 
+
+
+
+    stage_macroblock(FileBlock("This seems weird, but it's how 3D rotations behave."));
 	latex_i3->manager.transition(MICRO,{{"w","0.1"},{"h","0.28"}});
 	latex_i3->begin_latex_transition(MICRO, "i");
 	cs.slide_subscene(MICRO,"latex_i3",vec2(-0.135,-0.24));
@@ -3194,71 +3197,68 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	latex_i5->begin_latex_transition(MICRO, "i");
 	cs.slide_subscene(MICRO,"latex_i5",vec2(0.15,-0.24));
     
-
-
     cs.fade_subscene(MICRO,"table",0);
     cs.fade_subscene(MICRO,"flippy_png",0);
 
-
-    stage_macroblock(FileBlock("This seems weird, but it's how 3D rotations behave."));
     cs.render_microblock();
     cs.remove_subscene("flippy_png");
 
-
-	shared_ptr<LatexScene> latex_up1 = make_shared<LatexScene>("\\Uparrow",vec2(0.17,0.17));
-	cs.add_scene_fade_in(MICRO, latex_up1 , "latex_up1",vec2(0.275,0.21));
-	cs.slide_subscene(MICRO,"latex_up1",vec2(0,-0.04));
-	shared_ptr<LatexScene> latex_left2 = make_shared<LatexScene>("\\Leftarrow",vec2(0.12,0.12));
-	cs.add_scene_fade_in(MICRO, latex_left2 , "latex_left2",vec2(0.69,0.17));
-	cs.slide_subscene(MICRO,"latex_left2",vec2(-0.03,0));
-
-    cs.fade_subscene(MICRO,"latex_i3",0);
-    cs.fade_subscene(MICRO,"latex_j4",0);
-	cs.slide_subscene(MICRO,"latex_i3",vec2(0,-0.01));
-	cs.slide_subscene(MICRO,"latex_j4",vec2(-0.01,0));
-
     cs.render_microblock();
 
 
 
-	shared_ptr<LatexScene> latex_left1 = make_shared<LatexScene>("\\Leftarrow",vec2(0.12,0.12));
-	cs.add_scene_fade_in(MICRO, latex_left1 , "latex_left1",vec2(0.37,0.17));
-	cs.slide_subscene(MICRO,"latex_left1",vec2(-0.03,0));
-	shared_ptr<LatexScene> latex_up2 = make_shared<LatexScene>("\\Uparrow",vec2(0.17,0.17));
-	cs.add_scene_fade_in(MICRO, latex_up2 , "latex_up2",vec2(0.73,0.21));
-	cs.slide_subscene(MICRO,"latex_up2",vec2(0,-0.04));
-
-    cs.fade_subscene(MICRO,"latex_j2",0);
-    cs.fade_subscene(MICRO,"latex_i5",0);
-	cs.slide_subscene(MICRO,"latex_j2",vec2(-0.01,0));
-	cs.slide_subscene(MICRO,"latex_i5",vec2(0,-0.01));
 
     stage_macroblock(FileBlock("Up then left... is not the same as left then up."));
+
     rot1->manager.transition(MICRO, {
         {"rot_1", "0.7071"},
         {"rot_i", "0.7071"},
     });
+	shared_ptr<LatexScene> latex_up1 = make_shared<LatexScene>("\\Uparrow",vec2(0.17,0.17));
+	cs.add_scene_fade_in(MICRO, latex_up1 , "latex_up1",vec2(0.275,0.21));
+	cs.slide_subscene(MICRO,"latex_up1",vec2(0,-0.04));
+    cs.fade_subscene(MICRO,"latex_i3",0);
+	cs.slide_subscene(MICRO,"latex_i3",vec2(0,-0.01));
     cs.render_microblock();
+
     rot1->manager.transition(MICRO, {
         {"rot_1", "0.5"},
         {"rot_i", "0.5"},
         {"rot_j", "0.5"},
         {"rot_k", "-0.5"},
     });
+	shared_ptr<LatexScene> latex_left1 = make_shared<LatexScene>("\\Leftarrow",vec2(0.12,0.12));
+	cs.add_scene_fade_in(MICRO, latex_left1 , "latex_left1",vec2(0.37,0.17));
+	cs.slide_subscene(MICRO,"latex_left1",vec2(-0.03,0));
+    cs.fade_subscene(MICRO,"latex_j2",0);
+	cs.slide_subscene(MICRO,"latex_j2",vec2(-0.01,0));
+
     cs.render_microblock();
+
     cs.render_microblock();
     cs.render_microblock();
     rot2->manager.transition(MICRO, {
         {"rot_1", "0.7071"},
         {"rot_j", "0.7071"},
     });
+	shared_ptr<LatexScene> latex_left2 = make_shared<LatexScene>("\\Leftarrow",vec2(0.12,0.12));
+	cs.add_scene_fade_in(MICRO, latex_left2 , "latex_left2",vec2(0.69,0.17));
+	cs.slide_subscene(MICRO,"latex_left2",vec2(-0.03,0));
+    cs.fade_subscene(MICRO,"latex_j4",0);
+	cs.slide_subscene(MICRO,"latex_j4",vec2(-0.01,0));
     cs.render_microblock();
+
     rot2->manager.transition(MICRO, {
         {"rot_1", "0.5"},
         {"rot_i", "0.5"},
         {"rot_j", "0.5"},
         {"rot_k", "0.5"},
     });
+	shared_ptr<LatexScene> latex_up2 = make_shared<LatexScene>("\\Uparrow",vec2(0.17,0.17));
+	cs.add_scene_fade_in(MICRO, latex_up2 , "latex_up2",vec2(0.73,0.21));
+	cs.slide_subscene(MICRO,"latex_up2",vec2(0,-0.04));
+    cs.fade_subscene(MICRO,"latex_i5",0);
+	cs.slide_subscene(MICRO,"latex_i5",vec2(0,-0.01));
     cs.render_microblock();
 
 
@@ -3269,7 +3269,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.remove_subscene("latex_j4");
 	cs.remove_subscene("latex_i3");
 	cs.remove_subscene("latex_j2");
-
 
 
 
@@ -3415,6 +3414,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
+
     stage_macroblock(FileBlock("It can spin the cube along all 3 dimensions."));
 
     shared_ptr<FourDAlgebraScene> rotFull = make_shared<FourDAlgebraScene>(vec2(1,1.1));
@@ -3456,6 +3456,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
+
     stage_macroblock(FileBlock("This algebra models 3D rotation!"));
     rotFull->manager.transition(MICRO, {{"rot_1", "0.66666"},{"rot_i", "0.333333"},{"rot_j", "0"},{"rot_k", "-0.33333"},});
     cs.render_microblock();
@@ -3464,15 +3465,18 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-    // TODO make logo for matrices
 
     stage_macroblock(FileBlock("TGC: Who cares? We can already do that with matrices.")); 
     cs.render_microblock();
     shared_ptr<FourDAlgebraScene> matrices = make_shared<FourDAlgebraScene>();
     cs.add_scene_fade_in(MICRO, matrices, "matrices", vec2(1,0.55));
+    shared_ptr<PngScene> matrix_png = make_shared<PngScene>("matrices",vec2(0.27,0.135));
+    cs.add_scene_fade_in(MICRO, matrix_png, "matrix_png",vec2(0.99,0.14)); 
+
     cs.slide_subscene(MICRO, "rotFull",vec2(-0.2,0)); 
     cs.slide_subscene(MICRO, "quat_png",vec2(-0.2,0)); 
     cs.slide_subscene(MICRO, "matrices",vec2(-0.3,0)); 
+    cs.slide_subscene(MICRO, "matrix_png",vec2(-0.3,0)); 
 
     matrices->manager.set({
         {"offset_1", "0.0"},
@@ -3522,7 +3526,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
+    // TODO increase the variance between these examples
     stage_macroblock(FileBlock("Our algebra can do it more naturally.")); 
     cs.render_microblock();
     rotFull->manager.transition(MICRO, {
@@ -3536,6 +3540,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
+
 
     
     stage_macroblock(SilenceBlock(5));
@@ -3602,12 +3607,14 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     cs.fade_subscene(MICRO,"quat_png",0.1);
     cs.fade_subscene(MICRO,"matrices",0);
+    cs.fade_subscene(MICRO,"matrix_png",0);
     stage_macroblock(FileBlock("Any tilted slice makes its own spinny subalgebra.")); 
     rotFull->manager.transition(MICRO, {
         {"plane", "1"},
     });
     cs.render_microblock();
     cs.remove_subscene("matrices");
+    cs.remove_subscene("matrix_png");
 
 
     shared_ptr<MultiplicationTableScene> slice = make_shared<MultiplicationTableScene>();
@@ -3650,7 +3657,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
-    // TODO  eat 3 grapes in under 2 minutes
+
     stage_macroblock(FileBlock("TGC: So this algebra isn't just triple spinny...")); 
     rotFull->manager.transition(MICRO, {
         {"rot_1", "1"},
@@ -3671,7 +3678,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.remove_subscene("slice");
     cs.remove_subscene("spinny_png");
-
 
 
     stage_macroblock(FileBlock("TGC: it's infinny spinny!")); 
@@ -3755,7 +3761,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(FileBlock("Then we found that i should square to -1."));
     table->manager.transition(MICRO, {
-        {"table_size", "2.5"},
+        {"table_size", "2.8"},
         {"opacity_01", "0.1"},{"opacity_10", "0.1"},
         {"opacity_03", "0"},{"opacity_04", "0"},
         {"opacity_11", "0.1"},{"opacity_12", "0.1"},{"opacity_13", "0"},{"opacity_14", "0"},
@@ -3784,11 +3790,9 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
-
     stage_macroblock(FileBlock("Similarly, j should square to -1 in its subalgebra."));
     table->manager.transition(MICRO, {
-        {"table_size", "3"},
+        {"table_size", "3.2"},
         {"opacity_01", "0.1"},{"opacity_10", "0.1"},{"opacity_11", "0.1"},
         {"opacity_02", "0.1"},{"opacity_20", "0.1"},
         {"opacity_12", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},
@@ -3879,15 +3883,14 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-
-    // TODO make left side look better
     stage_macroblock(FileBlock("We can fill the rest of the table with some straightforward calculations,"));
-    cs.fade_subscene(MICRO,"table",0.1);
     cs.slide_subscene(MICRO, "table", vec2(-0.05,0));
     cs.slide_subscene(MICRO, "bitable", vec2(-0.05,0));
     cs.manager.transition(MICRO,{{"slider","0.42"}});
     table->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.65"},});
     bitable->manager.transition(MICRO, {{"w", "0.75"},{"h", "0.75"},});
+
+    table->manager.transition(MICRO, {{"opacity_40", "0.2"},{"opacity_04", "0.2"},});
 
     bitable->manager.transition(MICRO, {
         {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
@@ -3922,7 +3925,6 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-
     stage_macroblock(FileBlock("Alternatively, we can make the fourth dimension spinny,"));
     cs.slide_subscene(MICRO, "table", vec2(0.1,0));
     cs.slide_subscene(MICRO, "bitable", vec2(0.1,0));
@@ -3930,8 +3932,6 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.manager.transition(MICRO,{{"slider","0.58"}});
     table->manager.transition(MICRO, {{"w", "0.75"},{"h", "0.75"},});
     bitable->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.65"},});
-    cs.fade_subscene(MICRO,"table",1);
-    cs.fade_subscene(MICRO,"bitable",0.1);
     cs.fade_subscene(MICRO,"latex_bi",0.1);
 
     table->manager.transition(MICRO,{
@@ -3940,6 +3940,11 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
         {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0"},
         {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0"},{"opacity_33", "0.1"},{"opacity_34", "0"},
         {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "0"},
+    });    
+    bitable->manager.transition(MICRO, {
+        {"opacity_00", "0.1"},{"opacity_01", "0.2"},{"opacity_04", "0.2"},
+        {"opacity_10", "0.2"},{"opacity_11", "0.2"},{"opacity_14", "0.2"},
+        {"opacity_40", "0.2"},{"opacity_41", "0.2"},{"opacity_44", "0.2"},
     });
 
     cs.render_microblock();
@@ -3993,7 +3998,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("This algebra makes circular graphs."));
+    stage_macroblock(FileBlock("This quaternion algebra makes circular graphs."));
     cs.slide_subscene(MICRO, "bitable", vec2(0.4,0));
     cs.slide_subscene(MICRO, "latex_bi", vec2(0.4,0));
     cs.slide_subscene(MICRO, "table", vec2(-0.1,0));
@@ -4024,6 +4029,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_1k", "0.3"},
     });
     cs.render_microblock();
+
 
 
 
@@ -4062,7 +4068,6 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "latex_qu", vec2(-0.4,0));
     cs.slide_subscene(MICRO, "bitable", vec2(-0.4,0));
     cs.slide_subscene(MICRO, "latex_bi", vec2(-0.4,0.0));
-    cs.fade_subscene(MICRO,"bitable",1);
     cs.fade_subscene(MICRO,"latex_bi",1);
 
     cs.slide_subscene(MICRO, "fd", vec2(-0.4,0));
@@ -4235,7 +4240,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(1.2));
     fd->manager.transition(MICRO, {
-        {"pov_xz", "-1.8"},
+        {"pov_y", "0.5"},
     });
     cs.fade_subscene(MICRO,"fd",0);
     cs.render_microblock();
@@ -4286,6 +4291,8 @@ void render_video() {
 
     cursor->manager.set(cursor_control);
 
+    
+    set_for_real(false);
 
 
     four_d_intro(cs, bg_control);
