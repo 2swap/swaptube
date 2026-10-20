@@ -383,8 +383,6 @@ void TwoDAlgebraScene::draw() {
     }
 
 
-    // 2DO I generally get the feeling that you made your life a lot harder by not breaking this into multiple scenes
-
     const int xx_opacity = ((int) state["xx_opacity"]) << 24;
     if (xx_opacity != 0){
         const vec2 xx_pos = get_diagram_point_pos("xx");
@@ -428,16 +426,15 @@ void TwoDAlgebraScene::draw() {
     } else if (state["div_scene"] == 1){
         point_dist = (state["point_x"]*drag_times_x + state["point_y"]*drag_times_y)*vec2(1,-1)*screen_unit;
     } 
-    // Hollow markers at the original x and y positions, for comparing against the point labels
+    // Hollow markers at the original x and y positions
     const float unit_targets = state["unit_targets"];
     if (unit_targets > 0){
         const float target_size = point_radius*0.85*state["point_size"];
         const vec2 target_locs[2] = {origin + vec2(screen_unit, 0), origin + vec2(0, -screen_unit)};
         const string target_texts[2] = {"x", "y"};
         for (int i = 0; i < 2; i++){
-            draw_circle(gpu_pix.get_ptr(), wh, target_locs[i], target_size, 0xffffffff, unit_targets);
-            draw_circle(gpu_pix.get_ptr(), wh, target_locs[i], target_size*0.85, 0xff000000 | bg_color, unit_targets);
-            write_text(gpu_pix.get_ptr(), wh, latex_color(0xffffffff, target_texts[i]), target_locs[i], target_size*2, unit_targets, 0);
+            draw_circle(gpu_pix.get_ptr(), wh, target_locs[i], target_size*0.85, 0xffffffff, unit_targets);
+            write_text(gpu_pix.get_ptr(), wh, latex_color(0xff000000|bg_color, target_texts[i]), target_locs[i], target_size*2, unit_targets, 0);
         }
     }
 

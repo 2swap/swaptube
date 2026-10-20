@@ -1384,30 +1384,26 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.remove_subscene("latex_trig");
     cs.remove_subscene("latex_unit");
 
+    td->manager.set({{"spinny", "3.14 .3 *"},{"spinny_r", "1.3"},});
     td->manager.transition(MICRO, {
-        {"dragger_x", "1.1"},
-        {"dragger_y", "1.3"},
+        {"dragger_x", "<spinny> cos <spinny_r> *"},
+        {"dragger_y", "<spinny> sin <spinny_r> *"},
     });
     cs.render_microblock(); 
 
 
     stage_macroblock(CompositeBlock(FileBlock("We can't get x and y to their original positions."),SilenceBlock(5)));
 
-    cs.render_microblock(); 
-    td->manager.set("spinny", "3.14 .3 *");
-    td->manager.transition(MACRO, "spinny", "3.14 1.45 *");
-    td->manager.transition(MICRO, {
-        {"dragger_x", "<spinny> cos 1.3 *"},
-        {"dragger_y", "<spinny> sin 1.3 *"},
+    // Land exactly on (-0.1, -1.1): angle atan2(-1.1, -0.1) + 2pi ~= 1.471pi, radius sqrt(1.22)
+    td->manager.transition(MACRO, {
+        {"spinny", "pi 1.471 *"},
+        {"spinny_r", "1.22 sqrt"},
     });
     cs.render_microblock(); 
     cs.render_microblock(); 
     cs.render_microblock(); 
     cs.render_microblock(); 
     cs.render_microblock(); 
-    td->manager.set("unit_targets", "1");
-    cs.render_microblock(); 
-    td->manager.set("unit_targets", "0");
     cs.render_microblock(); 
     td->manager.set("unit_targets", "1");
     cs.render_microblock(); 
@@ -1421,7 +1417,13 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.render_microblock(); 
     td->manager.set("unit_targets", "0");
     cs.render_microblock(); 
+    td->manager.set("unit_targets", "1");
     cs.render_microblock(); 
+    td->manager.set("unit_targets", "0");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "1");
+    cs.render_microblock(); 
+    td->manager.set("unit_targets", "0");
     cs.render_microblock(); 
     cs.render_microblock(); 
     cs.render_microblock(); 
@@ -1442,10 +1444,12 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     stage_macroblock(CompositeBlock(FileBlock("Let's define x to act as 1."),SilenceBlock(0.6)));
     // (dx*xx_x + dy*xy_x, dx*xx_y + dy*xy_y) = (0, -0.1*-1 + -1.1*0.4) = (0, -0.34),
     cursor->manager.transition(MICRO,{{"cursor_x", ".5"},{"cursor_y", ".5 .34 5 / +"},});
+    StateSet undo_cursor_click = cursor->manager.set("cursor_size", "{microblock_fraction} .9 > -.02 * .08 +");
     cs.render_microblock(); 
     td->manager.set({
         {"xpoint_label", "0"},
     });
+    cursor->manager.set(undo_cursor_click);
     cs.render_microblock(); 
     cs.render_microblock(); 
 
@@ -1460,6 +1464,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     td->manager.transition(MICRO, {
         {"xx_x", "1"},
         {"xx_y", "0"},
+        {"x_label", "0"},
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "48"},{"bg_1_g", "0"},{"bg_1_b", "32"},});
     cs.render_microblock();
@@ -1485,20 +1490,19 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("Now y squared is the only free definition.")); 
+    stage_macroblock(CompositeBlock(FileBlock("Now y squared is the only free definition."), SilenceBlock(4)));
     cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
     cs.render_microblock();
-    td->manager.set("siney", "[siney]");
     cs.manager.set("siney", "0");
-    td->manager.transition(MICRO, {
+    td->manager.transition(MACRO, {
         {"yy_x", "0.6"},
-        {"yy_y", "<siney> sin"},
+    });
+    td->manager.transition(MICRO, {
+        {"yy_y", "[siney] sin"},
     });
     cs.manager.transition(MACRO, "siney", "3.14 1.2 *");
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "<siney> 1.2 / sin 50 *"},{"bg_1_b", "68 <siney> 1.2 / sin 38 * -"},});
     cs.render_microblock();
-
-    stage_macroblock(SilenceBlock(4));
     cs.render_microblock();
     cs.render_microblock();
     td->manager.transition(MICRO, {
@@ -2798,6 +2802,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(CompositeBlock(FileBlock("because ij squares to 1."),SilenceBlock(1)));
+    // TODO will they remember the significance of this?
 
     table->manager.transition(MICRO, {
         {"opacity_01", "0.1"},{"opacity_10", "0.1"},
@@ -2808,7 +2813,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("If we start with ij squared,"));
+    stage_macroblock(FileBlock("We can prove it, with some algebra."));
 
     cs.slide_subscene(MICRO, "table",vec2(-0.23,0)); 
     cs.slide_subscene(MICRO, "flippy_png",vec2(-0.23,0)); 
@@ -2850,7 +2855,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("and do a little algebra, we end up with 1."));
+    stage_macroblock(SilenceBlock(1.5));
 
 	shared_ptr<LatexScene> latex_i2 = make_shared<LatexScene>("i",vec2(0.053,0.19));
 	cs.add_scene(latex_i2 , "latex_i2",vec2(0.675,0.192));
@@ -3212,14 +3217,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.slide_subscene(MICRO,"latex_i3",vec2(0,-0.01));
 	cs.slide_subscene(MICRO,"latex_j4",vec2(-0.01,0));
 
-    rot1->manager.transition(MICRO, {
-        {"rot_1", "0.7071"},
-        {"rot_i", "0.7071"},
-    });
-    rot2->manager.transition(MICRO, {
-        {"rot_1", "0.7071"},
-        {"rot_j", "0.7071"},
-    });
     cs.render_microblock();
 
 
@@ -3236,13 +3233,26 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.slide_subscene(MICRO,"latex_j2",vec2(-0.01,0));
 	cs.slide_subscene(MICRO,"latex_i5",vec2(0,-0.01));
 
-    stage_macroblock(SilenceBlock(1));
+    stage_macroblock(FileBlock("Up then left... is not the same as left then up."));
+    rot1->manager.transition(MICRO, {
+        {"rot_1", "0.7071"},
+        {"rot_i", "0.7071"},
+    });
+    cs.render_microblock();
     rot1->manager.transition(MICRO, {
         {"rot_1", "0.5"},
         {"rot_i", "0.5"},
         {"rot_j", "0.5"},
         {"rot_k", "-0.5"},
     });
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    rot2->manager.transition(MICRO, {
+        {"rot_1", "0.7071"},
+        {"rot_j", "0.7071"},
+    });
+    cs.render_microblock();
     rot2->manager.transition(MICRO, {
         {"rot_1", "0.5"},
         {"rot_i", "0.5"},
@@ -3253,7 +3263,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(SilenceBlock(1));
+    stage_macroblock(SilenceBlock(2));
     cs.render_microblock();
 	cs.remove_subscene("latex_i5");
 	cs.remove_subscene("latex_j4");
@@ -3400,7 +3410,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(FileBlock("It can spin the cube along all 3 dimensions."));
 
-    shared_ptr<FourDAlgebraScene> rotFull = make_shared<FourDAlgebraScene>();
+    shared_ptr<FourDAlgebraScene> rotFull = make_shared<FourDAlgebraScene>(vec2(1,1.1));
     cs.add_scene_fade_in(MICRO, rotFull, "rotFull", vec2(0.5,0.55));
 
     cs.fade_subscene(MICRO,"table",0);
@@ -3433,9 +3443,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
         {"rot_j", "0"},
     });
     cs.render_microblock();
-
-
-    set_for_real(true);
 
 
     stage_macroblock(SilenceBlock(0.6));
@@ -3597,8 +3604,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
     shared_ptr<MultiplicationTableScene> slice = make_shared<MultiplicationTableScene>();
-    cs.add_scene_fade_in(MICRO, slice, "slice", vec2(1,0.52));
-    cs.slide_subscene(MICRO, "slice", vec2(-0.3,0));
+    cs.add_scene_fade_in(MICRO, slice, "slice", vec2(1.1,0.52));
+    cs.slide_subscene(MICRO, "slice", vec2(-0.4,0));
     slice->manager.set(bg);
     slice->manager.set({
         {"table_size", "2"},
@@ -3607,8 +3614,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     });
 
     shared_ptr<PngScene> spinny_png = make_shared<PngScene>("spinny",vec2(0.25,0.12));
-    cs.add_scene(spinny_png, "spinny_png",vec2(1.04,0.22)); 
-    cs.slide_subscene(MICRO, "spinny_png", vec2(-0.3,0));
+    cs.add_scene(spinny_png, "spinny_png",vec2(1.14,0.22)); 
+    cs.slide_subscene(MICRO, "spinny_png", vec2(-0.4,0));
 
 
     rotFull->manager.transition(MICRO, {
@@ -4225,12 +4232,6 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     });
     cs.fade_subscene(MICRO,"fd",0);
     cs.render_microblock();
-
-    
-    set_for_real(false);
-
-
-
 }
 
 
@@ -4279,8 +4280,6 @@ void render_video() {
     cursor->manager.set(cursor_control);
 
 
-
-    set_for_real(false);
 
     four_d_intro(cs, bg_control);
     one_dim_algebra(cs);
