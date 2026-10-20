@@ -3341,23 +3341,30 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
-    // TODO transition from 1 into -1
+    auto table_opacities = [](const vector<string>& cells, const string& on, const string& off){
+        StateSet ss;
+        for (int r = 0; r < 5; r++) for (int c = 0; c < 5; c++) ss["opacity_" + to_string(r) + to_string(c)] = off;
+        for (const string& cell : cells) ss["opacity_" + cell] = on;
+        return ss;
+    };
 
     stage_macroblock(FileBlock("It would be nice if ij squares to negative 1, making its own spinny subalgebra."));
 
-    table->manager.set({{"commutative","0"},{"triangle","0"}});
+    table->manager.set(table_opacities({}, "1", "1"));
     cs.fade_subscene(MICRO,"table",1);
     cs.fade_subscene(MICRO,"rot1",0);
     cs.fade_subscene(MICRO,"bicomplex_png",0.3);
     cs.render_microblock();
     cs.remove_subscene("rot1");
     cs.remove_subscene("rot2");
+
+    table->manager.transition(MICRO, table_opacities({"00","04","40","44"}, "1", "0"));
     cs.render_microblock();
-    table->manager.transition(MICRO,{
-        {"opacity_01", "1"},{"opacity_10", "1"},
-        {"opacity_11", "1"},{"opacity_14", "1"},{"opacity_44", "1"},{"opacity_41", "1"},
-    });
+
+    table->manager.set({{"commutative","0"},{"triangle","0"}});
+    cs.render_microblock();
+
+    table->manager.transition(MICRO, table_opacities({"00","01","04","10","11","14","40","41","44"}, "1", "0.1"));
     cs.render_microblock();
 
 
