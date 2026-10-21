@@ -2063,6 +2063,15 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 void three_dim(CompositeScene& cs, StateSet& bg){
 
 
+    shared_ptr<BackgroundScene> boxBorder = make_shared<BackgroundScene>(vec2(0.23,0.43));
+    cs.add_scene_fade_in(MICRO, boxBorder, "boxBorder", vec2(-0.42,0.175));
+    boxBorder->manager.set(bg);
+    boxBorder->manager.set({{"adder","40"}});
+    shared_ptr<BackgroundScene> boxFill = make_shared<BackgroundScene>(vec2(0.218,0.412));
+    cs.add_scene_fade_in(MICRO, boxFill, "boxFill", vec2(-0.42,0.175));
+    boxFill->manager.set(bg);
+
+
     cs.manager.begin_timer("tx");
     cs.manager.set({
         // {"xz_x", "0"}, {"xz_y", ".1"}, {"xz_z", ".9"}, 
@@ -2083,7 +2092,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     float line_distance = 0.9;
     // Builds the basis scene. Called again later to make an identical copy for fading in the w axis.
     auto make_basis = [&]() {
-        shared_ptr<ThreeDimensionScene> b = make_shared<ThreeDimensionScene>(vec2(.4, .5));
+        shared_ptr<ThreeDimensionScene> b = make_shared<ThreeDimensionScene>(vec2(.32, .4));
         b->manager.set(parentcontrol);
         b->manager.set(bg);
         b->manager.begin_timer("tx");
@@ -2120,7 +2129,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     };
     shared_ptr<ThreeDimensionScene> basis = make_basis();
 
-    // TODO I think the wiggley points should go inside of the same corner box as before to make it clear that it's the same thing
+    
     shared_ptr<ThreeDAlgebraScene> abAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
     abAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     abAssoc->manager.set({
@@ -2128,9 +2137,11 @@ void three_dim(CompositeScene& cs, StateSet& bg){
         {"reach", "3"},
     });
     abAssoc->manager.set(parentcontrol);
-    cs.add_scene_fade_in(MICRO, basis, "basis", vec2(-.3, .25));
-    cs.add_scene_fade_in(MICRO, abAssoc, "abAssoc",vec2(0,0.45));
+    cs.add_scene_fade_in(MICRO, basis, "basis", vec2(-.4, .2));
+    cs.add_scene_fade_in(MICRO, abAssoc, "abAssoc",vec2(0,0.45), 1, false, 1);
     cs.slide_subscene(MICRO, "basis", vec2(0.5,0));
+    cs.slide_subscene(MICRO, "boxFill", vec2(0.5,0));
+    cs.slide_subscene(MICRO, "boxBorder", vec2(0.5,0));
     cs.slide_subscene(MICRO, "abAssoc", vec2(0.5,0));
     cs.fade_subscene(MICRO, "table", 0);
     cs.slide_subscene(MICRO, "table", vec2(0.5,0));
@@ -2162,6 +2173,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
 
+
     stage_macroblock(FileBlock("Here, the grid is being multiplied by ij"));
     cs.manager.transition(MICRO, {
         {"yz_x", "0.8"}, {"yz_y", "-0.5"}, {"yz_z", "0.2"},
@@ -2190,7 +2202,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.manager.transition(MICRO,{{"bg_1_r", "60"},{"bg_1_g", "0"},{"bg_1_b", "24"},});
     cs.render_microblock();
 
-
     shared_ptr<ThreeDAlgebraScene> eaAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
     eaAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     eaAssoc->manager.set({
@@ -2201,17 +2212,24 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     });
     eaAssoc->manager.set(parentcontrol);
 
-    cs.add_scene_fade_in(MICRO, eaAssoc, "eaAssoc" ,vec2(0.0,0.45));
+    cs.add_scene_fade_in(MICRO, eaAssoc, "eaAssoc" ,vec2(0.0,0.49), 1, false, 1);
 
     stage_macroblock(FileBlock("Strangely, we get a different result if we multiply by i and then j."));
-    cs.slide_subscene(MICRO, "abAssoc", vec2(0.25,0));
-    cs.slide_subscene(MICRO, "abLatex", vec2(0.25,0));
-    cs.slide_subscene(MICRO, "eaAssoc", vec2(0.25,0));
-    cs.slide_subscene(MICRO, "basis", vec2(0.3,-0.02));
+    cs.slide_subscene(MICRO, "abAssoc", vec2(0.26,0.04));
+    cs.slide_subscene(MICRO, "abLatex", vec2(0.26,0));
+    cs.slide_subscene(MICRO, "eaAssoc", vec2(0.24,0));
+    cs.slide_subscene(MICRO, "basis", vec2(0.4,-0.04));
+    cs.slide_subscene(MICRO, "boxFill", vec2(0.415,-0.055)); 
+    cs.slide_subscene(MICRO, "boxBorder", vec2(0.415,-0.055));
+    boxBorder->manager.transition(MICRO,{{"w","0.2"}});
+    boxFill->manager.transition(MICRO,{{"w","0.189"}});
+
     cs.render_microblock();
 
+
+
     shared_ptr<LatexScene> eaLatex = make_shared<LatexScene>("\\times i",vec2(0.25,0.25));
-    cs.add_scene_fade_in(MICRO, eaLatex, "eaLatex", vec2(0.25,1));
+    cs.add_scene_fade_in(MICRO, eaLatex, "eaLatex", vec2(0.24,1));
     cs.slide_subscene(MICRO, "eaLatex", vec2(0,-0.1));
 
     eaAssoc->manager.transition(MICRO, {
@@ -2229,9 +2247,10 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
 
+
     stage_macroblock(FileBlock("This algebra is not associative, and moving the definitions around doesn't fix it."));
-    shared_ptr<LatexScene> neqLatex = make_shared<LatexScene>("\\neq", vec2(0.5, 0.5));
-    cs.add_scene_fade_in(MICRO, neqLatex, "neqLatex", vec2(0.5, 0.45));
+    shared_ptr<LatexScene> neqLatex = make_shared<LatexScene>("\\neq", vec2(0.4, 0.4));
+    cs.add_scene_fade_in(MICRO, neqLatex, "neqLatex", vec2(0.5, 0.5));
     cs.render_microblock();
     cs.manager.transition(MICRO, {
         {"yz_x", "-0.7"}, {"yz_y", "0.2"}, {"yz_z", "0.4"},
@@ -2248,6 +2267,8 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.fade_subscene(MICRO, "neqLatex", 0);
     cs.render_microblock();
     cs.remove_subscene("neqLatex");
+
+
 
 
     stage_macroblock(SilenceBlock(1.5));
@@ -2377,6 +2398,8 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.fade_subscene(MICRO,"eaLatex",0);
     cs.fade_subscene(MICRO,"abLatex",0);
     cs.fade_subscene(MICRO,"basis",0);
+    cs.fade_subscene(MICRO,"boxBorder",0);
+    cs.fade_subscene(MICRO,"boxFill",0);
     
     stage_macroblock(FileBlock("Let's check out the 4-dimensional cosine."));
     fd2->manager.transition(MICRO, {
@@ -2390,6 +2413,8 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.remove_subscene("eaLatex");
     cs.remove_subscene("abLatex");
     cs.remove_subscene("basis");
+    cs.remove_subscene("boxBorder");
+    cs.remove_subscene("boxFill");
 
 
     fd2->manager.transition(MICRO, {
@@ -2458,7 +2483,6 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
 
 
-
     stage_macroblock(SilenceBlock(4));
     fd2->manager.transition(MICRO, {
         {"brightness", "8000.0"},
@@ -2501,9 +2525,18 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
-    
 
-    shared_ptr<ThreeDimensionScene> basis = make_shared<ThreeDimensionScene>(vec2(.4, .5));
+
+    shared_ptr<BackgroundScene> boxBorder = make_shared<BackgroundScene>(vec2(0.27,0.43));
+    cs.add_scene_fade_in(MICRO, boxBorder, "boxBorder", vec2(0.09,0.18));
+    boxBorder->manager.set(bg);
+    boxBorder->manager.set({{"adder","40"}});
+    shared_ptr<BackgroundScene> boxFill = make_shared<BackgroundScene>(vec2(0.259,0.412));
+    cs.add_scene_fade_in(MICRO, boxFill, "boxFill", vec2(0.09,0.18));
+    boxFill->manager.set(bg);
+
+    
+    shared_ptr<ThreeDimensionScene> basis = make_shared<ThreeDimensionScene>(vec2(.32, .4));
     basis->manager.set(parentcontrol);
     basis->manager.set(bg);
     basis->manager.begin_timer("tx");
@@ -2534,8 +2567,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     basis->add_line(Line(vec3(0, 0, -line_distance), vec3(0, 0, line_distance), 0xff7777ff, 1.0f, false)); // z-axis
     basis->add_line(Line(vec3(-line_distance*0.6), vec3(line_distance*0.6), 0xffcccccc, 1.0f, false)); // w-axis
 
-    cs.add_scene_fade_in(MICRO, basis, "basis", vec2(.15, .2));
-
+    cs.add_scene_fade_in(MICRO, basis, "basis", vec2(.11, .21));
 
     stage_macroblock(FileBlock("Or we could change the definition of j^2, to move through algebra space."));
     cs.render_microblock();
@@ -2644,6 +2676,8 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
+
+
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
 
@@ -2664,14 +2698,14 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
 
     shared_ptr<PngScene> dub_png = make_shared<PngScene>("bicomplex",vec2(0.24,0.12));
-    cs.add_scene(dub_png, "dub_png",vec2(0.15,-0.06)); 
+    cs.add_scene(dub_png, "dub_png",vec2(0.11,-0.06)); 
     
 
 
     stage_macroblock(FileBlock("This is the double spinny algebra!"));
 
     cs.slide_subscene(MICRO, "dub_png",vec2(0,0.16)); 
-    cs.slide_subscene(MICRO, "basis",vec2(0,0.16)); 
+    cs.slide_subscene(MICRO, "basis",vec2(0,0.15)); 
     basis->manager.transition(MICRO, {
         {"point0.a", "1"}, 
         {"point1.a", "1"}, 
@@ -2680,10 +2714,10 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
         {"point4.a", "1"}, 
         {"point5.a", "1"}, 
     });
+    boxBorder->manager.transition(MICRO,{{"h","0.69"}});
+    boxFill->manager.transition(MICRO,{{"h","0.672"}});
     cs.render_microblock();
     cs.render_microblock();
-
-
 
     stage_macroblock(FileBlock("But it doesn't just spin."));
     
@@ -2722,6 +2756,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
     cs.fade_subscene(MICRO, "tess", 0.3);
     cs.fade_subscene(MICRO, "basis", 0.3);
+    cs.fade_subscene(MICRO, "boxBorder", 0.3);
     cs.fade_subscene(MICRO, "dub_png", 0.3);
 
     shared_ptr<PngScene> flipping_text = make_shared<PngScene>("flipping",vec2(0.7,0.7));
@@ -2740,11 +2775,12 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
     dub_png->manager.transition(MICRO,{{"w","0.30"},{"h","0.14"}});
     cs.slide_subscene(MICRO, "tess", vec2(-0.5,0));
     cs.slide_subscene(MICRO, "basis", vec2(-0.5,0));
-    cs.slide_subscene(MICRO, "dub_png", vec2(0.36,0.05));
+    cs.slide_subscene(MICRO, "boxBorder", vec2(-0.5,0));
+    cs.slide_subscene(MICRO, "boxFill", vec2(-0.5,0));
+    cs.slide_subscene(MICRO, "dub_png", vec2(0.4,0.05));
     cs.slide_subscene(MICRO, "flipping_text", vec2(-0.5,0));
     cs.slide_subscene(MICRO, "is_text", vec2(-0.5,0));
     cs.slide_subscene(MICRO, "bad_text", vec2(-0.5,0));
@@ -2752,6 +2788,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
     cs.fade_subscene(MICRO, "tess", 0);
     cs.fade_subscene(MICRO, "basis", 0);
+    cs.fade_subscene(MICRO, "boxBorder", 0);
     cs.fade_subscene(MICRO, "flipping_text", 0);
     cs.fade_subscene(MICRO, "is_text", 0);
     cs.fade_subscene(MICRO, "bad_text", 0);
@@ -2774,7 +2811,9 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.render_microblock();
     cs.remove_subscene("tess");
+    cs.remove_subscene("boxFill");
     cs.remove_subscene("basis");
+    cs.remove_subscene("boxBorder");
     cs.remove_subscene("flipping_text");
     cs.remove_subscene("is_text");
     cs.remove_subscene("bad_text");

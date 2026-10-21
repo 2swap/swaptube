@@ -4,7 +4,7 @@
 
 extern "C" void draw_rectangle(uint32_t* pix, const ivec2& wh, const ivec2& top_left, const ivec2& bottom_right, const uint32_t color);
 
-
+// TEMP make this solid after 4d video
 extern "C" void background_render(
     const ivec2& wh,
     const ivec3 bg_0,
@@ -24,6 +24,8 @@ BackgroundScene::BackgroundScene(const vec2& dimensions) : Scene(dimensions){
         {"bg_1_b", "68"},
 
         {"slider", "0"},
+
+        {"adder", "0"},
     });
 }
 
@@ -33,11 +35,11 @@ void BackgroundScene::draw() {
     const int opacity = 0xff000000;
         
     if (state["slider"] >= 1){
-        const int bg_1 = ((int) state["bg_1_r"]) << 16 | ((int) state["bg_1_g"]) << 8 | (int) state["bg_1_b"];
+        const int bg_1 = ((int) (state["bg_1_r"] + state["adder"])) << 16 | ((int) (state["bg_1_g"] + state["adder"])) << 8 | (int) (state["bg_1_b"] + state["adder"]);
         draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(0,0), get_width_height(), opacity + bg_1);
 
     } else if (state["slider"] <= 0){
-        const int bg_0 = ((int) state["bg_0_r"]) << 16 | ((int) state["bg_0_g"]) << 8 | ((int) state["bg_0_b"]);
+        const int bg_0 = ((int) (state["bg_0_r"] + state["adder"])) << 16 | ((int) (state["bg_0_g"] + state["adder"])) << 8 | (int) (state["bg_0_b"] + state["adder"]);
         draw_rectangle(gpu_pix.get_ptr(), get_width_height(), ivec2(0,0), get_width_height(), opacity + bg_0);
 
     } else {
