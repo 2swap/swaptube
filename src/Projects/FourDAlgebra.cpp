@@ -3528,7 +3528,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
 
@@ -3563,7 +3562,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    // TODO increase the variance between these examples
     stage_macroblock(FileBlock("Our algebra can do it more naturally.")); 
     cs.render_microblock();
     rotFull->manager.transition(MICRO, {
@@ -3596,31 +3594,33 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
     matrices->manager.transition(MICRO, {
-        {"rot_i", "0.8"},
-        {"rot_j", "0.1"},
-        {"rot_k", "-1.2"},
+        {"rot_i", "0.9"},
+        {"rot_j", "-0.3"},
+        {"rot_k", "-2.2"},
     });
     rotFull->manager.transition(MICRO, {
-        {"rot_1", "0.3179"},
-        {"rot_i", "0.1938"},
-        {"rot_j", "0.6905"},
-        {"rot_k", "-0.6202"},
+        {"rot_1", "-0.5366"},
+        {"rot_i", "-0.2919"},
+        {"rot_j", "0.7131"},
+        {"rot_k", "-0.3439"},
     });
     cs.render_microblock();
 
 
     matrices->manager.transition(MICRO, {
-        {"rot_i", "-0.3"},
-        {"rot_j", "-0.6"},
-        {"rot_k", "-0.2"},
+        {"rot_i", "1.4"},
+        {"rot_j", "0.3"},
+        {"rot_k", "-1.5"},
     });
     rotFull->manager.transition(MICRO, {
-        {"rot_1", "0.8059"},
-        {"rot_i", "-0.1319"},
-        {"rot_j", "-0.5771"},
-        {"rot_k", "0.0069"},
+        {"rot_1", "0.302"},
+        {"rot_i", "0.0165"},
+        {"rot_j", "0.9426"},
+        {"rot_k", "-0.1414"},
     });
     cs.render_microblock();
+
+
 
     matrices->manager.transition(MICRO, {
         {"rot_i", "0"},
@@ -3653,6 +3653,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.remove_subscene("matrices");
     cs.remove_subscene("matrix_png");
 
+    
 
     shared_ptr<MultiplicationTableScene> slice = make_shared<MultiplicationTableScene>();
     cs.add_scene_fade_in(MICRO, slice, "slice", vec2(1.1,0.52));
