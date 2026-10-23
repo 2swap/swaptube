@@ -1,5 +1,6 @@
 #include "RootFractalScene.h"
 #include <cmath>
+#include "../../IO/Latex.h"
 
 extern "C" void draw_root_fractal(
     uint32_t* d_pixels,
@@ -47,19 +48,14 @@ void RootFractalScene::draw() {
     float gm = get_geom_mean_size() / 200;
 
     // Draw coefficients
-    /* TODO needs GPU refactor
-    int i = 0;
-    for(complex<float> coeff : {c0, c1}) {
-        float letter_opa = 1;
-        letter_opa *= state["coefficients_opacity"];
-        const vec2 pixel(point_to_pixel(vec2(coeff.real(), coeff.imag())));
-        if(letter_opa > 0.01) {
-            ScalingParams sp = ScalingParams(gm * vec2(16, 40));
-            Pixels text_pixels = latex_to_pix(string(1,char('a' + i)), sp);
-            pix.overlay_cpu(text_pixels, floor(pixel - text_pixels.wh / 2), letter_opa);
+    const float letter_opa = state["coefficients_opacity"];
+    if(letter_opa > 0.01) {
+        int i = 0;
+        for(complex<float> coeff : {c0, c1}) {
+            const vec2 pixel(point_to_pixel(vec2(coeff.real(), coeff.imag())));
+            write_text(gpu_pix.get_ptr(), get_width_height(), string(1, char('a' + i)), pixel, gm * vec2(16, 40), letter_opa, 0);
+            i++;
         }
-        i++;
     }
-    */
     CoordinateScene::draw();
 }
