@@ -13,6 +13,6 @@ void render_video() {
         {"coefficients_opacity", "0"},
         {"ticks_opacity", "0"},
     });
-    stage_macroblock(SilenceBlock(1.5), 1);
+    stage_macroblock(SilenceBlock(1.5));
     rfs.render_microblock();
 }

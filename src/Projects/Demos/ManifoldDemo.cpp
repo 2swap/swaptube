@@ -11,7 +11,7 @@ void render_video() {
         "-1", "1", "5000"
     );
 
-    stage_macroblock(SilenceBlock(15), 6);
+    stage_macroblock(SilenceBlock(15));
     ms.manager.set({
         {"d", "4"},
     });

@@ -2,6 +2,6 @@
 
 void render_video() {
     PendulumScene ps({0.5, 1.2, 0, 0});
-    stage_macroblock(SilenceBlock(10), 1);
+    stage_macroblock(SilenceBlock(10));
     ps.render_microblock();
 }

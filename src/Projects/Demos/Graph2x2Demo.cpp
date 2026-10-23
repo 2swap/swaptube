@@ -17,19 +17,19 @@ void render_video() {
         {"qj", "{t} 5 * cos .2 *"},
     });
 
-    stage_macroblock(SilenceBlock(2), 1);
+    stage_macroblock(SilenceBlock(2));
     rgs.add_cube("", true, false);
     rgs.render_microblock();
 
     for(int i = 0; i < 3; i++) {
-        stage_macroblock(SilenceBlock(1), 1);
+        stage_macroblock(SilenceBlock(1));
         rgs.manager.transition(MICRO, "d", to_string(d));
         d*=1.5;
         rgs.add_children({"R", "U", "R'", "U'"}, true, true, false);
         rgs.render_microblock();
     }
 
-    stage_macroblock(SilenceBlock(5), 1);
+    stage_macroblock(SilenceBlock(5));
     rgs.render_microblock();
 
     cout << "Graph size: " << rgs.gs->graph.size() << " nodes";

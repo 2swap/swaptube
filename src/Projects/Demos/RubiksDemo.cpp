@@ -10,7 +10,7 @@
 
 void render_video(){
     RubiksScene rs;
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(1));
 
     quat yaw_quat = quat(cos(0.125 * M_PI), 0, sin(0.125 * M_PI), 0);
     quat pitch_quat = quat(cos(-0.098 * M_PI), sin(-0.098 * M_PI), 0, 0);
@@ -32,7 +32,7 @@ void render_video(){
     // open_ui(rs);
 
 
-    stage_macroblock(SilenceBlock(10), 10);
+    stage_macroblock(SilenceBlock(10));
     
     rs.exec_move_from_slice("R");
     rs.render_microblock();
@@ -77,6 +77,6 @@ void render_video(){
 
 
 
-    stage_macroblock(SilenceBlock(10), 1);
+    stage_macroblock(SilenceBlock(10));
     rs.render_microblock();
 }

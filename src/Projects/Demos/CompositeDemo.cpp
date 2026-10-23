@@ -3,7 +3,7 @@
 
 void render_video() {
     CompositeScene cs;
-    stage_macroblock(SilenceBlock(5), 5);
+    stage_macroblock(SilenceBlock(5));
     shared_ptr<MandelbrotScene> ms = make_shared<MandelbrotScene>();
     cs.add_scene(ms, "ms");
 

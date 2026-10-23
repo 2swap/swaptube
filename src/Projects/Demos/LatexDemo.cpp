@@ -10,13 +10,13 @@ void render_video(){
     vector<string> latex_strings = {"ax^2 + bx + c = 0", "x^2 + \\frac{b}{a}x + \\frac{c}{a} = 0"};
 
     LatexScene latex(latex_strings[0]);
-    stage_macroblock(SilenceBlock(1), 1);
+    stage_macroblock(SilenceBlock(1));
     latex.render_microblock();
 
     for (int i = 1; i < latex_strings.size(); i++){
         const string& latex_str = latex_strings[i];
         latex.begin_latex_transition(MICRO, latex_str);
-        stage_macroblock(SilenceBlock(1), 2);
+        stage_macroblock(SilenceBlock(1));
         latex.render_microblock();
         latex.render_microblock();
     }

@@ -17,7 +17,7 @@ void render_video() {
         {"points_radius_multiplier", "3"},
     });
 
-    stage_macroblock(SilenceBlock(5), 4);
+    stage_macroblock(SilenceBlock(5));
     double a_hash = gs.graph.add_node(.1);
     gs.graph.move_node(a_hash, vec4(-1, 0, 0, 0));
     double b_hash = gs.graph.add_node(.2);

@@ -21,7 +21,7 @@ void render_video(){
         {"yy_y", "0"},
     });
 
-    stage_macroblock(SilenceBlock(6), 6);
+    stage_macroblock(SilenceBlock(6));
     td.render_microblock();
 
     td.manager.transition(MICRO, "dragger_y", "1");
