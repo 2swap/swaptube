@@ -64,7 +64,7 @@ public:
     int add_audio_from_file(const std::string& filename);
     sample_t get_max_sample_for_frame(int frame_index);
 
-    void encode_buffers();
+    void encode_buffers(bool final_flush = false);
 
     ~AudioWriter();
 };

@@ -346,7 +346,7 @@ int AudioWriter::add_audio_from_file(const string& filename) {
     return length_in_samples / samples_per_frame;
 }
 
-void AudioWriter::encode_buffers() {
+void AudioWriter::encode_buffers(bool final_flush) {
     if(!rendering_on()) return; // Don't write in smoketest
     if(!include_audio) return; // num_audio_streams is 0; outputCodecContexts[0] below would be out of bounds
 
@@ -354,9 +354,13 @@ void AudioWriter::encode_buffers() {
         int frameSize = outputCodecContexts[0]->frame_size;
         if(frameSize <= 0) frameSize = 1024; // Default frame size if not set
 
-        // If we don't have enough samples for a full frame, exit
-        if(sample_buffer.size() < frameSize * audio_channels) break;
-        // TODO pad last frame?
+        // If we don't have enough samples for a full frame, wait for more,
+        // unless this is the final flush: then send the remainder as a short last frame.
+        // PCM encoders accept any frame length, so the audio ends exactly where the video does.
+        if(sample_buffer.size() < frameSize * audio_channels) {
+            if(!final_flush || sample_buffer.empty()) break;
+            frameSize = sample_buffer.size() / audio_channels;
+        }
 
         for (int ch = 0; ch < audio_channels; ++ch) {
             // Extend channel with silence (interleaved)
@@ -449,7 +453,7 @@ void AudioWriter::encode_buffers() {
 
 AudioWriter::~AudioWriter() {
     cout << "Cleaning up AudioWriter..." << endl;
-    encode_buffers();
+    encode_buffers(true);
 
     // Flush encoders by sending null frames
     for(int i = 0; i < num_audio_streams; i++) {
