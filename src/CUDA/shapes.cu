@@ -193,7 +193,7 @@ __global__ void bezier_kernel(
     Cuda::vec2 point2 = point_to_pixel_in_screen(bezier_2d(
             p1, p2, p3, p4, (i+1)/1000.0f), lx_ty, rx_by, wh);
 
-    bresenham(point1.x, point1.y, point2.x, point2.y, 0xFFFFFFFF, 1.0f, 2, pix, wh, false);
+    bresenham(point1, point2, 0xFFFFFFFF, 1.0f, 2, pix, wh, false);
 }
 
 extern "C" void cuda_draw_bezier(
@@ -217,7 +217,7 @@ __global__ void render_path_kernel(
     Cuda::vec2 pixel_1 = point_to_pixel_in_screen(rope[i], lx_ty, rx_by, wh);
     Cuda::vec2 pixel_2 = point_to_pixel_in_screen(rope[(i+1)%rope_length], lx_ty, rx_by, wh);
 
-    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, color, opacity, thickness, pixels, wh, false);
+    bresenham(pixel_1, pixel_2, color, opacity, thickness, pixels, wh, false);
 }
 
 extern "C" void cuda_render_path(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* d_path, const int path_length,
@@ -258,7 +258,7 @@ __global__ void render_many_lines_kernel(
     Cuda::vec2 pixel_1 = point_to_pixel_in_screen(d_line_list[i*2], lx_ty, rx_by, wh);
     Cuda::vec2 pixel_2 = point_to_pixel_in_screen(d_line_list[i*2+1], lx_ty, rx_by, wh);
 
-    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, colors[i], opacity, thickness, pixels, wh, false);
+    bresenham(pixel_1, pixel_2, colors[i], opacity, thickness, pixels, wh, false);
 }
 
 extern "C" void cuda_render_many_lines(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* d_line_list, const int line_count,
@@ -297,7 +297,7 @@ __global__ void segments_kernel(
     const Cuda::vec2 pixel_1 = point_to_pixel_in_screen(endpoints[2 * i],     lx_ty, rx_by, wh);
     const Cuda::vec2 pixel_2 = point_to_pixel_in_screen(endpoints[2 * i + 1], lx_ty, rx_by, wh);
 
-    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, color, opacity, thickness, pixels, wh, false);
+    bresenham(pixel_1, pixel_2, color, opacity, thickness, pixels, wh, false);
 }
 
 extern "C" void cuda_render_lines_from_host(

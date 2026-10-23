@@ -55,8 +55,6 @@ public:
     void overlay_cpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier = 1);
     void overlay_cpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians);
 
-    void scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const;
-
     void overwrite(const Pixels& p, const vec2& top_left);
 
     void fill_rect(int x, int y, int rw, int rh, int col);
@@ -78,7 +76,7 @@ public:
     void rotate_90_inverse(Pixels& rotated) const;
     void rotate_90(Pixels& rotated) const;
 
-    void bicubic_scale(int new_width, int new_height, Pixels& result) const;
+    void bicubic_scale(const ivec2& new_wh, Pixels& result) const;
     float bicubic_weight(float t) const;
 
     void print_to_terminal();

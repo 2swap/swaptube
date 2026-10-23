@@ -23,7 +23,7 @@ __global__ void render_points_kernel(
         p.center, camera_direction, camera_pos, fov, geom_mean_size, wh);
     if (pixel.z <= 0) return; // behind the camera
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 140.0f;
-    Cuda::d_fill_circle(pixel.x, pixel.y, dot_size, p.color, pixels, wh, points_opacity * p.opacity);
+    Cuda::d_fill_circle(pixel, dot_size, p.color, pixels, wh, points_opacity * p.opacity);
 }
 
 __global__ void render_lines_kernel(
@@ -44,7 +44,7 @@ __global__ void render_lines_kernel(
         ln.end, camera_direction, camera_pos, fov, geom_mean_size, wh);
     if (p2.z <= 0) return;
     Cuda::bresenham(
-        p1.x, p1.y, p2.x, p2.y,
+        p1, p2,
         ln.color, lines_opacity * ln.opacity, thickness,
         pixels, wh, ln.is_dashed, brightest_wins);
 }

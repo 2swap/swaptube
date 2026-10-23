@@ -78,7 +78,7 @@ uint32_t* init_icons(std::vector<std::string> pngnames, ivec2 wh) {
     scaled.resize(icon_amount);
     for (int i=0; i<icon_amount; i++) {
         png_to_pix(pix, pngnames[i]);
-        pix.scale_to_bounding_box(wh.x, wh.y, scaled[i]);
+        pix.scale_to_bounding_box(wh, scaled[i]);
         for (int j=0; j<wh.x*wh.y; j++) {
             h_icons[i][j] = scaled[i].pixels[j];
         }

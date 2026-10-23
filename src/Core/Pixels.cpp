@@ -10,7 +10,7 @@
 #include <limits>
 #include "../IO/Writer.h"
 
-extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, int input_w, int input_h, unsigned int* output_pixels, int output_w, int output_h);
+extern "C" int cuda_bicubic_scale(const unsigned int* input_pixels, const ivec2& input_wh, unsigned int* output_pixels, const ivec2& output_wh);
 
 Pixels::Pixels() : wh(0,0), pixels(0) {}
 Pixels::Pixels(const ivec2& dim) : wh(dim), pixels(dim.x*dim.y) {}
@@ -104,11 +104,10 @@ void Pixels::scale_to_bounding_box(const vec2& box, Pixels &scaled) const {
     float scale = min(static_cast<float>(box.x) / wh.x, static_cast<float>(box.y) / wh.y);
 
     // Calculate the new dimensions
-    int new_width = static_cast<int>(wh.x * scale);
-    int new_height = static_cast<int>(wh.y * scale);
+    const ivec2 new_wh(wh.x * scale, wh.y * scale);
 
     // Scale the image using bicubic interpolation
-    bicubic_scale(new_width, new_height, scaled);
+    bicubic_scale(new_wh, scaled);
 }
 
 void Pixels::crop(const ivec2& top_left, const ivec2& bottom_right, Pixels &cropped) const {
@@ -202,18 +201,6 @@ void Pixels::overlay_cpu(const Pixels& p, const vec2& center, double overlay_opa
             overlay_pixel(xpdx, y+offset.y, p.get_pixel_carefully(x, y), overlay_opacity_multiplier);
         }
     }
-}
-
-void Pixels::scale_to_bounding_box(int box_w, int box_h, Pixels &scaled) const {
-    // Calculate the scaling factor based on the bounding box
-    float scale = min(static_cast<float>(box_w) / wh.x, static_cast<float>(box_h) / wh.y);
-
-    // Calculate the new dimensions
-    int new_width = static_cast<int>(wh.x * scale);
-    int new_height = static_cast<int>(wh.y * scale);
-
-    // Scale the image using bicubic interpolation
-    bicubic_scale(new_width, new_height, scaled);
 }
 
 // Use bilinear interpolation to sample from p with rotation, and overlay onto this.
@@ -432,9 +419,9 @@ void Pixels::rotate_90(Pixels& rotated) const {
     }
 }
 
-void Pixels::bicubic_scale(int new_width, int new_height, Pixels& result) const {
-    result = Pixels(ivec2(new_width, new_height));
-    cuda_bicubic_scale(pixels.data(), wh.x, wh.y, result.pixels.data(), new_width, new_height);
+void Pixels::bicubic_scale(const ivec2& new_wh, Pixels& result) const {
+    result = Pixels(new_wh);
+    cuda_bicubic_scale(pixels.data(), wh, result.pixels.data(), new_wh);
 }
 
 void Pixels::print_to_terminal() {

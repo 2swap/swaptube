@@ -348,16 +348,16 @@ static __device__ bool collision_cube(float Y[6], uint32_t& color, float& dist) 
 }
 
 // Kernel: trace one ray per pixel, integrate geodesic in parameter-space
-__global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
+__global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, const Cuda::ivec2 wh,
                                              Cuda::quat camera_orientation,
                                              Cuda::vec3 camera_position,
                                              float fov, float max_dist) {
     int px = blockIdx.x * blockDim.x + threadIdx.x;
     int py = blockIdx.y * blockDim.y + threadIdx.y;
-    if (px >= w || py >= h) return;
-    d_pixels[py * w + px] = 0xff0000ff; // default to blue
+    if (px >= wh.x || py >= wh.y) return;
+    d_pixels[py * wh.x + px] = 0xff0000ff; // default to blue
 
-    Cuda::vec3 dir_world(Cuda::get_raymarch_vector(Cuda::ivec2(px, py), Cuda::ivec2(w, h), fov, camera_orientation));
+    Cuda::vec3 dir_world(Cuda::get_raymarch_vector(Cuda::ivec2(px, py), wh, fov, camera_orientation));
 
 
     // Initialize state in parameter-space (we treat param-space coords directly)
@@ -410,15 +410,15 @@ __global__ void cuda_surface_raymarch_kernel(uint32_t* d_pixels, int w, int h,
     }
 
     if(dist_traveled >= max_dist) {
-        d_pixels[py * w + px] = 0xff000000;
+        d_pixels[py * wh.x + px] = 0xff000000;
     }
 
     // fade to black based on steps
-    else d_pixels[py * w + px] = Cuda::colorlerp(out, 0xff000000, dist_traveled / max_dist );
+    else d_pixels[py * wh.x + px] = Cuda::colorlerp(out, 0xff000000, dist_traveled / max_dist );
 }
 
 // Host-facing launcher
-extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
+extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, const Cuda::ivec2& wh,
                                              int x_size, Cuda::ResolvedStateEquationComponent* x_eq,
                                              int y_size, Cuda::ResolvedStateEquationComponent* y_eq,
                                              int z_size, Cuda::ResolvedStateEquationComponent* z_eq,
@@ -439,13 +439,13 @@ extern "C" void launch_cuda_surface_raymarch(uint32_t* h_pixels, int w, int h,
     cudaMemcpyToSymbol(special_case_code, &special, sizeof(int));
 
     uint32_t* d_pixels;
-    size_t pixel_buffer_size = w * h * sizeof(uint32_t);
+    size_t pixel_buffer_size = wh.x * wh.y * sizeof(uint32_t);
     cudaMalloc(&d_pixels, pixel_buffer_size);
 
     dim3 block(16, 16);
-    dim3 grid( (w + block.x - 1) / block.x, (h + block.y - 1) / block.y );
+    dim3 grid( (wh.x + block.x - 1) / block.x, (wh.y + block.y - 1) / block.y );
     cuda_surface_raymarch_kernel<<<grid, block>>>(
-        d_pixels, w, h, camera_orientation, camera_position,
+        d_pixels, wh, camera_orientation, camera_position,
         fov_rad, max_dist
     );
     cudaDeviceSynchronize();

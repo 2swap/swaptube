@@ -204,23 +204,22 @@ __device__ bool mainloop(RayState& r) {
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlight_pixels, float* depth_buffer, int w, int h, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, int* action, int pathlen, TuringMachine tm, float brightness_offset, float color_source_depth, Cuda::vec3 highlight, float highlight_intensity, int max_steps) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlight_pixels, float* depth_buffer, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, int* action, int pathlen, TuringMachine tm, float brightness_offset, float color_source_depth, Cuda::vec3 highlight, float highlight_intensity, int max_steps) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
-    if (idx >= w || idy >= h) {
+    if (idx >= wh.x || idy >= wh.y) {
         return;
     }
-    int pixel_index = idy * w + idx;
-    int pos_x = floor(idx + (0.5f - center.x) * w);
-    int pos_y = floor(idy + (0.5f - center.y) * h);
+    int pixel_index = idy * wh.x + idx;
+    int pos_x = floor(idx + (0.5f - center.x) * wh.x);
+    int pos_y = floor(idy + (0.5f - center.y) * wh.y);
 
     RayState r;
     //r.print = idx == 313 && idy == 193;
     //r.print = idx == 64 && idy == 48;
 
-    Cuda::ivec2 wh(w, h);
     r.dir = normalize(Cuda::get_raymarch_vector(Cuda::ivec2(pos_x, pos_y), wh, fov, camera));
-    r.thickness = 20 * fov / (w + h);
+    r.thickness = 20 * fov / (wh.x + wh.y);
     r.low_time_depth = floor(color_source_depth);
     r.highlight = highlight;
     r.max_steps = max_steps;
@@ -276,7 +275,7 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlig
 }
 
 extern "C" void beaver_TNF_3D_cuda(
-    unsigned int* d_pixels, uint32_t* d_highlight, float* d_depth_buffer, int w, int h, Cuda::vec2 center,
+    unsigned int* d_pixels, uint32_t* d_highlight, float* d_depth_buffer, const Cuda::ivec2& wh, Cuda::vec2 center,
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
     std::vector<int> action, TuringMachine tm,
@@ -293,12 +292,11 @@ extern "C" void beaver_TNF_3D_cuda(
     cudaMemcpy(d_action_path, action_path, action.size() * sizeof(int), cudaMemcpyHostToDevice);
 
     dim3 threads(16, 16);
-    dim3 block((w + threads.x - 1) / threads.x, (h + threads.y - 1) / threads.y);
+    dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, d_highlight, d_depth_buffer, w, h, center, normalize(camera), fov, lower, upper, d_action_path, action.size(), tm, brightness_offset, color_source_depth, highlight, highlight_intensity, max_steps);
-    cuda_edge_detect(d_pixels, d_depth_buffer, Cuda::ivec2(w, h), 0xff000000);
+    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, d_highlight, d_depth_buffer, wh, center, normalize(camera), fov, lower, upper, d_action_path, action.size(), tm, brightness_offset, color_source_depth, highlight, highlight_intensity, max_steps);
+    cuda_edge_detect(d_pixels, d_depth_buffer, wh, 0xff000000);
 
-    Cuda::ivec2 wh(w, h);
     cuda_overlay(d_pixels, wh, d_highlight, wh, wh/2, 1, 0);
 
     cudaFree(d_action_path);

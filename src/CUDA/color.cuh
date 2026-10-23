@@ -13,10 +13,10 @@ __device__ __forceinline__ void overlay_pixel(const Cuda::ivec2& pix, int col, f
     pixels[idx] = blended;
 }
 
-__device__ __forceinline__ void atomic_overlay_pixel(int x, int y, int col, float opacity, unsigned int* pixels, const Cuda::ivec2& wh) {
-    if (x < 0 || x >= wh.x || y < 0 || y >= wh.y) return;
+__device__ __forceinline__ void atomic_overlay_pixel(const Cuda::ivec2& pix, int col, float opacity, unsigned int* pixels, const Cuda::ivec2& wh) {
+    if (pix.x < 0 || pix.x >= wh.x || pix.y < 0 || pix.y >= wh.y) return;
     opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
-    int idx = y * wh.x + x;
+    int idx = pix.y * wh.x + pix.x;
 
     unsigned int old_pixel = pixels[idx];
     int base = old_pixel;
@@ -26,10 +26,10 @@ __device__ __forceinline__ void atomic_overlay_pixel(int x, int y, int col, floa
 }
 
 // temporary hack: brightest-wins variant to stop line flicker from GPU races. Revert ASAP.
-__device__ __forceinline__ void atomic_overlay_pixel_brightest(int x, int y, int col, float opacity, unsigned int* pixels, const Cuda::ivec2& wh) {
-    if (x < 0 || x >= wh.x || y < 0 || y >= wh.y) return;
+__device__ __forceinline__ void atomic_overlay_pixel_brightest(const Cuda::ivec2& pix, int col, float opacity, unsigned int* pixels, const Cuda::ivec2& wh) {
+    if (pix.x < 0 || pix.x >= wh.x || pix.y < 0 || pix.y >= wh.y) return;
     opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
-    int idx = y * wh.x + x;
+    int idx = pix.y * wh.x + pix.x;
 
     unsigned int old_pixel = pixels[idx];
     while (true) {
