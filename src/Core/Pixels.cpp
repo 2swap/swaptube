@@ -66,11 +66,6 @@ void Pixels::darken(float factor){
     }
 }
 
-void Pixels::set_alpha(int x, int y, int a) {
-    if(out_of_range(x, y) || a < 0 || a > 255) return;
-    pixels[wh.x*y+x] = (pixels[wh.x*y+x] & 0x00ffffff) | (a << 24);
-}
-
 void Pixels::get_average_color(int x_start, int y_start, int x_end, int y_end,
                            int &avgA, int &avgR, int &avgG, int &avgB) {
     long long sumA = 0, sumR = 0, sumG = 0, sumB = 0;
@@ -283,15 +278,6 @@ void Pixels::fill_ring(const ivec2& center, double r_outer, double r_inner, int 
     }
 }
 
-void Pixels::fill_ellipse(const ivec2& center, double rw, double rh, int col, double opa){
-    for(double dx = -rw+1; dx < rw; dx++){
-        double sdx = square(dx/rw);
-        for(double dy = -rh+1; dy < rh; dy++)
-            if(sdx+square(dy/rh) < 1)
-                overlay_pixel(center.x+dx, center.y+dy, col, opa);
-    }
-}
-
 void Pixels::bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness) {
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
@@ -337,19 +323,6 @@ void Pixels::bresenham(int x1, int y1, int x2, int y2, int col, float opacity, i
             y1 += sy;
         }
     }
-}
-
-void Pixels::rounded_rect(float x, float y, float rw, float rh, float r, int col){
-    int xplusr = round(x+r);
-    int yplusr = round(y+r);
-    int rwmrt2 = round(rw-r*2);
-    int rhmrt2 = round(rh-r*2);
-    int xprwmr = round(x+rw-r);
-    int yprhmr = round(y+rh-r);
-    fill_rect(xplusr, y, rwmrt2, rh, col);
-    fill_rect(x, yplusr, rw, rhmrt2, col);
-    for(int i = 0; i < 4; i++)
-        fill_ellipse(i%2==0 ? xplusr : xprwmr, i/2==0 ? yplusr : yprhmr, r, r, col);
 }
 
 void Pixels::flood_fill(int x, int y, int color) {

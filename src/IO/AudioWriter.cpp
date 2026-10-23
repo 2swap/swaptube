@@ -362,10 +362,8 @@ void AudioWriter::encode_buffers(bool final_flush) {
             frameSize = sample_buffer.size() / audio_channels;
         }
 
-        for (int ch = 0; ch < audio_channels; ++ch) {
-            // Extend channel with silence (interleaved)
-            if (sfx_buffer.size() < sample_buffer.size()) sfx_buffer.resize(sample_buffer.size(), 0);
-        }
+        // Extend sfx with silence (interleaved) so it covers every sample being encoded
+        if (sfx_buffer.size() < sample_buffer.size()) sfx_buffer.resize(sample_buffer.size(), 0);
 
         vector<AVFrame*> frames = vector<AVFrame*>(num_audio_streams, nullptr);
         for(int i = 0; i < num_audio_streams; i++) {

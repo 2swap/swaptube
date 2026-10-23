@@ -38,8 +38,6 @@ public:
 
     void darken(float factor);
 
-    void set_alpha(int x, int y, int a);
-
     void get_average_color(int x_start, int y_start, int x_end, int y_end,
                            int &avgA, int &avgR, int &avgG, int &avgB);
 
@@ -63,11 +61,7 @@ public:
 
     void fill_ring(const ivec2& center, double r_outer, double r_inner, int col, double opa = 1);
 
-    void fill_ellipse(const ivec2& center, double rw, double rh, int col, double opa = 1);
-
     void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness);
-
-    void rounded_rect(float x, float y, float rw, float rh, float r, int col);
 
     void flood_fill(int x, int y, int color);
 
