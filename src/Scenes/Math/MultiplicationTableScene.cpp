@@ -30,9 +30,7 @@ MultiplicationTableScene::MultiplicationTableScene(const vec2& dimensions) : Sce
         {"triangle", "1"},
         {"table_size", "4"},
 
-        {"tilted", "0"},
-        
-        {"three_d", "0"},
+        {"tilted", "0"},{"i_flippy", "0"},{"three_d", "0"},
     });
 }
 
@@ -49,15 +47,15 @@ void MultiplicationTableScene::draw() {
 
     if (state["three_d"] == 0){
         const string iunit = (state["tilted"]==0)?"i":"\\frac{2i+2j+ij}{3}";
-        units = {"","1",iunit,"j","ij"};
-        unit_q = {0,0,0,0,0};
-        unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cccc33};
+        units = {"","1",iunit,"j","ij","ij"};
+        unit_q = {0,0,0,0,state["q_ij"],state["q_jj"]};
+        unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cccc33,0x00cccc33};
         
         table_units = {
             0,1,2,3,4,
             1,1,2,3,4,
             2,2,1,4,3,
-            3,3,4,1,2,
+            3,3,5,1,2,
             4,4,3,2,1,
         };
 
@@ -68,6 +66,14 @@ void MultiplicationTableScene::draw() {
                 0,0,1,0,1,
                 0,0,0,1,1,
                 0,0,1,1,0,
+            };
+        } else if (state["i_flippy"] == 1) {
+            table_signs = {
+                0,0,0,0,0,
+                0,0,0,0,0,
+                0,0,0,0,1,
+                0,0,1,1,0,
+                0,0,0,1,1,
             };
         } else {
             table_signs = {
@@ -124,7 +130,7 @@ void MultiplicationTableScene::draw() {
                 }
             }
 
-
+            if (cell_opacity == 0) continue;
 
             int i = r*5 + c;
 

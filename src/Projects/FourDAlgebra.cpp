@@ -3636,7 +3636,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
     stage_macroblock(SilenceBlock(0.4));
     cs.render_microblock();
 
@@ -3713,6 +3712,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.fade_subscene(MICRO,"spinny_png",0);
     cs.slide_subscene(MICRO, "quat_png", vec2(0.2,0.03));
     cs.slide_subscene(MICRO, "rotFull", vec2(0.2,0.03));
+    cs.slide_subscene(MICRO, "slice", vec2(0.15,0.03));
+    cs.slide_subscene(MICRO, "spinny_png", vec2(0.15,0.03));
     cs.render_microblock();
     cs.remove_subscene("slice");
     cs.remove_subscene("spinny_png");
@@ -3753,9 +3754,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     table->manager.set(bg);
     table->manager.set({
-        {"triangle", "0"},
-        {"commutative", "0"},
-        {"table_size", "1.5"},
+        {"triangle", "0"},{"commutative", "1"},{"table_size", "1.5"},{"q_ij", "1"},{"q_jj", "1"},
 
         {"opacity_00", "0"},{"opacity_01", "0"},{"opacity_02", "0"},{"opacity_03", "0"},{"opacity_04", "0"},
         {"opacity_10", "0"},{"opacity_11", "0"},{"opacity_12", "0"},{"opacity_13", "0"},{"opacity_14", "0"},
@@ -3782,15 +3781,14 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(FileBlock("which makes these neutral multiplications."));
     table->manager.transition(MICRO, {
-        {"table_size", "4"},
-        {"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
-        {"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
+        {"table_size", "2.6"},
+        {"opacity_02", "1"},
+        {"opacity_11", "1"},{"opacity_12", "1"},
         {"opacity_20", "1"},{"opacity_21", "1"},
-        {"opacity_30", "1"},{"opacity_31", "1"},
-        {"opacity_40", "1"},{"opacity_41", "1"},
     });
     cs.render_microblock();
     cs.render_microblock();
+
 
 
     stage_macroblock(SilenceBlock(0.6));
@@ -3813,22 +3811,71 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
-    // TODO show the different choice
+
+    shared_ptr<MultiplicationTableScene> other_choice = make_shared<MultiplicationTableScene>(vec2(1,1));
+    cs.add_scene_fade_in(MICRO,other_choice, "other_choice",vec2(0.48,0.48));
+
+    other_choice->manager.set(bg);
+    other_choice->manager.set({
+        {"triangle", "0"},{"i_flippy", "1"},{"commutative", "0"},
+        {"table_size", "2.8"},
+
+        {"opacity_00", "0"},{"opacity_01", "0"},{"opacity_02", "0"},{"opacity_03", "0"},{"opacity_04", "0"},
+        {"opacity_10", "0"},{"opacity_11", "0"},{"opacity_12", "0"},{"opacity_13", "0"},{"opacity_14", "0"},
+        {"opacity_20", "0"},{"opacity_21", "0"},{"opacity_22", "1"},{"opacity_23", "0"},{"opacity_24", "0"},
+        {"opacity_30", "0"},{"opacity_31", "0"},{"opacity_32", "0"},{"opacity_33", "0"},{"opacity_34", "0"},
+        {"opacity_40", "0"},{"opacity_41", "0"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "0"},
+    });
+
+
     stage_macroblock(FileBlock("A different choice would make this subalgebra flippy."));
+    cs.render_microblock();
+    cs.render_microblock();
+
+    shared_ptr<PngScene> flippy_png = make_shared<PngScene>("flippy",vec2(0.28,0.14));
+    cs.add_scene(flippy_png, "flippy_png",vec2(0.48,-0.05)); 
+    cs.slide_subscene(MICRO, "flippy_png",vec2(0,0.18)); 
+    cs.slide_subscene(MICRO,"table",vec2(0,0.03));
+    cs.slide_subscene(MICRO,"other_choice",vec2(0,0.03));
+
     table->manager.transition(MICRO, {
         {"opacity_01", "1"},{"opacity_10", "1"},
         {"opacity_11", "1"},{"opacity_12", "1"},
         {"opacity_21", "1"},
     });
     cs.render_microblock();
-    cs.render_microblock();
+
+
 
 
     stage_macroblock(CompositeBlock(FileBlock("TGC: And that's bad!"),SilenceBlock(0.4)));
     cs.render_microblock();
+    cs.manager.set({{"d","0"},{"bounce","<d> sin 1.09 *"}});
+    cs.manager.transition(MICRO,{{"d","1.98"}});
+    shared_ptr<PngScene> bad_png = make_shared<PngScene>("bad",vec2(0.1,0.1));
+    cs.add_scene_fade_in(MICRO,bad_png, "bad_png",vec2(0.50,0.62)); 
+    // cs.slide_subscene(MICRO, "bad_png",vec2(-0.1,0.08)); 
+    cs.manager.set({{"bad_png.angle","-0.3"},{"bad_png.x","<bounce> -0.1 * 0.5 +"},{"bad_png.y","<bounce> 0.08 * 0.62 +"}});
+    bad_png->manager.set({{"w","[bounce] 0.3 * 0.1 +"},{"h","[bounce] 0.3 * 0.1 +"}});
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1.6));
+    cs.render_microblock();
+    cs.fade_subscene(MICRO,"other_choice",0);
+    cs.fade_subscene(MICRO,"bad_png",0);
+    cs.fade_subscene(MICRO,"flippy_png",0);
+    cs.slide_subscene(MICRO,"flippy_png",vec2(0,-0.18));
+    cs.slide_subscene(MICRO,"bad_png",vec2(0.1,0.2));
+    cs.render_microblock();
+    cs.remove_subscene("other_choice");
+    cs.remove_subscene("bad_png");
+    cs.remove_subscene("flippy_png");
+
 
 
     stage_macroblock(FileBlock("Similarly, j should square to -1 in its subalgebra."));
+    cs.slide_subscene(MICRO,"table",vec2(0,-0.03));
     table->manager.transition(MICRO, {
         {"table_size", "3.2"},
         {"opacity_01", "0.1"},{"opacity_10", "0.1"},{"opacity_11", "0.1"},
@@ -3849,28 +3896,96 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     stage_macroblock(SilenceBlock(1.5));
     cs.render_microblock();
 
-    // TODO 1j boxes fade in 
+
     stage_macroblock(FileBlock("We tried combining i and j to make a 3D algebra, but it was not associative."));
     table->manager.transition(MICRO, {
         {"opacity_02", "1"},{"opacity_20", "1"},
         {"opacity_12", "1"},{"opacity_21", "1"},{"opacity_22", "1"},
+        {"opacity_23", "1"},{"opacity_32", "1"},
     });
     cs.render_microblock();
     cs.render_microblock();
+
+
+    StateSet parentcontrol = {
+        {"yz_x", "[yz_x]"}, {"yz_y", "[yz_y]"}, {"yz_z", "[yz_z]"},{"yz_w", "[yz_w]"},
+        {"zz_x", "[zz_x]"}, {"zz_y", "[zz_y]"}, {"zz_z", "[zz_z]"},{"zz_w", "[zz_w]"},
+        {"d", "[d]"},{"w_slider", "[w_slider]"},
+    };
+    cs.manager.set({
+        {"yz_x", "-0.7"}, {"yz_y", "0.2"}, {"yz_z", "0.4"},
+        {"zz_x", "0.7"}, {"zz_y", "0.3"}, {"zz_z", "-0.4"},
+        {"w_slider","0"},{"d","30"},
+    });
+    shared_ptr<ThreeDAlgebraScene> threed1 = make_shared<ThreeDAlgebraScene>(vec2(0.4, 1));
+    threed1->manager.set({
+        {"associativity", "1"},{"a_x", "0"},{"a_y", "1"},{"b_x", "0"},{"b_z", "1"},{"reach", "3"},
+    });
+    threed1->manager.set(parentcontrol);
+
+    shared_ptr<ThreeDAlgebraScene> threed2 = make_shared<ThreeDAlgebraScene>(vec2(0.4, 1));
+    threed2->manager.set({
+        {"associativity", "0"},{"a_x", "0"},{"a_y", "1"},{"b_x", "0"},{"b_z", "1"},{"reach", "3"},
+    });
+    threed2->manager.set(parentcontrol);
+
+    shared_ptr<LatexScene> latex_ij = make_shared<LatexScene>("\\times ij",vec2(0.25,0.25));
+    shared_ptr<LatexScene> latex_i_j = make_shared<LatexScene>("\\times i \\times j",vec2(0.25,0.25));
+
+    cs.manager.transition(MICRO,{
+        {"yz_x", "-0.1"}, {"yz_y", "0.6"}, {"yz_z", "0.3"},
+        {"zz_x", "0.1"}, {"zz_y", "-0.7"}, {"zz_z", "-0.5"},
+    });
+    cs.add_scene(threed1, "threed1",vec2(1.2,0.4)); 
+    cs.add_scene(threed2, "threed2",vec2(-0.2,0.4));
+    cs.add_scene(latex_ij, "latex_ij", vec2(1.2,0.8)); 
+    cs.add_scene(latex_i_j, "latex_i_j", vec2(-0.2,0.8)); 
+    cs.slide_subscene(MICRO,"threed1",vec2(-0.37,0));
+    cs.slide_subscene(MICRO,"threed2",vec2(0.37,0));
+    cs.slide_subscene(MICRO,"latex_ij",vec2(-0.37,0));
+    cs.slide_subscene(MICRO,"latex_i_j",vec2(0.37,0));
+    table->manager.transition(MICRO,{{"w","0.75"},{"h","0.75"}});
     cs.render_microblock();
 
-    // TODO question marks in ij, or show 3d choices
+
+
+    stage_macroblock(SilenceBlock(2.4));
+
+    cs.manager.transition(MICRO,{
+        {"yz_x", "0.2"}, {"yz_y", "0.5"}, {"yz_z", "-0.6"},
+        {"zz_x", "0.9"}, {"zz_y", "0.2"}, {"zz_z", "-0.6"},
+    });
+    cs.render_microblock();
+    cs.manager.transition(MICRO,{
+        {"yz_x", "-1"}, {"yz_y", "0.2"}, {"yz_z", "0"},
+        {"zz_x", "0"}, {"zz_y", "1"}, {"zz_z", "-0.2"},
+    });
+    cs.render_microblock();
+    cs.slide_subscene(MICRO,"threed1",vec2(0.4,0));
+    cs.slide_subscene(MICRO,"threed2",vec2(-0.4,0));
+    cs.slide_subscene(MICRO,"latex_ij",vec2(0.4,0));
+    cs.slide_subscene(MICRO,"latex_i_j",vec2(-0.4,0));
+    table->manager.transition(MICRO,{{"w","1"},{"h","1"}});
+    cs.render_microblock();
+    cs.remove_subscene("threed1");
+    cs.remove_subscene("threed2");
+    cs.remove_subscene("latex_ij");
+    cs.remove_subscene("latex_i_j");
+
+
     stage_macroblock(FileBlock("i times j must be in a 4th dimension."));
     table->manager.transition(MICRO, {
+        {"q_ij", "0"},
         {"opacity_01", "0.1"},{"opacity_10", "0.1"},{"opacity_11", "0.1"},
         {"opacity_02", "0.1"},{"opacity_20", "1"},
         {"opacity_12", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},
         {"opacity_03", "1"},{"opacity_30", "0.1"},
         {"opacity_13", "0.1"},{"opacity_31", "0.1"},{"opacity_33", "0.1"},
-        {"opacity_23", "1"},
+        {"opacity_32", "0"},
     });
     cs.render_microblock();
     cs.render_microblock();
+    table->manager.set({{"q_jj", "0"},{"commutative", "0"}});
     table->manager.transition(MICRO, {
         {"table_size", "4"},
         {"opacity_04", "1"},{"opacity_40", "1"},
@@ -3880,7 +3995,6 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
-
 
 
     stage_macroblock(FileBlock("And here's where the algebra splits."));
