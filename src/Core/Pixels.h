@@ -27,16 +27,11 @@ public:
     int get_pixel_carelessly(int x, int y) const;
     int get_pixel_carefully(int x, int y) const;
 
-    void overlay_pixel(int x, int y, int col, double overlay_opacity_multiplier = 1);
-
     void get_pixel_by_channels(int x, int y, int& a, int& r, int& g, int& b) const;
 
     int get_alpha(int x, int y) const;
 
     void set_pixel_carelessly(int x, int y, int col);
-    void set_pixel_carefully(int x, int y, int col);
-
-    void darken(float factor);
 
     void get_average_color(int x_start, int y_start, int x_end, int y_end,
                            int &avgA, int &avgR, int &avgG, int &avgB);
@@ -46,36 +41,11 @@ public:
     void crop(const ivec2&, const ivec2&, Pixels &cropped) const;
     void crop_by_alpha(Pixels& cropped);
 
-    int get_pixel_bilinear(const vec2& pos) const;
-
-    bool is_empty() const;
-
-    void overlay_cpu(const Pixels& p, const vec2& center, double overlay_opacity_multiplier = 1);
-    void overlay_cpu_with_rotation(const Pixels& p, const vec2& center, double overlay_opacity_multiplier, float angle_radians);
-
-    void overwrite(const Pixels& p, const vec2& top_left);
-
     void fill_rect(int x, int y, int rw, int rh, int col);
-
-    void fill_circle(const ivec2& center, double r, int col, double opa = 1);
-
-    void fill_ring(const ivec2& center, double r_outer, double r_inner, int col, double opa = 1);
-
-    void bresenham(int x1, int y1, int x2, int y2, int col, float opacity, int thickness);
-
-    void flood_fill(int x, int y, int color);
 
     Pixels naive_scale_down(int scale_down_factor) const;
 
-    void rotate_90_inverse(Pixels& rotated) const;
-    void rotate_90(Pixels& rotated) const;
-
     void bicubic_scale(const ivec2& new_wh, Pixels& result) const;
-    float bicubic_weight(float t) const;
 
     void print_to_terminal();
 };
-
-// Free functions
-Pixels create_alpha_from_intensities(const vector<vector<unsigned int>>& intensities);
-Pixels create_pixels_from_2d_vector(const vector<vector<unsigned int>>& colors, int negative_intensity);
