@@ -4123,7 +4123,6 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
     stage_macroblock(FileBlock("if we accept the tricky rule that completes the table."));
 	shared_ptr<LatexScene> latex_qu = make_shared<LatexScene>("ij=-ji",vec2(0.3,0.15));
 	cs.add_scene(latex_qu , "latex_qu",vec2(0.3,-0.06));
@@ -4160,8 +4159,9 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "0.0"},
         {"rotation_ik", "-0.28"},
         {"rotation_1k", "-0.121"},
-        {"slider", "0.36666"},
+        {"slider", "0.4166666"},
     });
+    // fd.slider = (0.75 - fd.x + cs.slider)*2/3
 
     
 
@@ -4174,7 +4174,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     table->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.65"},});
     cs.slide_subscene(MICRO, "latex_qu", vec2(-0.1,0.05));
     cs.manager.transition(MICRO,{{"slider","1.1"}});
-    fd->manager.transition(MICRO,{{"slider","0.766666"}});
+    fd->manager.transition(MICRO,{{"slider","0.816666"}});
 
 
     cs.render_microblock();
@@ -4241,7 +4241,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     cs.slide_subscene(MICRO, "fd", vec2(-0.25,0));
     cs.manager.transition(MICRO,{{"slider","-0.1"}});
-    fd->manager.transition(MICRO,{{"slider","0.2333333"}});
+    fd->manager.transition(MICRO,{{"slider","0.1833333"}});
     
     bitable->manager.transition(MICRO,{
         {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
@@ -4261,7 +4261,6 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
         {"pov_xz", "-0.3"},
     });
     cs.render_microblock();
-
 
 
     stage_macroblock(SilenceBlock(0.6));
@@ -4357,7 +4356,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     cs.slide_subscene(MICRO, "fd", vec2(0.4,0));
     cs.manager.transition(MICRO,{{"slider","1.1"}});
-    fd->manager.transition(MICRO,{{"slider","0.766666"}});
+    fd->manager.transition(MICRO,{{"slider","0.716666"}});
 
     fd->manager.transition(MICRO, {
         {"pov_xz", "-1.82"},
@@ -4460,6 +4459,7 @@ void render_video() {
 
     cursor->manager.set(cursor_control);
 
+    set_for_real(false);
     
 
     four_d_intro(cs, bg_control);
