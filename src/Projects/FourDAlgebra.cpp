@@ -428,9 +428,10 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cursor->manager.transition(MICRO,{{"cursor_x", "{drag_x}"},{"cursor_y", "{drag_y}"},});
     cs.render_microblock();
 
+    td->manager.begin_timer("add_axes");
     td->manager.transition(MICRO, {
-        {"dragger_x", "{t} .7 * 3 + sin 2 *"},
-        {"dragger_y", "{t} 1. * cos 2 *"},
+        {"dragger_x", "<add_axes> .5 * 3 + sin 2 *"},
+        {"dragger_y", "<add_axes> .7 * cos 2 *"},
     });
     cs.render_microblock();
     td->manager.transition(MICRO, {
@@ -464,9 +465,10 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cursor->manager.transition(MICRO,{{"cursor_x", "{drag_x}"},{"cursor_y", "{drag_y}"},});
     cs.render_microblock();
 
+    td->manager.begin_timer("mult_axes");
     td->manager.transition(MICRO, {
-        {"dragger_x", "{t} .7 * sin .8 * 1 +"},
-        {"dragger_y", "{t} 1. * cos .8 * 1 +"},
+        {"dragger_x", "<mult_axes> .7 * sin .8 * 1 +"},
+        {"dragger_y", "<mult_axes> 1. * cos .8 * 1 +"},
     });
     cs.render_microblock();
     td->manager.transition(MICRO, {
@@ -1181,8 +1183,8 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    stage_macroblock(CompositeBlock(SilenceBlock(0.4), FileBlock("plot more complicated polynomials,")));
-    cs.render_microblock(); 
+    stage_macroblock(CompositeBlock(CompositeBlock(SilenceBlock(0.4), FileBlock("plot more complicated polynomials,")), SilenceBlock(0.5)));
+    cs.render_microblock();
     cs.render_microblock();
     td->manager.transition(MICRO, {
         {"mode", "105"},
@@ -1198,7 +1200,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(SilenceBlock(4));
+    stage_macroblock(SilenceBlock(3.5));
     cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
     cs.render_microblock();
     td->manager.transition(MICRO, {
@@ -1216,12 +1218,21 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(CompositeBlock(FileBlock("And even use a Taylor polynomial to graph the sine function in all sorts of algebras."), SilenceBlock(4)));
+    // Equation 105 is ~100x larger than the sine polynomial, so a linear blend only reveals the sine
+    // in the last few frames. Shrink 105's weight geometrically instead, from 1 down to 1e-4.
+    td->manager.set({
+        {"sine_ease", "0 1 {microblock_fraction} smoothlerp"},
+        {"sine_lerp", "1 10 <sine_ease> -4 * ^ - .9999 /"},
+        {"mode", "105 <sine_lerp> +"},
+    });
     td->manager.transition(MICRO, {
-        {"mode", "106"},
         {"zoom", "0"},
     });
-    cs.render_microblock(); 
-    cs.render_microblock(); 
+    cs.render_microblock();
+    td->manager.set({
+        {"mode", "106"},
+    });
+    cs.render_microblock();
 
     td->manager.transition(MICRO, {
         {"yy_x", "0.3"},
@@ -1261,6 +1272,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "68"},{"bg_1_g", "0"},{"bg_1_b", "24"},});
     cs.render_microblock();
+    cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
     cs.render_microblock();
     cs.render_microblock();
 
@@ -1280,8 +1292,6 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
-    cs.render_microblock();
     td->manager.transition(MICRO, {
         {"yy_x", "0.6"},
         {"yy_y", "-0.1"},
@@ -1290,7 +1300,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    stage_macroblock(CompositeBlock(SilenceBlock(4), FileBlock("Though... not always.")));
+    stage_macroblock(CompositeBlock(SilenceBlock(3), FileBlock("Though... not always.")));
     td->manager.transition(MICRO, {
         {"yy_x", "-0.8"},
         {"yy_y", "-0.5"},
@@ -1444,7 +1454,8 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     stage_macroblock(CompositeBlock(FileBlock("Let's define x to act as 1."),SilenceBlock(0.6)));
     // (dx*xx_x + dy*xy_x, dx*xx_y + dy*xy_y) = (0, -0.1*-1 + -1.1*0.4) = (0, -0.34),
     cursor->manager.transition(MICRO,{{"cursor_x", ".5"},{"cursor_y", ".5 .34 5 / +"},});
-    StateSet undo_cursor_click = cursor->manager.set("cursor_size", "{microblock_fraction} .9 > -.02 * .08 +");
+    cs.render_microblock(); 
+    StateSet undo_cursor_click = cursor->manager.set("cursor_size", "{microblock_fraction} .8 > -.03 * .08 +");
     cs.render_microblock(); 
     td->manager.set({
         {"xpoint_label", "0"},
@@ -1487,12 +1498,10 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(1));
     cs.render_microblock();
-
-
-
-    stage_macroblock(CompositeBlock(FileBlock("Now y squared is the only free definition."), SilenceBlock(4)));
     cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
     cs.render_microblock();
+
+    stage_macroblock(CompositeBlock(FileBlock("Now y squared is the only free definition."), SilenceBlock(4)));
     cs.manager.set("siney", "0");
     td->manager.transition(MACRO, {
         {"yy_x", "0.6"},
@@ -2825,11 +2834,11 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     stage_macroblock(FileBlock("The space of just 1 and ij forms the flippy algebra,"));
 
     table->manager.transition(MICRO, {
-        {"opacity_02", "0.1"},{"opacity_03", "0.1"},
-        {"opacity_12", "0.1"},{"opacity_13", "0.1"},
-        {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0.1"},
-        {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0.1"},{"opacity_33", "0.1"},{"opacity_34", "0.1"},
-        {"opacity_42", "0.1"},{"opacity_43", "0.1"},
+        {"opacity_02", "0"},{"opacity_03", "0"},
+        {"opacity_12", "0"},{"opacity_13", "0"},
+        {"opacity_20", "0"},{"opacity_21", "0"},{"opacity_22", "0"},{"opacity_23", "0"},{"opacity_24", "0"},
+        {"opacity_30", "0"},{"opacity_31", "0"},{"opacity_32", "0"},{"opacity_33", "0"},{"opacity_34", "0"},
+        {"opacity_42", "0"},{"opacity_43", "0"},
     });
     cs.fade_subscene(MICRO, "dub_png", 0.1);
     cs.render_microblock();
@@ -2846,6 +2855,11 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     table->manager.transition(MICRO, {
         {"opacity_01", "0.1"},{"opacity_10", "0.1"},
         {"opacity_11", "0.1"},{"opacity_14", "0.1"},{"opacity_41", "0.1"},
+        {"opacity_02", "0.1"},{"opacity_03", "0.1"},
+        {"opacity_12", "0.1"},{"opacity_13", "0.1"},
+        {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0.1"},
+        {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0.1"},{"opacity_33", "0.1"},{"opacity_34", "0.1"},
+        {"opacity_42", "0.1"},{"opacity_43", "0.1"},
     });
     cs.render_microblock();
     cs.render_microblock();
@@ -2894,7 +2908,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(SilenceBlock(1.5));
+    stage_macroblock(SilenceBlock(4));
 
 	shared_ptr<LatexScene> latex_i2 = make_shared<LatexScene>("i",vec2(0.053,0.19));
 	cs.add_scene(latex_i2 , "latex_i2",vec2(0.675,0.192));
@@ -3438,6 +3452,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
         {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
     });
     cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
 
 
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "8"},{"bg_1_b", "80"},});
@@ -3878,9 +3894,9 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO,"table",vec2(0,-0.03));
     table->manager.transition(MICRO, {
         {"table_size", "3.2"},
-        {"opacity_01", "0.1"},{"opacity_10", "0.1"},{"opacity_11", "0.1"},
-        {"opacity_02", "0.1"},{"opacity_20", "0.1"},
-        {"opacity_12", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},
+        {"opacity_01", "0"},{"opacity_10", "0"},{"opacity_11", "0"},
+        {"opacity_02", "0"},{"opacity_20", "0"},
+        {"opacity_12", "0"},{"opacity_21", "0"},{"opacity_22", "0"},
         {"opacity_03", "1"},{"opacity_30", "1"},
         {"opacity_33", "1"},
     });
@@ -3949,7 +3965,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(SilenceBlock(2.4));
+    stage_macroblock(SilenceBlock(5));
 
     cs.manager.transition(MICRO,{
         {"yz_x", "0.2"}, {"yz_y", "0.5"}, {"yz_z", "-0.6"},
@@ -4058,15 +4074,16 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "latex_bi", vec2(0,0.2));
     cs.slide_subscene(MICRO, "bitable", vec2(0,0.08));
     cs.render_microblock();
+    cs.render_microblock();
 
 
     stage_macroblock(CompositeBlock(FileBlock("but that makes it flippy."),SilenceBlock(0.4)));
     bitable->manager.transition(MICRO, {
-        {"opacity_00", "0.1"},{"opacity_01", "1"},{"opacity_02", "0.1"},{"opacity_03", "0.1"},{"opacity_04", "1"},
-        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "0.1"},{"opacity_13", "0.1"},{"opacity_14", "1"},
-        {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0.1"},
-        {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0.1"},{"opacity_33", "0.1"},{"opacity_34", "0.1"},
-        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "0.1"},{"opacity_43", "0.1"},{"opacity_44", "1"},
+        {"opacity_00", "0"},{"opacity_01", "1"},{"opacity_02", "0"},{"opacity_03", "0"},{"opacity_04", "1"},
+        {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "0"},{"opacity_13", "0"},{"opacity_14", "1"},
+        {"opacity_20", "0"},{"opacity_21", "0"},{"opacity_22", "0"},{"opacity_23", "0"},{"opacity_24", "0"},
+        {"opacity_30", "0"},{"opacity_31", "0"},{"opacity_32", "0"},{"opacity_33", "0"},{"opacity_34", "0"},
+        {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "1"},
     });
     cs.render_microblock();
     cs.render_microblock();
@@ -4077,7 +4094,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("Alternatively, we can make the fourth dimension spinny,"));
+    stage_macroblock(FileBlock("Alternatively, we can force the fourth dimension to be spinny,"));
     cs.slide_subscene(MICRO, "table", vec2(0.1,0));
     cs.slide_subscene(MICRO, "bitable", vec2(0.1,0));
     cs.slide_subscene(MICRO, "latex_bi", vec2(0.1,0));
@@ -4130,7 +4147,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
     shared_ptr<FourDAlgebraScene> fd = make_shared<FourDAlgebraScene>(vec2(1.5,1));
-    cs.add_scene_fade_in(MICRO, fd, "fd",vec2(0.7,0.5), 1, false, 1);
+    cs.add_scene_fade_in(MICRO, fd, "fd",vec2(0.625,0.5), 1, false, 1);
 
     fd->manager.set({
         {"offset_1", "-0.13"},
@@ -4222,7 +4239,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "latex_bi", vec2(-0.4,0.0));
     cs.fade_subscene(MICRO,"latex_bi",1);
 
-    cs.slide_subscene(MICRO, "fd", vec2(-0.4,0));
+    cs.slide_subscene(MICRO, "fd", vec2(-0.25,0));
     cs.manager.transition(MICRO,{{"slider","-0.1"}});
     fd->manager.transition(MICRO,{{"slider","0.2333333"}});
     
@@ -4444,8 +4461,6 @@ void render_video() {
     cursor->manager.set(cursor_control);
 
     
-    set_for_real(false);
-
 
     four_d_intro(cs, bg_control);
     one_dim_algebra(cs);
