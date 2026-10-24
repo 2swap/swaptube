@@ -13,6 +13,7 @@ https://discord.gg/a786NZXYQ3
 # Compatibility
 SwapTube is developed, and is known to compile and run on several Linux distributions. MacOS and Windows are untested.
 Furthermore, a CUDA-compatible NVIDIA GPU or a [HIP](https://rocm.docs.amd.com/projects/install-on-linux/en/latest/install/quick-start.html)-compatible AMD GPU is required.
+Video is normally encoded on the GPU's hardware encoder (NVENC on NVIDIA, VA-API on AMD). If your GPU lacks one, pass `-e` to `go.sh` to encode on the CPU with libx264 instead. This is slower and produces 8-bit H.264 rather than 10-bit.
 
 Note that the HIP folder is generated on HIP-compatible machines by translating the CUDA folder with hipify. Do not modify any of the contents in HIP/, instead treat the CUDA folder as the source of truth and modify that. It will be re-translated via CMake.
 

@@ -14,11 +14,11 @@ using namespace std;
 
 void render_video(); // Forward declaration, provided by the user in their project file
 
-void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio, bool& audio_sfx, string& timeline_plan_path, bool& record_timeline_plan) {
+void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio, bool& audio_sfx, string& timeline_plan_path, bool& record_timeline_plan, bool& cpu_encode) {
     cout << "Parsing command line arguments... " << endl;
 
-    if (argc != 9) {
-        throw runtime_error("Expected 8 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx timeline_plan_path");
+    if (argc != 10) {
+        throw runtime_error("Expected 9 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx timeline_plan_path cpu_encode");
     }
 
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
@@ -77,7 +77,14 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
     if (timeline_plan_path.empty()) {
         throw runtime_error("Microblock plan path cannot be empty");
     }
-    cout << "Microblock Counts: " << timeline_plan_path << endl << endl;
+    cout << "Microblock Counts: " << timeline_plan_path << ", " << flush;
+
+    int cpu_encode_i;
+    if (sscanf(argv[9], "%d", &cpu_encode_i) != 1 || (cpu_encode_i != 0 && cpu_encode_i != 1)) {
+        throw runtime_error("Invalid cpu encode argument: " + string(argv[9]) );
+    }
+    cpu_encode = (cpu_encode_i != 0);
+    cout << "CPU Encode: " << (cpu_encode ? "true" : "false") << endl << endl;
 }
 
 inline void signal_handler(int signal) {
@@ -92,17 +99,17 @@ void setup_output_subfolders() {
 
 int main(int argc, char* argv[]) {
     int VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE;
-    bool INCLUDE_AUDIO, AUDIO_SFX;
+    bool INCLUDE_AUDIO, AUDIO_SFX, CPU_ENCODE;
     bool record_timeline_plan;
     string timeline_plan_path;
-    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, INCLUDE_AUDIO, AUDIO_SFX, timeline_plan_path, record_timeline_plan);
+    parse_args(argc, argv, VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, INCLUDE_AUDIO, AUDIO_SFX, timeline_plan_path, record_timeline_plan, CPU_ENCODE);
     Timer timer;
 
     // Main Render Loop
     signal(SIGINT, signal_handler);
     try {
         setup_output_subfolders();
-        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, INCLUDE_AUDIO, AUDIO_SFX);
+        init_writer(VIDEO_WIDTH, VIDEO_HEIGHT, FRAMERATE, SAMPLERATE, 0xff000044, INCLUDE_AUDIO, AUDIO_SFX, CPU_ENCODE);
         initialize_timeline_plan(timeline_plan_path, record_timeline_plan);
         if (is_smoketest()) {
             cout << "Smoketesting video... " << endl;

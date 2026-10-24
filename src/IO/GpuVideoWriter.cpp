@@ -1,6 +1,5 @@
-#include "VideoWriter.h"
+#include "GpuVideoWriter.h"
 #include "../Core/State/GlobalState.h"
-#include "../Core/Smoketest.h"
 
 #include <iostream>
 #include <string>
@@ -42,7 +41,7 @@ extern "C" void preprocess_argb_to_p010(
 );
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 
-bool VideoWriter::encode_and_write_frame(AVFrame* frame){
+bool GpuVideoWriter::encode_and_write_frame(AVFrame* frame){
     int ret = avcodec_send_frame(videoCodecContext, frame);
     //if (ret == AVERROR_EOF) return false;
     if (ret < 0) {
@@ -70,7 +69,7 @@ bool VideoWriter::encode_and_write_frame(AVFrame* frame){
     return true;
 }
 
-VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int video_width_pixels, int video_height_pixels, int video_framerate_fps) : fc(fc_) {
+GpuVideoWriter::GpuVideoWriter(AVFormatContext *fc_, const string& video_path, int video_width_pixels, int video_height_pixels, int video_framerate_fps) : fc(fc_) {
     #ifdef USE_AMD
     setenv("AMD_DEBUG", "notiling", 1);
     #endif
@@ -145,6 +144,8 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
         av_strerror(ret2, errbuf, sizeof(errbuf));
         cout << "Failed to open video codec " << CODEC_NAME << ": " << errbuf << endl;
         av_buffer_unref(&hw_device_ctx);
+        if (ret2 == AVERROR(ENOSYS))
+            throw runtime_error("This GPU has no hardware video encoder for " CODEC_NAME ". Re-run go.sh with -e to encode on the CPU instead.");
         throw runtime_error("Failed avcodec_open2!");
     }
     av_dict_free(&opt);
@@ -171,20 +172,7 @@ VideoWriter::VideoWriter(AVFormatContext *fc_, const string& video_path, int vid
     av_buffer_unref(&hw_device_ctx);
 }
 
-void VideoWriter::add_frame(uint32_t* device_pixels) {
-    if (!is_for_real()) return; // Don't do anything in dev mode
-
-    static auto last_print_time = chrono::steady_clock::time_point::min();
-    auto now = chrono::steady_clock::now();
-    if(last_print_time == chrono::steady_clock::time_point::min() || chrono::duration_cast<chrono::seconds>(now - last_print_time).count() >= 1) {
-        Pixels p(get_video_dimensions_pixels());
-        cuda_copy_pixels_to_host(p.pixels.data(), get_video_width_pixels() * get_video_height_pixels(), device_pixels);
-        p.print_to_terminal();
-        last_print_time = now;
-    }
-
-    if (is_smoketest()) return; // Don't encode video in smoketest
-
+void GpuVideoWriter::add_frame(uint32_t* device_pixels) {
     AVFrame* gpu_frame = av_frame_alloc();
     if (!gpu_frame) {
         throw runtime_error("Failed to allocate frame!");
@@ -263,8 +251,8 @@ void VideoWriter::add_frame(uint32_t* device_pixels) {
     av_frame_free(&gpu_frame);
 }
 
-VideoWriter::~VideoWriter() {
-    cout << "Cleaning up VideoWriter..." << endl;
+GpuVideoWriter::~GpuVideoWriter() {
+    cout << "Cleaning up GpuVideoWriter..." << endl;
 
     while(encode_and_write_frame(NULL));
 

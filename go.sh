@@ -73,11 +73,12 @@ SAMPLERATE=48000
 SKIP_RENDER=0
 INCLUDE_AUDIO=1
 AUDIO_SFX=0
+CPU_ENCODE=0
 INVALID_FLAG=0
 COMPUTE_LANG=""
 DEBUGGER=0
 # Parse flags
-while getopts "saxc:g" flag; do
+while getopts "saxc:ge" flag; do
     case "$flag" in
         s)
             SKIP_RENDER=1
@@ -105,6 +106,9 @@ while getopts "saxc:g" flag; do
         g)
             DEBUGGER=1
             ;;
+        e)
+            CPU_ENCODE=1
+            ;;
         *)
             INVALID_FLAG=1
             ;;
@@ -120,6 +124,8 @@ if [ $INVALID_FLAG -eq 1 ]; then
     echo "-x means to also emit sound effects and voice narration as their own separate"
     echo "   tracks, in addition to the merged track."
     echo "-c means to specify compute language (takes arguments \"CUDA\" or \"HIP\")"
+    echo "-e means to encode video on the CPU (libx264) instead of the GPU's hardware"
+    echo "   encoder, for machines without one. Slower, and 8-bit instead of 10-bit."
     exit 1
 fi
 
@@ -190,9 +196,9 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     MICROBLOCK_COUNTS_PATH="$(pwd)/io_out/microblock_counts.txt"
 
     if [ $DEBUGGER -eq 1 ]; then
-        gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
+        gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
     else
-        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
+        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
     fi
     if [ $? -ne 0 ]; then
         echo "go.sh: Execution failed in smoketest."
@@ -204,9 +210,9 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
         # Clear all files from the smoketest, keeping the recorded microblock counts.
         find io_out/ -mindepth 1 -maxdepth 1 ! -name microblock_counts.txt -exec rm -rf {} +
         if [ $DEBUGGER -eq 1 ]; then
-            gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
+            gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
         else
-            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH"
+            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
         fi
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."

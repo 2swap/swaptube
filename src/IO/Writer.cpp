@@ -6,13 +6,14 @@
 #include "ShtookaWriter.h"
 #include "SubtitleWriter.h"
 #include "AudioWriter.h"
-#include "VideoWriter.h"
+#include "GpuVideoWriter.h"
+#include "CpuVideoWriter.h"
 #include "MidiWriter.h"
 #include "../Core/Smoketest.h"
 
 using namespace std;
 
-Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio, const bool& audio_sfx) :
+Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio, const bool& audio_sfx, const bool& cpu_encode) :
     video_width_pixels(video_width_pixels),
     video_height_pixels(video_height_pixels),
     video_framerate_fps(video_framerate_fps),
@@ -31,7 +32,8 @@ Writer::Writer(int video_width_pixels, int video_height_pixels, int video_framer
     if (format_context == nullptr) throw std::runtime_error("Failed to allocate output format context");
 
     audio = new AudioWriter(format_context, audio_samplerate_hz, include_audio, audio_sfx);
-    video = new VideoWriter(format_context, video_path, video_width_pixels, video_height_pixels, video_framerate_fps);
+    if (cpu_encode) video = new CpuVideoWriter(format_context, video_path, video_width_pixels, video_height_pixels, video_framerate_fps);
+    else            video = new GpuVideoWriter(format_context, video_path, video_width_pixels, video_height_pixels, video_framerate_fps);
 }
 
 void Writer::destroy() {
@@ -55,12 +57,12 @@ uint32_t Writer::get_video_background_color() const { return video_background_co
 
 static std::unique_ptr<Writer> writer;
 
-void init_writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio, const bool& audio_sfx) {
+void init_writer(int video_width_pixels, int video_height_pixels, int video_framerate_fps, int audio_samplerate_hz, uint32_t video_background_color, const bool& include_audio, const bool& audio_sfx, const bool& cpu_encode) {
     cout << "Initializing writer for " << video_width_pixels << "x" << video_height_pixels << " at " << video_framerate_fps << " fps." << endl;
     if (writer)
         throw std::runtime_error("Writer already initialized");
 
-    writer = std::make_unique<Writer>(video_width_pixels, video_height_pixels, video_framerate_fps, audio_samplerate_hz, video_background_color, include_audio, audio_sfx);
+    writer = std::make_unique<Writer>(video_width_pixels, video_height_pixels, video_framerate_fps, audio_samplerate_hz, video_background_color, include_audio, audio_sfx, cpu_encode);
 }
 
 Writer& get_writer() {
