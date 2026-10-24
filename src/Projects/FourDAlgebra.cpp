@@ -4478,6 +4478,9 @@ void render_video() {
     // TODO color design
 
     // TODO for final render set 4d sin and cos back to 60 iterations and drop raymarch step size in ghost and cube scenes
+
+    // TODO resize latex without transitioning
+    // TODO gpu flicker on circles
 }
 
 
