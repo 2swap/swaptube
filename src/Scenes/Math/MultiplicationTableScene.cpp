@@ -49,7 +49,8 @@ void MultiplicationTableScene::draw() {
         const string iunit = (state["tilted"]==0)?"i":"\\frac{2i+2j+ij}{3}";
         units = {"","1",iunit,"j","ij","ij"};
         unit_q = {0,0,0,0,state["q_ij"],state["q_jj"]};
-        unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cccc33,0x00cccc33};
+        // empty, white, pink, green, blue, blue
+        unit_colors = {0x00000000,0x00e3e5fc,0x00de6dff,0x004ae59d,0x0041bcff,0x0041bcff};
         
         table_units = {
             0,1,2,3,4,
@@ -87,21 +88,22 @@ void MultiplicationTableScene::draw() {
 
     } else {
 
-        units = {"","1","i","j","j","ij","j^2"};
-        unit_q = {0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"]};
-        unit_colors = {0x00000000,0x00cccccc,0x0033cccc,0x00cc33cc,0x00cc33cc,0x00cccc33,0x0033cc33};
+        units = {"","1","i","j","j","ij","j^2","-1"};
+        unit_q = {0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"],0};
+        // empty, white, pink, green, green, blue, white, yellow
+        unit_colors = {0x00000000,0x00e3e5fc,0x00de6dff,0x004ae59d,0x004ae59d,0x0041bcff,0x00e3e5fc,0x00fffa81};
         
         table_units = {
             0,1,2,3,0,
             1,1,2,4,0,
-            2,2,1,5,0,
+            2,2,7,5,0,
             3,0,0,6,0,
             0,0,0,0,0,
         };
         table_signs = {
             0,0,0,0,0,
             0,0,0,0,0,
-            0,0,1,0,0,
+            0,0,0,0,0,
             0,0,0,0,0,
             0,0,0,0,0,
         };

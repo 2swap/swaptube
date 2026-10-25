@@ -64,27 +64,27 @@ __global__ void four_d_rotation_raymarch(
         if (abs(pos_rotated.y) < 1 && abs(pos_rotated.z) < 1 && abs(pos_rotated.w) < 1 && abs(pos_rotated.x) < 1){
             if (abs(last_position.y) > 1){
                 if (last_position.y > 0){
-                    colors[pixel_index] = 0xffaa0000; 
+                    colors[pixel_index] = 0xffef9492; //orange
                     break;
                 }
-                colors[pixel_index] = 0xffaa7700; 
+                colors[pixel_index] = 0xffde6dff; //pink
                 break;
             } else if (abs(last_position.z) > 1){
                 if (last_position.z > 0){
-                    colors[pixel_index] = 0xffcccc00; 
+                    colors[pixel_index] = 0xffe3e5fc; //white
                     break;
                 }
-                colors[pixel_index] = 0xffcccccc; 
+                colors[pixel_index] = 0xfffffa81; //yellow
                 break;
             } else if (abs(last_position.w) > 1){
                 if (last_position.w > 0){
-                    colors[pixel_index] = 0xff00cc55; 
+                    colors[pixel_index] = 0xff4ae59d;  //greeb
                     break;
                 }
-                colors[pixel_index] = 0xff5533dd; 
+                colors[pixel_index] = 0xff41bcff; //blue
                 break;
             }
-            colors[pixel_index] = 0xffee55cc; 
+            colors[pixel_index] = 0xffff41a3; //RED
             break;
         }
         

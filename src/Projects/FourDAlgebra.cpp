@@ -2162,7 +2162,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.remove_subscene("table");
 
 
-
     
     stage_macroblock(SilenceBlock(4));
 
@@ -3027,6 +3026,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.fade_subscene(MICRO,"table",0);
     cs.fade_subscene(MICRO,"flippy_png",0);
+	cs.slide_subscene(MICRO,"table",vec2(-0.15,0));
+	cs.slide_subscene(MICRO,"flippy_png",vec2(-0.15,0));
     vec2 leftshift = vec2(-0.2,0);
 	cs.slide_subscene(MICRO,"latex_2",leftshift);
 	cs.slide_subscene(MICRO,"latex__10",leftshift);
@@ -3201,7 +3202,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
         {"slider", "1.1"},
         {"rotate", "1"},
         {"scale", "5.0"},
-        {"pov_xz", "-0.1"},
+        {"pov_xz", "0.1"},
         {"pov_y", "0.2"},
     });
 
@@ -3215,7 +3216,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
         {"slider", "1.1"},
         {"rotate", "1"},
         {"scale", "5.0"},
-        {"pov_xz", "-0.1"},
+        {"pov_xz", "0.1"},
         {"pov_y", "0.2"},
     });
 
@@ -3247,9 +3248,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	latex_i5->manager.transition(MICRO,{{"w","0.1"},{"h","0.28"}});
 	latex_i5->begin_latex_transition(MICRO, "i");
 	cs.slide_subscene(MICRO,"latex_i5",vec2(0.15,-0.24));
-    
-    cs.fade_subscene(MICRO,"table",0);
-    cs.fade_subscene(MICRO,"flippy_png",0);
+
 
     cs.render_microblock();
     cs.remove_subscene("flippy_png");
@@ -3377,7 +3376,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
     
-    cs.slide_subscene(MICRO, "table",vec2(0.2,0)); 
+    cs.slide_subscene(MICRO, "table",vec2(0.35,0)); 
 
 
     stage_macroblock(SilenceBlock(3));
@@ -3411,6 +3410,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     table->manager.transition(MICRO, table_opacities({"00","04","40","44"}, "1", "0"));
     cs.render_microblock();
 
+    cs.render_microblock();
     table->manager.set({{"commutative","0"},{"triangle","0"}});
     cs.render_microblock();
 
@@ -3481,7 +3481,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
         {"slider", "1.1"},
         {"rotate", "1"},
         {"scale", "5.0"},
-        {"pov_xz", "-0.1"},
+        {"pov_xz", "0.1"},
         {"pov_y", "0.2"},
     });
     cs.render_microblock();
@@ -3537,7 +3537,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
         {"slider", "1.1"},
         {"rotate", "1"},
         {"scale", "5.0"},
-        {"pov_xz", "-0.1"},
+        {"pov_xz", "0.1"},
         {"pov_y", "0.2"},
         {"matrices", "1"},
     });
@@ -3654,7 +3654,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(0.4));
     cs.render_microblock();
-
 
 
     cs.fade_subscene(MICRO,"quat_png",0.1);
