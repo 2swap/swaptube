@@ -705,7 +705,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    stage_macroblock(FileBlock("For example, we can define x squared to equal this point"));
+    stage_macroblock(CompositeBlock(SilenceBlock(0.5), FileBlock("For example, we can define x squared to equal this point")));
         
     cs.render_microblock();
     cs.fade_subscene(MICRO,"latex_xx",0);
@@ -776,15 +776,13 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
         {"diagram_opacity", "255"},
         {"xx_x", "1"},{"xx_y", "0"},{"xy_x", "0"},
         {"xy_y", "1"},{"yy_x", "-1"},{"yy_y", "0"},
+        {"diagram_label", "1"},
     });
     cs.render_microblock();
     cs.render_microblock();
     shared_ptr<PngScene> spinny_png = make_shared<PngScene>("spinny",vec2(0.18,0.09));
     cs.add_scene(spinny_png, "spinny_png",vec2(0.09,-0.05)); 
     cs.slide_subscene(MICRO, "spinny_png",vec2(0,0.1)); 
-    td->manager.transition(MICRO, {
-        {"diagram_label", "1"},
-    });
     cs.render_microblock();
 
 
@@ -873,7 +871,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 
 
     
-    stage_macroblock(FileBlock("Here's the squishy one.")); 
+    stage_macroblock(CompositeBlock(FileBlock("Here's the squishy one."), SilenceBlock(1))); 
 
     cursor->manager.transition(MICRO,{{"cursor_x", "{xy_pos_x}"},{"cursor_y", "{xy_pos_y}"},});
     cs.render_microblock();
@@ -893,7 +891,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(SilenceBlock(6)); 
+    stage_macroblock(SilenceBlock(5)); 
     cursor->manager.transition(MICRO,{{"cursor_x", "{drag_x}"},{"cursor_y", "{drag_y}"},});
     cs.render_microblock();
 
@@ -2289,6 +2287,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
 
+// TODO this needs to be more visible
     stage_macroblock(FileBlock("Unless... we move that pesky ij into a 4th dimension."));
 
     cs.render_microblock();
@@ -2332,6 +2331,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(FileBlock("A fourth-dimensional algebra lets us restore associativity."));
+// TODO remove the axes scene
     cs.manager.transition(MICRO, {
         {"zz_x", "-0.4"}, {"zz_y", "-0.3"}, {"zz_z", "0.6"}, {"zz_w", "0.2"},
     });
@@ -2689,7 +2689,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
 
-    stage_macroblock(CompositeBlock(FileBlock("and in the j dimension."),SilenceBlock(1)));
+    stage_macroblock(CompositeBlock(FileBlock("and in the j dimension."),SilenceBlock(.5)));
     
     tess->manager.transition(MICRO, {
         {"a_x", "0"}, 
@@ -3051,6 +3051,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.slide_subscene(MICRO,"latex_15",leftshift);
     cs.render_microblock();
 
+    stage_macroblock(SilenceBlock(0.7));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("How about this step, where i and j swap sides?"));
 
@@ -3121,6 +3123,9 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(FileBlock("We can stop the swap by saying that ij is not ji."));
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(0.7));
     cs.render_microblock();
 
 
@@ -3398,6 +3403,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     };
 
     stage_macroblock(FileBlock("It would be nice if ij squares to negative 1, making its own spinny subalgebra."));
+// TODO make cursor click on 1 for transition
 
     table->manager.set(table_opacities({}, "1", "1"));
     cs.fade_subscene(MICRO,"table",1);
@@ -3425,7 +3431,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "bicomplex_png",vec2(0,-0.2)); 
     cs.slide_subscene(MICRO, "latex_ij2",vec2(0,0.2)); 
 
-    stage_macroblock(SilenceBlock(0.6));
+    stage_macroblock(SilenceBlock(1.6));
     cs.render_microblock();
     cs.remove_subscene("bicomplex_png");
 
@@ -3441,7 +3447,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.render_microblock();
 
-
+    stage_macroblock(SilenceBlock(.3));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("This rule helps us fill in the rest of the table, to get the triple spinny algebra."));
     table->manager.transition(MICRO,{
@@ -3455,6 +3462,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.render_microblock();
 
+    stage_macroblock(SilenceBlock(.3));
+    cs.render_microblock();
 
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "8"},{"bg_1_b", "80"},});
     shared_ptr<PngScene> quat_png = make_shared<PngScene>("quat",vec2(0.3,0.15));
@@ -3695,13 +3704,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(1.6));
     rotFull->manager.transition(MICRO, {
-        {"rot_1", "-1"},
-        {"rot_i", "0"},
-        {"rot_j", "0"},
-        {"rot_k", "0"},
-    });
-    cs.render_microblock();
-    rotFull->manager.transition(MICRO, {
         {"rot_1", "0.2"},
         {"rot_i", "-0.6666"},
         {"rot_j", "-0.6666"},
@@ -3745,7 +3747,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     rotFull->manager.transition(MICRO, {{"rot_1", "-0.8"},{"rot_i", "0.2"},{"rot_j", "0.4"},{"rot_k", "0.4"},});
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(2.5));
+    stage_macroblock(SilenceBlock(4));
     rotFull->manager.transition(MICRO, {{"rot_1", "0.333333"},{"rot_i", "0.0"},{"rot_j", "0.6666"},{"rot_k", "-0.33333"},});
     cs.render_microblock();
     rotFull->manager.transition(MICRO, {{"rot_1", "1"},{"rot_i", "0"},{"rot_j", "0"},{"rot_k", "0"},});
@@ -3796,7 +3798,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(FileBlock("which makes these neutral multiplications."));
     table->manager.transition(MICRO, {
-        {"table_size", "2.6"},
+        {"table_size", "2.8"},
         {"opacity_02", "1"},
         {"opacity_11", "1"},{"opacity_12", "1"},
         {"opacity_20", "1"},{"opacity_21", "1"},
@@ -3842,6 +3844,8 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
         {"opacity_40", "0"},{"opacity_41", "0"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "0"},
     });
 
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("A different choice would make this subalgebra flippy."));
     cs.render_microblock();
@@ -3900,22 +3904,24 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
         {"opacity_33", "1"},
     });
     cs.render_microblock();
+    cs.render_microblock();
     table->manager.transition(MICRO, {
         {"opacity_01", "1"},{"opacity_10", "1"},{"opacity_11", "1"},
         {"opacity_13", "1"},{"opacity_31", "1"},
     });
     cs.render_microblock();
-    cs.render_microblock();
 
 
     stage_macroblock(SilenceBlock(1.5));
+    table->manager.transition(MICRO, {
+        {"opacity_02", "1"},{"opacity_20", "1"},
+        {"opacity_12", "1"},{"opacity_21", "1"},{"opacity_22", "1"},
+    });
     cs.render_microblock();
 
 
     stage_macroblock(FileBlock("We tried combining i and j to make a 3D algebra, but it was not associative."));
     table->manager.transition(MICRO, {
-        {"opacity_02", "1"},{"opacity_20", "1"},
-        {"opacity_12", "1"},{"opacity_21", "1"},{"opacity_22", "1"},
         {"opacity_23", "1"},{"opacity_32", "1"},
     });
     cs.render_microblock();
@@ -4006,6 +4012,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
         {"opacity_04", "1"},{"opacity_40", "1"},
     });
     cs.render_microblock();
+    cs.render_microblock();
 
 
     stage_macroblock(SilenceBlock(0.6));
@@ -4048,7 +4055,8 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     cs.render_microblock();
 
-
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("We can fill the rest of the table with some straightforward calculations,"));
     cs.slide_subscene(MICRO, "table", vec2(-0.05,0));
@@ -4164,6 +4172,8 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
     
 
+    stage_macroblock(SilenceBlock(0.8));
+    cs.render_microblock();
 
 
     stage_macroblock(FileBlock("This quaternion algebra makes circular graphs."));
@@ -4458,8 +4468,6 @@ void render_video() {
 
     cursor->manager.set(cursor_control);
 
-    set_for_real(false);
-    
 
     four_d_intro(cs, bg_control);
     one_dim_algebra(cs);
