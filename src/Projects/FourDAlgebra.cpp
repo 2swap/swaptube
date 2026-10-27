@@ -11,6 +11,7 @@
 #include "../Scenes/Common/ThreeDimensionScene.h"
 #include "../Scenes/Common/CompositeScene.h"
 #include "../Scenes/Common/BackgroundScene.h"
+#include "../Scenes/Common/TwoswapScene.h"
 
 #include "../Core/State/BezierStateCurve.h"
 #include "../Core/State/StateTester.h"
@@ -2527,7 +2528,6 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "16"},{"bg_1_b", "72"},});
     cs.render_microblock();
-    // TODO too jostly
     fd2->manager.transition(MICRO, {
         {"pov_xz", "0.1"},
         {"rotation_jk", "0.63"},
@@ -2873,7 +2873,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(CompositeBlock(FileBlock("because ij squares to 1."),SilenceBlock(1)));
-    // TODO will they remember the significance of this?
 
     table->manager.transition(MICRO, {
         {"opacity_01", "0.1"},{"opacity_10", "0.1"},
@@ -3784,7 +3783,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-void quat_graphs(CompositeScene& cs, StateSet& bg){
+shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
@@ -4443,8 +4442,60 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
     fd->manager.transition(MICRO, {
         {"pov_y", "0.5"},
     });
-    cs.fade_subscene(MICRO,"fd",0);
     cs.render_microblock();
+
+    return fd;
+}
+
+
+
+void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
+    stage_macroblock(SilenceBlock(1));
+    shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
+    fd->manager.transition(MICRO, {
+        {"rotation_1k", "0.0"},
+        {"rotation_ik", "-1"},
+        {"rotation_jk", "1"},
+        {"pov_xz", "0.76"},
+        {"pov_y", "0"},
+        {"equation", "100"},
+        {"slider", "2.166666"},
+    });
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1));
+    fd->manager.transition(MICRO, {
+        {"brightness", "60000.0"},
+        {"scale", "20.0"},
+        {"w", "0.5"},
+        {"h", "0.5"},
+    });
+    cs.slide_subscene(MICRO, "fd", vec2(-.505, .03));
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("This has been 2swap,"));
+    cs.add_scene_fade_in(MACRO, twoswap, "twoswap");
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("and TheGrayCuber!"));
+    shared_ptr<PngScene> ps = make_shared<PngScene>("tgc_logo", vec2(0.6, 0.4));
+    cs.add_scene(ps, "ps", vec2(0.4, 1.25));
+    cs.slide_subscene(MICRO, "ps", vec2(0, -0.5));
+    cs.slide_subscene(MICRO, "fd", vec2(0, -0.2));
+    twoswap->slide_subscene(MICRO, "logo", vec2(0, -.2));
+    twoswap->slide_subscene(MICRO, "music", vec2(0, -.2));
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("with music by 6884."));
+    twoswap->manager.transition(MACRO, "music_opacity", "1");
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(1));
+    cs.fade_subscene(MICRO, "twoswap", 0);
+    cs.fade_subscene(MICRO, "fd", 0);
+    cs.render_microblock();
+
+    cs.remove_subscene("twoswap");
 }
 
 
@@ -4452,6 +4503,7 @@ void quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 void render_video() {
+set_for_real(false);
     CompositeScene cs;
 
     StateSet bg_control = {
@@ -4503,7 +4555,9 @@ void render_video() {
     three_dim(cs,bg_control);
     four_d_cosine(cs,bg_control);
     non_commutative(cs,bg_control);
-    quat_graphs(cs,bg_control);
+    shared_ptr<FourDAlgebraScene> fd = quat_graphs(cs,bg_control);
+set_for_real(true);
+    outtro(cs, fd);
 
 
     // TODO resize latex without transitioning
