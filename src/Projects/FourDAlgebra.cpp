@@ -4452,6 +4452,8 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
     stage_macroblock(SilenceBlock(1));
     shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
+    twoswap->manager.set({{"logo.y","0.5"},{"music.y","0.65"}});
+
     fd->manager.transition(MICRO, {
         {"rotation_1k", "0.0"},
         {"rotation_ik", "-1"},
@@ -4462,7 +4464,7 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
         {"slider", "2.166666"},
     });
     cs.render_microblock();
-
+    
     stage_macroblock(SilenceBlock(1));
     fd->manager.transition(MICRO, {
         {"brightness", "60000.0"},
@@ -4470,20 +4472,26 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
         {"w", "0.5"},
         {"h", "0.5"},
     });
-    cs.slide_subscene(MICRO, "fd", vec2(-.505, .03));
+    cs.slide_subscene(MICRO, "fd", vec2(-.505, -.02));
     cs.render_microblock();
+
 
     stage_macroblock(FileBlock("This has been 2swap,"));
     cs.add_scene_fade_in(MACRO, twoswap, "twoswap");
     cs.render_microblock();
 
     stage_macroblock(FileBlock("and TheGrayCuber!"));
-    shared_ptr<PngScene> ps = make_shared<PngScene>("tgc_logo", vec2(0.6, 0.4));
-    cs.add_scene(ps, "ps", vec2(0.4, 1.25));
-    cs.slide_subscene(MICRO, "ps", vec2(0, -0.5));
-    cs.slide_subscene(MICRO, "fd", vec2(0, -0.2));
-    twoswap->slide_subscene(MICRO, "logo", vec2(0, -.2));
-    twoswap->slide_subscene(MICRO, "music", vec2(0, -.2));
+    shared_ptr<PngScene> ps = make_shared<PngScene>("tgc_logo", vec2(0, 0));  
+
+    cs.manager.set({{"d","0"},{"bounce","<d> sin 1.09 *"}});
+    cs.manager.transition(MICRO,{{"d","1.98"}});
+    cs.add_scene(ps, "ps", vec2(0.49, 0.83));
+    ps->manager.set({{"w","[bounce] 0.8 *"},{"h","[bounce] 0.5 *"}});
+
+    cs.slide_subscene(MICRO, "fd", vec2(0, -0.04));
+    twoswap->slide_subscene(MICRO, "logo", vec2(0, -.04));
+    twoswap->slide_subscene(MICRO, "music", vec2(0, -.04));
+    cs.render_microblock();
     cs.render_microblock();
 
     stage_macroblock(FileBlock("with music by 6884."));
@@ -4493,6 +4501,7 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
     stage_macroblock(SilenceBlock(1));
     cs.fade_subscene(MICRO, "twoswap", 0);
     cs.fade_subscene(MICRO, "fd", 0);
+    cs.fade_subscene(MICRO, "ps", 0);
     cs.render_microblock();
 
     cs.remove_subscene("twoswap");
@@ -4544,7 +4553,6 @@ set_for_real(false);
 
     cursor->manager.set(cursor_control);
 
-    set_for_real(false);
 
     four_d_intro(cs, bg_control);
     one_dim_algebra(cs);
@@ -4556,7 +4564,6 @@ set_for_real(false);
     four_d_cosine(cs,bg_control);
     non_commutative(cs,bg_control);
     shared_ptr<FourDAlgebraScene> fd = quat_graphs(cs,bg_control);
-set_for_real(true);
     outtro(cs, fd);
 
 
