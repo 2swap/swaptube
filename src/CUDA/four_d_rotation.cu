@@ -33,8 +33,7 @@ __global__ void four_d_rotation_raymarch(
     Cuda::ivec2 pixel(pixel_x, pixel_y);
 
     float dist_traveled = 0.0f;
-    float dt = 0.01f;
-    // float dt = 0.002f;
+    float dt = 0.0015f;
     
     Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, camera_orientation))*dt;
     Cuda::vec3 current_position = camera_position + dir_world;
@@ -64,24 +63,24 @@ __global__ void four_d_rotation_raymarch(
         if (abs(pos_rotated.y) < 1 && abs(pos_rotated.z) < 1 && abs(pos_rotated.w) < 1 && abs(pos_rotated.x) < 1){
             if (abs(last_position.y) > 1){
                 if (last_position.y > 0){
-                    colors[pixel_index] = 0xffef9492; //orange
+                    colors[pixel_index] = 0xfffc9f9f; //orange
                     break;
                 }
-                colors[pixel_index] = 0xffde6dff; //pink
+                colors[pixel_index] = 0xffd865ff; //pink
                 break;
             } else if (abs(last_position.z) > 1){
                 if (last_position.z > 0){
                     colors[pixel_index] = 0xffe3e5fc; //white
                     break;
                 }
-                colors[pixel_index] = 0xfffffa81; //yellow
+                colors[pixel_index] = 0xfffff96e; //yellow
                 break;
             } else if (abs(last_position.w) > 1){
                 if (last_position.w > 0){
-                    colors[pixel_index] = 0xff4ae59d;  //greeb
+                    colors[pixel_index] = 0xff32ed96;  //greeb
                     break;
                 }
-                colors[pixel_index] = 0xff41bcff; //blue
+                colors[pixel_index] = 0xff00c7ff; //blue
                 break;
             }
             colors[pixel_index] = 0xffff41a3; //RED

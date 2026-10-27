@@ -23,8 +23,6 @@
 // flippy:  48  0 60
 
 
-// TODO gauss filter
-
 
 void set_global_draggers(float x_drag, float y_drag){
     set_global_state("dragger_x_1", x_drag);
@@ -2286,9 +2284,19 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
-// TODO this needs to be more visible
     stage_macroblock(FileBlock("Unless... we move that pesky ij into a 4th dimension."));
+    basis->manager.transition(MICRO,{{"w","0.44"},{"h","0.55"}});
+    cs.slide_subscene(MICRO,"basis",vec2(-0.005,0.05));
+    boxBorder->manager.transition(MICRO,{{"w","0.28"},{"h","0.66"}});
+    boxFill->manager.transition(MICRO,{{"w","0.269"},{"h","0.642"}});
+    cs.fade_subscene(MICRO,"eaAssoc",0.2);
+    cs.fade_subscene(MICRO,"abAssoc",0.2);
+    cs.fade_subscene(MICRO,"eaLatex",0.2);
+    cs.fade_subscene(MICRO,"abLatex",0.2);
+    cs.slide_subscene(MICRO,"eaAssoc",vec2(-0.03,0.05));
+    cs.slide_subscene(MICRO,"abAssoc",vec2(0.03,0.05));
+    cs.slide_subscene(MICRO,"eaLatex",vec2(-0.01,0));
+    cs.slide_subscene(MICRO,"abLatex",vec2(0.01,0));
 
     cs.render_microblock();
     cs.manager.transition(MICRO, {
@@ -2298,11 +2306,17 @@ void three_dim(CompositeScene& cs, StateSet& bg){
         {"yz_w", "1"},
     });
 
+
     // fade in an identical copy of basis that has the w axis, sharing its timer and position so they line up exactly
     const Line w_axis(vec3(-line_distance*0.6), vec3(line_distance*0.6), 0xffcccccc, 1.0f, false);
     shared_ptr<ThreeDimensionScene> basis_w = make_basis();
     basis_w->manager.set("tx", basis->manager.get_equation_string("tx"));
+    basis_w->manager.set({{"w","0.44"},{"h","0.55"}});
     basis_w->add_line(w_axis);
+    basis_w->manager.set({
+            {"point0.a", "0"},{"point1.a", "0"},{"point2.a", "0"},{"point3.a", "0"},
+    });
+
     cs.add_scene_fade_in(MICRO, basis_w, "basis_w");
     cs.manager.set({
         {"basis_w.x", cs.manager.get_equation_string("basis.x")},
@@ -2331,7 +2345,20 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(FileBlock("A fourth-dimensional algebra lets us restore associativity."));
-// TODO remove the axes scene
+
+    cs.slide_subscene(MICRO,"basis",vec2(0,-0.4));
+    cs.slide_subscene(MICRO,"boxBorder",vec2(0,-0.4));
+    cs.slide_subscene(MICRO,"boxFill",vec2(0,-0.4));
+    cs.fade_subscene(MICRO,"basis",0);
+    cs.fade_subscene(MICRO,"boxBorder",0);
+    cs.slide_subscene(MICRO,"eaAssoc",vec2(0.05,-0.05));
+    cs.slide_subscene(MICRO,"abAssoc",vec2(-0.05,-0.05));
+    cs.slide_subscene(MICRO,"eaLatex",vec2(0.03,-0.02));
+    cs.slide_subscene(MICRO,"abLatex",vec2(-0.03,-0.02));
+    cs.fade_subscene(MICRO,"eaAssoc",1);
+    cs.fade_subscene(MICRO,"abAssoc",1);
+    cs.fade_subscene(MICRO,"eaLatex",1);
+    cs.fade_subscene(MICRO,"abLatex",1);
     cs.manager.transition(MICRO, {
         {"zz_x", "-0.4"}, {"zz_y", "-0.3"}, {"zz_z", "0.6"}, {"zz_w", "0.2"},
     });
@@ -2343,6 +2370,9 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "24"},{"bg_1_b", "68"},});
     cs.render_microblock();
+    cs.remove_subscene("basis");
+    cs.remove_subscene("boxBorder");
+    cs.remove_subscene("boxFill");
 
 
     stage_macroblock(CompositeBlock(FileBlock("Now, the two sides always match."), SilenceBlock(.8)));
@@ -2405,9 +2435,6 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.fade_subscene(MICRO,"abAssoc",0);
     cs.fade_subscene(MICRO,"eaLatex",0);
     cs.fade_subscene(MICRO,"abLatex",0);
-    cs.fade_subscene(MICRO,"basis",0);
-    cs.fade_subscene(MICRO,"boxBorder",0);
-    cs.fade_subscene(MICRO,"boxFill",0);
     
     stage_macroblock(FileBlock("Let's check out the 4-dimensional cosine."));
     fd2->manager.transition(MICRO, {
@@ -2420,9 +2447,6 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.remove_subscene("abAssoc");
     cs.remove_subscene("eaLatex");
     cs.remove_subscene("abLatex");
-    cs.remove_subscene("basis");
-    cs.remove_subscene("boxBorder");
-    cs.remove_subscene("boxFill");
 
 
     fd2->manager.transition(MICRO, {
@@ -4468,6 +4492,7 @@ void render_video() {
 
     cursor->manager.set(cursor_control);
 
+    set_for_real(false);
 
     four_d_intro(cs, bg_control);
     one_dim_algebra(cs);
@@ -4480,11 +4505,6 @@ void render_video() {
     non_commutative(cs,bg_control);
     quat_graphs(cs,bg_control);
 
-
-    
-    // TODO color design
-
-    // TODO for final render set 4d sin and cos back to 60 iterations and drop raymarch step size in ghost and cube scenes
 
     // TODO resize latex without transitioning
     // TODO gpu flicker on circles

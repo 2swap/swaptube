@@ -62,7 +62,7 @@ __global__ void four_d_raymarch_kernel(
 
     Cuda::vec3 out(0.0,0.0,0.0);
     float dist_traveled = 0.0f;
-    float dt = 0.01f;
+    float dt = 0.005f;
     
     Cuda::vec3 dir_world = normalize(Cuda::get_raymarch_vector(pixel, wh, fov, camera_orientation))*dt;
 

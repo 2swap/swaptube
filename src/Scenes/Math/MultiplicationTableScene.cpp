@@ -50,7 +50,7 @@ void MultiplicationTableScene::draw() {
         units = {"","1",iunit,"j","ij","ij"};
         unit_q = {0,0,0,0,state["q_ij"],state["q_jj"]};
         // empty, white, pink, green, blue, blue
-        unit_colors = {0x00000000,0x00e3e5fc,0x00de6dff,0x004ae59d,0x0041bcff,0x0041bcff};
+        unit_colors = {0x00000000,0x00e3e5fc,0x00d865ff,0x0032ed96,0x0000c7ff,0x0000c7ff};
         
         table_units = {
             0,1,2,3,4,
@@ -91,7 +91,7 @@ void MultiplicationTableScene::draw() {
         units = {"","1","i","j","j","ij","j^2","-1"};
         unit_q = {0,0,0,0,state["q_1j"],state["q_ij"],state["q_jj"],0};
         // empty, white, pink, green, green, blue, white, yellow
-        unit_colors = {0x00000000,0x00e3e5fc,0x00de6dff,0x004ae59d,0x004ae59d,0x0041bcff,0x00e3e5fc,0x00fffa81};
+        unit_colors = {0x00000000,0x00e3e5fc,0x00d865ff,0x0032ed96,0x0032ed96,0x0000c7ff,0x00e3e5fc,0x00fff96e};
         
         table_units = {
             0,1,2,3,0,
