@@ -370,13 +370,17 @@ void one_dim_algebra(CompositeScene& cs){
     cs.render_microblock();
     cs.render_microblock();
 
-    //TODO dragger dissapears quicker
-    stage_macroblock(CompositeBlock(FileBlock("This is a 1-dimensional algebra."), SilenceBlock(.8)));
+    stage_macroblock(FileBlock("This is a 1-dimensional algebra."));
     td->manager.transition(MICRO, {
         {"dragger_shown", "0"},
     });
-    cursor->manager.transition(MICRO,{{"cursor_x", "0.57"},{"cursor_y", "0.53"},});
+    cursor->manager.transition(MACRO,{{"cursor_x", "0.57"},{"cursor_y", "0.53"},});
     cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(.8));
     cs.render_microblock();
 
     td->manager.set({
@@ -439,14 +443,13 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
-
-
     td->manager.transition(MICRO, {{"dragger_shown", "0"},});
     cursor->manager.transition(MICRO, {{"cursor_x", "0.55"},{"cursor_y", "0.46"},});
     cs.render_microblock();
     
 
-    // TODO dragger appears faster
+
+
     stage_macroblock(CompositeBlock(FileBlock("For multiplication, we could scale independently, squishing the space."),SilenceBlock(3)));
 
     cs.manager.transition(MICRO, {{"bg_1_r", "0"},{"bg_1_g", "48"},{"bg_1_b", "48"},});
@@ -458,12 +461,13 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     set_global_draggers(1,1);
 
     td->manager.transition(MICRO, {
-        {"dragger_shown", "1"},
+        {"dragger_shown", "2"},
     });
 
     cursor->manager.transition(MICRO,{{"cursor_x", "{drag_x}"},{"cursor_y", "{drag_y}"},});
     cs.render_microblock();
 
+    td->manager.set({{"dragger_shown", "1"}});
     td->manager.begin_timer("mult_axes");
     td->manager.transition(MICRO, {
         {"dragger_x", "<mult_axes> .7 * sin .8 * 1 +"},
@@ -487,7 +491,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
         {"yy_y", "0"},
     });
 
-    // TODO add more spin
+    
     stage_macroblock(FileBlock("Alternatively, we can scale uniformly and spin."));
     
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "8"},{"bg_1_b", "80"},});
@@ -499,16 +503,23 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     
     td->manager.transition(MICRO, {
+        {"dragger_y", "0.4"},
+        {"dragger_x", "-1.2"},
+    });
+    cs.render_microblock();
+
+
+    stage_macroblock(SilenceBlock(0.7));
+    td->manager.transition(MICRO, {
         {"dragger_y", "1.6"},
         {"dragger_x", "0"},
     });
     cs.render_microblock();
 
-
-    stage_macroblock(SilenceBlock(0.6));
+    stage_macroblock(SilenceBlock(0.2));
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(1));
+    stage_macroblock(SilenceBlock(0.7));
     td->manager.transition(MICRO, {{"dragger_shown", "0"},});
     cursor->manager.transition(MICRO, {{"cursor_x", "0.45"},{"cursor_y", "-0.1"},});
     cs.render_microblock();
@@ -1321,7 +1332,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.manager.transition(MICRO,{{"bg_1_r", "60"},{"bg_1_g", "0"},{"bg_1_b", "16"},});
     cs.render_microblock();
 
-    // TODO check 4k to make sure this looks good
+    // TODO this transition has problems even in 4K 60fps, switch back to 3 separate latex?
     stage_macroblock(FileBlock("The polynomial has a 1 term, ...   ...but what is 1?"));
 	cs.manager.transition(MICRO,{{"latex_poly.x", "0.5"},{"latex_poly.y", "0.5"}});
     td->manager.transition(MICRO, {{"brightness", "64"},});
@@ -1644,7 +1655,6 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 	cs.render_microblock();
 	
 
-    // TODO  yh on screen during 'y times a half flip'
     stage_macroblock(FileBlock("1 times a half flip is y times a half flip."));
 	shared_ptr<LatexScene> latex_1 = make_shared<LatexScene>("1",vec2(0.118,0.274));
 	cs.add_scene(latex_1 , "latex_1",vec2(0.901,0.704));
@@ -1672,6 +1682,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 	cs.slide_subscene(MICRO,"latex_h2",vec2(-0.329,0.002));
 	cs.manager.transition(MICRO,{{"latex__3.opacity","1"},{"latex_y.opacity","1"},{"latex_h2.opacity","1"}});
 
+	cs.render_microblock();
 	cs.render_microblock();
 	cs.render_microblock();
 	 
@@ -1737,7 +1748,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 	cs.slide_subscene(MICRO,"latex__3",vec2(0.5,0.5));
 
 
-
+    
     stage_macroblock(FileBlock("And that's not true!"));
     td->manager.transition(MICRO, {
         {"dragger_x", "0"},
@@ -1801,10 +1812,9 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     td->manager.begin_timer("spinny");
 
-    // TODO this transition from linear to rotation feels weird, try to smooth out somehow?
     td->manager.transition(MICRO, {
-        {"dragger_x", "-0.4 <spinny> -.7 * sin *"},
-        {"dragger_y", "0.4 <spinny> .7 * cos *"},
+        {"dragger_x", "<spinny> -0.15 * -0.4 + <spinny> -.7 * sin *"},
+        {"dragger_y", "<spinny> 0.15 * 0.4 + <spinny> .7 * cos *"},
         {"grid_scale", "0.6"},
     });
     cs.render_microblock();
@@ -1813,6 +1823,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(FileBlock("Any spin preserves the structure of the grid."));
+    td->manager.transition(MICRO, {{"grid_scale", "0.8"},});
     cs.render_microblock();
 
     stage_macroblock(CompositeBlock(FileBlock("Unless you multiply by zero... but oh well, we'll have to make some sacrifices."), SilenceBlock(1)));
@@ -1845,7 +1856,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    // TODO we can see that the circles are 16-gons. is there a way to use a higher poly?
+    // TODO we can see that the circles are 16-gons. is there an easy way to use a higher poly?
     stage_macroblock(FileBlock("y squares to negative 1. It's the imaginary unit i."));
     td->manager.transition(MICRO, {
         {"diagram_opacity", "0"},
@@ -2179,7 +2190,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
 
-    // TODO push up the latex a bit. subtitles may cover it.
     stage_macroblock(FileBlock("Here, the grid is being multiplied by ij"));
     cs.manager.transition(MICRO, {
         {"yz_x", "0.8"}, {"yz_y", "-0.5"}, {"yz_z", "0.2"},
@@ -2189,7 +2199,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
     shared_ptr<LatexScene> abLatex = make_shared<LatexScene>("\\times ij",vec2(0.25,0.25));
-    cs.add_scene_fade_in(MICRO, abLatex, "abLatex", vec2(0.5,1));
+    cs.add_scene_fade_in(MICRO, abLatex, "abLatex", vec2(0.5,0.96));
     cs.slide_subscene(MICRO, "abLatex", vec2(0,-0.1));
     cs.render_microblock();
     
@@ -2235,7 +2245,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
     shared_ptr<LatexScene> eaLatex = make_shared<LatexScene>("\\times i",vec2(0.25,0.25));
-    cs.add_scene_fade_in(MICRO, eaLatex, "eaLatex", vec2(0.24,1));
+    cs.add_scene_fade_in(MICRO, eaLatex, "eaLatex", vec2(0.24,0.96));
     cs.slide_subscene(MICRO, "eaLatex", vec2(0,-0.1));
 
     eaAssoc->manager.transition(MICRO, {
@@ -2339,15 +2349,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(SilenceBlock(1.2));
-    cs.manager.transition(MICRO, {
-        {"zz_x", "-0.7"}, {"zz_y", "0"}, {"zz_z", "0"}, {"zz_w", "0.7"},
-    });
-    cs.manager.transition(MICRO,{{"bg_1_r", "16"},{"bg_1_g", "48"},{"bg_1_b", "16"},});
-    cs.render_microblock();
-
-    // TODO don't move j^2 until the fade has happened
-    stage_macroblock(FileBlock("A fourth-dimensional algebra lets us restore associativity."));
-
     cs.slide_subscene(MICRO,"basis",vec2(0,-0.4));
     cs.slide_subscene(MICRO,"boxBorder",vec2(0,-0.4));
     cs.slide_subscene(MICRO,"boxFill",vec2(0,-0.4));
@@ -2361,6 +2362,17 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.fade_subscene(MICRO,"abAssoc",1);
     cs.fade_subscene(MICRO,"eaLatex",1);
     cs.fade_subscene(MICRO,"abLatex",1);
+    cs.render_microblock();
+
+
+    stage_macroblock(FileBlock("A fourth-dimensional algebra lets us restore associativity."));
+
+    cs.manager.transition(MICRO, {
+        {"zz_x", "-0.7"}, {"zz_y", "0"}, {"zz_z", "0"}, {"zz_w", "0.7"},
+    });
+    cs.manager.transition(MICRO,{{"bg_1_r", "16"},{"bg_1_g", "48"},{"bg_1_b", "16"},});
+    cs.render_microblock();
+
     cs.manager.transition(MICRO, {
         {"zz_x", "-0.4"}, {"zz_y", "-0.3"}, {"zz_z", "0.6"}, {"zz_w", "0.2"},
     });
@@ -2477,10 +2489,9 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    // TODO lower brightness back down here?
     stage_macroblock(CompositeBlock(SilenceBlock(0.5),FileBlock("Red denotes the i axis,")));
     fd2->manager.transition(MICRO, {
-        {"brightness", "80000.0"},
+        {"brightness", "800.0"},
         {"r_channel", "1.2"},
         {"g_channel", "0.1"},
         {"b_channel", "0.1"},
@@ -2507,8 +2518,8 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     stage_macroblock(CompositeBlock(SilenceBlock(0.5),FileBlock("and blue is ij.")));
     fd2->manager.transition(MICRO, {
         {"r_channel", "0.1"},
-        {"g_channel", "0.3"},
-        {"b_channel", "1.2"},
+        {"g_channel", "0.4"},
+        {"b_channel", "1.1"},
         {"rotation_1k", "-1.2"},
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "8"},{"bg_1_g", "16"},{"bg_1_b", "72"},});
@@ -3077,7 +3088,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(0.7));
     cs.render_microblock();
-
+    
     stage_macroblock(FileBlock("How about this step, where i and j swap sides?"));
 
 
@@ -3146,12 +3157,10 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("We can stop the swap by saying that ij is not ji."));
-    // TODO was there a reason why the transition was pushed out of this MACRO? it looks weird now
+    stage_macroblock(CompositeBlock(FileBlock("We can stop the swap by saying that ij is not ji."),SilenceBlock(0.7)));
     cs.render_microblock();
 
 
-    stage_macroblock(SilenceBlock(0.7));
     cs.render_microblock();
 
 
@@ -3222,6 +3231,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 	cs.remove_subscene("latex_2");
 	
 	
+    cs.render_microblock();
     cs.render_microblock();
 
     shared_ptr<FourDAlgebraScene> rot2 = make_shared<FourDAlgebraScene>(vec2(1,1.1));
@@ -3477,8 +3487,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    // TODO triple spinny shows up during this sentence
     stage_macroblock(FileBlock("This rule helps us fill in the rest of the table, to get the triple spinny algebra."));
+    cs.render_microblock();
     table->manager.transition(MICRO,{
         {"opacity_00", "1"},{"opacity_01", "1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
         {"opacity_10", "1"},{"opacity_11", "1"},{"opacity_12", "1"},{"opacity_13", "1"},{"opacity_14", "1"},
@@ -3487,10 +3497,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
         {"opacity_40", "1"},{"opacity_41", "1"},{"opacity_42", "1"},{"opacity_43", "1"},{"opacity_44", "1"},
     });
     cs.render_microblock();
-    cs.render_microblock();
-    cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(.3));
     cs.render_microblock();
 
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "8"},{"bg_1_b", "80"},});
@@ -3500,6 +3507,9 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "quat_png",vec2(0,0.2)); 
     cs.slide_subscene(MICRO, "latex_ij2",vec2(0,-0.2)); 
     cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(.3));
     cs.render_microblock();
 
 
@@ -3692,7 +3702,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     stage_macroblock(SilenceBlock(0.4));
     cs.render_microblock();
 
-    //TODO tilted slice is more noticeable
     cs.fade_subscene(MICRO,"quat_png",0.1);
     cs.fade_subscene(MICRO,"matrices",0);
     cs.fade_subscene(MICRO,"matrix_png",0);
@@ -3835,7 +3844,6 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
 
@@ -3856,8 +3864,10 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
 
-    //TODO the different choice shows up too soon
+
     shared_ptr<MultiplicationTableScene> other_choice = make_shared<MultiplicationTableScene>(vec2(1,1));
     cs.add_scene_fade_in(MICRO,other_choice, "other_choice",vec2(0.48,0.48));
 
@@ -3873,8 +3883,6 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"opacity_40", "0"},{"opacity_41", "0"},{"opacity_42", "0"},{"opacity_43", "0"},{"opacity_44", "0"},
     });
 
-    stage_macroblock(SilenceBlock(0.6));
-    cs.render_microblock();
 
     stage_macroblock(FileBlock("A different choice would make this subalgebra flippy."));
     cs.render_microblock();
@@ -3940,16 +3948,18 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
-    //TODO feels weird bringing in i before the following sentence
-    stage_macroblock(SilenceBlock(1.5));
+    stage_macroblock(SilenceBlock(1.2));
+    cs.render_microblock();
+
+    stage_macroblock(CompositeBlock(SilenceBlock(0.3),FileBlock("We tried combining i and j to make a 3D algebra, but it was not associative.")));
     table->manager.transition(MICRO, {
         {"opacity_02", "1"},{"opacity_20", "1"},
         {"opacity_12", "1"},{"opacity_21", "1"},{"opacity_22", "1"},
     });
     cs.render_microblock();
+    cs.render_microblock();
 
 
-    stage_macroblock(FileBlock("We tried combining i and j to make a 3D algebra, but it was not associative."));
     table->manager.transition(MICRO, {
         {"opacity_23", "1"},{"opacity_32", "1"},
     });

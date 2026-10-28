@@ -104,7 +104,7 @@ __global__ void four_d_rotation_raymarch(
     }
 
     if (hit_plane){
-        colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0xffbbddff,0.5*plane);
+        colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0xffbbddff,0.7*plane);
     }
 
 }

@@ -311,7 +311,7 @@ void TwoDAlgebraScene::draw() {
 
     const int dragger_opacity = 0xff000000;
     const ivec2 drag_pixel = get_drag_pixel();
-    const float dragger_size = screen_unit*0.35*sin(state["dragger_shown"]*1.98);
+    const float dragger_size = screen_unit*0.35*sin(min(state["dragger_shown"],1.0)*1.98);
 
     if (state["dragger_type"] == 1 && state["dragger_shown"] != 0){
         ivec2 pos_diff((int) (dragger_size),(int) (dragger_size*0.4));
