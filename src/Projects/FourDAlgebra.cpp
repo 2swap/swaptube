@@ -838,7 +838,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "spinny_png",vec2(0,-0.1)); 
 
     td->manager.transition(MICRO, {
-        {"diagram_label", "0"}, // TODO keep this at 1? it seems weird that the grid moves while the mouse is dragging
+        {"diagram_label", "1"},
         {"xy_x", "-0.6"},
         {"xy_y", "0.8"},
     });
@@ -890,7 +890,6 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "squishy_png",vec2(0,0.1)); 
 
     td->manager.transition(MICRO, {
-        {"diagram_label", "1"},
         {"xy_x", "0"},
         {"xy_y", "0"},
     });
@@ -2133,8 +2132,8 @@ void three_dim(CompositeScene& cs, StateSet& bg){
             {"points_radius_multiplier", "1.8"},
             {"lines_thickness_multiplier", "4"},
 
-            {"slow", "<tx> .08 * 0.2 +"},
-            {"d", "4"}, {"q1", "<slow> .7 * sin"}, {"qi", "<slow> sin"}, {"qj", "<slow> 1.3 * cos"},
+            {"slow", "<tx> .08 / 0.2 +"},
+            {"d", "4"}, {"q1", "<slow> .7 * sin"}, {"qi", "<slow> sin 1 +"}, {"qj", "<slow> 1.3 * cos 1 +"},
         });
         b->point_names = {
             {0, "1"}, {1, "i"}, {2, "j"}, {3, "i^2"}, {4, "ij"}, {5, "j^2"},
@@ -2297,10 +2296,13 @@ void three_dim(CompositeScene& cs, StateSet& bg){
 
 
     stage_macroblock(FileBlock("Unless... we move that pesky ij into a 4th dimension."));
-    basis->manager.transition(MICRO,{{"w","0.44"},{"h","0.55"}});
-    cs.slide_subscene(MICRO,"basis",vec2(-0.005,0.05));
-    boxBorder->manager.transition(MICRO,{{"w","0.28"},{"h","0.66"}});
-    boxFill->manager.transition(MICRO,{{"w","0.269"},{"h","0.642"}});
+    basis->manager.transition(MICRO,{{"w","0.572"},{"h","0.715"}});
+    // basis and box grow about a point near the top center (y~0.027), so they slide down as they grow
+    cs.slide_subscene(MICRO,"basis",vec2(-0.005,0.105));
+    cs.slide_subscene(MICRO,"boxBorder",vec2(0,0.028));
+    cs.slide_subscene(MICRO,"boxFill",vec2(0,0.028));
+    boxBorder->manager.transition(MICRO,{{"w","0.364"},{"h","0.858"}});
+    boxFill->manager.transition(MICRO,{{"w","0.353"},{"h","0.840"}});
     cs.fade_subscene(MICRO,"eaAssoc",0.2);
     cs.fade_subscene(MICRO,"abAssoc",0.2);
     cs.fade_subscene(MICRO,"eaLatex",0.2);
@@ -2311,38 +2313,43 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO,"abLatex",vec2(0.01,0));
 
     cs.render_microblock();
-    cs.manager.transition(MICRO, {
-        {"yz_x", "0"}, 
-        {"yz_y", "0"}, 
-        {"yz_z", "0"},
-        {"yz_w", "1"},
-    });
+    cs.render_microblock();
 
 
     // fade in an identical copy of basis that has the w axis, sharing its timer and position so they line up exactly
     const Line w_axis(vec3(-line_distance*0.6), vec3(line_distance*0.6), 0xffcccccc, 1.0f, false);
     shared_ptr<ThreeDimensionScene> basis_w = make_basis();
     basis_w->manager.set("tx", basis->manager.get_equation_string("tx"));
-    basis_w->manager.set({{"w","0.44"},{"h","0.55"}});
+    basis_w->manager.set({{"w","0.572"},{"h","0.715"}});
     basis_w->add_line(w_axis);
     basis_w->manager.set({
             {"point0.a", "0"},{"point1.a", "0"},{"point2.a", "0"},{"point3.a", "0"},
     });
 
-    cs.add_scene_fade_in(MICRO, basis_w, "basis_w");
     cs.manager.set({
         {"basis_w.x", cs.manager.get_equation_string("basis.x")},
         {"basis_w.y", cs.manager.get_equation_string("basis.y")},
+    });
+
+    for(int i = 0; i < 3; i++) {
+        cs.add_scene(basis_w, "basis_w");
+        cs.render_microblock();
+        cs.remove_subscene("basis_w");
+        if (i != 2) cs.render_microblock();
+    }
+
+    // give originl basis a w axis too and yeet the duplicate
+    basis->add_line(w_axis);
+    cs.manager.transition(MICRO, {
+        {"yz_x", "0"}, 
+        {"yz_y", "0"}, 
+        {"yz_z", "0"},
+        {"yz_w", "1"},
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "52"},{"bg_1_b", "0"},});
     cs.manager.transition(MICRO, {
         {"w_slider", "1"},
     });
-    cs.render_microblock();
-
-    // give originl basis a w axis too and yeet the duplicate
-    basis->add_line(w_axis);
-    cs.remove_subscene("basis_w");
     cs.render_microblock();
 
 
@@ -2597,9 +2604,9 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
         {"point0.a", "0.4"},{"point1.a", "0.4"},{"point2.a", "0.4"},{"point3.a", "0.4"},{"point4.a", "1"},{"point5.a", "1"},
 
-        {"slow", "<tx> .08 *"},
+        {"slow", "<tx> .08 /"},
         {"lines_thickness_multiplier", "4"},
-        {"d", "4"}, {"q1", "<slow> sin"}, {"qi", "<slow> sin .2 *"}, {"qj", "<slow> cos"},
+        {"d", "4"}, {"q1", "<slow> sin"}, {"qi", "<slow> sin .2 * 1 +"}, {"qj", "<slow> cos 1 +"},
     });
     basis->point_names = {
         {0, "1"}, {1, "i"}, {2, "j"}, {3, "i^2"}, {4, "ij"}, {5, "j^2"},
@@ -3752,7 +3759,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(SilenceBlock(1.6));
     rotFull->manager.transition(MICRO, {
-        {"rot_1", "0.2"},
+        {"rot_1", "0.4"},
         {"rot_i", "-0.6666"},
         {"rot_j", "-0.6666"},
         {"rot_k", "0.3333"},
@@ -4263,7 +4270,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("It consists of symmetrically spinny systems."));
+    stage_macroblock(FileBlock("It's a symmetrically spinny system."));
 
     table->manager.transition(MICRO,{
         {"opacity_00", "0.1"},{"opacity_01", "0.1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "1"},
@@ -4332,7 +4339,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("The small spinny subspaces don't interact."));
+    stage_macroblock(FileBlock("The spinny subspaces don't interact.")); // TODO what does interact mean?
 
     bitable->manager.transition(MICRO,{
         {"opacity_00", "0.1"},{"opacity_01", "0.1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "0.1"},
@@ -4383,7 +4390,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("Sticking to familiar ideas can have seemingly nice results."));
+    stage_macroblock(FileBlock("Familiar ideas may produce comfortable results,"));
 
     cs.slide_subscene(MICRO, "bitable", vec2(-0.02,0.1));
     cs.fade_subscene(MICRO, "bitable",0);
@@ -4415,7 +4422,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("But with open minds and critical curiosity"));
+    stage_macroblock(FileBlock("but only by keeping an open mind"));
 
     latex_qu->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.3"},});
 	latex_qu->begin_latex_transition(MICRO, "ij=-ji");
@@ -4443,42 +4450,78 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("we discover unexpectedly beautiful possibilities."));
+    stage_macroblock(CompositeBlock(FileBlock("do we unlock beautiful new possibilities."), SilenceBlock(6.4)));
 
+    cs.fade_subscene(MACRO,"latex_qu",0);
+    cs.manager.transition(MACRO, "fd.x", ".5");
+    cs.manager.transition(MACRO, "fd.y", ".5");
 
-    fd->manager.transition(MICRO, {
-        {"equation", "102"},
-        {"brightness", "1000.0"},
+    // equation and brightness stay out of the curve: bezier overshoot would push equation past 102
+    // and brightness negative, so they're transitioned separately alongside it.
+    vector<StateSet> beautiful_waypoints;
+    beautiful_waypoints.push_back({
+        {"rotation_1k", "0"},
+        {"rotation_ik", "1.3"},
+        {"rotation_jk", "-0.23"},
+        {"pov_xz", "-2.48"},
+        {"pov_y", "1.53"},
     });
-    cs.render_microblock();
-
-    fd->manager.transition(MICRO, {
-        {"brightness", "10000.0"},
+    beautiful_waypoints.push_back({
+        {"rotation_1k", "0"},
         {"rotation_ik", "0.2"},
+        {"rotation_jk", "-0.23"},
+        {"pov_xz", "-2.48"},
         {"pov_y", "1.57"},
     });
-    cs.render_microblock();
-    
-    
-    stage_macroblock(SilenceBlock(3));
-    fd->manager.transition(MICRO, {
+    beautiful_waypoints.push_back({
+        {"rotation_1k", "0"},
+        {"rotation_ik", "0.2"},
         {"rotation_jk", "-0.83"},
         {"pov_xz", "-2"},
+        {"pov_y", "1.57"},
     });
-    cs.fade_subscene(MICRO,"latex_qu",0);
-    cs.render_microblock();
-
-    fd->manager.transition(MICRO, {
+    beautiful_waypoints.push_back({
         {"rotation_1k", "0.6"},
+        {"rotation_ik", "0.2"},
+        {"rotation_jk", "-0.83"},
+        {"pov_xz", "-2"},
         {"pov_y", "0.745"},
     });
-    cs.render_microblock();
-
-    stage_macroblock(SilenceBlock(1.2));
-    fd->manager.transition(MICRO, {
+    beautiful_waypoints.push_back({
+        {"rotation_1k", "0.6"},
+        {"rotation_ik", "0.2"},
+        {"rotation_jk", "-0.83"},
+        {"pov_xz", "-2"},
         {"pov_y", "0.5"},
     });
+    beautiful_waypoints.push_back({
+        {"rotation_1k", "0.0"},
+        {"rotation_ik", "-1"},
+        {"rotation_jk", "1"},
+        {"pov_xz", "0.76"},
+        {"pov_y", "0"},
+    });
     cs.render_microblock();
+
+    BezierStateCurve bsc_beautiful(beautiful_waypoints);
+    vector<StateSet> _beautiful_waypoints = bsc_beautiful.get_waypoints();
+
+    fd->manager.set(_beautiful_waypoints[0]);
+    fd->manager.transition(MICRO, bsc_beautiful.pop_next_state_set());
+    for(int i = 0; i < _beautiful_waypoints.size()-2; i++) {
+        if (i == 0)
+            fd->manager.transition(MICRO, {{"equation", "102"},{"brightness", "1000.0"},});
+        if (i == 1)
+            fd->manager.transition(MICRO, {{"brightness", "10000.0"},});
+        if (i == _beautiful_waypoints.size()-4)
+            fd->manager.transition(MICRO, { {"equation", "100"}, {"slider", "2.166666"}, });
+        cs.render_microblock();
+        fd->manager.set(bsc_beautiful.pop_next_state_set());
+    }
+    fd->manager.transition(MICRO, _beautiful_waypoints[_beautiful_waypoints.size()-1]);
+    cs.render_microblock();
+
+    cs.remove_all_subscenes_except("fd");
 
     return fd;
 }
@@ -4486,29 +4529,17 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
-    stage_macroblock(SilenceBlock(1));
-    shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
     twoswap->manager.set({{"logo.y","0.5"},{"music.y","0.65"}});
 
-    fd->manager.transition(MICRO, {
-        {"rotation_1k", "0.0"},
-        {"rotation_ik", "-1"},
-        {"rotation_jk", "1"},
-        {"pov_xz", "0.76"},
-        {"pov_y", "0"},
-        {"equation", "100"},
-        {"slider", "2.166666"},
-    });
-    cs.render_microblock();
-    
+    shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
     stage_macroblock(SilenceBlock(1));
     fd->manager.transition(MICRO, {
         {"brightness", "60000.0"},
         {"scale", "20.0"},
-        {"w", "0.5"},
-        {"h", "0.5"},
+        {"w", "0.75"},
+        {"h", "0.75"},
     });
-    cs.slide_subscene(MICRO, "fd", vec2(-.505, -.02));
+    cs.slide_subscene(MICRO, "fd", vec2(-.24, -.01));
     cs.render_microblock();
 
 
@@ -4548,7 +4579,6 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
 
 
 void render_video() {
-set_for_real(false);
     CompositeScene cs;
 
     StateSet bg_control = {
