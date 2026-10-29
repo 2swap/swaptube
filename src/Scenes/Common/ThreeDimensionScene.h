@@ -25,7 +25,7 @@ public:
     void clear_points();
 
     unordered_map<int, string> point_names;
-    bool brightest_lines = false; // TEMP HACK. REVERT
+    bool brightest_lines = false; // TEMP HACK. REVERT. Also applies to points.
 
     vec3 camera_pos;
     quat camera_direction;

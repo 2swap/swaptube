@@ -655,7 +655,6 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 	
     
 
-    // TODO time this so it lines up with voice
     stage_macroblock(FileBlock("x squared, xy, and y squared.")); 
     cs.render_microblock();
 	cs.slide_subscene(MICRO,"latex_x",vec2(0,-0.022));
@@ -1333,6 +1332,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
     // TODO this transition has problems even in 4K 60fps, switch back to 3 separate latex?
+// 2swap: *@!(#& it shouldn't have problems... i'll track this down
     stage_macroblock(FileBlock("The polynomial has a 1 term, ...   ...but what is 1?"));
 	cs.manager.transition(MICRO,{{"latex_poly.x", "0.5"},{"latex_poly.y", "0.5"}});
     td->manager.transition(MICRO, {{"brightness", "64"},});
@@ -2591,7 +2591,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
         {"point0.x", "1"},  {"point0.y", "0"},  {"point0.z", "0"},   // xx
         {"point1.x", "0"},  {"point1.y", "1"},  {"point1.z", "0"},   // xy
         {"point2.x", "0"},  {"point2.y", "0"},  {"point2.z", "1"},   // xz
-        {"point3.x", "-1.05"}, {"point3.y", "-0.02"},  {"point3.z", "0"},   // yy
+        {"point3.x", "-1"}, {"point3.y", "0"},  {"point3.z", "0"},   // yy
         {"point4.x", "0.5"}, {"point4.y", "0.5"}, {"point4.z", "0.5"},   // yz
         {"point5.x", "<jj_ij> 0.5 * <jj_1> +"}, {"point5.y", "<jj_ij> 0.5 * <jj_i> +"}, {"point5.z", "<jj_ij> 0.5 * <jj_j> +"},   // zz
 
@@ -3439,7 +3439,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     };
 
     stage_macroblock(FileBlock("It would be nice if ij squares to negative 1, making its own spinny subalgebra."));
-// TODO make cursor click on 1 for transition
 
     table->manager.set(table_opacities({}, "1", "1"));
     cs.fade_subscene(MICRO,"table",1);
@@ -3452,11 +3451,23 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     table->manager.transition(MICRO, table_opacities({"00","04","40","44"}, "1", "0"));
     cs.render_microblock();
 
+    shared_ptr<CursorScene> cursor = make_shared<CursorScene>();
+    cs.add_scene(cursor, "cursor");
+    cursor->manager.set({
+        {"cursor_x", "0.65"}, {"cursor_y", "1.1"}, {"cursor_size", "0.08"},
+        {"stroke_r", "[bg_1_r]"}, {"stroke_g", "[bg_1_g]"}, {"stroke_b", "[bg_1_b]"},
+    });
+    cursor->manager.transition(MICRO,{{"cursor_x", "0.596"},{"cursor_y", "0.774"},});
+    cs.render_microblock();
+    StateSet undo_cursor_click = cursor->manager.set("cursor_size", "{microblock_fraction} .8 > -.03 * .08 +");
     cs.render_microblock();
     table->manager.set({{"commutative","0"},{"triangle","0"}});
+    cursor->manager.set(undo_cursor_click);
+    cursor->manager.transition(MICRO,{{"cursor_x", "0.65"},{"cursor_y", "1.1"},});
     cs.render_microblock();
+    cs.remove_subscene("cursor");
 
-    table->manager.transition(MICRO, table_opacities({"00","01","04","10","11","14","40","41","44"}, "1", "0.1"));
+    table->manager.transition(MICRO, table_opacities({"00","01","04","10","11","14","40","41","44"}, "1", "0"));
     cs.render_microblock();
 
 
@@ -3772,6 +3783,8 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.remove_subscene("slice");
     cs.remove_subscene("spinny_png");
 
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("TGC: it's infinny spinny!")); 
 
@@ -4346,12 +4359,19 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
     stage_macroblock(SilenceBlock(2.4));
+    fd->manager.set({
+        {"eq_ease", "0 1 {microblock_fraction} smoothlerp"},
+        {"eq_lerp", "1 10 <eq_ease> -4 * ^ - .9999 /"},
+        {"equation", "100 <eq_lerp> +"},
+    });
     fd->manager.transition(MICRO, {
-        {"equation", "101"},
         {"brightness", "10000.0"},
         {"scale", "12.0"},
     });
     cs.render_microblock();
+    fd->manager.set({
+        {"equation", "101"},
+    });
     fd->manager.transition(MICRO, {
         {"brightness", "5000.0"},
         {"rotation_jk", "0.78"},
@@ -4402,7 +4422,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.slide_subscene(MICRO, "latex_qu", vec2(0.45,0));
     cs.slide_subscene(MICRO, "latex_bi", vec2(0.45,0));
 
-    cs.slide_subscene(MICRO, "fd", vec2(0.4,0));
+    cs.slide_subscene(MICRO, "fd", vec2(0.3,0));
     cs.manager.transition(MICRO,{{"slider","1.1"}});
     fd->manager.transition(MICRO,{{"slider","0.716666"}});
 
@@ -4582,10 +4602,8 @@ set_for_real(false);
     shared_ptr<FourDAlgebraScene> fd = quat_graphs(cs,bg_control);
     outtro(cs, fd);
 
-
     // TODO improve the blue on purple
     // TODO resize latex without transitioning
-    // TODO gpu flicker on circles
 }
 
 

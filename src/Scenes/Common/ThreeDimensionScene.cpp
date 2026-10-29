@@ -10,7 +10,8 @@ extern "C" {
         uint32_t* d_pixels, const ivec2& wh,
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
-        const quat& camera_direction, const vec3& camera_pos, float fov);
+        const quat& camera_direction, const vec3& camera_pos, float fov,
+        bool brightest_wins); // TEMP HACK. REVERT ASAP
 
     void render_lines_on_gpu(
         uint32_t* d_pixels, const ivec2& wh,
@@ -96,7 +97,8 @@ void ThreeDimensionScene::draw() {
             n,
             camera_direction,
             camera_pos,
-            fov
+            fov,
+            brightest_lines
         );
     };
 

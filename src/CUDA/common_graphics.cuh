@@ -6,7 +6,7 @@
 namespace Cuda {
 
 // Fill a circle on a pixel buffer
-__device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r, int col, unsigned int* pixels, const Cuda::ivec2& wh, float opa=1.0f) {
+__device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r, int col, unsigned int* pixels, const Cuda::ivec2& wh, float opa=1.0f, bool brightest_wins = false) { // HACK. brightest_wins, revert this
     // breakout if outside of screen
     if (center.x + r < 0 || center.x - r >= wh.x || center.y + r < 0 || center.y - r >= wh.y)
         return;
@@ -14,8 +14,10 @@ __device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r,
     for (float dx = -r; dx < r; dx++) {
         float sdx = dx*dx;
         for (float dy = -r; dy < r; dy++) {
-            if (sdx + dy*dy < r2)
-                atomic_overlay_pixel(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
+            if (sdx + dy*dy < r2) {
+                if (brightest_wins) atomic_overlay_pixel_brightest(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
+                else                atomic_overlay_pixel(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
+            }
         }
     }
 }
