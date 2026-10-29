@@ -1841,7 +1841,6 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.render_microblock();
 
-    //TODO it would be nice if the brightness didn't make alpha weirdness
     stage_macroblock(FileBlock("This algebra is the complex numbers."));
     cs.render_microblock();
     td->manager.transition(MICRO, {
@@ -1855,14 +1854,13 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    // TODO we can see that the circles are 16-gons. is there an easy way to use a higher poly?
     stage_macroblock(FileBlock("y squares to negative 1. It's the imaginary unit i."));
     td->manager.transition(MICRO, {
         {"diagram_opacity", "0"},
     });
     StateSet undo = td->manager.transition(MICRO, {
-        {"xx_opacity", "40"},
-        {"xy_opacity", "40"},
+        {"xx_dim", "0.2"},
+        {"xy_dim", "0.2"},
     });
     cs.render_microblock();
     cs.render_microblock();
@@ -4114,6 +4112,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
     cs.render_microblock();
 
+
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
 
@@ -4422,6 +4421,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
+
     stage_macroblock(FileBlock("but only by keeping an open mind"));
 
     latex_qu->manager.transition(MICRO, {{"w", "0.65"},{"h", "0.3"},});
@@ -4438,6 +4438,11 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
+    shared_ptr<PngScene> hamilton = make_shared<PngScene>("Hamilton",vec2(0.35,0.35));
+    cs.add_scene_fade_in(MICRO,hamilton, "hamilton",vec2(0.25,0.78)); 
+	shared_ptr<LatexScene> hamilton_eq = make_shared<LatexScene>("i^2=j^2=k^2=ijk=-1",vec2(0.36,0.075));
+	cs.add_scene_fade_in(MICRO,hamilton_eq , "hamilton_eq",vec2(0.25,0.852));
+
     fd->manager.transition(MICRO, {
         {"rotation_jk", "-0.23"},
         {"pov_xz", "-2.48"},
@@ -4452,7 +4457,6 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
     stage_macroblock(CompositeBlock(FileBlock("do we unlock beautiful new possibilities."), SilenceBlock(6.4)));
 
-    cs.fade_subscene(MACRO,"latex_qu",0);
     cs.manager.transition(MACRO, "fd.x", ".5");
     cs.manager.transition(MACRO, "fd.y", ".5");
 
@@ -4503,6 +4507,11 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
+    cs.fade_subscene(MACRO,"latex_qu",0);
+    cs.fade_subscene(MACRO,"hamilton",0);
+    cs.fade_subscene(MACRO,"hamilton_eq",0);
+
+
     BezierStateCurve bsc_beautiful(beautiful_waypoints);
     vector<StateSet> _beautiful_waypoints = bsc_beautiful.get_waypoints();
 
@@ -4529,9 +4538,9 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
-    twoswap->manager.set({{"logo.y","0.5"},{"music.y","0.65"}});
 
     shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
+    twoswap->manager.set({{"logo.y","0.5"},{"music.y","0.65"}});
     stage_macroblock(SilenceBlock(1));
     fd->manager.transition(MICRO, {
         {"brightness", "60000.0"},
@@ -4579,6 +4588,7 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
 
 
 void render_video() {
+    set_for_real(false);
     CompositeScene cs;
 
     StateSet bg_control = {
@@ -4632,7 +4642,6 @@ void render_video() {
     shared_ptr<FourDAlgebraScene> fd = quat_graphs(cs,bg_control);
     outtro(cs, fd);
 
-    // TODO improve the blue on purple
     // TODO resize latex without transitioning
 }
 

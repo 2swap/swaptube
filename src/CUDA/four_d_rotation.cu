@@ -80,7 +80,7 @@ __global__ void four_d_rotation_raymarch(
                     colors[pixel_index] = 0xff32ed96;  //greeb
                     break;
                 }
-                colors[pixel_index] = 0xff00c7ff; //blue
+                colors[pixel_index] = 0xff3ab4ff; //blue
                 break;
             }
             colors[pixel_index] = 0xffff41a3; //RED
