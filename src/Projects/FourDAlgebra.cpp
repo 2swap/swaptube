@@ -3724,6 +3724,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     stage_macroblock(SilenceBlock(0.4));
     cs.render_microblock();
 
+
     cs.fade_subscene(MICRO,"quat_png",0.1);
     cs.fade_subscene(MICRO,"matrices",0);
     cs.fade_subscene(MICRO,"matrix_png",0);
@@ -4461,7 +4462,6 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    set_for_real(true);
     stage_macroblock(CompositeBlock(FileBlock("do we unlock beautiful new possibilities."), SilenceBlock(7.4)));
 
     cs.manager.transition(MACRO, "fd.x", ".5");

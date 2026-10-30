@@ -63,24 +63,24 @@ __global__ void four_d_rotation_raymarch(
         if (abs(pos_rotated.y) < 1 && abs(pos_rotated.z) < 1 && abs(pos_rotated.w) < 1 && abs(pos_rotated.x) < 1){
             if (abs(last_position.y) > 1){
                 if (last_position.y > 0){
-                    colors[pixel_index] = 0xfffc9f9f; //orange
+                    colors[pixel_index] = 0xffd2938e; //orange
                     break;
                 }
-                colors[pixel_index] = 0xffd865ff; //pink
+                colors[pixel_index] = 0xffc76fe5; //pink
                 break;
             } else if (abs(last_position.z) > 1){
                 if (last_position.z > 0){
-                    colors[pixel_index] = 0xffe3e5fc; //white
+                    colors[pixel_index] = 0xffd4d6f2; //white
                     break;
                 }
-                colors[pixel_index] = 0xfffff96e; //yellow
+                colors[pixel_index] = 0xffdcd585; //yellow
                 break;
             } else if (abs(last_position.w) > 1){
                 if (last_position.w > 0){
-                    colors[pixel_index] = 0xff32ed96;  //greeb
+                    colors[pixel_index] = 0xff4fd597;  //greeb
                     break;
                 }
-                colors[pixel_index] = 0xff3ab4ff; //blue
+                colors[pixel_index] = 0xff3ea8ea; //blue
                 break;
             }
             colors[pixel_index] = 0xffff41a3; //RED
@@ -102,6 +102,9 @@ __global__ void four_d_rotation_raymarch(
         }
         last_dot = this_dot;
     }
+
+    // float point_sum = (floorf(last_position.y*5) + floorf(last_position.z*5) + floorf(last_position.w*5))/2.0;
+    // if (floorf(point_sum) == floorf(point_sum+0.5)) colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0x00000000,0.05);
 
     if (hit_plane){
         colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0xffbbddff,0.7*plane);
