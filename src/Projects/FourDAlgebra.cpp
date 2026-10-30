@@ -2607,7 +2607,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
         {"slow", "<tx> .08 /"},
         {"lines_thickness_multiplier", "4"},
-        {"d", "4"}, {"q1", "<slow> sin"}, {"qi", "<slow> sin .2 * 1 +"}, {"qj", "<slow> cos 1 +"},
+        {"d", "4"}, {"q1", "1"}, {"qi", "<slow> sin .2 * 1 +"}, {"qj", "<slow> cos 1 +"},
     });
     basis->point_names = {
         {0, "1"}, {1, "i"}, {2, "j"}, {3, "i^2"}, {4, "ij"}, {5, "j^2"},
@@ -4461,13 +4461,13 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(CompositeBlock(FileBlock("do we unlock beautiful new possibilities."), SilenceBlock(6.4)));
+    set_for_real(true);
+    stage_macroblock(CompositeBlock(FileBlock("do we unlock beautiful new possibilities."), SilenceBlock(7.4)));
 
     cs.manager.transition(MACRO, "fd.x", ".5");
     cs.manager.transition(MACRO, "fd.y", ".5");
+    fd->manager.transition(MACRO, "w", "1");
 
-    // equation and brightness stay out of the curve: bezier overshoot would push equation past 102
-    // and brightness negative, so they're transitioned separately alongside it.
     vector<StateSet> beautiful_waypoints;
     beautiful_waypoints.push_back({
         {"rotation_1k", "0"},
@@ -4482,14 +4482,6 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_ik", "0.2"},
         {"rotation_jk", "-0.23"},
         {"pov_xz", "-2.48"},
-        {"pov_y", "1.57"},
-        {"pov_max_dist", "10"},
-    });
-    beautiful_waypoints.push_back({
-        {"rotation_1k", "0"},
-        {"rotation_ik", "0.2"},
-        {"rotation_jk", "-0.83"},
-        {"pov_xz", "-2"},
         {"pov_y", "1.57"},
         {"pov_max_dist", "10"},
     });
@@ -4515,7 +4507,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "1"},
         {"pov_xz", "0.76"},
         {"pov_y", "0"},
-        {"pov_max_dist", "20"},
+        {"pov_max_dist", "22"},
     });
     cs.render_microblock();
 
@@ -4530,12 +4522,35 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     fd->manager.set(_beautiful_waypoints[0]);
     fd->manager.transition(MICRO, bsc_beautiful.pop_next_state_set());
     for(int i = 0; i < _beautiful_waypoints.size()-2; i++) {
-        if (i == 0)
-            fd->manager.transition(MICRO, {{"equation", "102"},{"brightness", "1000.0"},});
-        if (i == 1)
+        if (i == 0) {
+            fd->manager.set({
+                {"eq_ease", "0 1 {microblock_fraction} smoothlerp"},
+                {"eq_sig", "1 1 10 4 1 <eq_ease> 2 * - * ^ + /"},
+                {"eq_s0", "1 1 10 4 ^ + /"},
+                {"eq_s1", "1 1 10 -4 ^ + /"},
+                {"eq_lerp", "<eq_sig> <eq_s0> - <eq_s1> <eq_s0> - /"},
+                {"equation", "101 <eq_lerp> -"},
+            });
+            fd->manager.transition(MICRO, {{"brightness", "1000.0"},});
+        }
+        if (i == 1) {
+            fd->manager.set({{"equation", "100"},});
             fd->manager.transition(MICRO, {{"brightness", "10000.0"},});
+        }
         if (i == _beautiful_waypoints.size()-4)
-            fd->manager.transition(MICRO, { {"equation", "100"}, {"slider", "2.166666"}, });
+            fd->manager.transition(MICRO, { {"slider", "2.166666"}, });
+        if (i == _beautiful_waypoints.size()-3) {
+            fd->manager.transition(MICRO, {
+                {"brightness", "60000.0"},
+                {"scale", "20.0"},
+            });
+            cs.manager.set({
+                {"fd.x", cs.manager.get_equation_string("fd.x")},
+                {"fd.y", cs.manager.get_equation_string("fd.y")},
+            });
+            cs.fade_subscene(MICRO, "bg", 0);
+            cs.manager.transition(MICRO, {{"fd.x", ".28"}});
+        }
         cs.render_microblock();
         fd->manager.set(bsc_beautiful.pop_next_state_set());
     }
@@ -4550,19 +4565,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
-
     shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
-    twoswap->manager.set({{"logo.y","0.5"},{"music.y","0.65"}});
-    stage_macroblock(SilenceBlock(1));
-    fd->manager.transition(MICRO, {
-        {"brightness", "60000.0"},
-        {"scale", "20.0"},
-        {"w", "0.75"},
-        {"h", "0.75"},
-    });
-    cs.slide_subscene(MICRO, "fd", vec2(-.24, -.01));
-    cs.render_microblock();
-
 
     stage_macroblock(FileBlock("This has been 2swap,"));
     cs.add_scene_fade_in(MACRO, twoswap, "twoswap");
