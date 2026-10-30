@@ -4478,28 +4478,12 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"pov_max_dist", "10"},
     });
     beautiful_waypoints.push_back({
-        {"rotation_1k", "0"},
-        {"rotation_ik", "0.2"},
-        {"rotation_jk", "-0.23"},
-        {"pov_xz", "-2.48"},
-        {"pov_y", "1.57"},
-        {"pov_max_dist", "10"},
-    });
-    beautiful_waypoints.push_back({
         {"rotation_1k", "0.6"},
         {"rotation_ik", "0.2"},
         {"rotation_jk", "-0.83"},
         {"pov_xz", "-2"},
         {"pov_y", "0.745"},
-        {"pov_max_dist", "10"},
-    });
-    beautiful_waypoints.push_back({
-        {"rotation_1k", "0.6"},
-        {"rotation_ik", "0.2"},
-        {"rotation_jk", "-0.83"},
-        {"pov_xz", "-2"},
-        {"pov_y", "0.5"},
-        {"pov_max_dist", "10"},
+        {"pov_max_dist", "19"},
     });
     beautiful_waypoints.push_back({
         {"rotation_1k", "0.0"},
