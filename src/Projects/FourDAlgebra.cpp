@@ -433,8 +433,8 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 
     td->manager.begin_timer("add_axes");
     td->manager.transition(MICRO, {
-        {"dragger_x", "<add_axes> .5 * 3 + sin 2 *"},
-        {"dragger_y", "<add_axes> .7 * cos 2 *"},
+        {"dragger_x", "<add_axes> 1.4 * 3 + sin 2 *"},
+        {"dragger_y", "<add_axes> 1.7 * cos 2 *"},
     });
     cs.render_microblock();
     td->manager.transition(MICRO, {
@@ -492,6 +492,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     });
 
     
+// TODO 2swap my stress on "scale uniformly" came out weird
     stage_macroblock(FileBlock("Alternatively, we can scale uniformly and spin."));
     
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "8"},{"bg_1_b", "80"},});
@@ -694,6 +695,8 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
         {"yy_y", "0.85"},
     });
 
+    stage_macroblock(SilenceBlock(0.6));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("The answer to the multiplication depends on what these things equal."));
     cs.render_microblock();
@@ -1278,7 +1281,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "68"},{"bg_1_g", "0"},{"bg_1_b", "24"},});
     cs.render_microblock();
-    cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
+    cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x} {xx_pos_x} + 2 /"},{"cursor_y", "{yy_pos_y} {xx_pos_y} + 2 /"},});
     cs.render_microblock();
     cs.render_microblock();
 
@@ -1295,6 +1298,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
         {"zoom", "0.2"},
     });
     cs.render_microblock();
+    cursor->manager.transition(MICRO,{{"cursor_x", "{yy_pos_x}"},{"cursor_y", "{yy_pos_y}"},});
     cs.render_microblock();
 
 
@@ -2131,7 +2135,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
             {"lines_thickness_multiplier", "4"},
 
             {"slow", "<tx> .08 / 0.2 +"},
-            {"d", "4"}, {"q1", "<slow> .7 * sin"}, {"qi", "<slow> sin 1 +"}, {"qj", "<slow> 1.3 * cos 1 +"},
+            {"d", "4"}, {"q1", "1"}, {"qi", "<slow> sin 1 +"}, {"qj", "<slow> 1.3 * cos 1 +"},
         });
         b->point_names = {
             {0, "1"}, {1, "i"}, {2, "j"}, {3, "i^2"}, {4, "ij"}, {5, "j^2"},
@@ -2324,13 +2328,12 @@ void three_dim(CompositeScene& cs, StateSet& bg){
             {"point0.a", "0"},{"point1.a", "0"},{"point2.a", "0"},{"point3.a", "0"},
     });
 
-    cs.manager.set({
-        {"basis_w.x", cs.manager.get_equation_string("basis.x")},
-        {"basis_w.y", cs.manager.get_equation_string("basis.y")},
-    });
-
     for(int i = 0; i < 3; i++) {
         cs.add_scene(basis_w, "basis_w");
+        cs.manager.set({
+            {"basis_w.x", cs.manager.get_equation_string("basis.x")},
+            {"basis_w.y", cs.manager.get_equation_string("basis.y")},
+        });
         cs.render_microblock();
         cs.remove_subscene("basis_w");
         if (i != 2) cs.render_microblock();
@@ -2892,13 +2895,13 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     stage_macroblock(CompositeBlock(FileBlock("because ij squares to 1."),SilenceBlock(1)));
 
     table->manager.transition(MICRO, {
-        {"opacity_01", "0.1"},{"opacity_10", "0.1"},
-        {"opacity_11", "0.1"},{"opacity_14", "0.1"},{"opacity_41", "0.1"},
-        {"opacity_02", "0.1"},{"opacity_03", "0.1"},
-        {"opacity_12", "0.1"},{"opacity_13", "0.1"},
-        {"opacity_20", "0.1"},{"opacity_21", "0.1"},{"opacity_22", "0.1"},{"opacity_23", "0.1"},{"opacity_24", "0.1"},
-        {"opacity_30", "0.1"},{"opacity_31", "0.1"},{"opacity_32", "0.1"},{"opacity_33", "0.1"},{"opacity_34", "0.1"},
-        {"opacity_42", "0.1"},{"opacity_43", "0.1"},
+        {"opacity_01", "0"},{"opacity_10", "0"},
+        {"opacity_11", "0"},{"opacity_14", "0"},{"opacity_41", "0"},
+        {"opacity_02", "0"},{"opacity_03", "0"},
+        {"opacity_12", "0"},{"opacity_13", "0"},
+        {"opacity_20", "0"},{"opacity_21", "0"},{"opacity_22", "0"},{"opacity_23", "0"},{"opacity_24", "0"},
+        {"opacity_30", "0"},{"opacity_31", "0"},{"opacity_32", "0"},{"opacity_33", "0"},{"opacity_34", "0"},
+        {"opacity_42", "0"},{"opacity_43", "0"},
     });
     cs.render_microblock();
     cs.render_microblock();
@@ -3267,10 +3270,13 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     });
 
 
+/*
+// 2swap: I prefer it full opaque
     cs.fade_subscene(MICRO,"latex_i3",0.3);
     cs.fade_subscene(MICRO,"latex_j2",0.3);
     cs.fade_subscene(MICRO,"latex_j4",0.3);
     cs.fade_subscene(MICRO,"latex_i5",0.3);
+*/
 
 
 
@@ -3464,7 +3470,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     });
     cursor->manager.transition(MICRO,{{"cursor_x", "0.596"},{"cursor_y", "0.774"},});
     cs.render_microblock();
-    StateSet undo_cursor_click = cursor->manager.set("cursor_size", "{microblock_fraction} .8 > -.03 * .08 +");
+    StateSet undo_cursor_click = cursor->manager.set("cursor_size", "{microblock_fraction} .9 > -.03 * .08 +");
     cs.render_microblock();
     table->manager.set({{"commutative","0"},{"triangle","0"}});
     cursor->manager.set(undo_cursor_click);
@@ -4208,6 +4214,8 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
 
+    stage_macroblock(SilenceBlock(0.8));
+    cs.render_microblock();
 
 
     shared_ptr<FourDAlgebraScene> fd = make_shared<FourDAlgebraScene>(vec2(1.5,1));
@@ -4230,8 +4238,6 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
     
 
-    stage_macroblock(SilenceBlock(0.8));
-    cs.render_microblock();
 
 
     stage_macroblock(FileBlock("This quaternion algebra makes circular graphs."));
@@ -4298,7 +4304,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("Its evil twin looks linear."));
+    stage_macroblock(FileBlock("Its evil twin looks griddy."));
 
     cs.slide_subscene(MICRO, "table", vec2(-0.4,0));
     cs.slide_subscene(MICRO, "latex_qu", vec2(-0.4,0));
@@ -4338,7 +4344,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("The spinny subspaces don't interact.")); // TODO what does interact mean?
+    stage_macroblock(FileBlock("The spinny subspaces don't interact."));
 
     bitable->manager.transition(MICRO,{
         {"opacity_00", "0.1"},{"opacity_01", "0.1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "0.1"},
@@ -4469,6 +4475,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "-0.23"},
         {"pov_xz", "-2.48"},
         {"pov_y", "1.53"},
+        {"pov_max_dist", "10"},
     });
     beautiful_waypoints.push_back({
         {"rotation_1k", "0"},
@@ -4476,6 +4483,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "-0.23"},
         {"pov_xz", "-2.48"},
         {"pov_y", "1.57"},
+        {"pov_max_dist", "10"},
     });
     beautiful_waypoints.push_back({
         {"rotation_1k", "0"},
@@ -4483,6 +4491,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "-0.83"},
         {"pov_xz", "-2"},
         {"pov_y", "1.57"},
+        {"pov_max_dist", "10"},
     });
     beautiful_waypoints.push_back({
         {"rotation_1k", "0.6"},
@@ -4490,6 +4499,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "-0.83"},
         {"pov_xz", "-2"},
         {"pov_y", "0.745"},
+        {"pov_max_dist", "10"},
     });
     beautiful_waypoints.push_back({
         {"rotation_1k", "0.6"},
@@ -4497,6 +4507,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "-0.83"},
         {"pov_xz", "-2"},
         {"pov_y", "0.5"},
+        {"pov_max_dist", "10"},
     });
     beautiful_waypoints.push_back({
         {"rotation_1k", "0.0"},
@@ -4504,6 +4515,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "1"},
         {"pov_xz", "0.76"},
         {"pov_y", "0"},
+        {"pov_max_dist", "20"},
     });
     cs.render_microblock();
 
