@@ -7,6 +7,7 @@
 
 #include "../Scenes/Media/LatexScene.h"
 #include "../Scenes/Media/PngScene.h"
+#include "../Scenes/Media/Mp4Scene.h"
 #include "../Scenes/Media/CursorScene.h"
 #include "../Scenes/Common/ThreeDimensionScene.h"
 #include "../Scenes/Common/CompositeScene.h"
@@ -4305,7 +4306,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("Its evil twin looks griddy."));
+    stage_macroblock(FileBlock("Its evil twin looks like a grid."));
 
     cs.slide_subscene(MICRO, "table", vec2(-0.4,0));
     cs.slide_subscene(MICRO, "latex_qu", vec2(-0.4,0));
@@ -4345,7 +4346,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(FileBlock("The spinny subspaces don't interact."));
+    stage_macroblock(FileBlock("Its _two_ spinny subspaces don't interact."));
 
     bitable->manager.transition(MICRO,{
         {"opacity_00", "0.1"},{"opacity_01", "0.1"},{"opacity_02", "1"},{"opacity_03", "1"},{"opacity_04", "0.1"},
@@ -4547,6 +4548,93 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 }
 
 
+void ad(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd) {
+set_for_real(true);
+    string current_png = "";
+    string stale_png = "";
+    auto show_png = [&](const string& name, const vec2& size = vec2(0.85, 0.85), const vec2& pos = vec2(0.5, 0.53)) {
+        if(stale_png != "") cs.remove_subscene(stale_png);
+        if(current_png != "") cs.fade_subscene(MICRO, current_png, 0);
+        stale_png = current_png;
+        shared_ptr<PngScene> png = make_shared<PngScene>(name, size);
+        cs.add_scene(png, name, pos);
+        current_png = name;
+    };
+
+    stage_macroblock(FileBlock("Keeping an open mind matters outside of math, too. Especially when it comes to deciding how to spend your future."));
+    cs.remove_subscene("fd");
+    cs.render_microblock();
+
+    // [8 second motion graphic]
+    stage_macroblock(FileBlock("You have 80,000 Hours in your career. That's 40 hours a week, 50 weeks a year, for 40 years."));
+    shared_ptr<Mp4Scene> motion = make_shared<Mp4Scene>(vector<string>{"80k"}, 1, Mp4EndBehavior::Stop);
+    cs.add_scene(motion, "motion");
+    cs.render_microblock();
+
+    // [Website desktop B-roll]
+    stage_macroblock(FileBlock("That's a lot of time to spend on the wrong career. Technology is reshaping the job market fast, and over half of new grads are second-guessing their career choices."));
+    cs.fade_subscene(MICRO, "motion", 0);
+    show_png("80k_home");
+    cs.render_microblock();
+    cs.remove_subscene("motion");
+
+    // [Show evidence of them doing research]
+    stage_macroblock(FileBlock("Today's sponsor is 80,000 Hours, a nonprofit that's spent over ten years researching how to find a career that's fulfilling AND does real good."));
+    show_png("80k_research");
+    cs.render_microblock();
+
+    // [Show spoiler-blurred list of most useful career paths]
+    stage_macroblock(FileBlock("And they've found some surprising stuff. Their research suggests some career paths can have hundreds of times more impact than others. Can you guess which?"));
+    show_png("80k_careers_blurred");
+    cs.render_microblock();
+
+    // [Career guide B-roll]
+    stage_macroblock(FileBlock("Now, I think this sponsor is actually very special for one simple reason: they aren't asking you to buy anything."));
+    show_png("80k_guide");
+    cs.render_microblock();
+
+    // [Screenshot of each thing mentioned- problems, career paths, job board, advising team info]
+    stage_macroblock(FileBlock("Their website has research on the world's most pressing problems,"));
+    show_png("80k_problems");
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("reviews of career paths,"));
+    show_png("80k_careers");
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("a job board,"));
+    show_png("80k_jobs");
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("and even one-on-one career advice."));
+    show_png("80k_advising");
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Go check it out- there is no catch: all of it is free."));
+    cs.render_microblock();
+
+    // [On-screen: link, career guide, transition back to video.]
+    // TODO: fill in the real link slug once 80k provides it.
+    stage_macroblock(FileBlock("Visit 80000hours.org/2swap"));
+    show_png("80k_guide", vec2(0.6, 0.6), vec2(0.5, 0.64));
+    shared_ptr<LatexScene> link = make_shared<LatexScene>("\\text{80000hours.org/2swap}", vec2(0.6, 0.15));
+    cs.add_scene_fade_in(MICRO, link, "link", vec2(0.5, 0.15));
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("to get a free copy of their in-depth and up-to-date career guide,"));
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("and start planning a career that helps make the world a better place."));
+    cs.fade_subscene(MICRO, "80k_guide", 0);
+    cs.fade_subscene(MICRO, "link", 0);
+    cs.fade_subscene(MICRO, "fd", 1);
+    cs.render_microblock();
+
+    cs.remove_all_subscenes();
+    cs.add_scene(fd, "fd");
+set_for_real(false);
+}
+
 
 void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
     shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
@@ -4587,7 +4675,7 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
 
 
 void render_video() {
-    set_for_real(false);
+set_for_real(false);
     CompositeScene cs;
 
     StateSet bg_control = {
@@ -4639,6 +4727,7 @@ void render_video() {
     four_d_cosine(cs,bg_control);
     non_commutative(cs,bg_control);
     shared_ptr<FourDAlgebraScene> fd = quat_graphs(cs,bg_control);
+    ad(cs, fd);
     outtro(cs, fd);
 
     // TODO resize latex without transitioning
