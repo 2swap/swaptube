@@ -103,8 +103,8 @@ __global__ void four_d_rotation_raymarch(
         last_dot = this_dot;
     }
 
-    // float point_sum = (floorf(last_position.y*5) + floorf(last_position.z*5) + floorf(last_position.w*5))/2.0;
-    // if (floorf(point_sum) == floorf(point_sum+0.5)) colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0x00000000,0.05);
+    float point_sum = (floorf(last_position.y*5) + floorf(last_position.z*5) + floorf(last_position.w*5))/2.0;
+    if (floorf(point_sum) == floorf(point_sum+0.5)) colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0x00000000,0.05);
 
     if (hit_plane){
         colors[pixel_index] = Cuda::colorlerp(colors[pixel_index],0xffbbddff,0.7*plane);

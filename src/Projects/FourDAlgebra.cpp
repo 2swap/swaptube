@@ -2697,7 +2697,6 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
 
 
-    // TODO camera looking nearly straight down the grid
     shared_ptr<ThreeDAlgebraScene> tess = make_shared<ThreeDAlgebraScene>(vec2(1,1));
     tess->manager.set({
         {"associativity", "1"},
