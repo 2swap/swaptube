@@ -32,8 +32,8 @@ PngScene::PngScene(string pn, const vec2& dimensions) : Scene(dimensions), pictu
 
 void PngScene::draw() {
     const ivec2 src_wh = cached_image->get_wh();
-    const vec2 crop_tl(state["crop_top"], state["crop_left"]);
-    const vec2 crop_br(state["crop_bottom"], state["crop_right"]);
+    const vec2 crop_tl(state["crop_left"], state["crop_top"]);
+    const vec2 crop_br(state["crop_right"], state["crop_bottom"]);
 
     const ivec2 cropped_wh(
         max(1, (int)floor(src_wh.x * crop_br.x) - (int)floor(src_wh.x * crop_tl.x)),

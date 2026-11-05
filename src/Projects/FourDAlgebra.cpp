@@ -18,6 +18,7 @@
 #include "../Core/State/StateTester.h"
 #include "../Core/Smoketest.h"
 #include "../IO/Writer.h"
+#include "../IO/PNG.h"
 
 
 // spinny:   0  8 80
@@ -4445,10 +4446,12 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
+/*
     shared_ptr<PngScene> hamilton = make_shared<PngScene>("Hamilton",vec2(0.35,0.35));
     cs.add_scene_fade_in(MICRO,hamilton, "hamilton",vec2(0.25,0.78)); 
 	shared_ptr<LatexScene> hamilton_eq = make_shared<LatexScene>("i^2=j^2=k^2=ijk=-1",vec2(0.36,0.075));
 	cs.add_scene_fade_in(MICRO,hamilton_eq , "hamilton_eq",vec2(0.25,0.852));
+*/
 
     fd->manager.transition(MICRO, {
         {"rotation_jk", "-0.23"},
@@ -4462,11 +4465,13 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
 
 
 
-    stage_macroblock(CompositeBlock(FileBlock("do we unlock beautiful new possibilities."), SilenceBlock(7.4)));
+    stage_macroblock(CompositeBlock(FileBlock("do we unlock beautiful new possibilities."), CompositeBlock(SilenceBlock(5.4), FileBlock("Keeping an open mind matters outside of math, too. Especially when it comes to deciding how to spend your future."))));
 
     cs.manager.transition(MACRO, "fd.x", ".5");
     cs.manager.transition(MACRO, "fd.y", ".5");
-    fd->manager.transition(MACRO, "w", "1");
+    cs.fade_all_subscenes_except(MICRO,"fd",0);
+    cs.render_microblock();
+    cs.remove_all_subscenes_except("fd");
 
     vector<StateSet> beautiful_waypoints;
     beautiful_waypoints.push_back({
@@ -4483,21 +4488,9 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
         {"rotation_jk", "-0.83"},
         {"pov_xz", "-2"},
         {"pov_y", "0.745"},
-        {"pov_max_dist", "19"},
+        {"pov_max_dist", "4"},
     });
-    beautiful_waypoints.push_back({
-        {"rotation_1k", "0.0"},
-        {"rotation_ik", "-1"},
-        {"rotation_jk", "1"},
-        {"pov_xz", "0.76"},
-        {"pov_y", "0"},
-        {"pov_max_dist", "22"},
-    });
-    cs.render_microblock();
 
-    cs.fade_subscene(MACRO,"latex_qu",0);
-    cs.fade_subscene(MACRO,"hamilton",0);
-    cs.fade_subscene(MACRO,"hamilton_eq",0);
 
 
     BezierStateCurve bsc_beautiful(beautiful_waypoints);
@@ -4521,6 +4514,249 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
             fd->manager.set({{"equation", "100"},});
             fd->manager.transition(MICRO, {{"brightness", "10000.0"},});
         }
+        cs.render_microblock();
+        fd->manager.set(bsc_beautiful.pop_next_state_set());
+    }
+    fd->manager.transition(MICRO, _beautiful_waypoints[_beautiful_waypoints.size()-1]);
+    cs.render_microblock();
+
+    return fd;
+}
+
+
+void ad(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd) {
+    string current_media = "";
+    string stale_media = "";
+    const vec2 media_size(1, 1);
+    const vec2 media_pos(0.5, 0.5);
+    auto show_media = [&](shared_ptr<Scene> scene, const string& name) {
+        if(stale_media != "") cs.remove_subscene(stale_media);
+        stale_media = current_media;
+        cs.add_scene_fade_in(MICRO, scene, name, media_pos);
+        current_media = name;
+    };
+    auto drop_stale_media = [&]() {
+        if(stale_media != "") cs.remove_subscene(stale_media);
+        stale_media = "";
+    };
+
+    shared_ptr<BackgroundScene> white = make_shared<BackgroundScene>();
+    white->manager.set({
+        {"bg_0_r", "255"}, {"bg_0_g", "255"}, {"bg_0_b", "255"},
+        {"bg_1_r", "255"}, {"bg_1_g", "255"}, {"bg_1_b", "255"},
+        {"slider", "0"},
+    });
+
+    cs.add_scene_fade_in(MICRO, white, "white");
+    cs.render_microblock();
+    cs.remove_subscene("fd");
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(0.4));
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("You have 80,000 Hours in your career. That's 40 hours a week, 50 weeks a year, for 40 years."));
+    shared_ptr<Mp4Scene> motion = make_shared<Mp4Scene>(vector<string>{"80k"}, 1, Mp4EndBehavior::Stop);
+    cs.add_scene(motion, "motion");
+    cs.remove_subscene("white");
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(0.4));
+    cs.fade_subscene(MICRO, "motion", 0);
+    cs.render_microblock();
+    cs.remove_subscene("motion");
+
+    stage_macroblock(FileBlock("That's a lot of time to spend on the wrong career. Technology is reshaping the job market fast, and over half of new grads are second-guessing their career choices."));
+    cs.render_microblock();
+    cs.render_microblock();
+
+    const vector<string> lab_logos = {"logo_gemini", "logo_openai", "logo_anthropic"};
+    const vector<vec2> lab_logo_targets = {vec2(.2, .4), vec2(.8, .4), vec2(.5, .25)};
+    for(int i = 0; i < lab_logos.size(); i++) {
+        cs.add_scene(make_shared<PngScene>(lab_logos[i], i==2?vec2(0.18,0.18):vec2(0.22, 0.22)), lab_logos[i], lab_logo_targets[i] + vec2(0, 1));
+        cs.slide_subscene(MICRO, lab_logos[i], vec2(0, -1));
+        cs.render_microblock();
+    }
+
+    Pixels grad_pix;
+    png_to_pix(grad_pix, "graduate");
+    const double grad_h = 0.55;
+    const double grad_w = grad_h * grad_pix.wh.x / grad_pix.wh.y * get_video_height_pixels() / get_video_width_pixels();
+    shared_ptr<PngScene> grad = make_shared<PngScene>("graduate", vec2(grad_w, grad_h));
+    cs.render_microblock();
+    cs.add_scene(grad, "graduate", vec2(0.5, 1 + grad_h / 2));
+    cs.slide_subscene(MICRO, "graduate", vec2(0, -grad_h));
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Today's sponsor is 80,000 Hours, a nonprofit that's spent over ten years researching how to find a career that's fulfilling AND does real good."));
+    for(int i = 0; i < lab_logos.size(); i++)
+        cs.slide_subscene(MICRO, lab_logos[i], vec2(0, 1));
+    cs.slide_subscene(MICRO, "graduate", vec2(0, 1));
+    const vec2 logo_80k_end(0.5, 0.5);
+    const vec2 logo_80k_start(logo_80k_end.x, -0.35);
+    cs.add_scene(make_shared<PngScene>("80k_logo", vec2(0.6, 0.6)), "80k_logo", logo_80k_start);
+    cs.slide_subscene(MICRO, "80k_logo", logo_80k_end - logo_80k_start);
+    current_media = "80k_logo";
+    cs.render_microblock();
+    for(const string& logo : lab_logos) cs.remove_subscene(logo);
+    cs.remove_subscene("graduate");
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("And they've found some surprising stuff. Their research suggests some career paths can have hundreds of times more impact than others. Can you guess which?"));
+    shared_ptr<PngScene> careers = make_shared<PngScene>("80k_careers_blurred", media_size);
+    careers->manager.set({
+        {"crop_left",   "0.20833"},
+        {"crop_right",  "0.48958"},
+        {"crop_top",    "0.12963"},
+        {"crop_bottom", "0.41111"},
+    });
+    show_media(careers, "80k_careers_blurred");
+    cs.render_microblock();
+    drop_stale_media();
+    cs.render_microblock();
+    careers->manager.transition(MICRO, {
+        {"crop_left", "0"}, {"crop_right", "1"}, {"crop_top", "0"}, {"crop_bottom", "1"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Now, I think this sponsor is actually very special for one simple reason: they aren't asking you to buy anything."));
+    const double home_h = 11000;
+    const double window_h = 1080 / home_h;
+    const double scrolled_top = 1 - window_h;
+    shared_ptr<PngScene> home = make_shared<PngScene>("80k_home_full", media_size);
+    home->manager.set({
+        {"crop_left",   "0"},
+        {"crop_right",  "1"},
+        {"crop_top",    "0"},
+        {"crop_bottom", to_string(window_h)},
+    });
+    cs.add_scene(white, "white", vec2(0.5, 0.5), true);
+    cs.manager.set("white.opacity", "1");
+    show_media(home, "80k_home_full");
+    cs.render_microblock();
+    drop_stale_media();
+    home->manager.transition(MICRO, {
+        {"crop_top",    to_string(scrolled_top)},
+        {"crop_bottom", "1"},
+    });
+    cs.render_microblock();
+    home->manager.transition(MICRO, {
+        {"crop_left",   "0.58906"},
+        {"crop_right",  "0.77083"},
+        {"crop_top",    to_string(10384 / home_h)},
+        {"crop_bottom", to_string(10806 / home_h)},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+
+    const double site_fps = 30;
+    auto site_frame = [&](const double seconds) { return to_string(floor(seconds * site_fps)); };
+    shared_ptr<Mp4Scene> site = make_shared<Mp4Scene>(vector<string>{"80k_site"}, 1, Mp4EndBehavior::Stop, media_size);
+    site->manager.set("current_frame", site_frame(0.5));
+
+    stage_macroblock(FileBlock("Their website has research on the world's most pressing problems,"));
+    show_media(site, "80k_site");
+    site->manager.transition(MACRO, "current_frame", site_frame(4.4), false);
+    cs.render_microblock();
+    drop_stale_media();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("reviews of career paths,"));
+    site->manager.set("current_frame", site_frame(8.2));
+    site->manager.transition(MACRO, "current_frame", site_frame(10.0), false);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("a job board,"));
+    site->manager.set("current_frame", site_frame(14.0));
+    site->manager.transition(MACRO, "current_frame", site_frame(16.0), false);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("and even one-on-one career advice."));
+    site->manager.set("current_frame", site_frame(19.4));
+    site->manager.transition(MACRO, "current_frame", site_frame(21.0), false);
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Go check it out- there is no catch: all of it is free."));
+    const double approach_start = 21.0;
+    const double approach_end = 22.1;
+    for(int i = 1; i <= 4; i++) {
+        site->manager.transition(MICRO, "current_frame", site_frame(approach_start + (approach_end - approach_start) * i / 4), false);
+        cs.render_microblock();
+    }
+    site->manager.set("current_frame", site_frame(24.2));
+    site->manager.transition(MICRO, "current_frame", site_frame(25.0), false);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("Visit 80000hours.org/2swap"));
+    cs.fade_subscene(MICRO, "80k_site", 0);
+    cs.render_microblock();
+    shared_ptr<LatexScene> link = make_shared<LatexScene>("\\textcolor{#000000}{\\text{80000hours.org/2swap}}", vec2(0.96, 0.24));
+    cs.add_scene_fade_in(MICRO, link, "link", vec2(0.4, 0.15));
+    cs.render_microblock();
+    cs.remove_subscene("80k_site");
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.render_microblock();
+    if(stale_media != "") cs.remove_subscene(stale_media);
+
+    stage_macroblock(FileBlock("to get a free copy of their in-depth and up-to-date career guide,"));
+    const vec2 book_end(0.68, 0.62);
+    const vec2 book_start(book_end.x, 1.5);
+    cs.add_scene(make_shared<PngScene>("80k_book", vec2(0.6, 0.6)), "80k_book", book_start);
+    cs.slide_subscene(MICRO, "80k_book", book_end - book_start);
+    cs.render_microblock();
+
+    stage_macroblock(FileBlock("and start planning a career that helps make the world a better place."));
+    cs.render_microblock();
+    cs.add_scene_fade_in(MICRO, fd, "fd");
+    cs.render_microblock();
+
+    cs.remove_all_subscenes_except("fd");
+}
+
+
+void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
+    fd->manager.transition(MACRO, "w", "1");
+
+    vector<StateSet> beautiful_waypoints;
+    beautiful_waypoints.push_back({
+        {"rotation_1k", "0.6"},
+        {"rotation_ik", "0.2"},
+        {"rotation_jk", "-0.83"},
+        {"pov_xz", "-2"},
+        {"pov_y", "0.745"},
+        {"pov_max_dist", "19"},
+    });
+    beautiful_waypoints.push_back({
+        {"rotation_1k", "0.0"},
+        {"rotation_ik", "-1"},
+        {"rotation_jk", "1"},
+        {"pov_xz", "0.76"},
+        {"pov_y", "0"},
+        {"pov_max_dist", "22"},
+    });
+    cs.render_microblock();
+
+    cs.fade_all_subscenes_except(MACRO,"fd", 0);
+
+
+    BezierStateCurve bsc_beautiful(beautiful_waypoints);
+    vector<StateSet> _beautiful_waypoints = bsc_beautiful.get_waypoints();
+
+    fd->manager.set(_beautiful_waypoints[0]);
+    fd->manager.transition(MICRO, bsc_beautiful.pop_next_state_set());
+    for(int i = 0; i < _beautiful_waypoints.size()-2; i++) {
         if (i == _beautiful_waypoints.size()-4)
             fd->manager.transition(MICRO, { {"slider", "2.166666"}, });
         if (i == _beautiful_waypoints.size()-3) {
@@ -4533,7 +4769,7 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
                 {"fd.y", cs.manager.get_equation_string("fd.y")},
             });
             cs.fade_subscene(MICRO, "bg", 0);
-            cs.manager.transition(MICRO, {{"fd.x", ".28"}});
+            cs.manager.transition(MICRO, {{"fd.x", ".26"}, {"fd.y", ".48"}});
         }
         cs.render_microblock();
         fd->manager.set(bsc_beautiful.pop_next_state_set());
@@ -4541,101 +4777,8 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     fd->manager.transition(MICRO, _beautiful_waypoints[_beautiful_waypoints.size()-1]);
     cs.render_microblock();
 
-    cs.remove_all_subscenes_except("fd");
-
-    return fd;
-}
 
 
-void ad(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd) {
-set_for_real(true);
-    string current_png = "";
-    string stale_png = "";
-    auto show_png = [&](const string& name, const vec2& size = vec2(0.85, 0.85), const vec2& pos = vec2(0.5, 0.53)) {
-        if(stale_png != "") cs.remove_subscene(stale_png);
-        if(current_png != "") cs.fade_subscene(MICRO, current_png, 0);
-        stale_png = current_png;
-        shared_ptr<PngScene> png = make_shared<PngScene>(name, size);
-        cs.add_scene(png, name, pos);
-        current_png = name;
-    };
-
-    stage_macroblock(FileBlock("Keeping an open mind matters outside of math, too. Especially when it comes to deciding how to spend your future."));
-    cs.remove_subscene("fd");
-    cs.render_microblock();
-
-    // [8 second motion graphic]
-    stage_macroblock(FileBlock("You have 80,000 Hours in your career. That's 40 hours a week, 50 weeks a year, for 40 years."));
-    shared_ptr<Mp4Scene> motion = make_shared<Mp4Scene>(vector<string>{"80k"}, 1, Mp4EndBehavior::Stop);
-    cs.add_scene(motion, "motion");
-    cs.render_microblock();
-
-    // [Website desktop B-roll]
-    stage_macroblock(FileBlock("That's a lot of time to spend on the wrong career. Technology is reshaping the job market fast, and over half of new grads are second-guessing their career choices."));
-    cs.fade_subscene(MICRO, "motion", 0);
-    show_png("80k_home");
-    cs.render_microblock();
-    cs.remove_subscene("motion");
-
-    // [Show evidence of them doing research]
-    stage_macroblock(FileBlock("Today's sponsor is 80,000 Hours, a nonprofit that's spent over ten years researching how to find a career that's fulfilling AND does real good."));
-    show_png("80k_research");
-    cs.render_microblock();
-
-    // [Show spoiler-blurred list of most useful career paths]
-    stage_macroblock(FileBlock("And they've found some surprising stuff. Their research suggests some career paths can have hundreds of times more impact than others. Can you guess which?"));
-    show_png("80k_careers_blurred");
-    cs.render_microblock();
-
-    // [Career guide B-roll]
-    stage_macroblock(FileBlock("Now, I think this sponsor is actually very special for one simple reason: they aren't asking you to buy anything."));
-    show_png("80k_guide");
-    cs.render_microblock();
-
-    // [Screenshot of each thing mentioned- problems, career paths, job board, advising team info]
-    stage_macroblock(FileBlock("Their website has research on the world's most pressing problems,"));
-    show_png("80k_problems");
-    cs.render_microblock();
-
-    stage_macroblock(FileBlock("reviews of career paths,"));
-    show_png("80k_careers");
-    cs.render_microblock();
-
-    stage_macroblock(FileBlock("a job board,"));
-    show_png("80k_jobs");
-    cs.render_microblock();
-
-    stage_macroblock(FileBlock("and even one-on-one career advice."));
-    show_png("80k_advising");
-    cs.render_microblock();
-
-    stage_macroblock(FileBlock("Go check it out- there is no catch: all of it is free."));
-    cs.render_microblock();
-
-    // [On-screen: link, career guide, transition back to video.]
-    // TODO: fill in the real link slug once 80k provides it.
-    stage_macroblock(FileBlock("Visit 80000hours.org/2swap"));
-    show_png("80k_guide", vec2(0.6, 0.6), vec2(0.5, 0.64));
-    shared_ptr<LatexScene> link = make_shared<LatexScene>("\\text{80000hours.org/2swap}", vec2(0.6, 0.15));
-    cs.add_scene_fade_in(MICRO, link, "link", vec2(0.5, 0.15));
-    cs.render_microblock();
-
-    stage_macroblock(FileBlock("to get a free copy of their in-depth and up-to-date career guide,"));
-    cs.render_microblock();
-
-    stage_macroblock(FileBlock("and start planning a career that helps make the world a better place."));
-    cs.fade_subscene(MICRO, "80k_guide", 0);
-    cs.fade_subscene(MICRO, "link", 0);
-    cs.fade_subscene(MICRO, "fd", 1);
-    cs.render_microblock();
-
-    cs.remove_all_subscenes();
-    cs.add_scene(fd, "fd");
-set_for_real(false);
-}
-
-
-void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
     shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
 
     stage_macroblock(FileBlock("This has been 2swap,"));
@@ -4674,7 +4817,6 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
 
 
 void render_video() {
-set_for_real(false);
     CompositeScene cs;
 
     StateSet bg_control = {
