@@ -2150,7 +2150,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     };
     shared_ptr<ThreeDimensionScene> basis = make_basis();
 
-    
+    // TODO this spins too fast
     shared_ptr<ThreeDAlgebraScene> abAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
     abAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     abAssoc->manager.set({
@@ -3494,7 +3494,7 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.remove_subscene("bicomplex_png");
 
-
+    // TODO these latex transitions look weird in 1080p
 
     stage_macroblock(FileBlock("We can rearrange to find that ij is negative ji."));
 
