@@ -31,8 +31,8 @@
 // 5.   We now have paired shared glyphs. We can interpolate between them by linearly interpolating
 //      the positions of the glyphs, and using a simple alpha blend for the pixels in the glyphs.
 
-const float ASPECT_RATIO_THRESHOLD = 0.15f;
-const float IOU_THRESHOLD = 0.85f;
+const float ASPECT_RATIO_THRESHOLD = 0.25f;
+const float IOU_THRESHOLD = 0.75f;
 const bool ALLOW_MULTI_EDGES = false;
 
 // Helper function to get the bounding box of a glyph with a given color
