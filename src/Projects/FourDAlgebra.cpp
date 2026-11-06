@@ -19,6 +19,7 @@
 #include "../Core/Smoketest.h"
 #include "../IO/Writer.h"
 #include "../IO/PNG.h"
+#include "../IO/Latex.h"
 
 
 // spinny:   0  8 80
@@ -493,8 +494,6 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
         {"yy_y", "0"},
     });
 
-    
-// TODO 2swap my stress on "scale uniformly" came out weird
     stage_macroblock(FileBlock("Alternatively, we can scale uniformly and spin."));
     
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "8"},{"bg_1_b", "80"},});
@@ -512,17 +511,17 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
-    stage_macroblock(SilenceBlock(0.7));
+    stage_macroblock(SilenceBlock(1));
     td->manager.transition(MICRO, {
         {"dragger_y", "1.6"},
         {"dragger_x", "0"},
     });
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(0.2));
+    stage_macroblock(SilenceBlock(0.1));
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(0.7));
+    stage_macroblock(SilenceBlock(0.5));
     td->manager.transition(MICRO, {{"dragger_shown", "0"},});
     cursor->manager.transition(MICRO, {{"cursor_x", "0.45"},{"cursor_y", "-0.1"},});
     cs.render_microblock();
@@ -899,7 +898,6 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
         {"xy_y", "0"},
     });
     cs.manager.transition(MICRO,{{"bg_1_r", "0"},{"bg_1_g", "48"},{"bg_1_b", "48"},});
-    cs.render_microblock();
     cs.render_microblock();
 
 
@@ -1336,14 +1334,15 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.manager.transition(MICRO,{{"bg_1_r", "60"},{"bg_1_g", "0"},{"bg_1_b", "16"},});
     cs.render_microblock();
 
-    // TODO this transition has problems even in 4K 60fps, switch back to 3 separate latex?
-// 2swap: *@!(#& it shouldn't have problems... i'll track this down
     stage_macroblock(FileBlock("The polynomial has a 1 term, ...   ...but what is 1?"));
 	cs.manager.transition(MICRO,{{"latex_poly.x", "0.5"},{"latex_poly.y", "0.5"}});
     td->manager.transition(MICRO, {{"brightness", "64"},});
     cs.render_microblock(); 
     cs.render_microblock(); 
-	latex_poly->begin_latex_transition(MICRO, "\\cos(p) \\approx {\\Huge 1} - \\frac{p^2}{2!} + \\frac{p^4}{4!} - \\frac{p^6}{6!} + \\frac{p^8}{8!}");
+	latex_poly->begin_latex_transition(MICRO,
+        latex_color(0xff333333, "\\cos(p) \\approx ") +
+        latex_color(0xffff3377, "1") +
+        latex_color(0xff333333, " - \\frac{p^2}{2!} + \\frac{p^4}{4!} - \\frac{p^6}{6!} + \\frac{p^8}{8!}"));
 	latex_poly->manager.transition(MICRO,{{"w","0.64"}});
     cs.render_microblock(); 
     cs.render_microblock(); 
@@ -2136,7 +2135,7 @@ void three_dim(CompositeScene& cs, StateSet& bg){
             {"points_radius_multiplier", "1.8"},
             {"lines_thickness_multiplier", "4"},
 
-            {"slow", "<tx> .08 / 0.2 +"},
+            {"slow", "<tx> .06 * 0.2 +"},
             {"d", "4"}, {"q1", "1"}, {"qi", "<slow> sin 1 +"}, {"qj", "<slow> 1.3 * cos 1 +"},
         });
         b->point_names = {
@@ -2607,7 +2606,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
         {"point0.a", "0.4"},{"point1.a", "0.4"},{"point2.a", "0.4"},{"point3.a", "0.4"},{"point4.a", "1"},{"point5.a", "1"},
 
-        {"slow", "<tx> .08 /"},
+        {"slow", "<tx> .06 *"},
         {"lines_thickness_multiplier", "4"},
         {"d", "4"}, {"q1", "1"}, {"qi", "<slow> sin .2 * 1 +"}, {"qj", "<slow> cos 1 +"},
     });
@@ -2712,6 +2711,8 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     cs.add_scene_fade_in(MICRO, tess, "tess");
     cs.fade_subscene(MICRO, "fd2", 0);
 
+    stage_macroblock(SilenceBlock(1));
+    cs.render_microblock();
 
     stage_macroblock(FileBlock("The grids can spin in the i dimension,"));
     
@@ -2770,6 +2771,9 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
     boxBorder->manager.transition(MICRO,{{"h","0.69"}});
     boxFill->manager.transition(MICRO,{{"h","0.672"}});
     cs.render_microblock();
+    cs.render_microblock();
+
+    stage_macroblock(SilenceBlock(0.4));
     cs.render_microblock();
 
     stage_macroblock(FileBlock("But it doesn't just spin."));
@@ -4717,17 +4721,12 @@ void ad(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd) {
     cs.slide_subscene(MICRO, "80k_book", book_end - book_start);
     cs.render_microblock();
 
-    stage_macroblock(FileBlock("and start planning a career that helps make the world a better place."));
-    cs.render_microblock();
-    cs.add_scene_fade_in(MICRO, fd, "fd");
-    cs.render_microblock();
-
-    cs.remove_all_subscenes_except("fd");
-}
-
-
-void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
+set_for_real(true);
+    stage_macroblock(CompositeBlock(FileBlock("and start planning a career that helps make the world a better place."), SilenceBlock(2)));
     fd->manager.transition(MACRO, "w", "1");
+    cs.add_scene(fd, "fd");
+    cs.remove_all_subscenes_except("fd");
+
 
     vector<StateSet> beautiful_waypoints;
     beautiful_waypoints.push_back({
@@ -4736,7 +4735,7 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
         {"rotation_jk", "-0.83"},
         {"pov_xz", "-2"},
         {"pov_y", "0.745"},
-        {"pov_max_dist", "19"},
+        {"pov_max_dist", "4"},
     });
     beautiful_waypoints.push_back({
         {"rotation_1k", "0.0"},
@@ -4776,9 +4775,10 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
     }
     fd->manager.transition(MICRO, _beautiful_waypoints[_beautiful_waypoints.size()-1]);
     cs.render_microblock();
+}
 
 
-
+void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
     shared_ptr<TwoswapScene> twoswap = make_shared<TwoswapScene>();
 
     stage_macroblock(FileBlock("This has been 2swap,"));
@@ -4817,6 +4817,7 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
 
 
 void render_video() {
+set_for_real(false);
     CompositeScene cs;
 
     StateSet bg_control = {
