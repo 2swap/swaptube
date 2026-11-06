@@ -12,7 +12,8 @@
 // 2.   Identify and enumerate all connected components in each image by naively setting the colors
 //      to the uint32_t index of the component. This is done with a simple flood fill algorithm.
 // 3.   Identify which pairs of components are the same glyph.
-// 3a.  Immediately discard pairs whose bounding boxes have aspect ratios that differ by more than a few percent.
+// 3a.  Immediately discard pairs whose bounding boxes have aspect ratios that differ by more than a few percent
+//      (measured as |log(ar1 / ar2)|, so the tolerance is relative rather than absolute).
 // 3b.  For the remaining pairs, compute IOU (Intersection over Union) of the glyphs, and discard pairs with IOU far from 1.
 //      We do a best-effort scale to make the bounding boxes of the components match before computing IOU,
 //      to account for differently sized glyphs, such as exponents turning into coefficients in a derivative.
@@ -30,7 +31,7 @@
 // 5.   We now have paired shared glyphs. We can interpolate between them by linearly interpolating
 //      the positions of the glyphs, and using a simple alpha blend for the pixels in the glyphs.
 
-const float ASPECT_RATIO_THRESHOLD = 0.2f;
+const float ASPECT_RATIO_THRESHOLD = 0.15f;
 const float IOU_THRESHOLD = 0.85f;
 const bool ALLOW_MULTI_EDGES = false;
 
@@ -112,11 +113,13 @@ float compute_iou (
 
 bool is_same_glyph(const Cuda::Glyph& g1, const Cuda::Glyph& g2)
 {
-    float y1 = g1.wh.y + .01f;
-    float y2 = g2.wh.y + .01f;
-    float aspect_ratio_1 = (float) g1.wh.x / y1;
-    float aspect_ratio_2 = (float) g2.wh.x / y2;
-    if (std::abs(aspect_ratio_1 - aspect_ratio_2) > ASPECT_RATIO_THRESHOLD) {
+    // Degenerate (empty) bounding boxes can never match.
+    if (g1.wh.x <= 0 || g1.wh.y <= 0 || g2.wh.x <= 0 || g2.wh.y <= 0) {
+        return false;
+    }
+    float aspect_ratio_1 = (float) g1.wh.x / (float) g1.wh.y;
+    float aspect_ratio_2 = (float) g2.wh.x / (float) g2.wh.y;
+    if (std::abs(std::log(aspect_ratio_1 / aspect_ratio_2)) > ASPECT_RATIO_THRESHOLD) {
         return false;
     }
     float iou = compute_iou(g1.pix, g1.wh, g2.pix, g2.wh);
@@ -167,9 +170,9 @@ void print_adjacency_matrix(const Cuda::GraphAdjacencyMatrix& matrix)
             if (status == Cuda::EdgeStatus::UNDECIDED_EDGE) c = 'U';
             else if (status == Cuda::EdgeStatus::KEEP_EDGE) c = 'K';
             else if (status == Cuda::EdgeStatus::NO_EDGE) c = '.';
-            // printf("%c ", c);
+            printf("%c ", c);
         }
-        // printf("\n");
+        printf("\n");
     }
 }
 
