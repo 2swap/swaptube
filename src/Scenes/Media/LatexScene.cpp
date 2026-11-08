@@ -32,6 +32,7 @@ static vector<uint32_t> shapes_of_glyphs(const vector<uint32_t>& element_of_labe
 LatexScene::LatexScene(const string& l, const vec2& dimensions)
 : Scene(dimensions) {
     ScalingParams sp(get_width_height());
+    current_scaling = sp;
     last_pixels = next_pixels = latex_to_gpu_pix(l, sp);
     current_latex = l;
 }
@@ -54,11 +55,12 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
     cuda_copy_pixels_to_host(last_pixels_cpu.pixels.data(), last_wh.x*last_wh.y, last_pixels->get_ptr());
     cuda_copy_pixels_to_host(next_pixels_cpu.pixels.data(), next_wh.x*next_wh.y, next_pixels->get_ptr());
     vector<uint32_t> last_elements, next_elements;
-    Pixels last_segmented = segment_by_glyph_ids(last_pixels_cpu, latex_to_glyph_ids(current_latex, fresh_sp), last_num_glyphs, last_elements);
+    Pixels last_segmented = segment_by_glyph_ids(last_pixels_cpu, latex_to_glyph_ids(current_latex, current_scaling), last_num_glyphs, last_elements);
     Pixels next_segmented = segment_by_glyph_ids(next_pixels_cpu, latex_to_glyph_ids(l, fresh_sp), next_num_glyphs, next_elements);
     const vector<uint32_t> last_shapes = shapes_of_glyphs(last_elements, latex_glyph_shapes(current_latex));
     const vector<uint32_t> next_shapes = shapes_of_glyphs(next_elements, latex_glyph_shapes(l));
     current_latex = l;
+    current_scaling = fresh_sp;
     interp = stage_interpolation(
         last_segmented.pixels.data(), last_pixels_cpu.pixels.data(), last_shapes.data(), last_pixels_cpu.wh, last_num_glyphs,
         next_segmented.pixels.data(), next_pixels_cpu.pixels.data(), next_shapes.data(), next_pixels_cpu.wh, next_num_glyphs
@@ -87,6 +89,7 @@ void LatexScene::on_end_transition_extra_behavior(const TransitionType tt) {
 
 void LatexScene::jump_latex(string l) {
     ScalingParams sp(get_width_height());
+    current_scaling = sp;
     next_pixels = last_pixels = latex_to_gpu_pix(l, sp);
     current_latex = l;
     transitioning = false;

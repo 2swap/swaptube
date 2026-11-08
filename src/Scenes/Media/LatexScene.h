@@ -2,6 +2,7 @@
 
 #include "../Scene.h"
 #include "../../Host_Device_Shared/Interpolation.h"
+#include "../../IO/ScalingParams.h"
 
 class LatexScene : public Scene {
 public:
@@ -24,4 +25,5 @@ private:
     TransitionType transition_type;
     bool transitioning = false;
     string current_latex; // Equation currently shown (the start of the next transition)
+    ScalingParams current_scaling = ScalingParams(vec2(0, 0));
 };

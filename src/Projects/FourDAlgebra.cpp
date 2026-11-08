@@ -436,8 +436,8 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 
     td->manager.begin_timer("add_axes");
     td->manager.transition(MICRO, {
-        {"dragger_x", "<add_axes> 1.4 * 3 + sin 2 *"},
-        {"dragger_y", "<add_axes> 1.7 * cos 2 *"},
+        {"dragger_x", "<add_axes> 1.4 * 3 + sin 1.3 *"},
+        {"dragger_y", "<add_axes> 1.7 * cos 1.3 *"},
     });
     cs.render_microblock();
     td->manager.transition(MICRO, {
@@ -518,10 +518,10 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
     });
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(0.1));
+    stage_macroblock(SilenceBlock(0.6));
     cs.render_microblock();
 
-    stage_macroblock(SilenceBlock(0.5));
+    stage_macroblock(SilenceBlock(1));
     td->manager.transition(MICRO, {{"dragger_shown", "0"},});
     cursor->manager.transition(MICRO, {{"cursor_x", "0.45"},{"cursor_y", "-0.1"},});
     cs.render_microblock();
@@ -626,7 +626,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 
 	
 	latex_x->manager.transition(MICRO,{{"w","0.357"},{"h","0.346"}});
-	latex_x->begin_latex_transition(MICRO, "x²");
+	latex_x->begin_latex_transition(MICRO, "x^2");
 	cs.slide_subscene(MICRO,"latex_x",vec2(0.01,-0.026));
 	cs.slide_subscene(MICRO,"latex__1",vec2(0.015,0.01));
 	cs.slide_subscene(MICRO,"latex_y",vec2(0.12,0.01));
@@ -634,7 +634,7 @@ void two_dim_algebra(CompositeScene& cs, StateSet& bg){
 	cs.slide_subscene(MICRO,"latex__2",vec2(-0.01,0.01));
 	
 	latex_y2->manager.transition(MICRO,{{"w","0.364"},{"h","0.346"}});
-	latex_y2->begin_latex_transition(MICRO, "y²");
+	latex_y2->begin_latex_transition(MICRO, "y^2");
 	cs.slide_subscene(MICRO,"latex_y2",vec2(0,-0.026));
 	cs.slide_subscene(MICRO,"latex_2",vec2(-0.048,0.01));
 
@@ -1341,7 +1341,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.render_microblock(); 
 	latex_poly->begin_latex_transition(MICRO,
         latex_color(0xff333333, "\\cos(p) \\approx ") +
-        latex_color(0xffff3377, "1") +
+        latex_color(0xffff3377, "\\Huge{1}") +
         latex_color(0xff333333, " - \\frac{p^2}{2!} + \\frac{p^4}{4!} - \\frac{p^6}{6!} + \\frac{p^8}{8!}"));
 	latex_poly->manager.transition(MICRO,{{"w","0.64"}});
     cs.render_microblock(); 
@@ -1414,6 +1414,7 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.render_microblock(); 
 
 
+    // TODO x and y "unit targets" should be translucent, but rendered atop the existing x and y points.
     stage_macroblock(CompositeBlock(FileBlock("We can't get x and y to their original positions."),SilenceBlock(5)));
 
     // Land exactly on (-0.1, -1.1): angle atan2(-1.1, -0.1) + 2pi ~= 1.471pi, radius sqrt(1.22)
@@ -2149,7 +2150,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     };
     shared_ptr<ThreeDimensionScene> basis = make_basis();
 
-    // TODO this spins too fast
     shared_ptr<ThreeDAlgebraScene> abAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
     abAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     abAssoc->manager.set({
@@ -2264,6 +2264,8 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
 
+    stage_macroblock(SilenceBlock(.8));
+    cs.render_microblock();
 
 
     stage_macroblock(FileBlock("This algebra is not associative, and moving the definitions around doesn't fix it."));
@@ -2329,16 +2331,15 @@ void three_dim(CompositeScene& cs, StateSet& bg){
             {"point0.a", "0"},{"point1.a", "0"},{"point2.a", "0"},{"point3.a", "0"},
     });
 
-    for(int i = 0; i < 3; i++) {
-        cs.add_scene(basis_w, "basis_w");
-        cs.manager.set({
-            {"basis_w.x", cs.manager.get_equation_string("basis.x")},
-            {"basis_w.y", cs.manager.get_equation_string("basis.y")},
-        });
-        cs.render_microblock();
-        cs.remove_subscene("basis_w");
-        if (i != 2) cs.render_microblock();
-    }
+    cs.add_scene(basis_w, "basis_w");
+    cs.manager.set({
+        {"basis_w.x", cs.manager.get_equation_string("basis.x")},
+        {"basis_w.y", cs.manager.get_equation_string("basis.y")},
+        {"basis_w.opacity", "{microblock_fraction} .25 < {microblock_fraction} .5 > {microblock_fraction} .75 < * +"},
+    });
+    cs.render_microblock();
+    cs.render_microblock();
+    cs.remove_subscene("basis_w");
 
     // give originl basis a w axis too and yeet the duplicate
     basis->add_line(w_axis);
@@ -4432,6 +4433,8 @@ shared_ptr<FourDAlgebraScene> quat_graphs(CompositeScene& cs, StateSet& bg){
     cs.remove_subscene("table");
 
 
+    stage_macroblock(SilenceBlock(1));
+    cs.render_microblock();
 
 
     stage_macroblock(FileBlock("but only by keeping an open mind"));
@@ -4721,11 +4724,11 @@ void ad(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd) {
     cs.slide_subscene(MICRO, "80k_book", book_end - book_start);
     cs.render_microblock();
 
-set_for_real(true);
     stage_macroblock(CompositeBlock(FileBlock("and start planning a career that helps make the world a better place."), SilenceBlock(2)));
     fd->manager.transition(MACRO, "w", "1");
     cs.add_scene(fd, "fd");
-    cs.remove_all_subscenes_except("fd");
+    cs.remove_subscene("white");
+    cs.fade_all_subscenes_except(MACRO, "fd", 0);
 
 
     vector<StateSet> beautiful_waypoints;
@@ -4747,9 +4750,6 @@ set_for_real(true);
     });
     cs.render_microblock();
 
-    cs.fade_all_subscenes_except(MACRO,"fd", 0);
-
-
     BezierStateCurve bsc_beautiful(beautiful_waypoints);
     vector<StateSet> _beautiful_waypoints = bsc_beautiful.get_waypoints();
 
@@ -4767,7 +4767,6 @@ set_for_real(true);
                 {"fd.x", cs.manager.get_equation_string("fd.x")},
                 {"fd.y", cs.manager.get_equation_string("fd.y")},
             });
-            cs.fade_subscene(MICRO, "bg", 0);
             cs.manager.transition(MICRO, {{"fd.x", ".26"}, {"fd.y", ".48"}});
         }
         cs.render_microblock();
@@ -4775,6 +4774,7 @@ set_for_real(true);
     }
     fd->manager.transition(MICRO, _beautiful_waypoints[_beautiful_waypoints.size()-1]);
     cs.render_microblock();
+    cs.remove_all_subscenes_except("fd");
 }
 
 
@@ -4817,7 +4817,6 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
 
 
 void render_video() {
-set_for_real(false);
     CompositeScene cs;
 
     StateSet bg_control = {
