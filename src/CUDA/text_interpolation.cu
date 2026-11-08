@@ -1,6 +1,9 @@
 #include <cuda_runtime.h>
 #include <cmath>
 #include <cstdio>
+#include <vector>
+#include <limits>
+#include <algorithm>
 #include "../Host_Device_Shared/helpers.h"
 #include "../Host_Device_Shared/Interpolation.h"
 #include "color.cuh"
@@ -17,23 +20,14 @@
 // 3b.  For the remaining pairs, compute IOU (Intersection over Union) of the glyphs, and discard pairs with IOU far from 1.
 //      We do a best-effort scale to make the bounding boxes of the components match before computing IOU,
 //      to account for differently sized glyphs, such as exponents turning into coefficients in a derivative.
-// 4.   We are now left with a bipartite graph of components, where edges represent matching glyphs.
-//      We wish to eliminate as many edges as possible without leaving any glyph unpaired.
-//      This is done geometrically by analyzing the positions of the components and their neighbors,
-//      and eliminating edges that are inconsistent with the majority of the graph structure.
-//      Mark each edge as "undecided". We will mark edges as "keep" or "discard" like so:
-// 4a.  For each undecided edge e, if one of its neighbors has degree of exactly 1, mark e as "keep".
-// 4b.  For each undecided edge e, if both of its neighbors have an existing "keep" edge, mark e as "discard".
-//      Repeat these steps until no more edges can be marked as "keep" or "discard".
-// 4c.  Score all remaining undecided edges e with position delta d,
-//      by summing over all edges e' the term 1 / (10 + mag(d - d')).
-//      Add the edge with the highest score to the "keep" set, and repeat from 4a.
+// 4.   We are now left with a bipartite graph of components, where edges connect shape-compatible glyphs.
+//      Choose the one-to-one matching with the least total on-screen travel distance, solved using the
+//      Hungarian algorithm. Unmatched leftover glyphs fade out or in.
 // 5.   We now have paired shared glyphs. We can interpolate between them by linearly interpolating
 //      the positions of the glyphs, and using a simple alpha blend for the pixels in the glyphs.
 
 const float ASPECT_RATIO_THRESHOLD = 0.25f;
 const float IOU_THRESHOLD = 0.75f;
-const bool ALLOW_MULTI_EDGES = false;
 
 // Helper function to get the bounding box of a glyph with a given color
 // NOTE: Due to max operation on matching pixels, d_bottom_right is inclusive (not exclusive)
@@ -129,194 +123,101 @@ bool is_same_glyph(const Cuda::Glyph& g1, const Cuda::Glyph& g2)
     return true;
 }
 
-Cuda::vec2 get_position_delta(const Cuda::Glyph& g1, const Cuda::Glyph& g2)
+void print_matching(const Cuda::Interpolation& interpolation)
 {
-    // Compute the position delta between the two glyphs, which is the difference in their centers.
-    return (g2.top_left + g2.wh / 2) - (g1.top_left + g1.wh / 2);
-}
-
-void construct_plausibility_matrix(Cuda::Interpolation& interpolation)
-{
-    Cuda::GraphAdjacencyMatrix& matrix = interpolation.adjacency_matrix;
-    matrix.num_components_1 = interpolation.num_glyphs_1;
-    matrix.num_components_2 = interpolation.num_glyphs_2;
-    matrix.adj_matrix = new Cuda::GraphAdjacency[matrix.num_components_1 * matrix.num_components_2];
-    uint32_t undecided = 0;
-    uint32_t no_edge = 0;
-    for (uint32_t i = 0; i < matrix.num_components_1; i++) {
-        for (uint32_t j = 0; j < matrix.num_components_2; j++) {
-            const uint32_t index = i * matrix.num_components_2 + j;
-            const Cuda::Glyph& g1 = interpolation.glyphs_1[i];
-            const Cuda::Glyph& g2 = interpolation.glyphs_2[j];
-            if (is_same_glyph(g1, g2)) {
-                matrix.adj_matrix[index].status = Cuda::EdgeStatus::UNDECIDED_EDGE;
-                undecided++;
-            } else {
-                matrix.adj_matrix[index].status = Cuda::NO_EDGE;
-                no_edge++;
-            }
-            matrix.adj_matrix[index].position_delta = get_position_delta(g1, g2);
-        }
+    for (int i = 0; i < interpolation.num_glyphs_1; i++) {
+        if (interpolation.match_1[i] >= 0) printf("%d -> %d\n", i, interpolation.match_1[i]);
+        else printf("%d fades out\n", i);
+    }
+    for (int j = 0; j < interpolation.num_glyphs_2; j++) {
+        if (interpolation.match_2[j] < 0) printf("%d fades in\n", j);
     }
 }
 
-void print_adjacency_matrix(const Cuda::GraphAdjacencyMatrix& matrix)
-{
-    for (uint32_t i = 0; i < matrix.num_components_1; i++) {
-        for (uint32_t j = 0; j < matrix.num_components_2; j++) {
-            const Cuda::GraphAdjacency& adj = matrix.adj_matrix[i * matrix.num_components_2 + j];
-            const Cuda::EdgeStatus status = adj.status;
-            char c = '?';
-            if (status == Cuda::EdgeStatus::UNDECIDED_EDGE) c = 'U';
-            else if (status == Cuda::EdgeStatus::KEEP_EDGE) c = 'K';
-            else if (status == Cuda::EdgeStatus::NO_EDGE) c = '.';
-            printf("%c ", c);
-        }
-        printf("\n");
-    }
-}
-
-// Step 4a
-bool add_definite_edges(Cuda::Interpolation& interpolation)
-{
-    bool added_edge = false;
-    uint32_t added_count = 0;
-    Cuda::GraphAdjacencyMatrix& matrix = interpolation.adjacency_matrix;
-    const Cuda::Glyph* glyphs_1 = interpolation.glyphs_1;
-    const Cuda::Glyph* glyphs_2 = interpolation.glyphs_2;
-    for (uint32_t i = 0; i < matrix.num_components_1; i++) {
-        for (uint32_t j = 0; j < matrix.num_components_2; j++) {
-            if (matrix.adj_matrix[i * matrix.num_components_2 + j].status == Cuda::EdgeStatus::UNDECIDED_EDGE) {
-                // Check if either neighbor has no edges other than this one.
-                bool neighbor_1_has_no_other_options = true;
-                bool neighbor_2_has_no_other_options = true;
-                for (uint32_t k = 0; k < matrix.num_components_2; k++) {
-                    if (k != j && matrix.adj_matrix[i * matrix.num_components_2 + k].status != Cuda::EdgeStatus::NO_EDGE) {
-                        neighbor_1_has_no_other_options = false;
-                        break;
-                    }
-                }
-                for (uint32_t k = 0; k < matrix.num_components_1; k++) {
-                    if (k != i && matrix.adj_matrix[k * matrix.num_components_2 + j].status != Cuda::EdgeStatus::NO_EDGE) {
-                        neighbor_2_has_no_other_options = false;
-                        break;
-                    }
-                }
-                bool condition = ALLOW_MULTI_EDGES ? (neighbor_1_has_no_other_options || neighbor_2_has_no_other_options) :
-                                                     (neighbor_1_has_no_other_options && neighbor_2_has_no_other_options);
-                if (condition) {
-                    matrix.adj_matrix[i * matrix.num_components_2 + j].status = Cuda::KEEP_EDGE;
-                    matrix.adj_matrix[i * matrix.num_components_2 + j].position_delta = get_position_delta(glyphs_1[i], glyphs_2[j]);
-                    added_edge = true;
-                    added_count++;
-                }
-            }
-        }
-    }
-    return added_edge;
-}
-
-// Step 4b
-bool remove_extraneous_edges(Cuda::Interpolation& interpolation)
-{
-    bool removed_edge = false;
-    Cuda::GraphAdjacencyMatrix& matrix = interpolation.adjacency_matrix;
-    for (uint32_t i = 0; i < matrix.num_components_1; i++) {
-        for (uint32_t j = 0; j < matrix.num_components_2; j++) {
-            if (matrix.adj_matrix[i * matrix.num_components_2 + j].status == Cuda::EdgeStatus::UNDECIDED_EDGE) {
-                // Check if both neighbors have an existing "keep" edge.
-                bool neighbor_1_has_keep_edge = false;
-                bool neighbor_2_has_keep_edge = false;
-                for (uint32_t k = 0; k < matrix.num_components_2; k++) {
-                    if (k != j && matrix.adj_matrix[i * matrix.num_components_2 + k].status == Cuda::EdgeStatus::KEEP_EDGE) {
-                        neighbor_1_has_keep_edge = true;
-                        break;
-                    }
-                }
-                for (uint32_t k = 0; k < matrix.num_components_1; k++) {
-                    if (k != i && matrix.adj_matrix[k * matrix.num_components_2 + j].status == Cuda::EdgeStatus::KEEP_EDGE) {
-                        neighbor_2_has_keep_edge = true;
-                        break;
-                    }
-                }
-                bool condition = ALLOW_MULTI_EDGES ? (neighbor_1_has_keep_edge && neighbor_2_has_keep_edge) :
-                                                     (neighbor_1_has_keep_edge || neighbor_2_has_keep_edge);
-                if (condition) {
-                    matrix.adj_matrix[i * matrix.num_components_2 + j].status = Cuda::EdgeStatus::NO_EDGE;
-                    removed_edge = true;
-                }
-            }
-        }
-    }
-    return removed_edge;
-}
-
-float score_edge(Cuda::Interpolation& interpolation, uint32_t i, uint32_t j)
+// On-screen distance glyph i (image 1) travels to reach glyph j (image 2), in the centered layout
+// interpolate() draws with (each image centered in the output), so differing image sizes don't bias it.
+float travel_distance(const Cuda::Interpolation& interpolation, uint32_t i, uint32_t j)
 {
     const Cuda::Glyph& g1 = interpolation.glyphs_1[i];
     const Cuda::Glyph& g2 = interpolation.glyphs_2[j];
-    const Cuda::vec2 d = get_position_delta(g1, g2);
-    float score = 0.0f;
-    const Cuda::GraphAdjacencyMatrix& matrix = interpolation.adjacency_matrix;
-    for (uint32_t k = 0; k < matrix.num_components_1; k++) {
-        for (uint32_t l = 0; l < matrix.num_components_2; l++) {
-            Cuda::GraphAdjacency& adj = matrix.adj_matrix[k * matrix.num_components_2 + l];
-            if (adj.status == Cuda::EdgeStatus::KEEP_EDGE) {
-                const Cuda::vec2 d_prime = adj.position_delta;
-                score += 1.0f / (.1f + Cuda::length(d - d_prime));
-            }
-        }
-    }
-    return score;
+    const float x1 = g1.top_left.x + 0.5f * g1.wh.x - 0.5f * interpolation.wh_1.x;
+    const float y1 = g1.top_left.y + 0.5f * g1.wh.y - 0.5f * interpolation.wh_1.y;
+    const float x2 = g2.top_left.x + 0.5f * g2.wh.x - 0.5f * interpolation.wh_2.x;
+    const float y2 = g2.top_left.y + 0.5f * g2.wh.y - 0.5f * interpolation.wh_2.y;
+    return std::hypot(x2 - x1, y2 - y1);
 }
 
-// Step 4c
-bool add_highest_score_edge(Cuda::Interpolation& interpolation)
+// Minimum-cost assignment on a square n x n cost matrix (row-major). Returns assignment[row] = column.
+// O(n^3) Hungarian algorithm with potentials (Kuhn-Munkres, shortest augmenting path formulation).
+std::vector<int> solve_assignment(const std::vector<double>& cost, const int n)
 {
-    bool added_edge = false;
-    float best_score = -1.0f;
-    uint32_t best_i = 0;
-    uint32_t best_j = 0;
-    uint32_t undecided_count = 0;
-    Cuda::GraphAdjacencyMatrix& matrix = interpolation.adjacency_matrix;
-    const Cuda::Glyph* glyphs_1 = interpolation.glyphs_1;
-    const Cuda::Glyph* glyphs_2 = interpolation.glyphs_2;
-    for (uint32_t i = 0; i < matrix.num_components_1; i++) {
-        for (uint32_t j = 0; j < matrix.num_components_2; j++) {
-            if (matrix.adj_matrix[i * matrix.num_components_2 + j].status == Cuda::EdgeStatus::UNDECIDED_EDGE) {
-                undecided_count++;
-                float score = score_edge(interpolation, i, j);
-                // printf("Score for edge (%u, %u): %f\n", i, j, score);
-                if (score > best_score) {
-                    best_score = score;
-                    best_i = i;
-                    best_j = j;
-                }
+    const double INF = std::numeric_limits<double>::infinity();
+    // 1-indexed internally; column 0 is a sentinel.
+    std::vector<double> u(n + 1, 0), v(n + 1, 0);
+    std::vector<int> p(n + 1, 0), way(n + 1, 0);
+    for (int i = 1; i <= n; i++) {
+        p[0] = i;
+        int j0 = 0;
+        std::vector<double> minv(n + 1, INF);
+        std::vector<char> used(n + 1, 0);
+        do {
+            used[j0] = 1;
+            const int i0 = p[j0];
+            double delta = INF;
+            int j1 = 0;
+            for (int j = 1; j <= n; j++) {
+                if (used[j]) continue;
+                const double cur = cost[(i0 - 1) * n + (j - 1)] - u[i0] - v[j];
+                if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+                if (minv[j] < delta) { delta = minv[j]; j1 = j; }
             }
-        }
+            for (int j = 0; j <= n; j++) {
+                if (used[j]) { u[p[j]] += delta; v[j] -= delta; }
+                else minv[j] -= delta;
+            }
+            j0 = j1;
+        } while (p[j0] != 0);
+        do {
+            const int j1 = way[j0];
+            p[j0] = p[j1];
+            j0 = j1;
+        } while (j0);
     }
-    if (best_score > -1.0f) {
-        const int index = best_i * matrix.num_components_2 + best_j;
-        matrix.adj_matrix[index].status = Cuda::EdgeStatus::KEEP_EDGE;
-        matrix.adj_matrix[index].position_delta = get_position_delta(glyphs_1[best_i], glyphs_2[best_j]);
-        added_edge = true;
-    }
-    // If best_score is still -1.0f, then there are no undecided edges left, and we are done.
-    return added_edge;
+    std::vector<int> assignment(n, -1);
+    for (int j = 1; j <= n; j++) if (p[j] > 0) assignment[p[j] - 1] = j - 1;
+    return assignment;
 }
 
-void resolve_plausibility_matrix(Cuda::Interpolation& interpolation)
+// Steps 3 and 4: among the pairs that pass the shape tests (is_same_glyph), choose the matching with the most
+// matched pairs, breaking ties by least total travel distance. Writes the result to match_1 and match_2.
+// Solved as a square n x n assignment problem with n = max(n1, n2): rows are image 1 glyphs, columns are image 2
+// glyphs, and the shorter side is padded with free dummies.
+void solve_matching(Cuda::Interpolation& interpolation)
 {
-    while (true) {
-        while (true) {
-            bool added = add_definite_edges(interpolation);
-            bool removed = remove_extraneous_edges(interpolation);
-            if (!added && !removed) break;
+    const int n1 = interpolation.num_glyphs_1, n2 = interpolation.num_glyphs_2;
+    const int n = std::max(n1, n2);
+    for (int i = 0; i < n1; i++) interpolation.match_1[i] = -1;
+    for (int j = 0; j < n2; j++) interpolation.match_2[j] = -1;
+    if (n1 == 0 || n2 == 0) return;
+
+    const double diag = std::max(std::hypot((double) interpolation.wh_1.x, (double) interpolation.wh_1.y),
+                                 std::hypot((double) interpolation.wh_2.x, (double) interpolation.wh_2.y));
+    const double forbidden = diag * (std::min(n1, n2) + 1);
+
+    std::vector<double> cost((size_t) n * n, 0); // Dummy rows/columns (beyond n1 or n2) stay free
+    for (int i = 0; i < n1; i++)
+        for (int j = 0; j < n2; j++)
+            cost[(size_t) i * n + j] = is_same_glyph(interpolation.glyphs_1[i], interpolation.glyphs_2[j])
+                                       ? travel_distance(interpolation, i, j) : forbidden;
+
+    const std::vector<int> assignment = solve_assignment(cost, n);
+
+    for (int i = 0; i < n1; i++) {
+        const int j = assignment[i];
+        if (j < n2 && cost[(size_t) i * n + j] < forbidden) {
+            interpolation.match_1[i] = j;
+            interpolation.match_2[j] = i;
         }
-        print_adjacency_matrix(interpolation.adjacency_matrix);
-        bool added = add_highest_score_edge(interpolation);
-        print_adjacency_matrix(interpolation.adjacency_matrix);
-        if (!added) break;
     }
 }
 
@@ -340,9 +241,8 @@ extern "C" Cuda::Interpolation stage_interpolation(
     interpolation.num_glyphs_2 = num_glyphs_2;
     interpolation.glyphs_1 = new Cuda::Glyph[num_glyphs_1];
     interpolation.glyphs_2 = new Cuda::Glyph[num_glyphs_2];
-    interpolation.adjacency_matrix.num_components_1 = num_glyphs_1;
-    interpolation.adjacency_matrix.num_components_2 = num_glyphs_2;
-    interpolation.adjacency_matrix.adj_matrix = new Cuda::GraphAdjacency[num_glyphs_1 * num_glyphs_2];
+    interpolation.match_1 = new int[num_glyphs_1];
+    interpolation.match_2 = new int[num_glyphs_2];
 
     // Allocate two ivec2s on the GPU to hold the top left and bottom right corners of the bounding box
     Cuda::ivec2* d_top_left;
@@ -394,9 +294,8 @@ extern "C" Cuda::Interpolation stage_interpolation(
     cudaFree(d_top_left);
     cudaFree(d_bottom_right);
 
-    construct_plausibility_matrix(interpolation);
-    resolve_plausibility_matrix(interpolation);
-    print_adjacency_matrix(interpolation.adjacency_matrix);
+    solve_matching(interpolation);
+    print_matching(interpolation);
 
     return interpolation;
 }
@@ -413,7 +312,8 @@ extern "C" void free_interpolation(Cuda::Interpolation& interpolation)
     }
     delete[] interpolation.glyphs_1;
     delete[] interpolation.glyphs_2;
-    delete[] interpolation.adjacency_matrix.adj_matrix;
+    delete[] interpolation.match_1;
+    delete[] interpolation.match_2;
 }
 
 
@@ -503,48 +403,24 @@ void fade_unmatched_glyph(const Cuda::ivec2& envelope_wh,
     fade_glyph_kernel<<<blocks, threads>>>(glyph, t, tl_final, d_output_pix, output_wh);
 }
 
-// For each "keep" edge in the adjacency matrix, interpolate that glyph
+// Draw every glyph at time t: matched glyphs move and morph, unmatched ones fade.
 extern "C" void interpolate(
     const Cuda::Interpolation& interpolation, const float t,
     uint32_t* d_output_pix, const Cuda::ivec2 output_wh)
 {
-    // Draw all of the glyph interpolations
-    for (uint32_t i = 0; i < interpolation.adjacency_matrix.num_components_1; i++) {
-        for (uint32_t j = 0; j < interpolation.adjacency_matrix.num_components_2; j++) {
-            int index = i * interpolation.adjacency_matrix.num_components_2 + j;
-            if (interpolation.adjacency_matrix.adj_matrix[index].status == Cuda::EdgeStatus::KEEP_EDGE) {
-                interpolate_glyph(interpolation, i, j, t, d_output_pix, output_wh);
-            }
-        }
+    // Matched glyphs move and morph
+    for (int i = 0; i < interpolation.num_glyphs_1; i++) {
+        const int j = interpolation.match_1[i];
+        if (j >= 0) interpolate_glyph(interpolation, i, j, t, d_output_pix, output_wh);
     }
-
-    // Fade in any unmatched components from image 2
-    for (uint32_t j = 0; j < interpolation.adjacency_matrix.num_components_2; j++) {
-        bool has_edge = false;
-        for (uint32_t i = 0; i < interpolation.adjacency_matrix.num_components_1; i++) {
-            int index = i * interpolation.adjacency_matrix.num_components_2 + j;
-            if (interpolation.adjacency_matrix.adj_matrix[index].status == Cuda::EdgeStatus::KEEP_EDGE) {
-                has_edge = true;
-                break;
-            }
-        }
-        if (!has_edge) {
+    // Unmatched glyphs from image 2 fade in
+    for (int j = 0; j < interpolation.num_glyphs_2; j++) {
+        if (interpolation.match_2[j] < 0)
             fade_unmatched_glyph(interpolation.wh_2, interpolation.glyphs_2[j], t, d_output_pix, output_wh);
-        }
     }
-
-    // Fade out any unmatched components from image 1
-    for (uint32_t i = 0; i < interpolation.adjacency_matrix.num_components_1; i++) {
-        bool has_edge = false;
-        for (uint32_t j = 0; j < interpolation.adjacency_matrix.num_components_2; j++) {
-            int index = i * interpolation.adjacency_matrix.num_components_2 + j;
-            if (interpolation.adjacency_matrix.adj_matrix[index].status == Cuda::EdgeStatus::KEEP_EDGE) {
-                has_edge = true;
-                break;
-            }
-        }
-        if (!has_edge) {
+    // Unmatched glyphs from image 1 fade out
+    for (int i = 0; i < interpolation.num_glyphs_1; i++) {
+        if (interpolation.match_1[i] < 0)
             fade_unmatched_glyph(interpolation.wh_1, interpolation.glyphs_1[i], 1.0f - t, d_output_pix, output_wh);
-        }
     }
 }
