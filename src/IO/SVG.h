@@ -8,3 +8,6 @@
 #include <cstdint>
 
 shared_ptr<DevicePointer> svg_to_gpu_pix(const std::string& filename_with_or_without_suffix, ScalingParams& scaling_params);
+
+class Pixels;
+Pixels svg_to_aligned_pixels(const std::string& reference_svg, const std::string& other_svg, ScalingParams scaling_params);
