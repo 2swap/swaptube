@@ -291,16 +291,16 @@ extern "C" void free_interpolation(Cuda::Interpolation& interpolation)
 
 __device__ uint32_t sample_bilinear(const Cuda::Glyph& glyph, const Cuda::vec2 uv)
 {
-    float x = uv.x * (glyph.wh.x - 1);
-    float y = uv.y * (glyph.wh.y - 1);
+    const float x = uv.x * glyph.wh.x - 0.5f;
+    const float y = uv.y * glyph.wh.y - 0.5f;
+    const float fx = floorf(x), fy = floorf(y);
+    const float tx = x - fx;
+    const float ty = y - fy;
 
-    int x0 = max(0, min(glyph.wh.x - 1, (int) floorf(x)));
-    int y0 = max(0, min(glyph.wh.y - 1, (int) floorf(y)));
-    int x1 = max(0, min(glyph.wh.x - 1, x0 + 1));
-    int y1 = max(0, min(glyph.wh.y - 1, y0 + 1));
-
-    float tx = x - x0;
-    float ty = y - y0;
+    const int x0 = max(0, min(glyph.wh.x - 1, (int) fx));
+    const int y0 = max(0, min(glyph.wh.y - 1, (int) fy));
+    const int x1 = max(0, min(glyph.wh.x - 1, (int) fx + 1));
+    const int y1 = max(0, min(glyph.wh.y - 1, (int) fy + 1));
 
     uint32_t c00 = glyph.pix[y0 * glyph.wh.x + x0];
     uint32_t c10 = glyph.pix[y0 * glyph.wh.x + x1];
@@ -319,12 +319,14 @@ __global__ void interpolate_glyph_kernel(
     Cuda::vec2 grid_point(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
     if (grid_point.x >= wh_final.x || grid_point.y >= wh_final.y) return;
 
-    Cuda::vec2 norm = grid_point / wh_final;
+    // Sample at this output pixel's center
+    Cuda::vec2 norm = Cuda::vec2(grid_point.x + 0.5f, grid_point.y + 0.5f) / wh_final;
 
     uint32_t c1 = sample_bilinear(glyph1, norm);
     uint32_t c2 = sample_bilinear(glyph2, norm);
 
-    Cuda::ivec2 final_pos(grid_point.x + tl_final.x, grid_point.y + tl_final.y);
+    // Round to the nearest pixel: exact at t = 0 and 1, where tl_final is whole, and unbiased in between
+    Cuda::ivec2 final_pos((int) floorf(grid_point.x + tl_final.x + 0.5f), (int) floorf(grid_point.y + tl_final.y + 0.5f));
     overlay_pixel(final_pos, Cuda::colorlerp(c1, c2, t), 1.0, d_output_pix, output_wh);
 }
 
@@ -342,14 +344,21 @@ __global__ void fade_glyph_kernel(
     overlay_pixel(final_pos, c, opacity, d_output_pix, output_wh);
 }
 
+Cuda::ivec2 static_top_left(const Cuda::ivec2& output_wh, const Cuda::ivec2& image_wh)
+{
+    const Cuda::vec2 center(output_wh.x / 2.0f, output_wh.y / 2.0f);
+    return Cuda::floor(center - (image_wh * 0.5f));
+}
+
 void interpolate_glyph(const Cuda::Interpolation& interpolation, const int g1, const int g2, const float t, uint32_t* d_output_pix, const Cuda::ivec2& output_wh)
 {
     const Cuda::Glyph& glyph1 = interpolation.glyphs_1[g1];
     const Cuda::Glyph& glyph2 = interpolation.glyphs_2[g2];
 
-    Cuda::vec2 envelope_wh = Cuda::veclerp(interpolation.wh_1, interpolation.wh_2, t);
-    Cuda::vec2 tl_in_envelope = Cuda::veclerp(glyph1.top_left, glyph2.top_left, t);
-    Cuda::vec2 tl_final = tl_in_envelope + (output_wh - envelope_wh) / 2.0f;
+    // Move between the glyph's exact on-screen positions in the two static frames
+    const Cuda::vec2 screen_tl_1 = glyph1.top_left + static_top_left(output_wh, interpolation.wh_1);
+    const Cuda::vec2 screen_tl_2 = glyph2.top_left + static_top_left(output_wh, interpolation.wh_2);
+    Cuda::vec2 tl_final = Cuda::veclerp(screen_tl_1, screen_tl_2, t);
     Cuda::vec2 wh_final = Cuda::veclerp(glyph1.wh, glyph2.wh, t);
 
     dim3 threads(16, 16);
@@ -362,7 +371,7 @@ void fade_unmatched_glyph(const Cuda::ivec2& envelope_wh,
 {
     dim3 threads(16, 16);
     dim3 blocks((glyph.wh.x + threads.x - 1) / threads.x, (glyph.wh.y + threads.y - 1) / threads.y);
-    Cuda::vec2 tl_final = glyph.top_left + (output_wh - envelope_wh) / 2.0f;
+    Cuda::vec2 tl_final = glyph.top_left + static_top_left(output_wh, envelope_wh);
     fade_glyph_kernel<<<blocks, threads>>>(glyph, t, tl_final, d_output_pix, output_wh);
 }
 
