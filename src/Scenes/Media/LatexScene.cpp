@@ -6,8 +6,8 @@
 #include "../../IO/Latex.h"
 
 extern "C" Interpolation stage_interpolation(
-    const uint32_t* h_pix_1, const ivec2 wh_1, const int num_glyphs_1,
-    const uint32_t* h_pix_2, const ivec2 wh_2, const int num_glyphs_2);
+    const uint32_t* h_pix_1, const uint32_t* h_vis_1, const ivec2 wh_1, const int num_glyphs_1,
+    const uint32_t* h_pix_2, const uint32_t* h_vis_2, const ivec2 wh_2, const int num_glyphs_2);
 extern "C" void interpolate(
     const Interpolation& interpolation, const float t,
     uint32_t* d_output_pix, const ivec2 output_wh);
@@ -44,8 +44,8 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
     Pixels last_segmented = segment(last_pixels_cpu, last_num_glyphs);
     Pixels next_segmented = segment(next_pixels_cpu, next_num_glyphs);
     interp = stage_interpolation(
-        last_segmented.pixels.data(), last_pixels_cpu.wh, last_num_glyphs,
-        next_segmented.pixels.data(), next_pixels_cpu.wh, next_num_glyphs
+        last_segmented.pixels.data(), last_pixels_cpu.pixels.data(), last_pixels_cpu.wh, last_num_glyphs,
+        next_segmented.pixels.data(), next_pixels_cpu.pixels.data(), next_pixels_cpu.wh, next_num_glyphs
     );
 }
 

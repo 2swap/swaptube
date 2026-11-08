@@ -45,15 +45,35 @@ __global__ void get_bounding_box_kernel(const uint32_t* pix, const Cuda::ivec2 w
     }
 }
 
-__global__ void copy_glyph_to_gpu_kernel(const uint32_t* pix, const Cuda::ivec2 wh, const Cuda::ivec2 top_left, const Cuda::ivec2 bottom_right, uint32_t* d_glyph_pix, const uint32_t color)
+__global__ void copy_glyph_to_gpu_kernel(const uint32_t* pix, const uint32_t* vis, const Cuda::ivec2 wh, const Cuda::ivec2 top_left, const Cuda::ivec2 bottom_right, uint32_t* d_glyph_pix, const uint32_t label, const uint32_t transparent_color)
 {
     Cuda::ivec2 grid_point = Cuda::ivec2(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
     const Cuda::ivec2 glyph_wh = bottom_right - top_left;
     if (grid_point.x >= glyph_wh.x || grid_point.y >= glyph_wh.y) return;
     Cuda::ivec2 pix_point = top_left + grid_point;
 
-    uint32_t glyph_color = pix[pix_point.y * wh.x + pix_point.x] == color ? 0xFFFFFFFF : 0x00FFFFFF;
-    d_glyph_pix[grid_point.y * glyph_wh.x + grid_point.x] = glyph_color;
+    const int index = pix_point.y * wh.x + pix_point.x;
+    d_glyph_pix[grid_point.y * glyph_wh.x + grid_point.x] = pix[index] == label ? vis[index] : transparent_color;
+}
+
+// Picks one color per glyph, for its transparent pixels: the RGB of the glyph's most opaque pixel, with zero alpha.
+// Bilinear sampling lerps RGB even where alpha is 0, so transparent pixels must carry the glyph's own color,
+// or its edges would blend toward some other color while it moves.
+// Indexed by label, so entry 0 (background) is unused.
+static std::vector<uint32_t> transparent_glyph_colors(const uint32_t* labels, const uint32_t* vis, const Cuda::ivec2 wh, const int num_glyphs)
+{
+    std::vector<uint32_t> colors(num_glyphs + 1, 0x00FFFFFF);
+    std::vector<int> best_alpha(num_glyphs + 1, -1);
+    for (int p = 0; p < wh.x * wh.y; p++) {
+        const uint32_t label = labels[p];
+        if (label == 0 || label > (uint32_t) num_glyphs) continue;
+        const int alpha = Cuda::geta(vis[p]);
+        if (alpha > best_alpha[label]) {
+            best_alpha[label] = alpha;
+            colors[label] = vis[p] & 0x00FFFFFF;
+        }
+    }
+    return colors;
 }
 
 __global__ void compute_iou_kernel (
@@ -70,8 +90,8 @@ __global__ void compute_iou_kernel (
     Cuda::ivec2 p1(norm.x * wh_1.x, norm.y * wh_1.y);
     Cuda::ivec2 p2(norm.x * wh_2.x, norm.y * wh_2.y);
 
-    bool a = pix_1[p1.y * wh_1.x + p1.x] == 0xFFFFFFFF;
-    bool b = pix_2[p2.y * wh_2.x + p2.x] == 0xFFFFFFFF;
+    bool a = Cuda::geta(pix_1[p1.y * wh_1.x + p1.x]) >= 128;
+    bool b = Cuda::geta(pix_2[p2.y * wh_2.x + p2.x]) >= 128;
 
     if (a || b) atomicAdd(union_count, 1u);
     if (a && b) atomicAdd(intersection, 1u);
@@ -224,8 +244,8 @@ void solve_matching(Cuda::Interpolation& interpolation)
 // The main entry point which stages an interpolation.
 // The CPU is expected to have done steps 1 and 2 already, since flood filling is simpler on the CPU.
 extern "C" Cuda::Interpolation stage_interpolation(
-    const uint32_t* h_pix_1, const Cuda::ivec2 wh_1, const int num_glyphs_1,
-    const uint32_t* h_pix_2, const Cuda::ivec2 wh_2, const int num_glyphs_2)
+    const uint32_t* h_pix_1, const uint32_t* h_vis_1, const Cuda::ivec2 wh_1, const int num_glyphs_1,
+    const uint32_t* h_pix_2, const uint32_t* h_vis_2, const Cuda::ivec2 wh_2, const int num_glyphs_2)
 {
     Cuda::Interpolation interpolation;
 
@@ -236,6 +256,14 @@ extern "C" Cuda::Interpolation stage_interpolation(
     cudaMalloc(&interpolation.pix_2, wh_2.x * wh_2.y * sizeof(uint32_t));
     cudaMemcpy(interpolation.pix_1, h_pix_1, wh_1.x * wh_1.y * sizeof(uint32_t), cudaMemcpyHostToDevice);
     cudaMemcpy(interpolation.pix_2, h_pix_2, wh_2.x * wh_2.y * sizeof(uint32_t), cudaMemcpyHostToDevice);
+
+    // The rendered (colored) images
+    uint32_t* d_vis_1;
+    uint32_t* d_vis_2;
+    cudaMalloc(&d_vis_1, wh_1.x * wh_1.y * sizeof(uint32_t));
+    cudaMalloc(&d_vis_2, wh_2.x * wh_2.y * sizeof(uint32_t));
+    cudaMemcpy(d_vis_1, h_vis_1, wh_1.x * wh_1.y * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_vis_2, h_vis_2, wh_2.x * wh_2.y * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
     interpolation.num_glyphs_1 = num_glyphs_1;
     interpolation.num_glyphs_2 = num_glyphs_2;
@@ -249,6 +277,9 @@ extern "C" Cuda::Interpolation stage_interpolation(
     Cuda::ivec2* d_bottom_right;
     cudaMalloc(&d_top_left, sizeof(Cuda::ivec2));
     cudaMalloc(&d_bottom_right, sizeof(Cuda::ivec2));
+
+    const std::vector<uint32_t> transparent_colors_1 = transparent_glyph_colors(h_pix_1, h_vis_1, wh_1, num_glyphs_1);
+    const std::vector<uint32_t> transparent_colors_2 = transparent_glyph_colors(h_pix_2, h_vis_2, wh_2, num_glyphs_2);
 
     for (int i = 0; i < num_glyphs_1; i++) {
         // Populate the ivec2s
@@ -268,7 +299,7 @@ extern "C" Cuda::Interpolation stage_interpolation(
         cudaMalloc(&interpolation.glyphs_1[i].pix, interpolation.glyphs_1[i].wh.x * interpolation.glyphs_1[i].wh.y * sizeof(uint32_t));
         threads = dim3(16, 16);
         blocks = dim3((interpolation.glyphs_1[i].wh.x + threads.x - 1) / threads.x, (interpolation.glyphs_1[i].wh.y + threads.y - 1) / threads.y);
-        copy_glyph_to_gpu_kernel<<<blocks, threads>>>(interpolation.pix_1, wh_1, top_left, bottom_right, interpolation.glyphs_1[i].pix, i + 1);
+        copy_glyph_to_gpu_kernel<<<blocks, threads>>>(interpolation.pix_1, d_vis_1, wh_1, top_left, bottom_right, interpolation.glyphs_1[i].pix, i + 1, transparent_colors_1[i + 1]);
     }
 
     for (int i = 0; i < num_glyphs_2; i++) {
@@ -288,11 +319,14 @@ extern "C" Cuda::Interpolation stage_interpolation(
         cudaMalloc(&interpolation.glyphs_2[i].pix, interpolation.glyphs_2[i].wh.x * interpolation.glyphs_2[i].wh.y * sizeof(uint32_t));
         threads = dim3(16, 16);
         blocks = dim3((interpolation.glyphs_2[i].wh.x + threads.x - 1) / threads.x, (interpolation.glyphs_2[i].wh.y + threads.y - 1) / threads.y);
-        copy_glyph_to_gpu_kernel<<<blocks, threads>>>(interpolation.pix_2, wh_2, top_left, bottom_right, interpolation.glyphs_2[i].pix, i + 1);
+        copy_glyph_to_gpu_kernel<<<blocks, threads>>>(interpolation.pix_2, d_vis_2, wh_2, top_left, bottom_right, interpolation.glyphs_2[i].pix, i + 1, transparent_colors_2[i + 1]);
     }
 
+    cudaDeviceSynchronize();
     cudaFree(d_top_left);
     cudaFree(d_bottom_right);
+    cudaFree(d_vis_1);
+    cudaFree(d_vis_2);
 
     solve_matching(interpolation);
     print_matching(interpolation);
