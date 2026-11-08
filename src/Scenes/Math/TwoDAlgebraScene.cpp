@@ -442,18 +442,6 @@ void TwoDAlgebraScene::draw() {
     } else if (state["div_scene"] == 1){
         point_dist = (state["point_x"]*drag_times_x + state["point_y"]*drag_times_y)*vec2(1,-1)*screen_unit;
     } 
-    // Hollow markers at the original x and y positions
-    const float unit_targets = state["unit_targets"];
-    if (unit_targets > 0){
-        const float target_size = point_radius*0.85*state["point_size"];
-        const vec2 target_locs[2] = {origin + vec2(screen_unit, 0), origin + vec2(0, -screen_unit)};
-        const string target_texts[2] = {"x", "y"};
-        for (int i = 0; i < 2; i++){
-            draw_circle(gpu_pix.get_ptr(), wh, target_locs[i], target_size*0.85, 0xffffffff, unit_targets);
-            write_text(gpu_pix.get_ptr(), wh, latex_color(0xff000000|bg_color, target_texts[i]), target_locs[i], target_size*2, unit_targets, 0);
-        }
-    }
-
     for  (int p = 0; p < state["point_count"]; p++){
 
         const float point_lerp = min(state["point_count"]-p,1.0);
@@ -487,6 +475,18 @@ void TwoDAlgebraScene::draw() {
             write_text(gpu_pix.get_ptr(), wh, latex_color(point_stroke,"y"), y_loc, point_size*2, state["point_opacity"]/255, 0);
         }
 
+    }
+
+    const float unit_targets = state["unit_targets"];
+    if (unit_targets > 0){
+        const float target_opacity = unit_targets * 0.5f;
+        const float target_size = point_radius*0.85*state["point_size"];
+        const vec2 target_locs[2] = {origin + vec2(screen_unit, 0), origin + vec2(0, -screen_unit)};
+        const string target_texts[2] = {"x", "y"};
+        for (int i = 0; i < 2; i++){
+            draw_circle(gpu_pix.get_ptr(), wh, target_locs[i], target_size*0.85, 0xffffffff, target_opacity);
+            write_text(gpu_pix.get_ptr(), wh, latex_color(0xff000000|bg_color, target_texts[i]), target_locs[i], target_size*2, target_opacity, 0);
+        }
     }
 
 

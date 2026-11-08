@@ -1341,7 +1341,7 @@ void two_dim_smallness(CompositeScene& cs, StateSet& bg){
     cs.render_microblock(); 
 	latex_poly->begin_latex_transition(MICRO,
         latex_color(0xff333333, "\\cos(p) \\approx ") +
-        latex_color(0xffff3377, "\\Huge{1}") +
+        latex_color(0xffff3377, "\\raisebox{-0.3em}{\\Huge 1}") +
         latex_color(0xff333333, " - \\frac{p^2}{2!} + \\frac{p^4}{4!} - \\frac{p^6}{6!} + \\frac{p^8}{8!}"));
 	latex_poly->manager.transition(MICRO,{{"w","0.64"}});
     cs.render_microblock(); 
@@ -1414,7 +1414,6 @@ void two_dim_wrapup(CompositeScene& cs, StateSet& bg){
     cs.render_microblock(); 
 
 
-    // TODO x and y "unit targets" should be translucent, but rendered atop the existing x and y points.
     stage_macroblock(CompositeBlock(FileBlock("We can't get x and y to their original positions."),SilenceBlock(5)));
 
     // Land exactly on (-0.1, -1.1): angle atan2(-1.1, -0.1) + 2pi ~= 1.471pi, radius sqrt(1.22)
@@ -3499,8 +3498,6 @@ void non_commutative(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
     cs.remove_subscene("bicomplex_png");
 
-    // TODO these latex transitions look weird in 1080p
-
     stage_macroblock(FileBlock("We can rearrange to find that ij is negative ji."));
 
 	latex_ij2->begin_latex_transition(MICRO, "ijij = -1");
@@ -4727,8 +4724,14 @@ void ad(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd) {
     stage_macroblock(CompositeBlock(FileBlock("and start planning a career that helps make the world a better place."), SilenceBlock(2)));
     fd->manager.transition(MACRO, "w", "1");
     cs.add_scene(fd, "fd");
+    cs.move_to_front("link");
+    cs.move_to_front("80k_book");
     cs.remove_subscene("white");
     cs.fade_all_subscenes_except(MACRO, "fd", 0);
+    cs.manager.set({
+        {"link.opacity",     "1 0 {macroblock_fraction} 2 * 1 min smoothlerp"},
+        {"80k_book.opacity", "1 0 {macroblock_fraction} 2 * 1 min smoothlerp"},
+    });
 
 
     vector<StateSet> beautiful_waypoints;
@@ -4870,8 +4873,6 @@ void render_video() {
     shared_ptr<FourDAlgebraScene> fd = quat_graphs(cs,bg_control);
     ad(cs, fd);
     outtro(cs, fd);
-
-    // TODO resize latex without transitioning
 }
 
 
