@@ -5,7 +5,7 @@
 
 SHARED_FILE_PREFIX
 
-// Struct to represent a glyph, which is a connected component of pixels in the image.
+// one symbol of the rendered equation
 struct Glyph {
     ivec2 wh;
     ivec2 top_left;

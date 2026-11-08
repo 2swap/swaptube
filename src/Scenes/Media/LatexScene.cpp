@@ -2,12 +2,12 @@
 #include <iostream>
 #include <stdexcept>
 #include "../../Core/Smoketest.h"
-#include "../../Core/Convolution.h"
+#include "../../Core/GlyphSegmentation.h"
 #include "../../IO/Latex.h"
 
 extern "C" Interpolation stage_interpolation(
-    const uint32_t* h_pix_1, const uint32_t* h_vis_1, const ivec2 wh_1, const int num_glyphs_1,
-    const uint32_t* h_pix_2, const uint32_t* h_vis_2, const ivec2 wh_2, const int num_glyphs_2);
+    const uint32_t* h_pix_1, const uint32_t* h_vis_1, const uint32_t* h_shapes_1, const ivec2 wh_1, const int num_glyphs_1,
+    const uint32_t* h_pix_2, const uint32_t* h_vis_2, const uint32_t* h_shapes_2, const ivec2 wh_2, const int num_glyphs_2);
 extern "C" void interpolate(
     const Interpolation& interpolation, const float t,
     uint32_t* d_output_pix, const ivec2 output_wh);
@@ -19,10 +19,21 @@ extern "C" void cuda_overlay (
     const uint32_t* foreground, const ivec2& f_wh,
     const vec2& center, const float opacity, const float angle_rad);
 
+// Shape class of each glyph (index label - 1), from the SVG element each glyph came from.
+static vector<uint32_t> shapes_of_glyphs(const vector<uint32_t>& element_of_label, const vector<uint32_t>& shape_of_element) {
+    vector<uint32_t> shapes;
+    for (size_t label = 1; label < element_of_label.size(); label++) {
+        const uint32_t element = element_of_label[label];
+        shapes.push_back(element < shape_of_element.size() ? shape_of_element[element] : 0);
+    }
+    return shapes;
+}
+
 LatexScene::LatexScene(const string& l, const vec2& dimensions)
 : Scene(dimensions) {
     ScalingParams sp(get_width_height());
     last_pixels = next_pixels = latex_to_gpu_pix(l, sp);
+    current_latex = l;
 }
 
 void LatexScene::begin_latex_transition(const TransitionType tt, const string& l) {
@@ -31,6 +42,7 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
         throw runtime_error("LatexScene: Already transitioning. Cannot begin a new transition until the current one finishes.");
     }
     ScalingParams sp(get_width_height());
+    const ScalingParams fresh_sp = sp; // latex_to_gpu_pix mutates its argument
     transitioning = true;
     transition_type = tt;
     last_pixels = next_pixels;
@@ -41,11 +53,15 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
     ivec2 next_wh = next_pixels_cpu.wh;
     cuda_copy_pixels_to_host(last_pixels_cpu.pixels.data(), last_wh.x*last_wh.y, last_pixels->get_ptr());
     cuda_copy_pixels_to_host(next_pixels_cpu.pixels.data(), next_wh.x*next_wh.y, next_pixels->get_ptr());
-    Pixels last_segmented = segment(last_pixels_cpu, last_num_glyphs);
-    Pixels next_segmented = segment(next_pixels_cpu, next_num_glyphs);
+    vector<uint32_t> last_elements, next_elements;
+    Pixels last_segmented = segment_by_glyph_ids(last_pixels_cpu, latex_to_glyph_ids(current_latex, fresh_sp), last_num_glyphs, last_elements);
+    Pixels next_segmented = segment_by_glyph_ids(next_pixels_cpu, latex_to_glyph_ids(l, fresh_sp), next_num_glyphs, next_elements);
+    const vector<uint32_t> last_shapes = shapes_of_glyphs(last_elements, latex_glyph_shapes(current_latex));
+    const vector<uint32_t> next_shapes = shapes_of_glyphs(next_elements, latex_glyph_shapes(l));
+    current_latex = l;
     interp = stage_interpolation(
-        last_segmented.pixels.data(), last_pixels_cpu.pixels.data(), last_pixels_cpu.wh, last_num_glyphs,
-        next_segmented.pixels.data(), next_pixels_cpu.pixels.data(), next_pixels_cpu.wh, next_num_glyphs
+        last_segmented.pixels.data(), last_pixels_cpu.pixels.data(), last_shapes.data(), last_pixels_cpu.wh, last_num_glyphs,
+        next_segmented.pixels.data(), next_pixels_cpu.pixels.data(), next_shapes.data(), next_pixels_cpu.wh, next_num_glyphs
     );
 }
 
@@ -72,5 +88,6 @@ void LatexScene::on_end_transition_extra_behavior(const TransitionType tt) {
 void LatexScene::jump_latex(string l) {
     ScalingParams sp(get_width_height());
     next_pixels = last_pixels = latex_to_gpu_pix(l, sp);
+    current_latex = l;
     transitioning = false;
 }

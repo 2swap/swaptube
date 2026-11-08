@@ -23,4 +23,5 @@ private:
     Interpolation interp;
     TransitionType transition_type;
     bool transitioning = false;
+    string current_latex; // Equation currently shown (the start of the next transition)
 };

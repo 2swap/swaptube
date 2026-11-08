@@ -125,6 +125,15 @@ shared_ptr<DevicePointer> latex_to_gpu_pix(const string& latex, ScalingParams& s
 // rule (fraction bar, \hline, table border segment, radical overline, \overline...) as its own
 // stroked <path>. We rewrite the SVG so each drawn element gets a unique flat color encoding its
 // index, and turn off antialiasing, so that rasterizing it yields a per-pixel element ID map.
+// What each element is (which glyph, or which kind of rule) is read separately from the SVG: see latex_glyph_shapes.
+
+// Largest element ID that fits in a pixel's RGB.
+static const uint32_t MAX_ELEMENT_ID = 0xFFFFFF;
+
+// Rules are stroked, unfilled paths. Cairo writes this as a style property, or in older versions as an attribute.
+static bool is_rule_tag(const string& tag) {
+    return tag.find("fill:none") != string::npos || tag.find("fill=\"none\"") != string::npos;
+}
 
 static string id_color_hex(uint32_t id) {
     stringstream ss;
@@ -132,9 +141,9 @@ static string id_color_hex(uint32_t id) {
     return ss.str();
 }
 
-// If use_targets is given, it is filled so that (*use_targets)[id] is the <symbol> id that element `id` draws
-// via <use>, or "" if that element is not a <use> (rules and other drawables). Index 0 is unused.
-static string make_glyph_id_svg(const string& svg, vector<string>* use_targets = nullptr) {
+// If element_tags is given, it is filled so that (*element_tags)[id] is the original SVG tag of element `id`
+// (a <use> for font glyphs, a <path> etc. for rules and other drawables). Index 0 is unused.
+static string make_glyph_id_svg(const string& svg, vector<string>* element_tags = nullptr) {
     const size_t defs_end = svg.find("</defs>");
     size_t body_start = (defs_end == string::npos) ? svg.find('>', svg.find("<svg")) + 1 : defs_end + 7;
     string head = svg.substr(0, body_start);
@@ -145,11 +154,11 @@ static string make_glyph_id_svg(const string& svg, vector<string>* use_targets =
     if (svg_tag != string::npos) head.insert(svg_tag + 4, " shape-rendering=\"crispEdges\"");
 
     static const regex color_prop(R"((fill|stroke):(rgb\([^)]*\)|#[0-9a-fA-F]+))");
+    static const regex color_attr(R"(\b(fill|stroke)="(rgb\([^)]*\)|#[0-9a-fA-F]+)\")");
     static const regex style_attr(R"(style="([^"]*)\")");
     static const regex drawable(R"(^<(path|rect|circle|ellipse|polygon|polyline|line)\b)");
-    static const regex href_attr(R"(href="#([^"]+)\")");
 
-    if (use_targets) use_targets->assign(1, "");
+    if (element_tags) element_tags->assign(1, "");
     string out;
     out.reserve(body.size() + 4096);
     uint32_t next_id = 1;
@@ -162,26 +171,24 @@ static string make_glyph_id_svg(const string& svg, vector<string>* use_targets =
         if (gt == string::npos) { out += body.substr(lt); break; }
         string tag = body.substr(lt, gt - lt + 1);
 
-        if (tag.rfind("<use", 0) == 0) {
-            // Font glyph: the referenced <symbol> path has no fill of its own and inherits this one.
-            if (next_id >= GLYPH_ID_RULE_FLAG) throw runtime_error("make_glyph_id_svg: too many elements");
-            if (use_targets) {
+        const bool is_use = tag.rfind("<use", 0) == 0;
+        if (is_use || regex_search(tag, drawable)) {
+            if (next_id > MAX_ELEMENT_ID) throw runtime_error("make_glyph_id_svg: too many elements");
+            if (element_tags) element_tags->push_back(tag);
+            const string color = id_color_hex(next_id);
+            if (is_use) {
+                // Font glyph: the referenced <symbol> path has no fill of its own and inherits this one.
+                tag.insert(4, " style=\"fill:" + color + ";stroke:none;\"");
+            } else {
+                const bool is_rule = is_rule_tag(tag);
                 smatch m;
-                use_targets->push_back(regex_search(tag, m, href_attr) ? m[1].str() : "");
+                string style = regex_search(tag, m, style_attr) ? m[1].str() : "";
+                string new_style = regex_replace(style, color_prop, "$1:" + color);
+                if (!is_rule && new_style.find("fill:") == string::npos) new_style = "fill:" + color + ";" + new_style;
+                if (m.empty()) tag.insert(tag.find(' ') == string::npos ? tag.size() - 1 : tag.find(' '), " style=\"" + new_style + "\"");
+                else tag.replace(m.position(1), m.length(1), new_style);
+                tag = regex_replace(tag, color_attr, "$1=\"" + color + "\"");   // Colors given as attributes
             }
-            tag.insert(4, " style=\"fill:" + id_color_hex(next_id) + ";stroke:none;\"");
-            next_id++;
-        } else if (regex_search(tag, drawable)) {
-            if (next_id >= GLYPH_ID_RULE_FLAG) throw runtime_error("make_glyph_id_svg: too many elements");
-            smatch m;
-            string style = regex_search(tag, m, style_attr) ? m[1].str() : "";
-            const bool is_rule = style.find("fill:none") != string::npos;
-            const string color = id_color_hex(is_rule ? (next_id | GLYPH_ID_RULE_FLAG) : next_id);
-            string new_style = regex_replace(style, color_prop, "$1:" + color);
-            if (!is_rule && new_style.find("fill:") == string::npos) new_style = "fill:" + color + ";" + new_style;
-            if (m.empty()) tag.insert(tag.find(' ') == string::npos ? tag.size() - 1 : tag.find(' '), " style=\"" + new_style + "\"");
-            else tag.replace(m.position(1), m.length(1), new_style);
-            if (use_targets) use_targets->push_back("");
             next_id++;
         }
         out += tag;
@@ -198,7 +205,7 @@ Pixels latex_to_glyph_ids(const string& latex, const ScalingParams& scaling_para
     if (it != glyph_id_cache.end()) return it->second;
 
     const string svg_path = ensure_latex_svg(latex);
-    const string id_svg_path = svg_path.substr(0, svg_path.size() - 4) + "_glyph_ids.svg";
+    const string id_svg_path = svg_path.substr(0, svg_path.size() - 4) + "_element_ids.svg";
     const string id_svg_full = "io_in/" + id_svg_path;
     if (access(id_svg_full.c_str(), F_OK) == -1) {
         ifstream in("io_in/" + svg_path);
@@ -338,13 +345,38 @@ static bool same_shape(const GlyphOutline& a, const GlyphOutline& b) {
     return directed_hausdorff(a, b) <= SHAPE_TOLERANCE && directed_hausdorff(b, a) <= SHAPE_TOLERANCE;
 }
 
+// Rules have no outline to compare, so they're classed by orientation: a fraction bar can become another
+// fraction bar of any length, but not a vertical table border.
+static const uint32_t HORIZONTAL_RULE_SHAPE = 1;
+static const uint32_t VERTICAL_RULE_SHAPE = 2;
+static const uint32_t FIRST_GLYPH_SHAPE = 3;
+
+// Orientation class of a rule tag, from its path's extent. (Its transform is a uniform scale, which doesn't
+// change orientation.) 0 if it has no path data.
+static uint32_t rule_shape(const string& tag) {
+    static const regex d_attr(R"(\bd="([^"]*)\")");
+    smatch m;
+    if (!regex_search(tag, m, d_attr)) return 0;
+    const string d = m[1].str();
+    static const regex number(R"(-?\d*\.?\d+(?:[eE][-+]?\d+)?)");
+    vector<double> v;
+    for (sregex_iterator it(d.begin(), d.end(), number), end; it != end; ++it) v.push_back(stod((*it)[0].str()));
+    if (v.size() < 2) return 0;
+    double min_x = v[0], max_x = v[0], min_y = v[1], max_y = v[1];
+    for (size_t k = 0; k + 1 < v.size(); k += 2) {
+        min_x = min(min_x, v[k]); max_x = max(max_x, v[k]);
+        min_y = min(min_y, v[k + 1]); max_y = max(max_y, v[k + 1]);
+    }
+    return (max_x - min_x) >= (max_y - min_y) ? HORIZONTAL_RULE_SHAPE : VERTICAL_RULE_SHAPE;
+}
+
 // Shape classes for the whole run, so that class numbers agree across equations.
 // Each class keeps the first outline seen as its representative. Identical path data (the same glyph at the
 // same size, the common case) is looked up directly, skipping the geometric comparison.
 static uint32_t shape_class(const string& path_data) {
     static unordered_map<string, uint32_t> by_path_data;
     static vector<pair<GlyphOutline, uint32_t>> representatives;
-    static uint32_t next_class = 1;
+    static uint32_t next_class = FIRST_GLYPH_SHAPE;
 
     auto known = by_path_data.find(path_data);
     if (known != by_path_data.end()) return known->second;
@@ -402,15 +434,22 @@ vector<uint32_t> latex_glyph_shapes(const string& latex) {
     const string svg = buffer.str();
 
     // Same walk that numbers the elements of the glyph ID image, so indices line up with its IDs
-    vector<string> use_targets;
-    make_glyph_id_svg(svg, &use_targets);
+    vector<string> element_tags;
+    make_glyph_id_svg(svg, &element_tags);
     const unordered_map<string, string> symbols = read_symbol_paths(svg);
 
-    vector<uint32_t> shapes(use_targets.size(), 0);
-    for (size_t id = 1; id < use_targets.size(); id++) {
-        if (use_targets[id].empty()) continue;
-        auto sym = symbols.find(use_targets[id]);
-        if (sym != symbols.end()) shapes[id] = shape_class(sym->second);
+    static const regex href_attr(R"(href="#([^"]+)\")");
+    vector<uint32_t> shapes(element_tags.size(), 0);
+    for (size_t id = 1; id < element_tags.size(); id++) {
+        const string& tag = element_tags[id];
+        smatch m;
+        if (tag.rfind("<use", 0) == 0) {
+            if (!regex_search(tag, m, href_attr)) continue;
+            auto sym = symbols.find(m[1].str());
+            if (sym != symbols.end()) shapes[id] = shape_class(sym->second);
+        } else if (is_rule_tag(tag)) {
+            shapes[id] = rule_shape(tag);
+        }
     }
     glyph_shape_cache[latex] = shapes;
     return shapes;

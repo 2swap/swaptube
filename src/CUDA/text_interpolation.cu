@@ -11,23 +11,17 @@
 // Various functions used for text interpolation, which takes two rasterized LaTeX images,
 // assumed to be mathematical formulas, and interpolates between them by identifying shared glyphs.
 // The algorithm is as follows:
-// 1.   Convert the grayscale images to black and white with a simple brightness threshold.
-// 2.   Identify and enumerate all connected components in each image by naively setting the colors
-//      to the uint32_t index of the component. This is done with a simple flood fill algorithm.
-// 3.   Identify which pairs of components are the same glyph.
-// 3a.  Immediately discard pairs whose bounding boxes have aspect ratios that differ by more than a few percent
-//      (measured as |log(ar1 / ar2)|, so the tolerance is relative rather than absolute).
-// 3b.  For the remaining pairs, compute IOU (Intersection over Union) of the glyphs, and discard pairs with IOU far from 1.
-//      We do a best-effort scale to make the bounding boxes of the components match before computing IOU,
-//      to account for differently sized glyphs, such as exponents turning into coefficients in a derivative.
-// 4.   We are now left with a bipartite graph of components, where edges connect shape-compatible glyphs.
+// 1.   (CPU, before staging) Segment each image into glyphs: every pixel is labeled with the uint32_t index
+//      (starting at 1) of the glyph it belongs to, 0 for background. Glyphs come from the LaTeX SVG's own
+//      per-symbol structure (see segment_by_glyph_ids in Core/GlyphSegmentation.cpp), so multi-part symbols like
+//      i, j and = are single glyphs.
+// 2.   (CPU, before staging) Identify each glyph: a shape class read from the LaTeX SVG (see latex_glyph_shapes in
+//      IO/Latex.cpp), equal for the same symbol at any size and resolution. Two glyphs can pair iff their classes match.
+// 3.   We are now left with a bipartite graph of glyphs, where edges connect glyphs of the same class.
 //      Choose the one-to-one matching with the least total on-screen travel distance, solved using the
 //      Hungarian algorithm. Unmatched leftover glyphs fade out or in.
-// 5.   We now have paired shared glyphs. We can interpolate between them by linearly interpolating
+// 4.   We now have paired shared glyphs. We can interpolate between them by linearly interpolating
 //      the positions of the glyphs, and using a simple alpha blend for the pixels in the glyphs.
-
-const float ASPECT_RATIO_THRESHOLD = 0.25f;
-const float IOU_THRESHOLD = 0.75f;
 
 // Helper function to get the bounding box of a glyph with a given color
 // NOTE: Due to max operation on matching pixels, d_bottom_right is inclusive (not exclusive)
@@ -74,73 +68,6 @@ static std::vector<uint32_t> transparent_glyph_colors(const uint32_t* labels, co
         }
     }
     return colors;
-}
-
-__global__ void compute_iou_kernel (
-    const uint32_t* pix_1, const Cuda::ivec2 wh_1,
-    const uint32_t* pix_2, const Cuda::ivec2 wh_2,
-    uint32_t* intersection, uint32_t* union_count)
-{
-    Cuda::ivec2 grid_point = Cuda::ivec2(blockIdx.x * blockDim.x + threadIdx.x, blockIdx.y * blockDim.y + threadIdx.y);
-
-    if (grid_point.x >= 100 || grid_point.y >= 100) return;
-
-    Cuda::vec2 norm = (Cuda::vec2(grid_point.x + 0.5f, grid_point.y + 0.5f)) / 100.0f;
-
-    Cuda::ivec2 p1(norm.x * wh_1.x, norm.y * wh_1.y);
-    Cuda::ivec2 p2(norm.x * wh_2.x, norm.y * wh_2.y);
-
-    bool a = Cuda::geta(pix_1[p1.y * wh_1.x + p1.x]) >= 128;
-    bool b = Cuda::geta(pix_2[p2.y * wh_2.x + p2.x]) >= 128;
-
-    if (a || b) atomicAdd(union_count, 1u);
-    if (a && b) atomicAdd(intersection, 1u);
-}
-
-float compute_iou (
-    const uint32_t* pix_1, const Cuda::ivec2 wh_1,
-    const uint32_t* pix_2, const Cuda::ivec2 wh_2)
-{
-    uint32_t* d_intersection;
-    uint32_t* d_union;
-    uint32_t h_intersection = 0;
-    uint32_t h_union = 0;
-    cudaMalloc(&d_intersection, sizeof(uint32_t));
-    cudaMalloc(&d_union, sizeof(uint32_t));
-    cudaMemcpy(d_intersection, &h_intersection, sizeof(uint32_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_union, &h_union, sizeof(uint32_t), cudaMemcpyHostToDevice);
-    // TODO do we really need to do a memcpy for something this simple??
-
-    dim3 threads(10, 10);
-    dim3 blocks(10, 10);
-    compute_iou_kernel<<<blocks, threads>>>(pix_1, wh_1, pix_2, wh_2, d_intersection, d_union);
-    cudaDeviceSynchronize();
-
-    cudaMemcpy(&h_intersection, d_intersection, sizeof(uint32_t), cudaMemcpyDeviceToHost);
-    cudaMemcpy(&h_union, d_union, sizeof(uint32_t), cudaMemcpyDeviceToHost);
-    cudaFree(d_intersection);
-    cudaFree(d_union);
-
-    if (h_union == 0) return 0.0f;
-    return (float) h_intersection / (float) h_union;
-}
-
-bool is_same_glyph(const Cuda::Glyph& g1, const Cuda::Glyph& g2)
-{
-    // Degenerate (empty) bounding boxes can never match.
-    if (g1.wh.x <= 0 || g1.wh.y <= 0 || g2.wh.x <= 0 || g2.wh.y <= 0) {
-        return false;
-    }
-    float aspect_ratio_1 = (float) g1.wh.x / (float) g1.wh.y;
-    float aspect_ratio_2 = (float) g2.wh.x / (float) g2.wh.y;
-    if (std::abs(std::log(aspect_ratio_1 / aspect_ratio_2)) > ASPECT_RATIO_THRESHOLD) {
-        return false;
-    }
-    float iou = compute_iou(g1.pix, g1.wh, g2.pix, g2.wh);
-    if (iou < IOU_THRESHOLD) {
-        return false;
-    }
-    return true;
 }
 
 void print_matching(const Cuda::Interpolation& interpolation)
@@ -208,11 +135,12 @@ std::vector<int> solve_assignment(const std::vector<double>& cost, const int n)
     return assignment;
 }
 
-// Steps 3 and 4: among the pairs that pass the shape tests (is_same_glyph), choose the matching with the most
+// Step 3: among the pairs whose shape classes match, choose the matching with the most
 // matched pairs, breaking ties by least total travel distance. Writes the result to match_1 and match_2.
 // Solved as a square n x n assignment problem with n = max(n1, n2): rows are image 1 glyphs, columns are image 2
 // glyphs, and the shorter side is padded with free dummies.
-void solve_matching(Cuda::Interpolation& interpolation)
+// shapes_1[i] and shapes_2[j] are the glyphs' shape classes; 0 means unknown, which never matches.
+void solve_matching(Cuda::Interpolation& interpolation, const uint32_t* shapes_1, const uint32_t* shapes_2)
 {
     const int n1 = interpolation.num_glyphs_1, n2 = interpolation.num_glyphs_2;
     const int n = std::max(n1, n2);
@@ -227,7 +155,7 @@ void solve_matching(Cuda::Interpolation& interpolation)
     std::vector<double> cost((size_t) n * n, 0); // Dummy rows/columns (beyond n1 or n2) stay free
     for (int i = 0; i < n1; i++)
         for (int j = 0; j < n2; j++)
-            cost[(size_t) i * n + j] = is_same_glyph(interpolation.glyphs_1[i], interpolation.glyphs_2[j])
+            cost[(size_t) i * n + j] = (shapes_1[i] != 0 && shapes_1[i] == shapes_2[j])
                                        ? travel_distance(interpolation, i, j) : forbidden;
 
     const std::vector<int> assignment = solve_assignment(cost, n);
@@ -242,10 +170,11 @@ void solve_matching(Cuda::Interpolation& interpolation)
 }
 
 // The main entry point which stages an interpolation.
-// The CPU is expected to have done steps 1 and 2 already, since flood filling is simpler on the CPU.
+// The CPU is expected to have done steps 1 and 2 already: h_pix are glyph label images, and h_shapes[i] is the
+// shape class of glyph i (label i + 1).
 extern "C" Cuda::Interpolation stage_interpolation(
-    const uint32_t* h_pix_1, const uint32_t* h_vis_1, const Cuda::ivec2 wh_1, const int num_glyphs_1,
-    const uint32_t* h_pix_2, const uint32_t* h_vis_2, const Cuda::ivec2 wh_2, const int num_glyphs_2)
+    const uint32_t* h_pix_1, const uint32_t* h_vis_1, const uint32_t* h_shapes_1, const Cuda::ivec2 wh_1, const int num_glyphs_1,
+    const uint32_t* h_pix_2, const uint32_t* h_vis_2, const uint32_t* h_shapes_2, const Cuda::ivec2 wh_2, const int num_glyphs_2)
 {
     Cuda::Interpolation interpolation;
 
@@ -328,7 +257,7 @@ extern "C" Cuda::Interpolation stage_interpolation(
     cudaFree(d_vis_1);
     cudaFree(d_vis_2);
 
-    solve_matching(interpolation);
+    solve_matching(interpolation, h_shapes_1, h_shapes_2);
     print_matching(interpolation);
 
     return interpolation;
