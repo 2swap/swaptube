@@ -4819,6 +4819,43 @@ void outtro(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd){
 
 
 
+
+void thumbnail(CompositeScene& cs, StateSet& bg){
+    shared_ptr<FourDAlgebraScene> fd = make_shared<FourDAlgebraScene>();
+    cs.add_scene(fd, "fd");
+
+    cs.manager.set({{"slider","0.5"}});
+
+    fd->manager.set(bg);
+    fd->manager.set({
+        {"brightness", "0.9"},
+        {"offset_1", "0.33"},
+        {"offset_2", "0.093"},
+        {"scale", "9.0"},
+        {"equation", "200"},
+        {"pov_xz", "0.15"},
+        {"pov_y", "0.2"},
+        {"rotation_jk", "-0.02"},
+        {"rotation_ik", "-0.86"},
+        {"rotation_1k", "0.02"},
+        {"slider_width", "0.006"},
+    });
+
+
+    stage_macroblock(SilenceBlock(1));
+    
+    cs.render_microblock();
+    // fd->manager.transition(MICRO, {
+    //     {"brightness", "60.0"},
+    //     {"pov_xz", "1.57"},
+    //     {"rotation_jk", "0.0"}
+    // });
+    // cs.render_microblock();
+
+}
+
+
+
 void render_video() {
     CompositeScene cs;
 
@@ -4860,6 +4897,8 @@ void render_video() {
 
     cursor->manager.set(cursor_control);
 
+
+    // thumbnail(cs,bg_control);
 
     four_d_intro(cs, bg_control);
     one_dim_algebra(cs);

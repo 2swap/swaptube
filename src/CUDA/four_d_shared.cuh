@@ -196,7 +196,6 @@ __device__ __forceinline__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const
 
 
     } else if (equation == 101){
-        // return four_d_cos(v2*0.06, commute, jj, ijj) + four_d_sin(v*0.4, commute, jj, ijj)*2;
 
         return four_d_exp(four_d_sin(v*0.3, commute, jj, ijj)*5, commute, jj, ijj)-2;
 
@@ -224,6 +223,8 @@ __device__ __forceinline__ Cuda::vec4 four_d_function(const Cuda::vec4& v, const
         p = four_d_mult(p,va - Cuda::vec4(0.2,0,-1,0),commute,jj,ijj);
 
         return p;
+    } else if (equation == 200){
+        return four_d_cos(v2*0.06, commute, jj, ijj) + four_d_exp(four_d_sin(v*0.4, commute, jj, ijj)*2, commute, jj, ijj);
     }
     
     return v;
