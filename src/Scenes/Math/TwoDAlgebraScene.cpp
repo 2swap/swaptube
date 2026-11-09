@@ -479,7 +479,7 @@ void TwoDAlgebraScene::draw() {
 
     const float unit_targets = state["unit_targets"];
     if (unit_targets > 0){
-        const float target_opacity = unit_targets * 0.5f;
+        const float target_opacity = unit_targets * 0.75f;
         const float target_size = point_radius*0.85*state["point_size"];
         const vec2 target_locs[2] = {origin + vec2(screen_unit, 0), origin + vec2(0, -screen_unit)};
         const string target_texts[2] = {"x", "y"};

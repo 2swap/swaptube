@@ -2606,7 +2606,7 @@ void four_d_cosine(CompositeScene& cs, StateSet& bg){
 
         {"point0.a", "0.4"},{"point1.a", "0.4"},{"point2.a", "0.4"},{"point3.a", "0.4"},{"point4.a", "1"},{"point5.a", "1"},
 
-        {"slow", "<tx> .06 *"},
+        {"slow", "<tx> .06 * 1 +"},
         {"lines_thickness_multiplier", "4"},
         {"d", "4"}, {"q1", "1"}, {"qi", "<slow> sin .2 * 1 +"}, {"qj", "<slow> cos 1 +"},
     });
