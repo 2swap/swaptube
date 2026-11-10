@@ -4705,7 +4705,7 @@ void ad(CompositeScene& cs, shared_ptr<FourDAlgebraScene> fd) {
     stage_macroblock(FileBlock("Visit 80000hours.org/2swap"));
     cs.fade_subscene(MICRO, "80k_site", 0);
     cs.render_microblock();
-    shared_ptr<LatexScene> link = make_shared<LatexScene>("\\textcolor{#000000}{\\text{80000hours.org/2swap}}", vec2(0.96, 0.24));
+    shared_ptr<LatexScene> link = make_shared<LatexScene>("\\textcolor{#000000}{\\text{80000hours{.}org/2swap}}", vec2(0.96, 0.24));
     cs.add_scene_fade_in(MICRO, link, "link", vec2(0.4, 0.15));
     cs.render_microblock();
     cs.remove_subscene("80k_site");
