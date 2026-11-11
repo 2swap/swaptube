@@ -33,9 +33,6 @@ The following external dependencies are required for specific functionalities wi
 | Cairo | In-Video LaTeX | visual_media.cpp | Renders SVG files onto Cairo surfaces and converts them to pixel data | `sudo apt install libcairo2-dev` |
 | LibPNG | PNG scenes | visual_media.cpp | Reads PNG files and converts them to pixel data | `sudo apt install libpng-dev` |
 
-## Docker Setup
-For easy deployment with all dependencies included, see the [docker/README.md](docker/README.md) for containerized setup instructions. This is optional and community-made for Docker users. I (2swap) personally don't use or maintain it.
-
 ## WSL Setup (Windows machines)
 
 Windows users run swaptube inside WSL2, GPU included.
@@ -50,7 +47,7 @@ Windows users run swaptube inside WSL2, GPU included.
 
    ```bash
    sudo apt update && sudo apt install -y \
-       cmake ninja-build gnuplot ffmpeg pkg-config g++ \
+       cmake ninja-build ffmpeg pkg-config g++ \
        libswscale-dev libavcodec-dev libavformat-dev libavdevice-dev \
        libavutil-dev libavfilter-dev libswresample-dev \
        librsvg2-dev libglib2.0-dev libcairo2-dev libpng-dev libgdk-pixbuf-2.0-dev \

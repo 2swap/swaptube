@@ -13,7 +13,6 @@ check_command_available() {
 # Check for required commands
 check_command_available "cmake"
 check_command_available "ninja"
-check_command_available "gnuplot"
 # Check if MicroTeX build exists
 if [ ! -s "../MicroTeX-master/build/LaTeX" ]; then
     echo "Error: ../MicroTeX-master/build/LaTeX does not exist. MicroTeX is required for this project."
