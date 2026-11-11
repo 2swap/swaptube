@@ -25,22 +25,6 @@ __device__ __forceinline__ void atomic_overlay_pixel(const Cuda::ivec2& pix, int
     atomicCAS(&pixels[idx], old_pixel, new_pixel);
 }
 
-// temporary hack: brightest-wins variant to stop line flicker from GPU races. Revert ASAP.
-__device__ __forceinline__ void atomic_overlay_pixel_brightest(const Cuda::ivec2& pix, int col, float opacity, unsigned int* pixels, const Cuda::ivec2& wh) {
-    if (pix.x < 0 || pix.x >= wh.x || pix.y < 0 || pix.y >= wh.y) return;
-    opacity = Cuda::clamp(opacity, 0.0f, 1.0f);
-    int idx = pix.y * wh.x + pix.x;
-
-    unsigned int old_pixel = pixels[idx];
-    while (true) {
-        unsigned int new_pixel = Cuda::color_combine(old_pixel, col, opacity);
-        if ((new_pixel & 0x00ffffff) < (old_pixel & 0x00ffffff)) return;
-        unsigned int prev = atomicCAS(&pixels[idx], old_pixel, new_pixel);
-        if (prev == old_pixel) return;
-        old_pixel = prev;
-    }
-}
-
 __device__ __forceinline__ int complex_to_srgb(const thrust::complex<float>& c, float ab_dilation, float dot_radius) {
     float mag = abs(c);
     if(mag < 1e-7) return Cuda::argb(255, 255, 255, 255); // white to dodge division by zero 

@@ -6,7 +6,7 @@
 namespace Cuda {
 
 // Fill a circle on a pixel buffer
-__device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r, int col, unsigned int* pixels, const Cuda::ivec2& wh, float opa=1.0f, bool brightest_wins = false) { // HACK. brightest_wins, revert this
+__device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r, int col, unsigned int* pixels, const Cuda::ivec2& wh, float opa=1.0f) {
     // breakout if outside of screen
     if (center.x + r < 0 || center.x - r >= wh.x || center.y + r < 0 || center.y - r >= wh.y)
         return;
@@ -14,15 +14,13 @@ __device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r,
     for (float dx = -r; dx < r; dx++) {
         float sdx = dx*dx;
         for (float dy = -r; dy < r; dy++) {
-            if (sdx + dy*dy < r2) {
-                if (brightest_wins) atomic_overlay_pixel_brightest(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
-                else                atomic_overlay_pixel(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
-            }
+            if (sdx + dy*dy < r2)
+                atomic_overlay_pixel(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
         }
     }
 }
 
-__device__ __forceinline__ void bresenham(const Cuda::vec2& start, const Cuda::vec2& end, int col, float opacity, int thickness, unsigned int* pixels, const Cuda::ivec2& wh, bool is_dashed, bool brightest_wins = false) { // HACK. brightest_wins, revert this
+__device__ __forceinline__ void bresenham(const Cuda::vec2& start, const Cuda::vec2& end, int col, float opacity, int thickness, unsigned int* pixels, const Cuda::ivec2& wh, bool is_dashed) {
     int x1 = start.x, y1 = start.y;
     const int x2 = end.x, y2 = end.y;
     int dx = abs(x2 - x1), dy = abs(y2 - y1);
@@ -33,8 +31,7 @@ __device__ __forceinline__ void bresenham(const Cuda::vec2& start, const Cuda::v
     int dash_counter = 0;
     int dash_counter_modulus = (wh.x + wh.y) >> 7; // Naive average
     auto plot = [&](int x, int y) {
-        if (brightest_wins) atomic_overlay_pixel_brightest(Cuda::ivec2(x, y), col, opacity, pixels, wh);
-        else                atomic_overlay_pixel(Cuda::ivec2(x, y), col, opacity, pixels, wh);
+        atomic_overlay_pixel(Cuda::ivec2(x, y), col, opacity, pixels, wh);
     };
 
     while (true) {

@@ -10,15 +10,13 @@ extern "C" {
         uint32_t* d_pixels, const ivec2& wh,
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
-        const quat& camera_direction, const vec3& camera_pos, float fov,
-        bool brightest_wins); // TEMP HACK. REVERT ASAP
+        const quat& camera_direction, const vec3& camera_pos, float fov);
 
     void render_lines_on_gpu(
         uint32_t* d_pixels, const ivec2& wh,
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
-        const quat& camera_direction, const vec3& camera_pos, float fov,
-        bool brightest_wins); // TEMP HACK. REVERT ASAP
+        const quat& camera_direction, const vec3& camera_pos, float fov);
 }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
@@ -80,8 +78,7 @@ void ThreeDimensionScene::draw() {
             static_cast<int>(lines.size()),
             camera_direction,
             camera_pos,
-            fov,
-            brightest_lines
+            fov
         );
     }
 
@@ -97,8 +94,7 @@ void ThreeDimensionScene::draw() {
             n,
             camera_direction,
             camera_pos,
-            fov,
-            brightest_lines
+            fov
         );
     };
 
