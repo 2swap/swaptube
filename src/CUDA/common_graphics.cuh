@@ -5,8 +5,15 @@
 
 namespace Cuda {
 
+__device__ __forceinline__ void depth_plot(const Cuda::ivec2& pix, float z, int col, float opacity, unsigned long long* depth, const Cuda::ivec2& wh) {
+    if (pix.x < 0 || pix.x >= wh.x || pix.y < 0 || pix.y >= wh.y || z <= 0) return;
+    const unsigned int a = (unsigned int)(Cuda::clamp(opacity, 0.0f, 1.0f) * ((unsigned int)col >> 24));
+    const unsigned int c = (a << 24) | ((unsigned int)col & 0x00ffffff);
+    atomicMin(&depth[pix.y * wh.x + pix.x], ((unsigned long long)__float_as_uint(z) << 32) | c);
+}
+
 // Fill a circle on a pixel buffer
-__device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r, int col, unsigned int* pixels, const Cuda::ivec2& wh, float opa=1.0f, bool brightest_wins = false) { // HACK. brightest_wins, revert this
+__device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r, int col, unsigned int* pixels, const Cuda::ivec2& wh, float opa=1.0f, bool brightest_wins = false, unsigned long long* depth = nullptr, float z = 0, float world_r = 0) { // HACK. brightest_wins, revert this
     // breakout if outside of screen
     if (center.x + r < 0 || center.x - r >= wh.x || center.y + r < 0 || center.y - r >= wh.y)
         return;
@@ -15,14 +22,15 @@ __device__ __forceinline__ void d_fill_circle(const Cuda::vec2& center, float r,
         float sdx = dx*dx;
         for (float dy = -r; dy < r; dy++) {
             if (sdx + dy*dy < r2) {
-                if (brightest_wins) atomic_overlay_pixel_brightest(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
+                if (depth) depth_plot(Cuda::ivec2(center.x + dx, center.y + dy), z - world_r * sqrtf(1 - (sdx + dy*dy) / r2), col, opa, depth, wh);
+                else if (brightest_wins) atomic_overlay_pixel_brightest(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
                 else                atomic_overlay_pixel(Cuda::ivec2(center.x + dx, center.y + dy), col, opa, pixels, wh);
             }
         }
     }
 }
 
-__device__ __forceinline__ void bresenham(const Cuda::vec2& start, const Cuda::vec2& end, int col, float opacity, int thickness, unsigned int* pixels, const Cuda::ivec2& wh, bool is_dashed, bool brightest_wins = false) { // HACK. brightest_wins, revert this
+__device__ __forceinline__ void bresenham(const Cuda::vec2& start, const Cuda::vec2& end, int col, float opacity, int thickness, unsigned int* pixels, const Cuda::ivec2& wh, bool is_dashed, bool brightest_wins = false, unsigned long long* depth = nullptr, float z1 = 1, float z2 = 1) { // HACK. brightest_wins, revert this
     int x1 = start.x, y1 = start.y;
     const int x2 = end.x, y2 = end.y;
     int dx = abs(x2 - x1), dy = abs(y2 - y1);
@@ -32,8 +40,13 @@ __device__ __forceinline__ void bresenham(const Cuda::vec2& start, const Cuda::v
     int err = dx - dy;
     int dash_counter = 0;
     int dash_counter_modulus = (wh.x + wh.y) >> 7; // Naive average
+    const float steps = fmaxf(1.0f, (float)max(dx, dy));
     auto plot = [&](int x, int y) {
-        if (brightest_wins) atomic_overlay_pixel_brightest(Cuda::ivec2(x, y), col, opacity, pixels, wh);
+        if (depth) {
+            const float t = dash_counter / steps;
+            depth_plot(Cuda::ivec2(x, y), 1.0f / ((1 - t) / z1 + t / z2), col, opacity, depth, wh);
+        }
+        else if (brightest_wins) atomic_overlay_pixel_brightest(Cuda::ivec2(x, y), col, opacity, pixels, wh);
         else                atomic_overlay_pixel(Cuda::ivec2(x, y), col, opacity, pixels, wh);
     };
 

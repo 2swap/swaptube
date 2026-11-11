@@ -11,14 +11,19 @@ extern "C" {
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
         const quat& camera_direction, const vec3& camera_pos, float fov,
-        bool brightest_wins); // TEMP HACK. REVERT ASAP
+        bool brightest_wins, // TEMP HACK. REVERT ASAP
+        unsigned long long* d_depth);
 
     void render_lines_on_gpu(
         uint32_t* d_pixels, const ivec2& wh,
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
         const quat& camera_direction, const vec3& camera_pos, float fov,
-        bool brightest_wins); // TEMP HACK. REVERT ASAP
+        bool brightest_wins, // TEMP HACK. REVERT ASAP
+        unsigned long long* d_depth);
+
+    unsigned long long* create_depth_buffer(const ivec2& wh);
+    void resolve_depth_buffer(uint32_t* d_pixels, const ivec2& wh, unsigned long long* d_depth);
 }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
@@ -68,6 +73,8 @@ vector<Point> ThreeDimensionScene::read_state_points() const {
 void ThreeDimensionScene::draw() {
     set_camera_direction();
 
+    unsigned long long* d_depth = depth_test ? create_depth_buffer(get_width_height()) : nullptr;
+
     if (!lines.empty() && state["lines_opacity"] > .001) {
         int thickness = static_cast<int>(state["lines_thickness_multiplier"] * get_geom_mean_size() / 640.0);
         render_lines_on_gpu(
@@ -81,7 +88,8 @@ void ThreeDimensionScene::draw() {
             camera_direction,
             camera_pos,
             fov,
-            brightest_lines
+            brightest_lines,
+            d_depth
         );
     }
 
@@ -98,7 +106,8 @@ void ThreeDimensionScene::draw() {
             camera_direction,
             camera_pos,
             fov,
-            brightest_lines
+            brightest_lines,
+            d_depth
         );
     };
 
@@ -107,6 +116,7 @@ void ThreeDimensionScene::draw() {
     vector<Point> state_points = read_state_points();
     render_point_set(state_points.data(), static_cast<int>(state_points.size()));
 
+    if (d_depth) resolve_depth_buffer(gpu_pix.get_ptr(), get_width_height(), d_depth);
 
 
     const float labels_size = state["point_labels_size"];

@@ -4,6 +4,7 @@ HOST_DEVICE inline uint32_t OKLABtoRGB(int alpha, float L, float a, float b);
 
 
 ThreeDAlgebraScene::ThreeDAlgebraScene(const vec2& dimensions) : ThreeDimensionScene(dimensions) {
+    depth_test = true;
     manager.set({
         {"associativity", "0"}, // 0 = left-associated (e*a)*b, 1 = right-associated e*(a*b)
         {"xx_x", "1"}, {"xx_y", "0"}, {"xx_z", "0"},
