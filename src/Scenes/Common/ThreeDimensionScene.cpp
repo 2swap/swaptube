@@ -12,7 +12,7 @@ extern "C" {
         Point* h_points, int num_points,
         const quat& camera_direction, const vec3& camera_pos, float fov,
         bool brightest_wins, // TEMP HACK. REVERT ASAP
-        unsigned long long* d_depth);
+        unsigned long long* d_depth, bool translucent);
 
     void render_lines_on_gpu(
         uint32_t* d_pixels, const ivec2& wh,
@@ -20,10 +20,11 @@ extern "C" {
         Line* h_lines, int num_lines,
         const quat& camera_direction, const vec3& camera_pos, float fov,
         bool brightest_wins, // TEMP HACK. REVERT ASAP
-        unsigned long long* d_depth);
+        unsigned long long* d_depth, bool translucent);
 
     unsigned long long* create_depth_buffer(const ivec2& wh);
     void resolve_depth_buffer(uint32_t* d_pixels, const ivec2& wh, unsigned long long* d_depth);
+    void free_depth_buffer(unsigned long long* d_depth);
 }
 
 ThreeDimensionScene::ThreeDimensionScene(const vec2& dimensions)
@@ -75,48 +76,54 @@ void ThreeDimensionScene::draw() {
 
     unsigned long long* d_depth = depth_test ? create_depth_buffer(get_width_height()) : nullptr;
 
-    if (!lines.empty() && state["lines_opacity"] > .001) {
-        int thickness = static_cast<int>(state["lines_thickness_multiplier"] * get_geom_mean_size() / 640.0);
-        render_lines_on_gpu(
-            gpu_pix.get_ptr(),
-            get_width_height(),
-            get_geom_mean_size(),
-            thickness,
-            state["lines_opacity"],
-            lines.data(),
-            static_cast<int>(lines.size()),
-            camera_direction,
-            camera_pos,
-            fov,
-            brightest_lines,
-            d_depth
-        );
+    for (int pass = 0; pass < (d_depth ? 2 : 1); pass++) {
+        const bool translucent = pass == 1;
+        if (translucent) resolve_depth_buffer(gpu_pix.get_ptr(), get_width_height(), d_depth);
+
+        if (!lines.empty() && state["lines_opacity"] > .001) {
+            int thickness = static_cast<int>(state["lines_thickness_multiplier"] * get_geom_mean_size() / 640.0);
+            render_lines_on_gpu(
+                gpu_pix.get_ptr(),
+                get_width_height(),
+                get_geom_mean_size(),
+                thickness,
+                state["lines_opacity"],
+                lines.data(),
+                static_cast<int>(lines.size()),
+                camera_direction,
+                camera_pos,
+                fov,
+                brightest_lines,
+                d_depth,
+                translucent
+            );
+        }
+
+        auto render_point_set = [&](Point* data, int n) {
+            if (n <= 0 || state["points_opacity"] <= .001 || state["points_radius_multiplier"] <= 0.001) return;
+            render_points_on_gpu(
+                gpu_pix.get_ptr(),
+                get_width_height(),
+                get_geom_mean_size(),
+                state["points_opacity"],
+                state["points_radius_multiplier"],
+                data,
+                n,
+                camera_direction,
+                camera_pos,
+                fov,
+                brightest_lines,
+                d_depth,
+                translucent
+            );
+        };
+
+        render_point_set(points.data(), static_cast<int>(points.size()));
+
+        vector<Point> state_points = read_state_points();
+        render_point_set(state_points.data(), static_cast<int>(state_points.size()));
     }
-
-    auto render_point_set = [&](Point* data, int n) {
-        if (n <= 0 || state["points_opacity"] <= .001 || state["points_radius_multiplier"] <= 0.001) return;
-        render_points_on_gpu(
-            gpu_pix.get_ptr(),
-            get_width_height(),
-            get_geom_mean_size(),
-            state["points_opacity"],
-            state["points_radius_multiplier"],
-            data,
-            n,
-            camera_direction,
-            camera_pos,
-            fov,
-            brightest_lines,
-            d_depth
-        );
-    };
-
-    render_point_set(points.data(), static_cast<int>(points.size()));
-
-    vector<Point> state_points = read_state_points();
-    render_point_set(state_points.data(), static_cast<int>(state_points.size()));
-
-    if (d_depth) resolve_depth_buffer(gpu_pix.get_ptr(), get_width_height(), d_depth);
+    if (d_depth) free_depth_buffer(d_depth);
 
 
     const float labels_size = state["point_labels_size"];
