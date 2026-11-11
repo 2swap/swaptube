@@ -14,7 +14,6 @@ __global__ void render_points_kernel(
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* points, int num_points,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov,
-    bool brightest_wins, // TEMP (FourDAlgebra): revert ASAP
     unsigned long long* depth, bool translucent)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -26,7 +25,7 @@ __global__ void render_points_kernel(
     if (pixel.z <= 0) return; // behind the camera
     float dot_size = p.size * points_radius_multiplier * geom_mean_size / 140.0f;
     const float world_r = dot_size * pixel.z / (geom_mean_size * fov);
-    Cuda::d_fill_circle(pixel, dot_size, p.color, pixels, wh, points_opacity * p.opacity, brightest_wins, depth, pixel.z, world_r, translucent);
+    Cuda::d_fill_circle(pixel, dot_size, p.color, pixels, wh, points_opacity * p.opacity, depth, pixel.z, world_r, translucent);
 }
 
 __global__ void render_lines_kernel(
@@ -34,7 +33,6 @@ __global__ void render_lines_kernel(
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* lines, int num_lines,
     Cuda::quat camera_direction, Cuda::vec3 camera_pos, float fov,
-    bool brightest_wins, // TEMP (FourDAlgebra): revert ASAP
     unsigned long long* depth, bool translucent)
 {
     int idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -50,7 +48,7 @@ __global__ void render_lines_kernel(
     Cuda::bresenham(
         p1, p2,
         ln.color, lines_opacity * ln.opacity, thickness,
-        pixels, wh, ln.is_dashed, brightest_wins, depth, p1.z, p2.z, translucent);
+        pixels, wh, ln.is_dashed, depth, p1.z, p2.z, translucent);
 }
 
 __global__ void resolve_depth_kernel(unsigned int* pixels, const Cuda::ivec2 wh, const unsigned long long* depth) {
@@ -85,7 +83,6 @@ extern "C" void render_points_on_gpu(
     float geom_mean_size, float points_opacity, float points_radius_multiplier,
     Cuda::Point* h_points, int num_points,
     const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov,
-    bool brightest_wins, // TEMP (FourDAlgebra): revert after this video
     unsigned long long* d_depth, bool translucent)
 {
     Cuda::Point*  d_points = nullptr;
@@ -101,7 +98,7 @@ extern "C" void render_points_on_gpu(
         geom_mean_size, points_opacity, points_radius_multiplier,
         d_points, num_points,
         camera_direction, camera_pos, fov,
-        brightest_wins, d_depth, translucent);
+        d_depth, translucent);
     cudaDeviceSynchronize();
 
     // TODO we don't really need to copy these back and forth every frame...
@@ -113,7 +110,6 @@ extern "C" void render_lines_on_gpu(
     float geom_mean_size, int thickness, float lines_opacity,
     Cuda::Line* h_lines, int num_lines,
     const Cuda::quat& camera_direction, const Cuda::vec3& camera_pos, float fov,
-    bool brightest_wins, // TEMP (FourDAlgebra): revert after this video
     unsigned long long* d_depth, bool translucent)
 {
     Cuda::Line* d_lines  = nullptr;
@@ -129,7 +125,7 @@ extern "C" void render_lines_on_gpu(
         geom_mean_size, thickness, lines_opacity,
         d_lines, num_lines,
         camera_direction, camera_pos, fov,
-        brightest_wins, d_depth, translucent);
+        d_depth, translucent);
     cudaDeviceSynchronize();
 
     cudaFree(d_lines);

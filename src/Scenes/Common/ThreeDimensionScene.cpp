@@ -11,7 +11,6 @@ extern "C" {
         float geom_mean_size, float points_opacity, float points_radius_multiplier,
         Point* h_points, int num_points,
         const quat& camera_direction, const vec3& camera_pos, float fov,
-        bool brightest_wins, // TEMP HACK. REVERT ASAP
         unsigned long long* d_depth, bool translucent);
 
     void render_lines_on_gpu(
@@ -19,7 +18,6 @@ extern "C" {
         float geom_mean_size, int thickness, float lines_opacity,
         Line* h_lines, int num_lines,
         const quat& camera_direction, const vec3& camera_pos, float fov,
-        bool brightest_wins, // TEMP HACK. REVERT ASAP
         unsigned long long* d_depth, bool translucent);
 
     unsigned long long* create_depth_buffer(const ivec2& wh);
@@ -93,7 +91,6 @@ void ThreeDimensionScene::draw() {
                 camera_direction,
                 camera_pos,
                 fov,
-                brightest_lines,
                 d_depth,
                 translucent
             );
@@ -112,7 +109,6 @@ void ThreeDimensionScene::draw() {
                 camera_direction,
                 camera_pos,
                 fov,
-                brightest_lines,
                 d_depth,
                 translucent
             );

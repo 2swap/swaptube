@@ -2150,7 +2150,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     shared_ptr<ThreeDimensionScene> basis = make_basis();
 
     shared_ptr<ThreeDAlgebraScene> abAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
-    abAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     abAssoc->manager.set({
         {"associativity", "1"},{"a_x", "0"},{"a_y", "1"},{"b_x", "0"},{"b_z", "1"},
         {"reach", "3"},
@@ -2220,7 +2219,6 @@ void three_dim(CompositeScene& cs, StateSet& bg){
     cs.render_microblock();
 
     shared_ptr<ThreeDAlgebraScene> eaAssoc = make_shared<ThreeDAlgebraScene>(vec2(0.5, 0.8));
-    eaAssoc->brightest_lines = true; // TEMP: fixes grid flicker, revert after this video
     eaAssoc->manager.set({
         {"associativity", "0"},
         {"a_x", "1"}, {"a_y", "0"}, {"a_1", "0"},
