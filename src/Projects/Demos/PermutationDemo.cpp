@@ -7,8 +7,8 @@
 
     // if no file, render a blank scene and print a warning
     if (!std::ifstream(file_path).is_open()) {
-        std::cerr << "[Warning] Fichier " << file_path 
-                  << " introuvable. Rendu d'une scène vide pour la démo.\n";
+        std::cerr << "[Warning] File " << file_path 
+                  << " not found. Rendering an empty scene for the demo.\n";
 
         PermutationScene ps("");
         stage_macroblock(SilenceBlock(1));

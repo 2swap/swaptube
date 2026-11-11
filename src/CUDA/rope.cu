@@ -59,17 +59,17 @@ extern "C" void copy_pins(const Cuda::vec2* h_pins, Cuda::vec2* d_pins, const in
 }
 
 extern "C" void initialize_nodes_from_file(const std::string& file_name, Cuda::vec2* d_rope) {
-    // Lecture du fichier texte sur le CPU
+    // Read the text file on the CPU
     std::ifstream file(file_name);
     if (!file.is_open()) {
-        std::cerr << "Erreur: Impossible d'ouvrir le fichier " << file_name << std::endl;
+        std::cerr << "Error: Could not open file " << file_name << std::endl;
         return;
     }
 
     std::vector<Cuda::vec2> h_rope;
     Cuda::vec2 temp_point;
 
-    // Lit les paires de float (x, y) ligne par ligne
+    // Read (x, y) float pairs line by line
     while (file >> temp_point.x >> temp_point.y) {
         h_rope.push_back(temp_point);
         // printf("Read point: (%f, %f)\n", temp_point.x, temp_point.y);
@@ -77,11 +77,11 @@ extern "C" void initialize_nodes_from_file(const std::string& file_name, Cuda::v
     file.close();
 
     if (h_rope.empty()) {
-        std::cerr << "Attention: Le fichier est vide ou mal formaté." << std::endl;
+        std::cerr << "Warning: The file is empty or malformed." << std::endl;
         return;
     }
 
-    // 2. Transfert de la mémoire Host (CPU) vers Device (GPU)
+    // 2. Transfer memory from Host (CPU) to Device (GPU)
     cudaError_t err = cudaMemcpy(
         d_rope, 
         h_rope.data(), 
@@ -90,7 +90,7 @@ extern "C" void initialize_nodes_from_file(const std::string& file_name, Cuda::v
     );
 
     if (err != cudaSuccess) {
-        std::cerr << "Erreur CUDA Memcpy: " << cudaGetErrorString(err) << std::endl;
+        std::cerr << "CUDA Memcpy error: " << cudaGetErrorString(err) << std::endl;
     }
 }
 
