@@ -44,11 +44,7 @@ private:
 
     int total_samples_processed;
 
-    std::vector<sample_t> max_sample_per_frame; // Can be read by a Scene
-    int current_max_sample = 0;
-    int current_sample_index_in_frame = 0;
-
-    void reset_framewise_tracking();
+    int64_t total_samples_added = 0;
 
     bool file_exists(const std::string& filename);
 
@@ -59,10 +55,11 @@ public:
     AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bool& include_audio, const bool& audio_sfx);
     void add_sfx(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer, const double t);
 
-    int add_generated_audio(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer);
-    int add_silence(int duration_frames);
-    int add_audio_from_file(const std::string& filename);
-    sample_t get_max_sample_for_frame(int frame_index);
+    int64_t add_generated_audio(const std::vector<sample_t>& left_buffer, const std::vector<sample_t>& right_buffer);
+    int64_t add_silence(int64_t num_samples);
+    int64_t add_audio_from_file(const std::string& filename);
+
+    int64_t get_total_samples_added() const { return total_samples_added; }
 
     void encode_buffers(bool final_flush = false);
 

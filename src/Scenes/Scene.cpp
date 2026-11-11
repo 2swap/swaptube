@@ -18,6 +18,14 @@ int total_frames_in_macroblock = 0;
 
 namespace {
 constexpr int smoketest_nominal_macroblock_frames = 10;
+
+// The video frame nearest to an audio sample position (ties round up).
+int64_t nearest_frame_to_sample(const int64_t sample) {
+    const int64_t fps = get_video_framerate_fps();
+    const int64_t samplerate = get_audio_samplerate_hz();
+    return (2 * sample * fps + samplerate) / (2 * samplerate);
+}
+
 Scene* last_smoketest_scene = nullptr;
 bool smoketest_macroblock_open = false;
 
@@ -57,7 +65,7 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
         macroblock.write_shtooka();
 
         get_writer().audio->encode_buffers();
-        macroblock.write_and_get_duration_frames();
+        macroblock.write_and_get_duration_samples();
 
         total_frames_in_macroblock = remaining_frames_in_macroblock = smoketest_nominal_macroblock_frames;
         cout << endl << macroblock_blurb << " staged for smoketesting." << endl;
@@ -82,17 +90,21 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
 
     get_writer().audio->encode_buffers();
 
-    total_frames_in_macroblock = macroblock.write_and_get_duration_frames();
+    const int64_t start_sample = get_writer().audio->get_total_samples_added();
+    const int64_t duration_samples = macroblock.write_and_get_duration_samples();
+    const int64_t end_sample = start_sample + duration_samples;
+    total_frames_in_macroblock = nearest_frame_to_sample(end_sample) - nearest_frame_to_sample(start_sample);
     if (!rendering_on()) total_frames_in_macroblock = min(10, total_microblocks_in_macroblock); // Don't do too many simmed microblocks in smoketest
     cout << "Set total frames in macroblock to " << to_string(total_frames_in_macroblock) << ". We are " << (rendering_on() ? "rendering" : "smoketesting") << "." << endl;
     remaining_frames_in_macroblock = total_frames_in_macroblock;
 
     cout << endl << macroblock_blurb << " staged to last " << to_string(expected_microblocks_in_macroblock) << " microblock(s), " << to_string(total_frames_in_macroblock) << " frame(s)." << endl;
 
-    double macroblock_length_seconds = static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
+    const double samplerate = get_audio_samplerate_hz();
+    double macroblock_length_seconds = rendering_on() ? duration_samples / samplerate : static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
     // Mark macroblock/microblock boundaries as their own MIDI tracks, for external tooling.
-    double time = get_global_state("t");
+    double time = rendering_on() ? start_sample / samplerate : get_global_state("t");
     double microblock_length_seconds = macroblock_length_seconds / expected_microblocks_in_macroblock;
     get_writer().midi->add_note("macroblock", time, 0);
     for(int i = 0; i < expected_microblocks_in_macroblock; i++) {
@@ -259,10 +271,8 @@ void Scene::publish_global() {
 void Scene::render_one_frame(int microblock_frame_number, int scene_duration_frames) {
     cout << "[" << flush;
 
-    sample_t sample = get_writer().audio->get_max_sample_for_frame(total_frames_in_macroblock - remaining_frames_in_macroblock);
     set_global_state("macroblock_fraction", 1 - static_cast<double>(remaining_frames_in_macroblock) / total_frames_in_macroblock);
     set_global_state("microblock_fraction", static_cast<double>(microblock_frame_number) / scene_duration_frames);
-    set_global_state("voice", sample_to_float(sample));
 
     query();
     if (is_for_real()) {
