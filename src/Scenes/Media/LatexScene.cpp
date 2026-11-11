@@ -11,6 +11,7 @@ extern "C" Interpolation stage_interpolation(
 extern "C" void interpolate(
     const Interpolation& interpolation, const float t,
     uint32_t* d_output_pix, const ivec2 output_wh);
+extern "C" void free_interpolation(Interpolation& interpolation);
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
 extern "C" uint32_t* cuda_alloc_pixels_on_device(int size);
 extern "C" void cuda_free_pixels_on_device(uint32_t* d_pixels);
@@ -37,6 +38,15 @@ LatexScene::LatexScene(const string& l, const vec2& dimensions)
     current_latex = l;
 }
 
+LatexScene::~LatexScene() {
+    release_interpolation();
+}
+
+void LatexScene::release_interpolation() {
+    free_interpolation(interp);
+    interp = Interpolation{};
+}
+
 void LatexScene::begin_latex_transition(const TransitionType tt, const string& l) {
     cout << "LatexScene: begin_latex_transition called with TransitionType: " << tt << " and latex: " << l << endl;
     if(transitioning) {
@@ -61,6 +71,7 @@ void LatexScene::begin_latex_transition(const TransitionType tt, const string& l
     const vector<uint32_t> next_shapes = shapes_of_glyphs(next_elements, latex_glyph_shapes(l));
     current_latex = l;
     current_scaling = fresh_sp;
+    release_interpolation();
     interp = stage_interpolation(
         last_segmented.pixels.data(), last_pixels_cpu.pixels.data(), last_shapes.data(), last_pixels_cpu.wh, last_num_glyphs,
         next_segmented.pixels.data(), next_pixels_cpu.pixels.data(), next_shapes.data(), next_pixels_cpu.wh, next_num_glyphs
@@ -84,6 +95,7 @@ void LatexScene::on_end_transition_extra_behavior(const TransitionType tt) {
     if (transitioning && (transition_type == MICRO || tt == MACRO)) {
         last_pixels = next_pixels;
         transitioning = false;
+        release_interpolation();
     }
 }
 
@@ -93,4 +105,5 @@ void LatexScene::jump_latex(string l) {
     next_pixels = last_pixels = latex_to_gpu_pix(l, sp);
     current_latex = l;
     transitioning = false;
+    release_interpolation();
 }
