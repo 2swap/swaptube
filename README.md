@@ -73,6 +73,19 @@ Windows users run swaptube inside WSL2, GPU included.
 
 Two things behave differently than on a native Linux. WSL2 defaults to half your RAM, so a large render may need a `C:\Users\<you>\.wslconfig` containing `[wsl2]` and a higher memory allocation. Additionally, CUDA kernel launches cross a paravirtualization boundary, which costs a fixed couple of milliseconds per frame.
 
+## NixOS Setup
+If you are using NixOS or the Nix package manager, you can use the provided flake.
+
+### CUDA
+```bash
+nix develop
+```
+
+### HIP
+```bash
+nix develop .#hip
+```
+
 # How to Run
 When you have created a project file `src/Projects/yourprojectname.cpp`, you can compile and run the whole project by executing:
 

@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/usr/bin/env bash
 #
 # Shell script which uploads completed swaptube output folders recursively
 # to a gcloud bucket using `gcloud storage cp` command.
