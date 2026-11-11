@@ -18,7 +18,6 @@ public:
 
     std::string get_last_written_subtitle() const;
 
-    void get_substime(double t_seconds);
     void add_silence(double duration);
     void add_subtitle(double duration, const std::string& text);
 };
