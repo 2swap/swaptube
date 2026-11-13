@@ -56,7 +56,7 @@ Windows users run swaptube inside WSL2, GPU included.
 
    Install only the CUDA *toolkit*. WSL gets the GPU from the Windows NVIDIA driver by way of `/usr/lib/wsl/lib`; installing a Linux driver package inside the distro breaks that. Confirm with `nvidia-smi`.
 
-3. **Clone into the Linux filesystem, not `/mnt/c`.** Small-file I/O across the Windows boundary is roughly 75x slower, and a render writes one PNG per frame.
+3. **Clone into the Linux filesystem, not `/mnt/c`.** Small-file I/O across the Windows boundary is roughly 75x slower, and a render writes one PNG per macroblock.
 
    ```bash
    git clone https://github.com/2swap/swaptube.git ~/swaptube
