@@ -765,6 +765,62 @@ void U_cycle(){
     cs.render_microblock();
 }
 
+void cube_graph_path(){
+    const int cube_size = 3;
+
+    auto rs  = make_shared<RubiksScene>(vec2(0.5, 1));
+    auto rgs = make_shared<RubiksGraphScene>(vec2(0.5, 1), cube_size);
+
+    rs->manager.set({
+        {"cube_size", to_string(cube_size)},
+    });
+    rgs->manager.set({
+        {"repel", "10"},
+        {"physics_multiplier", "1"},
+        {"decay", ".8"},
+        {"dimensions", "3"},
+        {"cube_size", to_string(cube_size)},
+    });
+
+    CompositeScene cs;
+    cs.add_scene(rs,  "rs",  vec2(0.25, 0.5)); // cube à gauche
+    cs.add_scene(rgs, "rgs", vec2(0.75, 0.5)); // graphe à droite
+
+    const vector<string> forward  = {"U", "R", "D"};
+    const vector<string> backward = {"D'", "R'", "U'"};
+
+    // Hash du cube résolu = premier nœud du chemin
+    Rubiks solved;
+    double hash = solved.get_hash(cube_size);
+    vector<double> path = {hash};
+
+    stage_macroblock(SilenceBlock(1), 1);
+    rgs->add_cube("", false, false);
+    rgs->set_highlight(hash); // le point rouge apparaît sur le cube résolu
+    cs.render_microblock();
+
+    // Aller : U, R, D. Chaque coup crée un nœud et le point le suit.
+    stage_macroblock(SilenceBlock(3), 3);
+    for(const string& move : forward){
+        rs->exec_move_from_slice(move);
+        hash = rgs->add_specific_child(hash, move, false, false, false);
+        path.push_back(hash);
+        rgs->move_highlight(hash);
+        cs.render_microblock();
+    }
+
+    // Retour : D', R', U'. Les nœuds existent déjà, le point repasse dessus.
+    stage_macroblock(SilenceBlock(3), 3);
+    for(int i = 0; i < (int)backward.size(); i++){
+        rs->exec_move_from_slice(backward[i]);
+        rgs->move_highlight(path[path.size() - 2 - i]);
+        cs.render_microblock();
+    }
+
+    stage_macroblock(SilenceBlock(2), 1);
+    cs.render_microblock();
+}
+
 
 void render_video() {
     // CompositeScene cs;
@@ -778,5 +834,6 @@ void render_video() {
     // perm_U_R();
     // non_commutativity();
     // sexy_move();
-    U_cycle();
+    // U_cycle();
+    cube_graph_path();
 }

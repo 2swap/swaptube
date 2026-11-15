@@ -6,6 +6,8 @@
 #include "../../Core/Smoketest.h"
 #include "../../Host_Device_Shared/vec.h"
 
+extern "C" void draw_circle(uint32_t* pix, const ivec2& wh, const vec2& center, const float radius, const uint32_t color, const float opacity);
+
 string to_string_with_precision(const double a_value, const int n){
     ostringstream out;
     out.precision(n);
@@ -51,6 +53,7 @@ void GraphScene::transition_node_position(const TransitionType tt, const double 
 }
 
 void GraphScene::on_end_transition_extra_behavior(const TransitionType tt){
+    curr_hash = next_hash;
     if(tt == MACRO) {
         for(pair<double, pair<vec4, vec4>> p : nodes_in_macro_transition){
             double hash = p.first;
@@ -164,6 +167,30 @@ void GraphScene::draw(){
     }
 
     ThreeDimensionScene::draw();
+    draw_highlight_point(micro);
+}
+
+void GraphScene::draw_highlight_point(const float micro) {
+    auto curr_it = graph.nodes.find(curr_hash);
+    auto next_it = graph.nodes.find(next_hash);
+    const bool curr_found = curr_it != graph.nodes.end();
+    const bool next_found = next_it != graph.nodes.end();
+    if (!curr_found && !next_found) return;
+
+    const float t = smoother2(micro);
+    vec3 pos;
+    if      (!curr_found) pos = vec3(next_it->second.position);
+    else if (!next_found) pos = vec3(curr_it->second.position);
+    else                  pos = veclerp(vec3(curr_it->second.position), vec3(next_it->second.position), t);
+    const float from = curr_found ? 1 : 0;
+    const float to   = next_found ? 1 : 0;
+    const float opa  = highlight_opacity * (from * (1 - t) + to * t);
+    if (opa < 0.001) return;
+
+    float distance;
+    vec2 pixel = coordinate_to_pixel(pos, distance);
+    if (distance <= 0) return; // behind the camera
+    draw_circle(gpu_pix.get_ptr(), get_width_height(), pixel, highlight_radius * get_geom_mean_size(), highlight_color, opa);
 }
 
 void GraphScene::change_data() {

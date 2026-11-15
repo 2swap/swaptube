@@ -14,6 +14,11 @@ public:
     void add_children(unordered_set<string> move_set, bool cube_or_not, bool edge_label_or_not, bool cube_label_or_not);
     double add_specific_child(double parent_hash, const string& move, bool cube_or_not, bool edge_label_or_not, bool cube_label_or_not);
     void draw() override;
+
+    // Highlight point on the graph (drawn even though the graph's own points are hidden)
+    void set_highlight(double hash)  { gs->set_highlight(hash); }  // snaps instantly
+    void move_highlight(double hash) { gs->move_highlight(hash); } // glides during the next microblock
+
     shared_ptr<GraphScene> gs;
 private:
     const int cube_size;
