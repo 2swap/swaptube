@@ -11,7 +11,7 @@ void render_video() {
         {"seed_c_r", ".4"},
         {"seed_c_i", ".1"},
     });
-    stage_macroblock(SilenceBlock(4), 2);
+    stage_macroblock(SilenceBlock(4));
     ms.render_microblock();
     if (!is_smoketest())
         open_ui(ms);

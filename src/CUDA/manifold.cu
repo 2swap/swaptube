@@ -17,7 +17,7 @@ __global__ void render_manifold_kernel(
     const float geom_mean_size, const float fov,
     float* depth_buffer,
     const float ab_dilation, const float dot_radius,
-    const uint32_t* tex_pixels, const int tex_w, const int tex_h
+    const uint32_t* tex_pixels, const Cuda::ivec2 tex_wh
 ) {
     // Determine u, v from thread indices
     int u_idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -50,9 +50,9 @@ __global__ void render_manifold_kernel(
         float v_range = d_manifold.v_max - d_manifold.v_min;
         float u_norm = (u - d_manifold.u_min) / u_range;
         float v_norm = 1 - (v - d_manifold.v_min) / v_range;
-        int tu = (int)(u_norm * tex_w + 0.5f);
-        int tv = (int)(v_norm * tex_h + 0.5f);
-        color = tex_pixels[tv * tex_w + tu];
+        int tu = (int)(u_norm * tex_wh.x + 0.5f);
+        int tv = (int)(v_norm * tex_wh.y + 0.5f);
+        color = tex_pixels[tv * tex_wh.x + tu];
     } else {
         // Evaluate color equations to get color
         float r = evaluate_resolved_state_equation(d_manifold.r_size, d_manifold.r_eq, cuda_tags, 3, error);
@@ -94,7 +94,7 @@ extern "C" void cuda_render_manifold(
     const Cuda::vec3& camera_pos, const Cuda::quat& camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
-    const uint32_t* d_tex_pixels, const int tex_w, const int tex_h
+    const uint32_t* d_tex_pixels, const Cuda::ivec2& tex_wh
 ) {
     // Allocate zeroized depth buffer on device (initialize to large values from host)
     cudaMemset(d_depth_buffer, 0x7e, wh.x * wh.y * sizeof(float)); // lazy hack to populate "really big floats"
@@ -111,7 +111,7 @@ extern "C" void cuda_render_manifold(
             geom_mean_size, fov,
             d_depth_buffer,
             ab_dilation, dot_radius,
-            d_tex_pixels, tex_w, tex_h
+            d_tex_pixels, tex_wh
         );
         cudaDeviceSynchronize();
 
@@ -121,8 +121,8 @@ extern "C" void cuda_render_manifold(
     cuda_edge_detect(d_pixels, d_depth_buffer, wh, 0xff0000ff);
 }
 
-extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const int tex_w, const int tex_h) {
-    size_t tex_size = (size_t)tex_w * (size_t)tex_h * sizeof(uint32_t);
+extern "C" uint32_t* cuda_copy_texture_to_device(const uint32_t* h_tex_pixels, const Cuda::ivec2& tex_wh) {
+    size_t tex_size = (size_t)tex_wh.x * (size_t)tex_wh.y * sizeof(uint32_t);
     uint32_t* d_tex_pixels;
     cudaMalloc(&d_tex_pixels, tex_size);
     cudaMemcpy(d_tex_pixels, h_tex_pixels, tex_size, cudaMemcpyHostToDevice);

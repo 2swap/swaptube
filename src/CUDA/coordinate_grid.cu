@@ -11,12 +11,12 @@ __device__ __forceinline__ float is_near_integer(float val, float frac_part) {
     return closeness > 0 ? closeness / half_thickness : 0;
 }
 
-__device__ __forceinline__ uint32_t coordinate_line(float x, float y, float zoom) {
+__device__ __forceinline__ uint32_t coordinate_line(const Cuda::vec2& point, float zoom) {
     int floor_zoom = floorf(zoom);
     float exp_zoom = floor_zoom >= 0 ? (1 << floor_zoom) : (1.0f / (1 << -floor_zoom));
     float frac_part = zoom - floor_zoom;
-    float close1 = max(is_near_integer(x * exp_zoom      , frac_part), is_near_integer(y * exp_zoom      , frac_part));
-    float close2 = max(is_near_integer(x * exp_zoom + 0.5, frac_part), is_near_integer(y * exp_zoom + 0.5, frac_part));
+    float close1 = max(is_near_integer(point.x * exp_zoom      , frac_part), is_near_integer(point.y * exp_zoom      , frac_part));
+    float close2 = max(is_near_integer(point.x * exp_zoom + 0.5, frac_part), is_near_integer(point.y * exp_zoom + 0.5, frac_part));
     float opacity_f = max(close1, close2 * frac_part);
     if (opacity_f > 0) {
         int opacity = (int)(opacity_f * 255);
@@ -34,7 +34,7 @@ __global__ void render_coordinate_grid_kernel(
     Cuda::vec2 point_vec = pixel_to_point_in_screen(pixel, lx_ty, rx_by, wh);
 
     float zoom = log2f(rx_by.x - lx_ty.x);
-    uint32_t color = coordinate_line(point_vec.x, point_vec.y, -zoom + 5);
+    uint32_t color = coordinate_line(point_vec, -zoom + 5);
     if(color == 0) return;
 
     // Effect is stronger at center of screen

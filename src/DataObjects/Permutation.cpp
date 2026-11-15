@@ -23,13 +23,13 @@ Permutation::Permutation(std::string file_name) {
         ss >> token;
         cout << "Processing line: " << line << endl;
 
-        // Changement de section
+        // Section change
         if (token == "places" || token == "pieces" || token == "orbits") {
             current_section = token;
             continue;
         }
 
-        // Section PLACES (Format : Nom X Y)
+        // PLACES section (Format: Name X Y)
         if (current_section == "places") {
             std::string name = token;
             float x, y;
@@ -37,13 +37,13 @@ Permutation::Permutation(std::string file_name) {
                 places[name] = vec2(x, y);
             }
         } 
-        // Section PIECES (Format : Nom A R G B)
+        // PIECES section (Format: Name A R G B)
         else if (current_section == "pieces") {
 
             std::string name = token;
             uint32_t a, r, g, b;
             if (ss >> a >> r >> g >> b) {
-                // Construction du uint32_t au format 0xAARRGGBB
+                // Build the uint32_t in 0xAARRGGBB format
                 uint32_t color = ((a & 0xFF) << 24) | 
                                  ((r & 0xFF) << 16) | 
                                  ((g & 0xFF) << 8)  | 
@@ -52,7 +52,7 @@ Permutation::Permutation(std::string file_name) {
                 // cout << "Loaded piece: " << name << " with color ARGB(" << a << ", " << r << ", " << g << ", " << b << ")" << endl;
             }
         } 
-        // Section ORBITS (Format : NomLieu1 Lieu2 Lieu3 ...)
+        // ORBITS section (Format: Place1 Place2 Place3 ...)
         else if (current_section == "orbits") {
             std::string orbit_name = token;
             std::string place_name;

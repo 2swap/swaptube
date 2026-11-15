@@ -222,7 +222,7 @@ void intro_rope(){
     ls.render_microblock();//TODO make a failed solution and remove one pin, something appears on screen showing we failed, idk
 
     stage_macroblock(FileBlock("Let's look at it algebraically."));
-    ls.render_microblock();// TODO ajouter les ropes en plus des latex
+    ls.render_microblock();// TODO add the ropes in addition to the latex
 
     stage_macroblock(FileBlock("Looking back at the 2 pins case, we had this solution"));
     const string simple_commutator = "[A,B]=ABA^{-1}B^{-1}";
@@ -272,7 +272,7 @@ void intro_rope(){
     const string full_solution = "ABA^{-1}B^{-1}CBA^{-1}B^{-1}A^{-1}C^{-1}";
     ls.begin_latex_transition(MICRO, full_solution);
     ls.render_microblock();
-    ls.render_microblock(); //TODO indiquer chaque lettre pendant que la rope fait le chemn de cette lettre, puis montrer que si on enlève un pin, le reste se défait.
+    ls.render_microblock(); //TODO highlight each letter while the rope traces that letter's path, then show that if we remove a pin, the rest comes undone.
 
     stage_macroblock(FileBlock("Of course, we could nest more commutators to make it work with any number of pins"));
     const string nested_commutators = "[[[A,B],C],D\\dots]";

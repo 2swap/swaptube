@@ -15,7 +15,7 @@ void render_video() {
     cs.manager.set("center_y", "-24000");// {t} .2 * sin 200 * +");
     cs.manager.set("ticks_opacity", "0");
 
-    stage_macroblock(SilenceBlock(10), 5);
+    stage_macroblock(SilenceBlock(10));
     cs.render_microblock();
     cs.manager.transition(MICRO, "zoom", "-11");
     cs.render_microblock();

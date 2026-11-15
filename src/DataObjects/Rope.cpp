@@ -4,6 +4,7 @@ extern "C" void initialize_nodes_from_file(const std::string& file_name, vec2* d
 extern "C" void allocate_rope_and_pins(vec2** rope_pointer, vec2** pins_pointer);
 extern "C" void physics(vec2* rope, const int rope_length, const vec2* pins, const int pins_length);
 extern "C" void copy_pins(const vec2* h_pins, vec2* d_pins, const int pins_length);
+extern "C" void free_memory(vec2* rope_pointer, vec2* pins_pointer);
 
 void Rope::tick() {
     for (int i = 0; i < 3; ++i) {
@@ -14,6 +15,10 @@ void Rope::tick() {
 Rope::Rope(const std::string& file_name) {
     allocate_rope_and_pins(&d_nodes, &d_pins);
     initialize_nodes_from_file(file_name, d_nodes);
+}
+
+Rope::~Rope() {
+    free_memory(d_nodes, d_pins);
 }
 
 void Rope::add_pin(const vec2& pos) {

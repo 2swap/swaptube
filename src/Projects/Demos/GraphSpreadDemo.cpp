@@ -16,7 +16,7 @@ void render_video() {
         {"physics_multiplier", "40"},
     });
 
-    stage_macroblock(SilenceBlock(10), 2);
+    stage_macroblock(SilenceBlock(10));
     int graph_size = 50;
     for(int i = 0; i < graph_size; i++) {
         for(int j = 0; j < graph_size; j++) {

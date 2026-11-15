@@ -45,8 +45,7 @@ AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bo
     num_audio_streams(include_audio ? (1 + (audio_sfx ? 2 : 0)) : 0),
     outputCodecContexts(std::vector<AVCodecContext*>(num_audio_streams, nullptr)),
     audioStreams(std::vector<AVStream*>(num_audio_streams, nullptr)),
-    fc(fc_), sample_buffer(), sfx_buffer(), total_samples_processed(0),
-    max_sample_per_frame(), current_max_sample(0), current_sample_index_in_frame(0)
+    fc(fc_), sample_buffer(), sfx_buffer(), total_samples_processed(0)
 {
     for(int i = 0; i < num_audio_streams; i++) {
         const AVCodec* audioOutputCodec = avcodec_find_encoder(output_codec);
@@ -86,17 +85,6 @@ AudioWriter::AudioWriter(AVFormatContext *fc_, int audio_samplerate_hz, const bo
         }
     }
     cout << "AudioWriter initialized with " << num_audio_streams << " audio stream(s)." << endl;
-}
-
-sample_t AudioWriter::get_max_sample_for_frame(int frame_index_this_macroblock) {
-    if(!rendering_on())
-        return 0;
-    if(frame_index_this_macroblock < max_sample_per_frame.size()){
-        return max_sample_per_frame[frame_index_this_macroblock];
-    } else {
-        return max_sample_per_frame.empty() ? 0 : max_sample_per_frame.back();
-    }
-
 }
 
 bool AudioWriter::file_exists(const string& filename){
@@ -156,46 +144,35 @@ void AudioWriter::add_sfx(const vector<sample_t>& left_buffer, const vector<samp
     }
 }
 
-void AudioWriter::reset_framewise_tracking() {
-    current_max_sample = 0;
-    current_sample_index_in_frame = 0;
-    max_sample_per_frame.clear();
-}
-
-int AudioWriter::add_generated_audio(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer) {
+int64_t AudioWriter::add_generated_audio(const vector<sample_t>& left_buffer, const vector<sample_t>& right_buffer) {
     if (left_buffer.size() != right_buffer.size()) {
         throw runtime_error("Generated sound buffer lengths do not match. Left: "+ to_string(left_buffer.size()) + ", right: " + to_string(right_buffer.size()));
-    }
-    if(left_buffer.size() % get_samples_per_frame() != 0){
-        throw runtime_error("Generated sound buffer length is not a multiple of video frame size. Size: " + to_string(left_buffer.size()) + " samples.");
     }
 
     if (!rendering_on()) return 0; // Don't write in smoketest
 
-    int num_samples = left_buffer.size();
+    const int64_t num_samples = left_buffer.size();
     if (include_audio) {
-        for(int i = 0; i < num_samples; i++){
+        for(int64_t i = 0; i < num_samples; i++){
             sample_buffer.push_back( left_buffer[i]);
             sample_buffer.push_back(right_buffer[i]);
         }
     }
+    total_samples_added += num_samples;
 
-    reset_framewise_tracking();
-
-    return num_samples * get_video_framerate_fps() / get_audio_samplerate_hz(); // Return length in frames
+    return num_samples;
 }
 
-int AudioWriter::add_silence(int duration_frames) {
+int64_t AudioWriter::add_silence(int64_t num_samples) {
     if (!rendering_on()) return 0; // Don't write in smoketest
     if (include_audio) {
-        int num_samples = duration_frames * get_samples_per_frame();
         sample_buffer.resize(sample_buffer.size() + num_samples * audio_channels, 0);
     }
-    reset_framewise_tracking();
-    return duration_frames;
+    total_samples_added += num_samples;
+    return num_samples;
 }
 
-int AudioWriter::add_audio_from_file(const string& filename) {
+int64_t AudioWriter::add_audio_from_file(const string& filename) {
     // Build full path to the input audio file
     string fullInputAudioFilename = "io_in/" + filename;
 
@@ -203,7 +180,7 @@ int AudioWriter::add_audio_from_file(const string& filename) {
     if (!file_exists(fullInputAudioFilename)) {
         int seconds = 2;
         cout << "Audio file not found: " << fullInputAudioFilename << ". Adding " << seconds << " seconds of silence instead." << endl;
-        return add_silence(seconds * get_video_framerate_fps());
+        return add_silence(static_cast<int64_t>(seconds) * get_audio_samplerate_hz());
     }
 
     int ret = 0;
@@ -294,7 +271,7 @@ int AudioWriter::add_audio_from_file(const string& filename) {
         throw runtime_error("Error: Failed to allocate AVPacket.");
     }
 
-    int length_in_samples = 0;
+    int64_t length_in_samples = 0;
     while (av_read_frame(inputAudioFormatContext, packet) >= 0) {
         if (packet->stream_index == audioStreamInput->index) {
             AVFrame* frame = av_frame_alloc();
@@ -310,12 +287,10 @@ int AudioWriter::add_audio_from_file(const string& filename) {
                 }
 
                 int num_samples = frame->nb_samples;
+                const sample_t* interleaved = reinterpret_cast<sample_t*>(frame->data[0]);
 
                 if (include_audio) {
-                    for (int i = 0; i < num_samples; ++i) {
-                        sample_buffer.push_back(reinterpret_cast<sample_t*>(frame->data[0])[i*2]); // Left
-                        sample_buffer.push_back(reinterpret_cast<sample_t*>(frame->data[0])[i*2+1]); // Right
-                    }
+                    sample_buffer.insert(sample_buffer.end(), interleaved, interleaved + num_samples * audio_channels);
                 }
 
                 length_in_samples += num_samples;
@@ -328,25 +303,16 @@ int AudioWriter::add_audio_from_file(const string& filename) {
         av_packet_unref(packet);
     }
 
-    // Add silence to align to a frame boundary
-    int samples_per_frame = get_samples_per_frame();
-    while (length_in_samples % samples_per_frame != 0) {
-        if (include_audio) {
-            sample_buffer.push_back(0);
-            sample_buffer.push_back(0);
-        }
-        length_in_samples++;
-    }
-
-    reset_framewise_tracking();
-
+    av_packet_free(&packet);
     avcodec_free_context(&codecContext);
     avformat_close_input(&inputAudioFormatContext);
 
-    return length_in_samples / samples_per_frame;
+    total_samples_added += length_in_samples;
+
+    return length_in_samples;
 }
 
-void AudioWriter::encode_buffers() {
+void AudioWriter::encode_buffers(bool final_flush) {
     if(!rendering_on()) return; // Don't write in smoketest
     if(!include_audio) return; // num_audio_streams is 0; outputCodecContexts[0] below would be out of bounds
 
@@ -354,14 +320,20 @@ void AudioWriter::encode_buffers() {
         int frameSize = outputCodecContexts[0]->frame_size;
         if(frameSize <= 0) frameSize = 1024; // Default frame size if not set
 
-        // If we don't have enough samples for a full frame, exit
-        if(sample_buffer.size() < frameSize * audio_channels) break;
-        // TODO pad last frame?
-
-        for (int ch = 0; ch < audio_channels; ++ch) {
-            // Extend channel with silence (interleaved)
-            if (sfx_buffer.size() < sample_buffer.size()) sfx_buffer.resize(sample_buffer.size(), 0);
+        // If we don't have enough samples for a full frame, wait for more,
+        // unless this is the final flush: then send the remainder as a short last frame.
+        // PCM encoders accept any frame length, so the audio ends exactly where the video does.
+        // Outside the final flush, hold back the most recent second of audio. Video frames are aligned
+        // to the nearest frame of each macroblock boundary, so a frame (and any sfx it triggers) can start
+        // slightly before the audio already written. The reserve keeps that region open for sfx.
+        const size_t reserve = final_flush ? 0 : static_cast<size_t>(get_audio_samplerate_hz()) * audio_channels;
+        if(sample_buffer.size() < frameSize * audio_channels + reserve) {
+            if(!final_flush || sample_buffer.empty()) break;
+            frameSize = sample_buffer.size() / audio_channels;
         }
+
+        // Extend sfx with silence (interleaved) so it covers every sample being encoded
+        if (sfx_buffer.size() < sample_buffer.size()) sfx_buffer.resize(sample_buffer.size(), 0);
 
         vector<AVFrame*> frames = vector<AVFrame*>(num_audio_streams, nullptr);
         for(int i = 0; i < num_audio_streams; i++) {
@@ -421,14 +393,6 @@ void AudioWriter::encode_buffers() {
             // Merged audio track
             dst[track_number][idxL] = voice_left + sfx_left;
             dst[track_number][idxR] = voice_right + sfx_right;
-
-            current_max_sample = max(current_max_sample, voice_left);
-            current_sample_index_in_frame++;
-            if(current_sample_index_in_frame == get_samples_per_frame()){
-                max_sample_per_frame.push_back(current_max_sample);
-                current_max_sample = 0;
-                current_sample_index_in_frame = 0;
-            }
         }
 
         for(int i = 0; i < num_audio_streams; i++) {
@@ -449,7 +413,7 @@ void AudioWriter::encode_buffers() {
 
 AudioWriter::~AudioWriter() {
     cout << "Cleaning up AudioWriter..." << endl;
-    encode_buffers();
+    encode_buffers(true);
 
     // Flush encoders by sending null frames
     for(int i = 0; i < num_audio_streams; i++) {

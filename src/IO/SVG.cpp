@@ -29,7 +29,9 @@ static gboolean get_svg_intrinsic_size(RsvgHandle *handle, gdouble* width, gdoub
     #endif
 }
 
-shared_ptr<DevicePointer> svg_to_gpu_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
+// Rasterizes an SVG at the size given by scaling_params, without cropping.
+// filename_with_or_without_suffix is relative to io_in/.
+static Pixels rasterize_svg(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
     // Check if the filename already ends with ".svg"
     string filename = "io_in/" + filename_with_or_without_suffix;
     if (filename.length() < 4 || filename.substr(filename.length() - 4) != ".svg") {
@@ -123,6 +125,12 @@ shared_ptr<DevicePointer> svg_to_gpu_pix(const string& filename_with_or_without_
     cairo_surface_destroy(surface);
     g_object_unref(handle);
 
+    return copy;
+}
+
+shared_ptr<DevicePointer> svg_to_gpu_pix(const string& filename_with_or_without_suffix, ScalingParams& scaling_params) {
+    Pixels copy = rasterize_svg(filename_with_or_without_suffix, scaling_params);
+
     Pixels ret;
     copy.crop_by_alpha(ret);
 
@@ -131,4 +139,32 @@ shared_ptr<DevicePointer> svg_to_gpu_pix(const string& filename_with_or_without_
     dp->copy_to_device(ret.pixels.data());
 
     return dp;
+}
+
+Pixels svg_to_aligned_pixels(const string& reference_svg, const string& other_svg, ScalingParams scaling_params) {
+    // Rasterize both at the same scale, then crop both by the reference's alpha bounds,
+    // exactly as svg_to_gpu_pix crops the reference.
+    ScalingParams reference_params = scaling_params;
+    Pixels reference = rasterize_svg(reference_svg, reference_params);
+    ScalingParams other_params = scaling_params;
+    Pixels other = rasterize_svg(other_svg, other_params);
+    if (reference.wh.x != other.wh.x || reference.wh.y != other.wh.y)
+        throw runtime_error("svg_to_aligned_pixels: " + reference_svg + " and " + other_svg + " rasterized to different sizes");
+
+    int min_x = reference.wh.x, min_y = reference.wh.y, max_x = -1, max_y = -1;
+    for (int y = 0; y < reference.wh.y; y++) {
+        for (int x = 0; x < reference.wh.x; x++) {
+            if (reference.get_alpha(x, y) > 0) {
+                min_x = min(min_x, x);
+                min_y = min(min_y, y);
+                max_x = max(max_x, x);
+                max_y = max(max_y, y);
+            }
+        }
+    }
+    if (max_x < min_x || max_y < min_y) return Pixels(ivec2(0, 0));
+
+    Pixels ret;
+    other.crop(ivec2(min_x, min_y), ivec2(max_x + 1, max_y + 1), ret);
+    return ret;
 }

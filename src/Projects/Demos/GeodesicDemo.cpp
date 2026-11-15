@@ -21,7 +21,7 @@ void render_video() {
         {"pov_q1", "-.5"},
         {"pov_qj", "1"},
     });
-    stage_macroblock(SilenceBlock(2), 2);
+    stage_macroblock(SilenceBlock(2));
     gs->manager.transition(MICRO, {
         {"amp", ".25"}
     });

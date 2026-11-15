@@ -17,10 +17,10 @@ void render_video(){
     rs.add_pin(vec2(0.7,0.2));
     rs.add_pin(vec2(0.9,0.7));
 
-    stage_macroblock(SilenceBlock(5), 1);
+    stage_macroblock(SilenceBlock(5));
     rs.render_microblock();
 
-    stage_macroblock(SilenceBlock(5), 1);
+    stage_macroblock(SilenceBlock(5));
     rs.remove_pin(1);
     rs.render_microblock();
 }

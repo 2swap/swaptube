@@ -7,7 +7,7 @@ void render_tm(char* tc, int states, int symbols) {
     tms.manager.transition(MACRO, "iterations", "200", false);
     tms.manager.set("center_y", "<iterations> <slowdown> +");
     tms.manager.transition(MACRO, "zoom", "-2");
-    stage_macroblock(SilenceBlock(16), 2);
+    stage_macroblock(SilenceBlock(16));
     tms.manager.set("slowdown", "0");
     tms.manager.transition(MICRO, "slowdown", "-10");
     tms.render_microblock();

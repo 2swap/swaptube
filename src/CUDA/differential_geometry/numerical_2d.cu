@@ -177,7 +177,7 @@ static __device__ bool rk4_step_geodesic(float Y[4], float dt) {
 }
 
 __global__ void geodesics_2d_kernel(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const Cuda::ivec2 wh,
     const Cuda::vec2 start_position, const Cuda::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
     const Cuda::vec3 camera_pos, const Cuda::quat camera_direction,
@@ -205,21 +205,20 @@ __global__ void geodesics_2d_kernel(
     // Iterate geodesic curve
     Cuda::vec3 last_pixel = Cuda::coordinate_to_pixel(
         surface_2d(Cuda::vec2(state[0], state[1])),
-        camera_direction, camera_pos, fov, geom_mean_size, Cuda::ivec2(w, h));
+        camera_direction, camera_pos, fov, geom_mean_size, wh);
     for(int i = 0; i < num_steps; ++i) {
         if (!rk4_step_geodesic(state, 1)) return;
         if (state[0] < u_min || state[0] > u_max || state[1] < v_min || state[1] > v_max) return;
 
         const Cuda::vec3 pixel = Cuda::coordinate_to_pixel(
             surface_2d(Cuda::vec2(state[0], state[1])),
-            camera_direction, camera_pos, fov, geom_mean_size, Cuda::ivec2(w, h));
+            camera_direction, camera_pos, fov, geom_mean_size, wh);
 
-        if (pixel.z > 0 && last_pixel.z > 0 && pixel.x >= 0 && pixel.x < w && pixel.y >= 0 && pixel.y < h) {
+        if (pixel.z > 0 && last_pixel.z > 0 && pixel.x >= 0 && pixel.x < wh.x && pixel.y >= 0 && pixel.y < wh.y) {
             Cuda::bresenham(
-                last_pixel.x, last_pixel.y,
-                pixel.x, pixel.y,
+                last_pixel, pixel,
                 0xffff0000, opacity, 2,
-                pixels, Cuda::ivec2(w, h), false
+                pixels, wh, false
             );
         }
 
@@ -228,7 +227,7 @@ __global__ void geodesics_2d_kernel(
 }
 
 extern "C" void cuda_render_geodesics_2d(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const Cuda::ivec2& wh,
     const Cuda::ManifoldData& manifold,
     const Cuda::vec2 start_position, const Cuda::vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
@@ -237,8 +236,8 @@ extern "C" void cuda_render_geodesics_2d(
 ) {
     // Allocate and copy pixels to device
     uint32_t* d_pixels;
-    cudaMalloc(&d_pixels, w * h * sizeof(uint32_t));
-    cudaMemcpy(d_pixels, pixels, w * h * sizeof(uint32_t), cudaMemcpyHostToDevice);
+    cudaMalloc(&d_pixels, wh.x * wh.y * sizeof(uint32_t));
+    cudaMemcpy(d_pixels, pixels, wh.x * wh.y * sizeof(uint32_t), cudaMemcpyHostToDevice);
 
     Cuda::ManifoldData cp_manifold = deepcopy_manifold(manifold);
     cudaMemcpyToSymbol(d_manifold, &cp_manifold, sizeof(Cuda::ManifoldData));
@@ -247,7 +246,7 @@ extern "C" void cuda_render_geodesics_2d(
     int blockSize = 256;
     int gridSize = (num_geodesics + blockSize - 1) / blockSize;
     geodesics_2d_kernel<<<gridSize, blockSize>>>(
-        d_pixels, w, h,
+        d_pixels, wh,
         start_position, start_velocity,
         num_geodesics, num_steps, spread_angle,
         camera_pos, camera_direction,
@@ -257,7 +256,7 @@ extern "C" void cuda_render_geodesics_2d(
     cudaDeviceSynchronize();
 
     // Copy pixels back to host
-    cudaMemcpy(pixels, d_pixels, w * h * sizeof(uint32_t), cudaMemcpyDeviceToHost);
+    cudaMemcpy(pixels, d_pixels, wh.x * wh.y * sizeof(uint32_t), cudaMemcpyDeviceToHost);
 
     // Free device memory
     cudaFree(d_pixels);

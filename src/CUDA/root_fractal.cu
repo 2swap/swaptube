@@ -16,16 +16,16 @@ __device__ cuFloatComplex complex_pow(cuFloatComplex z, int n) {
 }
 
 // Make a circular gradient on a pixel buffer
-__device__ void d_gradient_circle(float cx, float cy, float radius, float red, float green, float blue,
+__device__ void d_gradient_circle(const Cuda::vec2& center, float radius, float red, float green, float blue,
         float* d_alpha, float* d_red, float* d_green, float* d_blue, const Cuda::ivec2 wh, float opa=1.0f) {
     // breakout if any part of the circle is outside of screen
-    if (cx < 0 || cx >= wh.x || cy < 0 || cy >= wh.y)
+    if (center.x < 0 || center.x >= wh.x || center.y < 0 || center.y >= wh.y)
         return;
     float radius2 = radius * radius;
-    for (int x = cx - radius; x < cx + radius; x++) {
-        float sdx = (x - cx)*(x - cx);
-        for (int y = cy - radius; y < cy + radius; y++) {
-            float sdy = (y - cy)*(y - cy);
+    for (int x = center.x - radius; x < center.x + radius; x++) {
+        float sdx = (x - center.x)*(x - center.x);
+        for (int y = center.y - radius; y < center.y + radius; y++) {
+            float sdy = (y - center.y)*(y - center.y);
             float dist2 = (sdx + sdy) / radius2;
             if (dist2 < 1.0f) {
                 float final_opa = opa / (.025 + 160 * dist2 * dist2);
@@ -84,7 +84,7 @@ __global__ void root_fractal_kernel(float* d_alpha, float* d_red, float* d_green
     for (int i = 0; i < degree; i++) {
         Cuda::vec2 point(cuCrealf(roots[i]), cuCimagf(roots[i]));
         Cuda::vec2 pixel = point_to_pixel_in_screen(point, lx_ty, rx_by, wh);
-        d_gradient_circle(pixel.x, pixel.y, radius, red, green, blue, d_alpha, d_red, d_green, d_blue, wh, opacity);
+        d_gradient_circle(pixel, radius, red, green, blue, d_alpha, d_red, d_green, d_blue, wh, opacity);
     }
 }
 

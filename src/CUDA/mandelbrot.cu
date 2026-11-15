@@ -164,7 +164,6 @@ __global__ void mandelbrot_kernel(
     int pixel_y = blockIdx.y * blockDim.y + threadIdx.y;
     if (pixel_x >= wh.x || pixel_y >= wh.y) return;
     Cuda::ivec2 pixel(pixel_x, pixel_y);
-    colors[pixel_y * wh.x + pixel_x] = 0xffff0000; // Temporary color for debugging
 
     cuComplex z, x, c; 
     float log_real_part_exp, sq_radius = 0;

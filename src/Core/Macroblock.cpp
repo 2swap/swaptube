@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <cmath>
 #include <cctype>
 #include <stdexcept>
 #include <vector>
@@ -21,19 +22,23 @@ string sanitize_filename(const string& text) {
     return sanitized + ".wav";
 }
 
+static double samples_to_seconds(const int64_t samples) {
+    return static_cast<double>(samples) / get_audio_samplerate_hz();
+}
+
 SilenceBlock::SilenceBlock(const double duration_seconds)
-    : duration_frames(duration_seconds * get_video_framerate_fps()) {
-    if (duration_frames <= 0) {
+    : duration_samples(llround(duration_seconds * get_audio_samplerate_hz())) {
+    if (duration_samples <= 0) {
         throw invalid_argument("Duration must be greater than 0");
     }
 }
 
-int SilenceBlock::write_and_get_duration_frames() const {
-    get_writer().audio->add_silence(duration_frames);
-    get_writer().subtitle->add_silence(static_cast<double>(duration_frames) / get_video_framerate_fps());
-    return duration_frames;
+int64_t SilenceBlock::write_and_get_duration_samples() const {
+    const int64_t samples = get_writer().audio->add_silence(duration_samples);
+    get_writer().subtitle->add_silence(samples_to_seconds(samples));
+    return samples;
 }
-string SilenceBlock::blurb() const { return "SilenceBlock(" + to_string(static_cast<double>(duration_frames) / get_video_framerate_fps()) + "s)"; }
+string SilenceBlock::blurb() const { return "SilenceBlock(" + to_string(samples_to_seconds(duration_samples)) + "s)"; }
 
 FileBlock::FileBlock(const string& subtitle_text)
     : subtitle_text(subtitle_text), audio_filename(sanitize_filename(subtitle_text)) {}
@@ -42,10 +47,10 @@ void FileBlock::write_shtooka() const {
     get_writer().shtooka->add_shtooka_entry(audio_filename, subtitle_text);
 }
 
-int FileBlock::write_and_get_duration_frames() const {
-    int duration_frames = get_writer().audio->add_audio_from_file(audio_filename);
-    get_writer().subtitle->add_subtitle(static_cast<double>(duration_frames) / get_video_framerate_fps(), subtitle_text);
-    return duration_frames;
+int64_t FileBlock::write_and_get_duration_samples() const {
+    const int64_t samples = get_writer().audio->add_audio_from_file(audio_filename);
+    get_writer().subtitle->add_subtitle(samples_to_seconds(samples), subtitle_text);
+    return samples;
 }
 string FileBlock::blurb() const { return "FileBlock(" + subtitle_text + ")"; }
 
@@ -56,10 +61,10 @@ GeneratedBlock::GeneratedBlock(const vector<int32_t>& leftBuffer, const vector<i
     }
 }
 
-int GeneratedBlock::write_and_get_duration_frames() const {
-    int duration_frames = get_writer().audio->add_generated_audio(leftBuffer, rightBuffer);
-    get_writer().subtitle->add_subtitle(static_cast<double>(duration_frames) / get_video_framerate_fps(), "[Computer Generated Sound]");
-    return duration_frames;
+int64_t GeneratedBlock::write_and_get_duration_samples() const {
+    const int64_t samples = get_writer().audio->add_generated_audio(leftBuffer, rightBuffer);
+    get_writer().subtitle->add_subtitle(samples_to_seconds(samples), "[Computer Generated Sound]");
+    return samples;
 }
 string GeneratedBlock::blurb() const { return "GeneratedBlock(" + to_string(leftBuffer.size() / get_audio_samplerate_hz()) + "s)"; }
 
@@ -71,9 +76,9 @@ void CompositeBlock::write_shtooka() const {
     b.write_shtooka();
 }
 
-int CompositeBlock::write_and_get_duration_frames() const {
-    int a_duration = a.write_and_get_duration_frames();
-    int b_duration = b.write_and_get_duration_frames();
+int64_t CompositeBlock::write_and_get_duration_samples() const {
+    const int64_t a_duration = a.write_and_get_duration_samples();
+    const int64_t b_duration = b.write_and_get_duration_samples();
     return a_duration + b_duration;
 }
 string CompositeBlock::blurb() const { return "CompositeBlock(" + a.blurb() + ", " + b.blurb() + ")"; }

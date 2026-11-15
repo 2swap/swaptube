@@ -15,7 +15,7 @@ void PermutationScene::on_end_transition_extra_behavior(const TransitionType tt)
         return;
     }
 
-    // Appliquer le décalage pour chaque orbite enregistrée
+    // Apply the offset for each registered orbit
     for (const auto& [orbit_name, multiplier] : moving_orbits) {
         vector<string> moving_orbit = the_perm.orbits[orbit_name];
         
@@ -28,12 +28,12 @@ void PermutationScene::on_end_transition_extra_behavior(const TransitionType tt)
         }
     }
 
-    // Réinitialiser la liste après la fin de la transition
+    // Reset the list once the transition has finished
     moving_orbits.clear();
 }
 
 void PermutationScene::move(const string orbit_name, int multiplier) {
-    // Ajoute ou met à jour l'orbite dans la map
+    // Add or update the orbit in the map
     moving_orbits[orbit_name] = multiplier;
 }
 
@@ -58,7 +58,7 @@ vec2 PermutationScene::get_place_position_from_state(const string& place_name) {
 void PermutationScene::draw() {
     const float tension = 0.25f;
 
-    // 1. Dessiner le squelette des orbites (courbes de Bézier)
+    // 1. Draw the orbit skeleton (Bezier curves)
     for (const auto& [orbit_name, orbit] : the_perm.orbits) {
         for (size_t i = 0; i < orbit.size(); i++) {
             const vec2& p1 = get_place_position_from_state(orbit[i]);
@@ -73,11 +73,11 @@ void PermutationScene::draw() {
         }
     }
 
-    // 2. Dessiner chaque pièce
+    // 2. Draw each piece
     for (const auto& [name, color] : the_perm.pieces) {
         bool is_moving = false;
 
-        // Vérifier si cette pièce appartient à l'une des orbites en mouvement
+        // Check whether this piece belongs to one of the moving orbits
         for (const auto& [orbit_name, multiplier] : moving_orbits) {
             const vector<string>& orbit = the_perm.orbits[orbit_name];
             
@@ -89,7 +89,7 @@ void PermutationScene::draw() {
                 base_index++;
             }
 
-            // La pièce appartient à cette orbite !
+            // The piece belongs to this orbit!
             if (base_index < (int)orbit.size()) {
                 is_moving = true;
 
@@ -119,11 +119,11 @@ void PermutationScene::draw() {
                 ));
 
                 draw_circle(gpu_pix.get_ptr(), get_width_height(), center, 5.0f, color, 1.0f);
-                break; // Une fois trouvée et dessinée, on peut sortir de la boucle des orbites
+                break; // Once found and drawn, we can exit the orbit loop
             }
         }
 
-        // Si la pièce n'appartient à aucune orbite active en mouvement
+        // If the piece doesn't belong to any active moving orbit
         if (!is_moving) {
             const vec2& pos = point_to_pixel(get_place_position_from_state(name));
             draw_circle(gpu_pix.get_ptr(), get_width_height(), pos, 5.0f, color, 1.0f);

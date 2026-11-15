@@ -10,7 +10,7 @@ ResolvedStateEquation i_eq = {
     {RESOLVED_CONSTANT, .content = {.constant = 0.0}},
 };
 extern "C" void launch_cuda_surface_raymarch(
-    uint32_t* h_pixels, int w, int h,
+    uint32_t* h_pixels, const ivec2& wh,
     int x_size, ResolvedStateEquationComponent* x_eq,
     int y_size, ResolvedStateEquationComponent* y_eq,
     int z_size, ResolvedStateEquationComponent* z_eq,
@@ -27,11 +27,11 @@ extern "C" void cuda_render_manifold(
     const vec3& camera_pos, const quat& camera_direction,
     const float geom_mean_size, const float fov,
     const float ab_dilation, const float dot_radius,
-    const uint32_t* tex_pixels, const int tex_w, const int tex_h
+    const uint32_t* tex_pixels, const ivec2& tex_wh
 );
 
 extern "C" void cuda_render_geodesics_2d(
-    uint32_t* pixels, const int w, const int h,
+    uint32_t* pixels, const ivec2& wh,
     const ManifoldData& manifold,
     const vec2 start_position, const vec2 start_velocity,
     const int num_geodesics, const int num_steps, const float spread_angle,
@@ -89,7 +89,7 @@ void GeodesicScene::draw_perspective(ResolvedStateEquation& x_eq,
     if(x_y_z_flat) special_case_code = 1;
     if(x_y_z_flat && w_flat) special_case_code = 2;
 
-    launch_cuda_surface_raymarch(gpu_pix.get_ptr(), get_width(), get_height(),
+    launch_cuda_surface_raymarch(gpu_pix.get_ptr(), get_width_height(),
                                  x_eq.size(), x_eq.data(),
                                  y_eq.size(), y_eq.data(),
                                  z_eq.size(), z_eq.data(),
@@ -152,7 +152,7 @@ void GeodesicScene::draw_manifold(
             state["manifold_fov"],
             1,
             1,
-            nullptr,0,0 // No textures
+            nullptr, ivec2(0, 0) // No textures
         );
     }
 
@@ -166,7 +166,7 @@ void GeodesicScene::draw_manifold(
         start_velocity = 0.005 * normalize(start_velocity);
         cuda_render_geodesics_2d(
             gpu_pix.get_ptr(),
-            get_width(), get_height(),
+            get_width_height(),
             manifold1,
             start_position, start_velocity,
             num_geodesics, geodesic_steps,

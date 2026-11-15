@@ -118,20 +118,20 @@ extern "C" void cuda_crop_scale_darken_device(
 
 // Plain host-to-host resize: a full-frame crop with no darkening. Handles the
 // device round trip for callers that hold their pixels on the host.
-extern "C" int cuda_bicubic_scale(const uint32_t* input_pixels, int input_w, int input_h, uint32_t* output_pixels, int output_w, int output_h) {
+extern "C" int cuda_bicubic_scale(const uint32_t* input_pixels, const Cuda::ivec2& input_wh, uint32_t* output_pixels, const Cuda::ivec2& output_wh) {
     uint32_t* d_input = nullptr;
     uint32_t* d_output = nullptr;
 
-    const size_t in_size = static_cast<size_t>(input_w) * input_h * sizeof(uint32_t);
-    const size_t out_size = static_cast<size_t>(output_w) * output_h * sizeof(uint32_t);
+    const size_t in_size = static_cast<size_t>(input_wh.x) * input_wh.y * sizeof(uint32_t);
+    const size_t out_size = static_cast<size_t>(output_wh.x) * output_wh.y * sizeof(uint32_t);
 
     cudaMalloc((void**)&d_input, in_size);
     cudaMemcpy(d_input, input_pixels, in_size, cudaMemcpyHostToDevice);
     cudaMalloc((void**)&d_output, out_size);
 
     cuda_crop_scale_darken_device(
-        d_input, Cuda::ivec2(input_w, input_h),
-        d_output, Cuda::ivec2(output_w, output_h),
+        d_input, input_wh,
+        d_output, output_wh,
         Cuda::vec2(0.0f, 0.0f), Cuda::vec2(1.0f, 1.0f), 1.0f);
 
     cudaMemcpy(output_pixels, d_output, out_size, cudaMemcpyDeviceToHost);

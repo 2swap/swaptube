@@ -11,8 +11,7 @@ class ManifoldScene : public ThreeDimensionScene {
 private:
     std::unordered_set<std::string> manifold_names;
     uint32_t* d_texture_data;
-    int texture_w;
-    int texture_h;
+    ivec2 texture_wh;
     DevicePointer distance_buffer; // depth buffer for the manifold raymarch pass
 
 public:

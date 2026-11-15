@@ -18,4 +18,9 @@ class Rope {
         void remove_pin(int pin_index);
 
         Rope(const std::string& file_name);
+        ~Rope();
+
+        // Owns GPU memory; copying would double-free it.
+        Rope(const Rope&) = delete;
+        Rope& operator=(const Rope&) = delete;
 };

@@ -43,10 +43,6 @@ void SubtitleWriter::add_srt_time(double s) {
              << setw(3) << milliseconds;
 }
 
-void SubtitleWriter::get_substime(double t_seconds) {
-    get_substime(get_global_state("frame_number") / get_video_framerate_fps());
-}
-
 void SubtitleWriter::add_silence(double duration) {
     if (!rendering_on()) return;
     substime += duration;

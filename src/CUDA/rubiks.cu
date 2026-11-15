@@ -25,13 +25,13 @@ __device__ __forceinline__ bool ray_slice_plane_intersect(
     float& out_t) 
 {
     float denom = Cuda::dot(ray_dir, plane_normal);
-    // Si le rayon n'est pas parallèle au plan de coupe
+    // If the ray is not parallel to the cutting plane
     if (fabsf(denom) > 1e-6f) {
         float t = (plane_dist - Cuda::dot(ray_origin, plane_normal)) / denom;
         if (t > 0.0f) {
             Cuda::vec3 hit = ray_origin + t * ray_dir;
             const float eps = 1e-3f;
-            // On vérifie que l'impact se trouve BIEN à l'intérieur des limites du cube
+            // Make sure the hit point really is within the cube's bounds
             if (fabsf(hit.x) <= 1.0f + eps && 
                 fabsf(hit.y) <= 1.0f + eps && 
                 fabsf(hit.z) <= 1.0f + eps) {
@@ -217,7 +217,7 @@ __global__ void render_cube_kernel(
         if (dist < best_dist) {
             best_dist = dist;
             have_hit = true;
-            is_internal_plastic = true; // On a touché la face plastique de coupe
+            is_internal_plastic = true; // We hit the internal plastic face of the cut
         }
     }
 

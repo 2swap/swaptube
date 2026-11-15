@@ -119,68 +119,6 @@ extern "C" void draw_rectangle(uint32_t* pix, const Cuda::ivec2& wh, const Cuda:
     rectangle_kernel<<<gridSize, blockSize>>>(pix, wh, min_pos, max_pos, color, min_pos, max_pos);
 }
 
-__global__ void convex_polygon_kernel(
-    uint32_t* pixels, const Cuda::ivec2 wh,
-    const Cuda::vec2* verts, const int n,
-    const uint32_t color, const float opacity,
-    const Cuda::ivec2 min_pos, const Cuda::ivec2 max_pos)
-{
-    const Cuda::ivec2 pos = min_pos + Cuda::ivec2(blockIdx.x * blockDim.x + threadIdx.x,
-                                                  blockIdx.y * blockDim.y + threadIdx.y);
-    if (pos.x >= max_pos.x || pos.y >= max_pos.y || pos.x >= wh.x || pos.y >= wh.y) return;
-
-    const Cuda::vec2 p(pos.x, pos.y);
-
-    float nearest = 1e30f;
-    for (int i = 0; i < n; i++) {
-        const Cuda::vec2 a = verts[i];
-        const Cuda::vec2 b = verts[(i + 1) % n];
-        const Cuda::vec2 ab = b - a;
-        const float len = Cuda::length(ab);
-        if (len < 1e-6f) continue;   // coincident vertices carry no edge
-        const Cuda::vec2 ap = p - a;
-        const float signed_distance = (ab.y * ap.x - ab.x * ap.y) / len;   // > 0 to the left, clockwise winding
-        if (signed_distance < nearest) nearest = signed_distance;
-    }
-
-    const float coverage = Cuda::clamp(0.5f+nearest, 0.0f, 1.0f);
-    if (coverage <= 0.0f) return;
-    overlay_pixel(pos, color, coverage * opacity, pixels, wh);
-}
-
-extern "C" void draw_convex_polygon(
-    uint32_t* d_pixels, const Cuda::ivec2& wh,
-    const Cuda::vec2* h_verts, int n,
-    uint32_t color, float opacity)
-{
-    if (n < 3 || opacity <= 0.0f) return;
-
-    // Only the polygon's own bounding box can be covered.
-    float lx = h_verts[0].x, rx = h_verts[0].x, ty = h_verts[0].y, by = h_verts[0].y;
-    for (int i = 1; i < n; i++) {
-        lx = fminf(lx, h_verts[i].x); rx = fmaxf(rx, h_verts[i].x);
-        ty = fminf(ty, h_verts[i].y); by = fmaxf(by, h_verts[i].y);
-    }
-    const int left = (int)floorf(lx) - 1, top    = (int)floorf(ty) - 1;
-    const int right = (int)ceilf(rx) + 1, bottom = (int)ceilf(by)  + 1;
-    const Cuda::ivec2 min_pos(left  > 0     ? left  : 0,     top    > 0     ? top    : 0);
-    const Cuda::ivec2 max_pos(right < wh.x  ? right : wh.x,  bottom < wh.y  ? bottom : wh.y);
-    const Cuda::ivec2 size = max_pos - min_pos;
-    if (size.x <= 0 || size.y <= 0) return;
-
-    Cuda::vec2* d_verts = nullptr;
-    const size_t bytes = (size_t)n * sizeof(Cuda::vec2);
-    cudaMalloc(&d_verts, bytes);
-    cudaMemcpy(d_verts, h_verts, bytes, cudaMemcpyHostToDevice);
-
-    dim3 block(16, 16);
-    dim3 grid((size.x + block.x - 1) / block.x, (size.y + block.y - 1) / block.y);
-    convex_polygon_kernel<<<grid, block>>>(d_pixels, wh, d_verts, n, color, opacity, min_pos, max_pos);
-    cudaDeviceSynchronize();
-
-    cudaFree(d_verts);
-}
-
 __global__ void bezier_kernel(
     uint32_t* pix, const Cuda::ivec2 wh, const Cuda::vec2 p1, const Cuda::vec2 p2, const Cuda::vec2 p3, const Cuda::vec2 p4, 
     Cuda::vec2 lx_ty, Cuda::vec2 rx_by)
@@ -193,7 +131,7 @@ __global__ void bezier_kernel(
     Cuda::vec2 point2 = point_to_pixel_in_screen(bezier_2d(
             p1, p2, p3, p4, (i+1)/1000.0f), lx_ty, rx_by, wh);
 
-    bresenham(point1.x, point1.y, point2.x, point2.y, 0xFFFFFFFF, 1.0f, 2, pix, wh, false);
+    bresenham(point1, point2, 0xFFFFFFFF, 1.0f, 2, pix, wh, false);
 }
 
 extern "C" void cuda_draw_bezier(
@@ -217,7 +155,7 @@ __global__ void render_path_kernel(
     Cuda::vec2 pixel_1 = point_to_pixel_in_screen(rope[i], lx_ty, rx_by, wh);
     Cuda::vec2 pixel_2 = point_to_pixel_in_screen(rope[(i+1)%rope_length], lx_ty, rx_by, wh);
 
-    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, color, opacity, thickness, pixels, wh, false);
+    bresenham(pixel_1, pixel_2, color, opacity, thickness, pixels, wh, false);
 }
 
 extern "C" void cuda_render_path(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* d_path, const int path_length,
@@ -232,61 +170,6 @@ extern "C" void cuda_render_path(uint32_t* d_pixels, const Cuda::ivec2& wh, cons
     cudaDeviceSynchronize();
 }
 
-extern "C" void cuda_render_path_from_host(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* h_path, const int path_length,
-    const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, const uint32_t color, const float opacity, const float thickness, const bool closed)
-{
-    if (path_length < 2) return;
-
-    Cuda::vec2* d_path = nullptr;
-    const size_t bytes = (size_t)path_length * sizeof(Cuda::vec2);
-    cudaMalloc(&d_path, bytes);
-    cudaMemcpy(d_path, h_path, bytes, cudaMemcpyHostToDevice);
-
-    cuda_render_path(d_pixels, wh, d_path, path_length, lx_ty, rx_by, color, opacity, thickness, closed);
-
-    cudaFree(d_path);
-}
-
-
-__global__ void render_many_lines_kernel(
-    uint32_t* pixels, const Cuda::ivec2 wh, const Cuda::vec2* d_line_list, const int line_count, Cuda::vec2 lx_ty, Cuda::vec2 rx_by,
-    const uint32_t* colors, const float opacity, const int thickness)
-{
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= line_count) return;
-
-    Cuda::vec2 pixel_1 = point_to_pixel_in_screen(d_line_list[i*2], lx_ty, rx_by, wh);
-    Cuda::vec2 pixel_2 = point_to_pixel_in_screen(d_line_list[i*2+1], lx_ty, rx_by, wh);
-
-    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, colors[i], opacity, thickness, pixels, wh, false);
-}
-
-extern "C" void cuda_render_many_lines(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* d_line_list, const int line_count,
-    const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, const uint32_t* colors, const float opacity, const float thickness)
-{
-    if (line_count <= 0) return;
-
-    int blockSize = 256;
-    int gridSize = (line_count + blockSize - 1) / blockSize;
-    render_many_lines_kernel<<<gridSize, blockSize>>>(d_pixels, wh, d_line_list, line_count, lx_ty, rx_by, colors, opacity, (int)thickness);
-    cudaDeviceSynchronize();
-}
-
-extern "C" void cuda_render_many_lines_from_host(uint32_t* d_pixels, const Cuda::ivec2& wh, const Cuda::vec2* h_line_list, const int line_count,
-    const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, const uint32_t* colors, const float opacity, const float thickness)
-{
-    if (line_count <= 0) return;
-
-    Cuda::vec2* d_line_list = nullptr;
-    const size_t bytes = (size_t)line_count * 2 * sizeof(Cuda::vec2);
-    cudaMalloc(&d_line_list, bytes);
-    cudaMemcpy(d_line_list, h_line_list, bytes, cudaMemcpyHostToDevice);
-
-    cuda_render_many_lines(d_pixels, wh, d_line_list, line_count, lx_ty, rx_by, colors, opacity, thickness);
-
-    cudaFree(d_line_list);
-}
-
 __global__ void segments_kernel(
     uint32_t* pixels, const Cuda::ivec2 wh, const Cuda::vec2* endpoints, const int segment_count,
     Cuda::vec2 lx_ty, Cuda::vec2 rx_by, const uint32_t color, const float opacity, const int thickness)
@@ -297,7 +180,7 @@ __global__ void segments_kernel(
     const Cuda::vec2 pixel_1 = point_to_pixel_in_screen(endpoints[2 * i],     lx_ty, rx_by, wh);
     const Cuda::vec2 pixel_2 = point_to_pixel_in_screen(endpoints[2 * i + 1], lx_ty, rx_by, wh);
 
-    bresenham(pixel_1.x, pixel_1.y, pixel_2.x, pixel_2.y, color, opacity, thickness, pixels, wh, false);
+    bresenham(pixel_1, pixel_2, color, opacity, thickness, pixels, wh, false);
 }
 
 extern "C" void cuda_render_lines_from_host(
