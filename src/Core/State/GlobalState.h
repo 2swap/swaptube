@@ -5,12 +5,6 @@
 
 using namespace std;
 
-static unordered_map<string, double> global_state{
-    {"frame_number", 0},
-    {"t", 0},
-    {"macroblock_fraction", 0},
-    {"microblock_fraction", 0},
-};
 void print_global_state();
 double get_global_state(const std::string& key);
 void set_global_state(const std::string& key, double value);
