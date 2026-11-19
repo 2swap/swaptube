@@ -177,7 +177,7 @@ static string make_glyph_id_svg(const string& svg, vector<string>* element_tags 
             if (element_tags) element_tags->push_back(tag);
             const string color = id_color_hex(next_id);
             if (is_use) {
-                // Font glyph: the referenced <symbol> path has no fill of its own and inherits this one.
+                // Font glyph: the referenced glyph path has no fill of its own and inherits this one.
                 tag.insert(4, " style=\"fill:" + color + ";stroke:none;\"");
             } else {
                 const bool is_rule = is_rule_tag(tag);
@@ -225,7 +225,7 @@ Pixels latex_to_glyph_ids(const string& latex, const ScalingParams& scaling_para
 // ------------------
 // Glyph shape identity
 // ------------------
-// Every <use> element draws a <symbol> whose path is a font glyph's outline, anchored at the glyph origin.
+// Every <use> element draws a glyph from <defs> whose path is a font glyph's outline, anchored at the glyph origin.
 // The same character at another size is the same outline scaled about that origin (a superscript is x0.7, a
 // second-level superscript x0.5), so outlines identify symbols across sizes and across equations.
 // The path data can't be compared directly: Cairo rounds coordinates to a fine grid, so very short segments
@@ -395,29 +395,27 @@ static uint32_t shape_class(const string& path_data) {
     return id;
 }
 
-// Maps each <symbol> id in the SVG's <defs> to the path data it contains (all its paths' d attributes joined).
-static unordered_map<string, string> read_symbol_paths(const string& svg) {
-    unordered_map<string, string> symbols;
-    static const regex id_attr(R"(\bid="([^"]+)\")");
+// Maps each glyph id in the SVG's <defs> to the path data it contains (all its paths' d attributes joined).
+// Cairo writes each glyph as <g id="glyph-F-G"> holding its outline path(s).
+static unordered_map<string, string> read_glyph_paths(const string& svg) {
+    unordered_map<string, string> glyphs;
     static const regex d_attr(R"(\bd="([^"]*)\")");
+    const string marker = "<g id=\"";
     size_t pos = 0;
-    while ((pos = svg.find("<symbol", pos)) != string::npos) {
+    while ((pos = svg.find(marker, pos)) != string::npos) {
+        const size_t id_start = pos + marker.size();
+        const size_t id_end = svg.find('"', id_start);
         const size_t open_end = svg.find('>', pos);
-        const size_t close = svg.find("</symbol>", pos);
-        if (open_end == string::npos || close == string::npos) break;
-        const string open_tag = svg.substr(pos, open_end - pos + 1);
-        smatch m;
-        if (regex_search(open_tag, m, id_attr)) {
-            const string id = m[1].str();
-            string paths;
-            const string inner = svg.substr(open_end + 1, close - open_end - 1);
-            for (sregex_iterator it(inner.begin(), inner.end(), d_attr), end; it != end; ++it)
-                paths += (*it)[1].str() + " ";
-            symbols[id] = paths;
-        }
-        pos = close + 9;
+        const size_t close = svg.find("</g>", pos);
+        if (id_end == string::npos || open_end == string::npos || close == string::npos) break;
+        const string inner = svg.substr(open_end + 1, close - open_end - 1);
+        string paths;
+        for (sregex_iterator it(inner.begin(), inner.end(), d_attr), end; it != end; ++it)
+            paths += (*it)[1].str() + " ";
+        glyphs[svg.substr(id_start, id_end - id_start)] = paths;
+        pos = close + 4;
     }
-    return symbols;
+    return glyphs;
 }
 
 unordered_map<string, vector<uint32_t>> glyph_shape_cache;
@@ -436,7 +434,7 @@ vector<uint32_t> latex_glyph_shapes(const string& latex) {
     // Same walk that numbers the elements of the glyph ID image, so indices line up with its IDs
     vector<string> element_tags;
     make_glyph_id_svg(svg, &element_tags);
-    const unordered_map<string, string> symbols = read_symbol_paths(svg);
+    const unordered_map<string, string> glyphs = read_glyph_paths(svg);
 
     static const regex href_attr(R"(href="#([^"]+)\")");
     vector<uint32_t> shapes(element_tags.size(), 0);
@@ -445,8 +443,8 @@ vector<uint32_t> latex_glyph_shapes(const string& latex) {
         smatch m;
         if (tag.rfind("<use", 0) == 0) {
             if (!regex_search(tag, m, href_attr)) continue;
-            auto sym = symbols.find(m[1].str());
-            if (sym != symbols.end()) shapes[id] = shape_class(sym->second);
+            auto glyph = glyphs.find(m[1].str());
+            if (glyph != glyphs.end()) shapes[id] = shape_class(glyph->second);
         } else if (is_rule_tag(tag)) {
             shapes[id] = rule_shape(tag);
         }
