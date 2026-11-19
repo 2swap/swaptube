@@ -45,7 +45,6 @@ void print_frame_preview(uint32_t* device_argb_pixels) {
 // During smoketest a macroblock closes at the next stage_macroblock() or at project end.
 void finish_deferred_macroblock() {
     if (!smoketest_macroblock_open) return;
-    set_global_state("macroblock_number", get_global_state("macroblock_number") + 1);
     if (last_smoketest_scene) last_smoketest_scene->on_end_transition(MACRO);
     last_smoketest_scene = nullptr;
     smoketest_macroblock_open = false;
@@ -184,7 +183,6 @@ void Scene::render_microblock(){
         render_one_frame(0, 1);
         remaining_frames_in_macroblock = max(0, remaining_frames_in_macroblock);
         last_smoketest_scene = this;
-        set_global_state("microblock_number", get_global_state("microblock_number") + 1);
         on_end_transition(MICRO);
         return;
     }
@@ -209,9 +207,7 @@ void Scene::render_microblock(){
     }
     remaining_microblocks_in_macroblock--;
     bool done_macroblock = remaining_microblocks_in_macroblock == 0;
-    set_global_state("microblock_number", get_global_state("microblock_number") + 1);
     if (done_macroblock) {
-        set_global_state("macroblock_number", get_global_state("macroblock_number") + 1);
         if (rendering_on()) {
             int roundedFrameNumber = round(get_global_state("frame_number"));
             ostringstream stream;

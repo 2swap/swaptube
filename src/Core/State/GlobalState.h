@@ -8,8 +8,6 @@ using namespace std;
 static unordered_map<string, double> global_state{
     {"frame_number", 0},
     {"t", 0},
-    {"macroblock_number", 0},
-    {"microblock_number", 0},
     {"macroblock_fraction", 0},
     {"microblock_fraction", 0},
 };
