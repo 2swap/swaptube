@@ -1,9 +1,6 @@
 #pragma once
-// This file contains a number of singleton static variables
-// which indicate whether we are running a smoketest.
-
-static bool FOR_REAL = true; // Flag exposed to the project definition to disable sections of video
-static bool SMOKETEST= false;// Overall smoketest flag
+// Accessors for the process-wide flags which indicate whether we are running a smoketest,
+// and whether the project has flagged the current section to be rendered.
 
 bool is_smoketest();
 bool is_for_real();
