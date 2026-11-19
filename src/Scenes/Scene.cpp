@@ -28,6 +28,7 @@ int64_t nearest_frame_to_sample(const int64_t sample) {
 
 Scene* last_smoketest_scene = nullptr;
 bool smoketest_macroblock_open = false;
+int staged_macroblock_count = 0;
 
 // Prints the frame to the terminal, at most once a second.
 void print_frame_preview(uint32_t* device_argb_pixels) {
@@ -58,6 +59,7 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
 
     if (is_smoketest()) {
         finish_deferred_macroblock();
+        enter_macroblock(staged_macroblock_count++);
         const string macroblock_blurb = macroblock.blurb();
         begin_macroblock_plan_entry(macroblock_blurb, declared_microblocks_in_macroblock);
         smoketest_macroblock_open = true;
@@ -77,6 +79,9 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
                 "This macroblock had " + to_string(total_microblocks_in_macroblock) + " microblocks, "
                 "but render_microblock() was only called " + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
     }
+
+    // Must precede writing audio, which only happens while rendering is on.
+    enter_macroblock(staged_macroblock_count++);
 
     const string macroblock_blurb = macroblock.blurb();
 
@@ -162,8 +167,8 @@ uint32_t* Scene::query() {
     cout << "(" << flush;
     if(!has_updated_since_last_query) update();
 
-    // The only time we skip render entirely is when the project flags to skip a section.
-    if(is_for_real()) {
+    // The only time we skip drawing entirely is for a macroblock outside the render range.
+    if(macroblock_in_range()) {
         cuda_zeroize_pixels(gpu_pix.get_ptr(), get_width_height());
         cout << "|" << flush;
         draw();
@@ -275,7 +280,7 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("microblock_fraction", static_cast<double>(microblock_frame_number) / scene_duration_frames);
 
     query();
-    if (is_for_real()) {
+    if (macroblock_in_range()) {
         print_frame_preview(gpu_pix.get_ptr());
         if (get_writer().video) get_writer().video->add_frame(gpu_pix.get_ptr());
     }
