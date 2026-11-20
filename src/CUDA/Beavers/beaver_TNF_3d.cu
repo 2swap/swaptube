@@ -3,7 +3,6 @@
 #include "../../Host_Device_Shared/TuringMachine.h"
 #include "../color.cuh"
 #include "../common_graphics.cuh"
-#include "../edge_detect.cuh"
 #include <vector>
 
 extern "C" void cuda_overlay (
@@ -204,7 +203,7 @@ __device__ bool mainloop(RayState& r) {
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlight_pixels, float* depth_buffer, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, int* action, int pathlen, TuringMachine tm, float brightness_offset, float color_source_depth, Cuda::vec3 highlight, float highlight_intensity, int max_steps) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlight_pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, int* action, int pathlen, TuringMachine tm, float brightness_offset, float color_source_depth, Cuda::vec3 highlight, float highlight_intensity, int max_steps) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx >= wh.x || idy >= wh.y) {
@@ -270,12 +269,10 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlig
     //if ((idx & idy & 3) == 3) pixels[pixel_index] = 0xffff00ff;
     //if ((idx & idy & 15) == 15) pixels[pixel_index] = 0xffe0e000;
     highlight_pixels[pixel_index] = ((unsigned int)(floor(highlight_intensity * r.highlight_hit * 255)) << 24) | 0x00ffffff;
-    r.len = 5*sqrtf(sqrtf(r.len));
-    depth_buffer[pixel_index] = r.len;
 }
 
 extern "C" void beaver_TNF_3D_cuda(
-    unsigned int* d_pixels, uint32_t* d_highlight, float* d_depth_buffer, const Cuda::ivec2& wh, Cuda::vec2 center,
+    unsigned int* d_pixels, uint32_t* d_highlight, const Cuda::ivec2& wh, Cuda::vec2 center,
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
     std::vector<int> action, TuringMachine tm,
@@ -294,8 +291,7 @@ extern "C" void beaver_TNF_3D_cuda(
     dim3 threads(16, 16);
     dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, d_highlight, d_depth_buffer, wh, center, normalize(camera), fov, lower, upper, d_action_path, action.size(), tm, brightness_offset, color_source_depth, highlight, highlight_intensity, max_steps);
-    cuda_edge_detect(d_pixels, d_depth_buffer, wh, 0xff000000);
+    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, d_highlight, wh, center, normalize(camera), fov, lower, upper, d_action_path, action.size(), tm, brightness_offset, color_source_depth, highlight, highlight_intensity, max_steps);
 
     cuda_overlay(d_pixels, wh, d_highlight, wh, wh/2, 1, 0);
 

@@ -8,5 +8,4 @@ public:
 private:
     void draw() override;
     DevicePointer highlight_pix;
-    DevicePointer depth_buffer;
 };
