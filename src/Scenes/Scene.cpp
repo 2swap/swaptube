@@ -7,6 +7,7 @@
 #include "../Host_Device_Shared/helpers.h"
 
 #include <chrono>
+#include <fstream>
 
 extern "C" void cuda_zeroize_pixels(uint32_t* d_pixels, const ivec2& wh);
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
@@ -105,6 +106,11 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
     cout << endl << macroblock_blurb << " staged to last " << to_string(expected_microblocks_in_macroblock) << " microblock(s), " << to_string(total_frames_in_macroblock) << " frame(s)." << endl;
 
     const double samplerate = get_audio_samplerate_hz();
+    if (rendering_on()) {
+        // Lets the UI seek to each rendered macroblock within the video.
+        ofstream starts("io_out/macroblock_starts.txt", ios::app);
+        starts << (staged_macroblock_count - 1) << " " << fixed << setprecision(6) << start_sample / samplerate << "\n";
+    }
     double macroblock_length_seconds = rendering_on() ? duration_samples / samplerate : static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
     // Mark macroblock/microblock boundaries as their own MIDI tracks, for external tooling.
