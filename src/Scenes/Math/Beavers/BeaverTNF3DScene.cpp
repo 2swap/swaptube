@@ -2,7 +2,7 @@
 #include "../../../Host_Device_Shared/TuringMachine.h"
 #include <vector>
 
-extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, uint32_t*, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, std::vector<int> action, TuringMachine tm, float brightness_offset, float color_source_depth, /*float ancestor_offset,*/ vec3 highlight, float highlight_intensity, int max_steps);
+extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, std::vector<int> action, TuringMachine tm, float brightness_offset, int max_steps);
 
 BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     manager.set({
@@ -21,13 +21,7 @@ BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
         {"scale_x", "1"},
         {"scale_y", "1"},
         {"scale_z", "1"},
-        {"ancestor_offset", "0"},
-        {"highlight_x", "-1"},
-        {"highlight_y", "-1"},
-        {"highlight_z", "-1"},
-        {"highlight_intensity", "0"},
         {"brightness_offset", "0"},
-	{"color_source_depth", "0"},
         {"max_tnf_depth", "15"}
     });
 }
@@ -67,7 +61,7 @@ int halt_trans(TuringMachine tm, int max_steps) {
     return (current_state == -1) ? action_index : -1;
 }
 
-void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, vec3& highlight, double x, double y, double z, int max_steps, int max_tnf_depth) {
+void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth) {
     for (int i=0; i<CODON_MEM_LIMIT; i++) tm.next_state[i] = -1;
     ivec3 scale(1);
     if (0 <= x && x <= 1 && 0 <= y && y <= 1 && 0 <= z && z <= 1) {
@@ -102,30 +96,22 @@ void BeaverTNF3DScene::draw() {
     double x = (double)(target.x) - (double)(dist * dir.x);
     double y = (double)(target.y) - (double)(dist * dir.y);
     double z = (double)(target.z) - (double)(dist * dir.z);
-    vec3 highlight = vec3(state["highlight_x"], state["highlight_y"], state["highlight_z"]) - vec3(x,y,z);
 
     std::vector<int> action;
     TuringMachine tm;
     vec3 lower;
     vec3 upper;
-    get_context(action, tm, lower, upper, highlight, x, y, z, state["max_steps"], state["max_tnf_depth"]);
+    get_context(action, tm, lower, upper, x, y, z, state["max_steps"], state["max_tnf_depth"]);
     /*for (int i=0; i<action.size(); i++) {
         printf("\nTransition %d: (%d,%d,%d)", action[i], tm.write_symbol[action[i]], tm.left_right[action[i]], tm.next_state[action[i]]);
     }
     printf("\nCuboid: ((%f,%f,%f),(%f,%f,%f))\n", lower.x, lower.y, lower.z, upper.x, upper.y, upper.z);*/
     beaver_TNF_3D_cuda(
-        gpu_pix.get_ptr(), highlight_pix.get_ptr(), get_width_height(), vec2(state["center_x"], state["center_y"]),
+        gpu_pix.get_ptr(), get_width_height(), vec2(state["center_x"], state["center_y"]),
         camera, state["fov"],
         lower*scale, upper*scale,
         action, tm,
-        state["brightness_offset"], state["color_source_depth"],
-        //state["ancestor_offset"],
-        highlight*scale, state["highlight_intensity"],
+        state["brightness_offset"],
         state["max_steps"]
     );
-}
-
-void BeaverTNF3DScene::change_data() {
-    Scene::change_data();
-    highlight_pix.tick(get_width_height());
 }

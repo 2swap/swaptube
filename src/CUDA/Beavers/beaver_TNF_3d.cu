@@ -5,11 +5,6 @@
 #include "../common_graphics.cuh"
 #include <vector>
 
-extern "C" void cuda_overlay (
-    uint32_t* background, const Cuda::ivec2& b_wh,
-    const uint32_t* foreground, const Cuda::ivec2& f_wh,
-    const Cuda::vec2& center, const float opacity, const float angle_rad);
-
 const int MAX_TNF_DEPTH = 20;
 const float INF = 10000000000000.0f;
 const int half_tape_length = 20;
@@ -19,15 +14,11 @@ struct RayState {
     float len = 0;
     float thickness = 0;
     int face = -2;
-    Cuda::vec3 highlight;
-    float highlight_hit = 0;
 
     TuringMachine tm;
     int max_steps;
     int max_depth = MAX_TNF_DEPTH - 1;
-    int halt_time_low = 0;
-    int halt_time_high = 0;
-    int low_time_depth = 0;
+    int halt_time = 0;   // steps until the most recently run machine reached an undefined transition
 
     int action[MAX_TNF_DEPTH];
     int states[MAX_TNF_DEPTH] = {2};
@@ -136,8 +127,7 @@ __device__ bool mainloop(RayState& r) {
     int current_state = 0;
     int steps = 0;
     int action_index;
-    r.halt_time_low = 0;
-    r.halt_time_high = 0;
+    r.halt_time = 0;
     while (steps < r.max_steps) {
         // the transitions are indexed like this (but continued up to CODON_MEM_LIMIT-1):
         // 0  2  5  10
@@ -152,9 +142,8 @@ __device__ bool mainloop(RayState& r) {
         }
 
         current_state = r.tm.next_state[action_index];
-        r.halt_time_low += (r.halt_time_low == 0 && (current_state == -1 || (action_index == r.action[r.low_time_depth] && r.low_time_depth < r.plen - 1))) * (steps + 1);
-        r.halt_time_high += (r.halt_time_high == 0 && (current_state == -1 || (action_index == r.action[r.low_time_depth + 1] && r.low_time_depth < r.plen - 2))) * (steps + 1);
         if (current_state == -1) {
+            r.halt_time = steps + 1;
             break;
         }
         tape[head_position] = r.tm.write_symbol[action_index];
@@ -177,7 +166,6 @@ __device__ bool mainloop(RayState& r) {
         get_child_block(r);
         r.plen++;
     } else {
-        r.highlight_hit += (int)(in_block(r.highlight, r.l[r.plen - 1], r.u[r.plen - 1]));
         raytrace_block(r, true);
         bool out = true;
         while (out) {
@@ -203,7 +191,7 @@ __device__ bool mainloop(RayState& r) {
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlight_pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, int* action, int pathlen, TuringMachine tm, float brightness_offset, float color_source_depth, Cuda::vec3 highlight, float highlight_intensity, int max_steps) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, int* action, int pathlen, TuringMachine tm, float brightness_offset, int max_steps) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx >= wh.x || idy >= wh.y) {
@@ -219,8 +207,6 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlig
 
     r.dir = normalize(Cuda::get_raymarch_vector(Cuda::ivec2(pos_x, pos_y), wh, fov, camera));
     r.thickness = 20 * fov / (wh.x + wh.y);
-    r.low_time_depth = floor(color_source_depth);
-    r.highlight = highlight;
     r.max_steps = max_steps;
 
     for (int i=0; i<CODON_MEM_LIMIT; i++) r.tm.next_state[i] = -1;
@@ -256,28 +242,21 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, unsigned int* highlig
     }
 
     float b = fmaxf(0,fminf(1, -logf(r.len)/3+brightness_offset));
-    float t = color_source_depth - r.low_time_depth;
-    int haltcollow = Cuda::rainbow(atan(r.halt_time_low / 4.0f) / 1.57079632679f);
-    int haltcolhigh = Cuda::rainbow(atan(r.halt_time_high / 4.0f) / 1.57079632679f);
-    Cuda::vec3 collow = (b+0.25f)/1.25f*Cuda::vec3((haltcollow >> 16) & 255, (haltcollow >> 8) & 255, haltcollow & 255);
-    Cuda::vec3 colhigh = (b+0.25f)/1.25f*Cuda::vec3((haltcolhigh >> 16) & 255, (haltcolhigh >> 8) & 255, haltcolhigh & 255);
-    Cuda::vec3 col = collow * (1-t) + colhigh * t;
-    //col += highlight_intensity * r.highlight_hit * (Cuda::vec3(255.5) - col);
+    int haltcol = Cuda::rainbow(atan(r.halt_time / 4.0f) / 1.57079632679f);
+    Cuda::vec3 col = (b+0.25f)/1.25f*Cuda::vec3((haltcol >> 16) & 255, (haltcol >> 8) & 255, haltcol & 255);
 
     pixels[pixel_index] = (0xff000000 * (r.len < INF)) | ((unsigned int)(floor(col.x)) << 16) | ((unsigned int)(floor(col.y)) << 8) | (unsigned int)(floor(col.z));
     if (r.print) pixels[pixel_index] = 0xff00ff00;
     //if ((idx & idy & 3) == 3) pixels[pixel_index] = 0xffff00ff;
     //if ((idx & idy & 15) == 15) pixels[pixel_index] = 0xffe0e000;
-    highlight_pixels[pixel_index] = ((unsigned int)(floor(highlight_intensity * r.highlight_hit * 255)) << 24) | 0x00ffffff;
 }
 
 extern "C" void beaver_TNF_3D_cuda(
-    unsigned int* d_pixels, uint32_t* d_highlight, const Cuda::ivec2& wh, Cuda::vec2 center,
+    unsigned int* d_pixels, const Cuda::ivec2& wh, Cuda::vec2 center,
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
     std::vector<int> action, TuringMachine tm,
-    float brightness_offset, float color_source_depth,
-    Cuda::vec3 highlight, float highlight_intensity,
+    float brightness_offset,
     int max_steps
 ) {
     int* d_action_path;
@@ -291,9 +270,7 @@ extern "C" void beaver_TNF_3D_cuda(
     dim3 threads(16, 16);
     dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, d_highlight, wh, center, normalize(camera), fov, lower, upper, d_action_path, action.size(), tm, brightness_offset, color_source_depth, highlight, highlight_intensity, max_steps);
-
-    cuda_overlay(d_pixels, wh, d_highlight, wh, wh/2, 1, 0);
+    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, d_action_path, action.size(), tm, brightness_offset, max_steps);
 
     cudaFree(d_action_path);
 }
