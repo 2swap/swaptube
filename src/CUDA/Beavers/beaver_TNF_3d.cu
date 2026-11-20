@@ -3,11 +3,19 @@
 #include "../../Host_Device_Shared/TuringMachine.h"
 #include "../color.cuh"
 #include "../common_graphics.cuh"
-#include <vector>
+#include <stdexcept>
+#include <string>
 
 const int MAX_TNF_DEPTH = 20;
 const float INF = 10000000000000.0f;
 const int half_tape_length = 20;
+
+// The camera's context path (transition indices from the root down to the cube
+// containing the camera). Passed by value as a kernel argument, so no device
+// allocation is needed per frame.
+struct ActionPath {
+    int a[MAX_TNF_DEPTH];
+};
 
 struct RayState {
     Cuda::vec3 dir;
@@ -191,7 +199,8 @@ __device__ bool mainloop(RayState& r) {
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, int* action, int pathlen, TuringMachine tm, float brightness_offset, int max_steps) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, TuringMachine tm, float brightness_offset, int max_steps) {
+    const int* action = path.a;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
     if (idx >= wh.x || idy >= wh.y) {
@@ -255,22 +264,18 @@ extern "C" void beaver_TNF_3D_cuda(
     unsigned int* d_pixels, const Cuda::ivec2& wh, Cuda::vec2 center,
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
-    std::vector<int> action, TuringMachine tm,
+    const int* action, int pathlen, TuringMachine tm,
     float brightness_offset,
     int max_steps
 ) {
-    int* d_action_path;
-    cudaMalloc(&d_action_path, action.size() * sizeof(int));
-    cout << "Action path size: " << action.size() << endl;
-
-    int action_path[action.size()];
-    for (int i=0; i<action.size(); i++) action_path[i] = action[i];
-    cudaMemcpy(d_action_path, action_path, action.size() * sizeof(int), cudaMemcpyHostToDevice);
+    if (pathlen > MAX_TNF_DEPTH - 2) {
+        throw runtime_error("beaver_TNF_3D_cuda: context path of length " + to_string(pathlen) + " exceeds MAX_TNF_DEPTH - 2");
+    }
+    ActionPath path;
+    for (int i=0; i<pathlen; i++) path.a[i] = action[i];
 
     dim3 threads(16, 16);
     dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, d_action_path, action.size(), tm, brightness_offset, max_steps);
-
-    cudaFree(d_action_path);
+    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, path, pathlen, tm, brightness_offset, max_steps);
 }
