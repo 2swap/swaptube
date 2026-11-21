@@ -12,29 +12,6 @@ void beep(int state, int symbol, int num_states){
     sfx_boink(get_global_state("t"), tone * 440, .05, 1);
 }
 
-// For example, 1RB0LB_1LC0RE_1LA1LD_0LC---_0RB0RF_1RE1RB has 2 symbols and 5 states.
-void parse_tm_from_string(char* s, int num_states, int num_symbols, TuringMachine& tm) {
-    tm.num_symbols = num_symbols;
-    tm.num_states = num_states;
-    for(int state = 0; state < num_states; state++) {
-        for(int symbol = 0; symbol < num_symbols; symbol++) {
-            int action_layer = max(state, symbol) - 1;
-            int action_side = (int)(state < symbol);
-            int action_index = action_layer * action_layer + 2 * (state + symbol) + action_side - 1;
-            if (action_index < CODON_MEM_LIMIT) {
-                int string_index = state * (num_symbols * 3 + 1) + symbol * 3;
-                tm.write_symbol[action_index] = s[string_index  ] - '0';
-                tm.left_right  [action_index] = s[string_index+1] == 'R';
-                char ns = s[string_index+2];
-                if(ns == 'Z')
-                    tm.next_state  [action_index] = -1;
-                else
-                    tm.next_state  [action_index] = ns - 'A';
-            }
-        }
-    }
-}
-
 TuringMachineScene::TuringMachineScene(const TuringMachine& tm, const vec2& dimension)
 : CoordinateScene(dimension), tm(tm), tape_length(301), tape(tape_length, 0), head_position(tape_length/2) {
     manager.set("iterations", "0");
@@ -43,21 +20,18 @@ TuringMachineScene::TuringMachineScene(const TuringMachine& tm, const vec2& dime
 }
 
 void TuringMachineScene::draw() {
-    while (steps < state["iterations"]) {
-        //int action_index = current_state * num_symbols + tape[head_position];
-        int ls = tape[head_position];
-        int action_layer = max(current_state, tape[head_position]) - 1;
-        int action_side = (int)(current_state < tape[head_position]);
-        int action_index = action_layer * action_layer + 2 * (current_state + tape[head_position]) + action_side - 1;
-        if (action_index >= CODON_MEM_LIMIT) {
-            break;
-        }
+    while (steps < state["iterations"] && current_state != -1) {
+        const int codon = tm_codon(current_state, tape[head_position]);
+        if (codon >= TM_CODONS) break;
+        const int tr = tm.table[codon];
 
 	    beep(current_state, tape[head_position], tm.num_states);
 
-        tape[head_position] = tm.write_symbol[action_index];
-        head_position += tm.left_right[action_index] ? 1 : -1;
-        current_state = tm.next_state[action_index];
+        // an undefined transition halts without writing; a halting one writes and moves first
+        if (tr == TM_UNDEFINED) { current_state = -1; break; }
+        tape[head_position] = tm_write_symbol(tr);
+        head_position += 2 * tm_move_right(tr) - 1;
+        current_state = tm_next_state(tr) == TM_HALT ? -1 : tm_next_state(tr);
 
         if(current_state == -1) break; // halt
         steps++;

@@ -26,60 +26,32 @@ BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     });
 }
 
-int halt_trans(TuringMachine tm, int max_steps) {
-    int half_tape_length = 20;
-    int tape[2 * half_tape_length + 1] = {0};
-    int head_position = half_tape_length;
-    int current_state = 0;
-    int steps = 0;
-    int action_index;
-    while (steps < max_steps) {
-        // the transitions are indexed like this (but continued up to CODON_MEM_LIMIT-1):
-        // 0  2  5  10
-        // 1  3  7  12
-        // 4  6  8  14
-        // 9  11 13 15
-        int action_layer = max(current_state, tape[head_position]) - 1;
-        int action_side = (int)(current_state < tape[head_position]);
-        action_index = action_layer * action_layer + 2 * (current_state + tape[head_position]) + action_side - 1;
-        if (action_index >= CODON_MEM_LIMIT) {
-            break;
-        }
-
-        current_state = tm.next_state[action_index];
-        if (current_state == -1) {
-            break;
-        }
-        tape[head_position] = tm.write_symbol[action_index];
-        head_position += 2 * tm.left_right[action_index] - 1;
-        if (head_position < 0 || head_position > 2 * half_tape_length) {
-            break;
-        }
-
-        steps++;
-    }
-    return (current_state == -1) ? action_index : -1;
+// Runs tm from a blank tape. Returns the codon of the undefined transition it
+// stops at, or -1 if it never reaches one (out of steps or off the tape).
+int halt_trans(const TuringMachine& tm, int max_steps) {
+    TuringMachineRun run;
+    const int codon = tm_run(tm.table, run, max_steps);
+    return codon >= 0 ? codon : -1;
 }
 
 void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth) {
-    for (int i=0; i<CODON_MEM_LIMIT; i++) tm.next_state[i] = -1;
     ivec3 scale(1);
     if (0 <= x && x <= 1 && 0 <= y && y <= 1 && 0 <= z && z <= 1) {
         int states = 2;
-        int symbols = 2;
         for (int i=0; i<max_tnf_depth; i++) {
             action.push_back(halt_trans(tm, max_steps));
             int a = action[action.size()-1];
             if (a == -1) break;
-            scale *= ivec3(states, symbols, 2);
-            tm.next_state[a] = min((double)(states-1), max((double)(0), floor(states * x)));
-            x = states * x - tm.next_state[a];
-            states += tm.next_state[a] == states - 1;
-            tm.write_symbol[a] = min((double)(symbols-1), max((double)(0), floor(symbols * y)));
-            y = symbols * y - tm.write_symbol[a];
-            symbols += tm.write_symbol[a] == symbols - 1;
-            tm.left_right[a] = min((double)(1), max((double)(0), floor(2 * z)));
-            z = 2 * z - tm.left_right[a];
+            // children are laid out as (next state, write symbol, move) along (x, y, z)
+            scale *= ivec3(states, 2, 2);
+            const int next_state = min((double)(states-1), max((double)(0), floor(states * x)));
+            x = states * x - next_state;
+            const int write_symbol = min(1.0, max(0.0, floor(2 * y)));
+            y = 2 * y - write_symbol;
+            const int move_right = min(1.0, max(0.0, floor(2 * z)));
+            z = 2 * z - move_right;
+            tm.table[a] = tm_pack(next_state, write_symbol, move_right);
+            states += next_state == states - 1;
         }
         action.pop_back();
     }
@@ -103,7 +75,7 @@ void BeaverTNF3DScene::draw() {
     vec3 upper;
     get_context(action, tm, lower, upper, x, y, z, state["max_steps"], state["max_tnf_depth"]);
     /*for (int i=0; i<action.size(); i++) {
-        printf("\nTransition %d: (%d,%d,%d)", action[i], tm.write_symbol[action[i]], tm.left_right[action[i]], tm.next_state[action[i]]);
+        printf("\nTransition %d: (%d,%d,%d)", action[i], tm_write_symbol(tm.table[action[i]]), tm_move_right(tm.table[action[i]]), tm_next_state(tm.table[action[i]]));
     }
     printf("\nCuboid: ((%f,%f,%f),(%f,%f,%f))\n", lower.x, lower.y, lower.z, upper.x, upper.y, upper.z);*/
     beaver_TNF_3D_cuda(

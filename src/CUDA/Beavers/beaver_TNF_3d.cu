@@ -8,7 +8,6 @@
 
 const int MAX_TNF_DEPTH = 20;
 const float INF = 10000000000000.0f;
-const int half_tape_length = 20;
 
 // The camera's context path (transition indices from the root down to the cube
 // containing the camera). Passed by value as a kernel argument, so no device
@@ -23,14 +22,13 @@ struct RayState {
     float thickness = 0;
     int face = -2;
 
-    TuringMachine tm;
+    int table[Cuda::TM_CODONS];   // packed transitions of the machine being explored (see TuringMachine.h)
     int max_steps;
     int max_depth = MAX_TNF_DEPTH - 1;
     int halt_time = 0;   // steps until the most recently run machine reached an undefined transition
 
     int action[MAX_TNF_DEPTH];
     int states[MAX_TNF_DEPTH] = {2};
-    int symbols[MAX_TNF_DEPTH] = {2};
     Cuda::vec3 l[MAX_TNF_DEPTH];   // lower corner
     Cuda::vec3 u[MAX_TNF_DEPTH];   // upper corner
     int plen;
@@ -64,32 +62,29 @@ __device__ void raytrace_block(RayState& r, bool inside) {
 }
 
 __device__ void get_child_block(RayState& r) {
-    Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / Cuda::vec3(r.states[r.plen - 1], r.symbols[r.plen - 1], 2);
+    // children are laid out as (next state, write symbol, move) along (x, y, z)
+    Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / Cuda::vec3(r.states[r.plen - 1], 2, 2);
     Cuda::vec3 thingy = r.len * r.dir - r.l[r.plen];
     Cuda::ivec3 child = floor(thingy / child_size);
     child.x = min(r.states[r.plen - 1] - 1, max(0, child.x));
-    child.y = min(r.symbols[r.plen - 1] - 1, max(0, child.y));
+    child.y = min(1, max(0, child.y));
     child.z = min(1, max(0, child.z));
     //if (r.print) printf("Child: (%d,%d,%d)\n", child.x, child.y, child.z);
     r.l[r.plen] += child_size * child;
     r.u[r.plen] = r.l[r.plen] + child_size;
-    r.tm.next_state[r.action[r.plen - 1]] = child.x;
-    r.tm.write_symbol[r.action[r.plen - 1]] = child.y;
-    r.tm.left_right[r.action[r.plen - 1]] = child.z;
+    r.table[r.action[r.plen - 1]] = Cuda::tm_pack(child.x, child.y, child.z);
     r.states[r.plen] = r.states[r.plen - 1] + (child.x == r.states[r.plen - 1] - 1);
-    r.symbols[r.plen] = r.symbols[r.plen - 1] + (child.y == r.symbols[r.plen - 1] - 1);
 }
 
 __device__ void print_things(RayState& r) {
     printf("\nPath Length: %d\nRay Length: %f\nRay Pos: (%f,%f,%f)\nLast Block: ((%f,%f,%f),(%f,%f,%f))\nFace: %d\n", r.plen, r.len, r.len*r.dir.x, r.len*r.dir.y, r.len*r.dir.z, r.l[r.plen - 1].x, r.l[r.plen - 1].y, r.l[r.plen - 1].z, r.u[r.plen - 1].x, r.u[r.plen - 1].y, r.u[r.plen - 1].z, r.face);
     for (int i=0; i<r.plen; i++) printf("Cuboid %d: ((%f,%f,%f),(%f,%f,%f))\n", i, r.l[i].x, r.l[i].y, r.l[i].z, r.u[i].x, r.u[i].y, r.u[i].z);
-    for (int i=0; i<r.plen-1; i++) printf("Transition %d: (%d,%d,%d)\n", r.action[i], r.tm.write_symbol[r.action[i]], r.tm.left_right[r.action[i]], r.tm.next_state[r.action[i]]);
+    for (int i=0; i<r.plen-1; i++) printf("Transition %d: (%d,%d,%d)\n", r.action[i], Cuda::tm_write_symbol(r.table[r.action[i]]), Cuda::tm_move_right(r.table[r.action[i]]), Cuda::tm_next_state(r.table[r.action[i]]));
 }
 
 __device__ void print_init(RayState& r) {
     printf("\nDirection: (%f,%f,%f)\n", r.dir.x, r.dir.y, r.dir.z);
     //for (int i=0; i<r.plen; i++) printf("Cuboid %d: ((%f,%f,%f),(%f,%f,%f))\n", i, r.l[i].x, r.l[i].y, r.l[i].z, r.u[i].x, r.u[i].y, r.u[i].z);
-    //for (int i=0; i<r.plen-1; i++) printf("Transition %d: (%d,%d,%d)\n", r.action[i], r.tm.write_symbol[r.action[i]], r.tm.left_right[r.action[i]], r.tm.next_state[r.action[i]]);
 }
 
 
@@ -129,40 +124,11 @@ __device__ bool mainloop(RayState& r) {
 
     //if (r.print) print_things(r);
 
-    // run TM
-    int tape[2 * half_tape_length + 1] = {0};
-    int head_position = half_tape_length;
-    int current_state = 0;
-    int steps = 0;
-    int action_index;
-    r.halt_time = 0;
-    while (steps < r.max_steps) {
-        // the transitions are indexed like this (but continued up to CODON_MEM_LIMIT-1):
-        // 0  2  5  10
-        // 1  3  7  12
-        // 4  6  8  14
-        // 9  11 13 15
-        int action_layer = max(current_state, tape[head_position]) - 1;
-        int action_side = (int)(current_state < tape[head_position]);
-        action_index = action_layer * action_layer + 2 * (current_state + tape[head_position]) + action_side - 1;
-        if (action_index >= CODON_MEM_LIMIT) {
-            break;
-        }
-
-        current_state = r.tm.next_state[action_index];
-        if (current_state == -1) {
-            r.halt_time = steps + 1;
-            break;
-        }
-        tape[head_position] = r.tm.write_symbol[action_index];
-        head_position += 2 * r.tm.left_right[action_index] - 1;
-        if (head_position < 0 || head_position > 2 * half_tape_length) {
-            break;
-        }
-
-        steps++;
-    }
-    bool halted = current_state == -1;
+    // run TM from a blank tape until it reaches an undefined transition ("halts") or gives up
+    Cuda::TuringMachineRun run;
+    int action_index = Cuda::tm_run(r.table, run, r.max_steps);
+    bool halted = action_index >= 0;   // >= 0 is a codon: the machine reached an undefined transition
+    r.halt_time = halted ? run.steps + 1 : 0;
 
     //if (r.print) printf("\nHalted? %d\n", halted);
 
@@ -179,14 +145,21 @@ __device__ bool mainloop(RayState& r) {
         while (out) {
             r.plen--;
             if (r.plen == 0) {r.len = INF; return false;}
-            r.tm.next_state[r.action[r.plen - 1]] += (r.face == 1) - (r.face == 0);
-            r.tm.write_symbol[r.action[r.plen - 1]] += (r.face == 3) - (r.face == 2);
-            int lr = r.tm.left_right[r.action[r.plen - 1]] + (r.face == 5) - (r.face == 4);
-            out = r.tm.next_state[r.action[r.plen - 1]] < 0 || r.tm.next_state[r.action[r.plen - 1]] >= r.states[r.plen - 1] || r.tm.write_symbol[r.action[r.plen - 1]] < 0 || r.tm.write_symbol[r.action[r.plen - 1]] >= r.symbols[r.plen - 1] || lr < 0 || lr > 1;
-            r.states[r.plen] += r.tm.next_state[r.action[r.plen - 1]] == r.states[r.plen - 1] - 1 && r.face == 1;
-            r.symbols[r.plen] += r.tm.write_symbol[r.action[r.plen - 1]] == r.symbols[r.plen - 1] - 1 && r.face == 3;
-            r.tm.left_right[r.action[r.plen - 1]] = lr == 1;
-            r.tm.next_state[r.action[r.plen - 1]] -= out * (r.tm.next_state[r.action[r.plen - 1]] + 1);
+            // move to the sibling across the exit face by changing this level's transition
+            const int a = r.action[r.plen - 1];
+            const int S = r.states[r.plen - 1];
+            const int tr = r.table[a];
+            const int ns = Cuda::tm_next_state(tr) + (r.face == 1) - (r.face == 0);
+            const int ws = Cuda::tm_write_symbol(tr) + (r.face == 3) - (r.face == 2);
+            const int lr = Cuda::tm_move_right(tr) + (r.face == 5) - (r.face == 4);
+            out = ns < 0 || ns >= S || ws < 0 || ws > 1 || lr < 0 || lr > 1;
+            if (out) {
+                // no sibling that way: undo this level's choice and keep climbing
+                r.table[a] = Cuda::TM_UNDEFINED;
+            } else {
+                r.table[a] = Cuda::tm_pack(ns, ws, lr);
+                r.states[r.plen] = S + (ns == S - 1);
+            }
         }
         Cuda::vec3 shift = (r.u[r.plen] - r.l[r.plen]) * Cuda::vec3((r.face == 1) - (r.face == 0), (r.face == 3) - (r.face == 2), (r.face == 5) - (r.face == 4));
         r.l[r.plen] += shift;
@@ -199,7 +172,7 @@ __device__ bool mainloop(RayState& r) {
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, TuringMachine tm, float brightness_offset, int max_steps) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, Cuda::TuringMachine tm, float brightness_offset, int max_steps) {
     const int* action = path.a;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -218,22 +191,20 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
     r.thickness = 20 * fov / (wh.x + wh.y);
     r.max_steps = max_steps;
 
-    for (int i=0; i<CODON_MEM_LIMIT; i++) r.tm.next_state[i] = -1;
+    for (int i=0; i<Cuda::TM_CODONS; i++) r.table[i] = Cuda::TM_UNDEFINED;
     r.plen = pathlen + 1;
     for (int i=0; i<r.plen-1; i++) {
-        r.tm.next_state[action[i]] = tm.next_state[action[i]];
-        r.tm.write_symbol[action[i]] = tm.write_symbol[action[i]];
-        r.tm.left_right[action[i]] = tm.left_right[action[i]];
+        r.table[action[i]] = tm.table[action[i]];
         r.action[i] = action[i];
-        r.states[i+1] = r.states[i] + (tm.next_state[action[i]] == r.states[i] - 1);
-        r.symbols[i+1] = r.symbols[i] + (tm.write_symbol[action[i]] == r.symbols[i] - 1);
+        r.states[i+1] = r.states[i] + (Cuda::tm_next_state(tm.table[action[i]]) == r.states[i] - 1);
     }
 
     r.l[r.plen - 1] = lower;
     r.u[r.plen - 1] = upper;
     for (int i=r.plen-2; i>=0; i--) {
-        r.l[i] = r.l[i+1] - (r.u[i+1] - r.l[i+1]) * Cuda::vec3(tm.next_state[action[i]], tm.write_symbol[action[i]], tm.left_right[action[i]]);
-        r.u[i] = r.l[i] + (r.u[i+1] - r.l[i+1]) * Cuda::vec3(r.states[i], r.symbols[i], 2);
+        const int tr = tm.table[action[i]];
+        r.l[i] = r.l[i+1] - (r.u[i+1] - r.l[i+1]) * Cuda::vec3(Cuda::tm_next_state(tr), Cuda::tm_write_symbol(tr), Cuda::tm_move_right(tr));
+        r.u[i] = r.l[i] + (r.u[i+1] - r.l[i+1]) * Cuda::vec3(r.states[i], 2, 2);
     }
 
     //if (r.print) print_init(r);
@@ -264,7 +235,7 @@ extern "C" void beaver_TNF_3D_cuda(
     unsigned int* d_pixels, const Cuda::ivec2& wh, Cuda::vec2 center,
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
-    const int* action, int pathlen, TuringMachine tm,
+    const int* action, int pathlen, Cuda::TuringMachine tm,
     float brightness_offset,
     int max_steps
 ) {

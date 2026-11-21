@@ -18,12 +18,14 @@
 #include "../../Host_Device_Shared/TuringMachine.h"
 #include "../common_graphics.cuh"
 
-__device__ void decode_turing_machine_index(int x, int y, int grid_w, int grid_h, int num_states, int num_symbols, TuringMachine* tm) {
+// Transition slot i of the grid is state i % num_states reading symbol i / num_states.
+// Along x each slot picks the next state (0 = halt), along y the write symbol and move.
+__device__ void decode_turing_machine_index(int x, int y, int grid_w, int grid_h, int num_states, Cuda::TuringMachine* tm) {
     int remaining_x = x;
     int remaining_y = y;
-    int exponent = num_symbols * num_states;
+    int exponent = 2 * num_states;
     int w_base = num_states + 1;
-    int h_base = 2 * num_symbols;
+    int h_base = 4;
     for (int i = 0; i < exponent; i++) {
         grid_w /= w_base;
         grid_h /= h_base;
@@ -31,13 +33,12 @@ __device__ void decode_turing_machine_index(int x, int y, int grid_w, int grid_h
         int y_here = remaining_y / grid_h;
         remaining_x %= grid_w;
         remaining_y %= grid_h;
-        tm->left_right[i] = (y_here % 2) == 1;
-        tm->write_symbol[i] = y_here / 2;
-        tm->next_state[i] = x_here - 1;
+        const int next_state = x_here == 0 ? Cuda::TM_HALT : x_here - 1;
+        tm->table[Cuda::tm_codon(i % num_states, i / num_states)] = Cuda::tm_pack(next_state, y_here / 2, y_here % 2);
     }
 }
 
-__global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pixels, const Cuda::ivec2 wh, int grid_w, int grid_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
+__global__ void beaver_grid_kernel(int num_states, uint32_t* pixels, const Cuda::ivec2 wh, int grid_w, int grid_h, Cuda::vec2 lx_ty, Cuda::vec2 rx_by, int max_steps) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -54,24 +55,25 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pi
         return;
     }
 
-    TuringMachine tm;
-    decode_turing_machine_index(point_vec.x, point_vec.y, grid_w, grid_h, num_states, num_symbols, &tm);
+    Cuda::TuringMachine tm;
+    decode_turing_machine_index(point_vec.x, point_vec.y, grid_w, grid_h, num_states, &tm);
     // Simulate the Turing machine and determine the number of steps until it halts
-    int tape[1001] = {0};
+    uint8_t tape[1001] = {0};
     int head_position = 500;
     int current_state = 0;
     int steps = 0;
+    bool halted = false;
     while (steps < max_steps) {
-        //int action_index = current_state * num_symbols + tape[head_position];
-        int action_index = current_state + num_states * tape[head_position];
+        const int tr = tm.table[Cuda::tm_codon(current_state, tape[head_position])];
 
-        tape[head_position] = tm.write_symbol[action_index];
-        head_position += tm.left_right[action_index] ? 1 : -1;
-        current_state = tm.next_state[action_index];
-
-        if(current_state == -1) {
+        // a halting transition still writes and moves
+        tape[head_position] = Cuda::tm_write_symbol(tr);
+        head_position += 2 * Cuda::tm_move_right(tr) - 1;
+        if (Cuda::tm_next_state(tr) == Cuda::TM_HALT) {
+            halted = true;
             break;
         }
+        current_state = Cuda::tm_next_state(tr);
         steps++;
     }
 
@@ -82,8 +84,6 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pi
         }
     }*/
 
-    bool halted = current_state == -1;
-
     //int col = 0xff000000 | (0x3f << ((head_position - 498) * 4));
     //int col = 0xff000000 | (0x3f << (current_state * 8));
     //pixels[pixel_index] = halted ? Cuda::rainbow((float) head_position / 42) : 0xff000000;
@@ -91,12 +91,12 @@ __global__ void beaver_grid_kernel(int num_states, int num_symbols, uint32_t* pi
     pixels[pixel_index] = halted ? Cuda::rainbow(atan_steps) : 0xff000000;
 }
 
-extern "C" void beaver_grid_cuda(int num_states, int num_symbols, uint32_t* pixels, const Cuda::ivec2& wh, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, int max_steps) {
+extern "C" void beaver_grid_cuda(int num_states, uint32_t* pixels, const Cuda::ivec2& wh, const Cuda::vec2& lx_ty, const Cuda::vec2& rx_by, int max_steps) {
     uint32_t* d_pixels;
     int w_base = (num_states + 1);
-    int h_base = 2 * num_symbols;
+    int h_base = 4;
 // given by (2m(n+1))^(mn)
-    int exp = num_symbols * num_states;
+    int exp = 2 * num_states;
     int grid_w = 1;
     int grid_h = 1;
     for (int i = 0; i < exp; i++) {
@@ -108,7 +108,7 @@ extern "C" void beaver_grid_cuda(int num_states, int num_symbols, uint32_t* pixe
     dim3 blockSize(16, 16);
     dim3 gridSize((wh.x + blockSize.x - 1) / blockSize.x, (wh.y + blockSize.y - 1) / blockSize.y);
 
-    beaver_grid_kernel<<<gridSize, blockSize>>>(num_states, num_symbols, d_pixels, wh, grid_w, grid_h, lx_ty, rx_by, max_steps);
+    beaver_grid_kernel<<<gridSize, blockSize>>>(num_states, d_pixels, wh, grid_w, grid_h, lx_ty, rx_by, max_steps);
     cudaDeviceSynchronize();
     cudaMemcpy(pixels, d_pixels, size, cudaMemcpyDeviceToHost);
     cudaFree(d_pixels);
