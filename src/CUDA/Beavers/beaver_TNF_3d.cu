@@ -64,18 +64,18 @@ __device__ void raytrace_block(RayState& r, bool inside) {
 }
 
 // Axis cycling. A branch at depth k (k = 0 for the root's split) lays its
-// children out with the next state on axis rot, the write symbol on axis
-// (rot+1)%3 and the move on axis (rot+2)%3, where rot is 0 above depth
+// children out with the write symbol on axis rot, the move on axis (rot+1)%3
+// and the next state on axis (rot+2)%3, where rot is 0 above depth
 // axis_cycle_start and cycles 0, 1, 2, ... from there down.
 __device__ int axis_rotation(int depth, int axis_cycle_start) {
     return depth < axis_cycle_start ? 0 : (depth - axis_cycle_start) % 3;
 }
 
-// The vector with st on axis rot, w on axis (rot+1)%3 and m on axis (rot+2)%3.
+// The vector with w on axis rot, m on axis (rot+1)%3 and st on axis (rot+2)%3.
 __device__ Cuda::vec3 place(int rot, float st, float w, float m) {
-    if (rot == 0) return Cuda::vec3(st, w, m);
-    if (rot == 1) return Cuda::vec3(m, st, w);
-    return Cuda::vec3(w, m, st);
+    if (rot == 0) return Cuda::vec3(w, m, st);
+    if (rot == 1) return Cuda::vec3(st, w, m);
+    return Cuda::vec3(m, st, w);
 }
 
 __device__ float axis_component(const Cuda::vec3& v, int axis) {
@@ -90,9 +90,9 @@ __device__ void get_child_block(RayState& r) {
     const int S = r.states[r.plen - 1];
     Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / place(rot, S + 1, 2, 2);
     Cuda::vec3 fc = (r.len * r.dir - r.l[r.plen]) / child_size;
-    const int slot = min(S, max(0, (int)floorf(axis_component(fc, rot))));
-    const int write_symbol = min(1, max(0, (int)floorf(axis_component(fc, (rot + 1) % 3))));
-    const int move_right = min(1, max(0, (int)floorf(axis_component(fc, (rot + 2) % 3))));
+    const int write_symbol = min(1, max(0, (int)floorf(axis_component(fc, rot))));
+    const int move_right = min(1, max(0, (int)floorf(axis_component(fc, (rot + 1) % 3))));
+    const int slot = min(S, max(0, (int)floorf(axis_component(fc, (rot + 2) % 3))));
     //if (r.print) printf("Child: (%d,%d,%d)\n", slot, write_symbol, move_right);
     r.l[r.plen] += child_size * place(rot, slot, write_symbol, move_right);
     r.u[r.plen] = r.l[r.plen] + child_size;
@@ -129,12 +129,12 @@ __device__ bool step_out(RayState& r) {
         const int S = r.states[r.plen - 1];
         const int tr = r.table[a];
         const int slot = Cuda::tm_next_state(tr) == Cuda::TM_HALT ? S : Cuda::tm_next_state(tr);
-        // which of (state, write, move) the crossed face's axis carries at this depth
+        // which of (write, move, state) the crossed face's axis carries at this depth
         const int role = ((r.face >> 1) - axis_rotation(r.plen - 1, r.axis_cycle_start) + 3) % 3;
         const int sgn = (r.face & 1) ? 1 : -1;
-        const int ns = slot + (role == 0) * sgn;
-        const int ws = Cuda::tm_write_symbol(tr) + (role == 1) * sgn;
-        const int lr = Cuda::tm_move_right(tr) + (role == 2) * sgn;
+        const int ws = Cuda::tm_write_symbol(tr) + (role == 0) * sgn;
+        const int lr = Cuda::tm_move_right(tr) + (role == 1) * sgn;
+        const int ns = slot + (role == 2) * sgn;
         out = ns < 0 || ns > S || ws < 0 || ws > 1 || lr < 0 || lr > 1;
         if (out) {
             // no sibling that way: undo this level's choice and keep climbing
@@ -237,11 +237,14 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
         while (mainloop(r)) {}
     }
 
+    // a miss leaves the pixel as the scene cleared it
+    if (!r.hit) return;
+
     // color by the hit machine's halt time, shaded by which face was hit
     int haltcol = Cuda::rainbow(atan(r.halt_time / 4.0f) / 1.57079632679f);
     Cuda::vec3 col = face_shade(r.face >> 1) * Cuda::vec3((haltcol >> 16) & 255, (haltcol >> 8) & 255, haltcol & 255);
 
-    pixels[pixel_index] = (0xff000000 * r.hit) | ((unsigned int)(floor(col.x)) << 16) | ((unsigned int)(floor(col.y)) << 8) | (unsigned int)(floor(col.z));
+    pixels[pixel_index] = 0xff000000 | ((unsigned int)(floor(col.x)) << 16) | ((unsigned int)(floor(col.y)) << 8) | (unsigned int)(floor(col.z));
     if (r.print) pixels[pixel_index] = 0xff00ff00;
     //if ((idx & idy & 3) == 3) pixels[pixel_index] = 0xffff00ff;
     //if ((idx & idy & 15) == 15) pixels[pixel_index] = 0xffe0e000;

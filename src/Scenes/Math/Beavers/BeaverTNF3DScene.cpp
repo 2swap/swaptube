@@ -53,7 +53,7 @@ void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3&
             if (a == -1) break;
             const int depth = action.size();
             const int rot = depth < axis_cycle_start ? 0 : (depth - axis_cycle_start) % 3;
-            const int aS = rot, aW = (rot + 1) % 3, aM = (rot + 2) % 3;
+            const int aW = rot, aM = (rot + 1) % 3, aS = (rot + 2) % 3;   // write, move, state axes (see axis_rotation in beaver_TNF_3d.cu)
             action.push_back(a);
             scale[aS] *= states + 1; scale[aW] *= 2; scale[aM] *= 2;
             const int slot = min(states, max(0, (int)floor((states + 1) * p[aS])));
