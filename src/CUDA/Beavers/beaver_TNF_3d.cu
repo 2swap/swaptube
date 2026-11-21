@@ -148,8 +148,8 @@ __device__ bool mainloop(RayState& r) {
     Cuda::vec3 cubsize = r.u[r.plen - 1] - r.l[r.plen - 1];
     const bool cut_off = r.plen >= r.max_depth || (cubsize.x + cubsize.y + cubsize.z) < 0.3 * r.thickness * r.len;
     if (!cut_off) {
-        Cuda::TuringMachineRun run;
-        const int result = Cuda::tm_run(r.table, run, r.max_steps);
+        int steps;
+        const int result = Cuda::tm_run(r.table, r.max_steps, steps);
         if (result >= 0) {
             // undefined transition: branch on it, descending into the child the ray is in
             r.action[r.plen - 1] = result;
@@ -162,7 +162,7 @@ __device__ bool mainloop(RayState& r) {
         if (result == Cuda::TM_HALTED) {
             // a halting machine is a solid cube
             r.hit = true;
-            r.halt_time = run.steps + 1;
+            r.halt_time = steps + 1;
             return false;
         }
     }

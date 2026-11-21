@@ -31,52 +31,32 @@ HOST_DEVICE inline int tm_next_state(int tr) { return tr >> 2; }
 HOST_DEVICE inline int tm_write_symbol(int tr) { return (tr >> 1) & 1; }
 HOST_DEVICE inline int tm_move_right(int tr) { return tr & 1; }
 
-// A machine's execution state on a short tape, for GPU-heavy uses that run
-// many machines per pixel. The 96-cell tape is bit-packed into three words
-// (cell i is bit i%32 of word i/32), so on the GPU it lives in registers
-// instead of a head-indexed array in local memory. The head starts mid-tape.
-inline constexpr int TM_TAPE_LEN = 96;
-
-struct TuringMachineRun {
-    uint32_t t0 = 0, t1 = 0, t2 = 0;
-    int head = TM_TAPE_LEN / 2;
-    int state = 0;
-    int steps = 0;
-};
-
-HOST_DEVICE inline int tm_read_cell(const TuringMachineRun& r) {
-    const uint32_t word = r.head < 32 ? r.t0 : (r.head < 64 ? r.t1 : r.t2);
-    return (word >> (r.head & 31)) & 1u;
-}
-
-HOST_DEVICE inline void tm_write_cell(TuringMachineRun& r, int bit) {
-    const uint32_t mask = 1u << (r.head & 31);
-    const uint32_t value = bit ? mask : 0u;
-    if (r.head < 32)      r.t0 = (r.t0 & ~mask) | value;
-    else if (r.head < 64) r.t1 = (r.t1 & ~mask) | value;
-    else                  r.t2 = (r.t2 & ~mask) | value;
-}
-
 // Results of tm_run other than a codon (which is always >= 0).
 inline constexpr int TM_RAN_OUT = -1;   // out of steps, out of codons, or off the tape
 inline constexpr int TM_HALTED = -2;    // reached a TM_HALT transition
 
-// Runs the machine from wherever `r` currently is, until one of:
-//  - an undefined transition: returns its codon, with `r` paused before it;
-//  - a halting transition: returns TM_HALTED, with `r` paused before it;
+// The tape tm_run uses: 64 cells, head starting mid-tape.
+inline constexpr int TM_TAPE_LEN = 64;
+
+// Runs the machine from a blank tape until one of:
+//  - an undefined transition: returns its codon;
+//  - a halting transition: returns TM_HALTED;
 //  - otherwise TM_RAN_OUT.
-HOST_DEVICE inline int tm_run(const int* table, TuringMachineRun& r, int max_steps) {
-    while (r.steps < max_steps) {
-        const int codon = tm_codon(r.state, tm_read_cell(r));
+HOST_DEVICE inline int tm_run(const int* table, int max_steps, int& steps) {
+    uint64_t tape = 0;
+    int head = TM_TAPE_LEN / 2;
+    int state = 0;
+    for (steps = 0; steps < max_steps; steps++) {
+        const uint64_t mask = 1ull << head;
+        const int codon = tm_codon(state, (tape & mask) != 0);
         if (codon >= TM_CODONS) break;
         const int tr = table[codon];
         if (tr == TM_UNDEFINED) return codon;
         if (tm_next_state(tr) == TM_HALT) return TM_HALTED;
-        tm_write_cell(r, tm_write_symbol(tr));
-        r.head += 2 * tm_move_right(tr) - 1;
-        r.state = tm_next_state(tr);
-        if (r.head < 0 || r.head >= TM_TAPE_LEN) break;
-        r.steps++;
+        tape = tm_write_symbol(tr) ? (tape | mask) : (tape & ~mask);
+        head += 2 * tm_move_right(tr) - 1;
+        state = tm_next_state(tr);
+        if (head < 0 || head >= TM_TAPE_LEN) break;
     }
     return TM_RAN_OUT;
 }

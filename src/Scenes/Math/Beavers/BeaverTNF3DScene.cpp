@@ -34,8 +34,8 @@ const int MAX_CONTEXT_PATH = 18;
 // stops at, or -1 if it never reaches one (it halts, runs out of steps, or
 // runs off the tape).
 int halt_trans(const TuringMachine& tm, int max_steps) {
-    TuringMachineRun run;
-    const int codon = tm_run(tm.table, run, max_steps);
+    int steps;
+    const int codon = tm_run(tm.table, max_steps, steps);
     return codon >= 0 ? codon : -1;
 }
 
