@@ -128,6 +128,13 @@ __device__ bool step_out(RayState& r) {
     return true;
 }
 
+// Flat shading up to which face was entered
+__device__ float face_shade(int axis) {
+    if (axis == 1) return 0.85f;
+    if (axis == 2) return 0.7f;
+    return 1.0f; // Camera in cube
+}
+
 // One step of the traversal, in the cube at the end of the current path.
 // Returns true to keep going, false once the ray has hit a halting cube
 // (r.hit) or left the fractal.
@@ -160,7 +167,7 @@ __device__ bool mainloop(RayState& r) {
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, Cuda::TuringMachine tm, float brightness_offset, int max_steps, int max_depth) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, Cuda::TuringMachine tm, int max_steps, int max_depth) {
     const int* action = path.a;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -205,9 +212,9 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
         while (mainloop(r)) {}
     }
 
-    float b = fmaxf(0,fminf(1, -logf(r.len)/3+brightness_offset));
+    // color by the hit machine's halt time, shaded by which face was hit
     int haltcol = Cuda::rainbow(atan(r.halt_time / 4.0f) / 1.57079632679f);
-    Cuda::vec3 col = (b+0.25f)/1.25f*Cuda::vec3((haltcol >> 16) & 255, (haltcol >> 8) & 255, haltcol & 255);
+    Cuda::vec3 col = face_shade(r.face >> 1) * Cuda::vec3((haltcol >> 16) & 255, (haltcol >> 8) & 255, haltcol & 255);
 
     pixels[pixel_index] = (0xff000000 * r.hit) | ((unsigned int)(floor(col.x)) << 16) | ((unsigned int)(floor(col.y)) << 8) | (unsigned int)(floor(col.z));
     if (r.print) pixels[pixel_index] = 0xff00ff00;
@@ -220,7 +227,6 @@ extern "C" void beaver_TNF_3D_cuda(
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
     const int* action, int pathlen, Cuda::TuringMachine tm,
-    float brightness_offset,
     int max_steps, int max_depth
 ) {
     if (pathlen > MAX_TNF_DEPTH - 2) {
@@ -232,5 +238,5 @@ extern "C" void beaver_TNF_3D_cuda(
     dim3 threads(16, 16);
     dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, path, pathlen, tm, brightness_offset, max_steps, max_depth);
+    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, path, pathlen, tm, max_steps, max_depth);
 }

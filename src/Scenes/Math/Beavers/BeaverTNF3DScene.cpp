@@ -2,7 +2,7 @@
 #include "../../../Host_Device_Shared/TuringMachine.h"
 #include <vector>
 
-extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, float brightness_offset, int max_steps, int max_depth);
+extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, int max_steps, int max_depth);
 
 BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     manager.set({
@@ -21,7 +21,6 @@ BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
         {"scale_x", "1"},
         {"scale_y", "1"},
         {"scale_z", "1"},
-        {"brightness_offset", "0"},
         {"max_tnf_depth", "15"}
     });
 }
@@ -93,7 +92,6 @@ void BeaverTNF3DScene::draw() {
         camera, state["fov"],
         lower*scale, upper*scale,
         action.data(), action.size(), tm,
-        state["brightness_offset"],
         state["max_steps"], state["max_tnf_depth"]
     );
 }
