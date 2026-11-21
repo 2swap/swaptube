@@ -24,8 +24,9 @@ struct RayState {
 
     int table[Cuda::TM_CODONS];   // packed transitions of the machine being explored (see TuringMachine.h)
     int max_steps;
-    int max_depth = MAX_TNF_DEPTH - 1;
-    int halt_time = 0;   // steps until the most recently run machine reached an undefined transition
+    int max_depth;
+    bool hit = false;    // the ray ended on a halting (solid) cube
+    int halt_time = 0;   // steps the hit machine ran before halting
 
     int action[MAX_TNF_DEPTH];
     int states[MAX_TNF_DEPTH] = {2};
@@ -62,18 +63,21 @@ __device__ void raytrace_block(RayState& r, bool inside) {
 }
 
 __device__ void get_child_block(RayState& r) {
-    // children are laid out as (next state, write symbol, move) along (x, y, z)
-    Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / Cuda::vec3(r.states[r.plen - 1], 2, 2);
+    // children are laid out as (next state, write symbol, move) along (x, y, z).
+    // The state axis has S+1 slots: the S existing states (the last of which is
+    // new to this machine), then halt.
+    const int S = r.states[r.plen - 1];
+    Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / Cuda::vec3(S + 1, 2, 2);
     Cuda::vec3 thingy = r.len * r.dir - r.l[r.plen];
     Cuda::ivec3 child = floor(thingy / child_size);
-    child.x = min(r.states[r.plen - 1] - 1, max(0, child.x));
+    child.x = min(S, max(0, child.x));
     child.y = min(1, max(0, child.y));
     child.z = min(1, max(0, child.z));
     //if (r.print) printf("Child: (%d,%d,%d)\n", child.x, child.y, child.z);
     r.l[r.plen] += child_size * child;
     r.u[r.plen] = r.l[r.plen] + child_size;
-    r.table[r.action[r.plen - 1]] = Cuda::tm_pack(child.x, child.y, child.z);
-    r.states[r.plen] = r.states[r.plen - 1] + (child.x == r.states[r.plen - 1] - 1);
+    r.table[r.action[r.plen - 1]] = Cuda::tm_pack(child.x == S ? Cuda::TM_HALT : child.x, child.y, child.z);
+    r.states[r.plen] = S + (child.x == S - 1);
 }
 
 __device__ void print_things(RayState& r) {
@@ -89,90 +93,74 @@ __device__ void print_init(RayState& r) {
 
 
 
-/*
------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------
-
-
-
-the loop:
-
-- run TM
-- raytrace to the block whose TM you just ran, from the outside if the TM halted and from the inside if the TM didn't halt
-- use raytracing info to find next block to enter
-
-alternatively:
-
-- run TM
-- if nonhalt, raytrace out of the block, use face id to find next block and modify path and TM accordingly
-- if halt, use already computed ray position to find which child the ray passes through, modify path and TM accordingly
-
-not sure if the branching is worth skipping the raytrace. idk exactly the mechanism through which branching loses time on gpu.
-
-
-
------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------
-*/
-
-
-
-__device__ bool mainloop(RayState& r) {
-    // end ray if it covers the whole block or it's past max depth
-    Cuda::vec3 cubsize = r.u[r.plen - 1] - r.l[r.plen - 1];
-    if (r.plen >= r.max_depth || (cubsize.x + cubsize.y + cubsize.z) < 0.3 * r.thickness * r.len || r.face == -1) return false;
-
-    //if (r.print) print_things(r);
-
-    // run TM from a blank tape until it reaches an undefined transition ("halts") or gives up
-    Cuda::TuringMachineRun run;
-    int action_index = Cuda::tm_run(r.table, run, r.max_steps);
-    bool halted = action_index >= 0;   // >= 0 is a codon: the machine reached an undefined transition
-    r.halt_time = halted ? run.steps + 1 : 0;
-
-    //if (r.print) printf("\nHalted? %d\n", halted);
-
-    // modify path
-    if (halted) {
-        r.action[r.plen - 1] = action_index;
-        r.l[r.plen] = r.l[r.plen - 1];
-        r.u[r.plen] = r.u[r.plen - 1];
-        get_child_block(r);
-        r.plen++;
-    } else {
-        raytrace_block(r, true);
-        bool out = true;
-        while (out) {
-            r.plen--;
-            if (r.plen == 0) {r.len = INF; return false;}
-            // move to the sibling across the exit face by changing this level's transition
-            const int a = r.action[r.plen - 1];
-            const int S = r.states[r.plen - 1];
-            const int tr = r.table[a];
-            const int ns = Cuda::tm_next_state(tr) + (r.face == 1) - (r.face == 0);
-            const int ws = Cuda::tm_write_symbol(tr) + (r.face == 3) - (r.face == 2);
-            const int lr = Cuda::tm_move_right(tr) + (r.face == 5) - (r.face == 4);
-            out = ns < 0 || ns >= S || ws < 0 || ws > 1 || lr < 0 || lr > 1;
-            if (out) {
-                // no sibling that way: undo this level's choice and keep climbing
-                r.table[a] = Cuda::TM_UNDEFINED;
-            } else {
-                r.table[a] = Cuda::tm_pack(ns, ws, lr);
-                r.states[r.plen] = S + (ns == S - 1);
-            }
+// Leave the current cube through its exit face into the neighbouring cube,
+// climbing up the tree while that neighbour lies outside the parent.
+// Returns false if the ray leaves the whole fractal (or hits a numerical dead end).
+__device__ bool step_out(RayState& r) {
+    raytrace_block(r, true);
+    if (r.face < 0) return false;
+    bool out = true;
+    while (out) {
+        r.plen--;
+        if (r.plen == 0) return false;
+        // move to the sibling across the exit face by changing this level's transition.
+        // On the state axis, slot S (one past the last state) is the halt slot.
+        const int a = r.action[r.plen - 1];
+        const int S = r.states[r.plen - 1];
+        const int tr = r.table[a];
+        const int slot = Cuda::tm_next_state(tr) == Cuda::TM_HALT ? S : Cuda::tm_next_state(tr);
+        const int ns = slot + (r.face == 1) - (r.face == 0);
+        const int ws = Cuda::tm_write_symbol(tr) + (r.face == 3) - (r.face == 2);
+        const int lr = Cuda::tm_move_right(tr) + (r.face == 5) - (r.face == 4);
+        out = ns < 0 || ns > S || ws < 0 || ws > 1 || lr < 0 || lr > 1;
+        if (out) {
+            // no sibling that way: undo this level's choice and keep climbing
+            r.table[a] = Cuda::TM_UNDEFINED;
+        } else {
+            r.table[a] = Cuda::tm_pack(ns == S ? Cuda::TM_HALT : ns, ws, lr);
+            r.states[r.plen] = S + (ns == S - 1);
         }
-        Cuda::vec3 shift = (r.u[r.plen] - r.l[r.plen]) * Cuda::vec3((r.face == 1) - (r.face == 0), (r.face == 3) - (r.face == 2), (r.face == 5) - (r.face == 4));
-        r.l[r.plen] += shift;
-        r.u[r.plen] += shift;
-        r.plen++;
     }
-
+    Cuda::vec3 shift = (r.u[r.plen] - r.l[r.plen]) * Cuda::vec3((r.face == 1) - (r.face == 0), (r.face == 3) - (r.face == 2), (r.face == 5) - (r.face == 4));
+    r.l[r.plen] += shift;
+    r.u[r.plen] += shift;
+    r.plen++;
     return true;
+}
+
+// One step of the traversal, in the cube at the end of the current path.
+// Returns true to keep going, false once the ray has hit a halting cube
+// (r.hit) or left the fractal.
+__device__ bool mainloop(RayState& r) {
+    Cuda::vec3 cubsize = r.u[r.plen - 1] - r.l[r.plen - 1];
+    const bool cut_off = r.plen >= r.max_depth || (cubsize.x + cubsize.y + cubsize.z) < 0.3 * r.thickness * r.len;
+    if (!cut_off) {
+        //if (r.print) print_things(r);
+        Cuda::TuringMachineRun run;
+        const int result = Cuda::tm_run(r.table, run, r.max_steps);
+        if (result >= 0) {
+            // undefined transition: branch on it, descending into the child the ray is in
+            r.action[r.plen - 1] = result;
+            r.l[r.plen] = r.l[r.plen - 1];
+            r.u[r.plen] = r.u[r.plen - 1];
+            get_child_block(r);
+            r.plen++;
+            return true;
+        }
+        if (result == Cuda::TM_HALTED) {
+            // a halting machine is a solid cube
+            r.hit = true;
+            r.halt_time = run.steps + 1;
+            return false;
+        }
+    }
+    // non-halting and cut-off cubes are transparent: pass straight through
+    return step_out(r);
 }
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, Cuda::TuringMachine tm, float brightness_offset, int max_steps) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, Cuda::TuringMachine tm, float brightness_offset, int max_steps, int max_depth) {
     const int* action = path.a;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -190,6 +178,7 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
     r.dir = normalize(Cuda::get_raymarch_vector(Cuda::ivec2(pos_x, pos_y), wh, fov, camera));
     r.thickness = 20 * fov / (wh.x + wh.y);
     r.max_steps = max_steps;
+    r.max_depth = min(MAX_TNF_DEPTH - 1, max_depth);
 
     for (int i=0; i<Cuda::TM_CODONS; i++) r.table[i] = Cuda::TM_UNDEFINED;
     r.plen = pathlen + 1;
@@ -203,8 +192,9 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
     r.u[r.plen - 1] = upper;
     for (int i=r.plen-2; i>=0; i--) {
         const int tr = tm.table[action[i]];
-        r.l[i] = r.l[i+1] - (r.u[i+1] - r.l[i+1]) * Cuda::vec3(Cuda::tm_next_state(tr), Cuda::tm_write_symbol(tr), Cuda::tm_move_right(tr));
-        r.u[i] = r.l[i] + (r.u[i+1] - r.l[i+1]) * Cuda::vec3(r.states[i], 2, 2);
+        const int slot = Cuda::tm_next_state(tr) == Cuda::TM_HALT ? r.states[i] : Cuda::tm_next_state(tr);
+        r.l[i] = r.l[i+1] - (r.u[i+1] - r.l[i+1]) * Cuda::vec3(slot, Cuda::tm_write_symbol(tr), Cuda::tm_move_right(tr));
+        r.u[i] = r.l[i] + (r.u[i+1] - r.l[i+1]) * Cuda::vec3(r.states[i] + 1, 2, 2);
     }
 
     //if (r.print) print_init(r);
@@ -212,20 +202,14 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
     bool started_inside = in_block(Cuda::vec3(0), lower, upper);
     if (!started_inside) raytrace_block(r, false);
     if (started_inside || r.face >= 0) {
-        int time = 0;
-        while (mainloop(r)) {
-            //if (r.print) print_things(r);
-            time++;
-        }
-    } else {
-        r.len = INF;
+        while (mainloop(r)) {}
     }
 
     float b = fmaxf(0,fminf(1, -logf(r.len)/3+brightness_offset));
     int haltcol = Cuda::rainbow(atan(r.halt_time / 4.0f) / 1.57079632679f);
     Cuda::vec3 col = (b+0.25f)/1.25f*Cuda::vec3((haltcol >> 16) & 255, (haltcol >> 8) & 255, haltcol & 255);
 
-    pixels[pixel_index] = (0xff000000 * (r.len < INF)) | ((unsigned int)(floor(col.x)) << 16) | ((unsigned int)(floor(col.y)) << 8) | (unsigned int)(floor(col.z));
+    pixels[pixel_index] = (0xff000000 * r.hit) | ((unsigned int)(floor(col.x)) << 16) | ((unsigned int)(floor(col.y)) << 8) | (unsigned int)(floor(col.z));
     if (r.print) pixels[pixel_index] = 0xff00ff00;
     //if ((idx & idy & 3) == 3) pixels[pixel_index] = 0xffff00ff;
     //if ((idx & idy & 15) == 15) pixels[pixel_index] = 0xffe0e000;
@@ -237,7 +221,7 @@ extern "C" void beaver_TNF_3D_cuda(
     Cuda::vec3 lower, Cuda::vec3 upper,
     const int* action, int pathlen, Cuda::TuringMachine tm,
     float brightness_offset,
-    int max_steps
+    int max_steps, int max_depth
 ) {
     if (pathlen > MAX_TNF_DEPTH - 2) {
         throw runtime_error("beaver_TNF_3D_cuda: context path of length " + to_string(pathlen) + " exceeds MAX_TNF_DEPTH - 2");
@@ -248,5 +232,5 @@ extern "C" void beaver_TNF_3D_cuda(
     dim3 threads(16, 16);
     dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, path, pathlen, tm, brightness_offset, max_steps);
+    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, path, pathlen, tm, brightness_offset, max_steps, max_depth);
 }

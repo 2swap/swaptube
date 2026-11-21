@@ -2,7 +2,7 @@
 #include "../../../Host_Device_Shared/TuringMachine.h"
 #include <vector>
 
-extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, float brightness_offset, int max_steps);
+extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, float brightness_offset, int max_steps, int max_depth);
 
 BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     manager.set({
@@ -26,37 +26,47 @@ BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     });
 }
 
+// Longest camera context path the kernel accepts: MAX_TNF_DEPTH - 2 in
+// beaver_TNF_3d.cu (whose host wrapper throws if this is exceeded).
+const int MAX_CONTEXT_PATH = 18;
+
 // Runs tm from a blank tape. Returns the codon of the undefined transition it
-// stops at, or -1 if it never reaches one (out of steps or off the tape).
+// stops at, or -1 if it never reaches one (it halts, runs out of steps, or
+// runs off the tape).
 int halt_trans(const TuringMachine& tm, int max_steps) {
     TuringMachineRun run;
     const int codon = tm_run(tm.table, run, max_steps);
     return codon >= 0 ? codon : -1;
 }
 
+// Finds the tree path from the root cube [0,1]^3 down to the cube containing
+// the camera at (x, y, z), at most max_tnf_depth levels deep, and that cube's
+// bounds relative to the camera.
 void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth) {
-    ivec3 scale(1);
+    double p[3] = {x, y, z};          // camera position inside the current cube, per axis, in [0,1]
+    double scale[3] = {1, 1, 1};      // root cube size / current cube size, per axis
     if (0 <= x && x <= 1 && 0 <= y && y <= 1 && 0 <= z && z <= 1) {
         int states = 2;
-        for (int i=0; i<max_tnf_depth; i++) {
-            action.push_back(halt_trans(tm, max_steps));
-            int a = action[action.size()-1];
+        const int max_path = min(max_tnf_depth, MAX_CONTEXT_PATH);
+        while ((int)action.size() < max_path) {
+            const int a = halt_trans(tm, max_steps);
             if (a == -1) break;
-            // children are laid out as (next state, write symbol, move) along (x, y, z)
-            scale *= ivec3(states, 2, 2);
-            const int next_state = min((double)(states-1), max((double)(0), floor(states * x)));
-            x = states * x - next_state;
-            const int write_symbol = min(1.0, max(0.0, floor(2 * y)));
-            y = 2 * y - write_symbol;
-            const int move_right = min(1.0, max(0.0, floor(2 * z)));
-            z = 2 * z - move_right;
-            tm.table[a] = tm_pack(next_state, write_symbol, move_right);
-            states += next_state == states - 1;
+            action.push_back(a);
+            // children are laid out as (next state, write symbol, move) along (x, y, z);
+            // the state axis has states + 1 slots: existing states, then halt
+            scale[0] *= states + 1; scale[1] *= 2; scale[2] *= 2;
+            const int slot = min(states, max(0, (int)floor((states + 1) * p[0])));
+            p[0] = (states + 1) * p[0] - slot;
+            const int write_symbol = min(1, max(0, (int)floor(2 * p[1])));
+            p[1] = 2 * p[1] - write_symbol;
+            const int move_right = min(1, max(0, (int)floor(2 * p[2])));
+            p[2] = 2 * p[2] - move_right;
+            tm.table[a] = tm_pack(slot == states ? TM_HALT : slot, write_symbol, move_right);
+            states += slot == states - 1;
         }
-        action.pop_back();
     }
-    lower = vec3(-x, -y, -z) / scale;
-    upper = vec3(1-x, 1-y, 1-z) / scale;
+    lower = vec3(-p[0] / scale[0], -p[1] / scale[1], -p[2] / scale[2]);
+    upper = vec3((1 - p[0]) / scale[0], (1 - p[1]) / scale[1], (1 - p[2]) / scale[2]);
 }
 
 void BeaverTNF3DScene::draw() {
@@ -84,6 +94,6 @@ void BeaverTNF3DScene::draw() {
         lower*scale, upper*scale,
         action.data(), action.size(), tm,
         state["brightness_offset"],
-        state["max_steps"]
+        state["max_steps"], state["max_tnf_depth"]
     );
 }
