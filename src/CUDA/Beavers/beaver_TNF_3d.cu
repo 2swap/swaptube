@@ -25,6 +25,7 @@ struct RayState {
     int table[Cuda::TM_CODONS];   // packed transitions of the machine being explored (see TuringMachine.h)
     int max_steps;
     int max_depth;
+    int axis_cycle_start;
     bool hit = false;    // the ray ended on a halting (solid) cube
     int halt_time = 0;   // steps the hit machine ran before halting
 
@@ -62,22 +63,41 @@ __device__ void raytrace_block(RayState& r, bool inside) {
     r.len = (r.face >> 1 == 0) * fminf(INF,fmaxf(-INF,dists.x)) + (r.face >> 1 == 1) * fminf(INF,fmaxf(-INF,dists.y)) + (r.face >> 1 == 2) * fminf(INF,fmaxf(-INF,dists.z)) + (r.face == -1) * fminf(dists.x, fminf(dists.y, dists.z));
 }
 
+// Axis cycling. A branch at depth k (k = 0 for the root's split) lays its
+// children out with the next state on axis rot, the write symbol on axis
+// (rot+1)%3 and the move on axis (rot+2)%3, where rot is 0 above depth
+// axis_cycle_start and cycles 0, 1, 2, ... from there down.
+__device__ int axis_rotation(int depth, int axis_cycle_start) {
+    return depth < axis_cycle_start ? 0 : (depth - axis_cycle_start) % 3;
+}
+
+// The vector with st on axis rot, w on axis (rot+1)%3 and m on axis (rot+2)%3.
+__device__ Cuda::vec3 place(int rot, float st, float w, float m) {
+    if (rot == 0) return Cuda::vec3(st, w, m);
+    if (rot == 1) return Cuda::vec3(m, st, w);
+    return Cuda::vec3(w, m, st);
+}
+
+__device__ float axis_component(const Cuda::vec3& v, int axis) {
+    return axis == 0 ? v.x : (axis == 1 ? v.y : v.z);
+}
+
 __device__ void get_child_block(RayState& r) {
-    // children are laid out as (next state, write symbol, move) along (x, y, z).
-    // The state axis has S+1 slots: the S existing states (the last of which is
-    // new to this machine), then halt.
+    // children are laid out as (next state, write symbol, move) along the axes
+    // given by this depth's rotation. The state axis has S+1 slots: the S
+    // existing states (the last of which is new to this machine), then halt.
+    const int rot = axis_rotation(r.plen - 1, r.axis_cycle_start);
     const int S = r.states[r.plen - 1];
-    Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / Cuda::vec3(S + 1, 2, 2);
-    Cuda::vec3 thingy = r.len * r.dir - r.l[r.plen];
-    Cuda::ivec3 child = floor(thingy / child_size);
-    child.x = min(S, max(0, child.x));
-    child.y = min(1, max(0, child.y));
-    child.z = min(1, max(0, child.z));
-    //if (r.print) printf("Child: (%d,%d,%d)\n", child.x, child.y, child.z);
-    r.l[r.plen] += child_size * child;
+    Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / place(rot, S + 1, 2, 2);
+    Cuda::vec3 fc = (r.len * r.dir - r.l[r.plen]) / child_size;
+    const int slot = min(S, max(0, (int)floorf(axis_component(fc, rot))));
+    const int write_symbol = min(1, max(0, (int)floorf(axis_component(fc, (rot + 1) % 3))));
+    const int move_right = min(1, max(0, (int)floorf(axis_component(fc, (rot + 2) % 3))));
+    //if (r.print) printf("Child: (%d,%d,%d)\n", slot, write_symbol, move_right);
+    r.l[r.plen] += child_size * place(rot, slot, write_symbol, move_right);
     r.u[r.plen] = r.l[r.plen] + child_size;
-    r.table[r.action[r.plen - 1]] = Cuda::tm_pack(child.x == S ? Cuda::TM_HALT : child.x, child.y, child.z);
-    r.states[r.plen] = S + (child.x == S - 1);
+    r.table[r.action[r.plen - 1]] = Cuda::tm_pack(slot == S ? Cuda::TM_HALT : slot, write_symbol, move_right);
+    r.states[r.plen] = S + (slot == S - 1);
 }
 
 __device__ void print_things(RayState& r) {
@@ -109,9 +129,12 @@ __device__ bool step_out(RayState& r) {
         const int S = r.states[r.plen - 1];
         const int tr = r.table[a];
         const int slot = Cuda::tm_next_state(tr) == Cuda::TM_HALT ? S : Cuda::tm_next_state(tr);
-        const int ns = slot + (r.face == 1) - (r.face == 0);
-        const int ws = Cuda::tm_write_symbol(tr) + (r.face == 3) - (r.face == 2);
-        const int lr = Cuda::tm_move_right(tr) + (r.face == 5) - (r.face == 4);
+        // which of (state, write, move) the crossed face's axis carries at this depth
+        const int role = ((r.face >> 1) - axis_rotation(r.plen - 1, r.axis_cycle_start) + 3) % 3;
+        const int sgn = (r.face & 1) ? 1 : -1;
+        const int ns = slot + (role == 0) * sgn;
+        const int ws = Cuda::tm_write_symbol(tr) + (role == 1) * sgn;
+        const int lr = Cuda::tm_move_right(tr) + (role == 2) * sgn;
         out = ns < 0 || ns > S || ws < 0 || ws > 1 || lr < 0 || lr > 1;
         if (out) {
             // no sibling that way: undo this level's choice and keep climbing
@@ -167,7 +190,7 @@ __device__ bool mainloop(RayState& r) {
 
 
 
-__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, Cuda::TuringMachine tm, int max_steps, int max_depth) {
+__global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh, Cuda::vec2 center, Cuda::quat camera, float fov, Cuda::vec3 lower, Cuda::vec3 upper, ActionPath path, int pathlen, Cuda::TuringMachine tm, int max_steps, int max_depth, int axis_cycle_start) {
     const int* action = path.a;
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -186,6 +209,7 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
     r.thickness = 20 * fov / (wh.x + wh.y);
     r.max_steps = max_steps;
     r.max_depth = min(MAX_TNF_DEPTH - 1, max_depth);
+    r.axis_cycle_start = axis_cycle_start;
 
     for (int i=0; i<Cuda::TM_CODONS; i++) r.table[i] = Cuda::TM_UNDEFINED;
     r.plen = pathlen + 1;
@@ -200,8 +224,9 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
     for (int i=r.plen-2; i>=0; i--) {
         const int tr = tm.table[action[i]];
         const int slot = Cuda::tm_next_state(tr) == Cuda::TM_HALT ? r.states[i] : Cuda::tm_next_state(tr);
-        r.l[i] = r.l[i+1] - (r.u[i+1] - r.l[i+1]) * Cuda::vec3(slot, Cuda::tm_write_symbol(tr), Cuda::tm_move_right(tr));
-        r.u[i] = r.l[i] + (r.u[i+1] - r.l[i+1]) * Cuda::vec3(r.states[i] + 1, 2, 2);
+        const int rot = axis_rotation(i, axis_cycle_start);
+        r.l[i] = r.l[i+1] - (r.u[i+1] - r.l[i+1]) * place(rot, slot, Cuda::tm_write_symbol(tr), Cuda::tm_move_right(tr));
+        r.u[i] = r.l[i] + (r.u[i+1] - r.l[i+1]) * place(rot, r.states[i] + 1, 2, 2);
     }
 
     //if (r.print) print_init(r);
@@ -227,7 +252,7 @@ extern "C" void beaver_TNF_3D_cuda(
     Cuda::quat camera, float fov,
     Cuda::vec3 lower, Cuda::vec3 upper,
     const int* action, int pathlen, Cuda::TuringMachine tm,
-    int max_steps, int max_depth
+    int max_steps, int max_depth, int axis_cycle_start
 ) {
     if (pathlen > MAX_TNF_DEPTH - 2) {
         throw runtime_error("beaver_TNF_3D_cuda: context path of length " + to_string(pathlen) + " exceeds MAX_TNF_DEPTH - 2");
@@ -238,5 +263,5 @@ extern "C" void beaver_TNF_3D_cuda(
     dim3 threads(16, 16);
     dim3 block((wh.x + threads.x - 1) / threads.x, (wh.y + threads.y - 1) / threads.y);
 
-    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, path, pathlen, tm, max_steps, max_depth);
+    beaver_tnf_3D_kernel<<<block, threads>>>(d_pixels, wh, center, normalize(camera), fov, lower, upper, path, pathlen, tm, max_steps, max_depth, axis_cycle_start);
 }

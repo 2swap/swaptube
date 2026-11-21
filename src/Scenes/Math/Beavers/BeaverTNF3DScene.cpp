@@ -2,7 +2,7 @@
 #include "../../../Host_Device_Shared/TuringMachine.h"
 #include <vector>
 
-extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, int max_steps, int max_depth);
+extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, int max_steps, int max_depth, int axis_cycle_start);
 
 BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     manager.set({
@@ -21,7 +21,8 @@ BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
         {"scale_x", "1"},
         {"scale_y", "1"},
         {"scale_z", "1"},
-        {"max_tnf_depth", "15"}
+        {"max_tnf_depth", "15"},
+        {"axis_cycle_start", "0"}
     });
 }
 
@@ -41,7 +42,7 @@ int halt_trans(const TuringMachine& tm, int max_steps) {
 // Finds the tree path from the root cube [0,1]^3 down to the cube containing
 // the camera at (x, y, z), at most max_tnf_depth levels deep, and that cube's
 // bounds relative to the camera.
-void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth) {
+void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth, int axis_cycle_start) {
     double p[3] = {x, y, z};          // camera position inside the current cube, per axis, in [0,1]
     double scale[3] = {1, 1, 1};      // root cube size / current cube size, per axis
     if (0 <= x && x <= 1 && 0 <= y && y <= 1 && 0 <= z && z <= 1) {
@@ -50,16 +51,17 @@ void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3&
         while ((int)action.size() < max_path) {
             const int a = halt_trans(tm, max_steps);
             if (a == -1) break;
+            const int depth = action.size();
+            const int rot = depth < axis_cycle_start ? 0 : (depth - axis_cycle_start) % 3;
+            const int aS = rot, aW = (rot + 1) % 3, aM = (rot + 2) % 3;
             action.push_back(a);
-            // children are laid out as (next state, write symbol, move) along (x, y, z);
-            // the state axis has states + 1 slots: existing states, then halt
-            scale[0] *= states + 1; scale[1] *= 2; scale[2] *= 2;
-            const int slot = min(states, max(0, (int)floor((states + 1) * p[0])));
-            p[0] = (states + 1) * p[0] - slot;
-            const int write_symbol = min(1, max(0, (int)floor(2 * p[1])));
-            p[1] = 2 * p[1] - write_symbol;
-            const int move_right = min(1, max(0, (int)floor(2 * p[2])));
-            p[2] = 2 * p[2] - move_right;
+            scale[aS] *= states + 1; scale[aW] *= 2; scale[aM] *= 2;
+            const int slot = min(states, max(0, (int)floor((states + 1) * p[aS])));
+            p[aS] = (states + 1) * p[aS] - slot;
+            const int write_symbol = min(1, max(0, (int)floor(2 * p[aW])));
+            p[aW] = 2 * p[aW] - write_symbol;
+            const int move_right = min(1, max(0, (int)floor(2 * p[aM])));
+            p[aM] = 2 * p[aM] - move_right;
             tm.table[a] = tm_pack(slot == states ? TM_HALT : slot, write_symbol, move_right);
             states += slot == states - 1;
         }
@@ -82,7 +84,7 @@ void BeaverTNF3DScene::draw() {
     TuringMachine tm;
     vec3 lower;
     vec3 upper;
-    get_context(action, tm, lower, upper, x, y, z, state["max_steps"], state["max_tnf_depth"]);
+    get_context(action, tm, lower, upper, x, y, z, state["max_steps"], state["max_tnf_depth"], state["axis_cycle_start"]);
     /*for (int i=0; i<action.size(); i++) {
         printf("\nTransition %d: (%d,%d,%d)", action[i], tm_write_symbol(tm.table[action[i]]), tm_move_right(tm.table[action[i]]), tm_next_state(tm.table[action[i]]));
     }
@@ -92,6 +94,6 @@ void BeaverTNF3DScene::draw() {
         camera, state["fov"],
         lower*scale, upper*scale,
         action.data(), action.size(), tm,
-        state["max_steps"], state["max_tnf_depth"]
+        state["max_steps"], state["max_tnf_depth"], state["axis_cycle_start"]
     );
 }
