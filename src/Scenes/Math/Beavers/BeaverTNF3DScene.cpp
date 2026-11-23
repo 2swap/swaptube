@@ -2,7 +2,7 @@
 #include "../../../Host_Device_Shared/TuringMachine.h"
 #include <vector>
 
-extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, int max_steps, int max_depth, int axis_cycle_start);
+extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, int max_steps, int max_depth, int axis_cycle_start, int warp_level, float warp_t);
 
 BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     manager.set({
@@ -42,9 +42,10 @@ int halt_trans(const TuringMachine& tm, int max_steps) {
 // Finds the tree path from the root cube [0,1]^3 down to the cube containing
 // the camera at (x, y, z), at most max_tnf_depth levels deep, and that cube's
 // bounds relative to the camera.
-void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth, int axis_cycle_start) {
+void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth, int axis_cycle_start, int warp_level, double warp_t) {
     double p[3] = {x, y, z};          // camera position inside the current cube, per axis, in [0,1]
     double scale[3] = {1, 1, 1};      // root cube size / current cube size, per axis
+    double offset[3] = {0, 0, 0};     // camera pre-image minus camera, in root units
     if (0 <= x && x <= 1 && 0 <= y && y <= 1 && 0 <= z && z <= 1) {
         int states = 2;
         const int max_path = min(max_tnf_depth, MAX_CONTEXT_PATH);
@@ -52,7 +53,22 @@ void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3&
             const int a = halt_trans(tm, max_steps);
             if (a == -1) break;
             const int depth = action.size();
-            const int rot = depth < axis_cycle_start ? 0 : (depth - axis_cycle_start) % 3;
+            if (depth == warp_level) {
+                // pre-image of p under q -> (1-t) q + t (q.y, q.z, q.x); see warp_inverse in beaver_TNF_3d.cu
+                const double a = 1 - warp_t, b = warp_t, det = a * a * a + b * b * b;
+                double pre[3];
+                bool inside = true;
+                for (int i = 0; i < 3; i++) {
+                    pre[i] = (a * a * p[i] - a * b * p[(i + 1) % 3] + b * b * p[(i + 2) % 3]) / det;
+                    inside = inside && 0 <= pre[i] && pre[i] <= 1;
+                }
+                if (!inside) break;
+                for (int i = 0; i < 3; i++) {
+                    offset[i] = (pre[i] - p[i]) / scale[i];
+                    p[i] = pre[i];
+                }
+            }
+            const int rot = depth < axis_cycle_start ? 0 : (depth - axis_cycle_start) % 3;   // depth - axis_cycle_start >= 0 here
             const int aW = rot, aM = (rot + 1) % 3, aS = (rot + 2) % 3;   // write, move, state axes (see axis_rotation in beaver_TNF_3d.cu)
             action.push_back(a);
             scale[aS] *= states + 1; scale[aW] *= 2; scale[aM] *= 2;
@@ -66,8 +82,8 @@ void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3&
             states += slot == states - 1;
         }
     }
-    lower = vec3(-p[0] / scale[0], -p[1] / scale[1], -p[2] / scale[2]);
-    upper = vec3((1 - p[0]) / scale[0], (1 - p[1]) / scale[1], (1 - p[2]) / scale[2]);
+    lower = vec3(offset[0] - p[0] / scale[0], offset[1] - p[1] / scale[1], offset[2] - p[2] / scale[2]);
+    upper = vec3(offset[0] + (1 - p[0]) / scale[0], offset[1] + (1 - p[1]) / scale[1], offset[2] + (1 - p[2]) / scale[2]);
 }
 
 void BeaverTNF3DScene::draw() {
@@ -80,11 +96,18 @@ void BeaverTNF3DScene::draw() {
     double y = (double)(target.y) - (double)(dist * dir.y);
     double z = (double)(target.z) - (double)(dist * dir.z);
 
+    // fractional axis roll interpolates between the rolls at floor and
+    // floor + 1, which differ only from depth floor + 1 down.
+    const double roll = state["axis_cycle_start"];
+    const int axis_cycle_start = (int)floor(roll);
+    const double warp_t = roll - axis_cycle_start;
+    const int warp_level = warp_t > 0 && axis_cycle_start >= -1 ? axis_cycle_start + 1 : -1;
+
     std::vector<int> action;
     TuringMachine tm;
     vec3 lower;
     vec3 upper;
-    get_context(action, tm, lower, upper, x, y, z, state["max_steps"], state["max_tnf_depth"], state["axis_cycle_start"]);
+    get_context(action, tm, lower, upper, x, y, z, state["max_steps"], state["max_tnf_depth"], axis_cycle_start, warp_level, warp_t);
     /*for (int i=0; i<action.size(); i++) {
         printf("\nTransition %d: (%d,%d,%d)", action[i], tm_write_symbol(tm.table[action[i]]), tm_move_right(tm.table[action[i]]), tm_next_state(tm.table[action[i]]));
     }
@@ -94,6 +117,6 @@ void BeaverTNF3DScene::draw() {
         camera, state["fov"],
         lower*scale, upper*scale,
         action.data(), action.size(), tm,
-        state["max_steps"], state["max_tnf_depth"], state["axis_cycle_start"]
+        state["max_steps"], state["max_tnf_depth"], axis_cycle_start, warp_level, warp_t
     );
 }
