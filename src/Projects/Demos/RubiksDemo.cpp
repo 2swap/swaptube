@@ -6,7 +6,6 @@
 #include <memory>
 #include "../Scenes/Math/RubiksGraphScene.h"
 #include "../Scenes/Physics/RopeScene.h"
-#include "../Core/State/StateTester.h"
 
 void render_video(){
     RubiksScene rs;
@@ -29,7 +28,6 @@ void render_video(){
 
     
     rs.render_microblock();
-    // open_ui(rs);
 
 
     stage_macroblock(SilenceBlock(10));

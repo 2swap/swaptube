@@ -5,32 +5,23 @@
 #include "../color.cuh"
 #include "../common_graphics.cuh"
 
-/*__device__ void get_TM_from_pos(Cuda::ivec2 cell_pos, TuringMachine& tm) {
+// Picks the 2-state machine for a grid cell. The grid enumerates the four
+// transitions in the order (A,0), (B,0), (A,1), (B,1): slot k of the local
+// arrays below is the transition at codon order_to_codon[k].
+__device__ void get_TM_from_pos(Cuda::ivec2 cell_pos, Cuda::TuringMachine& tm) {
     tm.num_states = 2;
-    tm.num_symbols = 2;
-    int transitions[12] = {
-        1, 1, 1,
-        (cell_pos.x & 4) == 4, 0, (cell_pos.x & 2) == 2,
-        (2 - (cell_pos.x & 2)) * (cell_pos.y & 2) == 4, (2 - (cell_pos.x & 2)) * (cell_pos.y & 1) == 2, (1 - ((cell_pos.x & 2) == 2)) * (1 + (cell_pos.x & 1)) - 1,
-        (cell_pos.x & 2) * (cell_pos.y & 2) == 4, (cell_pos.x & 2) * (cell_pos.y & 1) == 2, ((cell_pos.x & 2) == 2) * (1 + (cell_pos.y & 1)) - 1,
-    };
-    for (int i=0; i<4; i++) {
-        tm.write_symbol[i] = transitions[3*i];
-        tm.left_right[i] = transitions[3*i+1];
-        tm.next_state[i] = transitions[3*i+2];
-    }
-}*/
-
-__device__ void get_TM_from_pos(Cuda::ivec2 cell_pos, TuringMachine& tm) {
-    tm.num_states = 2;
-    tm.num_symbols = 2;
+    const int order_to_codon[4] = {Cuda::tm_codon(0, 0), Cuda::tm_codon(1, 0), Cuda::tm_codon(0, 1), Cuda::tm_codon(1, 1)};
+    int next_state[4], write_symbol[4], move_right[4];
     int pows[4] = {1,3,9,27};
     for (int i=0; i<4; i++) {
         int val = 3 * ((cell_pos.y / pows[3 - i]) % 3) + ((cell_pos.x / pows[3 - i]) % 3);
-        int j = i ^ (i > 1 && tm.next_state[tm.write_symbol[0]]);
-        tm.write_symbol[j] = val & 1;
-        tm.left_right[j] = (val & 2) == 2;
-        tm.next_state[j] = (val >> 2) - 3 * (val == 8);
+        int j = i ^ (i > 1 && next_state[write_symbol[0]] != 0);
+        write_symbol[j] = val & 1;
+        move_right[j] = (val & 2) == 2;
+        next_state[j] = (val >> 2) - 3 * (val == 8);   // -1 means halt
+    }
+    for (int k=0; k<4; k++) {
+        tm.table[order_to_codon[k]] = Cuda::tm_pack(next_state[k] == -1 ? Cuda::TM_HALT : next_state[k], write_symbol[k], move_right[k]);
     }
 }
 
@@ -40,47 +31,35 @@ __device__ uint32_t get_color_at_cell(Cuda::ivec2 grid_cell_pos, Cuda::ivec2 spa
 
     if (!inside_grid) return 0x00000000;
 
-    TuringMachine tm;
+    Cuda::TuringMachine tm;
     get_TM_from_pos(grid_cell_pos, tm);
 
     uint32_t colors[3] = {0xff0050ff, 0xff805800, 0xffff8078};
 
     // run TM
     const int half_tape_length = 10;
-    int tape[2 * half_tape_length + 1] = {0};
+    uint8_t tape[2 * half_tape_length + 1] = {0};
     int head_position = half_tape_length;
     int current_state = 0;
     int steps = 0;
-    int action_index;
+    bool halted = false;
     uint32_t cell_color = 0xff000000;
     while (steps < iterations) {
         if (steps == spacetime_cell_pos.y && inside_spacetime) cell_color = colors[2 - (head_position != spacetime_cell_pos.x+5) * (2 - tape[spacetime_cell_pos.x+5])];
-        // the transitions are indexed like this (but continued up to CODON_MEM_LIMIT-1):
-        // 0  2  5  10
-        // 1  3  7  12
-        // 4  6  8  14
-        // 9  11 13 15
-        int action_layer = max(current_state, tape[head_position]) - 1;
-        int action_side = (int)(current_state < tape[head_position]);
-        action_index = action_layer * action_layer + 2 * (current_state + tape[head_position]) + action_side - 1;
-        if (action_index >= CODON_MEM_LIMIT) {
+        int tr = tm.table[Cuda::tm_codon(current_state, tape[head_position])];
+        if (Cuda::tm_next_state(tr) == Cuda::TM_HALT) {
+            halted = true;
             break;
         }
-
-        current_state = tm.next_state[action_index];
-        if (current_state == -1) {
-            break;
-        }
-        tape[head_position] = tm.write_symbol[action_index];
-        head_position += 2 * tm.left_right[action_index] - 1;
+        current_state = Cuda::tm_next_state(tr);
+        tape[head_position] = Cuda::tm_write_symbol(tr);
+        head_position += 2 * Cuda::tm_move_right(tr) - 1;
         if (head_position < 0 || head_position > 2 * half_tape_length) {
             break;
         }
 
         steps++;
     }
-    bool halted = current_state == -1;
-
     return cell_color + (halted && !inside_spacetime) * 0x0000ff00;
 }
 

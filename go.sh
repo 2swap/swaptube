@@ -76,8 +76,9 @@ CPU_ENCODE=0
 INVALID_FLAG=0
 COMPUTE_LANG=""
 DEBUGGER=0
+MACROBLOCK_RANGE="all"
 # Parse flags
-while getopts "saxc:ge" flag; do
+while getopts "saxc:gem:" flag; do
     case "$flag" in
         s)
             SKIP_RENDER=1
@@ -108,6 +109,13 @@ while getopts "saxc:ge" flag; do
         e)
             CPU_ENCODE=1
             ;;
+        m)
+            if ! [[ "$OPTARG" =~ ^[0-9]+-[0-9]+$ ]]; then
+                echo "go.sh: Error - Macroblock range must be N-M."
+                exit 1
+            fi
+            MACROBLOCK_RANGE="$OPTARG"
+            ;;
         *)
             INVALID_FLAG=1
             ;;
@@ -125,6 +133,8 @@ if [ $INVALID_FLAG -eq 1 ]; then
     echo "-c means to specify compute language (takes arguments \"CUDA\" or \"HIP\")"
     echo "-e means to encode video on the CPU (libx264) instead of the GPU's hardware"
     echo "   encoder, for machines without one. Slower, and 8-bit instead of 10-bit."
+    echo "-m means to render only a range of macroblocks (takes N-M for macroblocks"
+    echo "   N through M, 0-indexed and inclusive-exclusive)."
     exit 1
 fi
 
@@ -195,9 +205,9 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
     MICROBLOCK_COUNTS_PATH="$(pwd)/io_out/microblock_counts.txt"
 
     if [ $DEBUGGER -eq 1 ]; then
-        gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
+        gdb --args ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE all
     else
-        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
+        ./swaptube 320 180 $FRAMERATE $SAMPLERATE smoketest $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE all
     fi
     if [ $? -ne 0 ]; then
         echo "go.sh: Execution failed in smoketest."
@@ -209,9 +219,9 @@ echo "go.sh: Building project ${PROJECT_NAME} with output folder name ${OUTPUT_F
         # Clear all files from the smoketest, keeping the recorded microblock counts.
         find io_out/ -mindepth 1 -maxdepth 1 ! -name microblock_counts.txt -exec rm -rf {} +
         if [ $DEBUGGER -eq 1 ]; then
-            gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
+            gdb --args ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE "$MACROBLOCK_RANGE"
         else
-            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE
+            ./swaptube $VIDEO_WIDTH $VIDEO_HEIGHT $FRAMERATE $SAMPLERATE render $INCLUDE_AUDIO $AUDIO_SFX "$MICROBLOCK_COUNTS_PATH" $CPU_ENCODE "$MACROBLOCK_RANGE"
         fi
         if [ $? -ne 0 ]; then
             echo "go.sh: Execution failed in render."

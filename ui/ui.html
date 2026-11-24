@@ -1,0 +1,184 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Swaptube UI</title>
+<style>
+body { margin: 0; height: 100vh; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto minmax(0, 1fr); }
+#video { grid-row: 1; grid-column: 1; background: black; }
+#info { grid-row: 2; grid-column: 1; margin: 0; overflow: auto; width: 0; min-width: 100%; }
+#right { grid-row: 1 / 3; grid-column: 2; overflow: auto; }
+.selected { outline: 2px solid black; }
+.playing::after { content: "(playing)"; float: right; }
+</style>
+</head>
+<body>
+<video id="video" controls></video>
+<pre id="info"></pre>
+<div id="right">
+  <input id="width" value="640" size="4">x<input id="height" value="360" size="4">@<input id="fps" value="30" size="3"><br>
+  <button id="smoke">Smoke</button>
+  <button id="render">Render</button>
+  <div id="timeline"></div>
+</div>
+<script>
+const video = document.getElementById("video");
+const info = document.getElementById("info");
+let snapshot = null, first = null, last = null;
+let renders = [];          // Finished renders, oldest first
+let lastRenderCount = 0;
+let playing = null;        // { section, render, stop }: the section being shown and when it ends in the video
+let logDir = null, logOffset = 0, logDecoder = null;
+const startsCache = {};    // render dir -> { macroblock index: start seconds }
+
+// Sends the resolution boxes along with every request.
+function post(url, body) {
+  const value = id => document.getElementById(id).value;
+  return fetch(url, { method: "POST", body: JSON.stringify({ width: value("width"), height: value("height"), fps: value("fps"), ...body }) });
+}
+
+document.getElementById("smoke").onclick = () => post("/api/smoke");
+document.getElementById("render").onclick = () => {
+  if (first === null) return;
+  post("/api/render", { first: Math.min(first, last), end: Math.max(first, last) + 1 });
+};
+
+function range(render) {
+  return render.range.split("-").map(Number);
+}
+
+// The newest finished render containing this section, if any.
+function newestRender(section) {
+  for (let n = renders.length - 1; n >= 0; n--) {
+    const [first, end] = range(renders[n]);
+    if (first <= section && section < end) return renders[n];
+  }
+  return null;
+}
+
+async function starts(render) {
+  if (!startsCache[render.dir]) {
+    const text = await (await fetch("/files/" + render.dir + "/macroblock_starts.txt")).text();
+    const map = {};
+    for (const line of text.trim().split("\n")) {
+      const [index, seconds] = line.split(" ").map(Number);
+      map[index] = seconds;
+    }
+    startsCache[render.dir] = map;
+  }
+  return startsCache[render.dir];
+}
+
+// Shows a section in its newest render, or the next section that has one.
+async function playSection(section) {
+  const count = document.getElementById("timeline").children.length;
+  while (section < count && !newestRender(section)) section++;
+  if (section >= count) { playing = null; markPlaying(); return; }
+  const render = newestRender(section);
+  const map = await starts(render);
+  const stop = map[section + 1] !== undefined ? map[section + 1] : Infinity;
+  // Within one file the video already plays straight into the next section, so leave it alone.
+  const sameFile = playing && playing.render.dir === render.dir;
+  playing = { section, render, stop };
+  markPlaying();
+  if (sameFile) return;
+  const src = "/files/" + render.dir + "/Video.mkv";
+  if (!video.src.endsWith(src)) {
+    video.src = src;
+    video.width = render.width;
+    video.height = render.height;
+  }
+  video.currentTime = map[section];
+  video.play();
+}
+
+video.ontimeupdate = () => {
+  if (playing && video.currentTime >= playing.stop) playSection(playing.section + 1);
+};
+video.onended = () => {
+  if (playing) playSection(playing.section + 1);
+};
+
+function drawTimeline(counts) {
+  const timeline = document.getElementById("timeline");
+  timeline.innerHTML = "";
+  counts.forEach((count, i) => {
+    const item = document.createElement("div");
+    item.textContent = count + (count === 1 ? " microblock" : " microblocks");
+    item.onclick = e => {
+      if (e.shiftKey && first !== null) last = i; else first = last = i;
+      highlight();
+      playing = null;
+      playSection(i);
+    };
+    timeline.appendChild(item);
+  });
+}
+
+function highlight() {
+  [...document.getElementById("timeline").children].forEach((item, i) => {
+    item.classList.toggle("selected", first !== null && i >= Math.min(first, last) && i <= Math.max(first, last));
+  });
+}
+
+function markPlaying() {
+  [...document.getElementById("timeline").children].forEach((item, i) => {
+    item.classList.toggle("playing", playing !== null && playing.section === i);
+  });
+}
+
+// Hue goes from cyan (newest render) to lime (one render older), approaching red with age.
+function colorByAge() {
+  [...document.getElementById("timeline").children].forEach((item, i) => {
+    const render = newestRender(i);
+    const age = render ? renders.length - 1 - renders.indexOf(render) : null;
+    item.style.background = age === null ? "" : "hsl(" + 180 * Math.pow(2 / 3, age) + ", 100%, 50%)";
+  });
+}
+
+// Appends whatever swaptube has written to the latest job's log since the last poll.
+async function updateLog(jobs) {
+  const latest = jobs.filter(job => job.dir).pop();
+  if (!latest) return;
+  if (latest.dir !== logDir) {
+    logDir = latest.dir;
+    logOffset = 0;
+    logDecoder = new TextDecoder();
+    info.textContent = "";
+  }
+  const response = await fetch("/files/" + logDir + "/log.txt", { headers: { Range: "bytes=" + logOffset + "-" } });
+  if (response.status !== 200 && response.status !== 206) return;
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  logOffset += bytes.length;
+  const atBottom = info.scrollTop + info.clientHeight >= info.scrollHeight - 5;
+  info.textContent += logDecoder.decode(bytes, { stream: true });
+  if (atBottom) info.scrollTop = info.scrollHeight;
+}
+
+async function poll() {
+  const state = await (await fetch("/api/state")).json();
+  if (state.snapshot !== snapshot) {
+    snapshot = state.snapshot;
+    first = last = null;
+    drawTimeline(state.counts);
+  }
+
+  renders = state.jobs.filter(job => job.kind === "render" && job.status === "done");
+  colorByAge();
+  if (renders.length > lastRenderCount) {
+    lastRenderCount = renders.length;
+    playing = null;
+    playSection(range(renders[renders.length - 1])[0]);
+  }
+
+  await updateLog(state.jobs);
+}
+
+async function loop() {
+  try { await poll(); } catch (e) {}
+  setTimeout(loop, 1000);
+}
+loop();
+</script>
+</body>
+</html>

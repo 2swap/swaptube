@@ -310,9 +310,10 @@ const StateReturn StateManager::get_state() const {
         }
         result.set(variable_name, vc.value);
     }
-    for (const auto& global_var : global_state) {
-        const string& variable_name = global_var.first;
-        result.set(variable_name, get_global_state(variable_name));
+    // A scene's own variables take precedence over globals of the same name,
+    // such as one the scene itself publishes to global state.
+    for (const auto& [variable_name, value] : get_all_global_state()) {
+        if (!result.contains(variable_name)) result.set(variable_name, value);
     }
     return result;
 }

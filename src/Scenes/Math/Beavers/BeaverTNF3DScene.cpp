@@ -2,7 +2,7 @@
 #include "../../../Host_Device_Shared/TuringMachine.h"
 #include <vector>
 
-extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, uint32_t*, uint32_t*, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, std::vector<int> action, TuringMachine tm, float brightness_offset, float color_source_depth, /*float ancestor_offset,*/ vec3 highlight, float highlight_intensity, int max_steps);
+extern "C" void beaver_TNF_3D_cuda(unsigned int* pixels, const ivec2& wh, vec2 center, quat camera, float fov, vec3 lower, vec3 upper, const int* action, int pathlen, TuringMachine tm, int max_steps, int max_depth, int axis_cycle_start, int warp_level, float warp_t);
 
 BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
     manager.set({
@@ -21,76 +21,69 @@ BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
         {"scale_x", "1"},
         {"scale_y", "1"},
         {"scale_z", "1"},
-        {"ancestor_offset", "0"},
-        {"highlight_x", "-1"},
-        {"highlight_y", "-1"},
-        {"highlight_z", "-1"},
-        {"highlight_intensity", "0"},
-        {"brightness_offset", "0"},
-	{"color_source_depth", "0"},
-        {"max_tnf_depth", "15"}
+        {"max_tnf_depth", "15"},
+        {"axis_cycle_start", "0"}
     });
 }
 
-int halt_trans(TuringMachine tm, int max_steps) {
-    int half_tape_length = 20;
-    int tape[2 * half_tape_length + 1] = {0};
-    int head_position = half_tape_length;
-    int current_state = 0;
-    int steps = 0;
-    int action_index;
-    while (steps < max_steps) {
-        // the transitions are indexed like this (but continued up to CODON_MEM_LIMIT-1):
-        // 0  2  5  10
-        // 1  3  7  12
-        // 4  6  8  14
-        // 9  11 13 15
-        int action_layer = max(current_state, tape[head_position]) - 1;
-        int action_side = (int)(current_state < tape[head_position]);
-        action_index = action_layer * action_layer + 2 * (current_state + tape[head_position]) + action_side - 1;
-        if (action_index >= CODON_MEM_LIMIT) {
-            break;
-        }
+// Longest camera context path the kernel accepts: MAX_TNF_DEPTH - 2 in
+// beaver_TNF_3d.cu (whose host wrapper throws if this is exceeded).
+const int MAX_CONTEXT_PATH = 18;
 
-        current_state = tm.next_state[action_index];
-        if (current_state == -1) {
-            break;
-        }
-        tape[head_position] = tm.write_symbol[action_index];
-        head_position += 2 * tm.left_right[action_index] - 1;
-        if (head_position < 0 || head_position > 2 * half_tape_length) {
-            break;
-        }
-
-        steps++;
-    }
-    return (current_state == -1) ? action_index : -1;
+// Runs tm from a blank tape. Returns the codon of the undefined transition it
+// stops at, or -1 if it never reaches one (it halts, runs out of steps, or
+// runs off the tape).
+int halt_trans(const TuringMachine& tm, int max_steps) {
+    int steps;
+    const int codon = tm_run(tm.table, max_steps, steps);
+    return codon >= 0 ? codon : -1;
 }
 
-void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, vec3& highlight, double x, double y, double z, int max_steps, int max_tnf_depth) {
-    for (int i=0; i<CODON_MEM_LIMIT; i++) tm.next_state[i] = -1;
-    ivec3 scale(1);
+// Finds the tree path from the root cube [0,1]^3 down to the cube containing
+// the camera at (x, y, z), at most max_tnf_depth levels deep, and that cube's
+// bounds relative to the camera.
+void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3& upper, double x, double y, double z, int max_steps, int max_tnf_depth, int axis_cycle_start, int warp_level, double warp_t) {
+    double p[3] = {x, y, z};          // camera position inside the current cube, per axis, in [0,1]
+    double scale[3] = {1, 1, 1};      // root cube size / current cube size, per axis
+    double offset[3] = {0, 0, 0};     // camera pre-image minus camera, in root units
     if (0 <= x && x <= 1 && 0 <= y && y <= 1 && 0 <= z && z <= 1) {
         int states = 2;
-        int symbols = 2;
-        for (int i=0; i<max_tnf_depth; i++) {
-            action.push_back(halt_trans(tm, max_steps));
-            int a = action[action.size()-1];
+        const int max_path = min(max_tnf_depth, MAX_CONTEXT_PATH);
+        while ((int)action.size() < max_path) {
+            const int a = halt_trans(tm, max_steps);
             if (a == -1) break;
-            scale *= ivec3(states, symbols, 2);
-            tm.next_state[a] = min((double)(states-1), max((double)(0), floor(states * x)));
-            x = states * x - tm.next_state[a];
-            states += tm.next_state[a] == states - 1;
-            tm.write_symbol[a] = min((double)(symbols-1), max((double)(0), floor(symbols * y)));
-            y = symbols * y - tm.write_symbol[a];
-            symbols += tm.write_symbol[a] == symbols - 1;
-            tm.left_right[a] = min((double)(1), max((double)(0), floor(2 * z)));
-            z = 2 * z - tm.left_right[a];
+            const int depth = action.size();
+            if (depth == warp_level) {
+                // pre-image of p under q -> (1-t) q + t (q.y, q.z, q.x); see warp_inverse in beaver_TNF_3d.cu
+                const double a = 1 - warp_t, b = warp_t, det = a * a * a + b * b * b;
+                double pre[3];
+                bool inside = true;
+                for (int i = 0; i < 3; i++) {
+                    pre[i] = (a * a * p[i] - a * b * p[(i + 1) % 3] + b * b * p[(i + 2) % 3]) / det;
+                    inside = inside && 0 <= pre[i] && pre[i] <= 1;
+                }
+                if (!inside) break;
+                for (int i = 0; i < 3; i++) {
+                    offset[i] = (pre[i] - p[i]) / scale[i];
+                    p[i] = pre[i];
+                }
+            }
+            const int rot = depth < axis_cycle_start ? 0 : (depth - axis_cycle_start) % 3;   // depth - axis_cycle_start >= 0 here
+            const int aW = rot, aM = (rot + 1) % 3, aS = (rot + 2) % 3;   // write, move, state axes (see axis_rotation in beaver_TNF_3d.cu)
+            action.push_back(a);
+            scale[aS] *= states + 1; scale[aW] *= 2; scale[aM] *= 2;
+            const int slot = min(states, max(0, (int)floor((states + 1) * p[aS])));
+            p[aS] = (states + 1) * p[aS] - slot;
+            const int write_symbol = min(1, max(0, (int)floor(2 * p[aW])));
+            p[aW] = 2 * p[aW] - write_symbol;
+            const int move_right = min(1, max(0, (int)floor(2 * p[aM])));
+            p[aM] = 2 * p[aM] - move_right;
+            tm.table[a] = tm_pack(slot == states ? TM_HALT : slot, write_symbol, move_right);
+            states += slot == states - 1;
         }
-        action.pop_back();
     }
-    lower = vec3(-x, -y, -z) / scale;
-    upper = vec3(1-x, 1-y, 1-z) / scale;
+    lower = vec3(offset[0] - p[0] / scale[0], offset[1] - p[1] / scale[1], offset[2] - p[2] / scale[2]);
+    upper = vec3(offset[0] + (1 - p[0]) / scale[0], offset[1] + (1 - p[1]) / scale[1], offset[2] + (1 - p[2]) / scale[2]);
 }
 
 void BeaverTNF3DScene::draw() {
@@ -102,31 +95,28 @@ void BeaverTNF3DScene::draw() {
     double x = (double)(target.x) - (double)(dist * dir.x);
     double y = (double)(target.y) - (double)(dist * dir.y);
     double z = (double)(target.z) - (double)(dist * dir.z);
-    vec3 highlight = vec3(state["highlight_x"], state["highlight_y"], state["highlight_z"]) - vec3(x,y,z);
+
+    // fractional axis roll interpolates between the rolls at floor and
+    // floor + 1, which differ only from depth floor + 1 down.
+    const double roll = state["axis_cycle_start"];
+    const int axis_cycle_start = (int)floor(roll);
+    const double warp_t = roll - axis_cycle_start;
+    const int warp_level = warp_t > 0 && axis_cycle_start >= -1 ? axis_cycle_start + 1 : -1;
 
     std::vector<int> action;
     TuringMachine tm;
     vec3 lower;
     vec3 upper;
-    get_context(action, tm, lower, upper, highlight, x, y, z, state["max_steps"], state["max_tnf_depth"]);
+    get_context(action, tm, lower, upper, x, y, z, state["max_steps"], state["max_tnf_depth"], axis_cycle_start, warp_level, warp_t);
     /*for (int i=0; i<action.size(); i++) {
-        printf("\nTransition %d: (%d,%d,%d)", action[i], tm.write_symbol[action[i]], tm.left_right[action[i]], tm.next_state[action[i]]);
+        printf("\nTransition %d: (%d,%d,%d)", action[i], tm_write_symbol(tm.table[action[i]]), tm_move_right(tm.table[action[i]]), tm_next_state(tm.table[action[i]]));
     }
     printf("\nCuboid: ((%f,%f,%f),(%f,%f,%f))\n", lower.x, lower.y, lower.z, upper.x, upper.y, upper.z);*/
     beaver_TNF_3D_cuda(
-        gpu_pix.get_ptr(), highlight_pix.get_ptr(), depth_buffer.get_ptr(), get_width_height(), vec2(state["center_x"], state["center_y"]),
+        gpu_pix.get_ptr(), get_width_height(), vec2(state["center_x"], state["center_y"]),
         camera, state["fov"],
         lower*scale, upper*scale,
-        action, tm,
-        state["brightness_offset"], state["color_source_depth"],
-        //state["ancestor_offset"],
-        highlight*scale, state["highlight_intensity"],
-        state["max_steps"]
+        action.data(), action.size(), tm,
+        state["max_steps"], state["max_tnf_depth"], axis_cycle_start, warp_level, warp_t
     );
-}
-
-void BeaverTNF3DScene::change_data() {
-    Scene::change_data();
-    highlight_pix.tick(get_width_height());
-    depth_buffer.tick(get_width_height());
 }

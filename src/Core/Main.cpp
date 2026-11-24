@@ -17,8 +17,8 @@ void render_video(); // Forward declaration, provided by the user in their proje
 void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& samplerate, bool& include_audio, bool& audio_sfx, string& timeline_plan_path, bool& record_timeline_plan, bool& cpu_encode) {
     cout << "Parsing command line arguments... " << endl;
 
-    if (argc != 10) {
-        throw runtime_error("Expected 9 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx timeline_plan_path cpu_encode");
+    if (argc != 11) {
+        throw runtime_error("Expected 10 arguments: width height framerate samplerate smoketest/render include_audio audio_sfx timeline_plan_path cpu_encode macroblock_range");
     }
 
     if (sscanf(argv[1], "%d", &w) != 1 || w < 1 || w > 10000) {
@@ -84,7 +84,10 @@ void parse_args(int argc, char* argv[], int& w, int& h, int& framerate, int& sam
         throw runtime_error("Invalid cpu encode argument: " + string(argv[9]) );
     }
     cpu_encode = (cpu_encode_i != 0);
-    cout << "CPU Encode: " << (cpu_encode ? "true" : "false") << endl << endl;
+    cout << "CPU Encode: " << (cpu_encode ? "true" : "false") << ", " << flush;
+
+    parse_macroblock_range(argv[10]);
+    cout << "Macroblock Range: " << argv[10] << endl << endl;
 }
 
 inline void signal_handler(int signal) {

@@ -1,12 +1,13 @@
 #include "BeaverIndividualScene.h"
 #include "../../../IO/Writer.h"
 #include "../../../IO/SFX.h"
+#include <stdexcept>
 #include <vector>
 
 extern "C" void draw_individual_beaver(
     uint32_t* pixels, ivec2 wh, vec2 lx_ty, vec2 rx_by,
     uint32_t* grid, ivec2 grid_wh,
-    uint32_t* icons, ivec4 icons_whnm, int icons_len,
+    uint32_t* icons, ivec3 icons_whn, int icons_len,
     TuringMachine tm, float iterations,
     float state_icon_scale, float vertical_step, float opacity_min, float opacity_dropoff,
     float dir_icon_scale, float current_tape_opacity, int rest,
@@ -21,8 +22,8 @@ void boop(int state, int symbol, int num_states){
     sfx_boink(get_global_state("t"), tone * 440, .05, 1);
 }
 
-BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* icons, ivec4& icons_whnm, int& icons_len, const vec2& dimension)
-: Scene(dimension), tm(tm), tape_length(241), icons(icons), icons_whnm(icons_whnm), icons_len(icons_len), tape(tape_length, 0), head_position(tape_length/2) {
+BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* icons, const ivec3& icons_whn, int icons_len, const vec2& dimension)
+: Scene(dimension), tm(tm), tape_length(241), icons(icons), icons_whn(icons_whn), icons_len(icons_len), tape(tape_length, 0), head_position(tape_length/2) {
     head_position_history.push_back(head_position);
     default_everything();
     /*manager.set({
@@ -58,7 +59,10 @@ BeaverIndividualScene::BeaverIndividualScene(const TuringMachine& tm, uint32_t* 
     });*/
 }
 
-void BeaverIndividualScene::reset(std::vector<uint32_t> start_tape = {}, uint32_t start_state = 0, int start_pos = -1) {
+void BeaverIndividualScene::reset(std::vector<uint8_t> start_tape = {}, uint32_t start_state = 0, int start_pos = -1) {
+    for (uint8_t cell : start_tape) {
+        if (cell > 1) throw std::runtime_error("BeaverIndividualScene::reset: tape symbols must be 0 or 1");
+    }
     grid = {};
     steps = 0;
     head_position = tape_length/2;
@@ -128,26 +132,24 @@ void BeaverIndividualScene::draw() {
         grid[head_position] &= 0xffff0000 | current_state;
     }
     while (steps <= state["iterations"] && current_state != -1) {
-        int ls = tape[head_position];
-        int action_layer = max(current_state, tape[head_position]) - 1;
-        int action_side = (int)(current_state < tape[head_position]);
-        int action_index = action_layer * action_layer + 2 * (current_state + tape[head_position]) + action_side - 1;
-        if (action_index >= CODON_MEM_LIMIT) {
-            break;
-        }
+        const int codon = tm_codon(current_state, tape[head_position]);
+        if (codon >= TM_CODONS) break;
+        const int tr = tm.table[codon];
 
         //boop(current_state, tape[head_position], tm.num_states);
 
-        tape[head_position] = tm.write_symbol[action_index];
-        head_position += tm.left_right[action_index] ? 1 : -1;
-        current_state = tm.next_state[action_index];
+        // an undefined transition halts without writing; a halting one writes and moves first
+        if (tr == TM_UNDEFINED) { current_state = -1; break; }
+        tape[head_position] = tm_write_symbol(tr);
+        head_position += 2 * tm_move_right(tr) - 1;
+        current_state = tm_next_state(tr) == TM_HALT ? -1 : tm_next_state(tr);
 
         steps++;
         head_position_history.push_back(head_position);
-        used_transition_history.push_back(used_transition_history[steps - 1] | (1 << ((action_index < 32) * action_index)));
+        used_transition_history.push_back(used_transition_history[steps - 1] | (1 << ((codon < 32) * codon)));
         if (current_state == -1) break; // halt
 
-        // grid entry format: first 16 bits = symbol, last 16 bits = state
+        // grid entry format: bit 16 = tape symbol (0 or 1), low 16 bits = state of the head here (0xffff if none)
         grid.resize(tape_length + grid.size());
         for (int i = 0; i < tape_length; i++) {
             grid[grid.size() - tape_length + i] = tape[i] << 16 | 0x0000ffff;
@@ -173,10 +175,10 @@ void BeaverIndividualScene::draw() {
     draw_individual_beaver(
         gpu_pix.get_ptr(), wh, lx_ty, rx_by,
         grid.data(), ivec2(tape_length, grid.size() / tape_length),
-        icons, icons_whnm, icons_len,
+        icons, icons_whn, icons_len,
         tm, iterations,
         state["state_icon_scale"], state["vertical_step"], state["opacity_min"], state["opacity_dropoff"],
-        state["dir_icon_scale"], state["current_tape_opacity"], (iterations > grid_wh.y-1 || state["sleep"] < 0) ? last_state - (icons_whnm.z + 1) : state["sleep"] > 0,
+        state["dir_icon_scale"], state["current_tape_opacity"], (iterations > grid_wh.y-1 || state["sleep"] < 0) ? last_state - (icons_whn.z + 1) : state["sleep"] > 0,
         vec2(state["table_col_w"], state["table_row_h"]), vec2(state["table_w0"], state["table_h0"]), state["table_cell_margin"], state["table_icon_border"], state["table_border"], state["table_line_glow"], (state["show_all_transitions"] == 0 ? used_transitions : transitions_to_show) | -(state["show_all_transitions"] == 2), new_transition,
         0
     );

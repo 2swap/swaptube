@@ -7,7 +7,6 @@
 #include "../Scenes/Math/RubiksGraphScene.h"
 #include "../Scenes/Math/PermutationScene.h"
 #include "../Scenes/Physics/RopeScene.h"
-#include "../Core/State/StateTester.h"
 
 /* SCRIPT
 What does a rubik's cube, parallel parking, and rotating a broken sattalite have in common ?
@@ -432,7 +431,6 @@ void cube_corner_in_center(){
 
     
     rs.render_microblock();
-    // open_ui(rs);
 
 
     stage_macroblock(SilenceBlock(5), 3);

@@ -7,6 +7,7 @@
 #include "../Host_Device_Shared/helpers.h"
 
 #include <chrono>
+#include <fstream>
 
 extern "C" void cuda_zeroize_pixels(uint32_t* d_pixels, const ivec2& wh);
 extern "C" void cuda_copy_pixels_to_host(uint32_t* h_pixels, int size, uint32_t* d_pixels);
@@ -28,6 +29,7 @@ int64_t nearest_frame_to_sample(const int64_t sample) {
 
 Scene* last_smoketest_scene = nullptr;
 bool smoketest_macroblock_open = false;
+int staged_macroblock_count = 0;
 
 // Prints the frame to the terminal, at most once a second.
 void print_frame_preview(uint32_t* device_argb_pixels) {
@@ -44,7 +46,6 @@ void print_frame_preview(uint32_t* device_argb_pixels) {
 // During smoketest a macroblock closes at the next stage_macroblock() or at project end.
 void finish_deferred_macroblock() {
     if (!smoketest_macroblock_open) return;
-    set_global_state("macroblock_number", get_global_state("macroblock_number") + 1);
     if (last_smoketest_scene) last_smoketest_scene->on_end_transition(MACRO);
     last_smoketest_scene = nullptr;
     smoketest_macroblock_open = false;
@@ -58,6 +59,7 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
 
     if (is_smoketest()) {
         finish_deferred_macroblock();
+        enter_macroblock(staged_macroblock_count++);
         const string macroblock_blurb = macroblock.blurb();
         begin_macroblock_plan_entry(macroblock_blurb, declared_microblocks_in_macroblock);
         smoketest_macroblock_open = true;
@@ -77,6 +79,9 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
                 "This macroblock had " + to_string(total_microblocks_in_macroblock) + " microblocks, "
                 "but render_microblock() was only called " + to_string(total_microblocks_in_macroblock - remaining_microblocks_in_macroblock) + " times.");
     }
+
+    // Must precede writing audio, which only happens while rendering is on.
+    enter_macroblock(staged_macroblock_count++);
 
     const string macroblock_blurb = macroblock.blurb();
 
@@ -101,6 +106,11 @@ void stage_macroblock_impl(const Macroblock& macroblock, const optional<int> dec
     cout << endl << macroblock_blurb << " staged to last " << to_string(expected_microblocks_in_macroblock) << " microblock(s), " << to_string(total_frames_in_macroblock) << " frame(s)." << endl;
 
     const double samplerate = get_audio_samplerate_hz();
+    if (rendering_on()) {
+        // Lets the UI seek to each rendered macroblock within the video.
+        ofstream starts("io_out/macroblock_starts.txt", ios::app);
+        starts << (staged_macroblock_count - 1) << " " << fixed << setprecision(6) << start_sample / samplerate << "\n";
+    }
     double macroblock_length_seconds = rendering_on() ? duration_samples / samplerate : static_cast<double>(total_frames_in_macroblock) / get_video_framerate_fps();
 
     // Mark macroblock/microblock boundaries as their own MIDI tracks, for external tooling.
@@ -162,8 +172,8 @@ uint32_t* Scene::query() {
     cout << "(" << flush;
     if(!has_updated_since_last_query) update();
 
-    // The only time we skip render entirely is when the project flags to skip a section.
-    if(is_for_real()) {
+    // The only time we skip drawing entirely is for a macroblock outside the render range.
+    if(macroblock_in_range()) {
         cuda_zeroize_pixels(gpu_pix.get_ptr(), get_width_height());
         cout << "|" << flush;
         draw();
@@ -179,7 +189,6 @@ void Scene::render_microblock(){
         render_one_frame(0, 1);
         remaining_frames_in_macroblock = max(0, remaining_frames_in_macroblock);
         last_smoketest_scene = this;
-        set_global_state("microblock_number", get_global_state("microblock_number") + 1);
         on_end_transition(MICRO);
         return;
     }
@@ -204,9 +213,7 @@ void Scene::render_microblock(){
     }
     remaining_microblocks_in_macroblock--;
     bool done_macroblock = remaining_microblocks_in_macroblock == 0;
-    set_global_state("microblock_number", get_global_state("microblock_number") + 1);
     if (done_macroblock) {
-        set_global_state("macroblock_number", get_global_state("macroblock_number") + 1);
         if (rendering_on()) {
             int roundedFrameNumber = round(get_global_state("frame_number"));
             ostringstream stream;
@@ -275,7 +282,7 @@ void Scene::render_one_frame(int microblock_frame_number, int scene_duration_fra
     set_global_state("microblock_fraction", static_cast<double>(microblock_frame_number) / scene_duration_frames);
 
     query();
-    if (is_for_real()) {
+    if (macroblock_in_range()) {
         print_frame_preview(gpu_pix.get_ptr());
         if (get_writer().video) get_writer().video->add_frame(gpu_pix.get_ptr());
     }

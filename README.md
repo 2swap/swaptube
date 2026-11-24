@@ -56,7 +56,7 @@ Windows users run swaptube inside WSL2, GPU included.
 
    Install only the CUDA *toolkit*. WSL gets the GPU from the Windows NVIDIA driver by way of `/usr/lib/wsl/lib`; installing a Linux driver package inside the distro breaks that. Confirm with `nvidia-smi`.
 
-3. **Clone into the Linux filesystem, not `/mnt/c`.** Small-file I/O across the Windows boundary is roughly 75x slower, and a render writes one PNG per frame.
+3. **Clone into the Linux filesystem, not `/mnt/c`.** Small-file I/O across the Windows boundary is roughly 75x slower, and a render writes one PNG per macroblock.
 
    ```bash
    git clone https://github.com/2swap/swaptube.git ~/swaptube
@@ -155,17 +155,6 @@ Things that do NOT happen during smoketesting:
 - No subtitle entries are written.
 
 You can run `./go.sh MyProjectName 640 360 30 -s`, using the `-s` flag to indicate "smoketest only". This skips the full render after the smoketest.
-
-While working on a later section, `set_for_real(false)` keeps running project logic but skips drawing and encoding. Call `set_for_real(true)` before the section that you want to render normally:
-
-```cpp
-set_for_real(false);
-// Stage and run sections that do not need to be encoded.
-set_for_real(true);
-// Subsequent sections render normally.
-```
-
-This is a development shortcut for reaching a later section without rendering the beginning again; it does not skip project execution.
 
 ### State
 **State**: The "State Manager" tracks a list of definitions of variables, arranged in a dependency graph of definitions, eventually decided from upstate "global state" sensors, such as the current microblock completion fraction `{microblock_fraction}` or the number of seconds elapsed in the video `{t}`. It is best used for any numerical or boolean information used by the Scene to render a particular frame: opacities, angles, camera positions, real-valued parameters, etc. All scenes have a StateManager, and when the user whishes to modify the scene's state, they can do so by calling functions on the StateManager. Usually these will be `set` and `transition` function calls. Since State uniquely contains numerical information, swaptube will handle all the clean transitions of state.

@@ -6,7 +6,6 @@
 #include <memory>
 #include "../Scenes/Math/RubiksGraphScene.h"
 #include "../Scenes/Physics/RopeScene.h"
-#include "../Core/State/StateTester.h"
 
 
 

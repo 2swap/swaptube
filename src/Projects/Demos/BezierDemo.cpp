@@ -1,6 +1,5 @@
 #include "../Scenes/Math/MandelbrotScene.h"
 #include "../Core/State/BezierStateCurve.h"
-#include "../Core/State/StateTester.h"
 
 void render_video() {
     MandelbrotScene ms;
