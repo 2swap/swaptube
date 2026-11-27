@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 check_media_player_exists() {
     # Try each player in order and pick the first available one
