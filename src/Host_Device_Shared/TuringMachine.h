@@ -12,7 +12,7 @@ SHARED_FILE_PREFIX
 //     next_state * 4 + write_symbol * 2 + move   (move: 1 = right, 0 = left)
 // next_state may be TM_HALT: the machine writes, moves, then halts.
 // An entry of TM_UNDEFINED is a transition that has not been chosen.
-inline constexpr int TM_CODONS = 48;      // room for 24 states
+inline constexpr int TM_CODONS = 60;      // room for 30 states
 inline constexpr int TM_UNDEFINED = -1;
 inline constexpr int TM_HALT = 31;        // a next_state value; larger than any real state
 
@@ -30,6 +30,9 @@ HOST_DEVICE inline int tm_pack(int next_state, int write_symbol, int move_right)
 HOST_DEVICE inline int tm_next_state(int tr) { return tr >> 2; }
 HOST_DEVICE inline int tm_write_symbol(int tr) { return (tr >> 1) & 1; }
 HOST_DEVICE inline int tm_move_right(int tr) { return tr & 1; }
+
+HOST_DEVICE inline int tnf_slot_to_state(int slot, int S) { return slot == S - 1 ? TM_HALT : (slot == S ? S - 1 : slot); }
+HOST_DEVICE inline int tnf_state_to_slot(int state, int S) { return state == TM_HALT ? S - 1 : (state == S - 1 ? S : state); }
 
 // Results of tm_run other than a codon (which is always >= 0).
 inline constexpr int TM_RAN_OUT = -1;   // out of steps, out of codons, or off the tape

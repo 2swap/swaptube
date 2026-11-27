@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-const int MAX_TNF_DEPTH = 20;
+const int MAX_TNF_DEPTH = 31;
 const float INF = 10000000000000.0f;
 
 // The camera's context path (transition indices from the root down to the cube
@@ -49,7 +49,25 @@ __device__ bool in_block(Cuda::vec3 pos, Cuda::vec3 l, Cuda::vec3 u, int skip_ax
     );
 }
 
+__device__ float axis_component(const Cuda::vec3& v, int axis) {
+    return axis == 0 ? v.x : (axis == 1 ? v.y : v.z);
+}
+
 __device__ void raytrace_block(RayState& r, bool inside) {
+    if (inside) {
+        float best = INF;
+        r.face = -1;
+        for (int i = 0; i < 3; i++) {
+            const float d = axis_component(r.dir, i);
+            if (d == 0) continue;
+            const bool pos = d > 0;
+            const float t = (axis_component(pos ? r.u[r.plen-1] : r.l[r.plen-1], i) - axis_component(r.origin, i)) / d;
+            if (t < best) { best = t; r.face = 2 * i + pos; }
+        }
+        if (r.face >= 0) r.len = fmaxf(r.len, best); // never step backwards
+        return;
+    }
+
     Cuda::vec3 whichface = Cuda::vec3((r.dir.x > 0) == inside, (r.dir.y > 0) == inside, (r.dir.z > 0) == inside);
     Cuda::vec3 dists = (r.l[r.plen-1] + whichface * (r.u[r.plen-1] - r.l[r.plen-1]) - r.origin) / r.dir;
     dists *= Cuda::vec3(dists.x >= 0, dists.y >= 0, dists.z >= 0);
@@ -79,14 +97,10 @@ __device__ Cuda::vec3 place(int rot, float st, float w, float m) {
     return Cuda::vec3(m, st, w);
 }
 
-__device__ float axis_component(const Cuda::vec3& v, int axis) {
-    return axis == 0 ? v.x : (axis == 1 ? v.y : v.z);
-}
-
 __device__ void get_child_block(RayState& r) {
     // children are laid out as (next state, write symbol, move) along the axes
-    // given by this depth's rotation. The state axis has S+1 slots: the S
-    // existing states (the last of which is new to this machine), then halt.
+    // given by this depth's rotation. The state axis has S+1 slots, ordered as
+    // in tnf_slot_to_state.
     const int rot = axis_rotation(r.plen - 1, r.axis_cycle_start);
     const int S = r.states[r.plen - 1];
     Cuda::vec3 child_size = (r.u[r.plen] - r.l[r.plen]) / place(rot, S + 1, 2, 2);
@@ -96,8 +110,8 @@ __device__ void get_child_block(RayState& r) {
     const int slot = min(S, max(0, (int)floorf(axis_component(fc, (rot + 2) % 3))));
     r.l[r.plen] += child_size * place(rot, slot, write_symbol, move_right);
     r.u[r.plen] = r.l[r.plen] + child_size;
-    r.table[r.action[r.plen - 1]] = Cuda::tm_pack(slot == S ? Cuda::TM_HALT : slot, write_symbol, move_right);
-    r.states[r.plen] = S + (slot == S - 1);
+    r.table[r.action[r.plen - 1]] = Cuda::tm_pack(Cuda::tnf_slot_to_state(slot, S), write_symbol, move_right);
+    r.states[r.plen] = S + (slot == S);
 }
 
 
@@ -155,18 +169,17 @@ __device__ bool step_out(RayState& r) {
         r.plen--;
         if (r.plen == 0) return false;
         // move to the sibling across the exit face by changing this level's transition.
-        // On the state axis, slot S (one past the last state) is the halt slot.
         const int a = r.action[r.plen - 1];
         const int S = r.states[r.plen - 1];
         const int tr = r.table[a];
-        const int slot = Cuda::tm_next_state(tr) == Cuda::TM_HALT ? S : Cuda::tm_next_state(tr);
+        const int slot = Cuda::tnf_state_to_slot(Cuda::tm_next_state(tr), S);
         // which of (write, move, state) the crossed face's axis carries at this depth
         const int role = ((r.face >> 1) - axis_rotation(r.plen - 1, r.axis_cycle_start) + 3) % 3;
         const int sgn = (r.face & 1) ? 1 : -1;
         const int ws = Cuda::tm_write_symbol(tr) + (role == 0) * sgn;
         const int lr = Cuda::tm_move_right(tr) + (role == 1) * sgn;
-        const int ns = slot + (role == 2) * sgn;
-        out = ns < 0 || ns > S || ws < 0 || ws > 1 || lr < 0 || lr > 1;
+        const int new_slot = slot + (role == 2) * sgn;
+        out = new_slot < 0 || new_slot > S || ws < 0 || ws > 1 || lr < 0 || lr > 1;
         if (out) {
             // no sibling that way: undo this level's choice and keep climbing
             r.table[a] = Cuda::TM_UNDEFINED;
@@ -178,8 +191,8 @@ __device__ bool step_out(RayState& r) {
                 if (r.face < 0) return false;
             }
         } else {
-            r.table[a] = Cuda::tm_pack(ns == S ? Cuda::TM_HALT : ns, ws, lr);
-            r.states[r.plen] = S + (ns == S - 1);
+            r.table[a] = Cuda::tm_pack(Cuda::tnf_slot_to_state(new_slot, S), ws, lr);
+            r.states[r.plen] = S + (new_slot == S);
         }
     }
     Cuda::vec3 shift = (r.u[r.plen] - r.l[r.plen]) * Cuda::vec3((r.face == 1) - (r.face == 0), (r.face == 3) - (r.face == 2), (r.face == 5) - (r.face == 4));
@@ -215,31 +228,30 @@ __device__ float hit_shade(const RayState& r) {
 // (r.hit) or left the fractal.
 __device__ bool mainloop(RayState& r) {
     Cuda::vec3 cubsize = r.u[r.plen - 1] - r.l[r.plen - 1];
-    const bool cut_off = r.plen >= r.max_depth || (cubsize.x + cubsize.y + cubsize.z) < 0.3 * r.thickness * r.len;
-    if (!cut_off) {
-        int steps;
-        const int result = Cuda::tm_run(r.table, r.max_steps, steps);
-        if ((result >= 0 || result == Cuda::TM_HALTED) && !r.warped && r.plen - 1 == r.warp_level) {
-            // a warped cube: its content only fills part of it
-            if (!enter_warp(r)) return step_out(r);
-        }
-        if (result >= 0) {
-            // undefined transition: branch on it, descending into the child the ray is in
-            r.action[r.plen - 1] = result;
-            r.l[r.plen] = r.l[r.plen - 1];
-            r.u[r.plen] = r.u[r.plen - 1];
-            get_child_block(r);
-            r.plen++;
-            return true;
-        }
-        if (result == Cuda::TM_HALTED) {
-            // a halting machine is a solid cube
-            r.hit = true;
-            r.halt_time = steps + 1;
-            return false;
-        }
+    const bool cut_off = r.plen >= r.max_depth || (cubsize.x + cubsize.y + cubsize.z) < 0.03 * r.thickness * r.len;
+    int steps;
+    const int result = Cuda::tm_run(r.table, r.max_steps, steps);
+    if (!cut_off && (result >= 0 || result == Cuda::TM_HALTED) && !r.warped && r.plen - 1 == r.warp_level) {
+        // a warped cube: its content only fills part of it
+        if (!enter_warp(r)) return step_out(r);
     }
-    // non-halting and cut-off cubes are transparent: pass straight through
+    if (!cut_off && result >= 0) {
+        // undefined transition: branch on it, descending into the child the ray is in
+        r.action[r.plen - 1] = result;
+        r.l[r.plen] = r.l[r.plen - 1];
+        r.u[r.plen] = r.u[r.plen - 1];
+        get_child_block(r);
+        r.plen++;
+        return true;
+    }
+    if (result == Cuda::TM_HALTED) {
+        // a halting machine is a solid cube, however small (the cutoff only stops
+        // subdivision: skipping solid cubes makes them pop in as the camera nears)
+        r.hit = true;
+        r.halt_time = steps + 1;
+        return false;
+    }
+    // non-halting cubes and cut-off undecided ones are transparent: pass straight through
     return step_out(r);
 }
 
@@ -278,7 +290,7 @@ __global__ void beaver_tnf_3D_kernel(unsigned int* pixels, const Cuda::ivec2 wh,
     r.u[r.plen - 1] = upper;
     for (int i=r.plen-2; i>=0; i--) {
         const int tr = tm.table[action[i]];
-        const int slot = Cuda::tm_next_state(tr) == Cuda::TM_HALT ? r.states[i] : Cuda::tm_next_state(tr);
+        const int slot = Cuda::tnf_state_to_slot(Cuda::tm_next_state(tr), r.states[i]);
         const int rot = axis_rotation(i, axis_cycle_start);
         r.l[i] = r.l[i+1] - (r.u[i+1] - r.l[i+1]) * place(rot, slot, Cuda::tm_write_symbol(tr), Cuda::tm_move_right(tr));
         r.u[i] = r.l[i] + (r.u[i+1] - r.l[i+1]) * place(rot, r.states[i] + 1, 2, 2);

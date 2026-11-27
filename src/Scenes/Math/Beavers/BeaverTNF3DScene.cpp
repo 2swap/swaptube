@@ -28,7 +28,7 @@ BeaverTNF3DScene::BeaverTNF3DScene(const vec2& dimension) {
 
 // Longest camera context path the kernel accepts: MAX_TNF_DEPTH - 2 in
 // beaver_TNF_3d.cu (whose host wrapper throws if this is exceeded).
-const int MAX_CONTEXT_PATH = 18;
+const int MAX_CONTEXT_PATH = 29;
 
 // Runs tm from a blank tape. Returns the codon of the undefined transition it
 // stops at, or -1 if it never reaches one (it halts, runs out of steps, or
@@ -78,8 +78,8 @@ void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3&
             p[aW] = 2 * p[aW] - write_symbol;
             const int move_right = min(1, max(0, (int)floor(2 * p[aM])));
             p[aM] = 2 * p[aM] - move_right;
-            tm.table[a] = tm_pack(slot == states ? TM_HALT : slot, write_symbol, move_right);
-            states += slot == states - 1;
+            tm.table[a] = tm_pack(tnf_slot_to_state(slot, states), write_symbol, move_right);
+            states += slot == states;
         }
     }
     lower = vec3(offset[0] - p[0] / scale[0], offset[1] - p[1] / scale[1], offset[2] - p[2] / scale[2]);
@@ -87,14 +87,14 @@ void get_context(std::vector<int>& action, TuringMachine& tm, vec3& lower, vec3&
 }
 
 void BeaverTNF3DScene::draw() {
-    vec3 target = vec3(state["target_x"], state["target_y"], state["target_z"]);
+    const double target[3] = {state["target_x"], state["target_y"], state["target_z"]};
     quat camera = quat(state["q1"], state["qi"], state["qj"], state["qk"]);
     float dist = state["camera_distance"];
     vec3 scale = vec3(state["scale_x"], state["scale_y"], state["scale_z"]);
     vec3 dir = normalize(rotate_vector(vec3(0, 0, 1), camera) / scale);
-    double x = (double)(target.x) - (double)(dist * dir.x);
-    double y = (double)(target.y) - (double)(dist * dir.y);
-    double z = (double)(target.z) - (double)(dist * dir.z);
+    double x = target[0] - (double)(dist * dir.x);
+    double y = target[1] - (double)(dist * dir.y);
+    double z = target[2] - (double)(dist * dir.z);
 
     // fractional axis roll interpolates between the rolls at floor and
     // floor + 1, which differ only from depth floor + 1 down.
