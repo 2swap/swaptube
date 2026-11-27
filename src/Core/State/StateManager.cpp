@@ -1,6 +1,7 @@
 #include "StateManager.h"
 #include "GlobalState.h"
 #include <cstdint>
+#include <limits>
 
 using namespace std;
 
@@ -79,15 +80,17 @@ void StateManager::print_state() const {
         keys.push_back(variable.first);
     }
     sort(keys.begin(), keys.end());
+    const streamsize old_precision = cout.precision(numeric_limits<double>::max_digits10);
     for (const string& key : keys) {
         const VariableContents& vc = variables.at(key);
         cout << left << setw(32) << key
              << setw(38) << vc.equation.to_string()
-             << " : " << setw(10) << vc.value
+             << " : " << setw(16) << vc.value
              << (vc.fresh ? " (Fresh)" : " (Stale)")
              << " " << &vc
              << endl;
     }
+    cout.precision(old_precision);
     cout << "-----------------------" << endl;
 }
 
@@ -329,7 +332,7 @@ void StateManager::evaluate_single_variable(const string& variable) {
     ResolvedStateEquation rse = resolve_state_equation(vc.equation);
     try {
         int error = 0;
-        float blank_cuda_tags[8] = {1.20f, -.19f, 90.0f, 1.0f, 2.0f, 3.0f, -4.0f, 5.0f};
+        state_float blank_cuda_tags[8] = {1.20, -.19, 90.0, 1.0, 2.0, 3.0, -4.0, 5.0};
         vc.value = evaluate_resolved_state_equation(rse.size(), rse.data(), blank_cuda_tags, 8, error);
         if(error != 0) {
             throw runtime_error("Error code " + to_string(error) + " returned from evaluate_resolved_state_equation.");

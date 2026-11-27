@@ -38,7 +38,7 @@ UnresolvedStateEquationComponent::UnresolvedStateEquationComponent(const std::st
 
     // Check for constant
     char* end;
-    float constant_ = strtof(space_delimited_string.c_str(), &end);
+    double constant_ = strtod(space_delimited_string.c_str(), &end);
     if (*end == '\0') {
         type = UNRESOLVED_CONSTANT;
         content.constant = constant_;

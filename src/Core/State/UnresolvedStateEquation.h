@@ -19,7 +19,7 @@ enum UnresolvedStateEquationComponentType {
 };
 
 struct UnresolvedContent {
-    float constant;
+    double constant;
     StateOperator op;
     std::string variable_name;
     int cuda_tag;

@@ -76,39 +76,58 @@ HOST_DEVICE inline static int get_operator_arity(StateOperator op) {
     }
 }
 
-HOST_DEVICE inline static float evaluate_operator(StateOperator op, float *a) {
+// The precision state equations are evaluated at: double on the host, float on GPU.
+#if defined(__CUDACC__) || defined(__HIPCC__)
+typedef float state_float;
+#define STATE_MATH(name) name##f   // sinf, powf, ...
+#else
+typedef double state_float;
+#define STATE_MATH(name) ::name    // sin, pow, ...
+#endif
+
+HOST_DEVICE inline state_float state_smoothlerp(state_float a, state_float b, state_float w) {
+    const state_float v = w < .5 ? (w * w) * 2 : 1 - ((1 - w) * (1 - w)) * 2;
+    return a * (1 - v) + b * v;
+}
+
+HOST_DEVICE inline state_float state_extended_mod(state_float a, state_float b) {
+    b = STATE_MATH(fabs)(b);
+    const state_float result = STATE_MATH(fmod)(a, b);
+    return result < 0 ? result + b : result;
+}
+
+HOST_DEVICE inline static state_float evaluate_operator(StateOperator op, state_float *a) {
     switch (op) {
         case OP_ADD:        return a[0] + a[1];
         case OP_SUB:        return a[0] - a[1];
         case OP_MUL:        return a[0] * a[1];
         case OP_DIV:        return a[0] / a[1];
-        case OP_POW:        return powf(a[0], a[1]);
-        case OP_SIN:        return sinf(a[0]);
-        case OP_COS:        return cosf(a[0]);
-        case OP_ATAN2:      return atan2f(a[0], a[1]);
-        case OP_EXP:        return expf(a[0]);
-        case OP_SQRT:       return sqrtf(a[0]);
-        case OP_ABS:        return fabsf(a[0]);
-        case OP_LOG:        return logf(a[0]);
-        case OP_FLOOR:      return floorf(a[0]);
-        case OP_CEIL:       return ceilf(a[0]);
-        case OP_PI:         return 3.141592653589793f;
-        case OP_E:          return 2.718281828459045f;
-        case OP_PHI:        return 1.618033988749895f;
-        case OP_GT:         return a[0] > a[1] ? 1.0f : 0.0f;
-        case OP_LT:         return a[0] < a[1] ? 1.0f : 0.0f;
-        case OP_GTE:        return a[0] >= a[1] ? 1.0f : 0.0f;
-        case OP_LTE:        return a[0] <= a[1] ? 1.0f : 0.0f;
-        case OP_EQ:         return fabsf(a[0] - a[1]) < 1e-9 ? 1.0f : 0.0f;
-        case OP_NEQ:        return fabsf(a[0] - a[1]) >= 1e-9 ? 1.0f : 0.0f;
-        case OP_SMOOTHLERP: return smoothlerp(a[0], a[1], a[2]);
+        case OP_POW:        return STATE_MATH(pow)(a[0], a[1]);
+        case OP_SIN:        return STATE_MATH(sin)(a[0]);
+        case OP_COS:        return STATE_MATH(cos)(a[0]);
+        case OP_ATAN2:      return STATE_MATH(atan2)(a[0], a[1]);
+        case OP_EXP:        return STATE_MATH(exp)(a[0]);
+        case OP_SQRT:       return STATE_MATH(sqrt)(a[0]);
+        case OP_ABS:        return STATE_MATH(fabs)(a[0]);
+        case OP_LOG:        return STATE_MATH(log)(a[0]);
+        case OP_FLOOR:      return STATE_MATH(floor)(a[0]);
+        case OP_CEIL:       return STATE_MATH(ceil)(a[0]);
+        case OP_PI:         return (state_float)3.141592653589793;
+        case OP_E:          return (state_float)2.718281828459045;
+        case OP_PHI:        return (state_float)1.618033988749895;
+        case OP_GT:         return a[0] > a[1] ? 1 : 0;
+        case OP_LT:         return a[0] < a[1] ? 1 : 0;
+        case OP_GTE:        return a[0] >= a[1] ? 1 : 0;
+        case OP_LTE:        return a[0] <= a[1] ? 1 : 0;
+        case OP_EQ:         return STATE_MATH(fabs)(a[0] - a[1]) < 1e-9 ? 1 : 0;
+        case OP_NEQ:        return STATE_MATH(fabs)(a[0] - a[1]) >= 1e-9 ? 1 : 0;
+        case OP_SMOOTHLERP: return state_smoothlerp(a[0], a[1], a[2]);
         case OP_LERP:       return a[0] + a[2] * (a[1] - a[0]);
-        case OP_BEZIER:     return bezier(a[0], a[1], a[2], a[3], a[4]);
-        case OP_LOGISTIC:   return 1.0f / (1.0f + expf(-a[0]));
-        case OP_MIN:        return fminf(a[0], a[1]);
-        case OP_MAX:        return fmaxf(a[0], a[1]);
+        case OP_LOGISTIC:   return 1 / (1 + STATE_MATH(exp)(-a[0]));
+        case OP_MIN:        return STATE_MATH(fmin)(a[0], a[1]);
+        case OP_MAX:        return STATE_MATH(fmax)(a[0], a[1]);
         case OP_SQUARE:     return a[0] * a[0];
-        case OP_MOD:        return extended_mod(a[0], a[1]);
+        case OP_MOD:        return state_extended_mod(a[0], a[1]);
                             // Should not reach here, return NaN
         default:            return nanf("");
     }

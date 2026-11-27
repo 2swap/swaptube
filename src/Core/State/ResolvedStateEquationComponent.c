@@ -13,7 +13,7 @@ enum ResolvedStateEquationComponentType {
 struct ResolvedStateEquationComponent {
     ResolvedStateEquationComponentType type;
     union ResolvedContent {
-        float constant;
+        double constant;
         StateOperator op;
         int cuda_tag;
     } content;
@@ -37,14 +37,14 @@ HOST_DEVICE inline void print_resolved_state_equation(const int num_components, 
 }
 
 // Treat as RPN stack evaluation
-HOST_DEVICE inline float evaluate_resolved_state_equation(const int num_components, const ResolvedStateEquationComponent* components, const float* cuda_tags, const int num_cuda_tags, int& error) {
+HOST_DEVICE inline state_float evaluate_resolved_state_equation(const int num_components, const ResolvedStateEquationComponent* components, const state_float* cuda_tags, const int num_cuda_tags, int& error) {
     error = 0;
-    float stack[1024];
+    state_float stack[1024];
     int stack_size = 0;
     for (int i = 0; i < num_components; i++) {
         const ResolvedStateEquationComponent* comp = &components[i];
         if (comp->type == RESOLVED_CONSTANT) {
-            stack[stack_size] = comp->content.constant;
+            stack[stack_size] = (state_float)comp->content.constant;
             stack_size++;
         } else if(comp->type == RESOLVED_OPERATOR) {
             StateOperator op = comp->content.op;
